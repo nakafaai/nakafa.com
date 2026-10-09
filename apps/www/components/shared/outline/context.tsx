@@ -57,7 +57,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     const current = store.getState().activeHeadings;
     if (
       current.length === activeHeadings.length &&
-      current.every((id, index) => id === activeHeadings[index])
+      Arr.every(current, (id, index) => id === activeHeadings[index])
     ) {
       return;
     }
@@ -90,7 +90,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     if (!(node instanceof Element)) {
       return [];
     }
-    return [node, ...node.querySelectorAll("[id]")].filter((element) =>
+    return Arr.filter([node, ...node.querySelectorAll("[id]")], (element) =>
       HashSet.has(watched, element.id)
     );
   }
@@ -123,7 +123,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
       return;
     }
     const ids = HashSet.fromIterable(visibleIds());
-    const inView = watch.filter((id) => HashSet.has(ids, id));
+    const inView = Arr.filter(watch, (id) => HashSet.has(ids, id));
     const lastId = watch.at(-1);
     if (inView.length > 0) {
       publish(inView);
@@ -163,7 +163,7 @@ export function TocProvider({
   const [store] = useState(() =>
     createStore<TocState>()(() => ({ activeHeadings: [] }))
   );
-  const watchKey = extractAllHeadingIds(toc).join(WATCH_SEPARATOR);
+  const watchKey = Arr.join(extractAllHeadingIds(toc), WATCH_SEPARATOR);
 
   useEffect(
     () =>

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import {
@@ -109,7 +110,8 @@ function correctSelection(
 ): TryoutResponseSelection | null {
   if (response.kind === "category") {
     return {
-      assignments: response.statements.map(
+      assignments: Arr.map(
+        response.statements,
         ({ correctCategoryKey, statementKey }) => ({
           categoryKey: correctCategoryKey,
           statementKey,
@@ -121,8 +123,9 @@ function correctSelection(
   if (response.kind === "short-answer" || response.kind === "rubric") {
     return null;
   }
-  const optionKeys = response.options.flatMap(({ isCorrect, optionKey }) =>
-    isCorrect ? [optionKey] : []
+  const optionKeys = Arr.flatMap(
+    response.options,
+    ({ isCorrect, optionKey }) => (isCorrect ? [optionKey] : [])
   );
   if (response.kind === "multiple-choice") {
     return { kind: "multiple-choice", optionKeys };

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import {
   createConversationRows,
@@ -40,7 +41,7 @@ describe("conversation/data/transcript/pages", () => {
       },
     });
 
-    expect(rows.map((row) => row.type)).toEqual([
+    expect(Arr.map(rows, (row) => row.type)).toEqual([
       "header",
       "date",
       "post",
@@ -128,7 +129,7 @@ describe("conversation/data/transcript/pages", () => {
       ],
     });
 
-    expect(rows.map((row) => row.type)).toEqual(["date", "post"]);
+    expect(Arr.map(rows, (row) => row.type)).toEqual(["date", "post"]);
     expect(getConversationRowKey({ type: "header" }, undefined)).toBe("header");
     expect(getLastConversationPostId([])).toBeNull();
   });

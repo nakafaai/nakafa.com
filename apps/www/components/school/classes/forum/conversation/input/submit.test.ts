@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { SessionRequired } from "@repo/backend/confect/auth/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Layer, Result, Schema } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import type { HttpClientRequest } from "effect/http/HttpClientRequest";
@@ -23,7 +24,6 @@ const postId = "post_1" as Id<"schoolClassForumPosts">;
 const storageId = "storage_1" as Id<"_storage">;
 const uploadUrl = "https://upload.example.test/file?token=signed-upload-secret";
 type SubmitForumPostInput = Parameters<typeof submitForumPost>[0];
-const failureJson = Schema.fromJsonString(Schema.Unknown);
 const TestHttpClient = Layer.succeed(
   HttpClient.HttpClient,
   HttpClient.make((request) =>
@@ -321,7 +321,7 @@ describe("submitForumPost", () => {
         if (Result.isSuccess(result)) {
           return;
         }
-        const encodedFailure = yield* Schema.encodeEffect(failureJson)(
+        const encodedFailure = yield* Schema.encodeEffect(JsonTextSchema)(
           result.failure
         );
         expect(encodedFailure).not.toContain("signed-upload-secret");

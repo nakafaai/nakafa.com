@@ -1,5 +1,5 @@
 import { timeOperation } from "@repo/utilities/logging/effect";
-import { Config, Effect, Redacted, Schema } from "effect";
+import { Array as Arr, Config, Effect, Option, Redacted, Schema } from "effect";
 import {
   type CurrentWeatherSummary,
   OpenWeatherCurrentResponseSchema,
@@ -60,7 +60,7 @@ export const getCurrentWeather = Effect.fn("weather.getCurrentWeather")(
         yield* Effect.logInfo("Current weather fetched successfully").pipe(
           Effect.annotateLogs(context)
         );
-        const condition = response.weather.at(0);
+        const condition = Option.getOrUndefined(Arr.head(response.weather));
         return {
           city: response.name,
           condition: condition?.description ?? DEFAULT_CONDITION,

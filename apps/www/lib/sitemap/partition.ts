@@ -1,3 +1,4 @@
+import { Array as Arr, Order } from "effect";
 import type { Locale } from "next-intl";
 import {
   formatArticlePartition,
@@ -17,16 +18,8 @@ export const SITEMAP_PARTITION_BUCKETS = 32;
 
 /** Groups deterministic bucket ids into stable capacity-owned partitions. */
 export function groupSitemapBuckets(buckets: readonly string[]): string[][] {
-  const ordered = [...buckets].sort();
-  const groups: string[][] = [];
-  for (
-    let index = 0;
-    index < ordered.length;
-    index += SITEMAP_PARTITION_BUCKETS
-  ) {
-    groups.push(ordered.slice(index, index + SITEMAP_PARTITION_BUCKETS));
-  }
-  return groups;
+  const ordered = Arr.sort(buckets, Order.String);
+  return Arr.chunksOf(ordered, SITEMAP_PARTITION_BUCKETS);
 }
 
 /** Describes capacity-owned sitemap partitions for one bucket inventory. */
@@ -35,7 +28,7 @@ export function describeSitemapPartitions(
   locale: Locale,
   buckets: readonly string[]
 ): SitemapPage[] {
-  return groupSitemapBuckets(buckets).map((_, partition) => {
+  return Arr.map(groupSitemapBuckets(buckets), (_, partition) => {
     if (family === "article") {
       return {
         id: formatArticlePartition(locale, partition),

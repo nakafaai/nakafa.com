@@ -1,8 +1,7 @@
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Predicate, pipe, Schema } from "effect";
 
-const encodeJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const encodeJson = Schema.encodeUnknownSync(JsonTextSchema);
 /** Request headers the endpoint reads: none for sessions or GET streams, which it does not serve. */
 const DEFAULT_ALLOWED_HEADERS = [
   "accept",

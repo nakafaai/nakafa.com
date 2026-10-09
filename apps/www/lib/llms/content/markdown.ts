@@ -3,7 +3,14 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { Effect, HashSet, Option, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  HashSet,
+  Option,
+  Record as Rec,
+  Schema,
+} from "effect";
 import type { Locale } from "next-intl";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/index/cache";
@@ -19,7 +26,7 @@ import {
 import { classifyQuranLlmsRoute, getQuranLlmsText } from "@/lib/llms/quran";
 
 const MATERIAL_ROUTE_SEGMENTS = HashSet.fromIterable(
-  PUBLIC_ROUTE_SURFACES.flatMap((surface) =>
+  Arr.flatMap(PUBLIC_ROUTE_SURFACES, (surface) =>
     surface.key === "subject" ? Rec.values(surface.routeSlugs) : []
   )
 );
@@ -139,7 +146,7 @@ const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
 function readPublishedFamily(
   cleanSlug: string
 ): PublishedMarkdownInput["family"] | null {
-  const segments = cleanSlug.split("/").filter(Boolean);
+  const segments = Arr.filter(cleanSlug.split("/"), Boolean);
   const [routeSegment] = segments;
   if (routeSegment === "articles") {
     return "article";

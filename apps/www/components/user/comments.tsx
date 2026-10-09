@@ -29,6 +29,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import {
   CommentActionsProvider,
@@ -82,7 +83,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
     <>
       {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
       <div className="flex flex-col divide-y rounded-xl border bg-card text-card-foreground shadow-sm">
-        {results.map((comment) => (
+        {Arr.map(results, (comment) => (
           <CommentThread
             comment={comment}
             key={comment._id}

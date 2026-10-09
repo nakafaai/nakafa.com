@@ -161,7 +161,9 @@ async function renderAttemptBatch(
   );
   cacheLife("max");
   cacheTag(
-    ...content.map(({ artifactHash }) => makeArtifactCacheTag(artifactHash))
+    ...Arr.map(content, ({ artifactHash }) =>
+      makeArtifactCacheTag(artifactHash)
+    )
   );
   return content;
 }
@@ -173,7 +175,9 @@ async function renderBatch(selectors: readonly TryoutSelector[]) {
   const content = await Effect.runPromise(readBatch(selectors));
   cacheLife("max");
   cacheTag(
-    ...content.map(({ artifactHash }) => makeArtifactCacheTag(artifactHash))
+    ...Arr.map(content, ({ artifactHash }) =>
+      makeArtifactCacheTag(artifactHash)
+    )
   );
   return content;
 }

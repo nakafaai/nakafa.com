@@ -3,7 +3,7 @@
 import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import classes from "@repo/backend/confect/_generated/refs/classes";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { toggleReactionState } from "@/components/school/classes/forum/reaction/state";
 import { useViewer } from "@/lib/identity/client";
 
@@ -26,7 +26,7 @@ function updateForumLists(
       query.args,
       Option.some({
         ...query.value.value,
-        page: query.value.value.page.map((forum) =>
+        page: Arr.map(query.value.value.page, (forum) =>
           forum._id === forumId
             ? toggleReactionState(forum, emoji, reactorName)
             : forum
@@ -77,7 +77,7 @@ export function usePostReactionMutation() {
         classes.forums.queries.pages.getForumPosts,
         query.args,
         Option.some(
-          query.value.value.map((post) =>
+          Arr.map(query.value.value, (post) =>
             post._id === postId
               ? toggleReactionState(post, emoji, reactorName)
               : post

@@ -12,6 +12,7 @@ import {
   providerStep,
   runSpecialist,
 } from "@repo/backend/test/nina/specialist";
+import { encodeJsonText } from "@repo/utilities/json";
 import { InvalidToolInputError, NoSuchToolError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { Schema } from "effect";
@@ -20,7 +21,6 @@ afterEach(() => {
   vi.restoreAllMocks();
   provider.languageModel.mockReset();
 });
-const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const nakafaInputJsonSchema = Schema.fromJsonString(NakafaToolInputSchema);
 const tools = {
   nakafa: { inputSchema: nakafaToolInputSchema },
@@ -90,9 +90,9 @@ describe("Nina tool repair with the Agent component", () => {
         userId: expect.any(String),
       })
     );
-    expect(
-      Schema.encodeSync(jsonTextSchema)(model.doGenerateCalls[0]?.prompt)
-    ).toContain("Keep the original task and source constraints");
+    expect(encodeJsonText(model.doGenerateCalls[0]?.prompt)).toContain(
+      "Keep the original task and source constraints"
+    );
   });
 
   it.each(["schema", "provider", "output"] as const)(

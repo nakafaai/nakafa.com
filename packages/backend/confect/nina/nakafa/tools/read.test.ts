@@ -9,6 +9,7 @@ import {
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, MutableList, Schema } from "effect";
 
 vi.mock("@repo/backend/agent/content", () => ({ getNakafaContent: vi.fn() }));
@@ -24,7 +25,6 @@ const input = {
 };
 // The plain codec keeps every key, so a leak in any field fails the check.
 // The contract codec drops undeclared keys: it proves only the artifact shape.
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const encodeContract = Schema.encodeSync(
   Schema.fromJsonString(Schema.Array(CapabilityArtifactSchema))
 );
@@ -48,7 +48,7 @@ describe("Nina content evidence", () => {
       },
     ]);
     expect(() => encodeContract(MutableList.toArray(artifacts))).not.toThrow();
-    expect(encodeJson(MutableList.toArray(artifacts))).not.toContain(
+    expect(encodeJsonText(MutableList.toArray(artifacts))).not.toContain(
       content.text
     );
   });

@@ -5,6 +5,7 @@ import { useDebouncedValue } from "@mantine/hooks";
 import classes from "@repo/backend/confect/_generated/refs/classes";
 import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { MaterialGroupCard } from "@/components/school/classes/materials/item";
@@ -57,7 +58,7 @@ export function SchoolClassesMaterialsList() {
       {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
       <div className="flex flex-col">
         <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
-          {results.map((group) => (
+          {Arr.map(results, (group) => (
             <MaterialGroupCard
               canManage={canManage}
               group={group}

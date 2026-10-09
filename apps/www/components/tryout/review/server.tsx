@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { NinaAskProvider } from "@/components/ai/ask";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
@@ -58,7 +58,7 @@ export async function TryoutReview({
   return (
     <NinaAskProvider>
       <section className="space-y-12">
-        {questions.map((question) => (
+        {Arr.map(questions, (question) => (
           <TryoutReviewQuestionShell
             action={
               <TryoutAskButton

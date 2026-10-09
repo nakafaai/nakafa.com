@@ -1,5 +1,5 @@
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { TryoutSelector } from "@/components/tryout/content/model";
 
 type RuntimeIdentity = Pick<
@@ -15,7 +15,8 @@ const requireCoherentSelectors = Effect.fn(
   if (!first) {
     return yield* runtimeIntegrity("Protected content batch is empty.");
   }
-  const coherent = selectors.every(
+  const coherent = Arr.every(
+    selectors,
     (selector) =>
       selector.appLocale === first.appLocale &&
       selector.snapshotId === first.snapshotId &&
@@ -34,14 +35,16 @@ export const makeTryoutRuntimeRequest = Effect.fn(
   "NakafaContent.makeTryoutRequest"
 )(function* (selectors: readonly TryoutSelector[]) {
   const first = yield* requireCoherentSelectors(selectors);
-  if (selectors.some(({ bundleHash }) => bundleHash !== first.bundleHash)) {
+  if (
+    Arr.some(selectors, ({ bundleHash }) => bundleHash !== first.bundleHash)
+  ) {
     return yield* runtimeIntegrity(
       "Protected content batch spans multiple permanent bundles."
     );
   }
   return {
     bundleHash: first.bundleHash,
-    selectors: selectors.map(({ artifactHash, contentKey, delivery }) => ({
+    selectors: Arr.map(selectors, ({ artifactHash, contentKey, delivery }) => ({
       artifactHash,
       contentKey,
       delivery,

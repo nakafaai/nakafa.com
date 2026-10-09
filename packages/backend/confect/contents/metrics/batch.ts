@@ -6,7 +6,8 @@ import {
   type LearningPopularityWindow,
   learningPopularityWindowValues,
 } from "@repo/backend/confect/contents/popularity";
-import { Array as Arr, MutableHashMap, Option, Schema, Struct } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, MutableHashMap, Option, Struct } from "effect";
 
 type QueuedLearningEngagement = Docs["learningEngagementQueue"];
 type AnalyticsGraphRef = Pick<
@@ -47,11 +48,9 @@ function getAnalyticsContext(item: QueuedLearningEngagement) {
   ]);
 }
 
-const MetricsKeySchema = Schema.fromJsonString(Schema.Unknown);
-
 /** Encodes one metrics identity without delimiter collisions. */
 function encodeMetricsKey(parts: readonly (number | string)[]) {
-  return Schema.encodeSync(MetricsKeySchema)(parts);
+  return encodeJsonText(parts);
 }
 
 /**

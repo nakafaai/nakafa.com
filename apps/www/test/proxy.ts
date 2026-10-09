@@ -81,3 +81,58 @@ export const localeHints: [
     },
   ],
 ];
+
+/** Public routes that a locale hint or an unknown locale must not turn into an internal rewrite. */
+export const publicRoutes: [
+  string,
+  ConstructorParameters<typeof NextRequest>[1]?,
+][] = [
+  ["/en", { headers: { "x-next-intl-locale": "en" } }],
+  ["/en/search", { headers: { "x-next-intl-locale": "en" } }],
+  ["/zz/quran/1", undefined],
+  ["/id/kurikulum", undefined],
+];
+
+/** One page asked for as Markdown and as a representation it does not have. */
+export const representations: [
+  string,
+  string,
+  ConstructorParameters<typeof NextRequest>[1],
+  string | null,
+][] = [
+  [
+    "accept header",
+    "/en/terms-of-service",
+    { headers: { accept: "text/markdown" } },
+    "http://localhost:3000/llms.mdx/en/terms-of-service",
+  ],
+  [
+    "unacceptable header",
+    "/en/terms-of-service",
+    { headers: { accept: "text/x-component" } },
+    null,
+  ],
+];
+
+/** The published SNBT exam with its one live year track. */
+export const snbtExam = {
+  country: {
+    countryCode: "ID",
+    countryKey: "indonesia",
+    publicPath: "try-out/indonesia",
+    title: "Indonesia",
+  },
+  exam: {
+    examKey: "snbt",
+    publicPath: "try-out/indonesia/snbt",
+    scoringStrategy: "irt",
+    title: "SNBT",
+  },
+  tracks: [
+    {
+      publicPath: "try-out/indonesia/snbt/2027",
+      trackKey: "2027",
+      trackKind: "year",
+    },
+  ],
+};

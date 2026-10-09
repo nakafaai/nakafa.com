@@ -31,10 +31,8 @@ import {
   testSignedArtifact,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Order, Schema, Stream } from "effect";
-
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Stages a complete authenticated genesis release across real bounded batches. */
 export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
@@ -168,8 +166,8 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
     );
     yield* stageRelease(
       "candidate",
-      encodeJson(signed),
-      encodeJson(TEST_PROOF_RENDERER)
+      encodeJsonText(signed),
+      encodeJsonText(TEST_PROOF_RENDERER)
     );
     for (let start = 0; start < count; start += MAX_ITEM_BATCH_COUNT) {
       const batchIndex = start / MAX_ITEM_BATCH_COUNT;
@@ -177,12 +175,12 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
       yield* stageItemProgram(
         releaseId,
         batchIndex,
-        Arr.map(batch, ({ item }) => encodeJson(item))
+        Arr.map(batch, ({ item }) => encodeJsonText(item))
       );
       yield* stageArtifacts(
         releaseId,
         batchIndex,
-        Arr.map(batch, ({ artifact }) => encodeJson(artifact))
+        Arr.map(batch, ({ artifact }) => encodeJsonText(artifact))
       );
       yield* stageProjectionProgram(
         releaseId,
@@ -195,7 +193,7 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
         releaseId,
         start / MAX_ITEM_BATCH_COUNT,
         Arr.map(routes.slice(start, start + MAX_ITEM_BATCH_COUNT), (route) =>
-          encodeJson(route)
+          encodeJsonText(route)
         )
       );
     }

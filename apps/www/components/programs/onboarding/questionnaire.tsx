@@ -25,7 +25,7 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { redirect, useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -185,7 +185,7 @@ export function OnboardingQuestionnaire({
         render={(props, { current, total }) => (
           <div {...props}>
             <div aria-hidden="true" className="grid w-full grid-cols-3 gap-2">
-              {onboardingItems.map((item, index) => (
+              {Arr.map(onboardingItems, (item, index) => (
                 <span
                   className={cn(
                     "h-1 rounded-full bg-muted transition-colors",
@@ -208,7 +208,7 @@ export function OnboardingQuestionnaire({
       <QuestionnaireItem name="role" required>
         <QuestionnaireTitle>{t("onboarding.role-title")}</QuestionnaireTitle>
         <QuestionnaireChoices>
-          {roleOptions.map((option) => (
+          {Arr.map(roleOptions, (option) => (
             <QuestionnaireChoice
               checked={answers.role === option.value}
               key={option.value}
@@ -234,7 +234,7 @@ export function OnboardingQuestionnaire({
           {t("onboarding.region-description")}
         </QuestionnaireDescription>
         <QuestionnaireChoices>
-          {regionOptions.map((option) => (
+          {Arr.map(regionOptions, (option) => (
             <QuestionnaireChoice
               checked={answers.region === option.value}
               key={option.value}
@@ -257,7 +257,7 @@ export function OnboardingQuestionnaire({
       <QuestionnaireItem name="focus" required>
         <QuestionnaireTitle>{t("onboarding.focus-title")}</QuestionnaireTitle>
         <QuestionnaireChoices>
-          {focusOptions.map((option) => (
+          {Arr.map(focusOptions, (option) => (
             <QuestionnaireChoice
               checked={answers.focus === option.value}
               key={option.value}

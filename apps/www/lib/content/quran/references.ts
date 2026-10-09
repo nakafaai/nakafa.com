@@ -3,6 +3,7 @@ import type {
   QuranViewTafsirAccess,
 } from "@repo/backend/client/quran/view";
 import type { Reference } from "@repo/contents/content";
+import { Array as Arr } from "effect";
 
 type QuranReferenceSource =
   | QuranViewSources[keyof QuranViewSources]
@@ -13,7 +14,8 @@ export function getQuranReferences(
   sources: QuranViewSources,
   tafsirAccess: QuranViewTafsirAccess | null
 ): Reference[] {
-  const readingReferences = [sources.arabic, sources.translation].map(
+  const readingReferences = Arr.map(
+    [sources.arabic, sources.translation],
     toReference
   );
   if (tafsirAccess === null) {

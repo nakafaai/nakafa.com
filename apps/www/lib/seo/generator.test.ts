@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
-import { Effect, HashMap, Option, Schema } from "effect";
+import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
 import { generateSEOMetadata } from "@/lib/seo/generator";
 
 const { mockGetTranslations } = vi.hoisted(() => ({
@@ -68,13 +68,17 @@ const translations: TranslationNamespaces = HashMap.fromIterable([
       [
         "curriculum.keywords",
         (values) =>
-          [
-            getValue(values, "title"),
-            getValue(values, "parent"),
-            getValue(values, "program"),
-          ]
-            .filter((value) => value && value !== "__EMPTY__")
-            .join(", "),
+          Arr.join(
+            Arr.filter(
+              [
+                getValue(values, "title"),
+                getValue(values, "parent"),
+                getValue(values, "program"),
+              ],
+              (value) => Boolean(value) && value !== "__EMPTY__"
+            ),
+            ", "
+          ),
       ],
       [
         "curriculum.title",

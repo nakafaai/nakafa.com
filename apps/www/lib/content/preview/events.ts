@@ -1,5 +1,6 @@
 import "server-only";
 import { PreviewEventSchema } from "@nakafa/aksara-contracts/preview/spec";
+import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   Effect,
@@ -29,7 +30,6 @@ const EVENT_PREFIX = "event: update\ndata: ";
 const EVENT_CONTENT_TYPE = /^text\/event-stream(?:\s*;\s*charset=utf-8)?$/i;
 const encoder = new TextEncoder();
 const PreviewEventJsonSchema = Schema.fromJsonString(PreviewEventSchema);
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 /** Strictly validates and re-encodes one provider event for the browser. */
 function sanitizeEvent(block: string) {
   if (block.startsWith(":") && !block.includes("\n")) {
@@ -49,9 +49,7 @@ function sanitizeEvent(block: string) {
     return Result.fail(new PreviewEventError({ stage: "event" }));
   }
   return Result.succeed(
-    encoder.encode(
-      `${EVENT_PREFIX}${Schema.encodeSync(JsonTextSchema)(decoded.success)}\n\n`
-    )
+    encoder.encode(`${EVENT_PREFIX}${encodeJsonText(decoded.success)}\n\n`)
   );
 }
 type SanitizedEvent = Result.Result<Uint8Array, PreviewEventError>;

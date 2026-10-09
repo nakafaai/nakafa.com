@@ -34,11 +34,10 @@ import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { testMaterialPublicPath } from "@repo/backend/test/content/material";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
 export const TEST_MANIFEST_HASH = Sha256HashSchema.make(
   `sha256:${"1".repeat(64)}`
@@ -73,7 +72,7 @@ export function testRendererJson(
   componentName = "p"
 ) {
   const base = [componentName];
-  return encodeJson({
+  return encodeJsonText({
     base,
     domains: Arr.map(RENDERER_DOMAINS, (name) => ({
       components: [],
@@ -150,7 +149,7 @@ export function testReleaseJson({
   const origin = rollback
     ? { kind: "rollback", releaseId: originReleaseId ?? baseReleaseId }
     : { kind: "git", sha: "a".repeat(40) };
-  return encodeJson({
+  return encodeJsonText({
     keyId: "test-key",
     manifest: {
       activeAppLocales,
@@ -209,7 +208,7 @@ export function testRollbackJson(options?: {
   readonly releaseId?: string | undefined;
 }) {
   const index = options?.index ?? 0;
-  return encodeJson({
+  return encodeJsonText({
     index,
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
     snapshot: {
@@ -234,7 +233,7 @@ export function testUpsertJson(options?: {
 }) {
   const index = options?.index ?? 0;
   const artifactLocale = options?.artifactLocale ?? "en";
-  return encodeJson({
+  return encodeJsonText({
     change: {
       artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
       artifactLocale,
@@ -270,7 +269,7 @@ export function testRouteJson(options?: {
     operation: options?.operation ?? "bind",
     publicPath: options?.publicPath ?? testMaterialPublicPath(index, appLocale),
   };
-  return encodeJson({
+  return encodeJsonText({
     change,
     index,
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
@@ -284,7 +283,7 @@ export function testDeleteJson(options?: {
   readonly index?: number | undefined;
   readonly releaseId?: string | undefined;
 }) {
-  return encodeJson({
+  return encodeJsonText({
     change: {
       artifactLocale: options?.artifactLocale ?? "en",
       contentKey: options?.contentKey ?? "test:deleted",

@@ -4,7 +4,7 @@ import {
   type PublicRouteSurface,
 } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
-import { Array as Arr, Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   BASE_URL,
@@ -35,28 +35,32 @@ type PublicLlmsSectionIndex = typeof PublicLlmsSectionIndexSchema.Type;
 
 /** Renders the constant-size root discovery index. */
 export function buildRootLlmsIndexText() {
-  return [
-    "# Nakafa",
-    "",
-    "> Nakafa publishes multilingual learning materials. Choose a locale, then follow its public-prefix indexes and bounded catalog pages to page-level markdown URLs.",
-    "",
-    "## Indexes",
-    "",
-    ...routing.locales.map(formatLocaleIndexLine),
-    "",
-    "## References",
-    "",
-    `- [Nakafa MCP skill](${BASE_URL}/skill.md): public agent instructions for tools \`nakafa_search_content\`, \`nakafa_get_content\`, \`nakafa_get_taxonomy\`, and \`nakafa_get_quran_reference\`. MCP endpoint: \`${NAKAFA_MCP_ENDPOINT}\`.`,
-    `- Sitemap: \`${BASE_URL}/sitemap.xml\`.`,
-    "",
-  ].join("\n");
+  return Arr.join(
+    [
+      "# Nakafa",
+      "",
+      "> Nakafa publishes multilingual learning materials. Choose a locale, then follow its public-prefix indexes and bounded catalog pages to page-level markdown URLs.",
+      "",
+      "## Indexes",
+      "",
+      ...Arr.map(routing.locales, formatLocaleIndexLine),
+      "",
+      "## References",
+      "",
+      `- [Nakafa MCP skill](${BASE_URL}/skill.md): public agent instructions for tools \`nakafa_search_content\`, \`nakafa_get_content\`, \`nakafa_get_taxonomy\`, and \`nakafa_get_quran_reference\`. MCP endpoint: \`${NAKAFA_MCP_ENDPOINT}\`.`,
+      `- Sitemap: \`${BASE_URL}/sitemap.xml\`.`,
+      "",
+    ],
+    "\n"
+  );
 }
 
 /** Returns localized nested-index lines for one locale aggregate. */
 export function getPublicLlmsSectionIndexLines(locale: Locale) {
   const localeLabel = getLocaleLabel(locale);
 
-  return getPublicLlmsSectionIndexes(locale).map(
+  return Arr.map(
+    getPublicLlmsSectionIndexes(locale),
     (index) =>
       `- [${index.label}](${BASE_URL}/${locale}/${index.prefix}/llms.txt): ${localeLabel} ${index.label.toLowerCase()}.`
   );
@@ -75,20 +79,26 @@ export function resolvePublicLlmsSectionIndex({
   cleanSlug: string;
   locale: Locale;
 }) {
-  const parts = stripLlmsRouteExtension(cleanSlug).split("/").filter(Boolean);
-
-  if (parts.at(-1) === "llms") {
-    parts.pop();
-  }
+  const segments = Arr.filter(
+    stripLlmsRouteExtension(cleanSlug).split("/"),
+    Boolean
+  );
+  const parts = Option.exists(
+    Arr.last(segments),
+    (segment) => segment === "llms"
+  )
+    ? Arr.dropRight(segments, 1)
+    : segments;
 
   if (parts.length !== 1) {
     return null;
   }
 
-  return (
-    getPublicLlmsSectionIndexes(locale).find(
+  return Option.getOrNull(
+    Arr.findFirst(
+      getPublicLlmsSectionIndexes(locale),
       (index) => index.prefix === parts[0]
-    ) ?? null
+    )
   );
 }
 
@@ -117,7 +127,7 @@ export function buildPublicLlmsAppSectionIndexText({
 function getPublicLlmsSectionIndexes(locale: Locale): PublicLlmsSectionIndex[] {
   return [
     { label: SECTION_LABELS.articles, prefix: "articles", section: "articles" },
-    ...PUBLIC_ROUTE_SURFACES.map((surface) =>
+    ...Arr.map(PUBLIC_ROUTE_SURFACES, (surface) =>
       getProjectedPublicLlmsSectionIndex({ locale, surface })
     ),
     { label: SECTION_LABELS.quran, prefix: "quran", section: "quran" },

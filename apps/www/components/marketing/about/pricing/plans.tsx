@@ -6,6 +6,7 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, ComponentType } from "react";
 import { PricingButton } from "@/components/marketing/about/pricing/button.client";
@@ -39,8 +40,8 @@ function PricingFeature({ text, icon }: PricingFeatureProps) {
 export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
   const PlanHeading = headingLevel;
-  const freeFeatures = freePlanFeatures.map((key) => t(key));
-  const proFeatures = proPlanFeatures.map((key) => t(key));
+  const freeFeatures = Arr.map(freePlanFeatures, (key) => t(key));
+  const proFeatures = Arr.map(proPlanFeatures, (key) => t(key));
 
   return (
     <div className="grid lg:grid-cols-2 lg:divide-x">
@@ -61,7 +62,7 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
         </div>
 
         <div className="grid gap-3">
-          {freeFeatures.map((feature) => (
+          {Arr.map(freeFeatures, (feature) => (
             <PricingFeature key={feature} text={feature} />
           ))}
         </div>
@@ -104,7 +105,7 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
         <div className="grid gap-3">
           <PricingFeature icon={Rocket01Icon} text={proFeatures[0]} />
           <div className="grid gap-3 border-t pt-3">
-            {proFeatures.slice(1).map((feature) => (
+            {Arr.map(proFeatures.slice(1), (feature) => (
               <PricingFeature key={feature} text={feature} />
             ))}
           </div>

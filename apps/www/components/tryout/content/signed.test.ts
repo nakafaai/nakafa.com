@@ -42,7 +42,15 @@ import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { type Context, Effect, Layer, Predicate, Schema } from "effect";
+import { JsonTextSchema } from "@repo/utilities/json";
+import {
+  Array as Arr,
+  type Context,
+  Effect,
+  Layer,
+  Predicate,
+  Schema,
+} from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
@@ -145,12 +153,14 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
       sessionId: seed.identity.sessionId,
     });
     const access: SignedContentAccess = {
-      answers: seed.request.selectors.filter(
+      answers: Arr.filter(
+        seed.request.selectors,
         (selector) => selector.delivery === "entitled"
       ),
       kind: "signed",
       previewAnswers: [],
-      questions: seed.request.selectors.filter(
+      questions: Arr.filter(
+        seed.request.selectors,
         (selector) => selector.delivery === "authenticated"
       ),
     };
@@ -198,8 +208,6 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
 });
-/** Plain JSON codec: the body is the same bytes JSON.stringify writes, with every key kept. */
-const plainJson = Schema.fromJsonString(Schema.Unknown);
 
 describe("signed try-out execution", () => {
   it.effect(
@@ -212,7 +220,7 @@ describe("signed try-out execution", () => {
           "Answer opening.\n\nEvery original explanation step.\n\nFinal answer paragraph.";
         const [questionCode, answerCode] = yield* Effect.promise(() =>
           Promise.all(
-            [rawMdx, answerMdx].map((body) =>
+            Arr.map([rawMdx, answerMdx], (body) =>
               compile(body, {
                 outputFormat: "function-body",
               })
@@ -284,7 +292,7 @@ describe("signed try-out execution", () => {
           )
         );
         assert.isNotNull(found);
-        const body = yield* Schema.encodeEffect(plainJson)(found);
+        const body = yield* Schema.encodeEffect(JsonTextSchema)(found);
         const response = new Response(body, {
           headers: {
             "content-type": "application/json",

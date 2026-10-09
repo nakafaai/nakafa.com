@@ -29,11 +29,10 @@ import type {
   progressValidator,
   statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 export type Progress = typeof progressValidator.Type;
 export type Status = typeof statusValidator.Type;
-/** Stores the proof as the exact JSON text that the commit compares byte for byte. */
-const ProofJsonSchema = Schema.fromJsonString(Schema.Unknown);
 /** Authenticates the frozen release and renderer identity shared by proof steps. */
 export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
   function* (manifestHash: string, releaseId: string) {
@@ -228,7 +227,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       stagedSnapshotRows: snapshots.stagedRows,
       upsertHeads: items.upsertCount,
     };
-    const proofJson = yield* Schema.encodeEffect(ProofJsonSchema)(proof).pipe(
+    const proofJson = yield* Schema.encodeEffect(JsonTextSchema)(proof).pipe(
       Effect.orDie
     );
     yield* runMutation(refs.internal.contentRelease.proof.commit.commitProof, {

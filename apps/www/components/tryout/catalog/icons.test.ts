@@ -6,18 +6,17 @@ import {
   Mortarboard02Icon,
 } from "@hugeicons/core-free-icons";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
-import { Array as Arr, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr } from "effect";
 import {
   getTryoutExamIcon,
   getTryoutSubjectIcon,
   getTryoutTrackIcon,
 } from "@/components/tryout/catalog/icons";
 
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
-
 /** Serialize an icon definition for stable structural assertions. */
 function serializeIcon(icon: unknown) {
-  return encodeJson(icon);
+  return encodeJsonText(icon);
 }
 
 /** UTBK-SNBT subtests under their official names, in exam order. */
@@ -33,7 +32,7 @@ const SNBT_SECTIONS = [
 
 describe("try-out icons", () => {
   it("keeps visible exam selector options unique by icon", () => {
-    const icons = ["snbt", "tka"].map((key) =>
+    const icons = Arr.map(["snbt", "tka"], (key) =>
       serializeIcon(getTryoutExamIcon(key))
     );
 
@@ -45,10 +44,10 @@ describe("try-out icons", () => {
   });
 
   it("gives every UTBK-SNBT subtest its own icon", () => {
-    const icons = SNBT_SECTIONS.map((key) => getTryoutSubjectIcon(key));
+    const icons = Arr.map(SNBT_SECTIONS, (key) => getTryoutSubjectIcon(key));
 
     expect(icons).not.toContain(BulbIcon);
-    expect(Arr.dedupe(icons.map(serializeIcon)).length).toBe(
+    expect(Arr.dedupe(Arr.map(icons, serializeIcon)).length).toBe(
       SNBT_SECTIONS.length
     );
   });

@@ -1,5 +1,5 @@
 import { addDays, format, getHours, getMinutes, isToday, set } from "date-fns";
-import { DateTime } from "effect";
+import { Array as Arr, DateTime } from "effect";
 import type { Locale } from "next-intl";
 import { getLocale } from "@/lib/utils/date";
 
@@ -19,7 +19,7 @@ export function updateTime(timestamp: number, timeString: string) {
     return timestamp;
   }
 
-  const [hours, minutes] = timeString.split(":").map(Number);
+  const [hours, minutes] = Arr.map(timeString.split(":"), Number);
 
   if (!(Number.isFinite(hours) && Number.isFinite(minutes))) {
     return timestamp;

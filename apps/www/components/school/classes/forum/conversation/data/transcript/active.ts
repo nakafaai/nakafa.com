@@ -37,7 +37,7 @@ export function createActiveTranscriptModel({
     posts,
     ...(unreadCue === undefined ? {} : { unreadCue }),
   });
-  const postIds = posts.map((post) => post._id);
+  const postIds = Arr.map(posts, (post) => post._id);
   const rowIndexByPostId = HashMap.fromIterable(
     Arr.flatMap(rows, (row, index) =>
       row.type === "post" ? [Tuple.make(row.post._id, index)] : []

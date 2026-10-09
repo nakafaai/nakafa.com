@@ -1,5 +1,6 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { getSessionCookie } from "better-auth/cookies";
+import { Array as Arr } from "effect";
 import type { NextRequest } from "next/server";
 import { hasLocale } from "next-intl";
 
@@ -8,12 +9,15 @@ import { hasLocale } from "next-intl";
  * Convex functions and server data seams still own authorization.
  */
 export function readSchoolAuthRedirect(request: NextRequest) {
-  const routeSegments = request.nextUrl.pathname.split("/").filter(Boolean);
+  const routeSegments = Arr.filter(
+    request.nextUrl.pathname.split("/"),
+    Boolean
+  );
   const firstSegment = routeSegments[0];
   const hasLocalePrefix =
     firstSegment !== undefined && hasLocale(routing.locales, firstSegment);
   const schoolSegments = hasLocalePrefix
-    ? routeSegments.slice(1)
+    ? Arr.drop(routeSegments, 1)
     : routeSegments;
 
   if (schoolSegments[0] !== "school" || schoolSegments.length === 1) {

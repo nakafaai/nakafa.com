@@ -28,7 +28,7 @@ import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
@@ -69,7 +69,7 @@ export function NinaInput({
       return false;
     }
     startTransition(async () => {
-      hideSubmittedFiles(message.files?.map((file) => file.id) ?? []);
+      hideSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
       await admission;
     });
     return admission;
@@ -77,7 +77,7 @@ export function NinaInput({
 
   return (
     <PromptInput
-      accept={NinaFileType.literals.join(",")}
+      accept={Arr.join(NinaFileType.literals, ",")}
       maxFileSize={NINA_FILE_SIZE}
       maxFiles={NINA_FILE_COUNT}
       multiple
@@ -177,7 +177,7 @@ export function NinaSuggestions({
   ];
   return (
     <div className="flex flex-col gap-2 pb-4">
-      {suggestions.map((suggestion) => (
+      {Arr.map(suggestions, (suggestion) => (
         <Button
           aria-label={suggestion.prompt}
           className="group w-full justify-start font-normal shadow-none"

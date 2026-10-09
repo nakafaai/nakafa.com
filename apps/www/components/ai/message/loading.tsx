@@ -2,6 +2,7 @@
 
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { isToolUIPart } from "ai";
+import { Array as Arr } from "effect";
 
 import { useChat } from "@/components/ai/chat/context";
 import { useMessage } from "@/components/ai/message/context";
@@ -25,7 +26,8 @@ export function AiChatMessageLoading() {
 
   // Show loading when streaming but no text content yet
   if (busy && currentMessage.status !== "failed") {
-    const hasContent = currentMessage.parts.some(
+    const hasContent = Arr.some(
+      currentMessage.parts,
       (p) =>
         isToolUIPart(p) ||
         ((p.type === "text" || p.type === "reasoning") &&

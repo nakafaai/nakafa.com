@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { MutableList, Schema } from "effect";
 import type {
   Forum,
   ForumPost,
@@ -39,7 +39,10 @@ export function createConversationRows({
   posts: ForumPost[];
   unreadCue?: ConversationUnreadCue | null;
 }) {
-  const rows: ConversationRow[] = forum ? [{ type: "header" }] : [];
+  const rows = MutableList.make<ConversationRow>();
+  if (forum) {
+    MutableList.append(rows, { type: "header" });
+  }
   let previousDate: string | null = null;
   let hasInsertedUnreadSeparator = !unreadCue;
 
@@ -47,19 +50,19 @@ export function createConversationRows({
     const currentDate = new Date(post._creationTime).toDateString();
 
     if (currentDate !== previousDate) {
-      rows.push({ type: "date", value: post._creationTime });
+      MutableList.append(rows, { type: "date", value: post._creationTime });
       previousDate = currentDate;
     }
 
     if (!hasInsertedUnreadSeparator && unreadCue?.postId === post._id) {
-      rows.push({ ...unreadCue, type: "unread" });
+      MutableList.append(rows, { ...unreadCue, type: "unread" });
       hasInsertedUnreadSeparator = true;
     }
 
-    rows.push({ type: "post", post });
+    MutableList.append(rows, { type: "post", post });
   }
 
-  return rows;
+  return MutableList.toArray(rows);
 }
 
 /** Returns the final confirmed post id in one ordered transcript list. */

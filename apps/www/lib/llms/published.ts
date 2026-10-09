@@ -72,15 +72,18 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
       })
     : undefined;
 
-  return [
-    ...buildHeader({
-      description,
-      ...(source === undefined ? {} : { source }),
-      title,
-      url: `${BASE_URL}/${appLocale}/${publicPath}`,
-    }),
-    body,
-  ].join("\n");
+  return Arr.join(
+    [
+      ...buildHeader({
+        description,
+        ...(source === undefined ? {} : { source }),
+        title,
+        url: `${BASE_URL}/${appLocale}/${publicPath}`,
+      }),
+      body,
+    ],
+    "\n"
+  );
 });
 
 /** Reads one verified body-bearing artifact as agent-facing text data. */

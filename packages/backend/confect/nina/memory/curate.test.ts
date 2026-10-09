@@ -9,8 +9,9 @@ import { curateMemory } from "@repo/backend/confect/nina/memory/curate";
 import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
+import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -18,7 +19,6 @@ afterEach(() => {
 });
 
 const enable = Ref.getFunctionReference(refs.public.nina.memory.enable);
-const jsonCodec = Schema.fromJsonString(Schema.Unknown);
 
 /** A learner prompt, a way to curate it, and the stored memory. */
 async function fixture(prompt = "Aku kelas 12 dan mau ikut SNBT 2027.") {
@@ -46,9 +46,7 @@ async function fixture(prompt = "Aku kelas 12 dan mau ikut SNBT 2027.") {
 /** A curator model that answers every call with `changes`. */
 function curator(changes: object) {
   const model = new MockLanguageModelV4({
-    doGenerate: providerStep([
-      { type: "text", text: Schema.encodeSync(jsonCodec)(changes) },
-    ]),
+    doGenerate: providerStep([{ type: "text", text: encodeJsonText(changes) }]),
   });
   provider.languageModel.mockReturnValue(model);
   return model;
@@ -74,7 +72,7 @@ describe("Nina memory curation", () => {
     await f.curate();
     await f.curate();
     const [first, second] = Arr.map(model.doGenerateCalls, (call) =>
-      Schema.encodeSync(jsonCodec)(call.prompt)
+      encodeJsonText(call.prompt)
     );
     expect(first).toContain("Aku kelas 12 dan mau ikut SNBT 2027.");
     expect(first).toContain("Known facts: none");
@@ -142,7 +140,7 @@ describe("Nina memory curation", () => {
             content: [
               {
                 type: "text",
-                text: Schema.encodeSync(jsonCodec)({
+                text: encodeJsonText({
                   forget: [],
                   remember: [],
                   update: [],

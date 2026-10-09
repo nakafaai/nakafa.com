@@ -33,7 +33,8 @@ import {
 } from "@repo/backend/test/content/publication";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
-import { Effect, Layer, Schema } from "effect";
+import { JsonTextSchema } from "@repo/utilities/json";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   readFeaturedTryout,
@@ -124,8 +125,6 @@ beforeEach(() => {
   transportMock.mockReset();
   vi.stubGlobal("fetch", transportMock);
 });
-/** Plain JSON codec: the body is the same bytes JSON.stringify writes, with every key kept. */
-const plainJson = Schema.fromJsonString(Schema.Unknown);
 
 describe("immutable try-out application catalog", () => {
   it.effect.each(APP_LOCALE_CODES)(
@@ -210,7 +209,7 @@ describe("immutable try-out application catalog", () => {
             id: "Matematika Wajib",
             de: "Pflichtmathematik",
           }[locale],
-          alternates: APP_LOCALE_CODES.map((appLocale) => ({
+          alternates: Arr.map(APP_LOCALE_CODES, (appLocale) => ({
             appLocale,
             publicPath: TRACK,
           })),
@@ -306,7 +305,7 @@ describe("immutable try-out application catalog", () => {
           )
         );
         assert.isNotNull(found);
-        const body = yield* Schema.encodeEffect(plainJson)(found);
+        const body = yield* Schema.encodeEffect(JsonTextSchema)(found);
         const response = new Response(body, {
           headers: {
             "content-type": "application/json",

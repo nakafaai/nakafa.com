@@ -4,6 +4,7 @@ import {
   projectMdxForAgentMarkdown,
   readMdxBody,
 } from "@repo/contents/llms/mdx";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 describe("authored MDX body", () => {
@@ -273,9 +274,8 @@ Fragment child with <InlineMath math="x" />.
           label: `point-${index}`,
           value: index,
         }));
-        const encodedData = yield* Schema.encodeUnknownEffect(
-          Schema.fromJsonString(Schema.Unknown)
-        )(longData);
+        const encodedData =
+          yield* Schema.encodeUnknownEffect(JsonTextSchema)(longData);
 
         const markdown = yield* projectMdxForAgentMarkdown(`
 <FutureScienceScene

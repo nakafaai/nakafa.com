@@ -4,6 +4,7 @@ import {
   Rocket01Icon,
   TimeScheduleIcon,
 } from "@hugeicons/core-free-icons";
+import { Array as Arr, Option } from "effect";
 
 export const materialStatusList = [
   {
@@ -38,6 +39,9 @@ export type MaterialStatusValue = (typeof materialStatusList)[number]["value"];
 export function getMaterialStatus(value: MaterialStatusValue) {
   return (
     // Default to published if no status is found
-    materialStatusList.find((s) => s.value === value) ?? materialStatusList[0]
+    Option.getOrElse(
+      Arr.findFirst(materialStatusList, (s) => s.value === value),
+      () => materialStatusList[0]
+    )
   );
 }

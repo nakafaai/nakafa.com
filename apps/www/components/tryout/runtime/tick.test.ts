@@ -1,14 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
-import { MutableHashSet } from "effect";
+import { Array as Arr, MutableHashSet } from "effect";
 import { notifyTickListeners } from "@/components/tryout/runtime/tick";
 
 describe("tryout runtime tick", () => {
   it("calls every listener once per tick, in subscription order", () => {
     const listeners = MutableHashSet.empty<() => void>();
-    const calls: string[] = [];
+    let calls: string[] = [];
     for (const name of ["first", "second", "third"]) {
       MutableHashSet.add(listeners, () => {
-        calls.push(name);
+        calls = Arr.append(calls, name);
       });
     }
 
@@ -19,17 +19,17 @@ describe("tryout runtime tick", () => {
 
   it("skips a listener that an earlier listener removed during the same tick", () => {
     const listeners = MutableHashSet.empty<() => void>();
-    const calls: string[] = [];
+    let calls: string[] = [];
     const removed = () => {
-      calls.push("removed");
+      calls = Arr.append(calls, "removed");
     };
     MutableHashSet.add(listeners, () => {
-      calls.push("remover");
+      calls = Arr.append(calls, "remover");
       MutableHashSet.remove(listeners, removed);
     });
     MutableHashSet.add(listeners, removed);
     MutableHashSet.add(listeners, () => {
-      calls.push("kept");
+      calls = Arr.append(calls, "kept");
     });
 
     notifyTickListeners(listeners);
@@ -39,12 +39,12 @@ describe("tryout runtime tick", () => {
 
   it("first calls a listener added during a tick on the next tick", () => {
     const listeners = MutableHashSet.empty<() => void>();
-    const calls: string[] = [];
+    let calls: string[] = [];
     const added = () => {
-      calls.push("added");
+      calls = Arr.append(calls, "added");
     };
     MutableHashSet.add(listeners, () => {
-      calls.push("adder");
+      calls = Arr.append(calls, "adder");
       MutableHashSet.add(listeners, added);
     });
 

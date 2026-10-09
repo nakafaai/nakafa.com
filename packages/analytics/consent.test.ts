@@ -10,6 +10,7 @@ import {
   hasBrowserPrivacySignal,
   resolveAnalyticsConsentState,
 } from "@repo/analytics/consent";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Option, Schema } from "effect";
 
 const grantedAnonymousConsent = Schema.decodeSync(
@@ -42,9 +43,7 @@ const encodeConsentRecord = Schema.encodeSync(
 );
 
 /** Encodes stale or malformed JSON that the production codec must reject. */
-const encodeUnvalidatedJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const encodeUnvalidatedJson = Schema.encodeUnknownSync(JsonTextSchema);
 
 describe("analytics consent contract", () => {
   effectIt.effect("round-trips the current anonymous consent record", () =>

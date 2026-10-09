@@ -15,6 +15,7 @@ import {
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { classVisibilityList } from "@/components/school/classes/add/schema";
 
@@ -57,7 +58,7 @@ export function HeaderAddVisibilityField({
           }
         />
         <DropdownMenuContent align="start" className="w-(--anchor-width)">
-          {classVisibilityList.map((visibility) => (
+          {Arr.map(classVisibilityList, (visibility) => (
             <DropdownMenuItem
               className="cursor-pointer"
               key={visibility}

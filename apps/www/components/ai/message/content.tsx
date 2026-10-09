@@ -1,5 +1,6 @@
 "use client";
 
+import { Array as Arr } from "effect";
 import { useChat } from "@/components/ai/chat/context";
 import { useMessage } from "@/components/ai/message/context";
 import { groupMessageParts } from "@/components/ai/message/group";
@@ -17,16 +18,16 @@ export function AiChatMessageContent() {
 
   return (
     <MessageSections>
-      {groupMessageParts(parts).map((group) => (
+      {Arr.map(groupMessageParts(parts), (group) => (
         <MessageSection key={group.key} kind={group.kind}>
-          {group.entries.map((entry) =>
+          {Arr.map(group.entries, (entry) =>
             entry.type === "answer" ? (
               <AiMessageAnswer
                 key={entry.key}
                 part={entry.part}
                 partKey={entry.key}
               >
-                {entry.trailing.map((trailing) => (
+                {Arr.map(entry.trailing, (trailing) => (
                   <AiMessagePart
                     key={trailing.key}
                     part={trailing.part}

@@ -11,12 +11,11 @@ import {
   testStoredReachability,
 } from "@repo/backend/test/content/release";
 import { insertTestState } from "@repo/backend/test/content/state";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Schema } from "effect";
 
 /** Names one manifest field a retired content contract still carried. */
 const RETIRED_MANIFEST_FIELD = "rendererContractVersion";
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** A JSON object whose top-level fields are kept as stored, so the retired payload keeps every key. */
 const StoredObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
 const decodeStoredObject = Schema.decodeUnknownSync(
@@ -89,7 +88,7 @@ export async function retireStoredAnchorPayload(
     retired.manifest
   );
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: encodeJson({
+    releaseJson: encodeJsonText({
       ...retired,
       manifest: { ...manifest, [RETIRED_MANIFEST_FIELD]: "1.0.0" },
     }),
@@ -143,7 +142,7 @@ export async function insertAnchoredActiveRelease(
     throw new Error("Expected the anchored active release fixture.");
   }
   await ctx.db.patch("contentReleases", activeId, {
-    receiptJson: encodeJson(
+    receiptJson: encodeJsonText(
       makePublicationReceipt(
         Schema.decodeSync(contentReleases.Doc)(active),
         Schema.decodeSync(Schema.fromJsonString(SignedContentReleaseSchema))(

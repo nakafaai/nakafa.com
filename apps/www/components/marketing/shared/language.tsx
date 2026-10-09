@@ -13,6 +13,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
@@ -51,7 +52,7 @@ export function Language({ compact = false }: { compact?: boolean }) {
         className="w-max max-w-[calc(100vw-2rem)]"
       >
         <DropdownMenuGroup>
-          {languages.map((language) => (
+          {Arr.map(languages, (language) => (
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}

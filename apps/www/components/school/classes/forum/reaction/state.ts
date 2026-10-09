@@ -3,6 +3,7 @@ import type {
   forumReactionUsersValidator,
 } from "@repo/backend/confect/classes/forums/validators";
 import type { schoolClassReactionCountValidator } from "@repo/backend/confect/classes/schema";
+import { Array as Arr, Option } from "effect";
 
 type ReactionCount = typeof schoolClassReactionCountValidator.Type;
 type ReactionPreview = typeof forumReactionUsersValidator.Type;
@@ -18,18 +19,22 @@ function updateCounts(
   emoji: string,
   added: boolean
 ) {
-  const current = counts.find((reaction) => reaction.emoji === emoji);
-  const nextCount = (current?.count ?? 0) + (added ? 1 : -1);
+  const current = Arr.findFirst(counts, (reaction) => reaction.emoji === emoji);
+  const currentCount = Option.match(current, {
+    onNone: () => 0,
+    onSome: (reaction) => reaction.count,
+  });
+  const nextCount = currentCount + (added ? 1 : -1);
 
   if (nextCount <= 0) {
-    return counts.filter((reaction) => reaction.emoji !== emoji);
+    return Arr.filter(counts, (reaction) => reaction.emoji !== emoji);
   }
 
-  if (!current) {
+  if (Option.isNone(current)) {
     return [...counts, { count: nextCount, emoji }];
   }
 
-  return counts.map((reaction) =>
+  return Arr.map(counts, (reaction) =>
     reaction.emoji === emoji ? { ...reaction, count: nextCount } : reaction
   );
 }
@@ -69,14 +74,21 @@ function updatePreviews(
   reactorName: string | undefined,
   added: boolean
 ) {
-  const current = previews.find((reaction) => reaction.emoji === emoji);
-  const nextCount = (current?.count ?? 0) + (added ? 1 : -1);
+  const current = Arr.findFirst(
+    previews,
+    (reaction) => reaction.emoji === emoji
+  );
+  const currentCount = Option.match(current, {
+    onNone: () => 0,
+    onSome: (reaction) => reaction.count,
+  });
+  const nextCount = currentCount + (added ? 1 : -1);
 
   if (nextCount <= 0) {
-    return previews.filter((reaction) => reaction.emoji !== emoji);
+    return Arr.filter(previews, (reaction) => reaction.emoji !== emoji);
   }
 
-  if (!current) {
+  if (Option.isNone(current)) {
     return [
       ...previews,
       {
@@ -87,7 +99,7 @@ function updatePreviews(
     ];
   }
 
-  return previews.map((reaction) =>
+  return Arr.map(previews, (reaction) =>
     reaction.emoji === emoji
       ? {
           ...reaction,
@@ -112,7 +124,7 @@ export function toggleReactionState<T extends ReactionState>(
   const added = !state.myReactions.includes(emoji);
   const myReactions = added
     ? [...state.myReactions, emoji]
-    : state.myReactions.filter((reaction) => reaction !== emoji);
+    : Arr.filter(state.myReactions, (reaction) => reaction !== emoji);
   const reactionCounts = updateCounts(state.reactionCounts, emoji, added);
 
   if (!state.reactionUsers) {

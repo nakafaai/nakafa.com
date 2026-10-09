@@ -19,8 +19,8 @@ type DependencyHold = typeof ApprovedSpecsSchema.Type &
   typeof DependencyNameSchema.Type;
 
 /** The exact package manager the root manifest pins for every checkout and CI job. */
-export const PACKAGE_MANAGER = "pnpm@11.28.4";
-export const CONTRACT_PACKAGE_VERSION = "0.47.0";
+export const PACKAGE_MANAGER = "pnpm@11.28.5";
+export const CONTRACT_PACKAGE_VERSION = "0.47.2";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.1";
 /**
@@ -45,7 +45,7 @@ export const VITEST_COHORT_VERSION = "5.0.3";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.2.1",
-  ai: "7.0.130",
+  ai: "7.0.135",
 } as const;
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
@@ -275,7 +275,7 @@ export const REGISTRY_REVIEWS = [
   ["node@24", "24.21.0", "The repository supports the Node 24 runtime line."],
   [
     "pnpm@latest",
-    "12.9.1",
+    "12.10.1",
     "pnpm 12 records its own packages in a second YAML document at the top of the lockfile. OSV Scanner 2.6.0 reads both documents and Turborepo hashes each workspace as before, but GitHub's dependency graph reads only the first (dependabot/dependabot-core#15904), so it would report no application dependencies and close Aksara's Dependabot alerts. The one setting that keeps a single document, `pmOnFail: ignore`, also stops pnpm from enforcing the pinned version. pnpm 12 moves in both repositories once GitHub reads both documents.",
   ],
   [

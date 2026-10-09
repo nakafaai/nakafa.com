@@ -1,4 +1,4 @@
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import "server-only";
 
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
@@ -18,7 +18,7 @@ export function renderTryoutResponseLabels(
   response: QuestionResponse
 ): Readonly<Record<string, ReactNode>> {
   return Rec.fromEntries(
-    readLabelEntries(responseId, response).map(([id, label]) => [
+    Arr.map(readLabelEntries(responseId, response), ([id, label]) => [
       id,
       <MarkdownContent
         className="wrap-anywhere h-auto whitespace-normal"
@@ -37,12 +37,13 @@ function readLabelEntries(
   response: QuestionResponse
 ): readonly LabelEntry[] {
   if (response.kind === "category") {
-    return response.statements.flatMap((statement) => [
+    return Arr.flatMap(response.statements, (statement) => [
       [
         statementLabelId(responseId, statement.statementKey),
         statement.label,
       ] as const,
-      ...response.categories.map(
+      ...Arr.map(
+        response.categories,
         (category) =>
           [
             categoryLabelId(
@@ -58,7 +59,8 @@ function readLabelEntries(
   if (response.kind === "short-answer" || response.kind === "rubric") {
     return [];
   }
-  return response.options.map(
+  return Arr.map(
+    response.options,
     (option) =>
       [optionLabelId(responseId, option.optionKey), option.label] as const
   );

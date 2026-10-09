@@ -22,6 +22,7 @@ import { testPublicationScope } from "@repo/backend/test/content/release";
 import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { recomputeContentProof } from "@repo/backend/test/content/verify";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
@@ -30,10 +31,6 @@ const release = testSignedRelease(testEmptyManifest(releaseId));
 const commit = internal.contentRelease.proof.commit.commitProof;
 const encodeProofJson = Schema.encodeSync(
   Schema.fromJsonString(ReleaseVerificationEvidenceSchema)
-);
-/** The text JSON.stringify writes, which the commit compares byte for byte. */
-const encodePlainJson = Schema.encodeSync(
-  Schema.fromJsonString(Schema.Unknown)
 );
 const encodeRendererJson = Schema.encodeSync(
   Schema.fromJsonString(RendererManifestEnvelopeSchema)
@@ -54,7 +51,7 @@ async function prepare() {
     )
   );
   const proof = await recomputeContentProof(t, release.manifestHash, releaseId);
-  return { proof, proofJson: encodePlainJson(proof), t };
+  return { proof, proofJson: encodeJsonText(proof), t };
 }
 
 /** Selects the unique technical release for deliberate durability corruption. */

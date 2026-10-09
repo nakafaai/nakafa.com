@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import {
@@ -94,7 +94,7 @@ export function buildLlmsListingIndexText({
   }
 
   return renderLlmsIndexText({
-    lines: entries.map(formatLlmsEntryLine),
+    lines: Arr.map(entries, formatLlmsEntryLine),
     summary: `For AI agents: verified ${localeLabel} ${sectionLabel.toLowerCase()} links for ${route}. Follow page-level \`.md\` links for clean markdown content.`,
     title,
   });
@@ -124,7 +124,7 @@ export function buildLlmsPageIndexText({
   }
 
   return renderLlmsIndexText({
-    lines: entries.map(formatLlmsEntryLine),
+    lines: Arr.map(entries, formatLlmsEntryLine),
     summary: `For AI agents: bounded verified links for ${localeLabel} ${sectionLabel.toLowerCase()} page ${page}. Use \`.md\` links when available for agent-friendly markdown.`,
     title: `Nakafa ${localeLabel} ${sectionLabel} Page ${page}`,
   });
@@ -148,19 +148,16 @@ function buildSectionPageMapLines({
 
   const pagePath = `${BASE_URL}/llms/${locale}/${section}/page`;
   const lastPage = pageCount - 1;
-  const lines = [
+  const lastPageLines =
+    lastPage > 0
+      ? [
+          `- [${sectionLabel} page ${lastPage}](${pagePath}/${lastPage}/llms.txt): last bounded content page.`,
+        ]
+      : [];
+
+  return [
     `- [${sectionLabel} page 0](${pagePath}/0/llms.txt): first bounded content page.`,
+    ...lastPageLines,
+    `- Page URL pattern: \`${pagePath}/{page}/llms.txt\`, where \`page\` is an integer from 0 through ${lastPage}.`,
   ];
-
-  if (lastPage > 0) {
-    lines.push(
-      `- [${sectionLabel} page ${lastPage}](${pagePath}/${lastPage}/llms.txt): last bounded content page.`
-    );
-  }
-
-  lines.push(
-    `- Page URL pattern: \`${pagePath}/{page}/llms.txt\`, where \`page\` is an integer from 0 through ${lastPage}.`
-  );
-
-  return lines;
 }

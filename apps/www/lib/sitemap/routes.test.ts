@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
 const articleMocks = vi.hoisted(() => ({
@@ -198,7 +198,7 @@ describe("sitemap route pages", () => {
         materialMocks.readPublishedMaterialSitemap.mockImplementation(
           (locale, buckets: string[]) =>
             Effect.succeed({
-              routes: buckets.map((bucket) => ({
+              routes: Arr.map(buckets, (bucket) => ({
                 lastModified: "2026-07-25",
                 publicPath: `subjects/mathematics/lesson-${locale}-${bucket}`,
               })),
@@ -232,19 +232,20 @@ describe("sitemap route pages", () => {
         materialMocks.readPublishedMaterialSitemap.mockImplementation(
           (_locale, batch: string[]) =>
             Effect.succeed({
-              routes: batch.map((bucket) => ({
+              routes: Arr.map(batch, (bucket) => ({
                 publicPath: `subjects/test/${bucket}`,
               })),
             })
         );
         expect(yield* readPaths("material_en_p0")).toEqual(
-          buckets.map((bucket) => `/subjects/test/${bucket}`)
+          Arr.map(buckets, (bucket) => `/subjects/test/${bucket}`)
         );
         expect(
           materialMocks.readPublishedMaterialSitemap
         ).toHaveBeenCalledTimes(Math.ceil(32 / MATERIAL_SITEMAP_BUCKET_LIMIT));
         expect(
-          materialMocks.readPublishedMaterialSitemap.mock.calls.every(
+          Arr.every(
+            materialMocks.readPublishedMaterialSitemap.mock.calls,
             ([, batch]) => batch.length <= MATERIAL_SITEMAP_BUCKET_LIMIT
           )
         ).toBe(true);
@@ -309,7 +310,7 @@ describe("sitemap route pages", () => {
               batch.length === 1
                 ? null
                 : {
-                    routes: batch.map((bucket) => ({
+                    routes: Arr.map(batch, (bucket) => ({
                       publicPath: `subjects/test/${bucket}`,
                     })),
                   }
@@ -540,7 +541,7 @@ const readPaths = Effect.fn("www.sitemap.test.paths")(function* (
   pageId: string
 ) {
   const page = yield* readSitemapRoutePage(pageId);
-  return page.routes.map((route) => route.path);
+  return Arr.map(page.routes, (route) => route.path);
 });
 
 /** Reads one typed sitemap route failure. */

@@ -1,4 +1,5 @@
 import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/notes";
+import { Array as Arr } from "effect";
 
 interface Props {
   id: string;
@@ -22,7 +23,7 @@ export function QuranTranslation({
         className={proseClassName ?? "text-pretty leading-relaxed"}
         data-quran-translation
       >
-        {translation.segments.map((segment) =>
+        {Arr.map(translation.segments, (segment) =>
           segment.kind === "text" ? (
             <span key={`text:${segment.offset}`}>{segment.value}</span>
           ) : (
@@ -49,7 +50,7 @@ export function QuranTranslation({
           className="space-y-2 text-muted-foreground text-sm"
         >
           <ol className="space-y-2">
-            {translation.notes.map((note) => (
+            {Arr.map(translation.notes, (note) => (
               <li
                 className="grid scroll-mt-44 grid-cols-[auto_1fr] gap-2 text-pretty leading-relaxed"
                 data-quran-translation-note

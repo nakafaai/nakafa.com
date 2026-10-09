@@ -16,6 +16,7 @@ import {
   MODEL_BUILD_PAGE_ROWS,
   type ModelBuildPage,
 } from "@repo/backend/confect/contentRelease/models/spec";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { compareValues } from "convex/values";
 import { Array as Arr, Effect, Option, Schema, Stream, Struct } from "effect";
 
@@ -27,8 +28,6 @@ const CursorSchema = Schema.fromJsonString(
     version: Schema.Literal(1),
   })
 );
-/** Writes the cursor as plain JSON text; CursorSchema remains its decoding contract. */
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 type ModelRow = Docs[
   | "articleCatalog"
   | "articleCategories"

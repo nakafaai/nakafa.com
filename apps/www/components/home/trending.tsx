@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import "server-only";
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import contents from "@repo/backend/confect/_generated/refs/contents";
@@ -62,7 +62,7 @@ export async function HomeTrending({ locale }: { locale: Locale }) {
         <HugeIcons className="size-4" icon={ArrowDown02Icon} />
       </h2>
       <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-        {data.map((subject) => (
+        {Arr.map(data, (subject) => (
           <MaterialRow
             key={`${subject.content_id}:${subject.contextKey}`}
             material={{

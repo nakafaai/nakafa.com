@@ -2,7 +2,7 @@ import { CapabilityOutputSchema } from "@repo/backend/confect/nina/capability/pr
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { researchMaxSources } from "@repo/backend/confect/nina/research/schema";
 import { type DynamicToolUIPart, getToolName, type ToolUIPart } from "ai";
-import { Result, Schema } from "effect";
+import { Array as Arr, Result, Schema } from "effect";
 
 /**
  * Validates one native Agent invocation at its rendering seam and never infers
@@ -38,8 +38,10 @@ export function readInvocation(
     sourceLimit:
       output?.failure === "sourceLimit" ? researchMaxSources : undefined,
     denied: part.state === "output-denied" || output?.failure === "denied",
-    failures: artifacts.filter((artifact) => artifact.data.status === "error")
-      .length,
+    failures: Arr.filter(
+      artifacts,
+      (artifact) => artifact.data.status === "error"
+    ).length,
     running: unfinished && !settled,
     stopped: unfinished && settled,
   };

@@ -22,7 +22,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -143,7 +143,7 @@ function ChatList({
   }
   return (
     <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-      {results.map((chat) => {
+      {Arr.map(results, (chat) => {
         const isPrivate = chat.visibility === "private";
         return (
           <div

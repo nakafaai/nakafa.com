@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { getArticleCategoryIcon } from "@/components/articles/category";
 import { holyMenu } from "@/components/sidebar/data/holy";
@@ -30,12 +31,12 @@ export function NavExplore({
   const tCommon = useTranslations("Common");
   const tHoly = useTranslations("Holy");
   const items = [
-    ...holyMenu.map((item) => ({
+    ...Arr.map(holyMenu, (item) => ({
       href: item.href,
       icon: item.icon,
       label: tHoly(item.title),
     })),
-    ...articleNavigation.map((item) => ({
+    ...Arr.map(articleNavigation, (item) => ({
       href: item.href,
       icon: getArticleCategoryIcon(item.category),
       label: item.title,
@@ -47,7 +48,7 @@ export function NavExplore({
       <SidebarGroupLabel>{tCommon("explore")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
+          {Arr.map(items, (item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 isActive={pathname.includes(item.href)}

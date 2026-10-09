@@ -1,11 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Ref, Result } from "effect";
+import { Effect, Fiber, Ref, Result } from "effect";
 import {
   HttpClient,
   HttpClientError,
   type HttpClientRequest,
   HttpClientResponse,
 } from "effect/http";
+import { TestClock } from "effect/testing";
 import { requestNakafaApi } from "#cli/client";
 
 const problem = {
@@ -208,5 +209,23 @@ describe("Nakafa API client", () => {
           "NetworkError"
         );
       })
+  );
+  it.effect("fails with a network error at the 10 second deadline", () =>
+    Effect.gen(function* () {
+      const fiber = yield* Effect.forkChild(
+        execute(
+          HttpClient.make(() => Effect.never),
+          "https://api.nakafa.com"
+        ).pipe(Effect.flip)
+      );
+
+      yield* TestClock.adjust("10 seconds");
+
+      const failure = yield* Fiber.join(fiber);
+      expect(failure._tag).toBe("NetworkError");
+      expect(failure.message).toBe(
+        "Nakafa did not answer https://api.nakafa.com/v1/health within 10 seconds."
+      );
+    })
   );
 });

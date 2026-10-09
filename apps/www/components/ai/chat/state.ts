@@ -1,5 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Array as Arr } from "effect";
 
 type Chat = Docs["chats"];
 type ChatPatch = Partial<Pick<Chat, "title" | "visibility">>;
@@ -10,14 +11,14 @@ export function patchChatPage(
   chatId: Id<"chats">,
   patch: ChatPatch
 ) {
-  return page.map((chat) =>
+  return Arr.map(page, (chat) =>
     chat._id === chatId ? { ...chat, ...patch } : chat
   );
 }
 
 /** Remove one chat from an immutable query page. */
 export function removeChatFromPage(page: Chat[], chatId: Id<"chats">) {
-  return page.filter((chat) => chat._id !== chatId);
+  return Arr.filter(page, (chat) => chat._id !== chatId);
 }
 
 /**

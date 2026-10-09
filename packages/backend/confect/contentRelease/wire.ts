@@ -22,16 +22,13 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import type { SignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/spec";
-import { Schema } from "effect";
-
-/** Plain JSON text codec that writes the same bytes as JSON.stringify. */
-const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
+import { encodeJsonText } from "@repo/utilities/json";
 
 /** Stores one signed release without introducing a second wire canonicalizer. */
 export function encodeReleaseJson(
   release: typeof SignedContentReleaseSchema.Type
 ) {
-  return Schema.encodeSync(UnknownJsonSchema)(release);
+  return encodeJsonText(release);
 }
 
 /** Stores one item using the canonicalizer owned by Aksara contracts. */
@@ -60,7 +57,7 @@ export function encodeProjectionJson(projection: ContentProjection) {
 export function encodeSnapshotJson(
   snapshot: typeof ContentSnapshotManifestSchema.Type
 ) {
-  return Schema.encodeSync(UnknownJsonSchema)(snapshot);
+  return encodeJsonText(snapshot);
 }
 
 /** Stores one structured row through the contract-owned canonicalizer. */
@@ -74,12 +71,12 @@ export function encodeSnapshotRowJson(
 export function encodeRendererJson(
   renderer: typeof RendererManifestEnvelopeSchema.Type
 ) {
-  return Schema.encodeSync(UnknownJsonSchema)(renderer);
+  return encodeJsonText(renderer);
 }
 
 /** Stores one schema-decoded signed runtime bundle without a mirror format. */
 export function encodeTryoutRuntimeBundleJson(
   bundle: SignedTryoutRuntimeBundle
 ) {
-  return Schema.encodeSync(UnknownJsonSchema)(bundle);
+  return encodeJsonText(bundle);
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import {
   getForYouNavigationHref,
   getForYouNavigationItems,
@@ -6,7 +7,7 @@ import {
 
 describe("sidebar navigation", () => {
   it("returns the shared primary actions in display order", () => {
-    expect(getForYouNavigationItems().map((item) => item.id)).toEqual([
+    expect(Arr.map(getForYouNavigationItems(), (item) => item.id)).toEqual([
       "subject",
       "tryOut",
       "askNina",

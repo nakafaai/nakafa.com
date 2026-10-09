@@ -5,6 +5,7 @@ import {
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { Fragment } from "react";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
@@ -26,7 +27,7 @@ export function TryoutCountdown({ expiresAt }: { expiresAt: number }) {
     <section className="flex flex-col items-center gap-3 rounded-xl border bg-card p-5 shadow-sm [--number-flow-mask-height:0.125em]">
       <NumberFormatGroup>
         <div className="items-baseline-last flex justify-center gap-2 sm:gap-3">
-          {segments.map((segment, index) => (
+          {Arr.map(segments, (segment, index) => (
             <Fragment key={segment.label}>
               <div className="grid gap-1 text-center">
                 <span className="text-muted-foreground text-xs uppercase tracking-wide">

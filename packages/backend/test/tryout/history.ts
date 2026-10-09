@@ -23,17 +23,14 @@ import {
 } from "@repo/backend/test/content/proof";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   Effect,
   MutableList,
   Order,
   Record as Rec,
-  Schema,
 } from "effect";
-
-/** Plain codec whose output equals JSON.stringify, keeping the legacy row and hash text exact. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Rebuilds a technical fixture using the exact choices-era placement hash format. */
 async function retainChoicesSnapshot(
@@ -70,7 +67,7 @@ async function retainChoicesSnapshot(
     }
     const { response, languagePolicy, ...identity } = original.record.row;
     const row = { ...identity, choices: response.options };
-    const canonical = encodeJson(
+    const canonical = encodeJsonText(
       Rec.fromEntries(
         Arr.sort(
           Rec.toEntries<string, unknown>(row),
@@ -89,7 +86,7 @@ async function retainChoicesSnapshot(
     digest.update(`${canonical}\0${rowHash}\n`);
     MutableList.append(records, {
       stored,
-      rowJson: encodeJson({
+      rowJson: encodeJsonText({
         family: "tryout",
         rowKind: "placement",
         record: { row, rowHash },
@@ -137,7 +134,7 @@ async function retainChoicesSnapshot(
   });
   await ctx.db.patch(storedSnapshot._id, {
     snapshotId: snapshot.snapshotId,
-    snapshotJson: encodeJson({ family: "tryout", manifest: snapshot }),
+    snapshotJson: encodeJsonText({ family: "tryout", manifest: snapshot }),
   });
   for (const record of MutableList.toArray(records)) {
     await ctx.db.patch(record.stored._id, {
@@ -148,7 +145,7 @@ async function retainChoicesSnapshot(
   }
   await ctx.db.patch(runtime._id, {
     bundleHash: bundle.bundleHash,
-    bundleJson: encodeJson(bundle),
+    bundleJson: encodeJsonText(bundle),
     snapshotId: snapshot.snapshotId,
     sourceManifestHash: bundle.payload.sourceManifestHash,
   });

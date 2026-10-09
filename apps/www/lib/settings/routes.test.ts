@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import {
   getUserSettingsSection,
   isUserSettingsPath,
@@ -8,7 +9,10 @@ import {
 describe("user settings routes", () => {
   it("declares the account and billing sections in sidebar order", () => {
     expect(
-      userSettingsSections.map((section) => [section.href, section.labelKey])
+      Arr.map(userSettingsSections, (section) => [
+        section.href,
+        section.labelKey,
+      ])
     ).toEqual([
       ["/user/settings", "account"],
       ["/user/settings/subscriptions", "billing"],

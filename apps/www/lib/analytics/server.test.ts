@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   scheduleCurrentServerExceptionCapture,
   scheduleServerExceptionCapture,
@@ -48,7 +48,7 @@ describe("request-time server exception reporting", () => {
       new Headers({ "user-agent": userAgent })
     );
     analyticsMocks.after.mockImplementation((task) => {
-      analyticsMocks.tasks.push(task);
+      analyticsMocks.tasks = Arr.append(analyticsMocks.tasks, task);
     });
     analyticsMocks.isServerExceptionReportingEnabled.mockReturnValue(true);
   });

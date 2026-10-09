@@ -1,7 +1,8 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { type Duration, Effect, Fiber, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { type Duration, Effect, Fiber } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import { readSessionToken, SessionTokenUnavailable } from "@/lib/auth/token";
@@ -9,7 +10,6 @@ import { readSessionToken, SessionTokenUnavailable } from "@/lib/auth/token";
 const SITE_URL = "https://example.convex.site";
 const TOKEN_URL = "https://example.convex.site/api/auth/convex/token";
 const SESSION_COOKIE = "better-auth.session_token=session-value";
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** One fetch double for the whole file, provided to the module's own client. */
 const fetcher = vi.fn<typeof fetch>();
 
@@ -130,9 +130,9 @@ describe("readSessionToken", () => {
       expect(error).toStrictEqual(
         new SessionTokenUnavailable({ reason: "status", status: 503 })
       );
-      expect(encodeJson(error)).not.toContain("private-body-value");
-      expect(encodeJson(error)).not.toContain("private-header-value");
-      expect(encodeJson(error)).not.toContain("session-value");
+      expect(encodeJsonText(error)).not.toContain("private-body-value");
+      expect(encodeJsonText(error)).not.toContain("private-header-value");
+      expect(encodeJsonText(error)).not.toContain("session-value");
       expect(fetcher).toHaveBeenCalledTimes(3);
     })
   );

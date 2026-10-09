@@ -11,7 +11,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/page";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
@@ -67,13 +67,13 @@ export const readPublishedPageCatalog = Effect.fn(
   const projections = yield* Effect.forEach(result.projectionJson, (source) =>
     decodePublishedPageJson(source, identity)
   );
-  const collision = projections.find(({ appLocale, publicPath }) =>
+  const collision = Arr.findFirst(projections, ({ appLocale, publicPath }) =>
     isReservedPagePath(appLocale, publicPath)
   );
-  if (collision) {
+  if (Option.isSome(collision)) {
     return yield* new PublishedProjectionError({
-      appLocale: collision.appLocale,
-      publicPath: collision.publicPath,
+      appLocale: collision.value.appLocale,
+      publicPath: collision.value.publicPath,
     });
   }
   return {
@@ -97,15 +97,17 @@ export async function getPublishedPageCatalog() {
 export const verifyPublishedPageCatalog = Effect.fn(
   "NakafaContent.verifyPublishedPageCatalog"
 )(function* (catalog: PublishedPageCatalog, page: PublishedPageRead) {
-  const counterparts = catalog.projections.filter(
+  const counterparts = Arr.filter(
+    catalog.projections,
     ({ pageKey }) => pageKey === page.projection.pageKey
   );
-  const current = counterparts.find(
+  const current = Arr.findFirst(
+    counterparts,
     ({ appLocale }) => appLocale === page.projection.appLocale
   );
   if (
-    !current ||
-    canonicalizePublicPageProjection(current) !==
+    Option.isNone(current) ||
+    canonicalizePublicPageProjection(current.value) !==
       canonicalizePublicPageProjection(page.projection)
   ) {
     return yield* new PublishedProjectionError({
@@ -129,27 +131,30 @@ export const readPublishedPageLocalePath = Effect.fn(
   readonly publicPath: string;
 }) {
   const catalog = yield* readPublishedPageCatalog();
-  const current = catalog.projections.find(
+  const current = Arr.findFirst(
+    catalog.projections,
     (projection) =>
       projection.appLocale === currentLocale &&
       projection.publicPath === publicPath
   );
-  if (!current) {
+  if (Option.isNone(current)) {
     return {
       kind: "unmanaged",
     } satisfies PublishedPageLocalePath;
   }
-  const target = catalog.projections.find(
+  const target = Arr.findFirst(
+    catalog.projections,
     (projection) =>
-      projection.appLocale === locale && projection.pageKey === current.pageKey
+      projection.appLocale === locale &&
+      projection.pageKey === current.value.pageKey
   );
-  if (!target) {
+  if (Option.isNone(target)) {
     return {
       kind: "missing",
     } satisfies PublishedPageLocalePath;
   }
   return {
     kind: "found",
-    publicPath: target.publicPath,
+    publicPath: target.value.publicPath,
   } satisfies PublishedPageLocalePath;
 });

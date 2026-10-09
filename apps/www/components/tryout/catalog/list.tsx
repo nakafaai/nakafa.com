@@ -4,6 +4,7 @@ import { GradientBlock } from "@repo/design-system/components/ui/gradient-block"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import {
   TryoutStatus,
@@ -52,7 +53,7 @@ export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
   return (
     <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
       <div className="grid divide-y">
-        {rows.map((row) => (
+        {Arr.map(rows, (row) => (
           <TryoutRow key={row.key} row={row} />
         ))}
       </div>

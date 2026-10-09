@@ -2,7 +2,7 @@ import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { cache } from "react";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
@@ -55,7 +55,7 @@ const host = `https://${MAIN_DOMAIN}`;
 
 /** Expands one route into canonical localized sitemap entries. */
 function getEntries(href: string, options: SitemapEntryOptions) {
-  return options.locales.map((locale) => ({
+  return Arr.map(options.locales, (locale) => ({
     ...(options.lastModified === undefined
       ? {}
       : { lastModified: options.lastModified }),
@@ -83,18 +83,16 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.page")(
     const page = yield* readSitemapRoutePage(pageId);
     const routes: readonly SitemapRouteEntry[] = page.routes;
     const locales = getSitemapEntryLocales(pageId);
-    const entries: (typeof SitemapPageUrl.Type)[] = [];
-
-    for (const route of routes) {
-      entries.push(
-        ...getEntries(route.path, {
+    const entries: (typeof SitemapPageUrl.Type)[] = Arr.flatMap(
+      routes,
+      (route) =>
+        getEntries(route.path, {
           ...(route.lastModified === undefined
             ? {}
             : { lastModified: route.lastModified }),
           locales,
         })
-      );
-    }
+    );
 
     return entries;
   }

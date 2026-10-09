@@ -10,6 +10,7 @@ import {
   Config,
   ConfigProvider,
   Effect,
+  Fiber,
   FileSystem,
   Layer,
   Path,
@@ -17,6 +18,7 @@ import {
   Schema,
 } from "effect";
 import { FetchHttpClient } from "effect/http";
+import { TestClock } from "effect/testing";
 
 vi.mock("node:util", async (original) => {
   const actual = await original<typeof import("node:util")>();
@@ -309,6 +311,20 @@ describe("customer audit configuration", () => {
 });
 
 describe("customer integrity query boundary", () => {
+  it.effect("fails with the request error at the 10 second deadline", () =>
+    Effect.gen(function* () {
+      fetcher.mockImplementation(() => new Promise<Response>(() => undefined));
+      const fiber = yield* Effect.forkChild(callQuery().pipe(Effect.flip));
+
+      yield* TestClock.adjust("10 seconds");
+
+      expect(yield* Fiber.join(fiber)).toMatchObject({
+        _tag: "CustomerConvexRequestError",
+        message: "Convex did not answer within 10 seconds.",
+      });
+      expect(fetcher).toHaveBeenCalledOnce();
+    })
+  );
   it.effect("sends one authenticated query and validates its value", () =>
     Effect.gen(function* () {
       fetcher.mockResolvedValue(Response.json({ status: "success", value: 3 }));

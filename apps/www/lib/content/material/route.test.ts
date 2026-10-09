@@ -6,7 +6,7 @@ import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
 import {
@@ -65,7 +65,8 @@ function foundModel(overrides?: {
         : overrides.activeReleaseId,
     alternateJson:
       overrides?.alternateJson ??
-      [previewProjection, previewIdProjection, previewDeProjection].map(
+      Arr.map(
+        [previewProjection, previewIdProjection, previewDeProjection],
         canonicalizeMaterialProjection
       ),
     projectionJson:
@@ -78,7 +79,8 @@ function foundModel(overrides?: {
         : overrides.rendererDomain,
     siblingJson:
       overrides?.siblingJson ??
-      [previewProjection, previewNextProjection].map(
+      Arr.map(
+        [previewProjection, previewNextProjection],
         canonicalizeMaterialProjection
       ),
     sourcePath:

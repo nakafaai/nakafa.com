@@ -13,7 +13,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Effect, type Result } from "effect";
+import { Array as Arr, Effect, type Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -88,7 +88,7 @@ export function UserSettingsMemory({
         <CardContent className="border-t px-0">
           {memory.facts.length > 0 ? (
             <ul className="divide-y">
-              {memory.facts.map((fact) => (
+              {Arr.map(memory.facts, (fact) => (
                 <li
                   className="flex items-center gap-2 px-6 py-3"
                   key={fact.key}

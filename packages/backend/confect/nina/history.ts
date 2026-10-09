@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import { CapabilityOutputSchema } from "@repo/backend/confect/nina/capability/progress";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
+import { encodeJsonText } from "@repo/utilities/json";
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
 import { Array as Arr, MutableHashSet, Schema } from "effect";
 
@@ -17,8 +18,6 @@ const FILE_TOKENS = 300;
 const EXCERPT_TOKENS = 600;
 const EXCERPT_NOTE =
   "Earlier evidence in this conversation, shortened. Call the capability again when the full evidence matters.";
-/** Writes a stored value as the JSON text the model reads, as JSON.stringify does. */
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Estimates provider tokens for one message without counting file bytes. */
 function messageTokens(message: ModelMessage) {
@@ -30,9 +29,9 @@ function messageTokens(message: ModelMessage) {
     if (part.type === "text" || part.type === "reasoning") {
       total += countTextTokens(part.text);
     } else if (part.type === "tool-call") {
-      total += countTextTokens(Schema.encodeSync(JsonTextSchema)(part.input));
+      total += countTextTokens(encodeJsonText(part.input));
     } else if (part.type === "tool-result") {
-      total += countTextTokens(Schema.encodeSync(JsonTextSchema)(part.output));
+      total += countTextTokens(encodeJsonText(part.output));
     } else {
       total += FILE_TOKENS;
     }
@@ -62,7 +61,7 @@ function evidenceText(part: ToolResultPart) {
   if (output.type === "text" || output.type === "error-text") {
     return output.value;
   }
-  return capabilityText(part) ?? Schema.encodeSync(JsonTextSchema)(output);
+  return capabilityText(part) ?? encodeJsonText(output);
 }
 
 /**

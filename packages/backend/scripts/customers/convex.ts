@@ -1,6 +1,7 @@
 import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { FetchClient } from "@repo/utilities/http/client";
 import type {
   DefaultFunctionArgs,
@@ -196,44 +197,57 @@ const parseResponse = <A, I>(
 /** Calls one generated customer-integrity query through Convex's admin HTTP API. */
 export const callCustomerIntegrityQuery = Effect.fn(
   "customers.callCustomerIntegrityQuery"
-)(function* <TQuery extends CustomerIntegrityQuery, Encoded>(
-  config: CustomerConvexConfig,
-  query: TQuery,
-  args: FunctionArgs<TQuery>,
-  schema: Schema.Codec<FunctionReturnType<TQuery>, Encoded, never, never>
-) {
-  const functionPath = yield* Effect.try({
-    try: () => getFunctionName(query),
-    catch: (error) =>
-      new CustomerConvexConfigError({ message: getUnknownMessage(error) }),
-  });
-  const client = yield* HttpClient.HttpClient;
-  const response = yield* HttpClientRequest.post(
-    `${config.url}/api/query`
-  ).pipe(
-    HttpClientRequest.setHeader(
-      "Authorization",
-      `Convex ${config.accessToken}`
-    ),
-    HttpClientRequest.bodyJsonUnsafe({
-      args,
-      format: "json",
-      path: functionPath,
-    }),
-    client.execute,
-    Effect.mapError(
-      (error) =>
-        new CustomerConvexRequestError({
-          message: getUnknownMessage(error.reason.cause),
-        })
-    )
-  );
-  if (response.status < 200 || response.status >= 300) {
-    const body = yield* response.text.pipe(Effect.mapError(toResponseError));
-    return yield* new CustomerConvexRequestError({
-      message: `${functionPath}: HTTP ${response.status} ${body}`,
+)(
+  function* <TQuery extends CustomerIntegrityQuery, Encoded>(
+    config: CustomerConvexConfig,
+    query: TQuery,
+    args: FunctionArgs<TQuery>,
+    schema: Schema.Codec<FunctionReturnType<TQuery>, Encoded, never, never>
+  ) {
+    const functionPath = yield* Effect.try({
+      try: () => getFunctionName(query),
+      catch: (error) =>
+        new CustomerConvexConfigError({ message: getUnknownMessage(error) }),
     });
-  }
-  const body = yield* response.json.pipe(Effect.mapError(toResponseError));
-  return yield* parseResponse(body, schema, functionPath);
-}, Effect.provide(FetchClient));
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* HttpClientRequest.post(
+      `${config.url}/api/query`
+    ).pipe(
+      HttpClientRequest.setHeader(
+        "Authorization",
+        `Convex ${config.accessToken}`
+      ),
+      HttpClientRequest.bodyJsonUnsafe({
+        args,
+        format: "json",
+        path: functionPath,
+      }),
+      client.execute,
+      Effect.mapError(
+        (error) =>
+          new CustomerConvexRequestError({
+            message: getUnknownMessage(error.reason.cause),
+          })
+      )
+    );
+    if (response.status < 200 || response.status >= 300) {
+      const body = yield* response.text.pipe(Effect.mapError(toResponseError));
+      return yield* new CustomerConvexRequestError({
+        message: `${functionPath}: HTTP ${response.status} ${body}`,
+      });
+    }
+    const body = yield* response.json.pipe(Effect.mapError(toResponseError));
+    return yield* parseResponse(body, schema, functionPath);
+  },
+  // The deadline covers the send and the JSON read, so a stalled answer ends.
+  Effect.timeoutOrElse({
+    duration: NETWORK_ATTEMPT_DEADLINE,
+    orElse: () =>
+      Effect.fail(
+        new CustomerConvexRequestError({
+          message: "Convex did not answer within 10 seconds.",
+        })
+      ),
+  }),
+  Effect.provide(FetchClient)
+);

@@ -2,7 +2,7 @@ import { isRenderableCurriculumLevel } from "@nakafa/aksara-contracts/program/cu
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   readPublishedArticleCategory,
   readPublishedCategoryAlternates,
@@ -62,10 +62,11 @@ const readLocalizedArticleHref = Effect.fn("www.routing.locale.readArticle")(
       }
 
       const alternates = yield* readPublishedCategoryAlternates(current.value);
-      const target = alternates.find(
+      const target = Arr.findFirst(
+        alternates,
         (alternate) => alternate.appLocale === input.locale
       );
-      if (!target) {
+      if (Option.isNone(target)) {
         return yield* new MissingLocalizedRouteProjectionError({
           locale: input.locale,
           publicPath: input.publicPath,
@@ -73,7 +74,7 @@ const readLocalizedArticleHref = Effect.fn("www.routing.locale.readArticle")(
       }
 
       return toNavigationHref(
-        target.publicPath,
+        target.value.publicPath,
         `${stripArticlePagination(input.search)}${input.hash}`
       );
     }
@@ -90,10 +91,11 @@ const readLocalizedArticleHref = Effect.fn("www.routing.locale.readArticle")(
         });
       }
 
-      const target = current.alternates.find(
+      const target = Arr.findFirst(
+        current.alternates,
         (alternate) => alternate.appLocale === input.locale
       );
-      if (!target) {
+      if (Option.isNone(target)) {
         return yield* new MissingLocalizedRouteProjectionError({
           locale: input.locale,
           publicPath: input.publicPath,
@@ -101,7 +103,7 @@ const readLocalizedArticleHref = Effect.fn("www.routing.locale.readArticle")(
       }
 
       return toNavigationHref(
-        target.publicPath,
+        target.value.publicPath,
         `${input.search}${input.hash}`
       );
     }
@@ -151,7 +153,7 @@ export const readPublishedLocalizedHref = Effect.fn(
   publicPath,
   search,
 }: PublishedLocalizedHrefInput) {
-  const segments = publicPath.split("/").filter(Boolean);
+  const segments = Arr.filter(publicPath.split("/"), Boolean);
   const namespace = segments[0];
 
   if (namespace === ARTICLE_NAMESPACE) {
@@ -161,11 +163,12 @@ export const readPublishedLocalizedHref = Effect.fn(
     );
   }
 
-  const surface = PUBLIC_ROUTE_SURFACES.find(
+  const surface = Arr.findFirst(
+    PUBLIC_ROUTE_SURFACES,
     (candidate) => candidate.routeSlugs[currentLocale] === namespace
   );
 
-  if (surface?.key === "subject") {
+  if (Option.exists(surface, (found) => found.key === "subject")) {
     const current = yield* readPublishedMaterialRoute(
       currentLocale,
       publicPath
@@ -176,10 +179,11 @@ export const readPublishedLocalizedHref = Effect.fn(
         publicPath,
       });
     }
-    const target = current.alternates.find(
+    const target = Arr.findFirst(
+      current.alternates,
       (alternate) => alternate.appLocale === locale
     );
-    if (!target) {
+    if (Option.isNone(target)) {
       return yield* new MissingLocalizedRouteProjectionError({
         locale,
         publicPath,
@@ -189,12 +193,12 @@ export const readPublishedLocalizedHref = Effect.fn(
       expectedActiveReleaseId: current.activeReleaseId,
       locale,
       search,
-      target,
+      target: target.value,
     });
-    return toNavigationHref(target.publicPath, `${suffix}${hash}`);
+    return toNavigationHref(target.value.publicPath, `${suffix}${hash}`);
   }
 
-  if (surface?.key === "tryout") {
+  if (Option.exists(surface, (found) => found.key === "tryout")) {
     const target = yield* readPublishedTryoutLocalizedPath({
       currentAppLocale: currentLocale,
       publicPath,
@@ -209,7 +213,7 @@ export const readPublishedLocalizedHref = Effect.fn(
     return toNavigationHref(target, `${search}${hash}`);
   }
 
-  if (!surface) {
+  if (Option.isNone(surface)) {
     const target = yield* readPublishedPageLocalePath({
       currentLocale,
       locale,
@@ -234,7 +238,8 @@ export const readPublishedLocalizedHref = Effect.fn(
       publicPath,
     });
   }
-  const target = current.alternates.find(
+  const target = Arr.findFirst(
+    current.alternates,
     (alternate) =>
       alternate.appLocale === locale &&
       alternate.nodeKey === current.route?.nodeKey &&
@@ -242,11 +247,11 @@ export const readPublishedLocalizedHref = Effect.fn(
       alternate.sitemap &&
       isRenderableCurriculumLevel(alternate.level)
   );
-  if (!target) {
+  if (Option.isNone(target)) {
     return yield* new MissingLocalizedRouteProjectionError({
       locale,
       publicPath,
     });
   }
-  return toNavigationHref(target.publicPath, `${search}${hash}`);
+  return toNavigationHref(target.value.publicPath, `${search}${hash}`);
 });

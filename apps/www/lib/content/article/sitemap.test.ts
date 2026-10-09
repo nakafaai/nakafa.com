@@ -4,7 +4,7 @@ import { HttpClient } from "@confect/js";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer, Order } from "effect";
 import {
   readPublishedArticleBuckets,
   readPublishedArticleSitemap,
@@ -49,14 +49,15 @@ describe("published article sitemap", () => {
           articleCount: 2,
         });
         expect(
-          pages
-            .flatMap((page) => {
+          Arr.sort(
+            Arr.flatMap(pages, (page) => {
               if (page === null) {
                 return expect.fail("A declared article bucket must exist.");
               }
-              return page.routes.map((row) => row.publicPath);
-            })
-            .sort()
+              return Arr.map(page.routes, (row) => row.publicPath);
+            }),
+            Order.String
+          )
         ).toEqual([
           "articles/politik",
           "articles/politik/artikel-1",

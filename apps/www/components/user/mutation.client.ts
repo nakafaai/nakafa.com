@@ -4,7 +4,7 @@ import { useMutation } from "@confect/react";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import users from "@repo/backend/confect/_generated/refs/users";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { updateUserName, updateUserRole } from "@/components/user/state";
 
 /** Return a role mutation that immediately updates the current-user query. */
@@ -103,7 +103,7 @@ export function useForgetMemoryMutation() {
           nina.memory.get,
           {},
           Option.some({
-            facts: current.facts.filter((fact) => fact.key !== key),
+            facts: Arr.filter(current.facts, (fact) => fact.key !== key),
           })
         );
       }

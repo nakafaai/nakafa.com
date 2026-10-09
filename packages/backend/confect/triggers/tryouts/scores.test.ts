@@ -9,11 +9,11 @@ import { tryoutScoresHandler } from "@repo/backend/confect/triggers/tryouts/scor
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { ensureTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
-import { Effect, Schema, Struct } from "effect";
+import { Effect, Struct } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Builds a trigger test instance with its analytics component boundary. */
 function createTryoutScoreTriggerTest() {
@@ -152,7 +152,7 @@ describe("triggers/tryouts/scores", () => {
           expect.objectContaining({
             distinctId: identity.userId,
             event: "tryout attempt completed",
-            properties: encodeJson({
+            properties: encodeJsonText({
               attempt_number: 2,
               country_key: "indonesia",
               exam_key: "snbt",

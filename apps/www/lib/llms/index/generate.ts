@@ -1,6 +1,6 @@
 import type { ContentCacheScope } from "@nakafa/aksara-contracts/cache/content";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
@@ -100,7 +100,7 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
     }
 
     if (prefixParts.length > 1) {
-      const route = prefixParts.join("/");
+      const route = Arr.join(prefixParts, "/");
       const entries = yield* getContentListingLlmsEntries({ locale, route });
 
       if (entries !== null) {
@@ -131,7 +131,10 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
 
 /** Parses `/llms/:locale/...` index routes into locale and prefix parts. */
 function parseLlmsIndexSlug(cleanSlug: string) {
-  const parts = stripLlmsRouteExtension(cleanSlug).split("/").filter(Boolean);
+  const parts = Arr.filter(
+    stripLlmsRouteExtension(cleanSlug).split("/"),
+    Boolean
+  );
 
   if (parts[0] !== "llms") {
     return null;
@@ -142,10 +145,13 @@ function parseLlmsIndexSlug(cleanSlug: string) {
     return null;
   }
 
-  const prefixParts = parts.slice(2);
-  if (prefixParts.at(-1) === "llms") {
-    prefixParts.pop();
-  }
+  const segments = Arr.drop(parts, 2);
+  const prefixParts = Option.exists(
+    Arr.last(segments),
+    (segment) => segment === "llms"
+  )
+    ? Arr.dropRight(segments, 1)
+    : segments;
 
   return {
     locale: rawLocale,
@@ -164,7 +170,7 @@ function buildLlmsSiteIndexText({
   const localeLabel = getLocaleLabel(locale);
 
   return renderLlmsIndexText({
-    lines: entries.map(formatLlmsEntryLine),
+    lines: Arr.map(entries, formatLlmsEntryLine),
     summary: `For AI agents: reviewed ${localeLabel} site pages from Nakafa indexes and the active signed Page catalog.`,
     title: `Nakafa ${localeLabel} Site Pages`,
   });
@@ -179,34 +185,32 @@ function buildLocaleLlmsIndexText({
   locale: Locale;
 }) {
   const localeLabel = getLocaleLabel(locale);
-  const starterLines: string[] = [];
-  if (entries.length > 0) {
-    starterLines.push(
-      "## Starter Pages",
-      "",
-      ...entries.map(formatLlmsEntryLine),
-      ""
-    );
-  }
+  const starterLines =
+    entries.length > 0
+      ? ["## Starter Pages", "", ...Arr.map(entries, formatLlmsEntryLine), ""]
+      : [];
 
-  return [
-    `# Nakafa ${localeLabel} Content`,
-    "",
-    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). Start with the direct ${localeLabel} page links below or open a public section index for bounded route-catalog pages.`,
-    "",
-    "## Sections",
-    "",
-    ...getPublicLlmsSectionIndexLines(locale),
-    "",
-    ...starterLines,
-  ].join("\n");
+  return Arr.join(
+    [
+      `# Nakafa ${localeLabel} Content`,
+      "",
+      `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). Start with the direct ${localeLabel} page links below or open a public section index for bounded route-catalog pages.`,
+      "",
+      "## Sections",
+      "",
+      ...getPublicLlmsSectionIndexLines(locale),
+      "",
+      ...starterLines,
+    ],
+    "\n"
+  );
 }
 
 /** Reads a bounded starter set of page-level markdown entries for one locale. */
 const getLocaleIndexEntries = Effect.fn("www.llms.locale.entries")(function* (
   locale: Locale
 ) {
-  const sections = getLlmsSections().filter(isContentLlmsSection);
+  const sections = Arr.filter(getLlmsSections(), isContentLlmsSection);
   const siteEntries = yield* readSiteLlmsEntries(locale);
 
   const sectionEntries = yield* Effect.forEach(sections, (section) =>
@@ -216,17 +220,12 @@ const getLocaleIndexEntries = Effect.fn("www.llms.locale.entries")(function* (
       section,
     })
   );
-  const entries = [...siteEntries];
+  const entries = [
+    ...siteEntries,
+    ...Arr.flatMap(sectionEntries, (pageEntries) => pageEntries ?? []),
+  ];
 
-  for (const pageEntries of sectionEntries) {
-    if (pageEntries === null) {
-      continue;
-    }
-
-    entries.push(...pageEntries);
-  }
-
-  return entries.slice(0, LOCALE_INDEX_ENTRY_LIMIT);
+  return Arr.take(entries, LOCALE_INDEX_ENTRY_LIMIT);
 });
 
 /** Excludes the static site section when building content-backed locale starter links. */
@@ -242,7 +241,7 @@ function parsePageIndex(prefixParts: readonly string[]) {
     return null;
   }
 
-  const pageSegment = prefixParts.slice(2).join("");
+  const pageSegment = Arr.join(prefixParts.slice(2), "");
   const page = Number(pageSegment);
   if (!Number.isSafeInteger(page) || page < 0 || String(page) !== pageSegment) {
     return null;

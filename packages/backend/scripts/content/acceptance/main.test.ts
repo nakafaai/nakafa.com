@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem, Schema } from "effect";
 
 const mocks = vi.hoisted(() => {
@@ -31,8 +32,6 @@ vi.mock("@repo/backend/scripts/content/acceptance/learner", () => ({
   createAcceptanceLearner: mocks.learner,
 }));
 
-/** Encodes test fixtures and generated scripts as JSON text. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const originalArgv = process.argv;
 const execute = Effect.fn("AcceptanceCliTest.execute")(function* (
   mode?: string,
@@ -115,7 +114,7 @@ describe("isolated acceptance CLI", () => {
         yield* fs.makeDirectory(`${directory}/backend`);
         yield* fs.writeFileString(
           `${directory}/package.json`,
-          encodeJson({
+          encodeJsonText({
             private: true,
             packageManager: manifest.packageManager,
             scripts: { start: "pnpm --dir backend acceptance start" },
@@ -123,18 +122,18 @@ describe("isolated acceptance CLI", () => {
         );
         yield* fs.writeFileString(
           `${directory}/backend/package.json`,
-          encodeJson({
+          encodeJsonText({
             private: true,
             scripts: { acceptance: "node entry.mjs" },
           })
         );
         yield* fs.writeFileString(
           `${directory}/backend/entry.mjs`,
-          `import { Effect, FileSystem } from ${encodeJson(import.meta.resolve("effect"))};
-import { ChildProcess } from ${encodeJson(import.meta.resolve("effect/process"))};
-import { runMain } from ${encodeJson(import.meta.resolve("@effect/platform-node/NodeRuntime"))};
-import { layer } from ${encodeJson(import.meta.resolve("@effect/platform-node/NodeServices"))};
-import { withTerminal } from ${encodeJson(new URL("./process.ts", import.meta.url).href)};
+          `import { Effect, FileSystem } from ${encodeJsonText(import.meta.resolve("effect"))};
+import { ChildProcess } from ${encodeJsonText(import.meta.resolve("effect/process"))};
+import { runMain } from ${encodeJsonText(import.meta.resolve("@effect/platform-node/NodeRuntime"))};
+import { layer } from ${encodeJsonText(import.meta.resolve("@effect/platform-node/NodeServices"))};
+import { withTerminal } from ${encodeJsonText(new URL("./process.ts", import.meta.url).href)};
 runMain(withTerminal(Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   yield* Effect.acquireRelease(

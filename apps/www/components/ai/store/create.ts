@@ -1,6 +1,6 @@
 "use client";
 
-import { DateTime } from "effect";
+import { Array as Arr, DateTime } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -15,7 +15,7 @@ export function createAiStore() {
         ...initialState,
         addChatDraft: (key) =>
           set((state) => {
-            state.chatDrafts.unshift(key);
+            state.chatDrafts = Arr.prepend(state.chatDrafts, key);
           }),
         getModel: () => get().model,
         // One new-chat admission at a time: a pending ask or composer draft
@@ -30,7 +30,8 @@ export function createAiStore() {
         },
         removeChatDraft: (key) =>
           set((state) => {
-            state.chatDrafts = state.chatDrafts.filter(
+            state.chatDrafts = Arr.filter(
+              state.chatDrafts,
               (draft) => draft !== key
             );
           }),
@@ -52,7 +53,8 @@ export function createAiStore() {
               return;
             }
             // Convex resolves mutations after subscribed queries include the write.
-            state.chatDrafts = state.chatDrafts.filter(
+            state.chatDrafts = Arr.filter(
+              state.chatDrafts,
               (draft) => draft !== key
             );
             state.openingChat = {

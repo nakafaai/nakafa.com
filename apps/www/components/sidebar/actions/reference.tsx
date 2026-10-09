@@ -25,6 +25,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { cleanupUrl, formatUrl } from "@repo/design-system/lib/routing/url";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 
@@ -75,7 +76,7 @@ export function ReferenceButton({ references, title }: Props) {
             <div className="flex flex-1 flex-col overflow-hidden">
               <ScrollArea className="h-full">
                 <ul data-slot="reference-list">
-                  {references.map((reference, index) => {
+                  {Arr.map(references, (reference, index) => {
                     const url = reference.url
                       ? formatUrl(reference.url)
                       : t("no-website");

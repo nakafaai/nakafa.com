@@ -5,6 +5,7 @@ import {
   type PublicContentRuntimeResponse,
   PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Schema } from "effect";
 /** Maximum exact Aksara public exchanges resolved by one batch transaction. */
 export const PUBLIC_CONTENT_RUNTIME_BATCH_SIZE = 8;
@@ -17,10 +18,9 @@ export const MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES =
 export const MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES =
   PUBLIC_CONTENT_RUNTIME_BATCH_SIZE * MAX_PUBLIC_RUNTIME_RESPONSE_BYTES +
   BATCH_JSON_OVERHEAD_BYTES;
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Measures the exact JSON wire bytes of one decoded Aksara response. */
 export function publicRuntimeResponseBytes<Response>(response: Response) {
-  return new TextEncoder().encode(encodeJson(response)).byteLength;
+  return new TextEncoder().encode(encodeJsonText(response)).byteLength;
 }
 /** Route identity of one public read: its path stays a plain string until a request validates it. */
 export const PublicContentRuntimeInputSchema = Schema.Struct({

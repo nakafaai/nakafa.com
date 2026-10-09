@@ -10,14 +10,15 @@
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.13.11",
     "effect": "catalog:",
-    "posthog-js": "1.438.2",
-    "posthog-node": "^5.55.0",
+    "posthog-js": "1.438.3",
+    "posthog-node": "^5.55.1",
     "server-only": "0.0.1"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@repo/utilities": "workspace:*",
     "@vitest/coverage-istanbul": "catalog:",
     "vitest": "catalog:"
   }

@@ -14,7 +14,7 @@ import {
   PageKeySchema,
   PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   getShellPageNavigation,
   PageNavigationMissingError,
@@ -154,7 +154,8 @@ describe("signed Page navigation", () => {
       catalogMock.mockReturnValue(
         Effect.succeed({
           activeReleaseId: "release-pages",
-          projections: germanPages.filter(
+          projections: Arr.filter(
+            germanPages,
             ({ pageKey }) => pageKey !== "developers"
           ),
         })
@@ -182,7 +183,8 @@ describe("signed Page navigation", () => {
         catalogMock.mockReturnValue(
           Effect.succeed({
             activeReleaseId: "release-pages",
-            projections: germanPages.filter(
+            projections: Arr.filter(
+              germanPages,
               (projection) => projection.pageKey !== pageKey
             ),
           })

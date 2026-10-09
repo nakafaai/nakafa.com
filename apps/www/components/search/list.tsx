@@ -77,7 +77,7 @@ export function SearchResults({
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border py-4 shadow-sm">
-      {groups.map((group, index) => (
+      {Arr.map(groups, (group, index) => (
         <Fragment key={group.title}>
           <ResultGroup group={group} query={query} />
           {index !== groups.length - 1 && <Separator />}
@@ -101,7 +101,7 @@ function ResultGroup({
         {group.title}
       </h2>
       <div className="flex flex-col gap-1">
-        {group.items.map((result) => (
+        {Arr.map(group.items, (result) => (
           <NavigationLink
             className={cn(
               "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
@@ -150,8 +150,11 @@ function getSearchResultGroups(
   results: ContentSearchResultItem[],
   sectionLabels: Record<ContentSearchResultItem["section"], string>
 ) {
-  return Arr.dedupe(results.map((result) => result.section)).map((section) => ({
-    items: results.filter((result) => result.section === section),
-    title: sectionLabels[section],
-  }));
+  return Arr.map(
+    Arr.dedupe(Arr.map(results, (result) => result.section)),
+    (section) => ({
+      items: Arr.filter(results, (result) => result.section === section),
+      title: sectionLabels[section],
+    })
+  );
 }

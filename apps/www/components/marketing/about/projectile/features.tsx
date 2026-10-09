@@ -11,6 +11,7 @@ import {
   PROJECTILE_SCENARIOS,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Array as Arr, Option } from "effect";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ProjectileClient } from "@/components/marketing/about/projectile/client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -26,7 +27,7 @@ export async function FeaturesProjectile() {
   const locale = getLocaleOrThrow(await getLocale());
   const t = await getTranslations({ locale, namespace: "Features" });
   const decimalSeparator = decimalSeparators[locale];
-  const scenarios = PROJECTILE_SCENARIOS.map((scenario) => {
+  const scenarios = Arr.map(PROJECTILE_SCENARIOS, (scenario) => {
     const motion = getProjectileMotionState(scenario.id);
     const instantVelocity = getVelocityAtTime(motion, PROJECTILE_INSTANT_TIME);
 
@@ -105,18 +106,19 @@ export async function FeaturesProjectile() {
       motion,
     };
   });
-  const initialScenario =
-    scenarios.find(({ id }) => id === DEFAULT_PROJECTILE_SCENARIO_ID) ??
-    scenarios[0];
+  const initialScenario = Option.orElse(
+    Arr.findFirst(scenarios, ({ id }) => id === DEFAULT_PROJECTILE_SCENARIO_ID),
+    () => Arr.head(scenarios)
+  );
 
-  if (!initialScenario) {
+  if (Option.isNone(initialScenario)) {
     return null;
   }
 
   return (
     <ProjectileClient
       controlsLabel={t("projectile-controls")}
-      initialScenario={initialScenario}
+      initialScenario={initialScenario.value}
       scenarios={scenarios}
       title={t.rich("projectile-title", {
         mark: (chunks) => <mark>{chunks}</mark>,

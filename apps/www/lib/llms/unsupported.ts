@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import { LLMS_TEXT_PATH } from "@/lib/discovery";
 import { BASE_URL } from "@/lib/llms/constants";
 
@@ -20,19 +21,22 @@ export function buildUnsupportedMarkdownRouteText({
   const htmlPath = `/${locale}${route.replace(ROOT_ROUTE_PATTERN, "")}`;
   const markdownPath = `${htmlPath}.md`;
 
-  return [
-    "# Markdown page not found",
-    "",
-    `The markdown page \`${markdownPath}\` does not exist for Nakafa.`,
-    "",
-    "Use these source-backed routes instead:",
-    "",
-    `- HTML page: ${BASE_URL}${htmlPath}`,
-    `- Agent index: ${BASE_URL}${LLMS_TEXT_PATH}`,
-    `- Localized content index: ${BASE_URL}/llms/${locale}/llms.txt`,
-    `- Static site index: ${BASE_URL}/llms/${locale}/site/llms.txt`,
-    "",
-    "Markdown is available only for supported content and legal pages advertised from the llms indexes. Those pages use `.md` URLs or `Accept: text/markdown`.",
-    "",
-  ].join("\n");
+  return Arr.join(
+    [
+      "# Markdown page not found",
+      "",
+      `The markdown page \`${markdownPath}\` does not exist for Nakafa.`,
+      "",
+      "Use these source-backed routes instead:",
+      "",
+      `- HTML page: ${BASE_URL}${htmlPath}`,
+      `- Agent index: ${BASE_URL}${LLMS_TEXT_PATH}`,
+      `- Localized content index: ${BASE_URL}/llms/${locale}/llms.txt`,
+      `- Static site index: ${BASE_URL}/llms/${locale}/site/llms.txt`,
+      "",
+      "Markdown is available only for supported content and legal pages advertised from the llms indexes. Those pages use `.md` URLs or `Accept: text/markdown`.",
+      "",
+    ],
+    "\n"
+  );
 }
