@@ -33,11 +33,14 @@ import {
 /**
  * The modules whose types describe values that no Schema describes as data:
  * React and MDX values, the design system's Markdown types (each one names a
- * React or MDX type), and the message parts that the AI SDK owns.
+ * React or MDX type), the message parts that the AI SDK owns, and the parser
+ * syntax-tree nodes of ESTree and its JSX extension.
  */
 const FRAMEWORK_TYPE_MODULES = HashSet.make(
   "@repo/design-system/types/markdown",
   "ai",
+  "estree",
+  "estree-jsx",
   "mdx/types",
   "react"
 );
@@ -98,9 +101,9 @@ function handleNames(clause: ImportClause | undefined): readonly string[] {
 /**
  * Returns the local names that a module binds to value types through its
  * imports, type-only imports included: everything from React, MDX, the design
- * system's Markdown types, and the AI SDK, such as `ReactNode`,
- * `MDXComponents`, and `TextUIPart`, and the handle modules of `effect`, such
- * as `Effect` and `Fiber`.
+ * system's Markdown types, the AI SDK, and ESTree, such as `ReactNode`,
+ * `MDXComponents`, `TextUIPart`, and `JSXElement`, and the handle modules of
+ * `effect`, such as `Effect` and `Fiber`.
  */
 export function valueNames(sourceFile: SourceFile): readonly string[] {
   return Arr.flatMap(sourceFile.statements, (statement) => {
@@ -163,9 +166,9 @@ function wrappedTypes(type: TypeNode): readonly TypeNode[] {
 /**
  * Returns the test for the members of one module's shapes that hold a value no
  * Schema describes as data: a function, a constructor, a method, a React or
- * MDX value, an AI SDK message part, or an Effect runtime handle. A Schema
- * describes data only, so such a member keeps its shape out of Schema
- * candidates.
+ * MDX value, an AI SDK message part, an Effect runtime handle, or a parser
+ * syntax-tree node. A Schema describes data only, so such a member keeps its
+ * shape out of Schema candidates.
  *
  * A member type is read through unions, intersections, arrays, `readonly`,
  * indexed access such as `MDXComponents[string]`, nested object literals, type

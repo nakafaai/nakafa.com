@@ -293,7 +293,8 @@ function isGeneric(
  * interfaces that only extend a derived type, the type a recursive schema names
  * (found among all `nodes`), shapes that hold a value no Schema describes (a
  * function, a React or MDX value, an AI SDK message part, an Effect runtime
- * handle), and generic shapes that use a type parameter stay allowed.
+ * handle, a parser syntax-tree node), and generic shapes that use a type
+ * parameter stay allowed.
  */
 export function shapeCandidates(
   file: string,

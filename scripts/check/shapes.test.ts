@@ -231,6 +231,24 @@ export interface Card {
   );
 
   it.effect(
+    "allows a shape whose own member holds a parser syntax-tree node, and still reports plain data",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`import type { JSXElement } from "estree-jsx";
+export interface Snippet {
+  readonly element: JSXElement;
+}
+export interface Lesson {
+  readonly title: string;
+}
+`),
+          [5]
+        );
+      })
+  );
+
+  it.effect(
     "keeps a shape reported when a member names no React import or a local data alias",
     () =>
       Effect.gen(function* () {
