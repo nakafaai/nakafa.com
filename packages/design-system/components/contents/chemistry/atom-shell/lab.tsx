@@ -22,6 +22,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr, Result } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -125,19 +126,19 @@ export function AtomShellLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          <LabFact
+          <VisualFact
             label={labels.atomicNumber}
             value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
           />
-          <LabFact
+          <VisualFact
             label={labels.configuration}
             value={<InlineMath math={`${configurationMath}`} />}
           />
-          <LabFact
+          <VisualFact
             label={labels.outerShell}
             value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
           />
-          <LabFact
+          <VisualFact
             label={labels.maximumCapacity}
             value={
               <InlineMath
@@ -149,15 +150,5 @@ export function AtomShellLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/** Renders one compact fact in the shell lab footer. */
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

@@ -4,13 +4,8 @@ import type {
   LineLabel,
 } from "@repo/design-system/components/three/line-equation";
 import { LineEndpointsSchema } from "@repo/design-system/lib/geometry/endpoint";
+import { Point3Schema } from "@repo/design-system/lib/geometry/point";
 import { Schema } from "effect";
-
-const LinePointSchema = Schema.Struct({
-  x: Schema.Finite,
-  y: Schema.Finite,
-  z: Schema.Finite,
-});
 
 /** Serializable label contract passed from the server card to WebGL. */
 export type ResolvedLineLabel = LineLabel;
@@ -35,7 +30,7 @@ const ResolvedLineFieldsSchema = Schema.Struct({
   /** Original authored samples that retain visible point markers. */
   pointIndices: Schema.optionalKey(Schema.Array(Schema.Finite)),
   /** The WebGL line component declares its points as a mutable array. */
-  points: Schema.mutable(Schema.Array(LinePointSchema)),
+  points: Schema.mutable(Schema.Array(Point3Schema)),
   showPoints: Schema.optionalKey(Schema.Boolean),
   smooth: Schema.optionalKey(Schema.Boolean),
 });
@@ -47,7 +42,7 @@ export type ResolvedLine = typeof ResolvedLineFieldsSchema.Type &
 type CircleLine = Omit<ResolvedLine, "points" | "smooth">;
 
 const CuboidLineSchema = Schema.Struct({
-  center: Schema.optionalKey(LinePointSchema),
+  center: Schema.optionalKey(Point3Schema),
   height: Schema.Finite,
   kind: Schema.Literal("cuboid"),
   length: Schema.Finite,

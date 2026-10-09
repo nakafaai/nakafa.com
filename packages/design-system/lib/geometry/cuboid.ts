@@ -1,21 +1,18 @@
+import {
+  type Point3,
+  Point3Schema,
+} from "@repo/design-system/lib/geometry/point";
 import { Array as Arr, Schema } from "effect";
 
-const CuboidPointSchema = Schema.Struct({
-  x: Schema.Finite,
-  y: Schema.Finite,
-  z: Schema.Finite,
-});
-type CuboidPoint = typeof CuboidPointSchema.Type;
-
 const CuboidDimensionsSchema = Schema.Struct({
-  center: Schema.optionalKey(CuboidPointSchema),
+  center: Schema.optionalKey(Point3Schema),
   height: Schema.Finite,
   length: Schema.Finite,
   width: Schema.Finite,
 });
 type CuboidDimensions = typeof CuboidDimensionsSchema.Type;
 
-const ORIGIN: CuboidPoint = { x: 0, y: 0, z: 0 };
+const ORIGIN: Point3 = { x: 0, y: 0, z: 0 };
 
 function halfMeasure(measure: number) {
   return Math.max(measure / 2, Number.MIN_VALUE);
@@ -59,7 +56,7 @@ export function createCuboid({
     { x: x + halfLength, y: y - halfHeight, z: z + halfWidth },
     { x: x + halfLength, y: y + halfHeight, z: z + halfWidth },
     { x: x - halfLength, y: y + halfHeight, z: z + halfWidth },
-  ] satisfies readonly CuboidPoint[];
+  ] satisfies readonly Point3[];
   const edges = Arr.map(
     EDGE_VERTEX_INDICES,
     ([startIndex, endIndex]) =>

@@ -34,6 +34,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -134,15 +135,15 @@ export function DimensionLab({
       </VisualCardBody>
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <DimensionFact
+          <VisualFact
             label={labels.formula}
             value={<InlineMath math={selectedMode.formula} />}
           />
-          <DimensionFact
+          <VisualFact
             label={labels.unit}
             value={<InlineMath math={selectedMode.unit} />}
           />
-          <DimensionFact
+          <VisualFact
             label={labels.dimension}
             value={<InlineMath math={selectedMode.dimension} />}
           />
@@ -169,17 +170,5 @@ function ResponsiveDimensionCamera() {
       cameraTarget={CAMERA_TARGET}
       fov={45}
     />
-  );
-}
-
-/**
- * Renders one formula fact without badge styling.
- */
-function DimensionFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

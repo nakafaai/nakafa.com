@@ -1,3 +1,4 @@
+import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -384,10 +385,6 @@ function getArcPoint(segment: ArcSegment, progress: number) {
     x: segment.center.x + segment.radius * Math.cos(angle),
     z: segment.center.z + segment.radius * Math.sin(angle),
   };
-}
-
-function lerp(start: number, end: number, progress: number) {
-  return start + (end - start) * progress;
 }
 
 function formatNumber(

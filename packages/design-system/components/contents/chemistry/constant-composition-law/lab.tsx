@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -146,8 +147,8 @@ export function ConstantCompositionLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <LabFact label={labels.ratioLabel} value={selectedLabels.ratio} />
-          <LabFact
+          <VisualFact label={labels.ratioLabel} value={selectedLabels.ratio} />
+          <VisualFact
             label={labels.leftoverLabel}
             value={selectedLabels.leftover}
           />
@@ -171,14 +172,5 @@ function ConstantCompositionCameraControls() {
       cameraTarget={CONSTANT_COMPOSITION_SCENE_VIEW.cameraTarget}
       fov={43}
     />
-  );
-}
-
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

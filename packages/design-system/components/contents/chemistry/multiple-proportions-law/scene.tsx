@@ -1,9 +1,9 @@
 import { Line } from "@react-three/drei";
+import type { ElementName } from "@repo/design-system/components/contents/chemistry/element";
 import {
   MULTIPLE_PROPORTIONS_MODELS,
   type MultipleProportionsAtom,
   type MultipleProportionsCompoundModel,
-  type MultipleProportionsElement,
   type MultipleProportionsModeId,
   type MultipleProportionsMolecule,
   type MultipleProportionsSceneColors,
@@ -136,7 +136,7 @@ function AtomParticle({
   );
 }
 
-function atomRadius(element: MultipleProportionsElement) {
+function atomRadius(element: ElementName) {
   if (element === "hydrogen") {
     return 0.1;
   }
@@ -148,7 +148,7 @@ function atomRadius(element: MultipleProportionsElement) {
   return 0.15;
 }
 
-function atomSymbol(element: MultipleProportionsElement) {
+function atomSymbol(element: ElementName) {
   if (element === "carbon") {
     return "C";
   }
@@ -165,7 +165,7 @@ function atomSymbol(element: MultipleProportionsElement) {
 }
 
 function atomColor(
-  element: MultipleProportionsElement,
+  element: ElementName,
   colors: MultipleProportionsSceneColors
 ) {
   if (element === "carbon") {

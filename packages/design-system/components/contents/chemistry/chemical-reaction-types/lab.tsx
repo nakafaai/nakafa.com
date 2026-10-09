@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -154,22 +155,19 @@ export function ChemicalReactionTypesLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <ReactionTypeFact
+          <VisualFact
             label={labels.equationLabel}
             value={selectedLabels.equation}
           />
-          <ReactionTypeFact
+          <VisualFact
             label={labels.visibleCueLabel}
             value={selectedLabels.visibleCue}
           />
-          <ReactionTypeFact
+          <VisualFact
             label={labels.readingLabel}
             value={selectedLabels.reading}
           />
-          <ReactionTypeFact
-            label={labels.checkLabel}
-            value={selectedLabels.check}
-          />
+          <VisualFact label={labels.checkLabel} value={selectedLabels.check} />
         </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
@@ -194,23 +192,5 @@ function ReactionTypeCameraControls() {
       fov={45}
       framing="content"
     />
-  );
-}
-
-/**
- * Renders one compact footer fact for the selected reaction type.
- */
-function ReactionTypeFact({
-  label,
-  value,
-}: {
-  label: string;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

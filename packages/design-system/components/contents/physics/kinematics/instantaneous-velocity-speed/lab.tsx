@@ -17,6 +17,7 @@ import {
   type InstantaneousVelocitySpeedState,
   isInstantaneousSpeedCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/instantaneous-velocity-speed/data";
+import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
@@ -365,8 +366,4 @@ function getAnimatedCarX(
 
 function getCarRotationY(direction: number) {
   return direction > 0 ? Math.PI / 2 : -Math.PI / 2;
-}
-
-function lerp(start: number, end: number, progress: number) {
-  return start + (end - start) * progress;
 }

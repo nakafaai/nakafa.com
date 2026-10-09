@@ -1,3 +1,7 @@
+import {
+  type ElementName,
+  ElementNameSchema,
+} from "@repo/design-system/components/contents/chemistry/element";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
@@ -15,13 +19,6 @@ export const MATTER_PARTICLE_MODE_IDS = [
   COMPOUND_MOLECULE_MODE_ID,
 ] as const;
 
-const MatterParticleElementSchema = Schema.Literals([
-  "carbon",
-  "hydrogen",
-  "nitrogen",
-  "oxygen",
-]);
-export type MatterParticleElement = typeof MatterParticleElementSchema.Type;
 export type MatterParticleModeId = (typeof MATTER_PARTICLE_MODE_IDS)[number];
 export type MatterParticleSceneColors = ReturnType<
   typeof getMatterParticleSceneColors
@@ -35,7 +32,7 @@ const MatterParticleScenePointSchema = Schema.Tuple([
 type MatterParticleScenePoint = typeof MatterParticleScenePointSchema.Type;
 
 const MatterParticleAtomSchema = Schema.Struct({
-  element: MatterParticleElementSchema,
+  element: ElementNameSchema,
   id: Schema.String,
   position: MatterParticleScenePointSchema,
 });
@@ -165,7 +162,7 @@ export function getMatterParticleSceneColors(
 
 function atom(
   id: string,
-  element: MatterParticleElement,
+  element: ElementName,
   position: MatterParticleScenePoint
 ): MatterParticleAtom {
   return { element, id, position };
@@ -173,7 +170,7 @@ function atom(
 
 function atomCluster(
   idPrefix: string,
-  element: MatterParticleElement,
+  element: ElementName,
   count: number,
   radius: number
 ) {

@@ -1,8 +1,8 @@
 import { Line } from "@react-three/drei";
+import type { ElementName } from "@repo/design-system/components/contents/chemistry/element";
 import {
   MATTER_PARTICLE_MODELS,
   type MatterParticleAtom,
-  type MatterParticleElement,
   type MatterParticleModeId,
   type MatterParticleMolecule,
   type MatterParticleSceneColors,
@@ -116,7 +116,7 @@ function AtomParticle({
   );
 }
 
-function atomRadius(element: MatterParticleElement) {
+function atomRadius(element: ElementName) {
   if (element === "hydrogen") {
     return 0.1;
   }
@@ -124,7 +124,7 @@ function atomRadius(element: MatterParticleElement) {
   return 0.15;
 }
 
-function atomSymbol(element: MatterParticleElement) {
+function atomSymbol(element: ElementName) {
   if (element === "carbon") {
     return "C";
   }
@@ -140,10 +140,7 @@ function atomSymbol(element: MatterParticleElement) {
   return "O";
 }
 
-function atomColor(
-  element: MatterParticleElement,
-  colors: MatterParticleSceneColors
-) {
+function atomColor(element: ElementName, colors: MatterParticleSceneColors) {
   if (element === "carbon") {
     return colors.carbon;
   }

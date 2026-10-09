@@ -1,18 +1,9 @@
-import { Schema } from "effect";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
 
 const DEFAULT_ARC_SEGMENTS = 20;
 
-const GraphPointSchema = Schema.Struct({
-  x: Schema.Finite,
-  y: Schema.Finite,
-  z: Schema.Finite,
-});
-
-/** Three-dimensional point used by SNBT line and arc visuals. */
-type GraphPoint = typeof GraphPointSchema.Type;
-
 /** Returns the exact midpoint between two SNBT graph points. */
-export function getMidpoint(firstPoint: GraphPoint, secondPoint: GraphPoint) {
+export function getMidpoint(firstPoint: Point3, secondPoint: Point3) {
   return {
     x: (firstPoint.x + secondPoint.x) / 2,
     y: (firstPoint.y + secondPoint.y) / 2,
@@ -27,7 +18,7 @@ export function getMidpoint(firstPoint: GraphPoint, secondPoint: GraphPoint) {
  * Every sampled point preserves the center's z coordinate.
  */
 export function getArcPoints(
-  center: GraphPoint,
+  center: Point3,
   radius: number,
   startAngle: number,
   endAngle: number,

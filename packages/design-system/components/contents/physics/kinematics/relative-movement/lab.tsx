@@ -2,6 +2,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
+import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import {
   formatSignedSpeedMath,
   getRelativeMovementState,
@@ -424,8 +425,4 @@ function getLoopSeconds(motion: RelativeMovementState) {
   const speedRatio = Math.abs(motion.relativeVelocity) / MAX_RELATIVE_SPEED;
 
   return lerp(MAX_LOOP_SECONDS, MIN_LOOP_SECONDS, speedRatio);
-}
-
-function lerp(start: number, end: number, progress: number) {
-  return start + (end - start) * progress;
 }

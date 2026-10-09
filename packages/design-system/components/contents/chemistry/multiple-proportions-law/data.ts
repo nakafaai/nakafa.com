@@ -1,3 +1,7 @@
+import {
+  type ElementName,
+  ElementNameSchema,
+} from "@repo/design-system/components/contents/chemistry/element";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
@@ -16,15 +20,6 @@ export const MULTIPLE_PROPORTIONS_MODE_IDS = [
 export type MultipleProportionsModeId =
   (typeof MULTIPLE_PROPORTIONS_MODE_IDS)[number];
 
-const MultipleProportionsElementSchema = Schema.Literals([
-  "carbon",
-  "hydrogen",
-  "nitrogen",
-  "oxygen",
-]);
-export type MultipleProportionsElement =
-  typeof MultipleProportionsElementSchema.Type;
-
 export type MultipleProportionsSceneColors = ReturnType<
   typeof getMultipleProportionsSceneColors
 >;
@@ -38,7 +33,7 @@ type MultipleProportionsScenePoint =
   typeof MultipleProportionsScenePointSchema.Type;
 
 const MultipleProportionsAtomSchema = Schema.Struct({
-  element: MultipleProportionsElementSchema,
+  element: ElementNameSchema,
   id: Schema.String,
   position: MultipleProportionsScenePointSchema,
 });
@@ -221,7 +216,7 @@ export function getMultipleProportionsSceneColors(
 
 function atom(
   id: string,
-  element: MultipleProportionsElement,
+  element: ElementName,
   position: MultipleProportionsScenePoint
 ): MultipleProportionsAtom {
   return { element, id, position };

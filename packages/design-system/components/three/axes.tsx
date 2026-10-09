@@ -5,11 +5,11 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   type CoordinateFrame,
-  type CoordinatePoint,
   createAxisGeometry,
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
 import { COLORS } from "@repo/design-system/lib/color";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { Array as Arr } from "effect";
 import { type ComponentProps, useCallback, useMemo, useRef } from "react";
 import { Frustum, type Group, Matrix4, Vector2, Vector3 } from "three";
@@ -198,7 +198,7 @@ export function Axes({
   size?: number;
   showLabels?: boolean;
   showZAxis?: boolean;
-  origin?: CoordinatePoint | undefined;
+  origin?: Point3 | undefined;
 } & ComponentProps<"group">) {
   const axes = useMemo(() => {
     const geometry = createAxisGeometry(

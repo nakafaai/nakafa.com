@@ -1,3 +1,4 @@
+import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { getColor } from "@repo/design-system/lib/color";
 import type { CameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
@@ -284,10 +285,6 @@ function getCameraPosition(
     bounds.span * CAMERA_COMPOSITION.verticalRatio,
     bounds.span * CAMERA_COMPOSITION.depthRatio,
   ] as const;
-}
-
-function lerp(start: number, end: number, progress: number) {
-  return start + (end - start) * progress;
 }
 
 function getMotionCenterX(forwardDistance: number) {

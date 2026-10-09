@@ -1,3 +1,7 @@
+import {
+  type Point3,
+  Point3Schema,
+} from "@repo/design-system/lib/geometry/point";
 import { BigDecimal, MutableList, Schema } from "effect";
 
 const CoordinateRangeSchema = Schema.Struct({
@@ -13,13 +17,6 @@ export const CoordinateFrameSchema = Schema.Struct({
 });
 export type CoordinateFrame = typeof CoordinateFrameSchema.Type;
 
-const CoordinatePointSchema = Schema.Struct({
-  x: Schema.Finite,
-  y: Schema.Finite,
-  z: Schema.Finite,
-});
-export type CoordinatePoint = typeof CoordinatePointSchema.Type;
-
 const CoordinateTupleSchema = Schema.Tuple([
   Schema.Finite,
   Schema.Finite,
@@ -28,10 +25,10 @@ const CoordinateTupleSchema = Schema.Tuple([
 export type CoordinateTuple = typeof CoordinateTupleSchema.Type;
 
 const AxisGeometrySchema = Schema.Struct({
-  from: CoordinatePointSchema,
-  negativeLabel: Schema.UndefinedOr(CoordinatePointSchema),
-  positiveLabel: Schema.UndefinedOr(CoordinatePointSchema),
-  to: CoordinatePointSchema,
+  from: Point3Schema,
+  negativeLabel: Schema.UndefinedOr(Point3Schema),
+  positiveLabel: Schema.UndefinedOr(Point3Schema),
+  to: Point3Schema,
   visible: Schema.Boolean,
 });
 const AxisGeometriesSchema = Schema.Struct({
@@ -55,21 +52,20 @@ const GridGeometrySchema = Schema.Struct({
 });
 type GridGeometry = typeof GridGeometrySchema.Type;
 
-const ORIGIN: CoordinatePoint = { x: 0, y: 0, z: 0 };
+const ORIGIN: Point3 = { x: 0, y: 0, z: 0 };
 const MINIMUM_CELL_STEP = 0.5;
 const MAXIMUM_AXIS_DIVISIONS = 200;
 const MAXIMUM_AXIS_COORDINATES = MAXIMUM_AXIS_DIVISIONS + 2;
-
-function decimal(value: number) {
-  return BigDecimal.fromNumberUnsafe(value);
-}
 
 function containsCoordinate({ max, min }: CoordinateRange, coordinate: number) {
   return min <= coordinate && max >= coordinate;
 }
 
 function span({ max, min }: CoordinateRange) {
-  return BigDecimal.subtract(decimal(max), decimal(min));
+  return BigDecimal.subtract(
+    BigDecimal.fromNumberUnsafe(max),
+    BigDecimal.fromNumberUnsafe(min)
+  );
 }
 
 function coordinateValues(
@@ -77,14 +73,17 @@ function coordinateValues(
   step: number,
   anchor: number
 ) {
-  const exactStep = decimal(step);
-  const exactAnchor = decimal(anchor);
+  const exactStep = BigDecimal.fromNumberUnsafe(step);
+  const exactAnchor = BigDecimal.fromNumberUnsafe(anchor);
   const first = BigDecimal.sum(
     exactAnchor,
     BigDecimal.multiply(
       BigDecimal.ceil(
         BigDecimal.divideUnsafe(
-          BigDecimal.subtract(decimal(range.min), exactAnchor),
+          BigDecimal.subtract(
+            BigDecimal.fromNumberUnsafe(range.min),
+            exactAnchor
+          ),
           exactStep
         )
       ),
@@ -100,7 +99,9 @@ function coordinateValues(
       first,
       BigDecimal.multiply(exactStep, BigDecimal.fromBigInt(BigInt(index)))
     );
-    if (BigDecimal.isGreaterThan(value, decimal(range.max))) {
+    if (
+      BigDecimal.isGreaterThan(value, BigDecimal.fromNumberUnsafe(range.max))
+    ) {
       break;
     }
     const numeric = BigDecimal.toNumberUnsafe(value);
@@ -123,7 +124,10 @@ function resolveCellStep(frame: CoordinateFrame) {
     BigDecimal.fromBigInt(BigInt(MAXIMUM_AXIS_DIVISIONS))
   );
   if (
-    BigDecimal.isLessThanOrEqualTo(requiredStep, decimal(MINIMUM_CELL_STEP))
+    BigDecimal.isLessThanOrEqualTo(
+      requiredStep,
+      BigDecimal.fromNumberUnsafe(MINIMUM_CELL_STEP)
+    )
   ) {
     return MINIMUM_CELL_STEP;
   }
@@ -150,7 +154,10 @@ function resolveCellStep(frame: CoordinateFrame) {
 
 function offset(value: number, delta: number) {
   const result = BigDecimal.toNumberUnsafe(
-    BigDecimal.sum(decimal(value), decimal(delta))
+    BigDecimal.sum(
+      BigDecimal.fromNumberUnsafe(value),
+      BigDecimal.fromNumberUnsafe(delta)
+    )
   );
   if (Number.isFinite(result)) {
     return result;
@@ -225,7 +232,7 @@ export function createSymmetricFrame(size: number): CoordinateFrame {
 export function createAxisGeometry(
   frame: CoordinateFrame,
   labelOffset: number,
-  origin: CoordinatePoint = ORIGIN
+  origin: Point3 = ORIGIN
 ): typeof AxisGeometriesSchema.Type {
   const xVisible =
     containsCoordinate(frame.y, origin.y) &&
@@ -307,7 +314,7 @@ export function createAxisGeometry(
 /** Resolves finite grid segments anchored to the projected mathematical origin. */
 export function createGridGeometry(
   frame: CoordinateFrame,
-  origin: CoordinatePoint = ORIGIN
+  origin: Point3 = ORIGIN
 ): GridGeometry {
   const cellStep = resolveCellStep(frame);
 

@@ -1,3 +1,4 @@
+import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 
@@ -103,8 +104,4 @@ function getRoadLength(distanceMeters: number) {
     UNIFORM_LINEAR_MOTION_SCENE.roadMinimumLength,
     contextualLength
   );
-}
-
-function lerp(start: number, end: number, progress: number) {
-  return start + (end - start) * progress;
 }

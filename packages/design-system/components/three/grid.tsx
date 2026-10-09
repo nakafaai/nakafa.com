@@ -3,10 +3,10 @@
 import { Grid, Line } from "@react-three/drei";
 import {
   type CoordinateFrame,
-  type CoordinatePoint,
   createGridGeometry,
   type GridPlaneGeometry,
 } from "@repo/design-system/components/three/frame";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { type ColorRepresentation, DoubleSide } from "three";
@@ -69,7 +69,7 @@ export function CoordinateGrid({
   readonly cellColor: ColorRepresentation;
   readonly frame: CoordinateFrame;
   readonly infinite?: boolean;
-  readonly origin?: CoordinatePoint | undefined;
+  readonly origin?: Point3 | undefined;
   readonly sectionColor: ColorRepresentation;
 }) {
   const geometry = useMemo(

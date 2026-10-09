@@ -7,7 +7,6 @@ import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { useCoordinateControls } from "@repo/design-system/components/three/controls";
 import {
   type CoordinateFrame,
-  type CoordinatePoint,
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
 import { CoordinateGrid } from "@repo/design-system/components/three/grid";
@@ -16,6 +15,7 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { VisualCardScene } from "@repo/design-system/components/visual/card";
 import { COLORS, getColor } from "@repo/design-system/lib/color";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
 import { useTheme } from "next-themes";
@@ -49,7 +49,7 @@ interface Props {
   /** Size of the grid */
   gridSize?: number;
   /** Projected world coordinate of the mathematical origin. */
-  origin?: CoordinatePoint;
+  origin?: Point3;
   /** Show the coordinate axes */
   showAxes?: boolean;
   /** Show axis labels */
