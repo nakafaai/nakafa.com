@@ -284,7 +284,7 @@ function settleLayoutShift(
 }
 
 /** Reads the cumulative layout shift of the whole page once it stops changing. */
-export const readSettledLayoutShift = Effect.fn(
+const readSettledLayoutShift = Effect.fn(
   "NakafaE2E.readSettledVisualLayoutShift"
 )((page: Page) => settleLayoutShift(page, readCumulativeLayoutShift));
 

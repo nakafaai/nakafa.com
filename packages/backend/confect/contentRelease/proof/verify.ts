@@ -34,7 +34,7 @@ import { Effect, Schema } from "effect";
 export type Progress = typeof progressValidator.Type;
 export type Status = typeof statusValidator.Type;
 /** Authenticates the frozen release and renderer identity shared by proof steps. */
-export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
+const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
   function* (manifestHash: string, releaseId: string) {
     const { runQuery } = yield* QueryRunner;
     const state = yield* runQuery(
@@ -67,7 +67,7 @@ export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
 );
 
 /** Advances exact item verification from the durable server cursor. */
-export const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
+const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
   function* (releaseId: string, afterIndex: number) {
     const { runMutation } = yield* MutationRunner;
     let cursor = afterIndex;
@@ -88,31 +88,31 @@ export const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
 );
 
 /** Traverses the permanent route directory and validates every active owner. */
-export const verifyRouteCatalog = Effect.fn(
-  "contentRelease.verifyRouteCatalog"
-)(function* (releaseId: string) {
-  const { runQuery } = yield* QueryRunner;
-  let cursor: null | string = null;
-  while (true) {
-    const page: RouteCatalogPage = yield* runQuery(
-      refs.internal.contentRelease.proof.routes.routes,
-      {
-        cursor,
-        releaseId,
+const verifyRouteCatalog = Effect.fn("contentRelease.verifyRouteCatalog")(
+  function* (releaseId: string) {
+    const { runQuery } = yield* QueryRunner;
+    let cursor: null | string = null;
+    while (true) {
+      const page: RouteCatalogPage = yield* runQuery(
+        refs.internal.contentRelease.proof.routes.routes,
+        {
+          cursor,
+          releaseId,
+        }
+      ).pipe(Effect.catchTag("SchemaError", Effect.die));
+      if (page.done) {
+        return;
       }
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
-    if (page.done) {
-      return;
+      if (page.nextCursor === null || page.nextCursor === cursor) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Route catalog for ${releaseId} stopped advancing.`
+        );
+      }
+      cursor = page.nextCursor;
     }
-    if (page.nextCursor === null || page.nextCursor === cursor) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Route catalog for ${releaseId} stopped advancing.`
-      );
-    }
-    cursor = page.nextCursor;
   }
-});
+);
 
 /** Reauthenticates one bounded artifact batch on an isolated Node worker. */
 export const verifyArtifactBatchProgram = Effect.fn(

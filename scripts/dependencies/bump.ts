@@ -32,17 +32,16 @@ class DependencyMetadataError extends Schema.TaggedError<DependencyMetadataError
 ) {}
 
 /** Returns every local dependency and workflow policy violation. */
-export const inspectRepositoryPolicy = Effect.fn(
-  "RepositoryPolicy.inspectRepository"
-)((root: string) =>
-  Effect.all([
-    inspectDependencyPolicy(root).pipe(
-      Effect.catch((error) =>
-        Effect.succeed([`Unable to inspect dependencies: ${error.message}`])
-      )
-    ),
-    inspectGithubActionPolicy(root),
-  ]).pipe(Effect.map(([dependency, actions]) => [...dependency, ...actions]))
+const inspectRepositoryPolicy = Effect.fn("RepositoryPolicy.inspectRepository")(
+  (root: string) =>
+    Effect.all([
+      inspectDependencyPolicy(root).pipe(
+        Effect.catch((error) =>
+          Effect.succeed([`Unable to inspect dependencies: ${error.message}`])
+        )
+      ),
+      inspectGithubActionPolicy(root),
+    ]).pipe(Effect.map(([dependency, actions]) => [...dependency, ...actions]))
 );
 
 /**

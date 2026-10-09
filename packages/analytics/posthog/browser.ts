@@ -25,7 +25,7 @@ import { postHogPublicKeys } from "@repo/analytics/public";
 import { DateTime, Effect, MutableRef, Option, Schema } from "effect";
 import type { PostHog } from "posthog-js";
 
-export type BrowserAnalyticsClient = Pick<
+type BrowserAnalyticsClient = Pick<
   PostHog,
   | "capture"
   | "captureException"

@@ -3,8 +3,9 @@ import {
   rendererDomainValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { Schema, Struct } from "effect";
+
 /** One signed-publication row selected for the partner API. */
-export const materialApiEntryValidator = Schema.Struct({
+const materialApiEntryValidator = Schema.Struct({
   appLocale: appLocaleValidator,
   publicPath: Schema.String,
 });

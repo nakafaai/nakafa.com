@@ -34,6 +34,8 @@ const IGNORED_DIRECTORIES = HashSet.make(
 /** TypeScript modules in every flavor: `.ts`, `.tsx`, `.mts`, and `.cts`. */
 const SOURCE_FILE_PATTERN = /\.[cm]?tsx?$/u;
 const DECLARATION_FILE_PATTERN = /\.d\.[cm]?ts$/u;
+/** JavaScript and TypeScript modules in every flavor, declaration files included. */
+const MODULE_FILE_PATTERN = /\.[cm]?[jt]sx?$/u;
 const GENERATED_DIRECTORY = "_generated";
 
 /**
@@ -101,20 +103,34 @@ export const readRepositoryFiles = Effect.fn("RepositoryPolicy.readFiles")(
   }
 );
 
-/** Reads the files of the authored workspaces and of the repository scripts. */
+/**
+ * Reads the files of the authored workspaces and of the repository scripts,
+ * and the files of the agent skills folder, whose scripts import repository
+ * modules. A repository without that folder has no such files.
+ */
 export const readAuthoredTree = Effect.fn("RepositoryPolicy.readAuthoredTree")(
   function* (root: string) {
     const path = yield* Path.Path;
     const read = (directory: string) =>
       readRepositoryFiles(path.join(root, directory), IGNORED_DIRECTORIES);
-    const { apps, packages, scripts } = yield* Effect.all({
+    const { agents, apps, packages, scripts } = yield* Effect.all({
+      agents: read(".agents"),
       apps: read("apps"),
       packages: read("packages"),
       scripts: read("scripts"),
     });
-    return { scripts, workspaces: Arr.appendAll(apps, packages) };
+    return { agents, scripts, workspaces: Arr.appendAll(apps, packages) };
   }
 );
+
+/** Whether a file is an authored TypeScript module: no declaration file, and no generated output. */
+function isAuthored(file: string, separator: string) {
+  return (
+    SOURCE_FILE_PATTERN.test(file) &&
+    !DECLARATION_FILE_PATTERN.test(file) &&
+    !Arr.contains(Str.split(file, separator), GENERATED_DIRECTORY)
+  );
+}
 
 /**
  * Reads the authored TypeScript modules among `files` by repository-relative
@@ -125,13 +141,7 @@ export const readAuthoredSources = Effect.fn(
 )(function* (root: string, files: readonly string[]) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const authored = Arr.filter(
-    files,
-    (file) =>
-      SOURCE_FILE_PATTERN.test(file) &&
-      !DECLARATION_FILE_PATTERN.test(file) &&
-      !Arr.contains(Str.split(file, path.sep), GENERATED_DIRECTORY)
-  );
+  const authored = Arr.filter(files, (file) => isAuthored(file, path.sep));
   return yield* Effect.forEach(authored, (file) =>
     fileSystem.readFileString(file).pipe(
       Effect.map((sourceText): typeof RepositorySource.Type => ({
@@ -145,3 +155,35 @@ export const readAuthoredSources = Effect.fn(
     )
   );
 });
+
+/**
+ * Reads the text of the modules that no rule judges, which still name the
+ * exports of authored modules: among `files`, the declaration files, the
+ * generated output, and JavaScript, and every module among `outside`, the files
+ * outside the authored roots.
+ */
+export const readOtherModules = Effect.fn("RepositoryPolicy.readOtherModules")(
+  function* (files: readonly string[], outside: readonly string[]) {
+    const fileSystem = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    return yield* Effect.forEach(
+      Arr.filter(
+        Arr.appendAll(
+          Arr.filter(files, (file) => !isAuthored(file, path.sep)),
+          outside
+        ),
+        (file) => MODULE_FILE_PATTERN.test(file)
+      ),
+      (file) =>
+        fileSystem.readFileString(file).pipe(
+          Effect.mapError(
+            (cause) =>
+              new RepositoryReadError({
+                cause,
+                message: `Unable to read ${file}.`,
+              })
+          )
+        )
+    );
+  }
+);

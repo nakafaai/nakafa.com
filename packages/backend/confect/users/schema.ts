@@ -2,10 +2,11 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { userRoles } from "@repo/backend/confect/users/role";
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import { Schema } from "effect";
+
 /**
  * User role options (non-null) - for mutations that set a role
  */
-export const userRoleOptionsValidator = Schema.Literals([...userRoles]);
+const userRoleOptionsValidator = Schema.Literals([...userRoles]);
 
 /** Roles a normal end user may self-select during onboarding/settings. */
 export const selfSelectableUserRoleValidator = Schema.Literals([

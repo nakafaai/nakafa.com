@@ -9,7 +9,7 @@ const NonNegativeInteger = Schema.Finite.pipe(
   Schema.check(Schema.isGreaterThanOrEqualTo(0))
 );
 
-export const GithubActionReviewSchema = Schema.Struct({
+const GithubActionReviewSchema = Schema.Struct({
   action: Schema.String,
   approvedSha: Schema.String,
   expectedInputs: Schema.optional(Schema.Record(Schema.String, Schema.String)),
@@ -19,7 +19,7 @@ export const GithubActionReviewSchema = Schema.Struct({
 });
 export type GithubActionReview = typeof GithubActionReviewSchema.Type;
 
-export const GithubActionUseSchema = Schema.Struct({
+const GithubActionUseSchema = Schema.Struct({
   inputs: UnknownRecord,
   reference: Schema.String,
   workflowPath: Schema.String,

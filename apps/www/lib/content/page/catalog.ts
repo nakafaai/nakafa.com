@@ -24,7 +24,7 @@ const PublishedPageCatalogSchema = Schema.Struct({
   projections: Schema.Array(PublicPageProjectionSchema),
 });
 /** Complete signed Page catalog selected from one active release. */
-export type PublishedPageCatalog = typeof PublishedPageCatalogSchema.Type;
+type PublishedPageCatalog = typeof PublishedPageCatalogSchema.Type;
 const PublishedPageReadSchema = Schema.Struct({
   projection: PublicPageProjectionSchema,
 });
@@ -43,7 +43,7 @@ const PublishedPageLocalePathSchema = Schema.Union([
   }),
 ]);
 /** Result of resolving one Page identity into another active locale. */
-export type PublishedPageLocalePath = typeof PublishedPageLocalePathSchema.Type;
+type PublishedPageLocalePath = typeof PublishedPageLocalePathSchema.Type;
 
 /** Reads and strictly decodes every locale-equivalent Page projection. */
 export const readPublishedPageCatalog = Effect.fn(

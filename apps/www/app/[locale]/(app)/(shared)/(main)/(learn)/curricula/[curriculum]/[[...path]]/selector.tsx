@@ -23,7 +23,8 @@ import { reportClientException } from "@/lib/analytics/client";
 import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
-export type CurriculumSelectorOption = ReturnType<
+
+type CurriculumSelectorOption = ReturnType<
   typeof readRuntimeCurriculumOptions
 >[number];
 type SavePreferredCurriculumArgs = Ref.Args<

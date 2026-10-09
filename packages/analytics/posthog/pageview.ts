@@ -1,7 +1,7 @@
 import { Context, Effect } from "effect";
 import type { PostHog } from "posthog-js";
 
-export type PageviewCaptureClient = Pick<PostHog, "capture">;
+type PageviewCaptureClient = Pick<PostHog, "capture">;
 
 /** Browser window members that pageview tracking reads and patches. */
 export class PageviewWindow extends Context.Service<

@@ -14,7 +14,8 @@ import {
 } from "@repo/backend/confect/tryouts/score";
 import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
 import { Schema } from "effect";
-export const historyRowValidator = Schema.Struct({
+
+const historyRowValidator = Schema.Struct({
   attemptId: IdSchema("tryoutAttempts"),
   attemptNumber: Schema.Finite,
   completedAt: Schema.Union([Schema.Finite, Schema.Null]),

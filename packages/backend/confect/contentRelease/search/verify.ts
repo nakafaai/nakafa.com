@@ -4,7 +4,8 @@ import type { loadSearchOwner } from "@repo/backend/confect/contentRelease/searc
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import { Array as Arr, Effect } from "effect";
-export type SearchModelOwner = NonNullable<
+
+type SearchModelOwner = NonNullable<
   Effect.Success<ReturnType<typeof loadSearchOwner>>
 >;
 /** Resolves one indexed hit through the active release's structural sharing. */

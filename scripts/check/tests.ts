@@ -20,7 +20,16 @@ import {
   findingMessages,
   sortFindings,
 } from "#scripts/check/effect";
-import { readAuthoredSources, readAuthoredTree } from "#scripts/check/files";
+import {
+  declarationDirectories,
+  inspectExports,
+  publishedDirectories,
+} from "#scripts/check/exports";
+import {
+  readAuthoredSources,
+  readAuthoredTree,
+  readOtherModules,
+} from "#scripts/check/files";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
@@ -61,7 +70,9 @@ function lineReport(lines: readonly string[]) {
 const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
   root: string,
   sources: Parameters<typeof parseSources>[0],
-  projectConfigs: readonly string[]
+  projectConfigs: readonly string[],
+  otherModules: readonly string[],
+  unjudged: readonly string[]
 ) {
   const parsed = yield* parseSources(sources);
   const arrays = yield* Effect.scoped(
@@ -73,7 +84,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
       (api) => arrayFindings(api, root, projectConfigs, parsed.modules)
     )
   );
-  return Arr.appendAll(
+  return Arr.flatten([
     findingMessages(
       sortFindings(Arr.appendAll(yield* effectFindings(parsed), arrays))
     ),
@@ -86,8 +97,16 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectModuleSize(file, sourceFile),
         inspectDeploySource(file, sourceFile),
       ])
-    )
-  );
+    ),
+    inspectExports(
+      parsed.modules,
+      Arr.appendAll(
+        Arr.map(sources, ({ sourceText }) => sourceText),
+        otherModules
+      ),
+      unjudged
+    ),
+  ]);
 }, Effect.scoped);
 
 /**
@@ -100,7 +119,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   function* (root: string, owner: string = root) {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const { scripts, workspaces } = yield* readAuthoredTree(root);
+    const { agents, scripts, workspaces } = yield* readAuthoredTree(root);
     const tests = Arr.filter(workspaces, (file) =>
       TEST_FILE_PATTERN.test(file)
     );
@@ -128,6 +147,13 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     // The policy reads repository paths, which use "/" on every platform. A
     // configuration at the repository root counts like any workspace's own.
     const rootEntries = yield* fileSystem.readDirectory(root);
+    const otherModules = yield* readOtherModules(
+      Arr.appendAll(workspaces, scripts),
+      Arr.appendAll(
+        agents,
+        Arr.map(rootEntries, (entry) => path.join(root, entry))
+      )
+    );
     const configs = yield* Effect.forEach(
       Arr.filter(
         Arr.appendAll(
@@ -156,7 +182,12 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     const sourceViolations = yield* inspectSources(
       root,
       sources,
-      projectConfigs
+      projectConfigs,
+      otherModules,
+      Arr.appendAll(
+        yield* publishedDirectories(root, workspaces),
+        declarationDirectories(configs)
+      )
     );
     const reports = Arr.filter(
       [

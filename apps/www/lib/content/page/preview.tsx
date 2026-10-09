@@ -23,9 +23,7 @@ export type PagePreviewInput = Pick<
 >;
 
 /** Authenticated local Page content rendered by the Nakafa application. */
-export type PagePreviewContent = Effect.Success<
-  ReturnType<typeof readReadyPage>
->;
+type PagePreviewContent = Effect.Success<ReturnType<typeof readReadyPage>>;
 
 /** Checks whether one selected Page owns the requested physical route. */
 function matchesPageRoute(

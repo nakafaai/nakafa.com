@@ -22,7 +22,7 @@ export const setFilterValidator = Schema.Literals([
   "not-started",
   ...tryoutStatusValidator.literals,
 ]);
-export const trackIdentityValidator = Schema.Struct({
+const trackIdentityValidator = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
   examKey: tryoutRouteKeyValidator,
   locale: appLocaleValidator,
@@ -39,7 +39,7 @@ export const runningAttemptValidator = Schema.Struct({
   attemptId: IdSchema("tryoutAttempts"),
   publicPath: Schema.String,
 });
-export const trackSetValidator = Schema.Struct({
+const trackSetValidator = Schema.Struct({
   ...publicTryoutSetValidator.fields,
   attemptStatus: Schema.Union([Schema.Null, tryoutStatusValidator]),
   durationSeconds: Schema.Finite,

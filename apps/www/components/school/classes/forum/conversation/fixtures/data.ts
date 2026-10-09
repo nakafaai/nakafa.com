@@ -141,9 +141,7 @@ function createConversationTestHandle({
 }
 
 /** Creates one deterministic `findItemIndex` callback from item start offsets. */
-export function createConversationTestFindItemIndex(
-  offsets: readonly number[]
-) {
+function createConversationTestFindItemIndex(offsets: readonly number[]) {
   return (offset: number) => {
     const leadingOffsets = Arr.takeWhile(
       offsets,

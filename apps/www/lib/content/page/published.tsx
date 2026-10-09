@@ -16,7 +16,7 @@ import {
 import { decodePublishedPage } from "@/lib/content/published/projection";
 
 /** Public Page identity pinned to one selected release. */
-export type PublishedPageInput = PublishedContentInput;
+type PublishedPageInput = PublishedContentInput;
 
 /** Current public Page identity resolved from signed runtime state. */
 export type CurrentPublishedPageInput = PublishedContentRouteInput;
@@ -47,7 +47,7 @@ const decodePageData = Effect.fn("NakafaContent.decodePageData")(function* (
 });
 
 /** Verified signed runtime data narrowed to the Page projection contract. */
-export type PublishedPageData = typeof PublishedPageDataSchema.Type;
+type PublishedPageData = typeof PublishedPageDataSchema.Type;
 
 /** Reads a Page pinned to a release selected by another trusted read. */
 export const readPublishedPage = Effect.fn("NakafaContent.readPublishedPage")(
@@ -58,7 +58,7 @@ export const readPublishedPage = Effect.fn("NakafaContent.readPublishedPage")(
 );
 
 /** Reads a Page directly from the signed current runtime. */
-export const readCurrentPublishedPage = Effect.fn(
+const readCurrentPublishedPage = Effect.fn(
   "NakafaContent.readCurrentPublishedPage"
 )(function* (input: CurrentPublishedPageInput) {
   const data = yield* readCurrentPublishedContent(input);

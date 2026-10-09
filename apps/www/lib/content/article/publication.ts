@@ -23,48 +23,46 @@ import { httpLayer } from "@/lib/convex/http";
  *
  * Static consumers such as social images resolve metadata through this seam
  * so their module graph never renders interactive renderers. */
-export const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(
-  function* (
-    source: Ref.Returns<typeof contentRelease.article.delivery>,
-    locale: Locale,
-    publicPath: string
-  ) {
-    const input = {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    };
-    const model = yield* decodePublishedArticleRoute(
-      source.model,
-      locale,
-      publicPath
-    );
-    if (!model.projection) {
-      if (source.runtimeJson !== null) {
-        return yield* makeArticleProjectionError(input);
-      }
-      return null;
-    }
-    if (source.runtimeJson === null) {
+const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(function* (
+  source: Ref.Returns<typeof contentRelease.article.delivery>,
+  locale: Locale,
+  publicPath: string
+) {
+  const input = {
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath,
+  };
+  const model = yield* decodePublishedArticleRoute(
+    source.model,
+    locale,
+    publicPath
+  );
+  if (!model.projection) {
+    if (source.runtimeJson !== null) {
       return yield* makeArticleProjectionError(input);
     }
-    const data = yield* decodePublishedDelivery(input, source.runtimeJson);
-    const narrowed = yield* decodeArticleData(data, input);
-    yield* verifyArticlePublication(
-      {
-        activeReleaseId: model.activeReleaseId,
-        projection: model.projection,
-      },
-      narrowed
-    );
-    return {
-      model,
-      narrowed,
-    };
+    return null;
   }
-);
+  if (source.runtimeJson === null) {
+    return yield* makeArticleProjectionError(input);
+  }
+  const data = yield* decodePublishedDelivery(input, source.runtimeJson);
+  const narrowed = yield* decodeArticleData(data, input);
+  yield* verifyArticlePublication(
+    {
+      activeReleaseId: model.activeReleaseId,
+      projection: model.projection,
+    },
+    narrowed
+  );
+  return {
+    model,
+    narrowed,
+  };
+});
 
 /** Verifies the complete query result before evaluating its immutable body. */
-export const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
+const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
   function* (
     source: Ref.Returns<typeof contentRelease.article.delivery>,
     locale: Locale,

@@ -40,7 +40,7 @@ export const learningContextStorageFields = {
 };
 
 /** Persisted material/question context fields attached to engagement rows. */
-export const learningContextStorageValidator = Schema.Struct(
+const learningContextStorageValidator = Schema.Struct(
   learningContextStorageFields
 );
 export type LearningContextInput = typeof learningContextInputValidator.Type;

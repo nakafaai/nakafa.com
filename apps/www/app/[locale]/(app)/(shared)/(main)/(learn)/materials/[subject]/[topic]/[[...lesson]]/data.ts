@@ -5,7 +5,7 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export type MaterialParams =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">["params"];
-export type MaterialRouteParams = Awaited<MaterialParams>;
+type MaterialRouteParams = Awaited<MaterialParams>;
 
 /** Parses one localized OG slug into concrete material lesson params. */
 export function parseMaterialParams(

@@ -50,7 +50,7 @@ const instantShellSelector = {
 } as const;
 
 /** A rendered source route has no visible link matching its signed catalog. */
-export class NavigationLinkMissing extends Schema.TaggedError<NavigationLinkMissing>()(
+class NavigationLinkMissing extends Schema.TaggedError<NavigationLinkMissing>()(
   "NavigationLinkMissing",
   {
     hrefPattern: Schema.String,
@@ -70,7 +70,7 @@ const NavigationTargetSchema = Schema.Struct({
   sourceHref: Schema.String,
 });
 
-export type NavigationTarget = typeof NavigationTargetSchema.Type;
+type NavigationTarget = typeof NavigationTargetSchema.Type;
 
 /** Finds the target of one navigation case from the page that starts it. */
 type NavigationResolve = (

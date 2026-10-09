@@ -238,10 +238,4 @@ function useEvilBrush<TData extends Record<string, unknown>>({
   };
 }
 
-export {
-  EvilBrush,
-  type EvilBrushProps,
-  type EvilBrushRange,
-  type EvilBrushVariant,
-  useEvilBrush,
-};
+export { EvilBrush, type EvilBrushRange, type EvilBrushVariant, useEvilBrush };

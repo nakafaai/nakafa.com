@@ -5,7 +5,7 @@ import type {
 } from "@/components/school/classes/forum/conversation/viewport/runtime";
 
 /** Read-sync fiber lifetime relative to the open viewport service. */
-export type ViewportReadSyncLifetime = "viewport" | "detached";
+type ViewportReadSyncLifetime = "viewport" | "detached";
 
 /** Marks the last visible post as read once per observed post id. */
 export function markLastVisibleViewportPostRead(

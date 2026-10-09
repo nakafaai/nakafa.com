@@ -5,7 +5,7 @@ export const curriculumProgramOptionValidator = Schema.Struct({
   publicSlug: Schema.String,
   title: Schema.String,
 });
-export const tryoutCountryOptionValidator = Schema.Struct({
+const tryoutCountryOptionValidator = Schema.Struct({
   countryCode: Schema.String,
   key: Schema.String,
   publicPath: Schema.String,

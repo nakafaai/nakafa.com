@@ -108,7 +108,7 @@ export const PostAuthIntentSchema = Schema.String.pipe(
 
 const AppLocaleSchema = Schema.Literals(routing.locales);
 
-export const PostAuthIntentResolutionSchema = Schema.Union([
+const PostAuthIntentResolutionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("none"),
     reason: Schema.Literals([
@@ -134,7 +134,7 @@ const PostAuthDestinationSchema = Schema.Struct({
   locale: AppLocaleSchema,
 });
 
-export type PostAuthDestination = typeof PostAuthDestinationSchema.Type;
+type PostAuthDestination = typeof PostAuthDestinationSchema.Type;
 
 const decodeString = Schema.decodeUnknownOption(Schema.String);
 

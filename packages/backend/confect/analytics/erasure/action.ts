@@ -7,8 +7,9 @@ import {
 } from "@repo/backend/confect/analytics/erasure/action.spec";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Config, Effect, Redacted, Schema } from "effect";
-export const postHogIngestionHostnameSuffix = /\.i\.posthog\.com$/;
-export const postHogProjectIdPattern = /^[1-9]\d*$/;
+
+const postHogIngestionHostnameSuffix = /\.i\.posthog\.com$/;
+const postHogProjectIdPattern = /^[1-9]\d*$/;
 const PostHogBulkEraseResponseSchema = Schema.Struct({
   deletion_errors: Schema.optional(Schema.Array(Schema.Unknown)),
   events_queued_for_deletion: Schema.Boolean,
@@ -25,7 +26,7 @@ const PostHogErasureConfigSchema = Schema.Struct({
   host: Schema.String,
   projectId: Schema.String,
 });
-export type PostHogErasureConfig = typeof PostHogErasureConfigSchema.Type;
+type PostHogErasureConfig = typeof PostHogErasureConfigSchema.Type;
 const PostHogBulkEraseJsonSchema = Schema.fromJsonString(
   PostHogBulkEraseResponseSchema
 );
@@ -76,7 +77,7 @@ const readPostHogErasureConfig = Effect.fn(
 });
 
 /** Validates and normalizes the credentials required before identity erasure. */
-export const validatePostHogErasureConfig = Effect.fn(
+const validatePostHogErasureConfig = Effect.fn(
   "analytics.erasure.validatePostHogErasureConfig"
 )(function* (config: PostHogErasureConfig) {
   const deletionApiKey = config.deletionApiKey.trim();

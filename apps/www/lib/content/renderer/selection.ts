@@ -34,7 +34,7 @@ export interface RendererImplementation {
   readonly name: string;
 }
 
-export type SelectedRenderer =
+type SelectedRenderer =
   | {
       readonly kind: "implementation";
       readonly component: MDXComponents[string];

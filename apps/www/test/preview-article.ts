@@ -37,9 +37,7 @@ const germanArticleRoute = Schema.decodeSync(ArticleRouteSchema)({
 });
 
 /** Exact real article selected by local preview tests. */
-export const articlePreviewDocument = Schema.decodeSync(
-  ArticlePreviewDocumentSchema
-)({
+const articlePreviewDocument = Schema.decodeSync(ArticlePreviewDocumentSchema)({
   delivery: "public",
   family: "article",
   rendererDomain: "politics",

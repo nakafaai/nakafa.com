@@ -21,14 +21,14 @@ const RawArticlePageQuerySchema = Schema.Record(
   Schema.Union([Schema.String, Schema.Array(Schema.String), Schema.Undefined])
 );
 /** Raw Next.js query values accepted by article catalog pages. */
-export type ArticlePageQuery = typeof RawArticlePageQuerySchema.Type;
+type ArticlePageQuery = typeof RawArticlePageQuerySchema.Type;
 const ArticleNextPageSchema = Schema.Struct({
   activeManifestHash: Schema.NullOr(Sha256HashSchema),
   activeReleaseId: Schema.NullOr(ReleaseIdSchema),
   nextCursor: Schema.NullOr(Schema.String),
 });
 /** Minimal active page identity used to build one continuation URL. */
-export type ArticleNextPage = typeof ArticleNextPageSchema.Type;
+type ArticleNextPage = typeof ArticleNextPageSchema.Type;
 /** Removes source-release pagination before navigating to another locale. */
 export function stripArticlePagination(search: string) {
   const query = new URLSearchParams(search);

@@ -1,7 +1,8 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import { Schema } from "effect";
-export const forumAttachmentUploadOutcomeValidator = Schema.Literals([
+
+const forumAttachmentUploadOutcomeValidator = Schema.Literals([
   "accepted",
   "discarded",
   "rejected",

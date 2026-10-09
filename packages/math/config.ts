@@ -1,6 +1,6 @@
 import { Config } from "effect";
 
-export const CAS_ENV = {
+const CAS_ENV = {
   apiKey: "MATH_CAS_API_KEY",
   url: "NEXT_PUBLIC_CAS_URL",
 } as const;

@@ -104,7 +104,7 @@ describe("test ownership policy", () => {
       });
       yield* writeFixtures(root, {
         "apps/web/style.test.ts":
-          'import { it } from "@effect/vitest";\nit("keeps size-[4px]", () => {});\n',
+          'import { it } from "@effect/vitest";\nimport { style } from "./style";\nit("keeps size-[4px]", () => style);\n',
         "apps/web/style.ts": 'export const style = "w-[calc(100%-2rem)]";\n',
         "apps/web/tsconfig.json":
           '{"extends":"@repo/typescript-config/base.json"}\n',
@@ -119,8 +119,14 @@ describe("test ownership policy", () => {
           '{"name":"@repo/typescript-config"}\n',
         "packages/core/types.d.ts":
           'export declare const narrowed: typeof value === "object";\n',
-        "scripts/tool.test.ts": CLEAN_TEST,
-        "scripts/tool.ts": "export const tool = true;\n",
+        ".agents/skills/content/scripts/run.ts":
+          'import { skilled } from "../../../../scripts/tool";\nrun(skilled);\n',
+        "site.config.ts":
+          'import { configured } from "./scripts/tool";\nrun(configured);\n',
+        "scripts/tool.test.ts":
+          'import { it } from "@effect/vitest";\nimport { tool } from "./tool";\nit("reads", () => tool);\n',
+        "scripts/tool.ts":
+          "export const tool = true;\nexport const skilled = 1;\nexport const configured = 2;\n",
         "scripts/tsconfig.json":
           '{"extends":"../packages/typescript-config/base.json"}\n',
       });
@@ -140,18 +146,18 @@ describe("test ownership policy", () => {
         prefix: "test-policy-dirty-",
       });
       yield* writeFixtures(root, {
-        "apps/web/card.tsx": 'export const card = "size-[4px]";\n',
+        "apps/web/card.tsx": 'const card = "size-[4px]";\n',
         "apps/web/orphan.test.ts": CLEAN_TEST,
         "apps/web/view.test.tsx": CLEAN_TEST,
-        "apps/web/view.ts": "export const view = true;\n",
-        "packages/core/__tests__/value.ts": "export const value = 1;\n",
+        "apps/web/view.ts": "const view = true;\n",
+        "packages/core/__tests__/value.ts": "const value = 1;\n",
         "packages/core/runner.test.ts":
           'import { Effect } from "effect";\nEffect.runPromise(program);\n',
-        "packages/core/runner.ts": "export const runner = true;\n",
+        "packages/core/runner.ts": "const runner = true;\n",
         "scripts/raw.ts":
           "export function read() {\n  try {\n    return 1;\n  } catch {\n    return 0;\n  }\n}\n",
         "apps/web/store.ts":
-          "export const store = new Map();\nexport const names = Object.keys(value);\n",
+          "const store = new Map();\nconst names = Object.keys(value);\n",
         "apps/web/tsconfig.json":
           '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
         "packages/typescript-config/package.json":
@@ -166,7 +172,7 @@ describe("test ownership policy", () => {
           "Final code must not contain .test.tsx files:\n  - apps/web/view.test.tsx\n",
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
           "packages/core/runner.test.ts: return the Effect to @effect/vitest instead of running it.\n",
-          `apps/web/store.ts:1: ${RULES["map-set"].message} (map-set)\napps/web/store.ts:2: ${RULES["object-helper"].message} (object-helper)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
+          `apps/web/store.ts:1: ${RULES["map-set"].message} (map-set)\napps/web/store.ts:2: ${RULES["object-helper"].message} (object-helper)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\nscripts/raw.ts:1: no other module names read: remove its \`export\`, or delete the declaration when this module does not use it either (unused-export)\n`,
           "apps/web/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\ntsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\n",
           "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
@@ -184,34 +190,38 @@ describe("test ownership policy", () => {
       category: "a TSX test",
       files: {
         "apps/web/view.test.tsx": CLEAN_TEST,
-        "apps/web/view.ts": "export const view = true;\n",
+        "apps/web/view.ts": "const view = true;\n",
       },
     },
     {
       category: "a nested test folder",
-      files: { "packages/core/__test__/value.ts": "export const value = 1;\n" },
+      files: { "packages/core/__test__/value.ts": "const value = 1;\n" },
     },
     {
       category: "a test that runs its Effect",
       files: {
         "scripts/runner.test.ts":
           'import { Effect } from "effect";\nEffect.runSync(program);\n',
-        "scripts/runner.ts": "export const runner = true;\n",
+        "scripts/runner.ts": "const runner = true;\n",
       },
     },
     {
       category: "an arbitrary value a Tailwind class repeats",
-      files: { "apps/web/card.tsx": 'export const card = "ring-[3px]";\n' },
+      files: { "apps/web/card.tsx": 'const card = "ring-[3px]";\n' },
     },
     {
       category: "a native Map",
-      files: { "apps/web/store.ts": "export const store = new Map();\n" },
+      files: { "apps/web/store.ts": "const store = new Map();\n" },
     },
     {
       category: "an Object helper",
       files: {
-        "apps/web/store.ts": "export const store = Object.keys(value);\n",
+        "apps/web/store.ts": "const store = Object.keys(value);\n",
       },
+    },
+    {
+      category: "an export that no other module names",
+      files: { "apps/web/lonely.ts": "export const lonely = 1;\n" },
     },
     {
       category: "the Vercel gateway package",
@@ -224,7 +234,7 @@ describe("test ownership policy", () => {
       category: "typeof-object narrowing",
       files: {
         "packages/core/guard.ts":
-          'export const isRecord = (value: unknown) => typeof value === "object";\n',
+          'const isRecord = (value: unknown) => typeof value === "object";\n',
       },
     },
   ])("fails for $category alone", ({ files }) =>
@@ -234,13 +244,13 @@ describe("test ownership policy", () => {
         prefix: "test-policy-category-",
       });
       yield* writeFixtures(root, {
-        "apps/web/value.ts": "export const value = 1;\n",
-        "packages/core/value.ts": "export const value = 1;\n",
+        "apps/web/value.ts": "const value = 1;\n",
+        "packages/core/value.ts": "const value = 1;\n",
         "packages/typescript-config/base.json":
           '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
         "packages/typescript-config/package.json":
           '{"name":"@repo/typescript-config"}\n',
-        "scripts/tool.ts": "export const tool = true;\n",
+        "scripts/tool.ts": "const tool = true;\n",
         "tsconfig.json":
           '{"extends":"./packages/typescript-config/base.json"}\n',
         ...files,
@@ -263,11 +273,16 @@ describe("test ownership policy", () => {
       yield* writeFixtures(repository, {
         "apps/web/value.test.ts": CLEAN_TEST,
         "apps/web/value.ts": "export const value = 1;\n",
+        "packages/core/_generated/api.ts": "export const api = 1;\n",
         "packages/core/value.ts": "export const value = 1;\n",
         "scripts/tool.ts": "export const tool = true;\n",
       });
       const unreadableTest = path.join(repository, "apps/web/value.test.ts");
       const unreadableSource = path.join(repository, "scripts/tool.ts");
+      const unreadableGenerated = path.join(
+        repository,
+        "packages/core/_generated/api.ts"
+      );
 
       const failures = [
         yield* checkFixture(repository).pipe(
@@ -278,6 +293,10 @@ describe("test ownership policy", () => {
           Effect.provide(unreadableFile(unreadableSource)),
           Effect.flip
         ),
+        yield* checkFixture(repository).pipe(
+          Effect.provide(unreadableFile(unreadableGenerated)),
+          Effect.flip
+        ),
       ];
 
       assert.deepStrictEqual(
@@ -285,6 +304,7 @@ describe("test ownership policy", () => {
         [
           ["RepositoryReadError", `Unable to read ${unreadableTest}.`],
           ["RepositoryReadError", `Unable to read ${unreadableSource}.`],
+          ["RepositoryReadError", `Unable to read ${unreadableGenerated}.`],
         ]
       );
     }).pipe(Effect.provide(NodeServices.layer))

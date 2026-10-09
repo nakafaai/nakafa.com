@@ -18,7 +18,7 @@ import { getQuranSurahName } from "@/lib/utils/pages/quran";
 const QURAN_PAGE_MARKDOWN_VERSE_LIMIT = 80;
 
 /** One canonical Quran route whose Markdown body is owned by this module. */
-export const QuranLlmsRouteSchema = Schema.Union([
+const QuranLlmsRouteSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("index") }),
   Schema.Struct({
     kind: Schema.Literal("surah"),
@@ -26,7 +26,7 @@ export const QuranLlmsRouteSchema = Schema.Union([
   }),
 ]);
 
-export type QuranLlmsRoute = typeof QuranLlmsRouteSchema.Type;
+type QuranLlmsRoute = typeof QuranLlmsRouteSchema.Type;
 
 /** Classifies Quran Markdown ownership without reading publication body data. */
 export function classifyQuranLlmsRoute(

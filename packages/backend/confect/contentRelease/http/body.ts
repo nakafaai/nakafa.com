@@ -10,7 +10,7 @@ export class HttpBodyError extends Schema.TaggedError<HttpBodyError>()(
   }
 ) {}
 /** Complete UTF-8 JSON request body accepted by one HTTP adapter. */
-export type HttpJsonBody = typeof dispatchInputValidator.Type;
+type HttpJsonBody = typeof dispatchInputValidator.Type;
 /** Creates one sanitized body failure without retaining request bytes. */
 function bodyError(reason: HttpBodyError["reason"]) {
   return new HttpBodyError({

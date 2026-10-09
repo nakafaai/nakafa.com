@@ -70,7 +70,7 @@ function runtimeProjectionJson(
 }
 
 /** Inserts one complete immutable artifact used by a selected route binding. */
-export async function insertRuntimeArtifact(
+async function insertRuntimeArtifact(
   ctx: MutationCtx,
   artifactHash: string,
   contentKey: string,

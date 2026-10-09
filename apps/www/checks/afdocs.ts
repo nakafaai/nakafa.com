@@ -3,13 +3,10 @@ import { loadConfig } from "afdocs/helpers";
 import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
 
 /** Expected failure while running the external AFDocs site contract. */
-export class AfdocsError extends Schema.TaggedError<AfdocsError>()(
-  "AfdocsError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+class AfdocsError extends Schema.TaggedError<AfdocsError>()("AfdocsError", {
+  cause: Schema.Unknown,
+  message: Schema.String,
+}) {}
 
 /** Runs every configured AFDocs check against an already-started site. */
 export const runAfdocs = Effect.fn("www.checks.runAfdocs")(function* () {

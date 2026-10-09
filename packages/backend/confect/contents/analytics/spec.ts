@@ -6,7 +6,7 @@ import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const invalidContentAnalyticsPartitionCode =
   "INVALID_CONTENT_ANALYTICS_PARTITION";
-export const contentAnalyticsIoFailedCode = "CONTENT_ANALYTICS_IO_FAILED";
+const contentAnalyticsIoFailedCode = "CONTENT_ANALYTICS_IO_FAILED";
 const learningPopularityWindowValidator = Schema.Literals([
   ...learningPopularityFiniteWindowValues,
 ]);
@@ -19,7 +19,7 @@ export const scheduleContentAnalyticsPartitionsResultValidator = Schema.Struct({
 export const scheduleContentAnalyticsPartitionArgs = {
   partition: Schema.Finite,
 };
-export const scheduleContentAnalyticsPartitionArgsValidator = Schema.Struct(
+const scheduleContentAnalyticsPartitionArgsValidator = Schema.Struct(
   scheduleContentAnalyticsPartitionArgs
 );
 export const scheduleContentAnalyticsPartitionResultValidator = Schema.Struct({
@@ -30,7 +30,7 @@ export const processContentAnalyticsPartitionArgs = {
   leaseVersion: Schema.Finite,
   partition: Schema.Finite,
 };
-export const processContentAnalyticsPartitionArgsValidator = Schema.Struct(
+const processContentAnalyticsPartitionArgsValidator = Schema.Struct(
   processContentAnalyticsPartitionArgs
 );
 export const processContentAnalyticsPartitionResultValidator = Schema.Struct({
@@ -65,7 +65,7 @@ export const refreshLearningPopularityWindowPageArgs = {
 };
 
 /** Public validator for one paginated popularity window refresh invocation. */
-export const refreshLearningPopularityWindowPageArgsValidator = Schema.Struct(
+const refreshLearningPopularityWindowPageArgsValidator = Schema.Struct(
   refreshLearningPopularityWindowPageArgs
 );
 
@@ -85,7 +85,7 @@ export const expireLearningPopularityWindowPageArgs = {
   scopeMode: learningPopularityScopeValidator,
   windowKey: learningPopularityWindowValidator,
 };
-export const expireLearningPopularityWindowPageArgsValidator = Schema.Struct(
+const expireLearningPopularityWindowPageArgsValidator = Schema.Struct(
   expireLearningPopularityWindowPageArgs
 );
 export const expireLearningPopularityWindowPageResultValidator = Schema.Struct({

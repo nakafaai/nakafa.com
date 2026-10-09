@@ -8,7 +8,7 @@ export const INDEXING_HOST = COMPANY_IDENTITY.url;
 export const INDEXING_HOSTNAME = new URL(INDEXING_HOST).hostname;
 
 /** Public IndexNow verification key filename served from Nakafa's public root. */
-export const INDEXNOW_KEY_FILE_NAME = "e22d548f7fd2482a9022e3b84e944901.txt";
+const INDEXNOW_KEY_FILE_NAME = "e22d548f7fd2482a9022e3b84e944901.txt";
 
 /** Public IndexNow verification key; this is not a service-account secret. */
 export const INDEXNOW_KEY = "e22d548f7fd2482a9022e3b84e944901";

@@ -13,13 +13,13 @@ const SIDEBAR_COOKIE_MAX_AGE =
   SECONDS_PER_MINUTE * MINUTES_PER_HOUR * HOURS_PER_DAY * DAYS_PER_WEEK;
 
 /** Runtime contract for a sidebar state cookie write. */
-export const SidebarStateCookie = Schema.Struct({
+const SidebarStateCookie = Schema.Struct({
   cookieName: Schema.String,
   open: Schema.Boolean,
 });
 
 /** Schema-derived input accepted by sidebar persistence. */
-export type SidebarStateCookie = typeof SidebarStateCookie.Type;
+type SidebarStateCookie = typeof SidebarStateCookie.Type;
 
 /** Expected browser failure while persisting sidebar state. */
 export class SidebarStatePersistenceError extends Schema.TaggedError<SidebarStatePersistenceError>()(

@@ -1,7 +1,7 @@
 import { cn } from "cn";
 import type { SVGProps } from "react";
 
-export const brandLogoNames = [
+const brandLogoNames = [
   "anthropic",
   "claude",
   "deepseek",
@@ -18,7 +18,7 @@ export const brandLogoNames = [
   "zai",
 ] as const;
 
-export type BrandLogoName = (typeof brandLogoNames)[number];
+type BrandLogoName = (typeof brandLogoNames)[number];
 
 type LogoProps = SVGProps<SVGSVGElement>;
 

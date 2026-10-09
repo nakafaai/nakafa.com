@@ -2,7 +2,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 
 /** Committed prompt presentation used while the first reactive page arrives. */
-export const NinaPromptPreview = Schema.Struct({
+const NinaPromptPreview = Schema.Struct({
   text: Schema.String,
   files: Schema.mutable(
     Schema.Array(

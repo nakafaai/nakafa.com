@@ -2,13 +2,13 @@ import { Config, Effect, Schema } from "effect";
 import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
 
-export const GateOutcomeSchema = Schema.Literals([
+const GateOutcomeSchema = Schema.Literals([
   "cancelled",
   "failure",
   "skipped",
   "success",
 ]);
-export const GateRoleSchema = Schema.Literals(["doctor", "required"]);
+const GateRoleSchema = Schema.Literals(["doctor", "required"]);
 export const GateInputSchema = Schema.Struct({
   backendOutcome: GateOutcomeSchema,
   fullOutcome: GateOutcomeSchema,
@@ -20,13 +20,10 @@ export const GateInputSchema = Schema.Struct({
 });
 export type GateInput = typeof GateInputSchema.Type;
 
-export class CiGateError extends Schema.TaggedError<CiGateError>()(
-  "CiGateError",
-  {
-    cause: Schema.optional(Schema.Unknown),
-    message: Schema.String,
-  }
-) {}
+class CiGateError extends Schema.TaggedError<CiGateError>()("CiGateError", {
+  cause: Schema.optional(Schema.Unknown),
+  message: Schema.String,
+}) {}
 
 const requireOutcome = (
   actual: GateInput["scopeOutcome"],

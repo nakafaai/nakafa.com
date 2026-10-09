@@ -28,7 +28,7 @@ export const StreamFormat = Schema.Literals([
 ]);
 
 /** Agent owns part decoding and delta assembly; Confect validates its envelope. */
-export const AgentMessage = Schema.Struct({
+const AgentMessage = Schema.Struct({
   id: Schema.String,
   key: Schema.String,
   order: Schema.Finite,

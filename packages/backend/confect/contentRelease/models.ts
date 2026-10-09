@@ -22,7 +22,7 @@ import { Clock, Duration, Effect } from "effect";
 
 type ScheduledFunction = SystemDataModel["_scheduled_functions"]["document"];
 /** Reports whether one scheduler job can still make forward progress. */
-export function isRunningJob(job: Pick<ScheduledFunction, "state"> | null) {
+function isRunningJob(job: Pick<ScheduledFunction, "state"> | null) {
   return job?.state.kind === "pending" || job?.state.kind === "inProgress";
 }
 

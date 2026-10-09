@@ -31,8 +31,7 @@ const PublishedMaterialSummarySchema = Schema.Struct({
 });
 
 /** Verified compact material metadata used by discovery surfaces. */
-export type PublishedMaterialSummary =
-  typeof PublishedMaterialSummarySchema.Type;
+type PublishedMaterialSummary = typeof PublishedMaterialSummarySchema.Type;
 /** Decodes one backend-verified material discovery row. */
 const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
   function* (summary: MaterialSummary, locale: Locale) {

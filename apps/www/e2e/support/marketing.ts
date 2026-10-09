@@ -16,7 +16,7 @@ const MarketingSurfaceSchema = Schema.Literals([
 ]);
 
 /** The fixed contributor fixture does not contain its required first row. */
-export class MarketingContributorMissing extends Schema.TaggedError<MarketingContributorMissing>()(
+class MarketingContributorMissing extends Schema.TaggedError<MarketingContributorMissing>()(
   "MarketingContributorMissing",
   {}
 ) {
@@ -26,7 +26,7 @@ export class MarketingContributorMissing extends Schema.TaggedError<MarketingCon
 }
 
 /** One required homepage surface was absent from the rendered document. */
-export class MarketingSurfaceMissing extends Schema.TaggedError<MarketingSurfaceMissing>()(
+class MarketingSurfaceMissing extends Schema.TaggedError<MarketingSurfaceMissing>()(
   "MarketingSurfaceMissing",
   { surface: MarketingSurfaceSchema }
 ) {

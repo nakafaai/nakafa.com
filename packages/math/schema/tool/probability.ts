@@ -6,7 +6,8 @@ import {
   valueInputSchema,
 } from "@repo/math/schema/shared";
 import { Array as Arr, Schema, Struct } from "effect";
-export const mathProbabilityDistributions = [
+
+const mathProbabilityDistributions = [
   "bernoulli",
   "binomial",
   "normal",

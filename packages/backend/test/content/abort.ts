@@ -19,7 +19,7 @@ export function abortContentKey(index: number) {
 }
 
 /** Creates one staged upsert body with no authored educational content. */
-export function abortItemJson(index: number) {
+function abortItemJson(index: number) {
   const contentKey = abortContentKey(index);
   return encodeJsonText({
     change: {

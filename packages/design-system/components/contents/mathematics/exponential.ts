@@ -1,7 +1,7 @@
 import { Array as Arr, Effect, Schema } from "effect";
 
 /** A real exponential model and the integer observations shown beside it. */
-export const ExponentialSchema = Schema.Struct({
+const ExponentialSchema = Schema.Struct({
   a: Schema.Finite.check(Schema.isGreaterThan(0)),
   mode: Schema.optional(Schema.Literals(["continuous", "discrete"])),
   n: Schema.optional(Schema.Int.check(Schema.isGreaterThanOrEqualTo(2))),

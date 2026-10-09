@@ -1,10 +1,7 @@
 import { FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX } from "@repo/backend/confect/classes/forums/attachments/constants";
 import { ForumAttachmentUploadConfigError } from "@repo/backend/confect/classes/forums/attachments/spec";
-import type { forumAttachmentUploadOutcomeValidator } from "@repo/backend/confect/classes/forums/attachments/upload.spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Config, Effect } from "effect";
-export type ForumAttachmentUploadOutcome =
-  typeof forumAttachmentUploadOutcomeValidator.Type;
 /** Builds one opaque, deployment-owned upload capability URL. */
 export const createForumAttachmentUploadUrl = Effect.fn(
   "classes.forums.attachments.createUploadUrl"

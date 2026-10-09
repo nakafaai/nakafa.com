@@ -10,7 +10,7 @@ const ALL_ARTWORK_LOCALES = ACTIVE_APP_LOCALE_CODES;
 const ENGLISH_ARTWORK = [ENGLISH_APP_LOCALE_CODE] as const;
 
 /** Reviewed public artwork grouped by stable, language-neutral identity. */
-export const artworkSources = {
+const artworkSources = {
   "app/ask-nakafa": ALL_ARTWORK_LOCALES,
   "app/pricing": ALL_ARTWORK_LOCALES,
   "app/school": ENGLISH_ARTWORK,

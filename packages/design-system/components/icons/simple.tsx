@@ -3,7 +3,7 @@ import type { SimpleIcon as SimpleIconData } from "simple-icons";
 
 export type ProgrammingIcon = SimpleIconData;
 
-export type SimpleIconProps = SVGProps<SVGSVGElement> & {
+type SimpleIconProps = SVGProps<SVGSVGElement> & {
   icon: ProgrammingIcon;
 };
 

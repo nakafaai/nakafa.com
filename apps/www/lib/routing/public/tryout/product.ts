@@ -27,7 +27,7 @@ const RetiredSnbtProductSchema = Schema.Struct({
   year: Schema.String,
 });
 /** One retired SNBT product URL: its year and set, plus its part when it names one. */
-export type RetiredSnbtProduct = typeof RetiredSnbtProductSchema.Type;
+type RetiredSnbtProduct = typeof RetiredSnbtProductSchema.Type;
 
 /** Reads the retired SNBT exam URL `/{l}/try-out/snbt`, which named no country. */
 export function readRetiredSnbtExam(

@@ -7,12 +7,11 @@ export const attemptEndReasonValidator = Schema.Literals([
 export type AttemptEndReason = typeof attemptEndReasonValidator.Type;
 
 /** Final attempt statuses that can be mapped to a persisted end reason. */
-export const finalizedAttemptStatusValidator = Schema.Literals([
+const finalizedAttemptStatusValidator = Schema.Literals([
   "completed",
   "expired",
 ]);
-export type FinalizedAttemptStatus =
-  typeof finalizedAttemptStatusValidator.Type;
+type FinalizedAttemptStatus = typeof finalizedAttemptStatusValidator.Type;
 const finalizedAttemptStatusesByEndReason = {
   submitted: "completed",
   "time-expired": "expired",

@@ -1,8 +1,9 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HashMap, Option } from "effect";
 import type { ConversationGeometryHandle } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
+
 /** Clamps one row index into the currently rendered transcript range. */
-export function clampConversationIndex(index: number, itemCount: number) {
+function clampConversationIndex(index: number, itemCount: number) {
   return Math.max(0, Math.min(itemCount - 1, index));
 }
 

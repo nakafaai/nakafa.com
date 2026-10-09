@@ -14,7 +14,7 @@ import {
 } from "effect";
 
 /** Where the generator reads the assembled spec, writes the refs modules, and finds the leaves. */
-export const RefsTarget = Schema.Struct({
+const RefsTarget = Schema.Struct({
   backendRoot: Schema.String,
   outputDirectory: Schema.String,
   specPath: Schema.String,

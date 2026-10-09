@@ -11,7 +11,7 @@ import {
 import { decodePublishedArticle } from "@/lib/content/published/projection";
 
 /** Exact public article identity pinned by an agent-facing catalog read. */
-export type PublishedArticleInput = PublishedContentInput;
+type PublishedArticleInput = PublishedContentInput;
 
 /** Strictly narrows one verified runtime exchange to article data. */
 export const decodeArticleData = Effect.fn("NakafaContent.decodeArticleData")(
@@ -30,7 +30,7 @@ export const decodeArticleData = Effect.fn("NakafaContent.decodeArticleData")(
 );
 
 /** Verified article projection and signed artifact selected from active state. */
-export type PublishedArticleData = Effect.Success<
+type PublishedArticleData = Effect.Success<
   ReturnType<typeof decodeArticleData>
 >;
 
@@ -64,8 +64,3 @@ export const renderArticleArtifact = Effect.fn(
     sourceRevision: data.sourceRevision,
   };
 });
-
-/** Rendered article data consumed by the existing article page shell. */
-export type PublishedArticleContent = Effect.Success<
-  ReturnType<typeof renderArticleArtifact>
->;

@@ -49,7 +49,7 @@ export const boundInputSchema = describedNonEmptyString(
 export const valueInputSchema = describedNonEmptyString(
   "A numeric or symbolic value represented as text so exact math is preserved."
 );
-export const coordinateInputSchema = valueInputSchema.pipe(
+const coordinateInputSchema = valueInputSchema.pipe(
   Schema.check(
     Schema.isPattern(/^[A-Za-z0-9_+\-*/^().\s]+$/u, {
       description:
@@ -100,7 +100,7 @@ export const MathStepSchema = Schema.Struct({
     description:
       "One deterministic math step emitted for student-facing evidence.",
   });
-export const MathPointSchema = Schema.Struct({
+const MathPointSchema = Schema.Struct({
   x: coordinateInputSchema,
   y: coordinateInputSchema,
 })

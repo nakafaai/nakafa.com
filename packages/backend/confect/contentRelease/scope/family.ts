@@ -33,7 +33,7 @@ export function hasExactFamilies(
 }
 
 /** Compares two canonical signed publication scopes field by field. */
-export function hasSamePublicationScope(
+function hasSamePublicationScope(
   left: PublicationScope,
   right: PublicationScope
 ) {

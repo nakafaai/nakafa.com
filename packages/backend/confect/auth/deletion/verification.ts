@@ -2,17 +2,15 @@ import type { components } from "@repo/backend/confect/_generated/components";
 import type { UserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
-export type VerificationPage = FunctionReturnType<
+
+type VerificationPage = FunctionReturnType<
   typeof components.betterAuth.deletion.deleteUserVerificationPage
 >;
-export type DeleteVerificationPage = (
+type DeleteVerificationPage = (
   cursor: string | null
 ) => Effect.Effect<VerificationPage, UserCleanupError>;
-export type LoadVerificationCursor = Effect.Effect<
-  string | null,
-  UserCleanupError
->;
-export type SaveVerificationCursor = (
+type LoadVerificationCursor = Effect.Effect<string | null, UserCleanupError>;
+type SaveVerificationCursor = (
   cursor: string | null
 ) => Effect.Effect<unknown, UserCleanupError>;
 /**

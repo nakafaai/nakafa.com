@@ -17,7 +17,7 @@ const UserSettingsSectionSchema = Schema.Struct({
   labelKey: Schema.Literals(["account", "billing"]),
 });
 /** One addressable section of the private user settings surface. */
-export type UserSettingsSection = typeof UserSettingsSectionSchema.Type;
+type UserSettingsSection = typeof UserSettingsSectionSchema.Type;
 
 /** Root route of the private settings surface. */
 const userSettingsRootHref = "/user/settings";

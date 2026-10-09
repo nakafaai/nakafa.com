@@ -2,8 +2,8 @@ import { Array as Arr, Option, Result, Schema } from "effect";
 import { IpNetwork, NetAddress } from "effect/net";
 
 /** The verdict on an address: outside every refused range, or inside one. */
-export const AddressVerdict = Schema.Literals(["public", "refused"]);
-export type AddressVerdict = typeof AddressVerdict.Type;
+const AddressVerdict = Schema.Literals(["public", "refused"]);
+type AddressVerdict = typeof AddressVerdict.Type;
 
 /** Checks whether a scrape URL is syntactically safe for public fetching. */
 export function isPublicHttpUrlSyntax(value: string) {

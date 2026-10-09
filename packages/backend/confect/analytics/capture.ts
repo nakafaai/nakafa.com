@@ -19,7 +19,7 @@ const ProductAnalyticsCaptureArgsSchema = Schema.Struct({
   /** Event time as epoch milliseconds. */
   timestamp: Schema.optionalKey(Schema.Finite),
 });
-export type ProductAnalyticsCaptureArgs =
+type ProductAnalyticsCaptureArgs =
   typeof ProductAnalyticsCaptureArgsSchema.Type;
 /** Raised when an admitted backend product event cannot be queued. */
 /** Maps one Convex or PostHog failure into the analytics capture channel. */

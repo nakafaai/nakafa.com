@@ -1,9 +1,9 @@
 import { Schema } from "effect";
 
 export const SLSA_PREDICATE = "https://slsa.dev/provenance/v1";
-export const GITHUB_BUILD_TYPE =
+const GITHUB_BUILD_TYPE =
   "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1";
-export const GITHUB_BUILDER = "https://github.com/actions/runner/github-hosted";
+const GITHUB_BUILDER = "https://github.com/actions/runner/github-hosted";
 
 const GitSha = Schema.String.check(Schema.isPattern(/^[a-f0-9]{40}$/u));
 const Sha512 = Schema.String.check(Schema.isPattern(/^[a-f0-9]{128}$/u));

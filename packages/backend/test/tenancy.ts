@@ -26,7 +26,7 @@ import type { FunctionReference } from "convex/server";
 import type { TestConvex } from "convex-test";
 import { Cause, DateTime, Effect, Exit, Schema, Struct } from "effect";
 
-export const TENANCY_NOW = DateTime.toEpochMillis(
+const TENANCY_NOW = DateTime.toEpochMillis(
   DateTime.makeUnsafe("2026-10-01T08:00:00Z")
 );
 

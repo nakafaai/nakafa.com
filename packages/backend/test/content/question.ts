@@ -5,9 +5,9 @@ import {
 } from "@nakafa/aksara-contracts/projection/question";
 import { Schema } from "effect";
 
-export const TEST_QUESTION_SET_KEY =
+const TEST_QUESTION_SET_KEY =
   "question-bank/tryout/indonesia/snbt/general-reasoning/set-1";
-export const TEST_QUESTION_KEY = `${TEST_QUESTION_SET_KEY}/question-1`;
+const TEST_QUESTION_KEY = `${TEST_QUESTION_SET_KEY}/question-1`;
 export const TEST_QUESTION_CONTENT_KEY = `${TEST_QUESTION_KEY}/question`;
 export const TEST_QUESTION_SOURCE = CorpusSourcePathSchema.make(
   `packages/corpus/${TEST_QUESTION_KEY}/question.en.mdx`

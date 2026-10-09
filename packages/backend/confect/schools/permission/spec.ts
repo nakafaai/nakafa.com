@@ -12,9 +12,10 @@ import type {
   SchoolClassTeacherRole,
 } from "@repo/backend/confect/classes/role";
 import type { SchoolMemberRole } from "@repo/backend/confect/schools/schema";
-export type SchoolRole = SchoolMemberRole;
-export type ClassRole = SchoolClassMemberRole;
-export type TeacherRole = SchoolClassTeacherRole;
+
+type SchoolRole = SchoolMemberRole;
+type ClassRole = SchoolClassMemberRole;
+type TeacherRole = SchoolClassTeacherRole;
 export const PERMISSIONS = {
   CLASS_CREATE: "class:create",
   CLASS_READ: "class:read",
@@ -30,7 +31,7 @@ export const PERMISSIONS = {
   FORUM_WRITE: "forum:write",
   FORUM_MODERATE: "forum:moderate",
 } as const;
-export const PermissionSchema = Schema.Literals(Rec.values(PERMISSIONS));
+const PermissionSchema = Schema.Literals(Rec.values(PERMISSIONS));
 export type Permission = typeof PermissionSchema.Type;
 
 /** The stable access-control failure returned by school and class mutations. */

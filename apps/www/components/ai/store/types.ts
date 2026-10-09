@@ -13,7 +13,7 @@ const AiAskSchema = Schema.Struct({
   text: Schema.String,
 });
 
-export type AiAsk = typeof AiAskSchema.Type;
+type AiAsk = typeof AiAskSchema.Type;
 
 const AiStateSchema = Schema.Struct({
   activeChatId: Schema.NullOr(Id("chats")),
@@ -35,7 +35,7 @@ const AiStateSchema = Schema.Struct({
 
 export type AiState = typeof AiStateSchema.Type;
 
-export interface AiActions {
+interface AiActions {
   addChatDraft: (key: string) => void;
   getModel: () => AiState["model"];
   openAsk: (ask: AiAsk) => boolean;

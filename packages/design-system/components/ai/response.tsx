@@ -3,7 +3,6 @@
 import {
   MarkdownBlock,
   type MarkdownContentProps,
-  type MarkdownSecurityProps,
 } from "@repo/design-system/components/markdown/content";
 import { MarkdownFrame } from "@repo/design-system/components/markdown/frame";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
@@ -12,8 +11,7 @@ import { trimIncompleteTail } from "@repo/design-system/lib/markdown/stream";
 import { Array as Arr } from "effect";
 import { memo, useMemo } from "react";
 
-export type HardenedMarkdownProps = MarkdownSecurityProps;
-export type ResponseProps = Omit<MarkdownContentProps, "variant"> & {
+type ResponseProps = Omit<MarkdownContentProps, "variant"> & {
   /** Withholds a trailing formula or diagram until its source is complete. */
   readonly isStreaming?: boolean;
 };

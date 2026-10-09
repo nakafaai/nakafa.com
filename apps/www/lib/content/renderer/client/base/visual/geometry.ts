@@ -28,7 +28,7 @@ import {
 } from "@/lib/content/renderer/client/base/visual/transform";
 
 const MathPathArrowsSchema = Schema.Literals(["both", "end", "none"]);
-export type MathPathArrows = typeof MathPathArrowsSchema.Type;
+type MathPathArrows = typeof MathPathArrowsSchema.Type;
 const VisualMarkerSchema = Schema.Struct({
   appearance: MathAppearanceSchema,
   at: SpacePointSchema,
@@ -53,7 +53,7 @@ const VisualGeometrySchema = Schema.Struct({
   paths: Schema.mutable(Schema.Array(VisualPathSchema)),
   regions: Schema.mutable(Schema.Array(VisualRegionSchema)),
 });
-export type VisualGeometry = typeof VisualGeometrySchema.Type;
+type VisualGeometry = typeof VisualGeometrySchema.Type;
 function arrows(
   kind: PlaneObject["kind"] | SpaceObject["kind"]
 ): MathPathArrows {

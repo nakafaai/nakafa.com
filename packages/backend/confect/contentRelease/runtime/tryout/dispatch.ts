@@ -29,7 +29,7 @@ const decodeRequestJson = Schema.decodeEffect(
   { onExcessProperty: "error" }
 );
 /** Strictly parses one bounded UTF-8 protected batch request. */
-export const decodeProtectedRequest = Effect.fn(
+const decodeProtectedRequest = Effect.fn(
   "contentRelease.decodeProtectedRequest"
 )(function* (source: string, byteLength: number) {
   const measured = new TextEncoder().encode(source).byteLength;
@@ -45,7 +45,7 @@ export const decodeProtectedRequest = Effect.fn(
 });
 
 /** Reads and authenticates one permanent protected artifact batch. */
-export const resolveProtectedRuntime = Effect.fn(
+const resolveProtectedRuntime = Effect.fn(
   "contentRelease.resolveProtectedRuntime"
 )(function* (request: ProtectedContentRuntimeRequest) {
   const { runQuery } = yield* QueryRunner;

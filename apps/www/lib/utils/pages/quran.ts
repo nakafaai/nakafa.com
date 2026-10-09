@@ -26,7 +26,7 @@ const QuranPaginationSchema = Schema.Struct({
 });
 
 /** Navigation data for Quran previous and next links. */
-export type QuranPagination = typeof QuranPaginationSchema.Type;
+type QuranPagination = typeof QuranPaginationSchema.Type;
 
 /** Creates pagination data for Quran surah navigation. */
 export function getQuranPagination({

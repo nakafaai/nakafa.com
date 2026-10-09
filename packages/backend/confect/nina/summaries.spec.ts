@@ -6,7 +6,7 @@ const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 const Tokens = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 
 /** Provider tokens one summary refresh spent. */
-export const NinaSummaryCall = Schema.Struct({ input: Tokens, output: Tokens });
+const NinaSummaryCall = Schema.Struct({ input: Tokens, output: Tokens });
 
 /**
  * A chat's rolling summary of every turn up to and including `throughOrder`.
@@ -25,7 +25,7 @@ export const NinaSummary = Schema.Struct({
 });
 
 /** The summary facts generation and refresh read back. */
-export const NinaSummaryView = NinaSummary.mapFields((fields) => ({
+const NinaSummaryView = NinaSummary.mapFields((fields) => ({
   text: fields.text,
   throughOrder: fields.throughOrder,
 }));

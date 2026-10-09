@@ -74,7 +74,7 @@ export function isElectronConfigurationSampleId(
 }
 
 /** Expected failure: the electron-configuration examples cover atomic numbers 1 to 20. */
-export class SimpleShellConfigurationError extends Schema.TaggedError<SimpleShellConfigurationError>()(
+class SimpleShellConfigurationError extends Schema.TaggedError<SimpleShellConfigurationError>()(
   "SimpleShellConfigurationError",
   {
     message: Schema.String,

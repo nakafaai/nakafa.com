@@ -137,7 +137,7 @@ const answerIdentity = {
 } as const;
 
 /** Exact prompt document accepted by the local preview protocol. */
-export const questionPromptDocument = Schema.decodeSync(
+const questionPromptDocument = Schema.decodeSync(
   QuestionPromptPreviewDocumentSchema
 )({
   delivery: "authenticated",
@@ -149,7 +149,7 @@ export const questionPromptDocument = Schema.decodeSync(
 });
 
 /** Exact answer document carrying its required prompt-first closure. */
-export const questionAnswerDocument = Schema.decodeSync(
+const questionAnswerDocument = Schema.decodeSync(
   QuestionAnswerPreviewDocumentSchema
 )({
   delivery: "entitled",
@@ -193,7 +193,7 @@ export const questionPromptProjection = Schema.decodeSync(
 });
 
 /** Exact answer projection paired with the selected prompt. */
-export const questionAnswerProjection = Schema.decodeSync(
+const questionAnswerProjection = Schema.decodeSync(
   QuestionAnswerProjectionSchema
 )({
   ...answerIdentity,

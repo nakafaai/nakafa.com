@@ -11,14 +11,14 @@ export const Email = Schema.String.check(
 ).pipe(Schema.brand("@Nakafa/Email"));
 export type Email = typeof Email.Type;
 
-export const TenantName = Schema.String.check(
+const TenantName = Schema.String.check(
   Schema.isTrimmed(),
   Schema.isMinLength(2),
   Schema.isMaxLength(120)
 );
-export const TenantKind = Schema.Literals(["school", "foundation"]);
+const TenantKind = Schema.Literals(["school", "foundation"]);
 /** A suspended tenant stays readable and refuses every write. */
-export const TenantStatus = Schema.Literals(["active", "suspended"]);
+const TenantStatus = Schema.Literals(["active", "suspended"]);
 
 export const UnitName = Schema.String.check(
   Schema.isTrimmed(),
@@ -38,11 +38,11 @@ export const UnitLevel = Schema.Literals([
   "other",
 ]);
 /** An archived unit stays readable and refuses every write. */
-export const UnitStatus = Schema.Literals(["active", "archived"]);
+const UnitStatus = Schema.Literals(["active", "archived"]);
 /** Units one tenant may hold; every unit list reads at most this many. */
 export const UNIT_LIMIT = 24;
 /** The national school number (NPSN) of one unit. */
-export const Npsn = Schema.String.check(Schema.isPattern(/^\d{8}$/)).pipe(
+const Npsn = Schema.String.check(Schema.isPattern(/^\d{8}$/)).pipe(
   Schema.brand("@Nakafa/Npsn")
 );
 
@@ -68,11 +68,11 @@ export const Account = Schema.Union([
   }),
 ]);
 
-export const InviteChannel = Schema.Struct({
+const InviteChannel = Schema.Struct({
   email: Email,
   kind: Schema.Literal("email"),
 });
-export const InviteState = Schema.Union([
+const InviteState = Schema.Union([
   Schema.Struct({ status: Schema.Literal("pending") }),
   Schema.Struct({
     at: Schema.Finite,

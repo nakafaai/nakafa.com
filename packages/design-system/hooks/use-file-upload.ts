@@ -30,7 +30,7 @@ const FileMetadataSchema = Schema.Struct({
 });
 
 /** Describes a file that is already stored outside the browser. */
-export type FileMetadata = typeof FileMetadataSchema.Type;
+type FileMetadata = typeof FileMetadataSchema.Type;
 
 const FileWithPreviewSchema = Schema.Struct({
   file: Schema.Union([Schema.instanceOf(File), FileMetadataSchema]),

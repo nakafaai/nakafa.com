@@ -45,7 +45,7 @@ export const subjectMenu = Arr.map(data, (item) => ({
   icon: getCategoryIcon(item.title),
 }));
 
-export type SubjectMenuItem = (typeof subjectMenu)[number]["items"][number];
+type SubjectMenuItem = (typeof subjectMenu)[number]["items"][number];
 
 /**
  * Selects the localized public subject URL carried by the subject menu source

@@ -24,7 +24,7 @@ const RuntimeRequestResultSchema = Schema.Union([
   RejectedRuntimeRequestSchema,
 ]);
 /** Authenticated bounded body or one response-safe rejection. */
-export type RuntimeRequestResult = typeof RuntimeRequestResultSchema.Type;
+type RuntimeRequestResult = typeof RuntimeRequestResultSchema.Type;
 /** Maps one shared bounded-body failure to its stable HTTP status. */
 function bodyFailureResult(error: HttpBodyError) {
   if (error.reason === "size") {

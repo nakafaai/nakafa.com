@@ -3,7 +3,7 @@ import { Array as Arr, MutableList } from "effect";
 const HIGHLIGHT_TOKEN_LIMIT = 8;
 const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
 
-export type SearchExcerptPart = ReturnType<typeof createPart>;
+type SearchExcerptPart = ReturnType<typeof createPart>;
 
 /** Returns whether one Convex excerpt contains visible text. */
 export function hasSearchExcerpt(excerpt: string) {

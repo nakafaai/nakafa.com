@@ -82,7 +82,7 @@ const navigationIcons: {
 };
 
 /** Resolves a source-owned navigation identity to its Hugeicons card icon. */
-export function readCurriculumNavigationIcon(key: ProgramNavigationIconKey) {
+function readCurriculumNavigationIcon(key: ProgramNavigationIconKey) {
   return navigationIcons[key];
 }
 

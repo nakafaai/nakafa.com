@@ -37,7 +37,7 @@ export const onboardingProfileValidator = Schema.Struct({
   role: Schema.optionalKey(selfSelectableUserRoleValidator),
   updatedAt: Schema.Finite,
 });
-export const currentOnboardingProfileValidator = Schema.Union([
+const currentOnboardingProfileValidator = Schema.Union([
   Schema.Null,
   onboardingProfileValidator,
 ]);

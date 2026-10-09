@@ -16,7 +16,7 @@ export const AgentCurriculumPreferenceSchema = Schema.Struct({
 export type AgentCurriculumPreference =
   typeof AgentCurriculumPreferenceSchema.Type;
 /** Per-turn context shared by Nina and specialist agents after authenticated admission. */
-export const AgentContextSchema = Schema.Struct({
+const AgentContextSchema = Schema.Struct({
   currentDate: Schema.String,
   curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
   nina: Schema.optional(NinaContextPackSchema),
@@ -36,7 +36,7 @@ export const TaskAgentDataSchema = Schema.Struct({
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type TaskAgentData = typeof TaskAgentDataSchema.Type;
 /** Schema-derived data passed to the external research specialist. */
-export const ResearchAgentDataSchema = Schema.Struct({
+const ResearchAgentDataSchema = Schema.Struct({
   ...TaskAgentDataSchema.fields,
   sourceReferences: Schema.Array(SourceReferenceSchema),
   toolCallId: Schema.String,

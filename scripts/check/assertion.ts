@@ -32,7 +32,7 @@ function assertedType(node: Node): TypeNode | undefined {
  * it is not an assertion. The `as` of an import, an export, or a mapped type is
  * not an expression, so the rule never sees it.
  */
-export function isAssertion(node: Node) {
+function isAssertion(node: Node) {
   if (isNonNullExpression(node)) {
     return true;
   }

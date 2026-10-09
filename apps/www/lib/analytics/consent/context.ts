@@ -14,7 +14,7 @@ export const AnalyticsConsentContext =
   createContext<AnalyticsConsentStore | null>(null);
 
 /** Returns the consent store and rejects a missing provider. */
-export function useAnalyticsConsentStore() {
+function useAnalyticsConsentStore() {
   const store = use(AnalyticsConsentContext);
   if (!store) {
     throw new Error(

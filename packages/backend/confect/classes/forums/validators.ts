@@ -21,7 +21,7 @@ export const forumPostAttachmentValidator = Schema.Struct({
 });
 
 /** Shared forum thread owner snapshot returned to the frontend. */
-export const forumUserValidator = userDataValidator;
+const forumUserValidator = userDataValidator;
 
 /** Shared enriched forum post payload returned by detached history queries. */
 export const forumPostWithMetadataValidator = Schema.Struct({

@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export const NUMERIC_GRADES = [
+const NUMERIC_GRADES = [
   "1",
   "2",
   "3",
@@ -16,11 +16,11 @@ export const NUMERIC_GRADES = [
 ] as const;
 export const NON_NUMERIC_GRADES = ["bachelor", "master", "phd"] as const;
 
-export const GRADES = [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES] as const;
+const GRADES = [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES] as const;
 export const GradeSchema = Schema.Literals(GRADES);
 export type Grade = typeof GradeSchema.Type;
 
-export const HIGH_SCHOOL_MATERIALS = [
+const HIGH_SCHOOL_MATERIALS = [
   "mathematics",
   "physics",
   "chemistry",
@@ -32,7 +32,7 @@ export const HIGH_SCHOOL_MATERIALS = [
   "geospatial",
   "sociology",
 ] as const;
-export const BACHELOR_MATERIALS = [
+const BACHELOR_MATERIALS = [
   "ai-ds",
   "game-engineering",
   "computer-science",
@@ -41,7 +41,7 @@ export const BACHELOR_MATERIALS = [
   "informatics-engineering",
   "international-relations",
 ] as const;
-export const SUBJECT_MATERIALS = [
+const SUBJECT_MATERIALS = [
   ...HIGH_SCHOOL_MATERIALS,
   ...BACHELOR_MATERIALS,
 ] as const;

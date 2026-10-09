@@ -7,7 +7,7 @@ import {
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
 
-export const LocalizedLlmsRouteSchema = Schema.Struct({
+const LocalizedLlmsRouteSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,
   markdownExtension: Schema.Literals(["", ".md", ".mdx"]),
   route: Schema.String,

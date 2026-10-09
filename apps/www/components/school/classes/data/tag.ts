@@ -32,7 +32,7 @@ const tagList = [
     value: "resource",
   },
 ] as const;
-export type TagValue = (typeof tagList)[number]["value"];
+type TagValue = (typeof tagList)[number]["value"];
 
 /**
  * Resolve the icon used to represent one forum tag.

@@ -51,7 +51,7 @@ export const testPageArtifact = SignedContentArtifactSchema.make({
 });
 
 /** Exact reviewed Page selected by local preview tests. */
-export const testPagePreviewDocument = PagePreviewDocumentSchema.make({
+const testPagePreviewDocument = PagePreviewDocumentSchema.make({
   delivery: "public",
   family: "page",
   rendererDomain: "site",

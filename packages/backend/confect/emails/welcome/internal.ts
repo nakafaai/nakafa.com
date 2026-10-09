@@ -12,7 +12,8 @@ import {
 } from "@repo/backend/confect/emails/welcome/impl";
 import { WELCOME_EMAIL_FROM } from "@repo/backend/confect/emails/welcome/spec";
 import { Effect, flow } from "effect";
-export type WelcomeIntent = Docs["welcomeEmailIntents"];
+
+type WelcomeIntent = Docs["welcomeEmailIntents"];
 export const enqueueRenderedWelcomeProgram = Effect.fn(
   "emails.welcome.enqueueRendered"
 )(

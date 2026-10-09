@@ -51,10 +51,10 @@ const JavascriptRunSchema = Schema.Struct({
   urls: Schema.Array(Schema.String),
 });
 
-export type JavascriptRun = typeof JavascriptRunSchema.Type;
+type JavascriptRun = typeof JavascriptRunSchema.Type;
 
 /** A route did not return one successful document response. */
-export class JavascriptResourceResponseError extends Schema.TaggedError<JavascriptResourceResponseError>()(
+class JavascriptResourceResponseError extends Schema.TaggedError<JavascriptResourceResponseError>()(
   "JavascriptResourceResponseError",
   {
     href: Schema.String,
@@ -63,7 +63,7 @@ export class JavascriptResourceResponseError extends Schema.TaggedError<Javascri
 ) {}
 
 /** A required JavaScript request did not complete. */
-export class JavascriptResourceRequestError extends Schema.TaggedError<JavascriptResourceRequestError>()(
+class JavascriptResourceRequestError extends Schema.TaggedError<JavascriptResourceRequestError>()(
   "JavascriptResourceRequestError",
   {
     href: Schema.String,
@@ -76,7 +76,7 @@ export class JavascriptResourceRequestError extends Schema.TaggedError<Javascrip
 }
 
 /** Next.js did not register a visible-link prefetch within the fixed window. */
-export class JavascriptPrefetchReadinessTimeout extends Schema.TaggedError<JavascriptPrefetchReadinessTimeout>()(
+class JavascriptPrefetchReadinessTimeout extends Schema.TaggedError<JavascriptPrefetchReadinessTimeout>()(
   "JavascriptPrefetchReadinessTimeout",
   {
     href: Schema.String,
@@ -93,7 +93,7 @@ export class JavascriptPrefetchReadinessTimeout extends Schema.TaggedError<Javas
 }
 
 /** Matching JavaScript resources continued loading beyond the fixed window. */
-export class JavascriptResourceSettleTimeout extends Schema.TaggedError<JavascriptResourceSettleTimeout>()(
+class JavascriptResourceSettleTimeout extends Schema.TaggedError<JavascriptResourceSettleTimeout>()(
   "JavascriptResourceSettleTimeout",
   {
     href: Schema.String,

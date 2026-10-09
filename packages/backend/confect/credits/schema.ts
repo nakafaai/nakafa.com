@@ -1,7 +1,8 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { userPlanValidator } from "@repo/backend/confect/users/schema";
 import { Schema } from "effect";
-export const creditTransactionTypeValidator = Schema.Literals([
+
+const creditTransactionTypeValidator = Schema.Literals([
   "daily-grant",
   "monthly-grant",
   "usage",
@@ -10,14 +11,13 @@ export const creditTransactionTypeValidator = Schema.Literals([
   "bonus",
   "expiration",
 ]);
-export type CreditTransactionType = typeof creditTransactionTypeValidator.Type;
 const creditGrantTypeValidator = creditTransactionTypeValidator.pick([
   "daily-grant",
   "monthly-grant",
 ]);
 
 /** Scalar audit values allowed on credit transaction metadata. */
-export const creditTransactionMetadataValueValidator = Schema.Union([
+const creditTransactionMetadataValueValidator = Schema.Union([
   Schema.String,
   Schema.Finite,
   Schema.Boolean,
@@ -25,7 +25,7 @@ export const creditTransactionMetadataValueValidator = Schema.Union([
 ]);
 
 /** Bounded metadata record for credit audit events. */
-export const creditTransactionMetadataValidator = Schema.Record(
+const creditTransactionMetadataValidator = Schema.Record(
   Schema.String,
   creditTransactionMetadataValueValidator
 );

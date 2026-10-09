@@ -4,7 +4,8 @@ import { loadAttemptScoreResult } from "@repo/backend/confect/tryouts/score/resu
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
 import type { PaginationOptions } from "convex/server";
 import { Effect } from "effect";
-export const MAX_HISTORY_ROWS_READ = 25;
+
+const MAX_HISTORY_ROWS_READ = 25;
 /** Loads and projects one bounded history page for the current app user. */
 export const readHistoryPage = Effect.fn("tryouts.queries.history.readPage")(
   function* (identity: TryoutSetIdentity, paginationOpts: PaginationOptions) {

@@ -55,7 +55,7 @@ export const NinaInput = Schema.Union([
 ]);
 
 /** Only active generation owns a refundable reservation and verified run context. */
-export const NinaActiveTurn = Schema.Struct({
+const NinaActiveTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
   ...NinaCreditHold.fields,
   phase: Schema.Literal("active"),
@@ -78,7 +78,7 @@ export const NinaSettledTurn = Schema.Struct({
 });
 
 /** A saved prompt without a response has no inferred charge or completion time. */
-export const NinaUnansweredTurn = Schema.Struct({
+const NinaUnansweredTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
   phase: Schema.Literal("unanswered"),
   state: NinaTurnState.members[5],

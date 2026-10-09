@@ -35,7 +35,7 @@ import {
 } from "#scripts/check/source";
 
 /** One construct that breaks an Effect-native rule at a line of an authored module. */
-export const Finding = Schema.Struct({
+const Finding = Schema.Struct({
   file: Schema.String,
   line: Schema.Int,
   rule: Rule,

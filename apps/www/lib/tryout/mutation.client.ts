@@ -4,7 +4,8 @@ import { useMutation } from "@confect/react";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import { Array as Arr, Option } from "effect";
 import type { TryoutCountrySelectorOption } from "@/components/tryout/catalog/options";
-export type TryoutPreferenceOption = Pick<
+
+type TryoutPreferenceOption = Pick<
   TryoutCountrySelectorOption,
   "countryCode" | "countryKey" | "publicPath" | "title"
 >;

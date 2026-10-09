@@ -25,64 +25,62 @@ import { httpLayer } from "@/lib/convex/http";
  *
  * Static consumers such as social images resolve metadata through this seam
  * so their module graph never renders interactive renderers. */
-export const decodeMaterialModel = Effect.fn("NakafaMaterial.decodeModel")(
+const decodeMaterialModel = Effect.fn("NakafaMaterial.decodeModel")(function* (
+  source: Effect.Success<ReturnType<typeof assembleMaterialSource>>,
+  locale: Locale,
+  publicPath: string
+) {
+  const input = {
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath,
+  };
+  const model = yield* decodePublishedMaterialRoute(
+    source.model,
+    locale,
+    publicPath
+  );
+  if (!model.projection) {
+    if (source.runtimeJson !== null) {
+      return yield* makeMaterialProjectionError(input);
+    }
+    return null;
+  }
+  if (source.runtimeJson === null) {
+    return yield* makeMaterialProjectionError(input);
+  }
+  const data = yield* decodePublishedDelivery(input, source.runtimeJson);
+  const narrowed = yield* decodeMaterialData(data, input);
+  yield* verifyMaterialPublication(
+    {
+      activeReleaseId: model.activeReleaseId,
+      projection: model.projection,
+    },
+    narrowed
+  );
+  return {
+    model,
+    narrowed,
+  };
+});
+
+/** Verifies the complete query result before evaluating its immutable body. */
+const decodeMaterialDelivery = Effect.fn("NakafaMaterial.decodeDelivery")(
   function* (
     source: Effect.Success<ReturnType<typeof assembleMaterialSource>>,
     locale: Locale,
     publicPath: string
   ) {
-    const input = {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    };
-    const model = yield* decodePublishedMaterialRoute(
-      source.model,
-      locale,
-      publicPath
-    );
-    if (!model.projection) {
-      if (source.runtimeJson !== null) {
-        return yield* makeMaterialProjectionError(input);
-      }
+    const decoded = yield* decodeMaterialModel(source, locale, publicPath);
+    if (!decoded) {
       return null;
     }
-    if (source.runtimeJson === null) {
-      return yield* makeMaterialProjectionError(input);
-    }
-    const data = yield* decodePublishedDelivery(input, source.runtimeJson);
-    const narrowed = yield* decodeMaterialData(data, input);
-    yield* verifyMaterialPublication(
-      {
-        activeReleaseId: model.activeReleaseId,
-        projection: model.projection,
-      },
-      narrowed
-    );
+    const published = yield* renderMaterialArtifact(decoded.narrowed);
     return {
-      model,
-      narrowed,
+      model: decoded.model,
+      published,
     };
   }
 );
-
-/** Verifies the complete query result before evaluating its immutable body. */
-export const decodeMaterialDelivery = Effect.fn(
-  "NakafaMaterial.decodeDelivery"
-)(function* (
-  source: Effect.Success<ReturnType<typeof assembleMaterialSource>>,
-  locale: Locale,
-  publicPath: string
-) {
-  const decoded = yield* decodeMaterialModel(source, locale, publicPath);
-  if (!decoded) {
-    return null;
-  }
-  const published = yield* renderMaterialArtifact(decoded.narrowed);
-  return {
-    model: decoded.model,
-    published,
-  };
-});
 
 /** Authenticates the publication shared by a lesson and its cached navigation. */
 const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(

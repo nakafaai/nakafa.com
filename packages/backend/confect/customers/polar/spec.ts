@@ -12,7 +12,7 @@ export const polarDuplicateEmailCode = "POLAR_DUPLICATE_EMAIL";
 export const polarPortalErrorCode = "POLAR_PORTAL_ERROR";
 export const polarUpdateErrorCode = "POLAR_UPDATE_ERROR";
 export const customerIdMetadataKey = "userId";
-export const checkoutSessionResultValidator = Schema.Struct({
+const checkoutSessionResultValidator = Schema.Struct({
   url: Schema.String,
 });
 export type PolarMetadata = typeof polarMetadataValidator.Type;

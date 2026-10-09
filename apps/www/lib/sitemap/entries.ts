@@ -28,10 +28,7 @@ const SitemapPageMissing = Schema.TaggedStruct("Missing", {});
  * without the original class, so a missing page travels as data instead of as
  * a thrown `SitemapPageNotFoundError`.
  */
-export const SitemapPageRead = Schema.Union([
-  SitemapPageFound,
-  SitemapPageMissing,
-]);
+const SitemapPageRead = Schema.Union([SitemapPageFound, SitemapPageMissing]);
 
 /** Optional settings shared by the Next route and standalone indexing scripts. */
 const SitemapEntryOptions = Schema.Struct({

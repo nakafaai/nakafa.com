@@ -4,7 +4,7 @@ import { components } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 
 type LearningPopularityCounter = Docs["learningPopularityCounters"];
-export type LearningPopularityRankingNamespace = [
+type LearningPopularityRankingNamespace = [
   LearningPopularityCounter["section"],
   LearningPopularityCounter["locale"],
   LearningPopularityCounter["scopeMode"],

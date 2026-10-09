@@ -19,7 +19,7 @@ import {
 import { Array as Arr, Clock, Effect, Option } from "effect";
 
 /** Validates server-owned cleanup counters before advancing a page. */
-export function cleanupCounters(release: Docs["contentReleases"]) {
+function cleanupCounters(release: Docs["contentReleases"]) {
   const deletedArtifacts = release.cleanupDeletedArtifacts ?? 0;
   if (!Number.isSafeInteger(deletedArtifacts) || deletedArtifacts < 0) {
     return null;
@@ -30,7 +30,7 @@ export function cleanupCounters(release: Docs["contentReleases"]) {
 }
 
 /** Builds exact cumulative evidence for one cleanup request. */
-export function cleanupReceipt(
+function cleanupReceipt(
   releaseId: string,
   complete: boolean,
   deletedArtifacts: number,
@@ -52,7 +52,7 @@ export function cleanupReceipt(
 }
 
 /** Proves only one detached aborted release may initiate artifact cleanup. */
-export const ensureEligible = Effect.fn("contentRelease.ensureCleanupEligible")(
+const ensureEligible = Effect.fn("contentRelease.ensureCleanupEligible")(
   function* (release: Docs["contentReleases"]) {
     const state = yield* loadState();
     if (

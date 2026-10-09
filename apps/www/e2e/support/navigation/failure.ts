@@ -4,7 +4,7 @@ import {
   requestFailureFields,
 } from "@/e2e/support/requests";
 
-export const NavigationReadinessPhaseSchema = Schema.Literals([
+const NavigationReadinessPhaseSchema = Schema.Literals([
   "hydration",
   "source",
   "viewport",

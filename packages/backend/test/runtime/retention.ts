@@ -20,7 +20,7 @@ import type { TestConvex } from "convex-test";
 import { Effect, Schema, Struct } from "effect";
 
 export const RETENTION_RELEASE_ID = "release-runtime-retention";
-export const RETENTION_MANIFEST_HASH = Sha256HashSchema.make(
+const RETENTION_MANIFEST_HASH = Sha256HashSchema.make(
   `sha256:${"1".repeat(64)}`
 );
 export const RETENTION_RESULT_SNAPSHOT = Sha256HashSchema.make(

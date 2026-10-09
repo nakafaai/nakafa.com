@@ -7,7 +7,7 @@ import { Effect, Option, Schema } from "effect";
 export const MAX_MCP_REQUEST_BYTES = 64 * 1024;
 
 /** Expected failure while bounding an MCP request before protocol classification. */
-export class McpRequestBodyError extends Schema.TaggedError<McpRequestBodyError>()(
+class McpRequestBodyError extends Schema.TaggedError<McpRequestBodyError>()(
   "McpRequestBodyError",
   {
     reason: Schema.Literals(["invalid", "size"]),

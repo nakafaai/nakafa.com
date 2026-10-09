@@ -54,7 +54,7 @@ const PublishedMaterialRouteSchema = Schema.Union([
 ]);
 
 /** Complete immutable shell data for one signed material lesson or tombstone. */
-export type PublishedMaterialRoute = typeof PublishedMaterialRouteSchema.Type;
+type PublishedMaterialRoute = typeof PublishedMaterialRouteSchema.Type;
 /** Decodes the coherent active release identifiers carried by one route model. */
 const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
   function* (
