@@ -3,10 +3,11 @@ import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import { Array as Arr } from "effect";
 
 type NumberedSurah = Pick<PublishedQuranSurah, "number">;
+type VerseNumber = Pick<QuranRuntimeVerse["number"], "inSurah">;
 
 /** Checks that one verse list exactly covers the requested local range. */
 export function hasExactQuranVerseRange(
-  verses: readonly Pick<QuranRuntimeVerse, "number">[],
+  verses: readonly { readonly number: VerseNumber }[],
   fromVerse: number,
   toVerse: number
 ) {
