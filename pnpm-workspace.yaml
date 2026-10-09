@@ -74,8 +74,6 @@ overrides:
   "mermaid@11.17.2>katex": "0.19.0"
   "micromark-extension-math@3.1.0>katex": "0.19.0"
   "next@16.4.0>postcss": "8.5.29"
-  "solid-js@1.9.15>seroval": "1.6.8"
-  "solid-js@1.9.15>seroval-plugins": "1.6.8"
   "source-map-js": "1.2.2"
 
 # The tested test-utils-only exception is recorded in scripts/dependencies/policy.ts.
