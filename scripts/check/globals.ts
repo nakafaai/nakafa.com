@@ -25,6 +25,7 @@ import {
   SyntaxKind,
 } from "typescript/unstable/ast";
 import { candidate, loadsImport, type Rule } from "#scripts/check/rules";
+import type { Binding } from "#scripts/check/source";
 import { unwrapped, wrapped } from "#scripts/check/wrapper";
 
 type RuleId = typeof Rule.Type;
@@ -90,6 +91,8 @@ const BUILD_CONSTANTS = HashSet.make("NEXT_RUNTIME", "NODE_ENV");
 /** The module and the function that own the environment seam of code that Next.js bundles. */
 const ENV_SEAM_MODULE = "@repo/utilities/env";
 const ENV_SEAM = "readEnvironment";
+/** The bindings of a seam callee that is not the import of the seam. */
+const NOT_IMPORTED: readonly (typeof Binding.Type)[] = ["global", "local"];
 const ASSIGNMENTS = HashSet.make(
   SyntaxKind.AmpersandAmpersandEqualsToken,
   SyntaxKind.BarBarEqualsToken,
@@ -169,16 +172,24 @@ function bypassesConfig(env: Node) {
 }
 
 /**
- * Whether a `process.env` access is one value of the record that a
- * `readEnvironment` call decodes: `NAME: process.env.NAME` in the object literal
- * of its second argument. That is the seam where Next.js inlines public
- * variables, so the read is a plain property access and its key is the name of
- * the variable.
+ * Returns the callee of the `readEnvironment` call whose record holds this
+ * `process.env` access as `NAME: process.env.NAME`, in the object literal of its
+ * second argument. That is the seam where Next.js inlines public variables, so
+ * the read is a plain property access of the bare `process`, and its key is the
+ * name of the variable. The read is exempt only while that callee binds as the
+ * module's import, which the caller proves with the compiler.
  */
-function isSeamValue(env: Node) {
+function seamCallee(env: Node): Option.Option<Identifier> {
   const access = env.parent;
-  if (!(isPropertyAccessExpression(access) && access.expression === env)) {
-    return false;
+  if (
+    !(
+      isPropertyAccessExpression(env) &&
+      isIdentifier(env.expression) &&
+      isPropertyAccessExpression(access) &&
+      access.expression === env
+    )
+  ) {
+    return Option.none();
   }
   const entry = access.parent;
   if (
@@ -189,16 +200,16 @@ function isSeamValue(env: Node) {
       entry.name.text === access.name.text
     )
   ) {
-    return false;
+    return Option.none();
   }
   const record = entry.parent;
   const call = record.parent;
-  return (
-    isCallExpression(call) &&
+  return isCallExpression(call) &&
     call.arguments[1] === record &&
     isIdentifier(call.expression) &&
     call.expression.text === ENV_SEAM
-  );
+    ? Option.some(call.expression)
+    : Option.none();
 }
 
 /** Whether the module imports `readEnvironment`, as a value, from its owner. */
@@ -235,11 +246,7 @@ function memberRule(name: string, member: string) {
  * use of its wrapped expression `outer`: a constructor, a call, or a member it
  * reads.
  */
-function directRule(
-  name: string,
-  outer: Node,
-  envSeam: boolean
-): Option.Option<RuleId> {
+function directRule(name: string, outer: Node): Option.Option<RuleId> {
   const { parent } = outer;
   if (isNewExpression(parent) && parent.expression === outer) {
     const dated =
@@ -254,10 +261,7 @@ function directRule(
     if (name === "console") {
       return Option.some("console");
     }
-    if (
-      name === "process" &&
-      (bypassesConfig(parent) || (envSeam && isSeamValue(parent)))
-    ) {
+    if (name === "process" && bypassesConfig(parent)) {
       return Option.none();
     }
     return memberRule(name, member);
@@ -311,18 +315,40 @@ function globalUses(name: string, reference: Node, envSeam: boolean) {
   const outer = wrapped(reference);
   return [
     ...Option.toArray(
-      Option.map(directRule(name, outer, envSeam), (rule) => ({
+      Option.map(directRule(name, outer), (rule) => ({
         at: reference,
         rule,
+        seam:
+          envSeam && rule === "env"
+            ? seamCallee(outer.parent)
+            : Option.none<Identifier>(),
       }))
     ),
     ...Arr.filterMap(destructured(outer), ({ at, member }) =>
       Option.match(memberRule(name, member), {
         onNone: () => Result.failVoid,
-        onSome: (rule) => Result.succeed({ at, rule }),
+        onSome: (rule) =>
+          Result.succeed({ at, rule, seam: Option.none<Identifier>() }),
       })
     ),
   ];
+}
+
+/**
+ * Returns one use as a candidate. It counts while `binder` is the platform
+ * global. A read inside the environment seam counts instead while the callee of
+ * its call is not the module's import, so a local `readEnvironment` exempts
+ * nothing.
+ */
+function useCandidate(
+  sourceFile: SourceFile,
+  binder: Identifier,
+  { at, rule, seam }: ReturnType<typeof globalUses>[number]
+) {
+  return Option.match(seam, {
+    onNone: () => candidate(rule, sourceFile, at, binder),
+    onSome: (callee) => candidate(rule, sourceFile, at, callee, NOT_IMPORTED),
+  });
 }
 
 /** Returns the platform globals one node uses, directly or through a global object. */
@@ -333,8 +359,8 @@ function referenceCandidates(
 ) {
   if (isIdentifier(node)) {
     return HashSet.has(GLOBALS, node.text)
-      ? Arr.map(globalUses(node.text, node, envSeam), ({ at, rule }) =>
-          candidate(rule, sourceFile, at, node)
+      ? Arr.map(globalUses(node.text, node, envSeam), (use) =>
+          useCandidate(sourceFile, node, use)
         )
       : [];
   }
@@ -357,8 +383,8 @@ function referenceCandidates(
     Option.toArray(memberRead(node, node.expression)),
     (name) =>
       HashSet.has(GLOBALS, name)
-        ? Arr.map(globalUses(name, node, envSeam), ({ at, rule }) =>
-            candidate(rule, sourceFile, at, owner)
+        ? Arr.map(globalUses(name, node, envSeam), (use) =>
+            useCandidate(sourceFile, owner, use)
           )
         : []
   );

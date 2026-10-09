@@ -429,6 +429,23 @@ process.env.SITE_URL === url;
     })
   );
 
+  it.effect("reports a read whose call a local binding shadows", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`import { readEnvironment } from "@repo/utilities/env";
+export const env = readEnvironment(fields, { SITE_URL: process.env.SITE_URL });
+export function local(readEnvironment: (fields: unknown, values: unknown) => unknown) {
+  return readEnvironment(fields, { SITE_URL: process.env.SITE_URL });
+}
+export const viaObject = readEnvironment(fields, {
+  SITE_URL: globalThis.process.env.SITE_URL,
+});
+`),
+        ["4 env", "7 env"]
+      );
+    })
+  );
+
   it.effect("needs the seam imported as a value from its owner", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
