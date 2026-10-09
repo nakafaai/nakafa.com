@@ -11,7 +11,12 @@ import {
   releaseLocalRuntime,
   reserveLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
-import { anonymousConvexCommand, fixture } from "@repo/backend/test/acceptance";
+import {
+  anonymousConvexCommand,
+  fixture,
+  ticking,
+  versionServiceError,
+} from "@repo/backend/test/acceptance";
 import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
@@ -31,11 +36,12 @@ const environment =
   "VITE_CONVEX_URL=http://127.0.0.1:43120\nVITE_CONVEX_SITE_URL=http://127.0.0.1:43121\n";
 const LOCAL_JWKS_LINE =
   /^JWKS='\[\{"alg":"RS256","createdAt":\d+,"id":"[^"]+","privateKey":"\\"[0-9a-f]+\\"","publicKey":"\{[^']+\}"\}\]'$/mu;
-const initialize = (source = environment) => {
+const initialize = (source = environment, statuses: readonly number[] = []) => {
   // Temporary roots that existed while their Convex command ran.
   const temporaryRoots = MutableList.make<string>();
+  const failures = Arr.map(statuses, versionServiceError);
   mocks.command.mockImplementation(
-    anonymousConvexCommand(source, temporaryRoots)
+    anonymousConvexCommand(source, temporaryRoots, failures)
   );
   return temporaryRoots;
 };
@@ -456,6 +462,38 @@ describe("owned signed acceptance runtime", () => {
           ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
           yield* releaseLocalRuntime(reserved);
         }).pipe(Effect.provide(nodeServicesLayer))
+    );
+  }
+
+  it.effect("retries an init answered with a 500 once, then starts clean", () =>
+    Effect.gen(function* () {
+      const temporaryRoots = initialize(environment, [500]);
+      const { fs, root } = yield* fixture;
+      yield* reserveLocalRuntime(root);
+      const runtime = yield* ticking(initializeLocalRuntime(root));
+      expect(mocks.command).toHaveBeenCalledTimes(3);
+      expect(yield* readLocalRuntime(root)).toEqual(runtime);
+      for (const temporaryRoot of MutableList.toArray(temporaryRoots)) {
+        expect(yield* fs.exists(temporaryRoot)).toBe(false);
+      }
+    }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  for (const [title, statuses, calls, last] of [
+    ["ends an init with its last failure", [500, 500, 503], 3, 503],
+    ["does not retry another init failure", [404], 1, 404],
+  ] as const) {
+    it.effect(title, () =>
+      Effect.gen(function* () {
+        initialize(environment, statuses);
+        const { root } = yield* fixture;
+        yield* reserveLocalRuntime(root);
+        const failure = yield* ticking(
+          initializeLocalRuntime(root).pipe(Effect.flip)
+        );
+        expect(mocks.command).toHaveBeenCalledTimes(calls);
+        expect(failure.message).toContain(`returned ${last}`);
+      }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
 });
