@@ -1,4 +1,5 @@
 import { Agent, type UsageHandler } from "@convex-dev/agent";
+import { NinaTitle } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -11,7 +12,6 @@ import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
 import { assembleContext } from "@repo/backend/confect/nina/history";
-import { NinaTitle } from "@repo/backend/confect/nina/presentation.spec";
 import { nakafaSuggestions } from "@repo/backend/confect/nina/prompt/suggestions";
 import { Output } from "ai";
 import { Effect, Schema } from "effect";
