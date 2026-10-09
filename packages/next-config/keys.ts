@@ -136,12 +136,8 @@ export const previewKeys = () => {
     AKSARA_PREVIEW_RENDERER_TOKEN: process.env.AKSARA_PREVIEW_RENDERER_TOKEN,
   } satisfies Record<keyof typeof config, string | undefined>;
   return Effect.runSync(
-    Config.all(config)
-      .parse(ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true }))
-      .pipe(
-        Effect.mapError(
-          (error) => new InvalidEnvironmentError({ details: error.message })
-        )
-      )
+    Config.all(config).parse(
+      ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true })
+    )
   );
 };
