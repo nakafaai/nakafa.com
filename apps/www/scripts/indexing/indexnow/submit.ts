@@ -40,24 +40,31 @@ export const submitUrlsToIndexNow = Effect.fn(
 
   yield* Effect.logInfo(`Submitting ${urls.length} URLs to IndexNow...`);
 
-  for (const [index, batch] of batches.entries()) {
-    const outcome = yield* submitBatchToIndexNow({
-      batch,
-      batchCount: index + 1,
-      key,
-      totalBatches: batches.length,
-    }).pipe(Effect.result);
-    if (Result.isFailure(outcome)) {
-      return {
-        failure: Option.some(outcome.failure),
-        submittedUrls: MutableList.toArray(successfullySubmitted),
-      };
-    }
-    MutableList.appendAll(successfullySubmitted, outcome.success);
+  const walk = yield* Effect.forEach(
+    batches,
+    (batch, index) =>
+      Effect.gen(function* () {
+        MutableList.appendAll(
+          successfullySubmitted,
+          yield* submitBatchToIndexNow({
+            batch,
+            batchCount: index + 1,
+            key,
+            totalBatches: batches.length,
+          })
+        );
 
-    if (index < batches.length - 1) {
-      yield* Effect.sleep(RATE_LIMIT_DELAY);
-    }
+        if (index < batches.length - 1) {
+          yield* Effect.sleep(RATE_LIMIT_DELAY);
+        }
+      }),
+    { discard: true }
+  ).pipe(Effect.result);
+  if (Result.isFailure(walk)) {
+    return {
+      failure: Option.some(walk.failure),
+      submittedUrls: MutableList.toArray(successfullySubmitted),
+    };
   }
 
   yield* Effect.logInfo(

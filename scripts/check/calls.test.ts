@@ -41,9 +41,34 @@ items.slice(1);
           "4 array-method items",
           "5 array-method items",
           "6 array-method items",
+          "7 array-method items",
         ]
       );
     })
+  );
+
+  it.effect(
+    "recognizes the array methods that Effect replaces by the rule each breaks",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* calls(`items.at(-1);
+items.indexOf(value);
+items.lastIndexOf(value);
+items.includes(value);
+items.concat(more);
+items.entries();
+`),
+          [
+            "1 array-search items",
+            "2 array-search items",
+            "3 array-search items",
+            "4 array-method items",
+            "5 array-method items",
+            "6 array-method items",
+          ]
+        );
+      })
   );
 
   it.effect("recognizes an element access written with a string literal", () =>

@@ -42,45 +42,45 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
 
     const successfullySubmitted = MutableList.make<string>();
     let currentDelay = RATE_LIMIT_DELAY;
-    let stopped = false;
-
-    for (const [index, url] of urls.entries()) {
-      const outcome = yield* submitUrlToGoogle(
-        url,
-        accessToken,
-        index + 1,
-        urls.length
-      ).pipe(Effect.result);
-      if (Result.isFailure(outcome)) {
-        return {
-          failure: Option.some(outcome.failure),
-          stopped: false,
-          submittedUrls: MutableList.toArray(successfullySubmitted),
-        };
-      }
-      const result = outcome.success;
-
-      if (result.shouldStop) {
-        stopped = true;
-        break;
-      }
-
-      if (result.success) {
-        MutableList.append(successfullySubmitted, url);
-        currentDelay = RATE_LIMIT_DELAY;
-      } else {
-        currentDelay = Math.min(
-          currentDelay * BACKOFF_MULTIPLIER,
-          MAX_BACKOFF_DELAY
+    // The walk ends at the first URL that Google answers with a stop status, or with a typed failure.
+    const walk = yield* Effect.findFirst(urls, (url, index) =>
+      Effect.gen(function* () {
+        const result = yield* submitUrlToGoogle(
+          url,
+          accessToken,
+          index + 1,
+          urls.length
         );
-        yield* Effect.logWarning(
-          `Increasing delay to ${currentDelay}ms due to failure.`
-        );
-      }
 
-      if (index < urls.length - 1) {
-        yield* Effect.sleep(currentDelay);
-      }
+        if (result.shouldStop) {
+          return true;
+        }
+
+        if (result.success) {
+          MutableList.append(successfullySubmitted, url);
+          currentDelay = RATE_LIMIT_DELAY;
+        } else {
+          currentDelay = Math.min(
+            currentDelay * BACKOFF_MULTIPLIER,
+            MAX_BACKOFF_DELAY
+          );
+          yield* Effect.logWarning(
+            `Increasing delay to ${currentDelay}ms due to failure.`
+          );
+        }
+
+        if (index < urls.length - 1) {
+          yield* Effect.sleep(currentDelay);
+        }
+        return false;
+      })
+    ).pipe(Effect.result);
+    if (Result.isFailure(walk)) {
+      return {
+        failure: Option.some(walk.failure),
+        stopped: false,
+        submittedUrls: MutableList.toArray(successfullySubmitted),
+      };
     }
 
     yield* Effect.logInfo(
@@ -89,7 +89,7 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
 
     return {
       failure: Option.none(),
-      stopped,
+      stopped: Option.isSome(walk.success),
       submittedUrls: MutableList.toArray(successfullySubmitted),
     };
   }
