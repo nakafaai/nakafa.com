@@ -24,6 +24,7 @@ export const Rule = Schema.Literals([
   "array-method",
   "array-mutation",
   "array-search",
+  "assertion",
   "clock",
   "console",
   "data-type",
@@ -75,6 +76,11 @@ export const RULES = {
     message:
       "search arrays with Array.findFirst, Array.findLast, or their index forms from effect, which return an Option, instead of a native find method.",
     scope: "code",
+  },
+  assertion: {
+    message:
+      "narrow the value with a Schema or a Predicate from effect instead of an as, angle-bracket, satisfies, or non-null assertion.",
+    scope: "every",
   },
   clock: {
     message:

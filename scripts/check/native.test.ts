@@ -109,6 +109,7 @@ export const named = makeRequire()("node:fs");
           [
             "1 node-module",
             "5 node-module",
+            "6 assertion",
             "6 node-module",
             "7 node-module",
             "8 node-module",
@@ -164,7 +165,7 @@ export function asserted(value: unknown) {
   }
 }
 `),
-          ["2 typeof-object", "10 typeof-object"]
+          ["2 typeof-object", "10 assertion", "10 typeof-object"]
         );
       })
   );
@@ -252,7 +253,7 @@ export const bare = (async () => {
 `,
           WORKFLOW
         ),
-        ["9 promise", "10 promise"]
+        ["8 assertion", "9 promise", "10 promise"]
       );
     })
   );
@@ -281,7 +282,16 @@ export const bare = (async () => {
 `,
           WORKFLOW
         ),
-        ["15 promise", "16 promise"]
+        [
+          "3 assertion",
+          "6 assertion",
+          "9 assertion",
+          "11 assertion",
+          "14 assertion",
+          "15 assertion",
+          "15 promise",
+          "16 promise",
+        ]
       );
     })
   );

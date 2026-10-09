@@ -12,6 +12,7 @@ import {
   isShorthandPropertyAssignment,
 } from "typescript/unstable/ast";
 import type { API } from "typescript/unstable/sync";
+import { assertionCandidates } from "#scripts/check/assertion";
 import { symbolTable } from "#scripts/check/convex";
 import { globalCandidates } from "#scripts/check/globals";
 import { nativeCandidates } from "#scripts/check/native";
@@ -180,6 +181,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
           globalCandidates(sourceFile, runtime),
           nativeCandidates(sourceFile, runtime),
           shapeCandidates(file, sourceFile, nodes, runtime),
+          assertionCandidates(sourceFile, nodes),
         ]),
         (found) =>
           covers(found.rule, file, sourceFile)
