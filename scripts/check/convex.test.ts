@@ -1,8 +1,34 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Tuple } from "effect";
+import { isIdentifier } from "typescript/unstable/ast";
+import { symbolTable } from "#scripts/check/convex";
 import { effectTestViolations } from "#scripts/check/effect";
+import { descendants, parseSources } from "#scripts/check/source";
 
 const file = "packages/backend/example.test.ts";
+
+describe("symbol table", () => {
+  it.effect("keys each identifier by its node, not by its spelling", () =>
+    Effect.gen(function* () {
+      const { modules } = yield* parseSources([
+        { file: "scripts/names.ts", sourceText: "a;\na;\n" },
+      ]);
+      const [{ sourceFile }] = modules;
+      const identifiers = Arr.take(
+        Arr.filter(descendants(sourceFile, false), isIdentifier),
+        2
+      );
+      const table = symbolTable(
+        Arr.map(Arr.take(identifiers, 1), (node) => Tuple.make(node, undefined))
+      );
+      assert.deepStrictEqual(
+        Arr.map(identifiers, (node) => MutableHashMap.has(table, node)),
+        [true, false]
+      );
+    }).pipe(Effect.scoped)
+  );
+});
+
 const imports =
   'import { Effect } from "effect"; import { convexTest, type TestConvex } from "convex-test";';
 

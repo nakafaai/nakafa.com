@@ -11,6 +11,7 @@ import {
   isShorthandPropertyAssignment,
 } from "typescript/unstable/ast";
 import type { API } from "typescript/unstable/sync";
+import { symbolTable } from "#scripts/check/convex";
 import { globalCandidates } from "#scripts/check/globals";
 import { nativeCandidates } from "#scripts/check/native";
 import { outsidePage, pageKeysOf } from "#scripts/check/page";
@@ -95,9 +96,8 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
             ]
           : []
       );
-      const lexicalSymbols = Arr.appendAll(
-        Arr.zip(identifiers, symbols),
-        shorthands
+      const lexicalSymbols = symbolTable(
+        Arr.appendAll(Arr.zip(identifiers, symbols), shorthands)
       );
       return effectRunnerViolation(nodes, lexicalSymbols)
         ? [

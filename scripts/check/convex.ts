@@ -1,4 +1,12 @@
-import { Array as Arr, HashMap, HashSet, Option } from "effect";
+import {
+  Array as Arr,
+  Equal,
+  HashMap,
+  HashSet,
+  MutableHashMap,
+  Option,
+  Tuple,
+} from "effect";
 import {
   type BindingElement,
   type Identifier,
@@ -39,28 +47,41 @@ import { children } from "#scripts/check/source";
 
 type Origin = "client" | HashMap.HashMap<string, Origin>;
 /**
- * The native symbol each identifier of a module resolves to: one entry per
- * identifier, in the breadth-first order of `descendants`, and one more entry
- * after them for each shorthand property name, holding the symbol of the value
- * that the name reads. Entries match their node by reference, so a lookup never
- * hashes a compiler object's whole tree.
+ * The native symbol each identifier of a module resolves to, keyed by its node.
+ * A key is marked for reference equality, so a lookup never hashes a compiler
+ * object's whole tree, and a later entry for a node replaces an earlier one.
  */
-export type Symbols = ReadonlyArray<readonly [Node, NativeSymbol | undefined]>;
+export type Symbols = MutableHashMap.MutableHashMap<
+  Node,
+  NativeSymbol | undefined
+>;
+
+/**
+ * Builds the symbol table of one module from its entries, in order: one entry per
+ * identifier, then one for each shorthand property name, holding the symbol of
+ * the value that the name reads, so the later entry wins.
+ */
+export function symbolTable(
+  entries: readonly (readonly [Node, NativeSymbol | undefined])[]
+): Symbols {
+  return MutableHashMap.fromIterable(
+    Arr.map(entries, ([node, symbol]) =>
+      Tuple.make(Equal.byReferenceUnsafe(node), symbol)
+    )
+  );
+}
 const methods = HashSet.make("query", "mutation", "action", "run");
 const callbacks = (node: Node) =>
   isArrowFunction(node) ||
   isFunctionExpression(node) ||
   isFunctionDeclaration(node);
 
-/**
- * Returns the native symbol recorded for a node. When several entries name the
- * node, the last one wins, so a shorthand property overrides its name's entry.
- */
+/** Returns the native symbol recorded for a node, or undefined when none is. */
 export function symbolAt(symbols: Symbols, node: Node) {
   return Option.getOrUndefined(
     Option.flatMap(
-      Arr.findLast(symbols, ([key]) => key === node),
-      ([, symbol]) => Option.fromNullishOr(symbol)
+      MutableHashMap.get(symbols, Equal.byReferenceUnsafe(node)),
+      Option.fromNullishOr
     )
   );
 }
