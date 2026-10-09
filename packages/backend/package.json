@@ -49,7 +49,7 @@
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "@vercel/config": "^0.11.0",
+    "@vercel/config": "^0.12.0",
     "ai": "catalog:",
     "better-auth": "1.6.33",
     "buffer": "^6.0.3",

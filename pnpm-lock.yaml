@@ -140,8 +140,8 @@ importers:
         specifier: 24.19.1
         version: 24.19.1
       '@vercel/config':
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^0.12.0
+        version: 0.12.0
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -149,8 +149,8 @@ importers:
   apps/cas:
     devDependencies:
       '@vercel/config':
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^0.12.0
+        version: 0.12.0
 
   apps/email:
     dependencies:
@@ -184,8 +184,8 @@ importers:
         specifier: 24.19.1
         version: 24.19.1
       '@vercel/config':
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^0.12.0
+        version: 0.12.0
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -377,8 +377,8 @@ importers:
         specifier: 19.2.7
         version: 19.2.7(@types/react@19.2.18)
       '@vercel/config':
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^0.12.0
+        version: 0.12.0
       '@vitest/coverage-istanbul':
         specifier: 'catalog:'
         version: 5.0.3(vitest@5.0.3)
@@ -507,8 +507,8 @@ importers:
         specifier: ^0.13.11
         version: 0.13.11(typescript@7.0.2)(zod@4.6.5)
       '@vercel/config':
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^0.12.0
+        version: 0.12.0
       ai:
         specifier: 'catalog:'
         version: 7.0.130(zod@4.6.5)
@@ -4095,8 +4095,8 @@ packages:
     resolution: {integrity: sha512-g9XerViJ/paZujufXYcu5XYI2vU2rtB4sgdpjUHde5RnOkdmpu0ngH46LCFGHoPXO/C+qDPSczIHIRN+8Q2YKQ==}
     engines: {node: '>= 18'}
 
-  '@vercel/config@0.11.0':
-    resolution: {integrity: sha512-Vnw8GiRgfChftk/+xZZc1Qr7MCa7FQLJpl4TWpT95rPIzYvDil/0QTqQrqiJ7ZNVYeI3Va9yiATpgb8bsQVjvA==}
+  '@vercel/config@0.12.0':
+    resolution: {integrity: sha512-VogSFNNBrUCbukjiZCZ6rkO52NLhv3Xspi9Rx54hTPqkVsp3v6V0M8+qdLDkducsenEEDRDPOJFXsRi9synvoA==}
     hasBin: true
 
   '@vercel/functions@3.9.11':
@@ -10476,7 +10476,7 @@ snapshots:
     dependencies:
       execa: 5.1.1
 
-  '@vercel/config@0.11.0':
+  '@vercel/config@0.12.0':
     dependencies:
       '@vercel/routing-utils': 6.6.0
       pretty-cache-header: 1.0.0
