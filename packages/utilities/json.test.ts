@@ -4,7 +4,7 @@ import {
   encodePrettyJsonText,
   JsonTextSchema,
 } from "@repo/utilities/json";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 describe("encodeJsonText", () => {
   it("writes the same text as JSON.stringify, keeping escapes and key order", () => {
@@ -35,20 +35,23 @@ describe("encodePrettyJsonText", () => {
     };
 
     expect(encodePrettyJsonText(value)).toBe(
-      [
-        "{",
-        '  "name": "Caf\u00e9",',
-        '  "nested": {',
-        '    "empty": {},',
-        '    "list": [',
-        "      1,",
-        "      {",
-        '        "ok": true',
-        "      }",
-        "    ]",
-        "  }",
-        "}",
-      ].join("\n")
+      Arr.join(
+        [
+          "{",
+          '  "name": "Caf\u00e9",',
+          '  "nested": {',
+          '    "empty": {},',
+          '    "list": [',
+          "      1,",
+          "      {",
+          '        "ok": true',
+          "      }",
+          "    ]",
+          "  }",
+          "}",
+        ],
+        "\n"
+      )
     );
   });
 });
