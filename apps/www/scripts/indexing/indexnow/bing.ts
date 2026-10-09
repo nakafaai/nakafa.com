@@ -1,4 +1,4 @@
-import { Config, Effect, Option, Schema } from "effect";
+import { Config, Effect, MutableList, Option, Schema } from "effect";
 import { HttpBody, HttpClient, type HttpClientResponse } from "effect/http";
 import { BingSubmitError } from "@/scripts/indexing/errors";
 import { INDEXING_HOST } from "@/scripts/indexing/paths";
@@ -48,7 +48,7 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
     }
     let batchSize = BATCH_SIZE;
     let submittedCount = 0;
-    const successfullySubmitted: string[] = [];
+    const successfullySubmitted = MutableList.make<string>();
     yield* Effect.logInfo("Starting Bing URL Submission API process...");
     yield* Effect.logInfo(`URLs to submit: ${urls.length}`);
     yield* Effect.logInfo(`Initial batch size: ${batchSize}`);
@@ -70,7 +70,7 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
         startIndex,
       });
       if (result.submittedUrls.length > 0) {
-        successfullySubmitted.push(...result.submittedUrls);
+        MutableList.appendAll(successfullySubmitted, result.submittedUrls);
         submittedCount += result.submittedUrls.length;
       }
       if (result.shouldStop) {
@@ -98,7 +98,7 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
     yield* Effect.logInfo(
       `Bing URL Submission API process completed. Submitted ${successfullySubmitted.length}/${urls.length} URLs.`
     );
-    return successfullySubmitted;
+    return MutableList.toArray(successfullySubmitted);
   }
 );
 /** Submits one Bing batch and converts quota responses into caller decisions. */

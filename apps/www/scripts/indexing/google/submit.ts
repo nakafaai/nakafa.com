@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 import {
   HttpClient,
   HttpClientRequest,
@@ -33,7 +33,7 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
       `Submitting ${urls.length} Google Indexing API eligible URLs individually...`
     );
 
-    const successfullySubmitted: string[] = [];
+    const successfullySubmitted = MutableList.make<string>();
     let shouldStop = false;
     let currentDelay = RATE_LIMIT_DELAY;
 
@@ -58,7 +58,7 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
       }
 
       if (result.success) {
-        successfullySubmitted.push(url);
+        MutableList.append(successfullySubmitted, url);
         currentDelay = RATE_LIMIT_DELAY;
       } else {
         currentDelay = Math.min(
@@ -79,7 +79,7 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
       `Google Indexing API submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} eligible URLs.`
     );
 
-    return successfullySubmitted;
+    return MutableList.toArray(successfullySubmitted);
   }
 );
 

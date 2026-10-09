@@ -1,4 +1,4 @@
-import { Clock, Effect, FileSystem, Schema } from "effect";
+import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
 import { SubmissionHistoryError } from "@/scripts/indexing/errors";
 import { indexingFiles } from "@/scripts/indexing/paths";
 
@@ -135,7 +135,7 @@ export function listUnsubmittedUrls({
   service: SubmissionService;
   urls: readonly string[];
 }) {
-  return urls.filter((url) => !history[service][url]);
+  return Arr.filter(urls, (url) => !history[service][url]);
 }
 /** Adds successful notifications to one service's ignored local history. */
 export const updateSubmissionHistory = Effect.fn(
