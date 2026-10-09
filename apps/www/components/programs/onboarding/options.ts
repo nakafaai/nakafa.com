@@ -11,6 +11,7 @@ import {
   onboardingRegions,
 } from "@repo/backend/confect/onboarding/values";
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
+import { Array as Arr } from "effect";
 
 import { roleIconByValue } from "@/lib/data/roles";
 
@@ -106,17 +107,17 @@ const focusMetadata = {
   Omit<OnboardingOption<OnboardingFocus>, "value">
 >;
 
-export const roleOptions = selfSelectableUserRoles.map((value) => ({
+export const roleOptions = Arr.map(selfSelectableUserRoles, (value) => ({
   ...roleMetadata[value],
   value,
 }));
 
-export const regionOptions = onboardingRegions.map((value) => ({
+export const regionOptions = Arr.map(onboardingRegions, (value) => ({
   ...regionMetadata[value],
   value,
 }));
 
-export const focusOptions = onboardingFocuses.map((value) => ({
+export const focusOptions = Arr.map(onboardingFocuses, (value) => ({
   ...focusMetadata[value],
   value,
 }));
@@ -124,17 +125,17 @@ export const focusOptions = onboardingFocuses.map((value) => ({
 /** Stable ordered item definitions consumed by the shadcn Questionnaire root. */
 export const onboardingItems = [
   {
-    choices: roleOptions.map(({ value }) => ({ value })),
+    choices: Arr.map(roleOptions, ({ value }) => ({ value })),
     name: "role",
     required: true,
   },
   {
-    choices: regionOptions.map(({ value }) => ({ value })),
+    choices: Arr.map(regionOptions, ({ value }) => ({ value })),
     name: "region",
     required: true,
   },
   {
-    choices: focusOptions.map(({ value }) => ({ value })),
+    choices: Arr.map(focusOptions, ({ value }) => ({ value })),
     name: "focus",
     required: true,
   },
@@ -144,5 +145,5 @@ export const onboardingItems = [
 export function isOnboardingItemName(
   value: string
 ): value is OnboardingItemName {
-  return onboardingItems.some((item) => item.name === value);
+  return Arr.some(onboardingItems, (item) => item.name === value);
 }

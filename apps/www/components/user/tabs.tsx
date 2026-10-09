@@ -5,6 +5,7 @@ import {
   MessageMultiple02Icon,
 } from "@hugeicons/core-free-icons";
 import { usePathname } from "@repo/internationalization/src/navigation";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 
 import { SharedTabs } from "@/components/user/navigation";
@@ -27,8 +28,11 @@ export function UserTabs({ userId }: { userId: string }) {
     },
   ];
 
-  const value =
-    tabs.find((tab) => pathname === tab.href)?.href || tabs[0]?.href;
+  const activeTab = Arr.findFirst(tabs, (tab) => pathname === tab.href);
+  const value = Option.match(activeTab, {
+    onNone: () => tabs[0]?.href,
+    onSome: (tab) => tab.href || tabs[0]?.href,
+  });
 
   return <SharedTabs tabs={tabs} value={value} />;
 }

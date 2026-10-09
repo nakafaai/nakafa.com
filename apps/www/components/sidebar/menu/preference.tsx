@@ -27,6 +27,7 @@ import {
 import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import dynamic from "next/dynamic";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
@@ -86,7 +87,7 @@ function LanguageMenuItems() {
 
   return (
     <>
-      {languages.map((language) => (
+      {Arr.map(languages, (language) => (
         <DropdownMenuItem
           className="cursor-pointer"
           disabled={isPending}
