@@ -202,8 +202,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)(react@19.2.8)
       '@convex-dev/agent':
-        specifier: 0.7.6
-        version: 0.7.6(@ai-sdk/provider-utils@5.0.56(zod@4.6.5))(@ai-sdk/provider@4.0.24)(ai@7.0.130(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
+        specifier: 0.7.7
+        version: 0.7.7(@ai-sdk/provider-utils@5.0.56(zod@4.6.5))(@ai-sdk/provider@4.0.24)(ai@7.0.130(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/better-auth':
         specifier: 0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.33(next@16.4.0(@babel/core@8.0.5)(@playwright/test@1.63.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.16)(vitest@5.0.3))(convex@1.46.0(react@19.2.8))(hono@4.13.13)(next@16.4.0(@babel/core@8.0.5)(@playwright/test@1.63.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
@@ -444,8 +444,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       '@convex-dev/agent':
-        specifier: 0.7.6
-        version: 0.7.6(@ai-sdk/provider-utils@5.0.56(zod@4.6.5))(@ai-sdk/provider@4.0.24)(ai@7.0.130(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
+        specifier: 0.7.7
+        version: 0.7.7(@ai-sdk/provider-utils@5.0.56(zod@4.6.5))(@ai-sdk/provider@4.0.24)(ai@7.0.130(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/aggregate':
         specifier: ^0.3.1
         version: 0.3.1(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5)
@@ -1730,8 +1730,8 @@ packages:
       convex-test: '>=0.0.50 <0.1.0'
       effect: ^4.0.0
 
-  '@convex-dev/agent@0.7.6':
-    resolution: {integrity: sha512-Y7cMns3yh3VZNIvVO5GsjUe9sLkBFZxDsFjDmMnsM4NeUTCTs22BpT3A1NFm8UJLjif8Yyc3iG2etb2SRpEBkg==}
+  '@convex-dev/agent@0.7.7':
+    resolution: {integrity: sha512-NUGMRj0m+niZgpSTLSQZzKFTXxH0n4nPu10F7vVp1qpaGsSKCLSpMKYNnRbi3E6PvZJnCVpxdU8PYKo9GmHqcw==}
     engines: {node: '>=22'}
     peerDependencies:
       '@ai-sdk/provider': ^4.0.0
@@ -8461,7 +8461,7 @@ snapshots:
       convex-test: 0.0.60(convex@1.46.0(react@19.2.8))
       effect: 4.0.1
 
-  '@convex-dev/agent@0.7.6(@ai-sdk/provider-utils@5.0.56(zod@4.6.5))(@ai-sdk/provider@4.0.24)(ai@7.0.130(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)':
+  '@convex-dev/agent@0.7.7(@ai-sdk/provider-utils@5.0.56(zod@4.6.5))(@ai-sdk/provider@4.0.24)(ai@7.0.130(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@ai-sdk/provider': 4.0.24
       '@ai-sdk/provider-utils': 5.0.56(zod@4.6.5)
