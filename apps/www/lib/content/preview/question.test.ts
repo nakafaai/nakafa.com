@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 import { readQuestionPreview } from "@/lib/content/preview/question";
@@ -187,14 +187,15 @@ describe("local question preview", () => {
               ...questionPromptProjection,
               response: {
                 kind: "multiple-choice",
-                options: response.options
-                  .map((option) => ({ ...option, isCorrect: true }))
-                  .concat({
-                    isCorrect: false,
-                    label: "Another option",
-                    optionKey: "option-3",
-                    order: 3,
-                  }),
+                options: Arr.map(response.options, (option) => ({
+                  ...option,
+                  isCorrect: true,
+                })).concat({
+                  isCorrect: false,
+                  label: "Another option",
+                  optionKey: "option-3",
+                  order: 3,
+                }),
               },
             },
           },
