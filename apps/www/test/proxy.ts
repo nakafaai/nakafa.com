@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import type { NextRequest } from "next/server";
 /** Public redirect examples cover renderer URLs, locale spelling and suffixes. */
 export const redirectCases: [
@@ -33,10 +34,12 @@ export const redirectCases: [
   ],
 ];
 /** Resource patterns that still require routing checks. */
-export const matched =
-  "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt"
-    .split(" ")
-    .map((extension) => `/missing.${extension}`);
+export const matched = Arr.map(
+  "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt".split(
+    " "
+  ),
+  (extension) => `/missing.${extension}`
+);
 /** Resources owned by static serving or hard not-found routing. */
 export const bypassed = [
   "/.well-known/llms.txt",
