@@ -1,5 +1,5 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
-import { Effect, MutableList } from "effect";
+import { Effect, MutableList, Option, Result } from "effect";
 import {
   HttpClient,
   HttpClientRequest,
@@ -20,14 +20,19 @@ const HTTP_STATUS_CODE_TOO_MANY_REQUESTS = 429;
 const GOOGLE_PUBLISH_ENDPOINT =
   "https://indexing.googleapis.com/v3/urlNotifications:publish";
 
-/** Submits eligible URL notifications sequentially for predictable rate stops. */
+/**
+ * Submits eligible URL notifications sequentially for predictable rate stops.
+ *
+ * Returns the URLs that Google accepted and, when a request fails, the typed
+ * failure that ended the call. A stop status ends the run without a failure.
+ */
 export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
   function* (urls: string[], accessToken: string) {
     if (urls.length === 0) {
       yield* Effect.logInfo(
         "No new eligible URLs to submit to Google Indexing API."
       );
-      return [];
+      return { failure: Option.none(), submittedUrls: [] };
     }
 
     yield* Effect.logInfo(
@@ -38,12 +43,19 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
     let currentDelay = RATE_LIMIT_DELAY;
 
     for (const [index, url] of urls.entries()) {
-      const result = yield* submitUrlToGoogle(
+      const outcome = yield* submitUrlToGoogle(
         url,
         accessToken,
         index + 1,
         urls.length
-      );
+      ).pipe(Effect.result);
+      if (Result.isFailure(outcome)) {
+        return {
+          failure: Option.some(outcome.failure),
+          submittedUrls: MutableList.toArray(successfullySubmitted),
+        };
+      }
+      const result = outcome.success;
 
       if (result.shouldStop) {
         break;
@@ -71,7 +83,10 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
       `Google Indexing API submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} eligible URLs.`
     );
 
-    return MutableList.toArray(successfullySubmitted);
+    return {
+      failure: Option.none(),
+      submittedUrls: MutableList.toArray(successfullySubmitted),
+    };
   }
 );
 

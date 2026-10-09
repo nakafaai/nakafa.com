@@ -8,8 +8,7 @@ import {
   listUnsubmittedUrls,
   loadSubmissionHistory,
   type SubmissionHistory,
-  saveSubmissionHistory,
-  updateSubmissionHistory,
+  saveAcceptedUrls,
 } from "@/scripts/indexing/history";
 import {
   forEachSiteIndexUrlBatch,
@@ -78,22 +77,18 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
 
         queuedCount += urls.length;
 
-        const successfullySubmitted = yield* submitUrlsToGoogle(
+        const { failure, submittedUrls } = yield* submitUrlsToGoogle(
           urls,
           accessToken
         );
-        successfullySubmittedCount += successfullySubmitted.length;
+        successfullySubmittedCount += submittedUrls.length;
 
-        if (successfullySubmitted.length === 0) {
-          return;
-        }
-
-        history = yield* updateSubmissionHistory({
+        history = yield* saveAcceptedUrls({
+          failure,
           history,
           service: "googleIndexingApi",
-          urls: successfullySubmitted,
+          submittedUrls,
         });
-        yield* saveSubmissionHistory(history);
       })
     );
 

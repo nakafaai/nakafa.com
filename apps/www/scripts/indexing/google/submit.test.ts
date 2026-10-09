@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Array as Arr, Effect, Fiber, Schema } from "effect";
+import { Array as Arr, Effect, Fiber, Option, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import { submitUrlsToGoogle } from "@/scripts/indexing/google/submit";
@@ -41,6 +41,12 @@ const brokenBody = () =>
     { status: 200 }
   );
 
+/** A submission that finished without a failure and accepted these URLs. */
+const noFailure = (submittedUrls: string[]) => ({
+  failure: Option.none(),
+  submittedUrls,
+});
+
 /** Submits URLs through the module's own client and this file's fetch double. */
 function submitUrls(urls: string[]) {
   return submitUrlsToGoogle(urls, ACCESS_TOKEN).pipe(
@@ -66,7 +72,7 @@ function urlsOf(count: number) {
 describe("submitUrlsToGoogle", () => {
   it.effect("sends nothing for an empty URL list", () =>
     Effect.gen(function* () {
-      expect(yield* submitUrls([])).toEqual([]);
+      expect(yield* submitUrls([])).toEqual(noFailure([]));
       expect(fetcher).not.toHaveBeenCalled();
     })
   );
@@ -75,7 +81,7 @@ describe("submitUrlsToGoogle", () => {
     Effect.gen(function* () {
       fetcher.mockResolvedValueOnce(accepted());
 
-      expect(yield* submitUrls([firstUrl])).toEqual([firstUrl]);
+      expect(yield* submitUrls([firstUrl])).toEqual(noFailure([firstUrl]));
       expect(fetcher).toHaveBeenCalledOnce();
       const [input, init] = fetcher.mock.calls[0] ?? [];
       expect(String(input)).toBe(PUBLISH_ENDPOINT);
@@ -98,9 +104,9 @@ describe("submitUrlsToGoogle", () => {
           .mockResolvedValueOnce(refused(429))
           .mockResolvedValueOnce(accepted());
 
-        expect(yield* submitAll([firstUrl, secondUrl, thirdUrl])).toEqual([
-          firstUrl,
-        ]);
+        expect(yield* submitAll([firstUrl, secondUrl, thirdUrl])).toEqual(
+          noFailure([firstUrl])
+        );
         expect(fetcher).toHaveBeenCalledTimes(2);
       })
   );
@@ -111,7 +117,7 @@ describe("submitUrlsToGoogle", () => {
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(refused(status));
 
-        expect(yield* submitAll([firstUrl, secondUrl])).toEqual([]);
+        expect(yield* submitAll([firstUrl, secondUrl])).toEqual(noFailure([]));
         expect(fetcher).toHaveBeenCalledOnce();
       })
   );
@@ -123,7 +129,7 @@ describe("submitUrlsToGoogle", () => {
     Effect.gen(function* () {
       fetcher.mockResolvedValueOnce(refused(500, body));
 
-      expect(yield* submitAll([firstUrl, secondUrl])).toEqual([]);
+      expect(yield* submitAll([firstUrl, secondUrl])).toEqual(noFailure([]));
       expect(fetcher).toHaveBeenCalledOnce();
     })
   );
@@ -148,7 +154,7 @@ describe("submitUrlsToGoogle", () => {
         expect(fetcher).toHaveBeenCalledTimes(2);
         yield* TestClock.adjust("1 millis");
         expect(fetcher).toHaveBeenCalledTimes(3);
-        expect(yield* Fiber.join(fiber)).toEqual([thirdUrl]);
+        expect(yield* Fiber.join(fiber)).toEqual(noFailure([thirdUrl]));
       })
   );
 
@@ -172,7 +178,9 @@ describe("submitUrlsToGoogle", () => {
         expect(fetcher).toHaveBeenCalledTimes(2);
         yield* TestClock.adjust("1 millis");
         expect(fetcher).toHaveBeenCalledTimes(3);
-        expect(yield* Fiber.join(fiber)).toEqual([secondUrl, thirdUrl]);
+        expect(yield* Fiber.join(fiber)).toEqual(
+          noFailure([secondUrl, thirdUrl])
+        );
       })
   );
 
@@ -191,7 +199,7 @@ describe("submitUrlsToGoogle", () => {
       expect(fetcher).toHaveBeenCalledTimes(5);
       yield* TestClock.adjust("1 millis");
       expect(fetcher).toHaveBeenCalledTimes(6);
-      expect(yield* Fiber.join(fiber)).toEqual([]);
+      expect(yield* Fiber.join(fiber)).toEqual(noFailure([]));
     })
   );
 
@@ -208,39 +216,40 @@ describe("submitUrlsToGoogle", () => {
         expect(fetcher).toHaveBeenCalledTimes(1);
         yield* TestClock.adjust("1 millis");
         expect(fetcher).toHaveBeenCalledTimes(2);
-        expect(yield* Fiber.join(fiber)).toEqual([firstUrl, secondUrl]);
-      })
-  );
-
-  it.effect(
-    "fails with a deadline when a response body never ends, at 10 s",
-    () =>
-      Effect.gen(function* () {
-        fetcher.mockResolvedValueOnce(neverEndingBody());
-        const fiber = yield* Effect.forkChild(
-          submitUrls([firstUrl]).pipe(Effect.flip)
+        expect(yield* Fiber.join(fiber)).toEqual(
+          noFailure([firstUrl, secondUrl])
         );
-
-        yield* TestClock.adjust("10 seconds");
-
-        expect(yield* Fiber.join(fiber)).toMatchObject({
-          _tag: "GoogleIndexSubmitError",
-          cause: "deadline",
-          message: `Submitting ${firstUrl} did not answer within 10 seconds.`,
-        });
-        expect(fetcher).toHaveBeenCalledOnce();
       })
   );
 
+  it.effect("reports a deadline when a response body never ends, at 10 s", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValueOnce(neverEndingBody());
+      const fiber = yield* Effect.forkChild(submitUrls([firstUrl]));
+
+      yield* TestClock.adjust("10 seconds");
+
+      const outcome = yield* Fiber.join(fiber);
+      expect(outcome.submittedUrls).toEqual([]);
+      expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
+        _tag: "GoogleIndexSubmitError",
+        cause: "deadline",
+        message: `Submitting ${firstUrl} did not answer within 10 seconds.`,
+      });
+      expect(fetcher).toHaveBeenCalledOnce();
+    })
+  );
+
   it.effect(
-    "fails at once with the typed error when the request is rejected, and sends no later URL",
+    "reports the typed error when the request is rejected, and sends no later URL",
     () =>
       Effect.gen(function* () {
         fetcher.mockRejectedValueOnce(new TypeError("fetch failed"));
 
-        expect(
-          yield* submitUrls([firstUrl, secondUrl]).pipe(Effect.flip)
-        ).toMatchObject({
+        const outcome = yield* submitUrls([firstUrl, secondUrl]);
+
+        expect(outcome.submittedUrls).toEqual([]);
+        expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
           _tag: "GoogleIndexSubmitError",
           message: `Network error submitting ${firstUrl}.`,
         });
@@ -249,12 +258,15 @@ describe("submitUrlsToGoogle", () => {
   );
 
   it.effect(
-    "fails with a typed error when the acknowledgement body cannot be read",
+    "reports a typed error when the acknowledgement body cannot be read",
     () =>
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(brokenBody());
 
-        expect(yield* submitUrls([firstUrl]).pipe(Effect.flip)).toMatchObject({
+        const outcome = yield* submitUrls([firstUrl]);
+
+        expect(outcome.submittedUrls).toEqual([]);
+        expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
           _tag: "GoogleIndexSubmitError",
           message: `Failed to read the Indexing API response for ${firstUrl}.`,
         });
@@ -262,21 +274,23 @@ describe("submitUrlsToGoogle", () => {
   );
 
   it.effect(
-    "pins today's result: a deadline after one accepted URL fails the call, so that URL is not returned",
+    "keeps the URL accepted before a deadline, and reports the deadline as the failure",
     () =>
       Effect.gen(function* () {
         fetcher
           .mockResolvedValueOnce(accepted())
           .mockResolvedValueOnce(neverEndingBody());
         const fiber = yield* Effect.forkChild(
-          submitUrls([firstUrl, secondUrl]).pipe(Effect.flip)
+          submitUrls([firstUrl, secondUrl])
         );
 
         // The first URL is accepted, then the 1 s wait ends and the second request starts.
         yield* TestClock.adjust("1 second");
         yield* TestClock.adjust("10 seconds");
 
-        expect(yield* Fiber.join(fiber)).toMatchObject({
+        const outcome = yield* Fiber.join(fiber);
+        expect(outcome.submittedUrls).toEqual([firstUrl]);
+        expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
           _tag: "GoogleIndexSubmitError",
           cause: "deadline",
         });
