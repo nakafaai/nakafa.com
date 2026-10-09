@@ -4,6 +4,7 @@ import {
 } from "@nakafa/aksara-contracts/transport/failure";
 import { MAX_PUBLICATION_RESPONSE_BYTES } from "@nakafa/aksara-contracts/transport/limits";
 import { PublicationResponseSchema } from "@nakafa/aksara-contracts/transport/response";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 /** Wire shape of one publication result: JSON body and exact HTTP status. */
@@ -50,9 +51,9 @@ export const encodePublicationResult = Effect.fn(
     )
   );
   // The response passed the contract above, so writing it as JSON cannot fail.
-  const body = yield* Schema.encodeEffect(
-    Schema.fromJsonString(Schema.Unknown)
-  )(response).pipe(Effect.orDie);
+  const body = yield* Schema.encodeEffect(JsonTextSchema)(response).pipe(
+    Effect.orDie
+  );
   yield* validateResponseBytes(body);
   const status = response.ok
     ? 200

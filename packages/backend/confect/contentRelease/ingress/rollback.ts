@@ -34,6 +34,7 @@ import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 type RollbackRequest = PublicationRollbackRequest | PublicationRoutePageRequest;
@@ -43,9 +44,7 @@ const decodePage = Effect.fn("contentRelease.decodeRollbackPage")(function* <
   A,
   I,
 >(source: string, schema: Schema.Codec<A, I, never, never>, label: string) {
-  const unknownPage = yield* Schema.decodeEffect(
-    Schema.fromJsonString(Schema.Unknown)
-  )(source).pipe(
+  const unknownPage = yield* Schema.decodeEffect(JsonTextSchema)(source).pipe(
     Effect.mapError(
       () =>
         new ReleaseError({

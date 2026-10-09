@@ -11,6 +11,7 @@ import {
   runSpecialist,
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { InvalidToolInputError, NoSuchToolError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { Schema } from "effect";
@@ -41,7 +42,6 @@ const options = {
   usageHandler: vi.fn(),
 };
 const repaired = { operation: "simplify", expression: "x + x" };
-const jsonCodec = Schema.fromJsonString(Schema.Unknown);
 
 describe("Math tool repair with the Agent component", () => {
   it.each([undefined, "Keep the exact expressions"])(
@@ -51,7 +51,7 @@ describe("Math tool repair with the Agent component", () => {
         doGenerate: providerStep([
           {
             type: "text",
-            text: Schema.encodeSync(jsonCodec)({
+            text: encodeJsonText({
               ...repaired,
               operation: "factor",
             }),
@@ -67,9 +67,9 @@ describe("Math tool repair with the Agent component", () => {
         toolName: toolCall.toolName,
         toolCallId: toolCall.toolCallId,
       });
-      expect(Schema.decodeSync(jsonCodec)(result?.input ?? "null")).toEqual(
-        repaired
-      );
+      expect(
+        Schema.decodeSync(JsonTextSchema)(result?.input ?? "null")
+      ).toEqual(repaired);
       expect(usageHandler).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
@@ -77,9 +77,9 @@ describe("Math tool repair with the Agent component", () => {
           userId: expect.any(String),
         })
       );
-      expect(
-        Schema.encodeSync(jsonCodec)(model.doGenerateCalls[0]?.prompt)
-      ).toContain(options.task);
+      expect(encodeJsonText(model.doGenerateCalls[0]?.prompt)).toContain(
+        options.task
+      );
     }
   );
 
@@ -88,7 +88,7 @@ describe("Math tool repair with the Agent component", () => {
     async (input) => {
       const model = new MockLanguageModelV4({
         doGenerate: providerStep([
-          { type: "text", text: Schema.encodeSync(jsonCodec)(repaired) },
+          { type: "text", text: encodeJsonText(repaired) },
         ]),
       });
       provider.languageModel.mockReturnValue(model);
@@ -99,12 +99,12 @@ describe("Math tool repair with the Agent component", () => {
           toolCall: { ...toolCall, input },
         })
       );
-      expect(Schema.decodeSync(jsonCodec)(result?.input ?? "null")).toEqual(
-        repaired
-      );
       expect(
-        Schema.encodeSync(jsonCodec)(model.doGenerateCalls[0]?.prompt)
-      ).toContain("# Failed Arguments");
+        Schema.decodeSync(JsonTextSchema)(result?.input ?? "null")
+      ).toEqual(repaired);
+      expect(encodeJsonText(model.doGenerateCalls[0]?.prompt)).toContain(
+        "# Failed Arguments"
+      );
     }
   );
 
@@ -119,7 +119,7 @@ describe("Math tool repair with the Agent component", () => {
     };
     const model = new MockLanguageModelV4({
       doGenerate: providerStep([
-        { type: "text", text: Schema.encodeSync(jsonCodec)(bounded) },
+        { type: "text", text: encodeJsonText(bounded) },
       ]),
     });
     provider.languageModel.mockReturnValue(model);
@@ -131,7 +131,7 @@ describe("Math tool repair with the Agent component", () => {
         toolCall: {
           ...toolCall,
           toolName: "equation",
-          input: Schema.encodeSync(jsonCodec)({
+          input: encodeJsonText({
             ...bounded,
             variable: undefined,
           }),
@@ -140,7 +140,7 @@ describe("Math tool repair with the Agent component", () => {
         inputSchema: () => Promise.resolve(mathEquationInput.jsonSchema),
       })
     );
-    expect(Schema.decodeSync(jsonCodec)(result?.input ?? "null")).toEqual(
+    expect(Schema.decodeSync(JsonTextSchema)(result?.input ?? "null")).toEqual(
       bounded
     );
   });

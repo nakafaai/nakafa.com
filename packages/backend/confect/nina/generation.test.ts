@@ -14,9 +14,10 @@ import {
   ninaUsage,
 } from "@repo/backend/test/nina";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
+import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -45,8 +46,6 @@ async function fixture() {
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const PRIVATE_DIAGNOSTIC = /private provider diagnostic/;
 const SUMMARY_UPDATED_AT = Date.UTC(2026, 8, 27, 12);
-/** Encodes captured values as the JSON text sent to providers or clients. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -115,7 +114,7 @@ describe("Nina generation through the real Agent component", () => {
               message.metadata.state.reason === reason
           )
         ).toBe(true);
-        expect(encodeJson(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
+        expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
       })
   );
 
@@ -454,7 +453,7 @@ describe("Nina generation through the real Agent component", () => {
         task: expect.stringContaining(ninaToolInput.request),
       })
     );
-    expect(encodeJson(languageModel.doGenerateCalls[0]?.prompt)).toContain(
+    expect(encodeJsonText(languageModel.doGenerateCalls[0]?.prompt)).toContain(
       "Repair the arguments for nakafa"
     );
     expect(Arr.map(state.turn?.usage ?? [], (entry) => entry.agent)).toContain(
@@ -476,7 +475,7 @@ describe("Nina generation through the real Agent component", () => {
       })
     );
     await f.t.action(run, { turnId: f.turnId });
-    const prompt = encodeJson(languageModel.doStreamCalls[0]?.prompt);
+    const prompt = encodeJsonText(languageModel.doStreamCalls[0]?.prompt);
     expect(prompt).toContain("# Conversation Summary");
     expect(prompt).toContain("- The learner practiced limits.");
     expect(prompt).not.toContain("Earlier question 3");

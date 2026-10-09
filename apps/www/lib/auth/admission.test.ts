@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { getTestInstance } from "better-auth/test";
 import { Effect, Option, Schema } from "effect";
 import {
@@ -14,8 +15,6 @@ import {
   PostAuthIntentSchema,
   resolvePostAuthIntent,
 } from "@/lib/auth/admission";
-
-const SocialSignInBodyCodec = Schema.fromJsonString(Schema.Unknown);
 
 describe("post-auth admission", () => {
   it("uses localized onboarding without inventing an intent", () => {
@@ -108,7 +107,7 @@ describe("post-auth admission", () => {
         "/en/search?q=geometry#results",
         "en"
       );
-      const signInBody = yield* Schema.encodeEffect(SocialSignInBodyCodec)({
+      const signInBody = yield* Schema.encodeEffect(JsonTextSchema)({
         callbackURL: "/en/onboarding",
         errorCallbackURL,
         provider: "google",

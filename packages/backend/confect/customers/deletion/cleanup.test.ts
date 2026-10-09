@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr } from "effect";
 // @vitest-environment node
 
 import { afterEach, expect, it } from "@effect/vitest";
@@ -6,8 +6,8 @@ import { components } from "@repo/backend/confect/_generated/components";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { registerWorkflow } from "@repo/backend/test/workflow";
+import { encodeJsonText } from "@repo/utilities/json";
 
-const JsonSchema = Schema.fromJsonString(Schema.Unknown);
 const NOW = Date.UTC(2026, 8, 27);
 
 afterEach(() => {
@@ -145,7 +145,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
       analyticsRequests,
       (request) =>
         request.body ===
-        Schema.encodeSync(JsonSchema)({
+        encodeJsonText({
           delete_events: true,
           delete_recordings: true,
           distinct_ids: [userId],

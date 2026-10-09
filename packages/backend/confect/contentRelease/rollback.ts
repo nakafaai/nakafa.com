@@ -27,10 +27,8 @@ import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
-
-/** Encodes a built page to the same text as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Proves one release is an exact active or verified-candidate rollback source. */
 const rollbackSource = Effect.fn("contentRelease.rollbackSource")(function* (
@@ -216,6 +214,6 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
       rollbackOfManifestHash: request.rollbackOfManifestHash,
       total,
     };
-    return encodeJson(page);
+    return encodeJsonText(page);
   }
 );

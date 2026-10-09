@@ -18,6 +18,7 @@ import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/rendere
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { decodeStoredSnapshotRow } from "@repo/backend/confect/contentRelease/tryout/row";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
@@ -41,12 +42,10 @@ const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
   )
 );
 
-const StoredJsonSchema = Schema.fromJsonString(Schema.Unknown);
-
 /** Parses one stored JSON value without allowing thrown parser failures. */
 export const parseStoredJson = Effect.fn("contentRelease.parseStoredJson")(
   (source: string, label = "Stored publication JSON") =>
-    Schema.decodeEffect(StoredJsonSchema)(source).pipe(
+    Schema.decodeEffect(JsonTextSchema)(source).pipe(
       Effect.mapError(
         () =>
           new ReleaseError({

@@ -6,7 +6,7 @@ import {
   NAKAFA_PUBLIC_API_PATH,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/agent/constants";
-import { Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
 
 const ETAG_CHECKSUM_MODULUS = 2_147_483_647;
 const ETAG_CHECKSUM_MULTIPLIER = 31;
@@ -55,10 +55,8 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
   ],
 };
 
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
-
 /** Stable document bytes used by direct and rewritten endpoints. */
-export const NAKAFA_OPENAPI_JSON = encodeJson(NAKAFA_OPENAPI_DOCUMENT);
+export const NAKAFA_OPENAPI_JSON = encodeJsonText(NAKAFA_OPENAPI_DOCUMENT);
 
 /** Derives a weak cache validator from the exact serialized bytes. */
 export function createOpenApiEtag(serializedDocument: string) {

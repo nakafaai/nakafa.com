@@ -1,4 +1,5 @@
 import { createStableId } from "@repo/utilities/helper";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Schema } from "effect";
 import type { Thing, WithContext } from "schema-dts";
 
@@ -7,9 +8,7 @@ interface JsonLdProps {
   jsonLd: WithContext<Thing> | readonly WithContext<Thing>[];
 }
 
-const encodeJsonLdText = Schema.encodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const encodeJsonLdText = Schema.encodeUnknownSync(JsonTextSchema);
 
 /**
  * Renders escaped JSON-LD in the initial server HTML with a deterministic id.

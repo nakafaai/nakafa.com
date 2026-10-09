@@ -5,7 +5,8 @@ import {
   createLocalSigningIdentity,
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
-import { Effect, FileSystem, Option, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect, FileSystem, Option } from "effect";
 
 const cryptoMock = vi.hoisted(() => ({ generateKeyPairSync: vi.fn() }));
 vi.mock("node:crypto", async (importOriginal) => {
@@ -18,8 +19,6 @@ vi.mock("node:crypto", async (importOriginal) => {
   };
 });
 
-/** Encodes a signing identity as JSON text to prove its private key stays out of it. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const temporary = yield* fs.makeTempDirectoryScoped({
@@ -70,7 +69,7 @@ describe("isolated acceptance signing identity", () => {
         // its text. A body line has nothing to escape and would appear verbatim.
         const [, privateKeyBody] = privateKey.split("\n");
         expect(privateKeyBody).toBeDefined();
-        expect(encodeJson(first.signing)).not.toContain(privateKeyBody);
+        expect(encodeJsonText(first.signing)).not.toContain(privateKeyBody);
         expect(first.signing.keyId).not.toBe(second.signing.keyId);
         expect(first.signing.publicKeyPem).not.toBe(
           second.signing.publicKeyPem

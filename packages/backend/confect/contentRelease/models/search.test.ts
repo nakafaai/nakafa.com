@@ -8,12 +8,12 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { insertModelBuild } from "@repo/backend/test/content/model";
+import { encodeJsonText } from "@repo/utilities/json";
 import type { WithoutSystemFields } from "convex/server";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 type SearchRow = WithoutSystemFields<Doc<"contentIndex">>;
 function searchRow(index: number): SearchRow {
   return {
@@ -227,12 +227,12 @@ describe("contentRelease/models/search", () => {
   // phase cursor satisfies it and fails the phase check in decodeCursor.
   it.each([
     "an-old-native-cursor",
-    Schema.encodeSync(JsonTextSchema)({
+    encodeJsonText({
       version: 2,
       phase: "search",
       position: ["a", "en"],
     }),
-    Schema.encodeSync(JsonTextSchema)({
+    encodeJsonText({
       version: 1,
       phase: "articleCatalog",
       position: ["a", "en"],

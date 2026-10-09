@@ -144,7 +144,39 @@ jobs:
         run: test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex)"
 
       - name: Run tests
-        run: pnpm test
+        # The backend suite runs in its own job. Its filter keeps it out of this
+        # run, and the test tasks in turbo.json depend on no other package's tests.
+        run: |
+          pnpm check:patches
+          pnpm check:tests
+          pnpm test:scripts
+          pnpm exec turbo run test --filter='!@repo/backend'
+
+  backend:
+    name: Backend
+    needs: scope
+    # The backend suite takes most of the test time, so it runs in its own job.
+    # The package directory runs its own test script. A workspace filter would
+    # exit 0 without running anything when that script is missing.
+    if: ${{ !cancelled() && needs.scope.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup toolchain
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          cache: false
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run backend tests
+        run: pnpm --dir packages/backend test
 
   production:
     name: Production
@@ -156,6 +188,12 @@ jobs:
     if: ${{ !cancelled() && needs.scope.result == 'success' && needs.scope.outputs.required == 'true' && needs.scope.outputs.trusted == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    # Each leg starts its own runtime and runs one browser suite, as named in
+    # apps/www/playwright.config.ts. Fail-fast is off, so every leg finishes.
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [runtime, visual, navigation]
     env:
       VERCEL_GIT_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
@@ -181,15 +219,23 @@ jobs:
       # The browsers need only the installed Playwright package, so they install
       # while acceptance prepares and builds instead of after them. Idle CPU and
       # disk priority leave the local backend's queries within Convex's limits.
-      # WebKit runs the visual card suite, whose full screen and immersive
-      # presentations serve Safari on iPad and iPhone.
+      # Only the navigation suite runs WebKit: its visual card project serves
+      # Safari on iPad and iPhone, so the other legs install Chromium alone.
       - name: Start browser install
+        env:
+          SUITE: ${{ matrix.suite }}
         run: |
-          setsid bash -c "nice -n 19 ionice -c 3 pnpm --filter www exec playwright install --with-deps chromium webkit; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
+          browsers=chromium
+          if [ "$SUITE" = navigation ]; then
+            browsers="chromium webkit"
+          fi
+          setsid bash -c "nice -n 19 ionice -c 3 pnpm --filter www exec playwright install --with-deps $browsers; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
             > "$RUNNER_TEMP/browsers.log" 2>&1 &
 
+      # Quality regenerates the Confect output and verifies it unchanged for this
+      # same commit, so prepare does not repeat that codegen.
       - name: Prepare signed acceptance publication
-        run: pnpm acceptance:prepare
+        run: pnpm --dir packages/backend acceptance prepare
 
       - name: Verify generated Convex bindings
         run: test -z "$(git status --porcelain -- packages/backend/convex/_generated)"
@@ -244,13 +290,15 @@ jobs:
 
       - name: Run production browser checks
         id: production_browser
+        env:
+          PLAYWRIGHT_SUITE: ${{ matrix.suite }}
         run: pnpm --filter www test:browser
 
       - name: Archive production browser failures
         if: failure() && steps.production_browser.outcome == 'failure'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: www-production-browser-failures-${{ github.run_attempt }}
+          name: www-production-browser-failures-${{ matrix.suite }}-${{ github.run_attempt }}
           path: .cache/playwright/www
           compression-level: 0
           if-no-files-found: error
@@ -258,6 +306,8 @@ jobs:
           retention-days: 1
 
       - name: Run site checks
+        # The site checks read the local app once, so only the runtime leg runs them.
+        if: matrix.suite == 'runtime'
         run: pnpm check:site
 
       - name: Stop local services and erase temporary state
@@ -339,7 +389,7 @@ jobs:
   required:
     name: Required
     if: ${{ !cancelled() }}
-    needs: [scope, quality, production, doctor]
+    needs: [scope, quality, backend, production, doctor]
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -359,6 +409,7 @@ jobs:
       - name: Verify required result
         if: always()
         env:
+          BACKEND_OUTCOME: ${{ needs.backend.result }}
           FULL_OUTCOME: ${{ needs.quality.result }}
           PRODUCTION_OUTCOME: ${{ needs.production.result }}
           PRODUCTION_REQUIRED: ${{ needs.scope.outputs.required }}

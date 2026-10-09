@@ -39,6 +39,7 @@ import {
   rollbackArtifactHash,
 } from "@repo/backend/test/content/rollback";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest, type TestConvex } from "convex-test";
 import { Schema } from "effect";
 
@@ -52,7 +53,6 @@ const ContentProjectionJsonSchema = Schema.fromJsonString(
 const SignedArtifactJsonSchema = Schema.fromJsonString(
   SignedContentArtifactSchema
 );
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Decodes the canonical body response through the shared contract. */
 function decodePage(source: string): RollbackPage {
@@ -393,7 +393,7 @@ describe("contentRelease/rollback", () => {
       await ctx.db.patch("contentArtifacts", prior._id, {
         // The patched payload carries the retired requiredComponents shape,
         // which the current contract rejects, so only the plain codec writes it.
-        artifactJson: encodeJson({
+        artifactJson: encodeJsonText({
           ...stored,
           payload: {
             ...stored.payload,

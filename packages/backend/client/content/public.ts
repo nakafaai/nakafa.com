@@ -39,12 +39,12 @@ import {
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Array as ReadonlyArray, Schema } from "effect";
 import type { HttpClientResponse } from "effect/http";
 
 /** Server-owned connection values for the private content runtime endpoint. */
 type ContentRuntimeTarget = ContentHttpTarget;
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 /** Public route identity without its module-owned delivery discriminator. */
 type PublicContentRuntimeInput = typeof PublicContentRuntimeInputSchema.Type;
 const PublicContentVerificationSchema = Schema.Union([

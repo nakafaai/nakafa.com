@@ -32,10 +32,9 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
-
-const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 describe("contentRelease/snapshot/retention", () => {
   it.effect(
@@ -136,7 +135,7 @@ describe("contentRelease/snapshot/retention", () => {
               Schema.fromJsonString(SignedContentReleaseSchema)
             )(release.releaseJson);
             await ctx.db.patch("contentReleases", release._id, {
-              releaseJson: Schema.encodeSync(UnknownJsonSchema)({
+              releaseJson: encodeJsonText({
                 ...stored,
                 manifest: {
                   ...stored.manifest,

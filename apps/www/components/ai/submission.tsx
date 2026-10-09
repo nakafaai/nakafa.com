@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/confect/nina/uploads.spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import { encodeJsonText } from "@repo/utilities/json";
 import { randomUuid } from "@repo/utilities/uuid";
 import type { FileUIPart } from "ai";
 import {
@@ -46,9 +47,6 @@ type Start = typeof nina.turns.start;
 export type NinaDraft = PromptInputMessage &
   Pick<typeof NinaPageInput.Type, "focus"> &
   Pick<typeof NinaPrompt.Type, "text">;
-
-/** Encodes a payload as JSON text, so two payloads match when their text does. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Confect replays this callback until the authoritative message arrives. */
 function optimisticPrompt(
@@ -240,8 +238,8 @@ export function useNinaSubmission() {
           const previous = uncertain.current;
           const same =
             previous &&
-            encodeJson({ ...previous, requestId: undefined }) ===
-              encodeJson(payload);
+            encodeJsonText({ ...previous, requestId: undefined }) ===
+              encodeJsonText(payload);
           const args = {
             ...payload,
             requestId: same ? previous.requestId : Effect.runSync(randomUuid),

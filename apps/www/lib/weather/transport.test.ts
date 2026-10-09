@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Fiber, Layer, Result, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect, Fiber, Layer, Result } from "effect";
 import {
   HttpClient,
   type HttpClientRequest,
@@ -28,7 +29,6 @@ function makeTestClient({
     )
   );
 }
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 describe("requestWeatherJson", () => {
   it.effect("sends query parameters and returns decoded JSON", () =>
     Effect.gen(function* () {
@@ -91,8 +91,8 @@ describe("requestWeatherJson", () => {
         endpoint: "current-weather",
         message: "OpenWeather request failed for current-weather.",
       });
-      expect(encodeJson(result.failure)).not.toContain("weather-secret");
-      expect(encodeJson(result.failure)).not.toContain(
+      expect(encodeJsonText(result.failure)).not.toContain("weather-secret");
+      expect(encodeJsonText(result.failure)).not.toContain(
         "https://weather.example.test/weather"
       );
     })

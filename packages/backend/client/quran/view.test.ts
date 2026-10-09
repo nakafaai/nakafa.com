@@ -7,10 +7,10 @@ import {
   makeQuranMeaning,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
+import { JsonTextSchema } from "@repo/utilities/json";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
   activeReleaseId: "quran-release",

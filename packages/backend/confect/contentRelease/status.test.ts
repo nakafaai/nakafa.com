@@ -18,10 +18,10 @@ import {
   type TestIdentity,
   zeroReleaseJson,
 } from "@repo/backend/test/content/state";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest, type TestConvex } from "convex-test";
 import { Schema } from "effect";
 
-const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
 const currentRelease = internal.contentRelease.status.current;
 const releaseStatus = internal.contentRelease.status.getStatus;
 const ACTIVE = {
@@ -278,7 +278,7 @@ describe("contentRelease/status", () => {
         Schema.fromJsonString(SignedContentReleaseSchema)
       )(testReleaseJson());
       await ctx.db.patch(release._id, {
-        releaseJson: Schema.encodeSync(UnknownJsonSchema)({
+        releaseJson: encodeJsonText({
           ...stored,
           manifest: {
             ...stored.manifest,

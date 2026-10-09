@@ -6,18 +6,17 @@ import {
   Mortarboard02Icon,
 } from "@hugeicons/core-free-icons";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
-import { Array as Arr, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr } from "effect";
 import {
   getTryoutExamIcon,
   getTryoutSubjectIcon,
   getTryoutTrackIcon,
 } from "@/components/tryout/catalog/icons";
 
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
-
 /** Serialize an icon definition for stable structural assertions. */
 function serializeIcon(icon: unknown) {
-  return encodeJson(icon);
+  return encodeJsonText(icon);
 }
 
 /** UTBK-SNBT subtests under their official names, in exam order. */

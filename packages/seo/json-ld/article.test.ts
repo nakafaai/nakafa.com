@@ -5,14 +5,13 @@ import {
   ArticleJsonLdSchema,
   makeArticleJsonLd,
 } from "@repo/seo/json-ld/article";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Schema } from "effect";
 
 const decodeJsonLd = Schema.decodeUnknownSync(
   Schema.fromJsonString(ArticleJsonLdSchema)
 );
-const encodeJsonLdText = Schema.encodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const encodeJsonLdText = Schema.encodeUnknownSync(JsonTextSchema);
 
 /** Reads the document like a crawler: JSON text, no undeclared properties. */
 function readPublishedJsonLd(value: unknown) {

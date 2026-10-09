@@ -1,10 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
-import { Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
 import manifest from "@/app/manifest";
 
 const HEX_COLOR_PATTERN = /#[\da-f]{3,8}\b/i;
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn(() =>
@@ -26,6 +25,6 @@ describe("manifest", () => {
     expect(value.background_color).toBe(
       THEME_COMPATIBILITY_COLORS.light.background
     );
-    expect(encodeJson(value)).not.toMatch(HEX_COLOR_PATTERN);
+    expect(encodeJsonText(value)).not.toMatch(HEX_COLOR_PATTERN);
   });
 });

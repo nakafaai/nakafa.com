@@ -4,16 +4,14 @@ import { PostHog } from "@posthog/convex";
 import refs from "@repo/backend/confect/_generated/refs";
 import { failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
+import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
-
-/** Encodes a captured report as the JSON text an analytics sink receives. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -86,7 +84,7 @@ it.effect.each([
         name: `OperationalError(nina-response.${facts.operation})`,
         message: "Operational exception",
       });
-      expect(encodeJson(report)).not.toContain("private");
+      expect(encodeJsonText(report)).not.toContain("private");
       expect(report?.distinctId).toBeUndefined();
     })
 );
