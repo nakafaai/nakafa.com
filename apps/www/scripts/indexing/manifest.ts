@@ -25,12 +25,14 @@ export type SiteIndexUrlBatch = typeof SiteIndexUrlBatchSchema.Type;
  * Processes canonical sitemap URLs from sitemap pages without exposing one list.
  *
  * Adapters receive bounded URL batches, while the manifest retains counters
- * only and never materializes every Nakafa public URL in memory.
+ * only and never materializes every Nakafa public URL in memory. A processor
+ * that answers true ends the pass after its batch, and the summary then counts
+ * the batches and URLs read so far.
  */
-export function forEachSiteIndexUrlBatch<Success, Failure, Requirements>(
+export function forEachSiteIndexUrlBatch<Failure, Requirements>(
   process: (
     batch: SiteIndexUrlBatch
-  ) => Effect.Effect<Success, Failure, Requirements>,
+  ) => Effect.Effect<boolean, Failure, Requirements>,
   options: { batchSize?: number } = {}
 ) {
   return Effect.gen(function* () {
@@ -49,15 +51,19 @@ export function forEachSiteIndexUrlBatch<Success, Failure, Requirements>(
 
         if (currentBatch.length >= batchSize) {
           batchIndex += 1;
-          yield* process({
+          const stop = yield* process({
             batchIndex,
             urls: MutableList.toArray(currentBatch),
           });
+          if (stop) {
+            return { batchCount: batchIndex, canonicalUrlCount };
+          }
           currentBatch = MutableList.make<string>();
         }
       }
     }
 
+    // The last batch ends the pass, so its answer does not change what follows.
     if (currentBatch.length > 0) {
       batchIndex += 1;
       yield* process({ batchIndex, urls: MutableList.toArray(currentBatch) });
