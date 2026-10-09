@@ -25,7 +25,6 @@ import {
   useSidebar,
 } from "@repo/design-system/lib/sidebar/context";
 import { languages } from "@repo/internationalization/data/lang";
-import { IconCircleFilled } from "@tabler/icons-react";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import dynamic from "next/dynamic";
@@ -56,9 +55,9 @@ function selectMenuSide(sidebar: SidebarContextValue) {
 /** Shows the active menu option without changing the item label layout. */
 function ActiveBadge({ isActive }: { isActive: boolean }) {
   return (
-    <IconCircleFilled
+    <span
       className={cn(
-        "ml-auto size-3 text-primary opacity-0 transition-opacity",
+        "relative ml-auto size-3 shrink-0 opacity-0 transition-opacity before:absolute before:inset-px before:rounded-full before:bg-primary",
         isActive && "opacity-100"
       )}
     />
