@@ -9,7 +9,6 @@ import { Effect, Schema } from "effect";
 const QuranPublicationOperationSchema = Schema.Literals([
   "attribution",
   "catalog",
-  "document",
   "interpretation",
   "markdown",
   "reference",
