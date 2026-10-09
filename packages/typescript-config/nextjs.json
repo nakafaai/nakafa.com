@@ -1,10 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Next.js",
-  "extends": "./base.json",
+  "extends": "./library.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "allowJs": true,
     "jsx": "preserve",
     "paths": {
