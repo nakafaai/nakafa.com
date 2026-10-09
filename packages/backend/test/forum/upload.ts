@@ -76,7 +76,7 @@ export const createPendingUpload = Effect.fn(
   const lastSegment = yield* Effect.orDie(
     Effect.fromOption(Arr.last(capability.pathname.split("/")))
   );
-  const uploadToken = yield* Schema.decodeUnknownEffect(Schema.NonEmptyString)(
+  const uploadToken = yield* Schema.decodeEffect(Schema.NonEmptyString)(
     lastSegment
   );
   return {
