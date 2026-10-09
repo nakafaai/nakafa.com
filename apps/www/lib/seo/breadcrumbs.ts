@@ -1,8 +1,6 @@
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Schema } from "effect";
 import type { Locale } from "next-intl";
-
-const SITE_ORIGIN = `https://${MAIN_DOMAIN}`;
 
 const BreadcrumbEntrySchema = Schema.Struct({
   name: Schema.String,
