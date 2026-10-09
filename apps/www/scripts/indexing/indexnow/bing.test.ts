@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { FetchClient } from "@repo/utilities/http/client";
-import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   ConfigProvider,
@@ -13,6 +12,7 @@ import {
 } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
+import { answer, quotaAnswer, urlsOf } from "@/scripts/indexing/fixture";
 import {
   readBingWebmasterApiKey,
   submitUrlsToBing,
@@ -52,18 +52,6 @@ function readKeyFrom(env: Readonly<Record<string, string>>) {
     )
   );
 }
-
-/** Builds n distinct canonical URLs for one submission. */
-function urlsOf(count: number) {
-  return Arr.makeBy(count, (index) => `https://nakafa.com/id/page-${index}`);
-}
-
-/** An answer with the given status and body text. */
-const answer = (status: number, body = "") => new Response(body, { status });
-
-/** A refused answer whose JSON body carries a quota message, as Bing sends it. */
-const quotaAnswer = (message: string) =>
-  new Response(encodeJsonText({ Message: message }), { status: 400 });
 
 /** A 200 answer whose body starts and never ends, so the read waits for its deadline. */
 const neverEndingBody = () =>
@@ -119,6 +107,7 @@ describe("submitUrlsToBing", () => {
     Effect.gen(function* () {
       expect(yield* submitUrls([])).toEqual({
         failure: Option.none(),
+        stopped: false,
         submittedUrls: [],
       });
       expect(fetcher).not.toHaveBeenCalled();
@@ -140,6 +129,7 @@ describe("submitUrlsToBing", () => {
 
         expect(yield* Fiber.join(fiber)).toEqual({
           failure: Option.none(),
+          stopped: false,
           submittedUrls: urls,
         });
         expect(sentBatchSizes()).toEqual([100, 50]);
@@ -166,6 +156,7 @@ describe("submitUrlsToBing", () => {
 
         expect(yield* Fiber.join(fiber)).toEqual({
           failure: Option.none(),
+          stopped: true,
           submittedUrls: Arr.take(urls, 100),
         });
         expect(fetcher).toHaveBeenCalledTimes(2);
@@ -186,6 +177,7 @@ describe("submitUrlsToBing", () => {
 
         expect(yield* Fiber.join(fiber)).toEqual({
           failure: Option.none(),
+          stopped: false,
           submittedUrls: urls,
         });
         expect(sentBatchSizes()).toEqual([100, 30, 30, 30, 10]);
@@ -193,18 +185,47 @@ describe("submitUrlsToBing", () => {
   );
 
   it.effect(
-    "stops quietly when a quota message allows the batch it refused, so no smaller batch is sent",
+    "fails with a typed failure when a quota message allows the batch it refused, so no smaller batch is sent",
     () =>
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(
           quotaAnswer("Quota remaining for today: 5")
         );
 
-        expect(yield* submitUrls(urlsOf(1))).toEqual({
-          failure: Option.none(),
-          submittedUrls: [],
+        const outcome = yield* submitUrls(urlsOf(2));
+
+        expect(outcome.stopped).toBe(false);
+        expect(outcome.submittedUrls).toEqual([]);
+        expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
+          _tag: "BingSubmitError",
+          message:
+            "Bing refused 2 URLs with HTTP 400 although its quota allows 5.",
         });
-        expect(sentBatchSizes()).toEqual([1]);
+        expect(sentBatchSizes()).toEqual([2]);
+      })
+  );
+
+  it.effect(
+    "keeps the URLs accepted before a batch that the quota allows, then reports the refusal",
+    () =>
+      Effect.gen(function* () {
+        const urls = urlsOf(150);
+        fetcher
+          .mockResolvedValueOnce(answer(200))
+          .mockResolvedValueOnce(quotaAnswer("Quota remaining for today: 50"));
+        const fiber = yield* Effect.forkChild(submitUrls(urls));
+
+        yield* TestClock.adjust("1 second");
+
+        const outcome = yield* Fiber.join(fiber);
+        expect(outcome.stopped).toBe(false);
+        expect(outcome.submittedUrls).toEqual(Arr.take(urls, 100));
+        expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
+          _tag: "BingSubmitError",
+          message:
+            "Bing refused 50 URLs with HTTP 400 although its quota allows 50.",
+        });
+        expect(fetcher).toHaveBeenCalledTimes(2);
       })
   );
 
@@ -223,6 +244,7 @@ describe("submitUrlsToBing", () => {
 
       expect(yield* submitUrls(urlsOf(2))).toEqual({
         failure: Option.none(),
+        stopped: true,
         submittedUrls: [],
       });
       expect(fetcher).toHaveBeenCalledOnce();

@@ -23,8 +23,9 @@ const GOOGLE_PUBLISH_ENDPOINT =
 /**
  * Submits eligible URL notifications sequentially for predictable rate stops.
  *
- * Returns the URLs that Google accepted and, when a request fails, the typed
- * failure that ended the call. A stop status ends the run without a failure.
+ * Returns the URLs that Google accepted, whether a stop status ended the call,
+ * and, when a request fails, the typed failure that ended the call. A stop
+ * status is not a failure: the caller saves what Google accepted, then ends the run.
  */
 export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
   function* (urls: string[], accessToken: string) {
@@ -32,7 +33,7 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
       yield* Effect.logInfo(
         "No new eligible URLs to submit to Google Indexing API."
       );
-      return { failure: Option.none(), submittedUrls: [] };
+      return { failure: Option.none(), stopped: false, submittedUrls: [] };
     }
 
     yield* Effect.logInfo(
@@ -41,6 +42,7 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
 
     const successfullySubmitted = MutableList.make<string>();
     let currentDelay = RATE_LIMIT_DELAY;
+    let stopped = false;
 
     for (const [index, url] of urls.entries()) {
       const outcome = yield* submitUrlToGoogle(
@@ -52,12 +54,14 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
       if (Result.isFailure(outcome)) {
         return {
           failure: Option.some(outcome.failure),
+          stopped: false,
           submittedUrls: MutableList.toArray(successfullySubmitted),
         };
       }
       const result = outcome.success;
 
       if (result.shouldStop) {
+        stopped = true;
         break;
       }
 
@@ -85,6 +89,7 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
 
     return {
       failure: Option.none(),
+      stopped,
       submittedUrls: MutableList.toArray(successfullySubmitted),
     };
   }
