@@ -147,6 +147,51 @@ engine owns when its steps start.
 tests and framework configuration, by `new-promise`. The rule counts only while
 `Promise` is the global binding, read by name or through a global object.
 
+### Data shapes written inline
+
+`data-type` also reports an object type written inline where a data shape is
+declared: in the type of a variable, in a return type, in the target of a type
+predicate, in the target of `satisfies`, and inside the named arguments of a
+parameter (an array element, a record value, a union member, a nested member).
+
+The object type that IS a parameter's type is not reported. It names the
+arguments of the function, as React props name the inputs of a component, so it
+is no data shape. This also holds when an intersection joins it to another
+type and inside `Partial`, `Readonly`, or `Required`. Two pilot sweeps measured
+the other reading: for about 108 such places they added 65 Schema constants and
+43 run-time imports that only gave a type, and one rebuilt a Convex document
+schema that Confect already provides. Of 528 inline object types measured, 94
+were data shapes.
+
+An inline object type is not reported, by construction, when:
+
+- one of its members holds a value that no Schema describes as data: a
+  function, a React or MDX value, an AI SDK message part, an Effect runtime
+  handle, a platform object such as `Request` or `Promise`, a three.js object,
+  or a syntax-tree node of ESTree or TypeScript;
+- an intersection joins it to such a value, as in `ResponseInit & { url?: string }`;
+- one of its members names a type parameter in scope. The caller chooses that
+  type, so no single `typeof X.Type` names the shape, as for a generic
+  interface;
+- it is the selector of `Extract` or `Exclude`;
+- it is the props of a React component, a type argument of a call, or the
+  constraint of a type parameter.
+
+The fix has an order. First remove an annotation that only restates what the
+value already says (`as const` keeps a literal type). Then derive from the
+owner that exists: a Schema's `.Type`, `Parameters` or `ReturnType` of the
+function that consumes or produces the value, `FunctionArgs` of a Convex
+reference, a type that Next.js generates. A new Schema is for a real contract:
+an exported shape, a shape that two places use, or the row type of an authored
+table. A browser module never gains a run-time import only to name a type.
+
+### Module size
+
+A hand-written module has at most 500 lines. The check reports a longer one
+with its count, tests included, and a module that a tool generated is not
+judged. The limit is on physical lines, so a long comment counts: a module
+that needs that much explanation holds more than one capability.
+
 ## Consequences
 
 - `packages/typescript-config/base.json` lists every rule the installed plugin
