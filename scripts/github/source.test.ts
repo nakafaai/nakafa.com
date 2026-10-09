@@ -45,7 +45,7 @@ const makeGithubTree = Effect.fn("GithubSourceTest.makeGithubTree")(function* (
 });
 
 describe("GitHub Action sources", () => {
-  it.effect("reads external action uses from every workflow file", () =>
+  it.effect("reads action uses from every workflow file", () =>
     Effect.gen(function* () {
       const root = yield* makeWorkflows({
         "README.md": "uses: example/ignored@0123456789abcdef\n",
@@ -72,6 +72,11 @@ describe("GitHub Action sources", () => {
           inputs: {},
           reference:
             "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          workflowPath: ".github/workflows/ci.yml",
+        },
+        {
+          inputs: {},
+          reference: "./.github/actions/local",
           workflowPath: ".github/workflows/ci.yml",
         },
         {
@@ -112,7 +117,7 @@ describe("GitHub Action sources", () => {
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.effect("reads external action uses from every composite action", () =>
+  it.effect("reads action uses from every composite action", () =>
     Effect.gen(function* () {
       const root = yield* makeGithubTree({
         "actions/README.md": "uses: example/ignored@0123456789abcdef\n",
@@ -144,6 +149,11 @@ describe("GitHub Action sources", () => {
         },
         {
           inputs: {},
+          reference: "./.github/actions/local",
+          workflowPath: ".github/actions/install/action.yml",
+        },
+        {
+          inputs: {},
           reference:
             "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
           workflowPath: ".github/actions/install/action.yml",
@@ -154,14 +164,6 @@ describe("GitHub Action sources", () => {
           workflowPath: ".github/actions/nested/tool/action.yaml",
         },
       ]);
-    }).pipe(Effect.provide(NodeServices.layer))
-  );
-
-  it.effect("reads no composite action uses without composite actions", () =>
-    Effect.gen(function* () {
-      const root = yield* makeGithubTree({ "workflows/ci.yml": "jobs: {}\n" });
-
-      expect(yield* readCompositeActionUses(root)).toEqual([]);
     }).pipe(Effect.provide(NodeServices.layer))
   );
 

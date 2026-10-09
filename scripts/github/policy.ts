@@ -1,6 +1,8 @@
 import { Array as Arr, HashMap, Option, Record as Rec, Schema } from "effect";
 import { problemWhen } from "#scripts/problem";
 
+/** The one folder whose composite actions this policy reads. */
+const LOCAL_ACTION_ROOT = "./.github/actions/";
 const UnknownRecord = Schema.Record(Schema.String, Schema.Unknown);
 const NonNegativeInteger = Schema.Finite.pipe(
   Schema.check(Schema.isInt()),
@@ -143,7 +145,7 @@ function inputProblems(
   );
 }
 
-/** Validates immutable revisions, exact reviewed inputs, and complete action coverage. */
+/** Validates immutable revisions, exact reviewed inputs, complete action coverage, and where local actions live. */
 export function validateGithubActionPolicy(
   actionUses: readonly GithubActionUse[]
 ) {
@@ -151,6 +153,16 @@ export function validateGithubActionPolicy(
     Arr.map(GITHUB_ACTION_REVIEWS, (review) => [review.action, review])
   );
   const inspected = Arr.map(actionUses, (use) => {
+    if (use.reference.startsWith("./")) {
+      return {
+        problems: problemWhen(
+          !use.reference.startsWith(LOCAL_ACTION_ROOT),
+          `${use.workflowPath} uses the local action ${use.reference}; keep a local action below .github/actions, where this policy reads the actions it uses.`
+        ),
+        reviewed: [],
+      };
+    }
+
     const parsed = parseActionReference(use.reference);
     if (!parsed) {
       return {

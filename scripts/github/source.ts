@@ -30,7 +30,7 @@ function matchingFiles(files: readonly string[], pattern: RegExp) {
   );
 }
 
-/** Reads the external action uses of YAML files at paths under the repository root. */
+/** Reads the action uses of YAML files at paths under the repository root. */
 const readYamlActionUses = Effect.fnUntraced(function* (
   root: string,
   relativePaths: readonly string[]
@@ -56,13 +56,10 @@ const readYamlActionUses = Effect.fnUntraced(function* (
     })
   );
 
-  return Arr.filter(
-    Arr.flatten(uses),
-    ({ reference }) => !reference.startsWith("./")
-  );
+  return Arr.flatten(uses);
 });
 
-/** Reads every external action used by first-party GitHub workflows. */
+/** Reads every action used by first-party GitHub workflows. */
 export const readWorkflowActionUses = Effect.fn(
   "RepositoryPolicy.readWorkflowActionUses"
 )(function* (root: string) {
@@ -85,7 +82,7 @@ export const readWorkflowActionUses = Effect.fn(
   );
 });
 
-/** Reads every external action used by the composite actions under .github/actions. */
+/** Reads every action used by the composite actions under .github/actions. */
 export const readCompositeActionUses = Effect.fn(
   "RepositoryPolicy.readCompositeActionUses"
 )(function* (root: string) {

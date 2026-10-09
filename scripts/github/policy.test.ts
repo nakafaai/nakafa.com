@@ -300,6 +300,27 @@ describe("GitHub Action policy", () => {
     ]);
   });
 
+  it("accepts a local action below .github/actions and reports one anywhere else", () => {
+    const problems = validateGithubActionPolicy(
+      Arr.appendAll(validActionUses(), [
+        {
+          inputs: {},
+          reference: "./.github/actions/install",
+          workflowPath: ".github/workflows/example.yml",
+        },
+        {
+          inputs: {},
+          reference: "./.github/tools/install",
+          workflowPath: ".github/workflows/example.yml",
+        },
+      ])
+    );
+
+    expect(problems).toEqual([
+      ".github/workflows/example.yml uses the local action ./.github/tools/install; keep a local action below .github/actions, where this policy reads the actions it uses.",
+    ]);
+  });
+
   it("reports mutable, unreviewed, missing, and misconfigured actions", () => {
     const validUses = validActionUses();
     const firstUse = validUses[0];
