@@ -1,0 +1,1 @@
+export const NINA_MESSAGES_PAGE_SIZE = 50;
