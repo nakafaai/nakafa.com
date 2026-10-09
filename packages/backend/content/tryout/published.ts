@@ -275,7 +275,7 @@ export const readPublishedEntrySection = Effect.fn(
   visibleSections: readonly TryoutSection[]
 ) {
   if (!set.internalEntrySectionKey) {
-    return visibleSections.at(0) ?? null;
+    return Option.getOrNull(Arr.head(visibleSections));
   }
   const entrySection = Arr.findFirst(
     sections,

@@ -8,10 +8,10 @@ import {
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
+import { Id } from "@repo/backend/confect/_generated/id";
 import type consents from "@repo/backend/confect/_generated/refs/consents";
 import { ConsentAccountChanged } from "@repo/backend/confect/consents/current.spec";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Duration, Effect, Fiber, Option, Result } from "effect";
+import { Duration, Effect, Fiber, Option, Result, Schema } from "effect";
 import { TestClock } from "effect/testing";
 import {
   AccountConsentPersistenceError,
@@ -21,7 +21,7 @@ import {
   saveAccountAnalyticsChoice,
 } from "@/lib/analytics/consent/signal";
 
-const expectedUserId = "user-1" as Id<"users">;
+const expectedUserId = Schema.decodeUnknownSync(Id("users"))("user-1");
 const revokedDecision = {
   category: ANALYTICS_CONSENT_CATEGORY,
   decidedAt: 100,

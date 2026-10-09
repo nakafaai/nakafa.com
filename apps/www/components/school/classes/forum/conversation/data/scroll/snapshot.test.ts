@@ -1,8 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import { createConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/data/scroll/snapshot";
 
-const postId = "post_1" as Id<"schoolClassForumPosts">;
+const postId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))("post_1");
 
 describe("conversation/data/scroll/snapshot", () => {
   it("builds persisted scroll snapshots from settled transcript state", () => {

@@ -182,7 +182,7 @@ describe("triggers/schools/members", () => {
   });
   it("tracks school joins and invite usage through school mutations", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const users = await t.mutation(async (ctx) => ({
       admin: await seedAuthenticatedUser(ctx, {

@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 it("requires a session and grants subscription UI access only for the current customer's active product", async () => {
-  vi.setSystemTime(new Date(NOW));
+  vi.setSystemTime(NOW);
   const t = createConvexTestWithBetterAuth();
   const query = api.subscriptions.queries.hasActiveSubscription;
   const args = { productId: "pro-product" };

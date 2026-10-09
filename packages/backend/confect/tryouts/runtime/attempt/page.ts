@@ -36,11 +36,16 @@ export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
     identity: TryoutSetIdentity
   ) {
     const selection = yield* readAttemptSetSelection(args, attempt, identity);
-    const publicPath = selection.sets.at(0)?.publicPath;
+    const publicPath = Option.map(
+      Arr.head(selection.sets),
+      (set) => set.publicPath
+    );
     const page = yield* readPublishedSetPageFromIndex(
       selection,
-      args.publicPath === attempt.setPublicPath && publicPath
-        ? publicPath
+      args.publicPath === attempt.setPublicPath &&
+        Option.isSome(publicPath) &&
+        publicPath.value
+        ? publicPath.value
         : args.publicPath
     );
     if (!page) {
@@ -128,23 +133,23 @@ function matchesAttemptSelection(
   identity: TryoutSetIdentity,
   selection: TryoutSetSelection
 ) {
-  const set = selection.sets.at(0);
+  const set = Arr.head(selection.sets);
   if (
-    !set ||
+    Option.isNone(set) ||
     selection.sets.length !== 1 ||
-    set.appLocale !== identity.locale ||
+    set.value.appLocale !== identity.locale ||
     !matchesAttemptIdentity(identity, {
-      countryKey: set.countryKey,
-      examKey: set.examKey,
+      countryKey: set.value.countryKey,
+      examKey: set.value.examKey,
       locale: identity.locale,
-      setKey: set.setKey,
-      trackKey: set.trackKey,
+      setKey: set.value.setKey,
+      trackKey: set.value.trackKey,
     }) ||
-    tryoutCatalogIdentity(set) !== attempt.setIdentity ||
-    set.publicPath !== attempt.setPublicPath ||
-    set.questionCount !== attempt.totalQuestions ||
-    set.scoringStrategy !== attempt.scoringStrategy ||
-    set.sectionCount !== attempt.sectionSnapshots.length ||
+    tryoutCatalogIdentity(set.value) !== attempt.setIdentity ||
+    set.value.publicPath !== attempt.setPublicPath ||
+    set.value.questionCount !== attempt.totalQuestions ||
+    set.value.scoringStrategy !== attempt.scoringStrategy ||
+    set.value.sectionCount !== attempt.sectionSnapshots.length ||
     selection.sectionRecords.length !== attempt.sectionSnapshots.length
   ) {
     return false;

@@ -57,7 +57,7 @@ async function setup(historical = false) {
     t,
   };
 }
-beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
+beforeEach(() => vi.setSystemTime(TRYOUT_TEST_NOW));
 describe("tryouts/runtime/history/read", () => {
   it.effect(
     "requires current Pro access for answers beyond the free preview",
@@ -135,23 +135,28 @@ describe("tryouts/runtime/history/read", () => {
         Arr.map(result.items, (item) => item.delivery),
         ["authenticated", "entitled"]
       );
-      for (const [index, selector] of seed.request.selectors.entries()) {
-        const stored = yield* Effect.promise(() =>
-          t.query((ctx) =>
-            ctx.db
-              .query("contentArtifacts")
-              .withIndex("by_artifactHash", (index) =>
-                index.eq("artifactHash", selector.artifactHash)
+      yield* Effect.forEach(
+        seed.request.selectors,
+        (selector, index) =>
+          Effect.gen(function* () {
+            const stored = yield* Effect.promise(() =>
+              t.query((ctx) =>
+                ctx.db
+                  .query("contentArtifacts")
+                  .withIndex("by_artifactHash", (index) =>
+                    index.eq("artifactHash", selector.artifactHash)
+                  )
+                  .unique()
               )
-              .unique()
-          )
-        );
-        assert.isNotNull(stored);
-        assert.strictEqual(
-          result.items[index]?.artifactJson,
-          stored.artifactJson
-        );
-      }
+            );
+            assert.isNotNull(stored);
+            assert.strictEqual(
+              result.items[index]?.artifactJson,
+              stored.artifactJson
+            );
+          }),
+        { discard: true }
+      );
     })
   );
   it.effect(
@@ -227,7 +232,7 @@ describe("tryouts/runtime/history/read", () => {
           yield* Effect.promise(() =>
             read(owned, {
               ...seed.request,
-              selectors: seed.request.selectors.slice(0, 1),
+              selectors: Arr.take(seed.request.selectors, 1),
             })
           )
         );

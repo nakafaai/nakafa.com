@@ -1,66 +1,79 @@
+import { Match, Schema } from "effect";
+
+const ItemLabelKey = Schema.Literals([
+  "math-item-algebraic-multiplicity",
+  "math-item-approximation",
+  "math-item-counterexample",
+  "math-item-diagonalizable",
+  "math-item-domain",
+  "math-item-eigenbasis",
+  "math-item-eigenvalue",
+  "math-item-eigenvector",
+  "math-item-factor",
+  "math-item-geometric-multiplicity",
+  "math-item-mode",
+  "math-item-q1",
+  "math-item-q2",
+  "math-item-q3",
+  "math-item-root",
+  "math-item-solution",
+  "math-item-singularity",
+  "math-item-status",
+  "math-item-result",
+]);
+
+const ItemValueKey = Schema.Literals([
+  "math-value-no",
+  "math-value-yes",
+  "math-value-divergent",
+]);
+
 /** Maps math item labels to stable translation keys. */
-export function getItemLabelKey(label: string) {
-  switch (label) {
-    case "algebraic_multiplicity":
-      return "math-item-algebraic-multiplicity";
-    case "approximation":
-      return "math-item-approximation";
-    case "counterexample":
-      return "math-item-counterexample";
-    case "diagonalizable":
-      return "math-item-diagonalizable";
-    case "domain":
-      return "math-item-domain";
-    case "eigenbasis":
-      return "math-item-eigenbasis";
-    case "eigenvalue":
-      return "math-item-eigenvalue";
-    case "eigenvector":
-      return "math-item-eigenvector";
-    case "factor":
-      return "math-item-factor";
-    case "geometric_multiplicity":
-      return "math-item-geometric-multiplicity";
-    case "mode":
-      return "math-item-mode";
-    case "q1":
-      return "math-item-q1";
-    case "q2":
-      return "math-item-q2";
-    case "q3":
-      return "math-item-q3";
-    case "root":
-      return "math-item-root";
-    case "solution":
-      return "math-item-solution";
-    case "singularity":
-      return "math-item-singularity";
-    case "status":
-      return "math-item-status";
-    default:
-      return "math-item-result";
-  }
-}
+export const getItemLabelKey = Match.type<string>().pipe(
+  Match.withReturnType<typeof ItemLabelKey.Type>(),
+  Match.when(
+    "algebraic_multiplicity",
+    () => "math-item-algebraic-multiplicity"
+  ),
+  Match.when("approximation", () => "math-item-approximation"),
+  Match.when("counterexample", () => "math-item-counterexample"),
+  Match.when("diagonalizable", () => "math-item-diagonalizable"),
+  Match.when("domain", () => "math-item-domain"),
+  Match.when("eigenbasis", () => "math-item-eigenbasis"),
+  Match.when("eigenvalue", () => "math-item-eigenvalue"),
+  Match.when("eigenvector", () => "math-item-eigenvector"),
+  Match.when("factor", () => "math-item-factor"),
+  Match.when(
+    "geometric_multiplicity",
+    () => "math-item-geometric-multiplicity"
+  ),
+  Match.when("mode", () => "math-item-mode"),
+  Match.when("q1", () => "math-item-q1"),
+  Match.when("q2", () => "math-item-q2"),
+  Match.when("q3", () => "math-item-q3"),
+  Match.when("root", () => "math-item-root"),
+  Match.when("solution", () => "math-item-solution"),
+  Match.when("singularity", () => "math-item-singularity"),
+  Match.when("status", () => "math-item-status"),
+  Match.orElse(() => "math-item-result")
+);
 
 /** Maps semantic math item values to localized display text. */
 export function getItemValueKey(label: string, value: string) {
   if (label === "diagonalizable") {
-    switch (value) {
-      case "false":
-        return "math-value-no";
-      case "true":
-        return "math-value-yes";
-      default:
-        return;
-    }
+    return Match.value(value).pipe(
+      Match.withReturnType<typeof ItemValueKey.Type | undefined>(),
+      Match.when("false", () => "math-value-no"),
+      Match.when("true", () => "math-value-yes"),
+      Match.orElse(() => undefined)
+    );
   }
 
   if (label === "status") {
-    switch (value) {
-      case "divergent":
-        return "math-value-divergent";
-      default:
-        return;
-    }
+    return Match.value(value).pipe(
+      Match.withReturnType<typeof ItemValueKey.Type | undefined>(),
+      Match.when("divergent", () => "math-value-divergent"),
+      Match.orElse(() => undefined)
+    );
   }
 }

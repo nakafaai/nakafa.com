@@ -2,6 +2,7 @@ import { getChartSeriesId } from "@repo/design-system/components/evilcharts/ui/c
 import { GeometricDot } from "@repo/design-system/components/evilcharts/ui/geometric-dot";
 import type { ChartDotVariant } from "@repo/design-system/lib/charts/series-cue";
 import { cn } from "cn";
+import { Match } from "effect";
 import { memo, useId } from "react";
 
 export type DotVariant = ChartDotVariant;
@@ -35,38 +36,37 @@ const ChartDot = memo(function ChartDot({
     return null;
   }
 
-  switch (type) {
-    case "border":
-      return (
-        <PrimaryBorderDot
-          className={className}
-          cx={cx}
-          cy={cy}
-          dotId={dotId}
-          fillOpacity={fillOpacity}
-          gradientUrl={gradientUrl}
-          maskId={maskId}
-        />
-      );
-    case "colored-border":
-      return (
-        <ColoredBorderDot
-          className={className}
-          cx={cx}
-          cy={cy}
-          dotId={dotId}
-          fillOpacity={fillOpacity}
-          gradientUrl={gradientUrl}
-          maskId={maskId}
-        />
-      );
-    case "square":
-    case "square-border":
-    case "diamond":
-    case "diamond-border":
-    case "triangle":
-    case "triangle-border":
-      return (
+  return Match.value(type).pipe(
+    Match.when("border", () => (
+      <PrimaryBorderDot
+        className={className}
+        cx={cx}
+        cy={cy}
+        dotId={dotId}
+        fillOpacity={fillOpacity}
+        gradientUrl={gradientUrl}
+        maskId={maskId}
+      />
+    )),
+    Match.when("colored-border", () => (
+      <ColoredBorderDot
+        className={className}
+        cx={cx}
+        cy={cy}
+        dotId={dotId}
+        fillOpacity={fillOpacity}
+        gradientUrl={gradientUrl}
+        maskId={maskId}
+      />
+    )),
+    Match.whenOr(
+      "square",
+      "square-border",
+      "diamond",
+      "diamond-border",
+      "triangle",
+      "triangle-border",
+      (geometricType) => (
         <GeometricDot
           className={className}
           cx={cx}
@@ -74,22 +74,22 @@ const ChartDot = memo(function ChartDot({
           fillOpacity={fillOpacity}
           gradientUrl={gradientUrl}
           maskId={maskId}
-          type={type}
+          type={geometricType}
         />
-      );
-    default:
-      return (
-        <DefaultDot
-          className={className}
-          cx={cx}
-          cy={cy}
-          dotId={dotId}
-          fillOpacity={fillOpacity}
-          gradientUrl={gradientUrl}
-          maskId={maskId}
-        />
-      );
-  }
+      )
+    ),
+    Match.orElse(() => (
+      <DefaultDot
+        className={className}
+        cx={cx}
+        cy={cy}
+        dotId={dotId}
+        fillOpacity={fillOpacity}
+        gradientUrl={gradientUrl}
+        maskId={maskId}
+      />
+    ))
+  );
 });
 
 interface DotVariantProps {

@@ -3,7 +3,7 @@ import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.
 import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 export type ConvexTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 export type ResponseFixture = Effect.Success<
   ReturnType<typeof seedResponseFixture>
@@ -57,13 +57,11 @@ export const seedResponseFixture = Effect.fn(
         suffix,
       });
       const placement = await ctx.db.get(state.placementId);
-      const selectedChoice =
+      const choices =
         placement?.responseSpec.kind === "single-choice"
-          ? placement.responseSpec.options.at(0)
-          : undefined;
-      if (!selectedChoice) {
-        throw new Error("Expected one frozen choice.");
-      }
+          ? placement.responseSpec.options
+          : [];
+      const selectedChoice = Option.getOrThrow(Arr.head(choices));
       return {
         ...state,
         selectedChoice,

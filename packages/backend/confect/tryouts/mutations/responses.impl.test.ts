@@ -17,7 +17,7 @@ import {
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const saveAnswer = Effect.fn("test.tryout.response.saveAnswer")(
   (fixture: ResponseFixture, selection: Doc<"tryoutResponses">["selection"]) =>
@@ -68,7 +68,7 @@ it.each([
 ])(
   "restores the $scenario failure tag from the registered response payload",
   async ({ scenario, tag, code }) => {
-    vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
+    vi.setSystemTime(TRYOUT_TEST_NOW);
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation((ctx) =>
       seedTryoutContentAccessState(ctx, {
@@ -247,7 +247,10 @@ describe("tryouts/mutations/responses outcomes", () => {
             }
           )
         );
-        expect(running?.runtime?.questions.at(0)?.response?.selection).toEqual({
+        expect(
+          Option.getOrUndefined(Arr.head(running?.runtime?.questions ?? []))
+            ?.response?.selection
+        ).toEqual({
           kind: "short-answer",
           text: "0,50",
         });

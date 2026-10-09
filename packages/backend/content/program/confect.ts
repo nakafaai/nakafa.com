@@ -6,7 +6,7 @@ import {
   programPosition,
 } from "@repo/backend/content/program/cursor";
 import { ProgramSource } from "@repo/backend/content/program/source";
-import { Effect, Layer, Option, Predicate } from "effect";
+import { Array as Arr, Effect, Layer, Option, Predicate } from "effect";
 
 /** Reads program relationships through their existing immutable native indexes. */
 export const programLayer = Layer.merge(
@@ -153,15 +153,16 @@ export const programLayer = Layer.merge(
                 cursor: null,
               })
               .pipe(Effect.orDie);
-            const last = stored.page.at(-1);
+            const last = Arr.last(stored.page);
             const split = Predicate.isNullish(stored.splitCursor)
               ? undefined
               : stored.page[Math.floor((stored.page.length - 1) / 2)];
             return {
               ...stored,
-              continueCursor: last
-                ? programPosition(last)
-                : (options.cursor ?? ""),
+              continueCursor: Option.match(last, {
+                onNone: () => options.cursor ?? "",
+                onSome: programPosition,
+              }),
               ...(split
                 ? {
                     splitCursor: programPosition(split),

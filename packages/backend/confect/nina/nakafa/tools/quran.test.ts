@@ -7,7 +7,7 @@ import {
   runSpecialist,
 } from "@repo/backend/test/nina/specialist";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { Effect, MutableList } from "effect";
+import { Array as Arr, Effect, MutableList, Option } from "effect";
 
 vi.mock("@repo/backend/agent/quran", () => ({
   getNakafaQuranReference: vi.fn(),
@@ -42,7 +42,9 @@ describe("Nina Quran evidence", () => {
         quran({ input, locale: "id", publish, toolCallId: "quran" })
       );
       expect(text).toContain("# Nakafa Quran Reference");
-      expect(MutableList.toArray(artifacts).at(-1)).toMatchObject({
+      expect(
+        Option.getOrThrow(Arr.last(MutableList.toArray(artifacts)))
+      ).toMatchObject({
         data: {
           status: "done",
           result: { verse_count: 1 },
@@ -70,7 +72,9 @@ describe("Nina Quran evidence", () => {
         )
       ).toBe(message);
       expect(getNakafaQuranReference).not.toHaveBeenCalled();
-      expect(MutableList.toArray(artifacts).at(-1)).toMatchObject({
+      expect(
+        Option.getOrThrow(Arr.last(MutableList.toArray(artifacts)))
+      ).toMatchObject({
         data: { status: "error", error: message },
       });
     }
@@ -92,7 +96,9 @@ describe("Nina Quran evidence", () => {
         })
       )
     ).toBe("Reference is unavailable.");
-    expect(MutableList.toArray(artifacts).at(-1)).toMatchObject({
+    expect(
+      Option.getOrThrow(Arr.last(MutableList.toArray(artifacts)))
+    ).toMatchObject({
       data: { status: "error", error: "Reference is unavailable." },
     });
   });

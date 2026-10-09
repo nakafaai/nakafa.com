@@ -10,7 +10,7 @@ describe("credits/mutations", () => {
   });
 
   it("syncs one plan reset period to the current boundary", async () => {
-    vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 10, 0, 0)));
+    vi.setSystemTime(Date.UTC(2026, 3, 2, 10, 0, 0));
 
     const t = convexTest(schema, convexModules);
 
@@ -33,7 +33,7 @@ describe("credits/mutations", () => {
   });
 
   it("syncs all credit reset periods", async () => {
-    vi.setSystemTime(new Date(Date.UTC(2026, 3, 18, 10, 0, 0)));
+    vi.setSystemTime(Date.UTC(2026, 3, 18, 10, 0, 0));
 
     const t = convexTest(schema, convexModules);
 
@@ -59,7 +59,7 @@ describe("credits/mutations", () => {
   });
 
   it("keeps repeated all-plan reconciliation idempotent", async () => {
-    vi.setSystemTime(new Date(Date.UTC(2026, 3, 18, 10, 0, 0)));
+    vi.setSystemTime(Date.UTC(2026, 3, 18, 10, 0, 0));
 
     const t = convexTest(schema, convexModules);
 

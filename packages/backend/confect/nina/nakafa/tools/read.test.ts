@@ -10,7 +10,7 @@ import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, MutableList, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 
 vi.mock("@repo/backend/agent/content", () => ({ getNakafaContent: vi.fn() }));
 afterEach(() => vi.restoreAllMocks());
@@ -73,7 +73,9 @@ describe("Nina content evidence", () => {
           ? "Nakafa content was not found."
           : "Content verification failed."
       );
-      expect(MutableList.toArray(artifacts).at(-1)).toMatchObject({
+      expect(
+        Option.getOrThrow(Arr.last(MutableList.toArray(artifacts)))
+      ).toMatchObject({
         data: { status: "error", error: text },
       });
     }

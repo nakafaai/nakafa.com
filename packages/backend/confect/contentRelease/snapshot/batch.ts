@@ -187,19 +187,13 @@ export const stageBatch = Effect.fn("contentRelease.stageSnapshotBatch")(
         `Snapshot batch ${family}/${batchIndex} exceeds signed row counts.`
       );
     }
-    let unchanged = 0;
-    for (const [offset, entry] of entries.entries()) {
-      if (
-        yield* stageRow(
-          snapshotId,
-          firstIndex + offset,
-          entry.row,
-          entry.rowJson
-        )
-      ) {
-        unchanged += 1;
-      }
-    }
+    const unchangedRows = yield* Effect.forEach(entries, (entry, offset) =>
+      stageRow(snapshotId, firstIndex + offset, entry.row, entry.rowJson)
+    );
+    const unchanged = Arr.filter(
+      unchangedRows,
+      (isUnchanged) => isUnchanged
+    ).length;
     const now = yield* Clock.currentTimeMillis;
     yield* writer
       .table("snapshotBatches")

@@ -146,7 +146,7 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
             attempt.sectionSnapshots,
             (section) =>
               section.publicPath === undefined &&
-              !attempt.completedSectionKeys.includes(section.sectionKey)
+              !Arr.contains(attempt.completedSectionKeys, section.sectionKey)
           )
         );
       if (!entrySection || entrySection.publicPath) {

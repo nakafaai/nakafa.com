@@ -37,7 +37,7 @@ describe("contentRelease/quran/translation", () => {
               translations: [
                 verse.translations[0],
                 ...Arr.filter(
-                  verse.translations.slice(1),
+                  Arr.drop(verse.translations, 1),
                   ({ appLocale }) => appLocale !== "de"
                 ),
               ],

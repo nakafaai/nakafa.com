@@ -188,7 +188,11 @@ describe("contentRelease/compact", () => {
         },
         (_, index) => compactionIdentity(index + 1)
       );
-      for (const [index, release] of releases.entries()) {
+      const indexedReleases = Arr.map(releases, (release, index) => ({
+        index,
+        release,
+      }));
+      for (const { index, release } of indexedReleases) {
         await insertCompletedRelease(
           ctx,
           release,
@@ -284,7 +288,7 @@ describe("contentRelease/compact", () => {
   });
 });
 describe("contentRelease/compact permanent history", () => {
-  beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
+  beforeEach(() => vi.setSystemTime(TRYOUT_TEST_NOW));
   it("preserves frozen attempt history after its source release expires", async () => {
     const t = createConvexTestWithBetterAuth();
     const seed = await t.mutation(async (ctx) => {

@@ -17,7 +17,7 @@ import { convertToDatabaseCustomer } from "@repo/backend/confect/customers/recor
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
 import { convertToDatabaseSubscription } from "@repo/backend/confect/subscriptions/utils";
-import { Effect, flow, Schema } from "effect";
+import { Effect, flow, Match, Schema } from "effect";
 
 type PolarWebhookEvent = webhooks.WebhookPayload;
 const subscriptionWebhookOperationSchema = Schema.Literals([
@@ -156,49 +156,63 @@ const deletePolarCustomerWebhook = Effect.fn(
 export const processPolarWebhookEvent = Effect.fn(
   "customers.polar.processWebhookEvent"
 )(function* (event: PolarWebhookEvent) {
-  switch (event.type) {
-    case "customer.created":
-    case "customer.updated": {
-      const customer = yield* decodePolarCustomer(event.data);
-      // A customer the normalizer cannot store is a payload this handler cannot read.
-      const disposition = yield* upsertPolarCustomerWebhook(customer).pipe(
-        Effect.catchTag("PolarCustomerError", (error) =>
-          Effect.fail(
-            new PolarPayloadError({ cause: error, message: error.message })
-          )
-        )
-      );
-      return disposition !== "missing";
-    }
-    case "customer.deleted": {
-      const customer = yield* decodePolarCustomerId(event.data);
-      yield* deletePolarCustomerWebhook(customer.id);
-      return true;
-    }
-    case "subscription.created": {
-      const subscription = yield* decodePolarSubscription(event.data);
-      const disposition = yield* upsertPolarSubscriptionWebhook(
-        convertToDatabaseSubscription(subscription),
-        "create"
-      );
-      return disposition !== "missing";
-    }
-    case "subscription.updated":
-    case "subscription.active":
-    case "subscription.canceled":
-    case "subscription.past_due":
-    case "subscription.uncanceled":
-    case "subscription.revoked": {
-      const subscription = yield* decodePolarSubscription(event.data);
-      const disposition = yield* upsertPolarSubscriptionWebhook(
-        convertToDatabaseSubscription(subscription),
-        "update"
-      );
-      return disposition !== "missing";
-    }
-    default: {
+  return yield* Match.value(event).pipe(
+    Match.whenOr(
+      { type: "customer.created" },
+      { type: "customer.updated" },
+      (customerEvent) =>
+        Effect.gen(function* () {
+          const customer = yield* decodePolarCustomer(customerEvent.data);
+          // A customer the normalizer cannot store is a payload this handler cannot read.
+          const disposition = yield* upsertPolarCustomerWebhook(customer).pipe(
+            Effect.catchTag("PolarCustomerError", (error) =>
+              Effect.fail(
+                new PolarPayloadError({ cause: error, message: error.message })
+              )
+            )
+          );
+          return disposition !== "missing";
+        })
+    ),
+    Match.when({ type: "customer.deleted" }, (deletedEvent) =>
+      Effect.gen(function* () {
+        const customer = yield* decodePolarCustomerId(deletedEvent.data);
+        yield* deletePolarCustomerWebhook(customer.id);
+        return true;
+      })
+    ),
+    Match.when({ type: "subscription.created" }, (createdEvent) =>
+      Effect.gen(function* () {
+        const subscription = yield* decodePolarSubscription(createdEvent.data);
+        const disposition = yield* upsertPolarSubscriptionWebhook(
+          convertToDatabaseSubscription(subscription),
+          "create"
+        );
+        return disposition !== "missing";
+      })
+    ),
+    Match.whenOr(
+      { type: "subscription.updated" },
+      { type: "subscription.active" },
+      { type: "subscription.canceled" },
+      { type: "subscription.past_due" },
+      { type: "subscription.uncanceled" },
+      { type: "subscription.revoked" },
+      (updatedEvent) =>
+        Effect.gen(function* () {
+          const subscription = yield* decodePolarSubscription(
+            updatedEvent.data
+          );
+          const disposition = yield* upsertPolarSubscriptionWebhook(
+            convertToDatabaseSubscription(subscription),
+            "update"
+          );
+          return disposition !== "missing";
+        })
+    ),
+    Match.orElse(() =>
       // No handler reads this type, so its data is never decoded and Polar stops retrying it.
-      return true;
-    }
-  }
+      Effect.succeed(true)
+    )
+  );
 });

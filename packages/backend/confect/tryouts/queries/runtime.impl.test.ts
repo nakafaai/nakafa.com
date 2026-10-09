@@ -16,7 +16,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { TRYOUT_SECTION_KEY } from "@repo/backend/test/tryouts";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const setRoute = {
   countryKey: TRYOUT_START_COUNTRY,
@@ -171,7 +171,9 @@ describe("tryouts/queries/runtime", () => {
         expect(exact?.attempt).not.toHaveProperty("lastActivityAt");
         expect(exact?.attempt).not.toHaveProperty("sectionRoutes");
         expect(exact?.attempt).not.toHaveProperty("totalQuestions");
-        expect(exact?.runtime?.questions.at(0)).not.toHaveProperty("title");
+        expect(
+          Option.getOrUndefined(Arr.head(exact?.runtime?.questions ?? []))
+        ).not.toHaveProperty("title");
       })
   );
 

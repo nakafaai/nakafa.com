@@ -102,7 +102,7 @@ describe("triggers/forums/posts", () => {
   });
 
   it("runs forum post triggers through the native trigger-aware mutation", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(seedOpenForum);
@@ -150,7 +150,7 @@ describe("triggers/forums/posts", () => {
   });
 
   it("keeps reply relationships, mentions, and forum counters atomic", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
@@ -302,7 +302,7 @@ describe("triggers/forums/posts", () => {
     expect(empty.forum?.lastPostAt).toBe(empty.forum?._creationTime);
   });
   it("cleans a deleted forum's parent and replies without leaving aggregate rows", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(seedOpenForum);
     const owner = t.withIdentity({

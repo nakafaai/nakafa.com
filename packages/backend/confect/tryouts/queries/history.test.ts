@@ -16,6 +16,7 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
+import { Array as Arr, Option } from "effect";
 
 const NOW = Date.UTC(2026, 6, 12, 12, 0, 0);
 const SET_PATH = "try-out/indonesia/tka/matematika-wajib/set-1";
@@ -86,7 +87,7 @@ async function insertHistoryAttempt(
 
 describe("tryouts/queries/history", () => {
   it("keeps immutable identity history after a public route rename", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
@@ -217,7 +218,9 @@ describe("tryouts/queries/history", () => {
 
     expect(identityHistory.isDone).toBe(false);
     expect(identityHistory.page).toHaveLength(25);
-    expect(identityHistory.page.at(0)?.attemptNumber).toBe(26);
+    expect(
+      Option.getOrUndefined(Arr.head(identityHistory.page))?.attemptNumber
+    ).toBe(26);
   });
 
   it("rejects malformed authored set identity keys", async () => {

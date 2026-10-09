@@ -70,7 +70,7 @@ export const readSignedQuranSearchDocuments = Effect.fn(
     queryTexts
   );
   const exactDocuments = yield* Effect.forEach(
-    exactSurahNumbers.slice(0, scanLimit),
+    Arr.take(exactSurahNumbers, scanLimit),
     (surahNumber) =>
       readSignedQuranSearchDocument(owner.snapshotId, args.locale, surahNumber),
     {

@@ -1,4 +1,5 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense, use } from "react";
@@ -36,5 +37,5 @@ function UserCommentsRoute({
   params,
 }: Pick<PageProps<"/[locale]/user/[id]">, "params">) {
   const { id } = use(params);
-  return <UserComments userId={id as Id<"users">} />;
+  return <UserComments userId={Schema.decodeUnknownSync(Id("users"))(id)} />;
 }

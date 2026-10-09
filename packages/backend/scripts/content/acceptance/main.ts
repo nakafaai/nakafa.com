@@ -10,7 +10,7 @@ import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptanc
 import { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, FileSystem, Layer } from "effect";
+import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 
 const main = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -22,7 +22,7 @@ const main = Effect.gen(function* () {
     return yield* prepareAcceptance(root);
   }
   if (mode === "build" || mode === "start") {
-    return yield* runAcceptance(root, mode, process.argv.slice(3));
+    return yield* runAcceptance(root, mode, Arr.drop(process.argv, 3));
   }
   if (mode === "clean") {
     return yield* cleanLocalRuntime(root);

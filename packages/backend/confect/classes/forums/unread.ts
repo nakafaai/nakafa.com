@@ -107,11 +107,11 @@ export const getForumUnreadCounts = Effect.fn(
       }))
     )
   );
-  for (const [batchIndex, { index }] of forumsWithUnreadPotential.entries()) {
+  Arr.forEach(forumsWithUnreadPotential, ({ index }, batchIndex) => {
     unreadCounts[index] = Math.max(
       totalUnreadCounts[batchIndex] - ownUnreadCounts[batchIndex],
       0
     );
-  }
+  });
   return unreadCounts;
 });

@@ -2,7 +2,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { TryoutStartScope } from "@repo/backend/confect/tryouts/start/spec";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
 import { products } from "@repo/backend/confect/utils/polar/products";
-import { Effect, Option } from "effect";
+import { DateTime, Effect, Option } from "effect";
 
 const activeSubscriptionStatus = "active";
 const perpetualSubscriptionEndsAt = Number.MAX_SAFE_INTEGER;
@@ -47,7 +47,10 @@ export const loadActiveProSubscription = Effect.fn(
               .eq("customerId", customer.id)
               .eq("status", activeSubscriptionStatus)
               .eq("productId", products.pro.id)
-              .gt("currentPeriodEnd", new Date(args.now).toISOString())
+              .gt(
+                "currentPeriodEnd",
+                DateTime.formatIso(DateTime.makeUnsafe(args.now))
+              )
         )
         .first()
         .pipe(Effect.map(Option.getOrNull)));

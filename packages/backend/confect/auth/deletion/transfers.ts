@@ -8,7 +8,7 @@ import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/confect/a
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { findSchoolOwnershipSuccessorPage } from "@repo/backend/confect/auth/deletion/successor";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, flow } from "effect";
+import { Array as Arr, Effect, flow } from "effect";
 
 /** Applies or advances one reserved school transfer. */
 const finalizeSchoolTransfer = Effect.fn(
@@ -131,8 +131,8 @@ export const finalizeSchoolTransfers = Effect.fn(
       .pipe(Effect.orDie);
     let needsContinuation =
       transfers.length > ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
-    for (const transfer of transfers.slice(
-      0,
+    for (const transfer of Arr.take(
+      transfers,
       ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE
     )) {
       const finalization = yield* finalizeSchoolTransfer(

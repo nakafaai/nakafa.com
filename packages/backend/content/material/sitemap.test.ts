@@ -49,7 +49,7 @@ describe("contentRelease/material/sitemap", () => {
         appLocale: "en",
       }
     );
-    const buckets = inventory.buckets.slice(0, MATERIAL_SITEMAP_BUCKET_LIMIT);
+    const buckets = Arr.take(inventory.buckets, MATERIAL_SITEMAP_BUCKET_LIMIT);
     assert(buckets.length === MATERIAL_SITEMAP_BUCKET_LIMIT);
     const previous = await Promise.all(
       Arr.map(buckets, (bucket) =>

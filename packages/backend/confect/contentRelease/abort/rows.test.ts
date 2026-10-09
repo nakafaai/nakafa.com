@@ -74,24 +74,24 @@ describe("bounded release row abort", () => {
                   createdSequence: 2,
                 })
               );
-              for (const [index, publicPath] of [
-                "test/foreign",
-                "test/absent",
-              ].entries()) {
-                yield* Effect.promise(() =>
-                  tCtx.db.insert("contentBindings", {
-                    appLocale: "en",
-                    batchHash: TEST_DIGEST,
-                    batchIndex: 0,
-                    index,
-                    operation: "delete",
-                    publicPath,
-                    releaseId: ABORT_RELEASE_ID,
-                    routeJson: "{}",
-                    sequence: 1,
-                  })
-                );
-              }
+              yield* Effect.forEach(
+                ["test/foreign", "test/absent"],
+                (publicPath, index) =>
+                  Effect.promise(() =>
+                    tCtx.db.insert("contentBindings", {
+                      appLocale: "en",
+                      batchHash: TEST_DIGEST,
+                      batchIndex: 0,
+                      index,
+                      operation: "delete",
+                      publicPath,
+                      releaseId: ABORT_RELEASE_ID,
+                      routeJson: "{}",
+                      sequence: 1,
+                    })
+                  ),
+                { discard: true }
+              );
             });
             expect(yield* deleteAbortRows(ABORT_RELEASE_ID, 1)).toBe(2);
             expect(

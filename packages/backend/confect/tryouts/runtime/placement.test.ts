@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const TRACK = "2027";
 const SECTION = "penalaran-matematika";
@@ -241,7 +241,7 @@ describe("tryouts/runtime/placement", () => {
                     : undefined;
                 const remainingOptions =
                   response?.kind === "single-choice"
-                    ? response.options.slice(1)
+                    ? Arr.drop(response.options, 1)
                     : [];
                 if (!(section && placement && response && firstOption)) {
                   return yield* Effect.die(

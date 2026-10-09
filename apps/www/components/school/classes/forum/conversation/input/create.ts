@@ -1,9 +1,9 @@
 import type { Ref } from "@confect/core";
 import { useMutation } from "@confect/react";
+import { Id } from "@repo/backend/confect/_generated/id";
 import classes from "@repo/backend/confect/_generated/refs/classes";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Array as Arr, DateTime, Effect, Option } from "effect";
+import { Array as Arr, DateTime, Effect, Option, Schema } from "effect";
 
 import { useData } from "@/components/school/classes/forum/conversation/context";
 import { createOptimisticForumPost } from "@/components/school/classes/forum/conversation/input/optimistic";
@@ -27,7 +27,9 @@ export function useCreateForumPost() {
     }
 
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
-    const postId = Effect.runSync(randomUuid) as Id<"schoolClassForumPosts">;
+    const postId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+      Effect.runSync(randomUuid)
+    );
     const optimisticMutation = createForumPost.withOptimisticUpdate(
       (localStore, optimisticArgs) => {
         const cached = localStore.getQuery(

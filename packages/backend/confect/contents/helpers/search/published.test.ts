@@ -89,18 +89,19 @@ describe("readPublishedSearchDocuments", () => {
     );
     await t.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, texts.length);
-      for (const [index, text] of texts.entries()) {
-        const projection = testArticleProjection(index);
-        await insertRuntimeIndex(ctx, projection.contentKey, {
-          plainText: text,
-        });
+      const indexRows = Arr.map(texts, (plainText, index) => ({
+        contentKey: testArticleProjection(index).contentKey,
+        plainText,
+      }));
+      for (const { contentKey, plainText } of indexRows) {
+        await insertRuntimeIndex(ctx, contentKey, { plainText });
       }
     });
     await activateSearch(t);
     const firstPage = await readArticles(t, queries, 2);
     const fullWindow = await readArticles(t, queries, 4);
     expect(firstPage).toHaveLength(2);
-    expect(firstPage).toEqual(fullWindow.slice(0, firstPage.length));
+    expect(firstPage).toEqual(Arr.take(fullWindow, firstPage.length));
     expect(
       Arr.dedupe(Arr.map(fullWindow, (document) => document.content_id)).length
     ).toBe(fullWindow.length);
@@ -187,10 +188,13 @@ describe("readPublishedSearchDocuments", () => {
         )
       );
     });
-    const expected = Arr.sort(
-      Arr.map(projections, ({ publicPath }) => publicPath),
-      Order.String
-    ).slice(0, 2);
+    const expected = Arr.take(
+      Arr.sort(
+        Arr.map(projections, ({ publicPath }) => publicPath),
+        Order.String
+      ),
+      2
+    );
     expect(Arr.map(documents, ({ route }) => route)).toEqual(expected);
   });
 });

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { defaultModel, ModelId } from "@repo/backend/confect/gateway/model";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Record as Rec, Schema } from "effect";
+import { DateTime, Record as Rec, Schema } from "effect";
 import { createAiStore } from "@/components/ai/store/create";
 
 const STORAGE_KEY = "nakafa-ai";
@@ -181,7 +181,7 @@ describe("ai/store/create", () => {
 
   it("moves a resolved composer draft into the chat that is opening", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-10-09T08:00:00Z"));
+    vi.setSystemTime("2026-10-09T08:00:00Z");
     const store = createAiStore();
     store.getState().addChatDraft("draft-1");
     store.getState().addChatDraft("draft-2");
@@ -194,7 +194,9 @@ describe("ai/store/create", () => {
       openingChat: {
         prompt: receipt.prompt,
         receipt,
-        submittedAt: new Date("2026-10-09T08:00:00Z").getTime(),
+        submittedAt: DateTime.toEpochMillis(
+          DateTime.makeUnsafe("2026-10-09T08:00:00Z")
+        ),
       },
     });
     expect(store.getState().model).toBe(model);

@@ -25,7 +25,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import type { User } from "better-auth";
-import { Array as Arr, Effect, pipe, Schema } from "effect";
+import { Array as Arr, DateTime, Effect, pipe, Schema } from "effect";
 
 vi.mock("@convex-dev/better-auth/plugins", async (importOriginal) => {
   const actual =
@@ -44,12 +44,12 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 const authUser = (id: string): User => ({
-  createdAt: new Date(NOW),
+  createdAt: DateTime.toDateUtc(DateTime.makeUnsafe(NOW)),
   email: "deletion-runtime@example.com",
   emailVerified: true,
   id,
   name: "Deletion Runtime",
-  updatedAt: new Date(NOW),
+  updatedAt: DateTime.toDateUtc(DateTime.makeUnsafe(NOW)),
 });
 const withPostHogErasureConfig = Effect.sync(() => {
   vi.stubEnv("POSTHOG_ERASURE_API_KEY", "phx_test_deletion_runtime");

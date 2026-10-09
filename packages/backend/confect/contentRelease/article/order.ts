@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/content/article/cursor";
 import { encodeArticlePublicationCursor } from "@repo/contents/publication";
 import type { PaginationOptions } from "convex/server";
-import { Effect, Predicate } from "effect";
+import { Array as Arr, Effect, Option, Predicate } from "effect";
 
 type AppLocale = Docs["articleCatalog"]["appLocale"];
 
@@ -115,16 +115,17 @@ export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
           ),
       })
     );
-    const page = scanned.page.slice(0, options.numItems);
-    const last = page.at(-1);
+    const page = Arr.take(scanned.page, options.numItems);
+    const last = Arr.last(page);
     const split = Predicate.isNullish(scanned.splitCursor)
       ? undefined
       : page[Math.floor((page.length - 1) / 2)];
     const hasMore = scanned.page.length > options.numItems;
     return {
-      continueCursor: last
-        ? articlePublicationCursor(last)
-        : (options.cursor ?? encodeArticlePublicationCursor("[]")),
+      continueCursor: Option.match(last, {
+        onNone: () => options.cursor ?? encodeArticlePublicationCursor("[]"),
+        onSome: articlePublicationCursor,
+      }),
       isDone: hasMore ? false : scanned.isDone,
       page,
       ...(scanned.pageStatus === undefined

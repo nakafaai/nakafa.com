@@ -74,12 +74,15 @@ export function groupMetricsQueueItems(
     ]);
     const groups =
       Option.getOrUndefined(MutableHashMap.get(identities, key)) ?? [];
-    const current = groups.at(-1);
+    const current = Arr.last(groups);
     MutableHashMap.set(
       identities,
       key,
-      current && current.length < groupSize
-        ? Arr.append(Arr.dropRight(groups, 1), Arr.append(current, queueItem))
+      Option.isSome(current) && current.value.length < groupSize
+        ? Arr.append(
+            Arr.dropRight(groups, 1),
+            Arr.append(current.value, queueItem)
+          )
         : Arr.append(groups, [queueItem])
     );
   }

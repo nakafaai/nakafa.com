@@ -10,7 +10,7 @@ import {
   loadSnapshotChildren,
 } from "@repo/backend/confect/contentRelease/snapshot/rows";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads one resumable or newly expired immutable snapshot. */
 export const loadExpiredSnapshot = Effect.fn(
@@ -125,14 +125,15 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
       yield* deleteSnapshotChild(child);
     }
     if (!children.done) {
-      const last = children.children.at(-1);
-      if (!last) {
+      const last = Arr.last(children.children);
+      if (Option.isNone(last)) {
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",
           `Snapshot ${snapshot.family}/${snapshot.snapshotId} lost its cleanup page.`
         );
       }
-      const nextIndex = "index" in last.row ? last.row.index : undefined;
+      const nextIndex =
+        "index" in last.value.row ? last.value.row.index : undefined;
       if (children.part !== "runtime" && nextIndex === undefined) {
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",

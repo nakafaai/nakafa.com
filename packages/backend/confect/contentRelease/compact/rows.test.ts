@@ -150,7 +150,11 @@ describe("contentRelease/compact/rows", () => {
       artifact(contentKey, 2),
     ]);
     await t.mutation(async (ctx) => {
-      for (const [index, contentKey] of keys.entries()) {
+      const indexedKeys = Arr.map(keys, (contentKey, index) => ({
+        contentKey,
+        index,
+      }));
+      for (const { contentKey, index } of indexedKeys) {
         for (const sequence of [1, 2, 3]) {
           await insertCeilingHead(ctx, {
             artifactHash: artifact(contentKey, sequence),
@@ -271,7 +275,11 @@ describe("contentRelease/compact/rows", () => {
       COMPACTION_PAGE_BYTES / (COMPACTION_ITEM_COUNT - 1)
     );
     await t.mutation(async (ctx) => {
-      for (const [index, artifactHash] of released.entries()) {
+      const indexedReleased = Arr.map(released, (artifactHash, index) => ({
+        artifactHash,
+        index,
+      }));
+      for (const { artifactHash, index } of indexedReleased) {
         await insertCeilingItem(
           ctx,
           {

@@ -11,7 +11,7 @@ import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { Array as Arr, Effect } from "effect";
 
 beforeEach(() => {
-  vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
+  vi.setSystemTime(TRYOUT_TEST_NOW);
 });
 describe("tryouts/runtime/selectors", () => {
   it.effect(

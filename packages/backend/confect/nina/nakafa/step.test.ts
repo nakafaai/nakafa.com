@@ -9,6 +9,7 @@ import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import type { NakafaAgentSection } from "@repo/contents/agent/schema/ref";
 import type { NakafaAgentSearchResult } from "@repo/contents/agent/schema/search";
 import type { Locale } from "@repo/contents/content";
+import { Array as Arr, Option } from "effect";
 
 /** Builds a typed Nakafa search item fixture from canonical route parts. */
 function contentSummary({
@@ -141,7 +142,7 @@ describe("Nakafa agent step state", () => {
 
     expect(step.activeTools).toEqual(["read"]);
     expect(step.toolChoice).toEqual({ toolName: "read", type: "tool" });
-    expect(step.messages.at(-1)).toEqual(
+    expect(Option.getOrThrow(Arr.last(step.messages))).toEqual(
       expect.objectContaining({
         content: expect.stringContaining("Call the read tool now"),
         role: "user",
@@ -179,7 +180,7 @@ describe("Nakafa agent step state", () => {
     }
 
     expect(answerStep.toolChoice).toBe("none");
-    expect(answerStep.messages.at(-1)).toEqual(
+    expect(Option.getOrThrow(Arr.last(answerStep.messages))).toEqual(
       expect.objectContaining({
         content: expect.stringContaining("Do not call another Nakafa tool"),
         role: "user",
@@ -211,7 +212,7 @@ describe("Nakafa agent step state", () => {
     }
 
     expect(step.toolChoice).toBe("none");
-    expect(step.messages.at(-1)).toEqual(
+    expect(Option.getOrThrow(Arr.last(step.messages))).toEqual(
       expect.objectContaining({
         content: expect.stringContaining("Use the Nakafa taxonomy result"),
         role: "user",

@@ -22,7 +22,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import type { FunctionArgs, WithoutSystemFields } from "convex/server";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type AttemptPatch = Partial<WithoutSystemFields<Doc<"tryoutAttempts">>>;
 type ProgressPatch = Partial<WithoutSystemFields<Doc<"tryoutSetProgress">>>;
@@ -95,7 +95,9 @@ const seedClient = Effect.fn("tryouts.queries.attemptPage.test.seedClient")(
         invoke(() =>
           t.mutation(async (ctx) => {
             const attempt = await ctx.db.get(attemptId);
-            const original = attempt?.sectionSnapshots.at(0);
+            const original = Option.getOrUndefined(
+              Arr.head(attempt?.sectionSnapshots ?? [])
+            );
             if (!(attempt && original)) {
               throw new Error("Expected one frozen section snapshot.");
             }
@@ -204,7 +206,9 @@ describe("tryouts/queries/attemptPage", () => {
               .unique();
             const selectedOption =
               placement?.responseSpec?.kind === "single-choice"
-                ? placement.responseSpec.options.at(0)
+                ? Option.getOrUndefined(
+                    Arr.head(placement.responseSpec.options)
+                  )
                 : undefined;
             if (!(placement && section && selectedOption)) {
               throw new Error("Expected one historical response target.");
@@ -255,7 +259,9 @@ describe("tryouts/queries/attemptPage", () => {
           return yield* Effect.die("Expected signed terminal set content.");
         }
         expect(
-          terminal.initialState.runtime?.questions.at(0)?.response
+          Option.getOrUndefined(
+            Arr.head(terminal.initialState.runtime?.questions ?? [])
+          )?.response
         ).toEqual({
           answeredAt: historicalAnswerTime,
           isComplete: true,

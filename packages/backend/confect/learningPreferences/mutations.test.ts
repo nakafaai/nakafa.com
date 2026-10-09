@@ -26,7 +26,7 @@ import {
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
 import { activateTryoutStartSource } from "@repo/backend/test/tryout/source";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const NOW = 1_798_752_000_000;
 const PREFERENCE_APP_LOCALES = Schema.decodeSync(ActiveAppLocaleListSchema)([
@@ -112,7 +112,7 @@ describe("learningPreferences", () => {
           "singapore-moe",
           "united-states",
         ]);
-        expect(programs.at(-1)).toMatchObject({
+        expect(Option.getOrThrow(Arr.last(programs))).toMatchObject({
           countryCode: "US",
           publicSlug: "amerika-serikat",
           title: "United States Standards-Aligned Pathway",
