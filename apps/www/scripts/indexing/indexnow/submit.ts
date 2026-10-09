@@ -1,5 +1,5 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
-import { Array as Arr, Effect, MutableList } from "effect";
+import { Array as Arr, Effect, MutableList, Option, Result } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
 import { IndexNowSubmitError } from "@/scripts/indexing/errors";
 import {
@@ -23,14 +23,16 @@ export function chunkIndexNowUrls(urls: readonly string[]) {
  * Submits canonical sitemap URLs to the IndexNow endpoint.
  *
  * The caller supplies sitemap-derived URLs and the public verification key, so
- * this adapter does not own route discovery or a private credential.
+ * this adapter does not own route discovery or a private credential. Returns the
+ * URLs of every batch that IndexNow accepted and, when a batch fails, the typed
+ * failure that ended the call.
  */
 export const submitUrlsToIndexNow = Effect.fn(
   "scripts.indexing.indexNow.submitUrls"
 )(function* (urls: readonly string[], key: string) {
   if (urls.length === 0) {
     yield* Effect.logInfo("No new URLs to submit to IndexNow.");
-    return [];
+    return { failure: Option.none(), submittedUrls: [] };
   }
 
   const batches = chunkIndexNowUrls(urls);
@@ -39,13 +41,19 @@ export const submitUrlsToIndexNow = Effect.fn(
   yield* Effect.logInfo(`Submitting ${urls.length} URLs to IndexNow...`);
 
   for (const [index, batch] of batches.entries()) {
-    const batchResult = yield* submitBatchToIndexNow({
+    const outcome = yield* submitBatchToIndexNow({
       batch,
       batchCount: index + 1,
       key,
       totalBatches: batches.length,
-    });
-    MutableList.appendAll(successfullySubmitted, batchResult);
+    }).pipe(Effect.result);
+    if (Result.isFailure(outcome)) {
+      return {
+        failure: Option.some(outcome.failure),
+        submittedUrls: MutableList.toArray(successfullySubmitted),
+      };
+    }
+    MutableList.appendAll(successfullySubmitted, outcome.success);
 
     if (index < batches.length - 1) {
       yield* Effect.sleep(RATE_LIMIT_DELAY);
@@ -56,7 +64,10 @@ export const submitUrlsToIndexNow = Effect.fn(
     `IndexNow submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} URLs.`
   );
 
-  return MutableList.toArray(successfullySubmitted);
+  return {
+    failure: Option.none(),
+    submittedUrls: MutableList.toArray(successfullySubmitted),
+  };
 });
 
 /** Submits one IndexNow batch and fails if the endpoint rejects it. */

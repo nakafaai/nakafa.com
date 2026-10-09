@@ -8,6 +8,7 @@ import {
   Fiber,
   Logger,
   MutableList,
+  Option,
   Schema,
 } from "effect";
 import { FetchHttpClient } from "effect/http";
@@ -29,6 +30,12 @@ const fetcher = vi.fn<typeof fetch>();
 
 beforeEach(() => {
   fetcher.mockReset();
+});
+
+/** A submission that finished without a failure and accepted these URLs. */
+const noFailure = (submittedUrls: string[]) => ({
+  failure: Option.none(),
+  submittedUrls,
 });
 
 /** Submits URLs through the module's own client and this file's fetch double. */
@@ -67,7 +74,7 @@ const recordLogs = (lines: MutableList.MutableList<string>) =>
 describe("submitUrlsToIndexNow", () => {
   it.effect("sends nothing for an empty URL list", () =>
     Effect.gen(function* () {
-      expect(yield* submitUrls([])).toEqual([]);
+      expect(yield* submitUrls([])).toEqual(noFailure([]));
       expect(fetcher).not.toHaveBeenCalled();
     })
   );
@@ -79,7 +86,7 @@ describe("submitUrlsToIndexNow", () => {
         const urls = urlsOf(2);
         fetcher.mockResolvedValueOnce(answer(200));
 
-        expect(yield* submitUrls(urls)).toEqual(urls);
+        expect(yield* submitUrls(urls)).toEqual(noFailure(urls));
         expect(fetcher).toHaveBeenCalledOnce();
         const [input, init] = fetcher.mock.calls[0] ?? [];
         expect(String(input)).toBe(INDEXNOW_ENDPOINT);
@@ -100,7 +107,7 @@ describe("submitUrlsToIndexNow", () => {
 
         expect(
           yield* submitUrls(urls).pipe(Effect.provide(recordLogs(lines)))
-        ).toEqual(urls);
+        ).toEqual(noFailure(urls));
         expect(
           Arr.filter(MutableList.toArray(lines), (line) =>
             line.includes("key validation is pending")
@@ -110,12 +117,15 @@ describe("submitUrlsToIndexNow", () => {
   );
 
   it.effect.each([400, 403, 422, 429, 500])(
-    "fails the batch with the status when the endpoint answers %i",
+    "reports the batch failure with the status when the endpoint answers %i",
     (status) =>
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(answer(status));
 
-        expect(yield* submitUrls(urlsOf(2)).pipe(Effect.flip)).toMatchObject({
+        const outcome = yield* submitUrls(urlsOf(2));
+
+        expect(outcome.submittedUrls).toEqual([]);
+        expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
           _tag: "IndexNowSubmitError",
           cause: status,
           message: `IndexNow batch 1 failed with HTTP ${status}.`,
@@ -123,32 +133,31 @@ describe("submitUrlsToIndexNow", () => {
       })
   );
 
-  it.effect(
-    "fails with a deadline when the endpoint never answers, at 10 s",
-    () =>
-      Effect.gen(function* () {
-        fetcher.mockImplementation(
-          () => new Promise<Response>(() => undefined)
-        );
-        const fiber = yield* Effect.forkChild(
-          submitUrls(urlsOf(2)).pipe(Effect.flip)
-        );
+  it.effect("reports a deadline when the endpoint never answers, at 10 s", () =>
+    Effect.gen(function* () {
+      fetcher.mockImplementation(() => new Promise<Response>(() => undefined));
+      const fiber = yield* Effect.forkChild(submitUrls(urlsOf(2)));
 
-        yield* TestClock.adjust("10 seconds");
+      yield* TestClock.adjust("10 seconds");
 
-        expect(yield* Fiber.join(fiber)).toMatchObject({
-          _tag: "IndexNowSubmitError",
-          cause: "deadline",
-          message: "IndexNow batch 1 did not answer within 10 seconds.",
-        });
-      })
+      const outcome = yield* Fiber.join(fiber);
+      expect(outcome.submittedUrls).toEqual([]);
+      expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
+        _tag: "IndexNowSubmitError",
+        cause: "deadline",
+        message: "IndexNow batch 1 did not answer within 10 seconds.",
+      });
+    })
   );
 
-  it.effect("fails with the typed error when the request is rejected", () =>
+  it.effect("reports the typed error when the request is rejected", () =>
     Effect.gen(function* () {
       fetcher.mockRejectedValueOnce(new TypeError("fetch failed"));
 
-      expect(yield* submitUrls(urlsOf(2)).pipe(Effect.flip)).toMatchObject({
+      const outcome = yield* submitUrls(urlsOf(2));
+
+      expect(outcome.submittedUrls).toEqual([]);
+      expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
         _tag: "IndexNowSubmitError",
         message: "Error submitting IndexNow batch 1.",
       });
@@ -168,27 +177,29 @@ describe("submitUrlsToIndexNow", () => {
       yield* TestClock.adjust("1 second");
       expect(fetcher).toHaveBeenCalledTimes(3);
 
-      expect(yield* Fiber.join(fiber)).toEqual(urls);
+      expect(yield* Fiber.join(fiber)).toEqual(noFailure(urls));
       expect(sentBatchSizes()).toEqual([100, 100, 50]);
     })
   );
 
   it.effect(
-    "pins today's result: a rejected second batch fails the call, so the first batch is not returned",
+    "keeps the first batch when a later batch is rejected, and reports the rejection",
     () =>
       Effect.gen(function* () {
+        const urls = urlsOf(150);
         fetcher
           .mockResolvedValueOnce(answer(200))
           .mockResolvedValueOnce(answer(500));
-        const fiber = yield* Effect.forkChild(
-          submitUrls(urlsOf(150)).pipe(Effect.flip)
-        );
+        const fiber = yield* Effect.forkChild(submitUrls(urls));
 
         yield* TestClock.adjust("1 second");
 
-        expect(yield* Fiber.join(fiber)).toMatchObject({
+        const outcome = yield* Fiber.join(fiber);
+        expect(outcome.submittedUrls).toEqual(Arr.take(urls, 100));
+        expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
           _tag: "IndexNowSubmitError",
           cause: 500,
+          message: "IndexNow batch 2 failed with HTTP 500.",
         });
         expect(fetcher).toHaveBeenCalledTimes(2);
       })

@@ -5,8 +5,6 @@ import {
   loadSubmissionHistory,
   type SubmissionHistory,
   saveAcceptedUrls,
-  saveSubmissionHistory,
-  updateSubmissionHistory,
 } from "@/scripts/indexing/history";
 import {
   readBingWebmasterApiKey,
@@ -94,26 +92,17 @@ const runIndexNowSubmission = Effect.fn(
     return history;
   }
 
-  const successfulUrls = yield* submitUrlsToIndexNow(
+  const { failure, submittedUrls } = yield* submitUrlsToIndexNow(
     unsubmittedUrls,
     INDEXNOW_KEY
   );
 
-  if (successfulUrls.length === 0) {
-    return history;
-  }
-
-  const updatedHistory = yield* updateSubmissionHistory({
+  return yield* saveAcceptedUrls({
+    failure,
     history,
     service: "indexNow",
-    urls: successfulUrls,
+    submittedUrls,
   });
-  yield* saveSubmissionHistory(updatedHistory);
-  yield* Effect.logInfo(
-    `Submission history updated for IndexNow with ${successfulUrls.length} successfully submitted URLs.`
-  );
-
-  return updatedHistory;
 });
 
 /** Submits canonical URLs to Bing when the optional Webmaster API key exists. */
