@@ -6,6 +6,7 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { RoutedContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createTestPublication } from "@repo/backend/test/content/publication";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Layer, Schema } from "effect";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
@@ -22,9 +23,6 @@ const input = {
 const routedJson = Schema.encodeSync(
   Schema.fromJsonString(RoutedContentProjectionSchema)
 );
-// The contract codec throws on the locale and parent path mismatches and strips
-// the unexpected key, so those three fixtures keep the plain codec.
-const plainJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -158,19 +156,21 @@ describe("published content route", () => {
         expect(fetchQueryMock).toHaveBeenCalledTimes(2);
       })
   );
+  // The contract codec throws on the locale and parent path mismatches and strips
+  // the unexpected key, so those three fixtures keep the plain codec.
   it.effect.each([
     "{",
     "{}",
-    plainJson({
+    encodeJsonText({
       ...previewProjection,
       publicPath: "subjects/mathematics/unrelated",
     }),
-    plainJson({
+    encodeJsonText({
       ...previewProjection,
       appLocale: "de",
     }),
     routedJson(testArticleProjection),
-    plainJson({
+    encodeJsonText({
       ...previewProjection,
       unexpected: true,
     }),

@@ -9,6 +9,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Record as Rec, Schema } from "effect";
 import { NextRequest } from "next/server";
 import {
@@ -26,7 +27,6 @@ const exactRequest = ContentCacheRequestSchema.make({
 const encodeCacheRequest = Schema.encodeSync(
   Schema.fromJsonString(ContentCacheRequestSchema)
 );
-const encodeRawJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const invalidateContentCacheMock = vi.hoisted(() =>
@@ -220,7 +220,7 @@ describe("content runtime cache revalidation route", () => {
   it.each([
     ["{", { "Content-Type": "application/json" }, 400],
     [
-      encodeRawJson({
+      encodeJsonText({
         extra: true,
         scope: "material",
         releaseId,
@@ -229,7 +229,7 @@ describe("content runtime cache revalidation route", () => {
       400,
     ],
     [
-      encodeRawJson({
+      encodeJsonText({
         scope: "material",
         releaseId,
         tags: ["unknown"],
@@ -238,7 +238,7 @@ describe("content runtime cache revalidation route", () => {
       400,
     ],
     [
-      encodeRawJson({
+      encodeJsonText({
         releaseId,
         scope: "material",
         tags: ["content-family:material", "content-runtime"],
@@ -247,7 +247,7 @@ describe("content runtime cache revalidation route", () => {
       400,
     ],
     [
-      encodeRawJson({
+      encodeJsonText({
         releaseId,
         scope: "material",
         tags: [

@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 import { measureRouteJavascript } from "@/e2e/support/resources";
 import { appRoutes } from "@/e2e/support/route";
 
-const measurementJson = Schema.fromJsonString(Schema.Unknown);
 const prettyMeasurementJson = Schema.fromJsonString(Schema.Unknown, {
   space: 2,
 });
@@ -40,7 +40,7 @@ for (const budget of routeBudgets) {
     const measurement = await Effect.runPromise(
       measureRouteJavascript(browser, baseURL ?? "", budget.href)
     );
-    const measurementEvidence = Schema.encodeSync(measurementJson)(measurement);
+    const measurementEvidence = encodeJsonText(measurement);
 
     await testInfo.attach(
       `${budget.href.replaceAll("/", "_")}-resources.json`,
