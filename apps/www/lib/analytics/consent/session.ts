@@ -48,13 +48,22 @@ const AnalyticsConsentSessionOperationSchema = Schema.Struct({
 export type AnalyticsConsentSessionOperation =
   typeof AnalyticsConsentSessionOperationSchema.Type;
 
+const AnalyticsConsentUserSchema = Schema.Struct({
+  appUser: Schema.Struct({ _id: Schema.String }),
+});
+
+const DurableAnalyticsConsentSchema = Schema.Struct({
+  decidedAt: Schema.Finite,
+  noticeVersion: Schema.String,
+});
+
 /** Identifies the current account or anonymous scope and consent notice. */
 export function createAnalyticsConsentPromptIdentity({
   isAuthenticated,
   user,
 }: {
   readonly isAuthenticated: boolean;
-  readonly user: { readonly appUser: { readonly _id: string } } | null;
+  readonly user: typeof AnalyticsConsentUserSchema.Type | null;
 }): AnalyticsConsentPromptIdentity | null {
   if (!isAuthenticated) {
     return `anonymous:${ANALYTICS_CONSENT_NOTICE_VERSION}`;
@@ -170,10 +179,7 @@ export function resolveAnalyticsConsentSessionPolicy({
   promptIdentity,
   status,
 }: {
-  readonly durableConsent: {
-    readonly decidedAt: number;
-    readonly noticeVersion: string;
-  } | null;
+  readonly durableConsent: typeof DurableAnalyticsConsentSchema.Type | null;
   readonly hasLoadError: boolean;
   readonly overrides: AnalyticsConsentSessionOverrides;
   readonly promptIdentity: AnalyticsConsentPromptIdentity | null;

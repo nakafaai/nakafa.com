@@ -1,10 +1,16 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { Schema } from "effect";
 import { generateFallbackImage } from "@/lib/og/fallback";
 
+const ImageCallSchema = Schema.Struct({
+  element: Schema.Unknown,
+  options: Schema.Unknown,
+});
+
 const mocks = vi.hoisted(() => {
-  let imageCalls: Array<{ element: unknown; options: unknown }> = [];
+  let imageCalls: (typeof ImageCallSchema.Type)[] = [];
 
   class FakeImageResponse {
     readonly element: unknown;

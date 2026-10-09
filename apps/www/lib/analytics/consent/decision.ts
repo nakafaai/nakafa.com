@@ -1,6 +1,6 @@
 "use client";
 
-import { Effect, Fiber } from "effect";
+import { Effect, Fiber, Schema } from "effect";
 import type { createAnonymousConsentSave } from "@/lib/analytics/consent/browser";
 import type { AnalyticsConsentError } from "@/lib/analytics/consent/context";
 import {
@@ -39,6 +39,11 @@ export function resolveConsentError({
   return null;
 }
 
+const ConsentAffordancesSchema = Schema.Struct({
+  canDecline: Schema.Boolean,
+  canGrant: Schema.Boolean,
+});
+
 /** Resolves whether the current visitor may decline or grant analytics. */
 export function resolveConsentAffordances({
   hasBrowserPrivacySignal,
@@ -52,10 +57,7 @@ export function resolveConsentAffordances({
   readonly isAnonymousResolved: boolean;
   readonly isAuthenticated: boolean;
   readonly isBlocked: boolean;
-}): {
-  readonly canDecline: boolean;
-  readonly canGrant: boolean;
-} {
+}): typeof ConsentAffordancesSchema.Type {
   const canDecline =
     !isBlocked && (isAuthenticated ? isAccountResolved : isAnonymousResolved);
   return {
