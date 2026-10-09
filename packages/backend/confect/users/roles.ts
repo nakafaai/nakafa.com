@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 /** User roles that normal users may choose during onboarding and settings. */
 export const selfSelectableUserRoles = [
   "teacher",
@@ -10,5 +12,5 @@ export type SelfSelectableUserRole = (typeof selfSelectableUserRoles)[number];
 export function isSelfSelectableUserRole(
   role: string | undefined
 ): role is SelfSelectableUserRole {
-  return role === "parent" || role === "student" || role === "teacher";
+  return Arr.some(selfSelectableUserRoles, (selfRole) => selfRole === role);
 }

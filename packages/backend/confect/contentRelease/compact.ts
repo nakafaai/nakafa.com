@@ -10,8 +10,7 @@ import {
 } from "@repo/backend/confect/contentRelease/compact/state";
 import type { compactionReceiptValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Clock, Effect } from "effect";
-
-const RUN_PAGE_LIMIT = 64;
+export const RUN_PAGE_LIMIT = 64;
 type CompactionReceipt = typeof compactionReceiptValidator.Type;
 /** Returns the next durable phase after all rows in one table are exhausted. */
 export function nextPhase(
@@ -39,37 +38,38 @@ export function nextPhase(
 }
 
 /** Persists one completed table phase or the final compacted floor. */
-const advancePhase = Effect.fn("contentRelease.advanceCompaction")(function* (
-  cycle: CompactionCycle
-) {
-  const writer = yield* DatabaseWriter;
-  const phase = nextPhase(cycle.phase);
-  const now = yield* Clock.currentTimeMillis;
-  if (phase) {
+export const advancePhase = Effect.fn("contentRelease.advanceCompaction")(
+  function* (cycle: CompactionCycle) {
+    const writer = yield* DatabaseWriter;
+    const phase = nextPhase(cycle.phase);
+    const now = yield* Clock.currentTimeMillis;
+    if (phase) {
+      yield* writer.table("contentState").patch(cycle.state._id, {
+        compactCursor: undefined,
+        compactPhase: phase,
+        updatedAt: now,
+      });
+      return {
+        complete: false,
+        phase,
+      };
+    }
     yield* writer.table("contentState").patch(cycle.state._id, {
       compactCursor: undefined,
-      compactPhase: phase,
+      compactFloor: undefined,
+      compactFrom: undefined,
+      compactPhase: undefined,
+      compactStartedAt: undefined,
+      compactedFloor: cycle.floor,
       updatedAt: now,
     });
     return {
-      complete: false,
-      phase,
+      complete: true,
+      phase: cycle.phase,
     };
-  }
-  yield* writer.table("contentState").patch(cycle.state._id, {
-    compactCursor: undefined,
-    compactFloor: undefined,
-    compactFrom: undefined,
-    compactPhase: undefined,
-    compactStartedAt: undefined,
-    compactedFloor: cycle.floor,
-    updatedAt: now,
-  });
-  return {
-    complete: true,
-    phase: cycle.phase,
-  };
-}, Effect.orDie);
+  },
+  Effect.orDie
+);
 
 /** Runs one transactional, resumable history-compaction page. */
 export const compactProgram = Effect.fn("contentRelease.compactPage")(

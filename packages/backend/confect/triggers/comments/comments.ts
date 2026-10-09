@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
-import { Duration, Effect } from "effect";
+import { Duration, Effect, Struct } from "effect";
 
 /**
  * Trigger handler for comments table changes.
@@ -33,9 +33,12 @@ export const commentsHandler = Effect.fn(
       .table("comments")
       .get(comment.parentId)
       .pipe(Effect.orDie);
+    // Confect patch re-reads the whole row before replacing it, so replace
+    // the row loaded above with every stored field kept.
     yield* writer
       .table("comments")
-      .patch(comment.parentId, {
+      .replace(parentComment._id, {
+        ...Struct.omit(parentComment, ["_id", "_creationTime"]),
         replyCount: parentComment.replyCount + 1,
       })
       .pipe(Effect.orDie);
@@ -67,7 +70,8 @@ export const commentsHandler = Effect.fn(
   }
   yield* writer
     .table("comments")
-    .patch(oldComment.parentId, {
+    .replace(parentComment._id, {
+      ...Struct.omit(parentComment, ["_id", "_creationTime"]),
       replyCount: Math.max(parentComment.replyCount - 1, 0),
     })
     .pipe(Effect.orDie);
