@@ -26,7 +26,7 @@ const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_S
 
 describe("locale-neutral attempt ownership", () => {
   it("resumes, reviews and paginates the same history after every language change", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const owner = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -94,7 +94,7 @@ describe("locale-neutral attempt ownership", () => {
         })
       ).toMatchObject({ kind: "current", attemptId: first.attemptId });
     }
-    vi.setSystemTime(new Date(TRYOUT_START_NOW + 10_000));
+    vi.setSystemTime(TRYOUT_START_NOW + 10_000);
     const second = await client.mutation(
       api.tryouts.mutations.attempts.startAttempt,
       { ...identity, locale: "en" }

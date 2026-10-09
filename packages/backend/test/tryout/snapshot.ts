@@ -294,10 +294,15 @@ export async function activateTryoutSnapshot(
     snapshotJson: encodeSnapshotJson(manifest),
     verifiedAt: 1,
   });
-  for (const [index, record] of catalog.entries()) {
+  const catalogRows = Arr.map(catalog, (record, index) => ({ index, record }));
+  for (const { index, record } of catalogRows) {
     await insertCatalogRecord(ctx, snapshotId, index, record);
   }
-  for (const [offset, record] of placements.entries()) {
+  const placementRows = Arr.map(placements, (record, offset) => ({
+    offset,
+    record,
+  }));
+  for (const { offset, record } of placementRows) {
     await insertPlacementRecord(
       ctx,
       snapshotId,

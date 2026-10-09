@@ -346,9 +346,9 @@ describe("contentRelease/heads", () => {
       MAX_HEAD_PAGE_COUNT
     );
     expect(first.done).toBe(false);
-    expect(headKeys(first)).toEqual(contentKeys.slice(0, HEAD_PAGE_LIMIT));
+    expect(headKeys(first)).toEqual(Arr.take(contentKeys, HEAD_PAGE_LIMIT));
     expect(second).toMatchObject({ done: true, nextCursor: null });
-    expect(headKeys(second)).toEqual(contentKeys.slice(HEAD_PAGE_LIMIT));
+    expect(headKeys(second)).toEqual(Arr.drop(contentKeys, HEAD_PAGE_LIMIT));
   });
   it.live(
     "keeps the exact maximum head page below Convex and HTTP ceilings",

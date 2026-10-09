@@ -10,7 +10,7 @@ import {
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 describe("try-out review entitlement", () => {
   it.effect(
@@ -86,7 +86,9 @@ describe("try-out review entitlement", () => {
             request
           )
         );
-        const proQuestion = pro?.runtime?.questions.at(0);
+        const proQuestion = Option.getOrUndefined(
+          Arr.head(pro?.runtime?.questions ?? [])
+        );
         assert.isDefined(proQuestion);
         assert.deepStrictEqual(proQuestion.response?.outcome, {
           status: "incorrect",
@@ -120,7 +122,9 @@ describe("try-out review entitlement", () => {
           free?.runtime?.section.score,
           pro?.runtime?.section.score
         );
-        const freeQuestion = free?.runtime?.questions.at(0);
+        const freeQuestion = Option.getOrUndefined(
+          Arr.head(free?.runtime?.questions ?? [])
+        );
         assert.isDefined(freeQuestion);
         assert.isDefined(freeQuestion.response);
         assert.notProperty(freeQuestion.response, "outcome");

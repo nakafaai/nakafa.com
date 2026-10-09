@@ -29,13 +29,13 @@ export function getPublishedSearchFamilies(
   }
   let families: PublishedFamily[] = [];
   if (
-    owner.families.includes("article") &&
+    Arr.contains(owner.families, "article") &&
     (section === undefined || section === "articles")
   ) {
     families = Arr.append(families, "article");
   }
   if (
-    owner.families.includes("material") &&
+    Arr.contains(owner.families, "material") &&
     (section === undefined || section === "material")
   ) {
     families = Arr.append(families, "material");
@@ -72,8 +72,8 @@ export const readPublishedSearchDocuments = Effect.fn(
       (row) => row._id
     );
     const authenticated = yield* authenticateSearchRows(rows, owner);
-    return Arr.map(authenticated, ({ document }) => document).slice(
-      0,
+    return Arr.take(
+      Arr.map(authenticated, ({ document }) => document),
       scanLimit
     );
   }
@@ -182,7 +182,7 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
     const rows = exact
       ? [exact, ...Arr.filter(hits, (row) => row._id !== exact._id)]
       : hits;
-    return rows.slice(0, scanLimit);
+    return Arr.take(rows, scanLimit);
   },
   Effect.orDie
 );

@@ -35,7 +35,7 @@ import {
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type RollbackRequest = PublicationRollbackRequest | PublicationRoutePageRequest;
 const textEncoder = new TextEncoder();
@@ -71,7 +71,10 @@ function makeRollbackPage(
   total: number,
   records: readonly RollbackRecord[]
 ): RollbackPage {
-  const nextIndex = records.at(-1)?.index ?? request.afterIndex;
+  const nextIndex = Option.match(Arr.last(records), {
+    onNone: () => request.afterIndex,
+    onSome: (record) => record.index,
+  });
   return {
     done: nextIndex === total - 1,
     nextIndex,
@@ -87,7 +90,10 @@ function makeRoutePage(
   total: number,
   records: readonly RouteRollbackRecord[]
 ): RoutePage {
-  const nextIndex = records.at(-1)?.current.index ?? request.afterIndex;
+  const nextIndex = Option.match(Arr.last(records), {
+    onNone: () => request.afterIndex,
+    onSome: (record) => record.current.index,
+  });
   return {
     done: nextIndex === total - 1,
     nextIndex,

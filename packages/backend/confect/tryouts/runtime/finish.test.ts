@@ -251,7 +251,7 @@ describe("tryouts/runtime/finish", () => {
         const attempt = await ctx.db.get(fixture.attemptId);
         const placement = await ctx.db.get(fixture.placementId);
         const section = await ctx.db.get(fixture.sectionAttemptId);
-        const snapshot = attempt?.sectionSnapshots.at(0);
+        const snapshot = attempt?.sectionSnapshots[0];
         assert(attempt && placement && section && snapshot);
         if (kind === "attempt question total mismatch") {
           await ctx.db.patch(attempt._id, {
@@ -343,7 +343,7 @@ describe("tryouts/runtime/finish", () => {
       });
       const signedSectionFixture = makeSignedTryoutSection(section);
       const signedSection = signedSectionFixture.signed;
-      const signedPlacement = signedSection.placements.at(0);
+      const signedPlacement = signedSection.placements[0];
       assert.isDefined(
         signedPlacement,
         "Expected one signed try-out placement fixture."

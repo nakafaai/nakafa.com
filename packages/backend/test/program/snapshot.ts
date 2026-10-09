@@ -249,7 +249,7 @@ export const stageProgramSnapshot = Effect.fn("TestProgram.stageSnapshot")(
           batchIndex,
           family: "program",
           releaseId: TEST_RELEASE_ID,
-          rowJson: data.rowJson.slice(firstIndex, firstIndex + batchSize),
+          rowJson: Arr.take(Arr.drop(data.rowJson, firstIndex), batchSize),
           snapshotId: data.snapshotId,
         }
       );

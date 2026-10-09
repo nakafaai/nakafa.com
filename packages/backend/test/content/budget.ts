@@ -17,7 +17,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { makeTryoutPlacementRow } from "@repo/backend/test/tryout/snapshot";
 import { getDocumentSize, type Value } from "convex/values";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 type ArtifactHash = TryoutPlacement["questionArtifactHash"];
 
@@ -146,16 +146,16 @@ export async function insertCeilingReferences(
   artifactHashes: readonly ArtifactHash[],
   sequence: number
 ) {
-  for (const [index, artifactHash] of artifactHashes.entries()) {
-    const reference = {
-      artifactHash,
-      contentKey: `test:reference-${index}`,
-      index,
-      sequence,
-    };
+  const references = Arr.map(artifactHashes, (artifactHash, index) => ({
+    artifactHash,
+    contentKey: `test:reference-${index}`,
+    index,
+    sequence,
+  }));
+  for (const reference of references) {
     await insertCeilingHead(ctx, reference);
     await insertCeilingItem(ctx, reference);
-    await insertCeilingPlacement(ctx, artifactHash, index);
+    await insertCeilingPlacement(ctx, reference.artifactHash, reference.index);
   }
 }
 

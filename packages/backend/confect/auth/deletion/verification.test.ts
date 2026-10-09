@@ -124,22 +124,25 @@ describe("auth/deletion/verification", () => {
           },
           (_, index) => `unrelated-${index}`
         );
-        for (const [index, value] of unrelatedValues.entries()) {
-          yield* Effect.promise(() =>
-            t.mutation(components.betterAuth.adapter.create, {
-              input: {
-                model: "verification",
-                data: {
-                  createdAt: NOW + index,
-                  expiresAt: NOW + 60_000,
-                  identifier: `unrelated-${index}`,
-                  updatedAt: NOW + index,
-                  value,
+        yield* Effect.forEach(
+          unrelatedValues,
+          (value, index) =>
+            Effect.promise(() =>
+              t.mutation(components.betterAuth.adapter.create, {
+                input: {
+                  model: "verification",
+                  data: {
+                    createdAt: NOW + index,
+                    expiresAt: NOW + 60_000,
+                    identifier: `unrelated-${index}`,
+                    updatedAt: NOW + index,
+                    value,
+                  },
                 },
-              },
-            })
-          );
-        }
+              })
+            ),
+          { discard: true }
+        );
         yield* Effect.promise(() =>
           t.mutation(components.betterAuth.adapter.create, {
             input: {

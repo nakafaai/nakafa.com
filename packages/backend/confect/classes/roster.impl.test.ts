@@ -85,10 +85,10 @@ describe("class roster stream", () => {
     ).length;
     expect(teacherCount).toBe(4);
     expect(
-      Arr.every(people.slice(0, teacherCount), (row) => row.role === "teacher")
+      Arr.every(Arr.take(people, teacherCount), (row) => row.role === "teacher")
     ).toBe(true);
     expect(
-      Arr.every(people.slice(teacherCount), (row) => row.role === "student")
+      Arr.every(Arr.drop(people, teacherCount), (row) => row.role === "student")
     ).toBe(true);
   });
   it("continues bounded sparse searches through empty pages beyond 500 members", async () => {

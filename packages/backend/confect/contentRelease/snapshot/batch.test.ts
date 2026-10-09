@@ -201,7 +201,7 @@ describe("contentRelease/snapshot/batch", () => {
           batchIndex: 0,
           family: "program" as const,
           releaseId: TEST_RELEASE_ID,
-          rowJson: data.rowJson.slice(0, 1),
+          rowJson: Arr.take(data.rowJson, 1),
           snapshotId: data.snapshotId,
         };
         yield* Effect.promise(() =>

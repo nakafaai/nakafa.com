@@ -11,7 +11,7 @@ import {
   ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import { accountDeletionAttemptStatus } from "@repo/backend/confect/auth/deletion/spec";
-import { Clock, Effect, flow } from "effect";
+import { Array as Arr, Clock, Effect, flow } from "effect";
 
 type AuthUserExists = (
   authId: string
@@ -94,8 +94,8 @@ export const sweepAccountDeletionReceiptsProgram = Effect.fn(
       )
       .take(ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE + 1)
       .pipe(Effect.orDie);
-    for (const receipt of receipts.slice(
-      0,
+    for (const receipt of Arr.take(
+      receipts,
       ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE
     )) {
       yield* writer.table("accountDeletionReceipts").delete(receipt._id);

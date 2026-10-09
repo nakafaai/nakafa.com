@@ -57,10 +57,11 @@ export const seedResponseFixture = Effect.fn(
         suffix,
       });
       const placement = await ctx.db.get(state.placementId);
-      const selectedChoice =
+      const choices =
         placement?.responseSpec.kind === "single-choice"
-          ? placement.responseSpec.options.at(0)
-          : undefined;
+          ? placement.responseSpec.options
+          : [];
+      const [selectedChoice] = choices;
       assert.ok(selectedChoice, "Expected one frozen choice.");
       return {
         ...state,

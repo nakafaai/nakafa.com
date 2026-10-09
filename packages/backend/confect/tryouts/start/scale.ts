@@ -58,16 +58,16 @@ const loadExactScale = Effect.fn("tryouts.start.loadExactScale")(function* (
   if (scales.length > 1) {
     return yield* scaleError("Signed try-out has duplicate IRT scales.");
   }
-  const scale = scales.at(0);
-  if (!scale) {
+  const scale = Arr.head(scales);
+  if (Option.isNone(scale)) {
     return null;
   }
-  if (scale.questionCount !== source.snapshot.set.row.questionCount) {
+  if (scale.value.questionCount !== source.snapshot.set.row.questionCount) {
     return yield* scaleError(
       "Signed IRT scale does not match its try-out set."
     );
   }
-  return scale;
+  return scale.value;
 });
 
 /** Creates a new immutable scale from authenticated signed placements. */

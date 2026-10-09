@@ -51,7 +51,7 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
     (entry) => toTryoutSearchDocument(entry, args.locale)
   );
   if (queryTexts.length === 0) {
-    return documents.slice(0, scanLimit);
+    return Arr.take(documents, scanLimit);
   }
   const groups = Arr.map(queryTexts, (queryText) =>
     searchTryoutQuery(documents, args.locale, queryText, scanLimit)
@@ -116,7 +116,7 @@ function searchTryoutQuery(
         ),
       ]
     : hits;
-  return rankContentSearchDocuments(candidates, queryText).slice(0, scanLimit);
+  return Arr.take(rankContentSearchDocuments(candidates, queryText), scanLimit);
 }
 /** Combines signed display metadata with route tokens for in-memory search. */
 function getTryoutSearchText(document: ContentSearchDocument) {

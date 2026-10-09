@@ -17,7 +17,7 @@ export function mergeManagedFamilies(
 ) {
   return Arr.filter(
     ContentFamilySchema.literals,
-    (family) => current.includes(family) || selected.includes(family)
+    (family) => Arr.contains(current, family) || Arr.contains(selected, family)
   );
 }
 

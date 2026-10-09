@@ -63,7 +63,7 @@ describe("triggers/materials/groups", () => {
 
   it("decrements a parent group child count when a child group is deleted", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {

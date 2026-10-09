@@ -28,7 +28,7 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
-import { DateTime } from "effect";
+import { Array as Arr, DateTime } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
@@ -148,7 +148,11 @@ async function seedReusedBatch(
       itemCount: MAX_ARTIFACT_BATCH_COUNT,
       stagedUpserts: MAX_ARTIFACT_BATCH_COUNT,
     });
-    for (const [index, json] of artifactJson.entries()) {
+    const indexedJson = Arr.map(artifactJson, (json, index) => ({
+      index,
+      json,
+    }));
+    for (const { index, json } of indexedJson) {
       await insertBatchItem(ctx, index, projectionJson(index));
       await insertTestArtifact(ctx, {
         artifactHash: batchArtifactHash(index),

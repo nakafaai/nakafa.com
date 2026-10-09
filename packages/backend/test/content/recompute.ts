@@ -171,7 +171,7 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
     );
     for (let start = 0; start < count; start += MAX_ITEM_BATCH_COUNT) {
       const batchIndex = start / MAX_ITEM_BATCH_COUNT;
-      const batch = entries.slice(start, start + MAX_ITEM_BATCH_COUNT);
+      const batch = Arr.take(Arr.drop(entries, start), MAX_ITEM_BATCH_COUNT);
       yield* stageItemProgram(
         releaseId,
         batchIndex,
@@ -192,8 +192,9 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
       yield* stageRoutes(
         releaseId,
         start / MAX_ITEM_BATCH_COUNT,
-        Arr.map(routes.slice(start, start + MAX_ITEM_BATCH_COUNT), (route) =>
-          encodeJsonText(route)
+        Arr.map(
+          Arr.take(Arr.drop(routes, start), MAX_ITEM_BATCH_COUNT),
+          (route) => encodeJsonText(route)
         )
       );
     }

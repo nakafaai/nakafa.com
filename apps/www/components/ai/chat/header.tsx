@@ -9,6 +9,7 @@ import {
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
+import { useTimeout } from "@mantine/hooks";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -71,13 +72,15 @@ function AiChatHeaderContent({ chat }: { chat: Docs["chats"] }) {
   const updateChatTitle = useUpdateChatTitleMutation();
   const [isPending, startTransition] = useTransition();
 
+  const { start: focusTitleInput } = useTimeout(() => {
+    inputRef.current?.focus();
+  }, 0);
+
   /** Enter title editing with the current title selected for input. */
   const handleEdit = () => {
     setChatTitle(chat.title ?? "");
     setIsEditing(true);
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
+    focusTitleInput();
   };
 
   /** Persist a non-empty edited chat title. */

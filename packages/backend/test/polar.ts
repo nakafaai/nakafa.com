@@ -10,7 +10,7 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 29, 0, 0, 0);
 /** Inserts one app user that may already be inside account deletion. */
@@ -87,7 +87,7 @@ export function buildSubscription(
   customerId: string,
   suffix: string
 ): SubscriptionRecord {
-  const timestamp = new Date(NOW).toISOString();
+  const timestamp = DateTime.formatIso(DateTime.makeUnsafe(NOW));
 
   return {
     amount: null,
@@ -266,7 +266,7 @@ export function buildWebhookEvent<Type extends webhooks.WebhookPayload["type"]>(
   return {
     api_version: "2026-10",
     data,
-    timestamp: new Date(NOW).toISOString(),
+    timestamp: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
     type,
   };
 }
