@@ -38,6 +38,12 @@ It never gets an allowlist, a baseline, or a suppression.
 `switch` reports a `switch (typeof x)` once, as a switch, not also as a
 `typeof-object` comparison.
 
+`satisfies` is not an assertion: it checks a value and does not change its
+type. Of 781 uses measured, 491 check against a Schema-derived type, 104
+against a library type, 62 against a key or primitive type, 30 against a type
+derived from a value, and 94 against a local type. A local type that is an
+inline object type belongs to the shape rules, not to this one.
+
 Scopes name the modules a rule inspects:
 
 | Scope | Modules inspected |
@@ -61,8 +67,9 @@ A framework configuration file is named `*.config.ts`, `.mts`, `.cts`, or
 `.tsx`, imports the Vitest or Vercel configuration API, or has a default export
 that `satisfies` a `...Config` type which a package imports, such as Convex's
 `AuthConfig`. A configuration file that a product module imports is still
-configuration. This is open: `packages/backend/confect/auth.ts` is the measured
-case, and excluding it would report two `env` findings.
+configuration. Of 29 configuration files measured, one is imported by product
+code: `packages/backend/confect/auth.ts`, which Convex evaluates as its auth
+configuration and which the Better Auth plugin must receive as the same object.
 
 A `throw` of `ConvexError` in a Convex handler is exempt only when all of these
 hold:
@@ -121,3 +128,6 @@ global binding.
   setting that every runtime (Convex, the browser, Node) would need.
 - An `async` rule with exemptions for every framework callback: the list of
   callbacks is longer than the code it would protect.
+- Judging a configuration file as product code when a product module imports
+  it: the one such file must read `process.env`, because Convex evaluates it
+  before any Effect runtime exists.
