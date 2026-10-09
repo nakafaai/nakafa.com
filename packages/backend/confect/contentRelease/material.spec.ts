@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
+import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   materialApiPageValidator,
@@ -18,13 +19,8 @@ export const materialPageValidator = Schema.Struct({
   stale: Schema.Boolean,
 });
 export const materialSummaryValidator = Schema.Struct({
-  authors: Schema.mutable(
-    Schema.Array(
-      Schema.Struct({
-        name: Schema.String,
-      })
-    )
-  ),
+  authors: Schema.mutable(Schema.Array(ContentAuthorSchema)),
+  // Aksara's date fields add calendar checks, which a return must not add.
   dateModified: Schema.optionalKey(Schema.String),
   datePublished: Schema.String,
   description: Schema.optionalKey(Schema.String),

@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
+import { ArticleMetadataSchema } from "@nakafa/aksara-contracts/projection/article";
 import { articleApiPageValidator } from "@repo/backend/confect/contentRelease/article/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -30,17 +31,13 @@ export const categoryValidator = Schema.Struct({
 });
 export const articleSummaryValidator = Schema.Struct({
   articleSlug: Schema.String,
-  authors: Schema.mutable(
-    Schema.Array(
-      Schema.Struct({
-        name: Schema.String,
-      })
-    )
-  ),
+  authors: Schema.mutable(ArticleMetadataSchema.fields.authors),
   category: Schema.String,
   categoryTitle: Schema.String,
+  // Aksara's date fields add calendar checks, which a return must not add.
   dateModified: Schema.optionalKey(Schema.String),
   datePublished: Schema.String,
+  // Aksara's description also accepts undefined; the return keeps exact absence.
   description: Schema.optionalKey(Schema.String),
   official: Schema.Boolean,
   publicPath: Schema.String,
@@ -48,7 +45,7 @@ export const articleSummaryValidator = Schema.Struct({
     category: Schema.String,
     slug: Schema.String,
   }),
-  title: Schema.String,
+  title: ArticleMetadataSchema.fields.title,
 });
 export const articlePageValidator = Schema.Struct({
   activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
