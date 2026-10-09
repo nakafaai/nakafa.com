@@ -214,7 +214,7 @@ function TopReaction({ forum }: { forum: ForumListItem }) {
     (maxReaction, reaction) =>
       reaction.count > maxReaction.count ? reaction : maxReaction
   );
-  const isMyReaction = forum.myReactions.includes(topReaction.emoji);
+  const isMyReaction = Arr.contains(forum.myReactions, topReaction.emoji);
 
   /** Toggle the leading reaction without activating the forum link. */
   const handleToggle = (e: React.MouseEvent) => {
