@@ -38,7 +38,7 @@
     "@convex-dev/workpool": "^0.4.13",
     "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
-    "@mendable/firecrawl-js": "^4.44.1",
+    "@mendable/firecrawl-js": "^4.46.0",
     "@nakafa/aksara-contracts": "0.47.0",
     "@polar-sh/sdk": "^1.0.2",
     "@posthog/convex": "2.1.5",
