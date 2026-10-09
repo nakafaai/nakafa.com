@@ -1,3 +1,9 @@
+/**
+ * The single wire-format chooser for stored signed content. The shape-to-encoder
+ * mapping lives only in this module, and it follows @nakafa/aksara-contracts: a
+ * shape with a contract canonicalizer uses that canonicalizer, and any other
+ * decoded shape uses encodeJsonText. A change to stored bytes is made here.
+ */
 import {
   canonicalizeSignedContentArtifact,
   type SignedContentArtifactSchema,
