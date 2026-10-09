@@ -18,7 +18,7 @@ export class ProvenanceBundleVerifier extends Context.Service<
       identity: PublisherIdentity
     ) => Effect.Effect<string, ProvenanceVerificationError>;
   }
->()("RepositoryProvenance/BundleVerifier") {}
+>()("nakafa/scripts/github/provenance/bundle/ProvenanceBundleVerifier") {}
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");

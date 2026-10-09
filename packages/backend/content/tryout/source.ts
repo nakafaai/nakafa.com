@@ -54,4 +54,4 @@ export class TryoutSource extends Context.Service<
       bundleHash: string
     ) => OptionalRow<PublicationRow<"tryoutRuntimeBundles">>;
   }
->()("content/TryoutSource") {}
+>()("@repo/backend/content/tryout/source/TryoutSource") {}

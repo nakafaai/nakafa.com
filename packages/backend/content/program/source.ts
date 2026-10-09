@@ -66,4 +66,4 @@ export class ProgramSource extends Context.Service<
       limit: number
     ) => Effect.Effect<readonly BucketRow[], ReleaseError>;
   }
->()("content/ProgramSource") {}
+>()("@repo/backend/content/program/source/ProgramSource") {}

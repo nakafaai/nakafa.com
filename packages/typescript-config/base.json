@@ -33,6 +33,7 @@
           "classSelfMismatch": "error",
           "cryptoRandomUUID": "error",
           "cryptoRandomUUIDInEffect": "error",
+          "deterministicKeys": "error",
           "duplicatePackage": "error",
           "effectDoNotation": "error",
           "effectFnIife": "error",

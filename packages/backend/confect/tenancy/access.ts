@@ -7,7 +7,7 @@ import { Context } from "effect";
 
 /** The Person that the function's `PersonAccess` check loaded and allowed. */
 export class Person extends Context.Service<Person, TenantPeopleDoc>()(
-  "@repo/backend/tenancy/Person"
+  "@repo/backend/confect/tenancy/access/Person"
 ) {}
 
 /** Checks a person action on the Person whose ID the `arg` argument holds. */

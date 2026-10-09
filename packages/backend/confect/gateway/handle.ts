@@ -32,7 +32,7 @@ export class Gateway extends Context.Service<
       readonly timeout: Deadline;
     };
   }
->()("@repo/backend/gateway/Gateway") {}
+>()("@repo/backend/confect/gateway/handle/Gateway") {}
 
 /** The language model every provider hands to the AI SDK. */
 type LanguageModel = Parameters<typeof wrapLanguageModel>[0]["model"];
