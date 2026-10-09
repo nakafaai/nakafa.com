@@ -4,6 +4,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import {
   MEMORY_FACTS,
   type NinaMemoryChanges,
+  type NinaMemoryFact,
 } from "@repo/backend/confect/nina/memory.spec";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
@@ -109,9 +110,8 @@ describe("Nina learner memory", () => {
       });
     }
     const view = await f.owner.query(get, {});
-    const facts: ReadonlyArray<{ readonly text: string }> = Option.getOrThrow(
-      Option.fromNullishOr(view)
-    ).facts;
+    const facts: readonly Pick<typeof NinaMemoryFact.Type, "text">[] =
+      Option.getOrThrow(Option.fromNullishOr(view)).facts;
     expect(facts).toHaveLength(MEMORY_FACTS);
     expect(facts[0]?.text).toBe("Fakta 9-2.");
     expect(Option.getOrThrow(Arr.last(facts)).text).toBe("Fakta 0-0.");

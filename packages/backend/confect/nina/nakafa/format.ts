@@ -1,4 +1,5 @@
 import type { NakafaAgentQuranReference } from "@repo/contents/agent/schema/quran/reference";
+import type { NakafaQuranEmbeddedSourceSchema } from "@repo/contents/agent/schema/quran/source";
 import type { NakafaAgentSearchResult } from "@repo/contents/agent/schema/search";
 import type { NakafaAgentTaxonomy } from "@repo/contents/agent/schema/taxonomy";
 import dedent from "dedent";
@@ -61,7 +62,10 @@ function formatQuranSource(source: {
   readonly label: string;
   readonly publisher: string;
   readonly source_url: string;
-  readonly terms: { readonly url: string };
+  readonly terms: Pick<
+    (typeof NakafaQuranEmbeddedSourceSchema.Type)["terms"],
+    "url"
+  >;
   readonly update_url: string;
   readonly version: string;
 }) {

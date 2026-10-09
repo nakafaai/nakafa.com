@@ -14,6 +14,7 @@ import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
   type NinaLearner,
   NinaMemoryChanges,
+  type NinaMemoryFact,
 } from "@repo/backend/confect/nina/memory.spec";
 import { formatLearnerProfile } from "@repo/backend/confect/nina/prompt/learner";
 import { Output } from "ai";
@@ -43,7 +44,7 @@ class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
 /** Lists what curation must not repeat: account facts and keyed known facts. */
 function formatKnown(
   profile: typeof NinaLearner.Type.profile,
-  facts: readonly { readonly key: number; readonly text: string }[]
+  facts: readonly Pick<typeof NinaMemoryFact.Type, "key" | "text">[]
 ) {
   return Arr.join(
     [

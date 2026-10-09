@@ -135,9 +135,15 @@ function readArrayMetadata(schema: JsonSchema.JsonSchema): ArrayMetadata {
   return { description, maxItems, minItems };
 }
 
+/** The array limits that one union branch states; each limit is set only when stated. */
+const ArrayBoundsSchema = Schema.Struct({
+  maxItems: Schema.mutableKey(Schema.optionalKey(Schema.Finite)),
+  minItems: Schema.mutableKey(Schema.optionalKey(Schema.Finite)),
+});
+
 /** Relaxes shared array bounds enough to represent every union branch. */
 function mergeArrayBounds(left: ArrayMetadata, right: ArrayMetadata) {
-  const bounds: { maxItems?: number; minItems?: number } = {};
+  const bounds: typeof ArrayBoundsSchema.Type = {};
   if (typeof left.minItems === "number" || typeof right.minItems === "number") {
     bounds.minItems = Math.min(left.minItems ?? 0, right.minItems ?? 0);
   }
