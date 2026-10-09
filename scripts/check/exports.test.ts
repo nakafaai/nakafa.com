@@ -2,7 +2,7 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Path, Record as Rec } from "effect";
 import {
-  emitsDeclarations,
+  declarationDirectories,
   inspectExports,
   publishedDirectories,
 } from "#scripts/check/exports";
@@ -18,15 +18,13 @@ function report(line: number, name: string, file = MODULE) {
 
 /**
  * Inspects fixture modules with the export policy alone. `others` holds the
- * text of modules that no rule judges, `published` the directories of the
- * published workspaces, and `declarations` says whether the repository emits
- * declarations.
+ * text of modules that no rule judges, and `unjudged` the directories whose
+ * exports the check cannot judge.
  */
 function inspect(
   files: Readonly<Record<string, string>>,
   others: readonly string[] = [],
-  published: readonly string[] = [],
-  declarations = false
+  unjudged: readonly string[] = []
 ) {
   const sources = Arr.map(Rec.toEntries(files), ([file, sourceText]) => ({
     file,
@@ -40,8 +38,7 @@ function inspect(
           Arr.map(sources, ({ sourceText }) => sourceText),
           others
         ),
-        published,
-        declarations
+        unjudged
       )
     )
   );
@@ -173,49 +170,35 @@ export const { tax } = source;
     })
   );
 
-  it.effect(
-    "keeps a name that an exported signature needs when declarations are emitted",
-    () =>
-      Effect.gen(function* () {
-        const files = {
-          [MODULE]: `export class Failure {}
-export type Price = number;
-export const tax = 2;
-const local = tax;
-export const run = (price: Price) => new Failure();
-export default Failure;
-`,
-        };
-        assert.deepStrictEqual(yield* inspect(files, [], [], true), [
-          report(3, "tax"),
-          report(5, "run"),
-        ]);
-        assert.deepStrictEqual(yield* inspect(files), [
-          report(1, "Failure"),
-          report(2, "Price"),
-          report(3, "tax"),
-          report(5, "run"),
-        ]);
-      })
+  it.effect("judges nothing when every module emits declarations", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect({ [MODULE]: "export class Failure {}\n" }, [], [""]),
+        []
+      );
+    })
   );
 
-  it("reads declaration output from the compiler configurations", () => {
-    const config = (sourceText: string) => ({
-      file: "tsconfig.json",
-      sourceText,
-    });
-    assert.isTrue(
-      emitsDeclarations([
-        config('{"extends":"./base.json"}'),
-        config('{"compilerOptions":{"declaration":true,"noEmit":true}}'),
-      ])
+  it("names the directories that emit declarations", () => {
+    const on = '{"compilerOptions":{"declaration":true,"noEmit":true}}';
+    assert.deepStrictEqual(
+      declarationDirectories([
+        { file: "packages/cli/tsconfig.build.json", sourceText: on },
+        { file: "packages/shop/tsconfig.json", sourceText: "// not JSON" },
+        {
+          file: "apps/www/tsconfig.json",
+          sourceText: '{"compilerOptions":{"declaration":false}}',
+        },
+        { file: "scripts/tsconfig.json", sourceText: '{"extends":"../base"}' },
+      ]),
+      ["packages/cli/"]
     );
-    assert.isFalse(
-      emitsDeclarations([
-        config('{"compilerOptions":{"declaration":false}}'),
-        config('{"compilerOptions":{"noEmit":true}}'),
-        config("// not JSON"),
-      ])
+    assert.deepStrictEqual(
+      declarationDirectories([
+        { file: "packages/typescript-config/base.json", sourceText: on },
+        { file: "tsconfig.json", sourceText: on },
+      ]),
+      ["", ""]
     );
   });
 

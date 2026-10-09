@@ -210,10 +210,11 @@ package. It also leaves `packages/design-system/components/ui`, which keeps
 every part its shadcn upstream ships. A default export has no name to import
 and is not judged.
 
-Where a compiler configuration turns `declaration` on, the compiler rejects an
-exported declaration whose type names a declaration that is not exported. So
-in such a repository the check leaves a name that another exporting statement
-of its own module mentions.
+Where a compiler configuration turns `declaration` on, the compiler needs an
+exported name wherever an exported signature reaches it, also by inference
+through another module, and no syntax rule can see that. So the check does not
+judge the modules below such a configuration, and it judges none when a shared
+or root configuration turns the option on. There the typecheck decides.
 
 ### Vercel deployment policy
 

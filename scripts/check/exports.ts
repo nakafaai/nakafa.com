@@ -91,38 +91,31 @@ const DeclarationConfig = Schema.fromJsonString(
   })
 );
 const decodeDeclarationConfig = Schema.decodeUnknownOption(DeclarationConfig);
-/** A top-level statement that exports: a declaration, a list, or the default. */
-const EXPORT_STATEMENT_PATTERN = /^export\b/u;
+/** The folder of the shared configurations, which every workspace extends. */
+const SHARED_CONFIG_DIRECTORY = "packages/typescript-config/";
+/** The file name at the end of a repository-relative path. */
+const FILE_NAME_PATTERN = /[^/]+$/u;
 
 /**
- * Whether a compiler configuration of the repository turns declaration output
- * on. The compiler then rejects an exported declaration whose type names a
- * declaration that is not exported, so such a name has to stay exported.
+ * Returns the directories whose modules a compiler configuration emits
+ * declarations for, each with a trailing "/": the folder of a configuration
+ * that turns `declaration` on, and the whole repository, as "", when a shared
+ * or root configuration does. There the compiler needs an exported name
+ * wherever an exported signature reaches it, also by inference, so only the
+ * compiler can tell which exports are unused.
  */
-export function emitsDeclarations(
+export function declarationDirectories(
   configs: readonly (typeof RepositorySource.Type)[]
 ) {
-  return Arr.some(configs, ({ sourceText }) =>
+  return Arr.filterMap(configs, ({ file, sourceText }) =>
     Option.isSome(decodeDeclarationConfig(sourceText))
+      ? Result.succeed(
+          Str.startsWith(SHARED_CONFIG_DIRECTORY)(file)
+            ? ""
+            : Str.replace(FILE_NAME_PATTERN, "")(file)
+        )
+      : Result.failVoid
   );
-}
-
-/**
- * Whether another exporting statement of the module mentions `name`. With
- * declaration output on, such a name is part of that statement's signature.
- */
-function namedByExport(sourceFile: SourceFile, owner: Statement, name: string) {
-  return Arr.some(sourceFile.statements, (statement) => {
-    const text = Str.slice(
-      statement.getStart(sourceFile),
-      statement.end
-    )(sourceFile.text);
-    return (
-      statement !== owner &&
-      EXPORT_STATEMENT_PATTERN.test(text) &&
-      Arr.contains(Str.split(text, WORD_BREAK_PATTERN), name)
-    );
-  });
 }
 
 /** Whether a declaration carries `export` without `default`. */
@@ -181,10 +174,9 @@ function exportedNames(statement: Statement): readonly string[] {
  * generated, and declaration files alike. A name counts as mentioned when the
  * word appears in a second text, so the rule never reports a name that
  * something imports, and it misses an unused name that another module happens
- * to spell. `published` lists the directories of the workspaces that are
- * published as packages, whose exports another repository reads. With
- * `declarations`, a name that another exporting statement of its own module
- * mentions is left alone, because the compiler may need it in that signature.
+ * to spell. `unjudged` lists the directories whose exports this check cannot
+ * judge: the workspaces that are published as packages, and the modules that a
+ * compiler configuration emits declarations for.
  */
 export function inspectExports(
   modules: readonly {
@@ -192,31 +184,23 @@ export function inspectExports(
     readonly sourceFile: SourceFile;
   }[],
   texts: readonly string[],
-  published: readonly string[],
-  declarations: boolean
+  unjudged: readonly string[]
 ): readonly string[] {
   const declared = Arr.flatMap(modules, ({ file, sourceFile }) =>
     isGenerated(sourceFile) ||
     Str.startsWith(COMPONENT_SET_DIRECTORY)(file) ||
     Arr.some(FRAMEWORK_MODULE_PATTERNS, (pattern) => pattern.test(file)) ||
-    Arr.some(published, (directory) => Str.startsWith(directory)(file))
+    Arr.some(unjudged, (directory) => Str.startsWith(directory)(file))
       ? []
       : Arr.flatMap(sourceFile.statements, (statement) =>
-          Arr.map(
-            Arr.filter(
-              exportedNames(statement),
-              (name) =>
-                !(declarations && namedByExport(sourceFile, statement, name))
-            ),
-            (name) => ({
-              file,
-              line:
-                sourceFile.getLineAndCharacterOfPosition(
-                  statement.getStart(sourceFile)
-                ).line + 1,
-              name,
-            })
-          )
+          Arr.map(exportedNames(statement), (name) => ({
+            file,
+            line:
+              sourceFile.getLineAndCharacterOfPosition(
+                statement.getStart(sourceFile)
+              ).line + 1,
+            name,
+          }))
         )
   );
   const names = HashSet.fromIterable(Arr.map(declared, ({ name }) => name));

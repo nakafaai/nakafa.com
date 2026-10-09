@@ -21,7 +21,7 @@ import {
   sortFindings,
 } from "#scripts/check/effect";
 import {
-  emitsDeclarations,
+  declarationDirectories,
   inspectExports,
   publishedDirectories,
 } from "#scripts/check/exports";
@@ -72,8 +72,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
   sources: Parameters<typeof parseSources>[0],
   projectConfigs: readonly string[],
   otherModules: readonly string[],
-  published: readonly string[],
-  declarations: boolean
+  unjudged: readonly string[]
 ) {
   const parsed = yield* parseSources(sources);
   const arrays = yield* Effect.scoped(
@@ -105,8 +104,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         Arr.map(sources, ({ sourceText }) => sourceText),
         otherModules
       ),
-      published,
-      declarations
+      unjudged
     ),
   ]);
 }, Effect.scoped);
@@ -186,8 +184,10 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       sources,
       projectConfigs,
       otherModules,
-      yield* publishedDirectories(root, workspaces),
-      emitsDeclarations(configs)
+      Arr.appendAll(
+        yield* publishedDirectories(root, workspaces),
+        declarationDirectories(configs)
+      )
     );
     const reports = Arr.filter(
       [
