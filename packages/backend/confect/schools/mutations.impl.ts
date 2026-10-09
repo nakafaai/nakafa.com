@@ -13,12 +13,12 @@ import {
   SchoolReadError,
 } from "@repo/backend/confect/schools/errors";
 import {
+  generateInviteCode,
   validateInviteCodeState,
   validateNotExistingMembership,
 } from "@repo/backend/confect/schools/invitations";
 import { InvitationError } from "@repo/backend/confect/schools/invitations/spec";
 import spec from "@repo/backend/confect/schools/mutations.spec";
-import { generateNanoId } from "@repo/backend/confect/utils/id";
 import { slugify } from "@repo/backend/confect/utils/text";
 import { Clock, Effect, Layer } from "effect";
 
@@ -97,7 +97,7 @@ const createSchool = FunctionImpl.make(
         .insert({
           schoolId,
           role,
-          code: generateNanoId(),
+          code: yield* generateInviteCode(),
           enabled: true,
           currentUsage: 0,
           createdBy: userId,
