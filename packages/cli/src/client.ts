@@ -32,21 +32,19 @@ const sendNakafaRequest = Effect.fn("NakafaCli.sendRequest")(function* (
   const response = yield* HttpClient.get(url, {
     accept: "application/json, application/problem+json",
   }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new NetworkError({
-          cause,
-          message: `Unable to reach ${url}.`,
-        })
+    Effect.mapError((cause) =>
+      NetworkError.make({
+        cause,
+        message: `Unable to reach ${url}.`,
+      })
     )
   );
   const text = yield* response.text.pipe(
-    Effect.mapError(
-      (cause) =>
-        new NetworkError({
-          cause,
-          message: `Unable to read the response from ${url}.`,
-        })
+    Effect.mapError((cause) =>
+      NetworkError.make({
+        cause,
+        message: `Unable to read the response from ${url}.`,
+      })
     )
   );
   return { response, text };
@@ -62,7 +60,7 @@ export const requestNakafaApi = Effect.fn("NakafaCli.requestApi")(function* (
       duration: REQUEST_DEADLINE,
       orElse: () =>
         Effect.fail(
-          new NetworkError({
+          NetworkError.make({
             cause: new NakafaRequestDeadline(),
             message: `Nakafa did not answer ${url} within 10 seconds.`,
           })
@@ -75,7 +73,7 @@ export const requestNakafaApi = Effect.fn("NakafaCli.requestApi")(function* (
       isJsonMediaType(response.headers["content-type"])
     )
   ) {
-    return yield* new HttpResponseError({
+    return yield* HttpResponseError.make({
       retryAfter: response.headers["retry-after"],
       status: response.status,
     });
@@ -83,13 +81,12 @@ export const requestNakafaApi = Effect.fn("NakafaCli.requestApi")(function* (
   const payload = yield* Schema.decodeEffect(
     Schema.fromJsonString(Schema.Json)
   )(text).pipe(
-    Effect.mapError(
-      (cause) =>
-        new ResponseDecodeError({
-          cause,
-          message: `Nakafa returned non-JSON data for ${url}.`,
-          status: response.status,
-        })
+    Effect.mapError((cause) =>
+      ResponseDecodeError.make({
+        cause,
+        message: `Nakafa returned non-JSON data for ${url}.`,
+        status: response.status,
+      })
     )
   );
   if (isSuccessStatus(response.status)) {
@@ -98,16 +95,15 @@ export const requestNakafaApi = Effect.fn("NakafaCli.requestApi")(function* (
   const problem = yield* Schema.decodeUnknownEffect(ProblemDetailsSchema)(
     payload
   ).pipe(
-    Effect.mapError(
-      (cause) =>
-        new ResponseDecodeError({
-          cause,
-          message: `Nakafa returned an invalid Problem Details response for ${url}.`,
-          status: response.status,
-        })
+    Effect.mapError((cause) =>
+      ResponseDecodeError.make({
+        cause,
+        message: `Nakafa returned an invalid Problem Details response for ${url}.`,
+        status: response.status,
+      })
     )
   );
-  return yield* new ApiResponseError({
+  return yield* ApiResponseError.make({
     problem,
     status: response.status,
   });

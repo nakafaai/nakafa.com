@@ -42,7 +42,7 @@ const readStreams = Effect.fn("nina.messages.streams")(function* (
           includeStatuses: ["streaming", "finished", "aborted"],
         }),
       catch: () =>
-        new NinaReadError({ message: "Unable to read Nina streams." }),
+        NinaReadError.make({ message: "Unable to read Nina streams." }),
     });
     const allowed = HashSet.fromIterable(
       Arr.map(available, (stream) => stream.streamId)
@@ -65,8 +65,8 @@ const readStreams = Effect.fn("nina.messages.streams")(function* (
     syncStreams(ctx, components.nina, { threadId, streamArgs })
   ).pipe(
     Effect.flatMap(Effect.fromNullishOr),
-    Effect.mapError(
-      () => new NinaReadError({ message: "Unable to read Nina streams." })
+    Effect.mapError(() =>
+      NinaReadError.make({ message: "Unable to read Nina streams." })
     )
   );
 });
@@ -79,7 +79,7 @@ const list = FunctionImpl.make(
     const viewer = yield* getOptionalAppUserForRead();
     const chat = yield* readChat(args.chatId, viewer?.appUser._id ?? null);
     if (chat.threadId !== args.threadId) {
-      return yield* new ChatAccessError({
+      return yield* ChatAccessError.make({
         code: "FORBIDDEN",
         message: "The conversation does not belong to this chat.",
       });
@@ -99,7 +99,7 @@ const list = FunctionImpl.make(
     const page = yield* Effect.tryPromise({
       try: () => listUIMessages(ctx, components.nina, args),
       catch: () =>
-        new NinaReadError({ message: "Unable to read Nina messages." }),
+        NinaReadError.make({ message: "Unable to read Nina messages." }),
     });
     const reader = yield* DatabaseReader;
     // Hydrate only the orders present in this bounded message page. Agent keeps

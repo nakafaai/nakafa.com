@@ -57,12 +57,11 @@ export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
   const source = yield* runQuery(contentSourceReference, {
     input: lookup.value,
   }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new NakafaAgentDataReadError({
-          cause: getUnknownErrorMessage(cause),
-          message: "Unable to resolve the Nakafa content reference.",
-        })
+    Effect.mapError((cause) =>
+      NakafaAgentDataReadError.make({
+        cause: getUnknownErrorMessage(cause),
+        message: "Unable to resolve the Nakafa content reference.",
+      })
     )
   );
   if (!source) {
@@ -94,12 +93,11 @@ const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
       appLocale,
       publicPath: ref.route,
     }).pipe(
-      Effect.mapError(
-        (cause) =>
-          new NakafaAgentDataReadError({
-            cause: getUnknownErrorMessage(cause),
-            message: "Unable to read signed Nakafa public content.",
-          })
+      Effect.mapError((cause) =>
+        NakafaAgentDataReadError.make({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to read signed Nakafa public content.",
+        })
       )
     );
     const found = yield* decodePublicRuntimeRow(row).pipe(
@@ -213,7 +211,7 @@ function isPublishedRef(ref: NakafaAgentContentRef): ref is PublishedRef {
 
 /** Maps integrity and rendering failures into the agent read contract. */
 function contentReadError(error: unknown) {
-  return new NakafaAgentDataReadError({
+  return NakafaAgentDataReadError.make({
     cause: getUnknownErrorMessage(error),
     message: "Unable to read signed Nakafa public content.",
   });

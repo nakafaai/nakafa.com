@@ -427,7 +427,7 @@ describe("conversation/viewport/persist", () => {
       session: {
         saveSnapshot: () =>
           Effect.fail(
-            new ViewportSessionError({
+            ViewportSessionError.make({
               cause: "test",
               message: "Snapshot persistence failed in test.",
             })

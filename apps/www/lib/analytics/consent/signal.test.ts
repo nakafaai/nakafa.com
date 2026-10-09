@@ -155,7 +155,7 @@ describe("browser analytics privacy signal", () => {
       const setAccountConsent = vi.fn(() =>
         Promise.resolve(
           Result.fail(
-            new ConsentAccountChanged({
+            ConsentAccountChanged.make({
               code: "CONSENT_ACCOUNT_CHANGED",
               message:
                 "The active account changed before consent could be saved.",

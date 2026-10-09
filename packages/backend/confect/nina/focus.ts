@@ -23,7 +23,7 @@ export const resolveQuestionFocus = Effect.fn("nina.focus.resolve")(function* (
 ) {
   const entitled = yield* readEntitledPlacement(input, userId);
   if (Option.isNone(entitled)) {
-    return yield* new NinaTurnError({
+    return yield* NinaTurnError.make({
       code: "NINA_CONTEXT_FAILED",
       message: "This try-out question is not available to Nina.",
     });

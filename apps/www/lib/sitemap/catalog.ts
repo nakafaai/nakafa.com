@@ -36,7 +36,7 @@ export const readSitemapPageDescriptors = Effect.fn(
   };
   const active = yield* readActiveContentIdentity();
   if (!active) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   const activeReleaseId = active.releaseId;
   const [pageCatalog, quranCatalog] = yield* Effect.all([

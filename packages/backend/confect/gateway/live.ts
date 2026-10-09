@@ -18,7 +18,7 @@ export const GatewayLive = Layer.effect(
     Effect.tryPromise({
       try: () => getServiceToken("ai-gateway"),
       catch: () =>
-        new GatewayConfigurationError({
+        GatewayConfigurationError.make({
           message: "The AI gateway is not available on this deployment.",
         }),
     }),

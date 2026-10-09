@@ -14,12 +14,11 @@ export const verifyProvenanceAudit = Effect.fn("GithubProvenance.verifyAudit")(
     const args = yield* Schema.decodeUnknownEffect(CliArgumentsSchema)(
       argv
     ).pipe(
-      Effect.mapError(
-        (cause) =>
-          new ProvenanceVerificationError({
-            cause,
-            message: "Provenance verification arguments are invalid.",
-          })
+      Effect.mapError((cause) =>
+        ProvenanceVerificationError.make({
+          cause,
+          message: "Provenance verification arguments are invalid.",
+        })
       )
     );
     const [
@@ -35,12 +34,11 @@ export const verifyProvenanceAudit = Effect.fn("GithubProvenance.verifyAudit")(
     ] = args;
     const fileSystem = yield* FileSystem.FileSystem;
     const source = yield* fileSystem.readFileString(auditPath).pipe(
-      Effect.mapError(
-        (cause) =>
-          new ProvenanceVerificationError({
-            cause,
-            message: "Unable to read the npm signature audit.",
-          })
+      Effect.mapError((cause) =>
+        ProvenanceVerificationError.make({
+          cause,
+          message: "Unable to read the npm signature audit.",
+        })
       )
     );
     yield* verifyProvenance(source, {

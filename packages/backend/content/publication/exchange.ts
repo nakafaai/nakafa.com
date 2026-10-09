@@ -34,24 +34,24 @@ export const decodePublicRuntimeRow = Effect.fn(
       decodeReleaseJson(row.releaseJson),
       decodeRendererJson(row.rendererJson),
       Schema.decodeEffect(CorpusSourcePathSchema)(row.sourcePath),
-    ]).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
+    ]).pipe(Effect.mapError(() => PublicRuntimeReadError.make()));
   yield* Schema.decodeEffect(Sha256HashSchema)(row.projectionHash).pipe(
-    Effect.mapError(() => new PublicRuntimeReadError())
+    Effect.mapError(() => PublicRuntimeReadError.make())
   );
   const projectionJson = canonicalizeContentProjection(projection);
   const projectionHash = yield* hashText(
     "the current public content projection",
     projectionJson
-  ).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
+  ).pipe(Effect.mapError(() => PublicRuntimeReadError.make()));
   if (projection.kind === "question-body") {
-    return yield* new PublicRuntimeReadError();
+    return yield* PublicRuntimeReadError.make();
   }
   if (
     row.projectionHash !== projectionHash ||
     row.activeManifestHash !== release.manifestHash ||
     row.activeReleaseId !== release.manifest.releaseId
   ) {
-    return yield* new PublicRuntimeReadError();
+    return yield* PublicRuntimeReadError.make();
   }
   const response: PublicContentRuntimeFound = {
     activeManifestHash: release.manifestHash,

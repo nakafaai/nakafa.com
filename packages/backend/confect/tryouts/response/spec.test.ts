@@ -31,13 +31,13 @@ describe("tryouts/response/spec", () => {
 
   it("keeps the deployed selection codes for every rejected selection", () => {
     expect(
-      toTryoutSelectionError(new ResponseRejected({ reason: "kind" }))
+      toTryoutSelectionError(ResponseRejected.make({ reason: "kind" }))
     ).toMatchObject({
       _tag: "TryoutResponseSelectionError",
       code: "TRYOUT_RESPONSE_KIND_MISMATCH",
     });
     expect(
-      toTryoutSelectionError(new ResponseRejected({ reason: "selection" }))
+      toTryoutSelectionError(ResponseRejected.make({ reason: "selection" }))
     ).toMatchObject({
       _tag: "TryoutResponseSelectionError",
       code: "TRYOUT_RESPONSE_SELECTION_INVALID",

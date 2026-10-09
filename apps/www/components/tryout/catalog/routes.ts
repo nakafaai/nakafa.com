@@ -24,16 +24,14 @@ function readListedPage<Page>(
   read: () => Promise<Page | null>
 ) {
   return Effect.tryPromise({
-    catch: (cause) => new TryoutCatalogRouteError({ cause, publicPath }),
+    catch: (cause) => TryoutCatalogRouteError.make({ cause, publicPath }),
     try: read,
   }).pipe(
-    Effect.filterOrFail(
-      Predicate.isNotNull,
-      () =>
-        new TryoutCatalogRouteError({
-          cause: "The catalog does not serve a page it lists.",
-          publicPath,
-        })
+    Effect.filterOrFail(Predicate.isNotNull, () =>
+      TryoutCatalogRouteError.make({
+        cause: "The catalog does not serve a page it lists.",
+        publicPath,
+      })
     )
   );
 }

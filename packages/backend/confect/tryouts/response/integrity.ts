@@ -262,7 +262,7 @@ function responseIntegrity(
   code: TryoutResponseIntegrityError["code"],
   message: string
 ) {
-  return new TryoutResponseIntegrityError({
+  return TryoutResponseIntegrityError.make({
     code,
     message,
   });

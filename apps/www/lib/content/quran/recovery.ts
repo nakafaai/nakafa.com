@@ -22,7 +22,7 @@ const refreshQuranRoute = Effect.fn("www.quran.refreshStaleRoute")(
   function* () {
     yield* Effect.try({
       catch: (cause) =>
-        new QuranSnapshotRecoveryError({ cause, reason: "route-refresh" }),
+        QuranSnapshotRecoveryError.make({ cause, reason: "route-refresh" }),
       try: refresh,
     });
     return false;
@@ -37,15 +37,13 @@ export const recoverStalePublishedQuranSnapshot = Effect.fn(
   const staleSnapshotId = yield* Schema.decodeUnknownEffect(Sha256HashSchema)(
     input
   ).pipe(
-    Effect.mapError(
-      (cause) =>
-        new QuranSnapshotRecoveryError({ cause, reason: "invalid-input" })
+    Effect.mapError((cause) =>
+      QuranSnapshotRecoveryError.make({ cause, reason: "invalid-input" })
     )
   );
   const activeIdentity = yield* readPublishedQuranIdentity().pipe(
-    Effect.mapError(
-      (cause) =>
-        new QuranSnapshotRecoveryError({ cause, reason: "active-identity" })
+    Effect.mapError((cause) =>
+      QuranSnapshotRecoveryError.make({ cause, reason: "active-identity" })
     )
   );
   if (activeIdentity.snapshotId === staleSnapshotId) {
@@ -53,7 +51,7 @@ export const recoverStalePublishedQuranSnapshot = Effect.fn(
   }
   yield* Effect.try({
     catch: (cause) =>
-      new QuranSnapshotRecoveryError({ cause, reason: "cache-invalidation" }),
+      QuranSnapshotRecoveryError.make({ cause, reason: "cache-invalidation" }),
     try: () => updateTag(makeArtifactCacheTag(staleSnapshotId)),
   });
   return true;

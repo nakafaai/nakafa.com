@@ -47,7 +47,7 @@ const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
 function decodeError(
   code: "CONTENT_RELEASE_INVALID_REQUEST" | "CONTENT_RELEASE_SIZE"
 ) {
-  return new ReleaseError({
+  return ReleaseError.make({
     code,
     message: "Content publication request violates its wire contract.",
   });

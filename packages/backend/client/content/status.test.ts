@@ -35,7 +35,7 @@ describe("content runtime status", () => {
           })
         )
       )
-    ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+    ).toEqual(ContentTransportError.make({ reason: "response-contract" }));
     expect(
       createContentContractError(
         received(
@@ -44,7 +44,7 @@ describe("content runtime status", () => {
           })
         )
       )
-    ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
+    ).toEqual(ContentTransportError.make({ reason: "response-unmarked" }));
   });
 
   it.live("accepts only contract-owned response status pairs", () =>

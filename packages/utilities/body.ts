@@ -54,7 +54,7 @@ function streamBody(body: ReadableStream<Uint8Array>) {
   return Stream.fromPull(
     Effect.acquireRelease(
       Effect.try({
-        catch: () => new BodyReadError(),
+        catch: () => BodyReadError.make(),
         try: () => body.getReader(),
       }),
       (reader) =>
@@ -65,7 +65,7 @@ function streamBody(body: ReadableStream<Uint8Array>) {
     ).pipe(
       Effect.map((reader) =>
         Effect.tryPromise({
-          catch: () => new BodyReadError(),
+          catch: () => BodyReadError.make(),
           try: () => reader.read(),
         }).pipe(
           Effect.flatMap(({ done, value }) =>
@@ -83,14 +83,14 @@ export const parseContentLength = Effect.fn("Utilities.parseContentLength")(
       return null;
     }
     if (!DECIMAL_BYTES.test(value)) {
-      return yield* new BodyLengthError({ reason: "invalid" });
+      return yield* BodyLengthError.make({ reason: "invalid" });
     }
     const byteLength = Number(value);
     if (!Number.isSafeInteger(byteLength)) {
-      return yield* new BodyLengthError({ reason: "invalid" });
+      return yield* BodyLengthError.make({ reason: "invalid" });
     }
     if (byteLength > maxBytes) {
-      return yield* new BodyLengthError({ reason: "limit" });
+      return yield* BodyLengthError.make({ reason: "limit" });
     }
     return byteLength;
   }
@@ -110,7 +110,7 @@ export const readBoundedStream = Effect.fn("Utilities.readBoundedStream")(
           const nextTotal = current + chunk.byteLength;
           if (nextTotal > maxBytes) {
             return Effect.fail(
-              new BodyLimitError({ actualBytes: nextTotal, maxBytes })
+              BodyLimitError.make({ actualBytes: nextTotal, maxBytes })
             );
           }
           MutableList.append(chunks, chunk);
@@ -125,7 +125,7 @@ export const readBoundedStream = Effect.fn("Utilities.readBoundedStream")(
 export const readBoundedBody = Effect.fn("Utilities.readBoundedBody")(
   function* (body: ReadableStream<Uint8Array> | null, maxBytes: number) {
     if (body === null) {
-      return yield* new BodyMissingError();
+      return yield* BodyMissingError.make();
     }
     return yield* readBoundedStream(streamBody(body), maxBytes);
   }

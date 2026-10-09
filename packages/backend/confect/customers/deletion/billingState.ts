@@ -53,7 +53,7 @@ export const recordCustomerDeletionCheckpointProgram = Effect.fn(
       customerCheckpoint &&
       customerCheckpoint.polarCustomerId !== polarCustomerId
     ) {
-      return yield* new CustomerSyncIoError({
+      return yield* CustomerSyncIoError.make({
         code: customerSyncIoErrorCode,
         message:
           "Deleted-user billing cleanup already has a different Polar customer checkpoint.",
@@ -142,7 +142,7 @@ export const completeCustomerDeletionCheckpointProgram = Effect.fn(
       return;
     }
     if (tombstone.polarCustomerId !== polarCustomerId) {
-      return yield* new CustomerSyncIoError({
+      return yield* CustomerSyncIoError.make({
         code: customerSyncIoErrorCode,
         message:
           "Deleted-user billing cleanup checkpoint changed before completion.",

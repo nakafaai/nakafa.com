@@ -82,7 +82,7 @@ export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
     transparentBackground = false,
   }: CodeHighlightOptions) {
     if (!isBundledLanguage(language)) {
-      return yield* new UnsupportedCodeLanguageError({
+      return yield* UnsupportedCodeLanguageError.make({
         language,
         message: `Code language "${language}" is not included in Shiki's bundle.`,
       });
@@ -102,7 +102,7 @@ export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
           ],
         }),
       catch: (cause) =>
-        new CodeHighlightError({
+        CodeHighlightError.make({
           cause,
           language,
           message: `Failed to highlight code as "${language}".`,

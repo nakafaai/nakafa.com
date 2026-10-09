@@ -32,13 +32,13 @@ const consume = FunctionImpl.make(
           key,
         }),
       catch: (cause) =>
-        new NakafaAgentDataReadError({
+        NakafaAgentDataReadError.make({
           cause: getUnknownErrorMessage(cause),
           message: "The public API quota boundary is unavailable.",
         }),
     });
     if (!status.ok) {
-      return yield* new AgentRateLimitError({
+      return yield* AgentRateLimitError.make({
         retryAfterMs: Math.max(0, status.retryAfter),
       });
     }

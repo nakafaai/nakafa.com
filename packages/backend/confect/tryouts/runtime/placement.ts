@@ -33,7 +33,7 @@ export const requireSectionSnapshot = Effect.fn(
     )
   );
   if (!snapshot) {
-    return yield* new TryoutAttemptStateError({
+    return yield* TryoutAttemptStateError.make({
       code: "TRYOUT_SECTION_NOT_FOUND",
       message: "Try-out section is not part of this attempt.",
     });
@@ -141,7 +141,7 @@ export const createAttemptPlacements = Effect.fn(
 
 /** Creates one typed fail-closed snapshot mismatch. */
 function startMismatch(message: string) {
-  return new TryoutRuntimeError({
+  return TryoutRuntimeError.make({
     code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
     message,
   });

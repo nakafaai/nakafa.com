@@ -127,7 +127,7 @@ describe("local preview events", () => {
     () =>
       Effect.gen(function* () {
         configMock.mockReturnValueOnce(
-          Effect.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }))
+          Effect.fail(PreviewConfigError.make({ name: "AKSARA_PREVIEW" }))
         );
 
         expect(yield* openFailure()).toMatchObject({

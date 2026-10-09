@@ -39,14 +39,14 @@ const scripted = Layer.effect(
 
 /** A request Convex refused with one HTTP API error code. */
 function refused(code: string) {
-  return new HttpClient.HttpClientError({
+  return HttpClient.HttpClientError.make({
     cause: new Error(encodeJsonText({ code, message: "Try again later." })),
   });
 }
 
 /** A connection that closed before Convex answered, as Undici reports it. */
 function dropped() {
-  return new HttpClient.HttpClientError({
+  return HttpClient.HttpClientError.make({
     cause: new TypeError("terminated", {
       cause: Object.assign(new Error("other side closed"), {
         code: "UND_ERR_SOCKET",
@@ -160,7 +160,7 @@ describe("Convex HTTP query retries", () => {
 
   it.effect("returns a function error at once", () =>
     Effect.gen(function* () {
-      const failure = new HttpClient.HttpClientError({
+      const failure = HttpClient.HttpClientError.make({
         cause: new Error("Uncaught Error: Surah not found."),
       });
       const query = scriptQuery(Effect.fail(failure));
@@ -215,10 +215,10 @@ describe("Convex HTTP query retries", () => {
               refused("ServiceUnavailable"),
               dropped(),
               refused("InternalServerError"),
-              new HttpClient.HttpClientError({
+              HttpClient.HttpClientError.make({
                 cause: new Error("Bad request"),
               }),
-              new HttpClient.HttpClientError({ cause: "closed" }),
+              HttpClient.HttpClientError.make({ cause: "closed" }),
               new Error(encodeJsonText({ code: "ExpiredInQueue" })),
               { _tag: "HttpClientError", cause: dropped().cause },
             ],

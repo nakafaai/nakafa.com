@@ -405,7 +405,7 @@ export const verifyCliWorkflow = Effect.fn("GithubCli.verify")(function* (
   const problems = validateCliWorkflow(source);
   const [first, ...rest] = problems;
   if (first) {
-    return yield* new CliWorkflowPolicyError({
+    return yield* CliWorkflowPolicyError.make({
       problems: [first, ...rest],
     });
   }

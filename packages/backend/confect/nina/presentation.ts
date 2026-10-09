@@ -84,7 +84,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
             options
           )
           .then((result) => result.output),
-      catch: () => new NinaPresentationError({ operation: "suggestions" }),
+      catch: () => NinaPresentationError.make({ operation: "suggestions" }),
     }).pipe(
       Effect.flatMap((output) =>
         mutate(refs.internal.nina.presentation.save, {
@@ -127,12 +127,12 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
           },
           options
         ),
-      catch: () => new NinaPresentationError({ operation: "title" }),
+      catch: () => NinaPresentationError.make({ operation: "title" }),
     }).pipe(
       Effect.flatMap(({ text }) =>
         Schema.decodeEffect(NinaTitle)(text).pipe(
-          Effect.mapError(
-            () => new NinaPresentationError({ operation: "title" })
+          Effect.mapError(() =>
+            NinaPresentationError.make({ operation: "title" })
           )
         )
       ),

@@ -59,7 +59,7 @@ describe("Nina content evidence", () => {
         kind === "missing"
           ? Effect.succeedNone
           : Effect.fail(
-              new NakafaAgentDataReadError({
+              NakafaAgentDataReadError.make({
                 message: "Content verification failed.",
               })
             )

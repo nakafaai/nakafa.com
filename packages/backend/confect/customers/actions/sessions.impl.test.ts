@@ -163,7 +163,7 @@ describe("billing sessions", () => {
       const { authed } = yield* setup();
       polarGateway.createCheckoutSession.mockReturnValue(
         Effect.fail(
-          new PolarCheckoutError({
+          PolarCheckoutError.make({
             code: polarCheckoutErrorCode,
             message: "Checkout provider unavailable",
             cause: new Error("private provider response"),

@@ -67,7 +67,7 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
                   next.getAttribute("href")
                 );
                 if (!destination || destination === href) {
-                  return yield* new LessonNavigationMissing({ href });
+                  return yield* LessonNavigationMissing.make({ href });
                 }
 
                 const reference = yield* Effect.promise(() =>

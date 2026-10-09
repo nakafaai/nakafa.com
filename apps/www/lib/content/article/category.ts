@@ -36,7 +36,7 @@ export type PublishedArticleCategoryModel = PublishedArticleCategory &
 
 /** Maps an incomplete signed category catalog to its public failure contract. */
 function categoryError(locale: Locale, route = "articles") {
-  return new PublishedProjectionError({
+  return PublishedProjectionError.make({
     appLocale: AppLocaleSchema.make(locale),
     publicPath: route,
   });

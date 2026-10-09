@@ -261,7 +261,7 @@ describe("immutable try-out application catalog", () => {
         });
         fetchQueryMock.mockReturnValue(
           Effect.fail(
-            new HttpClient.HttpClientError({
+            HttpClient.HttpClientError.make({
               cause: new Error("Transport unavailable"),
             })
           )
@@ -378,7 +378,7 @@ describe("immutable try-out application catalog", () => {
         ).toBeNull();
         fetchQueryMock.mockReturnValue(
           Effect.fail(
-            new HttpClient.HttpClientError({
+            HttpClient.HttpClientError.make({
               cause: new Error("Transport unavailable"),
             })
           )

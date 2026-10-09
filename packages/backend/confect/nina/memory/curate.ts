@@ -85,7 +85,7 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
         ctx.runQuery(components.nina.messages.getMessagesByIds, {
           messageIds: [turn.promptMessageId],
         }),
-      catch: () => new NinaMemoryError({ operation: "read" }),
+      catch: () => NinaMemoryError.make({ operation: "read" }),
     });
     const text = prompt?.message?.role === "user" ? prompt.text?.trim() : "";
     if (!text) {
@@ -115,7 +115,7 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
           },
           { storageOptions: { saveMessages: "none" } }
         ),
-      catch: () => new NinaMemoryError({ operation: "generate" }),
+      catch: () => NinaMemoryError.make({ operation: "generate" }),
     });
     yield* (yield* MutationRunner)
       .runMutation(refs.internal.nina.memory.apply, {

@@ -46,7 +46,7 @@ const readEligibleGoogleIndexingUrl = Effect.fn(
       duration: NETWORK_ATTEMPT_DEADLINE,
       orElse: () =>
         Effect.fail(
-          new GoogleIndexPageFetchError({
+          GoogleIndexPageFetchError.make({
             cause: "deadline",
             message: `Fetching ${url} for Google Indexing API eligibility did not finish within 10 seconds.`,
             url,
@@ -57,13 +57,12 @@ const readEligibleGoogleIndexingUrl = Effect.fn(
   const blocks = readJsonLdScriptBodies(html);
   for (const block of blocks) {
     const data = yield* decodeStructuredDataJson(block).pipe(
-      Effect.mapError(
-        (cause) =>
-          new GoogleStructuredDataParseError({
-            cause,
-            message: `Failed to parse JSON-LD while checking ${url}.`,
-            url,
-          })
+      Effect.mapError((cause) =>
+        GoogleStructuredDataParseError.make({
+          cause,
+          message: `Failed to parse JSON-LD while checking ${url}.`,
+          url,
+        })
       )
     );
     if (hasGoogleIndexingApiEligibleStructuredData(data)) {
@@ -76,29 +75,27 @@ const fetchEligibilityPage = Effect.fn("scripts.google.eligibility.fetchPage")(
   function* (url: string) {
     const client = yield* HttpClient.HttpClient;
     const response = yield* client.get(url).pipe(
-      Effect.mapError(
-        (cause) =>
-          new GoogleIndexPageFetchError({
-            cause,
-            message: `Failed to fetch ${url} for Google Indexing API eligibility.`,
-            url,
-          })
+      Effect.mapError((cause) =>
+        GoogleIndexPageFetchError.make({
+          cause,
+          message: `Failed to fetch ${url} for Google Indexing API eligibility.`,
+          url,
+        })
       )
     );
     if (response.status < 200 || response.status >= 300) {
-      return yield* new GoogleIndexPageFetchError({
+      return yield* GoogleIndexPageFetchError.make({
         message: `Google Indexing API eligibility fetch returned HTTP ${response.status}.`,
         url,
       });
     }
     return yield* response.text.pipe(
-      Effect.mapError(
-        (cause) =>
-          new GoogleIndexPageFetchError({
-            cause,
-            message: `Failed to read ${url} for Google Indexing API eligibility.`,
-            url,
-          })
+      Effect.mapError((cause) =>
+        GoogleIndexPageFetchError.make({
+          cause,
+          message: `Failed to read ${url} for Google Indexing API eligibility.`,
+          url,
+        })
       )
     );
   }

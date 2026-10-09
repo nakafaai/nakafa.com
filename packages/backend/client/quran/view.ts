@@ -44,7 +44,7 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
         expected.appLocale
       )
     ) {
-      return yield* new QuranPublicationError({
+      return yield* QuranPublicationError.make({
         operation: "view",
         reason: "Signed Quran view is missing.",
       });
@@ -60,7 +60,7 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
         QURAN_SURAH_COUNT
       )
     ) {
-      return yield* new QuranPublicationError({
+      return yield* QuranPublicationError.make({
         operation: "view",
         reason: "Signed Quran view identity is inconsistent.",
       });

@@ -7,7 +7,7 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 
 /** Maps malformed program bytes to one public projection failure. */
 function projectionError(locale: Locale, publicPath: string) {
-  return new PublishedProjectionError({
+  return PublishedProjectionError.make({
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });

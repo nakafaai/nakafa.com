@@ -33,7 +33,7 @@ export const registerNakafaMcpResources = Effect.fn(
         },
       ],
     }),
-    resource: new McpSchema.Resource({
+    resource: McpSchema.Resource.make({
       description: "Recommended workflow for using the Nakafa MCP server.",
       mimeType: "text/markdown",
       name: "nakafa_usage",
@@ -57,7 +57,7 @@ export const registerNakafaMcpResources = Effect.fn(
       Effect.provideContext(services),
       Effect.catchDefect(unexpectedResourceFailure)
     ),
-    resource: new McpSchema.Resource({
+    resource: McpSchema.Resource.make({
       description: "Supported Nakafa locales, sections, and categories.",
       mimeType: "application/json",
       name: "nakafa_taxonomy",
@@ -75,7 +75,7 @@ export const registerNakafaMcpResources = Effect.fn(
           Option.match({
             onNone: () =>
               Effect.fail(
-                new McpSchema.InvalidParams({
+                McpSchema.InvalidParams.make({
                   data: { uri },
                   message: "Nakafa content resource was not found.",
                 })
@@ -96,7 +96,7 @@ export const registerNakafaMcpResources = Effect.fn(
         Effect.catchDefect(unexpectedResourceFailure)
       ),
     routerPath: CONTENT_ROUTER_PATH,
-    template: new McpSchema.ResourceTemplate({
+    template: McpSchema.ResourceTemplate.make({
       description: "Full Markdown for a readable Nakafa content ID.",
       mimeType: "text/markdown",
       name: "nakafa_content",
@@ -108,7 +108,7 @@ export const registerNakafaMcpResources = Effect.fn(
 
 /** Keeps a data failure's public message and nothing else of its cause. */
 function toInternalError(error: { readonly message: string }) {
-  return new McpSchema.InternalError({ message: error.message });
+  return McpSchema.InternalError.make({ message: error.message });
 }
 
 /** Logs a defect and answers the client with the generic failure, never the defect. */
@@ -116,7 +116,7 @@ const unexpectedResourceFailure = (defect: unknown) =>
   Effect.logError("Unexpected Nakafa MCP resource failure.", defect).pipe(
     Effect.andThen(
       Effect.fail(
-        new McpSchema.InternalError({ message: UNEXPECTED_FAILURE_MESSAGE })
+        McpSchema.InternalError.make({ message: UNEXPECTED_FAILURE_MESSAGE })
       )
     )
   );

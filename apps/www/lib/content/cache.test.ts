@@ -74,7 +74,7 @@ describe("content runtime cache", () => {
 
         expect(
           yield* invalidateContentCache("material").pipe(Effect.flip)
-        ).toEqual(new ContentCacheInvalidationError({ layer: "sitemap" }));
+        ).toEqual(ContentCacheInvalidationError.make({ layer: "sitemap" }));
       })
   );
   it.effect("keeps a failed Next invalidation in the typed error channel", () =>
@@ -85,7 +85,7 @@ describe("content runtime cache", () => {
 
       expect(
         yield* invalidateContentCache("material").pipe(Effect.flip)
-      ).toEqual(new ContentCacheInvalidationError({ layer: "next" }));
+      ).toEqual(ContentCacheInvalidationError.make({ layer: "next" }));
       expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
     })
   );

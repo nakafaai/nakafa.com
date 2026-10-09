@@ -37,7 +37,7 @@ function decodePromptProjection(artifact: PreviewArtifact) {
     artifact.projection,
     { onExcessProperty: "error" }
   ).pipe(
-    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
+    Effect.mapError(() => PreviewIntegrityError.make({ check: "projection" }))
   );
 }
 /** Decodes one answer projection without weakening the manifest contract. */
@@ -46,7 +46,7 @@ function decodeAnswerProjection(artifact: PreviewArtifact) {
     artifact.projection,
     { onExcessProperty: "error" }
   ).pipe(
-    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
+    Effect.mapError(() => PreviewIntegrityError.make({ check: "projection" }))
   );
 }
 /** Authenticates and executes an exact manifest-owned artifact reference. */
@@ -75,7 +75,7 @@ const readReadyAnswer = Effect.fn("NakafaContent.readReadyQuestionAnswer")(
     }
     const answerArtifact = manifest.artifacts[1];
     if (answerArtifact === undefined) {
-      return yield* new PreviewIntegrityError({ check: "artifact" });
+      return yield* PreviewIntegrityError.make({ check: "artifact" });
     }
     yield* decodeAnswerProjection(answerArtifact);
     const renderedAnswer = yield* executeArtifact(
@@ -147,10 +147,10 @@ export const readQuestionPreview = Effect.fn(
     return Option.none<QuestionPreviewContent>();
   }
   if (manifest.status === "pending") {
-    return yield* new PreviewPendingError({ revision: manifest.revision });
+    return yield* PreviewPendingError.make({ revision: manifest.revision });
   }
   if (manifest.status === "failed") {
-    return yield* new PreviewCompileError({
+    return yield* PreviewCompileError.make({
       code: manifest.failure.code,
       message: manifest.failure.message,
       revision: manifest.revision,

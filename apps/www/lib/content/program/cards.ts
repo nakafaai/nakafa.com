@@ -72,7 +72,7 @@ const selectMaterialRoutes = Effect.fn("NakafaProgram.selectMaterialRoutes")(
     if (currentParents.length === 1) {
       return materialGroup;
     }
-    return yield* new PublishedProjectionError({ appLocale, publicPath });
+    return yield* PublishedProjectionError.make({ appLocale, publicPath });
   }
 );
 
@@ -97,7 +97,7 @@ const readGroupMaterialPaths = Effect.fn(
     }
     hasMaterialContext = true;
     if (!context.canonicalPath) {
-      return yield* new PublishedProjectionError({ appLocale, publicPath });
+      return yield* PublishedProjectionError.make({ appLocale, publicPath });
     }
     const owned = yield* selectMaterialRoutes({
       canonicalPath: context.canonicalPath,
@@ -166,7 +166,7 @@ export const readPublishedMaterialCards = Effect.fn(
       continue;
     }
     if (!(description && Option.isSome(firstItem))) {
-      return yield* new PublishedProjectionError({
+      return yield* PublishedProjectionError.make({
         appLocale,
         publicPath: route.publicPath,
       });

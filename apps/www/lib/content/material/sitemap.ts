@@ -31,7 +31,7 @@ export const readPublishedMaterialBuckets = Effect.fn(
     }
   );
   if (!result.managed || activeReleaseId === null) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath: "sitemap.xml",
     });

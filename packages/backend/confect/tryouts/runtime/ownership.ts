@@ -16,7 +16,7 @@ export const TryoutSelectorReadErrorWire = publicFailure(
   TryoutSelectorReadError
 );
 export function selectorIntegrity(message: string) {
-  return new TryoutSelectorReadError({
+  return TryoutSelectorReadError.make({
     code: "TRYOUT_SELECTOR_INTEGRITY",
     message,
   });

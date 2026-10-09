@@ -178,7 +178,7 @@ describe("content runtime transport", () => {
 
       const failure = yield* runRetryRequest(requestJson().pipe(Effect.flip));
 
-      expect(failure).toEqual(new ContentTransportError({ reason: "body" }));
+      expect(failure).toEqual(ContentTransportError.make({ reason: "body" }));
       expect(fetchMock).toHaveBeenCalledTimes(3);
     })
   );
@@ -188,7 +188,7 @@ describe("content runtime transport", () => {
       fetchMock.mockResolvedValue(createResponse("{", 200));
 
       expect(yield* runRetryRequest(requestJson().pipe(Effect.flip))).toEqual(
-        new ContentTransportError({ reason: "json-syntax" })
+        ContentTransportError.make({ reason: "json-syntax" })
       );
       expect(fetchMock).toHaveBeenCalledOnce();
     })
@@ -235,7 +235,7 @@ describe("content runtime transport", () => {
           code: "[Request ID: private] Server Error",
         });
         expect(createContentContractError(response)).toEqual(
-          new ContentTransportError({ reason: "response-unmarked" })
+          ContentTransportError.make({ reason: "response-unmarked" })
         );
       })
   );
@@ -291,7 +291,7 @@ describe("content runtime transport", () => {
       expect(
         yield* runRetryRequest(requestResponse().pipe(Effect.flip))
       ).toEqual(
-        new ContentTransportError({
+        ContentTransportError.make({
           networkCodes: ["EPIPE"],
           reason: "fetch",
         })
@@ -307,7 +307,7 @@ describe("content runtime transport", () => {
       );
 
       expect(yield* requestResponse().pipe(Effect.flip)).toEqual(
-        new ContentTransportError({ networkCodes: [], reason: "fetch" })
+        ContentTransportError.make({ networkCodes: [], reason: "fetch" })
       );
       expect(fetchMock).toHaveBeenCalledOnce();
     })
@@ -316,7 +316,7 @@ describe("content runtime transport", () => {
   it.live("fails without a request when its endpoint is not a URL", () =>
     Effect.gen(function* () {
       expect(yield* requestResponse("not a URL").pipe(Effect.flip)).toEqual(
-        new ContentTransportError({ networkCodes: [], reason: "fetch" })
+        ContentTransportError.make({ networkCodes: [], reason: "fetch" })
       );
       expect(fetchMock).not.toHaveBeenCalled();
     })
@@ -334,7 +334,7 @@ describe("content runtime transport", () => {
         expect(
           yield* runRetryRequest(requestResponse().pipe(Effect.flip), 31.5)
         ).toEqual(
-          new ContentTransportError({ networkCodes: [], reason: "fetch" })
+          ContentTransportError.make({ networkCodes: [], reason: "fetch" })
         );
         expect(fetchMock).toHaveBeenCalledTimes(3);
         expect(attemptSignal(0)?.aborted).toBe(true);
@@ -368,7 +368,7 @@ describe("content runtime transport", () => {
       expect(
         yield* runRetryRequest(requestResponse().pipe(Effect.flip), 11)
       ).toEqual(
-        new ContentTransportError({ networkCodes: [], reason: "fetch" })
+        ContentTransportError.make({ networkCodes: [], reason: "fetch" })
       );
       expect(fetchMock).toHaveBeenCalledTimes(2);
     })
@@ -389,7 +389,7 @@ describe("content runtime transport", () => {
         // Three attempts of ten seconds each, with both retry delays between them.
         expect(
           yield* runRetryRequest(requestJson().pipe(Effect.flip), 32)
-        ).toEqual(new ContentTransportError({ reason: "body" }));
+        ).toEqual(ContentTransportError.make({ reason: "body" }));
         expect(fetchMock).toHaveBeenCalledTimes(3);
       })
   );

@@ -50,7 +50,7 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
   locale: Locale
 ) {
   return yield* Effect.tryPromise({
-    catch: (cause) => new CacheFailure({ cause, owner: "published" }),
+    catch: (cause) => CacheFailure.make({ cause, owner: "published" }),
     try: () => readPublishedMarkdown(source, locale),
   });
 });
@@ -64,7 +64,7 @@ const readCachedSectionIndex = Effect.fn("www.llms.markdown.index")(function* ({
       getCachedLlmsSectionIndexText({
         cleanSlug: `llms/${locale}/${cleanSlug}`,
       }),
-    catch: (cause) => new CacheFailure({ cause, owner: "index" }),
+    catch: (cause) => CacheFailure.make({ cause, owner: "index" }),
   });
 });
 /**

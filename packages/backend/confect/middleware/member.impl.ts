@@ -41,11 +41,11 @@ export const member = Effect.fn("tenancy.member")(function* <E>(
       ),
       Effect.catchTags({
         DocumentDecodeError: Effect.die,
-        GetByIndexFailure: () => Effect.fail(new NotMember()),
+        GetByIndexFailure: () => Effect.fail(NotMember.make()),
       }),
       Effect.filterOrFail(
         (found) => found.person.status === "active",
-        () => new NotMember()
+        () => NotMember.make()
       )
     );
   return yield* effect.pipe(

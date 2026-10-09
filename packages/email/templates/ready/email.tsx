@@ -144,18 +144,17 @@ export const renderAccountReadyEmail = Effect.fn("email.accountReady.render")(
     const props = yield* Schema.decodeEffect(AccountReadyEmailInputSchema)(
       input
     ).pipe(
-      Effect.mapError(
-        () =>
-          new AccountReadyEmailInputError({
-            code: "ACCOUNT_READY_EMAIL_INPUT_INVALID",
-            message: "Account-ready email input is invalid.",
-          })
+      Effect.mapError(() =>
+        AccountReadyEmailInputError.make({
+          code: "ACCOUNT_READY_EMAIL_INPUT_INVALID",
+          message: "Account-ready email input is invalid.",
+        })
       )
     );
     const copy = getAccountReadyEmailCopy(props.locale);
     const email = <AccountReadyEmail {...props} />;
     const renderFailure = () =>
-      new AccountReadyEmailRenderError({
+      AccountReadyEmailRenderError.make({
         code: "ACCOUNT_READY_EMAIL_RENDER_FAILED",
         message: "Unable to render the account-ready email.",
       });

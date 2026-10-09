@@ -19,7 +19,7 @@ const get = FunctionImpl.make(
         Effect.map(tenantProfile),
         Effect.catchTags({
           DocumentDecodeError: Effect.die,
-          GetByIndexFailure: () => Effect.fail(new TenantNotFound()),
+          GetByIndexFailure: () => Effect.fail(TenantNotFound.make()),
         })
       );
   })

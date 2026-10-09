@@ -67,21 +67,19 @@ export const sharedPackageName = Effect.fn(
   const source = yield* fileSystem
     .readFileString(path.join(root, SHARED_ROOT, PACKAGE_FILE))
     .pipe(
-      Effect.mapError(
-        (cause) =>
-          new SharedPackageError({
-            cause,
-            message: `${SHARED_ROOT}${PACKAGE_FILE} is missing or unreadable, so the compiler configuration policy cannot name the shared package.`,
-          })
+      Effect.mapError((cause) =>
+        SharedPackageError.make({
+          cause,
+          message: `${SHARED_ROOT}${PACKAGE_FILE} is missing or unreadable, so the compiler configuration policy cannot name the shared package.`,
+        })
       )
     );
   const manifest = yield* Schema.decodeEffect(PackageManifest)(source).pipe(
-    Effect.mapError(
-      (cause) =>
-        new SharedPackageError({
-          cause,
-          message: `${SHARED_ROOT}${PACKAGE_FILE} must be JSON with a string name, so the compiler configuration policy cannot name the shared package.`,
-        })
+    Effect.mapError((cause) =>
+      SharedPackageError.make({
+        cause,
+        message: `${SHARED_ROOT}${PACKAGE_FILE} must be JSON with a string name, so the compiler configuration policy cannot name the shared package.`,
+      })
     )
   );
   return manifest.name;

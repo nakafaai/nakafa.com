@@ -25,7 +25,7 @@ function isValidSecret(value: string) {
 const credentialDigest = Effect.fn("contentRelease.credentialDigest")(
   (value: string) =>
     Effect.tryPromise({
-      catch: () => new HttpSecretError(),
+      catch: () => HttpSecretError.make(),
       try: () =>
         crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
     })

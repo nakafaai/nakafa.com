@@ -135,7 +135,7 @@ const sumMarks = Effect.fn("tryouts.runtime.sumMarks")(function* (
   const earned = yield* Effect.forEach(answers, (answer) =>
     answer.marks === undefined
       ? Effect.fail(
-          new TryoutRuntimeError({
+          TryoutRuntimeError.make({
             code: "TRYOUT_SCORE_SOURCE_MISMATCH",
             message: "Penalized try-out section is missing its signed marks.",
           })
@@ -207,7 +207,7 @@ export const getSectionScoreSnapshot = Effect.fn(
     return snapshot;
   }
   if (score.theta === undefined || score.thetaSE === undefined) {
-    return yield* new TryoutRuntimeError({
+    return yield* TryoutRuntimeError.make({
       code: "TRYOUT_SCORE_ESTIMATE_INCOMPLETE",
       message: "Try-out score estimate is missing theta or standard error.",
     });

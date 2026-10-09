@@ -31,7 +31,7 @@ export const groupPathOf = Effect.fn("RefsPaths.groupPathOf")(function* (
     !body.endsWith(SPEC_SUFFIX) ||
     !Arr.every(segments, (segment) => segment.length > 0)
   ) {
-    return yield* new RefsSourceError({
+    return yield* RefsSourceError.make({
       message: `Leaf import "${specifier}" must name a spec file one folder above _generated, such as "../nina/turns.spec".`,
     });
   }
@@ -55,7 +55,7 @@ const leafPath = Effect.fn("RefsPaths.leafPath")(function* (
   const derivedPath = Arr.join(segments, ".");
   const nestedPath = Arr.join(leaf.nestedSegments, ".");
   if (derivedPath !== nestedPath) {
-    return yield* new RefsNestingError({
+    return yield* RefsNestingError.make({
       derivedPath,
       nestedPath,
       specifier: leaf.specifier,

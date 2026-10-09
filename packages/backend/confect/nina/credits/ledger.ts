@@ -41,18 +41,17 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
     const ctx = yield* MutationCtxService;
     const now = yield* Clock.currentTimeMillis;
     const state = yield* resolveEffectiveCreditState(user, now).pipe(
-      Effect.mapError(
-        () =>
-          new NinaCreditError({
-            code: "NINA_CREDIT_IO_FAILED",
-            message: "Unable to resolve chat credits.",
-          })
+      Effect.mapError(() =>
+        NinaCreditError.make({
+          code: "NINA_CREDIT_IO_FAILED",
+          message: "Unable to resolve chat credits.",
+        })
       )
     );
     const model: ModelKey = modelId;
     const credits = responseCredits[model];
     if (state.credits < credits) {
-      return yield* new NinaCreditError({
+      return yield* NinaCreditError.make({
         code: "INSUFFICIENT_CREDITS",
         message: "Not enough credits to start this response.",
       });
@@ -64,13 +63,13 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
           key: user._id,
         }),
       catch: () =>
-        new NinaCreditError({
+        NinaCreditError.make({
           code: "NINA_CREDIT_IO_FAILED",
           message: "Unable to check chat admission quota.",
         }),
     });
     if (!quota.ok) {
-      return yield* new NinaCreditError({
+      return yield* NinaCreditError.make({
         code: "RATE_LIMITED",
         message: "Too many chat requests. Try again shortly.",
       });
@@ -118,12 +117,11 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
   },
   // Translate native storage defects at this ledger boundary without catching
   // expected insufficient-credit, quota, or ownership failures.
-  Effect.catchDefect(
-    () =>
-      new NinaCreditError({
-        code: "NINA_CREDIT_IO_FAILED",
-        message: "Unable to reserve chat credits.",
-      })
+  Effect.catchDefect(() =>
+    NinaCreditError.make({
+      code: "NINA_CREDIT_IO_FAILED",
+      message: "Unable to reserve chat credits.",
+    })
   )
 );
 
@@ -142,12 +140,11 @@ export const refundCredits = Effect.fn("nina.credits.refund")(
       );
     if (user && !isAccountDeletionPending(user)) {
       const state = yield* resolveEffectiveCreditState(user, now).pipe(
-        Effect.mapError(
-          () =>
-            new NinaCreditError({
-              code: "NINA_CREDIT_IO_FAILED",
-              message: "Unable to release chat credits.",
-            })
+        Effect.mapError(() =>
+          NinaCreditError.make({
+            code: "NINA_CREDIT_IO_FAILED",
+            message: "Unable to release chat credits.",
+          })
         )
       );
       const resetGrant = getCreditResetGrantTransaction(user, state);
@@ -189,11 +186,10 @@ export const refundCredits = Effect.fn("nina.credits.refund")(
         .pipe(Effect.orDie);
     }
   },
-  Effect.catchDefect(
-    () =>
-      new NinaCreditError({
-        code: "NINA_CREDIT_IO_FAILED",
-        message: "Unable to release chat credits.",
-      })
+  Effect.catchDefect(() =>
+    NinaCreditError.make({
+      code: "NINA_CREDIT_IO_FAILED",
+      message: "Unable to release chat credits.",
+    })
   )
 );

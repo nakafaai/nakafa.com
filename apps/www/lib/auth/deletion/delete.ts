@@ -77,13 +77,12 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     const { attemptId, phase: startPhase } = attempt;
     const proveCommittedDeletion = () =>
       reconcile(attemptId).pipe(
-        Effect.mapError(
-          () =>
-            new AccountDeletionRequestUncertain({
-              attemptId,
-              code: accountDeletionErrorCode.requestUncertain,
-              phase: accountDeletionRequestPhase.deletion,
-            })
+        Effect.mapError(() =>
+          AccountDeletionRequestUncertain.make({
+            attemptId,
+            code: accountDeletionErrorCode.requestUncertain,
+            phase: accountDeletionRequestPhase.deletion,
+          })
         ),
         Effect.map(
           (status) => status === accountDeletionAttemptStatus.committed
@@ -117,7 +116,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
       Effect.tryPromise({
         try: () => request(attemptId),
         catch: () =>
-          new AccountDeletionRequestUncertain({
+          AccountDeletionRequestUncertain.make({
             attemptId,
             code: accountDeletionErrorCode.requestUncertain,
             phase: accountDeletionRequestPhase.deletion,
@@ -144,7 +143,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     }
     if (!result.error) {
       yield* resetPreparedAttempt();
-      return yield* new AccountDeletionFailed({
+      return yield* AccountDeletionFailed.make({
         code: accountDeletionErrorCode.failed,
       });
     }
@@ -153,7 +152,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
       result.error.code === ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE
     ) {
       yield* resetPreparedAttempt();
-      return yield* new AccountDeletionRequestUncertain({
+      return yield* AccountDeletionRequestUncertain.make({
         attemptId,
         code: accountDeletionErrorCode.requestUncertain,
         phase: accountDeletionRequestPhase.preparation,
@@ -161,17 +160,17 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     }
     if (result.error.code === betterAuthSessionExpiredCode) {
       yield* resetPreparedAttempt();
-      return yield* new AccountDeletionSessionExpired({
+      return yield* AccountDeletionSessionExpired.make({
         code: accountDeletionErrorCode.sessionExpired,
       });
     }
     if (result.error.code === ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE) {
       yield* resetPreparedAttempt();
-      return yield* new AccountDeletionSchoolMemberRequired({
+      return yield* AccountDeletionSchoolMemberRequired.make({
         code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
       });
     }
-    return yield* new AccountDeletionRequestUncertain({
+    return yield* AccountDeletionRequestUncertain.make({
       attemptId,
       code: accountDeletionErrorCode.requestUncertain,
       phase: accountDeletionRequestPhase.deletion,

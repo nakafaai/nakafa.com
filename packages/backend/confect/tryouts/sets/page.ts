@@ -34,7 +34,7 @@ export const paginatePublishedSets = Effect.fn(
 ) {
   const snapshotId = catalog.snapshotId;
   if (!(Number.isSafeInteger(pagination.numItems) && pagination.numItems > 0)) {
-    return yield* new PublishedSetPaginationError({
+    return yield* PublishedSetPaginationError.make({
       code: "INVALID_TRYOUT_SET_PAGE_SIZE",
       message: "The try-out set page size is invalid.",
     });
@@ -106,7 +106,7 @@ function decodeCursor(
 }
 /** Creates the cursor signal recognized by Convex's paginated React hook. */
 function cursorFailure() {
-  return new PublishedSetPaginationError({
+  return PublishedSetPaginationError.make({
     code: "INVALID_TRYOUT_SET_CURSOR",
     message: "InvalidCursor: The try-out set pagination state changed.",
   });

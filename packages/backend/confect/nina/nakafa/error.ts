@@ -11,7 +11,7 @@ export class NakafaGenerationError extends Schema.TaggedError<NakafaGenerationEr
 
 /** Maps an unknown AI SDK failure into the Nakafa capability error contract. */
 export function makeNakafaGenerationError(cause: unknown) {
-  return new NakafaGenerationError({
+  return NakafaGenerationError.make({
     cause,
     message: "Nakafa generation failed.",
   });

@@ -93,7 +93,7 @@ export const readBounds = Effect.fn("NakafaE2E.readBounds")(function* (
 ) {
   const bounds = yield* Effect.promise(() => locator.boundingBox());
   if (!bounds) {
-    return yield* new SurfaceBoundsMissing({ surface });
+    return yield* SurfaceBoundsMissing.make({ surface });
   }
   return bounds;
 });

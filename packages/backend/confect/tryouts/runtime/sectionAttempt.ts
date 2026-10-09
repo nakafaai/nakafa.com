@@ -35,7 +35,7 @@ export const requireInternalEntrySection = Effect.fn(
     Arr.findFirst(sections, (row) => row.sectionKey === sectionKey)
   );
   if (section?.visibility !== "internal-entry") {
-    return yield* new TryoutRuntimeError({
+    return yield* TryoutRuntimeError.make({
       code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",
       message: "Try-out entry section is not available for this set.",
     });
@@ -61,7 +61,7 @@ export const requireActiveSectionAttempt = Effect.fn(
     sectionKey: args.sectionKey,
   });
   if (section?.status !== "in-progress") {
-    return yield* new TryoutAttemptStateError({
+    return yield* TryoutAttemptStateError.make({
       code: "TRYOUT_SECTION_NOT_ACTIVE",
       message: "Try-out section is not active.",
     });
@@ -80,13 +80,13 @@ export const startSectionAttempt = Effect.fn(
   const scheduler = yield* Scheduler;
   const writer = yield* DatabaseWriter;
   if (args.attempt.status !== "in-progress") {
-    return yield* new TryoutAttemptStateError({
+    return yield* TryoutAttemptStateError.make({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt is not active.",
     });
   }
   if (args.now >= args.attempt.expiresAt) {
-    return yield* new TryoutAttemptStateError({
+    return yield* TryoutAttemptStateError.make({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt time has expired.",
     });
@@ -99,13 +99,13 @@ export const startSectionAttempt = Effect.fn(
     return startSectionResult;
   }
   if (existing?.status === "in-progress") {
-    return yield* new TryoutAttemptStateError({
+    return yield* TryoutAttemptStateError.make({
       code: "TRYOUT_SECTION_NOT_ACTIVE",
       message: "Try-out section time has expired.",
     });
   }
   if (existing) {
-    return yield* new TryoutRuntimeError({
+    return yield* TryoutRuntimeError.make({
       code: "TRYOUT_SECTION_ALREADY_FINISHED",
       message: "Try-out section already finished.",
     });
@@ -200,7 +200,7 @@ const requireNoParallelSectionTimer = Effect.fn(
       });
       continue;
     }
-    return yield* new TryoutRuntimeError({
+    return yield* TryoutRuntimeError.make({
       code: "TRYOUT_SECTION_IN_PROGRESS",
       message: "Another try-out section is already in progress.",
     });
@@ -213,7 +213,7 @@ const requireNoParallelSectionTimer = Effect.fn(
       Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
     );
   if (currentAttempt.status !== "in-progress") {
-    return yield* new TryoutAttemptStateError({
+    return yield* TryoutAttemptStateError.make({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt is not active.",
     });

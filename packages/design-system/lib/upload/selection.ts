@@ -50,10 +50,10 @@ const validateFile = Effect.fn("fileUpload.validateFile")(function* (
   maxSize: number
 ) {
   if (file.size > maxSize) {
-    return yield* new FileSizeError({ maxSize });
+    return yield* FileSizeError.make({ maxSize });
   }
   if (!acceptsFile(file, accept)) {
-    return yield* new FileTypeError({ fileName: file.name });
+    return yield* FileTypeError.make({ fileName: file.name });
   }
   return file;
 });
@@ -75,7 +75,7 @@ export const selectFileBatch = Effect.fn("fileUpload.selectBatch")(function* ({
   multiple: boolean;
 }) {
   if (multiple && currentFiles.length + files.length > maxFiles) {
-    return yield* new FileCountError({ maxFiles });
+    return yield* FileCountError.make({ maxFiles });
   }
 
   const candidates = Arr.filter(

@@ -58,7 +58,7 @@ describe("Nina taxonomy evidence", () => {
   it("does not turn a publication failure into an empty inventory", async () => {
     vi.mocked(getNakafaTaxonomy).mockReturnValue(
       Effect.fail(
-        new NakafaAgentDataReadError({
+        NakafaAgentDataReadError.make({
           message: "Publication verification failed.",
         })
       )

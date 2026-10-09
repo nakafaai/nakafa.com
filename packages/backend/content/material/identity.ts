@@ -34,13 +34,11 @@ const decodeMaterialIdentity = Effect.fn(
       input.expectedSectionKey
     ),
   }).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_LIMIT",
-          message:
-            "Material identity must satisfy the current Aksara contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_LIMIT",
+        message: "Material identity must satisfy the current Aksara contract.",
+      })
     )
   );
 });

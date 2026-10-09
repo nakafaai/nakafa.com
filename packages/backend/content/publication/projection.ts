@@ -53,12 +53,11 @@ const decodeContentHead = Effect.fn("contentRelease.decodeContentHead")(
       sourceHash: head.sourceHash,
       sourcePath: head.sourcePath,
     }).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Content version ${head.contentKey}/${head.artifactLocale}/${head.sequence} violates the content-head contract.`,
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Content version ${head.contentKey}/${head.artifactLocale}/${head.sequence} violates the content-head contract.`,
+        })
       )
     );
   }

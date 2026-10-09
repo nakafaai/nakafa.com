@@ -17,7 +17,7 @@ export class AnalyticsConsentStorageFailed extends Schema.TaggedError<AnalyticsC
 ) {}
 
 const analyticsConsentStorageFailure = () =>
-  new AnalyticsConsentStorageFailed({
+  AnalyticsConsentStorageFailed.make({
     code: analyticsConsentStorageFailedCode,
   });
 

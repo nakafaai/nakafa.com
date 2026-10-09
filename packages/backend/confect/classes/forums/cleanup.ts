@@ -21,7 +21,7 @@ const POST_REPLY_BATCH_SIZE = 25;
 /** Typed failure for bounded forum-owned data cleanup. */
 
 function toForumCleanupError(error: unknown) {
-  return new ForumCleanupError({
+  return ForumCleanupError.make({
     code: FORUM_CLEANUP_FAILED_CODE,
     message: getUnknownErrorMessage(error),
   });

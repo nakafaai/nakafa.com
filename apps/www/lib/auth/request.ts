@@ -23,7 +23,7 @@ export class AuthRequestDeadline extends Schema.TaggedError<AuthRequestDeadline>
 const abortedByCaller = (caller: AbortSignal) =>
   Effect.callback<never, AuthRequestFailed>((resume) => {
     const abort = () =>
-      resume(Effect.fail(new AuthRequestFailed({ cause: caller.reason })));
+      resume(Effect.fail(AuthRequestFailed.make({ cause: caller.reason })));
     if (caller.aborted) {
       abort();
       return;
@@ -51,11 +51,11 @@ export const requestWithDeadline = Effect.fn("www.auth.requestWithDeadline")(
   ) {
     const request = Effect.tryPromise({
       try: (signal) => send(input, { ...init, signal }).then(bufferResponse),
-      catch: (cause) => new AuthRequestFailed({ cause }),
+      catch: (cause) => AuthRequestFailed.make({ cause }),
     }).pipe(
       Effect.timeoutOrElse({
         duration: NETWORK_ATTEMPT_DEADLINE,
-        orElse: () => Effect.fail(new AuthRequestDeadline()),
+        orElse: () => Effect.fail(AuthRequestDeadline.make()),
       })
     );
     const answer = init.signal

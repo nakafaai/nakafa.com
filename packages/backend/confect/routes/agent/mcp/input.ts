@@ -88,7 +88,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
 
 /** Creates a sanitized body failure without retaining request bytes. */
 function bodyError(reason: McpRequestBodyError["reason"]) {
-  return new McpRequestBodyError({
+  return McpRequestBodyError.make({
     reason,
   });
 }

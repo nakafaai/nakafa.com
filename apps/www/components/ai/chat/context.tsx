@@ -266,7 +266,7 @@ function useChatState(chatId: Id<"chats">) {
         Effect.tryPromise({
           try: () => cancelTurn({ chatId }),
           catch: () =>
-            new NinaConnectionError({
+            NinaConnectionError.make({
               code: "NINA_CONNECTION_FAILED",
               message: "Nina cancellation could not be confirmed.",
             }),

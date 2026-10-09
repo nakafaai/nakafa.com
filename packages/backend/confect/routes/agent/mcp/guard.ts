@@ -91,7 +91,7 @@ const readTrustedOrigins = Effect.fn("agent.mcp.readTrustedOrigins")(
   }
 );
 function invalidOrigins() {
-  return new NakafaAgentDataReadError({
+  return NakafaAgentDataReadError.make({
     message: "The MCP browser Origin boundary is unavailable.",
   });
 }

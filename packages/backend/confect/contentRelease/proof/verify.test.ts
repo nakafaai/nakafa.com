@@ -83,7 +83,7 @@ const runProof = Effect.fn("contentRelease.proof.verify.test.runProof")(
     const resolver = options.resolver ?? TEST_KEY_RESOLVER;
     return yield* Effect.tryPromise({
       catch: (cause) =>
-        new ObservedProofFailure({
+        ObservedProofFailure.make({
           cause,
         }),
       try: () => recomputeContentProof(t, hash, proofReleaseId, resolver),

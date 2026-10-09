@@ -24,11 +24,11 @@ function decodeReleasePin(
     actual
   );
   if (Result.isFailure(decoded)) {
-    return Result.fail(new PublishedProjectionError(identity));
+    return Result.fail(PublishedProjectionError.make(identity));
   }
   if (expected !== undefined && decoded.success !== expected) {
     return Result.fail(
-      new PublishedReleaseMismatchError({
+      PublishedReleaseMismatchError.make({
         actualReleaseId: decoded.success,
         expectedReleaseId: expected,
       })

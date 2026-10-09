@@ -27,11 +27,13 @@ export const resolveExponential = Effect.fn("Exponential.resolve")(function* (
     n = 11,
     mode = "continuous",
   } = yield* Schema.decodeEffect(ExponentialSchema)(input).pipe(
-    Effect.mapError((error) => new ExponentialError({ message: error.message }))
+    Effect.mapError((error) =>
+      ExponentialError.make({ message: error.message })
+    )
   );
   const values = Array.from({ length: n }, (_, x) => ({ x, y: p * a ** x }));
   if (Arr.some(values, ({ y }) => !Number.isFinite(y))) {
-    return yield* new ExponentialError({
+    return yield* ExponentialError.make({
       message: "The exponential model exceeds finite chart values.",
     });
   }

@@ -26,7 +26,7 @@ const initializeMermaid = Effect.fn("designSystem.mermaid.initialize")(
     const mermaidModule = yield* Effect.tryPromise({
       try: () => import("mermaid"),
       catch: (cause) =>
-        new MermaidRenderError({ cause, operation: "initialize" }),
+        MermaidRenderError.make({ cause, operation: "initialize" }),
     });
     const mermaid = mermaidModule.default;
     const config: MermaidConfig = {
@@ -46,7 +46,7 @@ const initializeMermaid = Effect.fn("designSystem.mermaid.initialize")(
     yield* Effect.try({
       try: () => mermaid.initialize(securedConfig),
       catch: (cause) =>
-        new MermaidRenderError({ cause, operation: "initialize" }),
+        MermaidRenderError.make({ cause, operation: "initialize" }),
     });
     return mermaid;
   }
@@ -58,7 +58,7 @@ export const renderMermaid = Effect.fn("designSystem.mermaid.render")(
     const mermaid = yield* initializeMermaid(config);
     return yield* Effect.tryPromise({
       try: () => mermaid.render(renderId, chart),
-      catch: (cause) => new MermaidRenderError({ cause, operation: "render" }),
+      catch: (cause) => MermaidRenderError.make({ cause, operation: "render" }),
     });
   }
 );

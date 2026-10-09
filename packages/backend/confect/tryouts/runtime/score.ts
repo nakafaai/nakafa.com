@@ -71,7 +71,7 @@ type AttemptScoreOwner = Pick<
 
 /** Hides persistence diagnostics from the attempt ownership boundary. */
 function toAttemptReadError(cause: unknown) {
-  return new TryoutRuntimeError({
+  return TryoutRuntimeError.make({
     cause,
     code: "TRYOUT_RUNTIME_FAILED",
     message: "Unable to load try-out attempt.",
@@ -121,7 +121,7 @@ export const requireOwnedAttempt = Effect.fn(
       Effect.catchDefect((cause) => Effect.fail(toAttemptReadError(cause)))
     );
   if (!attempt || attempt.userId !== args.userId) {
-    return yield* new TryoutAttemptStateError({
+    return yield* TryoutAttemptStateError.make({
       code: "TRYOUT_ATTEMPT_NOT_FOUND",
       message: "Try-out attempt not found.",
     });
@@ -202,7 +202,7 @@ export const finalizeAttemptScore = Effect.fn(
     };
   }
   if (args.attempt.status !== "in-progress") {
-    return yield* new TryoutAttemptStateError({
+    return yield* TryoutAttemptStateError.make({
       code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       message: "Try-out attempt is not active.",
     });
@@ -316,7 +316,7 @@ const validateScoreSource = Effect.fn("tryouts.runtime.validateScoreSource")(
       source.attemptId !== attempt._id ||
       source.scoringStrategy !== attempt.scoringStrategy
     ) {
-      return yield* new TryoutRuntimeError({
+      return yield* TryoutRuntimeError.make({
         code: "TRYOUT_SCORE_SOURCE_MISMATCH",
         message: "Try-out score source does not match the frozen attempt.",
       });

@@ -86,7 +86,7 @@ export const settlePrefetch = Effect.fn("NakafaE2E.settlePrefetch")(function* <
             return;
           }
           if (now - startedAt > readinessTimeoutMilliseconds) {
-            return yield* new PrefetchSettleTimeout({
+            return yield* PrefetchSettleTimeout.make({
               pending: Arr.map(
                 [
                   ...tracker.pendingRequests("javascript"),

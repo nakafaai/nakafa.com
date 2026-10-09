@@ -13,12 +13,11 @@ export const createForumAttachmentUploadUrl = Effect.fn(
   uploadToken: string
 ) {
   const siteUrl = yield* Config.URL("CONVEX_SITE_URL").pipe(
-    Effect.mapError(
-      () =>
-        new ForumAttachmentUploadConfigError({
-          code: "FORUM_ATTACHMENT_UPLOAD_CONFIG_INVALID",
-          message: "Forum attachment upload is not configured.",
-        })
+    Effect.mapError(() =>
+      ForumAttachmentUploadConfigError.make({
+        code: "FORUM_ATTACHMENT_UPLOAD_CONFIG_INVALID",
+        message: "Forum attachment upload is not configured.",
+      })
     )
   );
   const url = new URL(

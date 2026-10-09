@@ -21,7 +21,7 @@ const startAnalyticsErasure: StartAnalyticsErasure = Effect.fn(
   const ctx = yield* ActionCtxService;
   return yield* Effect.tryPromise({
     catch: (error) =>
-      new AnalyticsErasureRequestError({
+      AnalyticsErasureRequestError.make({
         code: analyticsErasureRequestFailedCode,
         message: `Unable to start durable analytics erasure: ${getUnknownErrorMessage(error)}`,
       }),

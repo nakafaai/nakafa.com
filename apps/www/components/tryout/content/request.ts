@@ -55,5 +55,5 @@ export const makeTryoutRuntimeRequest = Effect.fn(
 
 /** Creates one consistent signed runtime verification failure. */
 function runtimeIntegrity(cause: string) {
-  return new ContentRuntimeVerificationError({ cause });
+  return ContentRuntimeVerificationError.make({ cause });
 }

@@ -49,13 +49,13 @@ describe("content publication response encoding", () => {
       expect(Exit.isFailure(invalid)).toBe(true);
       if (Exit.isFailure(invalid)) {
         expect(Cause.findDefect(invalid.cause)).toEqual(
-          Result.succeed(new PublicationResponseDefect({ reason: "contract" }))
+          Result.succeed(PublicationResponseDefect.make({ reason: "contract" }))
         );
       }
       expect(Exit.isFailure(oversized)).toBe(true);
       if (Exit.isFailure(oversized)) {
         expect(Cause.findDefect(oversized.cause)).toEqual(
-          Result.succeed(new PublicationResponseDefect({ reason: "size" }))
+          Result.succeed(PublicationResponseDefect.make({ reason: "size" }))
         );
       }
     })

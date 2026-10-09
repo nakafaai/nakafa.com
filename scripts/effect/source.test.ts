@@ -70,9 +70,9 @@ const runGit = Effect.fn("EffectSourceTest.runGit")(function* (
         { concurrency: 2 }
       );
     })
-  ).pipe(Effect.mapError((cause) => new GitFixtureError({ cause, message })));
+  ).pipe(Effect.mapError((cause) => GitFixtureError.make({ cause, message })));
   if (exitCode !== 0) {
-    return yield* new GitFixtureError({ cause: exitCode, message });
+    return yield* GitFixtureError.make({ cause: exitCode, message });
   }
   return stdout.trim();
 });

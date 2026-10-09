@@ -15,7 +15,7 @@ import SessionMiddleware from "@repo/backend/confect/middleware/session.spec";
 import { Effect } from "effect";
 
 const authReadFailure = () =>
-  new AuthReadError({
+  AuthReadError.make({
     code: "AUTH_READ_FAILED",
     message: "Unable to read authentication state.",
   });

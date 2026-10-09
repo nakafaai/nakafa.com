@@ -177,7 +177,7 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
           assert(Predicate.isObject(encodedArgs));
           return owned.query(functionReference, encodedArgs);
         },
-        (cause) => new HttpClient.HttpClientError({ cause })
+        (cause) => HttpClient.HttpClientError.make({ cause })
       );
     });
     const question = yield* Effect.fromNullishOr(access.questions[0]);
@@ -201,7 +201,7 @@ beforeEach(() => {
   tokenMock.mockReset().mockResolvedValue("technical-session-token");
   runtimeSiteMock.mockReset().mockReturnValue(siteUrl);
   runtimeKeysMock.mockReset().mockImplementation(() => {
-    throw new ContentRuntimeConfigurationError({
+    throw ContentRuntimeConfigurationError.make({
       key: "CONTENT_RUNTIME_TOKEN",
     });
   });
@@ -492,7 +492,7 @@ describe("signed try-out execution", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* readOwnedFixture();
-        const cause = new HttpClient.HttpClientError({
+        const cause = HttpClient.HttpClientError.make({
           cause: new TypeError("Authorization query unavailable."),
         });
         queryMock.mockReturnValueOnce(Effect.fail(cause));

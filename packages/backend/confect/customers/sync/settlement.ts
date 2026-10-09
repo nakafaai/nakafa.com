@@ -34,7 +34,7 @@ export const settleCustomerSync = Effect.fn(
     yield* operations.deletePolarCustomer();
     yield* operations.deleteLocalCustomer();
   }
-  return yield* new UserNotFound({
+  return yield* UserNotFound.make({
     code: userNotFoundCode,
     message: `User not found for userId: ${userId}`,
   });

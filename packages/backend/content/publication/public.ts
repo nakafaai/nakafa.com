@@ -98,12 +98,11 @@ export const readSelectedPublicRuntime = Effect.fn(
   const sourcePath = yield* Schema.decodeEffect(CorpusSourcePathSchema)(
     selected.sourcePath
   ).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "The selected public source path is invalid.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "The selected public source path is invalid.",
+      })
     )
   );
   if (

@@ -27,7 +27,7 @@ export function validateResponseBytes(source: string) {
   return byteLength <= MAX_PUBLICATION_RESPONSE_BYTES
     ? Effect.void
     : Effect.die(
-        new PublicationResponseDefect({
+        PublicationResponseDefect.make({
           reason: "size",
         })
       );
@@ -44,7 +44,7 @@ export const encodePublicationResult = Effect.fn(
   ).pipe(
     Effect.catch(() =>
       Effect.die(
-        new PublicationResponseDefect({
+        PublicationResponseDefect.make({
           reason: "contract",
         })
       )

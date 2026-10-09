@@ -18,23 +18,21 @@ export const readPackageVersion = Effect.fn("NakafaCli.readPackageVersion")(
     const source = yield* fileSystem
       .readFileString(fileURLToPath(packageUrl))
       .pipe(
-        Effect.mapError(
-          (cause) =>
-            new CliStartupError({
-              cause,
-              message: "Unable to read the Nakafa CLI package metadata.",
-            })
+        Effect.mapError((cause) =>
+          CliStartupError.make({
+            cause,
+            message: "Unable to read the Nakafa CLI package metadata.",
+          })
         )
       );
     const metadata = yield* Schema.decodeEffect(
       Schema.fromJsonString(PackageMetadataSchema)
     )(source).pipe(
-      Effect.mapError(
-        (cause) =>
-          new CliStartupError({
-            cause,
-            message: "The Nakafa CLI package metadata is invalid.",
-          })
+      Effect.mapError((cause) =>
+        CliStartupError.make({
+          cause,
+          message: "The Nakafa CLI package metadata is invalid.",
+        })
       )
     );
     return metadata.version;

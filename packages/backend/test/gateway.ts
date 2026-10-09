@@ -33,49 +33,49 @@ export const GatewayTest = Layer.effect(
  * carry none.
  */
 export const failures = {
-  "rate-limit": new GatewayFailure({
+  "rate-limit": GatewayFailure.make({
     reason: "rate-limit",
     status: 429,
     retryAfter: 2,
     retryable: true,
   }),
-  quota: new GatewayFailure({
+  quota: GatewayFailure.make({
     reason: "quota",
     status: 402,
     retryable: false,
   }),
-  auth: new GatewayFailure({
+  auth: GatewayFailure.make({
     reason: "auth",
     status: 401,
     retryable: false,
   }),
-  configuration: new GatewayFailure({
+  configuration: GatewayFailure.make({
     reason: "configuration",
     status: 404,
     retryable: false,
   }),
-  invalid: new GatewayFailure({
+  invalid: GatewayFailure.make({
     reason: "invalid",
     status: 400,
     retryable: false,
     type: "invalid_request_error",
   }),
-  "too-large": new GatewayFailure({
+  "too-large": GatewayFailure.make({
     reason: "too-large",
     status: 413,
     retryable: false,
   }),
-  timeout: new GatewayFailure({
+  timeout: GatewayFailure.make({
     reason: "timeout",
     status: 408,
     retryable: true,
   }),
-  unavailable: new GatewayFailure({
+  unavailable: GatewayFailure.make({
     reason: "unavailable",
     status: 503,
     retryable: true,
   }),
-  network: new GatewayFailure({ reason: "network", retryable: true }),
-  interrupted: new GatewayFailure({ reason: "interrupted" }),
-  unknown: new GatewayFailure({ reason: "unknown" }),
+  network: GatewayFailure.make({ reason: "network", retryable: true }),
+  interrupted: GatewayFailure.make({ reason: "interrupted" }),
+  unknown: GatewayFailure.make({ reason: "unknown" }),
 } satisfies Record<GatewayFailure["reason"], GatewayFailure>;

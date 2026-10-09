@@ -26,22 +26,21 @@ export const verifyAttemptContent = Effect.fn("NakafaContent.verifyAttempt")(
     rendererManifest: unknown
   ) {
     const request = yield* decodeProtectedContentRuntimeRequest(input).pipe(
-      Effect.mapError(
-        (cause) =>
-          new ContentRuntimeVerificationError({
-            cause,
-          })
+      Effect.mapError((cause) =>
+        ContentRuntimeVerificationError.make({
+          cause,
+        })
       )
     );
     if (!row) {
-      return yield* new ContentRuntimeMissingError({
+      return yield* ContentRuntimeMissingError.make({
         request,
       });
     }
     if (
       protectedRuntimeResponseBytes(row) > MAX_PROTECTED_RUNTIME_RESPONSE_BYTES
     ) {
-      return yield* new ContentRuntimeVerificationError({
+      return yield* ContentRuntimeVerificationError.make({
         cause: "Try-out history exceeds its response byte limit.",
       });
     }
@@ -58,11 +57,10 @@ export const verifyAttemptContent = Effect.fn("NakafaContent.verifyAttempt")(
         })
       ),
     ]).pipe(
-      Effect.mapError(
-        (cause) =>
-          new ContentRuntimeVerificationError({
-            cause,
-          })
+      Effect.mapError((cause) =>
+        ContentRuntimeVerificationError.make({
+          cause,
+        })
       )
     );
     const response: ProtectedContentRuntimeFound = {
@@ -76,11 +74,10 @@ export const verifyAttemptContent = Effect.fn("NakafaContent.verifyAttempt")(
       request,
       response,
     }).pipe(
-      Effect.mapError(
-        (cause) =>
-          new ContentRuntimeVerificationError({
-            cause,
-          })
+      Effect.mapError((cause) =>
+        ContentRuntimeVerificationError.make({
+          cause,
+        })
       )
     );
     return response;

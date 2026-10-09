@@ -24,7 +24,7 @@ export class ServerAnalyticsCaptureError extends Schema.TaggedError<ServerAnalyt
 ) {}
 
 function captureError(cause: unknown) {
-  return new ServerAnalyticsCaptureError({
+  return ServerAnalyticsCaptureError.make({
     cause,
     message: "Failed to capture the server exception.",
   });

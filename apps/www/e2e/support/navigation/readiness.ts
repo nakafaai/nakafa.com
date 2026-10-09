@@ -24,7 +24,7 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
       }),
     catch: (error) => {
       if (error instanceof errors.TimeoutError) {
-        return new NavigationReadinessTimeout({
+        return NavigationReadinessTimeout.make({
           errorText: readErrorText(error),
           href: targetHref,
           phase: "source",
@@ -32,7 +32,7 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
           timeoutMilliseconds,
         });
       }
-      return new NavigationRequestError({
+      return NavigationRequestError.make({
         errorText: readErrorText(error),
         href: targetHref,
         outcome: "network",
@@ -42,7 +42,7 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
     },
   });
   if (!response) {
-    return yield* new NavigationRequestError({
+    return yield* NavigationRequestError.make({
       href: targetHref,
       outcome: "missing-response",
       sourceHref,
@@ -50,7 +50,7 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
     });
   }
   if (!response.ok()) {
-    return yield* new NavigationRequestError({
+    return yield* NavigationRequestError.make({
       href: targetHref,
       outcome: "http",
       sourceHref,
@@ -79,7 +79,7 @@ export const waitForCommittedAppRouter = Effect.fn(
       ),
     catch: (error) => {
       if (error instanceof errors.TimeoutError) {
-        return new NavigationReadinessTimeout({
+        return NavigationReadinessTimeout.make({
           errorText: readErrorText(error),
           href: targetHref,
           phase: "hydration",
@@ -87,7 +87,7 @@ export const waitForCommittedAppRouter = Effect.fn(
           timeoutMilliseconds,
         });
       }
-      return new NavigationBrowserReadinessError({
+      return NavigationBrowserReadinessError.make({
         errorText: readErrorText(error),
         href: targetHref,
         phase: "hydration",
@@ -98,7 +98,7 @@ export const waitForCommittedAppRouter = Effect.fn(
   yield* Effect.tryPromise({
     try: () => committedState.dispose(),
     catch: (error) =>
-      new NavigationBrowserReadinessError({
+      NavigationBrowserReadinessError.make({
         errorText: readErrorText(error),
         href: targetHref,
         phase: "hydration",
@@ -115,7 +115,7 @@ const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
     timeoutMilliseconds: number
   ) {
     const viewportTimeout = (error: unknown) =>
-      new NavigationReadinessTimeout({
+      NavigationReadinessTimeout.make({
         errorText: readErrorText(error),
         href: targetHref,
         phase: "viewport",
@@ -131,7 +131,7 @@ const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
         catch: (error) =>
           error instanceof errors.TimeoutError
             ? viewportTimeout(error)
-            : new NavigationBrowserReadinessError({
+            : NavigationBrowserReadinessError.make({
                 errorText: readErrorText(error),
                 href: targetHref,
                 phase: "viewport",

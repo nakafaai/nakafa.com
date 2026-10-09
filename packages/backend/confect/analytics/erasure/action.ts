@@ -63,12 +63,11 @@ const readPostHogErasureConfig = Effect.fn(
     host: Config.schema(Schema.NonEmptyString, "POSTHOG_HOST"),
     projectId: Config.schema(Schema.NonEmptyString, "POSTHOG_PROJECT_ID"),
   }).pipe(
-    Effect.mapError(
-      () =>
-        new PostHogErasureConfigError({
-          code: postHogErasureConfigErrorCode,
-          message: "PostHog person erasure credentials are not configured.",
-        })
+    Effect.mapError(() =>
+      PostHogErasureConfigError.make({
+        code: postHogErasureConfigErrorCode,
+        message: "PostHog person erasure credentials are not configured.",
+      })
     )
   );
   return {
@@ -84,7 +83,7 @@ export const validatePostHogErasureConfig = Effect.fn(
   const deletionApiKey = config.deletionApiKey.trim();
   const projectId = config.projectId.trim();
   if (!(deletionApiKey && postHogProjectIdPattern.test(projectId))) {
-    return yield* new PostHogErasureConfigError({
+    return yield* PostHogErasureConfigError.make({
       code: postHogErasureConfigErrorCode,
       message: "PostHog person erasure credentials are not configured.",
     });
@@ -92,14 +91,14 @@ export const validatePostHogErasureConfig = Effect.fn(
   const hostUrl = yield* Effect.try({
     try: () => new URL(config.host),
     catch: () =>
-      new PostHogErasureConfigError({
+      PostHogErasureConfigError.make({
         code: postHogErasureConfigErrorCode,
         message: "PostHog erasure host is invalid.",
       }),
   });
   const hasTrustedHost = postHogIngestionHostnameSuffix.test(hostUrl.hostname);
   if (hostUrl.protocol !== "https:" || hostUrl.port || !hasTrustedHost) {
-    return yield* new PostHogErasureConfigError({
+    return yield* PostHogErasureConfigError.make({
       code: postHogErasureConfigErrorCode,
       message: "PostHog erasure host is invalid.",
     });
@@ -140,12 +139,12 @@ export const erasePostHogPerson = Effect.fn(
     yield* validatePostHogErasureConfig(config);
   const endpoint = `${apiOrigin}/api/projects/${encodeURIComponent(projectId)}/persons/bulk_delete/`;
   const requestNotSent = () =>
-    new PostHogErasureRequestError({
+    PostHogErasureRequestError.make({
       code: postHogErasureRequestErrorCode,
       message: "PostHog person erasure request could not be sent.",
     });
   const requestTimedOut = () =>
-    new PostHogErasureRequestError({
+    PostHogErasureRequestError.make({
       code: postHogErasureRequestErrorCode,
       message: "PostHog person erasure request timed out.",
     });
@@ -176,7 +175,7 @@ export const erasePostHogPerson = Effect.fn(
     })
   );
   if (!answer.ok) {
-    return yield* new PostHogErasureRequestError({
+    return yield* PostHogErasureRequestError.make({
       code: postHogErasureRequestErrorCode,
       message: `PostHog person erasure returned HTTP ${answer.status}.`,
     });
@@ -184,12 +183,11 @@ export const erasePostHogPerson = Effect.fn(
   const result = yield* Schema.decodeUnknownEffect(PostHogBulkEraseJsonSchema)(
     answer.text
   ).pipe(
-    Effect.mapError(
-      () =>
-        new PostHogErasureRequestError({
-          code: postHogErasureRequestErrorCode,
-          message: "PostHog person erasure returned an invalid response.",
-        })
+    Effect.mapError(() =>
+      PostHogErasureRequestError.make({
+        code: postHogErasureRequestErrorCode,
+        message: "PostHog person erasure returned an invalid response.",
+      })
     )
   );
   const matchedPersonsWereQueued =
@@ -203,7 +201,7 @@ export const erasePostHogPerson = Effect.fn(
     !matchedPersonsWereQueued ||
     !everyMatchedPersonWasDeleted
   ) {
-    return yield* new PostHogErasureRequestError({
+    return yield* PostHogErasureRequestError.make({
       code: postHogErasureRequestErrorCode,
       message: "PostHog did not accept complete analytics erasure.",
     });

@@ -23,9 +23,9 @@ const dispatchProtectedRuntime = Effect.fn(
     refs.internal.contentRelease.runtime.tryout.dispatch.dispatch,
     input
   ).pipe(
-    Effect.mapError(() => new ProtectedRuntimeActionError()),
+    Effect.mapError(() => ProtectedRuntimeActionError.make()),
     Effect.catchDefect(
-      flow(() => new ProtectedRuntimeActionError(), Effect.fail)
+      flow(() => ProtectedRuntimeActionError.make(), Effect.fail)
     ),
     Effect.result
   );

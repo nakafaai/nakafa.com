@@ -55,7 +55,7 @@ export const submitPromptInput = Effect.fn("designSystem.promptInput.submit")(
   }) {
     const accepted = yield* Effect.tryPromise({
       try: () => Promise.resolve(onSubmit({ text, files: [...files] }, event)),
-      catch: (cause) => new PromptInputSubmitError({ cause }),
+      catch: (cause) => PromptInputSubmitError.make({ cause }),
     });
 
     if (accepted === false) {
@@ -63,7 +63,7 @@ export const submitPromptInput = Effect.fn("designSystem.promptInput.submit")(
     }
     yield* Effect.try({
       try: onSuccess,
-      catch: (cause) => new PromptInputCompletionError({ cause }),
+      catch: (cause) => PromptInputCompletionError.make({ cause }),
     });
   }
 );

@@ -82,7 +82,7 @@ export const loadMathFonts = Effect.fn("designSystem.markdown.loadMathFonts")(
     yield* Effect.tryPromise({
       try: () =>
         Promise.all(Arr.map(CORE_MATH_FONTS, (font) => fonts.load(font))),
-      catch: (cause) => new MathFontLoadError({ cause }),
+      catch: (cause) => MathFontLoadError.make({ cause }),
     });
   }
 );

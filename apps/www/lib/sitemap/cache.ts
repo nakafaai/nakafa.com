@@ -41,11 +41,11 @@ export function applySitemapCache() {
 export const invalidateSitemapCache = Effect.fn("www.sitemap.cache.invalidate")(
   function* () {
     yield* Effect.try({
-      catch: () => new SitemapCacheInvalidationError(),
+      catch: () => SitemapCacheInvalidationError.make(),
       try: () => revalidateTag(CONTENT_SITEMAP_CACHE_TAG, { expire: 0 }),
     });
     yield* Effect.tryPromise({
-      catch: () => new SitemapCacheInvalidationError(),
+      catch: () => SitemapCacheInvalidationError.make(),
       try: () => invalidateByTag(CONTENT_SITEMAP_CACHE_TAG),
     });
   }

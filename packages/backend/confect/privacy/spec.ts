@@ -30,7 +30,7 @@ export function tryPrivacyCleanup<A>(operation: () => Promise<A>) {
   });
 }
 export function toPrivacyCleanupError(error: unknown) {
-  return new PrivacyCleanupError({
+  return PrivacyCleanupError.make({
     code: privacyCleanupFailedCode,
     message: getUnknownErrorMessage(error),
   });

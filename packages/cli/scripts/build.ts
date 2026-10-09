@@ -21,7 +21,7 @@ const buildCli = Effect.fn("NakafaCli.build")(function* () {
   yield* fileSystem.remove(outputDirectory, { force: true, recursive: true });
   yield* Effect.tryPromise({
     catch: (cause) =>
-      new CliBuildError({
+      CliBuildError.make({
         cause,
         message: "Unable to build the Nakafa CLI distribution.",
       }),

@@ -80,7 +80,7 @@ export function evaluate(spec: ResponseSpec, selection: Selection): Evaluating {
 }
 
 function rejectKind(): Evaluating {
-  return Result.fail(new ResponseRejected({ reason: "kind" }));
+  return Result.fail(ResponseRejected.make({ reason: "kind" }));
 }
 
 function evaluateSingleChoice(

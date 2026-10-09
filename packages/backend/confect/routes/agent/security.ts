@@ -40,7 +40,7 @@ const constantTimeEqual = Effect.fn("agent.constantTimeEqual")(function* (
 ) {
   const [expectedDigest, suppliedDigest] = yield* Effect.tryPromise({
     catch: (error) =>
-      new NakafaAgentDataReadError({
+      NakafaAgentDataReadError.make({
         cause: getUnknownErrorMessage(error),
         message: "The public agent edge boundary is unavailable.",
       }),
@@ -61,7 +61,7 @@ const constantTimeEqual = Effect.fn("agent.constantTimeEqual")(function* (
 
 /** Builds the typed fail-closed error for missing or malformed configuration. */
 function unavailableEdgeSecret() {
-  return new NakafaAgentDataReadError({
+  return NakafaAgentDataReadError.make({
     message: "The public agent edge boundary is unavailable.",
   });
 }

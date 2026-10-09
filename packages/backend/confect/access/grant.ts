@@ -58,37 +58,29 @@ const refusal = (
   scope: GrantScope
 ) =>
   Match.value({ person, role, scope }).pipe(
-    Match.not(
-      { person: { kind: "member" } },
-      () =>
-        new GrantRejected({
-          code: "PERSON_KIND",
-          message: "Operators hold only temporary visit grants.",
-        })
+    Match.not({ person: { kind: "member" } }, () =>
+      GrantRejected.make({
+        code: "PERSON_KIND",
+        message: "Operators hold only temporary visit grants.",
+      })
     ),
-    Match.not(
-      { person: { status: "active" } },
-      () =>
-        new GrantRejected({
-          code: "PERSON_INACTIVE",
-          message: "This person is not active.",
-        })
+    Match.not({ person: { status: "active" } }, () =>
+      GrantRejected.make({
+        code: "PERSON_INACTIVE",
+        message: "This person is not active.",
+      })
     ),
-    Match.when(
-      { role: "integration" },
-      () =>
-        new GrantRejected({
-          code: "GRANT_ROLE",
-          message: "Integrations are not people.",
-        })
+    Match.when({ role: "integration" }, () =>
+      GrantRejected.make({
+        code: "GRANT_ROLE",
+        message: "Integrations are not people.",
+      })
     ),
-    Match.when(
-      { role: "owner", scope: { kind: "unit" } },
-      () =>
-        new GrantRejected({
-          code: "GRANT_SCOPE",
-          message: "Owners cover the whole school.",
-        })
+    Match.when({ role: "owner", scope: { kind: "unit" } }, () =>
+      GrantRejected.make({
+        code: "GRANT_SCOPE",
+        message: "Owners cover the whole school.",
+      })
     ),
     Match.option
   );
@@ -121,7 +113,7 @@ export const assignRole = Effect.fn("access.grant.assign")(function* (
     return existing.value._id;
   }
   if (grants.length >= GRANT_LIMIT) {
-    return yield* new GrantRejected({
+    return yield* GrantRejected.make({
       code: "GRANT_LIMIT",
       message: "This person has too many roles.",
     });
@@ -130,7 +122,7 @@ export const assignRole = Effect.fn("access.grant.assign")(function* (
     role === "owner" &&
     (yield* activeOwners(person.tenantId)).length >= OWNER_LIMIT
   ) {
-    return yield* new GrantRejected({
+    return yield* GrantRejected.make({
       code: "GRANT_LIMIT",
       message: "This school has too many owners.",
     });
@@ -202,7 +194,7 @@ export const ensureOwnerRemains = Effect.fn("access.grant.ownerRemains")(
           holder.status === "active" && holder.account.state === "claimed"
       )
     ) {
-      return yield* new GrantRejected({
+      return yield* GrantRejected.make({
         code: "LAST_OWNER",
         message: "A school keeps at least one owner who has signed in.",
       });

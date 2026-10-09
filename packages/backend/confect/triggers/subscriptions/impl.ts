@@ -25,7 +25,7 @@ type UserDoc = Doc<"users">;
 
 /** Maps thrown Convex IO failures into the subscription trigger error channel. */
 function toSubscriptionPlanSyncIoError(error: unknown) {
-  return new SubscriptionPlanSyncIoError({
+  return SubscriptionPlanSyncIoError.make({
     code: subscriptionPlanSyncIoFailedCode,
     message: getUnknownErrorMessage(error),
   });

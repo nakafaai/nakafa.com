@@ -27,7 +27,7 @@ type SaveConsentInput = ConsentWrite & Pick<Docs["accountConsents"], "userId">;
 
 /** Maps a Convex database failure into the consent domain error channel. */
 function toConsentPersistenceError() {
-  return new ConsentPersistenceError({
+  return ConsentPersistenceError.make({
     code: consentPersistenceFailedCode,
     message: consentPersistenceFailedMessage,
   });

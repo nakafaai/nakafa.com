@@ -145,7 +145,7 @@ function scopedCompiler(create: () => API, message: string) {
   return Effect.acquireRelease(
     Effect.try({
       try: create,
-      catch: (cause) => new TestCompilerError({ cause, message }),
+      catch: (cause) => TestCompilerError.make({ cause, message }),
     }),
     (resource) => Effect.sync(() => resource.close())
   );
@@ -191,7 +191,7 @@ function binding(symbol: NativeSymbol | undefined): typeof Binding.Type {
 
 /** Fails a source inspection with the native compiler's cause. */
 function inspectionFailure(cause: unknown) {
-  return new TestCompilerError({
+  return TestCompilerError.make({
     cause,
     message: "Unable to inspect repository sources.",
   });

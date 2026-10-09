@@ -70,7 +70,7 @@ export function getCreditResetGrantTransaction(
 
 /** Normalize storage failures at the credit ledger boundary. */
 function creditStateFailure() {
-  return new CreditStateError({
+  return CreditStateError.make({
     code: "CREDIT_STATE_FAILED",
     message: "Unable to read or update the credit reset period.",
   });

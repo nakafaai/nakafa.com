@@ -129,13 +129,13 @@ const validateProgressScore = Effect.fn(
   "tryouts.progress.validateProgressScore"
 )(function* (status: TryoutStatus, publishedScore: number | null) {
   if (status === "in-progress" && publishedScore !== null) {
-    return yield* new TryoutProgressError({
+    return yield* TryoutProgressError.make({
       code: "TRYOUT_ACTIVE_PROGRESS_HAS_SCORE",
       message: "Active try-out progress cannot expose a score.",
     });
   }
   if (status !== "in-progress" && publishedScore === null) {
-    return yield* new TryoutProgressError({
+    return yield* TryoutProgressError.make({
       code: "TRYOUT_TERMINAL_PROGRESS_SCORE_REQUIRED",
       message: "Terminal try-out progress requires a score.",
     });
@@ -144,7 +144,7 @@ const validateProgressScore = Effect.fn(
 
 /** Maps one thrown database failure into the progress error channel. */
 function toTryoutProgressError() {
-  return new TryoutProgressError({
+  return TryoutProgressError.make({
     code: "TRYOUT_PROGRESS_WRITE_FAILED",
     message: "Unable to update try-out progress.",
   });

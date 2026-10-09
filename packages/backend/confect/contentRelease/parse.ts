@@ -46,12 +46,11 @@ const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
 export const parseStoredJson = Effect.fn("contentRelease.parseStoredJson")(
   (source: string, label = "Stored publication JSON") =>
     Schema.decodeEffect(JsonTextSchema)(source).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `${label} is not valid JSON.`,
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `${label} is not valid JSON.`,
+        })
       )
     )
 );
@@ -64,12 +63,11 @@ export const decodeReleaseJson = Effect.fn("contentRelease.decodeReleaseJson")(
           onExcessProperty: "error",
         })
       ),
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: "Signed release does not satisfy its exact contract.",
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Signed release does not satisfy its exact contract.",
+        })
       )
     )
 );
@@ -83,12 +81,11 @@ export const decodeItemJson = Effect.fn("contentRelease.decodeItemJson")(
           onExcessProperty: "error",
         })
       ),
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: "Release item does not satisfy its exact contract.",
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Release item does not satisfy its exact contract.",
+        })
       )
     )
 );
@@ -101,12 +98,11 @@ export const decodeRouteJson = Effect.fn("contentRelease.decodeRouteJson")(
           onExcessProperty: "error",
         })
       ),
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: "Release route does not satisfy its exact contract.",
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Release route does not satisfy its exact contract.",
+        })
       )
     )
 );
@@ -120,12 +116,11 @@ export const decodeArtifactJson = Effect.fn(
         onExcessProperty: "error",
       })
     ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Signed artifact does not satisfy its exact contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Signed artifact does not satisfy its exact contract.",
+      })
     )
   )
 );
@@ -139,12 +134,11 @@ export const decodeProjectionJson = Effect.fn(
         onExcessProperty: "error",
       })
     ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Content projection does not satisfy its exact contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Content projection does not satisfy its exact contract.",
+      })
     )
   )
 );
@@ -157,12 +151,11 @@ export const decodeProofJson = Effect.fn("contentRelease.decodeProofJson")(
           onExcessProperty: "error",
         })
       ),
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: "Release proof does not satisfy its exact contract.",
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Release proof does not satisfy its exact contract.",
+        })
       )
     )
 );
@@ -175,12 +168,11 @@ export const decodeReceiptJson = Effect.fn("contentRelease.decodeReceiptJson")(
           onExcessProperty: "error",
         })
       ),
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: "Publication receipt does not satisfy its contract.",
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Publication receipt does not satisfy its contract.",
+        })
       )
     )
 );
@@ -194,12 +186,11 @@ export const decodeRollbackJson = Effect.fn(
         onExcessProperty: "error",
       })
     ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Rollback snapshot does not satisfy its exact contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Rollback snapshot does not satisfy its exact contract.",
+      })
     )
   )
 );
@@ -213,12 +204,11 @@ export const decodeSnapshotJson = Effect.fn(
         onExcessProperty: "error",
       })
     ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Content snapshot does not satisfy its exact contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Content snapshot does not satisfy its exact contract.",
+      })
     )
   )
 );
@@ -232,13 +222,12 @@ export const decodeCurrentSnapshotRowJson = Effect.fn(
         onExcessProperty: "error",
       })
     ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message:
-            "New content snapshot row does not satisfy the current contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message:
+          "New content snapshot row does not satisfy the current contract.",
+      })
     )
   )
 );
@@ -248,12 +237,11 @@ export const decodeSnapshotRowJson = Effect.fn(
 )((source: string) =>
   parseStoredJson(source, "Content snapshot row").pipe(
     Effect.flatMap(decodeStoredSnapshotRow),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Content snapshot row does not satisfy its exact contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Content snapshot row does not satisfy its exact contract.",
+      })
     )
   )
 );
@@ -267,12 +255,11 @@ export const decodeRendererJson = Effect.fn(
         onExcessProperty: "error",
       })
     ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Renderer manifest does not satisfy its exact contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Renderer manifest does not satisfy its exact contract.",
+      })
     )
   )
 );
@@ -286,13 +273,11 @@ export const decodeTryoutRuntimeBundleJson = Effect.fn(
         onExcessProperty: "error",
       })
     ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message:
-            "Try-out runtime bundle does not satisfy its exact contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Try-out runtime bundle does not satisfy its exact contract.",
+      })
     )
   )
 );

@@ -161,7 +161,7 @@ export const requestFailure = Effect.fn("contentRelease.requestFailure")(
       return (
         failure ??
         (yield* Effect.die(
-          new PublicationFailureDefect({
+          PublicationFailureDefect.make({
             code: error.code,
             operation: request.operation,
           })
@@ -174,7 +174,7 @@ export const requestFailure = Effect.fn("contentRelease.requestFailure")(
         request.operation !== "activate"
       ) {
         return yield* Effect.die(
-          new PublicationFailureDefect({
+          PublicationFailureDefect.make({
             code: error.code,
             operation: request.operation,
           })
@@ -194,7 +194,7 @@ export const requestFailure = Effect.fn("contentRelease.requestFailure")(
       error.code === "CONTENT_RELEASE_UNAUTHORIZED"
     ) {
       return yield* Effect.die(
-        new PublicationFailureDefect({
+        PublicationFailureDefect.make({
           code: error.code,
           operation: request.operation,
         })

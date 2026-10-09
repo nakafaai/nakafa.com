@@ -19,7 +19,7 @@ import { Effect } from "effect";
 
 /** Maps unknown database failures into the preference persistence contract. */
 function toLearningPreferencePersistenceError() {
-  return new LearningPreferencePersistenceError({
+  return LearningPreferencePersistenceError.make({
     code: learningPreferencePersistenceFailedCode,
     message: learningPreferencePersistenceFailedMessage,
   });

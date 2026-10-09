@@ -51,7 +51,7 @@ export function contractFailure(error: unknown) {
   } else if (isSize(error)) {
     code = "CONTENT_RELEASE_SIZE";
   }
-  return new ReleaseError({
+  return ReleaseError.make({
     code,
     message: `Content release verification failed with ${readContractTag(error)}.`,
   });

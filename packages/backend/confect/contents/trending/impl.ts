@@ -27,7 +27,7 @@ const trendingRankingMaxPages = 5;
 
 /** Maps thrown Convex IO failures into the trending-material error channel. */
 function toTrendingSubjectIoError(error: unknown) {
-  return new TrendingSubjectIoError({
+  return TrendingSubjectIoError.make({
     code: trendingSubjectIoFailedCode,
     cause: error,
     message: "Unable to load trending subjects.",

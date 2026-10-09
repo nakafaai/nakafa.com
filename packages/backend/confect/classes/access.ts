@@ -16,12 +16,11 @@ export const loadClass = Effect.fn("classes.access.load")(function* (
     .get(classId)
     .pipe(
       Effect.catchTag("DocumentDecodeError", Effect.die),
-      Effect.mapError(
-        () =>
-          new ClassAccessError({
-            code: "CLASS_NOT_FOUND",
-            message: "Class not found.",
-          })
+      Effect.mapError(() =>
+        ClassAccessError.make({
+          code: "CLASS_NOT_FOUND",
+          message: "Class not found.",
+        })
       )
     );
 });
@@ -32,7 +31,7 @@ export const loadActiveClass = Effect.fn("classes.access.active")(function* (
 ) {
   const value = yield* loadClass(classId);
   if (value.isArchived) {
-    return yield* new ClassAccessError({
+    return yield* ClassAccessError.make({
       code: "CLASS_ARCHIVED",
       message: "Cannot modify an archived class.",
     });
@@ -70,13 +69,13 @@ export const requireClassAccess = Effect.fn("classes.access.require")(
   ) {
     const access = yield* checkClassAccess(classId, schoolId, userId);
     if (!access.schoolMembership) {
-      return yield* new ClassAccessError({
+      return yield* ClassAccessError.make({
         code: "ACCESS_DENIED",
         message: "You must be a member of this school to access this class.",
       });
     }
     if (!access.hasAccess) {
-      return yield* new ClassAccessError({
+      return yield* ClassAccessError.make({
         code: "ACCESS_DENIED",
         message: "You do not have access to this class.",
       });

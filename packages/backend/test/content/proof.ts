@@ -210,7 +210,7 @@ export const TEST_KEY_RESOLVER = ContentVerificationKeyResolver.of({
     if (requestedKeyId === TEST_KEY_ID) {
       return Effect.succeed(TEST_PUBLIC_KEY);
     }
-    return Effect.fail(new SigningKeyNotFoundError({ keyId: requestedKeyId }));
+    return Effect.fail(SigningKeyNotFoundError.make({ keyId: requestedKeyId }));
   },
 });
 /** Produces one fully authenticated technical artifact. */

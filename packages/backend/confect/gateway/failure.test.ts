@@ -46,7 +46,7 @@ describe("Gateway failure classification", () => {
     [409, "unknown"],
   ] as const)("classifies HTTP %i as %s", (status, reason) => {
     expect(classify(httpError(status))).toEqual(
-      new GatewayFailure({
+      GatewayFailure.make({
         reason,
         status,
         retryable: httpError(status).isRetryable,
@@ -61,7 +61,7 @@ describe("Gateway failure classification", () => {
       })
     );
     expect(failure).toEqual(
-      new GatewayFailure({ reason: "invalid", status: 400, retryable: false })
+      GatewayFailure.make({ reason: "invalid", status: 400, retryable: false })
     );
     expect(encode(failure)).not.toContain("private");
   });
@@ -134,7 +134,7 @@ describe("Gateway failure classification", () => {
     (_, status, data, reason, type) => {
       const failure = classify(httpError(status, data));
       expect(failure).toEqual(
-        new GatewayFailure({
+        GatewayFailure.make({
           reason,
           status,
           retryable: httpError(status).isRetryable,
@@ -147,7 +147,7 @@ describe("Gateway failure classification", () => {
 
   it("classifies a 429 with Retry-After by its status, since the page documents no body for it", () => {
     expect(classify(httpError(429, undefined, "2"))).toEqual(
-      new GatewayFailure({
+      GatewayFailure.make({
         reason: "rate-limit",
         status: 429,
         retryable: true,
@@ -158,7 +158,7 @@ describe("Gateway failure classification", () => {
 
   it("classifies a 402 by its status, since the page documents no body for it", () => {
     expect(classify(httpError(402))).toEqual(
-      new GatewayFailure({ reason: "quota", status: 402, retryable: false })
+      GatewayFailure.make({ reason: "quota", status: 402, retryable: false })
     );
   });
 
@@ -221,7 +221,7 @@ describe("Gateway failure classification", () => {
       })
     );
     expect(failure).toEqual(
-      new GatewayFailure({ reason: "network", retryable: true })
+      GatewayFailure.make({ reason: "network", retryable: true })
     );
     expect(encode(failure)).not.toContain("private");
   });
@@ -235,22 +235,22 @@ describe("Gateway failure classification", () => {
         requestBodyValues: {},
         isRetryable: true,
       }),
-      new GatewayFailure({ reason: "network", retryable: true }),
+      GatewayFailure.make({ reason: "network", retryable: true }),
     ],
     [
       "a deadline",
       new DOMException("private", "TimeoutError"),
-      new GatewayFailure({ reason: "timeout" }),
+      GatewayFailure.make({ reason: "timeout" }),
     ],
     [
       "an abort",
       new DOMException("private", "AbortError"),
-      new GatewayFailure({ reason: "interrupted" }),
+      GatewayFailure.make({ reason: "interrupted" }),
     ],
     [
       "an unexplained error",
       new Error("private"),
-      new GatewayFailure({ reason: "unknown" }),
+      GatewayFailure.make({ reason: "unknown" }),
     ],
   ] as const)("classifies %s", (_, error, expected) => {
     expect(classify(error)).toEqual(expected);
@@ -272,7 +272,7 @@ describe("Gateway failure classification", () => {
     ["a thrown string", "private", "unknown"],
     ["nothing", undefined, "unknown"],
   ] as const)("classifies %s by name", (_, error, reason) => {
-    expect(classify(error)).toEqual(new GatewayFailure({ reason }));
+    expect(classify(error)).toEqual(GatewayFailure.make({ reason }));
   });
 
   it("unwraps retries and empty outputs to the failure behind them", () => {
@@ -308,11 +308,11 @@ describe("Gateway failure classification", () => {
         errors: [error],
       });
     }
-    expect(classify(error)).toEqual(new GatewayFailure({ reason: "unknown" }));
+    expect(classify(error)).toEqual(GatewayFailure.make({ reason: "unknown" }));
   });
 
   it("keeps a classified failure as it is", () => {
-    const failure = new GatewayFailure({ reason: "quota", status: 402 });
+    const failure = GatewayFailure.make({ reason: "quota", status: 402 });
     expect(classify(failure)).toBe(failure);
     expect(
       classify(
@@ -336,7 +336,7 @@ describe("Gateway failure classification", () => {
       })
     );
     expect(failure).toEqual(
-      new GatewayFailure({
+      GatewayFailure.make({
         reason: "invalid",
         status: 400,
         retryable: false,

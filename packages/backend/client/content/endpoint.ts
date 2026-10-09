@@ -17,7 +17,7 @@ export const createContentEndpoint = Effect.fn(
 )(function* (baseUrl: string, path: string) {
   const base = yield* Effect.try({
     catch: () =>
-      new ContentTransportError({
+      ContentTransportError.make({
         reason: "url",
       }),
     try: () => new URL(baseUrl),
@@ -28,7 +28,7 @@ export const createContentEndpoint = Effect.fn(
     (base.protocol !== "https:" && !isLocalHttp) ||
     base.username.length + base.password.length > 0
   ) {
-    return yield* new ContentTransportError({
+    return yield* ContentTransportError.make({
       reason: "url",
     });
   }
@@ -40,15 +40,14 @@ export const encodeContentRequest = Effect.fn(
   "NakafaContent.encodeContentRequest"
 )(function* (input: unknown, maxBytes: number) {
   const source = yield* Schema.encodeEffect(JsonTextSchema)(input).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "request",
-        })
+    Effect.mapError(() =>
+      ContentTransportError.make({
+        reason: "request",
+      })
     )
   );
   if (new TextEncoder().encode(source).byteLength > maxBytes) {
-    return yield* new ContentTransportError({
+    return yield* ContentTransportError.make({
       reason: "request-size",
     });
   }

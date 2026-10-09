@@ -125,7 +125,7 @@ describe("signed Quran interpretation decoder", () => {
   );
   it("recognizes only a typed snapshot conflict request failure", () => {
     const conflict = toQuranInterpretationRequestError(
-      new ReleaseError({
+      ReleaseError.make({
         code: "CONTENT_RELEASE_CONFLICT",
         message: "The active Quran snapshot changed.",
       })
@@ -140,7 +140,7 @@ describe("signed Quran interpretation decoder", () => {
       toQuranInterpretationRequestError(null),
       toQuranInterpretationRequestError({}),
       toQuranInterpretationRequestError(
-        new ReleaseError({
+        ReleaseError.make({
           code: "CONTENT_RELEASE_INVALID_REQUEST",
           message: "Invalid request",
         })

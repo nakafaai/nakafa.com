@@ -138,7 +138,7 @@ const submitBatchToBing = Effect.fn("scripts.indexing.bing.submitBatch")(
         duration: NETWORK_ATTEMPT_DEADLINE,
         orElse: () =>
           Effect.fail(
-            new BingSubmitError({
+            BingSubmitError.make({
               cause: "deadline",
               message: "Bing did not answer within 10 seconds.",
             })
@@ -172,21 +172,19 @@ const sendBingBatch = Effect.fn("scripts.indexing.bing.sendBatch")(function* ({
     .pipe(
       // Bing requires `apikey` in the query, so its URL must not enter telemetry.
       Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
-      Effect.mapError(
-        (cause) =>
-          new BingSubmitError({
-            cause,
-            message: "Error submitting URLs to Bing.",
-          })
+      Effect.mapError((cause) =>
+        BingSubmitError.make({
+          cause,
+          message: "Error submitting URLs to Bing.",
+        })
       )
     );
   const responseText = yield* response.text.pipe(
-    Effect.mapError(
-      (cause) =>
-        new BingSubmitError({
-          cause,
-          message: "Failed to read Bing response text.",
-        })
+    Effect.mapError((cause) =>
+      BingSubmitError.make({
+        cause,
+        message: "Failed to read Bing response text.",
+      })
     )
   );
   return { responseText, status: response.status };
@@ -216,7 +214,7 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
       };
     }
     if (!responseText.includes("Quota remaining")) {
-      return yield* new BingSubmitError({
+      return yield* BingSubmitError.make({
         cause: status,
         message: `Bing failed with HTTP ${status}.`,
       });
@@ -244,12 +242,11 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
 const readRemainingBingQuota = Effect.fn("scripts.indexing.bing.readQuota")(
   function* (responseText: string) {
     const quotaMessage = yield* decodeBingQuotaMessage(responseText).pipe(
-      Effect.mapError(
-        (cause) =>
-          new BingSubmitError({
-            cause,
-            message: "Failed to decode Bing quota response.",
-          })
+      Effect.mapError((cause) =>
+        BingSubmitError.make({
+          cause,
+          message: "Failed to decode Bing quota response.",
+        })
       )
     );
     const remainingQuotaMatch = quotaMessage.Message.match(

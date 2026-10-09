@@ -37,7 +37,7 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
     request.selectors.length > MAX_PROTECTED_RUNTIME_SELECTORS ||
     protectedRuntimeResponseBytes(request) > MAX_PROTECTED_RUNTIME_REQUEST_BYTES
   ) {
-    return yield* new TryoutHistoryError({
+    return yield* TryoutHistoryError.make({
       code: "TRYOUT_HISTORY_REQUEST_INVALID",
       message: "Try-out history request exceeds its batch bounds.",
     });
@@ -73,7 +73,7 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
     bundle.payload.sourceManifestHash !== stored.sourceManifestHash ||
     bundle.payload.sourceReleaseId !== stored.sourceReleaseId
   ) {
-    return yield* new TryoutHistoryError({
+    return yield* TryoutHistoryError.make({
       code: "TRYOUT_HISTORY_INTEGRITY",
       message: "Try-out history lost its permanent bundle identity.",
     });
@@ -93,7 +93,7 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
     responseBytes +=
       protectedRuntimeResponseBytes(item) + (items.length > 0 ? 1 : 0);
     if (responseBytes > MAX_PROTECTED_RUNTIME_RESPONSE_BYTES) {
-      return yield* new TryoutHistoryError({
+      return yield* TryoutHistoryError.make({
         code: "TRYOUT_HISTORY_RESPONSE_TOO_LARGE",
         message: "Try-out history exceeds its response byte limit.",
       });

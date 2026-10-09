@@ -17,7 +17,7 @@ export class BrowserFileDownloadError extends Schema.TaggedError<BrowserFileDown
   }
 ) {}
 function downloadError(filename: string, cause: unknown) {
-  return new BrowserFileDownloadError({
+  return BrowserFileDownloadError.make({
     cause,
     filename,
     message: `Failed to download ${filename}.`,

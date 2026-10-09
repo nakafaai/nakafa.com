@@ -29,10 +29,10 @@ export const resolveLineMarkers = Effect.fn("line.resolveMarkers")(function* <
   const selected = yield* Schema.decodeEffect(LineMarkerIndicesSchema)(
     indices
   ).pipe(
-    Effect.mapError((error) => new LineMarkerError({ message: error.message }))
+    Effect.mapError((error) => LineMarkerError.make({ message: error.message }))
   );
   if (Arr.some(selected, (index) => index >= points.length)) {
-    return yield* new LineMarkerError({
+    return yield* LineMarkerError.make({
       message:
         "Expected every point marker index to identify an existing curve sample.",
     });

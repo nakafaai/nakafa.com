@@ -241,7 +241,7 @@ describe("explicit consent save actions", () => {
         ...createOptions(overrides, {
           saveDecision: () =>
             Effect.fail(
-              new AnalyticsConsentStorageFailed({
+              AnalyticsConsentStorageFailed.make({
                 code: "ANALYTICS_CONSENT_STORAGE_FAILED",
               })
             ),

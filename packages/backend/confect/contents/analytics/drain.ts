@@ -55,7 +55,7 @@ export const processClaimedContentAnalyticsPartition = Effect.fn(
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     if (!isContentAnalyticsPartition(args.partition)) {
-      return yield* new InvalidContentAnalyticsPartitionError({
+      return yield* InvalidContentAnalyticsPartitionError.make({
         code: invalidContentAnalyticsPartitionCode,
         message: "Content analytics partition is out of range.",
       });

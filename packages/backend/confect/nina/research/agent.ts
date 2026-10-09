@@ -71,7 +71,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       ...getSourceReferences(task),
     ]);
     if (sourceReferences.length > researchMaxSources) {
-      return yield* new ResearchSourceLimitError({
+      return yield* ResearchSourceLimitError.make({
         maximum: researchMaxSources,
         received: sourceReferences.length,
       });

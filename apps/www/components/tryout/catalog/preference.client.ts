@@ -48,10 +48,10 @@ export function saveTryoutPreference({
         locale,
         preferredTryoutCountryKey: countryKey,
       }),
-    catch: (cause) => new TryoutPreferenceSaveError({ cause }),
+    catch: (cause) => TryoutPreferenceSaveError.make({ cause }),
   }).pipe(
     Effect.flatMap(Effect.fromResult),
-    Effect.mapError((cause) => new TryoutPreferenceSaveError({ cause })),
+    Effect.mapError((cause) => TryoutPreferenceSaveError.make({ cause })),
     Effect.catchTag("TryoutPreferenceSaveError", (error) =>
       reportClientException(error, { countryKey, source }).pipe(
         Effect.andThen(

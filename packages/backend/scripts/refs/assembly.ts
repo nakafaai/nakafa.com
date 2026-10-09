@@ -159,7 +159,7 @@ const groupName = Effect.fn("RefsAssembly.groupName")(function* (
   expression: Expression
 ) {
   if (!isStringLiteral(expression)) {
-    return yield* new RefsSourceError({
+    return yield* RefsSourceError.make({
       message: "Each nested group needs a string literal name.",
     });
   }
@@ -172,7 +172,7 @@ const nameAndGroup = Effect.fn("RefsAssembly.nameAndGroup")(function* (
   method: string
 ) {
   if (args.length !== 2) {
-    return yield* new RefsSourceError({
+    return yield* RefsSourceError.make({
       message: `${method} takes a name and a group.`,
     });
   }
@@ -187,7 +187,7 @@ const groupNesting = Effect.fn("RefsAssembly.groupNesting")(function* (
 ): Effect.fn.Return<readonly (typeof NestedLeaf.Type)[], RefsSourceError> {
   const [base, calls] = unwindChain(expression, "addGroupAt");
   if (!(isIdentifier(base) || isGroupFactory(base))) {
-    return yield* new RefsSourceError({
+    return yield* RefsSourceError.make({
       message: `Unexpected group expression under ${Arr.join(segments, ".")}.`,
     });
   }
@@ -226,13 +226,13 @@ const specNesting = Effect.fn("RefsAssembly.specNesting")(function* (
     Option.fromNullishOr(value.initializer)
   );
   if (Option.isNone(expression)) {
-    return yield* new RefsSourceError({
+    return yield* RefsSourceError.make({
       message: "The assembled spec must declare const spec.",
     });
   }
   const [base, calls] = unwindChain(expression.value, "addAt");
   if (!isSpecFactory(base)) {
-    return yield* new RefsSourceError({
+    return yield* RefsSourceError.make({
       message: "The assembled spec must start from Spec.make().",
     });
   }
@@ -252,7 +252,7 @@ const pairLeaf = Effect.fn("RefsAssembly.pairLeaf")(function* (
     (leaf) => leaf.localName === imported.localName
   );
   if (occurrences.length !== 1) {
-    return yield* new RefsSourceError({
+    return yield* RefsSourceError.make({
       message: `${imported.specifier} must be nested exactly once in the assembled spec.`,
     });
   }
@@ -280,7 +280,7 @@ export const readAssembly = Effect.fn("RefsAssembly.readAssembly")(function* (
       Arr.some(imports, (imported) => imported.localName === leaf.localName)
     )
   ) {
-    return yield* new RefsSourceError({
+    return yield* RefsSourceError.make({
       message:
         "Every nested leaf must be a default import of the assembled spec.",
     });

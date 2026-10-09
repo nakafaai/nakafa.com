@@ -136,7 +136,7 @@ const readArticlePageRedirect = Effect.fn(
     }
   );
   if (previous.activeReleaseId !== successor.activeReleaseId) {
-    return yield* new PublishedReleaseMismatchError({
+    return yield* PublishedReleaseMismatchError.make({
       actualReleaseId: successor.activeReleaseId,
       expectedReleaseId: previous.activeReleaseId,
     });

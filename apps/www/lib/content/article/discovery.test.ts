@@ -274,7 +274,7 @@ describe("published article discovery", () => {
           )
           .mockReturnValueOnce(
             Effect.fail(
-              new HttpClient.HttpClientError({
+              HttpClient.HttpClientError.make({
                 cause: new Error("runtime unavailable"),
               })
             )

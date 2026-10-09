@@ -183,7 +183,7 @@ export const readHistoryArtifact = Effect.fn("tryouts.history.readArtifact")(
 
 /** Fails closed when a persisted attempt-owned content identity has drifted. */
 function historyIntegrity(message: string) {
-  return new TryoutHistoryError({
+  return TryoutHistoryError.make({
     code: "TRYOUT_HISTORY_INTEGRITY",
     message,
   });

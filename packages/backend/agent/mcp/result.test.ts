@@ -18,7 +18,9 @@ describe("Nakafa MCP tool results", () => {
     () =>
       Effect.gen(function* () {
         const result = yield* runMcpTool(
-          Effect.fail(new NakafaAgentInputError({ message: "Invalid input." })),
+          Effect.fail(
+            NakafaAgentInputError.make({ message: "Invalid input." })
+          ),
           "request-without-cause"
         );
         expect(result).toMatchObject({
@@ -39,7 +41,7 @@ describe("Nakafa MCP tool results", () => {
     Effect.gen(function* () {
       const result = yield* runMcpTool(
         Effect.fail(
-          new NakafaAgentDataReadError({
+          NakafaAgentDataReadError.make({
             message: "Published content unavailable.",
             cause: "private storage diagnostic",
           })
@@ -102,7 +104,7 @@ describe("Nakafa MCP tool results", () => {
     Effect.gen(function* () {
       const result = yield* runMcpTool(
         Effect.fail(
-          new NakafaAgentInputError({
+          NakafaAgentInputError.make({
             cause: "Use one of the published locale values.",
             message: "Invalid tool arguments.",
           })

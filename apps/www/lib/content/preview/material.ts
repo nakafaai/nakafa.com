@@ -63,10 +63,10 @@ export const readMaterialPreview = Effect.fn(
     return Option.none<MaterialPreviewContent>();
   }
   if (manifest.status === "pending") {
-    return yield* new PreviewPendingError({ revision: manifest.revision });
+    return yield* PreviewPendingError.make({ revision: manifest.revision });
   }
   if (manifest.status === "failed") {
-    return yield* new PreviewCompileError({
+    return yield* PreviewCompileError.make({
       code: manifest.failure.code,
       message: manifest.failure.message,
       revision: manifest.revision,

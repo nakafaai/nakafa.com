@@ -39,7 +39,7 @@ export const repairToolCall = Effect.fn("nina.repair")(
     }
     const schema = yield* Effect.tryPromise({
       try: () => inputSchema(toolCall),
-      catch: () => new NinaRepairError({ phase: "schema" }),
+      catch: () => NinaRepairError.make({ phase: "schema" }),
     });
     const tool = tools[toolCall.toolName];
     const ctx = yield* ActionCtx;
@@ -78,7 +78,7 @@ export const repairToolCall = Effect.fn("nina.repair")(
             { storageOptions: { saveMessages: "none" } }
           )
           .then((generated) => generated.output),
-      catch: () => new NinaRepairError({ phase: "generation" }),
+      catch: () => NinaRepairError.make({ phase: "generation" }),
     });
     const input = yield* Schema.encodeEffect(JsonTextSchema)(result).pipe(
       Effect.orDie

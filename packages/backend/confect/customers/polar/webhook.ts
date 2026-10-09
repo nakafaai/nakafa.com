@@ -35,7 +35,7 @@ class PolarWebhookIoError extends Schema.TaggedError<PolarWebhookIoError>()(
 ) {}
 /** Maps Convex action IO into the Polar webhook error channel. */
 function toPolarWebhookIoError(error: unknown) {
-  return new PolarWebhookIoError({
+  return PolarWebhookIoError.make({
     code: "POLAR_WEBHOOK_IO_FAILED",
     message: getUnknownErrorMessage(error),
   });
@@ -164,7 +164,7 @@ export const processPolarWebhookEvent = Effect.fn(
       const disposition = yield* upsertPolarCustomerWebhook(customer).pipe(
         Effect.catchTag("PolarCustomerError", (error) =>
           Effect.fail(
-            new PolarPayloadError({ cause: error, message: error.message })
+            PolarPayloadError.make({ cause: error, message: error.message })
           )
         )
       );

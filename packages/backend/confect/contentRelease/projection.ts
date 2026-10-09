@@ -64,12 +64,11 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
       projections,
       releaseId,
     }).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Projection batch ${batchIndex} violates its exact contract.`,
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Projection batch ${batchIndex} violates its exact contract.`,
+        })
       )
     );
   }

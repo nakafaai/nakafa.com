@@ -88,14 +88,14 @@ export const readLatestProgressAttempt = Effect.fn(
       Effect.mapError(toTryoutRuntimeError)
     );
   if (!attempt) {
-    return yield* new TryoutRuntimeError({
+    return yield* TryoutRuntimeError.make({
       code: "TRYOUT_PROGRESS_ATTEMPT_MISMATCH",
       message: "Try-out progress no longer identifies its latest attempt.",
     });
   }
   const matches = matchesProgressAttempt(attempt, progress, identity, userId);
   if (!matches) {
-    return yield* new TryoutRuntimeError({
+    return yield* TryoutRuntimeError.make({
       code: "TRYOUT_PROGRESS_ATTEMPT_MISMATCH",
       message: "Try-out progress no longer identifies its latest attempt.",
     });

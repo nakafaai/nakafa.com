@@ -27,7 +27,7 @@ export class ContentViewDeviceStorageFailed extends Schema.TaggedError<ContentVi
 ) {}
 
 const contentViewDeviceStorageFailure = () =>
-  new ContentViewDeviceStorageFailed({
+  ContentViewDeviceStorageFailed.make({
     code: contentViewDeviceStorageFailedCode,
   });
 

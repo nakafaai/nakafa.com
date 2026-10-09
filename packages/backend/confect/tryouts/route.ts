@@ -35,13 +35,12 @@ export const decodeTryoutSetIdentity = Effect.fn(
   "tryouts.route.decodeSetIdentity"
 )(function* (input: unknown) {
   return yield* Schema.decodeUnknownEffect(TryoutSetIdentitySchema)(input).pipe(
-    Effect.mapError(
-      (cause) =>
-        new TryoutRouteError({
-          cause,
-          code: "TRYOUT_ROUTE_INVALID",
-          message: "Try-out route identity is invalid.",
-        })
+    Effect.mapError((cause) =>
+      TryoutRouteError.make({
+        cause,
+        code: "TRYOUT_ROUTE_INVALID",
+        message: "Try-out route identity is invalid.",
+      })
     )
   );
 });

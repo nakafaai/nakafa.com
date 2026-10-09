@@ -41,7 +41,7 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
               namespace: "Common",
             }),
           catch: () =>
-            new TranslationLoadError({
+            TranslationLoadError.make({
               namespace: "Common",
               locale,
             }),
@@ -53,7 +53,7 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
               namespace: "Metadata",
             }),
           catch: () =>
-            new TranslationLoadError({
+            TranslationLoadError.make({
               namespace: "Metadata",
               locale,
             }),

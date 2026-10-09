@@ -29,7 +29,7 @@ export class TryoutResponseError extends Schema.TaggedError<TryoutResponseError>
 export const TryoutResponseErrorWire = publicFailure(TryoutResponseError);
 /** Redacts unexpected storage failures while retaining the internal cause. */
 export function toTryoutResponseError(error: unknown) {
-  return new TryoutResponseError({
+  return TryoutResponseError.make({
     cause: error,
     code: "TRYOUT_RESPONSE_FAILED",
     message: "Unable to save try-out response.",
@@ -50,11 +50,11 @@ export class TryoutResponseSelectionError extends Schema.TaggedError<TryoutRespo
 /** Maps one rejected selection onto the deployed try-out selection error. */
 export function toTryoutSelectionError(rejected: ResponseRejected) {
   return rejected.reason === "kind"
-    ? new TryoutResponseSelectionError({
+    ? TryoutResponseSelectionError.make({
         code: "TRYOUT_RESPONSE_KIND_MISMATCH",
         message: "Try-out response kind does not match its frozen question.",
       })
-    : new TryoutResponseSelectionError({
+    : TryoutResponseSelectionError.make({
         code: "TRYOUT_RESPONSE_SELECTION_INVALID",
         message: "Try-out selection does not belong to this frozen question.",
       });

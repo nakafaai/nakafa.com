@@ -62,11 +62,10 @@ export const readProtectedContent = Effect.fn(
   rendererManifest: unknown
 ) {
   const request = yield* decodeProtectedContentRuntimeRequest(input).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "request",
-        })
+    Effect.mapError(() =>
+      ContentTransportError.make({
+        reason: "request",
+      })
     )
   );
   const source = yield* encodeContentRequest(
@@ -108,20 +107,19 @@ const verifyProtectedResponse = Effect.fn(
     response: decoded,
   }).pipe(
     Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
-    Effect.mapError(
-      (cause) =>
-        new ContentRuntimeVerificationError({
-          cause,
-        })
+    Effect.mapError((cause) =>
+      ContentRuntimeVerificationError.make({
+        cause,
+      })
     )
   );
   if (verified.kind === "missing") {
-    return yield* new ContentRuntimeMissingError({
+    return yield* ContentRuntimeMissingError.make({
       request,
     });
   }
   if (verified.kind === "failure") {
-    return yield* new ContentRuntimeFailureError({
+    return yield* ContentRuntimeFailureError.make({
       code: verified.code,
       status,
     });

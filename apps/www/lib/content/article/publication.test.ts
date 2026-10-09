@@ -186,7 +186,7 @@ describe("coherent article publication", () => {
   it("preserves signed verification failures and never evaluates their body", async () => {
     deliveryMock.mockReturnValueOnce(
       Effect.fail(
-        new ContentRuntimeVerificationError({
+        ContentRuntimeVerificationError.make({
           cause: "invalid-signature",
         })
       )

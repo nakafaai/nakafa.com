@@ -49,12 +49,11 @@ const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
       Schema.decodeEffect(PublicPathSchema)(summary.publicPath),
       Schema.decodeEffect(CorpusSourcePathSchema)(summary.sourcePath),
     ]).pipe(
-      Effect.mapError(
-        () =>
-          new PublishedProjectionError({
-            appLocale,
-            publicPath: summary.publicPath,
-          })
+      Effect.mapError(() =>
+        PublishedProjectionError.make({
+          appLocale,
+          publicPath: summary.publicPath,
+        })
       )
     );
     return {
@@ -95,7 +94,7 @@ export const readPublishedMaterialBucket = Effect.fn(
     }
   );
   if (!result.managed || activeReleaseId === null) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath: "materials",
     });
@@ -138,7 +137,7 @@ export const readPublishedLatestMaterials = Effect.fn(
     }
   );
   if (!result.managed || activeReleaseId === null) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath: "materials",
     });

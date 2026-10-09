@@ -94,7 +94,7 @@ describe("readAuthResponse", () => {
       yield* TestClock.adjust("500 millis");
 
       expect(yield* Fiber.join(fiber)).toStrictEqual(
-        new NetworkRequestError({ networkCodes: ["ECONNREFUSED"] })
+        NetworkRequestError.make({ networkCodes: ["ECONNREFUSED"] })
       );
       expect(handler.GET).toHaveBeenCalledTimes(2);
     })
@@ -109,7 +109,7 @@ describe("readAuthResponse", () => {
       );
 
       expect(error).toStrictEqual(
-        new NetworkRequestError({ networkCodes: [] })
+        NetworkRequestError.make({ networkCodes: [] })
       );
       expect(handler.GET).toHaveBeenCalledOnce();
     })
@@ -126,7 +126,7 @@ describe("readAuthResponse", () => {
       expect(handler.GET).toHaveBeenCalledOnce();
       yield* TestClock.adjust("1 millis");
 
-      expect(yield* Fiber.join(fiber)).toStrictEqual(new AuthProxyDeadline());
+      expect(yield* Fiber.join(fiber)).toStrictEqual(AuthProxyDeadline.make());
       expect(handler.GET).toHaveBeenCalledOnce();
     })
   );
@@ -144,7 +144,7 @@ describe("readAuthResponse", () => {
       expect(handler.GET).toHaveBeenCalledTimes(2);
       yield* TestClock.adjust("1 millis");
 
-      expect(yield* Fiber.join(fiber)).toStrictEqual(new AuthProxyDeadline());
+      expect(yield* Fiber.join(fiber)).toStrictEqual(AuthProxyDeadline.make());
     })
   );
 
@@ -162,7 +162,7 @@ describe("readAuthResponse", () => {
         ).pipe(Effect.flip);
 
         expect(error).toStrictEqual(
-          new NetworkRequestError({ networkCodes: ["ECONNRESET"] })
+          NetworkRequestError.make({ networkCodes: ["ECONNRESET"] })
         );
         expect(handler.GET).toHaveBeenCalledOnce();
       })
@@ -182,7 +182,7 @@ describe("readAuthResponse", () => {
         ).pipe(Effect.flip);
 
         expect(error).toStrictEqual(
-          new NetworkRequestError({
+          NetworkRequestError.make({
             networkCodes: ["ECONNRESET", "ECONNREFUSED"],
           })
         );
@@ -218,7 +218,7 @@ describe("writeAuthResponse", () => {
       ).pipe(Effect.flip);
 
       expect(error).toStrictEqual(
-        new NetworkRequestError({ networkCodes: ["ECONNRESET"] })
+        NetworkRequestError.make({ networkCodes: ["ECONNRESET"] })
       );
       expect(handler.POST).toHaveBeenCalledOnce();
     })
@@ -236,7 +236,7 @@ describe("writeAuthResponse", () => {
 
       yield* TestClock.adjust("15 seconds");
 
-      expect(yield* Fiber.join(fiber)).toStrictEqual(new AuthProxyDeadline());
+      expect(yield* Fiber.join(fiber)).toStrictEqual(AuthProxyDeadline.make());
       expect(handler.POST).toHaveBeenCalledOnce();
     })
   );

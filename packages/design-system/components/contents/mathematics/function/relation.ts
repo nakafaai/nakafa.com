@@ -58,7 +58,7 @@ export const resolveRelation = Effect.fn("Relation.resolve")(function* (
   const relation = yield* Schema.decodeUnknownEffect(RelationSchema)(
     input
   ).pipe(
-    Effect.mapError((error) => new RelationError({ message: error.message }))
+    Effect.mapError((error) => RelationError.make({ message: error.message }))
   );
   const domain = positions(relation.domain, -3);
   const codomain = positions(relation.codomain, 3);

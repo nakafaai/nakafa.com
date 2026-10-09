@@ -35,7 +35,7 @@ export const readPublishedProgramCatalog = Effect.fn(
     publicPath: "curricula",
   });
   if (!result.managed) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath: "curricula",
     });
@@ -66,7 +66,7 @@ export const readPublishedProgramCatalog = Effect.fn(
       Option.isNone(translation)
     ) {
       return Effect.fail(
-        new PublishedProjectionError({
+        PublishedProjectionError.make({
           appLocale,
           publicPath: route.publicPath,
         })
@@ -106,7 +106,7 @@ export const readPublishedProgramPrerenderRoute = Effect.fn(
   const catalog = yield* readPublishedProgramCatalog(locale);
   const entry = Arr.findFirst(catalog.entries, ({ route }) => route.sitemap);
   if (Option.isNone(entry)) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale: AppLocaleSchema.make(locale),
       publicPath: "curricula",
     });
@@ -128,7 +128,7 @@ export const readPublishedProgramSubjects = Effect.fn(
     !result.managed ||
     result.routeJson.length > PROGRAM_FEATURED_SUBJECT_LIMIT
   ) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath: "curricula",
     });
@@ -141,7 +141,7 @@ export const readPublishedProgramSubjects = Effect.fn(
         route.level !== "subject" ||
         !route.sitemap
       ) {
-        return yield* new PublishedProjectionError({
+        return yield* PublishedProjectionError.make({
           appLocale,
           publicPath: route.publicPath,
         });

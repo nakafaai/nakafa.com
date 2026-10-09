@@ -18,12 +18,11 @@ export const loadForum = Effect.fn("classes.forums.loadForum")(function* (
     .get(forumId)
     .pipe(
       Effect.catchTag("DocumentDecodeError", Effect.die),
-      Effect.mapError(
-        () =>
-          new ForumError({
-            code: "FORUM_NOT_FOUND",
-            message: "Forum not found.",
-          })
+      Effect.mapError(() =>
+        ForumError.make({
+          code: "FORUM_NOT_FOUND",
+          message: "Forum not found.",
+        })
       )
     );
   return forum;
@@ -38,7 +37,7 @@ const loadOpenForum = Effect.fn("classes.forums.loadOpenForum")(function* (
 ) {
   const forum = yield* loadForum(forumId);
   if (forum.status !== "open") {
-    return yield* new ForumError({
+    return yield* ForumError.make({
       code: "FORUM_LOCKED",
       message: "This forum is locked.",
     });

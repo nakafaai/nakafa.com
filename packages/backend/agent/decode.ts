@@ -19,12 +19,11 @@ export function decodeAgentInput<SchemaType extends AgentSchema>(
     schema,
     parseOptions
   )(input).pipe(
-    Effect.mapError(
-      (error) =>
-        new NakafaAgentInputError({
-          cause: getUnknownErrorMessage(error),
-          message,
-        })
+    Effect.mapError((error) =>
+      NakafaAgentInputError.make({
+        cause: getUnknownErrorMessage(error),
+        message,
+      })
     )
   );
 }
@@ -39,12 +38,11 @@ export function decodeAgentOutput<SchemaType extends AgentSchema>(
     schema,
     parseOptions
   )(output).pipe(
-    Effect.mapError(
-      (error) =>
-        new NakafaAgentDataReadError({
-          cause: getUnknownErrorMessage(error),
-          message,
-        })
+    Effect.mapError((error) =>
+      NakafaAgentDataReadError.make({
+        cause: getUnknownErrorMessage(error),
+        message,
+      })
     )
   );
 }

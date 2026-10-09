@@ -35,5 +35,5 @@ const reasons = {
 /** Classifies a failed generation through the gateway's one vocabulary. */
 export function generationFailure(cause: unknown): NinaGenerationError {
   const gateway = classify(cause);
-  return new NinaGenerationError({ reason: reasons[gateway.reason], gateway });
+  return NinaGenerationError.make({ reason: reasons[gateway.reason], gateway });
 }

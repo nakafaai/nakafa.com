@@ -109,7 +109,7 @@ function decodeMaterialPreviewStaticParams({
 }) {
   const [namespace, subject, topic, ...lesson] = publicPath.split("/");
   if (namespace !== materialPublicNamespace(appLocale)) {
-    return Result.fail(new PreviewIntegrityError({ check: "projection" }));
+    return Result.fail(PreviewIntegrityError.make({ check: "projection" }));
   }
   return Result.mapError(
     Schema.decodeUnknownResult(MaterialPreviewStaticParamsSchema)({
@@ -117,7 +117,7 @@ function decodeMaterialPreviewStaticParams({
       subject,
       topic,
     }),
-    () => new PreviewIntegrityError({ check: "projection" })
+    () => PreviewIntegrityError.make({ check: "projection" })
   );
 }
 /** Parses one canonical material path into Next child params. */
@@ -141,7 +141,9 @@ export function readMaterialPreviewStaticParams(appLocale: AppLocale) {
       return [];
     }
     if (document.route.appLocale !== appLocale) {
-      return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
+      return Promise.reject(
+        PreviewIntegrityError.make({ check: "projection" })
+      );
     }
     const decoded = decodeMaterialPreviewStaticParams({
       appLocale,
@@ -161,7 +163,9 @@ export function readArticlePreviewStaticParams(appLocale: AppLocale) {
       return [];
     }
     if (document.route.appLocale !== appLocale) {
-      return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
+      return Promise.reject(
+        PreviewIntegrityError.make({ check: "projection" })
+      );
     }
     return [
       ArticlePreviewStaticParamsSchema.make({
@@ -179,7 +183,9 @@ export function readPagePreviewStaticParams(appLocale: AppLocale) {
       return [];
     }
     if (document.route.appLocale !== appLocale) {
-      return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
+      return Promise.reject(
+        PreviewIntegrityError.make({ check: "projection" })
+      );
     }
     return [
       {

@@ -20,7 +20,7 @@ const attemptSourceRequest = Effect.fn("www.openContent.attemptSource")(
       Effect.mapError((error) =>
         classifyNetworkFailure(
           error.reason.cause,
-          new OpenContentCopyError({
+          OpenContentCopyError.make({
             code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
             message: "The reviewed content source could not be fetched.",
           })
@@ -28,21 +28,19 @@ const attemptSourceRequest = Effect.fn("www.openContent.attemptSource")(
       ),
       Effect.flatMap((response) =>
         HttpClientResponse.filterStatusOk(response).pipe(
-          Effect.mapError(
-            () =>
-              new OpenContentCopyError({
-                code: "OPEN_CONTENT_SOURCE_REJECTED",
-                message: "The reviewed content source request was rejected.",
-              })
+          Effect.mapError(() =>
+            OpenContentCopyError.make({
+              code: "OPEN_CONTENT_SOURCE_REJECTED",
+              message: "The reviewed content source request was rejected.",
+            })
           ),
           Effect.flatMap(() =>
             response.text.pipe(
-              Effect.mapError(
-                () =>
-                  new OpenContentCopyError({
-                    code: "OPEN_CONTENT_SOURCE_READ_FAILED",
-                    message: "The reviewed content source could not be read.",
-                  })
+              Effect.mapError(() =>
+                OpenContentCopyError.make({
+                  code: "OPEN_CONTENT_SOURCE_READ_FAILED",
+                  message: "The reviewed content source could not be read.",
+                })
               )
             )
           )
@@ -67,7 +65,7 @@ export const requestOpenContentSource = Effect.fn(
 )(function* (copySourceUrl: string) {
   return yield* retryNetworkAttempt(
     attemptSourceRequest(copySourceUrl),
-    new OpenContentCopyError({
+    OpenContentCopyError.make({
       code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
       message: "The reviewed content source request timed out.",
     })

@@ -34,7 +34,7 @@ const set = FunctionImpl.make(
   Effect.fn("consents.current.set")(function* ({ decision, expectedUserId }) {
     const { appUser } = yield* requireAuth();
     if (appUser._id !== expectedUserId) {
-      return yield* new ConsentAccountChanged({
+      return yield* ConsentAccountChanged.make({
         code: "CONSENT_ACCOUNT_CHANGED",
         message: "The active account changed before consent could be saved.",
       });

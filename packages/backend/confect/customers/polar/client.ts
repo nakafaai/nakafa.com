@@ -21,11 +21,10 @@ export const readPolarClient = Effect.fn("polar.readClient")(function* () {
     Schema.Redacted(Schema.NonEmptyString),
     "POLAR_ACCESS_TOKEN"
   ).pipe(
-    Effect.mapError(
-      () =>
-        new PolarConfigError({
-          message: "Missing required Polar access token.",
-        })
+    Effect.mapError(() =>
+      PolarConfigError.make({
+        message: "Missing required Polar access token.",
+      })
     )
   );
   const server = yield* Config.schema(
@@ -33,11 +32,10 @@ export const readPolarClient = Effect.fn("polar.readClient")(function* () {
     "NEXT_PUBLIC_POLAR_SERVER"
   ).pipe(
     Config.withDefault("sandbox"),
-    Effect.mapError(
-      () =>
-        new PolarConfigError({
-          message: "Unable to read the Polar deployment environment.",
-        })
+    Effect.mapError(() =>
+      PolarConfigError.make({
+        message: "Unable to read the Polar deployment environment.",
+      })
     )
   );
   return yield* Effect.sync(

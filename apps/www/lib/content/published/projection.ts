@@ -13,12 +13,12 @@ export const decodePublishedArticle = Effect.fn(
   const projection = yield* Schema.decodeUnknownEffect(ArticleProjectionSchema)(
     input,
     { onExcessProperty: "error" }
-  ).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
+  ).pipe(Effect.mapError(() => PublishedProjectionError.make(identity)));
   if (
     projection.appLocale !== identity.appLocale ||
     projection.publicPath !== identity.publicPath
   ) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   return projection;
 });
@@ -30,13 +30,13 @@ export const decodePublishedPage = Effect.fn(
   const projection = yield* Schema.decodeUnknownEffect(
     PublicPageProjectionSchema
   )(input, { onExcessProperty: "error" }).pipe(
-    Effect.mapError(() => new PublishedProjectionError(identity))
+    Effect.mapError(() => PublishedProjectionError.make(identity))
   );
   if (
     projection.appLocale !== identity.appLocale ||
     projection.publicPath !== identity.publicPath
   ) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   return projection;
 });
@@ -49,5 +49,5 @@ export const decodePublishedPageJson = Effect.fn(
     Schema.fromJsonString(PublicPageProjectionSchema)
   )(source, {
     onExcessProperty: "error",
-  }).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
+  }).pipe(Effect.mapError(() => PublishedProjectionError.make(identity)));
 });

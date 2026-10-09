@@ -35,13 +35,13 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
       byteLength !== measured ||
       measured > MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES
     ) {
-      return yield* new PublicRuntimeBatchRequestError();
+      return yield* PublicRuntimeBatchRequestError.make();
     }
     return yield* Schema.decodeEffect(
       Schema.fromJsonString(PublicContentRuntimeBatchRequestSchema)
     )(source, {
       onExcessProperty: "error",
-    }).pipe(Effect.mapError(() => new PublicRuntimeBatchRequestError()));
+    }).pipe(Effect.mapError(() => PublicRuntimeBatchRequestError.make()));
   }
 );
 /** Reads and decodes one transactionally consistent public batch. */
@@ -58,13 +58,13 @@ const resolvePublicRuntimeBatch = Effect.fn(
       })),
     }
   ).pipe(
-    Effect.mapError(() => new PublicRuntimeBatchReadError()),
+    Effect.mapError(() => PublicRuntimeBatchReadError.make()),
     Effect.catchDefect(
-      flow(() => new PublicRuntimeBatchReadError(), Effect.fail)
+      flow(() => PublicRuntimeBatchReadError.make(), Effect.fail)
     )
   );
   if (rows.length !== requests.length) {
-    return yield* new PublicRuntimeBatchReadError();
+    return yield* PublicRuntimeBatchReadError.make();
   }
   return yield* Effect.forEach(rows, (row) =>
     decodePublicRuntimeRow(row).pipe(
@@ -81,7 +81,7 @@ const resolvePublicRuntimeBatch = Effect.fn(
             kind: "missing",
           }
       ),
-      Effect.mapError(() => new PublicRuntimeBatchReadError())
+      Effect.mapError(() => PublicRuntimeBatchReadError.make())
     )
   );
 });

@@ -160,12 +160,11 @@ export const readProtectedProgram = Effect.fn(
       onExcessProperty: "error",
     }
   )(input).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Protected runtime request is invalid.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Protected runtime request is invalid.",
+      })
     )
   );
   const bundle = yield* loadBundle(request);

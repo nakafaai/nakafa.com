@@ -35,7 +35,7 @@ export const decodePublishedQuranDocument = Effect.fn(
       expected.appLocale
     )
   ) {
-    return yield* new QuranPublicationError({
+    return yield* QuranPublicationError.make({
       operation: "document",
       reason: "Signed Quran document is missing.",
     });
@@ -45,7 +45,7 @@ export const decodePublishedQuranDocument = Effect.fn(
     result.surah.number !== expected.surahNumber ||
     !hasExactQuranVerseRange(result.verses, 1, result.surah.numberOfVerses)
   ) {
-    return yield* new QuranPublicationError({
+    return yield* QuranPublicationError.make({
       operation: "document",
       reason: "Signed Quran document identity is inconsistent.",
     });

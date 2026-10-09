@@ -121,7 +121,7 @@ describe("published content exchange", () => {
       Effect.gen(function* () {
         verifyPublicContentDeliveryMock.mockReturnValue(
           Effect.fail(
-            new ContentRuntimeVerificationError({ cause: "Invalid signature" })
+            ContentRuntimeVerificationError.make({ cause: "Invalid signature" })
           )
         );
         expect(
@@ -201,7 +201,7 @@ describe("published content exchange", () => {
     Effect.gen(function* () {
       readPublicContentMock.mockReturnValueOnce(
         Effect.fail(
-          new ContentRuntimeMissingError({
+          ContentRuntimeMissingError.make({
             request: {
               appLocale: input.appLocale,
               delivery: "public",
@@ -223,7 +223,7 @@ describe("published content exchange", () => {
 
       readPublicContentMock.mockReturnValueOnce(
         Effect.fail(
-          new ContentRuntimeVerificationError({
+          ContentRuntimeVerificationError.make({
             cause: new Error("The signed renderer does not match."),
           })
         )

@@ -15,7 +15,7 @@ export class UserCleanupError extends Schema.TaggedError<UserCleanupError>()(
 /** Converts a database or scheduler failure into the cleanup error contract. */
 export const UserCleanupErrorWire = publicFailure(UserCleanupError);
 export function toUserCleanupError(error: unknown) {
-  return new UserCleanupError({
+  return UserCleanupError.make({
     cause: error,
     code: USER_CLEANUP_FAILED_CODE,
     message: "Unable to complete account cleanup.",

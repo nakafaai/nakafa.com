@@ -42,7 +42,7 @@ export class ContentViewIoError extends Schema.TaggedError<ContentViewIoError>()
 /** Maps an unknown infrastructure failure into the content-view error channel. */
 export const ContentViewIoErrorWire = publicFailure(ContentViewIoError);
 export function toContentViewIoError(error: unknown) {
-  return new ContentViewIoError({
+  return ContentViewIoError.make({
     code: contentViewIoFailedCode,
     cause: error,
     message: "Unable to record the content view.",

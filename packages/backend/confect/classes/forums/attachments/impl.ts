@@ -49,14 +49,14 @@ function hasAllowedForumAttachmentExtension(fileName: string) {
 }
 function failForumAttachment(code: ForumAttachmentErrorCode, message: string) {
   return Effect.fail(
-    new ForumAttachmentError({
+    ForumAttachmentError.make({
       code,
       message,
     })
   );
 }
 function toForumAttachmentIoError(cause: unknown) {
-  return new ForumAttachmentIoError({
+  return ForumAttachmentIoError.make({
     cause,
     code: forumAttachmentIoFailedCode,
     message: "Could not read or update the forum attachment.",

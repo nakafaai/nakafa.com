@@ -68,7 +68,7 @@ const runCommand = Effect.fn("NakafaCli.test.runCommand")(function* (
 ) {
   const { exitCode, stderr, stdout } = yield* readCommand(command, args, cwd);
   if (exitCode !== 0) {
-    return yield* new CliTestCommandError({
+    return yield* CliTestCommandError.make({
       command: Arr.join([command, ...args], " "),
       exitCode,
       stderr: stderr.trim(),

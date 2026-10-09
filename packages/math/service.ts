@@ -53,35 +53,32 @@ export class MathService extends Context.Service<
             HttpClientRequest.bearerToken(apiKey),
             HttpClientRequest.bodyJsonUnsafe(request),
             client.execute,
-            Effect.mapError(
-              () =>
-                new MathCasRequestError({
-                  message: "Unable to reach the Nakafa math service.",
-                })
+            Effect.mapError(() =>
+              MathCasRequestError.make({
+                message: "Unable to reach the Nakafa math service.",
+              })
             )
           );
           if (response.status < 200 || response.status >= 300) {
-            return yield* new MathCasRequestError({
+            return yield* MathCasRequestError.make({
               message: yield* readResponseError(response),
               status: response.status,
             });
           }
           const payload = yield* response.json.pipe(
-            Effect.mapError(
-              () =>
-                new MathCasResponseError({
-                  message: "Math service returned an unreadable JSON response.",
-                })
+            Effect.mapError(() =>
+              MathCasResponseError.make({
+                message: "Math service returned an unreadable JSON response.",
+              })
             )
           );
           return yield* Schema.decodeUnknownEffect(MathResultSchema)(
             payload
           ).pipe(
-            Effect.mapError(
-              (error) =>
-                new MathCasResponseError({
-                  message: error.message,
-                })
+            Effect.mapError((error) =>
+              MathCasResponseError.make({
+                message: error.message,
+              })
             )
           );
         },
@@ -91,7 +88,7 @@ export class MathService extends Context.Service<
         Effect.timeoutOrElse({
           duration: "25 seconds",
           orElse: () =>
-            new MathCasRequestError({
+            MathCasRequestError.make({
               message: "Math service exceeded its response deadline.",
             }),
         })

@@ -55,12 +55,11 @@ export const decodeBatch = Effect.fn("contentRelease.decodeItemBatch")(
       items,
       releaseId,
     }).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Item batch ${batchIndex} violates its exact contract.`,
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Item batch ${batchIndex} violates its exact contract.`,
+        })
       )
     );
   }

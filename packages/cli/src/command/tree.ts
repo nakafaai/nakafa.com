@@ -74,11 +74,10 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
       const request = yield* Schema.decodeEffect(CliRequestSchema, {
         onExcessProperty: "error",
       })({ apiBase, command, pretty }).pipe(
-        Effect.mapError(
-          (cause) =>
-            new InvocationError({
-              message: `Invalid command options: ${String(cause)}`,
-            })
+        Effect.mapError((cause) =>
+          InvocationError.make({
+            message: `Invalid command options: ${String(cause)}`,
+          })
         )
       );
       yield* execute(request);

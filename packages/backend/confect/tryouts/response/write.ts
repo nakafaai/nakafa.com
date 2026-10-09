@@ -33,7 +33,7 @@ function toOwnedAttemptResponseError(
   error: TryoutRuntimeError | TryoutAttemptStateError
 ) {
   if (error.code !== "TRYOUT_ATTEMPT_NOT_FOUND") {
-    return new TryoutResponseError({
+    return TryoutResponseError.make({
       cause: error,
       code: "TRYOUT_RESPONSE_FAILED",
       message: "Unable to save try-out response.",
@@ -68,7 +68,7 @@ const requirePlacement = Effect.fn("tryouts.response.requirePlacement")(
         Effect.orDie
       );
     if (!placement) {
-      return yield* new TryoutResponseError({
+      return yield* TryoutResponseError.make({
         code: "TRYOUT_PLACEMENT_NOT_FOUND",
         message: "Try-out question placement not found.",
       });
@@ -82,7 +82,7 @@ const requireActiveSection = Effect.fn("tryouts.response.requireActiveSection")(
   function* (placement: TryoutPlacement) {
     const section = yield* loadPlacementSectionAttempt(placement);
     if (section?.status !== "in-progress") {
-      return yield* new TryoutAttemptStateError({
+      return yield* TryoutAttemptStateError.make({
         code: "TRYOUT_SECTION_NOT_ACTIVE",
         message: "Try-out section is not active.",
       });
@@ -109,7 +109,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
       userId: input.userId,
     }).pipe(Effect.mapError(toOwnedAttemptResponseError));
     if (attempt.status !== "in-progress") {
-      return yield* new TryoutAttemptStateError({
+      return yield* TryoutAttemptStateError.make({
         code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
         message: "Try-out attempt is not active.",
       });
@@ -123,7 +123,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
       placement,
     ]);
     if (input.now >= attempt.expiresAt || input.now >= section.expiresAt) {
-      return yield* new TryoutResponseError({
+      return yield* TryoutResponseError.make({
         code: "TRYOUT_EXPIRED",
         message: "Try-out attempt time has expired.",
       });
@@ -136,7 +136,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
       .take(2)
       .pipe(Effect.orDie);
     if (existingResponses.length > 1) {
-      return yield* new TryoutResponseIntegrityError({
+      return yield* TryoutResponseIntegrityError.make({
         code: "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
         message: "Try-out placement has more than one response.",
       });

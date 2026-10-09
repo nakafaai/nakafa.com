@@ -34,7 +34,7 @@ export const decodeProgramPosition = Effect.fn("program.decodeProgramPosition")(
       return null;
     }
     const invalid = () =>
-      new ReleaseError({
+      ReleaseError.make({
         code: "CONTENT_RELEASE_INTEGRITY",
         message: "Program cursor has an invalid query position.",
       });

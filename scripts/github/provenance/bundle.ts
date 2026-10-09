@@ -53,7 +53,7 @@ const normalizeBundle = Effect.fn("GithubProvenance.normalizeBundle")(
     return yield* Effect.try({
       try: () => bundleToJSON(bundleFromJSON(bundle)),
       catch: (cause) =>
-        new ProvenanceVerificationError({
+        ProvenanceVerificationError.make({
           cause,
           message: "The npm audit returned an invalid Sigstore bundle.",
         }),
@@ -65,14 +65,14 @@ const verifySigstoreBundle = Effect.fn("GithubProvenance.verifyBundle")(
   function* (bundle: unknown, identity: PublisherIdentity) {
     const serialized = yield* normalizeBundle(bundle);
     if (!("dsseEnvelope" in serialized && serialized.dsseEnvelope)) {
-      return yield* new ProvenanceVerificationError({
+      return yield* ProvenanceVerificationError.make({
         message: "The npm provenance bundle has no signed DSSE payload.",
       });
     }
     yield* Effect.tryPromise({
       try: () => verifySigstore(serialized, publisherPolicy(identity)),
       catch: (cause) =>
-        new ProvenanceVerificationError({
+        ProvenanceVerificationError.make({
           cause,
           message:
             "The npm provenance signer does not match the trusted publisher.",

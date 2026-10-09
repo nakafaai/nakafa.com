@@ -113,12 +113,11 @@ export const verifyCategory = Effect.fn("contentRelease.verifyArticleCategory")(
 export const decodeCategory = Effect.fn("contentRelease.decodeArticleCategory")(
   function* (source: string) {
     return yield* Schema.decodeEffect(ArticleCategorySchema)(source).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_LIMIT",
-            message: "The article category must be a lowercase kebab segment.",
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_LIMIT",
+          message: "The article category must be a lowercase kebab segment.",
+        })
       )
     );
   }

@@ -36,7 +36,7 @@ const loadLeafGroup = Effect.fn("RefsLoad.loadLeafGroup")(function* (
   const moduleExports = yield* Effect.tryPromise({
     try: () => server.ssrLoadModule(file),
     catch: (cause) =>
-      new RefsLoadError({
+      RefsLoadError.make({
         message: `Unable to load ${specifier}: ${getUnknownMessage(cause)}`,
       }),
   });

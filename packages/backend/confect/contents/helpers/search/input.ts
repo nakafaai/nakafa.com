@@ -23,20 +23,20 @@ export const validateContentSearchInput = Effect.fn(
   "contents.search.validateInput"
 )(function* (args: ContentSearchInput) {
   if (args.limit < 1 || args.limit > NAKAFA_AGENT_MAX_LIMIT) {
-    return yield* new ContentSearchInputError({
+    return yield* ContentSearchInputError.make({
       code: "CONTENT_SEARCH_LIMIT_INVALID",
       message: `Content search limit must be between 1 and ${NAKAFA_AGENT_MAX_LIMIT}.`,
     });
   }
   if (args.offset < 0 || args.offset > NAKAFA_AGENT_MAX_OFFSET) {
-    return yield* new ContentSearchInputError({
+    return yield* ContentSearchInputError.make({
       code: "CONTENT_SEARCH_OFFSET_INVALID",
       message: `Content search offset must be between 0 and ${NAKAFA_AGENT_MAX_OFFSET}.`,
     });
   }
   const queryTexts = getQueryTexts(args);
   if (queryTexts.length > NAKAFA_AGENT_MAX_QUERIES) {
-    return yield* new ContentSearchInputError({
+    return yield* ContentSearchInputError.make({
       code: "CONTENT_SEARCH_QUERY_COUNT_INVALID",
       message: `Content search accepts at most ${NAKAFA_AGENT_MAX_QUERIES} unique queries.`,
     });

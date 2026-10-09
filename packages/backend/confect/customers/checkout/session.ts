@@ -29,7 +29,7 @@ export const createAdmittedCheckoutSession = Effect.fn(
   const checkout = yield* operations.createCheckout;
   const admission = yield* operations.admitCheckout;
   if (admission.kind === "unavailable") {
-    return yield* new CheckoutUnavailable({
+    return yield* CheckoutUnavailable.make({
       code: accountUnavailableCode,
       message: accountUnavailableMessage,
     });

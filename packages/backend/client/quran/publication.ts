@@ -32,7 +32,7 @@ export function quranPublicationError(
   operation: QuranPublicationOperation,
   reason: string
 ) {
-  return new QuranPublicationError({
+  return QuranPublicationError.make({
     operation,
     reason,
   });

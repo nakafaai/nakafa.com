@@ -46,7 +46,7 @@ function getSharedConvexClient(convexUrl: string) {
  */
 const readConvexToken = Effect.tryPromise({
   catch: () =>
-    new ConvexTokenReadError({
+    ConvexTokenReadError.make({
       detail: "Better Auth could not read a Convex access token.",
     }),
   try: () => authClient.convex.token({ fetchOptions: { throw: false } }),
@@ -54,16 +54,14 @@ const readConvexToken = Effect.tryPromise({
   Effect.flatMap((response) =>
     response.error
       ? Effect.fail(
-          new ConvexTokenReadError({
+          ConvexTokenReadError.make({
             detail: "Better Auth rejected the Convex access token request.",
           })
         )
-      : Effect.fromOption(
-          Option.fromNullishOr(response.data?.token),
-          () =>
-            new ConvexTokenReadError({
-              detail: "Better Auth returned no Convex access token.",
-            })
+      : Effect.fromOption(Option.fromNullishOr(response.data?.token), () =>
+          ConvexTokenReadError.make({
+            detail: "Better Auth returned no Convex access token.",
+          })
         )
   )
 );

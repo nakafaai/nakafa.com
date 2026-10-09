@@ -58,7 +58,7 @@ const RuntimeTargetSchema = Schema.Struct({
 type RuntimeTarget = typeof RuntimeTargetSchema.Type;
 
 function failure(reason: Failure) {
-  return new UnsafeRuntimeError({ reason });
+  return UnsafeRuntimeError.make({ reason });
 }
 
 function normalize(hostname: string) {

@@ -64,7 +64,9 @@ describe("Nina content search", () => {
   it("keeps failed retrieval distinct from an empty search", async () => {
     vi.mocked(searchNakafaContent).mockReturnValue(
       Effect.fail(
-        new NakafaAgentDataReadError({ message: "Search verification failed." })
+        NakafaAgentDataReadError.make({
+          message: "Search verification failed.",
+        })
       )
     );
     const { artifacts, publish } = recordProgress();

@@ -44,7 +44,7 @@ const createSchool = FunctionImpl.make(
         Effect.orDie
       );
     if (existingSchoolByEmail) {
-      return yield* new SchoolCreateError({
+      return yield* SchoolCreateError.make({
         code: "SCHOOL_ALREADY_EXISTS",
         message: "A school with this email already exists.",
       });
@@ -130,7 +130,7 @@ const joinSchool = FunctionImpl.make(
         Effect.orDie
       );
     if (!inviteCode) {
-      return yield* new InvitationError({
+      return yield* InvitationError.make({
         code: "INVALID_CODE",
         message: "Invalid invite code.",
       });
@@ -146,7 +146,7 @@ const joinSchool = FunctionImpl.make(
         Effect.orDie
       );
     if (!school) {
-      return yield* new SchoolReadError({
+      return yield* SchoolReadError.make({
         code: "SCHOOL_NOT_FOUND",
         message: "School not found.",
       });

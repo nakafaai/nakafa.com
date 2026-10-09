@@ -68,7 +68,7 @@ export class AccountConsentRejectedError extends Schema.TaggedError<AccountConse
 ) {}
 
 function toAccountConsentWriteError(cause: unknown) {
-  return new AccountConsentPersistenceError({
+  return AccountConsentPersistenceError.make({
     cause,
     code: accountConsentPersistenceFailedCode,
     message: "Unable to persist the analytics decision for this account.",
@@ -99,13 +99,12 @@ const persistAccountAnalyticsConsent = Effect.fnUntraced(function* (
     }),
     Effect.flatMap((result) =>
       Effect.fromResult(result).pipe(
-        Effect.mapError(
-          (cause) =>
-            new AccountConsentRejectedError({
-              cause,
-              code: accountConsentRejectedCode,
-              message: "The analytics decision was rejected for this account.",
-            })
+        Effect.mapError((cause) =>
+          AccountConsentRejectedError.make({
+            cause,
+            code: accountConsentRejectedCode,
+            message: "The analytics decision was rejected for this account.",
+          })
         )
       )
     )

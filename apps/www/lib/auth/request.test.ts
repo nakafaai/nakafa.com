@@ -90,7 +90,7 @@ describe("requestWithDeadline", () => {
         yield* TestClock.adjust("1 millis");
 
         expect(yield* Fiber.join(fiber)).toStrictEqual(
-          new AuthRequestDeadline()
+          AuthRequestDeadline.make()
         );
         expect(signal?.aborted).toBe(true);
       })
@@ -115,7 +115,7 @@ describe("requestWithDeadline", () => {
         yield* TestClock.adjust("1 millis");
 
         expect(yield* Fiber.join(fiber)).toStrictEqual(
-          new AuthRequestDeadline()
+          AuthRequestDeadline.make()
         );
         expect(signal?.aborted).toBe(true);
       })

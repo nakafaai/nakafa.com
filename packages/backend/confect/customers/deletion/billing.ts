@@ -45,7 +45,7 @@ export const cleanupDeletedUserBilling = Effect.fn(
       customer &&
       checkpointPolarCustomerId !== customer.id
     ) {
-      return yield* new CustomerSyncIoError({
+      return yield* CustomerSyncIoError.make({
         code: customerSyncIoErrorCode,
         message:
           "Customer cleanup state is inconsistent: local customer and durable checkpoint use different Polar IDs.",

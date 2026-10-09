@@ -175,7 +175,7 @@ function matchesAttemptSelection(
 
 /** Rejects any drift inside an immutable attempt-owned page. */
 function attemptPageIntegrity(message: string) {
-  return new TryoutRuntimeError({
+  return TryoutRuntimeError.make({
     code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
     message,
   });

@@ -50,7 +50,7 @@ const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
   ) {
     const module = yield* Effect.tryPromise({
       catch: () =>
-        new ContentExecutionError({
+        ContentExecutionError.make({
           contentKey: input.contentKey,
           stage: "evaluate",
         }),
@@ -64,7 +64,7 @@ const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
     });
 
     if (typeof module.default !== "function") {
-      return yield* new ContentExecutionError({
+      return yield* ContentExecutionError.make({
         contentKey: input.contentKey,
         stage: "module",
       });

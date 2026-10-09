@@ -90,7 +90,7 @@ describe("strict Mermaid rendering", () => {
       });
       expect(
         yield* Effect.flip(renderMermaid("diagram", "graph TD", {}))
-      ).toEqual(new MermaidRenderError({ cause, operation: "initialize" }));
+      ).toEqual(MermaidRenderError.make({ cause, operation: "initialize" }));
       expect(render).not.toHaveBeenCalled();
     })
   );
@@ -103,7 +103,7 @@ describe("strict Mermaid rendering", () => {
         render.mockRejectedValue(cause);
         expect(
           yield* Effect.flip(renderMermaid("diagram", "invalid", {}))
-        ).toEqual(new MermaidRenderError({ cause, operation: "render" }));
+        ).toEqual(MermaidRenderError.make({ cause, operation: "render" }));
       })
   );
 

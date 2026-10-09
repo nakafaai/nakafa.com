@@ -190,7 +190,7 @@ const runStage = Effect.fn("test.contentRelease.runStage")(function* <A, E>(
   const runtimeServices = yield* Effect.context<never>();
   return yield* Effect.tryPromise({
     catch: (cause) =>
-      new ObservedStageActionFailure({
+      ObservedStageActionFailure.make({
         cause,
       }),
     try: () =>

@@ -46,13 +46,12 @@ export const cancelPreparedAccountDeletion = Effect.fn(
   while (outcome === accountDeletionCancellationOutcome.continue) {
     outcome = yield* Effect.tryPromise(() => cancelPreparation(attemptId)).pipe(
       Effect.flatMap(Effect.fromResult),
-      Effect.mapError(
-        () =>
-          new AccountDeletionRequestUncertain({
-            attemptId,
-            code: accountDeletionErrorCode.requestUncertain,
-            phase: uncertainPhase,
-          })
+      Effect.mapError(() =>
+        AccountDeletionRequestUncertain.make({
+          attemptId,
+          code: accountDeletionErrorCode.requestUncertain,
+          phase: uncertainPhase,
+        })
       )
     );
   }
@@ -66,11 +65,10 @@ export const persistAccountDeletionPhase = Effect.fn(
   persist: PersistAccountDeletionAttempt
 ) {
   yield* persist({ ...attempt, phase }).pipe(
-    Effect.mapError(
-      () =>
-        new AccountDeletionFailed({
-          code: accountDeletionErrorCode.failed,
-        })
+    Effect.mapError(() =>
+      AccountDeletionFailed.make({
+        code: accountDeletionErrorCode.failed,
+      })
     )
   );
 });
@@ -79,11 +77,10 @@ export const clearCanceledAccountDeletionAttempt = Effect.fn(
   "www.auth.clearCanceledAccountDeletionAttempt"
 )(function* (clearAttempt: ClearAccountDeletionAttempt) {
   yield* clearAttempt.pipe(
-    Effect.mapError(
-      () =>
-        new AccountDeletionFailed({
-          code: accountDeletionErrorCode.failed,
-        })
+    Effect.mapError(() =>
+      AccountDeletionFailed.make({
+        code: accountDeletionErrorCode.failed,
+      })
     )
   );
 });
@@ -111,13 +108,12 @@ export const prepareAccountDeletion = Effect.fn(
       prepare(attemptId)
     ).pipe(
       Effect.flatMap(Effect.fromResult),
-      Effect.mapError(
-        () =>
-          new AccountDeletionRequestUncertain({
-            attemptId,
-            code: accountDeletionErrorCode.requestUncertain,
-            phase: accountDeletionRequestPhase.preparation,
-          })
+      Effect.mapError(() =>
+        AccountDeletionRequestUncertain.make({
+          attemptId,
+          code: accountDeletionErrorCode.requestUncertain,
+          phase: accountDeletionRequestPhase.preparation,
+        })
       )
     );
   }
@@ -131,7 +127,7 @@ export const prepareAccountDeletion = Effect.fn(
       cancelPreparation
     );
     yield* clearCanceledAccountDeletionAttempt(clearAttempt);
-    return yield* new AccountDeletionSchoolMemberRequired({
+    return yield* AccountDeletionSchoolMemberRequired.make({
       code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
     });
   }
@@ -142,7 +138,7 @@ export const prepareAccountDeletion = Effect.fn(
       cancelPreparation
     );
     yield* clearCanceledAccountDeletionAttempt(clearAttempt);
-    return yield* new AccountDeletionFailed({
+    return yield* AccountDeletionFailed.make({
       code: accountDeletionErrorCode.failed,
     });
   }

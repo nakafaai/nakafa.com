@@ -18,7 +18,7 @@ export const loadAttemptSections = Effect.fn(
     .take(attempt.sectionSnapshots.length + 1)
     .pipe(Effect.orDie);
   if (sections.length > attempt.sectionSnapshots.length) {
-    return yield* new TryoutRuntimeError({
+    return yield* TryoutRuntimeError.make({
       code: "TRYOUT_SECTION_ATTEMPT_COUNT_EXCEEDED",
       message: "Try-out section attempt count exceeds the attempt snapshot.",
     });

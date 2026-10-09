@@ -30,7 +30,7 @@ export class AccountDeletionAttemptStorageFailed extends Schema.TaggedError<Acco
   }
 ) {}
 const accountDeletionAttemptStorageFailure = () =>
-  new AccountDeletionAttemptStorageFailed({
+  AccountDeletionAttemptStorageFailed.make({
     code: accountDeletionAttemptStorageFailedCode,
   });
 const getAccountDeletionAttemptStorage = Effect.fn(

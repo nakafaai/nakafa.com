@@ -25,7 +25,7 @@ describe("network request classification", () => {
     const error = createNetworkRequestError(cause);
 
     expect(error).toEqual(
-      new NetworkRequestError({
+      NetworkRequestError.make({
         networkCodes: ["ECONNRESET"],
       })
     );

@@ -125,7 +125,7 @@ function clamp(value: number, min: number, max: number) {
 
 /** Creates one stable typed IRT estimation failure. */
 function irtEstimationError(code: TryoutRuntimeError["code"], message: string) {
-  return new TryoutRuntimeError({
+  return TryoutRuntimeError.make({
     code,
     message,
   });

@@ -15,12 +15,11 @@ export const writeOutput = Effect.fn("RepositoryPolicy.writeOutput")(
     Effect.flatMap(Stdio.Stdio, (stdio) =>
       Stream.succeed(value).pipe(Stream.run(stdio.stdout()))
     ).pipe(
-      Effect.mapError(
-        (cause) =>
-          new RepositoryOutputError({
-            cause,
-            message: "Unable to write repository policy output.",
-          })
+      Effect.mapError((cause) =>
+        RepositoryOutputError.make({
+          cause,
+          message: "Unable to write repository policy output.",
+        })
       )
     )
 );
@@ -31,12 +30,11 @@ export const writeError = Effect.fn("RepositoryPolicy.writeError")(
     Effect.flatMap(Stdio.Stdio, (stdio) =>
       Stream.succeed(value).pipe(Stream.run(stdio.stderr()))
     ).pipe(
-      Effect.mapError(
-        (cause) =>
-          new RepositoryOutputError({
-            cause,
-            message: "Unable to write repository policy errors.",
-          })
+      Effect.mapError((cause) =>
+        RepositoryOutputError.make({
+          cause,
+          message: "Unable to write repository policy errors.",
+        })
       )
     )
 );

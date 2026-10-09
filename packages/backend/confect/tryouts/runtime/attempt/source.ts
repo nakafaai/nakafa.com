@@ -19,13 +19,12 @@ export const loadAttemptRuntimeBundle = Effect.fn(
     .get(bundleId)
     .pipe(
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.mapError(
-        (cause) =>
-          new TryoutSelectorReadError({
-            cause,
-            code: "TRYOUT_SELECTOR_INTEGRITY",
-            message: "Unable to read the permanent runtime bundle.",
-          })
+      Effect.mapError((cause) =>
+        TryoutSelectorReadError.make({
+          cause,
+          code: "TRYOUT_SELECTOR_INTEGRITY",
+          message: "Unable to read the permanent runtime bundle.",
+        })
       )
     );
   if (

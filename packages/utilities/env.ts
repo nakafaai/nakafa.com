@@ -67,8 +67,7 @@ export const readEnvironment = <
               "; "
             )
         );
-  return Result.getOrThrowWith(
-    decoded,
-    (details) => new InvalidEnvironmentError({ details })
+  return Result.getOrThrowWith(decoded, (details) =>
+    InvalidEnvironmentError.make({ details })
   );
 };

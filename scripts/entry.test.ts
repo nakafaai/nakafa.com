@@ -65,7 +65,7 @@ describe("script entry", () => {
 
   it.effect("hands typed failures to the runtime error report", () =>
     Effect.gen(function* () {
-      const failure = new EntryFailure({ message: "Policy failed." });
+      const failure = EntryFailure.make({ message: "Policy failed." });
       runEntry(true, Effect.fail(failure));
       assert.strictEqual(yield* runStartedProgram().pipe(Effect.flip), failure);
       assert.strictEqual(process.exitCode, undefined);

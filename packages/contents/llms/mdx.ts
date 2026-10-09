@@ -111,7 +111,7 @@ function parseMdxTree(body: string) {
 
 /** Converts parser and renderer defects into the typed projection failure channel. */
 function makeMdxAgentProjectionError(cause: unknown) {
-  return new MdxAgentProjectionError({
+  return MdxAgentProjectionError.make({
     message: String(cause),
   });
 }

@@ -31,7 +31,7 @@ function decodeManifest(input: unknown) {
     Schema.decodeUnknownResult(LocalPreviewManifestSchema)(input, {
       onExcessProperty: "error",
     }),
-    () => new PreviewIntegrityError({ check: "manifest" })
+    () => PreviewIntegrityError.make({ check: "manifest" })
   );
 }
 /** Shares one authenticated snapshot across a single React server render. */

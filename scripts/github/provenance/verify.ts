@@ -25,16 +25,15 @@ export const verifyProvenance = Effect.fn("GithubProvenance.verify")(function* (
   const audit = yield* Schema.decodeEffect(Schema.fromJsonString(AuditSchema))(
     source
   ).pipe(
-    Effect.mapError(
-      (cause) =>
-        new ProvenanceVerificationError({
-          cause,
-          message: "The npm signature audit is not valid JSON evidence.",
-        })
+    Effect.mapError((cause) =>
+      ProvenanceVerificationError.make({
+        cause,
+        message: "The npm signature audit is not valid JSON evidence.",
+      })
     )
   );
   if (audit.invalid.length > 0 || audit.missing.length > 0) {
-    return yield* new ProvenanceVerificationError({
+    return yield* ProvenanceVerificationError.make({
       message: "The npm signature audit contains invalid or missing evidence.",
     });
   }
@@ -49,7 +48,7 @@ export const verifyProvenance = Effect.fn("GithubProvenance.verify")(function* (
       entry.attestations.provenance.predicateType === SLSA_PREDICATE
   );
   if (publications.length !== 1) {
-    return yield* new ProvenanceVerificationError({
+    return yield* ProvenanceVerificationError.make({
       message: "The npm audit does not contain one exact package publication.",
     });
   }
@@ -59,7 +58,7 @@ export const verifyProvenance = Effect.fn("GithubProvenance.verify")(function* (
     ({ predicateType }) => predicateType === SLSA_PREDICATE
   );
   if (bundles.length !== 1) {
-    return yield* new ProvenanceVerificationError({
+    return yield* ProvenanceVerificationError.make({
       message: "The npm audit does not contain one exact SLSA bundle.",
     });
   }
@@ -69,12 +68,11 @@ export const verifyProvenance = Effect.fn("GithubProvenance.verify")(function* (
   const statement = yield* Schema.decodeEffect(
     Schema.fromJsonString(ProvenanceStatementSchema)
   )(payload).pipe(
-    Effect.mapError(
-      (cause) =>
-        new ProvenanceVerificationError({
-          cause,
-          message: "The authenticated SLSA statement is invalid.",
-        })
+    Effect.mapError((cause) =>
+      ProvenanceVerificationError.make({
+        cause,
+        message: "The authenticated SLSA statement is invalid.",
+      })
     )
   );
   const [subject] = statement.subject;
@@ -94,7 +92,7 @@ export const verifyProvenance = Effect.fn("GithubProvenance.verify")(function* (
     dependency?.uri !== expectedDependency ||
     dependency.digest.gitCommit !== expectation.sourceSha
   ) {
-    return yield* new ProvenanceVerificationError({
+    return yield* ProvenanceVerificationError.make({
       message:
         "The authenticated SLSA statement does not match the exact release.",
     });

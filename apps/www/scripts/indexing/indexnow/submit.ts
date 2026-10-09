@@ -103,18 +103,17 @@ const submitBatchToIndexNow = Effect.fn(
     })
     .pipe(
       Effect.map((response) => response.status),
-      Effect.mapError(
-        (cause) =>
-          new IndexNowSubmitError({
-            cause,
-            message: `Error submitting IndexNow batch ${batchCount}.`,
-          })
+      Effect.mapError((cause) =>
+        IndexNowSubmitError.make({
+          cause,
+          message: `Error submitting IndexNow batch ${batchCount}.`,
+        })
       ),
       Effect.timeoutOrElse({
         duration: NETWORK_ATTEMPT_DEADLINE,
         orElse: () =>
           Effect.fail(
-            new IndexNowSubmitError({
+            IndexNowSubmitError.make({
               cause: "deadline",
               message: `IndexNow batch ${batchCount} did not answer within 10 seconds.`,
             })
@@ -131,7 +130,7 @@ const submitBatchToIndexNow = Effect.fn(
   }
 
   if (status !== HTTP_STATUS_CODE_OK) {
-    return yield* new IndexNowSubmitError({
+    return yield* IndexNowSubmitError.make({
       cause: status,
       message: `IndexNow batch ${batchCount} failed with HTTP ${status}.`,
     });

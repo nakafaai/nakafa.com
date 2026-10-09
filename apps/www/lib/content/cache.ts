@@ -28,13 +28,13 @@ export function applyContentCache(
 export const invalidateContentCache = Effect.fn("www.content.cache.invalidate")(
   function* (scope: ContentCacheScope) {
     yield* Effect.try({
-      catch: () => new ContentCacheInvalidationError({ layer: "next" }),
+      catch: () => ContentCacheInvalidationError.make({ layer: "next" }),
       try: () =>
         revalidateTag(makeContentCacheTag(scope), CONTENT_CACHE_REVALIDATION),
     });
     yield* invalidateSitemapCache().pipe(
-      Effect.mapError(
-        () => new ContentCacheInvalidationError({ layer: "sitemap" })
+      Effect.mapError(() =>
+        ContentCacheInvalidationError.make({ layer: "sitemap" })
       )
     );
     return scope;

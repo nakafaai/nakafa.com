@@ -177,7 +177,7 @@ describe("tryouts/score/result", () => {
             )
           )
         );
-        const expected = new TryoutScoreReadError({
+        const expected = TryoutScoreReadError.make({
           code: "TRYOUT_SCORE_NOT_FOUND",
           message: "Terminal try-out attempt is missing its score snapshot.",
         });

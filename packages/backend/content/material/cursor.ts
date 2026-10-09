@@ -35,7 +35,7 @@ export const decodeMaterialPosition = Effect.fn(
     return null;
   }
   const invalid = () =>
-    new ReleaseError({
+    ReleaseError.make({
       code: "CONTENT_RELEASE_INTEGRITY",
       message: "Material cursor has an invalid query position.",
     });

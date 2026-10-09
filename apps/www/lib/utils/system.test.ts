@@ -127,7 +127,7 @@ describe("current content reference metadata", () => {
     Effect.gen(function* () {
       routeMocks.read.mockReturnValueOnce(
         Effect.fail(
-          new NakafaAgentDataReadError({
+          NakafaAgentDataReadError.make({
             cause: "Route catalog unavailable.",
             message: "Unable to read route catalog.",
           })

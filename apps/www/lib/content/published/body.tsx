@@ -30,7 +30,7 @@ export const readRenderedBody = Effect.fn("NakafaContent.readRenderedBody")(
     Effect.tryPromise({
       try: () => renderVerifiedBody(artifact),
       catch: () =>
-        new ContentExecutionError({
+        ContentExecutionError.make({
           contentKey: artifact.payload.contentKey,
           stage: "evaluate",
         }),

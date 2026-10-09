@@ -23,7 +23,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow } from "effect";
 export function toWelcomeIntentError() {
-  return new WelcomeIntentError({
+  return WelcomeIntentError.make({
     code: welcomeIntentFailedCode,
     message: "Unable to process the welcome email intent.",
   });
@@ -35,7 +35,7 @@ export function tryWelcomeIntent<A>(operation: () => Promise<A>) {
   });
 }
 export function deferWelcomeIntent() {
-  return new WelcomeIntentDeferredError({
+  return WelcomeIntentDeferredError.make({
     code: welcomeIntentDeferredCode,
     message: "Welcome email is deferred during account deletion preparation.",
   });
@@ -133,7 +133,7 @@ export const removeWelcomeIntent = Effect.fn("emails.welcome.removeIntent")(
         workflow.cleanup(ctx, workflowId)
       );
       if (!cleaned) {
-        return yield* new UserCleanupError({
+        return yield* UserCleanupError.make({
           code: USER_CLEANUP_FAILED_CODE,
           message: "Unable to clean the welcome email workflow.",
         });

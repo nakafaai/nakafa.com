@@ -56,7 +56,7 @@ export const decodePartnerCursor = Effect.fn(
       prefix: decodeURIComponent(encodedPrefix),
     }),
     catch: () =>
-      new ReleaseError({
+      ReleaseError.make({
         code: "CONTENT_RELEASE_INTEGRITY",
         message: "Partner API cursor has an invalid identity.",
       }),
@@ -68,12 +68,11 @@ export const decodePartnerCursor = Effect.fn(
     family,
     prefix: decoded.prefix,
   }).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Partner API cursor has an invalid identity.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Partner API cursor has an invalid identity.",
+      })
     )
   );
 });
@@ -90,12 +89,11 @@ export const encodePartnerCursor = Effect.fn(
   const cursor = yield* Schema.decodeUnknownEffect(PartnerCursorSchema)(
     input
   ).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Partner API page produced an invalid cursor identity.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Partner API page produced an invalid cursor identity.",
+      })
     )
   );
   return `${PARTNER_CURSOR_PREFIX}${cursor.family}:${cursor.activeReleaseId}:${cursor.appLocale}:${encodeURIComponent(cursor.prefix)}:${encodeURIComponent(cursor.contentKey)}`;

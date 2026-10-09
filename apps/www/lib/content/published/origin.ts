@@ -19,6 +19,6 @@ export const decodeSourceRevision = Effect.fn(
     return null;
   }
   return yield* Schema.decodeEffect(GitCommitShaSchema)(source).pipe(
-    Effect.mapError(() => new PublishedProjectionError(identity))
+    Effect.mapError(() => PublishedProjectionError.make(identity))
   );
 });

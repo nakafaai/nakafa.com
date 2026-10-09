@@ -45,23 +45,21 @@ const decodePage = Effect.fn("contentRelease.decodeRollbackPage")(function* <
   I,
 >(source: string, schema: Schema.Codec<A, I, never, never>, label: string) {
   const unknownPage = yield* Schema.decodeEffect(JsonTextSchema)(source).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `${label} is not valid JSON.`,
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `${label} is not valid JSON.`,
+      })
     )
   );
   return yield* Schema.decodeUnknownEffect(schema)(unknownPage, {
     onExcessProperty: "error",
   }).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `${label} violates its exact contract.`,
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `${label} violates its exact contract.`,
+      })
     )
   );
 });

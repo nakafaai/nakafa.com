@@ -41,7 +41,7 @@ export function validateStoredBatch(
     return Effect.void;
   }
   return Effect.fail(
-    new ReleaseError({
+    ReleaseError.make({
       code: "CONTENT_RELEASE_CONFLICT",
       message: `Batch ${batchIndex} for release ${releaseId} was reused with different bytes.`,
     })

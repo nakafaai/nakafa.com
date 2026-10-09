@@ -38,7 +38,7 @@ describe("content runtime endpoint", () => {
             siteUrl,
             PUBLIC_CONTENT_RUNTIME_PATH
           ).pipe(Effect.flip)
-        ).toEqual(new ContentTransportError({ reason: "url" }));
+        ).toEqual(ContentTransportError.make({ reason: "url" }));
       }
     })
   );

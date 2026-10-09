@@ -40,7 +40,7 @@ export const registerNakafaMcpPrompts = Effect.fn(
     annotations: Context.empty(),
     completions: {},
     handle: getFindLessonPrompt,
-    prompt: new McpSchema.Prompt({
+    prompt: McpSchema.Prompt.make({
       arguments: [
         { name: "locale", required: false },
         { name: "topic", required: true },
@@ -55,7 +55,7 @@ export const registerNakafaMcpPrompts = Effect.fn(
     annotations: Context.empty(),
     completions: {},
     handle: getAnswerFromContentPrompt,
-    prompt: new McpSchema.Prompt({
+    prompt: McpSchema.Prompt.make({
       arguments: [
         { name: "content_ref", required: true },
         { name: "question", required: true },
@@ -70,7 +70,7 @@ export const registerNakafaMcpPrompts = Effect.fn(
     annotations: Context.empty(),
     completions: {},
     handle: getQuranReferencePrompt,
-    prompt: new McpSchema.Prompt({
+    prompt: McpSchema.Prompt.make({
       arguments: [
         { name: "from_verse", required: false },
         { name: "locale", required: false },
@@ -136,7 +136,7 @@ const getQuranReferencePrompt = Effect.fn("agent.mcp.getQuranReferencePrompt")(
 );
 
 function promptResult(lines: readonly string[]) {
-  return new McpSchema.GetPromptResult({
+  return McpSchema.GetPromptResult.make({
     messages: [
       {
         content: {
@@ -155,11 +155,10 @@ function decodePromptArguments<
   return Schema.decodeUnknownEffect(schema, {
     onExcessProperty: "error",
   })(input).pipe(
-    Effect.mapError(
-      (cause) =>
-        new McpSchema.InvalidParams({
-          message: `Invalid arguments for prompt ${promptName}: ${cause.message}`,
-        })
+    Effect.mapError((cause) =>
+      McpSchema.InvalidParams.make({
+        message: `Invalid arguments for prompt ${promptName}: ${cause.message}`,
+      })
     )
   );
 }

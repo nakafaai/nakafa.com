@@ -46,18 +46,18 @@ export const restoreTryoutContentOrder = Effect.fn(
   renderedBatches: readonly (readonly Entry[])[]
 ) {
   if (renderedBatches.length !== plan.batches.length) {
-    return yield* new TryoutContentBatchOrderError();
+    return yield* TryoutContentBatchOrderError.make();
   }
   const sameBatchShape = Arr.every(
     plan.batches,
     (batch, index) => batch.length === renderedBatches[index]?.length
   );
   if (!sameBatchShape) {
-    return yield* new TryoutContentBatchOrderError();
+    return yield* TryoutContentBatchOrderError.make();
   }
   const entries = Arr.flatten(renderedBatches);
   if (entries.length !== plan.selectorCount) {
-    return yield* new TryoutContentBatchOrderError();
+    return yield* TryoutContentBatchOrderError.make();
   }
   return {
     answers: entries.slice(plan.questionCount),

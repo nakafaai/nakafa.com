@@ -181,7 +181,7 @@ const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
             try: () =>
               readMaterialNavigation(locale, materialKey, activeReleaseId),
             catch: (cause) =>
-              new MaterialReadError({
+              MaterialReadError.make({
                 cause,
                 stage: "navigation",
               }),
@@ -209,7 +209,7 @@ const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
       Effect.tryPromise({
         try: () => fetchMaterialLesson(locale, publicPath),
         catch: (cause) =>
-          new MaterialReadError({
+          MaterialReadError.make({
             cause,
             stage: "lesson",
           }),

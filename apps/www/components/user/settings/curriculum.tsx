@@ -260,8 +260,8 @@ function submitCurriculumPreference({
         ),
       })
     )(value).pipe(
-      Effect.mapError(
-        (cause) => new CurriculumPreferenceValidationError({ cause })
+      Effect.mapError((cause) =>
+        CurriculumPreferenceValidationError.make({ cause })
       )
     );
     const program = Arr.findFirst(
@@ -269,7 +269,7 @@ function submitCurriculumPreference({
       (candidate) => candidate.key === formValue.preferredCurriculumProgramKey
     );
     if (Option.isNone(program)) {
-      return yield* new CurriculumPreferenceValidationError({
+      return yield* CurriculumPreferenceValidationError.make({
         cause: formValue.preferredCurriculumProgramKey,
       });
     }
@@ -280,12 +280,12 @@ function submitCurriculumPreference({
           preferredCurriculumProgramKey:
             formValue.preferredCurriculumProgramKey,
         }),
-      catch: (cause) => new CurriculumPreferenceMutationError({ cause }),
+      catch: (cause) => CurriculumPreferenceMutationError.make({ cause }),
     }).pipe(
       Effect.flatMap((result) =>
         Effect.fromResult(result).pipe(
-          Effect.mapError(
-            (cause) => new CurriculumPreferenceMutationError({ cause })
+          Effect.mapError((cause) =>
+            CurriculumPreferenceMutationError.make({ cause })
           )
         )
       )

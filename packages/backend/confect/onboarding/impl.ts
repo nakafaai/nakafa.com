@@ -32,7 +32,7 @@ const onboardingPersistenceFailedMessage =
   "Unable to read or persist onboarding progress.";
 /** Maps unknown database failures into the stable onboarding contract. */
 function toOnboardingPersistenceError() {
-  return new OnboardingProfileError({
+  return OnboardingProfileError.make({
     code: onboardingPersistenceFailedCode,
     message: onboardingPersistenceFailedMessage,
   });
@@ -40,7 +40,7 @@ function toOnboardingPersistenceError() {
 
 /** Redacts signed-catalog failures behind the onboarding boundary. */
 function toOnboardingCurriculumError() {
-  return new OnboardingProfileError({
+  return OnboardingProfileError.make({
     code: onboardingCurriculumMissingCode,
     message: "The default curriculum is unavailable.",
   });
@@ -122,7 +122,7 @@ export const saveOnboardingAnswer = Effect.fn("onboarding.saveAnswer")(
     const writer = yield* DatabaseWriter;
     const current = yield* readOnboardingProfileByUserId(userId);
     if (current?.completedAt !== undefined) {
-      return yield* new OnboardingProfileError({
+      return yield* OnboardingProfileError.make({
         code: onboardingAlreadyCompleteCode,
         message: "Onboarding is already complete.",
       });
@@ -169,7 +169,7 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
   const writer = yield* DatabaseWriter;
   const profile = yield* readOnboardingProfileByUserId(userId);
   if (profile?.completedAt !== undefined) {
-    return yield* new OnboardingProfileError({
+    return yield* OnboardingProfileError.make({
       code: onboardingAlreadyCompleteCode,
       message: "Onboarding is already complete.",
     });
@@ -180,7 +180,7 @@ export const finishOnboarding = Effect.fn("onboarding.finish")(function* (
     defaults.curriculumProgramKey
   ).pipe(Effect.mapError(toOnboardingCurriculumError));
   if (!curriculum) {
-    return yield* new OnboardingProfileError({
+    return yield* OnboardingProfileError.make({
       code: onboardingCurriculumMissingCode,
       message: "The default curriculum is unavailable.",
     });

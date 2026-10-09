@@ -37,10 +37,10 @@ export const decodeProtectedRequest = Effect.fn(
     byteLength !== measured ||
     measured > MAX_PROTECTED_RUNTIME_REQUEST_BYTES
   ) {
-    return yield* new ProtectedRuntimeRequestError();
+    return yield* ProtectedRuntimeRequestError.make();
   }
   return yield* decodeRequestJson(source).pipe(
-    Effect.mapError(() => new ProtectedRuntimeRequestError())
+    Effect.mapError(() => ProtectedRuntimeRequestError.make())
   );
 });
 
@@ -56,8 +56,10 @@ export const resolveProtectedRuntime = Effect.fn(
       selectors: [...request.selectors],
     }
   ).pipe(
-    Effect.mapError(() => new ProtectedRuntimeReadError()),
-    Effect.catchDefect(flow(() => new ProtectedRuntimeReadError(), Effect.fail))
+    Effect.mapError(() => ProtectedRuntimeReadError.make()),
+    Effect.catchDefect(
+      flow(() => ProtectedRuntimeReadError.make(), Effect.fail)
+    )
   );
   return yield* decodeProtectedRuntimeRow(row, request);
 });

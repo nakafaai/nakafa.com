@@ -30,7 +30,7 @@ import {
 } from "effect";
 
 const writeFailure = () =>
-  new NinaTurnError({
+  NinaTurnError.make({
     code: "NINA_WRITE_FAILED",
     message: "Unable to start this Nina response.",
   });
@@ -71,7 +71,7 @@ const start = FunctionImpl.make(
       );
     if (existing) {
       if (existing.fingerprint !== fingerprint) {
-        return yield* new NinaTurnError({
+        return yield* NinaTurnError.make({
           code: "NINA_REQUEST_CONFLICT",
           message:
             "This request identifier already belongs to another response.",
@@ -107,7 +107,7 @@ const start = FunctionImpl.make(
       ? yield* requireChatOwner(args.chatId, appUser._id)
       : null;
     if (chat?.activeTurnId) {
-      return yield* new NinaTurnError({
+      return yield* NinaTurnError.make({
         code: "NINA_BUSY",
         message: "A Nina response is already running in this chat.",
       });

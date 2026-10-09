@@ -214,7 +214,7 @@ describe("Nina presentation after an answer", () => {
     provider.languageModel.mockReturnValue(ninaModel());
     await f.t.action(run, { turnId: f.turnId });
     deployment.mockReturnValue(
-      Effect.fail(new GatewayConfigurationError({ message: "Unavailable" }))
+      Effect.fail(GatewayConfigurationError.make({ message: "Unavailable" }))
     );
     provider.languageModel.mockClear();
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));

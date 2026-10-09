@@ -36,17 +36,17 @@ function sanitizeEvent(block: string) {
     return Result.succeed(encoder.encode(`${EVENT_HEARTBEAT}\n\n`));
   }
   if (!block.startsWith(EVENT_PREFIX)) {
-    return Result.fail(new PreviewEventError({ stage: "event" }));
+    return Result.fail(PreviewEventError.make({ stage: "event" }));
   }
   const source = block.slice(EVENT_PREFIX.length);
   if (source.includes("\n")) {
-    return Result.fail(new PreviewEventError({ stage: "event" }));
+    return Result.fail(PreviewEventError.make({ stage: "event" }));
   }
   const decoded = Schema.decodeResult(PreviewEventJsonSchema)(source, {
     onExcessProperty: "error",
   });
   if (Result.isFailure(decoded)) {
-    return Result.fail(new PreviewEventError({ stage: "event" }));
+    return Result.fail(PreviewEventError.make({ stage: "event" }));
   }
   return Result.succeed(
     encoder.encode(`${EVENT_PREFIX}${encodeJsonText(decoded.success)}\n\n`)
@@ -66,7 +66,7 @@ function sanitizeText(
   const pending = Arr.lastNonEmpty(blocks);
   const events = Arr.map(Arr.initNonEmpty(blocks), (block) =>
     isOversized(block)
-      ? Result.fail(new PreviewEventError({ stage: "event" }))
+      ? Result.fail(PreviewEventError.make({ stage: "event" }))
       : sanitizeEvent(block)
   );
   return [
@@ -74,7 +74,7 @@ function sanitizeText(
     isOversized(pending)
       ? Arr.append(
           events,
-          Result.fail(new PreviewEventError({ stage: "event" }))
+          Result.fail(PreviewEventError.make({ stage: "event" }))
         )
       : events,
   ];
@@ -94,7 +94,7 @@ function sanitizeStream<Failure, Requirements>(
           /** Rejects a provider that closes in the middle of an event. */
           onHalt: (pending): readonly SanitizedEvent[] =>
             `${pending}${decoder.decode()}`.length > 0
-              ? [Result.fail(new PreviewEventError({ stage: "event" }))]
+              ? [Result.fail(PreviewEventError.make({ stage: "event" }))]
               : [],
         }
       ),
@@ -125,12 +125,12 @@ function validateResponse(
     response.url !== target.toString() ||
     !EVENT_CONTENT_TYPE.test(response.headers["content-type"] ?? "")
   ) {
-    return Effect.fail(new PreviewEventError({ stage: "response" }));
+    return Effect.fail(PreviewEventError.make({ stage: "response" }));
   }
   return Effect.succeed(
     sanitizeStream(
       response.stream.pipe(
-        Stream.mapError(() => new PreviewEventError({ stage: "response" }))
+        Stream.mapError(() => PreviewEventError.make({ stage: "response" }))
       )
     )
   );
@@ -140,7 +140,7 @@ export const openPreviewEvents = Effect.fn("NakafaContent.openPreviewEvents")(
   function* (signal: AbortSignal) {
     const configOption = yield* readPreviewConfig();
     if (Option.isNone(configOption)) {
-      return yield* new PreviewUnavailableError({});
+      return yield* PreviewUnavailableError.make({});
     }
     const config = configOption.value;
     const target = yield* previewUrl(config, config.eventsPath);
@@ -150,7 +150,7 @@ export const openPreviewEvents = Effect.fn("NakafaContent.openPreviewEvents")(
       HttpClientRequest.bearerToken(config.token),
       client.execute,
       Effect.raceFirst(Effect.flip(waitForAbort(signal))),
-      Effect.mapError(() => new PreviewRequestError({ stage: "connect" }))
+      Effect.mapError(() => PreviewRequestError.make({ stage: "connect" }))
     );
     const events = yield* validateResponse(response, target);
     return yield* events.pipe(

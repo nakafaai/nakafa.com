@@ -27,7 +27,7 @@ export const writeCodeToClipboard = Effect.fn(
   code: string
 ) {
   if (!clipboard?.writeText) {
-    return yield* new CodeClipboardUnavailableError({
+    return yield* CodeClipboardUnavailableError.make({
       message: "Clipboard API is not available in this browser.",
     });
   }
@@ -37,7 +37,7 @@ export const writeCodeToClipboard = Effect.fn(
       Effect.tryPromise({
         try: () => clipboard.writeText(code),
         catch: (cause) =>
-          new CodeClipboardWriteError({
+          CodeClipboardWriteError.make({
             cause,
             message: "Failed to copy the code block to the clipboard.",
           }),

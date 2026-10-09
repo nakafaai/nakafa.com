@@ -4,7 +4,7 @@ import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
 describe("math errors", () => {
   it("keeps request failures tagged", () => {
     expect(
-      new MathCasRequestError({
+      MathCasRequestError.make({
         message: "CAS failed.",
         status: 500,
       })
@@ -17,7 +17,7 @@ describe("math errors", () => {
 
   it("keeps response failures tagged", () => {
     expect(
-      new MathCasResponseError({
+      MathCasResponseError.make({
         message: "Invalid payload.",
       })
     ).toMatchObject({

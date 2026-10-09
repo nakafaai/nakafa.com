@@ -73,7 +73,7 @@ describe("file batch selection", () => {
         expect(result).toEqual(
           expected
             ? { files: [file], errors: [] }
-            : { files: [], errors: [new FileTypeError({ fileName: name })] }
+            : { files: [], errors: [FileTypeError.make({ fileName: name })] }
         );
       })
   );
@@ -92,8 +92,8 @@ describe("file batch selection", () => {
         });
         expect(result.files).toEqual([PHOTO]);
         expect(result.errors).toEqual([
-          new FileSizeError({ maxSize: 3 }),
-          new FileTypeError({ fileName: "notes.txt" }),
+          FileSizeError.make({ maxSize: 3 }),
+          FileTypeError.make({ fileName: "notes.txt" }),
         ]);
       })
   );
@@ -111,7 +111,7 @@ describe("file batch selection", () => {
             maxSize: 0,
           })
         );
-        expect(error).toEqual(new FileCountError({ maxFiles: 1 }));
+        expect(error).toEqual(FileCountError.make({ maxFiles: 1 }));
       })
   );
 
@@ -125,7 +125,7 @@ describe("file batch selection", () => {
         files: [PHOTO, larger, renamed],
       });
       expect(result.files).toEqual([renamed]);
-      expect(result.errors).toEqual([new FileSizeError({ maxSize: 3 })]);
+      expect(result.errors).toEqual([FileSizeError.make({ maxSize: 3 })]);
     })
   );
 

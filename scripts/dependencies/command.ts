@@ -48,23 +48,21 @@ export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
         stderr: capture ? "pipe" : "inherit",
         stdout: capture ? "pipe" : "inherit",
       }).pipe(
-        Effect.mapError(
-          (cause) =>
-            new DependencyCommandError({
-              cause,
-              message: `Unable to run pnpm ${Arr.join(args, " ")}.`,
-            })
+        Effect.mapError((cause) =>
+          DependencyCommandError.make({
+            cause,
+            message: `Unable to run pnpm ${Arr.join(args, " ")}.`,
+          })
         )
       );
 
       if (!capture) {
         const exitCode = yield* command.exitCode.pipe(
-          Effect.mapError(
-            (cause) =>
-              new DependencyCommandError({
-                cause,
-                message: `Unable to finish pnpm ${Arr.join(args, " ")}.`,
-              })
+          Effect.mapError((cause) =>
+            DependencyCommandError.make({
+              cause,
+              message: `Unable to finish pnpm ${Arr.join(args, " ")}.`,
+            })
           )
         );
         return { exitCode: Number(exitCode), stderr: "", stdout: "" };
@@ -78,12 +76,11 @@ export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
         ],
         { concurrency: 3 }
       ).pipe(
-        Effect.mapError(
-          (cause) =>
-            new DependencyCommandError({
-              cause,
-              message: `Unable to finish pnpm ${Arr.join(args, " ")}.`,
-            })
+        Effect.mapError((cause) =>
+          DependencyCommandError.make({
+            cause,
+            message: `Unable to finish pnpm ${Arr.join(args, " ")}.`,
+          })
         )
       );
       return { exitCode: Number(exitCode), stderr, stdout };

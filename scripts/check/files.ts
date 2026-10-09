@@ -60,12 +60,11 @@ export const readRepositoryFiles = Effect.fn("RepositoryPolicy.readFiles")(
         Effect.catchReason("PlatformError", "NotFound", () =>
           Effect.succeed([])
         ),
-        Effect.mapError(
-          (cause) =>
-            new RepositoryReadError({
-              cause,
-              message: `Unable to read ${parent}.`,
-            })
+        Effect.mapError((cause) =>
+          RepositoryReadError.make({
+            cause,
+            message: `Unable to read ${parent}.`,
+          })
         )
       );
       for (const entry of entries) {
@@ -80,12 +79,11 @@ export const readRepositoryFiles = Effect.fn("RepositoryPolicy.readFiles")(
             "NotFound",
             () => Effect.succeedNone
           ),
-          Effect.mapError(
-            (cause) =>
-              new RepositoryReadError({
-                cause,
-                message: `Unable to inspect ${entryPath}.`,
-              })
+          Effect.mapError((cause) =>
+            RepositoryReadError.make({
+              cause,
+              message: `Unable to inspect ${entryPath}.`,
+            })
           )
         );
         if (Option.isSome(info)) {
@@ -138,9 +136,8 @@ export const readAuthoredSources = Effect.fn(
         file: Arr.join(Str.split(path.relative(root, file), path.sep), "/"),
         sourceText,
       })),
-      Effect.mapError(
-        (cause) =>
-          new RepositoryReadError({ cause, message: `Unable to read ${file}.` })
+      Effect.mapError((cause) =>
+        RepositoryReadError.make({ cause, message: `Unable to read ${file}.` })
       )
     )
   );

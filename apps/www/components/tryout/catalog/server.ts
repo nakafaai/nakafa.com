@@ -79,11 +79,10 @@ export async function readTryoutHubPage(locale: Locale) {
     ).pipe(
       Effect.provide(httpLayer()),
       Effect.withTracerTiming(false),
-      Effect.mapError(
-        (cause) =>
-          new TryoutCatalogReadError({
-            cause,
-          })
+      Effect.mapError((cause) =>
+        TryoutCatalogReadError.make({
+          cause,
+        })
       ),
       Effect.flatMap((page) =>
         decodeSourceRevision(page.sourceRevision, {
@@ -118,11 +117,10 @@ export async function readTryoutCountryPage(
     ).pipe(
       Effect.provide(httpLayer()),
       Effect.withTracerTiming(false),
-      Effect.mapError(
-        (cause) =>
-          new TryoutCatalogReadError({
-            cause,
-          })
+      Effect.mapError((cause) =>
+        TryoutCatalogReadError.make({
+          cause,
+        })
       ),
       Effect.flatMap((page) => {
         if (!page) {
@@ -189,11 +187,10 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
         )
       ),
       Effect.withTracerTiming(false),
-      Effect.mapError(
-        (cause) =>
-          new TryoutCatalogReadError({
-            cause,
-          })
+      Effect.mapError((cause) =>
+        TryoutCatalogReadError.make({
+          cause,
+        })
       )
     );
   }
@@ -232,11 +229,10 @@ export const readTryoutSetAttemptPage = Effect.fn(
       })
     ),
     Effect.withTracerTiming(false),
-    Effect.mapError(
-      (cause) =>
-        new TryoutCatalogReadError({
-          cause,
-        })
+    Effect.mapError((cause) =>
+      TryoutCatalogReadError.make({
+        cause,
+      })
     )
   );
 });
@@ -275,11 +271,10 @@ export const readTryoutSectionAttemptPage = Effect.fn(
       })
     ),
     Effect.withTracerTiming(false),
-    Effect.mapError(
-      (cause) =>
-        new TryoutCatalogReadError({
-          cause,
-        })
+    Effect.mapError((cause) =>
+      TryoutCatalogReadError.make({
+        cause,
+      })
     )
   );
 });

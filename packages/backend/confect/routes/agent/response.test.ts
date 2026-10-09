@@ -11,7 +11,7 @@ import { Array as Arr, Cause, Effect, Logger, MutableRef } from "effect";
 describe("agent responses", () => {
   it("uses corrective input guidance when no cause is supplied", async () => {
     const response = agentFailureResponse(
-      new NakafaAgentInputError({ message: "Choose a published locale." }),
+      NakafaAgentInputError.make({ message: "Choose a published locale." }),
       "/search",
       "request-locale"
     );

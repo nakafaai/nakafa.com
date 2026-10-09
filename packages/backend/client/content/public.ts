@@ -103,20 +103,19 @@ const verifyPublicContentResponse = Effect.fn(
     response,
   }).pipe(
     Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
-    Effect.mapError(
-      (cause) =>
-        new ContentRuntimeVerificationError({
-          cause,
-        })
+    Effect.mapError((cause) =>
+      ContentRuntimeVerificationError.make({
+        cause,
+      })
     )
   );
   if (verified.kind === "missing") {
-    return yield* new ContentRuntimeMissingError({
+    return yield* ContentRuntimeMissingError.make({
       request,
     });
   }
   if (verified.kind === "failure") {
-    return yield* new ContentRuntimeFailureError({
+    return yield* ContentRuntimeFailureError.make({
       code: verified.code,
       status,
     });
@@ -135,11 +134,10 @@ const readPublicContentProgram = Effect.fn(
     delivery: "public",
     ...input,
   }).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "request",
-        })
+    Effect.mapError(() =>
+      ContentTransportError.make({
+        reason: "request",
+      })
     )
   );
   const source = yield* encodeContentRequest(
@@ -185,7 +183,7 @@ const readPublicRuntimeBatchResponse = Effect.fn(
     if (failure.kind !== "failure") {
       return yield* createContentContractError(response);
     }
-    return yield* new ContentRuntimeFailureError({
+    return yield* ContentRuntimeFailureError.make({
       code: failure.code,
       status: response.status,
     });
@@ -216,11 +214,10 @@ export const readPublicContentEvidenceBatch = Effect.fn(
       delivery: "public",
       ...input,
     }).pipe(
-      Effect.mapError(
-        () =>
-          new ContentTransportError({
-            reason: "request",
-          })
+      Effect.mapError(() =>
+        ContentTransportError.make({
+          reason: "request",
+        })
       )
     )
   );
@@ -234,11 +231,10 @@ export const readPublicContentEvidenceBatch = Effect.fn(
       onExcessProperty: "error",
     }
   ).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "request",
-        })
+    Effect.mapError(() =>
+      ContentTransportError.make({
+        reason: "request",
+      })
     )
   );
   const source = yield* encodeContentRequest(
@@ -299,35 +295,32 @@ export const verifyPublicContentDelivery = Effect.fn(
     delivery: "public",
     ...input,
   }).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "request",
-        })
+    Effect.mapError(() =>
+      ContentTransportError.make({
+        reason: "request",
+      })
     )
   );
   if (
     new TextEncoder().encode(source).byteLength >
     MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
   ) {
-    return yield* new ContentTransportError({
+    return yield* ContentTransportError.make({
       reason: "response-size",
     });
   }
   const value = yield* Schema.decodeEffect(JsonTextSchema)(source).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "json-syntax",
-        })
+    Effect.mapError(() =>
+      ContentTransportError.make({
+        reason: "json-syntax",
+      })
     )
   );
   const response = yield* decodePublicContentRuntimeResponse(value).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "response-contract",
-        })
+    Effect.mapError(() =>
+      ContentTransportError.make({
+        reason: "response-contract",
+      })
     )
   );
   return yield* verifyPublicContentResponse(

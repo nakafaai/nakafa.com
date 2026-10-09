@@ -37,19 +37,17 @@ const runGit = Effect.fn("ProductionAcceptanceTest.runGit")(function* (
     stderr: "inherit",
     stdout: "ignore",
   }).pipe(
-    Effect.mapError(
-      () =>
-        new GitFixtureError({ message: `git ${Arr.join(args, " ")} failed.` })
+    Effect.mapError(() =>
+      GitFixtureError.make({ message: `git ${Arr.join(args, " ")} failed.` })
     )
   );
   const exitCode = yield* command.exitCode.pipe(
-    Effect.mapError(
-      () =>
-        new GitFixtureError({ message: `git ${Arr.join(args, " ")} failed.` })
+    Effect.mapError(() =>
+      GitFixtureError.make({ message: `git ${Arr.join(args, " ")} failed.` })
     )
   );
   if (exitCode !== 0) {
-    return yield* new GitFixtureError({
+    return yield* GitFixtureError.make({
       message: `git ${Arr.join(args, " ")} exited with ${exitCode}.`,
     });
   }
@@ -63,11 +61,10 @@ const readRevision = Effect.fn("ProductionAcceptanceTest.readRevision")(
         ChildProcess.make("git", ["rev-parse", revision], { cwd: repository })
       )
       .pipe(
-        Effect.mapError(
-          () =>
-            new GitFixtureError({
-              message: `git rev-parse ${revision} failed.`,
-            })
+        Effect.mapError(() =>
+          GitFixtureError.make({
+            message: `git rev-parse ${revision} failed.`,
+          })
         )
       );
     return output.trim();

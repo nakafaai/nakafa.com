@@ -24,7 +24,7 @@ export const loadAttemptScoreResult = Effect.fn("tryouts.score.loadAttempt")(
         Effect.orDie
       );
     if (!score) {
-      return yield* new TryoutScoreReadError({
+      return yield* TryoutScoreReadError.make({
         code: "TRYOUT_SCORE_NOT_FOUND",
         message: "Terminal try-out attempt is missing its score snapshot.",
       });
@@ -42,7 +42,7 @@ export const getSectionScoreResult = Effect.fn("tryouts.score.readSection")(
       return null;
     }
     if (!section.score) {
-      return yield* new TryoutScoreReadError({
+      return yield* TryoutScoreReadError.make({
         code: "TRYOUT_SECTION_SCORE_NOT_FOUND",
         message: "Terminal try-out section is missing its score snapshot.",
       });
@@ -69,7 +69,7 @@ const getScoreResult = Effect.fn("tryouts.score.getResult")(function* (
     return result;
   }
   if (score.theta === undefined || score.thetaSE === undefined) {
-    return yield* new TryoutRuntimeError({
+    return yield* TryoutRuntimeError.make({
       code: "TRYOUT_SCORE_ESTIMATE_INCOMPLETE",
       message: "Try-out score estimate is missing theta or standard error.",
     });

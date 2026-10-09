@@ -61,12 +61,11 @@ export const RegistryVersionJson = Schema.fromJsonString(Schema.String);
 
 function decodeRegistryVersion(registry: string, source: string) {
   return Schema.decodeEffect(RegistryVersionJson)(source).pipe(
-    Effect.mapError(
-      (cause) =>
-        new DependencyMetadataError({
-          cause,
-          message: `${registry} returned invalid registry metadata.`,
-        })
+    Effect.mapError((cause) =>
+      DependencyMetadataError.make({
+        cause,
+        message: `${registry} returned invalid registry metadata.`,
+      })
     )
   );
 }
@@ -85,12 +84,11 @@ function decodeOutdatedDependencies(source: string) {
     Effect.map((dependencies) =>
       Arr.sort(Rec.keys(dependencies), Order.String)
     ),
-    Effect.mapError(
-      (cause) =>
-        new DependencyMetadataError({
-          cause,
-          message: "pnpm outdated returned invalid JSON.",
-        })
+    Effect.mapError((cause) =>
+      DependencyMetadataError.make({
+        cause,
+        message: "pnpm outdated returned invalid JSON.",
+      })
     )
   );
 }
@@ -114,7 +112,7 @@ const reviewRegistryDependencies = Effect.fn("RepositoryPolicy.reviewRegistry")(
             duration: REGISTRY_VIEW_DEADLINE,
             orElse: () =>
               Effect.fail(
-                new DependencyCommandError({
+                DependencyCommandError.make({
                   cause: new RegistryViewDeadline(),
                   message: `pnpm view ${registry} did not finish within 10 seconds.`,
                 })

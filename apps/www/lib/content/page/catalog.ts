@@ -62,7 +62,7 @@ export const readPublishedPageCatalog = Effect.fn(
     identity
   );
   if (!(result.managed && activeReleaseId)) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   const projections = yield* Effect.forEach(result.projectionJson, (source) =>
     decodePublishedPageJson(source, identity)
@@ -71,7 +71,7 @@ export const readPublishedPageCatalog = Effect.fn(
     isReservedPagePath(appLocale, publicPath)
   );
   if (Option.isSome(collision)) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale: collision.value.appLocale,
       publicPath: collision.value.publicPath,
     });
@@ -110,7 +110,7 @@ export const verifyPublishedPageCatalog = Effect.fn(
     canonicalizePublicPageProjection(current.value) !==
       canonicalizePublicPageProjection(page.projection)
   ) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale: page.projection.appLocale,
       publicPath: page.projection.publicPath,
     });

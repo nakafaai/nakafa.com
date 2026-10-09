@@ -134,7 +134,7 @@ describe("published article sitemap", () => {
       Effect.gen(function* () {
         runtimeQueryMock.mockReturnValueOnce(
           Effect.fail(
-            new HttpClient.HttpClientError({
+            HttpClient.HttpClientError.make({
               cause: new Error("sitemap unavailable"),
             })
           )

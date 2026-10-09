@@ -143,7 +143,7 @@ export class ContentAnalyticsIoError extends Schema.TaggedError<ContentAnalytics
 /** Maps thrown Convex IO failures into the analytics domain error channel. */
 
 export function toContentAnalyticsIoError(error: unknown) {
-  return new ContentAnalyticsIoError({
+  return ContentAnalyticsIoError.make({
     code: contentAnalyticsIoFailedCode,
     message: getUnknownErrorMessage(error),
   });

@@ -158,7 +158,7 @@ describe("public content runtime client", () => {
           yield* verifyPublicContentDelivery(input, source, {}).pipe(
             Effect.flip
           )
-        ).toEqual(new ContentTransportError({ reason }));
+        ).toEqual(ContentTransportError.make({ reason }));
         expect(verifyMock).not.toHaveBeenCalled();
         expect(fetchMock).not.toHaveBeenCalled();
       })
@@ -188,15 +188,15 @@ describe("public content runtime client", () => {
           yield* verifyPublicContentDelivery(invalid, "{}", {}).pipe(
             Effect.flip
           )
-        ).toEqual(new ContentTransportError({ reason: "request" }));
+        ).toEqual(ContentTransportError.make({ reason: "request" }));
         expect(
           yield* readPublicContentEvidence(target, invalid).pipe(Effect.flip)
-        ).toEqual(new ContentTransportError({ reason: "request" }));
+        ).toEqual(ContentTransportError.make({ reason: "request" }));
         expect(
           yield* readPublicContentEvidenceBatch(target, [invalid]).pipe(
             Effect.flip
           )
-        ).toEqual(new ContentTransportError({ reason: "request" }));
+        ).toEqual(ContentTransportError.make({ reason: "request" }));
         expect(fetchMock).not.toHaveBeenCalled();
         expect(verifyMock).not.toHaveBeenCalled();
       })
@@ -217,7 +217,9 @@ describe("public content runtime client", () => {
             yield* readPublicContentEvidenceBatch(target, [input]).pipe(
               Effect.flip
             )
-          ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+          ).toEqual(
+            ContentTransportError.make({ reason: "response-contract" })
+          );
         }
         expect(verifyMock).not.toHaveBeenCalled();
       })
@@ -287,7 +289,7 @@ describe("public content runtime client", () => {
 
       expect(
         yield* readPublicContentEvidenceBatch(target, inputs).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "request" }));
+      ).toEqual(ContentTransportError.make({ reason: "request" }));
       expect(fetchMock).not.toHaveBeenCalled();
       expect(verifyMock).not.toHaveBeenCalled();
     })
@@ -316,14 +318,14 @@ describe("public content runtime client", () => {
       expect(
         yield* readPublicContentEvidenceBatch(target, [input]).pipe(Effect.flip)
       ).toEqual(
-        new ContentRuntimeMissingError({
+        ContentRuntimeMissingError.make({
           request: { delivery: "public", ...input },
         })
       );
       expect(
         yield* readPublicContentEvidenceBatch(target, [input]).pipe(Effect.flip)
       ).toEqual(
-        new ContentRuntimeFailureError({
+        ContentRuntimeFailureError.make({
           code: "CONTENT_RUNTIME_INTERNAL",
           status: 500,
         })
@@ -345,7 +347,7 @@ describe("public content runtime client", () => {
 
       expect(
         yield* readPublicContentEvidenceBatch(target, inputs).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+      ).toEqual(ContentTransportError.make({ reason: "response-contract" }));
       expect(verifyMock).not.toHaveBeenCalled();
     })
   );
@@ -361,7 +363,7 @@ describe("public content runtime client", () => {
 
       expect(
         yield* readPublicContentEvidenceBatch(target, [input]).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+      ).toEqual(ContentTransportError.make({ reason: "response-contract" }));
       expect(verifyMock).not.toHaveBeenCalled();
     })
   );
@@ -380,14 +382,14 @@ describe("public content runtime client", () => {
       expect(
         yield* readPublicContentEvidence(target, input).pipe(Effect.flip)
       ).toEqual(
-        new ContentRuntimeMissingError({
+        ContentRuntimeMissingError.make({
           request: { delivery: "public", ...input },
         })
       );
       expect(
         yield* readPublicContentEvidence(target, input).pipe(Effect.flip)
       ).toEqual(
-        new ContentRuntimeFailureError({
+        ContentRuntimeFailureError.make({
           code: "CONTENT_RUNTIME_INTERNAL",
           status: 500,
         })
@@ -403,10 +405,10 @@ describe("public content runtime client", () => {
 
       expect(
         yield* readPublicContentEvidence(target, input).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
+      ).toEqual(ContentTransportError.make({ reason: "response-unmarked" }));
       expect(
         yield* readPublicContentEvidence(target, input).pipe(Effect.flip)
-      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+      ).toEqual(ContentTransportError.make({ reason: "response-contract" }));
       expect(verifyContentRuntimeExchange).not.toHaveBeenCalled();
     })
   );
@@ -425,7 +427,7 @@ describe("public content runtime client", () => {
             input,
             foundResponse().rendererManifest
           ).pipe(Effect.flip)
-        ).toEqual(new ContentRuntimeVerificationError({ cause }));
+        ).toEqual(ContentRuntimeVerificationError.make({ cause }));
       })
   );
 });

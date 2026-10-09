@@ -45,12 +45,11 @@ export const decodeSnapshotBatch = Effect.fn(
     rows,
     snapshotId,
   }).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Snapshot batch ${family}/${batchIndex} violates its exact contract.`,
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Snapshot batch ${family}/${batchIndex} violates its exact contract.`,
+      })
     )
   );
 });

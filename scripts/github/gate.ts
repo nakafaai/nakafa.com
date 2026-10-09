@@ -36,7 +36,7 @@ const requireOutcome = (
   actual === expected
     ? Effect.void
     : Effect.fail(
-        new CiGateError({
+        CiGateError.make({
           message: `${capability} finished with ${actual}; expected ${expected}.`,
         })
       );
@@ -47,7 +47,7 @@ export const validateGate = Effect.fn("CiGate.validate")(function* (
 ) {
   yield* requireOutcome(input.scopeOutcome, "success", "Scope");
   if (!input.trusted && input.productionRequired) {
-    return yield* new CiGateError({
+    return yield* CiGateError.make({
       message: "Untrusted candidate requested signed production acceptance.",
     });
   }
@@ -75,12 +75,11 @@ export const validateGate = Effect.fn("CiGate.validate")(function* (
 const decodeConfig = <S extends Schema.Constraint>(name: string, schema: S) =>
   Config.NonEmptyString(name).pipe(
     Effect.flatMap(Schema.decodeUnknownEffect(schema)),
-    Effect.mapError(
-      (cause) =>
-        new CiGateError({
-          cause,
-          message: `${name} has an invalid CI value.`,
-        })
+    Effect.mapError((cause) =>
+      CiGateError.make({
+        cause,
+        message: `${name} has an invalid CI value.`,
+      })
     )
   );
 
@@ -90,9 +89,8 @@ export const runGate = Effect.fn("CiGate.run")(
     const role = yield* Schema.decodeUnknownEffect(GateRoleSchema)(
       roleInput
     ).pipe(
-      Effect.mapError(
-        (cause) =>
-          new CiGateError({ cause, message: "CI gate role is invalid." })
+      Effect.mapError((cause) =>
+        CiGateError.make({ cause, message: "CI gate role is invalid." })
       )
     );
     const [fullOutcome, productionOutcome, scopeOutcome] = yield* Effect.all([
@@ -109,12 +107,11 @@ export const runGate = Effect.fn("CiGate.run")(
       productionRequired: Config.Boolean("PRODUCTION_REQUIRED"),
       trusted: Config.Boolean("TRUSTED_CANDIDATE"),
     }).pipe(
-      Effect.mapError(
-        (cause) =>
-          new CiGateError({
-            cause,
-            message: "CI gate flags are incomplete.",
-          })
+      Effect.mapError((cause) =>
+        CiGateError.make({
+          cause,
+          message: "CI gate flags are incomplete.",
+        })
       )
     );
     const message = yield* validateGate({

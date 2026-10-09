@@ -8,7 +8,10 @@ const NULLISH_NAMES = ["null", "undefined"];
 
 /** Describes a native compiler question that failed while the receivers were judged. */
 const compilerFailure = (cause: unknown) =>
-  new TestCompilerError({ cause, message: "Unable to read repository types." });
+  TestCompilerError.make({
+    cause,
+    message: "Unable to read repository types.",
+  });
 
 /** Asks the native compiler one question, failing with a typed error when it throws. */
 const ask = <A>(question: () => A) =>

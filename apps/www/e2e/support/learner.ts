@@ -41,7 +41,7 @@ export const signInLearner = Effect.fn("NakafaE2E.signInLearner")(
     );
     const exitCode = yield* child.exitCode;
     if (exitCode !== 0) {
-      return yield* new LearnerSignInError({ exitCode });
+      return yield* LearnerSignInError.make({ exitCode });
     }
     const cookie = yield* fs
       .readFileString(output)

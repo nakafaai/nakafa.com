@@ -87,7 +87,7 @@ export const withQueryRetry = <E, R>(
                 : error
             )
           ),
-          new HttpClient.HttpClientError({ cause: new QueryDeadline() })
+          HttpClient.HttpClientError.make({ cause: new QueryDeadline() })
         ).pipe(
           Effect.tapError((error) =>
             isTransientQueryFailure(error)

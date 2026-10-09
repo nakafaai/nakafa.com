@@ -26,12 +26,11 @@ export const searchNakafaContent = Effect.fn("agent.searchNakafaContent")(
       "Invalid Nakafa content search options."
     );
     const result = yield* runQuery(searchReference, options).pipe(
-      Effect.mapError(
-        (cause) =>
-          new NakafaAgentDataReadError({
-            cause: getUnknownErrorMessage(cause),
-            message: "Unable to search Nakafa content.",
-          })
+      Effect.mapError((cause) =>
+        NakafaAgentDataReadError.make({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to search Nakafa content.",
+        })
       )
     );
     return yield* decodeAgentOutput(

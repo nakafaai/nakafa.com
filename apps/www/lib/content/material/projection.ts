@@ -31,7 +31,7 @@ export const decodePublishedMaterialContext = Effect.fn(
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   if (!result.managed) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath: material.publicPath,
     });
@@ -50,7 +50,7 @@ export const decodePublishedMaterialContext = Effect.fn(
     result.parentJson === null ||
     result.resolvedCanonicalPath === null
   ) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath: material.publicPath,
     });
@@ -79,7 +79,7 @@ export const decodePublishedMaterialContext = Effect.fn(
     parent.programKey !== context.programKey ||
     !(parent.level === "subject" || parent.level === "course")
   ) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath: group.publicPath,
     });

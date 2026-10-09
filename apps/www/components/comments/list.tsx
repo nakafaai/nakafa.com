@@ -70,11 +70,11 @@ export function CommentsList({ slug }: { slug: string }) {
             text,
             ...(parent ? { parentId: parent._id } : {}),
           }),
-        catch: (cause) => new CommentCreateError({ cause }),
+        catch: (cause) => CommentCreateError.make({ cause }),
       }).pipe(
         Effect.flatMap((result) =>
           Effect.fromResult(result).pipe(
-            Effect.mapError((cause) => new CommentCreateError({ cause }))
+            Effect.mapError((cause) => CommentCreateError.make({ cause }))
           )
         ),
         Effect.as(true),

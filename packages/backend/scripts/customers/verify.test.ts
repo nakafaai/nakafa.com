@@ -127,7 +127,7 @@ const failingAnswers: Answers = {
   ...cleanAnswers,
   [customersQuery]: () =>
     Effect.fail(
-      new ScriptedQueryError({
+      ScriptedQueryError.make({
         message: `${customersQuery}: HTTP 500 unavailable`,
       })
     ),

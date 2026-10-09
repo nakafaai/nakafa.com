@@ -32,12 +32,12 @@ export const resolveLineEndpoints = Effect.fn("line.resolveEndpoints")(
     const declared = yield* Schema.decodeUnknownEffect(LineEndpointsSchema)(
       endpoints
     ).pipe(
-      Effect.mapError(
-        (error) => new LineEndpointError({ message: error.message })
+      Effect.mapError((error) =>
+        LineEndpointError.make({ message: error.message })
       )
     );
     if (points.length === 0 && (declared.start || declared.end)) {
-      return yield* new LineEndpointError({
+      return yield* LineEndpointError.make({
         message: "An endpoint requires at least one authored point.",
       });
     }
@@ -47,7 +47,7 @@ export const resolveLineEndpoints = Effect.fn("line.resolveEndpoints")(
       declared.end &&
       declared.start !== declared.end
     ) {
-      return yield* new LineEndpointError({
+      return yield* LineEndpointError.make({
         message: "A single point cannot be both included and excluded.",
       });
     }

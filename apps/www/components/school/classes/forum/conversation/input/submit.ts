@@ -105,19 +105,18 @@ const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
             uploadIds,
           }),
         catch: (cause) =>
-          new ForumAttachmentCleanupError({
+          ForumAttachmentCleanupError.make({
             message: "Forum attachment cleanup failed.",
             cause: getErrorCause(cause),
           }),
       }).pipe(
         Effect.flatMap((result) =>
           Effect.fromResult(result).pipe(
-            Effect.mapError(
-              (cause) =>
-                new ForumAttachmentCleanupError({
-                  message: "Forum attachment cleanup failed.",
-                  cause: getErrorCause(cause),
-                })
+            Effect.mapError((cause) =>
+              ForumAttachmentCleanupError.make({
+                message: "Forum attachment cleanup failed.",
+                cause: getErrorCause(cause),
+              })
             )
           )
         )
@@ -151,19 +150,18 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
           forumId,
         }),
       catch: (cause) =>
-        new ForumAttachmentUploadError({
+        ForumAttachmentUploadError.make({
           message: "Forum attachment upload URL generation failed.",
           cause: getErrorCause(cause),
         }),
     }).pipe(
       Effect.flatMap((result) =>
         Effect.fromResult(result).pipe(
-          Effect.mapError(
-            (cause) =>
-              new ForumAttachmentUploadError({
-                message: "Forum attachment upload URL generation failed.",
-                cause: getErrorCause(cause),
-              })
+          Effect.mapError((cause) =>
+            ForumAttachmentUploadError.make({
+              message: "Forum attachment upload URL generation failed.",
+              cause: getErrorCause(cause),
+            })
           )
         )
       )
@@ -182,11 +180,10 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
         HttpClientResponse.schemaBodyJson(StorageUploadResponseSchema)
       ),
       Effect.timeout(STORAGE_UPLOAD_TIMEOUT),
-      Effect.mapError(
-        () =>
-          new ForumAttachmentUploadError({
-            message: "Forum attachment storage upload failed.",
-          })
+      Effect.mapError(() =>
+        ForumAttachmentUploadError.make({
+          message: "Forum attachment storage upload failed.",
+        })
       ),
       Effect.tapError(() =>
         discardPendingUploads({
@@ -206,19 +203,18 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
           uploadId,
         }),
       catch: (cause) =>
-        new ForumAttachmentUploadError({
+        ForumAttachmentUploadError.make({
           message: "Forum attachment metadata save failed.",
           cause: getErrorCause(cause),
         }),
     }).pipe(
       Effect.flatMap((result) =>
         Effect.fromResult(result).pipe(
-          Effect.mapError(
-            (cause) =>
-              new ForumAttachmentUploadError({
-                message: "Forum attachment metadata save failed.",
-                cause: getErrorCause(cause),
-              })
+          Effect.mapError((cause) =>
+            ForumAttachmentUploadError.make({
+              message: "Forum attachment metadata save failed.",
+              cause: getErrorCause(cause),
+            })
           )
         )
       ),
@@ -290,19 +286,18 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
             }),
       }),
     catch: (cause) =>
-      new ForumPostCreateError({
+      ForumPostCreateError.make({
         message: "Forum post creation failed.",
         cause: getErrorCause(cause),
       }),
   }).pipe(
     Effect.flatMap((result) =>
       Effect.fromResult(result).pipe(
-        Effect.mapError(
-          (cause) =>
-            new ForumPostCreateError({
-              message: "Forum post creation failed.",
-              cause: getErrorCause(cause),
-            })
+        Effect.mapError((cause) =>
+          ForumPostCreateError.make({
+            message: "Forum post creation failed.",
+            cause: getErrorCause(cause),
+          })
         )
       )
     ),

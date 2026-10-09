@@ -32,7 +32,7 @@ export const resolveRendererComponents = Effect.fn(
     }
     const component = findSemanticComponent(renderer.name);
     if (Option.isNone(component)) {
-      return yield* new RendererImplementationMissing({
+      return yield* RendererImplementationMissing.make({
         componentName: renderer.name,
         contentKey: selection.contentKey,
         rendererDomain: selection.rendererDomain,

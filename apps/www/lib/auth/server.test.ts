@@ -168,7 +168,7 @@ describe("Better Auth server boundary", () => {
         Effect.flip
       );
       expect(error.cause).toStrictEqual(
-        new SessionTokenUnavailable({ reason: "status", status: 403 })
+        SessionTokenUnavailable.make({ reason: "status", status: 403 })
       );
       expect(fetcher).toHaveBeenCalledOnce();
     })

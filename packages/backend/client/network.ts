@@ -72,7 +72,7 @@ function isNetworkRetryCode(code: string): code is NetworkRetryCode {
 export function createNetworkRequestError(cause: unknown) {
   const inspection = Result.try(() => inspectNetworkCodes(cause));
   if (Result.isFailure(inspection)) {
-    return new NetworkRequestError({
+    return NetworkRequestError.make({
       networkCodes: [],
     });
   }
@@ -83,7 +83,7 @@ export function createNetworkRequestError(cause: unknown) {
         HashSet.has(inspection.success.retryCodes, code)
       )
     : [];
-  return new NetworkRequestError({
+  return NetworkRequestError.make({
     networkCodes,
   });
 }

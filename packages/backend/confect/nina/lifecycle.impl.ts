@@ -16,7 +16,7 @@ import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { Clock, Effect, Layer } from "effect";
 
 const lifecycleFailure = () =>
-  new NinaTurnError({
+  NinaTurnError.make({
     code: "NINA_WRITE_FAILED",
     message: "Unable to update this Nina response.",
   });

@@ -52,7 +52,7 @@ export class DependencyPolicyReadError extends Schema.TaggedError<DependencyPoli
 ) {}
 
 function readError(message: string, cause: unknown) {
-  return new DependencyPolicyReadError({ cause, message });
+  return DependencyPolicyReadError.make({ cause, message });
 }
 
 /** Parses manifest text into a value whose shape PackageManifest narrows next. */

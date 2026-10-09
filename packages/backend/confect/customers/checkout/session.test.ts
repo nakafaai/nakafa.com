@@ -58,7 +58,7 @@ describe("customers/checkout/session", () => {
   );
   it.effect("preserves typed admission failures", () =>
     Effect.gen(function* () {
-      const failure = new CheckoutSessionIoError({
+      const failure = CheckoutSessionIoError.make({
         code: checkoutSessionIoErrorCode,
         message: "Convex unavailable",
       });

@@ -69,7 +69,7 @@ const readRequiredPageItem = Effect.fn("www.pages.readRequiredItem")(function* (
     (candidate) => candidate.pageKey === pageKey
   );
   if (Option.isNone(item)) {
-    return yield* new PageNavigationMissingError({ locale, pageKey });
+    return yield* PageNavigationMissingError.make({ locale, pageKey });
   }
   return item.value;
 });

@@ -46,7 +46,7 @@ function withPreviewRequestTimeout<A, E, R>(
   return effect.pipe(
     Effect.timeoutOrElse({
       duration: PREVIEW_PHASE_TIMEOUT_MS,
-      orElse: () => Effect.fail(new PreviewRequestError({ stage })),
+      orElse: () => Effect.fail(PreviewRequestError.make({ stage })),
     })
   );
 }
@@ -60,7 +60,7 @@ const validateResponse = Effect.fn("NakafaContent.validatePreviewResponse")(
       response.url !== target.toString() ||
       !isJsonContentType(response.headers["content-type"] ?? null)
     ) {
-      return yield* new PreviewRequestError({
+      return yield* PreviewRequestError.make({
         stage: "response",
         status: response.status,
       });
@@ -73,22 +73,22 @@ const decodeJson = Effect.fn("NakafaContent.decodePreviewJson")(function* (
   bytes: Uint8Array
 ) {
   const source = yield* Effect.try({
-    catch: () => new PreviewRequestError({ stage: "body" }),
+    catch: () => PreviewRequestError.make({ stage: "body" }),
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
   });
   return yield* decodePreviewJson(source).pipe(
-    Effect.mapError(() => new PreviewRequestError({ stage: "body" }))
+    Effect.mapError(() => PreviewRequestError.make({ stage: "body" }))
   );
 });
 /** Maps a bounded-body failure into the preview error vocabulary. */
 function mapBodyError(error: BodyLimitError | HttpClientError.HttpClientError) {
   if (error._tag === "BodyLimitError") {
-    return new PreviewBodyLimitError({
+    return PreviewBodyLimitError.make({
       actualBytes: error.actualBytes,
       maxBytes: error.maxBytes,
     });
   }
-  return new PreviewRequestError({ stage: "body" });
+  return PreviewRequestError.make({ stage: "body" });
 }
 /** Sends one interruptible loopback request with typed connection failure. */
 const requestPreviewResponse = Effect.fn(
@@ -100,7 +100,7 @@ const requestPreviewResponse = Effect.fn(
     HttpClientRequest.acceptJson,
     HttpClientRequest.bearerToken(config.token),
     client.execute,
-    Effect.mapError(() => new PreviewRequestError({ stage: "connect" }))
+    Effect.mapError(() => PreviewRequestError.make({ stage: "connect" }))
   );
 });
 /** Validates and decodes one fetched response through the Effect error channel. */

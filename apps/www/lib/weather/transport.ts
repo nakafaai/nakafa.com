@@ -54,12 +54,11 @@ export const requestWeatherJson = Effect.fn("weather.requestJson")(function* ({
     // OpenWeather requires `appid` in the query, so its URL must not enter telemetry.
     Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
     Effect.timeout(WEATHER_REQUEST_TIMEOUT),
-    Effect.mapError(
-      () =>
-        new WeatherClientRequestError({
-          endpoint,
-          message: `OpenWeather request failed for ${endpoint}.`,
-        })
+    Effect.mapError(() =>
+      WeatherClientRequestError.make({
+        endpoint,
+        message: `OpenWeather request failed for ${endpoint}.`,
+      })
     )
   );
 });

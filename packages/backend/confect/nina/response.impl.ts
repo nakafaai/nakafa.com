@@ -32,7 +32,7 @@ const run = FunctionImpl.make(
       Effect.provide(GatewayLive),
       Effect.catchTag("GatewayConfigurationError", () =>
         Effect.fail(
-          new NinaGenerationError({ reason: "service-configuration" })
+          NinaGenerationError.make({ reason: "service-configuration" })
         )
       ),
       Effect.onExit((exit) => {

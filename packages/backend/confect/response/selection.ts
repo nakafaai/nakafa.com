@@ -23,7 +23,7 @@ type Selecting = Result.Result<Selected, ResponseRejected>;
 
 /** Rejects one selection with the reason it does not belong to its response. */
 function reject(reason: ResponseRejected["reason"]) {
-  return Result.fail(new ResponseRejected({ reason }));
+  return Result.fail(ResponseRejected.make({ reason }));
 }
 
 /**

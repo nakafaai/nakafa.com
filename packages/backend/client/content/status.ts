@@ -19,11 +19,11 @@ export function createContentContractError(
   response: HttpClientResponse.HttpClientResponse
 ) {
   if (hasContentRuntimeMarker(response)) {
-    return new ContentTransportError({
+    return ContentTransportError.make({
       reason: "response-contract",
     });
   }
-  return new ContentTransportError({
+  return ContentTransportError.make({
     reason: "response-unmarked",
   });
 }
@@ -39,7 +39,7 @@ export const validateContentRuntimeStatus = Effect.fn(
     return;
   }
   if (response.kind !== "failure") {
-    return yield* new ContentTransportError({
+    return yield* ContentTransportError.make({
       reason: "status",
     });
   }
@@ -59,7 +59,7 @@ export const validateContentRuntimeStatus = Effect.fn(
   ) {
     return;
   }
-  return yield* new ContentTransportError({
+  return yield* ContentTransportError.make({
     reason: "status",
   });
 });

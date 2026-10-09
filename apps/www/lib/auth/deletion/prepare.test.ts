@@ -115,7 +115,7 @@ describe("account deletion preparation", () => {
           cancelPreparation,
           persist: () =>
             Effect.fail(
-              new AccountDeletionAttemptStorageFailed({
+              AccountDeletionAttemptStorageFailed.make({
                 code: STORAGE_FAILED_CODE,
               })
             ),
@@ -202,7 +202,7 @@ describe("account deletion preparation", () => {
       Effect.gen(function* () {
         const failure = yield* preparationFailure({
           clearAttempt: Effect.fail(
-            new AccountDeletionAttemptStorageFailed({
+            AccountDeletionAttemptStorageFailed.make({
               code: STORAGE_FAILED_CODE,
             })
           ),

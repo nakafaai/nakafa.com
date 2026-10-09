@@ -15,13 +15,12 @@ const SiteUrl = Schema.URL.check(
 /** Reads the configured site only when a capability needs its URL or origin. */
 export const readSiteUrl = Effect.fn("site.readUrl")(function* () {
   return yield* Config.schema(SiteUrl, "SITE_URL").pipe(
-    Effect.mapError(
-      () =>
-        new SiteConfigError({
-          code: "SITE_URL_INVALID",
-          message:
-            "SITE_URL must be configured as an absolute HTTP or HTTPS URL.",
-        })
+    Effect.mapError(() =>
+      SiteConfigError.make({
+        code: "SITE_URL_INVALID",
+        message:
+          "SITE_URL must be configured as an absolute HTTP or HTTPS URL.",
+      })
     )
   );
 });

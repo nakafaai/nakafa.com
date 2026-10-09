@@ -49,14 +49,14 @@ const complete = FunctionImpl.make(
         userId: appUser._id,
       });
       if (attempt.status !== "in-progress") {
-        return yield* new TryoutAttemptStateError({
+        return yield* TryoutAttemptStateError.make({
           code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
           message: "Try-out attempt is not active.",
         });
       }
       const now = yield* Clock.currentTimeMillis;
       if (now >= attempt.expiresAt) {
-        return yield* new TryoutAttemptStateError({
+        return yield* TryoutAttemptStateError.make({
           code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
           message: "Try-out attempt time has expired.",
         });

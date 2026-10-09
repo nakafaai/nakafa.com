@@ -54,19 +54,18 @@ export function createBrowserViewportAdapters({
         Effect.tryPromise({
           try: () => markForumRead({ forumId, lastReadPostId: postId }),
           catch: (cause) =>
-            new ViewportReadError({
+            ViewportReadError.make({
               cause,
               message: "Failed to mark forum post as read.",
             }),
         }).pipe(
           Effect.flatMap((result) =>
             Effect.fromResult(result).pipe(
-              Effect.mapError(
-                (cause) =>
-                  new ViewportReadError({
-                    cause,
-                    message: "Failed to mark forum post as read.",
-                  })
+              Effect.mapError((cause) =>
+                ViewportReadError.make({
+                  cause,
+                  message: "Failed to mark forum post as read.",
+                })
               )
             )
           ),
@@ -79,7 +78,7 @@ export function createBrowserViewportAdapters({
         Effect.try({
           try: () => saveSnapshot(forumId, snapshot),
           catch: (cause) =>
-            new ViewportSessionError({
+            ViewportSessionError.make({
               cause,
               message: "Failed to save forum conversation snapshot.",
             }),

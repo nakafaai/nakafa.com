@@ -93,7 +93,7 @@ export const validatePromptInputFiles = Effect.fn(
 }: ValidatePromptInputFilesOptions) {
   const accepted = Arr.filter(files, (file) => matchesAccept(file, accept));
   if (files.length > 0 && accepted.length === 0) {
-    return yield* new PromptInputFileConstraintError({
+    return yield* PromptInputFileConstraintError.make({
       code: "accept",
       message: "No files match the accepted types.",
     });
@@ -103,7 +103,7 @@ export const validatePromptInputFiles = Effect.fn(
     (file) => maxFileSize === undefined || file.size <= maxFileSize
   );
   if (accepted.length > 0 && sized.length === 0) {
-    return yield* new PromptInputFileConstraintError({
+    return yield* PromptInputFileConstraintError.make({
       code: "max_file_size",
       message: "All files exceed the maximum size.",
     });
@@ -117,7 +117,7 @@ export const validatePromptInputFiles = Effect.fn(
   }
   return {
     files: sized.slice(0, capacity),
-    warning: new PromptInputFileConstraintError({
+    warning: PromptInputFileConstraintError.make({
       code: "max_files",
       message: "Too many files. Some were not added.",
     }),

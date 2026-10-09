@@ -85,7 +85,7 @@ describe("stale published Quran snapshot recovery", () => {
 
         expect(result).toEqual(
           Result.fail(
-            new QuranSnapshotRecoveryError({
+            QuranSnapshotRecoveryError.make({
               cause: sourceFailure,
               reason: "active-identity",
             })

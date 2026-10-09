@@ -202,7 +202,7 @@ describe("account deletion", () => {
           Effect.succeed(accountDeletionAttemptStatus.committed)
         );
         vi.mocked(authClient.deleteUser).mockRejectedValueOnce(
-          new AuthRequestDeadline()
+          AuthRequestDeadline.make()
         );
 
         expect(
@@ -220,7 +220,7 @@ describe("account deletion", () => {
           Effect.succeed(accountDeletionAttemptStatus.pending)
         );
         vi.mocked(authClient.deleteUser).mockRejectedValueOnce(
-          new AuthRequestDeadline()
+          AuthRequestDeadline.make()
         );
 
         expect(
@@ -228,7 +228,7 @@ describe("account deletion", () => {
             createDeletionOperations({ reconcile })
           ).pipe(Effect.flip)
         ).toStrictEqual(
-          new AccountDeletionRequestUncertain({
+          AccountDeletionRequestUncertain.make({
             attemptId: ATTEMPT_ID,
             code: accountDeletionErrorCode.requestUncertain,
             phase: accountDeletionRequestPhase.deletion,
@@ -279,7 +279,7 @@ describe("account deletion", () => {
         createDeletionOperations({
           reconcile: () =>
             Effect.fail(
-              new UserCleanupError({
+              UserCleanupError.make({
                 code: "USER_CLEANUP_FAILED",
                 message: "proof unavailable",
               })

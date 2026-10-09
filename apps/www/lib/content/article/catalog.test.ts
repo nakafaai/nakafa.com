@@ -472,7 +472,7 @@ describe("published article catalog", () => {
       const failure = new Error("catalog unavailable");
       runtimeQueryMock.mockReturnValueOnce(
         Effect.fail(
-          new HttpClient.HttpClientError({
+          HttpClient.HttpClientError.make({
             cause: failure,
           })
         )

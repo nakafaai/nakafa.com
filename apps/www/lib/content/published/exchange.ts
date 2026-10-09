@@ -84,7 +84,7 @@ export const readCurrentPublishedContent = Effect.fn(
   const runtimeKeys = yield* Effect.try({
     try: contentRuntimeKeys,
     catch: () =>
-      new ContentRuntimeConfigurationError({
+      ContentRuntimeConfigurationError.make({
         key: "CONTENT_RUNTIME_TOKEN",
       }),
   });
@@ -113,7 +113,7 @@ export const readPublishedContent = Effect.fn(
 )(function* (input: PublishedContentInput) {
   const found = yield* readCurrentPublishedContent(input);
   if (found.activeReleaseId !== input.activeReleaseId) {
-    return yield* new PublishedReleaseMismatchError({
+    return yield* PublishedReleaseMismatchError.make({
       actualReleaseId: found.activeReleaseId,
       expectedReleaseId: input.activeReleaseId,
     });

@@ -102,13 +102,13 @@ export const signOutAccountBrowserIdentity = Effect.fn(
   const result = yield* Effect.tryPromise({
     try: request,
     catch: () =>
-      new AccountSignOutFailed({
+      AccountSignOutFailed.make({
         code: accountSignOutFailedCode,
       }),
   });
 
   if (result.error) {
-    return yield* new AccountSignOutFailed({
+    return yield* AccountSignOutFailed.make({
       code: accountSignOutFailedCode,
     });
   }

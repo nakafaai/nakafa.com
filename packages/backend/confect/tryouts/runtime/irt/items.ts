@@ -201,7 +201,7 @@ const validateIrtScaleItems = Effect.fn(
   const placementsByIdentity = MutableHashMap.empty<string, TryoutPlacement>();
   for (const placement of args.placements) {
     if (MutableHashMap.has(placementsByIdentity, placement.placementIdentity)) {
-      return yield* new TryoutResponseIntegrityError({
+      return yield* TryoutResponseIntegrityError.make({
         code: "TRYOUT_PLACEMENT_DUPLICATE",
         message: "Try-out placement has a duplicate immutable identity.",
       });
@@ -247,7 +247,7 @@ const validateIrtScaleItems = Effect.fn(
 
 /** Creates one stable typed IRT runtime failure. */
 function irtRuntimeError(code: TryoutRuntimeError["code"], message: string) {
-  return new TryoutRuntimeError({
+  return TryoutRuntimeError.make({
     code,
     message,
   });

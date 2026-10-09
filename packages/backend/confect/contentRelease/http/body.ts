@@ -13,7 +13,7 @@ export class HttpBodyError extends Schema.TaggedError<HttpBodyError>()(
 export type HttpJsonBody = typeof dispatchInputValidator.Type;
 /** Creates one sanitized body failure without retaining request bytes. */
 function bodyError(reason: HttpBodyError["reason"]) {
-  return new HttpBodyError({
+  return HttpBodyError.make({
     reason,
   });
 }

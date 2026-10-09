@@ -17,7 +17,7 @@ export const validateForumMentions = Effect.fn(
 }) {
   const uniqueMentionedUserIds = Arr.dedupe(mentionedUserIds);
   if (uniqueMentionedUserIds.length > MAX_FORUM_POST_MENTIONS) {
-    return yield* new ForumError({
+    return yield* ForumError.make({
       code: "FORUM_MENTION_LIMIT_EXCEEDED",
       message: "Forum post mention count exceeds the supported limit.",
     });
@@ -29,7 +29,7 @@ export const validateForumMentions = Effect.fn(
       userId
     );
     if (!(access.schoolMembership && access.hasAccess)) {
-      return yield* new ForumError({
+      return yield* ForumError.make({
         code: "INVALID_FORUM_MENTION",
         message: "Mentions must target users who can access this forum.",
       });

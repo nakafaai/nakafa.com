@@ -30,13 +30,13 @@ const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
       byteLength !== measured ||
       measured > MAX_PUBLIC_RUNTIME_REQUEST_BYTES
     ) {
-      return yield* new PublicRuntimeRequestError();
+      return yield* PublicRuntimeRequestError.make();
     }
     return yield* Schema.decodeEffect(
       Schema.fromJsonString(PublicContentRuntimeRequestSchema)
     )(source, {
       onExcessProperty: "error",
-    }).pipe(Effect.mapError(() => new PublicRuntimeRequestError()));
+    }).pipe(Effect.mapError(() => PublicRuntimeRequestError.make()));
   }
 );
 /** Reads one active public artifact for Nakafa verification. */
@@ -50,8 +50,8 @@ const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
         publicPath: request.publicPath,
       }
     ).pipe(
-      Effect.mapError(() => new PublicRuntimeReadError()),
-      Effect.catchDefect(flow(() => new PublicRuntimeReadError(), Effect.fail))
+      Effect.mapError(() => PublicRuntimeReadError.make()),
+      Effect.catchDefect(flow(() => PublicRuntimeReadError.make(), Effect.fail))
     );
     return yield* decodePublicRuntimeRow(row);
   }

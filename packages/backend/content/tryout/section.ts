@@ -61,12 +61,11 @@ export const readTryoutSectionRow = Effect.fn(
   const section = yield* Schema.decodeUnknownEffect(TryoutSectionSchema)(
     catalogRow
   ).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Try-out section ${catalogIdentity} changed its row kind.`,
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Try-out section ${catalogIdentity} changed its row kind.`,
+      })
     )
   );
   return {

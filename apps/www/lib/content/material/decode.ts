@@ -21,7 +21,7 @@ type MaterialPublicationRead = typeof MaterialPublicationReadSchema.Type;
 export function makeMaterialProjectionError(
   identity: PublishedProjectionIdentity
 ) {
-  return new PublishedProjectionError(identity);
+  return PublishedProjectionError.make(identity);
 }
 /** Strictly decodes one material projection and its requested route identity. */
 export const decodeMaterialProjection = Effect.fn(
@@ -62,7 +62,7 @@ export const verifyMaterialPublication = Effect.fn(
     publicPath: catalog.projection.publicPath,
   };
   if (runtime.activeReleaseId !== catalog.activeReleaseId) {
-    return yield* new PublishedReleaseMismatchError({
+    return yield* PublishedReleaseMismatchError.make({
       actualReleaseId: runtime.activeReleaseId,
       expectedReleaseId: catalog.activeReleaseId,
     });

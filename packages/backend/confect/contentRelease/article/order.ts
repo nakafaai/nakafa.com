@@ -65,7 +65,7 @@ export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
         position[1] !== appLocale ||
         position[2] !== category)
     ) {
-      return yield* new ReleaseError({
+      return yield* ReleaseError.make({
         code: "CONTENT_RELEASE_INTEGRITY",
         message: "Article publication cursor belongs to another query.",
       });
@@ -100,14 +100,14 @@ export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
       Effect.catchTags({
         DocumentDecodeError: () =>
           Effect.fail(
-            new ReleaseError({
+            ReleaseError.make({
               code: "CONTENT_RELEASE_INTEGRITY",
               message: "Article publication contains an invalid stored row.",
             })
           ),
         ReadBudgetExceededError: () =>
           Effect.fail(
-            new ReleaseError({
+            ReleaseError.make({
               code: "CONTENT_RELEASE_LIMIT",
               message:
                 "Article publication cannot advance within its read budget.",

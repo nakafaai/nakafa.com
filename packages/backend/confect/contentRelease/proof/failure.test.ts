@@ -21,37 +21,37 @@ describe("contentRelease/proof/failure", () => {
     const contentKey = ContentKeySchema.make("test:failure");
     const cases = [
       [
-        new SigningKeyNotFoundError({ keyId: TEST_KEY_ID }),
+        SigningKeyNotFoundError.make({ keyId: TEST_KEY_ID }),
         "CONTENT_RELEASE_UNSUPPORTED",
       ],
       [
-        new SigningKeyResolutionError({ keyId: TEST_KEY_ID }),
+        SigningKeyResolutionError.make({ keyId: TEST_KEY_ID }),
         "CONTENT_RELEASE_UNSUPPORTED",
       ],
       [
-        new PublicKeyParseError({ keyId: TEST_KEY_ID, subject: "release" }),
+        PublicKeyParseError.make({ keyId: TEST_KEY_ID, subject: "release" }),
         "CONTENT_RELEASE_UNSUPPORTED",
       ],
       [
-        new PublicKeyTypeError({ keyId: TEST_KEY_ID, subject: "artifact" }),
+        PublicKeyTypeError.make({ keyId: TEST_KEY_ID, subject: "artifact" }),
         "CONTENT_RELEASE_UNSUPPORTED",
       ],
       [
-        new ArtifactRendererComponentMissingError({
+        ArtifactRendererComponentMissingError.make({
           componentName: "TechnicalComponent",
           contentKey,
         }),
         "CONTENT_RELEASE_UNSUPPORTED",
       ],
       [
-        new ArtifactVerificationByteLimitError({
+        ArtifactVerificationByteLimitError.make({
           actualBytes: 2,
           maxBytes: 1,
         }),
         "CONTENT_RELEASE_SIZE",
       ],
       [
-        new ArtifactPayloadFieldByteLimitError({
+        ArtifactPayloadFieldByteLimitError.make({
           actualBytes: 2,
           contentKey,
           field: "compiledCode",

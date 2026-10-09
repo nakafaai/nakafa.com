@@ -21,7 +21,7 @@ import { Duration, Effect, Result } from "effect";
 const SCRAPE_DEADLINE = Duration.millis(purposes.specialist.timeout.stepMs);
 
 const scrapeFailure = () =>
-  new ResearchScrapeError({
+  ResearchScrapeError.make({
     message: "The page could not be retrieved. Please try again.",
   });
 

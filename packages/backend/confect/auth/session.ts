@@ -39,7 +39,7 @@ export const getOptionalActiveAppUser = Effect.fn("auth.optionalWrite")(
   function* () {
     const { authId, appUser } = yield* Session;
     if (authId && (!appUser || isAccountDeletionPending(appUser))) {
-      return yield* new AccountUnavailable({
+      return yield* AccountUnavailable.make({
         code: accountUnavailableCode,
         message: accountUnavailableMessage,
       });
@@ -57,13 +57,13 @@ export const getOptionalActiveAppUser = Effect.fn("auth.optionalWrite")(
 export const requireAuth = Effect.fn("auth.require")(function* () {
   const { authId, appUser } = yield* Session;
   if (!authId) {
-    return yield* new SessionRequired({
+    return yield* SessionRequired.make({
       code: "UNAUTHENTICATED",
       message: "Unauthenticated",
     });
   }
   if (!appUser || isAccountDeletionPending(appUser)) {
-    return yield* new AccountUnavailable({
+    return yield* AccountUnavailable.make({
       code: accountUnavailableCode,
       message: accountUnavailableMessage,
     });

@@ -43,7 +43,7 @@ function uploadError(
   operation: ForumAttachmentHttpError["operation"],
   status: ForumAttachmentHttpError["status"]
 ) {
-  return new ForumAttachmentHttpError({
+  return ForumAttachmentHttpError.make({
     code,
     operation,
     status,

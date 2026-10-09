@@ -17,7 +17,7 @@ export const enforceAgentReadLimit = Effect.fn("agent.enforceReadLimit")(
     yield* runMutation(refs.internal.routes.agent.quota.consume, { key }).pipe(
       Effect.catchTag("SchemaError", (error) =>
         Effect.fail(
-          new NakafaAgentDataReadError({
+          NakafaAgentDataReadError.make({
             cause: getUnknownErrorMessage(error),
             message: "The public API quota boundary is unavailable.",
           })
@@ -25,7 +25,7 @@ export const enforceAgentReadLimit = Effect.fn("agent.enforceReadLimit")(
       ),
       Effect.catchDefect(() =>
         Effect.fail(
-          new NakafaAgentDataReadError({
+          NakafaAgentDataReadError.make({
             message: "The public API quota boundary is unavailable.",
           })
         )
@@ -44,13 +44,13 @@ const readClientKey = Effect.fn("agent.readClientKey")(function* (
     address.length === 0 ||
     address.length > MAX_CLIENT_ADDRESS_LENGTH
   ) {
-    return yield* new NakafaAgentDataReadError({
+    return yield* NakafaAgentDataReadError.make({
       message: "The public API quota identity is unavailable.",
     });
   }
   const digest = yield* Effect.tryPromise({
     catch: (error) =>
-      new NakafaAgentDataReadError({
+      NakafaAgentDataReadError.make({
         cause: getUnknownErrorMessage(error),
         message: "The public API quota identity is unavailable.",
       }),

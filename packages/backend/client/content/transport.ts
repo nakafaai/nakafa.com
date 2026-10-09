@@ -155,11 +155,11 @@ function createContentSyntaxError(
   response: HttpClientResponse.HttpClientResponse
 ) {
   if (hasContentRuntimeMarker(response)) {
-    return new ContentTransportError({
+    return ContentTransportError.make({
       reason: "json-syntax",
     });
   }
-  return new ContentTransportError({
+  return ContentTransportError.make({
     reason: "response-unmarked",
   });
 }
@@ -220,7 +220,7 @@ export const requestContentResponse = Effect.fn(
         Effect.timeoutOrElse({
           duration: Math.max(remaining, 0),
           orElse: () =>
-            Effect.fail(new ContentTransportError({ reason: "body" })),
+            Effect.fail(ContentTransportError.make({ reason: "body" })),
         })
       );
     });
@@ -274,7 +274,7 @@ export const requestContentResponse = Effect.fn(
         failure instanceof RetryableContentDeadline,
       () =>
         Effect.fail(
-          new ContentTransportError({
+          ContentTransportError.make({
             networkCodes: [],
             reason: "fetch",
           })
@@ -285,7 +285,7 @@ export const requestContentResponse = Effect.fn(
         Schema.is(NetworkRequestError)(failure),
       (failure) =>
         Effect.fail(
-          new ContentTransportError({
+          ContentTransportError.make({
             networkCodes: failure.networkCodes,
             reason: "fetch",
           })
@@ -303,12 +303,12 @@ export const readContentResponse = Effect.fn(
   maxBytes: number
 ) {
   if (response.url !== endpoint) {
-    return yield* new ContentTransportError({
+    return yield* ContentTransportError.make({
       reason: "response-url",
     });
   }
   if (!isJsonContentType(response.headers["content-type"] ?? null)) {
-    return yield* new ContentTransportError({
+    return yield* ContentTransportError.make({
       reason: "content-type",
     });
   }
@@ -316,24 +316,22 @@ export const readContentResponse = Effect.fn(
     response.headers["content-length"] ?? null,
     maxBytes
   ).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "content-length",
-        })
+    Effect.mapError(() =>
+      ContentTransportError.make({
+        reason: "content-length",
+      })
     )
   );
   const bytes = yield* readBoundedStream(response.stream, maxBytes).pipe(
-    Effect.mapError(
-      (error) =>
-        new ContentTransportError({
-          reason: error._tag === "BodyLimitError" ? "response-size" : "body",
-        })
+    Effect.mapError((error) =>
+      ContentTransportError.make({
+        reason: error._tag === "BodyLimitError" ? "response-size" : "body",
+      })
     )
   );
   const source = yield* Effect.try({
     catch: () =>
-      new ContentTransportError({
+      ContentTransportError.make({
         reason: "body",
       }),
     try: () =>

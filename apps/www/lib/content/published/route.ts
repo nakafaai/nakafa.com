@@ -55,13 +55,13 @@ const decodeActiveProjection = Effect.fn(
     Schema.fromJsonString(RoutedContentProjectionSchema)
   )(input.projectionJson, {
     onExcessProperty: "error",
-  }).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
+  }).pipe(Effect.mapError(() => PublishedProjectionError.make(identity)));
   if (
     familyForProjection(projection) !== identity.family ||
     projection.appLocale !== identity.appLocale ||
     projection.publicPath !== identity.publicPath
   ) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   return projection;
 });

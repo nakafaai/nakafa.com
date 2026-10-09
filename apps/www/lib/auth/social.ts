@@ -34,14 +34,14 @@ export const startGoogleSignIn = Effect.fn("www.auth.startGoogleSignIn")(
   ) {
     const result = yield* Effect.tryPromise({
       catch: () =>
-        new SocialSignInFailed({
+        SocialSignInFailed.make({
           code: socialSignInFailedCode,
         }),
       try: () => request({ ...input, provider: "google" }),
     });
 
     if (result.error) {
-      return yield* new SocialSignInFailed({
+      return yield* SocialSignInFailed.make({
         code: socialSignInFailedCode,
       });
     }

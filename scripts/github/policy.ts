@@ -165,7 +165,7 @@ function inputProblems(
 }
 
 function policyError(message: string, cause: unknown) {
-  return new GithubActionPolicyError({ cause, message });
+  return GithubActionPolicyError.make({ cause, message });
 }
 
 /** Reads every external action used by first-party GitHub workflows. */

@@ -72,7 +72,7 @@ export function resolveTryoutExamArtwork(input: unknown) {
   const decodedIdentity = decodeTryoutExamArtworkIdentity(input);
   if (Result.isFailure(decodedIdentity)) {
     return Effect.fail(
-      new InvalidTryoutExamArtworkIdentityError({
+      InvalidTryoutExamArtworkIdentityError.make({
         message: "Invalid try-out exam artwork identity",
       })
     );

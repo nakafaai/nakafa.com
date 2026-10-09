@@ -204,7 +204,7 @@ describe("conversation/viewport/measure", () => {
             session: {
               saveSnapshot: () =>
                 Effect.fail(
-                  new ViewportSessionError({
+                  ViewportSessionError.make({
                     cause: "test",
                     message: "No snapshot should be persisted in this test.",
                   })

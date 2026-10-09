@@ -48,7 +48,7 @@ export const enrichForumPosts = Effect.fn(
     if (attachments.length <= MAX_FORUM_POST_ATTACHMENTS) {
       continue;
     }
-    return yield* new ForumAttachmentError({
+    return yield* ForumAttachmentError.make({
       code: "FORUM_ATTACHMENT_LIMIT_EXCEEDED",
       message: "Forum post attachment count exceeds the supported limit.",
     });

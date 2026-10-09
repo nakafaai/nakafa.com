@@ -19,7 +19,7 @@ class TryoutScoreAnalyticsError extends Schema.TaggedError<TryoutScoreAnalyticsE
 
 /** Maps trigger reads and analytics scheduling into one typed error channel. */
 function toTryoutScoreAnalyticsError(error: unknown) {
-  return new TryoutScoreAnalyticsError({
+  return TryoutScoreAnalyticsError.make({
     code: tryoutScoreAnalyticsFailedCode,
     message: getUnknownErrorMessage(error),
   });

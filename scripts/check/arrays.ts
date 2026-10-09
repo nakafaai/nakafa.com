@@ -111,7 +111,7 @@ const judgeModule = Effect.fnUntraced(function* (
   const sourceFile = yield* Effect.try({
     try: () => project.program.getSourceFile(path.join(root, file)),
     catch: (cause) =>
-      new TestCompilerError({
+      TestCompilerError.make({
         cause,
         message: `Unable to inspect ${file}.`,
       }),
@@ -138,7 +138,7 @@ const inspectProject = Effect.fn("RepositoryPolicy.inspectArrays")(function* (
 ) {
   const path = yield* Path.Path;
   const openFailure = (cause: unknown) =>
-    new TestCompilerError({ cause, message: `Unable to open ${config}.` });
+    TestCompilerError.make({ cause, message: `Unable to open ${config}.` });
   const snapshot = yield* Effect.acquireRelease(
     Effect.try({
       try: () =>
@@ -158,7 +158,7 @@ const inspectProject = Effect.fn("RepositoryPolicy.inspectArrays")(function* (
     catch: openFailure,
   });
   if (project === undefined) {
-    return yield* new TestCompilerError({
+    return yield* TestCompilerError.make({
       cause: `The native project ${config} is missing.`,
       message: `Unable to open ${config}.`,
     });
@@ -197,7 +197,7 @@ export const arrayFindings = Effect.fn("RepositoryPolicy.arrayFindings")(
       const chain = projectsUpward(file, configSet);
       return Arr.isReadonlyArrayEmpty(chain)
         ? Effect.fail(
-            new TestCompilerError({
+            TestCompilerError.make({
               cause: file,
               message: `${file} has no tsconfig.json up its folder tree, so the array rules cannot read its types.`,
             })
@@ -255,7 +255,7 @@ export const arrayFindings = Effect.fn("RepositoryPolicy.arrayFindings")(
       onNone: () => Effect.succeed(judgment.findings),
       onSome: ({ chain, file }) =>
         Effect.fail(
-          new TestCompilerError({
+          TestCompilerError.make({
             cause: file,
             message: `${file} is not part of any project up its folder tree (tried ${Arr.join(chain, ", ")}), so the array rules cannot read its types.`,
           })

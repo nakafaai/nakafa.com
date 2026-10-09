@@ -26,13 +26,12 @@ export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
           onExcessProperty: "error",
         })
       ),
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message:
-              "Quran snapshot row does not satisfy its bounded publication contract.",
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "Quran snapshot row does not satisfy its bounded publication contract.",
+        })
       )
     );
     if (
@@ -76,12 +75,11 @@ export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
     return yield* Schema.decodeUnknownEffect(payloadSchema)(
       decoded.record.payload
     ).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Quran row ${row.identity} changed its payload kind.`,
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Quran row ${row.identity} changed its payload kind.`,
+        })
       )
     );
   }

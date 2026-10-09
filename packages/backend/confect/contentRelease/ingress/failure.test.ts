@@ -186,7 +186,7 @@ function failure(request: PublicationRequest, code: ReleaseError["code"]) {
   return Effect.exit(
     requestFailure(
       request,
-      new ReleaseError({ code, message: "Technical failure." }),
+      ReleaseError.make({ code, message: "Technical failure." }),
       null
     )
   );
@@ -219,7 +219,7 @@ describe("content publication failure mapping", () => {
   it("sanitizes predecode failures without retaining private detail", () => {
     /** Builds one private failure whose message must never cross ingress. */
     const make = (code: ReleaseError["code"]) =>
-      new ReleaseError({ code, message: "Private technical detail." });
+      ReleaseError.make({ code, message: "Private technical detail." });
 
     expect(predecodeFailure(make("CONTENT_RELEASE_UNAUTHORIZED"))).toEqual({
       code: "CONTENT_RELEASE_UNAUTHORIZED",
@@ -348,7 +348,7 @@ describe("content publication failure mapping", () => {
         expect(Exit.isFailure(exit)).toBe(true);
         if (Exit.isFailure(exit)) {
           expect(Cause.findDefect(exit.cause)).toEqual(
-            Result.succeed(new PublicationFailureDefect({ code, operation }))
+            Result.succeed(PublicationFailureDefect.make({ code, operation }))
           );
         }
       }

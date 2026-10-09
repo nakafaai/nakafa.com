@@ -233,7 +233,7 @@ describe("sitemap page catalog", () => {
     Effect.gen(function* () {
       materialMocks.readPublishedMaterialBuckets.mockReturnValue(
         Effect.fail(
-          new MissingSignedMaterialInventory({
+          MissingSignedMaterialInventory.make({
             message: "Signed material inventory is unavailable.",
           })
         )

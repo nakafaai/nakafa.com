@@ -83,7 +83,7 @@ export const scheduleServerExceptionCapture = Effect.fn(
   const runPromise = Effect.runPromiseWith(services);
   yield* Effect.try({
     catch: (cause) =>
-      new ServerExceptionScheduleError({
+      ServerExceptionScheduleError.make({
         cause,
         message: "Failed to schedule server exception reporting.",
       }),

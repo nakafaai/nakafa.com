@@ -149,14 +149,14 @@ const failure = Match.type<unknown>().pipe(
     Option.match(Option.fromUndefinedOr(error.statusCode), {
       // No HTTP status: the request never reached a server.
       onNone: () =>
-        new GatewayFailure({
+        GatewayFailure.make({
           reason: "network",
           retryable: error.isRetryable,
           ...retryAfter(error),
           ...gatewayType(error.data),
         }),
       onSome: (status) =>
-        new GatewayFailure({
+        GatewayFailure.make({
           reason: httpReason(status, error),
           status,
           retryable: error.isRetryable,
@@ -165,7 +165,7 @@ const failure = Match.type<unknown>().pipe(
         }),
     })
   ),
-  Match.orElse((error) => new GatewayFailure({ reason: nameReason(error) }))
+  Match.orElse((error) => GatewayFailure.make({ reason: nameReason(error) }))
 );
 
 /**

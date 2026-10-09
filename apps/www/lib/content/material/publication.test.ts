@@ -131,7 +131,7 @@ describe("coherent material publication", () => {
       // Native HTTP failures remain tagged across the content-read boundary.
       .mockReturnValueOnce(
         Effect.fail(
-          new HttpClient.HttpClientError({
+          HttpClient.HttpClientError.make({
             cause: new Error("Cached navigation read failed"),
           })
         )
@@ -184,7 +184,7 @@ describe("coherent material publication", () => {
   it.each(["lesson", "navigation"])(
     "bounds the retry when the next %s read fails",
     async (stage) => {
-      const cause = new ReleaseError({
+      const cause = ReleaseError.make({
         code: "CONTENT_RELEASE_STATE",
         message: "Read failed",
       });
@@ -221,7 +221,7 @@ describe("coherent material publication", () => {
   );
   it.each([
     new Error("network failure"),
-    new ReleaseError({
+    ReleaseError.make({
       code: "CONTENT_RELEASE_INTEGRITY",
       message: "Invalid publication",
     }),
@@ -417,7 +417,7 @@ describe("coherent material publication", () => {
   it("preserves signed verification failures and never evaluates their body", async () => {
     deliveryMock.mockReturnValueOnce(
       Effect.fail(
-        new ContentRuntimeVerificationError({
+        ContentRuntimeVerificationError.make({
           cause: "invalid-signature",
         })
       )

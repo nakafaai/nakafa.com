@@ -36,38 +36,37 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
   const declaredLength = yield* parseContentLength(
     request.headers.get("content-length"),
     MAX_CACHE_REQUEST_BYTES
-  ).pipe(Effect.mapError(() => new CacheRequestError({ reason: "size" })));
+  ).pipe(Effect.mapError(() => CacheRequestError.make({ reason: "size" })));
   if (!request.body) {
-    return yield* new CacheRequestError({ reason: "body" });
+    return yield* CacheRequestError.make({ reason: "body" });
   }
   if (!isJsonContentType(request.headers.get("content-type"))) {
-    return yield* new CacheRequestError({ reason: "content-type" });
+    return yield* CacheRequestError.make({ reason: "content-type" });
   }
   const bytes = yield* readBoundedBody(
     request.body,
     MAX_CACHE_REQUEST_BYTES
   ).pipe(
-    Effect.mapError(
-      (error) =>
-        new CacheRequestError({
-          reason: error._tag === "BodyLimitError" ? "size" : "body",
-        })
+    Effect.mapError((error) =>
+      CacheRequestError.make({
+        reason: error._tag === "BodyLimitError" ? "size" : "body",
+      })
     )
   );
   if (declaredLength !== null && declaredLength !== bytes.byteLength) {
-    return yield* new CacheRequestError({ reason: "body" });
+    return yield* CacheRequestError.make({ reason: "body" });
   }
   if (bytes.byteLength === 0) {
-    return yield* new CacheRequestError({ reason: "body" });
+    return yield* CacheRequestError.make({ reason: "body" });
   }
   const source = yield* Effect.try({
-    catch: () => new CacheRequestError({ reason: "body" }),
+    catch: () => CacheRequestError.make({ reason: "body" }),
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
   });
   return yield* Schema.decodeEffect(
     Schema.fromJsonString(ContentCacheRequestSchema)
   )(source, { onExcessProperty: "error" }).pipe(
-    Effect.mapError(() => new CacheRequestError({ reason: "body" }))
+    Effect.mapError(() => CacheRequestError.make({ reason: "body" }))
   );
 });
 /**

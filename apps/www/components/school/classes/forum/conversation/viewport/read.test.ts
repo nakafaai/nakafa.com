@@ -43,7 +43,7 @@ describe("conversation/viewport/read", () => {
       read: {
         markPostRead: () =>
           Effect.fail(
-            new ViewportReadError({
+            ViewportReadError.make({
               cause: "test",
               message: "Read sync failed in test.",
             })
@@ -70,7 +70,7 @@ describe("conversation/viewport/read", () => {
           Effect.gen(function* () {
             readAttempts = Arr.append(readAttempts, postId);
             if (readAttempts.length === 1) {
-              return yield* new ViewportReadError({
+              return yield* ViewportReadError.make({
                 cause: "test",
                 message: "First read sync failed in test.",
               });
@@ -209,7 +209,7 @@ describe("conversation/viewport/read", () => {
       );
       yield* Deferred.fail(
         firstRead,
-        new ViewportReadError({
+        ViewportReadError.make({
           cause: "test",
           message: "Older read sync failed in test.",
         })

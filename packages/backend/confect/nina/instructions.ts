@@ -19,11 +19,11 @@ const readFocus = Effect.fn("nina.instructions.focus")(
       }
     );
     if (!source) {
-      return yield* new NinaGenerationError({ reason: "unknown" });
+      return yield* NinaGenerationError.make({ reason: "unknown" });
     }
     return yield* formatFocusPrompt(source);
   },
-  Effect.mapError(() => new NinaGenerationError({ reason: "unknown" }))
+  Effect.mapError(() => NinaGenerationError.make({ reason: "unknown" }))
 );
 
 /**

@@ -14,16 +14,15 @@ export const readChat = Effect.fn("chats.access.read")(function* (
     .get(chatId)
     .pipe(
       Effect.catchTag("DocumentDecodeError", Effect.die),
-      Effect.mapError(
-        () =>
-          new ChatAccessError({
-            code: "CHAT_NOT_FOUND",
-            message: `Chat not found for chatId: ${chatId}`,
-          })
+      Effect.mapError(() =>
+        ChatAccessError.make({
+          code: "CHAT_NOT_FOUND",
+          message: `Chat not found for chatId: ${chatId}`,
+        })
       )
     );
   if (chat.visibility === "private" && chat.userId !== viewerId) {
-    return yield* new ChatAccessError({
+    return yield* ChatAccessError.make({
       code: "FORBIDDEN",
       message: "You do not have permission to access this private chat.",
     });

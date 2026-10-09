@@ -28,16 +28,15 @@ export const getCurrentWeather = Effect.fn("weather.getCurrentWeather")(
       "fetch_current_weather",
       Effect.gen(function* () {
         const key = yield* Config.Redacted("OPENWEATHER_API_KEY").pipe(
-          Effect.mapError(
-            () =>
-              new WeatherConfigurationError({
-                message: "Weather is not configured.",
-              })
+          Effect.mapError(() =>
+            WeatherConfigurationError.make({
+              message: "Weather is not configured.",
+            })
           )
         );
         const apiKey = Redacted.value(key);
         if (!apiKey.trim()) {
-          return yield* new WeatherConfigurationError({
+          return yield* WeatherConfigurationError.make({
             message: "Weather is not configured.",
           });
         }

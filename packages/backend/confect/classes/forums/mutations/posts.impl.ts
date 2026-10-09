@@ -32,13 +32,13 @@ const createForumPost = FunctionImpl.make(
     const userId = user.appUser._id;
     const attachmentUploadIds = args.attachmentUploadIds ?? [];
     if (attachmentUploadIds.length > MAX_FORUM_POST_ATTACHMENTS) {
-      return yield* new ForumAttachmentError({
+      return yield* ForumAttachmentError.make({
         code: "FORUM_ATTACHMENT_LIMIT_EXCEEDED",
         message: "Forum post attachment count exceeds the supported limit.",
       });
     }
     if (!(args.body.trim().length > 0 || attachmentUploadIds.length > 0)) {
-      return yield* new ForumError({
+      return yield* ForumError.make({
         code: "EMPTY_POST",
         message: "Post must have either a message or attachments.",
       });
@@ -65,7 +65,7 @@ const createForumPost = FunctionImpl.make(
           Effect.orDie
         );
       if (!parentPost || parentPost.forumId !== args.forumId) {
-        return yield* new ForumError({
+        return yield* ForumError.make({
           code: "PARENT_POST_NOT_FOUND",
           message: "Parent post not found.",
         });

@@ -151,7 +151,7 @@ describe("Quran translation notes", () => {
         expect(result).toEqual(
           expect.objectContaining({
             _tag: "Failure",
-            failure: new QuranTranslationNotesError({
+            failure: QuranTranslationNotesError.make({
               reason: "mismatched-markers",
             }),
           })

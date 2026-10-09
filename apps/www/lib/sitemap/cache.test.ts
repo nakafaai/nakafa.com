@@ -69,7 +69,7 @@ describe("sitemap cache invalidation", () => {
 
         const error = yield* invalidateSitemapCache().pipe(Effect.flip);
 
-        expect(error).toEqual(new SitemapCacheInvalidationError());
+        expect(error).toEqual(SitemapCacheInvalidationError.make());
         expect(invalidateByTagMock).not.toHaveBeenCalled();
       })
   );
@@ -80,7 +80,7 @@ describe("sitemap cache invalidation", () => {
 
       const error = yield* invalidateSitemapCache().pipe(Effect.flip);
 
-      expect(error).toEqual(new SitemapCacheInvalidationError());
+      expect(error).toEqual(SitemapCacheInvalidationError.make());
     })
   );
 });

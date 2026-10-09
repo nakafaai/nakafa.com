@@ -238,7 +238,7 @@ function signedPlacements(source: TryoutStartSource) {
 
 /** Creates one typed fail-closed scale error. */
 function scaleError(message: string) {
-  return new TryoutRuntimeError({
+  return TryoutRuntimeError.make({
     code: "TRYOUT_IRT_SCALE_REQUIRED",
     message,
   });

@@ -70,7 +70,7 @@ export class TryoutStartError extends Schema.TaggedError<TryoutStartError>()(
 /** Maps a thrown Convex operation into the typed try-out start error channel. */
 
 export function toTryoutStartError() {
-  return new TryoutStartError({
+  return TryoutStartError.make({
     code: "TRYOUT_START_FAILED",
     message: "Unable to start try-out attempt.",
   });

@@ -51,7 +51,7 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
 ) {
   const configFile = `/test-policy/${index}/tsconfig.json`;
   const compilerFailure = (cause: unknown) =>
-    new TestCompilerError({ cause, message: `Unable to inspect ${file}.` });
+    TestCompilerError.make({ cause, message: `Unable to inspect ${file}.` });
   const snapshot = yield* Effect.acquireRelease(
     Effect.try({
       try: () =>

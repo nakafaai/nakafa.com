@@ -18,7 +18,7 @@ import {
 import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
 
 const settlementFailure = () =>
-  new NinaTurnError({
+  NinaTurnError.make({
     code: "NINA_WRITE_FAILED",
     message: "Unable to settle this Nina response.",
   });

@@ -169,7 +169,7 @@ describe("published Quran content", () => {
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(
         Effect.fail(
-          new HttpClient.HttpClientError({
+          HttpClient.HttpClientError.make({
             cause: new Error("Quran unavailable"),
           })
         )

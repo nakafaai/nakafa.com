@@ -31,7 +31,7 @@ const markForumRead = FunctionImpl.make(
           Effect.orDie
         );
       if (!lastReadPost || lastReadPost.forumId !== args.forumId) {
-        return yield* new ForumError({
+        return yield* ForumError.make({
           code: "POST_NOT_FOUND",
           message: "Read boundary post not found.",
         });

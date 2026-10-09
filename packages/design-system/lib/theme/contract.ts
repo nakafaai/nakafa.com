@@ -86,7 +86,7 @@ const DEFAULT_THEME_STYLE_SOURCE_PATHS: ThemeStyleSourcePaths = {
 
 /** Builds one typed stylesheet read failure with its exact source path. */
 function sourceLoadError(path: string, cause: unknown) {
-  return new ThemeStyleSourceLoadError({
+  return ThemeStyleSourceLoadError.make({
     cause,
     message: `Failed to load theme stylesheet at ${path}.`,
     path,

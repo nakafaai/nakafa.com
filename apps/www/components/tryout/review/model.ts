@@ -130,7 +130,7 @@ function getContentIdentity(identity: ReviewContentIdentity) {
 
 /** Creates one typed terminal-review projection failure. */
 function projectionError(message: string) {
-  return new TryoutReviewProjectionError({
+  return TryoutReviewProjectionError.make({
     code: "TRYOUT_REVIEW_PROJECTION",
     message,
   });

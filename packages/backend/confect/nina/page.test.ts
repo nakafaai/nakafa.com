@@ -39,7 +39,7 @@ describe("Nina current page context", () => {
         kind === "missing"
           ? Effect.succeedNone
           : Effect.fail(
-              new NakafaAgentDataReadError({
+              NakafaAgentDataReadError.make({
                 cause: "fixture",
                 message: "Unable to read signed Nakafa public content.",
               })

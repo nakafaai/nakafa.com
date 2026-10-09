@@ -16,7 +16,7 @@ export const runAfdocs = Effect.fn("www.checks.runAfdocs")(function* () {
   const config = yield* Effect.tryPromise({
     try: () => loadConfig(),
     catch: (cause) =>
-      new AfdocsError({ cause, message: "Unable to load AFDocs config." }),
+      AfdocsError.make({ cause, message: "Unable to load AFDocs config." }),
   });
   const inferredSamplingStrategy =
     config.pages?.length && !config.options?.samplingStrategy
@@ -36,7 +36,7 @@ export const runAfdocs = Effect.fn("www.checks.runAfdocs")(function* () {
         ...(config.pages === undefined ? {} : { curatedPages: config.pages }),
       }),
     catch: (cause) =>
-      new AfdocsError({ cause, message: "AFDocs site checks failed to run." }),
+      AfdocsError.make({ cause, message: "AFDocs site checks failed to run." }),
   });
   const results = HashMap.fromIterable<string, CheckResult>(
     Arr.map(report.results, (result): [string, CheckResult] => [

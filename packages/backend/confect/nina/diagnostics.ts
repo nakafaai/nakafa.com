@@ -19,7 +19,7 @@ export const reportFailure = Effect.fn("nina.diagnostics.report")(function* (
 ) {
   const error = Cause.findErrorOption(cause).pipe(
     Option.filter(Schema.is(NinaGenerationError)),
-    Option.getOrElse(() => new NinaGenerationError({ reason: "unknown" }))
+    Option.getOrElse(() => NinaGenerationError.make({ reason: "unknown" }))
   );
   const model: ModelKey = turn.modelId;
   const properties = {
@@ -42,7 +42,7 @@ export const reportFailure = Effect.fn("nina.diagnostics.report")(function* (
         error: createOperationalException(error, properties),
         additionalProperties: properties,
       }),
-    catch: () => new NinaDiagnosticsError(),
+    catch: () => NinaDiagnosticsError.make(),
   }).pipe(
     Effect.catchTag("NinaDiagnosticsError", () =>
       Effect.logWarning("Nina diagnostics could not be queued.")

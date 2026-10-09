@@ -61,11 +61,11 @@ const readTokenAnswer = Effect.fn("www.auth.readTokenAnswer")(function* (
     const { token } = yield* HttpClientResponse.schemaBodyJson(
       TokenResponseSchema
     )(response).pipe(
-      Effect.mapError(() => new SessionTokenUnavailable({ reason: "body" }))
+      Effect.mapError(() => SessionTokenUnavailable.make({ reason: "body" }))
     );
     return token;
   }
-  const failure = new SessionTokenUnavailable({
+  const failure = SessionTokenUnavailable.make({
     reason: "status",
     status: response.status,
   });
@@ -89,7 +89,7 @@ const sendTokenRequest = Effect.fn("www.auth.sendTokenRequest")(function* (
       Effect.mapError((error) =>
         classifyNetworkFailure(
           error.reason.cause,
-          new SessionTokenUnavailable({ reason: "fetch" })
+          SessionTokenUnavailable.make({ reason: "fetch" })
         )
       )
     );
@@ -116,7 +116,7 @@ export const readSessionToken = Effect.fn("www.auth.readSessionToken")(
     });
     return yield* retryNetworkAttempt(
       sendTokenRequest(request),
-      new SessionTokenUnavailable({ reason: "deadline" })
+      SessionTokenUnavailable.make({ reason: "deadline" })
     );
   },
   Effect.provide(FetchClient)

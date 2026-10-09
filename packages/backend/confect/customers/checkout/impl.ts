@@ -15,7 +15,7 @@ import { Effect } from "effect";
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];
 const checkoutProductIds = [products.pro.id] as const;
 const invalidSuccessUrl = (message: string) =>
-  new InvalidCheckoutSuccessUrl({
+  InvalidCheckoutSuccessUrl.make({
     code: invalidCheckoutSuccessUrlCode,
     message,
   });

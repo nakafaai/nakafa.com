@@ -151,7 +151,7 @@ describe("protected content runtime client", () => {
         yield* readProtectedContent(target, {}, TEST_PROOF_RENDERER).pipe(
           Effect.flip
         )
-      ).toEqual(new ContentTransportError({ reason: "request" }));
+      ).toEqual(ContentTransportError.make({ reason: "request" }));
       expect(fetchMock).not.toHaveBeenCalled();
     })
   );
@@ -169,12 +169,12 @@ describe("protected content runtime client", () => {
             TEST_PROOF_RENDERER
           ).pipe(Effect.flip)
         ).toEqual(
-          new ContentRuntimeFailureError({
+          ContentRuntimeFailureError.make({
             code: "CONTENT_RUNTIME_INTERNAL",
             status: 500,
           })
         );
-        const cause = new ContentTransportError({
+        const cause = ContentTransportError.make({
           reason: "response-contract",
         });
         verifyMock.mockImplementationOnce(() => Effect.fail(cause));
@@ -185,7 +185,7 @@ describe("protected content runtime client", () => {
             request,
             TEST_PROOF_RENDERER
           ).pipe(Effect.flip)
-        ).toEqual(new ContentRuntimeVerificationError({ cause }));
+        ).toEqual(ContentRuntimeVerificationError.make({ cause }));
       })
   );
 
@@ -216,7 +216,7 @@ describe("protected content runtime client", () => {
         yield* readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
           Effect.flip
         )
-      ).toEqual(new ContentRuntimeMissingError({ request }));
+      ).toEqual(ContentRuntimeMissingError.make({ request }));
     })
   );
 
@@ -236,14 +236,14 @@ describe("protected content runtime client", () => {
             request,
             TEST_PROOF_RENDERER
           ).pipe(Effect.flip)
-        ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
+        ).toEqual(ContentTransportError.make({ reason: "response-unmarked" }));
         expect(
           yield* readProtectedContent(
             target,
             request,
             TEST_PROOF_RENDERER
           ).pipe(Effect.flip)
-        ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+        ).toEqual(ContentTransportError.make({ reason: "response-contract" }));
         expect(verifyProtectedContentRuntimeExchange).not.toHaveBeenCalled();
       })
   );

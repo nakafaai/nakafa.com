@@ -51,7 +51,7 @@ describe("onboarding submission", () => {
     "preserves a declared rejection instead of accepting it as saved",
     () =>
       Effect.gen(function* () {
-        const cause = new SessionRequired({
+        const cause = SessionRequired.make({
           code: "UNAUTHENTICATED",
           message: "Unauthenticated",
         });

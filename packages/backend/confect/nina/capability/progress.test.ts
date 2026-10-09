@@ -129,7 +129,7 @@ it.effect("preserves a typed capability failure after progress", () =>
       (publish) =>
         Effect.gen(function* () {
           yield* publish(loading);
-          return yield* new EvidenceUnavailable();
+          return yield* EvidenceUnavailable.make();
         }),
       options
     ).pipe(Stream.runCollect, Effect.result);

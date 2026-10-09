@@ -31,7 +31,7 @@ describe("sidebar state boundary", () => {
     expect(() =>
       runSidebarStateProgram(
         Effect.fail(
-          new SidebarStatePersistenceError({
+          SidebarStatePersistenceError.make({
             cause,
             cookieName: "sidebar_state",
             message: "Failed to persist sidebar state in sidebar_state.",

@@ -196,7 +196,7 @@ const readContext = Effect.fn("contents.views.test.readContext")(function* (
   const runtimeServices = yield* Effect.context<never>();
   return yield* Effect.tryPromise({
     catch: (cause) =>
-      new ObservedContextQueryFailure({
+      ObservedContextQueryFailure.make({
         cause,
       }),
     try: () =>

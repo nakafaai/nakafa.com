@@ -79,7 +79,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
           threadId,
           upToAndIncludingMessageId: anchor,
         }),
-      catch: () => new NinaSummaryError({ operation: "read" }),
+      catch: () => NinaSummaryError.make({ operation: "read" }),
     });
     for (const message of page.page) {
       if (message.order > from && message.order <= through && message.text) {
@@ -118,7 +118,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       order: target,
     }).pipe(Effect.orDie);
     if (!anchor) {
-      return yield* new NinaSummaryError({ operation: "read" });
+      return yield* NinaSummaryError.make({ operation: "read" });
     }
     const transcript = yield* readTranscript(
       turn.threadId,
@@ -154,11 +154,11 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
           },
           { storageOptions: { saveMessages: "none" } }
         ),
-      catch: () => new NinaSummaryError({ operation: "generate" }),
+      catch: () => NinaSummaryError.make({ operation: "generate" }),
     });
     const summary = text.trim();
     if (!summary) {
-      return yield* new NinaSummaryError({ operation: "generate" });
+      return yield* NinaSummaryError.make({ operation: "generate" });
     }
     yield* (yield* MutationRunner)
       .runMutation(refs.internal.nina.summaries.save, {

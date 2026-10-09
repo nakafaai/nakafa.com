@@ -350,7 +350,7 @@ print("Hello, World!")
     "reports malformed standalone fragments as typed projection failures",
     () =>
       Effect.gen(function* () {
-        const explicitError = new MdxAgentProjectionError({
+        const explicitError = MdxAgentProjectionError.make({
           message: "projection failed",
         });
         const error = yield* Effect.flip(

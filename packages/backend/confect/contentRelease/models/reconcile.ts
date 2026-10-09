@@ -69,12 +69,11 @@ const decodeCursor = Effect.fn("contentRelease.decodeModelCursor")(function* (
     return;
   }
   const cursor = yield* Schema.decodeEffect(CursorSchema)(build.cursor).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Model phase ${build.phase} has an invalid reconciliation cursor.`,
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Model phase ${build.phase} has an invalid reconciliation cursor.`,
+      })
     )
   );
   if (cursor.phase !== build.phase) {

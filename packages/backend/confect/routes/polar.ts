@@ -42,7 +42,7 @@ const readPolarWebhookBody = Effect.fn("routes.polar.readBody")(
   (request: Request) =>
     Effect.tryPromise({
       catch: (error) =>
-        new PolarWebhookReadError({
+        PolarWebhookReadError.make({
           message: getUnknownErrorMessage(error),
         }),
       try: () => request.text(),
@@ -53,18 +53,18 @@ const readPolarWebhookBody = Effect.fn("routes.polar.readBody")(
 function toVerificationError(error: unknown) {
   const message = getUnknownErrorMessage(error);
   if (error instanceof webhooks.PolarWebhookVerificationError) {
-    return new PolarWebhookVerificationError({ message });
+    return PolarWebhookVerificationError.make({ message });
   }
   if (error instanceof webhooks.PolarWebhookUnknownTypeError) {
     // Without a string event type the body is malformed; a string type the SDK
     // does not know is an event Nakafa acknowledges.
     if (error.eventType === null) {
-      return new PolarPayloadError({ cause: error, message });
+      return PolarPayloadError.make({ cause: error, message });
     }
-    return new PolarWebhookUnknownEventError({ message });
+    return PolarWebhookUnknownEventError.make({ message });
   }
   // Any other rejection, including a body that is not JSON, is an SDK failure.
-  return new PolarWebhookSdkError({ message });
+  return PolarWebhookSdkError.make({ message });
 }
 
 /** Verifies the signature and decodes the SDK payload without throwing. */
@@ -76,11 +76,10 @@ const verifyPolarWebhook = Effect.fn("routes.polar.verify")(function* (
     Schema.Redacted(Schema.NonEmptyString),
     "POLAR_WEBHOOK_SECRET"
   ).pipe(
-    Effect.mapError(
-      () =>
-        new PolarWebhookSdkError({
-          message: "Polar webhook configuration is unavailable.",
-        })
+    Effect.mapError(() =>
+      PolarWebhookSdkError.make({
+        message: "Polar webhook configuration is unavailable.",
+      })
     )
   );
   return yield* Effect.tryPromise({

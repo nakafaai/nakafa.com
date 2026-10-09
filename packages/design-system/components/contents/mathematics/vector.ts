@@ -26,7 +26,7 @@ export const resolveVectorGeometry = Effect.fn("Vector.resolve")(function* (
   const vector = yield* Schema.decodeUnknownEffect(VectorGeometrySchema)(
     input
   ).pipe(
-    Effect.mapError((error) => new VectorError({ message: error.message }))
+    Effect.mapError((error) => VectorError.make({ message: error.message }))
   );
   const first = vector.points[0];
   const last = EffectArray.lastNonEmpty(vector.points);

@@ -145,7 +145,7 @@ const polarCustomerSessionValidator = Schema.Struct({
 /** Names the payload that broke its contract, for logs and the typed failure. */
 function payloadFailure(resource: string) {
   return (cause: unknown) =>
-    new PolarPayloadError({
+    PolarPayloadError.make({
       cause,
       message: `Polar ${resource} payload does not match its contract.`,
     });

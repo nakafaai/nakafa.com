@@ -44,7 +44,7 @@ describe("try-out signed content batches", () => {
           yield* restoreTryoutContentOrder(plan, [
             ["rendered:question-1"],
           ]).pipe(Effect.flip)
-        ).toEqual(new TryoutContentBatchOrderError());
+        ).toEqual(TryoutContentBatchOrderError.make());
       })
   );
 
@@ -62,7 +62,7 @@ describe("try-out signed content batches", () => {
           yield* restoreTryoutContentOrder(plan, [questions.slice(0, -1)]).pipe(
             Effect.flip
           )
-        ).toEqual(new TryoutContentBatchOrderError());
+        ).toEqual(TryoutContentBatchOrderError.make());
       })
   );
 
@@ -79,7 +79,7 @@ describe("try-out signed content batches", () => {
           yield* restoreTryoutContentOrder(plan, [
             ["rendered:question-1"],
           ]).pipe(Effect.flip)
-        ).toEqual(new TryoutContentBatchOrderError());
+        ).toEqual(TryoutContentBatchOrderError.make());
       })
   );
 

@@ -66,7 +66,7 @@ export const expireScheduledSection = Effect.fn("tryouts.expiry.section")(
         Effect.mapError(toTryoutRuntimeError)
       );
     if (!attemptRow) {
-      return yield* new TryoutAttemptStateError({
+      return yield* TryoutAttemptStateError.make({
         code: "TRYOUT_ATTEMPT_NOT_FOUND",
         message: "Try-out attempt not found.",
       });

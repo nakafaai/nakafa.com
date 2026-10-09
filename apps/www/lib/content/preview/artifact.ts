@@ -26,7 +26,7 @@ function validateRenderer(
   activeManifest: RendererManifestEnvelope
 ) {
   if (manifest.rendererManifestHash !== activeManifest.hash) {
-    return Effect.fail(new PreviewIntegrityError({ check: "renderer" }));
+    return Effect.fail(PreviewIntegrityError.make({ check: "renderer" }));
   }
 
   return Effect.void;
@@ -39,7 +39,7 @@ function makeKeyResolver(keyId: SigningKeyId, publicKey: string) {
     resolve: (requested: SigningKeyId) =>
       requested === keyId
         ? Effect.succeed(publicKey)
-        : Effect.fail(new SigningKeyNotFoundError({ keyId: requested })),
+        : Effect.fail(SigningKeyNotFoundError.make({ keyId: requested })),
   };
 }
 
@@ -83,7 +83,7 @@ export const executePreviewArtifact = Effect.fn(
       previewArtifact.projection.artifactLocale ||
     rendered.artifact.payload.rendererDomain !== document.rendererDomain
   ) {
-    return yield* new PreviewIntegrityError({ check: "artifact" });
+    return yield* PreviewIntegrityError.make({ check: "artifact" });
   }
 
   return rendered;

@@ -17,7 +17,7 @@ export class CustomerSyncIoError extends Schema.TaggedError<CustomerSyncIoError>
 /** Preserves the operation context while normalizing an unknown IO failure. */
 export const CustomerSyncIoErrorWire = publicFailure(CustomerSyncIoError);
 export function customerSyncIoError(message: string, error: unknown) {
-  return new CustomerSyncIoError({
+  return CustomerSyncIoError.make({
     code: customerSyncIoErrorCode,
     cause: error,
     message,

@@ -78,6 +78,7 @@
           "missingStarInYieldEffectGen": "error",
           "multipleCatchTag": "error",
           "multipleEffectProvide": "error",
+          "newSchemaClass": "error",
           "obsoleteMatchImport": "error",
           "obsoleteSchemaImport": "error",
           "optionMatchToFromOption": "error",

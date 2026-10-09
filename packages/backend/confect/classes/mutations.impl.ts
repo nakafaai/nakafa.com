@@ -105,7 +105,7 @@ const joinClass = FunctionImpl.make(
         Effect.orDie
       );
     if (!inviteCode) {
-      return yield* new ClassMutationError({
+      return yield* ClassMutationError.make({
         code: "INVALID_CODE",
         message: "Invalid invite code.",
       });
@@ -123,7 +123,7 @@ const joinClass = FunctionImpl.make(
     yield* validateNotExistingMembership(existingMember, "class");
     const schoolMember = yield* getSchoolMembership(classData.schoolId, userId);
     if (!schoolMember) {
-      return yield* new ClassMutationError({
+      return yield* ClassMutationError.make({
         code: "NOT_SCHOOL_MEMBER",
         message: "You must be a member of the school to join this class.",
       });
@@ -196,7 +196,7 @@ const joinPublicClass = FunctionImpl.make(
     const userId = user.appUser._id;
     const classData = yield* loadActiveClass(args.classId);
     if (classData.visibility !== "public") {
-      return yield* new ClassMutationError({
+      return yield* ClassMutationError.make({
         code: "CLASS_NOT_PUBLIC",
         message: "This class is not public. Please use an invite code to join.",
       });
@@ -212,7 +212,7 @@ const joinPublicClass = FunctionImpl.make(
     yield* validateNotExistingMembership(existingMember, "class");
     const schoolMember = yield* getSchoolMembership(classData.schoolId, userId);
     if (!schoolMember) {
-      return yield* new ClassMutationError({
+      return yield* ClassMutationError.make({
         code: "NOT_SCHOOL_MEMBER",
         message: "You must be a member of the school to join this class.",
       });
@@ -248,7 +248,7 @@ const updateClassImage = FunctionImpl.make(
       schoolId: classData.schoolId,
     });
     if (!isValidClassImage(args.image)) {
-      return yield* new ClassMutationError({
+      return yield* ClassMutationError.make({
         code: "INVALID_IMAGE",
         message: "Invalid class image. Please select a valid image.",
       });

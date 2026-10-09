@@ -109,7 +109,7 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
       duration: NETWORK_ATTEMPT_DEADLINE,
       orElse: () =>
         Effect.fail(
-          new GoogleIndexSubmitError({
+          GoogleIndexSubmitError.make({
             cause: "deadline",
             message: `Submitting ${url} did not answer within 10 seconds.`,
           })
@@ -166,12 +166,11 @@ const sendSubmitRequest = Effect.fn("scripts.google.submit.send")(function* (
       url,
     }),
     client.execute,
-    Effect.mapError(
-      (cause) =>
-        new GoogleIndexSubmitError({
-          cause,
-          message: `Network error submitting ${url}.`,
-        })
+    Effect.mapError((cause) =>
+      GoogleIndexSubmitError.make({
+        cause,
+        message: `Network error submitting ${url}.`,
+      })
     )
   );
   // Reading the acknowledgement releases the connection for the next URL.
@@ -183,12 +182,11 @@ const sendSubmitRequest = Effect.fn("scripts.google.submit.send")(function* (
 const readSubmitResponse = Effect.fn("scripts.google.submit.readResponse")(
   (response: HttpClientResponse.HttpClientResponse, url: string) =>
     response.text.pipe(
-      Effect.mapError(
-        (cause) =>
-          new GoogleIndexSubmitError({
-            cause,
-            message: `Failed to read the Indexing API response for ${url}.`,
-          })
+      Effect.mapError((cause) =>
+        GoogleIndexSubmitError.make({
+          cause,
+          message: `Failed to read the Indexing API response for ${url}.`,
+        })
       )
     )
 );

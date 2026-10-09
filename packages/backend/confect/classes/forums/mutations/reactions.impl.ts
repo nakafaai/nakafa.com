@@ -36,7 +36,7 @@ const togglePostReaction = FunctionImpl.make(
           Effect.orDie
         );
       if (!post) {
-        return yield* new ForumError({
+        return yield* ForumError.make({
           code: "POST_NOT_FOUND",
           message: "Post not found.",
         });
@@ -65,7 +65,7 @@ const togglePostReaction = FunctionImpl.make(
         !hasReactionVariant &&
         post.reactionCounts.length >= MAX_FORUM_REACTION_VARIANTS
       ) {
-        return yield* new ForumError({
+        return yield* ForumError.make({
           code: "FORUM_REACTION_VARIANT_LIMIT_EXCEEDED",
           message: "Forum post reaction variants exceed the supported limit.",
         });
@@ -119,7 +119,7 @@ const toggleForumReaction = FunctionImpl.make(
         !hasReactionVariant &&
         forum.reactionCounts.length >= MAX_FORUM_REACTION_VARIANTS
       ) {
-        return yield* new ForumError({
+        return yield* ForumError.make({
           code: "FORUM_REACTION_VARIANT_LIMIT_EXCEEDED",
           message: "Forum reaction variants exceed the supported limit.",
         });

@@ -178,7 +178,7 @@ const pinSitemapRelease = Effect.fn("www.sitemap.routePage.pin")(function* (
   };
   const active = yield* readActiveContentIdentity();
   if (!active) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   const verify = verifyContentReleasePin(active.releaseId, identity);
   return {
@@ -225,7 +225,7 @@ const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
           );
     const pageRoutes = yield* Effect.forEach(pages, (page) =>
       page === null
-        ? Effect.fail(new PublishedProjectionError(identity))
+        ? Effect.fail(PublishedProjectionError.make(identity))
         : Effect.succeed(Arr.map(page.routes, mapFamilyRoute))
     );
     const routes = Arr.sortWith(

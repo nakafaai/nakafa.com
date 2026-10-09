@@ -60,12 +60,11 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
     const request = yield* Schema.decodeUnknownEffect(
       RollbackPageRequestSchema
     )(input).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_LIMIT",
-            message: `Rollback pages require 1-${MAX_ROLLBACK_PAGE_RECORDS} records.`,
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_LIMIT",
+          message: `Rollback pages require 1-${MAX_ROLLBACK_PAGE_RECORDS} records.`,
+        })
       )
     );
     if (request.limit > RELEASE_PAGE_LIMIT) {
@@ -142,12 +141,11 @@ const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(function* (
   return yield* Schema.decodeUnknownEffect(ContentKeySchema)(
     prior.contentKey
   ).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Prior route ${row.appLocale}/${row.publicPath} lost its content identity.`,
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Prior route ${row.appLocale}/${row.publicPath} lost its content identity.`,
+      })
     )
   );
 });
@@ -158,12 +156,11 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
     const request = yield* Schema.decodeUnknownEffect(RoutePageRequestSchema)(
       input
     ).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_LIMIT",
-            message: `Route pages require 1-${MAX_ROUTE_PAGE_RECORDS} records.`,
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_LIMIT",
+          message: `Route pages require 1-${MAX_ROUTE_PAGE_RECORDS} records.`,
+        })
       )
     );
     if (request.limit > ROUTE_CATALOG_PAGE_LIMIT) {

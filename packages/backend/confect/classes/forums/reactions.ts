@@ -24,7 +24,7 @@ export const validateForumReactionValue = Effect.fn(
   ) {
     return emoji;
   }
-  return yield* new ForumError({
+  return yield* ForumError.make({
     code: "FORUM_REACTION_INVALID",
     message: "Forum reaction must be a supported emoji.",
   });

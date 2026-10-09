@@ -21,13 +21,12 @@ export const readGoogleAuthConfig = Effect.fn("auth.readGoogleConfig")(
         "AUTH_GOOGLE_SECRET"
       ),
     }).pipe(
-      Effect.mapError(
-        () =>
-          new GoogleAuthConfigError({
-            code: "AUTH_GOOGLE_CONFIG_INVALID",
-            message:
-              "AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET must be configured as nonempty credentials.",
-          })
+      Effect.mapError(() =>
+        GoogleAuthConfigError.make({
+          code: "AUTH_GOOGLE_CONFIG_INVALID",
+          message:
+            "AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET must be configured as nonempty credentials.",
+        })
       )
     );
   }

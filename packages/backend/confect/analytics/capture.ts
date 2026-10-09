@@ -26,7 +26,7 @@ export type ProductAnalyticsCaptureArgs =
 /** Raised when an admitted backend product event cannot be queued. */
 /** Maps one Convex or PostHog failure into the analytics capture channel. */
 export function toProductAnalyticsCaptureError(error: unknown) {
-  return new ProductAnalyticsCaptureError({
+  return ProductAnalyticsCaptureError.make({
     code: productAnalyticsCaptureFailedCode,
     message: getUnknownErrorMessage(error),
   });

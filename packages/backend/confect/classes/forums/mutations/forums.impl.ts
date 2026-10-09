@@ -32,13 +32,13 @@ const createForum = FunctionImpl.make(
     const title = args.title.trim();
     const body = args.body.trim();
     if (title.length < MIN_FORUM_THREAD_TEXT_LENGTH) {
-      return yield* new ForumError({
+      return yield* ForumError.make({
         code: "FORUM_TITLE_TOO_SHORT",
         message: "Forum title must be at least three characters long.",
       });
     }
     if (body.length < MIN_FORUM_THREAD_TEXT_LENGTH) {
-      return yield* new ForumError({
+      return yield* ForumError.make({
         code: "FORUM_BODY_TOO_SHORT",
         message: "Forum description must be at least three characters long.",
       });
@@ -56,7 +56,7 @@ const createForum = FunctionImpl.make(
         Arr.some(STUDENT_FORUM_TAGS, (tag) => tag === args.tag)
       )
     ) {
-      return yield* new ForumError({
+      return yield* ForumError.make({
         code: "FORUM_TAG_ACCESS_DENIED",
         message: "You do not have access to create this forum tag.",
       });

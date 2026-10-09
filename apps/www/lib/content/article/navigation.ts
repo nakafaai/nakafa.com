@@ -41,7 +41,7 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
         locale,
       });
       if (page.stale) {
-        return yield* new PublishedProjectionError({
+        return yield* PublishedProjectionError.make({
           appLocale: AppLocaleSchema.make(locale),
           publicPath: "articles",
         });

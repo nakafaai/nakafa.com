@@ -73,7 +73,7 @@ function invalidCursor(reason: string) {
 
 /** Creates one stable cursor integrity error. */
 function invalidCursorError(reason: string) {
-  return new ReleaseError({
+  return ReleaseError.make({
     code: "CONTENT_RELEASE_INTEGRITY",
     message: `Article publication cursor has an ${reason}.`,
   });

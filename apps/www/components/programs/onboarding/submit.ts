@@ -23,12 +23,12 @@ export class OnboardingMutationError extends Schema.TaggedError<OnboardingMutati
 export const saveOnboardingDraft = Effect.fn("www.onboarding.saveDraft")(
   function* (saveAnswer: SaveAnswerMutation, args: SaveAnswerArgs) {
     yield* Effect.tryPromise({
-      catch: (cause) => new OnboardingMutationError({ cause }),
+      catch: (cause) => OnboardingMutationError.make({ cause }),
       try: () => saveAnswer(args),
     }).pipe(
       Effect.flatMap((result) =>
         Effect.fromResult(result).pipe(
-          Effect.mapError((cause) => new OnboardingMutationError({ cause }))
+          Effect.mapError((cause) => OnboardingMutationError.make({ cause }))
         )
       )
     );
@@ -41,12 +41,12 @@ export const finishOnboarding = Effect.fn("www.onboarding.finish")(function* (
   args: FinishArgs
 ) {
   return yield* Effect.tryPromise({
-    catch: (cause) => new OnboardingMutationError({ cause }),
+    catch: (cause) => OnboardingMutationError.make({ cause }),
     try: () => finish(args),
   }).pipe(
     Effect.flatMap((result) =>
       Effect.fromResult(result).pipe(
-        Effect.mapError((cause) => new OnboardingMutationError({ cause }))
+        Effect.mapError((cause) => OnboardingMutationError.make({ cause }))
       )
     )
   );

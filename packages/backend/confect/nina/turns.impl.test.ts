@@ -187,7 +187,7 @@ describe("native Nina admission", () => {
     const { t, owner, identity } = await fixture();
     vi.mocked(resolveNinaContext).mockReturnValueOnce(
       Effect.fail(
-        new NinaTurnError({
+        NinaTurnError.make({
           code: "NINA_CONTEXT_FAILED",
           message: "Unavailable",
         })

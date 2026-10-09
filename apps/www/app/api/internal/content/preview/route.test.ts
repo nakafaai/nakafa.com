@@ -27,7 +27,7 @@ beforeEach(() => {
 describe("local preview event route", () => {
   it("is unavailable when no development child supplied a provider", async () => {
     eventsMock.mockReturnValueOnce(
-      Effect.fail(new PreviewUnavailableError({}))
+      Effect.fail(PreviewUnavailableError.make({}))
     );
 
     const response = await requestEvents();
@@ -37,7 +37,7 @@ describe("local preview event route", () => {
 
   it("hides provider failures from the browser", async () => {
     eventsMock.mockReturnValueOnce(
-      Effect.fail(new PreviewRequestError({ stage: "connect" }))
+      Effect.fail(PreviewRequestError.make({ stage: "connect" }))
     );
 
     const response = await requestEvents();

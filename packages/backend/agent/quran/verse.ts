@@ -33,12 +33,11 @@ export const projectQuranVerse = Effect.fn("agent.quran.projectVerse")(
   ) {
     const source = yield* readTranslation(verse, appLocale);
     const translation = yield* parseQuranTranslation(source).pipe(
-      Effect.mapError(
-        (error) =>
-          new NakafaAgentDataReadError({
-            cause: `Signed Quran verse ${verse.number.inQuran} has inconsistent translation notes: ${error.reason}.`,
-            message: "Unable to read signed Nakafa Quran reference.",
-          })
+      Effect.mapError((error) =>
+        NakafaAgentDataReadError.make({
+          cause: `Signed Quran verse ${verse.number.inQuran} has inconsistent translation notes: ${error.reason}.`,
+          message: "Unable to read signed Nakafa Quran reference.",
+        })
       )
     );
     const row = {
@@ -81,7 +80,7 @@ const readRequestedTafsir = Effect.fn("agent.quran.readRequestedTafsir")(
 
 /** Creates one typed signed-reference integrity failure. */
 function referenceError(cause: string) {
-  return new NakafaAgentDataReadError({
+  return NakafaAgentDataReadError.make({
     cause,
     message: "Unable to read signed Nakafa Quran reference.",
   });

@@ -37,13 +37,13 @@ const addComment = FunctionImpl.make(
           )
       : null;
     if (args.parentId && !parentComment) {
-      return yield* new CommentWriteError({
+      return yield* CommentWriteError.make({
         code: "COMMENT_PARENT_NOT_FOUND",
         message: "Reply parent not found.",
       });
     }
     if (parentComment && parentComment.slug !== cleanedSlug) {
-      return yield* new CommentWriteError({
+      return yield* CommentWriteError.make({
         code: "COMMENT_PARENT_MISMATCH",
         message: "Reply parent must belong to the same slug.",
       });
@@ -94,7 +94,7 @@ const voteOnComment = FunctionImpl.make(
         Effect.orDie
       );
     if (!comment) {
-      return yield* new CommentWriteError({
+      return yield* CommentWriteError.make({
         code: "COMMENT_NOT_FOUND",
         message: "Comment not found.",
       });
@@ -143,13 +143,13 @@ const deleteComment = FunctionImpl.make(
         Effect.orDie
       );
     if (!comment) {
-      return yield* new CommentWriteError({
+      return yield* CommentWriteError.make({
         code: "COMMENT_NOT_FOUND",
         message: `Comment not found for commentId: ${args.commentId}`,
       });
     }
     if (comment.userId !== user.appUser._id) {
-      return yield* new CommentWriteError({
+      return yield* CommentWriteError.make({
         code: "FORBIDDEN",
         message: "You can only delete your own comments.",
       });

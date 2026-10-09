@@ -168,7 +168,7 @@ const readStableJavascriptRun = Effect.fn("NakafaE2E.readStableJavascriptRun")(
     const javascriptRun = yield* readJavascriptRun(page);
     const snapshotFailure = requestTracker.getFailure("javascript");
     if (snapshotFailure) {
-      return yield* new JavascriptResourceRequestError({
+      return yield* JavascriptResourceRequestError.make({
         ...snapshotFailure,
         href,
       });
@@ -193,7 +193,7 @@ const readSettledJavascriptRun = Effect.fn(
     const observedAt = yield* Clock.currentTimeMillis;
     const requestFailure = requestTracker.getFailure("javascript");
     if (requestFailure) {
-      return yield* new JavascriptResourceRequestError({
+      return yield* JavascriptResourceRequestError.make({
         ...requestFailure,
         href,
       });
@@ -208,7 +208,7 @@ const readSettledJavascriptRun = Effect.fn(
     }
     if (requestTracker.successfulCount("prefetch") === 0) {
       if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
-        return yield* new JavascriptPrefetchReadinessTimeout({
+        return yield* JavascriptPrefetchReadinessTimeout.make({
           href,
           lastFailure: requestTracker.getFailure("prefetch"),
           timeoutMilliseconds: RESOURCE_SETTLE_TIMEOUT_MILLISECONDS,
@@ -231,7 +231,7 @@ const readSettledJavascriptRun = Effect.fn(
       }
     }
     if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
-      return yield* new JavascriptResourceSettleTimeout({
+      return yield* JavascriptResourceSettleTimeout.make({
         href,
         timeoutMilliseconds: RESOURCE_SETTLE_TIMEOUT_MILLISECONDS,
       });
@@ -281,7 +281,7 @@ export const measureRouteJavascript = Effect.fn(
                   page.goto(href, { waitUntil: "domcontentloaded" })
                 );
                 if (!response?.ok()) {
-                  return yield* new JavascriptResourceResponseError({
+                  return yield* JavascriptResourceResponseError.make({
                     href,
                     status: response?.status(),
                   });

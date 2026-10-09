@@ -40,13 +40,13 @@ export const loadSignedTryoutContent = Effect.fn(
 )(function* (attemptId: Id<"tryoutAttempts">, access: SignedContentAccess) {
   const token = yield* Effect.tryPromise({
     catch: (cause) =>
-      new ContentRuntimeVerificationError({
+      ContentRuntimeVerificationError.make({
         cause,
       }),
     try: () => getToken(),
   });
   if (!token) {
-    return yield* new ContentRuntimeVerificationError({
+    return yield* ContentRuntimeVerificationError.make({
       cause: "Try-out content requires an active session.",
     });
   }
@@ -63,7 +63,7 @@ export const loadTryoutQuestion = Effect.fn("NakafaContent.loadTryoutQuestion")(
     const rendered = yield* renderContentPlan(plan, (selectors) =>
       Effect.tryPromise({
         catch: (cause) =>
-          new ContentRuntimeVerificationError({
+          ContentRuntimeVerificationError.make({
             cause,
           }),
         try: () => renderBatch(selectors),
@@ -85,7 +85,7 @@ const renderContentPlan = Effect.fn("NakafaContent.renderTryoutContentPlan")(
     ) => Effect.Effect<readonly RenderedTryoutContentEntry[], Error>
   ) {
     if (plan.selectorCount === 0) {
-      return yield* new ContentRuntimeVerificationError({
+      return yield* ContentRuntimeVerificationError.make({
         cause: "Protected content batch is empty.",
       });
     }
@@ -119,16 +119,15 @@ const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
       })
     ),
     Effect.withTracerTiming(false),
-    Effect.mapError(
-      (cause) =>
-        new ContentRuntimeVerificationError({
-          cause,
-        })
+    Effect.mapError((cause) =>
+      ContentRuntimeVerificationError.make({
+        cause,
+      })
     )
   );
   return yield* Effect.tryPromise({
     catch: (cause) =>
-      new ContentRuntimeVerificationError({
+      ContentRuntimeVerificationError.make({
         cause,
       }),
     try: () => renderAttemptBatch(selectors, row),
@@ -214,7 +213,7 @@ const renderFoundItems = Effect.fn("NakafaContent.renderFoundItems")(function* (
 /** Reads the server-owned protected runtime target. */
 const readRuntimeTarget = Effect.try({
   catch: () =>
-    new ContentRuntimeConfigurationError({
+    ContentRuntimeConfigurationError.make({
       key: "CONTENT_RUNTIME_TOKEN",
     }),
   try: () => ({

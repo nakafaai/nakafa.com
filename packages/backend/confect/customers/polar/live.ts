@@ -109,13 +109,12 @@ export const polarGateway = {
         }),
       decodePolarCheckout
     ).pipe(
-      Effect.mapError(
-        ({ cause }) =>
-          new PolarCheckoutError({
-            code: polarCheckoutErrorCode,
-            cause,
-            message: "Failed to create checkout session.",
-          })
+      Effect.mapError(({ cause }) =>
+        PolarCheckoutError.make({
+          code: polarCheckoutErrorCode,
+          cause,
+          message: "Failed to create checkout session.",
+        })
       )
     );
   }),
@@ -136,13 +135,13 @@ export const polarGateway = {
     ).pipe(
       Effect.mapError(({ cause }) =>
         isDuplicateEmail(cause)
-          ? new PolarDuplicateEmailError({
+          ? PolarDuplicateEmailError.make({
               code: polarDuplicateEmailCode,
               cause,
               message:
                 "A Polar customer already exists for this email address.",
             })
-          : new PolarCustomerError({
+          : PolarCustomerError.make({
               code: polarCustomerErrorCode,
               cause,
               message: "Failed to create Polar customer.",
@@ -159,13 +158,12 @@ export const polarGateway = {
           }),
         decodePolarCustomerSession
       ).pipe(
-        Effect.mapError(
-          ({ cause }) =>
-            new PolarPortalError({
-              code: polarPortalErrorCode,
-              cause,
-              message: "Failed to create customer portal session.",
-            })
+        Effect.mapError(({ cause }) =>
+          PolarPortalError.make({
+            code: polarPortalErrorCode,
+            cause,
+            message: "Failed to create customer portal session.",
+          })
         )
       );
     }
@@ -179,7 +177,7 @@ export const polarGateway = {
         isMissingCustomer(cause)
           ? Effect.succeed(null)
           : Effect.fail(
-              new PolarDeleteError({
+              PolarDeleteError.make({
                 code: polarDeleteErrorCode,
                 cause,
                 message: "Failed to delete customer from Polar.",
@@ -201,13 +199,12 @@ export const polarGateway = {
         }),
       decodePolarCustomerPage
     ).pipe(
-      Effect.mapError(
-        ({ cause }) =>
-          new PolarCustomerError({
-            code: polarCustomerErrorCode,
-            cause,
-            message: "Failed to find Polar customer by email.",
-          })
+      Effect.mapError(({ cause }) =>
+        PolarCustomerError.make({
+          code: polarCustomerErrorCode,
+          cause,
+          message: "Failed to find Polar customer by email.",
+        })
       )
     );
     return Option.getOrNull(Arr.head(page.items));
@@ -222,7 +219,7 @@ export const polarGateway = {
           isMissingCustomer(cause)
             ? Effect.succeed(null)
             : Effect.fail(
-                new PolarCustomerError({
+                PolarCustomerError.make({
                   code: polarCustomerErrorCode,
                   cause,
                   message: "Failed to load Polar customer by external ID.",
@@ -241,7 +238,7 @@ export const polarGateway = {
         isMissingCustomer(cause)
           ? Effect.succeed(null)
           : Effect.fail(
-              new PolarCustomerError({
+              PolarCustomerError.make({
                 code: polarCustomerErrorCode,
                 cause,
                 message: "Failed to load Polar customer by ID.",
@@ -265,13 +262,12 @@ export const polarGateway = {
         }),
       decodePolarCustomer
     ).pipe(
-      Effect.mapError(
-        ({ cause }) =>
-          new PolarUpdateError({
-            code: polarUpdateErrorCode,
-            cause,
-            message: "Failed to sync customer data in Polar.",
-          })
+      Effect.mapError(({ cause }) =>
+        PolarUpdateError.make({
+          code: polarUpdateErrorCode,
+          cause,
+          message: "Failed to sync customer data in Polar.",
+        })
       )
     );
   }),
@@ -285,13 +281,12 @@ export const polarGateway = {
         }),
       decodePolarCustomer
     ).pipe(
-      Effect.mapError(
-        ({ cause }) =>
-          new PolarUpdateError({
-            code: polarUpdateErrorCode,
-            cause,
-            message: "Failed to update customer metadata.",
-          })
+      Effect.mapError(({ cause }) =>
+        PolarUpdateError.make({
+          code: polarUpdateErrorCode,
+          cause,
+          message: "Failed to update customer metadata.",
+        })
       )
     );
   }),

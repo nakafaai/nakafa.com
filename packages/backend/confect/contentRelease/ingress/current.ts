@@ -145,12 +145,11 @@ export const readCurrentPublication = Effect.fn(
       onExcessProperty: "error",
     }
   ).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Current release state violates its exact contract.",
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Current release state violates its exact contract.",
+      })
     )
   );
 });
@@ -191,12 +190,11 @@ export const readRecovery = Effect.fn("contentRelease.readRecovery")(
         receipt: stored.value.receipt,
       },
     }).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Recovery ${request.recoveryId} lost terminal evidence.`,
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Recovery ${request.recoveryId} lost terminal evidence.`,
+        })
       )
     );
   }

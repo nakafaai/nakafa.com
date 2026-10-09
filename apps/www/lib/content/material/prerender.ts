@@ -41,12 +41,12 @@ export const readPublishedMaterialPrerenderRoute = Effect.fn(
     !Schema.is(ReleaseIdSchema)(result.activeReleaseId) ||
     source === undefined
   ) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   yield* decodeSourceRevision(result.sourceRevision, identity);
   const route = yield* decodeMaterialJson(source, identity);
   if (route.appLocale !== appLocale) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   return route;
 });

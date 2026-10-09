@@ -81,7 +81,7 @@ describe("Nina capability execution policy", () => {
         vi.mocked(runNakafaAgent).mockReturnValue(
           state === "failed"
             ? Effect.fail(
-                new NakafaGenerationError({
+                NakafaGenerationError.make({
                   cause: undefined,
                   message: "Private provider detail",
                 })
@@ -91,7 +91,7 @@ describe("Nina capability execution policy", () => {
         vi.mocked(runMathAgent).mockReturnValue(
           state === "failed"
             ? Effect.fail(
-                new MathGenerationError({
+                MathGenerationError.make({
                   cause: undefined,
                   message: "Private provider detail",
                 })
@@ -101,7 +101,7 @@ describe("Nina capability execution policy", () => {
         if (state === "sourceLimit") {
           vi.mocked(runResearchAgent).mockReturnValue(
             Effect.fail(
-              new ResearchSourceLimitError({
+              ResearchSourceLimitError.make({
                 maximum: researchMaxSources,
                 received: researchMaxSources + 1,
               })
@@ -111,7 +111,7 @@ describe("Nina capability execution policy", () => {
           vi.mocked(runResearchAgent).mockReturnValue(
             state === "failed"
               ? Effect.fail(
-                  new ResearchGenerationError({
+                  ResearchGenerationError.make({
                     phase: "evidence",
                     message: "Private provider detail",
                   })

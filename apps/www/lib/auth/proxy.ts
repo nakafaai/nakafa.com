@@ -94,7 +94,7 @@ const withAuthDeadline = <A>(
   self.pipe(
     Effect.timeoutOrElse({
       duration: AUTH_PROXY_DEADLINE,
-      orElse: () => Effect.fail(new AuthProxyDeadline()),
+      orElse: () => Effect.fail(AuthProxyDeadline.make()),
     })
   );
 

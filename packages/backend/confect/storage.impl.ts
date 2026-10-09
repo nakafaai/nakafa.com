@@ -29,14 +29,14 @@ export const sweepStorage = Effect.fn("storage.sweep")(function* () {
       ctx.runQuery(components.nina.files.getFilesToDelete, {
         paginationOpts: { cursor: null, numItems: BATCH_SIZE },
       }),
-    catch: (cause) => new StorageSweepError({ cause }),
+    catch: (cause) => StorageSweepError.make({ cause }),
   });
   const removed = yield* Effect.tryPromise({
     try: () =>
       ctx.runMutation(components.nina.files.deleteFiles, {
         fileIds: Arr.map(page.page, (file) => file._id),
       }),
-    catch: (cause) => new StorageSweepError({ cause }),
+    catch: (cause) => StorageSweepError.make({ cause }),
   });
   const deleted = HashSet.fromIterable(removed);
   for (const file of page.page) {

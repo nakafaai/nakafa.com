@@ -26,12 +26,11 @@ export const decodeRequest = Effect.fn("contentRelease.decodeHeadPage")(
     return yield* Schema.decodeUnknownEffect(HeadPageRequestSchema)(input, {
       onExcessProperty: "error",
     }).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_LIMIT",
-            message: "Content head page request violates its bounded contract.",
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_LIMIT",
+          message: "Content head page request violates its bounded contract.",
+        })
       )
     );
   }
@@ -87,12 +86,11 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
   return yield* Schema.decodeUnknownEffect(HeadPageSchema)(page, {
     onExcessProperty: "error",
   }).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Content head page for ${request.activeReleaseId} is inconsistent.`,
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Content head page for ${request.activeReleaseId} is inconsistent.`,
+      })
     ),
     Effect.map((decoded) => ({
       ...decoded,

@@ -155,7 +155,7 @@ const runLifecycle = Effect.fn("test.contentRelease.runLifecycle")(function* <
   const runtimeServices = yield* Effect.context<never>();
   return yield* Effect.tryPromise({
     catch: (cause) =>
-      new ObservedLifecycleActionFailure({
+      ObservedLifecycleActionFailure.make({
         cause,
       }),
     try: () =>

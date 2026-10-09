@@ -80,7 +80,7 @@ export const decodePublishedQuranMarkdown = Effect.fn(
       expected.appLocale
     )
   ) {
-    return yield* new QuranPublicationError({
+    return yield* QuranPublicationError.make({
       operation: "markdown",
       reason: "Signed Quran markdown is missing.",
     });
@@ -95,7 +95,7 @@ export const decodePublishedQuranMarkdown = Effect.fn(
     result.toVerse !== expectedToVerse ||
     !hasExactQuranVerseRange(result.verses, 1, expectedToVerse)
   ) {
-    return yield* new QuranPublicationError({
+    return yield* QuranPublicationError.make({
       operation: "markdown",
       reason: "Signed Quran markdown identity is inconsistent.",
     });

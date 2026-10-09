@@ -29,7 +29,7 @@ export const cleanupAttemptScale = Effect.fn("tryouts.runtime.cleanupScale")(
         Effect.orDie
       );
     if (!scale) {
-      return yield* new TryoutRuntimeError({
+      return yield* TryoutRuntimeError.make({
         code: "TRYOUT_HISTORY_SCALE_MISSING",
         message: "A try-out attempt lost its IRT scale.",
       });

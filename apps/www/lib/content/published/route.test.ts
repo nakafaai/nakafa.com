@@ -195,7 +195,7 @@ describe("published content route", () => {
   );
   it.effect("propagates typed ownership query failures", () =>
     Effect.gen(function* () {
-      const failure = new HttpClient.HttpClientError({
+      const failure = HttpClient.HttpClientError.make({
         cause: "query unavailable",
       });
       fetchQueryMock.mockReturnValueOnce(Effect.fail(failure));

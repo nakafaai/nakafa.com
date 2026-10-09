@@ -67,12 +67,11 @@ export const readProductionChanges = Effect.fn(
         ],
         { cwd: repositoryRoot }
       ).pipe(
-        Effect.mapError(
-          (cause) =>
-            new ProductionAcceptanceError({
-              cause,
-              message: "Unable to inspect the pull request changes.",
-            })
+        Effect.mapError((cause) =>
+          ProductionAcceptanceError.make({
+            cause,
+            message: "Unable to inspect the pull request changes.",
+          })
         )
       );
       const [exitCode, stdout, stderr] = yield* Effect.all(
@@ -83,16 +82,15 @@ export const readProductionChanges = Effect.fn(
         ],
         { concurrency: 3 }
       ).pipe(
-        Effect.mapError(
-          (cause) =>
-            new ProductionAcceptanceError({
-              cause,
-              message: "Unable to finish inspecting the pull request changes.",
-            })
+        Effect.mapError((cause) =>
+          ProductionAcceptanceError.make({
+            cause,
+            message: "Unable to finish inspecting the pull request changes.",
+          })
         )
       );
       if (exitCode !== 0) {
-        return yield* new ProductionAcceptanceError({
+        return yield* ProductionAcceptanceError.make({
           message:
             stderr.trim() ||
             stdout.trim() ||
@@ -103,7 +101,7 @@ export const readProductionChanges = Effect.fn(
       const split = stdout.split("\0");
       const fields = split.at(-1) === "" ? Arr.dropRight(split, 1) : split;
       if (fields.length % 2 !== 0) {
-        return yield* new ProductionAcceptanceError({
+        return yield* ProductionAcceptanceError.make({
           message: "Git returned an invalid changed-path record.",
         });
       }
@@ -117,7 +115,7 @@ export const readProductionChanges = Effect.fn(
           status && path
             ? Effect.succeed({ path, status })
             : Effect.fail(
-                new ProductionAcceptanceError({
+                ProductionAcceptanceError.make({
                   message: "Git returned an incomplete changed-path record.",
                 })
               )
@@ -182,12 +180,11 @@ const resolveProductionAcceptance = Effect.fn(
     base: Config.NonEmptyString(environment.base),
     head: Config.NonEmptyString(environment.head),
   }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new ProductionAcceptanceError({
-          cause,
-          message: "Production acceptance configuration is incomplete.",
-        })
+    Effect.mapError((cause) =>
+      ProductionAcceptanceError.make({
+        cause,
+        message: "Production acceptance configuration is incomplete.",
+      })
     )
   );
   const [base, head] = yield* Effect.all(
@@ -197,12 +194,11 @@ const resolveProductionAcceptance = Effect.fn(
     ],
     { concurrency: 2 }
   ).pipe(
-    Effect.mapError(
-      (cause) =>
-        new ProductionAcceptanceError({
-          cause,
-          message: "Production acceptance requires exact Git revisions.",
-        })
+    Effect.mapError((cause) =>
+      ProductionAcceptanceError.make({
+        cause,
+        message: "Production acceptance requires exact Git revisions.",
+      })
     )
   );
   const changes = yield* readProductionChanges(repositoryRoot, base, head);
@@ -217,12 +213,11 @@ export const writeProductionAcceptanceDecision = Effect.fn(
   "ProductionAcceptance.writeDecision"
 )(function* (repositoryRoot: string) {
   const output = yield* Config.NonEmptyString("GITHUB_OUTPUT").pipe(
-    Effect.mapError(
-      (cause) =>
-        new ProductionAcceptanceError({
-          cause,
-          message: "Production acceptance configuration is incomplete.",
-        })
+    Effect.mapError((cause) =>
+      ProductionAcceptanceError.make({
+        cause,
+        message: "Production acceptance configuration is incomplete.",
+      })
     )
   );
   const { changes, required } = yield* resolveProductionAcceptance(
@@ -238,12 +233,11 @@ export const writeProductionAcceptanceDecision = Effect.fn(
       flag: "a",
     })
     .pipe(
-      Effect.mapError(
-        (cause) =>
-          new ProductionAcceptanceError({
-            cause,
-            message: "Unable to write the production acceptance decision.",
-          })
+      Effect.mapError((cause) =>
+        ProductionAcceptanceError.make({
+          cause,
+          message: "Unable to write the production acceptance decision.",
+        })
       )
     );
   yield* writeOutput(

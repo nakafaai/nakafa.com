@@ -134,7 +134,7 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
     }
 
     if (successfullySubmittedCount === 0) {
-      return yield* new GoogleIndexSubmitError({
+      return yield* GoogleIndexSubmitError.make({
         cause: "No eligible URLs were successfully submitted.",
         message: "Google Indexing API submission submitted zero queued URLs.",
       });

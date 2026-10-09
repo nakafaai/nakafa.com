@@ -14,7 +14,7 @@ export class ReleaseError extends Schema.TaggedError<ReleaseError>()(
 
 export function releaseFail(code: ReleaseError["code"], message: string) {
   return Effect.fail(
-    new ReleaseError({
+    ReleaseError.make({
       code,
       message,
     })

@@ -42,22 +42,20 @@ const loadGoogleServiceAccount = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   const { googleKey } = yield* indexingFiles;
   const keyFileContent = yield* fs.readFileString(googleKey).pipe(
-    Effect.mapError(
-      (cause) =>
-        new GoogleAssertionSignError({
-          cause,
-          message: `Failed to read ${googleKey}.`,
-        })
+    Effect.mapError((cause) =>
+      GoogleAssertionSignError.make({
+        cause,
+        message: `Failed to read ${googleKey}.`,
+      })
     )
   );
   return yield* decodeGoogleServiceAccount(keyFileContent).pipe(
-    Effect.mapError(
-      () =>
-        new GoogleAssertionSignError({
-          cause: "Invalid google-key.json shape.",
-          message:
-            "Google service-account credentials must include client_email and private_key.",
-        })
+    Effect.mapError(() =>
+      GoogleAssertionSignError.make({
+        cause: "Invalid google-key.json shape.",
+        message:
+          "Google service-account credentials must include client_email and private_key.",
+      })
     )
   );
 });
@@ -87,7 +85,7 @@ const signGoogleAccessTokenAssertion = Effect.fn(
         ["sign"]
       ),
     catch: (cause) =>
-      new GoogleAssertionSignError({
+      GoogleAssertionSignError.make({
         cause,
         message: "Failed to import the Google service-account private key.",
       }),
@@ -116,7 +114,7 @@ const signGoogleAccessTokenAssertion = Effect.fn(
         encoder.encode(signatureInput)
       ),
     catch: (cause) =>
-      new GoogleAssertionSignError({
+      GoogleAssertionSignError.make({
         cause,
         message: "Failed to sign the Google service-account JWT assertion.",
       }),
@@ -134,22 +132,20 @@ const sendGoogleTokenRequest = Effect.fn(
       grant_type: GOOGLE_JWT_GRANT_TYPE,
     }),
     client.execute,
-    Effect.mapError(
-      (cause) =>
-        new GoogleTokenRequestError({
-          cause,
-          message: "Google token request transport failed.",
-        })
+    Effect.mapError((cause) =>
+      GoogleTokenRequestError.make({
+        cause,
+        message: "Google token request transport failed.",
+      })
     )
   );
   // The body is read whether the endpoint grants or refuses the token.
   const responseText = yield* response.text.pipe(
-    Effect.mapError(
-      (cause) =>
-        new GoogleTokenRequestError({
-          cause,
-          message: "Google token response could not be read.",
-        })
+    Effect.mapError((cause) =>
+      GoogleTokenRequestError.make({
+        cause,
+        message: "Google token response could not be read.",
+      })
     )
   );
   return { responseText, status: response.status };
@@ -165,7 +161,7 @@ export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
         duration: NETWORK_ATTEMPT_DEADLINE,
         orElse: () =>
           Effect.fail(
-            new GoogleTokenRequestError({
+            GoogleTokenRequestError.make({
               cause: "deadline",
               message: "Google token request did not answer within 10 seconds.",
             })
@@ -173,18 +169,17 @@ export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
       })
     );
     if (status < 200 || status >= 300) {
-      return yield* new GoogleTokenRequestError({
+      return yield* GoogleTokenRequestError.make({
         message: "Google token request failed.",
         responseText,
       });
     }
     const token = yield* decodeGoogleTokenResponse(responseText).pipe(
-      Effect.mapError(
-        () =>
-          new GoogleTokenRequestError({
-            cause: "malformed",
-            message: "Google token response did not contain an access token.",
-          })
+      Effect.mapError(() =>
+        GoogleTokenRequestError.make({
+          cause: "malformed",
+          message: "Google token response did not contain an access token.",
+        })
       )
     );
     return token.access_token;

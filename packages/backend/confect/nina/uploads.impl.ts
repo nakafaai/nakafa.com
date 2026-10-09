@@ -30,7 +30,7 @@ const uploadQuota = new RateLimiter(components.agentRateLimiter, {
   },
 });
 const uploadFailure = () =>
-  new NinaUploadError({
+  NinaUploadError.make({
     code: "NINA_UPLOAD_FAILED",
     message: "Unable to save this attachment.",
   });
@@ -46,7 +46,7 @@ const save = FunctionImpl.make(
         args.bytes.byteLength === 0 ||
         args.bytes.byteLength > NINA_FILE_SIZE
       ) {
-        return yield* new NinaUploadError({
+        return yield* NinaUploadError.make({
           code: "NINA_UPLOAD_INVALID",
           message: "Choose a nonempty attachment no larger than 8 MiB.",
         });
@@ -101,7 +101,7 @@ const reserve = FunctionImpl.make(
       .take(NINA_FILE_COUNT)
       .pipe(Effect.orDie);
     if (pending.length >= NINA_FILE_COUNT) {
-      return yield* new NinaUploadError({
+      return yield* NinaUploadError.make({
         code: "NINA_UPLOAD_LIMIT",
         message:
           "Send or remove your pending attachments before uploading more.",
@@ -113,7 +113,7 @@ const reserve = FunctionImpl.make(
       catch: uploadFailure,
     });
     if (!quota.ok) {
-      return yield* new NinaUploadError({
+      return yield* NinaUploadError.make({
         code: "NINA_UPLOAD_LIMIT",
         message: "Too many uploads. Try again shortly.",
       });
@@ -156,7 +156,7 @@ const complete = FunctionImpl.make(
       upload.expiresAt <= now ||
       upload.state.status !== "uploading"
     ) {
-      return yield* new NinaUploadError({
+      return yield* NinaUploadError.make({
         code: "NINA_UPLOAD_INVALID",
         message: "This attachment is no longer available to send.",
       });

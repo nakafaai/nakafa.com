@@ -145,18 +145,17 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   const mediaType = yield* Schema.decodeUnknownEffect(NinaFileType)(
     attachment.file.type
   ).pipe(
-    Effect.mapError(
-      () =>
-        new NinaUploadError({
-          code: "NINA_UPLOAD_INVALID",
-          message: "This attachment type is not supported.",
-        })
+    Effect.mapError(() =>
+      NinaUploadError.make({
+        code: "NINA_UPLOAD_INVALID",
+        message: "This attachment type is not supported.",
+      })
     )
   );
   const bytes = yield* Effect.tryPromise({
     try: () => attachment.file.arrayBuffer(),
     catch: () =>
-      new NinaUploadError({
+      NinaUploadError.make({
         code: "NINA_UPLOAD_FAILED",
         message: "Unable to read this attachment.",
       }),
@@ -164,7 +163,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   const id = yield* Effect.tryPromise({
     try: () => upload({ bytes, mediaType, filename: attachment.file.name }),
     catch: () =>
-      new NinaConnectionError({
+      NinaConnectionError.make({
         code: "NINA_CONNECTION_FAILED",
         message: "Nina upload could not be confirmed.",
       }),
@@ -187,7 +186,7 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
   previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>
 ) {
   if (exceedsDocumentLimit(Arr.map(files, (attachment) => attachment.file))) {
-    return yield* new NinaUploadError({
+    return yield* NinaUploadError.make({
       code: "NINA_UPLOAD_SIZE",
       message: "The documents in one message can hold at most 10 MiB together.",
     });
@@ -254,7 +253,7 @@ export function useNinaSubmission() {
           return Effect.tryPromise({
             try: () => submit(args),
             catch: () =>
-              new NinaConnectionError({
+              NinaConnectionError.make({
                 code: "NINA_CONNECTION_FAILED",
                 message: "Nina admission could not be confirmed.",
               }),

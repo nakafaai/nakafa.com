@@ -169,7 +169,7 @@ describe("published material delivery", () => {
 
   it.effect("preserves signed-read failure before rendering", () =>
     Effect.gen(function* () {
-      const failure = new ContentRuntimeVerificationError({
+      const failure = ContentRuntimeVerificationError.make({
         cause: "Invalid material signature",
       });
       readMock.mockReturnValueOnce(Effect.fail(failure));
@@ -183,7 +183,7 @@ describe("published material delivery", () => {
 
   it.effect("preserves a typed failure from the immutable body cache", () =>
     Effect.gen(function* () {
-      const failure = new ContentExecutionError({
+      const failure = ContentExecutionError.make({
         contentKey: found.artifact.payload.contentKey,
         stage: "evaluate",
       });

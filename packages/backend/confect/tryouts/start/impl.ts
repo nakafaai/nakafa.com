@@ -74,7 +74,7 @@ const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
     if (!args.destinationSectionKey) {
       const publicPath = yield* readAttemptDestination(attempt, args.locale);
       if (!publicPath) {
-        return yield* new TryoutRuntimeError({
+        return yield* TryoutRuntimeError.make({
           code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
           message: "Try-out set route is missing from the attempt snapshot.",
         });
@@ -93,7 +93,7 @@ const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
       )
     );
     if (!destination?.publicPath) {
-      return yield* new TryoutRuntimeError({
+      return yield* TryoutRuntimeError.make({
         code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
         message: "Try-out destination is missing from the attempt snapshot.",
       });
@@ -104,7 +104,7 @@ const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
       args.destinationSectionKey
     );
     if (!publicPath) {
-      return yield* new TryoutRuntimeError({
+      return yield* TryoutRuntimeError.make({
         code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
         message: "The retained exam has no destination in this language.",
       });

@@ -94,7 +94,7 @@ export const validateInitialPage = Effect.fn(
 
 /** Creates one stable publication-page cursor integrity error. */
 function pageCursorError(reason: string) {
-  return new ReleaseError({
+  return ReleaseError.make({
     code: "CONTENT_RELEASE_INTEGRITY",
     message: `Publication page cursor has ${reason}.`,
   });

@@ -78,7 +78,7 @@ describe("Nina Quran evidence", () => {
   it("publishes the typed content failure", async () => {
     vi.mocked(getNakafaQuranReference).mockReturnValue(
       Effect.fail(
-        new NakafaAgentDataReadError({ message: "Reference is unavailable." })
+        NakafaAgentDataReadError.make({ message: "Reference is unavailable." })
       )
     );
     const { artifacts, publish } = recordProgress();

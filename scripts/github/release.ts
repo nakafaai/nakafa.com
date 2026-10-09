@@ -67,7 +67,7 @@ export const githubActionReleaseReviews = Effect.fn(
     };
 
     if (existing && existing.expectedTag !== review.expectedTag) {
-      return yield* new GithubActionReleaseError({
+      return yield* GithubActionReleaseError.make({
         cause: repository,
         message: `${repository} has conflicting action release reviews.`,
       });
@@ -100,18 +100,17 @@ export const fetchLatestGithubActionTag = Effect.fn(
     Effect.flatMap(HttpClientResponse.filterStatusOk),
     Effect.flatMap(HttpClientResponse.schemaBodyJson(GithubRelease)),
     Effect.map((release) => release.tag_name),
-    Effect.mapError(
-      (cause) =>
-        new GithubActionReleaseError({
-          cause,
-          message: `Unable to read the latest ${review.repository} release.`,
-        })
+    Effect.mapError((cause) =>
+      GithubActionReleaseError.make({
+        cause,
+        message: `Unable to read the latest ${review.repository} release.`,
+      })
     ),
     Effect.timeoutOrElse({
       duration: GITHUB_RELEASE_DEADLINE,
       orElse: () =>
         Effect.fail(
-          new GithubActionReleaseError({
+          GithubActionReleaseError.make({
             cause: new GithubReleaseDeadline(),
             message: `Unable to read the latest ${review.repository} release within 10 seconds.`,
           })

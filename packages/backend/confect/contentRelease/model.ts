@@ -76,7 +76,7 @@ export const loadRelease = Effect.fn("contentRelease.loadRelease")(function* (
           ),
         DocumentDecodeError: () =>
           Effect.fail(
-            new ReleaseError({
+            ReleaseError.make({
               code: "CONTENT_RELEASE_INTEGRITY",
               message: `Content release ${releaseId} does not match its stored contract.`,
             })

@@ -51,7 +51,7 @@ const writeBrowserCookie = Effect.fn("designSystem.sidebar.writeBrowserCookie")(
         document.cookie = cookie;
       },
       catch: (cause) =>
-        new SidebarStatePersistenceError({
+        SidebarStatePersistenceError.make({
           cause,
           cookieName,
           message: `Failed to persist sidebar state in ${cookieName}.`,

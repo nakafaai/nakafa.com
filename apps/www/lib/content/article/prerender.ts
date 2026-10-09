@@ -23,7 +23,7 @@ export const readPublishedArticlePrerenderRoute = Effect.fn(
   });
   const category = categories.categories[0];
   if (categories.stale || !category) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   const page = yield* readPublishedCategoryPage(
     {
@@ -46,7 +46,7 @@ export const readPublishedArticlePrerenderRoute = Effect.fn(
     page.sourceRevision !== categories.sourceRevision ||
     !article
   ) {
-    return yield* new PublishedProjectionError(identity);
+    return yield* PublishedProjectionError.make(identity);
   }
   return article.route;
 });

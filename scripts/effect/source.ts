@@ -69,7 +69,7 @@ function collectText(
 }
 /** Translates one platform command failure into the CLI error contract. */
 function gitPlatformError(error: PlatformError.PlatformError) {
-  return new EffectSourceGitError({ message: error.message });
+  return EffectSourceGitError.make({ message: error.message });
 }
 /** Runs Git with structured concurrency and preserves non-zero diagnostics. */
 const runGit = Effect.fn("EffectSource.runGit")(
@@ -89,7 +89,7 @@ const runGit = Effect.fn("EffectSource.runGit")(
         );
         if (exitCode !== 0) {
           const diagnostic = stderr.trim() || stdout.trim() || "Git failed.";
-          return yield* new EffectSourceGitError({
+          return yield* EffectSourceGitError.make({
             message: `git ${Arr.join(args, " ")}: ${diagnostic}`,
           });
         }
@@ -116,18 +116,17 @@ const readJson = Effect.fn("EffectSource.readJson")(function* (path: string) {
   const source = yield* fileSystem
     .readFileString(path)
     .pipe(
-      Effect.mapError(
-        (error) => new EffectSourceFileError({ message: error.message })
+      Effect.mapError((error) =>
+        EffectSourceFileError.make({ message: error.message })
       )
     );
   return yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown))(
     source
   ).pipe(
-    Effect.mapError(
-      () =>
-        new EffectSourceFileError({
-          message: `${path} does not contain valid JSON.`,
-        })
+    Effect.mapError(() =>
+      EffectSourceFileError.make({
+        message: `${path} does not contain valid JSON.`,
+      })
     )
   );
 });
@@ -137,11 +136,10 @@ const readVersion = Effect.fn("EffectSource.readVersion")(function* (
 ) {
   const input = yield* readJson(path);
   return yield* Schema.decodeUnknownEffect(PackageManifest)(input).pipe(
-    Effect.mapError(
-      () =>
-        new EffectSourceFileError({
-          message: `${path} does not contain a valid Effect version.`,
-        })
+    Effect.mapError(() =>
+      EffectSourceFileError.make({
+        message: `${path} does not contain a valid Effect version.`,
+      })
     ),
     Effect.map((manifest) => manifest.version)
   );
@@ -152,11 +150,10 @@ const readSourceIdentity = Effect.fn("EffectSource.readIdentity")(function* (
 ) {
   const input = yield* readJson(path);
   return yield* Schema.decodeUnknownEffect(SourceIdentity)(input).pipe(
-    Effect.mapError(
-      () =>
-        new EffectSourceFileError({
-          message: `${path} does not contain a valid Effect source identity.`,
-        })
+    Effect.mapError(() =>
+      EffectSourceFileError.make({
+        message: `${path} does not contain a valid Effect source identity.`,
+      })
     )
   );
 });
@@ -169,18 +166,17 @@ const writeSourceIdentity = Effect.fn("EffectSource.writeIdentity")(function* (
   const json = yield* Schema.encodeEffect(
     Schema.fromJsonString(SourceIdentity, { space: 2 })
   )(identity).pipe(
-    Effect.mapError(
-      () =>
-        new EffectSourceFileError({
-          message: `${path} cannot be written as an Effect source identity.`,
-        })
+    Effect.mapError(() =>
+      EffectSourceFileError.make({
+        message: `${path} cannot be written as an Effect source identity.`,
+      })
     )
   );
   yield* fileSystem
     .writeFileString(path, `${json}\n`)
     .pipe(
-      Effect.mapError(
-        (error) => new EffectSourceFileError({ message: error.message })
+      Effect.mapError((error) =>
+        EffectSourceFileError.make({ message: error.message })
       )
     );
 });
@@ -196,7 +192,7 @@ const inspectSource = Effect.fn("EffectSource.inspect")(function* (
     config.identityManifest,
   ]);
   if (sourceStatus.trim()) {
-    return yield* new EffectSourceMismatch({
+    return yield* EffectSourceMismatch.make({
       message: `${config.sourcePath} or ${config.identityManifest} has local changes.`,
     });
   }
@@ -222,13 +218,13 @@ const inspectSource = Effect.fn("EffectSource.inspect")(function* (
       { concurrency: 4 }
     );
   if (currentTree !== identity.tree) {
-    return yield* new EffectSourceMismatch({
+    return yield* EffectSourceMismatch.make({
       message: `${config.sourcePath} differs from tree ${identity.tree}.`,
     });
   }
   const vendoredTag = `effect@${vendoredVersion}`;
   if (identity.tag !== vendoredTag) {
-    return yield* new EffectSourceMismatch({
+    return yield* EffectSourceMismatch.make({
       message: `${config.identityManifest} records ${identity.tag}, but vendored source is ${vendoredTag}.`,
     });
   }
@@ -240,7 +236,7 @@ const checkSource = Effect.fn("EffectSource.check")(function* (
 ) {
   const state = yield* inspectSource(config);
   if (state.installedVersion !== state.vendoredVersion) {
-    return yield* new EffectSourceMismatch({
+    return yield* EffectSourceMismatch.make({
       message: `Installed Effect is ${state.installedVersion}, but ${config.sourcePath} is ${state.vendoredVersion}. Commit dependency changes, then run pnpm effect:source:update.`,
     });
   }
@@ -263,7 +259,7 @@ const requireCleanWorktree = Effect.fn("EffectSource.requireClean")(function* (
     "--porcelain",
   ]);
   if (status.trim()) {
-    return yield* new EffectSourceMismatch({
+    return yield* EffectSourceMismatch.make({
       message:
         "Effect source updates require a clean worktree. Commit dependency changes first.",
     });
@@ -342,7 +338,7 @@ const updateSource = Effect.fn("EffectSource.update")(function* (
     `${tree}:${config.sourcePath}`,
   ]);
   if (stagedSourceTree !== upstreamTree) {
-    return yield* new EffectSourceMismatch({
+    return yield* EffectSourceMismatch.make({
       message: `Staged ${config.sourcePath} is ${stagedSourceTree}, expected ${upstreamTree}.`,
     });
   }
@@ -380,7 +376,7 @@ export const makeEffectSourceProgram = Effect.fn("EffectSource.main")(
       yield* updateSource(config);
       return;
     }
-    return yield* new EffectSourceUsageError({
+    return yield* EffectSourceUsageError.make({
       message: "Usage: node scripts/effect/source.ts <check|update>",
     });
   }

@@ -28,4 +28,4 @@ class AcceptanceRuntimeError extends Schema.TaggedError<AcceptanceRuntimeError>(
 ) {}
 
 export const acceptanceRuntimeError = (message: string) =>
-  new AcceptanceRuntimeError({ message });
+  AcceptanceRuntimeError.make({ message });

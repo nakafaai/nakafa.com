@@ -19,7 +19,7 @@ export const ensureTryoutProgressWithinReadBudget = Effect.fn(
   if (isTryoutProgressWithinReadBudget(document)) {
     return;
   }
-  return yield* new TryoutProgressSizeError({
+  return yield* TryoutProgressSizeError.make({
     code: "TRYOUT_PROGRESS_SIZE",
     message: "Try-out progress exceeds the signed catalog read budget.",
   });

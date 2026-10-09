@@ -19,7 +19,7 @@ export const hashText = Effect.fn("contentRelease.hashText")(function* (
   const encoded = new TextEncoder().encode(source);
   const digest = yield* Effect.tryPromise({
     catch: () =>
-      new ReleaseError({
+      ReleaseError.make({
         code: "CONTENT_RELEASE_INTEGRITY",
         message: `Unable to identify ${label}.`,
       }),

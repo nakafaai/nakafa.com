@@ -63,10 +63,10 @@ const readReadyPage = Effect.fn("NakafaContent.readReadyPage")(function* (
   const projection = yield* Schema.decodeUnknownEffect(
     PublicPageProjectionSchema
   )(previewArtifact.projection, { onExcessProperty: "error" }).pipe(
-    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
+    Effect.mapError(() => PreviewIntegrityError.make({ check: "projection" }))
   );
   if (!matchesPageProjection(document, projection)) {
-    return yield* new PreviewIntegrityError({ check: "projection" });
+    return yield* PreviewIntegrityError.make({ check: "projection" });
   }
   const rendered = yield* executePreviewArtifact({
     config,
@@ -93,10 +93,10 @@ export const readPagePreview = Effect.fn("NakafaContent.readPagePreview")(
       return Option.none<PagePreviewContent>();
     }
     if (manifest.status === "pending") {
-      return yield* new PreviewPendingError({ revision: manifest.revision });
+      return yield* PreviewPendingError.make({ revision: manifest.revision });
     }
     if (manifest.status === "failed") {
-      return yield* new PreviewCompileError({
+      return yield* PreviewCompileError.make({
         code: manifest.failure.code,
         message: manifest.failure.message,
         revision: manifest.revision,

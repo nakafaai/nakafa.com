@@ -62,12 +62,11 @@ const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
   return yield* Schema.decodeEffect(RollbackUpsertStateSchema)(state, {
     onExcessProperty: "error",
   }).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Rollback state ${identity} is inconsistent.`,
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Rollback state ${identity} is inconsistent.`,
+      })
     )
   );
 });

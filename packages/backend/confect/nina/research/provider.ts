@@ -9,22 +9,23 @@ export class ResearchProviderError extends Schema.TaggedError<ResearchProviderEr
 /** Resolve research credentials inside the action that uses the provider. */
 export const readFirecrawlApp = Effect.fn("research.provider")(function* () {
   const key = yield* Config.Redacted("FIRECRAWL_API_KEY").pipe(
-    Effect.mapError(
-      () =>
-        new ResearchProviderError({
-          message: "Web research is not configured.",
-        })
+    Effect.mapError(() =>
+      ResearchProviderError.make({
+        message: "Web research is not configured.",
+      })
     )
   );
   const apiKey = Redacted.value(key);
   if (!apiKey.trim()) {
-    return yield* new ResearchProviderError({
+    return yield* ResearchProviderError.make({
       message: "Web research is not configured.",
     });
   }
   return yield* Effect.try({
     try: () => new FirecrawlApp({ apiKey }),
     catch: () =>
-      new ResearchProviderError({ message: "Web research is not configured." }),
+      ResearchProviderError.make({
+        message: "Web research is not configured.",
+      }),
   });
 });

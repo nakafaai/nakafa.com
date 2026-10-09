@@ -97,7 +97,7 @@ class ContentSeoContractError extends Schema.TaggedError<ContentSeoContractError
 ) {}
 
 function contentSeoError(href: string, surface: string) {
-  return new ContentSeoContractError({ href, surface });
+  return ContentSeoContractError.make({ href, surface });
 }
 
 const decodeJsonText = Schema.decodeUnknownEffect(JsonTextSchema);
@@ -399,7 +399,7 @@ const readRecordedViews = Effect.fn("NakafaE2E.readRecordedViews")(function* (
 ) {
   const storage = yield* readContentViewStorage(page);
   if (storage.recordedViews !== recordedViews) {
-    return yield* new RecordedViewsPending({
+    return yield* RecordedViewsPending.make({
       recordedViews: storage.recordedViews,
     });
   }

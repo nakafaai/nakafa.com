@@ -29,7 +29,7 @@ describe("chat runtime feedback", () => {
     it.effect(`shows ${code} without recording an operational exception`, () =>
       Effect.gen(function* () {
         yield* reportNinaFailure(
-          new NinaCreditError({
+          NinaCreditError.make({
             code,
             message: "The request could not be admitted.",
           }),
@@ -46,7 +46,7 @@ describe("chat runtime feedback", () => {
 
   it.effect("reports an unexpected failure with generic user copy", () =>
     Effect.gen(function* () {
-      const error = new NinaConnectionError({
+      const error = NinaConnectionError.make({
         code: "NINA_CONNECTION_FAILED",
         message: "Private transport diagnostic",
       });

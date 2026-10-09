@@ -203,7 +203,7 @@ describe("content runtime cache revalidation route", () => {
 
   it("reports a typed cache invalidation failure without a false receipt", async () => {
     invalidateContentCacheMock.mockReturnValueOnce(
-      Effect.fail(new ContentCacheInvalidationError({ layer: "sitemap" }))
+      Effect.fail(ContentCacheInvalidationError.make({ layer: "sitemap" }))
     );
     const { POST } = await import("@/app/api/internal/content/cache/route");
     const response = await POST(

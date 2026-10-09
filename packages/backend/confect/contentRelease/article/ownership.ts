@@ -107,12 +107,11 @@ const decodeCategoryRoute = Effect.fn("contentRelease.decodeCategoryRoute")(
       );
     }
     return yield* Schema.decodeEffect(ArticleRouteSlugSchema)(category).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Article path ${publicPath} has an invalid category route.`,
-          })
+      Effect.mapError(() =>
+        ReleaseError.make({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Article path ${publicPath} has an invalid category route.`,
+        })
       )
     );
   }
@@ -238,12 +237,11 @@ export const validateCategoryClaim = Effect.fn(
   const route = yield* Schema.decodeEffect(ArticleRouteSlugSchema)(
     categoryOwner.route
   ).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Article category ${categoryOwner.appLocale}/${categoryOwner.category} has an invalid stored route.`,
-        })
+    Effect.mapError(() =>
+      ReleaseError.make({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: `Article category ${categoryOwner.appLocale}/${categoryOwner.category} has an invalid stored route.`,
+      })
     )
   );
   const claim = {

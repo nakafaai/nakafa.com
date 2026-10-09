@@ -138,7 +138,7 @@ describe("local preview route matching", () => {
       ]);
 
       prerenderManifestMock.mockRejectedValueOnce(
-        new PreviewIntegrityError({ check: "manifest" })
+        PreviewIntegrityError.make({ check: "manifest" })
       );
       expect(
         yield* fromPreviewPromise(readPreviewStaticLocaleParams).pipe(
@@ -291,7 +291,7 @@ describe("local preview route matching", () => {
     () =>
       Effect.gen(function* () {
         prerenderManifestMock.mockRejectedValueOnce(
-          new PreviewIntegrityError({ check: "manifest" })
+          PreviewIntegrityError.make({ check: "manifest" })
         );
         expect(
           yield* fromPreviewPromise(() =>
@@ -337,7 +337,7 @@ describe("local preview route matching", () => {
     () =>
       Effect.gen(function* () {
         prerenderManifestMock.mockRejectedValueOnce(
-          new PreviewIntegrityError({ check: "manifest" })
+          PreviewIntegrityError.make({ check: "manifest" })
         );
         expect(
           yield* fromPreviewPromise(() =>
@@ -371,7 +371,7 @@ describe("local preview route matching", () => {
     () =>
       Effect.gen(function* () {
         prerenderManifestMock.mockRejectedValueOnce(
-          new PreviewIntegrityError({ check: "manifest" })
+          PreviewIntegrityError.make({ check: "manifest" })
         );
         expect(
           yield* fromPreviewPromise(() =>

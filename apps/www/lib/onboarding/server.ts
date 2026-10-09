@@ -26,7 +26,7 @@ export const readOnboardingStatus = Effect.fn("www.onboarding.readStatus")(
       return yield* client.query(onboarding.queries.getStatus, {});
     }).pipe(
       Effect.provide(httpLayer({ auth: token })),
-      Effect.mapError((cause) => new OnboardingStatusReadError({ cause }))
+      Effect.mapError((cause) => OnboardingStatusReadError.make({ cause }))
     );
   }
 );
@@ -46,6 +46,6 @@ export const recordOnboardingAdmission = Effect.fn(
   }).pipe(
     Effect.timeout(NETWORK_ATTEMPT_DEADLINE),
     Effect.provide(httpLayer({ auth: token })),
-    Effect.mapError((cause) => new OnboardingAdmissionError({ cause }))
+    Effect.mapError((cause) => OnboardingAdmissionError.make({ cause }))
   );
 });

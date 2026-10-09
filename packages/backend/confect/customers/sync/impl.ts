@@ -164,7 +164,7 @@ export const requireCustomer = Effect.fn("customers.sync.requireCustomer")(
   function* (userId: Id<"users">) {
     const [user, localCustomer] = yield* loadCustomerSyncState(userId);
     if (!user || isAccountDeletionPending(user)) {
-      return yield* new UserNotFound({
+      return yield* UserNotFound.make({
         code: userNotFoundCode,
         message: `User not found for userId: ${userId}`,
       });

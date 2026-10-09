@@ -38,22 +38,20 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
       readArticleCategories(locale),
       readInventories(locale),
       runQuery(quranCatalogReference, {}).pipe(
-        Effect.mapError(
-          (cause) =>
-            new NakafaAgentDataReadError({
-              cause: getUnknownErrorMessage(cause),
-              message: "Unable to read the signed Nakafa Quran catalog.",
-            })
+        Effect.mapError((cause) =>
+          NakafaAgentDataReadError.make({
+            cause: getUnknownErrorMessage(cause),
+            message: "Unable to read the signed Nakafa Quran catalog.",
+          })
         )
       ),
     ]);
     const quran = yield* decodePublishedQuranCatalog(quranResult).pipe(
-      Effect.mapError(
-        (error) =>
-          new NakafaAgentDataReadError({
-            cause: error.reason,
-            message: "Unable to read the signed Nakafa Quran catalog.",
-          })
+      Effect.mapError((error) =>
+        NakafaAgentDataReadError.make({
+          cause: error.reason,
+          message: "Unable to read the signed Nakafa Quran catalog.",
+        })
       )
     );
     yield* verifyReleasePin(before);
@@ -95,12 +93,11 @@ const readArticleCategories = Effect.fn("agent.readArticleCategories")(
     const taxonomy = yield* runQuery(articleCategoriesReference, {
       appLocale: locale,
     }).pipe(
-      Effect.mapError(
-        (cause) =>
-          new NakafaAgentDataReadError({
-            cause: getUnknownErrorMessage(cause),
-            message: "Unable to read signed Nakafa article taxonomy.",
-          })
+      Effect.mapError((cause) =>
+        NakafaAgentDataReadError.make({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to read signed Nakafa article taxonomy.",
+        })
       )
     );
     if (!taxonomy.managed) {
@@ -151,34 +148,31 @@ const readLocaleInventory = Effect.fn("agent.readLocaleInventory")(function* (
     runQuery(articleBucketsReference, {
       appLocale: locale,
     }).pipe(
-      Effect.mapError(
-        (cause) =>
-          new NakafaAgentDataReadError({
-            cause: getUnknownErrorMessage(cause),
-            message: "Unable to read signed Nakafa article inventory.",
-          })
+      Effect.mapError((cause) =>
+        NakafaAgentDataReadError.make({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to read signed Nakafa article inventory.",
+        })
       )
     ),
     runQuery(materialBucketsReference, {
       appLocale: locale,
     }).pipe(
-      Effect.mapError(
-        (cause) =>
-          new NakafaAgentDataReadError({
-            cause: getUnknownErrorMessage(cause),
-            message: "Unable to read signed Nakafa material inventory.",
-          })
+      Effect.mapError((cause) =>
+        NakafaAgentDataReadError.make({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to read signed Nakafa material inventory.",
+        })
       )
     ),
     runQuery(tryoutTaxonomyReference, {
       appLocale: locale,
     }).pipe(
-      Effect.mapError(
-        (cause) =>
-          new NakafaAgentDataReadError({
-            cause: getUnknownErrorMessage(cause),
-            message: "Unable to read signed Nakafa try-out taxonomy.",
-          })
+      Effect.mapError((cause) =>
+        NakafaAgentDataReadError.make({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to read signed Nakafa try-out taxonomy.",
+        })
       )
     ),
   ]);
@@ -202,12 +196,11 @@ const readLocaleInventory = Effect.fn("agent.readLocaleInventory")(function* (
 const readReleasePin = Effect.fn("agent.readReleasePin")(function* () {
   const { runQuery } = yield* QueryRunner;
   return yield* runQuery(activeReleaseReference, {}).pipe(
-    Effect.mapError(
-      (cause) =>
-        new NakafaAgentDataReadError({
-          cause: getUnknownErrorMessage(cause),
-          message: "Unable to read the active Nakafa content release.",
-        })
+    Effect.mapError((cause) =>
+      NakafaAgentDataReadError.make({
+        cause: getUnknownErrorMessage(cause),
+        message: "Unable to read the active Nakafa content release.",
+      })
     )
   );
 });
@@ -218,7 +211,7 @@ const verifyReleasePin = Effect.fn("agent.verifyReleasePin")(function* (
 ) {
   const actual = yield* readReleasePin();
   if (!isSameReleasePin(actual, expected)) {
-    return yield* new NakafaAgentDataReadError({
+    return yield* NakafaAgentDataReadError.make({
       cause: "The active Nakafa content release changed during the read.",
       message: "Unable to complete one release-pinned Nakafa content read.",
     });
@@ -239,7 +232,7 @@ function isSameReleasePin(actual: ReleasePin, expected: ReleasePin) {
 
 /** Fails closed when a signed inventory is not currently managed. */
 function missingInventory(family: string, locale: Locale) {
-  return new NakafaAgentDataReadError({
+  return NakafaAgentDataReadError.make({
     cause: `Signed ${family} inventory is unmanaged for ${locale}.`,
     message: "Unable to read signed Nakafa content inventory.",
   });

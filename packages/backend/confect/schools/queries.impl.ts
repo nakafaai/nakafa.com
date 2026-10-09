@@ -24,14 +24,14 @@ const getSchoolBySlug = FunctionImpl.make(
         Effect.orDie
       );
     if (!school) {
-      return yield* new SchoolReadError({
+      return yield* SchoolReadError.make({
         code: "SCHOOL_NOT_FOUND",
         message: `School not found for slug: ${args.slug}`,
       });
     }
     const membership = yield* getSchoolMembership(school._id, user.appUser._id);
     if (!membership) {
-      return yield* new SchoolReadError({
+      return yield* SchoolReadError.make({
         code: "MEMBERSHIP_NOT_FOUND",
         message: `Membership not found for schoolId: ${school._id} and userId: ${user.appUser._id}`,
       });
@@ -74,7 +74,7 @@ const getMySchoolLandingState = FunctionImpl.make(
         Effect.orDie
       );
     if (!school) {
-      return yield* new SchoolReadError({
+      return yield* SchoolReadError.make({
         code: "SCHOOL_NOT_FOUND",
         message: `School not found for schoolId: ${memberships[0].schoolId}`,
       });
@@ -110,7 +110,7 @@ const getMySchoolsPage = FunctionImpl.make(
             Effect.orDie
           );
         if (!school) {
-          return yield* new SchoolReadError({
+          return yield* SchoolReadError.make({
             code: "SCHOOL_NOT_FOUND",
             message: `School not found for schoolId: ${membership.schoolId}`,
           });

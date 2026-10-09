@@ -218,7 +218,7 @@ describe("customers/polar/impl", () => {
         const gateway = createGateway({
           createCustomer: () =>
             Effect.fail(
-              new PolarDuplicateEmailError({
+              PolarDuplicateEmailError.make({
                 code: polarDuplicateEmailCode,
                 message: "Duplicate email",
               })
@@ -263,7 +263,7 @@ describe("customers/polar/impl", () => {
         const gateway = createGateway({
           createCustomer: () =>
             Effect.fail(
-              new PolarDuplicateEmailError({
+              PolarDuplicateEmailError.make({
                 code: polarDuplicateEmailCode,
                 message: "Duplicate email",
               })
@@ -293,7 +293,7 @@ describe("customers/polar/impl", () => {
       const gateway = createGateway({
         createCustomer: () =>
           Effect.fail(
-            new PolarCustomerError({
+            PolarCustomerError.make({
               code: polarCustomerErrorCode,
               message: "Create failed",
             })
@@ -327,7 +327,7 @@ describe("customers/polar/impl", () => {
         const gateway = createGateway({
           createCustomer: () =>
             Effect.fail(
-              new PolarDuplicateEmailError({
+              PolarDuplicateEmailError.make({
                 code: polarDuplicateEmailCode,
                 message: "Duplicate email",
               })

@@ -16,7 +16,7 @@ export const readSectionCompletion = Effect.fn(
     section
   );
   if (section.status !== "in-progress") {
-    return yield* new TryoutAttemptStateError({
+    return yield* TryoutAttemptStateError.make({
       code: "TRYOUT_SECTION_NOT_ACTIVE",
       message: "Try-out section is not active.",
     });
@@ -74,7 +74,7 @@ export const requireFinalSectionAttempts = Effect.fn(
 
 /** Creates one typed fail-closed section completion error. */
 function completionIntegrity(message: string) {
-  return new TryoutResponseIntegrityError({
+  return TryoutResponseIntegrityError.make({
     code: "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
     message,
   });

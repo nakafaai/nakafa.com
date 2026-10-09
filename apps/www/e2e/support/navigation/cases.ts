@@ -133,7 +133,7 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
   sourceHref: string
 ) {
   const link = page.locator(`a[href="${href}"]:visible`).first();
-  const missingLink = new NavigationLinkMissing({
+  const missingLink = NavigationLinkMissing.make({
     hrefPattern: href,
     sourceHref,
   });
@@ -189,7 +189,7 @@ const readVisibleLinkedHref = Effect.fn("NakafaE2E.readVisibleLinkedHref")(
       }
     }
 
-    return yield* new NavigationLinkMissing({
+    return yield* NavigationLinkMissing.make({
       hrefPattern: hrefPattern.source,
       sourceHref,
     });

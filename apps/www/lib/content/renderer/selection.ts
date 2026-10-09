@@ -107,7 +107,7 @@ export const selectRendererImplementations = Effect.fn(
       domainImplementations.length;
 
     if (matchCount > 1) {
-      return yield* new RendererComponentCollision({
+      return yield* RendererComponentCollision.make({
         componentName: name,
         contentKey: selection.contentKey,
         rendererDomain: selection.rendererDomain,
@@ -133,7 +133,7 @@ export const selectRendererImplementations = Effect.fn(
       });
       continue;
     }
-    return yield* new RendererImplementationMissing({
+    return yield* RendererImplementationMissing.make({
       componentName: name,
       contentKey: selection.contentKey,
       rendererDomain: selection.rendererDomain,

@@ -21,7 +21,7 @@ type ArticlePublicationRead = typeof ArticlePublicationReadSchema.Type;
 export function makeArticleProjectionError(
   identity: PublishedProjectionIdentity
 ) {
-  return new PublishedProjectionError(identity);
+  return PublishedProjectionError.make(identity);
 }
 
 /** Parses one canonical article projection encoded by the backend. */
@@ -52,7 +52,7 @@ export const verifyArticlePublication = Effect.fn(
     publicPath: catalog.projection.publicPath,
   };
   if (runtime.activeReleaseId !== catalog.activeReleaseId) {
-    return yield* new PublishedReleaseMismatchError({
+    return yield* PublishedReleaseMismatchError.make({
       actualReleaseId: runtime.activeReleaseId,
       expectedReleaseId: catalog.activeReleaseId,
     });

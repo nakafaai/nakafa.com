@@ -154,7 +154,7 @@ describe("Convex authentication", () => {
           .fn<() => Effect.Effect<string, ConvexTokenReadError>>()
           .mockReturnValueOnce(Effect.succeed("token-1"))
           .mockReturnValueOnce(
-            Effect.fail(new ConvexTokenReadError({ detail: "No token." }))
+            Effect.fail(ConvexTokenReadError.make({ detail: "No token." }))
           )
           .mockReturnValueOnce(Effect.succeed("token-2"));
         const { client } = yield* startSession(Effect.suspend(read));
@@ -229,7 +229,7 @@ describe("Convex authentication", () => {
           .mockReturnValueOnce(
             Deferred.await(release).pipe(
               Effect.andThen(
-                Effect.fail(new ConvexTokenReadError({ detail: "No token." }))
+                Effect.fail(ConvexTokenReadError.make({ detail: "No token." }))
               )
             )
           )

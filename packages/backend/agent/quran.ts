@@ -32,12 +32,11 @@ export const getNakafaQuranReference = Effect.fn(
   const { runQuery } = yield* QueryRunner;
   const request = yield* readNakafaQuranRequest(input);
   const result = yield* runQuery(quranPassage, referenceArgs(request)).pipe(
-    Effect.mapError(
-      (cause) =>
-        new NakafaAgentDataReadError({
-          cause: getUnknownErrorMessage(cause),
-          message: "Unable to read the signed Nakafa Quran reference.",
-        })
+    Effect.mapError((cause) =>
+      NakafaAgentDataReadError.make({
+        cause: getUnknownErrorMessage(cause),
+        message: "Unable to read the signed Nakafa Quran reference.",
+      })
     )
   );
   const reference = yield* decodePublishedQuranReference(result, {
@@ -63,12 +62,11 @@ const readNakafaQuranRequest = Effect.fn("agent.readNakafaQuranRequest")(
     const lastVerse = parsed.to_verse ?? parsed.from_verse;
     yield* validateRequestedRange(parsed.from_verse, lastVerse);
     const catalogResult = yield* runQuery(quranCatalogReference, {}).pipe(
-      Effect.mapError(
-        (cause) =>
-          new NakafaAgentDataReadError({
-            cause: getUnknownErrorMessage(cause),
-            message: "Unable to read the signed Nakafa Quran catalog.",
-          })
+      Effect.mapError((cause) =>
+        NakafaAgentDataReadError.make({
+          cause: getUnknownErrorMessage(cause),
+          message: "Unable to read the signed Nakafa Quran catalog.",
+        })
       )
     );
     const catalog = yield* decodePublishedQuranCatalog(catalogResult).pipe(
@@ -116,7 +114,7 @@ const projectReferenceIdentity = Effect.fn(
     section: "quran",
   });
   if (Option.isNone(ref)) {
-    return yield* new NakafaAgentDataReadError({
+    return yield* NakafaAgentDataReadError.make({
       cause: "The signed Quran reference has an invalid graph identity.",
       message: "Unable to read signed Nakafa Quran reference.",
     });
@@ -145,7 +143,7 @@ function validateRequestedRange(fromVerse: number, toVerse: number) {
 
 /** Creates one actionable typed range error. */
 function invalidRange(cause: string) {
-  return new NakafaAgentInputError({
+  return NakafaAgentInputError.make({
     cause,
     message: "Invalid Quran verse range.",
   });
@@ -153,7 +151,7 @@ function invalidRange(cause: string) {
 
 /** Maps signed Quran failures into the public agent error contract. */
 function quranReadError(error: QuranPublicationError) {
-  return new NakafaAgentDataReadError({
+  return NakafaAgentDataReadError.make({
     cause: error.reason,
     message: `Unable to read signed Nakafa Quran ${error.operation}.`,
   });

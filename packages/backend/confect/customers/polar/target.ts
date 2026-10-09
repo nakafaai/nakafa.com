@@ -20,7 +20,7 @@ type PolarCustomerWebhookTargetInput =
   typeof polarCustomerWebhookTargetInputValidator.Type;
 /** Maps target lookup IO into one typed Convex failure. */
 function toWebhookTargetError(error: unknown) {
-  return new PolarCustomerWebhookTargetIoError({
+  return PolarCustomerWebhookTargetIoError.make({
     code: "POLAR_CUSTOMER_WEBHOOK_TARGET_IO_FAILED",
     message: getUnknownErrorMessage(error),
   });

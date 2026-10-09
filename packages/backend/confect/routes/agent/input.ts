@@ -66,7 +66,7 @@ export const readContentInput = Effect.fn("agent.http.readContentInput")(
     if (ref !== undefined) {
       return ref;
     }
-    return yield* new AgentHttpInputError({
+    return yield* AgentHttpInputError.make({
       detail: "The ref query parameter is required.",
       resolution:
         "Pass a content_id from search or a canonical Nakafa URL as ref.",
@@ -146,7 +146,7 @@ function assertAllowedParameters(url: URL, allowed: readonly string[]) {
       if (allowed.includes(key)) {
         continue;
       }
-      return yield* new AgentHttpInputError({
+      return yield* AgentHttpInputError.make({
         detail: `Unknown query parameter: ${key}.`,
         resolution: `Use only these query parameters: ${Arr.join(allowed, ", ")}.`,
       });
@@ -159,7 +159,7 @@ function readOptionalValue(url: URL, name: string) {
   const values = url.searchParams.getAll(name);
   if (values.length > 1) {
     return Effect.fail(
-      new AgentHttpInputError({
+      AgentHttpInputError.make({
         detail: `The ${name} query parameter cannot be repeated.`,
         resolution: `Pass exactly one ${name} value.`,
       })
@@ -189,7 +189,7 @@ const readOptionalBoolean = Effect.fn("agent.http.readOptionalBoolean")(
     if (value === "false") {
       return false;
     }
-    return yield* new AgentHttpInputError({
+    return yield* AgentHttpInputError.make({
       detail: `${name} must be true or false.`,
       resolution: `Pass ${name}=true or ${name}=false.`,
     });
@@ -200,7 +200,7 @@ const readOptionalBoolean = Effect.fn("agent.http.readOptionalBoolean")(
 function readInteger(value: string, name: string) {
   if (!INTEGER_PATTERN.test(value)) {
     return Effect.fail(
-      new AgentHttpInputError({
+      AgentHttpInputError.make({
         detail: `${name} must be an integer.`,
         resolution: `Pass ${name} as a base-10 integer without decimals.`,
       })

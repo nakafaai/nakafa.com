@@ -122,7 +122,7 @@ const make = <
     yield* Effect.logWarning("Access denied for an unknown subject.").pipe(
       Effect.annotateLogs({ action, kind: name })
     );
-    return yield* new AccessDenied({ action, reason: "resource" });
+    return yield* AccessDenied.make({ action, reason: "resource" });
   });
 
   /**
@@ -150,7 +150,7 @@ const make = <
       yield* relationsOf(row, member)
     );
     if (decision !== "allow") {
-      return yield* new AccessDenied({ action, reason: decision });
+      return yield* AccessDenied.make({ action, reason: decision });
     }
   });
 

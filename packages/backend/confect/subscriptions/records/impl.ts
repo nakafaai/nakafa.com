@@ -13,7 +13,7 @@ import { Effect, flow } from "effect";
 
 /** Maps thrown Convex IO failures into the subscription record error channel. */
 function toSubscriptionRecordIoError(error: unknown) {
-  return new SubscriptionRecordIoError({
+  return SubscriptionRecordIoError.make({
     code: subscriptionRecordIoFailedCode,
     message: getUnknownErrorMessage(error),
   });

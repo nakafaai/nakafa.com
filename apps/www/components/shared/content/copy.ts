@@ -28,7 +28,7 @@ type OpenContentCopySource = typeof OpenContentCopySourceSchema.Type;
  */
 const loadSourceRequest = Effect.tryPromise({
   catch: () =>
-    new OpenContentCopyError({
+    OpenContentCopyError.make({
       code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
       message: "The reviewed content source request could not be loaded.",
     }),
@@ -43,7 +43,7 @@ export const readOpenContentCopySource = Effect.fn(
       return content;
     }
     if (!copySourceUrl) {
-      return yield* new OpenContentCopyError({
+      return yield* OpenContentCopyError.make({
         code: "OPEN_CONTENT_SOURCE_MISSING",
         message: "No reviewed content source is available to copy.",
       });
@@ -51,7 +51,7 @@ export const readOpenContentCopySource = Effect.fn(
     const { requestOpenContentSource } = yield* loadSourceRequest;
     const source = yield* requestOpenContentSource(copySourceUrl);
     if (source.trim().length === 0) {
-      return yield* new OpenContentCopyError({
+      return yield* OpenContentCopyError.make({
         code: "OPEN_CONTENT_SOURCE_EMPTY",
         message: "The reviewed content source is empty.",
       });
@@ -62,7 +62,7 @@ export const readOpenContentCopySource = Effect.fn(
     duration: COPY_SOURCE_TIMEOUT,
     orElse: () =>
       Effect.fail(
-        new OpenContentCopyError({
+        OpenContentCopyError.make({
           code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
           message: "The reviewed content source request timed out.",
         })
@@ -100,7 +100,7 @@ function writeClipboardSource(source: Promise<string>) {
 export function writeOpenContentCopy(source: Promise<string>) {
   return Effect.tryPromise({
     catch: () =>
-      new OpenContentCopyError({
+      OpenContentCopyError.make({
         code: "OPEN_CONTENT_CLIPBOARD_FAILED",
         message: "The reviewed content source could not be copied.",
       }),

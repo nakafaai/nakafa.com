@@ -19,7 +19,7 @@ export const normalizeStoredCustomer: (
   "customers.polar.normalizeStoredCustomer"
 )(function* (customer: PolarCustomerSource) {
   if (typeof customer.email !== "string") {
-    return yield* new PolarCustomerError({
+    return yield* PolarCustomerError.make({
       code: polarCustomerErrorCode,
       message: `Polar customer ${customer.id} is missing a valid email address.`,
     });
@@ -50,7 +50,7 @@ export const syncExistingCustomer: (
     storedCustomer.externalId !== null &&
     storedCustomer.externalId !== input.externalId
   ) {
-    return yield* new PolarCustomerEmailConflict({
+    return yield* PolarCustomerEmailConflict.make({
       code: polarCustomerEmailConflictCode,
       existingExternalId: storedCustomer.externalId,
       message:
@@ -129,7 +129,7 @@ export const ensureCustomer: (
   if (racedCustomer) {
     return yield* syncExistingCustomer(gateway, racedCustomer, input);
   }
-  return yield* new PolarCustomerError({
+  return yield* PolarCustomerError.make({
     code: polarCustomerErrorCode,
     message: createAttempt.failure.message,
   });

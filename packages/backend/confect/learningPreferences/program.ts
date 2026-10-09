@@ -24,7 +24,7 @@ export type CurriculumProgramOption =
   typeof curriculumProgramOptionValidator.Type;
 /** Maps unknown database failures into the curriculum preference error channel. */
 function toPreferenceIoError() {
-  return new CurriculumPreferenceError({
+  return CurriculumPreferenceError.make({
     code: curriculumPreferenceIoFailedCode,
     message: curriculumPreferenceIoFailedMessage,
   });
@@ -66,7 +66,7 @@ const toCurriculumProgramOption = Effect.fn(
     )
   );
   if (!translation) {
-    return yield* new CurriculumPreferenceError({
+    return yield* CurriculumPreferenceError.make({
       code: curriculumPreferenceIoFailedCode,
       message: `Curriculum program ${program.key} has no ${locale} translation.`,
     });
@@ -102,7 +102,7 @@ export const listCurriculumPrograms = Effect.fn(
     (program) => program.kind === "school-curriculum"
   );
   if (curricula.length > CURRICULUM_PROGRAM_LIMIT) {
-    return yield* new CurriculumPreferenceError({
+    return yield* CurriculumPreferenceError.make({
       code: curriculumPreferenceIoFailedCode,
       message: `Curriculum program catalog exceeds ${CURRICULUM_PROGRAM_LIMIT} rows.`,
     });
@@ -139,7 +139,7 @@ export const saveCurriculumProgram = Effect.fn(
 )(function* (locale: Locale, programKey: string, userId: Id<"users">) {
   const program = yield* readCurriculumProgram(locale, programKey);
   if (!program) {
-    return yield* new CurriculumPreferenceError({
+    return yield* CurriculumPreferenceError.make({
       code: curriculumProgramNotFoundCode,
       message: "Curriculum program not found.",
     });

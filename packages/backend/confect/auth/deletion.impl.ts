@@ -85,7 +85,7 @@ const cancelAccountDeletionAttempt = FunctionImpl.make(
       Effect.filterOrFail(
         (outcome) => outcome !== null,
         () =>
-          new AccountDeletionCancellationUnprovenError({
+          AccountDeletionCancellationUnprovenError.make({
             code: ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
             message: "Account deletion cancellation could not be proven.",
           })

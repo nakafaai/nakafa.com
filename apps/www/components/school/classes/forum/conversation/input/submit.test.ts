@@ -76,7 +76,7 @@ describe("submitForumPost", () => {
     "keeps a declared %s failure in the upload cleanup protocol",
     (stage) =>
       Effect.gen(function* () {
-        const rejected = new SessionRequired({
+        const rejected = SessionRequired.make({
           code: "UNAUTHENTICATED",
           message: "Unauthenticated",
         });

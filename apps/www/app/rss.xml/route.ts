@@ -91,7 +91,7 @@ function getFeedContentRoutes() {
     Effect.gen(function* () {
       const active = yield* readActiveContentIdentity();
       if (!active) {
-        return yield* new PublishedProjectionError({
+        return yield* PublishedProjectionError.make({
           appLocale: AppLocaleSchema.make(routing.defaultLocale),
           publicPath: "rss.xml",
         });

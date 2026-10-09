@@ -54,7 +54,7 @@ const requestFullscreen = Effect.fn("designSystem.visual.requestFullscreen")(
     yield* Effect.tryPromise({
       try: () => card.requestFullscreen({ navigationUI: "hide" }),
       catch: (cause) =>
-        new VisualFullscreenError({
+        VisualFullscreenError.make({
           cause,
           message: "The browser refused to show the visual full screen.",
         }),
@@ -68,7 +68,7 @@ const exitFullscreen = Effect.fn("designSystem.visual.exitFullscreen")(
     yield* Effect.tryPromise({
       try: () => document.exitFullscreen(),
       catch: (cause) =>
-        new VisualFullscreenError({
+        VisualFullscreenError.make({
           cause,
           message: "The browser could not leave full screen.",
         }),

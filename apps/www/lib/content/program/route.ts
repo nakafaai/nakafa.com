@@ -49,22 +49,21 @@ export const readPublishedProgramRoute = Effect.fn(
   const activeReleaseId = yield* Schema.decodeEffect(
     Schema.NullOr(ReleaseIdSchema)
   )(result.activeReleaseId).pipe(
-    Effect.mapError(
-      () =>
-        new PublishedProjectionError({
-          appLocale,
-          publicPath,
-        })
+    Effect.mapError(() =>
+      PublishedProjectionError.make({
+        appLocale,
+        publicPath,
+      })
     )
   );
   if (!result.managed) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath,
     });
   }
   if (activeReleaseId === null) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath,
     });
@@ -84,7 +83,7 @@ export const readPublishedProgramRoute = Effect.fn(
     } satisfies PublishedProgramRoute;
   }
   if (result.programJson === null) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath,
     });
@@ -119,7 +118,7 @@ export const readPublishedProgramRoute = Effect.fn(
     program.key !== route.programKey ||
     Arr.some(materials, (material) => material.appLocale !== appLocale)
   ) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath,
     });

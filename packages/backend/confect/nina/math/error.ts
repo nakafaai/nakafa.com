@@ -11,7 +11,7 @@ export class MathGenerationError extends Schema.TaggedError<MathGenerationError>
 
 /** Maps an unknown AI SDK failure into the math capability error contract. */
 export function makeMathGenerationError(cause: unknown) {
-  return new MathGenerationError({
+  return MathGenerationError.make({
     cause,
     message: "Math generation failed.",
   });

@@ -152,7 +152,7 @@ describe("Nina generation through the real Agent component", () => {
   it("identifies missing Gateway configuration before a provider request", async () => {
     deployment.mockReturnValue(
       Effect.fail(
-        new GatewayConfigurationError({
+        GatewayConfigurationError.make({
           message: "AI Gateway is not configured.",
         })
       )

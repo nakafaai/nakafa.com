@@ -86,7 +86,7 @@ function expectFailure(
 ) {
   return Effect.gen(function* () {
     const result = yield* assertRuntimeTarget(target).pipe(Effect.flip);
-    expect(result).toEqual(new UnsafeRuntimeError({ reason }));
+    expect(result).toEqual(UnsafeRuntimeError.make({ reason }));
     expect(result.message.length).toBeGreaterThan(0);
   });
 }
@@ -369,12 +369,12 @@ describe("runtime environment parity", () => {
   it("rejects an empty or unparsable Convex URL as an invalid target", () => {
     stubRuntimeEnvironment({ NEXT_PUBLIC_CONVEX_URL: "" });
     expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "invalid-target" })
+      UnsafeRuntimeError.make({ reason: "invalid-target" })
     );
 
     stubRuntimeEnvironment({ NEXT_PUBLIC_CONVEX_URL: "not a url" });
     expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "invalid-target" })
+      UnsafeRuntimeError.make({ reason: "invalid-target" })
     );
   });
 
@@ -390,7 +390,7 @@ describe("runtime environment parity", () => {
       NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
     });
     expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "invalid-target" })
+      UnsafeRuntimeError.make({ reason: "invalid-target" })
     );
 
     stubRuntimeEnvironment({
@@ -398,7 +398,7 @@ describe("runtime environment parity", () => {
       NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
     });
     expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "invalid-target" })
+      UnsafeRuntimeError.make({ reason: "invalid-target" })
     );
   });
 
@@ -460,7 +460,7 @@ describe("runtime environment parity", () => {
       vi.stubEnv(name, undefined);
 
       expect(readRuntimeConfig).toThrow(
-        new UnsafeRuntimeError({ reason: "untrusted-production" })
+        UnsafeRuntimeError.make({ reason: "untrusted-production" })
       );
     }
   );
@@ -472,7 +472,7 @@ describe("runtime environment parity", () => {
       vi.stubEnv(name, "");
 
       expect(readRuntimeConfig).toThrow(
-        new UnsafeRuntimeError({ reason: "untrusted-production" })
+        UnsafeRuntimeError.make({ reason: "untrusted-production" })
       );
     }
   );
@@ -484,7 +484,7 @@ describe("runtime environment parity", () => {
     });
 
     expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "anonymous-production" })
+      UnsafeRuntimeError.make({ reason: "anonymous-production" })
     );
   });
 });

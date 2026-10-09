@@ -165,11 +165,10 @@ export const openNinaLearningSession = Effect.fn(
   const sessionInput = yield* Schema.decodeUnknownEffect(
     NinaLearningSessionInputSchema
   )(input).pipe(
-    Effect.mapError(
-      () =>
-        new NinaContextError({
-          message: "Invalid Nina learning session input.",
-        })
+    Effect.mapError(() =>
+      NinaContextError.make({
+        message: "Invalid Nina learning session input.",
+      })
     )
   );
   const tools = resolveNinaToolContext(sessionInput.learning);

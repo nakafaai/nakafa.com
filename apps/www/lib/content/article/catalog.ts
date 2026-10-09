@@ -71,7 +71,7 @@ export type PublishedCategoryPage = Effect.Success<
 >;
 /** Maps one malformed catalog field to the public projection failure contract. */
 function projectionError(locale: Locale, publicPath = "articles") {
-  return new PublishedProjectionError({
+  return PublishedProjectionError.make({
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });

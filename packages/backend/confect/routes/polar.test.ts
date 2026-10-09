@@ -276,7 +276,7 @@ describe("Polar webhook route", () => {
       vi.spyOn(console, "warn").mockImplementation(() => undefined);
       mocks.processEvent.mockReturnValue(
         Effect.fail(
-          new PolarPayloadError({
+          PolarPayloadError.make({
             cause: "malformed",
             message: "Polar customer payload does not match its contract.",
           })
@@ -325,7 +325,7 @@ describe("Polar webhook route", () => {
     Effect.gen(function* () {
       vi.spyOn(console, "error").mockImplementation(() => undefined);
       mocks.processEvent.mockReturnValue(
-        Effect.fail(new TestProcessingError({ message: "Database down" }))
+        Effect.fail(TestProcessingError.make({ message: "Database down" }))
       );
 
       const response = yield* postSignedWebhook('{"type":"customer.updated"}');

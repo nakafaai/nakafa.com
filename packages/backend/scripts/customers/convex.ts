@@ -64,11 +64,11 @@ const getUnknownMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 /** Reports why Convex's answer could not be read, in the words of its cause. */
 const toResponseError = (error: HttpClientError.HttpClientError) =>
-  new CustomerConvexResponseError({
+  CustomerConvexResponseError.make({
     message: getUnknownMessage(error.reason.cause),
   });
 const toConfigError = (error: unknown) =>
-  new CustomerConvexConfigError({ message: getUnknownMessage(error) });
+  CustomerConvexConfigError.make({ message: getUnknownMessage(error) });
 /** Decodes UTF-8 and keeps a byte order mark, as Node's utf8 file reads did. */
 const decodeUtf8 = (bytes: Uint8Array) =>
   new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes);
@@ -110,11 +110,10 @@ const getConvexUrl = Effect.fn("customers.getConvexUrl")(function* (
 ) {
   const name = prod ? "CONVEX_PROD_URL" : "CONVEX_URL";
   return yield* Config.NonEmptyString(name).pipe(
-    Effect.mapError(
-      () =>
-        new CustomerConvexConfigError({
-          message: `${name} is not configured for customer verification`,
-        })
+    Effect.mapError(() =>
+      CustomerConvexConfigError.make({
+        message: `${name} is not configured for customer verification`,
+      })
     )
   );
 });
@@ -124,26 +123,24 @@ const getLocalAccessToken = Effect.fn("customers.getLocalAccessToken")(
     const path = yield* Path.Path;
     const configPath = path.resolve(homedir(), ".convex", "config.json");
     const bytes = yield* fileSystem.readFile(configPath).pipe(
-      Effect.mapError(
-        () =>
-          new CustomerConvexAuthError({
-            message:
-              "No CONVEX_DEPLOY_KEY and no local Convex login are available",
-          })
+      Effect.mapError(() =>
+        CustomerConvexAuthError.make({
+          message:
+            "No CONVEX_DEPLOY_KEY and no local Convex login are available",
+        })
       )
     );
     const config = yield* Schema.decodeEffect(
       Schema.fromJsonString(ConvexAuthConfigSchema)
     )(decodeUtf8(bytes)).pipe(
-      Effect.mapError(
-        () =>
-          new CustomerConvexAuthError({
-            message: "The local Convex configuration is invalid",
-          })
+      Effect.mapError(() =>
+        CustomerConvexAuthError.make({
+          message: "The local Convex configuration is invalid",
+        })
       )
     );
     if (!config.accessToken) {
-      return yield* new CustomerConvexAuthError({
+      return yield* CustomerConvexAuthError.make({
         message: "The local Convex configuration has no access token",
       });
     }
@@ -173,24 +170,22 @@ const parseResponse = <A, I>(
     const response = yield* Schema.decodeUnknownEffect(ConvexResponseSchema)(
       body
     ).pipe(
-      Effect.mapError(
-        (error) =>
-          new CustomerConvexResponseError({
-            message: `Invalid Convex response: ${error.message}`,
-          })
+      Effect.mapError((error) =>
+        CustomerConvexResponseError.make({
+          message: `Invalid Convex response: ${error.message}`,
+        })
       )
     );
     if (response.status === "error") {
-      return yield* new CustomerConvexResponseError({
+      return yield* CustomerConvexResponseError.make({
         message: `${functionPath}: ${response.errorMessage ?? "Unknown Convex error"}`,
       });
     }
     return yield* Schema.decodeUnknownEffect(valueSchema)(response.value).pipe(
-      Effect.mapError(
-        (error) =>
-          new CustomerConvexResponseError({
-            message: `Invalid Convex value: ${error.message}`,
-          })
+      Effect.mapError((error) =>
+        CustomerConvexResponseError.make({
+          message: `Invalid Convex value: ${error.message}`,
+        })
       )
     );
   });
@@ -207,7 +202,7 @@ export const callCustomerIntegrityQuery = Effect.fn(
     const functionPath = yield* Effect.try({
       try: () => getFunctionName(query),
       catch: (error) =>
-        new CustomerConvexConfigError({ message: getUnknownMessage(error) }),
+        CustomerConvexConfigError.make({ message: getUnknownMessage(error) }),
     });
     const client = yield* HttpClient.HttpClient;
     const response = yield* HttpClientRequest.post(
@@ -223,16 +218,15 @@ export const callCustomerIntegrityQuery = Effect.fn(
         path: functionPath,
       }),
       client.execute,
-      Effect.mapError(
-        (error) =>
-          new CustomerConvexRequestError({
-            message: getUnknownMessage(error.reason.cause),
-          })
+      Effect.mapError((error) =>
+        CustomerConvexRequestError.make({
+          message: getUnknownMessage(error.reason.cause),
+        })
       )
     );
     if (response.status < 200 || response.status >= 300) {
       const body = yield* response.text.pipe(Effect.mapError(toResponseError));
-      return yield* new CustomerConvexRequestError({
+      return yield* CustomerConvexRequestError.make({
         message: `${functionPath}: HTTP ${response.status} ${body}`,
       });
     }
@@ -244,7 +238,7 @@ export const callCustomerIntegrityQuery = Effect.fn(
     duration: NETWORK_ATTEMPT_DEADLINE,
     orElse: () =>
       Effect.fail(
-        new CustomerConvexRequestError({
+        CustomerConvexRequestError.make({
           message: "Convex did not answer within 10 seconds.",
         })
       ),

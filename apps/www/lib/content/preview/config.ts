@@ -79,10 +79,10 @@ export function decodePreviewEnvironment(
     { onExcessProperty: "error" }
   );
   if (Result.isFailure(decoded)) {
-    return Result.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }));
+    return Result.fail(PreviewConfigError.make({ name: "AKSARA_PREVIEW" }));
   }
   return Result.try({
-    catch: () => new PreviewConfigError({ name: "AKSARA_PREVIEW" }),
+    catch: () => PreviewConfigError.make({ name: "AKSARA_PREVIEW" }),
     try: () => ({
       eventsPath: decoded.success.eventsPath,
       keyId: decoded.success.keyId,
@@ -97,11 +97,11 @@ export function decodePreviewEnvironment(
 export function decodePreviewUrl(config: PreviewConfig, path: string) {
   const decodedPath = Schema.decodeResult(PreviewPathSchema)(path);
   if (Result.isFailure(decodedPath)) {
-    return Result.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }));
+    return Result.fail(PreviewConfigError.make({ name: "AKSARA_PREVIEW" }));
   }
   const target = new URL(decodedPath.success, config.origin);
   if (target.origin !== config.origin.origin) {
-    return Result.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }));
+    return Result.fail(PreviewConfigError.make({ name: "AKSARA_PREVIEW" }));
   }
   return Result.succeed(target);
 }
@@ -164,8 +164,8 @@ export const readPreviewRendererConfig = Effect.fn(
         token: Redacted.make(value.token),
       })
     ),
-    Effect.mapError(
-      () => new PreviewRendererConfigError({ name: "AKSARA_PREVIEW_RENDERER" })
+    Effect.mapError(() =>
+      PreviewRendererConfigError.make({ name: "AKSARA_PREVIEW_RENDERER" })
     )
   );
 });

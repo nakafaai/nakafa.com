@@ -8,8 +8,8 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
 ) {
   yield* Effect.annotateCurrentSpan("query", query);
   const client = yield* readFirecrawlApp().pipe(
-    Effect.mapError(
-      (error) => new ResearchSearchError({ message: error.message })
+    Effect.mapError((error) =>
+      ResearchSearchError.make({ message: error.message })
     )
   );
 
@@ -26,7 +26,7 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
         timeout: 10_000,
       }),
     catch: () =>
-      new ResearchSearchError({
+      ResearchSearchError.make({
         message: "Failed to search the web. Please try again.",
       }),
   }).pipe(Effect.map((response) => ({ query, response })));

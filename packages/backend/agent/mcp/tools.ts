@@ -48,7 +48,7 @@ const readOnlyTool = Effect.fn("agent.mcp.readOnlyTool")(function* (options: {
 }) {
   const inputSchema = yield* toMcpInputSchema(options.input);
   const outputSchema = yield* toMcpOutputSchema(options.output);
-  return new McpSchema.Tool({
+  return McpSchema.Tool.make({
     annotations: READ_ONLY_ANNOTATIONS,
     description: options.description,
     inputSchema,
@@ -94,7 +94,7 @@ export const registerNakafaMcpTools = Effect.fn(
           Effect.flatMap(
             Option.match({
               onNone: () =>
-                new NakafaAgentInputError({
+                NakafaAgentInputError.make({
                   cause: "The supplied content_ref did not resolve.",
                   message:
                     "Call nakafa_search_content and pass a content_id only from a result with markdown_url.",

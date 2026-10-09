@@ -96,7 +96,7 @@ describe("readSessionToken", () => {
       const error = yield* readToken().pipe(Effect.flip);
 
       expect(error).toStrictEqual(
-        new SessionTokenUnavailable({ reason: "status", status: 403 })
+        SessionTokenUnavailable.make({ reason: "status", status: 403 })
       );
       expect(fetcher).toHaveBeenCalledOnce();
     })
@@ -128,7 +128,7 @@ describe("readSessionToken", () => {
       const error = yield* readTokenWithin("1500 millis").pipe(Effect.flip);
 
       expect(error).toStrictEqual(
-        new SessionTokenUnavailable({ reason: "status", status: 503 })
+        SessionTokenUnavailable.make({ reason: "status", status: 503 })
       );
       expect(encodeJsonText(error)).not.toContain("private-body-value");
       expect(encodeJsonText(error)).not.toContain("private-header-value");
@@ -163,7 +163,7 @@ describe("readSessionToken", () => {
       const error = yield* readToken().pipe(Effect.flip);
 
       expect(error).toStrictEqual(
-        new SessionTokenUnavailable({ reason: "fetch" })
+        SessionTokenUnavailable.make({ reason: "fetch" })
       );
       expect(fetcher).toHaveBeenCalledOnce();
     })
@@ -189,7 +189,7 @@ describe("readSessionToken", () => {
       const error = yield* readTokenWithin("31500 millis").pipe(Effect.flip);
 
       expect(error).toStrictEqual(
-        new SessionTokenUnavailable({ reason: "deadline" })
+        SessionTokenUnavailable.make({ reason: "deadline" })
       );
       expect(fetcher).toHaveBeenCalledTimes(3);
     })
@@ -204,7 +204,7 @@ describe("readSessionToken", () => {
         const error = yield* readToken().pipe(Effect.flip);
 
         expect(error).toStrictEqual(
-          new SessionTokenUnavailable({ reason: "body" })
+          SessionTokenUnavailable.make({ reason: "body" })
         );
         expect(fetcher).toHaveBeenCalledOnce();
       })

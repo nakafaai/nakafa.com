@@ -64,7 +64,7 @@ export class CheckoutSessionIoError extends Schema.TaggedError<CheckoutSessionIo
 /** Normalizes one Convex checkout boundary failure. */
 export const CheckoutSessionIoErrorWire = publicFailure(CheckoutSessionIoError);
 export function checkoutSessionIoError(error: unknown) {
-  return new CheckoutSessionIoError({
+  return CheckoutSessionIoError.make({
     code: checkoutSessionIoErrorCode,
     cause: error,
     message: "Failed to finish checkout session.",

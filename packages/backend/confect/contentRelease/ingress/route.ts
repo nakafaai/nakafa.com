@@ -19,7 +19,7 @@ import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 const NODE_ACTION_ARGUMENT_BYTES = 5 * 1024 * 1024;
 /** Converts an oversized Node argument envelope into a sanitized response. */
 function rejectOversizedDispatch() {
-  return new ReleaseError({
+  return ReleaseError.make({
     code: "CONTENT_RELEASE_SIZE",
     message: "Publication request was rejected before dispatch.",
   }).pipe(predecodeFailure, publicationFailure);
@@ -27,25 +27,25 @@ function rejectOversizedDispatch() {
 /** Converts one shared HTTP body rejection into publication wire semantics. */
 function publicationBodyError(error: HttpBodyError) {
   if (error.reason === "size") {
-    return new ReleaseError({
+    return ReleaseError.make({
       code: "CONTENT_RELEASE_SIZE",
       message: "Content publication request body was rejected.",
     });
   }
   if (error.reason === "unsupported") {
-    return new ReleaseError({
+    return ReleaseError.make({
       code: "CONTENT_RELEASE_UNSUPPORTED",
       message: "Content publication request body was rejected.",
     });
   }
-  return new ReleaseError({
+  return ReleaseError.make({
     code: "CONTENT_RELEASE_INVALID_REQUEST",
     message: "Content publication request body was rejected.",
   });
 }
 /** Returns the single sanitized publication authentication rejection. */
 function publicationAuthFailure() {
-  return new ReleaseError({
+  return ReleaseError.make({
     code: "CONTENT_RELEASE_UNAUTHORIZED",
     message: "Content publication authentication failed.",
   }).pipe(predecodeFailure, publicationFailure);

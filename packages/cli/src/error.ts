@@ -60,7 +60,7 @@ export class CliStartupError extends Schema.TaggedError<CliStartupError>()(
 
 /** Preserves actionable parser details in the stable invocation error shape. */
 export function makeInvocationError(error: CliError.CliError) {
-  return new InvocationError({
+  return InvocationError.make({
     message:
       error._tag === "ShowHelp"
         ? Arr.join(

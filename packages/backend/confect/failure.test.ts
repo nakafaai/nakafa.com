@@ -15,7 +15,7 @@ describe("public domain errors", () => {
       AccountUnavailable,
       CheckoutUnavailable,
     ]);
-    const failure = new TryoutRuntimeError({
+    const failure = TryoutRuntimeError.make({
       code: "TRYOUT_RUNTIME_FAILED",
       message: "Unable to complete try-out runtime operation.",
       cause: new Error("Private storage credentials and row identifiers"),
@@ -30,8 +30,11 @@ describe("public domain errors", () => {
     expect(decoded).toBeInstanceOf(TryoutRuntimeError);
     expect(decoded).not.toHaveProperty("cause");
     for (const error of [
-      new AccountUnavailable({ code: "UNAUTHORIZED", message: "Unavailable" }),
-      new CheckoutUnavailable({ code: "UNAUTHORIZED", message: "Unavailable" }),
+      AccountUnavailable.make({ code: "UNAUTHORIZED", message: "Unavailable" }),
+      CheckoutUnavailable.make({
+        code: "UNAUTHORIZED",
+        message: "Unavailable",
+      }),
     ]) {
       expect(
         Schema.decodeSync(codec)(Schema.encodeSync(codec)(error))

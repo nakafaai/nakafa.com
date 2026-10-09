@@ -35,7 +35,7 @@ export class TryoutRuntimeError extends Schema.TaggedError<TryoutRuntimeError>()
 /** Maps an unknown runtime failure into the stable typed error channel. */
 export const TryoutRuntimeErrorWire = publicFailure(TryoutRuntimeError);
 export function toTryoutRuntimeError(error: unknown) {
-  return new TryoutRuntimeError({
+  return TryoutRuntimeError.make({
     cause: error,
     code: "TRYOUT_RUNTIME_FAILED",
     message: runtimeFailureMessage,

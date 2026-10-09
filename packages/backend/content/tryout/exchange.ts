@@ -42,16 +42,16 @@ export const decodeProtectedRuntimeRow = Effect.fn(
     ),
     decodeTryoutRuntimeBundleJson(row.bundleJson),
     decodeRendererJson(row.rendererJson),
-  ]).pipe(Effect.mapError(() => new ProtectedRuntimeReadError()));
+  ]).pipe(Effect.mapError(() => ProtectedRuntimeReadError.make()));
   const bundle = yield* verifySignedTryoutRuntimeBundle({
     bundle: decodedBundle,
     rendererManifest,
-  }).pipe(Effect.mapError(() => new ProtectedRuntimeReadError()));
+  }).pipe(Effect.mapError(() => ProtectedRuntimeReadError.make()));
   if (
     bundle.bundleHash !== request.bundleHash ||
     bundle.payload.snapshot.snapshotId !== request.snapshotId
   ) {
-    return yield* new ProtectedRuntimeReadError();
+    return yield* ProtectedRuntimeReadError.make();
   }
   return {
     bundle,

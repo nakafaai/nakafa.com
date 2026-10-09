@@ -246,7 +246,7 @@ const solvePixelConstraints = Effect.fn("camera.solvePixelConstraints")(
           amount = Math.max(amount, interval.minimum);
           maximum = Math.min(maximum, interval.maximum);
           if (amount > maximum + 1e-10) {
-            return yield* new CameraLabelFitError({
+            return yield* CameraLabelFitError.make({
               axis,
               availablePixels,
               projection,

@@ -8,14 +8,14 @@ export function makeResearchGenerationError(
   phase: ResearchGenerationError["phase"]
 ) {
   if (phase === "synthesis" && NoObjectGeneratedError.isInstance(error)) {
-    return new ResearchGenerationError({
+    return ResearchGenerationError.make({
       cause: describeCause(error.cause),
       message: `Research synthesis generation failed: ${error.message}`,
       phase,
       text: error.text,
     });
   }
-  return new ResearchGenerationError({
+  return ResearchGenerationError.make({
     cause: describeCause(error),
     message: `Research ${phase} generation failed.`,
     phase,

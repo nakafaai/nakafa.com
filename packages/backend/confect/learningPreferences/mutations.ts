@@ -40,7 +40,7 @@ export const setPreferredTryoutCountryProgram = Effect.fn(
     locale: args.locale,
   });
   if (!country) {
-    return yield* new TryoutPreferenceError({
+    return yield* TryoutPreferenceError.make({
       code: tryoutCountryNotFoundCode,
       message: "Try-out country not found.",
     });

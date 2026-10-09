@@ -29,7 +29,7 @@ export function fetchSEOTranslationsNamespace(
   return Effect.tryPromise({
     try: () => getTranslations({ locale, namespace }),
     catch: (error: unknown) =>
-      new SEOTranslationLoadError({
+      SEOTranslationLoadError.make({
         locale,
         namespace,
         message: `Failed to load ${namespace} translations: ${getErrorMessage(error)}`,

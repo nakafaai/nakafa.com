@@ -11,7 +11,7 @@ export const asLeafGroup = Effect.fn("RefsLeaf.asLeafGroup")(function* (
     ? moduleExports.default
     : undefined;
   if (!GroupSpec.isGroupSpec(exported)) {
-    return yield* new RefsLoadError({
+    return yield* RefsLoadError.make({
       message: `${specifier} does not default-export a GroupSpec.`,
     });
   }

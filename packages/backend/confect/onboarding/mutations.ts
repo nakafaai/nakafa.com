@@ -14,7 +14,7 @@ export const requireSelfSelectableOnboardingUser = Effect.fn(
     user.appUser.role !== undefined &&
     !isSelfSelectableUserRole(user.appUser.role)
   ) {
-    return yield* new OnboardingRoleError({
+    return yield* OnboardingRoleError.make({
       code: "UNAUTHORIZED",
       message: "This account role cannot be changed through onboarding.",
     });

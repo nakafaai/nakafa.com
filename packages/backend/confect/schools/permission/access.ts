@@ -62,7 +62,7 @@ export const requirePermission = Effect.fn("permissions.require")(function* (
   target: PermissionTarget
 ) {
   if (!(yield* checkPermission(permission, target))) {
-    return yield* new PermissionDenied({
+    return yield* PermissionDenied.make({
       code: "FORBIDDEN",
       message: `Permission '${permission}' required`,
     });

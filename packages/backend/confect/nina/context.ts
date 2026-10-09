@@ -104,12 +104,11 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
       } satisfies NinaUser,
     };
   },
-  Effect.mapError(
-    () =>
-      new NinaTurnError({
-        code: "NINA_CONTEXT_FAILED",
-        message: "Unable to verify the learning context for this response.",
-      })
+  Effect.mapError(() =>
+    NinaTurnError.make({
+      code: "NINA_CONTEXT_FAILED",
+      message: "Unable to verify the learning context for this response.",
+    })
   )
 );
 

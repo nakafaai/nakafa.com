@@ -85,7 +85,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
             streamFailure ??= generationFailure(error);
           },
           onAbort: () => {
-            streamFailure ??= new NinaGenerationError({
+            streamFailure ??= NinaGenerationError.make({
               reason: "interrupted",
             });
           },
@@ -117,10 +117,10 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     return;
   }
   if (completed[0] === "content-filter") {
-    return yield* new NinaGenerationError({ reason: "content-blocked" });
+    return yield* NinaGenerationError.make({ reason: "content-blocked" });
   }
   if (completed[0] === "length" || completed[0] === "tool-calls") {
-    return yield* new NinaGenerationError({ reason: "response-limit" });
+    return yield* NinaGenerationError.make({ reason: "response-limit" });
   }
-  return yield* new NinaGenerationError({ reason: "unknown" });
+  return yield* NinaGenerationError.make({ reason: "unknown" });
 });

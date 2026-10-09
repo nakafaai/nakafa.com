@@ -50,7 +50,7 @@ const generateUploadUrl = FunctionImpl.make(
         .take(MAX_FORUM_POST_ATTACHMENTS)
         .pipe(Effect.orDie);
       if (activePendingUploads.length >= MAX_FORUM_POST_ATTACHMENTS) {
-        return yield* new ForumAttachmentError({
+        return yield* ForumAttachmentError.make({
           code: "FORUM_ATTACHMENT_LIMIT_EXCEEDED",
           message: "Forum post attachment count exceeds the supported limit.",
         });
@@ -103,7 +103,7 @@ const saveForumUpload = FunctionImpl.make(
           Effect.orDie
         );
       if (!upload) {
-        return yield* new ForumAttachmentError({
+        return yield* ForumAttachmentError.make({
           code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
           message: "Forum post attachment upload not found.",
         });
@@ -118,7 +118,7 @@ const saveForumUpload = FunctionImpl.make(
         );
       if (!owner || isAccountDeletionPending(owner)) {
         if (!hasBoundStorage) {
-          return yield* new ForumAttachmentError({
+          return yield* ForumAttachmentError.make({
             code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
             message: "Forum post attachment upload not found.",
           });
@@ -127,7 +127,7 @@ const saveForumUpload = FunctionImpl.make(
         return args.uploadId;
       }
       if (upload.storageId && !hasBoundStorage) {
-        return yield* new ForumAttachmentError({
+        return yield* ForumAttachmentError.make({
           code: "FORUM_ATTACHMENT_UPLOAD_ALREADY_SAVED",
           message: "Forum post attachment upload has already been finalized.",
         });
@@ -135,14 +135,14 @@ const saveForumUpload = FunctionImpl.make(
       const user = yield* requireAuth();
       const userId = user.appUser._id;
       if (upload.uploadedBy !== userId) {
-        return yield* new ForumAttachmentError({
+        return yield* ForumAttachmentError.make({
           code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
           message: "Forum post attachment upload not found.",
         });
       }
       yield* loadOpenForumWithAccess(upload.forumId, userId);
       if (upload.mimeType !== args.type || upload.size !== args.size) {
-        return yield* new ForumAttachmentError({
+        return yield* ForumAttachmentError.make({
           code: forumAttachmentMetadataMismatchCode,
           message:
             "Forum post attachment metadata no longer matches the upload.",

@@ -49,24 +49,22 @@ export const ensureSubmissionHistoryFolder = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   const { stateFolder } = yield* indexingFiles;
   const exists = yield* fs.exists(stateFolder).pipe(
-    Effect.mapError(
-      (cause) =>
-        new SubmissionHistoryError({
-          cause,
-          message: `Failed to inspect ${stateFolder}.`,
-        })
+    Effect.mapError((cause) =>
+      SubmissionHistoryError.make({
+        cause,
+        message: `Failed to inspect ${stateFolder}.`,
+      })
     )
   );
   if (exists) {
     return;
   }
   yield* fs.makeDirectory(stateFolder, { recursive: true }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new SubmissionHistoryError({
-          cause,
-          message: `Failed to create ${stateFolder}.`,
-        })
+    Effect.mapError((cause) =>
+      SubmissionHistoryError.make({
+        cause,
+        message: `Failed to create ${stateFolder}.`,
+      })
     )
   );
   yield* Effect.logInfo(`Created script state folder at: ${stateFolder}`);
@@ -82,33 +80,30 @@ export const loadSubmissionHistory = Effect.fn("scripts.indexing.history.load")(
     const fs = yield* FileSystem.FileSystem;
     const { submissionHistory } = yield* indexingFiles;
     const exists = yield* fs.exists(submissionHistory).pipe(
-      Effect.mapError(
-        (cause) =>
-          new SubmissionHistoryError({
-            cause,
-            message: `Failed to inspect ${submissionHistory}.`,
-          })
+      Effect.mapError((cause) =>
+        SubmissionHistoryError.make({
+          cause,
+          message: `Failed to inspect ${submissionHistory}.`,
+        })
       )
     );
     if (!exists) {
       return yield* decodeEmptySubmissionHistory(emptySubmissionHistory());
     }
     const data = yield* fs.readFileString(submissionHistory).pipe(
-      Effect.mapError(
-        (cause) =>
-          new SubmissionHistoryError({
-            cause,
-            message: `Failed to read ${submissionHistory}.`,
-          })
+      Effect.mapError((cause) =>
+        SubmissionHistoryError.make({
+          cause,
+          message: `Failed to read ${submissionHistory}.`,
+        })
       )
     );
     return yield* decodeSubmissionHistory(data).pipe(
-      Effect.mapError(
-        (cause) =>
-          new SubmissionHistoryError({
-            cause,
-            message: `Failed to decode ${submissionHistory}.`,
-          })
+      Effect.mapError((cause) =>
+        SubmissionHistoryError.make({
+          cause,
+          message: `Failed to decode ${submissionHistory}.`,
+        })
       )
     );
   }
@@ -120,12 +115,11 @@ export const saveSubmissionHistory = Effect.fn("scripts.indexing.history.save")(
     const { submissionHistory } = yield* indexingFiles;
     const text = encodePrettyJsonText(history);
     yield* fs.writeFileString(submissionHistory, text).pipe(
-      Effect.mapError(
-        (cause) =>
-          new SubmissionHistoryError({
-            cause,
-            message: `Failed to write ${submissionHistory}.`,
-          })
+      Effect.mapError((cause) =>
+        SubmissionHistoryError.make({
+          cause,
+          message: `Failed to write ${submissionHistory}.`,
+        })
       )
     );
   }

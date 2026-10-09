@@ -162,11 +162,13 @@ function saveCurriculumPreference({
         locale,
         preferredCurriculumProgramKey: programKey,
       }),
-    catch: (cause) => new CurriculumPreferenceSaveError({ cause }),
+    catch: (cause) => CurriculumPreferenceSaveError.make({ cause }),
   }).pipe(
     Effect.flatMap((result) =>
       Effect.fromResult(result).pipe(
-        Effect.mapError((cause) => new CurriculumPreferenceSaveError({ cause }))
+        Effect.mapError((cause) =>
+          CurriculumPreferenceSaveError.make({ cause })
+        )
       )
     ),
     Effect.catchTag("CurriculumPreferenceSaveError", (error) =>

@@ -37,7 +37,7 @@ export const assertPublicResearchUrl = Effect.fn(
 
   const addresses = yield* Effect.tryPromise({
     try: () => lookup(hostname, { all: true, verbatim: true }),
-    catch: () => new ResearchUnsafeUrlError({ message: unsafeUrlMessage }),
+    catch: () => ResearchUnsafeUrlError.make({ message: unsafeUrlMessage }),
   });
 
   if (addresses.length === 0) {
@@ -59,7 +59,9 @@ export const assertPublicResearchUrl = Effect.fn(
 
 /** Fails with one public error message for every unsafe scrape target. */
 function rejectUnsafeUrl() {
-  return Effect.fail(new ResearchUnsafeUrlError({ message: unsafeUrlMessage }));
+  return Effect.fail(
+    ResearchUnsafeUrlError.make({ message: unsafeUrlMessage })
+  );
 }
 
 /** True only when the judge calls the text a public address. */

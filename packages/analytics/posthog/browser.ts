@@ -81,7 +81,7 @@ export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<BrowserAnalyt
 ) {}
 
 const browserAnalyticsLoadFailure = () =>
-  new BrowserAnalyticsLoadFailed({ code: browserAnalyticsLoadFailedCode });
+  BrowserAnalyticsLoadFailed.make({ code: browserAnalyticsLoadFailedCode });
 
 /** Loads the PostHog browser SDK that the baseline client is built on. */
 const loadBrowserAnalyticsSdk: Effect.Effect<BrowserAnalyticsClient, unknown> =
@@ -249,7 +249,7 @@ export const admitConsentedIdentity = Effect.fn(
 )(function* (identity: BrowserAnalyticsIdentity) {
   const client = MutableRef.get(analyticsClient);
   if (!client) {
-    return yield* new BrowserAnalyticsLoadFailed({
+    return yield* BrowserAnalyticsLoadFailed.make({
       code: browserAnalyticsLoadFailedCode,
     });
   }

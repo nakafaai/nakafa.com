@@ -164,7 +164,7 @@ describe("signed Page navigation", () => {
       const failure = yield* readPageNavigation("de").pipe(Effect.flip);
 
       expect(failure).toEqual(
-        new PageNavigationMissingError({
+        PageNavigationMissingError.make({
           locale: "de",
           pageKey: PageKeySchema.make("developers"),
         })
@@ -193,7 +193,7 @@ describe("signed Page navigation", () => {
         const failure = yield* readPageNavigation("de").pipe(Effect.flip);
 
         expect(failure).toEqual(
-          new PageNavigationMissingError({
+          PageNavigationMissingError.make({
             locale: "de",
             pageKey: PageKeySchema.make(pageKey),
           })

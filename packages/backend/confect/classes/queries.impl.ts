@@ -47,7 +47,7 @@ const getClasses = FunctionImpl.make(
       user.appUser._id
     );
     if (!schoolMembership) {
-      return yield* new ClassAccessError({
+      return yield* ClassAccessError.make({
         code: "ACCESS_DENIED",
         message: "You must be a member of this school to list its classes.",
       });
@@ -125,7 +125,7 @@ const getClassRoute = FunctionImpl.make(
     const user = yield* requireAuth();
     const classId = ctx.db.normalizeId("schoolClasses", args.classId);
     if (!classId) {
-      return yield* new ClassAccessError({
+      return yield* ClassAccessError.make({
         code: "CLASS_NOT_FOUND",
         message: `Class not found for classId: ${args.classId}`,
       });
@@ -137,7 +137,7 @@ const getClassRoute = FunctionImpl.make(
       user.appUser._id
     );
     if (!schoolMembership) {
-      return yield* new ClassAccessError({
+      return yield* ClassAccessError.make({
         code: "ACCESS_DENIED",
         message: "You must be a member of this school to access this class.",
       });
@@ -190,13 +190,13 @@ const getPeople = FunctionImpl.make(
         .take(boundedMemberCount + 1)
         .pipe(Effect.orDie);
       if (expectedMemberCount > MAX_CLASS_MEMBER_SEARCH_RESULTS) {
-        return yield* new ClassQueryError({
+        return yield* ClassQueryError.make({
           code: "CLASS_MEMBER_SEARCH_LIMIT_EXCEEDED",
           message: "Class member search exceeds the supported search limit.",
         });
       }
       if (members.length > expectedMemberCount) {
-        return yield* new ClassQueryError({
+        return yield* ClassQueryError.make({
           code: "CLASS_MEMBER_COUNT_EXCEEDED",
           message: "Class member count exceeds the class member totals.",
         });
@@ -232,7 +232,7 @@ const getPeople = FunctionImpl.make(
       const cursor = paginationOpts.cursor;
       const startIndex = cursor ? Number(cursor) : 0;
       if (!Number.isInteger(startIndex) || startIndex < 0) {
-        return yield* new ClassQueryError({
+        return yield* ClassQueryError.make({
           code: "INVALID_PAGINATION_CURSOR",
           message: "Invalid class people search cursor.",
         });
@@ -299,14 +299,14 @@ const getInviteCodes = FunctionImpl.make(
         .take(SCHOOL_CLASS_INVITE_CODE_ROLES.length + 1)
         .pipe(Effect.orDie);
       if (inviteCodes.length > SCHOOL_CLASS_INVITE_CODE_ROLES.length) {
-        return yield* new ClassQueryError({
+        return yield* ClassQueryError.make({
           code: "CLASS_INVITE_CODE_LIMIT_EXCEEDED",
           message: "Class invite code count exceeds the supported role count.",
         });
       }
       return inviteCodes;
     }
-    return yield* new ClassAccessError({
+    return yield* ClassAccessError.make({
       code: "ACCESS_DENIED",
       message: "Only teachers or school admins can view class invite codes.",
     });

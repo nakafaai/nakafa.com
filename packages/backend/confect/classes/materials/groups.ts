@@ -16,13 +16,13 @@ export const validateScheduledStatus = Effect.fn(
     return;
   }
   if (scheduledAt === undefined) {
-    return yield* new MaterialGroupError({
+    return yield* MaterialGroupError.make({
       code: "INVALID_ARGUMENT",
       message: "scheduledAt is required when status is scheduled.",
     });
   }
   if (scheduledAt <= (yield* Clock.currentTimeMillis)) {
-    return yield* new MaterialGroupError({
+    return yield* MaterialGroupError.make({
       code: "INVALID_ARGUMENT",
       message: "scheduledAt must be in the future.",
     });
@@ -38,12 +38,11 @@ export const loadMaterialGroup = Effect.fn(
     .get(groupId)
     .pipe(
       Effect.catchTag("DocumentDecodeError", Effect.die),
-      Effect.mapError(
-        () =>
-          new MaterialGroupError({
-            code: "GROUP_NOT_FOUND",
-            message: "Material group not found.",
-          })
+      Effect.mapError(() =>
+        MaterialGroupError.make({
+          code: "GROUP_NOT_FOUND",
+          message: "Material group not found.",
+        })
       )
     );
 });

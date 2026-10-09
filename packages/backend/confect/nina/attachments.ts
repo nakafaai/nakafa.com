@@ -20,7 +20,7 @@ const readAttachment = Effect.fn("nina.attachments.read")(function* (
   const saved = yield* Effect.tryPromise({
     try: () => getFile(ctx, components.nina, fileId),
     catch: () =>
-      new NinaUploadError({
+      NinaUploadError.make({
         code: "NINA_UPLOAD_FAILED",
         message: "Unable to read this attachment.",
       }),
@@ -56,7 +56,7 @@ const requireDocumentLimit = Effect.fn("nina.attachments.limit")(function* (
     (total, size) => total + size
   );
   if (documentBytes > NINA_DOCUMENT_SIZE) {
-    return yield* new NinaUploadError({
+    return yield* NinaUploadError.make({
       code: "NINA_UPLOAD_SIZE",
       message: "The documents in one message can hold at most 10 MiB together.",
     });
@@ -84,7 +84,7 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
     uploadIds: readonly Docs["ninaUploads"]["_id"][]
   ) {
     if (Arr.dedupe(uploadIds).length !== uploadIds.length) {
-      return yield* new NinaUploadError({
+      return yield* NinaUploadError.make({
         code: "NINA_UPLOAD_INVALID",
         message: "An attachment cannot be submitted twice.",
       });
@@ -108,7 +108,7 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
           upload.expiresAt <= now ||
           upload.state.status !== "ready"
         ) {
-          return yield* new NinaUploadError({
+          return yield* NinaUploadError.make({
             code: "NINA_UPLOAD_INVALID",
             message: "This attachment is no longer available to send.",
           });

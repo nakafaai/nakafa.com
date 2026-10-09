@@ -4,10 +4,10 @@ import { makeInvocationError } from "#cli/error";
 
 describe("Nakafa CLI error mapping", () => {
   it("preserves parser details from help failures", () => {
-    const source = new CliError.ShowHelp({
+    const source = CliError.ShowHelp.make({
       commandPath: ["nakafa"],
       errors: [
-        new CliError.UnknownSubcommand({
+        CliError.UnknownSubcommand.make({
           parent: ["nakafa"],
           subcommand: "unknown",
           suggestions: [],
@@ -22,7 +22,7 @@ describe("Nakafa CLI error mapping", () => {
   });
 
   it("preserves direct native CLI error messages", () => {
-    const source = new CliError.UnrecognizedOption({
+    const source = CliError.UnrecognizedOption.make({
       command: ["nakafa"],
       option: "--unknown",
       suggestions: [],

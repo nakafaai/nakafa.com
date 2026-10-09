@@ -55,7 +55,7 @@ export const decodePublishedQuranInterpretation = Effect.fn(
     result.verseNumber !== expected.verseNumber ||
     !result.interpretation?.trim()
   ) {
-    return yield* new QuranPublicationError({
+    return yield* QuranPublicationError.make({
       operation: "interpretation",
       reason: "Signed Quran interpretation identity is inconsistent.",
     });

@@ -18,7 +18,7 @@ import type { ModelMessage } from "ai";
 import { Effect } from "effect";
 
 const retryUnavailable = () =>
-  new NinaTurnError({
+  NinaTurnError.make({
     code: "NINA_RETRY_UNAVAILABLE",
     message: "This message is no longer available to retry.",
   });

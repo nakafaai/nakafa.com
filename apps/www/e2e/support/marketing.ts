@@ -41,7 +41,7 @@ export const readFirstContributor = Effect.fn(
 )(function* (values: readonly Contributor[]) {
   const contributor = values[0];
   if (!contributor) {
-    return yield* new MarketingContributorMissing({});
+    return yield* MarketingContributorMissing.make({});
   }
   return contributor;
 });
@@ -110,7 +110,7 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
     );
 
     if (!measurements.communityPresent) {
-      return yield* new MarketingSurfaceMissing({ surface: "community" });
+      return yield* MarketingSurfaceMissing.make({ surface: "community" });
     }
     return measurements;
   }

@@ -26,7 +26,7 @@ export const getRecentlyViewedArgsValidator = Schema.Struct(
 export type ListRecentLearningArgs = typeof getRecentlyViewedArgsValidator.Type;
 /** Maps thrown Convex IO failures into the Continue Learning error channel. */
 export function toRecentLearningIoError(error: unknown) {
-  return new RecentLearningIoError({
+  return RecentLearningIoError.make({
     code: recentLearningIoFailedCode,
     cause: error,
     message: "Unable to load recent learning activity.",

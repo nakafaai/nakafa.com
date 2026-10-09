@@ -49,12 +49,11 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
       Schema.decodeEffect(ArticleRouteSlugSchema)(item.route.category),
       Schema.decodeEffect(ArticleRouteSlugSchema)(item.route.slug),
     ]).pipe(
-      Effect.mapError(
-        () =>
-          new PublishedProjectionError({
-            appLocale,
-            publicPath: item.publicPath,
-          })
+      Effect.mapError(() =>
+        PublishedProjectionError.make({
+          appLocale,
+          publicPath: item.publicPath,
+        })
       )
     );
     return {
@@ -100,7 +99,7 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
       }
     );
     if (!result.managed || activeReleaseId === null) {
-      return yield* new PublishedProjectionError({
+      return yield* PublishedProjectionError.make({
         appLocale,
         publicPath: "articles",
       });
@@ -143,7 +142,7 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
       }
     );
     if (!result.managed || activeReleaseId === null) {
-      return yield* new PublishedProjectionError({
+      return yield* PublishedProjectionError.make({
         appLocale,
         publicPath: "articles",
       });
@@ -183,7 +182,7 @@ export const readPublishedCategoryArticles = Effect.fn(
     }
   );
   if (!result.managed || activeReleaseId === null) {
-    return yield* new PublishedProjectionError({
+    return yield* PublishedProjectionError.make({
       appLocale,
       publicPath: `articles/${category}`,
     });
