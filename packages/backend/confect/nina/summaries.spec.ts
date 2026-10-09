@@ -1,6 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 const Tokens = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
@@ -49,9 +49,9 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "save",
       args: () => ({
-        chatId: Id("chats"),
-        text: Schema.String,
-        throughOrder: TurnOrder,
+        ...NinaSummary.mapFields(
+          Struct.pick(["chatId", "text", "throughOrder"])
+        ).fields,
         usage: NinaSummaryCall,
       }),
       returns: () => Schema.Null,
