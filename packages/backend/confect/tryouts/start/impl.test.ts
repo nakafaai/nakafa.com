@@ -15,6 +15,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import type { FunctionArgs } from "convex/server";
+import { DateTime } from "effect";
 
 describe("tryouts/start/impl", () => {
   it("records the active subscription without shortening an already admitted attempt", async () => {
@@ -33,14 +34,16 @@ describe("tryouts/start/impl", () => {
         metadata: {},
         userId: user.userId,
       });
-      const timestamp = new Date(TRYOUT_START_NOW).toISOString();
+      const timestamp = DateTime.formatIso(
+        DateTime.makeUnsafe(TRYOUT_START_NOW)
+      );
       await ctx.db.insert("subscriptions", {
         amount: null,
         cancelAtPeriodEnd: true,
         checkoutId: null,
         createdAt: timestamp,
         currency: null,
-        currentPeriodEnd: new Date(periodEnd).toISOString(),
+        currentPeriodEnd: DateTime.formatIso(DateTime.makeUnsafe(periodEnd)),
         currentPeriodStart: timestamp,
         customerId: "polar-paid-attempt",
         endedAt: null,
