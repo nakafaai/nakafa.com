@@ -1,15 +1,15 @@
+import {
+  type AnalyticsConsentPreferences,
+  initialConsentPreferences,
+} from "@repo/analytics/consent/preferences";
+import {
+  type AnalyticsConsentSessionOverrides,
+  emptyAnalyticsConsentSessionOverrides,
+} from "@repo/analytics/consent/session";
 import { Option, Schema } from "effect";
 import { createStore } from "zustand";
 import { combine } from "zustand/middleware";
 import type { AnalyticsConsentSave } from "@/lib/analytics/consent/decision";
-import {
-  type AnalyticsConsentPreferences,
-  initialConsentPreferences,
-} from "@/lib/analytics/consent/preferences";
-import {
-  type AnalyticsConsentSessionOverrides,
-  emptyAnalyticsConsentSessionOverrides,
-} from "@/lib/analytics/consent/session";
 import type { BrowserConsentSnapshot } from "@/lib/analytics/consent/state";
 
 /**

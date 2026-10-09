@@ -1,64 +1,19 @@
 "use client";
 
-import { Effect, Fiber } from "effect";
-import type { createAnonymousConsentSave } from "@/lib/analytics/consent/browser";
-import type { AnalyticsConsentError } from "@/lib/analytics/consent/context";
 import {
   type AnalyticsConsentPromptIdentity,
   type AnalyticsConsentSessionOperation,
   cancelAnalyticsConsentSessionSave,
   completeAnalyticsConsentSessionSave,
   setAnalyticsConsentSessionOverride,
-} from "@/lib/analytics/consent/session";
+} from "@repo/analytics/consent/session";
+import { Effect, Fiber } from "effect";
+import type { createAnonymousConsentSave } from "@/lib/analytics/consent/browser";
 import { saveAccountAnalyticsChoice } from "@/lib/analytics/consent/signal";
 import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
 export interface AnalyticsConsentSave extends AnalyticsConsentSessionOperation {
   readonly fiber: Fiber.Fiber<void, never>;
-}
-
-/** Resolves the single surfaced error with load errors winning over retries. */
-export function resolveConsentError({
-  hasLoadError,
-  hasRuntimeError,
-  hasSaveError,
-}: {
-  readonly hasLoadError: boolean;
-  readonly hasRuntimeError: boolean;
-  readonly hasSaveError: boolean;
-}): AnalyticsConsentError | null {
-  if (hasLoadError) {
-    return "load";
-  }
-  if (hasSaveError) {
-    return "save";
-  }
-  if (hasRuntimeError) {
-    return "runtime";
-  }
-  return null;
-}
-
-/** Resolves whether the current visitor may decline or grant analytics. */
-export function resolveConsentAffordances({
-  hasBrowserPrivacySignal,
-  isAccountResolved,
-  isAnonymousResolved,
-  isAuthenticated,
-  isBlocked,
-}: {
-  readonly hasBrowserPrivacySignal: boolean;
-  readonly isAccountResolved: boolean;
-  readonly isAnonymousResolved: boolean;
-  readonly isAuthenticated: boolean;
-  readonly isBlocked: boolean;
-}) {
-  const canDecline =
-    !isBlocked && (isAuthenticated ? isAccountResolved : isAnonymousResolved);
-  return {
-    canDecline,
-    canGrant: canDecline && !hasBrowserPrivacySignal,
-  };
 }
 
 interface ConsentSaveActionOptions {

@@ -1,12 +1,12 @@
 "use client";
 
-import { Effect, Fiber, Option } from "effect";
-import { useEffect, useRef } from "react";
-import { createConsentSaveAction } from "@/lib/analytics/consent/decision";
 import {
   type AnalyticsConsentPromptIdentity,
   cancelAnalyticsConsentSessionSave,
-} from "@/lib/analytics/consent/session";
+} from "@repo/analytics/consent/session";
+import { Effect, Fiber, Option } from "effect";
+import { useEffect, useRef } from "react";
+import { createConsentSaveAction } from "@/lib/analytics/consent/decision";
 import type { AnalyticsConsentStore } from "@/lib/analytics/consent/store";
 
 type DecisionHookOptions = Omit<

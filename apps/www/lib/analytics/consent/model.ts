@@ -5,6 +5,18 @@ import {
   ANALYTICS_CONSENT_CATEGORY,
   type AnalyticsConsentState,
 } from "@repo/analytics/consent";
+import {
+  resolveConsentAffordances,
+  resolveConsentError,
+} from "@repo/analytics/consent/decision";
+import {
+  initialConsentPreferences,
+  updateConsentPreferences,
+} from "@repo/analytics/consent/preferences";
+import {
+  createAnalyticsConsentPromptIdentity,
+  resolveAnalyticsConsentSessionPolicy,
+} from "@repo/analytics/consent/session";
 import consents from "@repo/backend/confect/_generated/refs/consents";
 import { Option } from "effect";
 import { useState } from "react";
@@ -14,19 +26,7 @@ import {
   createAnonymousConsentSave,
   refreshBrowserPrivacySignal,
 } from "@/lib/analytics/consent/browser";
-import {
-  resolveConsentAffordances,
-  resolveConsentError,
-} from "@/lib/analytics/consent/decision";
-import {
-  initialConsentPreferences,
-  updateConsentPreferences,
-} from "@/lib/analytics/consent/preferences";
 import { useAnalyticsConsentDecision } from "@/lib/analytics/consent/saves";
-import {
-  createAnalyticsConsentPromptIdentity,
-  resolveAnalyticsConsentSessionPolicy,
-} from "@/lib/analytics/consent/session";
 import {
   resolveBrowserAnalyticsConsentState,
   shouldRevokeAccountAnalyticsGrant,
