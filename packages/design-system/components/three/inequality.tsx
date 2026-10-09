@@ -88,15 +88,17 @@ export function Inequality({
   );
 
   // Material for the inequality region with performance optimizations
-  const material = useMemo(() => {
-    return new MeshBasicMaterial({
-      color: color instanceof Color ? color : new Color(color),
-      transparent: true,
-      opacity,
-      side: DoubleSide,
-      depthWrite: false, // Better transparency handling
-    });
-  }, [color, opacity]);
+  const material = useMemo(
+    () =>
+      new MeshBasicMaterial({
+        color: color instanceof Color ? color : new Color(color),
+        transparent: true,
+        opacity,
+        side: DoubleSide,
+        depthWrite: false, // Better transparency handling
+      }),
+    [color, opacity]
+  );
 
   const boundaryPoints = useMemo(
     () =>
