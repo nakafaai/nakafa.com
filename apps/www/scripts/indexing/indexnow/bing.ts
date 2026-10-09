@@ -1,6 +1,6 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Config, Effect, Option, Schema } from "effect";
-import { HttpBody, HttpClient, type HttpClientResponse } from "effect/http";
+import { HttpBody, HttpClient } from "effect/http";
 import { BingSubmitError } from "@/scripts/indexing/errors";
 import { INDEXING_HOST } from "@/scripts/indexing/paths";
 
@@ -118,70 +118,70 @@ const submitBatchToBing = Effect.fn("scripts.indexing.bing.submitBatch")(
     yield* Effect.logInfo(
       `Submitting batch of ${batch.length} URLs to Bing (${startIndex} to ${endIndex})`
     );
-    const client = yield* HttpClient.HttpClient;
-    const response = yield* client
-      .post(BING_SUBMIT_ENDPOINT, {
-        body: HttpBody.jsonUnsafe(
-          {
-            siteUrl: INDEXING_HOST,
-            urlList: batch,
-          },
-          JSON_CONTENT_TYPE
-        ),
-        headers: { Host: "ssl.bing.com" },
-        urlParams: { apikey: apiKey },
-      })
-      .pipe(
-        // Bing requires `apikey` in the query, so its URL must not enter telemetry.
-        Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
-        Effect.mapError(
-          (cause) =>
-            new BingSubmitError({
-              cause,
-              message: "Error submitting URLs to Bing.",
-            })
-        ),
-        Effect.timeoutOrElse({
-          duration: NETWORK_ATTEMPT_DEADLINE,
-          orElse: () =>
-            Effect.fail(
-              new BingSubmitError({
-                cause: "deadline",
-                message: "Bing did not answer within 10 seconds.",
-              })
-            ),
-        })
-      );
-    return yield* readBingResponse(response, batch);
-  }
-);
-/** Reads Bing's response and preserves quota semantics for the submit loop. */
-const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
-  function* (
-    response: HttpClientResponse.HttpClientResponse,
-    batch: readonly string[]
-  ) {
-    const status = response.status;
-    const responseText = yield* response.text.pipe(
-      Effect.mapError(
-        (cause) =>
-          new BingSubmitError({
-            cause,
-            message: "Failed to read Bing response text.",
-          })
-      ),
+    const { responseText, status } = yield* sendBingBatch({
+      apiKey,
+      batch,
+    }).pipe(
       Effect.timeoutOrElse({
         duration: NETWORK_ATTEMPT_DEADLINE,
         orElse: () =>
           Effect.fail(
             new BingSubmitError({
               cause: "deadline",
-              message:
-                "Reading the Bing response did not finish within 10 seconds.",
+              message: "Bing did not answer within 10 seconds.",
             })
           ),
       })
     );
+    return yield* readBingResponse(status, responseText, batch);
+  }
+);
+/** Sends one Bing batch and reads its body. The caller bounds both with one deadline. */
+const sendBingBatch = Effect.fn("scripts.indexing.bing.sendBatch")(function* ({
+  apiKey,
+  batch,
+}: {
+  apiKey: string;
+  batch: readonly string[];
+}) {
+  const client = yield* HttpClient.HttpClient;
+  const response = yield* client
+    .post(BING_SUBMIT_ENDPOINT, {
+      body: HttpBody.jsonUnsafe(
+        {
+          siteUrl: INDEXING_HOST,
+          urlList: batch,
+        },
+        JSON_CONTENT_TYPE
+      ),
+      headers: { Host: "ssl.bing.com" },
+      urlParams: { apikey: apiKey },
+    })
+    .pipe(
+      // Bing requires `apikey` in the query, so its URL must not enter telemetry.
+      Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
+      Effect.mapError(
+        (cause) =>
+          new BingSubmitError({
+            cause,
+            message: "Error submitting URLs to Bing.",
+          })
+      )
+    );
+  const responseText = yield* response.text.pipe(
+    Effect.mapError(
+      (cause) =>
+        new BingSubmitError({
+          cause,
+          message: "Failed to read Bing response text.",
+        })
+    )
+  );
+  return { responseText, status: response.status };
+});
+/** Reads Bing's response and preserves quota semantics for the submit loop. */
+const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
+  function* (status: number, responseText: string, batch: readonly string[]) {
     yield* Effect.logInfo(`Bing API response status: ${status}`);
     if (status === HTTP_STATUS_CODE_OK) {
       yield* Effect.logInfo(

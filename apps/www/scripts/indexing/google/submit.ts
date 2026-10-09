@@ -95,21 +95,10 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
     `Submitting URL ${index} of ${totalUrls}: ${index}/${totalUrls} (${Math.round((index / totalUrls) * 100)}%)`
   );
 
-  const client = yield* HttpClient.HttpClient;
-  const response = yield* HttpClientRequest.post(GOOGLE_PUBLISH_ENDPOINT).pipe(
-    HttpClientRequest.bearerToken(accessToken),
-    HttpClientRequest.bodyJsonUnsafe({
-      type: "URL_UPDATED",
-      url,
-    }),
-    client.execute,
-    Effect.mapError(
-      (cause) =>
-        new GoogleIndexSubmitError({
-          cause,
-          message: `Network error submitting ${url}.`,
-        })
-    ),
+  const { responseText, status } = yield* sendSubmitRequest(
+    url,
+    accessToken
+  ).pipe(
     Effect.timeoutOrElse({
       duration: NETWORK_ATTEMPT_DEADLINE,
       orElse: () =>
@@ -121,16 +110,11 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
         ),
     })
   );
-  const { status } = response;
 
   if (status === HTTP_STATUS_CODE_OK) {
-    // Reading the acknowledgement releases the connection for the next URL.
-    yield* readSubmitResponse(response, url);
     yield* Effect.logInfo(`Successfully submitted ${url}`);
     return { shouldStop: false, success: true };
   }
-
-  const responseText = yield* readSubmitResponse(response, url);
 
   yield* Effect.logError(`Failed to submit ${url} - Status: ${status}`);
   yield* Effect.logError(
@@ -163,6 +147,32 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
   return { shouldStop: false, success: false };
 });
 
+/** Sends one eligible URL and reads its acknowledgement. The caller bounds both with one deadline. */
+const sendSubmitRequest = Effect.fn("scripts.google.submit.send")(function* (
+  url: string,
+  accessToken: string
+) {
+  const client = yield* HttpClient.HttpClient;
+  const response = yield* HttpClientRequest.post(GOOGLE_PUBLISH_ENDPOINT).pipe(
+    HttpClientRequest.bearerToken(accessToken),
+    HttpClientRequest.bodyJsonUnsafe({
+      type: "URL_UPDATED",
+      url,
+    }),
+    client.execute,
+    Effect.mapError(
+      (cause) =>
+        new GoogleIndexSubmitError({
+          cause,
+          message: `Network error submitting ${url}.`,
+        })
+    )
+  );
+  // Reading the acknowledgement releases the connection for the next URL.
+  const responseText = yield* readSubmitResponse(response, url);
+  return { responseText, status: response.status };
+});
+
 /** Reads the Indexing API response body for one submitted URL. */
 const readSubmitResponse = Effect.fn("scripts.google.submit.readResponse")(
   (response: HttpClientResponse.HttpClientResponse, url: string) =>
@@ -173,16 +183,6 @@ const readSubmitResponse = Effect.fn("scripts.google.submit.readResponse")(
             cause,
             message: `Failed to read the Indexing API response for ${url}.`,
           })
-      ),
-      Effect.timeoutOrElse({
-        duration: NETWORK_ATTEMPT_DEADLINE,
-        orElse: () =>
-          Effect.fail(
-            new GoogleIndexSubmitError({
-              cause: "deadline",
-              message: `Reading the Indexing API response for ${url} did not finish within 10 seconds.`,
-            })
-          ),
-      })
+      )
     )
 );
