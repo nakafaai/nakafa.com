@@ -44,14 +44,6 @@ export const BIOLOGY_DEFAULT_VIEW = {
   cameraTarget: [0, 0.1, 0],
 } satisfies Record<string, BiologyScenePoint>;
 
-const BiologySceneViewSchema = Schema.Struct({
-  cameraPosition: BiologyScenePointSchema,
-  cameraTarget: BiologyScenePointSchema,
-  narrowCameraPosition: BiologyScenePointSchema,
-});
-
-export type BiologySceneView = typeof BiologySceneViewSchema.Type;
-
 export const BIOLOGY_RING_POINT_COUNT = 12;
 export const BIOLOGY_SMALL_RING_POINT_COUNT = 8;
 

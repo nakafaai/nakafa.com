@@ -3,7 +3,6 @@
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import {
   BIOLOGY_RING_POINT_COUNT,
-  type BiologySceneView,
   createBiologySpherePoints,
 } from "@repo/design-system/components/contents/biology/data";
 import {
@@ -24,6 +23,7 @@ import {
   PolyhedralVirusModel,
   VirusSurfaceSpike,
 } from "@repo/design-system/components/contents/biology/virus-parts";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
 
 const CAPSID_POINTS = createBiologySpherePoints(
@@ -38,12 +38,12 @@ const VIRION_VIEW = {
   cameraPosition: [2.05, 1.5, 2.85],
   cameraTarget: [0, 0.04, 0],
   narrowCameraPosition: [2.25, 1.72, 3.15],
-} satisfies BiologySceneView;
+} satisfies NarrowCameraPose;
 const MORPHOLOGY_VIEW = {
   cameraPosition: [0, 1.5, 5.8],
   cameraTarget: [0, -0.02, 0],
   narrowCameraPosition: [0, 1.5, 6.2],
-} satisfies BiologySceneView;
+} satisfies NarrowCameraPose;
 const MORPHOLOGY_LABEL_TARGETS = [
   { id: "helical", labelPosition: [-1.1, 0.26, 0.3] },
   { id: "polyhedral", labelPosition: [1.1, 0.26, 0.3] },

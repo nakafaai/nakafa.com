@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Schema } from "effect";
 
@@ -14,13 +15,15 @@ export type SubatomicParticlePropertiesModeId =
 export type SubatomicParticlePropertiesColors = ReturnType<
   typeof getSubatomicParticlePropertiesColors
 >;
-const SubatomicParticlePropertiesCameraPointSchema = Schema.Tuple([
-  Schema.Finite,
-  Schema.Finite,
-  Schema.Finite,
-]);
-type SubatomicParticlePropertiesCameraPoint =
-  typeof SubatomicParticlePropertiesCameraPointSchema.Type;
+
+const ParticleNameSchema = Schema.Literals(["electron", "neutron", "proton"]);
+const SubatomicMassBarSchema = Schema.Struct({
+  color: ParticleNameSchema,
+  height: Schema.Finite,
+  label: ParticleNameSchema,
+  x: Schema.Finite,
+});
+export type SubatomicMassBar = typeof SubatomicMassBarSchema.Type;
 
 export const SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS = [
   CHARGE_MODE_ID,
@@ -44,14 +47,7 @@ export const SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG = {
     cameraTarget: [0, 0, 0],
     narrowCameraPosition: [0, 0.08, 4.35],
   },
-} satisfies Record<
-  SubatomicParticlePropertiesModeId,
-  {
-    cameraPosition: SubatomicParticlePropertiesCameraPoint;
-    cameraTarget: SubatomicParticlePropertiesCameraPoint;
-    narrowCameraPosition: SubatomicParticlePropertiesCameraPoint;
-  }
->;
+} satisfies Record<SubatomicParticlePropertiesModeId, NarrowCameraPose>;
 
 /**
  * Narrows ToggleGroup string values to the available particle-property modes.

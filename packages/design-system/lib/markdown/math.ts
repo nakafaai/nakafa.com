@@ -92,10 +92,7 @@ function applyOutsideCodeFences(
  * @param position - The position to check
  * @returns Object with isInList boolean and indentation string
  */
-function getListContext(
-  text: string,
-  position: number
-): { isInList: boolean; indentation: string } {
+function getListContext(text: string, position: number) {
   // Check if current line or recent lines contain list markers
   const lines = text.slice(0, position).split("\n");
 

@@ -5,10 +5,7 @@ import {
   BLUE_MARBLE_EARTH_TEXTURE_ASSET,
   TERRA_SATELLITE_ASSET,
 } from "@repo/design-system/components/contents/biology/assets";
-import type {
-  BiologySceneColors,
-  BiologySceneView,
-} from "@repo/design-system/components/contents/biology/data";
+import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
@@ -16,6 +13,7 @@ import {
 } from "@repo/design-system/components/contents/biology/lab-frame";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import { BiologyLine } from "@repo/design-system/components/contents/biology/parts";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import {
@@ -32,7 +30,7 @@ const CLIMATE_OBSERVATION_VIEW = {
   cameraPosition: [2.55, 1.58, 3.48],
   cameraTarget: [0.02, 0.12, 0.02],
   narrowCameraPosition: [3.18, 2.02, 4.2],
-} satisfies BiologySceneView;
+} satisfies NarrowCameraPose;
 
 export function ClimateObservationLab(props: BiologyLabProps) {
   return (

@@ -2,11 +2,11 @@
 
 import { useGLTF } from "@react-three/drei";
 import { SARS_COV_2_VIRION_ASSET } from "@repo/design-system/components/contents/biology/assets";
-import type { BiologySceneView } from "@repo/design-system/components/contents/biology/data";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
 } from "@repo/design-system/components/contents/biology/lab-frame";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { useMemo } from "react";
 import { Box3, type Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
 
@@ -14,7 +14,7 @@ const SARS_COV_2_VIEW = {
   cameraPosition: [2.06, 1.22, 2.56],
   cameraTarget: [0, 0.04, 0],
   narrowCameraPosition: [2.38, 1.48, 3.02],
-} satisfies BiologySceneView;
+} satisfies NarrowCameraPose;
 
 /**
  * Shows a SARS-CoV-2 surface model for real virion inspection.

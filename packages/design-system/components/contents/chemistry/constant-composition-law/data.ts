@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const EXACT_RATIO_MODE_ID = "exact";
 export const HYDROGEN_EXCESS_MODE_ID = "hydrogen-excess";
@@ -27,23 +27,6 @@ export const ConstantCompositionScenePointSchema = Schema.Tuple([
 export type ConstantCompositionScenePoint =
   typeof ConstantCompositionScenePointSchema.Type;
 
-const CONSTANT_COMPOSITION_MODES = {
-  [EXACT_RATIO_MODE_ID]: {
-    kind: EXACT_RATIO_MODE_ID,
-  },
-  [HYDROGEN_EXCESS_MODE_ID]: {
-    kind: HYDROGEN_EXCESS_MODE_ID,
-  },
-  [OXYGEN_EXCESS_MODE_ID]: {
-    kind: OXYGEN_EXCESS_MODE_ID,
-  },
-} satisfies Record<
-  ConstantCompositionModeId,
-  {
-    kind: ConstantCompositionModeId;
-  }
->;
-
 export const CONSTANT_COMPOSITION_SCENE_VIEW = {
   cameraPosition: [0, 2.0, 4.55],
   cameraTarget: [0, 0, 0],
@@ -53,7 +36,7 @@ export const CONSTANT_COMPOSITION_SCENE_VIEW = {
 export function isConstantCompositionModeId(
   value: string
 ): value is ConstantCompositionModeId {
-  return value in CONSTANT_COMPOSITION_MODES;
+  return Arr.some(CONSTANT_COMPOSITION_MODE_IDS, (id) => id === value);
 }
 
 export function getConstantCompositionSceneColors(
