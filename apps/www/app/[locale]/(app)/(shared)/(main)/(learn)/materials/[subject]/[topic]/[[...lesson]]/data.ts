@@ -1,4 +1,5 @@
 import { readNamespaceSegment } from "@repo/contents/route/surface";
+import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -33,6 +34,6 @@ export async function readMaterialRequest(params: MaterialParams) {
 
   return {
     locale,
-    publicPath: [namespace, subject, topic, ...(lesson ?? [])].join("/"),
+    publicPath: Arr.join([namespace, subject, topic, ...(lesson ?? [])], "/"),
   };
 }

@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Order, Record as Rec } from "effect";
 import { activateUntilVisible, press } from "@/e2e/support/input";
 import {
   legacyAvatarFragmentIds,
@@ -70,7 +70,7 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
     yield* Effect.sync(() => {
       expect(measurements.unexpectedDuplicateIds).toEqual([]);
       expect(measurements.legacyAvatarDuplicateIds).toEqual(
-        [...legacyAvatarFragmentIds].sort()
+        Arr.sort(legacyAvatarFragmentIds, Order.String)
       );
       expect(measurements.missingFragmentReferences).toEqual([]);
       expect(measurements.communityChromeDescendants).toBeLessThanOrEqual(
@@ -221,11 +221,13 @@ const verifyContributorPayloads = Effect.fn(
           links.map((link) => link.getAttribute("href")).sort()
         )
     );
-    const expectedSocialLinks = Rec.values<string, string | undefined>(
-      contributor.social ?? {}
-    )
-      .filter((href) => href !== undefined)
-      .sort();
+    const expectedSocialLinks = Arr.sort(
+      Arr.filter(
+        Rec.values<string, string | undefined>(contributor.social ?? {}),
+        (href): href is string => href !== undefined
+      ),
+      Order.String
+    );
     yield* Effect.sync(() =>
       expect(actualSocialLinks).toEqual(expectedSocialLinks)
     );

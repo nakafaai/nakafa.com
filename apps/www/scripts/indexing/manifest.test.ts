@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 
 const sitemapMocks = vi.hoisted(() => ({
   getSitemapEntries: vi.fn(),
@@ -37,12 +37,12 @@ describe("forEachSiteIndexUrlBatch", () => {
       const { forEachSiteIndexUrlBatch } = yield* Effect.promise(
         () => import("@/scripts/indexing/manifest")
       );
-      const batches: string[][] = [];
+      const batches = MutableList.make<string[]>();
 
       const summary = yield* forEachSiteIndexUrlBatch(
         (batch) =>
           Effect.sync(() => {
-            batches.push([...batch.urls]);
+            MutableList.append(batches, [...batch.urls]);
           }),
         { batchSize: 2 }
       );
@@ -51,7 +51,7 @@ describe("forEachSiteIndexUrlBatch", () => {
         batchCount: 2,
         canonicalUrlCount: 3,
       });
-      expect(batches).toEqual([
+      expect(MutableList.toArray(batches)).toEqual([
         ["https://nakafa.com/id/home", "https://nakafa.com/id/search"],
         ["https://nakafa.com/en/home"],
       ]);

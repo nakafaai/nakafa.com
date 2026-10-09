@@ -1,5 +1,5 @@
 import { expect, test, type WebSocketRoute } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -29,13 +29,16 @@ test("material sidebar preserves verified curriculum context", async ({
       (context) =>
         Effect.gen(function* () {
           const page = yield* Effect.promise(() => context.newPage());
-          const connectSockets: (() => void)[] = [];
+          const connectSockets = MutableList.make<() => void>();
           let contextSubscriptions = 0;
           yield* Effect.promise(() =>
             page.routeWebSocket(CONVEX_SOCKET_PATTERN, (socket) => {
-              const buffered: Parameters<WebSocketRoute["send"]>[0][] = [];
-              socket.onMessage((message) => buffered.push(message));
-              connectSockets.push(() => {
+              const buffered =
+                MutableList.make<Parameters<WebSocketRoute["send"]>[0]>();
+              socket.onMessage((message) =>
+                MutableList.append(buffered, message)
+              );
+              MutableList.append(connectSockets, () => {
                 const server = socket.connectToServer();
                 const forward = (
                   message: Parameters<WebSocketRoute["send"]>[0]
@@ -46,7 +49,7 @@ test("material sidebar preserves verified curriculum context", async ({
                       .length - 1;
                   server.send(message);
                 };
-                for (const message of buffered) {
+                for (const message of MutableList.toArray(buffered)) {
                   forward(message);
                 }
                 socket.onMessage(forward);
@@ -92,7 +95,7 @@ test("material sidebar preserves verified curriculum context", async ({
                 expect.poll(() => connectSockets.length).toBeGreaterThan(0)
               );
               yield* Effect.sync(() => {
-                for (const connect of connectSockets) {
+                for (const connect of MutableList.toArray(connectSockets)) {
                   connect();
                 }
               });

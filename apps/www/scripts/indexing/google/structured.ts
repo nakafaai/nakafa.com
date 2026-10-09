@@ -20,7 +20,7 @@ export function hasGoogleIndexingApiEligibleStructuredData(
 /** Recursively checks for one Schema.org `@type` value. */
 function hasSchemaType(value: unknown, schemaType: string): boolean {
   if (Arr.isArray(value)) {
-    return value.some((entry) => hasSchemaType(entry, schemaType));
+    return Arr.some(value, (entry) => hasSchemaType(entry, schemaType));
   }
 
   if (!Predicate.isReadonlyObject(value)) {
@@ -31,7 +31,7 @@ function hasSchemaType(value: unknown, schemaType: string): boolean {
     return true;
   }
 
-  return readRecordValues(value).some((entry) =>
+  return Arr.some(readRecordValues(value), (entry) =>
     hasSchemaType(entry, schemaType)
   );
 }
@@ -39,7 +39,7 @@ function hasSchemaType(value: unknown, schemaType: string): boolean {
 /** Checks Google's livestream case: BroadcastEvent nested in VideoObject. */
 function hasBroadcastEventInsideVideoObject(value: unknown): boolean {
   if (Arr.isArray(value)) {
-    return value.some(hasBroadcastEventInsideVideoObject);
+    return Arr.some(value, hasBroadcastEventInsideVideoObject);
   }
 
   if (!Predicate.isReadonlyObject(value)) {
@@ -53,7 +53,7 @@ function hasBroadcastEventInsideVideoObject(value: unknown): boolean {
     return true;
   }
 
-  return readRecordValues(value).some(hasBroadcastEventInsideVideoObject);
+  return Arr.some(readRecordValues(value), hasBroadcastEventInsideVideoObject);
 }
 
 /** Reads Schema.org `@type` values without assuming scalar or array shape. */
@@ -68,18 +68,13 @@ function readSchemaTypes(value: Readonly<Record<PropertyKey, unknown>>) {
     return [];
   }
 
-  return schemaType.filter(
+  return Arr.filter(
+    schemaType,
     (entry): entry is string => typeof entry === "string"
   );
 }
 
 /** Reads object values through the narrowed JSON record contract. */
 function readRecordValues(value: Readonly<Record<PropertyKey, unknown>>) {
-  const values: unknown[] = [];
-
-  for (const key of Reflect.ownKeys(value)) {
-    values.push(value[key]);
-  }
-
-  return values;
+  return Arr.map(Reflect.ownKeys(value), (key) => value[key]);
 }

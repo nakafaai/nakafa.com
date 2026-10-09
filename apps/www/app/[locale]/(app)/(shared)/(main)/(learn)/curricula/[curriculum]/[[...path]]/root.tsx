@@ -1,4 +1,5 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import {
   CatalogCard,
@@ -25,7 +26,7 @@ export function CurriculumCatalogCards({
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {entries.map(({ program, route }, index) => {
+      {Arr.map(entries, ({ program, route }, index) => {
         const imageSrc = resolveCurriculumCatalogArtwork(locale, {
           kind: "program",
           programKey: program.key,
@@ -64,7 +65,7 @@ export function CurriculumChildCards({
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {routes.map((route, index) => {
+      {Arr.map(routes, (route, index) => {
         const imageSrc = resolveCurriculumCatalogArtwork(locale, {
           nodeKey: route.nodeKey,
           programKey: route.programKey,

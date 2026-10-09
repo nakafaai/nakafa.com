@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { parseMaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
@@ -48,7 +48,7 @@ export async function readOgMetadata(
       resolveReferenceInput({
         appLocale: locale,
         kind: "route",
-        publicPath: slug.join("/"),
+        publicPath: Arr.join(slug, "/"),
       })
     );
     if (!input) {
@@ -60,7 +60,7 @@ export async function readOgMetadata(
           input: {
             appLocale: locale,
             kind: "route",
-            publicPath: slug.join("/"),
+            publicPath: Arr.join(slug, "/"),
           },
         })
       ).pipe(Effect.provide(httpLayer()))

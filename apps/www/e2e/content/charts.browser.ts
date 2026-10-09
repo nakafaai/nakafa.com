@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect, Record as Rec } from "effect";
+import { Effect, MutableList, Record as Rec } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -166,13 +166,13 @@ test("function charts retain their tables and hydrate after a cached reload", as
       (context) =>
         Effect.gen(function* () {
           const page = yield* Effect.promise(() => context.newPage());
-          const failedScripts: string[] = [];
+          const failedScripts = MutableList.make<string>();
           page.on("response", (response) => {
             if (
               response.request().resourceType() === "script" &&
               !response.ok()
             ) {
-              failedScripts.push(response.url());
+              MutableList.append(failedScripts, response.url());
             }
           });
           yield* withObservedPageErrors(
@@ -204,7 +204,7 @@ test("function charts retain their tables and hydrate after a cached reload", as
                   expect(serverTables).toBe(2);
                 });
               }
-              expect(failedScripts).toEqual([]);
+              expect(MutableList.toArray(failedScripts)).toEqual([]);
             })
           );
         })

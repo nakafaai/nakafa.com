@@ -1,6 +1,6 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Effect, Predicate, Schema } from "effect";
+import { Array as Arr, Effect, Predicate, Result, Schema } from "effect";
 import { HttpClient } from "effect/http";
 import {
   GoogleIndexPageFetchError,
@@ -31,7 +31,7 @@ export const getEligibleGoogleIndexingUrls = Effect.fn(
     readEligibleGoogleIndexingUrl,
     { concurrency: ELIGIBILITY_FETCH_CONCURRENCY }
   );
-  const urls = maybeEligibleUrls.filter(Predicate.isString);
+  const urls = Arr.filter(maybeEligibleUrls, Predicate.isString);
   yield* Effect.logInfo(
     `Google Indexing API eligible URLs in batch ${batch.batchIndex}: ${urls.length}`
   );
@@ -105,12 +105,8 @@ const fetchEligibilityPage = Effect.fn("scripts.google.eligibility.fetchPage")(
 );
 /** Extracts JSON-LD script bodies from a live HTML document. */
 function readJsonLdScriptBodies(html: string) {
-  const blocks: string[] = [];
-  for (const match of html.matchAll(JSON_LD_SCRIPT_PATTERN)) {
+  return Arr.filterMap(html.matchAll(JSON_LD_SCRIPT_PATTERN), (match) => {
     const body = match[1]?.trim();
-    if (body) {
-      blocks.push(body);
-    }
-  }
-  return blocks;
+    return body ? Result.succeed(body) : Result.failVoid;
+  });
 }

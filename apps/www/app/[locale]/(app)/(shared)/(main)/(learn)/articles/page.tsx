@@ -1,6 +1,6 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -132,7 +132,7 @@ async function ArticleCatalog({
       />
       <LayoutContent>
         <SubjectList>
-          {catalog.categories.map(({ category, route, title }) => (
+          {Arr.map(catalog.categories, ({ category, route, title }) => (
             <SubjectItem
               href={`/articles/${route}`}
               icon={getArticleCategoryIcon(category)}

@@ -1,6 +1,7 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
+import { Array as Arr } from "effect";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import type { Locale } from "next-intl";
@@ -84,7 +85,7 @@ export default async function Page() {
       />
       <CollectionPageJsonLd
         description={description}
-        items={catalog.entries.map(({ route }) => ({
+        items={Arr.map(catalog.entries, ({ route }) => ({
           name: route.title,
           url: `https://nakafa.com/${locale}/${route.publicPath}`,
         }))}

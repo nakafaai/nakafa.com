@@ -8,14 +8,14 @@ import {
   verifyPreviewRendererProof,
 } from "@nakafa/aksara-contracts/preview/auth";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { NextRequest } from "next/server";
 
 const nonce = PreviewRendererNonceSchema.make("n".repeat(43));
 const secret = PreviewRendererSecretSchema.make("s".repeat(43));
 const manifest = {
   base: ["BlockMath"],
-  domains: RENDERER_DOMAINS.map((name) => ({
+  domains: Arr.map(RENDERER_DOMAINS, (name) => ({
     name,
     components: [],
   })),
@@ -139,7 +139,9 @@ describe("renderer manifest route", () => {
         { concurrency: "unbounded" }
       );
 
-      expect(responses.map(({ status }) => status)).toEqual([401, 401, 401]);
+      expect(Arr.map(responses, ({ status }) => status)).toEqual([
+        401, 401, 401,
+      ]);
     })
   );
 
