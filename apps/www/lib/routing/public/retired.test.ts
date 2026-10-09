@@ -90,6 +90,20 @@ describe("retired SNBT product URLs", () => {
     })
   );
 
+  it.effect.each([
+    "/en/try-out/snbt/2028-set-1",
+    "/de/try-out/snbt/2099-set-1",
+  ])("keeps %s off the gone answer when its year is not retired", (pathname) =>
+    Effect.gen(function* () {
+      serveSnbtExam(["2027"]);
+
+      expect(
+        yield* readRetiredPublicRoute({ hasAttemptCapability: false, pathname })
+      ).toBe(false);
+      expect(readExamPageMock).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("keeps a 2027 product URL on its redirect or the 404", () =>
     Effect.gen(function* () {
       serveSnbtExam(["2026", "2027"]);

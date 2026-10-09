@@ -49,11 +49,23 @@ function isRemovedPathname(pathname: string) {
 }
 
 /**
- * Reads whether the signed catalog serves the SNBT exam without a track for one
- * year. An absent exam proves nothing about a year, so it never answers gone.
+ * SNBT years whose track was retired, so their product URLs answer gone while
+ * the signed exam has no track for them. A year is added only when its track is
+ * retired: a year that is not published yet stays a plain 404 and can still
+ * redirect once it is published.
+ */
+const RETIRED_SNBT_YEARS = HashSet.make("2026");
+
+/**
+ * Reads whether one retired SNBT year has no track in the signed exam. Only a
+ * year in RETIRED_SNBT_YEARS can answer gone, and an absent exam proves nothing
+ * about a year, so it never answers gone.
  */
 const readRetiredSnbtYear = Effect.fn("www.routing.publicHtml.retiredSnbtYear")(
   function* (year: string) {
+    if (!HashSet.has(RETIRED_SNBT_YEARS, year)) {
+      return false;
+    }
     const exam = yield* readPublishedTryoutExamPage({
       appLocale: SOURCE_APP_LOCALE,
       publicPath: SNBT_EXAM_PATH,
@@ -70,8 +82,9 @@ const readRetiredSnbtYear = Effect.fn("www.routing.publicHtml.retiredSnbtYear")(
 
 /**
  * Answers whether one public URL is gone for good: a removed feature route or
- * file, or a retired SNBT product URL whose year has no live track. Try-out
- * attempts skip the try-out answer, as they skip the try-out redirects.
+ * file, or a product URL of a retired SNBT year that the signed exam has no
+ * track for. Try-out attempts skip the try-out answer, as they skip the try-out
+ * redirects.
  */
 export const readRetiredPublicRoute = Effect.fn(
   "www.routing.publicHtml.retiredRoute"

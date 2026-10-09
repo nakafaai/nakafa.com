@@ -238,6 +238,23 @@ describe("retired try-out redirects", () => {
     );
 
     it.effect(
+      "redirects a product URL of a later year once its localized set is live",
+      () =>
+        Effect.gen(function* () {
+          serveCatalog({
+            routes: [{ en: "try-out/indonesia/snbt/2028/set-1" }],
+          });
+
+          expect(
+            yield* readTryoutRedirect("/en/try-out/snbt/2028-set-1")
+          ).toEqual({
+            destination: "/en/try-out/indonesia/snbt/2028/set-1",
+            status: 308,
+          });
+        })
+    );
+
+    it.effect(
       "keeps the retired set path when the catalog still serves it",
       () =>
         Effect.gen(function* () {

@@ -432,7 +432,7 @@ describe("proxy", () => {
       expect(runtimeMocks.readActive).not.toHaveBeenCalled();
     }
   );
-  it("answers a retired SNBT product URL gone once its year has no live track", async () => {
+  it("answers a retired SNBT product URL gone once its retired year has no live track", async () => {
     runtimeMocks.readTryout.mockReturnValueOnce(
       Effect.succeed({
         country: {
@@ -460,6 +460,18 @@ describe("proxy", () => {
     expect(response.status).toBe(410);
     expectNoLocaleProxy();
   });
+  it.each(["/en/try-out/snbt/2028-set-1", "/de/try-out/snbt/2099-set-1"])(
+    "sends the product URL %s of a year that is not retired to the try-out rules",
+    async (path) => {
+      const response = await requestProxy(path);
+      expect(response.status).not.toBe(410);
+      expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
+        hasAttemptCapability: false,
+        method: "GET",
+        pathname: path,
+      });
+    }
+  );
   it("keeps a retired SNBT product URL on the try-out rules for an attempt", async () => {
     const response = await requestProxy(
       "/en/try-out/snbt/2026-set-1?attemptId=attempt-id"
