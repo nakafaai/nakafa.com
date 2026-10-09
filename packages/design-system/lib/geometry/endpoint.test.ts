@@ -116,7 +116,7 @@ describe("mathematical branch endpoints", () => {
     expect(clipped).toHaveLength(2);
     expect(
       clipOpenLineEnds(
-        authored.slice(0, 2),
+        Arr.take(authored, 2),
         { start: "open" },
         camera,
         0.1,
@@ -151,7 +151,7 @@ describe("mathematical branch endpoints", () => {
 
   it.effect("represents an isolated included point exactly once", () =>
     Effect.gen(function* () {
-      const singleton = points.slice(0, 1);
+      const singleton = Arr.take(points, 1);
       expect(
         yield* resolveLineEndpoints(singleton, {
           start: "closed",
@@ -176,7 +176,7 @@ describe("mathematical branch endpoints", () => {
         ).toBeInstanceOf(LineEndpointError);
         expect(
           yield* Effect.flip(
-            resolveLineEndpoints(points.slice(0, 1), {
+            resolveLineEndpoints(Arr.take(points, 1), {
               start: "open",
               end: "closed",
             })
@@ -229,7 +229,7 @@ describe("mathematical branch endpoints", () => {
     expect(clipped).toHaveLength(2);
     expect(clipped[0].x).toBeCloseTo(0.1, 12);
     expect(
-      clipOpenLineEnds(dense.slice(0, 3), { start: "open" }, camera, 0.1)
+      clipOpenLineEnds(Arr.take(dense, 3), { start: "open" }, camera, 0.1)
     ).toEqual([]);
     expect(
       clipOpenLineEnds([], { start: "open", end: "open" }, camera, 0.1)

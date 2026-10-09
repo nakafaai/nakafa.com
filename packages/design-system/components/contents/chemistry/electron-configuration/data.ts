@@ -59,7 +59,7 @@ const ELECTRON_CONFIGURATION_SHELLS = [
   { key: "L", patternLimit: 8 },
   { key: "M", patternLimit: 8 },
   { key: "N", patternLimit: 2 },
-] satisfies readonly (typeof ElectronConfigurationShellSchema.Type)[];
+] as const satisfies readonly (typeof ElectronConfigurationShellSchema.Type)[];
 
 /**
  * Narrows ToggleGroup string values to the available electron examples.

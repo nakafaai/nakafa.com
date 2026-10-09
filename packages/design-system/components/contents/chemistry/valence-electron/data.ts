@@ -1,4 +1,7 @@
-import { getEarlyElementShellConfiguration } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
+import {
+  getEarlyElementShellConfiguration,
+  getOuterOccupiedShell,
+} from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import { Array as Arr, Result, Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
@@ -73,11 +76,7 @@ export function getValenceElectronFacts(atomicNumber: number) {
         configuration,
         (shell) => shell.electronCount > 0
       );
-      const outerShell = Arr.reduce(
-        Arr.tailNonEmpty(configuration),
-        Arr.headNonEmpty(configuration),
-        (outer, shell) => (shell.electronCount > 0 ? shell : outer)
-      );
+      const outerShell = getOuterOccupiedShell(configuration);
 
       return {
         configurationMath: Arr.join(

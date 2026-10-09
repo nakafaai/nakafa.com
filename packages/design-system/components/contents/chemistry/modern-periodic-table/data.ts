@@ -174,7 +174,7 @@ function getElementCategory(symbol: string) {
   return Result.map(
     Result.fromOption(
       Arr.findFirst(ELEMENT_CATEGORY_GROUPS, ({ symbols }) =>
-        symbols.split(" ").includes(symbol)
+        Arr.contains(symbols.split(" "), symbol)
       ),
       () =>
         new PeriodicTableSourceError({

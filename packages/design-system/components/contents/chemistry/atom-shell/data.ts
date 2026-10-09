@@ -67,6 +67,20 @@ export class EarlyElementShellRangeError extends Schema.TaggedError<EarlyElement
 ) {}
 
 /**
+ * Returns the last shell that holds an electron. A neutral atom always fills
+ * its first shell, so the result needs no lookup.
+ */
+export function getOuterOccupiedShell<
+  Shell extends { readonly electronCount: number },
+>(shells: Arr.NonEmptyReadonlyArray<Shell>) {
+  return Arr.reduce(
+    Arr.tailNonEmpty(shells),
+    Arr.headNonEmpty(shells),
+    (outer, shell) => (shell.electronCount > 0 ? shell : outer)
+  );
+}
+
+/**
  * Builds the simple shell distribution used for neutral atoms up to calcium.
  */
 export function getEarlyElementShellConfiguration(atomicNumber: number) {

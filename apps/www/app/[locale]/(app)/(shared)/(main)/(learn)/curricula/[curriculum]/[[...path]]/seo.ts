@@ -1,3 +1,4 @@
+import { Array as Arr, Option } from "effect";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 import type { SEOContext } from "@/lib/seo/contract";
 
@@ -6,10 +7,12 @@ export function readCurriculumSeoContext(
   route: CurriculumViewRoute,
   ancestors: readonly CurriculumViewRoute[]
 ): Extract<SEOContext, { type: "curriculum-context" }> {
-  const parent = ancestors.at(-1);
-  const program = ancestors.at(0);
-  const parentTitle = parent?.title;
-  const programTitle = program?.title;
+  const parentTitle = Option.getOrUndefined(
+    Option.map(Arr.last(ancestors), (parent) => parent.title)
+  );
+  const programTitle = Option.getOrUndefined(
+    Option.map(Arr.head(ancestors), (program) => program.title)
+  );
   const programContext =
     programTitle && programTitle !== route.title && programTitle !== parentTitle
       ? programTitle

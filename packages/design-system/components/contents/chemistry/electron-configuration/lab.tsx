@@ -1,5 +1,6 @@
 "use client";
 
+import { getOuterOccupiedShell } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import {
   ELECTRON_CONFIGURATION_SAMPLE_IDS,
   ELECTRON_CONFIGURATION_SAMPLES,
@@ -63,15 +64,11 @@ export function ElectronConfigurationLab({
     shellConfiguration,
     (shell) => shell.electronCount > 0
   );
-  const outerShell = visibleShells.at(-1);
+  const outerShell = getOuterOccupiedShell(shellConfiguration);
   const configurationMath = Arr.join(
     Arr.map(visibleShells, (shell) => String(shell.electronCount)),
     ", "
   );
-
-  if (!outerShell) {
-    throw new Error("Electron configuration requires at least one shell.");
-  }
 
   /**
    * Keeps one atom selected when ToggleGroup emits an empty value.

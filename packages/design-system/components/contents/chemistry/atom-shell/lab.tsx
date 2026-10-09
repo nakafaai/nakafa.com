@@ -6,6 +6,7 @@ import {
   type AtomShellSampleId,
   CALCIUM_ID,
   getEarlyElementShellConfiguration,
+  getOuterOccupiedShell,
   isAtomShellSampleId,
 } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import { ShellModelCanvas } from "@repo/design-system/components/contents/chemistry/shell-model/canvas";
@@ -63,15 +64,11 @@ export function AtomShellLab({
     shellConfiguration,
     (shell) => shell.electronCount > 0
   );
-  const outerShell = visibleShells.at(-1);
+  const outerShell = getOuterOccupiedShell(shellConfiguration);
   const configurationMath = Arr.join(
     Arr.map(visibleShells, (shell) => String(shell.electronCount)),
     ", "
   );
-
-  if (!outerShell) {
-    throw new Error("Atom shell lab requires at least one occupied shell.");
-  }
 
   /** Keeps the current atom selected when ToggleGroup emits an empty value. */
   function handleSampleChange(value: string) {
