@@ -4,12 +4,12 @@ import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { betterAuth } from "better-auth/minimal";
 
 /**
- * Static Better Auth instance for local-install schema generation.
+ * The configuration that the Better Auth command line tool loads to generate
+ * `schema.ts`.
  *
- * The Better Auth CLI loads this file outside a Convex request. The local
- * install guide requires a placeholder context for this static export, so this
- * is the only allowed auth-context assertion and it must stay out of runtime
- * request paths.
+ * The tool runs outside a Convex request. The local install guide therefore
+ * requires a placeholder context for this static instance. Nothing at run time
+ * imports this file.
  * @see https://labs.convex.dev/better-auth/features/local-install#generate-the-schema
  */
 export const auth = betterAuth(createAuthOptions({} as GenericCtx<DataModel>));
