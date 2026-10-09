@@ -1,4 +1,4 @@
-import { Array as Arr, Effect, HashSet, Option, Result } from "effect";
+import { Array as Arr, Effect, HashSet, Option, Result, Tuple } from "effect";
 import {
   type Identifier,
   isCallExpression,
@@ -36,20 +36,17 @@ const CONVEX_VALUES = "convex/values";
 const CONVEX_ERROR = "ConvexError";
 
 /** One call of a Convex builder: the identifier that names the builder, and one handler of its options. */
-interface BuilderHandler {
-  readonly callee: Identifier;
-  readonly handler: Node;
-}
+type BuilderHandler = readonly [callee: Identifier, handler: Node];
 
 /**
  * A throw that a builder's handler raises with a `ConvexError`, with the two
  * identifiers that decide whether the throw is exempt: the builder and the error.
  */
-interface Probe {
-  readonly callee: Identifier;
-  readonly error: Identifier;
-  readonly node: ThrowStatement;
-}
+type Probe = readonly [
+  node: ThrowStatement,
+  callee: Identifier,
+  error: Identifier,
+];
 
 /**
  * Returns the local names that a module binds to the imports that `matches`
@@ -98,7 +95,9 @@ function builderHandlers(
     return Arr.contains(builders, callee.text) &&
       options !== undefined &&
       isObjectLiteralExpression(options)
-      ? Arr.map(handlerFunctions(options), (handler) => ({ callee, handler }))
+      ? Arr.map(handlerFunctions(options), (handler) =>
+          Tuple.make(callee, handler)
+        )
       : [];
   });
 }
@@ -114,16 +113,12 @@ function probeOf(
 ): Option.Option<Probe> {
   const thrown = unwrapped(node.expression);
   const owner = enclosingFunction(node);
-  const builder = Arr.findFirst(handlers, ({ handler }) => handler === owner);
+  const builder = Arr.findFirst(handlers, ([, handler]) => handler === owner);
   return isNewExpression(thrown) &&
     isIdentifier(thrown.expression) &&
     Arr.contains(errors, thrown.expression.text) &&
     Option.isSome(builder)
-    ? Option.some({
-        callee: builder.value.callee,
-        error: thrown.expression,
-        node,
-      })
+    ? Option.some(Tuple.make(node, builder.value[0], thrown.expression))
     : Option.none();
 }
 
@@ -139,13 +134,13 @@ const exemptThrows = Effect.fn("RepositoryPolicy.exemptThrows")(function* (
   if (Arr.isReadonlyArrayEmpty(probes)) {
     return Arr.empty<ThrowStatement>();
   }
-  const callees = yield* bind(Arr.map(probes, ({ callee }) => callee));
-  const errors = yield* bind(Arr.map(probes, ({ error }) => error));
+  const callees = yield* bind(Arr.map(probes, ([, callee]) => callee));
+  const errors = yield* bind(Arr.map(probes, ([, , error]) => error));
   return Arr.filterMap(
     Arr.zip(probes, Arr.zip(callees, errors)),
-    ([probe, [callee, error]]) =>
+    ([[node], [callee, error]]) =>
       callee === "import" && error === "import"
-        ? Result.succeed(probe.node)
+        ? Result.succeed(node)
         : Result.failVoid
   );
 });
