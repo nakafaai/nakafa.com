@@ -6,7 +6,6 @@
   "envMode": "loose",
   "globalEnv": ["NEXT_RUNTIME", "NODE_ENV"],
   "globalPassThroughEnv": [
-    "REDIS_URL",
     "BING_WEBMASTER_API_KEY",
     "FIRECRAWL_API_KEY",
     "MATH_CAS_API_KEY",
