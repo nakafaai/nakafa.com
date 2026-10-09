@@ -77,6 +77,28 @@ type NavigationResolve = (
   page: Page
 ) => Effect.Effect<NavigationTarget, NavigationLinkMissing>;
 
+/**
+ * Waits for the destination's own marker. Inside an `instant()` scope only the
+ * UI that came without dynamic data can show it, so there the check proves the
+ * marker is part of the static shell or of the prefetch.
+ *
+ * @see https://nextjs.org/docs/app/guides/instant-navigation#prevent-regressions-with-e2e-tests
+ */
+function expectMarker(page: Page, marker: NavigationTarget["marker"]) {
+  if (marker.kind === "title") {
+    return expect(page).toHaveTitle(marker.text, {
+      timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+    });
+  }
+  const headings = page.locator("h1:visible");
+  const heading = marker.text
+    ? headings.filter({ hasText: marker.text }).first()
+    : headings.first();
+  return expect(heading).toBeVisible({
+    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+  });
+}
+
 const assertSettledNavigation = Effect.fn("NakafaE2E.assertSettledNavigation")(
   function* (page: Page, target: NavigationTarget) {
     yield* Effect.promise(() =>
@@ -84,29 +106,7 @@ const assertSettledNavigation = Effect.fn("NakafaE2E.assertSettledNavigation")(
         timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
       })
     );
-
-    if (target.marker.kind === "title") {
-      const titleText = target.marker.text;
-      yield* Effect.promise(() =>
-        expect(page).toHaveTitle(titleText, {
-          timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-        })
-      );
-      return;
-    }
-
-    const markerText = target.marker.text;
-    const heading = markerText
-      ? page.locator("h1:visible").filter({ hasText: markerText }).first()
-      : page.locator("h1:visible").first();
-    yield* Effect.promise(() =>
-      expect(heading).toBeVisible({
-        timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-      })
-    );
-    if (markerText) {
-      yield* Effect.promise(() => expect(heading).toContainText(markerText));
-    }
+    yield* Effect.promise(() => expectMarker(page, target.marker));
   }
 );
 
@@ -217,8 +217,9 @@ const discoverLinkedHref = Effect.fn("NakafaE2E.discoverLinkedHref")(function* (
 
 /**
  * The installed instant lock withholds dynamic data until its callback returns.
- * The callback therefore verifies the committed route shell, while the Effect
- * program verifies destination-specific content after release.
+ * The callback therefore verifies the committed route shell and the
+ * destination's own marker, which must come without dynamic data, and the
+ * Effect program verifies the settled page after release.
  *
  * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/navigation-testing-lock.ts
  * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next-playwright/README.md
@@ -247,7 +248,8 @@ const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
             return expect(shell).toBeVisible({
               timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
             });
-          }),
+          })
+          .then(() => expectMarker(page, target.marker)),
       { baseURL }
     )
   );
@@ -285,6 +287,7 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
             timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
           });
         })
+        .then(() => expectMarker(page, target.marker))
     )
   );
   yield* assertSettledNavigation(page, target);
