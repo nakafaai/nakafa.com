@@ -53,11 +53,12 @@ const writeFixtures = Effect.fn("TestPolicyTest.writeFixtures")(function* (
 
 /** Runs the test policy against a fixture with captured standard streams. */
 const checkFixture = Effect.fn("TestPolicyTest.checkFixture")(function* (
-  root: string
+  root: string,
+  owner?: string
 ) {
   const stdout = yield* makeCapture;
   const stderr = yield* makeCapture;
-  const status = yield* checkTestPolicy(root).pipe(
+  const status = yield* checkTestPolicy(root, owner).pipe(
     Effect.provide(
       Stdio.layerTest({ stderr: capture(stderr), stdout: capture(stdout) })
     )
@@ -307,6 +308,57 @@ describe("test ownership policy", () => {
         stdout: ["Test ownership checks passed.\n"],
       });
     }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "compares the rule decisions with the repository that owns the check",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "test-policy-judged-",
+        });
+        const owner = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "test-policy-owner-",
+        });
+        yield* writeFixtures(root, {
+          ...sharedPackageFiles('{"name":"@nakafa/typescript-config"}\n'),
+          "apps/web/tsconfig.json":
+            '{"extends":"@nakafa/typescript-config/base.json"}\n',
+        });
+        yield* writeFixtures(owner, {
+          "packages/typescript-config/base.json":
+            '{"compilerOptions":{"plugins":[{"name":"@effect/language-service","diagnosticSeverity":{"globalDate":"error"}}]}}\n',
+        });
+
+        assert.deepStrictEqual(yield* checkFixture(root, owner), {
+          status: 1,
+          stderr: [
+            'packages/typescript-config/base.json: set globalDate to "error" in diagnosticSeverity, as the repository that owns this check decides it, so both repositories enforce the same rules.\n',
+          ],
+          stdout: [],
+        });
+        // The repository that owns the check has no other owner to compare with.
+        assert.strictEqual((yield* checkFixture(root, root)).status, 0);
+        // An owner whose configuration declares no plugins has no decisions to compare.
+        const plain = path.join(owner, "plain");
+        yield* writeFixtures(plain, {
+          "packages/typescript-config/base.json": "{}\n",
+        });
+        assert.strictEqual((yield* checkFixture(root, plain)).status, 0);
+        const missing = yield* checkFixture(
+          root,
+          path.join(owner, "absent")
+        ).pipe(Effect.flip);
+        assert.deepStrictEqual(
+          [missing._tag, missing.message],
+          [
+            "SharedPackageError",
+            "packages/typescript-config/base.json of the repository that owns this check is missing or unreadable, so its rule decisions cannot be compared.",
+          ]
+        );
+      }).pipe(Effect.provide(NodeServices.layer))
   );
 
   it.effect(
