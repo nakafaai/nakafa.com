@@ -98,7 +98,7 @@ export interface Runtime {
   readonly whole: Whole.Effect.Effect<void>;
 }
 `),
-          [true, true, true, true, false, false]
+          [true, true, true, true, false, true]
         );
       })
   );

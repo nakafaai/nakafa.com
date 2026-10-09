@@ -33,16 +33,33 @@ import {
 /**
  * The modules whose types describe values that no Schema describes as data:
  * React and MDX values, the design system's Markdown types (each one names a
- * React or MDX type), the message parts that the AI SDK owns, and the parser
- * syntax-tree nodes of ESTree and its JSX extension.
+ * React or MDX type), and the parser syntax-tree nodes of ESTree and its JSX
+ * extension. The AI SDK names only some of its types as values, listed below.
  */
 const FRAMEWORK_TYPE_MODULES = HashSet.make(
   "@repo/design-system/types/markdown",
-  "ai",
   "estree",
   "estree-jsx",
   "mdx/types",
   "react"
+);
+
+/**
+ * The AI SDK types that hold a value no Schema describes: the UI and model
+ * message parts, and the tool and schema types that hold functions. The other
+ * AI SDK types, such as `JSONValue` and `ChatStatus`, are plain data.
+ */
+const AI_VALUE_TYPES = HashSet.make(
+  "DynamicToolUIPart",
+  "FileUIPart",
+  "Schema",
+  "StepStartUIPart",
+  "TextUIPart",
+  "Tool",
+  "ToolCallRepairFunction",
+  "ToolLoopAgentSettings",
+  "ToolResultPart",
+  "ToolUIPart"
 );
 
 /**
@@ -99,9 +116,67 @@ function handleNames(clause: ImportClause | undefined): readonly string[] {
 }
 
 /**
+ * Returns the local names of the AI SDK types that hold a value, such as
+ * `TextUIPart` in `import { type TextUIPart } from "ai"`.
+ */
+function aiValueNames(clause: ImportClause | undefined): readonly string[] {
+  const bindings = clause?.namedBindings;
+  return bindings !== undefined && isNamedImports(bindings)
+    ? Arr.flatMap(bindings.elements, ({ name, propertyName }) =>
+        HashSet.has(AI_VALUE_TYPES, (propertyName ?? name).text)
+          ? [name.text]
+          : []
+      )
+    : [];
+}
+
+/** Returns the local names that a namespace import of `effect` binds, such as `Whole` in `import * as Whole from "effect"`. */
+function effectNamespaceNames(sourceFile: SourceFile): readonly string[] {
+  return Arr.flatMap(sourceFile.statements, (statement) => {
+    if (
+      !(
+        isImportDeclaration(statement) &&
+        isStringLiteral(statement.moduleSpecifier) &&
+        statement.moduleSpecifier.text === "effect"
+      )
+    ) {
+      return [];
+    }
+    const bindings = statement.importClause?.namedBindings;
+    return bindings !== undefined && isNamespaceImport(bindings)
+      ? [bindings.name.text]
+      : [];
+  });
+}
+
+/** Returns the identifiers of a type name from left to right, such as `Whole`, `Effect`, and `Effect` in `Whole.Effect.Effect`. */
+function segmentsOf(name: EntityName): readonly Identifier[] {
+  return isQualifiedName(name)
+    ? Arr.append(segmentsOf(name.left), name.right)
+    : [name];
+}
+
+/**
+ * Whether a qualified type name reads a runtime handle through a namespace import
+ * of `effect`, such as `Whole.Effect.Effect` for `import * as Whole from "effect"`.
+ */
+function namesEffectHandle(
+  name: EntityName,
+  namespaces: readonly string[]
+): boolean {
+  const [namespace, handle] = segmentsOf(name);
+  return (
+    namespace !== undefined &&
+    handle !== undefined &&
+    Arr.contains(namespaces, namespace.text) &&
+    HashSet.has(EFFECT_HANDLE_MODULES, handle.text)
+  );
+}
+
+/**
  * Returns the local names that a module binds to value types through its
  * imports, type-only imports included: everything from React, MDX, the design
- * system's Markdown types, the AI SDK, and ESTree, such as `ReactNode`,
+ * system's Markdown types, the AI SDK's value types, and ESTree, such as `ReactNode`,
  * `MDXComponents`, `TextUIPart`, and `JSXElement`, and the handle modules of
  * `effect`, such as `Effect` and `Fiber`.
  */
@@ -118,6 +193,9 @@ export function valueNames(sourceFile: SourceFile): readonly string[] {
     const module = statement.moduleSpecifier.text;
     if (HashSet.has(FRAMEWORK_TYPE_MODULES, module)) {
       return clauseNames(statement.importClause);
+    }
+    if (module === "ai") {
+      return aiValueNames(statement.importClause);
     }
     return module === "effect" ? handleNames(statement.importClause) : [];
   });
@@ -179,6 +257,7 @@ function wrappedTypes(type: TypeNode): readonly TypeNode[] {
  */
 export function valueMembers(sourceFile: SourceFile) {
   const names = valueNames(sourceFile);
+  const namespaces = effectNamespaceNames(sourceFile);
   const shapes = localShapes(sourceFile);
 
   /** Whether a shape that this module declares holds a value; a shape already being read does not count again. */
@@ -213,6 +292,7 @@ export function valueMembers(sourceFile: SourceFile) {
     }
     return (
       Arr.contains(names, leading(type.typeName).text) ||
+      namesEffectHandle(type.typeName, namespaces) ||
       Arr.some(type.typeArguments ?? [], (argument) =>
         typeHolds(argument, seen)
       ) ||

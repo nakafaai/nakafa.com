@@ -126,6 +126,23 @@ export const userRows = Schema.suspend((): Schema.Codec<UserRow> => UserRowsSche
     })
   );
 
+  it.effect("reports a shape whose only AI SDK member is plain JSON data", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`import type { JSONValue, TextUIPart } from "ai";
+export interface Payload {
+  readonly title: string;
+  readonly meta: JSONValue;
+}
+export interface Entry {
+  readonly part: TextUIPart;
+}
+`),
+        [2]
+      );
+    })
+  );
+
   it.effect("allows the type a recursive Schema.suspend thunk names", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
