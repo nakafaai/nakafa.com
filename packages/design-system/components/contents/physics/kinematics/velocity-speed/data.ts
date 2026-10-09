@@ -1,3 +1,4 @@
+import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { formatKeptZeroNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
@@ -132,7 +133,7 @@ export function getVelocitySpeedSample(
   motion: VelocitySpeedState,
   elapsedSeconds: number
 ) {
-  const elapsed = Math.min(Math.max(elapsedSeconds, 0), motion.duration);
+  const elapsed = clamp(elapsedSeconds, 0, motion.duration);
   const targetDistance = (elapsed / motion.duration) * motion.distance;
   let traveled = 0;
 

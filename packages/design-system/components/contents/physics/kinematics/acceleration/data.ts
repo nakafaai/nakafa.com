@@ -1,3 +1,4 @@
+import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
 import { formatTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Schema } from "effect";
@@ -259,8 +260,4 @@ function getTimeSamples(duration: number) {
   const sampleCount = Math.floor(duration) + 1;
 
   return Array.from({ length: sampleCount }, (_, index) => index);
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }

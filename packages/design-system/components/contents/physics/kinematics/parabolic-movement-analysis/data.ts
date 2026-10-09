@@ -1,3 +1,4 @@
+import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
 import { formatTrimmedFixedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Schema } from "effect";
@@ -191,8 +192,4 @@ function getMuzzleFlashPower(cycleTime: number) {
   }
 
   return 1 - cycleTime / flashSeconds;
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }

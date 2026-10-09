@@ -1,3 +1,4 @@
+import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { formatKeptZeroNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { Array as Arr, Option, Schema } from "effect";
@@ -243,10 +244,6 @@ function getRouteSpan(route: RoutePoint[]) {
 
 function getPointDistance(start: RoutePoint, end: RoutePoint) {
   return Math.hypot(end.x - start.x, end.z - start.z);
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }
 
 function normalizePoint(point: RoutePoint) {

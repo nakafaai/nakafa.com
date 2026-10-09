@@ -1,3 +1,4 @@
+import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
 import {
   formatSignedTrimmedNumber,
   formatTrimmedNumber,
@@ -192,8 +193,4 @@ function getTimeSamples(duration: number) {
   }
 
   return [...samples, duration];
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }
