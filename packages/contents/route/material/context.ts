@@ -4,6 +4,7 @@ import {
   type MaterialRouteIdentity,
   readMaterialContextRef,
 } from "@repo/contents/route/material/reference";
+import { Array as Arr } from "effect";
 
 /** Query parameter used only for validated material return-context hints. */
 export const MATERIAL_CONTEXT_QUERY_PARAM = "ctx";
@@ -12,7 +13,8 @@ const MATERIAL_CONTEXT_HINT_SEPARATOR = "~";
 
 /** Encodes one curriculum-owned context identity for material card links. */
 export function encodeMaterialContextHint(context: MaterialContextIdentity) {
-  return [context.programKey, context.nodeKey].join(
+  return Arr.join(
+    [context.programKey, context.nodeKey],
     MATERIAL_CONTEXT_HINT_SEPARATOR
   );
 }

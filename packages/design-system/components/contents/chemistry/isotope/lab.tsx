@@ -20,6 +20,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -99,7 +100,7 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
           value={selectedSampleId}
           variant="outline"
         >
-          {ISOTOPE_SAMPLE_IDS.map((sampleId) => (
+          {Arr.map(ISOTOPE_SAMPLE_IDS, (sampleId) => (
             <ToggleGroupItem
               aria-label={labels.samples[sampleId].ariaName}
               key={sampleId}
@@ -203,14 +204,14 @@ function NucleusDots({
       className="flex w-full justify-center p-2"
     >
       <div className="flex max-w-sm flex-wrap justify-center gap-2">
-        {protons.map((protonIndex) => (
+        {Arr.map(protons, (protonIndex) => (
           <ParticleDot
             key={`proton-${protonIndex}`}
             label="p^+"
             type="proton"
           />
         ))}
-        {neutrons.map((neutronIndex) => (
+        {Arr.map(neutrons, (neutronIndex) => (
           <ParticleDot
             key={`neutron-${neutronIndex}`}
             label="n^0"

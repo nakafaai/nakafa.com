@@ -15,7 +15,9 @@ describe("public route surfaces", () => {
   });
 
   it("returns no namespace when its decoded surface is absent", () => {
-    vi.spyOn(PUBLIC_ROUTE_SURFACES, "find").mockReturnValueOnce(undefined);
+    vi.spyOn(PUBLIC_ROUTE_SURFACES, Symbol.iterator).mockReturnValueOnce(
+      [][Symbol.iterator]()
+    );
 
     expect(readNamespaceSegment("subject", "id")).toBeUndefined();
   });

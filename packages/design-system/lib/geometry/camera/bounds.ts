@@ -111,12 +111,12 @@ export const measureCameraBounds = Effect.fn("camera.measureBounds")(
         return transformMeasurement(
           {
             bounds: unionBounds(
-              motionChildren.map((child) =>
+              Arr.map(motionChildren, (child) =>
                 motionEnvelope(child.bounds, subject)
               )
             ),
             labels: Arr.flatMap(motionChildren, (child) =>
-              child.labels.map((label) => ({
+              Arr.map(child.labels, (label) => ({
                 ...label,
                 anchors: motionEnvelope(label.anchors, subject),
               }))

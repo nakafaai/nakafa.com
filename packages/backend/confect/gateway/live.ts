@@ -1,3 +1,6 @@
+// @ai-sdk/gateway encodes file bytes with the global Buffer, which the
+// default Convex runtime does not have.
+import "@repo/backend/confect/polyfills";
 import { convexGateway } from "@convex-dev/ai-sdk-provider";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { Gateway, make } from "@repo/backend/confect/gateway/handle";

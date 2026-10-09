@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
   "straight",
@@ -195,7 +195,10 @@ export function getAverageMotionRoutePoints(
 export function isAverageVelocitySpeedCaseId(
   value: string
 ): value is AverageVelocitySpeedCaseId {
-  return AVERAGE_VELOCITY_SPEED_CASE_IDS.some((caseId) => caseId === value);
+  return Arr.some(
+    AVERAGE_VELOCITY_SPEED_CASE_IDS,
+    (caseId) => caseId === value
+  );
 }
 
 export function toWorldPoint(pointValue: Point2): WorldPoint2 {
@@ -308,9 +311,10 @@ function arc(
 }
 
 function getRouteLength(segments: readonly AverageMotionSegment[]) {
-  return segments.reduce(
-    (total, segment) => total + getSegmentLength(segment),
-    0
+  return Arr.reduce(
+    segments,
+    0,
+    (total, segment) => total + getSegmentLength(segment)
   );
 }
 

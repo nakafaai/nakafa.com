@@ -1,5 +1,5 @@
 import { getEarlyElementShellConfiguration } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
@@ -56,16 +56,20 @@ export const VALENCE_ELECTRON_SAMPLES = {
 export function isValenceElectronSampleId(
   value: string
 ): value is ValenceElectronSampleId {
-  return VALENCE_ELECTRON_SAMPLE_IDS.some((sampleId) => sampleId === value);
+  return Arr.some(
+    VALENCE_ELECTRON_SAMPLE_IDS,
+    (sampleId) => sampleId === value
+  );
 }
 
 /**
  * Reads the outer occupied shell and valence-electron count for a neutral atom up to calcium.
  */
 export function getValenceElectronFacts(atomicNumber: number) {
-  const shellConfiguration = getEarlyElementShellConfiguration(
-    atomicNumber
-  ).filter((shell) => shell.electronCount > 0);
+  const shellConfiguration = Arr.filter(
+    getEarlyElementShellConfiguration(atomicNumber),
+    (shell) => shell.electronCount > 0
+  );
   const outerShell = shellConfiguration.at(-1);
 
   if (!outerShell) {
@@ -73,9 +77,10 @@ export function getValenceElectronFacts(atomicNumber: number) {
   }
 
   return {
-    configurationMath: shellConfiguration
-      .map((shell) => shell.electronCount)
-      .join(", "),
+    configurationMath: Arr.join(
+      Arr.map(shellConfiguration, (shell) => String(shell.electronCount)),
+      ", "
+    ),
     outerShell,
     shellConfiguration,
     valenceElectronCount: outerShell.electronCount,

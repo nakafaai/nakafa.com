@@ -9,7 +9,7 @@ import {
   Particle,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
@@ -42,27 +42,27 @@ const BUBBLE_MAX_RADIUS =
 const BUBBLE_BOUNDS = {
   x: {
     min:
-      Math.min(...BUBBLES.map(({ position }) => position[0])) -
+      Math.min(...Arr.map(BUBBLES, ({ position }) => position[0])) -
       BUBBLE_MAX_RADIUS,
     max:
-      Math.max(...BUBBLES.map(({ position }) => position[0])) +
+      Math.max(...Arr.map(BUBBLES, ({ position }) => position[0])) +
       BUBBLE_MAX_RADIUS,
   },
   y: {
     min:
-      Math.min(...BUBBLES.map(({ position }) => position[1])) -
+      Math.min(...Arr.map(BUBBLES, ({ position }) => position[1])) -
       BUBBLE_MAX_RADIUS,
     max:
-      Math.max(...BUBBLES.map(({ position }) => position[1])) +
+      Math.max(...Arr.map(BUBBLES, ({ position }) => position[1])) +
       BUBBLE_TRAVEL +
       BUBBLE_MAX_RADIUS,
   },
   z: {
     min:
-      Math.min(...BUBBLES.map(({ position }) => position[2])) -
+      Math.min(...Arr.map(BUBBLES, ({ position }) => position[2])) -
       BUBBLE_MAX_RADIUS,
     max:
-      Math.max(...BUBBLES.map(({ position }) => position[2])) +
+      Math.max(...Arr.map(BUBBLES, ({ position }) => position[2])) +
       BUBBLE_MAX_RADIUS,
   },
 };
@@ -92,7 +92,7 @@ export function HeatRays({ color }: { color: string }) {
 
   return (
     <CameraBounds motion={{ scale: 1.08 }} objectRef={groupRef}>
-      {[-0.28, 0, 0.28].map((x) => (
+      {Arr.map([-0.28, 0, 0.28], (x) => (
         <mesh key={x} position={[x, 0.56, 0]} rotation={[0, 0, x * 2]}>
           <coneGeometry args={[0.05, 0.34, 16]} />
           <meshStandardMaterial color={color} emissive={color} />
@@ -105,7 +105,7 @@ export function HeatRays({ color }: { color: string }) {
 export function RustPatches({ color }: { color: string }) {
   return (
     <group position={[0, 0.12, 0.02]}>
-      {[-0.34, -0.08, 0.2, 0.38].map((x) => (
+      {Arr.map([-0.34, -0.08, 0.2, 0.38], (x) => (
         <mesh key={x} position={[x, 0.02, 0]}>
           <sphereGeometry args={[0.06, 16, 12]} />
           <meshStandardMaterial color={color} roughness={0.9} />
@@ -132,10 +132,10 @@ export function FloatingIons({
 
   return (
     <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
-      {FLOATING_ION_POINTS.map((point) => (
+      {Arr.map(FLOATING_ION_POINTS, (point) => (
         <Particle
           color={colors.calcium}
-          key={point.join(",")}
+          key={Arr.join(Arr.map(point, String), ",")}
           label=""
           labelColor={colors.sphereText}
           labelOutlineColor={colors.sphereTextOutline}
@@ -154,10 +154,10 @@ export function SettledSolid({
 }) {
   return (
     <group>
-      {SETTLED_SOLID_POINTS.map((point) => (
+      {Arr.map(SETTLED_SOLID_POINTS, (point) => (
         <Particle
           color={colors.precipitate}
-          key={point.join(",")}
+          key={Arr.join(Arr.map(point, String), ",")}
           label=""
           labelColor={colors.text}
           labelOutlineColor={colors.sphereTextOutline}
@@ -172,10 +172,10 @@ export function SettledSolid({
 export function GasBubbles({ color }: { color: string }) {
   return (
     <CameraBounds bounds={BUBBLE_BOUNDS}>
-      {BUBBLES.map((bubble) => (
+      {Arr.map(BUBBLES, (bubble) => (
         <AnimatedBubble
           color={color}
-          key={bubble.position.join(",")}
+          key={Arr.join(Arr.map(bubble.position, String), ",")}
           {...bubble}
         />
       ))}

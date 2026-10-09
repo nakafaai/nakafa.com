@@ -27,6 +27,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { type ReactNode, useMemo, useState } from "react";
 
 interface AverageVelocitySpeedLabProps {
@@ -118,7 +119,7 @@ export function AverageVelocitySpeedLab({
           value={caseId}
           variant="outline"
         >
-          {AVERAGE_VELOCITY_SPEED_CASE_IDS.map((caseOption) => (
+          {Arr.map(AVERAGE_VELOCITY_SPEED_CASE_IDS, (caseOption) => (
             <ToggleGroupItem key={caseOption} value={caseOption}>
               {labels.modeLabels[caseOption]}
             </ToggleGroupItem>
@@ -138,7 +139,7 @@ export function AverageVelocitySpeedLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          {facts.map((fact) => (
+          {Arr.map(facts, (fact) => (
             <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
               <dt className="flex items-center gap-2 text-muted-foreground">
                 {"markerColor" in fact ? (

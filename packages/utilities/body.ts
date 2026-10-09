@@ -1,4 +1,11 @@
-import { Cause, Effect, Array as EffectArray, Schema, Stream } from "effect";
+import {
+  Cause,
+  Effect,
+  Array as EffectArray,
+  MutableList,
+  Schema,
+  Stream,
+} from "effect";
 
 const DECIMAL_BYTES = /^\d+$/u;
 /** A request or response omitted the readable body required by its contract. */
@@ -42,12 +49,6 @@ function concatenateChunks(chunks: readonly Uint8Array[], totalBytes: number) {
   }
   return result;
 }
-/** Chunks grow in place, so reading a body stays linear in its size. */
-const BoundedBodyStateSchema = Schema.Struct({
-  chunks: Schema.Array(Schema.Uint8Array).pipe(Schema.mutable),
-  totalBytes: Schema.Finite,
-});
-type BoundedBodyState = typeof BoundedBodyStateSchema.Type;
 /** Acquires one reader in the typed channel and cancels it when its stream ends. */
 function streamBody(body: ReadableStream<Uint8Array>) {
   return Stream.fromPull(
@@ -100,22 +101,24 @@ export const readBoundedStream = Effect.fn("Utilities.readBoundedStream")(
     stream: Stream.Stream<Uint8Array, Failure, Requirements>,
     maxBytes: number
   ) {
-    const state = yield* stream.pipe(
+    // Chunks grow in place, so reading a body stays linear in its size.
+    const chunks = MutableList.make<Uint8Array>();
+    const totalBytes = yield* stream.pipe(
       Stream.runFoldEffect(
-        (): BoundedBodyState => ({ chunks: [], totalBytes: 0 }),
+        () => 0,
         (current, chunk) => {
-          const totalBytes = current.totalBytes + chunk.byteLength;
-          if (totalBytes > maxBytes) {
+          const nextTotal = current + chunk.byteLength;
+          if (nextTotal > maxBytes) {
             return Effect.fail(
-              new BodyLimitError({ actualBytes: totalBytes, maxBytes })
+              new BodyLimitError({ actualBytes: nextTotal, maxBytes })
             );
           }
-          current.chunks.push(chunk);
-          return Effect.succeed({ chunks: current.chunks, totalBytes });
+          MutableList.append(chunks, chunk);
+          return Effect.succeed(nextTotal);
         }
       )
     );
-    return concatenateChunks(state.chunks, state.totalBytes);
+    return concatenateChunks(MutableList.toArray(chunks), totalBytes);
   }
 );
 /** Reads a web body stream with typed failure and interruption cancellation. */

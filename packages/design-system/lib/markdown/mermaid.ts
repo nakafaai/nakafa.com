@@ -1,4 +1,4 @@
-import { MutableHashMap, Option } from "effect";
+import { Array as Arr, MutableHashMap, Option } from "effect";
 
 const MERMAID_DEFAULT_DESCRIPTION = "Key ideas shown visually.";
 const MERMAID_DEFAULT_TITLE = "Diagram";
@@ -143,7 +143,7 @@ function isLikelyInlineMath(content: string) {
 }
 
 function isFlowchart(chart: string) {
-  return chart
-    .split("\n")
-    .some((line) => MERMAID_FLOWCHART_DECLARATION_REGEX.test(line.trim()));
+  return Arr.some(chart.split("\n"), (line) =>
+    MERMAID_FLOWCHART_DECLARATION_REGEX.test(line.trim())
+  );
 }

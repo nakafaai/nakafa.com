@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const CONSERVATION_MODE_ID = "conservation";
 const FIXED_MODE_ID = "fixed";
@@ -58,7 +58,7 @@ function molecule(
   label: string,
   atomSymbols: readonly AtomSymbol[]
 ): Molecule {
-  const atoms = atomSymbols.map((symbol, index) => ({
+  const atoms = Arr.map(atomSymbols, (symbol, index) => ({
     id: `${id}-${symbol.toLowerCase()}-${index + 1}`,
     symbol,
   }));

@@ -5,6 +5,7 @@ import {
   createArcPoints,
   getCurveDivisions,
 } from "@repo/design-system/components/three/helpers/quality";
+import { Array as Arr } from "effect";
 
 describe("graph quality helpers", () => {
   it("uses requested curve divisions when provided", () => {
@@ -31,7 +32,7 @@ describe("graph quality helpers", () => {
     expect(points[1]?.y).toBeCloseTo(Math.sqrt(8), 12);
     expect(points[2]?.x).toBeCloseTo(0, 12);
     expect(points[2]?.y).toBeCloseTo(4, 12);
-    expect(points.every((point) => point.z === 0)).toBe(true);
+    expect(Arr.every(points, (point) => point.z === 0)).toBe(true);
   });
 
   it("creates at least one segment for invalid arc segment counts", () => {

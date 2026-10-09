@@ -26,6 +26,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -96,7 +97,7 @@ export function ModernPeriodicTableLab({
           value={selectedFocusId}
           variant="outline"
         >
-          {MODERN_PERIODIC_TABLE_FOCUS_IDS.map((focusId) => (
+          {Arr.map(MODERN_PERIODIC_TABLE_FOCUS_IDS, (focusId) => (
             <ToggleGroupItem
               aria-label={labels.focuses[focusId].name}
               key={focusId}
@@ -160,7 +161,7 @@ function Legend({
 }) {
   return (
     <div className="mx-auto flex max-w-lg flex-wrap justify-center gap-2 text-xs">
-      {PERIODIC_ELEMENT_CATEGORY_IDS.map((categoryId) => (
+      {Arr.map(PERIODIC_ELEMENT_CATEGORY_IDS, (categoryId) => (
         <Badge
           className="min-w-32 max-w-full justify-center gap-2 overflow-visible whitespace-normal px-3 py-1 text-center text-muted-foreground leading-snug sm:min-w-40 sm:whitespace-nowrap"
           key={categoryId}

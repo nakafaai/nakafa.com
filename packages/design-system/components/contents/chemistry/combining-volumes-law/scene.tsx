@@ -21,7 +21,7 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { HashMap, Option, Schema } from "effect";
+import { Array as Arr, HashMap, Option, Schema } from "effect";
 import { useRef } from "react";
 import { DoubleSide, type Group } from "three";
 
@@ -147,7 +147,7 @@ function GasSet({
 
   return (
     <group position={[x, 0, 0]}>
-      {gases.map((gas, index) => (
+      {Arr.map(gases, (gas, index) => (
         <GasColumn
           colors={colors}
           gas={gas}
@@ -185,7 +185,7 @@ function GasColumn({
     <group position={[x, 0, 0]}>
       <VolumeTube colors={colors} height={height} />
 
-      {volumeUnits.map((unit) => (
+      {Arr.map(volumeUnits, (unit) => (
         <group key={unit.id} position={[0, unit.y, 0]}>
           <VolumeBand color={colors[gas.fillColor]} />
           <FloatingMolecule
@@ -235,7 +235,7 @@ function VolumeTube({
         />
       </mesh>
 
-      {[-height / 2, height / 2].map((y) => (
+      {Arr.map([-height / 2, height / 2], (y) => (
         <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[TUBE_RADIUS, 0.012, 12, 48]} />
           <meshStandardMaterial
@@ -307,12 +307,12 @@ function Molecule({
 }) {
   const { atoms, bonds } = MOLECULE_SPECS[kind];
   const atomsById = HashMap.fromIterable(
-    atoms.map((atomData) => [atomData.id, atomData])
+    Arr.map(atoms, (atomData) => [atomData.id, atomData])
   );
 
   return (
     <group>
-      {bonds.map(([startId, endId]) => {
+      {Arr.map(bonds, ([startId, endId]) => {
         const start = HashMap.get(atomsById, startId);
         const end = HashMap.get(atomsById, endId);
 
@@ -330,7 +330,7 @@ function Molecule({
         );
       })}
 
-      {atoms.map((atomData) => (
+      {Arr.map(atoms, (atomData) => (
         <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
       ))}
     </group>
@@ -380,8 +380,9 @@ function atom(
 function molecule(atoms: readonly MoleculeAtom[]) {
   return {
     atoms,
-    bonds: atoms
-      .slice(1)
-      .map((atomData) => [atoms[0].id, atomData.id] as const),
+    bonds: Arr.map(
+      atoms.slice(1),
+      (atomData) => [atoms[0].id, atomData.id] as const
+    ),
   };
 }

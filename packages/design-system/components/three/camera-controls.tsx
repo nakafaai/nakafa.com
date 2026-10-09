@@ -19,7 +19,7 @@ import {
   resolveCameraPanOffset,
   resolveCameraRefit,
 } from "@repo/design-system/lib/geometry/camera/fit";
-import { Effect, HashMap, Option } from "effect";
+import { Array as Arr, Effect, HashMap, Option } from "effect";
 import {
   type ComponentRef,
   useCallback,
@@ -267,28 +267,35 @@ export function CameraControls(props: CameraControlsProps) {
         return;
       }
       const { bounds, labels } = measurement.value;
-      const key = [
-        ...bounds.min.toArray(),
-        ...bounds.max.toArray(),
-        ...labels.flatMap((label) => [
-          ...label.anchors.min.toArray(),
-          ...label.anchors.max.toArray(),
-          label.gap.x,
-          label.gap.y,
-          ...label.rectangle.min.toArray(),
-          ...label.rectangle.max.toArray(),
-        ]),
-        ...authoredPosition.toArray(),
-        ...authoredTarget.toArray(),
-        viewportWidth,
-        viewportHeight,
-        projectionFov,
-        projectionHeight,
-        projectionNear,
-        projectionFar,
-        minDistance,
-        maxDistance,
-      ].join(",");
+      // Each part is written the way join writes it: undefined becomes an empty string.
+      const key = Arr.join(
+        Arr.map(
+          [
+            ...bounds.min.toArray(),
+            ...bounds.max.toArray(),
+            ...Arr.flatMap(labels, (label) => [
+              ...label.anchors.min.toArray(),
+              ...label.anchors.max.toArray(),
+              label.gap.x,
+              label.gap.y,
+              ...label.rectangle.min.toArray(),
+              ...label.rectangle.max.toArray(),
+            ]),
+            ...authoredPosition.toArray(),
+            ...authoredTarget.toArray(),
+            viewportWidth,
+            viewportHeight,
+            projectionFov,
+            projectionHeight,
+            projectionNear,
+            projectionFar,
+            minDistance,
+            maxDistance,
+          ],
+          (part) => String(part ?? "")
+        ),
+        ","
+      );
       if (previous?.key === key) {
         return;
       }

@@ -7,6 +7,7 @@ import {
 } from "@repo/design-system/lib/code-block/context";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import type { HTMLAttributes, ReactNode } from "react";
 
 const codeBlockLineNumberVariants = cva(
@@ -45,7 +46,7 @@ export type CodeBlockBodyProps = Omit<
 export function CodeBlockBody({ children, ...props }: CodeBlockBodyProps) {
   const data = useCodeBlock((state) => state.data);
 
-  return <div {...props}>{data.map(children)}</div>;
+  return <div {...props}>{Arr.map(data, children)}</div>;
 }
 
 /** Active-source identity and optional line-number presentation. */

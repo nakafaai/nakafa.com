@@ -1,6 +1,7 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr, Order } from "effect";
 import type { ComponentProps } from "react";
 
 /** Renders the quantitative graph for SNBT set 6 question 19. */
@@ -12,18 +13,19 @@ export function Graph({
   const intersectionX = -2.201_003_972_920_786_6;
   const lineLabelX = -1;
   const curveLabelX = 1.5;
-  const linearPoints = [-3.5, lineLabelX, 2.5].map((x) => ({
+  const linearPoints = Arr.map([-3.5, lineLabelX, 2.5], (x) => ({
     x,
     y: 2 * x + 6,
     z: 0,
   }));
-  const exponentialInputs = Array.from(
-    { length: 241 },
-    (_, i) => -3.5 + i * 0.025
+  const exponentialInputs = Arr.sort(
+    Arr.append(
+      Array.from({ length: 241 }, (_, i) => -3.5 + i * 0.025),
+      intersectionX
+    ),
+    Order.Number
   );
-  exponentialInputs.push(intersectionX);
-  exponentialInputs.sort((a, b) => a - b);
-  const exponentialPoints = exponentialInputs.map((x) => ({
+  const exponentialPoints = Arr.map(exponentialInputs, (x) => ({
     x,
     y: 0.5 ** x - 3,
     z: 0,

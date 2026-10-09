@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const NEON_ID = "neon";
 export const MAGNESIUM_ID = "magnesium";
@@ -55,7 +55,7 @@ const EARLY_ELEMENT_FILL_LIMITS = [
  * Narrows ToggleGroup string values to the available atom-shell examples.
  */
 export function isAtomShellSampleId(value: string): value is AtomShellSampleId {
-  return ATOM_SHELL_SAMPLE_IDS.some((sampleId) => sampleId === value);
+  return Arr.some(ATOM_SHELL_SAMPLE_IDS, (sampleId) => sampleId === value);
 }
 
 /**
@@ -85,7 +85,7 @@ export function getEarlyElementShellConfiguration(atomicNumber: number) {
 
   let remainingElectrons = atomicNumber;
 
-  return EARLY_ELEMENT_FILL_LIMITS.map((shell) => {
+  return Arr.map(EARLY_ELEMENT_FILL_LIMITS, (shell) => {
     const electronCount = Math.min(remainingElectrons, shell.fillLimit);
     remainingElectrons -= electronCount;
 

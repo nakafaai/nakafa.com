@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const AccelerationCaseIdSchema = Schema.Literals([
   "speed-up",
@@ -134,15 +134,16 @@ function getMotionPointAfterAcceleration(
 }
 
 export function getAccelerationCaseById(id: AccelerationCaseId) {
-  return (
-    ACCELERATION_CASES.find((item) => item.id === id) ?? ACCELERATION_CASES[0]
+  return Option.getOrElse(
+    Arr.findFirst(ACCELERATION_CASES, (item) => item.id === id),
+    () => ACCELERATION_CASES[0]
   );
 }
 
 export function isAccelerationCaseId(
   value: string
 ): value is AccelerationCaseId {
-  return ACCELERATION_CASES.some((item) => item.id === value);
+  return Arr.some(ACCELERATION_CASES, (item) => item.id === value);
 }
 
 function getDeltaVelocity(item: AccelerationCase) {
@@ -163,7 +164,7 @@ export function getAccelerationMotionState(id: AccelerationCaseId) {
     worldDisplacement + ACCELERATION_LAB_SCENE.scenePadding,
     ACCELERATION_LAB_SCENE.minSceneLength
   );
-  const samples = getTimeSamples(duration).map((time) =>
+  const samples = Arr.map(getTimeSamples(duration), (time) =>
     getAccelerationPositionSample(scenario, time, startX)
   );
 
@@ -222,7 +223,7 @@ function getAccelerationVelocityAt(item: AccelerationCase, time: number) {
 }
 
 function getMotionSegments() {
-  return ACCELERATION_CASES.map((item) => ({
+  return Arr.map(ACCELERATION_CASES, (item) => ({
     end: { time: item.t1, velocity: item.v1 },
     id: item.id,
     start: { time: item.t0, velocity: item.v0 },
@@ -238,7 +239,7 @@ export function getMotionPoints() {
     return [];
   }
 
-  return [firstSegment.start, ...segments.map((segment) => segment.end)];
+  return [firstSegment.start, ...Arr.map(segments, (segment) => segment.end)];
 }
 
 export function formatAccelerationMath(value: number) {

@@ -15,7 +15,7 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { RocketShip } from "@repo/design-system/components/contents/physics/kinematics/acceleration/rocket";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { useMemo, useRef } from "react";
 import type { Group } from "three";
 
@@ -86,7 +86,7 @@ export function SpaceFlightScene({
 function TimeGates({ motion }: { motion: AccelerationMotionState }) {
   return (
     <group>
-      {motion.samples.map((sample) => (
+      {Arr.map(motion.samples, (sample) => (
         <mesh
           key={sample.time}
           position={[sample.x, 0, 0]}

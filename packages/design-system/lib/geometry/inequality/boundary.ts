@@ -1,5 +1,6 @@
 import { GRAPH_BOUNDARY_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
 import type { InequalitySampling } from "@repo/design-system/lib/geometry/inequality/region";
+import { MutableList } from "effect";
 
 type Point = [number, number, number];
 
@@ -36,7 +37,7 @@ function sampleLinearBoundary(
     alongX ? (-a * value - c) / b : (-b * value - c) / a;
   const point = (value: number, other: number, z: number): Point =>
     alongX ? [value, other, z] : [other, value, z];
-  const points: Point[] = [];
+  const points = MutableList.make<Point>();
 
   for (let index = 1; index <= resolution; index += 1) {
     const value = range[0] + index * step;
@@ -46,14 +47,14 @@ function sampleLinearBoundary(
     if (!(inRange(other, otherRange) && inRange(previousOther, otherRange))) {
       continue;
     }
-    points.push(
+    MutableList.appendAll(points, [
       point(previousValue, previousOther, zRange[0]),
-      point(value, other, zRange[0])
-    );
-    points.push(
+      point(value, other, zRange[0]),
+    ]);
+    MutableList.appendAll(points, [
       point(previousValue, previousOther, zRange[1]),
-      point(value, other, zRange[1])
-    );
+      point(value, other, zRange[1]),
+    ]);
   }
 
   // The x sweep retains the existing vertical connectors; the y sweep has edge pairs only.
@@ -63,14 +64,14 @@ function sampleLinearBoundary(
       const value = range[0] + index * step;
       const other = project(value);
       if (inRange(other, otherRange)) {
-        points.push(
+        MutableList.appendAll(points, [
           point(value, other, zRange[0]),
-          point(value, other, zRange[1])
-        );
+          point(value, other, zRange[1]),
+        ]);
       }
     }
   }
-  return points;
+  return MutableList.toArray(points);
 }
 
 function inRange(value: number, range: [number, number]) {
@@ -90,15 +91,15 @@ function sampleSurfaceEdges(
     const y = yRange[0] + (axis === "y" ? moving : fixed) * yStep;
     return [x, y, boundary(x, y)];
   };
-  const points: Point[] = [];
+  const points = MutableList.make<Point>();
   for (let fixed = 0; fixed <= resolution; fixed += gridStep) {
     for (let moving = 1; moving <= resolution; moving += 1) {
       const current = point(fixed, moving);
       const previous = point(fixed, moving - 1);
       if (inRange(current[2], zRange) && inRange(previous[2], zRange)) {
-        points.push(previous, current);
+        MutableList.appendAll(points, [previous, current]);
       }
     }
   }
-  return points;
+  return MutableList.toArray(points);
 }

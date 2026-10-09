@@ -17,7 +17,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import {
   AnimatePresence,
   domMax,
@@ -184,7 +184,7 @@ export function BacterialGrowth({
               <LazyMotion features={domMax} strict>
                 <LayoutGroup>
                   <AnimatePresence mode="popLayout">
-                    {frame.bacteriaIds.map((id, index) => (
+                    {Arr.map(frame.bacteriaIds, (id, index) => (
                       <m.div
                         animate={{
                           opacity: 1,

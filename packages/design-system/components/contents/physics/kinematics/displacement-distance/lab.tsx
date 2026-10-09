@@ -35,6 +35,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { type Group, Vector3 } from "three";
@@ -93,7 +94,7 @@ export function DisplacementDistanceLab({
           value={caseId}
           variant="outline"
         >
-          {DISPLACEMENT_DISTANCE_CASE_IDS.map((caseOption) => (
+          {Arr.map(DISPLACEMENT_DISTANCE_CASE_IDS, (caseOption) => (
             <ToggleGroupItem key={caseOption} value={caseOption}>
               {labels.modeLabels[caseOption]}
             </ToggleGroupItem>
@@ -232,13 +233,13 @@ function AnimatedCar({ motion }: { motion: DisplacementDistanceState }) {
         rotation: "y",
         translation: {
           x: {
-            min: Math.min(...motion.route.map((point) => point.x)),
-            max: Math.max(...motion.route.map((point) => point.x)),
+            min: Math.min(...Arr.map(motion.route, (point) => point.x)),
+            max: Math.max(...Arr.map(motion.route, (point) => point.x)),
           },
           y: { min: 0.035, max: 0.035 },
           z: {
-            min: Math.min(...motion.route.map((point) => point.z)),
-            max: Math.max(...motion.route.map((point) => point.z)),
+            min: Math.min(...Arr.map(motion.route, (point) => point.z)),
+            max: Math.max(...Arr.map(motion.route, (point) => point.z)),
           },
         },
       }}
@@ -257,7 +258,7 @@ function AnimatedCar({ motion }: { motion: DisplacementDistanceState }) {
 function RouteRoad({ segments }: { segments: RouteSegment[] }) {
   return (
     <group>
-      {segments.map((segment) => (
+      {Arr.map(segments, (segment) => (
         <RoadSegment
           key={`${segment.start.x}-${segment.start.z}-${segment.end.x}-${segment.end.z}`}
           segment={segment}
@@ -292,7 +293,7 @@ function RoadSegment({ segment }: { segment: RouteSegment }) {
         <meshStandardMaterial color={getColor("SLATE", 700)} roughness={0.74} />
       </mesh>
 
-      {stripePositions.map((x) => (
+      {Arr.map(stripePositions, (x) => (
         <mesh key={x} position={[x, 0.055, 0]}>
           <boxGeometry
             args={[
@@ -312,7 +313,8 @@ function RoadSegment({ segment }: { segment: RouteSegment }) {
 }
 
 function RouteLines({ motion }: { motion: DisplacementDistanceState }) {
-  const routePoints = motion.route.map(
+  const routePoints = Arr.map(
+    motion.route,
     (point) =>
       new Vector3(point.x, DISPLACEMENT_DISTANCE_SCENE.routeLineY, point.z)
   );

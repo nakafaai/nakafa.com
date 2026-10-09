@@ -1,10 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  isBlockedIpAddress,
-  isIpAddress,
   isPublicHttpUrlSyntax,
+  judgeAddress,
   normalizeHostname,
 } from "@repo/backend/confect/nina/research/url";
+import {
+  ADDRESS_VERDICTS,
+  type GoldenAddress,
+} from "@repo/backend/test/research/addresses";
+import { Option } from "effect";
 
 describe("research URL policy", () => {
   it("accepts only public http(s) URL syntax", () => {
@@ -25,44 +29,76 @@ describe("research URL policy", () => {
     expect(normalizeHostname("EXAMPLE.COM")).toBe("example.com");
   });
 
-  it("detects IP literals without treating domains as IPs", () => {
-    expect(isIpAddress("93.184.216.34")).toBe(true);
-    expect(isIpAddress("2001:4860:4860::8888")).toBe(true);
-    expect(isIpAddress("example.com")).toBe(false);
+  it("judges IP literals and leaves host names unjudged", () => {
+    expect(judgeLabel("93.184.216.34")).toBe("public");
+    expect(judgeLabel("2001:4860:4860::8888")).toBe("public");
+    expect(judgeLabel("example.com")).toBe("none");
   });
 
-  it("blocks non-public IPv4 ranges", () => {
-    expect(isBlockedIpAddress("0.0.0.0")).toBe(true);
-    expect(isBlockedIpAddress("10.0.0.1")).toBe(true);
-    expect(isBlockedIpAddress("127.0.0.1")).toBe(true);
-    expect(isBlockedIpAddress("100.64.0.1")).toBe(true);
-    expect(isBlockedIpAddress("169.254.0.1")).toBe(true);
-    expect(isBlockedIpAddress("172.16.0.1")).toBe(true);
-    expect(isBlockedIpAddress("192.0.0.1")).toBe(true);
-    expect(isBlockedIpAddress("192.88.99.1")).toBe(true);
-    expect(isBlockedIpAddress("192.168.0.1")).toBe(true);
-    expect(isBlockedIpAddress("198.18.0.1")).toBe(true);
-    expect(isBlockedIpAddress("198.51.100.1")).toBe(true);
-    expect(isBlockedIpAddress("203.0.113.1")).toBe(true);
-    expect(isBlockedIpAddress("224.0.0.1")).toBe(true);
-    expect(isBlockedIpAddress("999.0.0.1")).toBe(false);
-    expect(isBlockedIpAddress("93.184.216.34")).toBe(false);
+  it("refuses non-public IPv4 ranges", () => {
+    expect(judgeLabel("0.0.0.0")).toBe("refused");
+    expect(judgeLabel("10.0.0.1")).toBe("refused");
+    expect(judgeLabel("127.0.0.1")).toBe("refused");
+    expect(judgeLabel("100.64.0.1")).toBe("refused");
+    expect(judgeLabel("169.254.0.1")).toBe("refused");
+    expect(judgeLabel("172.16.0.1")).toBe("refused");
+    expect(judgeLabel("192.0.0.1")).toBe("refused");
+    expect(judgeLabel("192.88.99.1")).toBe("refused");
+    expect(judgeLabel("192.168.0.1")).toBe("refused");
+    expect(judgeLabel("198.18.0.1")).toBe("refused");
+    expect(judgeLabel("198.51.100.1")).toBe("refused");
+    expect(judgeLabel("203.0.113.1")).toBe("refused");
+    expect(judgeLabel("224.0.0.1")).toBe("refused");
+    expect(judgeLabel("999.0.0.1")).toBe("none");
+    expect(judgeLabel("93.184.216.34")).toBe("public");
   });
 
-  it("blocks non-public IPv6 ranges and mapped private IPv4 ranges", () => {
-    expect(isBlockedIpAddress("::")).toBe(true);
-    expect(isBlockedIpAddress("::1")).toBe(true);
-    expect(isBlockedIpAddress("fc00::1")).toBe(true);
-    expect(isBlockedIpAddress("fd00::1")).toBe(true);
-    expect(isBlockedIpAddress("fe80::1")).toBe(true);
-    expect(isBlockedIpAddress("ff00::1")).toBe(true);
-    expect(isBlockedIpAddress("2001:db8::1")).toBe(true);
-    expect(isBlockedIpAddress("::ffff:127.0.0.1")).toBe(true);
-    expect(isBlockedIpAddress("::ffff:7f00:1")).toBe(true);
-    expect(isBlockedIpAddress("::ffff:zzzz:1")).toBe(false);
-    expect(isBlockedIpAddress("::ffff:1")).toBe(false);
-    expect(isBlockedIpAddress("::ffff:10000:1")).toBe(false);
-    expect(isBlockedIpAddress("::ffff:-1:1")).toBe(false);
-    expect(isBlockedIpAddress("2001:4860:4860::8888")).toBe(false);
+  it("refuses non-public IPv6 ranges and mapped private IPv4 ranges", () => {
+    expect(judgeLabel("::")).toBe("refused");
+    expect(judgeLabel("::1")).toBe("refused");
+    expect(judgeLabel("fc00::1")).toBe("refused");
+    expect(judgeLabel("fd00::1")).toBe("refused");
+    expect(judgeLabel("fe80::1")).toBe("refused");
+    expect(judgeLabel("ff00::1")).toBe("refused");
+    expect(judgeLabel("2001:db8::1")).toBe("refused");
+    expect(judgeLabel("::ffff:127.0.0.1")).toBe("refused");
+    expect(judgeLabel("::ffff:7f00:1")).toBe("refused");
+    expect(judgeLabel("::ffff:zzzz:1")).toBe("none");
+    expect(judgeLabel("::ffff:1")).toBe("refused");
+    expect(judgeLabel("::ffff:10000:1")).toBe("none");
+    expect(judgeLabel("::ffff:-1:1")).toBe("none");
+    expect(judgeLabel("2001:4860:4860::8888")).toBe("public");
+  });
+
+  it("refuses the deprecated IPv4-compatible block ::/96", () => {
+    expect(isPublicHttpUrlSyntax("https://[::8.8.8.8]/")).toBe(false);
+    expect(judgeLabel("::127.0.0.1")).toBe("refused");
+    expect(judgeLabel("::8.8.8.8")).toBe("refused");
+    expect(judgeLabel("::ffff:8.8.8.8")).toBe("public");
+  });
+
+  it("gives text the address parser does not accept no verdict", () => {
+    expect(judgeLabel("")).toBe("none");
+    expect(judgeLabel("not-an-address")).toBe("none");
+    expect(judgeLabel("fe80::1%eth0")).toBe("none");
+    expect(judgeLabel("2606:4700:4700::1111%eth0")).toBe("none");
   });
 });
+
+describe("golden address verdicts", () => {
+  it.each(ADDRESS_VERDICTS)(
+    "keeps the recorded verdict for %s",
+    (host, url, address) => {
+      expect(isPublicHttpUrlSyntax(`https://${host}/`)).toBe(url === "allowed");
+      expect(judgeLabel(host)).toBe(address);
+    }
+  );
+});
+
+/** The golden address column for text: "none" when the address parser rejects it. */
+function judgeLabel(text: string): GoldenAddress {
+  return Option.match(judgeAddress(text), {
+    onNone: () => "none",
+    onSome: (verdict) => verdict,
+  });
+}

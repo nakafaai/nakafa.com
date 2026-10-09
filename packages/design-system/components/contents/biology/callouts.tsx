@@ -12,7 +12,7 @@ import {
 } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
-import { Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import type { ReactNode } from "react";
 
 const BIOLOGY_CALLOUT_ARROW_SIZE = 0.055;
@@ -52,10 +52,13 @@ export function BiologyCallouts({
 
   return (
     <>
-      {targets.map((target) => {
-        const callout = callouts.find((item) => item.id === target.id);
+      {Arr.map(targets, (target) => {
+        const callout = Arr.findFirst(
+          callouts,
+          (item) => item.id === target.id
+        );
 
-        if (!callout) {
+        if (Option.isNone(callout)) {
           return null;
         }
 
@@ -64,7 +67,7 @@ export function BiologyCallouts({
             color={color}
             fontSize={target.fontSize}
             key={target.id}
-            label={callout.label}
+            label={callout.value.label}
             labelPosition={target.labelPosition}
             target={target.target}
           />

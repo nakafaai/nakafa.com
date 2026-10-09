@@ -1,6 +1,6 @@
 "use client";
 
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { Curve, type CurveProps } from "recharts";
 
 // Buffer line
@@ -53,7 +53,7 @@ export const bufferLineShape = (props: CurveProps) => {
     return <Curve {...props} />;
   }
 
-  const drawablePoints = points.filter(isDrawableCurvePoint);
+  const drawablePoints = Arr.filter(points, isDrawableCurvePoint);
 
   if (drawablePoints.length < 2) {
     return <Curve {...props} />;
@@ -84,10 +84,13 @@ export const bufferLineShape = (props: CurveProps) => {
     // Build dasharray: solid run, then repeating dash-gap for the buffer segment
     const reps =
       Math.ceil(lastSegmentLength / (BUFFER_DASH_SIZE + BUFFER_GAP_SIZE)) + 1;
-    const dashedPart = Array.from(
-      { length: reps },
-      () => `${BUFFER_DASH_SIZE} ${BUFFER_GAP_SIZE}`
-    ).join(" ");
+    const dashedPart = Arr.join(
+      Array.from(
+        { length: reps },
+        () => `${BUFFER_DASH_SIZE} ${BUFFER_GAP_SIZE}`
+      ),
+      " "
+    );
 
     path.setAttribute("stroke-dasharray", `${solidLength} 0 ${dashedPart}`);
   };

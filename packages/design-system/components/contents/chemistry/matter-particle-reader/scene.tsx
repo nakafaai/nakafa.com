@@ -15,7 +15,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { HashMap, Option } from "effect";
+import { Array as Arr, HashMap, Option } from "effect";
 
 const SCENE_SCALE = 1.9;
 const FORMULA_LABEL_Y = 0.62;
@@ -32,7 +32,7 @@ export function MatterParticleReaderScene({
 
   return (
     <group position={[0, -0.04, 0]} scale={SCENE_SCALE}>
-      {model.molecules.map((molecule) => (
+      {Arr.map(model.molecules, (molecule) => (
         <MoleculeStage colors={colors} key={molecule.id} molecule={molecule} />
       ))}
     </group>
@@ -47,7 +47,7 @@ function MoleculeStage({
   molecule: MatterParticleMolecule;
 }) {
   const atomsById = HashMap.fromIterable(
-    molecule.atoms.map((atomData) => [atomData.id, atomData])
+    Arr.map(molecule.atoms, (atomData) => [atomData.id, atomData])
   );
 
   return (
@@ -60,7 +60,7 @@ function MoleculeStage({
         <InlineMath math={molecule.formula} />
       </ThreeLabel>
 
-      {molecule.bonds.map(([startId, endId]) => {
+      {Arr.map(molecule.bonds, ([startId, endId]) => {
         const start = Option.getOrUndefined(HashMap.get(atomsById, startId));
         const end = Option.getOrUndefined(HashMap.get(atomsById, endId));
 
@@ -78,7 +78,7 @@ function MoleculeStage({
         );
       })}
 
-      {molecule.atoms.map((atomData) => (
+      {Arr.map(molecule.atoms, (atomData) => (
         <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
       ))}
     </group>

@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Record as Rec, Schema } from "effect";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 
 export const VELOCITY_SPEED_CAR_MODEL_PATH =
   "/models/physics/kinematics/poly-pizza-dodge-charger/dodge-charger.glb";
@@ -164,7 +164,7 @@ export function getVelocitySpeedSample(
 export function isVelocitySpeedCaseId(
   value: string
 ): value is VelocitySpeedCaseId {
-  return VELOCITY_SPEED_CASE_IDS.some((caseId) => caseId === value);
+  return Arr.some(VELOCITY_SPEED_CASE_IDS, (caseId) => caseId === value);
 }
 
 export function formatMeterMath(value: number) {
@@ -229,7 +229,7 @@ function createMotionSegments({
 }
 
 function getRouteBounds(configs: MotionConfig[]) {
-  const routeXPositions = configs.flatMap((config) => {
+  const routeXPositions = Arr.flatMap(configs, (config) => {
     const forwardWorldDistance =
       config.forwardDistance * VELOCITY_SPEED_SCENE.worldScale;
     const backWorldDistance =

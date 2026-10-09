@@ -21,7 +21,8 @@ const RelationSchema = Schema.Struct({
   Schema.check(
     Schema.makeFilter(
       ({ domain, codomain, mappings }) =>
-        mappings.every(
+        Arr.every(
+          mappings,
           ({ from, to }) => domain.includes(from) && codomain.includes(to)
         ),
       {
@@ -42,7 +43,7 @@ export class RelationError extends Schema.TaggedError<RelationError>()(
 
 /** Places a set's elements evenly inside its own ellipse. */
 function positions(ids: readonly string[], x: number) {
-  return ids.map((id, index) => ({
+  return Arr.map(ids, (id, index) => ({
     id,
     x,
     y: 2 - (4 * (index + 0.5)) / ids.length,
@@ -64,7 +65,7 @@ export const resolveRelation = Effect.fn("Relation.resolve")(function* (
   return {
     domain,
     codomain,
-    mappings: relation.mappings.map(({ from, to }, index) => {
+    mappings: Arr.map(relation.mappings, ({ from, to }, index) => {
       const domainIndex = relation.domain.indexOf(from);
       const codomainIndex = relation.codomain.indexOf(to);
       return {

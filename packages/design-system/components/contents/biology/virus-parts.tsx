@@ -10,6 +10,7 @@ import {
   DnaDoubleHelix,
   RnaSingleStrand,
 } from "@repo/design-system/components/contents/biology/parts";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Quaternion, Vector3 } from "three";
 
@@ -101,7 +102,7 @@ export function HelicalVirusModel({
           turns={HELICAL_TURN_COUNT * 0.78}
         />
       </group>
-      {HELICAL_RIDGE_POINTS.map((ridge) => (
+      {Arr.map(HELICAL_RIDGE_POINTS, (ridge) => (
         <VirusTube
           color={colors.pathogen}
           key={ridge.id}
@@ -110,7 +111,7 @@ export function HelicalVirusModel({
           radius={0.009}
         />
       ))}
-      {HELICAL_CAPSOMERES.map((capsomere) => (
+      {Arr.map(HELICAL_CAPSOMERES, (capsomere) => (
         <group
           key={capsomere.id}
           position={capsomere.position}
@@ -155,13 +156,13 @@ export function PolyhedralVirusModel({
           turns={1.2}
         />
       </group>
-      {ADENOVIRUS_CAPSOMERS.map((anchor) => (
+      {Arr.map(ADENOVIRUS_CAPSOMERS, (anchor) => (
         <mesh key={anchor.id} position={anchor.position}>
           <sphereGeometry args={[0.031, 10, 8]} />
           <meshStandardMaterial color={colors.pathogen} roughness={0.7} />
         </mesh>
       ))}
-      {ADENOVIRUS_VERTEX_FIBERS.map((anchor) => (
+      {Arr.map(ADENOVIRUS_VERTEX_FIBERS, (anchor) => (
         <group
           key={anchor.id}
           position={anchor.position}
@@ -215,7 +216,7 @@ export function EnvelopedVirusModel({
           transparent
         />
       </mesh>
-      {INFLUENZA_RIBONUCLEOPROTEINS.map((strand) => (
+      {Arr.map(INFLUENZA_RIBONUCLEOPROTEINS, (strand) => (
         <group
           key={strand.id}
           position={strand.position}
@@ -231,7 +232,7 @@ export function EnvelopedVirusModel({
           />
         </group>
       ))}
-      {INFLUENZA_SPIKES.map((anchor) => (
+      {Arr.map(INFLUENZA_SPIKES, (anchor) => (
         <VirusSurfaceSpike
           anchor={anchor}
           color={colors.microbe}
@@ -246,7 +247,7 @@ export function EnvelopedVirusModel({
  * Creates radially oriented anchors for envelope spikes.
  */
 export function createVirusSurfaceAnchors(count: number, radius: number) {
-  return createBiologySpherePoints(count, radius).map((point) => {
+  return Arr.map(createBiologySpherePoints(count, radius), (point) => {
     const direction = new Vector3(...point.position).normalize();
 
     return {
@@ -283,8 +284,11 @@ export function VirusSurfaceSpike({
         <meshStandardMaterial color={color} roughness={0.78} />
       </mesh>
       <group position={[0, 0.27, 0]}>
-        {VIRION_SPIKE_HEADS.map((position) => (
-          <mesh key={position.join("-")} position={position}>
+        {Arr.map(VIRION_SPIKE_HEADS, (position) => (
+          <mesh
+            key={Arr.join(Arr.map(position, String), "-")}
+            position={position}
+          >
             <sphereGeometry args={[headRadius, 12, 10]} />
             <meshStandardMaterial color={color} roughness={0.72} />
           </mesh>
@@ -328,7 +332,7 @@ export function MiniEnvelopedVirion({
           turns={1.4}
         />
       </group>
-      {MINI_VIRION_SPIKES.map((anchor) => (
+      {Arr.map(MINI_VIRION_SPIKES, (anchor) => (
         <VirusSurfaceSpike
           anchor={anchor}
           color={colors.microbe}
@@ -376,10 +380,13 @@ export function BacteriophageModel({
         <cylinderGeometry args={[0.13, 0.1, 0.05, 16]} />
         <meshStandardMaterial color={colors.arrow} roughness={0.72} />
       </mesh>
-      {PHAGE_FIBERS.map((points) => (
+      {Arr.map(PHAGE_FIBERS, (points) => (
         <VirusTube
           color={colors.pathogen}
-          key={points.map((point) => point.join("-")).join("|")}
+          key={Arr.join(
+            Arr.map(points, (point) => Arr.join(Arr.map(point, String), "-")),
+            "|"
+          )}
           points={points}
           radius={0.01}
         />
@@ -442,7 +449,8 @@ export function VirusTube({
   radius: number;
 }) {
   const curve = useMemo(
-    () => new CatmullRomCurve3(points.map((point) => new Vector3(...point))),
+    () =>
+      new CatmullRomCurve3(Arr.map(points, (point) => new Vector3(...point))),
     [points]
   );
 

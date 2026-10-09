@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import { cn } from "cn";
-import { Predicate } from "effect";
+import { Array as Arr, Predicate } from "effect";
 import type * as React from "react";
 import type * as RechartsPrimitive from "recharts";
 import type {
@@ -237,10 +237,13 @@ function getIndicatorColorStyle(
     return { background: getChartColorVariable(dataKey, 0) };
   }
 
-  const stops = Array.from({ length: colorsCount }, (_, index) => {
-    const offset = (index / (colorsCount - 1)) * 100;
-    return `${getChartColorVariable(dataKey, index)} ${offset}%`;
-  }).join(", ");
+  const stops = Arr.join(
+    Array.from({ length: colorsCount }, (_, index) => {
+      const offset = (index / (colorsCount - 1)) * 100;
+      return `${getChartColorVariable(dataKey, index)} ${offset}%`;
+    }),
+    ", "
+  );
 
   return { background: `linear-gradient(to right, ${stops})` };
 }

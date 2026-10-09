@@ -20,7 +20,14 @@ import {
 } from "@repo/design-system/lib/theme/contrast";
 import { themes } from "@repo/design-system/lib/theme/registry";
 import Color from "colorjs.io";
-import { Effect, HashSet, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  HashSet,
+  MutableList,
+  Record as Rec,
+  Schema,
+} from "effect";
 
 const NORMAL_TEXT_MINIMUM_CONTRAST = 4.5;
 const NON_TEXT_MINIMUM_CONTRAST = 3;
@@ -62,32 +69,36 @@ const ThemeCohesionViolationSchema = Schema.Struct({
 });
 type ThemeCohesionViolation = typeof ThemeCohesionViolationSchema.Type;
 
-const concreteThemeNames = themes.flatMap((theme) =>
+const concreteThemeNames = Arr.flatMap(themes, (theme) =>
   theme.appearance === "dynamic" ? [] : [theme.value]
 );
 const readProfiles = readThemeStyleSources().pipe(
   Effect.map((sources) => createThemeProfiles(concreteThemeNames, sources)),
   Effect.provide(NodeFileSystem.layer)
 );
-const textPairs = TEXT_ROLE_PAIRS.map(
-  ([foreground, surface]): ContrastPair => ({
-    against: `--${surface}`,
-    color: `--${foreground}`,
-    minimum: NORMAL_TEXT_MINIMUM_CONTRAST,
-    role: "normal text on its declared semantic surface",
-  })
+const textPairs = Arr.appendAll(
+  Arr.map(
+    TEXT_ROLE_PAIRS,
+    ([foreground, surface]): ContrastPair => ({
+      against: `--${surface}`,
+      color: `--${foreground}`,
+      minimum: NORMAL_TEXT_MINIMUM_CONTRAST,
+      role: "normal text on its declared semantic surface",
+    })
+  ),
+  Arr.map(
+    STANDALONE_TEXT_ROLE_PAIRS,
+    ([color, against, role]): ContrastPair => ({
+      against: `--${against}`,
+      color: `--${color}`,
+      minimum: NORMAL_TEXT_MINIMUM_CONTRAST,
+      role,
+    })
+  )
 );
 
-for (const [color, against, role] of STANDALONE_TEXT_ROLE_PAIRS) {
-  textPairs.push({
-    against: `--${against}`,
-    color: `--${color}`,
-    minimum: NORMAL_TEXT_MINIMUM_CONTRAST,
-    role,
-  });
-}
-
-const nonTextPairs = NON_TEXT_ROLE_PAIRS.map(
+const nonTextPairs = Arr.map(
+  NON_TEXT_ROLE_PAIRS,
   ([color, against, role]): ContrastPair => ({
     against: `--${against}`,
     color: `--${color}`,
@@ -101,13 +112,13 @@ function findContrastViolations(
   profiles: readonly ProfileSource[],
   pairs: readonly ContrastPair[]
 ) {
-  return profiles.flatMap((profile) => {
+  return Arr.flatMap(profiles, (profile) => {
     const rule = findTopLevelRule(profile.root, profile.selector);
     if (!rule) {
       return [];
     }
 
-    return pairs.flatMap((pair) => {
+    return Arr.flatMap(pairs, (pair) => {
       const color = readDirectValue(rule, pair.color);
       const against = readDirectValue(rule, pair.against);
       if (!(color && against)) {
@@ -124,7 +135,7 @@ function findContrastViolations(
 
 /** Finds missing, invalid, translucent, or out-of-gamut semantic colors. */
 function findThemeColorViolations(profiles: readonly ProfileSource[]) {
-  const violations: ThemeColorViolation[] = [];
+  const violations = MutableList.make<ThemeColorViolation>();
 
   for (const profile of profiles) {
     const rule = findTopLevelRule(profile.root, profile.selector);
@@ -135,11 +146,15 @@ function findThemeColorViolations(profiles: readonly ProfileSource[]) {
     for (const token of SEMANTIC_COLOR_TOKENS) {
       const value = readDirectValue(rule, token);
       if (!value) {
-        violations.push({ profile: profile.name, reason: "missing", token });
+        MutableList.append(violations, {
+          profile: profile.name,
+          reason: "missing",
+          token,
+        });
         continue;
       }
       if (!OKLCH_SYNTAX_PATTERN.test(value)) {
-        violations.push({
+        MutableList.append(violations, {
           profile: profile.name,
           reason: "not OKLCH",
           token,
@@ -150,7 +165,7 @@ function findThemeColorViolations(profiles: readonly ProfileSource[]) {
 
       const color = new Color(value);
       if (color.alpha !== 1) {
-        violations.push({
+        MutableList.append(violations, {
           profile: profile.name,
           reason: "not opaque",
           token,
@@ -158,7 +173,7 @@ function findThemeColorViolations(profiles: readonly ProfileSource[]) {
         });
       }
       if (!color.inGamut("srgb")) {
-        violations.push({
+        MutableList.append(violations, {
           profile: profile.name,
           reason: "outside sRGB",
           token,
@@ -168,7 +183,7 @@ function findThemeColorViolations(profiles: readonly ProfileSource[]) {
     }
   }
 
-  return violations;
+  return MutableList.toArray(violations);
 }
 
 /** Returns the shortest angular distance between two hue values. */
@@ -178,7 +193,7 @@ function getHueDistance(first: number, second: number) {
 
 /** Finds border and input colors that no longer form one visual family. */
 function findBorderInputFamilyViolations(profiles: readonly ProfileSource[]) {
-  const violations: ThemeCohesionViolation[] = [];
+  const violations = MutableList.make<ThemeCohesionViolation>();
 
   for (const profile of profiles) {
     const rule = findTopLevelRule(profile.root, profile.selector);
@@ -214,7 +229,7 @@ function findBorderInputFamilyViolations(profiles: readonly ProfileSource[]) {
       usesUnifiedOutline !== intentionallyUnified ||
       (!intentionallyUnified && inputContrast <= borderContrast)
     ) {
-      violations.push({
+      MutableList.append(violations, {
         profile: profile.name,
         reason: "border and input lose their subtle shared hierarchy",
         tokens: ["--border", "--input"],
@@ -222,12 +237,12 @@ function findBorderInputFamilyViolations(profiles: readonly ProfileSource[]) {
     }
   }
 
-  return violations;
+  return MutableList.toArray(violations);
 }
 
 /** Finds semantic borders that disappear against their owning surfaces. */
 function findErasedBoundaries(profiles: readonly ProfileSource[]) {
-  const violations: ThemeCohesionViolation[] = [];
+  const violations = MutableList.make<ThemeCohesionViolation>();
 
   for (const profile of profiles) {
     const rule = findTopLevelRule(profile.root, profile.selector);
@@ -244,7 +259,7 @@ function findErasedBoundaries(profiles: readonly ProfileSource[]) {
 
       const contrast = getWcagContrast(border, surface);
       if (contrast < MINIMUM_BOUNDARY_CONTRAST) {
-        violations.push({
+        MutableList.append(violations, {
           profile: profile.name,
           reason: "boundary lacks sufficient local contrast",
           tokens: [borderToken, surfaceToken],
@@ -253,12 +268,12 @@ function findErasedBoundaries(profiles: readonly ProfileSource[]) {
     }
   }
 
-  return violations;
+  return MutableList.toArray(violations);
 }
 
 /** Finds status colors outside their declared chroma and hue families. */
 function findStatusColorFamilyViolations(profiles: readonly ProfileSource[]) {
-  const violations: ThemeCohesionViolation[] = [];
+  const violations = MutableList.make<ThemeCohesionViolation>();
 
   for (const profile of profiles) {
     const rule = findTopLevelRule(profile.root, profile.selector);
@@ -279,7 +294,7 @@ function findStatusColorFamilyViolations(profiles: readonly ProfileSource[]) {
         hue < family.minimumHue ||
         hue > family.maximumHue
       ) {
-        violations.push({
+        MutableList.append(violations, {
           profile: profile.name,
           reason: `${status} leaves its familiar semantic color family`,
           tokens: [token],
@@ -288,7 +303,7 @@ function findStatusColorFamilyViolations(profiles: readonly ProfileSource[]) {
     }
   }
 
-  return violations;
+  return MutableList.toArray(violations);
 }
 
 describe("theme color quality", () => {

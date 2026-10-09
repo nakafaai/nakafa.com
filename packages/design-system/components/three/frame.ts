@@ -1,4 +1,4 @@
-import { BigDecimal, Schema } from "effect";
+import { BigDecimal, MutableList, Schema } from "effect";
 
 const CoordinateRangeSchema = Schema.Struct({
   max: Schema.Finite,
@@ -87,7 +87,9 @@ function coordinateValues(
       exactStep
     )
   );
-  const values: number[] = [];
+  const values = MutableList.make<number>();
+  // The last value kept, so a repeated tick at the same position is dropped.
+  let previous: number | undefined;
 
   for (let index = 0; index < MAXIMUM_AXIS_COORDINATES; index += 1) {
     const value = BigDecimal.sum(
@@ -98,12 +100,13 @@ function coordinateValues(
       break;
     }
     const numeric = BigDecimal.toNumberUnsafe(value);
-    if (values.at(-1) !== numeric) {
-      values.push(numeric);
+    if (previous !== numeric) {
+      MutableList.append(values, numeric);
+      previous = numeric;
     }
   }
 
-  return values;
+  return MutableList.toArray(values);
 }
 
 function resolveCellStep(frame: CoordinateFrame) {
@@ -170,20 +173,22 @@ function createPlaneGeometry(
   secondAnchor: number
 ): GridPlaneGeometry {
   const sectionStep = cellStep * 2;
-  const sections: CoordinateTuple[] = [];
-  const cells: CoordinateTuple[] = [];
+  const sections = MutableList.make<CoordinateTuple>();
+  const cells = MutableList.make<CoordinateTuple>();
 
   for (const value of coordinateValues(first, cellStep, firstAnchor)) {
     const target = isSectionCoordinate(value, sectionStep, firstAnchor)
       ? sections
       : cells;
-    target.push(project(value, second.min), project(value, second.max));
+    MutableList.append(target, project(value, second.min));
+    MutableList.append(target, project(value, second.max));
   }
   for (const value of coordinateValues(second, cellStep, secondAnchor)) {
     const target = isSectionCoordinate(value, sectionStep, secondAnchor)
       ? sections
       : cells;
-    target.push(project(first.min, value), project(first.max, value));
+    MutableList.append(target, project(first.min, value));
+    MutableList.append(target, project(first.max, value));
   }
 
   return {
@@ -197,8 +202,8 @@ function createPlaneGeometry(
       project(first.min, second.max),
       project(first.min, second.min),
     ],
-    cells,
-    sections,
+    cells: MutableList.toArray(cells),
+    sections: MutableList.toArray(sections),
     visible,
   };
 }

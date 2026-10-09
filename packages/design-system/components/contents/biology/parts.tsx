@@ -3,6 +3,7 @@
 import { Line } from "@react-three/drei";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Vector3 } from "three";
 
@@ -83,7 +84,7 @@ export function DnaDoubleHelix({
         lineWidth={lineWidth}
         points={secondStrand}
       />
-      {basePairs.map((basePair) => (
+      {Arr.map(basePairs, (basePair) => (
         <BiologyLine
           color={pairColor}
           key={basePair.id}
@@ -147,7 +148,7 @@ export function RnaSingleStrand({
         lineWidth={lineWidth}
         points={backbone}
       />
-      {baseTicks.map((baseTick) => (
+      {Arr.map(baseTicks, (baseTick) => (
         <BiologyLine
           color={baseColor}
           key={baseTick.id}
@@ -226,7 +227,8 @@ export function BiologyTube({
   segments?: number;
 }) {
   const curve = useMemo(
-    () => new CatmullRomCurve3(points.map((point) => new Vector3(...point))),
+    () =>
+      new CatmullRomCurve3(Arr.map(points, (point) => new Vector3(...point))),
     [points]
   );
 
@@ -259,7 +261,7 @@ function BackboneMarkers({
   }[];
   radius: number;
 }) {
-  return points.map((point) => (
+  return Arr.map(points, (point) => (
     <mesh key={point.id} position={point.position}>
       <sphereGeometry args={[radius, 8, 6]} />
       <meshStandardMaterial color={color} roughness={0.64} />

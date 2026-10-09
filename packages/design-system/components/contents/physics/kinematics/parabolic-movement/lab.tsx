@@ -31,6 +31,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 interface ParabolicMovementLabProps {
@@ -106,7 +107,7 @@ export function ParabolicMovementLab({
           value={launchId}
           variant="outline"
         >
-          {PARABOLIC_LAUNCHES.map((launch) => (
+          {Arr.map(PARABOLIC_LAUNCHES, (launch) => (
             <ToggleGroupItem key={launch.id} value={launch.id}>
               <InlineMath math={formatAngleMath(launch.angleDegrees)} />
             </ToggleGroupItem>
@@ -153,7 +154,7 @@ export function ParabolicMovementLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          {facts.map((fact) => (
+          {Arr.map(facts, (fact) => (
             <LabFact
               key={fact.id}
               label={fact.label}
