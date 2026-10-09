@@ -60,13 +60,7 @@ function updateReactors(
       (reactor) => reactor === reactorName
     );
     if (Option.isSome(index)) {
-      return Arr.take(
-        [
-          ...Arr.take(reactors, index.value),
-          ...Arr.drop(reactors, index.value + 1),
-        ],
-        count
-      );
+      return Arr.take(Arr.remove(reactors, index.value), count);
     }
   }
 
