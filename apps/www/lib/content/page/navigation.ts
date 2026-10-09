@@ -5,7 +5,7 @@ import {
   PageKeySchema,
   PageMetadataSchema,
 } from "@nakafa/aksara-contracts/projection/page";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
@@ -64,33 +64,28 @@ const readRequiredPageItem = Effect.fn("www.pages.readRequiredItem")(function* (
   pageKey: PageKey,
   locale: Locale
 ) {
-  const item = items.find((candidate) => candidate.pageKey === pageKey);
-  if (!item) {
+  const item = Arr.findFirst(
+    items,
+    (candidate) => candidate.pageKey === pageKey
+  );
+  if (Option.isNone(item)) {
     return yield* new PageNavigationMissingError({ locale, pageKey });
   }
-  return item;
+  return item.value;
 });
 
 /** Reads every published Page owned by one application locale. */
 export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
   function* (locale: Locale) {
     const catalog = yield* readPublishedPageCatalog();
-    const localeItems: PageNavigationItem[] = [];
-    for (const {
-      appLocale,
-      metadata,
-      pageKey,
-      publicPath,
-    } of catalog.projections) {
-      if (appLocale !== locale) {
-        continue;
-      }
-      localeItems.push({
+    const localeItems = Arr.map(
+      Arr.filter(catalog.projections, ({ appLocale }) => appLocale === locale),
+      ({ metadata, pageKey, publicPath }): PageNavigationItem => ({
         href: `/${publicPath}`,
         pageKey,
         title: metadata.title,
-      });
-    }
+      })
+    );
     const [
       developerItem,
       imprintItem,

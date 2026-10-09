@@ -1,5 +1,5 @@
 import { HeartAddIcon, UserIcon } from "@hugeicons/core-free-icons";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const UserSettingsSectionSchema = Schema.Struct({
   href: Schema.String,
@@ -54,8 +54,8 @@ export function isUserSettingsPath(pathname: string) {
  * the shell label truthful instead of blank while a section is being added.
  */
 export function getUserSettingsSection(pathname: string): UserSettingsSection {
-  return (
-    userSettingsSections.find((section) => section.href === pathname) ??
-    userSettingsSections[0]
+  return Option.getOrElse(
+    Arr.findFirst(userSettingsSections, (section) => section.href === pathname),
+    () => userSettingsSections[0]
   );
 }

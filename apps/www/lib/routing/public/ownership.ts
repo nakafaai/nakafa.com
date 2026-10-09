@@ -1,7 +1,7 @@
 import { SCHOOL_ROUTE_SLUGS } from "@repo/backend/confect/schools/slug";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
-import { HashSet } from "effect";
+import { Array as Arr, HashSet, Option } from "effect";
 
 const APPLICATION_ROUTE_ROOTS = HashSet.make(
   "articles",
@@ -21,7 +21,8 @@ const APPLICATION_ROUTE_ROOTS = HashSet.make(
 type PublicLocale = (typeof routing.locales)[number];
 
 function readPublicSurface(locale: PublicLocale, root: string) {
-  return PUBLIC_ROUTE_SURFACES.find(
+  return Arr.findFirst(
+    PUBLIC_ROUTE_SURFACES,
     (surface) => surface.routeSlugs[locale] === root
   );
 }
@@ -76,7 +77,7 @@ function isSchoolPath(segments: readonly string[]) {
   if (school === SCHOOL_ROUTE_SLUGS.onboarding) {
     return (
       segments.length === 1 ||
-      (segments.length === 2 && ["create", "join"].includes(section))
+      (segments.length === 2 && Arr.contains(["create", "join"], section))
     );
   }
 
@@ -96,11 +97,11 @@ function isSchoolPath(segments: readonly string[]) {
     return true;
   }
 
-  if (["materials", "people"].includes(child)) {
+  if (Arr.contains(["materials", "people"], child)) {
     return segments.length === 4;
   }
 
-  return child === "forum" && [4, 5].includes(segments.length);
+  return child === "forum" && Arr.contains([4, 5], segments.length);
 }
 
 /** Checks whether one root belongs to a concrete application route. */
@@ -109,7 +110,7 @@ export function isApplicationRouteRoot(locale: PublicLocale, root: string) {
     return true;
   }
 
-  return readPublicSurface(locale, root) !== undefined;
+  return Option.isSome(readPublicSurface(locale, root));
 }
 
 /**
@@ -130,16 +131,16 @@ export function isApplicationRoutePath(
   }
 
   const publicSurface = readPublicSurface(locale, root);
-  if (publicSurface) {
-    return isPublicSurfacePath(publicSurface, segments);
+  if (Option.isSome(publicSurface)) {
+    return isPublicSurfacePath(publicSurface.value, segments);
   }
 
-  if (["contributor", "home", "pricing", "search"].includes(root)) {
+  if (Arr.contains(["contributor", "home", "pricing", "search"], root)) {
     return segments.length === 0;
   }
 
   if (root === "auth") {
-    return ["", "error"].includes(segments.join("/"));
+    return ["", "error"].includes(Arr.join(segments, "/"));
   }
 
   if (root === "chat") {

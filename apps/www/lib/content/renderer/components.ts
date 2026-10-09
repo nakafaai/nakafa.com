@@ -2,7 +2,7 @@ import "server-only";
 
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Option, Record as Rec } from "effect";
 import {
   RendererImplementationMissing,
   type RendererSelection,
@@ -10,9 +10,13 @@ import {
 } from "@/lib/content/renderer/selection";
 
 function findSemanticComponent(componentName: string) {
-  return Rec.toEntries(semanticMdxComponents).find(
-    ([name]) => name === componentName
-  )?.[1];
+  return Option.flatMapNullishOr(
+    Arr.findFirst(
+      Rec.toEntries(semanticMdxComponents),
+      ([name]) => name === componentName
+    ),
+    ([, component]) => component
+  );
 }
 
 /** Resolves exactly the registered implementations named by an authenticated payload. */
@@ -27,14 +31,14 @@ export const resolveRendererComponents = Effect.fn(
       continue;
     }
     const component = findSemanticComponent(renderer.name);
-    if (component === undefined) {
+    if (Option.isNone(component)) {
       return yield* new RendererImplementationMissing({
         componentName: renderer.name,
         contentKey: selection.contentKey,
         rendererDomain: selection.rendererDomain,
       });
     }
-    components[renderer.name] = component;
+    components[renderer.name] = component.value;
   }
   return components;
 });

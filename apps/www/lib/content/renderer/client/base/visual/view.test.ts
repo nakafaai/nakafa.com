@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import type {
   PlaneVisual,
   SpaceVisual,
@@ -58,7 +59,7 @@ describe("MathVisual camera direction", () => {
   it("uses equal camera directions for isometric views and lets measured subjects determine scale", () => {
     const view = resolveMathView(scene({ kind: "isometric" }));
     expect(
-      view.position.map((value, index) => value - view.target[index])
+      Arr.map(view.position, (value, index) => value - view.target[index])
     ).toEqual([12, 12, 12]);
     expect(view.projection).toEqual({ kind: "orthographic" });
   });
@@ -90,7 +91,7 @@ describe("MathVisual camera direction", () => {
       },
     } satisfies SpaceVisual;
     const view = resolveMathView(visual);
-    expect([...view.position, ...view.target].every(Number.isFinite)).toBe(
+    expect(Arr.every([...view.position, ...view.target], Number.isFinite)).toBe(
       true
     );
   });

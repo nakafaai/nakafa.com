@@ -3,6 +3,7 @@ import {
   makeQuranLocaleSources,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
+import { Array as Arr, Option } from "effect";
 import { getQuranReferences } from "@/lib/content/quran/references";
 
 const expectedSourceIds = {
@@ -26,13 +27,16 @@ describe("Quran bibliography", () => {
       const references = getQuranReferences(sources, tafsirAccess);
 
       expect(references).toHaveLength(3);
-      expect(references.map(({ title }) => title)).toEqual(
-        expectedSourceIds[locale].map((id) => expect.stringContaining(id))
+      expect(Arr.map(references, ({ title }) => title)).toEqual(
+        Arr.map(expectedSourceIds[locale], (id) => expect.stringContaining(id))
       );
       expect(
-        references.every(({ url }) => url !== undefined && URL.canParse(url))
+        Arr.every(
+          references,
+          ({ url }) => url !== undefined && URL.canParse(url)
+        )
       ).toBe(true);
-      expect(references.every(({ year }) => year === 2026)).toBe(true);
+      expect(Arr.every(references, ({ year }) => year === 2026)).toBe(true);
       expect(references[0]).toMatchObject({ url: sources.arabic.sourceUrl });
       expect(references[0]?.details).toContain(sources.arabic.terms.url);
       expect(references[0]?.details).toContain(sources.arabic.updateUrl);
@@ -41,7 +45,7 @@ describe("Quran bibliography", () => {
       });
       expect(references[1]?.details).toContain(sources.translation.terms.url);
       expect(references[1]?.details).toContain(sources.translation.updateUrl);
-      const tafsirReference = references.at(-1);
+      const tafsirReference = Option.getOrUndefined(Arr.last(references));
       expect(tafsirReference).toMatchObject({
         url: tafsirAccess.source.sourceUrl,
       });

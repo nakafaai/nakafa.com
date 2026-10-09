@@ -4,7 +4,7 @@ import { projectQuranTranslation } from "@repo/backend/client/quran/notes";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createTranslator, type Locale } from "next-intl";
 import {
   readPublishedQuranCatalog,
@@ -70,7 +70,7 @@ export const readQuranLlmsPageEntries = Effect.fn("www.llms.quran.pageEntries")(
 
     return buildPublishedContentLlmsEntries({
       locale,
-      rows: surahs.map((surah) => ({
+      rows: Arr.map(surahs, (surah) => ({
         description: formatQuranMeaning(surah.name.meaning, locale),
         publicPath: `quran/${surah.number}`,
         title: getQuranSurahName(surah.name),
@@ -112,31 +112,28 @@ const getQuranIndexText = Effect.fn("www.llms.quran.indexText")(function* (
     Effect.promise(() => loadLocaleMessages(locale)),
   ]);
   const t = createTranslator({ locale, messages, namespace: "Holy" });
-  const scanned = buildHeader({
+  const header = buildHeader({
     description: t("quran-description"),
     title: t("quran"),
     url: `${BASE_URL}/${locale}/quran`,
   });
-
-  for (const surah of surahs) {
+  const surahLines = Arr.flatMap(surahs, (surah) => {
     const title = getQuranSurahName(surah.name);
-    scanned.push(`## ${surah.number}. ${title}`);
-    scanned.push("");
-    scanned.push(
-      `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning, locale)}`
-    );
-    scanned.push("");
-    scanned.push(
+    return [
+      `## ${surah.number}. ${title}`,
+      "",
+      `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning, locale)}`,
+      "",
       `**${t("revelation")}:** ${t("revelation-place", {
         place: surah.revelation.place,
-      })}`
-    );
-    scanned.push("");
-    scanned.push(`**${t("number-of-verses")}:** ${surah.numberOfVerses}`);
-    scanned.push("");
-  }
+      })}`,
+      "",
+      `**${t("number-of-verses")}:** ${surah.numberOfVerses}`,
+      "",
+    ];
+  });
 
-  return scanned.join("\n");
+  return Arr.join([...header, ...surahLines], "\n");
 });
 
 /** Builds markdown for one surah and its verses. */
@@ -163,90 +160,82 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   const tafsirAccess = markdown.tafsirAccess;
   const title = getQuranSurahName(surah.name);
   const description = formatQuranMeaning(surah.name.meaning, locale);
-  const scanned = buildHeader({
+  const header = buildHeader({
     description,
     title,
     url: `${BASE_URL}/${locale}/quran/${surahNumber}`,
   });
-
-  scanned.push(`## ${title}`);
-  scanned.push("");
-  scanned.push(
-    `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning, locale)}`
-  );
-  scanned.push(
+  const summaryLines = [
+    `## ${title}`,
+    "",
+    `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning, locale)}`,
     `**${t("revelation")}:** ${t("revelation-place", {
       place: surah.revelation.place,
-    })}`
-  );
-  scanned.push(`**${t("number-of-verses")}:** ${surah.numberOfVerses}`);
-  scanned.push("");
-  scanned.push(`### ${t("sources")}`);
-  scanned.push("");
-  scanned.push(
-    `- **${t("arabic-source")}:** [${markdown.sources.arabic.label}](${markdown.sources.arabic.sourceUrl})`
-  );
-  scanned.push(`  ${markdown.sources.arabic.notice}`);
-  scanned.push(
-    `  ${markdown.sources.arabic.publisher} · ${markdown.sources.arabic.version}`
-  );
-  scanned.push(
-    `- **${t("translation-source")}:** [${markdown.sources.translation.label}](${markdown.sources.translation.sourceUrl})`
-  );
-  scanned.push(`  ${markdown.sources.translation.notice}`);
-  scanned.push(
-    `  ${markdown.sources.translation.publisher} · ${markdown.sources.translation.version}`
-  );
-  scanned.push("");
-  scanned.push(tafsirAccess.notice);
-  scanned.push("");
-  scanned.push(
-    `[${tafsirAccess.source.label}](${tafsirAccess.source.sourceUrl})`
-  );
-  scanned.push("");
+    })}`,
+    `**${t("number-of-verses")}:** ${surah.numberOfVerses}`,
+    "",
+    `### ${t("sources")}`,
+    "",
+    `- **${t("arabic-source")}:** [${markdown.sources.arabic.label}](${markdown.sources.arabic.sourceUrl})`,
+    `  ${markdown.sources.arabic.notice}`,
+    `  ${markdown.sources.arabic.publisher} · ${markdown.sources.arabic.version}`,
+    `- **${t("translation-source")}:** [${markdown.sources.translation.label}](${markdown.sources.translation.sourceUrl})`,
+    `  ${markdown.sources.translation.notice}`,
+    `  ${markdown.sources.translation.publisher} · ${markdown.sources.translation.version}`,
+    "",
+    tafsirAccess.notice,
+    "",
+    `[${tafsirAccess.source.label}](${tafsirAccess.source.sourceUrl})`,
+    "",
+    `### ${t("verses")}`,
+    "",
+  ];
+  const preBismillahLines =
+    markdown.preBismillah === null
+      ? []
+      : [
+          markdown.preBismillah.arabic,
+          "",
+          ...renderQuranTranslation(
+            markdown.preBismillah.translation,
+            t("translation"),
+            t("translation-notes")
+          ),
+          "",
+        ];
+  const verseLines = Arr.flatMap(markdown.verses, (verse) => [
+    `#### ${t("verse")} ${verse.number.inSurah}`,
+    "",
+    verse.arabic,
+    "",
+    ...renderQuranTranslation(
+      verse.translation,
+      t("translation"),
+      t("translation-notes")
+    ),
+    "",
+  ]);
+  const limitLines =
+    surah.numberOfVerses > markdown.toVerse
+      ? [
+          `_${t("markdown-limit", {
+            numberOfVerses: surah.numberOfVerses,
+            toVerse: markdown.toVerse,
+          })}_`,
+          "",
+        ]
+      : [];
 
-  scanned.push(`### ${t("verses")}`);
-  scanned.push("");
-
-  if (markdown.preBismillah !== null) {
-    scanned.push(markdown.preBismillah.arabic);
-    scanned.push("");
-    scanned.push(
-      ...renderQuranTranslation(
-        markdown.preBismillah.translation,
-        t("translation"),
-        t("translation-notes")
-      )
-    );
-    scanned.push("");
-  }
-
-  for (const verse of markdown.verses) {
-    scanned.push(`#### ${t("verse")} ${verse.number.inSurah}`);
-    scanned.push("");
-    scanned.push(verse.arabic);
-    scanned.push("");
-    scanned.push(
-      ...renderQuranTranslation(
-        verse.translation,
-        t("translation"),
-        t("translation-notes")
-      )
-    );
-    scanned.push("");
-  }
-
-  if (surah.numberOfVerses > markdown.toVerse) {
-    scanned.push(
-      `_${t("markdown-limit", {
-        numberOfVerses: surah.numberOfVerses,
-        toVerse: markdown.toVerse,
-      })}_`
-    );
-    scanned.push("");
-  }
-
-  return scanned.join("\n");
+  return Arr.join(
+    [
+      ...header,
+      ...summaryLines,
+      ...preBismillahLines,
+      ...verseLines,
+      ...limitLines,
+    ],
+    "\n"
+  );
 });
 
 /** Renders one semantic translation and its localized source-note heading. */
@@ -265,6 +254,6 @@ function renderQuranTranslation(
     `**${translationLabel}:** ${projected.text}`,
     "",
     `**${notesLabel}:**`,
-    ...projected.notes.map((note) => `- **${note.number}.** ${note.text}`),
+    ...Arr.map(projected.notes, (note) => `- **${note.number}.** ${note.text}`),
   ];
 }

@@ -16,7 +16,7 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { makeQuranRuntimeSource } from "@repo/backend/test/quran/runtime";
-import { Context, Effect, Layer, Result } from "effect";
+import { Array as Arr, Context, Effect, Layer, Result } from "effect";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -102,8 +102,8 @@ describe("published Quran content", () => {
   );
   it.effect.each([
     ["empty", []],
-    ["incomplete", catalogResult().rowJson.slice(0, 1)],
-    ["out of order", catalogResult().rowJson.reverse()],
+    ["incomplete", Arr.take(catalogResult().rowJson, 1)],
+    ["out of order", Arr.reverse(catalogResult().rowJson)],
   ])("rejects an %s signed catalog", ([_label, rowJson]) =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(
@@ -291,7 +291,7 @@ describe("immutable Quran application reads", () => {
             activeManifestHash: quran.state.activeManifestHash,
             snapshotId: quran.manifest.snapshotId,
           });
-          expect(catalog.surahs.map((surah) => surah.number)).toEqual(
+          expect(Arr.map(catalog.surahs, (surah) => surah.number)).toEqual(
             Array.from(
               {
                 length: QURAN_SURAH_COUNT,
@@ -317,7 +317,7 @@ describe("immutable Quran application reads", () => {
           expect(prefix.toVerse).toBe(3);
           expect(prefix.verses).toHaveLength(3);
           expect(complete.verses).toHaveLength(complete.surah.numberOfVerses);
-          expect(prefix.verses).toEqual(complete.verses.slice(0, 3));
+          expect(prefix.verses).toEqual(Arr.take(complete.verses, 3));
           expect(prefix.sources).toEqual(makeQuranLocaleSources(appLocale));
           expect(view.sources).toEqual(prefix.sources);
           expect(view.tafsirAccess).toEqual(

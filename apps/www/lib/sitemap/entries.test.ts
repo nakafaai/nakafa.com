@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import type { getPathname } from "@repo/internationalization/src/navigation";
-import { Effect, HashSet } from "effect";
+import { Array as Arr, Effect, HashSet } from "effect";
 import {
   getCachedSitemapEntries,
   getSitemapEntries,
@@ -100,7 +100,7 @@ describe("sitemap entries", () => {
   it.effect("generates sitemap entries from route and locale inputs", () =>
     Effect.gen(function* () {
       const entries = yield* getSitemapEntries({ pageId: "base" });
-      const urls = entries.map((entry) => entry.url);
+      const urls = Arr.map(entries, (entry) => entry.url);
 
       expect(HashSet.size(HashSet.fromIterable(urls))).toBe(urls.length);
       expect(urls).toContain("https://nakafa.com/en");
@@ -119,7 +119,8 @@ describe("sitemap entries", () => {
         url: "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition",
       });
       expect(
-        entries.every(
+        Arr.every(
+          entries,
           (entry) =>
             !(
               "changeFrequency" in entry ||
@@ -212,12 +213,14 @@ describe("sitemap entries", () => {
 
       const entries = yield* getSitemapEntries({ pageId: "base" });
 
-      expect(entries.map((entry) => entry.url)).toEqual([
+      expect(Arr.map(entries, (entry) => entry.url)).toEqual([
         "https://nakafa.com/en/search",
         "https://nakafa.com/id/search",
         "https://nakafa.com/de/search",
       ]);
-      expect(entries.every((entry) => !("alternates" in entry))).toBe(true);
+      expect(Arr.every(entries, (entry) => !("alternates" in entry))).toBe(
+        true
+      );
     })
   );
 
@@ -232,7 +235,7 @@ describe("sitemap entries", () => {
 
         const entries = yield* getSitemapEntries({ pageId: "base" });
 
-        expect(entries.map((entry) => entry.url)).toEqual([
+        expect(Arr.map(entries, (entry) => entry.url)).toEqual([
           "https://nakafa.com/en/curriculum",
           "https://nakafa.com/id/kurikulum",
           "https://nakafa.com/de/lehrplaene",

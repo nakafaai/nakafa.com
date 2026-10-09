@@ -1,6 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { cache } from "react";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
@@ -28,7 +28,8 @@ import { describeSitemapPartitions } from "@/lib/sitemap/partition";
 export const readSitemapPageDescriptors = Effect.fn(
   "www.sitemap.pageDescriptors"
 )(function* () {
-  const descriptors: SitemapPage[] = [{ id: SITEMAP_BASE_ID }];
+  const descriptors = MutableList.make<SitemapPage>();
+  MutableList.append(descriptors, { id: SITEMAP_BASE_ID });
   const identity = {
     appLocale: AppLocaleSchema.make(routing.defaultLocale),
     publicPath: "sitemap.xml",
@@ -66,28 +67,30 @@ export const readSitemapPageDescriptors = Effect.fn(
       );
 
     if (quranCatalog.surahs.length > 0) {
-      descriptors.push({
+      MutableList.append(descriptors, {
         id: formatQuranPage(locale),
         kind: "quran",
         locale,
       });
     }
 
-    if (pageCatalog.projections.some(({ appLocale }) => appLocale === locale)) {
-      descriptors.push({
+    if (
+      Arr.some(pageCatalog.projections, ({ appLocale }) => appLocale === locale)
+    ) {
+      MutableList.append(descriptors, {
         id: formatPagePage(locale),
         kind: "page",
         locale,
       });
     }
 
-    descriptors.push(
+    MutableList.appendAll(descriptors, [
       ...describeSitemapPartitions("article", locale, articleBuckets.buckets),
       ...describeSitemapPartitions("material", locale, materialBuckets.buckets),
-      ...describeSitemapPartitions("program", locale, programBuckets.buckets)
-    );
+      ...describeSitemapPartitions("program", locale, programBuckets.buckets),
+    ]);
     for (let page = 0; page < tryoutCount.pageCount; page += 1) {
-      descriptors.push({
+      MutableList.append(descriptors, {
         id: formatTryoutPage(locale, page),
         kind: "tryout",
         locale,
@@ -98,7 +101,7 @@ export const readSitemapPageDescriptors = Effect.fn(
 
   yield* verifyContentReleasePin(activeReleaseId, identity);
 
-  return descriptors;
+  return MutableList.toArray(descriptors);
 });
 
 /** Reads sitemap page descriptors inside the sitemap origin cache.

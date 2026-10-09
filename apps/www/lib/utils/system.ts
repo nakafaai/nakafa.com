@@ -3,7 +3,7 @@ import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/helpers/search/schema";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { applyContentCache } from "@/lib/content/cache";
@@ -80,7 +80,7 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
         input: {
           appLocale: locale,
           kind: "route",
-          publicPath: slug.join("/"),
+          publicPath: Arr.join(slug, "/"),
         },
       })
     ).pipe(Effect.provide(httpLayer()));
@@ -107,7 +107,7 @@ export async function getCachedMetadataFromSlug(
       const reference = yield* resolveReferenceInput({
         appLocale: locale,
         kind: "route",
-        publicPath: slug.join("/"),
+        publicPath: Arr.join(slug, "/"),
       });
       if (reference) {
         yield* Effect.sync(() => applyContentCache(reference.family));

@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option, Redacted } from "effect";
+import { Array as Arr, Effect, Option, Redacted } from "effect";
 import {
   hasPreviewConfig,
   previewUrl,
@@ -201,7 +201,7 @@ describe("local preview configuration", () => {
           (path) => previewUrl(previewConfig, path)
         );
 
-        expect(accepted.map((url) => url.pathname)).toEqual([
+        expect(Arr.map(accepted, (url) => url.pathname)).toEqual([
           "/events",
           "/manifest",
           artifactPath,

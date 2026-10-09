@@ -7,7 +7,7 @@ import {
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
@@ -51,26 +51,28 @@ const readProjectedMaterialRouteRejection = Effect.fn(
 export const readProjectedHtmlRouteRejection = Effect.fn(
   "www.routing.publicHtml.projectedRejection"
 )(function* ({ hasAttemptCapability, pathname }: ProjectedHtmlRouteInput) {
-  const [rawLocale, namespace, ...pathSegments] = pathname
-    .split("/")
-    .filter(Boolean);
+  const [rawLocale, namespace, ...pathSegments] = Arr.filter(
+    pathname.split("/"),
+    Boolean
+  );
   if (!(namespace && hasLocale(APP_LOCALE_CODES, rawLocale))) {
     return null;
   }
   const locale = rawLocale;
-  const surface = PUBLIC_ROUTE_SURFACES.find(
+  const surface = Arr.findFirst(
+    PUBLIC_ROUTE_SURFACES,
     (item) => item.routeSlugs[locale] === namespace
   );
-  if (!surface) {
+  if (Option.isNone(surface)) {
     return null;
   }
   if (
     pathSegments.length === 0 &&
-    (surface.key === "curriculum" || surface.key === "tryout")
+    (surface.value.key === "curriculum" || surface.value.key === "tryout")
   ) {
     return null;
   }
-  const publicPath = [namespace, ...pathSegments].join("/");
+  const publicPath = Arr.join([namespace, ...pathSegments], "/");
   const appLocale = AppLocaleSchema.make(locale);
   if (
     yield* matchesPreviewRoute({
@@ -80,14 +82,14 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   ) {
     return null;
   }
-  if (surface.key === "subject") {
+  if (surface.value.key === "subject") {
     return yield* readProjectedMaterialRouteRejection(
       locale,
       appLocale,
       publicPath
     );
   }
-  if (surface.key === "curriculum") {
+  if (surface.value.key === "curriculum") {
     const ownership = yield* readPublishedProgramPath(locale, publicPath);
     if (!ownership.managed) {
       return locale;

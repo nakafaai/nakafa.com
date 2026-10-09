@@ -1,5 +1,6 @@
 import { MATERIAL_CONTEXT_QUERY_PARAM } from "@repo/contents/route/material/context";
 import { routing } from "@repo/internationalization/src/routing";
+import { Array as Arr } from "effect";
 import { hasLocale } from "next-intl";
 
 /**
@@ -8,7 +9,7 @@ import { hasLocale } from "next-intl";
  */
 export function getLocale() {
   const pathname = window.location.pathname;
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = Arr.filter(pathname.split("/"), Boolean);
 
   // Get the first segment which should be the locale
   const locale = segments[0];
@@ -28,12 +29,12 @@ export function getLocale() {
  */
 export function getPathname() {
   const pathname = window.location.pathname;
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = Arr.filter(pathname.split("/"), Boolean);
 
   // Remove the first segment (locale) and reconstruct the path
   const localeSegment = segments[0];
   if (localeSegment && hasLocale(routing.locales, localeSegment)) {
-    const pathWithoutLocale = segments.slice(1).join("/");
+    const pathWithoutLocale = Arr.join(segments.slice(1), "/");
     return pathWithoutLocale ? `/${pathWithoutLocale}` : "/";
   }
 

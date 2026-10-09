@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { generateFallbackImage } from "@/lib/og/fallback";
 
 const mocks = vi.hoisted(() => {
-  const imageCalls: Array<{ element: unknown; options: unknown }> = [];
+  let imageCalls: Array<{ element: unknown; options: unknown }> = [];
 
   class FakeImageResponse {
     readonly element: unknown;
@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => {
 
     constructor(element: unknown, options?: unknown) {
       this.element = element;
-      imageCalls.push({ element, options });
+      imageCalls = [...imageCalls, { element, options }];
     }
 
     arrayBuffer() {
@@ -24,7 +24,9 @@ const mocks = vi.hoisted(() => {
     cacheLife: vi.fn(),
     FakeImageResponse,
     getTranslations: vi.fn(),
-    imageCalls,
+    get imageCalls() {
+      return imageCalls;
+    },
     readFile: vi.fn(),
   };
 });

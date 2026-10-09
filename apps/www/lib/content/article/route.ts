@@ -8,7 +8,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Effect, HashSet, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   decodeArticleJson,
@@ -115,21 +115,23 @@ export const decodePublishedArticleRoute = Effect.fn(
     })
   );
   const alternateLocales = HashSet.fromIterable(
-    alternates.map((alternate) => alternate.appLocale)
+    Arr.map(alternates, (alternate) => alternate.appLocale)
   );
   const completeLocaleSet =
     HashSet.size(alternateLocales) === activeAppLocales.length &&
-    activeAppLocales.every((alternateLocale) =>
+    Arr.every(activeAppLocales, (alternateLocale) =>
       HashSet.has(alternateLocales, alternateLocale)
     );
   if (
     projection.appLocale !== appLocale ||
     projection.publicPath !== publicPath ||
-    alternates.some(
+    Arr.some(
+      alternates,
       (alternate) => !isArticleCounterpart(projection, alternate)
     ) ||
     HashSet.size(alternateLocales) !== alternates.length ||
-    !alternates.some(
+    !Arr.some(
+      alternates,
       (alternate) =>
         alternate.appLocale === projection.appLocale &&
         alternate.publicPath === projection.publicPath

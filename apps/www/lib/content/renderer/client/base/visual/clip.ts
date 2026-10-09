@@ -1,4 +1,4 @@
-import { BigDecimal } from "effect";
+import { Array as Arr, BigDecimal, MutableList } from "effect";
 
 import type {
   PlanePoint,
@@ -22,7 +22,7 @@ function clipParameters(
   start?: number,
   end?: number
 ): readonly [Decimal, Decimal] | undefined {
-  if (direction.every((delta) => BigDecimal.equals(delta, ZERO))) {
+  if (Arr.every(direction, (delta) => BigDecimal.equals(delta, ZERO))) {
     return;
   }
 
@@ -67,7 +67,7 @@ function endpoint(
   direction: readonly Decimal[],
   parameter: Decimal
 ) {
-  return origin.map((coordinate, index) =>
+  return Arr.map(origin, (coordinate, index) =>
     BigDecimal.toNumberUnsafe(
       BigDecimal.sum(
         coordinate,
@@ -148,6 +148,17 @@ function sameSpacePoint(left: SpacePoint, right: SpacePoint) {
   return left.x === right.x && left.y === right.y && left.z === right.z;
 }
 
+/** Moves a finished run into `paths` when it has two or more points, and empties the run. */
+function endRun<Point>(
+  paths: MutableList.MutableList<Point[]>,
+  run: MutableList.MutableList<Point>
+) {
+  const points = MutableList.takeAll(run);
+  if (points.length > 1) {
+    MutableList.append(paths, points);
+  }
+}
+
 export function containsPlanePoint(
   frame: PlaneVisual["frame"],
   point: PlanePoint
@@ -198,8 +209,9 @@ export function clipPlanePath(
   closed = false
 ) {
   const source = closed && points[0] ? [...points, points[0]] : points;
-  const paths: PlanePoint[][] = [];
-  let current: PlanePoint[] = [];
+  const paths = MutableList.make<PlanePoint[]>();
+  const run = MutableList.make<PlanePoint>();
+  let last: PlanePoint | undefined;
 
   for (let index = 1; index < source.length; index += 1) {
     const from = source[index - 1];
@@ -209,29 +221,24 @@ export function clipPlanePath(
     }
     const segment = clipPlaneEndpoints(frame, from, to, 0, 1);
     if (!segment) {
-      if (current.length > 1) {
-        paths.push(current);
-      }
-      current = [];
+      endRun(paths, run);
+      last = undefined;
       continue;
     }
 
     const [segmentStart, segmentEnd] = segment;
-    const previous = current.at(-1);
-    if (previous && samePlanePoint(previous, segmentStart)) {
-      current.push(segmentEnd);
+    if (last && samePlanePoint(last, segmentStart)) {
+      MutableList.append(run, segmentEnd);
     } else {
-      if (current.length > 1) {
-        paths.push(current);
-      }
-      current = [segmentStart, segmentEnd];
+      endRun(paths, run);
+      MutableList.append(run, segmentStart);
+      MutableList.append(run, segmentEnd);
     }
+    last = segmentEnd;
   }
 
-  if (current.length > 1) {
-    paths.push(current);
-  }
-  return paths;
+  endRun(paths, run);
+  return MutableList.takeAll(paths);
 }
 
 export function clipSpacePath(
@@ -240,8 +247,9 @@ export function clipSpacePath(
   closed = false
 ) {
   const source = closed && points[0] ? [...points, points[0]] : points;
-  const paths: SpacePoint[][] = [];
-  let current: SpacePoint[] = [];
+  const paths = MutableList.make<SpacePoint[]>();
+  const run = MutableList.make<SpacePoint>();
+  let last: SpacePoint | undefined;
 
   for (let index = 1; index < source.length; index += 1) {
     const from = source[index - 1];
@@ -251,27 +259,22 @@ export function clipSpacePath(
     }
     const segment = clipSpaceEndpoints(frame, from, to, 0, 1);
     if (!segment) {
-      if (current.length > 1) {
-        paths.push(current);
-      }
-      current = [];
+      endRun(paths, run);
+      last = undefined;
       continue;
     }
 
     const [segmentStart, segmentEnd] = segment;
-    const previous = current.at(-1);
-    if (previous && sameSpacePoint(previous, segmentStart)) {
-      current.push(segmentEnd);
+    if (last && sameSpacePoint(last, segmentStart)) {
+      MutableList.append(run, segmentEnd);
     } else {
-      if (current.length > 1) {
-        paths.push(current);
-      }
-      current = [segmentStart, segmentEnd];
+      endRun(paths, run);
+      MutableList.append(run, segmentStart);
+      MutableList.append(run, segmentEnd);
     }
+    last = segmentEnd;
   }
 
-  if (current.length > 1) {
-    paths.push(current);
-  }
-  return paths;
+  endRun(paths, run);
+  return MutableList.takeAll(paths);
 }

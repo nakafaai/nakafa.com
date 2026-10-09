@@ -3,6 +3,7 @@ import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
 import { PreviewRendererSecretSchema } from "@nakafa/aksara-contracts/preview/auth";
 import { hasPreviewProvider } from "@repo/next-config/preview";
 import {
+  Array as Arr,
   Effect,
   Option,
   Record as Rec,
@@ -137,7 +138,7 @@ export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
       return Option.none<PreviewConfig>();
     }
     const environment = readPreviewEnvironment();
-    if (Rec.values(environment).every((value) => value === undefined)) {
+    if (Arr.every(Rec.values(environment), (value) => value === undefined)) {
       return Option.none<PreviewConfig>();
     }
     const decoded = decodePreviewEnvironment(environment);
@@ -155,7 +156,7 @@ export const readPreviewRendererConfig = Effect.fn(
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }
   const environment = readPreviewRendererEnvironment();
-  if (Rec.values(environment).every((value) => value === undefined)) {
+  if (Arr.every(Rec.values(environment), (value) => value === undefined)) {
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }
   return Schema.decodeUnknownEffect(PreviewRendererEnvironmentSchema)(

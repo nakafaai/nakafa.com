@@ -4,7 +4,7 @@ import {
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
-import { HashMap, Option } from "effect";
+import { Array as Arr, HashMap, Option } from "effect";
 import {
   canCommitAnalyticsConsentRevocation,
   cancelAnalyticsConsentSessionSave,
@@ -82,21 +82,24 @@ describe("analytics consent session", () => {
       });
 
     expect(
-      [
-        resolve(anonymous),
-        resolve(accountA),
-        resolve(accountB),
-        resolve(accountB, { ...currentSource, decidedAt: 299 }),
-        resolve(accountB, {
-          ...currentSource,
-          noticeVersion: "privacy-retained",
-        }),
-        resolve(accountB, currentSource),
-      ].map((policy) => [
-        policy.hasSaveError,
-        policy.isRuntimeSuppressed,
-        policy.status,
-      ])
+      Arr.map(
+        [
+          resolve(anonymous),
+          resolve(accountA),
+          resolve(accountB),
+          resolve(accountB, { ...currentSource, decidedAt: 299 }),
+          resolve(accountB, {
+            ...currentSource,
+            noticeVersion: "privacy-retained",
+          }),
+          resolve(accountB, currentSource),
+        ],
+        (policy) => [
+          policy.hasSaveError,
+          policy.isRuntimeSuppressed,
+          policy.status,
+        ]
+      )
     ).toEqual([
       [true, true, "denied"],
       [true, true, "denied"],
