@@ -41,7 +41,6 @@ const services = Layer.mergeAll(
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({
-    directory: tmpdir(),
     prefix: "acceptance-process-test-",
   });
   const runtime: LocalRuntime = {

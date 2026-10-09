@@ -1,11 +1,9 @@
-import { tmpdir } from "node:os";
 import { Effect, FileSystem, MutableList } from "effect";
 
 /** A temporary backend checkout holding the Convex files a local runtime reads. */
 export const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({
-    directory: tmpdir(),
     prefix: "acceptance-local-test-",
   });
   const root = yield* fs.realPath(directory);

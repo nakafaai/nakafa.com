@@ -1,4 +1,3 @@
-import { tmpdir } from "node:os";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
@@ -35,7 +34,6 @@ describe("acceptance command diagnostics", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const root = yield* fileSystem.makeTempDirectoryScoped({
-            directory: tmpdir(),
             prefix: "content-acceptance-command-test-",
           });
           const stderrPath = `${root}/stderr.log`;
@@ -86,7 +84,6 @@ describe("acceptance command diagnostics", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const root = yield* fileSystem.makeTempDirectoryScoped({
-            directory: tmpdir(),
             prefix: "content-acceptance-command-env-test-",
           });
           const stderrPath = `${root}/stderr.log`;
@@ -124,7 +121,6 @@ describe("acceptance command diagnostics", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const root = yield* fileSystem.makeTempDirectoryScoped({
-            directory: tmpdir(),
             prefix: "content-acceptance-fast-command-test-",
           });
 
@@ -171,7 +167,6 @@ describe("acceptance command diagnostics", () => {
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const root = yield* fileSystem.makeTempDirectoryScoped({
-            directory: tmpdir(),
             prefix: "content-acceptance-stdin-test-",
           });
           const outputPath = `${root}/combined.log`;
@@ -204,7 +199,6 @@ describe("acceptance command diagnostics", () => {
           Effect.gen(function* () {
             const fileSystem = yield* FileSystem.FileSystem;
             const root = yield* fileSystem.makeTempDirectoryScoped({
-              directory: tmpdir(),
               prefix: "content-acceptance-generic-error-test-",
             });
 
