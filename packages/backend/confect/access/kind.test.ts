@@ -1,6 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { FunctionImpl } from "@confect/server";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { entries } from "@repo/backend/confect/access/catalog";
@@ -94,17 +94,22 @@ describe("access/kind compile-time contract", () => {
       .middleware(Session)
       .middleware(RequireMember)
       .addFunction(probe);
-    const handler = Effect.fn(function* () {
+    type ProbeHandler = Parameters<
+      typeof FunctionImpl.make<typeof databaseSchema, typeof group, "probe">
+    >[3];
+    const needsPerson = Effect.fn(function* () {
       yield* Person;
       return null;
     });
+    const needsNothing = () => Effect.succeed(null);
+
+    expectTypeOf(needsPerson).not.toExtend<ProbeHandler>();
+    expectTypeOf(needsNothing).toExtend<ProbeHandler>();
     const impl = FunctionImpl.make(
       databaseSchema,
       group,
       "probe",
-      // @ts-expect-error Person is provided only by PersonAccess
-      // @effect-diagnostics-next-line missingEffectContext:off
-      handler
+      needsNothing
     );
     expect(impl).toBeDefined();
   });
