@@ -183,26 +183,28 @@ describe("Nina provider context", () => {
         ],
       },
     ]);
-    expect(result.at(-1)).toEqual({
-      role: "tool",
-      content: [
-        expect.objectContaining({
-          output: {
-            type: "text",
-            value: '{"type":"json","value":{"text":42}}',
-          },
-        }),
-        expect.objectContaining({
-          output: { type: "text", value: "CAS unavailable" },
-        }),
-        expect.objectContaining({
-          output: {
-            type: "text",
-            value: '{"type":"execution-denied","reason":"Not allowed"}',
-          },
-        }),
-      ],
-    });
+    expect(Arr.last(result)).toEqual(
+      Option.some({
+        role: "tool",
+        content: [
+          expect.objectContaining({
+            output: {
+              type: "text",
+              value: '{"type":"json","value":{"text":42}}',
+            },
+          }),
+          expect.objectContaining({
+            output: { type: "text", value: "CAS unavailable" },
+          }),
+          expect.objectContaining({
+            output: {
+              type: "text",
+              value: '{"type":"execution-denied","reason":"Not allowed"}',
+            },
+          }),
+        ],
+      })
+    );
   });
 
   it("omits turns the rolling summary already covers", () => {
@@ -232,7 +234,7 @@ describe("Nina provider context", () => {
       recent,
       throughOrder: null,
     });
-    const history = result.slice(0, -1);
+    const history = Arr.dropRight(result, 1);
     expect(tokens(history)).toBeLessThanOrEqual(NINA_BUDGET.history + 200);
     expect(history[0]).toMatchObject({ role: "user" });
     expect(encodeJsonText(result)).not.toContain("Tail of an older turn");
@@ -245,8 +247,8 @@ describe("Nina provider context", () => {
     // Three results each fill the evidence budget, so the turn outgrows history.
     const oversized = [
       ...turn("Huge", huge),
-      ...turn("Huge", huge).slice(1, 3),
-      ...turn("Huge", huge).slice(1, 3),
+      ...Arr.take(Arr.drop(turn("Huge", huge), 1), 2),
+      ...Arr.take(Arr.drop(turn("Huge", huge), 1), 2),
     ];
     const result = assembleContext({
       current: [{ role: "user", content: "Follow up" }],
@@ -330,7 +332,7 @@ describe("Nina provider context", () => {
         },
       ],
     });
-    expect(result.at(-1)).toEqual(current);
+    expect(Arr.last(result)).toEqual(Option.some(current));
   });
 
   it("keeps approval parts while shortening the evidence around them", () => {
@@ -419,18 +421,20 @@ describe("Nina provider context", () => {
       ...toolRound("three"),
       ...toolRound("four"),
     ]);
-    const current = result.slice(
-      Option.getOrElse(
+    const current = Arr.drop(
+      result,
+      Option.getOrThrow(
         Arr.findFirstIndex(
           result,
           (message) =>
             message.role === "user" && message.content === "Gather everything"
-        ),
-        () => -1
+        )
       )
     );
     expect(tokens(current)).toBeLessThanOrEqual(NINA_BUDGET.turnEvidence + 400);
-    expect(encodeJsonText(current.at(-1))).not.toContain("shortened");
+    expect(encodeJsonText(Option.getOrThrow(Arr.last(current)))).not.toContain(
+      "shortened"
+    );
     expect(encodeJsonText(current[2])).toContain("shortened");
     expect(result[2]).toMatchObject({
       role: "tool",

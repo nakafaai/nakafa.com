@@ -4,7 +4,7 @@ import type {
   CapabilityProgress,
 } from "@repo/backend/confect/nina/capability/progress";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
-import { Array as Arr, Effect, MutableRef } from "effect";
+import { Array as Arr, Effect, MutableRef, Option } from "effect";
 
 const firecrawlApp = vi.hoisted(() => ({
   search: vi.fn(),
@@ -205,7 +205,7 @@ describe("research web search tool", () => {
           }),
         })
       );
-      expect(parts().at(-1)).toEqual(
+      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           data: expect.objectContaining({
             queries: ["AI SDK docs"],
@@ -346,7 +346,7 @@ describe("research web search tool", () => {
 
         expect(output.result.sources).toEqual([]);
         expect(output.text).toContain("# Web Search Results");
-        expect(parts().at(-1)).toEqual(
+        expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
           expect.objectContaining({
             type: "data-web-search",
             data: expect.objectContaining({
@@ -374,7 +374,7 @@ describe("research web search tool", () => {
       expect(output.result.sources).toEqual([]);
       expect(output.result.error).toContain("Failed to search");
       expect(output.text).toContain("Failed to search");
-      expect(parts().at(-1)).toEqual(
+      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           type: "data-web-search",
           data: expect.objectContaining({

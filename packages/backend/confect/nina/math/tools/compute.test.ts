@@ -8,7 +8,13 @@ import type { MathRequest } from "@repo/math/schema/request";
 import type { MathResult } from "@repo/math/schema/result";
 import type { MathToolInput } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
-import { Array as Arr, ConfigProvider, Effect, MutableRef } from "effect";
+import {
+  Array as Arr,
+  ConfigProvider,
+  Effect,
+  MutableRef,
+  Option,
+} from "effect";
 import { FetchHttpClient } from "effect/http";
 
 type WrittenPart = CapabilityArtifact;
@@ -140,7 +146,7 @@ describe("math compute tool", () => {
       expect(output).toContain(
         "Retry the same operation if the task gives omitted variables"
       );
-      expect(parts().at(-1)).toEqual(
+      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           data: expect.objectContaining({
             error: "math_check_unavailable",
@@ -169,7 +175,7 @@ describe("math compute tool", () => {
       );
       expect(output).toContain("- Status: error");
       expect(output).toContain("- Error code: math_check_unavailable");
-      expect(parts().at(-1)).toEqual(
+      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           data: expect.objectContaining({
             error: "math_check_unavailable",
@@ -214,7 +220,7 @@ describe("math compute tool", () => {
         expect(output).toContain(
           "Retry the same operation with the explicit variable"
         );
-        expect(parts().at(-1)).toEqual(
+        expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
           expect.objectContaining({
             data: expect.objectContaining({
               error: "math_check_unavailable",
@@ -343,7 +349,7 @@ describe("math compute tool", () => {
         Effect.provideService(FetchHttpClient.Fetch, fetcher)
       );
       expect(output).toContain("- Error code: math_check_unavailable");
-      expect(parts().at(-1)).toEqual(
+      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           data: expect.objectContaining({
             error: "math_check_unavailable",

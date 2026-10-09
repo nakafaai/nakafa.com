@@ -8,7 +8,7 @@ import {
   isSuccessfulScrapeOutput,
   scrapeUrl,
 } from "@repo/backend/confect/nina/research/tools/scrape";
-import { Array as Arr, Effect, Fiber, MutableRef } from "effect";
+import { Array as Arr, Effect, Fiber, MutableRef, Option } from "effect";
 import { TestClock } from "effect/testing";
 
 const firecrawlApp = vi.hoisted(() => ({
@@ -238,7 +238,7 @@ describe("research scrape tool", () => {
 
       expect(text).toContain("full visibility over your AI SDK calls");
       expect(text).not.toContain("Sign Up");
-      expect(parts().at(-1)).toEqual(
+      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({
@@ -274,7 +274,7 @@ describe("research scrape tool", () => {
 
       expect(output.error).toBeUndefined();
       expect(output.data.content).toContain("Direct markdown evidence.");
-      expect(parts().at(-1)).toEqual(
+      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({
@@ -308,7 +308,7 @@ describe("research scrape tool", () => {
         expect(text).toContain("- Title: Fallback title");
         expect(text).toContain("- Description: Fallback description");
         expect(text).toContain("- Error: No content found.");
-        expect(parts().at(-1)).toEqual(
+        expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
           expect.objectContaining({
             type: "data-scrape-url",
             data: expect.objectContaining({
@@ -338,7 +338,7 @@ describe("research scrape tool", () => {
 
       expect(text).not.toContain("- Title:");
       expect(text).not.toContain("- Description:");
-      expect(parts().at(-1)).toEqual(
+      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: {
@@ -414,7 +414,7 @@ describe("research scrape tool", () => {
         "The page could not be retrieved. Please try again."
       );
       expect(text).not.toContain("- Title:");
-      expect(parts().at(-1)).toEqual(
+      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({ status: "error" }),
