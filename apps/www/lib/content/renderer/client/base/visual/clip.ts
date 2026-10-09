@@ -16,10 +16,6 @@ type ParameterBounds = readonly [
 ];
 const ZERO = BigDecimal.fromBigInt(0n);
 
-function decimal(value: number) {
-  return BigDecimal.fromNumberUnsafe(value);
-}
-
 /**
  * Narrows the parameter bounds of a line to one axis range. Answers none when
  * the line misses the range, so no later axis can bring it back.
@@ -31,18 +27,24 @@ function clipAxis(
   delta: Decimal
 ): Option.Option<ParameterBounds> {
   if (BigDecimal.equals(delta, ZERO)) {
-    return BigDecimal.isLessThan(coordinate, decimal(range.min)) ||
-      BigDecimal.isGreaterThan(coordinate, decimal(range.max))
+    return BigDecimal.isLessThan(
+      coordinate,
+      BigDecimal.fromNumberUnsafe(range.min)
+    ) ||
+      BigDecimal.isGreaterThan(
+        coordinate,
+        BigDecimal.fromNumberUnsafe(range.max)
+      )
       ? Option.none()
       : Option.some([minimum, maximum]);
   }
 
   const first = BigDecimal.divideUnsafe(
-    BigDecimal.subtract(decimal(range.min), coordinate),
+    BigDecimal.subtract(BigDecimal.fromNumberUnsafe(range.min), coordinate),
     delta
   );
   const second = BigDecimal.divideUnsafe(
-    BigDecimal.subtract(decimal(range.max), coordinate),
+    BigDecimal.subtract(BigDecimal.fromNumberUnsafe(range.max), coordinate),
     delta
   );
   const lower = BigDecimal.min(first, second);
@@ -72,8 +74,8 @@ function clipParameters(
   }
 
   const unclipped: ParameterBounds = [
-    Option.map(Option.fromUndefinedOr(start), decimal),
-    Option.map(Option.fromUndefinedOr(end), decimal),
+    Option.map(Option.fromUndefinedOr(start), BigDecimal.fromNumberUnsafe),
+    Option.map(Option.fromUndefinedOr(end), BigDecimal.fromNumberUnsafe),
   ];
   const clipped = Arr.reduce(
     frame,
@@ -115,10 +117,13 @@ function clipPlaneEndpoints(
   start?: number,
   end?: number
 ): readonly [PlanePoint, PlanePoint] | undefined {
-  const origin = [decimal(from.x), decimal(from.y)];
+  const origin = [
+    BigDecimal.fromNumberUnsafe(from.x),
+    BigDecimal.fromNumberUnsafe(from.y),
+  ];
   const direction = [
-    BigDecimal.subtract(decimal(through.x), origin[0]),
-    BigDecimal.subtract(decimal(through.y), origin[1]),
+    BigDecimal.subtract(BigDecimal.fromNumberUnsafe(through.x), origin[0]),
+    BigDecimal.subtract(BigDecimal.fromNumberUnsafe(through.y), origin[1]),
   ];
   const interval = clipParameters(
     origin,
@@ -146,11 +151,15 @@ function clipSpaceEndpoints(
   start?: number,
   end?: number
 ): readonly [SpacePoint, SpacePoint] | undefined {
-  const origin = [decimal(from.x), decimal(from.y), decimal(from.z)];
+  const origin = [
+    BigDecimal.fromNumberUnsafe(from.x),
+    BigDecimal.fromNumberUnsafe(from.y),
+    BigDecimal.fromNumberUnsafe(from.z),
+  ];
   const direction = [
-    BigDecimal.subtract(decimal(through.x), origin[0]),
-    BigDecimal.subtract(decimal(through.y), origin[1]),
-    BigDecimal.subtract(decimal(through.z), origin[2]),
+    BigDecimal.subtract(BigDecimal.fromNumberUnsafe(through.x), origin[0]),
+    BigDecimal.subtract(BigDecimal.fromNumberUnsafe(through.y), origin[1]),
+    BigDecimal.subtract(BigDecimal.fromNumberUnsafe(through.z), origin[2]),
   ];
   const interval = clipParameters(
     origin,

@@ -13,22 +13,25 @@ const TWO = BigDecimal.fromBigInt(2n);
 const ZERO = BigDecimal.fromBigInt(0n);
 type ExactRange = ReturnType<typeof range>;
 export type VisualProjection = ReturnType<typeof resolveVisualProjection>;
-function decimal(value: number) {
-  return BigDecimal.fromNumberUnsafe(value);
-}
 function range(
   bounds: { readonly min: number; readonly max: number },
   padding: number
 ) {
   return {
-    min: BigDecimal.subtract(decimal(bounds.min), decimal(padding)),
-    max: BigDecimal.sum(decimal(bounds.max), decimal(padding)),
+    min: BigDecimal.subtract(
+      BigDecimal.fromNumberUnsafe(bounds.min),
+      BigDecimal.fromNumberUnsafe(padding)
+    ),
+    max: BigDecimal.sum(
+      BigDecimal.fromNumberUnsafe(bounds.max),
+      BigDecimal.fromNumberUnsafe(padding)
+    ),
   };
 }
 function include(bounds: ExactRange, value: number): ExactRange {
   return {
-    min: BigDecimal.min(bounds.min, decimal(value)),
-    max: BigDecimal.max(bounds.max, decimal(value)),
+    min: BigDecimal.min(bounds.min, BigDecimal.fromNumberUnsafe(value)),
+    max: BigDecimal.max(bounds.max, BigDecimal.fromNumberUnsafe(value)),
   };
 }
 function midpoint(bounds: ExactRange) {
@@ -86,10 +89,18 @@ export function projectVisualPoint(
   projection: VisualProjection
 ): SpacePoint {
   return {
-    x: coordinate(decimal(point.x), projection.center.x, projection.extent),
-    y: coordinate(decimal(point.y), projection.center.y, projection.extent),
+    x: coordinate(
+      BigDecimal.fromNumberUnsafe(point.x),
+      projection.center.x,
+      projection.extent
+    ),
+    y: coordinate(
+      BigDecimal.fromNumberUnsafe(point.y),
+      projection.center.y,
+      projection.extent
+    ),
     z: coordinate(
-      "z" in point ? decimal(point.z) : ZERO,
+      "z" in point ? BigDecimal.fromNumberUnsafe(point.z) : ZERO,
       projection.center.z,
       projection.extent
     ),
@@ -116,7 +127,7 @@ export function projectVisualMeasure(
 ) {
   return BigDecimal.toNumberUnsafe(
     BigDecimal.divideUnsafe(
-      BigDecimal.multiply(decimal(measure), WORLD_EXTENT),
+      BigDecimal.multiply(BigDecimal.fromNumberUnsafe(measure), WORLD_EXTENT),
       projection.extent
     )
   );

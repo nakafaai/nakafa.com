@@ -13,9 +13,6 @@ import {
 } from "@/lib/content/renderer/client/base/visual/transform";
 
 const TWO = BigDecimal.fromBigInt(2n);
-function decimal(value: number) {
-  return BigDecimal.fromNumberUnsafe(value);
-}
 function evaluateQuadratic(
   object: Extract<PlaneObject, { readonly kind: "quadratic" }>,
   input: BigDecimal.BigDecimal
@@ -23,10 +20,13 @@ function evaluateQuadratic(
   const { a, b, c } = object.coefficients;
   return BigDecimal.sum(
     BigDecimal.multiply(
-      BigDecimal.sum(BigDecimal.multiply(decimal(a), input), decimal(b)),
+      BigDecimal.sum(
+        BigDecimal.multiply(BigDecimal.fromNumberUnsafe(a), input),
+        BigDecimal.fromNumberUnsafe(b)
+      ),
       input
     ),
-    decimal(c)
+    BigDecimal.fromNumberUnsafe(c)
   );
 }
 
@@ -34,8 +34,8 @@ function evaluateQuadratic(
 export function resolvePlaneQuadratic(
   object: Extract<PlaneObject, { readonly kind: "quadratic" }>
 ) {
-  const startInput = decimal(object.domain.min);
-  const endInput = decimal(object.domain.max);
+  const startInput = BigDecimal.fromNumberUnsafe(object.domain.min);
+  const endInput = BigDecimal.fromNumberUnsafe(object.domain.max);
   const halfSpan = BigDecimal.divideUnsafe(
     BigDecimal.subtract(endInput, startInput),
     TWO
@@ -44,8 +44,12 @@ export function resolvePlaneQuadratic(
   const startOutput = evaluateQuadratic(object, startInput);
   const endOutput = evaluateQuadratic(object, endInput);
   const derivative = BigDecimal.sum(
-    BigDecimal.multiplyAll([TWO, decimal(object.coefficients.a), startInput]),
-    decimal(object.coefficients.b)
+    BigDecimal.multiplyAll([
+      TWO,
+      BigDecimal.fromNumberUnsafe(object.coefficients.a),
+      startInput,
+    ]),
+    BigDecimal.fromNumberUnsafe(object.coefficients.b)
   );
   const controlOutput = BigDecimal.sum(
     startOutput,

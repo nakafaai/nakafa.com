@@ -57,16 +57,15 @@ const MINIMUM_CELL_STEP = 0.5;
 const MAXIMUM_AXIS_DIVISIONS = 200;
 const MAXIMUM_AXIS_COORDINATES = MAXIMUM_AXIS_DIVISIONS + 2;
 
-function decimal(value: number) {
-  return BigDecimal.fromNumberUnsafe(value);
-}
-
 function containsCoordinate({ max, min }: CoordinateRange, coordinate: number) {
   return min <= coordinate && max >= coordinate;
 }
 
 function span({ max, min }: CoordinateRange) {
-  return BigDecimal.subtract(decimal(max), decimal(min));
+  return BigDecimal.subtract(
+    BigDecimal.fromNumberUnsafe(max),
+    BigDecimal.fromNumberUnsafe(min)
+  );
 }
 
 function coordinateValues(
@@ -74,14 +73,17 @@ function coordinateValues(
   step: number,
   anchor: number
 ) {
-  const exactStep = decimal(step);
-  const exactAnchor = decimal(anchor);
+  const exactStep = BigDecimal.fromNumberUnsafe(step);
+  const exactAnchor = BigDecimal.fromNumberUnsafe(anchor);
   const first = BigDecimal.sum(
     exactAnchor,
     BigDecimal.multiply(
       BigDecimal.ceil(
         BigDecimal.divideUnsafe(
-          BigDecimal.subtract(decimal(range.min), exactAnchor),
+          BigDecimal.subtract(
+            BigDecimal.fromNumberUnsafe(range.min),
+            exactAnchor
+          ),
           exactStep
         )
       ),
@@ -97,7 +99,9 @@ function coordinateValues(
       first,
       BigDecimal.multiply(exactStep, BigDecimal.fromBigInt(BigInt(index)))
     );
-    if (BigDecimal.isGreaterThan(value, decimal(range.max))) {
+    if (
+      BigDecimal.isGreaterThan(value, BigDecimal.fromNumberUnsafe(range.max))
+    ) {
       break;
     }
     const numeric = BigDecimal.toNumberUnsafe(value);
@@ -120,7 +124,10 @@ function resolveCellStep(frame: CoordinateFrame) {
     BigDecimal.fromBigInt(BigInt(MAXIMUM_AXIS_DIVISIONS))
   );
   if (
-    BigDecimal.isLessThanOrEqualTo(requiredStep, decimal(MINIMUM_CELL_STEP))
+    BigDecimal.isLessThanOrEqualTo(
+      requiredStep,
+      BigDecimal.fromNumberUnsafe(MINIMUM_CELL_STEP)
+    )
   ) {
     return MINIMUM_CELL_STEP;
   }
@@ -147,7 +154,10 @@ function resolveCellStep(frame: CoordinateFrame) {
 
 function offset(value: number, delta: number) {
   const result = BigDecimal.toNumberUnsafe(
-    BigDecimal.sum(decimal(value), decimal(delta))
+    BigDecimal.sum(
+      BigDecimal.fromNumberUnsafe(value),
+      BigDecimal.fromNumberUnsafe(delta)
+    )
   );
   if (Number.isFinite(result)) {
     return result;
