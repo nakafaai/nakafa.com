@@ -13,6 +13,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { Fragment, type ReactElement } from "react";
 import { SearchExcerpt } from "@/components/search/excerpt";
+import { useSearchSectionLabels } from "@/components/search/labels";
 import type { ContentSearchResultItem } from "@/lib/search/query";
 
 interface Props {
@@ -126,23 +127,6 @@ function ResultGroup({
       </div>
     </div>
   );
-}
-
-/** Resolves localized section labels for the search results page. */
-function useSearchSectionLabels(): Record<
-  ContentSearchResultItem["section"],
-  string
-> {
-  const tCommon = useTranslations("Common");
-  const tArticles = useTranslations("Articles");
-  const tHoly = useTranslations("Holy");
-
-  return {
-    articles: tArticles("articles"),
-    material: tCommon("material"),
-    quran: tHoly("quran"),
-    tryout: tCommon("try-out"),
-  };
 }
 
 /** Groups flat Convex search results by section for page rendering. */
