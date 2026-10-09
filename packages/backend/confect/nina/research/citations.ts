@@ -1,4 +1,7 @@
-import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
+import type {
+  ResearchOutput,
+  WebSearchSourceSchema,
+} from "@repo/backend/confect/nina/research/schema";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Array as Arr, MutableHashSet } from "effect";
 
@@ -31,7 +34,7 @@ export function addEligibleCitationUrl(
 /** Adds each returned search source URL to the citation whitelist. */
 export function addEligibleSourceUrls(
   urls: MutableHashSet.MutableHashSet<string>,
-  sources: readonly { url: string }[]
+  sources: readonly Pick<typeof WebSearchSourceSchema.Type, "url">[]
 ) {
   for (const source of sources) {
     addEligibleCitationUrl(urls, source.url);

@@ -1,6 +1,6 @@
-import { CapabilityOutputSchema } from "@repo/backend/confect/nina/capability/progress";
+import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
+import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
-import { researchMaxSources } from "@repo/backend/confect/nina/research/schema";
 import { type DynamicToolUIPart, getToolName, type ToolUIPart } from "ai";
 import { Array as Arr, Result, Schema } from "effect";
 

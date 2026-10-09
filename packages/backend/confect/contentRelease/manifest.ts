@@ -223,9 +223,5 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     manifestHash: signed.manifestHash,
     phase: "staging",
     releaseId: signed.manifest.releaseId,
-  } satisfies {
-    readonly manifestHash: string;
-    readonly phase: "staging";
-    readonly releaseId: string;
-  };
+  } satisfies ReleaseStatus;
 });

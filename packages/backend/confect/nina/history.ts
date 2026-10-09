@@ -1,9 +1,9 @@
+import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import {
   boundText,
   countTextTokens,
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
-import { CapabilityOutputSchema } from "@repo/backend/confect/nina/capability/progress";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { encodeJsonText } from "@repo/utilities/json";
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";

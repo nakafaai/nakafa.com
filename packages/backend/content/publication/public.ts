@@ -20,6 +20,7 @@ import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { resolveActiveRoute } from "@repo/backend/content/publication/route";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { PublicationSource } from "@repo/backend/content/publication/source";
+import type { publicRequestValidator } from "@repo/backend/content/publication/spec";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type AppLocale = typeof appLocaleValidator.Type;
@@ -220,12 +221,7 @@ export const resolvePublicRoute = Effect.fn(
 /** Resolves one bounded public batch inside one consistent transaction. */
 export const resolvePublicRoutes = Effect.fn(
   "contentRelease.resolvePublicRoutes"
-)(function* (
-  requests: readonly {
-    readonly appLocale: AppLocale;
-    readonly publicPath: string;
-  }[]
-) {
+)(function* (requests: readonly (typeof publicRequestValidator.Type)[]) {
   if (
     requests.length === 0 ||
     requests.length > PUBLIC_CONTENT_RUNTIME_BATCH_SIZE

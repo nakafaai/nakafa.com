@@ -8,6 +8,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { completedReceipt } from "@repo/backend/confect/contentRelease/receipt";
+import type { recoveryLookupValidator } from "@repo/backend/confect/contentRelease/recovery.spec";
 import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/binding";
 import { Effect } from "effect";
 
@@ -69,9 +70,7 @@ export const lookupProgram = Effect.fn("contentRelease.recoveryLookup")(
     if (recovery?.status !== "completed") {
       return {
         kind: "missing",
-      } satisfies {
-        readonly kind: "missing";
-      };
+      } satisfies typeof recoveryLookupValidator.Type;
     }
     const candidate = yield* loadRelease(releaseId);
     const signed = yield* validateRecoveryRelation(candidate, recovery);
@@ -86,13 +85,6 @@ export const lookupProgram = Effect.fn("contentRelease.recoveryLookup")(
         releaseJson: recovery.releaseJson,
         rendererJson: recovery.rendererJson,
       },
-    } satisfies {
-      readonly kind: "completed";
-      readonly value: {
-        readonly receipt: unknown;
-        readonly releaseJson: string;
-        readonly rendererJson: string;
-      };
-    };
+    } satisfies typeof recoveryLookupValidator.Type;
   }
 );

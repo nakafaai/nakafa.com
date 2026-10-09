@@ -1,12 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import spec, {
-  DEFAULT_TITLE,
-} from "@repo/backend/confect/nina/presentation.spec";
+import spec from "@repo/backend/confect/nina/presentation.spec";
 import { Effect, Layer } from "effect";
 
 const save = FunctionImpl.make(

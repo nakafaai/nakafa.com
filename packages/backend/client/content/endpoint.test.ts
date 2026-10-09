@@ -7,9 +7,14 @@ import {
 } from "@repo/backend/client/content/endpoint";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import { PUBLIC_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
+
+/** A request body that refers to itself, so that JSON encoding must reject it. */
+const CyclicRequestSchema = Schema.Struct({
+  self: Schema.mutableKey(Schema.optionalKey(Schema.Unknown)),
+});
 
 describe("content runtime endpoint", () => {
   it.live("builds only fixed HTTPS or loopback endpoints", () =>
@@ -48,7 +53,7 @@ describe("content runtime endpoint", () => {
       expect(yield* encodeContentRequest({ locale: "en" }, 1024)).toBe(
         '{"locale":"en"}'
       );
-      const cyclic: { self?: unknown } = {};
+      const cyclic: typeof CyclicRequestSchema.Type = {};
       cyclic.self = cyclic;
       for (const input of [cyclic, undefined]) {
         expect(

@@ -2,7 +2,7 @@
  * Credit grant configuration per plan.
  * Extensible for future plans: max, ultra, enterprise, etc.
  */
-import type { CreditGrantType } from "@repo/backend/confect/credits/schema";
+import type { planCreditValidator } from "@repo/backend/confect/credits/schema";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
 /**
  * Credit grant configuration per plan.
@@ -10,12 +10,7 @@ import type { UserPlan } from "@repo/backend/confect/users/schema";
  */
 export const PLAN_CREDIT_CONFIG: Record<
   UserPlan,
-  {
-    /** Amount of credits granted per reset cycle */
-    amount: number;
-    /** Grant type for transaction logging */
-    grantType: CreditGrantType;
-  }
+  typeof planCreditValidator.Type
 > = {
   free: {
     amount: 10,
