@@ -15,11 +15,32 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMessage } from "@/components/ai/message/context";
 import { getAiModel } from "@/lib/data/models";
+
+/** Sums one token count across a turn's usage records; a missing turn sums to zero. */
+function sumTurnUsage(
+  turn:
+    | {
+        readonly usage: readonly {
+          readonly input: number;
+          readonly output: number;
+        }[];
+      }
+    | null
+    | undefined,
+  field: "input" | "output"
+) {
+  return Option.getOrElse(
+    Option.map(Option.fromNullishOr(turn), (current) =>
+      Arr.reduce(current.usage, 0, (sum, usage) => sum + usage[field])
+    ),
+    () => 0
+  );
+}
 
 export function AiChatMessageCredits() {
   const t = useTranslations("Ai");
@@ -31,14 +52,8 @@ export function AiChatMessageCredits() {
       ? (turn.credits ?? 0)
       : 0;
   const modelId = turn?.modelId;
-  const input =
-    turn?.tokens?.input ??
-    (turn && Arr.reduce(turn.usage, 0, (sum, usage) => sum + usage.input)) ??
-    0;
-  const output =
-    turn?.tokens?.output ??
-    (turn && Arr.reduce(turn.usage, 0, (sum, usage) => sum + usage.output)) ??
-    0;
+  const input = turn?.tokens?.input ?? sumTurnUsage(turn, "input");
+  const output = turn?.tokens?.output ?? sumTurnUsage(turn, "output");
   const tokens = {
     input,
     output,
