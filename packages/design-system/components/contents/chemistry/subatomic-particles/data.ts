@@ -1,7 +1,8 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr } from "effect";
 
 export const CATHODE_RAY_MODE_ID = "cathode-ray";
 export const GOLD_FOIL_MODE_ID = "gold-foil";
@@ -12,23 +13,12 @@ export type SubatomicParticlesModeId =
   | typeof GOLD_FOIL_MODE_ID
   | typeof ATOM_MAP_MODE_ID;
 export type SubatomicSceneColors = ReturnType<typeof getSubatomicSceneColors>;
-const SubatomicCameraPointSchema = Schema.Tuple([
-  Schema.Finite,
-  Schema.Finite,
-  Schema.Finite,
-]);
 
 export const SUBATOMIC_PARTICLE_MODE_IDS = [
   CATHODE_RAY_MODE_ID,
   GOLD_FOIL_MODE_ID,
   ATOM_MAP_MODE_ID,
 ] satisfies SubatomicParticlesModeId[];
-
-const SubatomicViewConfigSchema = Schema.Struct({
-  cameraPosition: SubatomicCameraPointSchema,
-  cameraTarget: SubatomicCameraPointSchema,
-  narrowCameraPosition: SubatomicCameraPointSchema,
-});
 
 export const SUBATOMIC_VIEW_CONFIG = {
   [CATHODE_RAY_MODE_ID]: {
@@ -46,10 +36,7 @@ export const SUBATOMIC_VIEW_CONFIG = {
     cameraTarget: [0, 0, 0],
     narrowCameraPosition: [0, 0.05, 3.35],
   },
-} satisfies Record<
-  SubatomicParticlesModeId,
-  typeof SubatomicViewConfigSchema.Type
->;
+} satisfies Record<SubatomicParticlesModeId, NarrowCameraPose>;
 
 export function isSubatomicParticlesModeId(
   value: string

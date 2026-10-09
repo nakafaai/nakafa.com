@@ -34,7 +34,11 @@ const AxisGeometrySchema = Schema.Struct({
   to: CoordinatePointSchema,
   visible: Schema.Boolean,
 });
-type AxisGeometry = typeof AxisGeometrySchema.Type;
+const AxisGeometriesSchema = Schema.Struct({
+  x: AxisGeometrySchema,
+  y: AxisGeometrySchema,
+  z: AxisGeometrySchema,
+});
 
 const GridPlaneGeometrySchema = Schema.Struct({
   boundary: Schema.Array(CoordinateTupleSchema),
@@ -222,11 +226,7 @@ export function createAxisGeometry(
   frame: CoordinateFrame,
   labelOffset: number,
   origin: CoordinatePoint = ORIGIN
-): {
-  readonly x: AxisGeometry;
-  readonly y: AxisGeometry;
-  readonly z: AxisGeometry;
-} {
+): typeof AxisGeometriesSchema.Type {
   const xVisible =
     containsCoordinate(frame.y, origin.y) &&
     containsCoordinate(frame.z, origin.z);

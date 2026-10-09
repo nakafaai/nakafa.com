@@ -16,7 +16,7 @@ const SHELL_RENDER_CONFIG = [
   { radius: 1.55, speed: 0.84 },
   { radius: 2.2, speed: 0.62 },
   { radius: 2.85, speed: 0.46 },
-] satisfies { radius: number; speed: number }[];
+];
 
 const ELECTRON_RADIUS = 0.07;
 const OUTER_ELECTRON_RADIUS = 0.085;

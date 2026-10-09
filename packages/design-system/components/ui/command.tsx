@@ -31,9 +31,7 @@ type CommandProps<ItemValue> = Omit<
   items?: readonly ItemValue[] | readonly { items: readonly ItemValue[] }[];
 };
 
-function hasGroupedItems(
-  value: unknown
-): value is { items: readonly unknown[] } {
+function hasGroupedItems(value: unknown) {
   return (
     Predicate.isObject(value) &&
     Predicate.hasProperty(value, "items") &&

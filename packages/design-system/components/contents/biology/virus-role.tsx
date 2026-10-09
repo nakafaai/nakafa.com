@@ -1,7 +1,6 @@
 "use client";
 
 import { BacillusBacteriumModel } from "@repo/design-system/components/contents/biology/bacteria-parts";
-import type { BiologySceneView } from "@repo/design-system/components/contents/biology/data";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
@@ -11,13 +10,14 @@ import {
   BacteriophageModel,
   MiniEnvelopedVirion,
 } from "@repo/design-system/components/contents/biology/virus-parts";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
 
 const ROLE_VIEW = {
   cameraPosition: [0, 1.5, 3.18],
   cameraTarget: [0.25, 0.08, 0.16],
   narrowCameraPosition: [0.25, 2.1, 4.5],
-} satisfies BiologySceneView;
+} satisfies NarrowCameraPose;
 const TARGET_BACTERIA = [
   {
     id: "infected",

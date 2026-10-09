@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import type { CameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr, Option } from "effect";
 
 export const INSTANTANEOUS_SPEED_CAR_MODEL_PATH =
@@ -44,11 +45,7 @@ export const INSTANTANEOUS_SPEED_CAMERA = {
   cameraPosition: [4.8, 3.15, 6.2],
   cameraTarget: [0, 0.18, 0],
   fov: 42,
-} satisfies {
-  cameraPosition: readonly [number, number, number];
-  cameraTarget: readonly [number, number, number];
-  fov: number;
-};
+} satisfies CameraPose;
 
 export const INSTANTANEOUS_SPEED_COLORS = {
   car: getColor("BLUE"),

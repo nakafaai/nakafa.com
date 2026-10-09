@@ -9,6 +9,7 @@ import {
   CHARGE_MODE_ID,
   LOCATION_MODE_ID,
   MASS_MODE_ID,
+  type SubatomicMassBar,
   type SubatomicParticlePropertiesColors,
   type SubatomicParticlePropertiesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
@@ -54,18 +55,7 @@ const MASS_BARS = [
   { color: "proton", height: 1.16, label: "proton", x: -1.45 },
   { color: "neutron", height: 1.18, label: "neutron", x: 0 },
   { color: "electron", height: 0.16, label: "electron", x: 1.45 },
-] satisfies {
-  color: keyof Pick<
-    SubatomicParticlePropertiesColors,
-    "electron" | "neutron" | "proton"
-  >;
-  height: number;
-  label: keyof Pick<
-    SubatomicParticlePropertiesLabProps["labels"]["scene"],
-    "electron" | "neutron" | "proton"
-  >;
-  x: number;
-}[];
+] satisfies SubatomicMassBar[];
 
 const NUCLEUS_PARTICLES = [
   { color: "proton", math: "p^+", position: new Vector3(-0.38, 0.26, 0.15) },

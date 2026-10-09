@@ -76,6 +76,11 @@ const WATER_BONDS = [
   },
 ] satisfies CompositionBond[];
 
+const CompositionLayoutSchema = Schema.Struct({
+  beforeAtoms: Schema.Array(CompositionAtomSchema),
+  leftoverAtoms: Schema.Array(CompositionAtomSchema),
+});
+
 const SCENE_LAYOUTS = {
   [EXACT_RATIO_MODE_ID]: {
     beforeAtoms: [
@@ -105,10 +110,7 @@ const SCENE_LAYOUTS = {
   },
 } satisfies Record<
   ConstantCompositionModeId,
-  {
-    beforeAtoms: readonly CompositionAtom[];
-    leftoverAtoms: readonly CompositionAtom[];
-  }
+  typeof CompositionLayoutSchema.Type
 >;
 
 export function ConstantCompositionScene({
