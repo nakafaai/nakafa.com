@@ -6,7 +6,6 @@ import {
   ContentDeleteSchema,
   ContentUpsertSchema,
 } from "@nakafa/aksara-contracts/release";
-import { StagedContentReleaseSchema } from "@nakafa/aksara-contracts/release/current/state";
 import {
   ContentRouteBindSchema,
   ContentRouteDeleteSchema,
@@ -258,7 +257,12 @@ const storedBundleValidator = Schema.Struct({
   releaseJson: Schema.String,
   rendererJson: Schema.String,
 });
-const stagedPhaseValidator = StagedContentReleaseSchema.fields.phase;
+const stagedPhaseValidator = Schema.Literals([
+  "staging",
+  "verifying",
+  "verified",
+  "aborting",
+]);
 
 /** Authenticated release bundles used for exact crash recovery. */
 export const currentValidator = Schema.Struct({
