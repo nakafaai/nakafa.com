@@ -6,17 +6,12 @@ import {
   type PublicAppLocale,
   routing,
 } from "@repo/internationalization/src/routing";
-import { Schema } from "effect";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
 /** The locale param that a parent route passes to the `generateStaticParams` of its child routes. */
-const LocaleRouteParamsSchema = Schema.Struct({
-  locale: Schema.String,
-});
-
-export type LocaleRouteParams = typeof LocaleRouteParamsSchema.Type;
+export type LocaleRouteParams = Awaited<LayoutProps<"/[locale]">["params"]>;
 
 /** Narrows one route locale to the product's current public locale set. */
 export function getActiveLocaleOrThrow(locale: string): PublicAppLocale {
