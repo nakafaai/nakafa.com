@@ -2,7 +2,7 @@ import {
   type ContentCacheScope,
   makeContentCacheTag,
 } from "@nakafa/aksara-contracts/cache/content";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import {
   CONTENT_CACHE_PROFILE,
@@ -20,7 +20,7 @@ export class ContentCacheInvalidationError extends Schema.TaggedError<ContentCac
 export function applyContentCache(
   ...scopes: readonly [ContentCacheScope, ...ContentCacheScope[]]
 ) {
-  cacheTag(...scopes.map(makeContentCacheTag));
+  cacheTag(...Arr.map(scopes, makeContentCacheTag));
   cacheLife(CONTENT_CACHE_PROFILE);
 }
 
