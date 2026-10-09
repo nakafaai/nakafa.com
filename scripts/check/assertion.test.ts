@@ -101,6 +101,56 @@ type Keys<T> = { [K in keyof T as Exclude<K, "hidden">]: T[K] };
   );
 
   it.effect(
+    "reports each non-null assertion on a call, an element, or an optional chain",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export const called = f()!;
+export const indexed = a[0]!;
+export const optional = a?.b!;
+`),
+          ["1 assertion", "2 assertion", "3 assertion"]
+        );
+      })
+  );
+
+  it.effect("reports each as in a chain of assertions", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings("export const forced = value as unknown as Target;\n"),
+        ["1 assertion", "1 assertion"]
+      );
+    })
+  );
+
+  it.effect("reports an as that follows a satisfies once", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          "export const shaped = input satisfies Shape as Target;\n"
+        ),
+        ["1 assertion"]
+      );
+    })
+  );
+
+  it.effect("reports an assertion inside a browser page function", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          `import { type Page } from "@playwright/test";
+export function read(page: Page) {
+  return page.evaluate(() => (window as Window).name);
+}
+`,
+          "apps/www/e2e/support/read.browser.ts"
+        ),
+        ["3 assertion"]
+      );
+    })
+  );
+
+  it.effect(
     "reports assertions in tests and components, never in configuration",
     () =>
       Effect.gen(function* () {

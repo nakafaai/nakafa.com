@@ -160,6 +160,27 @@ export function asserted(value: unknown) {
     })
   );
 
+  it.effect("reports a switch inside a browser page function", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          `import { type Page } from "@playwright/test";
+export function mode(page: Page) {
+  return page.evaluate(() => {
+    switch (document.title) {
+      default:
+        return 0;
+    }
+  });
+}
+`,
+          "apps/www/e2e/support/mode.browser.ts"
+        ),
+        ["4 switch"]
+      );
+    })
+  );
+
   it.effect("never reports if chains, lookup tables, Match, or text", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
