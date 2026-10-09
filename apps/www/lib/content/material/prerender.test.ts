@@ -179,8 +179,3 @@ describe("published material prerender selection", () => {
     })
   );
 });
-vi.mock("@/env", () => ({
-  env: {
-    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
-  },
-}));

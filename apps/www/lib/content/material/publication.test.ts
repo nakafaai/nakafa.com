@@ -80,11 +80,6 @@ vi.mock("@confect/js", async (importOriginal) => {
 vi.mock("next/cache", () => ({
   cacheLife: vi.fn(),
 }));
-vi.mock("@/env", () => ({
-  env: {
-    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
-  },
-}));
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
 }));
