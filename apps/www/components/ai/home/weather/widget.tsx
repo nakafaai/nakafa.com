@@ -72,7 +72,7 @@ function WeatherSummary({ weather }: { weather: Promise<WeatherRead> }) {
 
   const data = read.value;
   const city = data.city || t("unknown-location");
-  const country = data.countryName || t("unknown-country");
+  const country = data.countryName ?? t("unknown-country");
   const currentTemp = kelvinToCelsius(data.temperatureKelvin);
   const condition = data.condition || "Clear";
   const conditionTitle = condition.charAt(0).toUpperCase() + condition.slice(1);

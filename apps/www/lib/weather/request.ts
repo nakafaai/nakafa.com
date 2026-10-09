@@ -1,5 +1,5 @@
 import { FetchClient } from "@repo/utilities/http/client";
-import { DateTime, Effect, Option, Schedule } from "effect";
+import { DateTime, Effect, MutableRef, Option, Schedule } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import {
   type CurrentWeatherSummary,
@@ -8,10 +8,10 @@ import {
 
 /** The longest the browser waits for one attempt at the app's weather route. */
 const WEATHER_ROUTE_TIMEOUT = "10 seconds";
-/** Three retries, after one, two and four seconds, as the query client made by default. */
+/** A failed attempt is tried again three times, after one, two, and four seconds. */
 const WEATHER_RETRY_TIMES = 3;
 const WEATHER_RETRY_DELAY = "1 second";
-/** A summary is shared for a minute, the stale time the query client used. */
+/** Reads less than a minute apart share one request. */
 const WEATHER_REUSE_MS = 60_000;
 
 /** The widget's read: the summary, or nothing when the request failed. */
@@ -42,8 +42,9 @@ function loadWeatherSummary(): Promise<WeatherRead> {
 
 /**
  * Makes a reader that shares one request across reads less than a minute
- * apart. A request that failed is not shared, so the next read asks again, as
- * an errored query did when it mounted.
+ * apart, counted from the start of the request. Each of those reads gets the
+ * same Promise, so a widget that mounts again does not suspend. A request that
+ * failed is not shared: the next read asks again.
  */
 export function createWeatherReader({
   load,
@@ -52,23 +53,34 @@ export function createWeatherReader({
   readonly load: () => Promise<WeatherRead>;
   readonly now: () => number;
 }): () => Promise<WeatherRead> {
-  let sharedPromise: Promise<WeatherRead> | undefined;
-  let sharedStartedAt = 0;
+  const shared = MutableRef.make(
+    Option.none<{
+      readonly promise: Promise<WeatherRead>;
+      readonly startedAt: number;
+    }>()
+  );
 
   return () => {
     const at = now();
-    if (sharedPromise && at - sharedStartedAt < WEATHER_REUSE_MS) {
-      return sharedPromise;
+    const fresh = Option.filter(
+      MutableRef.get(shared),
+      ({ startedAt }) => at - startedAt < WEATHER_REUSE_MS
+    );
+    if (Option.isSome(fresh)) {
+      return fresh.value.promise;
     }
 
     const promise = load().then((read) => {
-      if (Option.isNone(read) && sharedPromise === promise) {
-        sharedPromise = undefined;
+      const isShared = Option.exists(
+        MutableRef.get(shared),
+        (entry) => entry.promise === promise
+      );
+      if (Option.isNone(read) && isShared) {
+        MutableRef.set(shared, Option.none());
       }
       return read;
     });
-    sharedPromise = promise;
-    sharedStartedAt = at;
+    MutableRef.set(shared, Option.some({ promise, startedAt: at }));
     return promise;
   };
 }

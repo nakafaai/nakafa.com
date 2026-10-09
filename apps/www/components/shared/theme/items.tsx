@@ -7,24 +7,12 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
-import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
+import { ActiveBadge } from "@/components/shared/active";
 
 const BASE_THEMES_COUNT = 3;
-
-/** Shows the selected theme without affecting the item hit target. */
-function ActiveBadge({ isActive }: { isActive: boolean }) {
-  return (
-    <span
-      className={cn(
-        "relative ml-auto size-3 shrink-0 opacity-0 transition-opacity before:absolute before:inset-px before:rounded-full before:bg-primary",
-        isActive && "opacity-100"
-      )}
-    />
-  );
-}
 
 /** Renders one group of themes while leaving the selected theme in next-themes. */
 function ThemeGroup({ options }: { options: typeof themeOptions }) {

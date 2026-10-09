@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Fiber, Option, Result } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
@@ -6,6 +6,7 @@ import {
   createWeatherReader,
   readWeatherSummary,
   requestWeatherSummary,
+  type WeatherRead,
 } from "@/lib/weather/request";
 
 const summary = {
@@ -22,6 +23,10 @@ vi.stubGlobal("fetch", fetcher);
 
 beforeEach(() => {
   fetcher.mockReset();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("createWeatherReader", () => {
@@ -57,6 +62,30 @@ describe("createWeatherReader", () => {
     await read();
     await read();
 
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("a request that fails late", () => {
+  it("does not drop the newer request that replaced it", async () => {
+    let now = 0;
+    let failOlder = () => {};
+    const older = new Promise<WeatherRead>((resolve) => {
+      failOlder = () => resolve(Option.none());
+    });
+    const load = vi
+      .fn<() => Promise<WeatherRead>>()
+      .mockReturnValueOnce(older)
+      .mockReturnValue(Promise.resolve(Option.some(summary)));
+    const read = createWeatherReader({ load, now: () => now });
+
+    const first = read();
+    now = 60_000;
+    const second = read();
+    failOlder();
+    await first;
+
+    expect(read()).toBe(second);
     expect(load).toHaveBeenCalledTimes(2);
   });
 });
@@ -108,5 +137,20 @@ describe("readWeatherSummary", () => {
     expect(second).toBe(first);
     expect(await first).toEqual(Option.some(summary));
     expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("reads nothing when the route keeps failing, and asks again on the next read", async () => {
+    vi.useFakeTimers();
+    vi.advanceTimersByTime(120_000);
+    fetcher.mockImplementation(
+      async () => new Response("unavailable", { status: 503 })
+    );
+
+    const failed = readWeatherSummary();
+    await vi.advanceTimersByTimeAsync(8000);
+
+    expect(await failed).toEqual(Option.none());
+    expect(fetcher).toHaveBeenCalledTimes(4);
+    expect(readWeatherSummary()).not.toBe(failed);
   });
 });

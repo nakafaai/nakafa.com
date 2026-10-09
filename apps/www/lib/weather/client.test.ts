@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer, Result } from "effect";
 import {
   HttpClient,
@@ -154,26 +154,19 @@ describe("getCurrentWeather", () => {
       expect(result.failure).toMatchObject({ _tag: "SchemaError" });
     })
   );
-  it.effect(
-    "leaves the country name empty when OpenWeather omits the country",
-    () =>
-      Effect.gen(function* () {
-        vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
-        const result = yield* runWeather(() =>
-          Response.json({
-            ...currentWeatherResponse,
-            sys: { country: "" },
-          })
-        );
-        expect(result).toEqual(
-          Result.succeed(
-            expect.objectContaining({
-              country: "",
-              countryName: "",
-            })
-          )
-        );
-      })
+  it.effect("omits the country name when OpenWeather names no country", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
+      const result = yield* runWeather(() =>
+        Response.json({
+          ...currentWeatherResponse,
+          sys: { country: "" },
+        })
+      );
+      assert(Result.isSuccess(result));
+      expect(result.success.country).toBe("");
+      expect(result.success).not.toHaveProperty("countryName");
+    })
   );
   it.effect(
     "preserves the visible condition defaults when conditions are absent",

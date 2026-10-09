@@ -14,6 +14,7 @@ import { languages } from "@repo/internationalization/data/lang";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { type Locale, useLocale, useTranslations } from "next-intl";
+import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
@@ -63,12 +64,7 @@ export function Language({ compact = false }: { compact?: boolean }) {
             >
               <CountryFlagIcon countryCode={language.countryCode} />
               <span className="truncate">{language.label}</span>
-              <span
-                className={cn(
-                  "relative ml-auto size-3 shrink-0 opacity-0 transition-opacity before:absolute before:inset-px before:rounded-full before:bg-primary",
-                  currentLocale === language.value && "opacity-100"
-                )}
-              />
+              <ActiveBadge isActive={currentLocale === language.value} />
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>

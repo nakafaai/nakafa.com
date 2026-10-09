@@ -62,11 +62,12 @@ export const getCurrentWeather = Effect.fn("weather.getCurrentWeather")(
           Effect.annotateLogs(context)
         );
         const condition = Option.getOrUndefined(Arr.head(response.weather));
+        const countryName = getCountryName(response.sys.country);
         return {
           city: response.name,
           condition: condition?.description ?? DEFAULT_CONDITION,
           country: response.sys.country,
-          countryName: getCountryName(response.sys.country) ?? "",
+          ...(countryName === undefined ? {} : { countryName }),
           icon: condition?.icon ?? DEFAULT_ICON,
           temperatureKelvin: response.main.temp,
         } satisfies CurrentWeatherSummary;
