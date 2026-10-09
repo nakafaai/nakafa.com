@@ -15,7 +15,15 @@ import {
 } from "@/lib/routing/public/tryout/route";
 import { readSectionSuccessor } from "@/lib/routing/public/tryout/section";
 
-const SET_KEY_PATTERN = /^set-\d+$/;
+/**
+ * The set segment that each app locale publishes for a set. German names its
+ * sets `aufgabensatz-N`; English and Indonesian name them `set-N`.
+ */
+const TRACKLESS_SET_PATTERNS: Record<AppLocaleCode, RegExp> = {
+  de: /^aufgabensatz-\d+$/,
+  en: /^set-\d+$/,
+  id: /^set-\d+$/,
+};
 const YEAR_TRACK_KEY_PATTERN = /^\d{4}$/;
 
 const TracklessSetRouteSchema = Schema.Struct({
@@ -41,7 +49,7 @@ export function readTracklessSetRoute(
     country === undefined ||
     exam === undefined ||
     set === undefined ||
-    !SET_KEY_PATTERN.test(set) ||
+    !TRACKLESS_SET_PATTERNS[appLocale.value].test(set) ||
     rest.length > 1
   ) {
     return Option.none();

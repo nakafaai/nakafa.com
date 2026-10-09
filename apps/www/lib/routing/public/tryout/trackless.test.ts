@@ -182,6 +182,23 @@ describe("retired try-out redirects", () => {
     );
 
     it.effect(
+      "redirects a German track-less set to the newest live year track that serves it",
+      () =>
+        Effect.gen(function* () {
+          serveCatalog({
+            exams: SNBT_EXAM_PAGES,
+            routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+          });
+
+          expect(
+            yield* readTryoutRedirect(
+              "/de/try-out/indonesien/snbt/aufgabensatz-1"
+            )
+          ).toBe("/de/try-out/indonesien/snbt/2027/aufgabensatz-1");
+        })
+    );
+
+    it.effect(
       "prefers the newest year track that serves the set over an older one",
       () =>
         Effect.gen(function* () {
@@ -335,6 +352,32 @@ describe("retired try-out redirects", () => {
             )
           ).toBe(
             "/en/try-out/indonesia/snbt/2027/set-1/reading-comprehension-and-writing"
+          );
+        })
+    );
+
+    it.effect(
+      "redirects a German track-less section to its renamed section in the newest live track",
+      () =>
+        Effect.gen(function* () {
+          serveCatalog({
+            exams: SNBT_EXAM_PAGES,
+            routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+            sections: [
+              {
+                appLocale: "de",
+                publicPath:
+                  "try-out/indonesien/snbt/2027/aufgabensatz-1/allgemeines-wissen-und-verstaendnis",
+              },
+            ],
+          });
+
+          expect(
+            yield* readTryoutRedirect(
+              "/de/try-out/indonesien/snbt/aufgabensatz-1/allgemeinwissen"
+            )
+          ).toBe(
+            "/de/try-out/indonesien/snbt/2027/aufgabensatz-1/allgemeines-wissen-und-verstaendnis"
           );
         })
     );

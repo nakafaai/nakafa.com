@@ -34,6 +34,8 @@ describe("retired try-out redirects", () => {
     "/en/try-out/indonesia/tka/matematika-wajib/set-1",
     "/en/try-out/snbt/2027-set-1/extra",
     "/fr/try-out/snbt",
+    "/de/try-out/indonesien/snbt/set-1",
+    "/en/try-out/indonesia/snbt/aufgabensatz-1",
   ])("leaves %s alone without reading the catalog", (pathname) =>
     Effect.gen(function* () {
       expect(yield* readTryoutRedirect(pathname)).toBeNull();
@@ -41,5 +43,26 @@ describe("retired try-out redirects", () => {
       expect(readExamPageMock).not.toHaveBeenCalled();
       expect(readSectionPageMock).not.toHaveBeenCalled();
     })
+  );
+
+  it.effect(
+    "leaves a live track page and a live set alone without reading the catalog",
+    () =>
+      Effect.gen(function* () {
+        const redirects = yield* Effect.forEach(
+          [
+            "/en/try-out/indonesia/snbt/2027",
+            "/en/try-out/indonesia/snbt/2027/set-1",
+            "/de/try-out/indonesien/snbt/2027",
+            "/de/try-out/indonesien/snbt/2027/aufgabensatz-1",
+          ],
+          (pathname) => readTryoutRedirect(pathname)
+        );
+
+        expect(redirects).toEqual([null, null, null, null]);
+        expect(readLocalizedPathMock).not.toHaveBeenCalled();
+        expect(readExamPageMock).not.toHaveBeenCalled();
+        expect(readSectionPageMock).not.toHaveBeenCalled();
+      })
   );
 });
