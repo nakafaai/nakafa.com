@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Result, Schema } from "effect";
 
 export const GROUP_ONE_FOCUS_ID = "group-one";
 export const PERIOD_THREE_FOCUS_ID = "period-three";
@@ -158,19 +158,32 @@ const PERIODIC_SERIES_ROW_SOURCE = [
 export type PeriodicSeriesRowKey =
   (typeof PERIODIC_SERIES_ROW_SOURCE)[number]["key"];
 
+/** Expected failure: an authored periodic-table text row cannot be read. */
+class PeriodicTableSourceError extends Schema.TaggedError<PeriodicTableSourceError>()(
+  "PeriodicTableSourceError",
+  {
+    message: Schema.String,
+    source: Schema.String,
+  }
+) {}
+
 /**
  * Finds the learning category used for one element tile.
  */
 function getElementCategory(symbol: string) {
-  const category = Arr.findFirst(ELEMENT_CATEGORY_GROUPS, ({ symbols }) =>
-    symbols.split(" ").includes(symbol)
+  return Result.map(
+    Result.fromOption(
+      Arr.findFirst(ELEMENT_CATEGORY_GROUPS, ({ symbols }) =>
+        symbols.split(" ").includes(symbol)
+      ),
+      () =>
+        new PeriodicTableSourceError({
+          message: `Missing periodic-table category for ${symbol}.`,
+          source: symbol,
+        })
+    ),
+    (category) => category.id
   );
-
-  if (Option.isNone(category)) {
-    throw new Error(`Missing periodic-table category for ${symbol}.`);
-  }
-
-  return category.value.id;
 }
 
 /**
@@ -181,25 +194,39 @@ function parseMainEntry(source: string) {
   const group = Number(groupText);
 
   if (!(groupText && symbol && Number.isInteger(group))) {
-    throw new Error(`Invalid periodic-table entry: ${source}.`);
+    return Result.fail(
+      new PeriodicTableSourceError({
+        message: `Invalid periodic-table entry: ${source}.`,
+        source,
+      })
+    );
   }
 
   if (!atomicNumberText) {
-    return { category: getElementCategory(symbol), group, symbol };
+    return Result.map(getElementCategory(symbol), (category) => ({
+      category,
+      group,
+      symbol,
+    }));
   }
 
   const atomicNumber = Number(atomicNumberText);
 
   if (!Number.isInteger(atomicNumber)) {
-    throw new Error(`Invalid atomic number: ${source}.`);
+    return Result.fail(
+      new PeriodicTableSourceError({
+        message: `Invalid atomic number: ${source}.`,
+        source,
+      })
+    );
   }
 
-  return {
+  return Result.map(getElementCategory(symbol), (category) => ({
     atomicNumber,
-    category: getElementCategory(symbol),
+    category,
     group,
     symbol,
-  };
+  }));
 }
 
 /**
@@ -210,30 +237,41 @@ function parseSeriesEntry(source: string) {
   const atomicNumber = Number(atomicNumberText);
 
   if (!(atomicNumberText && symbol && Number.isInteger(atomicNumber))) {
-    throw new Error(`Invalid f-block entry: ${source}.`);
+    return Result.fail(
+      new PeriodicTableSourceError({
+        message: `Invalid f-block entry: ${source}.`,
+        source,
+      })
+    );
   }
 
-  return {
+  return Result.map(getElementCategory(symbol), (category) => ({
     atomicNumber,
-    category: getElementCategory(symbol),
+    category,
     symbol,
-  };
+  }));
 }
 
-export const MAIN_PERIODIC_TABLE_ROWS = Arr.map(
-  MAIN_PERIODIC_TABLE_SOURCE,
-  (row) => ({
-    period: row.period,
-    entries: Arr.map(row.entries.split(" "), parseMainEntry),
-  })
+export const MAIN_PERIODIC_TABLE_ROWS = Result.getOrThrow(
+  Result.all(
+    Arr.map(MAIN_PERIODIC_TABLE_SOURCE, (row) =>
+      Result.map(
+        Result.all(Arr.map(row.entries.split(" "), parseMainEntry)),
+        (entries) => ({ period: row.period, entries })
+      )
+    )
+  )
 );
 
-export const PERIODIC_SERIES_ROWS = Arr.map(
-  PERIODIC_SERIES_ROW_SOURCE,
-  (row) => ({
-    key: row.key,
-    entries: Arr.map(row.entries.split(" "), parseSeriesEntry),
-  })
+export const PERIODIC_SERIES_ROWS = Result.getOrThrow(
+  Result.all(
+    Arr.map(PERIODIC_SERIES_ROW_SOURCE, (row) =>
+      Result.map(
+        Result.all(Arr.map(row.entries.split(" "), parseSeriesEntry)),
+        (entries) => ({ key: row.key, entries })
+      )
+    )
+  )
 );
 
 export type PeriodicElementEntry =
