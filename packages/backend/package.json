@@ -21,7 +21,6 @@
     "insights": "convex insights",
     "setup": "pnpm codegen && convex dev --once",
     "test": "pnpm codegen && vitest run",
-    "test:coverage": "pnpm codegen && vitest run --coverage",
     "test:debug": "pnpm codegen && vitest --inspect-brk --no-file-parallelism",
     "test:watch": "pnpm codegen && vitest watch",
     "typecheck": "pnpm codegen && tsc --project tsconfig.json --noEmit --emitDeclarationOnly false"
@@ -40,7 +39,7 @@
     "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
     "@mendable/firecrawl-js": "^4.46.0",
-    "@nakafa/aksara-contracts": "0.48.5",
+    "@nakafa/aksara-contracts": "0.48.6",
     "@polar-sh/sdk": "^1.0.2",
     "@posthog/convex": "2.1.5",
     "@react-email/render": "catalog:",

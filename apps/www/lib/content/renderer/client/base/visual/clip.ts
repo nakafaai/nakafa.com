@@ -1,3 +1,7 @@
+import {
+  samePlanePoint,
+  sameSpacePoint,
+} from "@nakafa/aksara-contracts/math/base";
 import { Array as Arr, BigDecimal, MutableList, Option } from "effect";
 
 import type {
@@ -178,14 +182,6 @@ function clipSpaceEndpoints(
     { x: first[0] ?? 0, y: first[1] ?? 0, z: first[2] ?? 0 },
     { x: second[0] ?? 0, y: second[1] ?? 0, z: second[2] ?? 0 },
   ];
-}
-
-function samePlanePoint(left: PlanePoint, right: PlanePoint) {
-  return left.x === right.x && left.y === right.y;
-}
-
-function sameSpacePoint(left: SpacePoint, right: SpacePoint) {
-  return left.x === right.x && left.y === right.y && left.z === right.z;
 }
 
 /** Moves a finished run into `paths` when it has two or more points, and empties the run. */
