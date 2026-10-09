@@ -1,10 +1,7 @@
 "use client";
 
 import { LinkSquare02Icon } from "@hugeicons/core-free-icons";
-import {
-  BrandLogo,
-  brandLogoNames,
-} from "@repo/design-system/components/logos/brand";
+import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
@@ -12,15 +9,8 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Link } from "@repo/internationalization/src/navigation";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-
-/** One link that a content page offers its reader, with a brand logo of its own. */
-const SourceLinkSchema = Schema.Struct({
-  href: Schema.String,
-  logo: Schema.Literals(brandLogoNames),
-  title: Schema.String,
-});
 
 /**
  * Lists where a reader can open one content page: its source and three
@@ -40,10 +30,12 @@ export function OpenInSubmenuContent({
   const markdownUrl = new URL(`${slug}.mdx`, "https://nakafa.com");
   const q = `I'm looking at this ${markdownUrl}, help me understand.`;
 
-  const sourceLinks: (typeof SourceLinkSchema.Type)[] = sourceUrl
-    ? [{ href: sourceUrl, logo: "github", title: t("open-in-github") }]
+  const sourceLinks = sourceUrl
+    ? ([
+        { href: sourceUrl, logo: "github", title: t("open-in-github") },
+      ] as const)
     : [];
-  const assistantLinks: (typeof sourceLinks)[number][] = [
+  const assistantLinks = [
     {
       title: t("open-in-chatgpt"),
       href: `https://chatgpt.com/?${new URLSearchParams({ hints: "search", q })}`,
@@ -59,7 +51,7 @@ export function OpenInSubmenuContent({
       href: `https://claude.ai/new?${new URLSearchParams({ q })}`,
       logo: "claude",
     },
-  ];
+  ] as const;
   const links = Arr.appendAll(sourceLinks, assistantLinks);
 
   return (
