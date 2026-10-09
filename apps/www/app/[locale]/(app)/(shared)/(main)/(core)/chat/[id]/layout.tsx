@@ -1,7 +1,8 @@
 import { HttpClient } from "@confect/js";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { cache } from "react";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
@@ -31,8 +32,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const defaultMetadata = {};
+  const chatId = Schema.decodeUnknownOption(IdSchema("chats"))(id);
+  if (Option.isNone(chatId)) {
+    return defaultMetadata;
+  }
   const title = await Effect.runPromise(
-    Effect.tryPromise(() => getChatTitle(id as Id<"chats">)).pipe(
+    Effect.tryPromise(() => getChatTitle(chatId.value)).pipe(
       Effect.catchTag("UnknownError", ({ cause: error }) =>
         Effect.gen(function* () {
           yield* captureServerExceptionSafely(error, {
