@@ -59,9 +59,9 @@ describe("try-out signed content batches", () => {
         const plan = planTryoutContentBatches(questions, []);
 
         expect(
-          yield* restoreTryoutContentOrder(plan, [questions.slice(0, -1)]).pipe(
-            Effect.flip
-          )
+          yield* restoreTryoutContentOrder(plan, [
+            Arr.dropRight(questions, 1),
+          ]).pipe(Effect.flip)
         ).toEqual(new TryoutContentBatchOrderError());
       })
   );

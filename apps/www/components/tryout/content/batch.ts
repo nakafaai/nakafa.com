@@ -28,7 +28,7 @@ export function planTryoutContentBatches<Question, Answer>(
   ) {
     MutableList.append(
       batches,
-      selectors.slice(start, start + MAX_PROTECTED_RUNTIME_SELECTORS)
+      Arr.take(Arr.drop(selectors, start), MAX_PROTECTED_RUNTIME_SELECTORS)
     );
   }
   return {
@@ -60,7 +60,7 @@ export const restoreTryoutContentOrder = Effect.fn(
     return yield* new TryoutContentBatchOrderError();
   }
   return {
-    answers: entries.slice(plan.questionCount),
-    questions: entries.slice(0, plan.questionCount),
+    answers: Arr.drop(entries, plan.questionCount),
+    questions: Arr.take(entries, plan.questionCount),
   };
 });
