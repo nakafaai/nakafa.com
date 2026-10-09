@@ -5,10 +5,9 @@ import {
   CoordinateControls,
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   VisualCard,
   VisualCardBody,
@@ -28,19 +27,6 @@ import {
   Label,
   NumberField,
 } from "react-aria-components";
-
-function ScenePlaceholder() {
-  return (
-    <div
-      aria-hidden="true"
-      className={threeSceneFrameVariants({
-        className: "grid place-items-center",
-      })}
-    >
-      <Spinner className="size-6" />
-    </div>
-  );
-}
 
 // Next owns this client-only import boundary so offscreen lessons do not load WebGL.
 const TriangleScene = dynamic(
