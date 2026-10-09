@@ -1,6 +1,18 @@
 import { encodePrettyJsonText } from "@repo/utilities/json";
-import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
-import { SubmissionHistoryError } from "@/scripts/indexing/errors";
+import {
+  Array as Arr,
+  Clock,
+  Effect,
+  FileSystem,
+  Option,
+  Schema,
+} from "effect";
+import {
+  type BingSubmitError,
+  type GoogleIndexSubmitError,
+  type IndexNowSubmitError,
+  SubmissionHistoryError,
+} from "@/scripts/indexing/errors";
 import { indexingFiles } from "@/scripts/indexing/paths";
 
 const SubmissionServiceSchema = Schema.Literals([
@@ -156,4 +168,47 @@ export const updateSubmissionHistory = Effect.fn(
     ...history,
     [service]: serviceHistory,
   };
+});
+/** Names each service in the log line that reports the URLs it saved. */
+const SERVICE_NAMES: Record<SubmissionService, string> = {
+  bing: "Bing",
+  googleIndexingApi: "Google Indexing API",
+  indexNow: "IndexNow",
+};
+/**
+ * Saves the URLs that one service's call accepted, then raises the typed failure
+ * that ended the call, if one did. Accepted URLs are saved first, so a later run
+ * does not submit them again. A call that accepted nothing saves nothing.
+ */
+export const saveAcceptedUrls = Effect.fn(
+  "scripts.indexing.history.saveAccepted"
+)(function* ({
+  failure,
+  history,
+  service,
+  submittedUrls,
+}: {
+  failure: Option.Option<
+    BingSubmitError | GoogleIndexSubmitError | IndexNowSubmitError
+  >;
+  history: SubmissionHistory;
+  service: SubmissionService;
+  submittedUrls: readonly string[];
+}) {
+  let updatedHistory = history;
+  if (submittedUrls.length > 0) {
+    updatedHistory = yield* updateSubmissionHistory({
+      history,
+      service,
+      urls: submittedUrls,
+    });
+    yield* saveSubmissionHistory(updatedHistory);
+    yield* Effect.logInfo(
+      `Submission history updated for ${SERVICE_NAMES[service]} with ${submittedUrls.length} successfully submitted URLs.`
+    );
+  }
+  if (Option.isSome(failure)) {
+    return yield* failure.value;
+  }
+  return updatedHistory;
 });
