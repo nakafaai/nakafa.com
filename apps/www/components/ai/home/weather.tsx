@@ -16,6 +16,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { getCountryName } from "@repo/design-system/lib/locale/country";
+import { Match } from "effect";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { useWeather } from "@/lib/weather/query";
@@ -29,40 +30,21 @@ function kelvinToCelsius(kelvin: number): number {
 function getWeatherIcon(
   iconCode: string
 ): ComponentProps<typeof HugeIcons>["icon"] {
-  switch (iconCode) {
-    case "01d":
-      return Sun01Icon;
-    case "01n":
-      return Moon01Icon;
-    case "02d":
-      return SunCloudSlowWindIcon;
-    case "02n":
-      return MoonCloudSlowWindIcon;
-    case "03d":
-    case "03n":
-      return CloudIcon;
-    case "04d":
-    case "04n":
-      return CloudFastWindIcon;
-    case "09d":
-    case "09n":
-      return CloudMidRainIcon;
-    case "10d":
-      return SunCloudLittleRainIcon;
-    case "10n":
-      return MoonCloudLittleRainIcon;
-    case "11d":
-    case "11n":
-      return CloudAngledZapIcon;
-    case "13d":
-    case "13n":
-      return SnowIcon;
-    case "50d":
-    case "50n":
-      return CloudIcon;
-    default:
-      return CloudIcon;
-  }
+  return Match.value(iconCode).pipe(
+    Match.when("01d", () => Sun01Icon),
+    Match.when("01n", () => Moon01Icon),
+    Match.when("02d", () => SunCloudSlowWindIcon),
+    Match.when("02n", () => MoonCloudSlowWindIcon),
+    Match.whenOr("03d", "03n", () => CloudIcon),
+    Match.whenOr("04d", "04n", () => CloudFastWindIcon),
+    Match.whenOr("09d", "09n", () => CloudMidRainIcon),
+    Match.when("10d", () => SunCloudLittleRainIcon),
+    Match.when("10n", () => MoonCloudLittleRainIcon),
+    Match.whenOr("11d", "11n", () => CloudAngledZapIcon),
+    Match.whenOr("13d", "13n", () => SnowIcon),
+    Match.whenOr("50d", "50n", () => CloudIcon),
+    Match.orElse(() => CloudIcon)
+  );
 }
 
 export function Weather() {

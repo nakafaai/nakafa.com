@@ -4,6 +4,7 @@ import { BookOpen02Icon, Sad02Icon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { Match } from "effect";
 import { useTranslations } from "next-intl";
 
 import { ContentPart } from "@/components/ai/message/evidence/nakafa/content";
@@ -40,23 +41,20 @@ export function NakafaPart({ message }: Props) {
     );
   }
 
-  switch (message.kind) {
-    case "taxonomy":
-      return (
+  return Match.value(message).pipe(
+    Match.discriminators("kind")({
+      taxonomy: () => (
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
           <HugeIcons className="size-4 shrink-0" icon={BookOpen02Icon} />
           <span>{t("nakafa-taxonomy")}</span>
         </div>
-      );
-    case "search":
-      return <SearchPart message={message} />;
-    case "content":
-      return <ContentPart message={message} />;
-    case "quran":
-      return <QuranPart message={message} />;
-    default:
-      return null;
-  }
+      ),
+      search: (data) => <SearchPart message={data} />,
+      content: (data) => <ContentPart message={data} />,
+      quran: (data) => <QuranPart message={data} />,
+    }),
+    Match.orElse(() => null)
+  );
 }
 NakafaPart.displayName = "NakafaPart";
 
@@ -65,16 +63,11 @@ function getKindLabel(
   kind: NakafaDataPart["kind"],
   t: ReturnType<typeof useTranslations>
 ) {
-  switch (kind) {
-    case "search":
-      return t("nakafa-search");
-    case "content":
-      return t("nakafa-content");
-    case "quran":
-      return t("nakafa-quran");
-    case "taxonomy":
-      return t("nakafa-taxonomy");
-    default:
-      return t("nakafa");
-  }
+  return Match.value(kind).pipe(
+    Match.when("search", () => t("nakafa-search")),
+    Match.when("content", () => t("nakafa-content")),
+    Match.when("quran", () => t("nakafa-quran")),
+    Match.when("taxonomy", () => t("nakafa-taxonomy")),
+    Match.orElse(() => t("nakafa"))
+  );
 }
