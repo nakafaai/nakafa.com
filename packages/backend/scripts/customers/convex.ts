@@ -1,6 +1,6 @@
 import { parseEnv } from "node:util";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
-import { getUnknownMessage } from "@repo/backend/scripts/lib/errors";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { FetchClient } from "@repo/utilities/http/client";
 import type {
   DefaultFunctionArgs,
@@ -62,10 +62,10 @@ class CustomerConvexResponseError extends Schema.TaggedError<CustomerConvexRespo
 /** Reports why Convex's answer could not be read, in the words of its cause. */
 const toResponseError = (error: HttpClientError.HttpClientError) =>
   new CustomerConvexResponseError({
-    message: getUnknownMessage(error.reason.cause),
+    message: getUnknownErrorMessage(error.reason.cause),
   });
 const toConfigError = (error: unknown) =>
-  new CustomerConvexConfigError({ message: getUnknownMessage(error) });
+  new CustomerConvexConfigError({ message: getUnknownErrorMessage(error) });
 /** Decodes UTF-8 and keeps a byte order mark, as Node's utf8 file reads did. */
 const decodeUtf8 = (bytes: Uint8Array) =>
   new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes);
@@ -212,7 +212,9 @@ export const callCustomerIntegrityQuery = Effect.fn(
     const functionPath = yield* Effect.try({
       try: () => getFunctionName(query),
       catch: (error) =>
-        new CustomerConvexConfigError({ message: getUnknownMessage(error) }),
+        new CustomerConvexConfigError({
+          message: getUnknownErrorMessage(error),
+        }),
     });
     const client = yield* HttpClient.HttpClient;
     const response = yield* HttpClientRequest.post(
@@ -231,7 +233,7 @@ export const callCustomerIntegrityQuery = Effect.fn(
       Effect.mapError(
         (error) =>
           new CustomerConvexRequestError({
-            message: getUnknownMessage(error.reason.cause),
+            message: getUnknownErrorMessage(error.reason.cause),
           })
       )
     );
