@@ -1,13 +1,16 @@
-import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
+import type {
+  PublishedQuranSurah,
+  QuranMarkdown,
+} from "@repo/backend/content/quran/contract";
 import { Array as Arr } from "effect";
 
 type NumberedSurah = Pick<PublishedQuranSurah, "number">;
-type VerseNumber = Pick<QuranRuntimeVerse["number"], "inSurah">;
+/** The verse fields the range check reads: the smallest verse a Quran response carries. */
+type NumberedVerse = Pick<QuranMarkdown["verses"][number], "number">;
 
 /** Checks that one verse list exactly covers the requested local range. */
 export function hasExactQuranVerseRange(
-  verses: readonly { readonly number: VerseNumber }[],
+  verses: readonly NumberedVerse[],
   fromVerse: number,
   toVerse: number
 ) {

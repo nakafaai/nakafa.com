@@ -15,7 +15,6 @@ const creditGrantTypeValidator = creditTransactionTypeValidator.pick([
   "daily-grant",
   "monthly-grant",
 ]);
-export type CreditGrantType = typeof creditGrantTypeValidator.Type;
 
 /** Scalar audit values allowed on credit transaction metadata. */
 export const creditTransactionMetadataValueValidator = Schema.Union([
