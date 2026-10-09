@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import {
@@ -61,7 +62,7 @@ describe("conversation/data/view/visible", () => {
   });
 
   it("returns null when no visible post row exists in the current range", () => {
-    const structuralRows = rows.slice(0, 2);
+    const structuralRows = Arr.take(rows, 2);
 
     expect(
       getLastVisibleConversationPostId({

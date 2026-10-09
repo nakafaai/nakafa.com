@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import type classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Array as Arr, Option } from "effect";
 
 import type {
   Forum,
@@ -21,7 +22,10 @@ function getOptimisticForumPostSequence({
   forum: Forum;
   posts: readonly ForumPost[];
 }) {
-  const latestSequence = posts.at(-1)?.sequence ?? 0;
+  const latestSequence = Option.getOrElse(
+    Option.map(Arr.last(posts), (post) => post.sequence),
+    () => 0
+  );
 
   return Math.max(forum.nextPostSequence, latestSequence + 1);
 }

@@ -34,7 +34,7 @@ export function getPathname() {
   // Remove the first segment (locale) and reconstruct the path
   const localeSegment = segments[0];
   if (localeSegment && hasLocale(routing.locales, localeSegment)) {
-    const pathWithoutLocale = Arr.join(segments.slice(1), "/");
+    const pathWithoutLocale = Arr.join(Arr.drop(segments, 1), "/");
     return pathWithoutLocale ? `/${pathWithoutLocale}` : "/";
   }
 

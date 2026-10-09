@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem } from "effect";
+import { Array as Arr, Effect, FileSystem } from "effect";
 import { validateCliWorkflow, verifyCliWorkflow } from "#scripts/github/cli";
 
 const WORKFLOW_PATH = fileURLToPath(
@@ -26,17 +26,21 @@ describe("CLI workflow policy", () => {
     Effect.gen(function* () {
       const source = yield* readWorkflow();
       assert.ok(
-        validateCliWorkflow(`${source}\nNODE_AUTH_TOKEN: secret`).includes(
+        Arr.contains(
+          validateCliWorkflow(`${source}\nNODE_AUTH_TOKEN: secret`),
           "CLI workflow contains forbidden credential: NODE_AUTH_TOKEN"
         )
       );
       assert.ok(
-        validateCliWorkflow(
-          source.replace(
-            "      contents: read",
-            "      contents: read\n      id-token: write"
-          )
-        ).includes("build must not receive npm OIDC identity.")
+        Arr.contains(
+          validateCliWorkflow(
+            source.replace(
+              "      contents: read",
+              "      contents: read\n      id-token: write"
+            )
+          ),
+          "build must not receive npm OIDC identity."
+        )
       );
 
       const movedIdentity = source
@@ -46,38 +50,49 @@ describe("CLI workflow policy", () => {
         );
       const movedProblems = validateCliWorkflow(movedIdentity);
       assert.ok(
-        movedProblems.includes(
+        Arr.contains(
+          movedProblems,
           "Only the publish job must receive npm OIDC identity."
         )
       );
       assert.ok(
-        movedProblems.includes("unrelated must not receive npm OIDC identity.")
+        Arr.contains(
+          movedProblems,
+          "unrelated must not receive npm OIDC identity."
+        )
       );
 
       const movedEnvironment = source
         .replace("    environment: npm-production", "    environment: test")
         .concat("\n# environment: npm-production\n");
       assert.ok(
-        validateCliWorkflow(movedEnvironment).includes(
+        Arr.contains(
+          validateCliWorkflow(movedEnvironment),
           "CLI publication must use the protected npm-production environment."
         )
       );
 
       assert.ok(
-        validateCliWorkflow(
-          source.replace(
-            "permissions: {}",
-            "permissions: {}\nenv:\n  NODE_OPTIONS: --import=data:text/javascript,throw%201"
-          )
-        ).includes("CLI workflow must not inherit root environment values.")
+        Arr.contains(
+          validateCliWorkflow(
+            source.replace(
+              "permissions: {}",
+              "permissions: {}\nenv:\n  NODE_OPTIONS: --import=data:text/javascript,throw%201"
+            )
+          ),
+          "CLI workflow must not inherit root environment values."
+        )
       );
       assert.ok(
-        validateCliWorkflow(
-          source.replace(
-            "permissions: {}",
-            "permissions: {}\ndefaults:\n  run:\n    shell: bash --noprofile --norc -e -o pipefail {0}"
-          )
-        ).includes("CLI workflow must not inherit root run defaults.")
+        Arr.contains(
+          validateCliWorkflow(
+            source.replace(
+              "permissions: {}",
+              "permissions: {}\ndefaults:\n  run:\n    shell: bash --noprofile --norc -e -o pipefail {0}"
+            )
+          ),
+          "CLI workflow must not inherit root run defaults."
+        )
       );
     }).pipe(Effect.provide(NodeServices.layer))
   );
@@ -93,12 +108,14 @@ describe("CLI workflow policy", () => {
         .concat('\n# node "$VERIFIER"\n');
       const verifierProblems = validateCliWorkflow(disabledVerifier);
       assert.ok(
-        verifierProblems.includes(
+        Arr.contains(
+          verifierProblems,
           'CLI verify job is missing required contract: node "$VERIFIER"'
         )
       );
       assert.ok(
-        verifierProblems.includes(
+        Arr.contains(
+          verifierProblems,
           "CLI verification must execute one transported verifier."
         )
       );
@@ -108,7 +125,8 @@ describe("CLI workflow policy", () => {
         "          echo 'node \"$VERIFIER\"' && : \\"
       );
       assert.ok(
-        validateCliWorkflow(quotedVerifier).includes(
+        Arr.contains(
+          validateCliWorkflow(quotedVerifier),
           "CLI verification must match the exact trusted job."
         )
       );
@@ -119,12 +137,14 @@ describe("CLI workflow policy", () => {
       );
       const privilegedProblems = validateCliWorkflow(privilegedVerifier);
       assert.ok(
-        privilegedProblems.includes(
+        Arr.contains(
+          privilegedProblems,
           "CLI publication must match the exact trusted job."
         )
       );
       assert.ok(
-        privilegedProblems.includes(
+        Arr.contains(
+          privilegedProblems,
           "CLI publication must not receive the verifier artifact."
         )
       );
@@ -135,7 +155,8 @@ describe("CLI workflow policy", () => {
           "\n  unrelated:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pnpm --filter @nakafa/cli build\n"
         );
       assert.ok(
-        validateCliWorkflow(siblingDecoy).includes(
+        Arr.contains(
+          validateCliWorkflow(siblingDecoy),
           "CLI build job is missing required contract: pnpm --filter @nakafa/cli build"
         )
       );
@@ -145,7 +166,8 @@ describe("CLI workflow policy", () => {
         "          # pnpm --filter @nakafa/cli typecheck"
       );
       assert.ok(
-        validateCliWorkflow(shellComment).includes(
+        Arr.contains(
+          validateCliWorkflow(shellComment),
           "CLI build job is missing required contract: pnpm --filter @nakafa/cli typecheck"
         )
       );
@@ -159,7 +181,8 @@ describe("CLI workflow policy", () => {
           `${command}          npx --yes "$NPM_CLI" publish "$TARBALL" \\`
         );
         assert.ok(
-          validateCliWorkflow(arbitraryCommand).includes(
+          Arr.contains(
+            validateCliWorkflow(arbitraryCommand),
             "CLI publication must match the exact trusted job."
           )
         );
@@ -170,15 +193,17 @@ describe("CLI workflow policy", () => {
         "          overwrite: false"
       );
       assert.ok(
-        validateCliWorkflow(staleArtifact).includes(
+        Arr.contains(
+          validateCliWorkflow(staleArtifact),
           "CLI build artifacts must be replaceable on rerun."
         )
       );
 
       assert.ok(
-        validateCliWorkflow(
-          source.replace("npm pack ./packages/cli", "npm pack packages/cli")
-        ).includes(
+        Arr.contains(
+          validateCliWorkflow(
+            source.replace("npm pack ./packages/cli", "npm pack packages/cli")
+          ),
           "CLI build job is missing required contract: npm pack ./packages/cli"
         )
       );
@@ -188,7 +213,8 @@ describe("CLI workflow policy", () => {
         "          for attempt in {1..1}; do"
       );
       assert.ok(
-        validateCliWorkflow(unsafeRerun).includes(
+        Arr.contains(
+          validateCliWorkflow(unsafeRerun),
           "CLI publish job is missing required contract: for attempt in {1..5}"
         )
       );
@@ -198,7 +224,8 @@ describe("CLI workflow policy", () => {
         "      - name: Verify and publish exact archive\n        continue-on-error: true"
       );
       assert.ok(
-        validateCliWorkflow(unreviewedStepOption).includes(
+        Arr.contains(
+          validateCliWorkflow(unreviewedStepOption),
           "CLI publication must match the exact trusted job."
         )
       );
@@ -208,7 +235,8 @@ describe("CLI workflow policy", () => {
         "    name: Publish\n    continue-on-error: true\n"
       );
       assert.ok(
-        validateCliWorkflow(unreviewedJobOption).includes(
+        Arr.contains(
+          validateCliWorkflow(unreviewedJobOption),
           "CLI publication must match the exact trusted job."
         )
       );
@@ -347,17 +375,23 @@ describe("CLI workflow policy", () => {
         ).length > 0
       );
       assert.ok(
-        validateCliWorkflow(
-          source.replace("needs: [build, publish]", "needs: publish")
-        ).includes("CLI verification must consume build and publication.")
+        Arr.contains(
+          validateCliWorkflow(
+            source.replace("needs: [build, publish]", "needs: publish")
+          ),
+          "CLI verification must consume build and publication."
+        )
       );
       assert.ok(
-        validateCliWorkflow(
-          source.replace(
-            "    permissions: {}\n    steps:\n      - name: Download verified package",
-            "    permissions:\n      contents: read\n    steps:\n      - name: Download verified package"
-          )
-        ).includes("CLI verification permissions must remain empty.")
+        Arr.contains(
+          validateCliWorkflow(
+            source.replace(
+              "    permissions: {}\n    steps:\n      - name: Download verified package",
+              "    permissions:\n      contents: read\n    steps:\n      - name: Download verified package"
+            )
+          ),
+          "CLI verification permissions must remain empty."
+        )
       );
       assert.ok(
         validateCliWorkflow(
@@ -365,7 +399,8 @@ describe("CLI workflow policy", () => {
         ).length > 0
       );
       assert.ok(
-        validateCliWorkflow(`${source}\n@base64d`).includes(
+        Arr.contains(
+          validateCliWorkflow(`${source}\n@base64d`),
           "CLI workflow contains unauthenticated provenance parsing: @base64d"
         )
       );

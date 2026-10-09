@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr, Option } from "effect";
 import { createActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
   createConversationTestForum,
@@ -32,7 +33,9 @@ describe("conversation/viewport/transcript", () => {
     );
 
     expect(rig.placements).toHaveLength(latestPlacementCount + 1);
-    expect(rig.placements.at(-1)?.motion).toBe("instant");
+    expect(Option.getOrUndefined(Arr.last(rig.placements))?.motion).toBe(
+      "instant"
+    );
 
     const detachedView = makePostMeasurement(firstPost._id);
     rig.setMeasurement(detachedView);
@@ -50,7 +53,7 @@ describe("conversation/viewport/transcript", () => {
     );
 
     expect(rig.placements).toHaveLength(detachedPlacementCount + 1);
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       motion: "instant",
       view: { kind: "post", postId: firstPost._id },
     });
@@ -115,7 +118,7 @@ describe("conversation/viewport/transcript", () => {
     );
 
     expect(rig.placements).toHaveLength(pendingPlacementCount + 1);
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       view: { kind: "post", postId: secondPost._id },
     });
     await shutdownViewport(viewport);
@@ -143,7 +146,7 @@ describe("conversation/viewport/transcript", () => {
     );
 
     expect(rig.placements).toHaveLength(detachedPlacementCount + 1);
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       motion: "instant",
       view: { kind: "post", postId: firstPost._id },
     });

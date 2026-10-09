@@ -137,12 +137,12 @@ describe("MathVisual analytic curves", () => {
         projection()
       );
       expect(points[0]).toEqual({ x: 3, y: -1, z: 0 });
-      for (const [index, point] of points.entries()) {
+      Arr.forEach(points, (point, index) => {
         const angle =
           ((index / (points.length - 1)) * sweepDegrees * Math.PI) / 180;
         expect(point.x).toBeCloseTo(1 + 2 * Math.cos(angle), 12);
         expect(point.y).toBeCloseTo(-1 + 2 * Math.sin(angle), 12);
-      }
+      });
     }
   );
   it("closes a circle exactly and preserves its center and radius", () => {

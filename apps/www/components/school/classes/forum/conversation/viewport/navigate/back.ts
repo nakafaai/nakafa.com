@@ -1,4 +1,11 @@
-import { Effect, HashMap, Ref, SubscriptionRef } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  HashMap,
+  Option,
+  Ref,
+  SubscriptionRef,
+} from "effect";
 import { startViewportPlacement } from "@/components/school/classes/forum/conversation/viewport/placement";
 import type { ViewportRuntime } from "@/components/school/classes/forum/conversation/viewport/runtime";
 import { updateViewportState } from "@/components/school/classes/forum/conversation/viewport/state";
@@ -7,15 +14,16 @@ import { updateViewportState } from "@/components/school/classes/forum/conversat
 export function handleBackNavigation(runtime: ViewportRuntime) {
   return Effect.gen(function* () {
     const state = yield* SubscriptionRef.get(runtime.stateRef);
-    const backView = state.backStack.at(-1);
+    const lastBackView = Arr.last(state.backStack);
 
-    if (!backView) {
+    if (Option.isNone(lastBackView)) {
       return;
     }
+    const backView = lastBackView.value;
 
     yield* updateViewportState(runtime, (current) => ({
       ...current,
-      backStack: current.backStack.slice(0, -1),
+      backStack: Arr.dropRight(current.backStack, 1),
       highlightedPostId: null,
     }));
     const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);

@@ -11,7 +11,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 
 const PERIOD_Z = -1.18;
@@ -93,9 +93,9 @@ function TrendTrack({
   const markerPoints = getTrackPoints(axis, samples.length);
   const railPoints = getRailPoints(axis, markerPoints);
   const [startPoint] = railPoints;
-  const endPoint = railPoints.at(-1);
+  const endPoint = Arr.last(railPoints);
 
-  if (!(startPoint && endPoint)) {
+  if (!startPoint || Option.isNone(endPoint)) {
     return null;
   }
 
@@ -107,7 +107,7 @@ function TrendTrack({
         color={color}
         from={startPoint}
         lineWidth={3}
-        to={endPoint}
+        to={endPoint.value}
       />
 
       {Arr.map(samples, (sample, sampleIndex) => (

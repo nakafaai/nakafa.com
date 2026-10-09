@@ -3,7 +3,7 @@ import {
   parseMarkdownIntoBlocks,
   readMarkdownBlocks,
 } from "@repo/design-system/lib/markdown/blocks";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { Lexer, type Tokens } from "marked";
 
 function mockLexerBlocks(...blocks: string[]) {
@@ -31,7 +31,7 @@ describe("markdown blocks", () => {
     expect(Arr.map(after, ({ key }) => key)).toEqual(
       Arr.map(before, ({ key }) => key)
     );
-    expect(after.at(-1)?.content).toBe("Second");
+    expect(Option.getOrThrow(Arr.last(after)).content).toBe("Second");
   });
 
   it("keeps empty input empty without inventing or dropping text blocks", () => {

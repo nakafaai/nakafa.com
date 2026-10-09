@@ -98,7 +98,7 @@ function execute(
     );
     const consoleAfter = yield* TestConsole.logLines;
     const consoleOutput = Arr.join(
-      Arr.map(consoleAfter.slice(consoleBefore.length), String),
+      Arr.map(Arr.drop(consoleAfter, consoleBefore.length), String),
       "\n"
     );
     const capturedStdout = yield* Ref.get(stdout);

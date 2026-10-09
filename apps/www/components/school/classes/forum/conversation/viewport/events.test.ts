@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr, Option } from "effect";
 import {
   createAdapters,
   createViewport,
@@ -22,7 +23,9 @@ describe("conversation/viewport/events", () => {
       (state) => state.pendingPlacement?.view.kind === "bottom"
     );
 
-    expect(rig.placements.at(-1)).toMatchObject({ view: { kind: "bottom" } });
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
+      view: { kind: "bottom" },
+    });
     await shutdownViewport(viewport);
   });
 
@@ -36,7 +39,9 @@ describe("conversation/viewport/events", () => {
       (state) => state.pendingPlacement?.view.kind === "bottom"
     );
 
-    expect(rig.placements.at(-1)).toMatchObject({ view: { kind: "bottom" } });
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
+      view: { kind: "bottom" },
+    });
     await dispatchViewport(viewport, { type: "unknown" } as never);
     await dispatchViewport(viewport, {
       awayFromLatest: false,

@@ -205,15 +205,18 @@ function useChatState(chatId: Id<"chats">) {
     chat,
     pagination
   );
+  const lastMessage = Arr.last(messages);
   const busy =
     !cancelling &&
     (isPending ||
       (!!opening && isLoading) ||
       (turn?.state.status !== "cancelled" &&
-        messages.at(-1)?.status === "pending") ||
+        Option.exists(
+          lastMessage,
+          (message) => message.status === "pending"
+        )) ||
       turn?.state.status === "queued" ||
       turn?.state.status === "running");
-  const lastMessage = messages.at(-1);
   // Actions read the transcript when they run, so they stay the same functions
   // while tokens stream instead of re-rendering every control that holds one.
   const latestMessages = useRef(messages);
@@ -313,9 +316,13 @@ function useChatState(chatId: Id<"chats">) {
         message.status === "failed"
     ),
     /** Whether the transcript already ends with the reply to the current turn. */
-    hasTurnResponse:
-      lastMessage?.role === "assistant" && lastMessage.order === turn?.order,
-    lastMessageId: lastMessage?.id,
+    hasTurnResponse: Option.exists(
+      lastMessage,
+      (message) => message.role === "assistant" && message.order === turn?.order
+    ),
+    lastMessageId: Option.getOrUndefined(
+      Option.map(lastMessage, (message) => message.id)
+    ),
     canLoadMore: pagination.status === "CanLoadMore",
     loadMore,
     send,

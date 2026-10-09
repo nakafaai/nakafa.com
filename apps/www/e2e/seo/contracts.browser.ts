@@ -149,7 +149,7 @@ const expectArticleJsonLd = Effect.fn("NakafaE2E.expectArticleJsonLd")(
       page.getByRole("heading", { level: 1 }).textContent()
     );
     const [home] = breadcrumb.itemListElement;
-    const current = breadcrumb.itemListElement.at(-1);
+    const current = Option.getOrUndefined(Arr.last(breadcrumb.itemListElement));
     yield* Effect.sync(() => {
       expect(article.url).toBe(`${APP_ORIGIN}${route.href}`);
       expect(article.headline).toBe(heading);

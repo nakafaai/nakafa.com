@@ -1,6 +1,6 @@
 "use client";
 
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { Curve, type CurveProps } from "recharts";
 
 // Buffer line
@@ -60,11 +60,11 @@ export const bufferLineShape = (props: CurveProps) => {
   }
 
   // x coordinate of the second-to-last point, where solid meets dashed
-  const splitPoint = drawablePoints.at(-2);
-  if (!splitPoint) {
+  const splitPoint = Arr.get(drawablePoints, drawablePoints.length - 2);
+  if (Option.isNone(splitPoint)) {
     return <Curve {...props} />;
   }
-  const splitX = splitPoint.x;
+  const splitX = splitPoint.value.x;
 
   // Ref callback runs synchronously during React commit (before browser paint),
   // so there's no visible flash of an un-dashed line.

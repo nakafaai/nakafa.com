@@ -47,11 +47,11 @@ const loadPreview = Effect.fn("TryoutReview.loadPreview")(
     const content = yield* loadSignedTryoutContent(attemptId, {
       ...access,
       answers: access.previewAnswers,
-      questions: access.questions.slice(0, count),
+      questions: Arr.take(access.questions, count),
     });
     return yield* projectTryoutReview({
       content,
-      questions: runtime.questions.slice(0, count),
+      questions: Arr.take(runtime.questions, count),
     });
   },
   Effect.catchTags({
