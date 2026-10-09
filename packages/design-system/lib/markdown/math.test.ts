@@ -2,10 +2,9 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
-import { Array as Arr, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr } from "effect";
 import { Lexer } from "marked";
-
-const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 describe("preprocessLaTeX", () => {
   it("returns empty text unchanged", () => {
@@ -86,9 +85,9 @@ describe("preprocessLaTeX", () => {
         "    *Ingat:* Domainnya adalah $$x \\neq 3$$, karena penyebut tidak boleh nol."
       );
       expect(output).not.toContain("\n\n```math");
-      expect(
-        Schema.encodeSync(UnknownJsonSchema)(Lexer.lex(output, { gfm: true }))
-      ).not.toContain('"codeBlockStyle":"indented"');
+      expect(encodeJsonText(Lexer.lex(output, { gfm: true }))).not.toContain(
+        '"codeBlockStyle":"indented"'
+      );
     }
   );
 

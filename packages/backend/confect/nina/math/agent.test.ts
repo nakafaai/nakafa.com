@@ -17,6 +17,7 @@ import { MathMatrixInputSchema } from "@repo/math/schema/tool/matrix";
 import { MathProbabilityInputSchema } from "@repo/math/schema/tool/probability";
 import { MathSeriesInputSchema } from "@repo/math/schema/tool/series";
 import { MathStatisticsInputSchema } from "@repo/math/schema/tool/statistics";
+import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { ConfigProvider, Effect, Schema } from "effect";
 
@@ -27,8 +28,6 @@ afterEach(() => {
   vi.restoreAllMocks();
   provider.languageModel.mockReset();
 });
-
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Pairs a tool name with the contract its production tool decodes, checking the fixture against that contract. */
 function toolCase<S extends Schema.Top>(
@@ -167,9 +166,9 @@ describe("math Agent execution", () => {
       );
       expect(usageHandler).toHaveBeenCalledTimes(2);
       expect(model.doGenerateCalls).toHaveLength(2);
-      expect(
-        Schema.encodeSync(JsonTextSchema)(model.doGenerateCalls[1]?.prompt)
-      ).toContain("Deterministic evidence.");
+      expect(encodeJsonText(model.doGenerateCalls[1]?.prompt)).toContain(
+        "Deterministic evidence."
+      );
     }
   );
 

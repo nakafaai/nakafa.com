@@ -9,9 +9,8 @@ import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Logger, Schema } from "effect";
-
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 
 describe("Nakafa MCP tool results", () => {
   it.effect(
@@ -56,7 +55,7 @@ describe("Nakafa MCP tool results", () => {
           },
         },
       });
-      const json = yield* Schema.encodeUnknownEffect(JsonText)(result);
+      const json = yield* Schema.encodeUnknownEffect(JsonTextSchema)(result);
       expect(json).not.toContain("private storage diagnostic");
     })
   );
@@ -80,7 +79,7 @@ describe("Nakafa MCP tool results", () => {
             },
           },
         });
-        const json = yield* Schema.encodeUnknownEffect(JsonText)(result);
+        const json = yield* Schema.encodeUnknownEffect(JsonTextSchema)(result);
         expect(json).not.toContain("private defect diagnostic");
       })
   );

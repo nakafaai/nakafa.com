@@ -4,6 +4,7 @@ import {
   releaseFail,
 } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const PAGE_CURSOR_PREFIX = "publication-page:";
@@ -12,7 +13,6 @@ const PageCursorSchema = Schema.Tuple([
   Schema.Literals(["blue", "green"]),
   Schema.String,
 ]);
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 type PageCursorKind = (typeof PageCursorSchema.Type)[0];
 
 /** Immutable active release identity bound to a native pagination cursor. */
@@ -69,7 +69,7 @@ export function encodePageCursor(
   slot: ModelSlot,
   cursor: string
 ) {
-  const text = Schema.encodeSync(JsonTextSchema)([kind, slot, cursor]);
+  const text = encodeJsonText([kind, slot, cursor]);
   return `${PAGE_CURSOR_PREFIX}${text}`;
 }
 

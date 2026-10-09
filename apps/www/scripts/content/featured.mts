@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { api } from "@repo/backend/convex/_generated/api";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
@@ -50,9 +51,7 @@ const verifyFeaturedRenderer = Effect.fn(
 });
 
 const main = verifyFeaturedRenderer().pipe(
-  Effect.flatMap((result) =>
-    Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown))(result)
-  ),
+  Effect.flatMap((result) => Schema.encodeEffect(JsonTextSchema)(result)),
   Effect.tap((json) => Effect.sync(() => process.stdout.write(`${json}\n`)))
 );
 

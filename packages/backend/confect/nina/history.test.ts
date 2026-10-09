@@ -4,8 +4,9 @@ import {
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
 import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
+import { encodeJsonText } from "@repo/utilities/json";
 import type { ModelMessage } from "ai";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option } from "effect";
 
 /** One complete turn with a verified capability result. */
 function turn(
@@ -44,23 +45,21 @@ function turn(
   ];
 }
 
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
-
 function tokens(messages: readonly ModelMessage[]) {
-  return countTextTokens(Schema.encodeSync(JsonTextSchema)(messages));
+  return countTextTokens(encodeJsonText(messages));
 }
 
 describe("Nina provider context", () => {
   it("projects stored evidence to text without changing the transcript or losing tool pairs", () => {
     const history = turn("Explain the page");
-    const before = Schema.encodeSync(JsonTextSchema)(history);
+    const before = encodeJsonText(history);
     const result = assembleContext({
       current: [{ role: "user", content: "Next question" }],
       currentOrder: 1,
       recent: history,
       throughOrder: null,
     });
-    expect(Schema.encodeSync(JsonTextSchema)(history)).toBe(before);
+    expect(encodeJsonText(history)).toBe(before);
     expect(result).toEqual([
       history[0],
       {
@@ -207,8 +206,8 @@ describe("Nina provider context", () => {
       throughOrder: 1,
     });
     expect(result[0]).toEqual({ role: "user", content: "Third" });
-    expect(Schema.encodeSync(JsonTextSchema)(result)).not.toContain("First");
-    expect(Schema.encodeSync(JsonTextSchema)(result)).not.toContain("Second");
+    expect(encodeJsonText(result)).not.toContain("First");
+    expect(encodeJsonText(result)).not.toContain("Second");
   });
 
   it("keeps whole newest turns within the history budget and drops a cut turn", () => {
@@ -228,15 +227,9 @@ describe("Nina provider context", () => {
     const history = result.slice(0, -1);
     expect(tokens(history)).toBeLessThanOrEqual(NINA_BUDGET.history + 200);
     expect(history[0]).toMatchObject({ role: "user" });
-    expect(Schema.encodeSync(JsonTextSchema)(result)).not.toContain(
-      "Tail of an older turn"
-    );
-    expect(Schema.encodeSync(JsonTextSchema)(result)).not.toContain(
-      "Answer to Old"
-    );
-    expect(Schema.encodeSync(JsonTextSchema)(result)).toContain(
-      "Answer to New"
-    );
+    expect(encodeJsonText(result)).not.toContain("Tail of an older turn");
+    expect(encodeJsonText(result)).not.toContain("Answer to Old");
+    expect(encodeJsonText(result)).toContain("Answer to New");
   });
 
   it("shortens the evidence of one oversized newest turn instead of dropping it", () => {
@@ -254,7 +247,7 @@ describe("Nina provider context", () => {
       throughOrder: null,
     });
     expect(result[0]).toEqual({ role: "user", content: "Huge" });
-    expect(Schema.encodeSync(JsonTextSchema)(result)).toContain(
+    expect(encodeJsonText(result)).toContain(
       "Earlier evidence in this conversation, shortened."
     );
     expect(tokens(result)).toBeLessThanOrEqual(NINA_BUDGET.history);
@@ -429,12 +422,8 @@ describe("Nina provider context", () => {
       )
     );
     expect(tokens(current)).toBeLessThanOrEqual(NINA_BUDGET.turnEvidence + 400);
-    expect(Schema.encodeSync(JsonTextSchema)(current.at(-1))).not.toContain(
-      "shortened"
-    );
-    expect(Schema.encodeSync(JsonTextSchema)(current[2])).toContain(
-      "shortened"
-    );
+    expect(encodeJsonText(current.at(-1))).not.toContain("shortened");
+    expect(encodeJsonText(current[2])).toContain("shortened");
     expect(result[2]).toMatchObject({
       role: "tool",
       content: [

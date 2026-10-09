@@ -11,6 +11,7 @@ import {
   NakafaApiIndexSchema,
 } from "@repo/contents/agent/schema/api";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
+import { encodeJsonText } from "@repo/utilities/json";
 import { dereference, validate } from "@scalar/openapi-parser";
 import {
   Array as Arr,
@@ -31,7 +32,6 @@ const OpenApiOperationSchema = Schema.Struct({
 type OpenApiOperation = typeof OpenApiOperationSchema.Type;
 /** Narrows one generated path value to the required operation surface. */
 const isOperation = Schema.is(OpenApiOperationSchema);
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Returns every method operation from the generated path map. */
 function readOperations() {
@@ -111,7 +111,7 @@ describe("Nakafa OpenAPI document", () => {
 
     expect(result.errors ?? []).toEqual([]);
     expect(result.schema).toBeDefined();
-    const serialized = encodeJson(result.schema);
+    const serialized = encodeJsonText(result.schema);
     expect(serialized).not.toContain('"$ref"');
   });
 
@@ -138,7 +138,7 @@ describe("Nakafa OpenAPI document", () => {
           name: expect.any(String),
           schema: expect.any(Object),
         });
-        expect(encodeJson(parameter)).not.toContain('"type":"null"');
+        expect(encodeJsonText(parameter)).not.toContain('"type":"null"');
       }
     }
   });
@@ -167,7 +167,7 @@ describe("Nakafa OpenAPI document", () => {
         ],
       },
     });
-    expect(encodeJson(verse)).not.toContain('"translation":"');
+    expect(encodeJsonText(verse)).not.toContain('"translation":"');
   });
 
   it("derives the canonical public examples", () => {
@@ -217,7 +217,7 @@ describe("Nakafa OpenAPI document", () => {
         properties: expect.any(Object),
         type: "object",
       });
-      expect(encodeJson(definition)).not.toContain("$ref");
+      expect(encodeJsonText(definition)).not.toContain("$ref");
     }
   });
 

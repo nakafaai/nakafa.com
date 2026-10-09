@@ -7,7 +7,8 @@ import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure
 import { deployment, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
-import { Array as Arr, Effect, Order, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Effect, Order } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -20,7 +21,6 @@ afterEach(() => {
   vi.useRealTimers();
 });
 const NOW = Date.UTC(2026, 8, 27, 12);
-const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const present = Ref.getFunctionReference(refs.internal.nina.response.present);
 const save = Ref.getFunctionReference(refs.internal.nina.presentation.save);
@@ -131,25 +131,17 @@ describe("Nina presentation after an answer", () => {
     );
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
     const [suggestions, title] = model.doGenerateCalls;
-    expect(Schema.encodeSync(jsonTextSchema)(suggestions?.prompt)).toContain(
-      "Explain a limit."
-    );
-    expect(Schema.encodeSync(jsonTextSchema)(suggestions?.prompt)).toContain(
+    expect(encodeJsonText(suggestions?.prompt)).toContain("Explain a limit.");
+    expect(encodeJsonText(suggestions?.prompt)).toContain(
       "A limit describes the value approached."
     );
-    expect(
-      Schema.encodeSync(jsonTextSchema)(suggestions?.prompt)
-    ).not.toContain("photosynthesis");
+    expect(encodeJsonText(suggestions?.prompt)).not.toContain("photosynthesis");
     expect(suggestions?.prompt.at(-1)?.role).toBe("user");
-    expect(Schema.encodeSync(jsonTextSchema)(title?.prompt)).toContain(
-      "Explain a limit."
-    );
-    expect(Schema.encodeSync(jsonTextSchema)(title?.prompt)).not.toContain(
+    expect(encodeJsonText(title?.prompt)).toContain("Explain a limit.");
+    expect(encodeJsonText(title?.prompt)).not.toContain(
       "A limit describes the value approached."
     );
-    expect(Schema.encodeSync(jsonTextSchema)(title?.prompt)).not.toContain(
-      "photosynthesis"
-    );
+    expect(encodeJsonText(title?.prompt)).not.toContain("photosynthesis");
     const state = await f.t.query(async (ctx) => ({
       turn: await ctx.db.get("ninaTurns", f.turnId),
       user: await ctx.db.get("users", f.identity.userId),

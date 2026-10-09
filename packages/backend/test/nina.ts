@@ -9,11 +9,9 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { DateTime, Effect, Schema } from "effect";
-
-/** Plain codec: writes the same bytes as JSON.stringify, even for tool input the contract rejects. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+import { DateTime, Effect } from "effect";
 
 /**
  * A real component thread with a reserved turn and its authenticated owner.
@@ -186,7 +184,7 @@ export function ninaModel(
               type: "tool-call",
               toolCallId: "read-1",
               toolName: "nakafa",
-              input: encodeJson(input),
+              input: encodeJsonText(input),
             },
             {
               type: "finish",
@@ -199,10 +197,10 @@ export function ninaModel(
       : final,
     doGenerate: ({ responseFormat, prompt }) => {
       let text = "Understanding A Function Limit";
-      if (encodeJson(prompt).includes("Repair the arguments for")) {
-        text = encodeJson(ninaToolInput);
+      if (encodeJsonText(prompt).includes("Repair the arguments for")) {
+        text = encodeJsonText(ninaToolInput);
       } else if (responseFormat?.type === "json") {
-        text = encodeJson({
+        text = encodeJsonText({
           suggestions: ["How does this relate to continuity?"],
         });
       }

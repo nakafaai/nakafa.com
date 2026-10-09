@@ -12,6 +12,7 @@ import {
   releaseLocalRuntime,
   reserveLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
+import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
   Effect,
@@ -25,7 +26,7 @@ const mocks = vi.hoisted(() => ({ command: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
   runAcceptanceCommand: mocks.command,
 }));
-const encodeJson = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
+const encodeJson = Schema.encodeEffect(JsonTextSchema);
 const environment =
   "VITE_CONVEX_URL=http://127.0.0.1:43120\nVITE_CONVEX_SITE_URL=http://127.0.0.1:43121\n";
 const LOCAL_JWKS_LINE =

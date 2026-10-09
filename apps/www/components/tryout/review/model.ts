@@ -1,3 +1,4 @@
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, HashMap, MutableHashSet, Option, Schema } from "effect";
 import type {
   TryoutAnswerContent,
@@ -24,8 +25,6 @@ type TryoutReviewQuestion = Pick<TryoutAnswerContent, "answer"> &
     ReviewRuntimeQuestion,
     "placementId" | "questionOrder" | "response" | "responseSpec"
   >;
-
-const IdentityJsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Fails closed when signed review content no longer matches frozen runtime. */
 export class TryoutReviewProjectionError extends Schema.TaggedError<TryoutReviewProjectionError>()(
@@ -111,7 +110,7 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
 
 /** Builds one collision-safe key from an already trusted content identity. */
 function getContentIdentity(identity: ReviewContentIdentity) {
-  return Schema.encodeSync(IdentityJsonSchema)([
+  return encodeJsonText([
     identity.sourcePath,
     identity.contentHash,
     identity.sourceRevision,

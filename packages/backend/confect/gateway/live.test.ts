@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Result, Schema, Stream } from "effect";
 
 const serviceToken = vi.hoisted(() => vi.fn<() => Promise<string>>());
@@ -62,9 +63,8 @@ const chunks = [
     },
   },
 ];
-const encodeChunk = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const events = `${Arr.join(
-  Arr.map(chunks, (chunk) => `data: ${encodeChunk(chunk)}\n\n`),
+  Arr.map(chunks, (chunk) => `data: ${encodeJsonText(chunk)}\n\n`),
   ""
 )}data: [DONE]\n\n`;
 
@@ -123,9 +123,9 @@ describe("The production gateway", () => {
         expect(new Headers(init?.headers).get("authorization")).toBe(
           "Bearer service-token"
         );
-        const body = yield* Schema.decodeUnknownEffect(
-          Schema.fromJsonString(Schema.Unknown)
-        )(init?.body);
+        const body = yield* Schema.decodeUnknownEffect(JsonTextSchema)(
+          init?.body
+        );
         expect(body).toMatchObject({
           model: "google/gemini-3.7-flash",
           reasoning_effort: effort,
@@ -163,9 +163,9 @@ describe("The production gateway", () => {
           providerMetadata: { convexGateway: { cost: 0.000_026_4 } },
         });
         const [, init] = fetch.mock.calls[0] ?? [];
-        const body = yield* Schema.decodeUnknownEffect(
-          Schema.fromJsonString(Schema.Unknown)
-        )(init?.body);
+        const body = yield* Schema.decodeUnknownEffect(JsonTextSchema)(
+          init?.body
+        );
         expect(body).toMatchObject({ stream: true });
         expect(body).not.toHaveProperty("stream_options");
       }).pipe(deployed);

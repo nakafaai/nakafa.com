@@ -10,10 +10,10 @@ import {
 } from "@repo/backend/confect/tryouts/sets/spec";
 import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
 import { toPublicPublishedSet } from "@repo/backend/content/tryout/published";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const SIGNED_CURSOR_PREFIX = "signed:";
-const PaginationJsonSchema = Schema.fromJsonString(Schema.Unknown);
 const publishedSetRowSchema = Schema.Struct({
   durationSeconds: Schema.Finite,
   progress: Schema.NullOr(tryoutSetProgress.Doc),
@@ -57,7 +57,7 @@ const identifyRows = Effect.fn("tryouts.sets.identifyPublishedPage")(
   (rows: readonly PublishedSetRow[]) =>
     hashText(
       "the signed try-out pagination state",
-      Schema.encodeSync(PaginationJsonSchema)(
+      encodeJsonText(
         Arr.map(rows, ({ progress, set }) => ({
           attemptStatus: progress?.status ?? null,
           publishedScore: progress?.publishedScore ?? null,
