@@ -54,11 +54,15 @@ export function fold(input: { kind: "a" } | { kind: "b"; at: number }) {}
 export const pick = ({ id }: { id: string }) => id;
 export function wrap(input: ({ id: string })) {}
 export function mixed(input: { run(): void; plain; id: string }) {}
+export function extend(input: Cursor & { readonly category: string }) {}
+export function patch(overrides?: Partial<{ credits: number }>, fixed?: Readonly<Base>) {}
+export function nested(input: Cursor & { readonly rows: { id: string }[] }) {}
+export function own(input: Required) {}
 class Store {
   set(next: { id: string }) {}
 }
 `),
-          []
+          [7]
         );
       })
   );

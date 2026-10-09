@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, HashSet } from "effect";
 import {
   isArrowFunction,
   isCallExpression,
@@ -13,6 +13,7 @@ import {
   isSatisfiesExpression,
   isTypeLiteralNode,
   isTypePredicateNode,
+  isTypeReferenceNode,
   isVariableDeclaration,
   type Node,
   type ParameterDeclaration,
@@ -70,16 +71,30 @@ function isComponentProps(file: string, parameter: ParameterDeclaration) {
   );
 }
 
+/** The utility types that keep an object type the named arguments it is. */
+const ARGUMENT_WRAPPERS = HashSet.make("Partial", "Readonly", "Required");
+
 /**
  * Returns the object types that a parameter's own type holds inside its named
  * arguments. The object type that IS the parameter's type names the arguments
  * of the function, as React props name the inputs of a component, so it is no
- * data shape. An object type inside it, such as the rows of
- * `{ rows: readonly { id: string }[] }`, is one.
+ * data shape: alone, joined to another type by an intersection, or inside
+ * `Partial`, `Readonly`, or `Required`. An object type inside it, such as the
+ * rows of `{ rows: readonly { id: string }[] }`, is one.
  */
 function argumentShapes(type: TypeNode): readonly TypeLiteralNode[] {
   if (isParenthesizedTypeNode(type)) {
     return argumentShapes(type.type);
+  }
+  if (isIntersectionTypeNode(type)) {
+    return Arr.flatMap(type.types, argumentShapes);
+  }
+  if (
+    isTypeReferenceNode(type) &&
+    isIdentifier(type.typeName) &&
+    HashSet.has(ARGUMENT_WRAPPERS, type.typeName.text)
+  ) {
+    return Arr.flatMap(type.typeArguments ?? [], argumentShapes);
   }
   return isTypeLiteralNode(type)
     ? Arr.flatMap(type.members, (member) =>
