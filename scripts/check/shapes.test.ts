@@ -163,6 +163,106 @@ export const tree = Schema.suspend((): Schema.Codec<Tree> => TreeSchema);
     })
   );
 
+  it.effect("allows each shape of a mutually recursive pair", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`import { Schema } from "effect";
+export interface Folder {
+  readonly name: string;
+  readonly files: ReadonlyArray<Entry>;
+}
+export interface Entry {
+  readonly name: string;
+  readonly folder?: Folder;
+}
+export const folder = Schema.suspend((): Schema.Codec<Folder> => FolderSchema);
+export const entry = Schema.suspend((): Schema.Codec<Entry> => EntrySchema);
+`),
+        []
+      );
+    })
+  );
+
+  it.effect("allows each shape of a cycle that runs through three names", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`import { Schema } from "effect";
+export interface First {
+  readonly second: Second;
+}
+export interface Second {
+  readonly third: Third;
+}
+export interface Third {
+  readonly first?: First;
+}
+export const first = Schema.suspend((): Schema.Codec<First> => FirstSchema);
+export const second = Schema.suspend((): Schema.Codec<Second> => SecondSchema);
+export const third = Schema.suspend((): Schema.Codec<Third> => ThirdSchema);
+`),
+        []
+      );
+    })
+  );
+
+  it.effect("reports a chain of thunk-named shapes that does not close", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`import { Schema } from "effect";
+export interface First {
+  readonly second: Second;
+}
+export interface Second {
+  readonly third: Third;
+}
+export interface Third {
+  readonly id: string;
+}
+export const first = Schema.suspend((): Schema.Codec<First> => FirstSchema);
+export const second = Schema.suspend((): Schema.Codec<Second> => SecondSchema);
+export const third = Schema.suspend((): Schema.Codec<Third> => ThirdSchema);
+`),
+        [2, 5, 8]
+      );
+    })
+  );
+
+  it.effect("reports a shape that only leads into a recursive shape", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`import { Schema } from "effect";
+export interface Entry {
+  readonly node: Node;
+}
+export interface Node {
+  readonly next?: Node;
+}
+export const entry = Schema.suspend((): Schema.Codec<Entry> => EntrySchema);
+export const node = Schema.suspend((): Schema.Codec<Node> => NodeSchema);
+`),
+        [2]
+      );
+    })
+  );
+
+  it.effect(
+    "allows a recursive shape that a function declares for its thunk",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`import { Schema } from "effect";
+export function build() {
+  interface Value {
+    readonly next?: Value;
+  }
+  return Schema.suspend((): Schema.Codec<Value> => ValueSchema);
+}
+`),
+          []
+        );
+      })
+  );
+
   it.effect(
     "keeps other interfaces and annotations of a recursive type reported",
     () =>

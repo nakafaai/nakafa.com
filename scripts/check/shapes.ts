@@ -1,4 +1,4 @@
-import { Array as Arr, HashSet } from "effect";
+import { Array as Arr, HashMap, HashSet } from "effect";
 import {
   type InterfaceDeclaration,
   isArrayTypeNode,
@@ -41,7 +41,7 @@ import {
 } from "typescript/unstable/ast";
 import { candidate } from "#scripts/check/rules";
 import { children } from "#scripts/check/source";
-import { valueMembers } from "#scripts/check/value";
+import { localShapes, valueMembers } from "#scripts/check/value";
 
 const JSX_PATTERN = /\.tsx$/u;
 const PROPS_PATTERN = /Props$/u;
@@ -49,6 +49,8 @@ const PROPS_PATTERN = /Props$/u;
 const SELECTOR_FILTERS = HashSet.make("Exclude", "Extract");
 /** The Schema types whose type argument a recursive `Schema.suspend` thunk returns. */
 const RECURSIVE_CODECS = HashSet.make("Codec", "Schema");
+/** An interface or a type alias that a module declares at its top level. */
+type Shape = InterfaceDeclaration | TypeAliasDeclaration;
 
 /**
  * Whether a type is a string, number, or boolean literal, or a union of them,
@@ -295,16 +297,52 @@ function isGeneric(
   return Arr.some(members, (member) => mentions(member, parameters));
 }
 
+/** Whether the own members of a shape mention the type name `name`. */
+function mentionsName(shape: Shape, name: string): boolean {
+  return Arr.some(ownMembers(shape), (member) => mentions(member, [name]));
+}
+
+/** Returns the module's own shapes that one shape's own members mention. */
+function followed(declared: readonly Shape[], shape: Shape): readonly Shape[] {
+  return Arr.filter(declared, (candidate) =>
+    mentionsName(shape, candidate.name.text)
+  );
+}
+
 /**
- * Whether a shape refers to its own name, which makes it a recursive type, such
- * as `Category` in `readonly children: ReadonlyArray<Category>`. A shape that a
- * thunk names without referring to itself is plain data.
+ * Whether the shape `from` reaches the type name `name`, directly or through the
+ * shapes that its module declares. Each shape is followed once, as `valueMembers`
+ * follows shapes, so a cycle ends the walk. The name itself is matched on the
+ * members, so a shape nested in a function still refers to itself.
  */
-function refersToItself(
-  node: InterfaceDeclaration | TypeAliasDeclaration,
-  name: string
+function reaches(
+  declared: readonly Shape[],
+  from: Shape,
+  name: string,
+  seen: readonly string[]
 ): boolean {
-  return Arr.some(ownMembers(node), (member) => mentions(member, [name]));
+  return (
+    mentionsName(from, name) ||
+    Arr.some(followed(declared, from), (next) => {
+      const target = next.name.text;
+      return (
+        !Arr.contains(seen, target) &&
+        reaches(declared, next, name, Arr.append(seen, target))
+      );
+    })
+  );
+}
+
+/**
+ * Whether a shape reaches its own name through the shapes of its module, which
+ * makes it a recursive type: `Category` in `readonly children:
+ * ReadonlyArray<Category>`, or each of `Folder` and `Entry` in a mutually
+ * recursive pair. A thunk-named shape that does not reach its own name is plain
+ * data, because `typeof X.Type` describes it, and a shape that only leads into a
+ * cycle is plain data too.
+ */
+function reachesItself(declared: readonly Shape[], shape: Shape): boolean {
+  return reaches(declared, shape, shape.name.text, [shape.name.text]);
 }
 
 /**
@@ -312,11 +350,11 @@ function refersToItself(
  * interfaces that declare their own members and type aliases that spell out an
  * object, outside the functions that run in the browser page, where no Schema
  * reaches. React component props in `.tsx` modules, ambient augmentations,
- * interfaces that only extend a derived type, the type a recursive schema names
- * (found among all `nodes`), shapes that hold a value no Schema describes (a
- * function, a React or MDX value, an AI SDK message part, an Effect runtime
- * handle, a parser syntax-tree node), and generic shapes that use a type
- * parameter stay allowed.
+ * interfaces that only extend a derived type, the type that a recursive schema
+ * names when the type reaches its own name (found among all `nodes`), shapes
+ * that hold a value no Schema describes (a function, a React or MDX value, an AI
+ * SDK message part, an Effect runtime handle, a parser syntax-tree node), and
+ * generic shapes that use a type parameter stay allowed.
  */
 export function shapeCandidates(
   file: string,
@@ -326,6 +364,7 @@ export function shapeCandidates(
 ) {
   const props = JSX_PATTERN.test(file);
   const recursive = recursiveNames(nodes);
+  const declared = Arr.fromIterable(HashMap.values(localShapes(sourceFile)));
   const holdsValue = valueMembers(sourceFile);
   return Arr.flatMap(runtime, (node) => {
     if (!(isInterfaceDeclaration(node) || isTypeAliasDeclaration(node))) {
@@ -340,7 +379,7 @@ export function shapeCandidates(
       (props && PROPS_PATTERN.test(node.name.text)) ||
       isAmbient(node) ||
       (Arr.contains(recursive, node.name.text) &&
-        refersToItself(node, node.name.text)) ||
+        reachesItself(declared, node)) ||
       Arr.some(members, holdsValue) ||
       isGeneric(node, members);
     return handWritten && !allowed

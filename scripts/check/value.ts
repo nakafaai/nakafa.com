@@ -207,7 +207,7 @@ export function valueNames(sourceFile: SourceFile): readonly string[] {
 }
 
 /** Returns the interfaces and type aliases that a module declares at its top level, by name. */
-function localShapes(sourceFile: SourceFile) {
+export function localShapes(sourceFile: SourceFile) {
   return HashMap.fromIterable(
     Arr.flatMap(sourceFile.statements, (statement) =>
       isInterfaceDeclaration(statement) || isTypeAliasDeclaration(statement)
