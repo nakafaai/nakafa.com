@@ -6,7 +6,7 @@ import {
   renderMermaid,
 } from "@repo/design-system/lib/mermaid/render";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { createStableId } from "@repo/utilities/helper";
+import { createStableId } from "@repo/utilities/id";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Effect, Fiber } from "effect";

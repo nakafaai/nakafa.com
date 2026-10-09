@@ -1,5 +1,5 @@
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 
 type ContentSearchInput = typeof contentSearchInputValidator.Type;
 const routeSeparatorPattern = /[/_-]+/g;

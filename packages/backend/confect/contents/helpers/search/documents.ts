@@ -4,7 +4,7 @@ import {
   nakafaSectionValidator,
 } from "@repo/backend/confect/lib/validators/contents";
 import { NAKAFA_BASE_URL } from "@repo/contents/agent/constants";
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, pipe, Schema } from "effect";
 
 const WHITESPACE_PATTERN = /\s+/g;

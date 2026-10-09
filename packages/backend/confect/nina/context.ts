@@ -27,8 +27,7 @@ import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { NAKAFA_BASE_URL } from "@repo/contents/agent/constants";
 import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { cleanSlug } from "@repo/utilities/helper";
-import { toAnchorSlug } from "@repo/utilities/slug";
+import { cleanSlug, toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 
 const referenceLayer = Layer.mergeAll(

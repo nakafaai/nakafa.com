@@ -1,25 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { cleanSlug, createStableId } from "@repo/utilities/helper";
+import { createStableId } from "@repo/utilities/id";
 
 const STABLE_ID_PATTERN = /^json-ld-[a-z0-9]+$/;
-
-describe("cleanSlug", () => {
-  it("removes every leading and trailing slash", () => {
-    expect(cleanSlug("///articles/education///")).toBe("articles/education");
-  });
-
-  it("preserves internal slashes and characters", () => {
-    expect(cleanSlug("/materi/café//dasar/")).toBe("materi/café//dasar");
-  });
-
-  it("returns an empty string for a slash-only value", () => {
-    expect(cleanSlug("///")).toBe("");
-  });
-
-  it("does not trim whitespace", () => {
-    expect(cleanSlug(" /articles/ ")).toBe(" /articles/ ");
-  });
-});
 
 describe("createStableId", () => {
   it("returns the same id for the same input", () => {

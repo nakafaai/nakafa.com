@@ -11,7 +11,7 @@ import spec, {
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { truncateText } from "@repo/backend/confect/utils/text";
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 import { Effect, Layer, Struct } from "effect";
 
 /**

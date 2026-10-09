@@ -13,7 +13,7 @@ import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions
 import { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { LocaleSchema } from "@repo/contents/content";
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 import { Schema, Struct } from "effect";
 /** Verified learning page state consumed by one Nina turn. */
 export const NinaPageSchema = Schema.Struct({

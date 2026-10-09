@@ -10,7 +10,7 @@ import {
   NakafaAgentSectionSchema,
 } from "@repo/contents/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/content";
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Option, Schema } from "effect";
 
 const CONTENT_RESOURCE_PREFIX = "nakafa://content/";
