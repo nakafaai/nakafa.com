@@ -1,3 +1,4 @@
+import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { Array as Arr, Option, Schema } from "effect";
 
 export const DISPLACEMENT_DISTANCE_CAR_MODEL_PATH =
@@ -244,10 +245,6 @@ function getRouteSpan(route: RoutePoint[]) {
 
 function getPointDistance(start: RoutePoint, end: RoutePoint) {
   return Math.hypot(end.x - start.x, end.z - start.z);
-}
-
-function lerp(start: number, end: number, progress: number) {
-  return start + (end - start) * progress;
 }
 
 function clamp(value: number, min: number, max: number) {

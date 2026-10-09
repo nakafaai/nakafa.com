@@ -2,6 +2,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
+import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import {
   formatMeterMath,
   formatSpeedMath,
@@ -466,8 +467,4 @@ function getBrakingProgress(
   }
 
   return (elapsedSeconds - STOPPING_DISTANCE_REACTION_TIME) / brakingSeconds;
-}
-
-function lerp(start: number, end: number, progress: number) {
-  return start + (end - start) * progress;
 }
