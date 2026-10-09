@@ -31,6 +31,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactCompact } from "@repo/design-system/components/visual/fact";
 import { Effect } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -135,9 +136,18 @@ export function VectorConceptLab({
       </VisualCardBody>
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <LabFact label={labels.magnitude} value={labels.magnitudeValue} />
-          <LabFact label={labels.direction} value={labels.directionValue} />
-          <LabFact label={labels.netIdea} value={labels.netIdeaValue} />
+          <VisualFactCompact
+            label={labels.magnitude}
+            value={labels.magnitudeValue}
+          />
+          <VisualFactCompact
+            label={labels.direction}
+            value={labels.directionValue}
+          />
+          <VisualFactCompact
+            label={labels.netIdea}
+            value={labels.netIdeaValue}
+          />
         </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
@@ -158,14 +168,5 @@ function ResponsiveVectorConceptCamera() {
       cameraTarget={CAMERA_TARGET}
       fov={44}
     />
-  );
-}
-
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

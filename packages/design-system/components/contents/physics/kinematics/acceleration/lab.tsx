@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
@@ -150,7 +151,7 @@ export function AccelerationLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {Arr.map(facts, (fact) => (
-            <LabFact
+            <VisualFactIndicator
               indicatorColor={
                 "indicatorColor" in fact ? fact.indicatorColor : undefined
               }
@@ -163,31 +164,5 @@ export function AccelerationLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-function LabFact({
-  indicatorColor,
-  label,
-  value,
-}: {
-  indicatorColor?: string | undefined;
-  label: ReactNode;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="flex items-center gap-2 text-muted-foreground">
-        {indicatorColor ? (
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: indicatorColor }}
-          />
-        ) : null}
-        {label}
-      </dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }

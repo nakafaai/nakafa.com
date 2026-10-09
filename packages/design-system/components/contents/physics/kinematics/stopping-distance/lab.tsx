@@ -35,6 +35,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
@@ -140,25 +141,25 @@ export function StoppingDistanceLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
-          <LabFact
+          <VisualFactIndicator
             label={labels.speed}
             value={<InlineMath math={formatSpeedMath(motion.speed)} />}
           />
-          <LabFact
+          <VisualFactIndicator
             indicatorColor={REACTION_DISTANCE_COLOR}
             label={labels.reactionDistance}
             value={
               <InlineMath math={formatMeterMath(motion.reactionDistance)} />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             indicatorColor={BRAKING_DISTANCE_COLOR}
             label={labels.brakingDistance}
             value={
               <InlineMath math={formatMeterMath(motion.brakingDistance)} />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             label={labels.stoppingDistance}
             value={
               <InlineMath math={formatMeterMath(motion.stoppingDistance)} />
@@ -387,32 +388,6 @@ function StopCone({ x }: { x: number }) {
         <meshStandardMaterial color={getColor("GRAY", 800)} roughness={0.65} />
       </mesh>
     </group>
-  );
-}
-
-function LabFact({
-  indicatorColor,
-  label,
-  value,
-}: {
-  indicatorColor?: string;
-  label: ReactNode;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="flex items-center gap-2 text-muted-foreground">
-        {indicatorColor ? (
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: indicatorColor }}
-          />
-        ) : null}
-        {label}
-      </dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }
 

@@ -10,4 +10,68 @@ function VisualFact({ label, value }: { label: ReactNode; value: ReactNode }) {
   );
 }
 
-export { VisualFact };
+/** A reading whose label keeps the text size of its footer list. */
+function VisualFactCompact({
+  label,
+  value,
+}: {
+  label: ReactNode;
+  value: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="wrap-break-word text-foreground">{value}</dd>
+    </div>
+  );
+}
+
+/** A compact reading whose value uses tabular numerals, so digits keep their width. */
+function VisualFactTabular({
+  label,
+  value,
+}: {
+  label: ReactNode;
+  value: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
+    </div>
+  );
+}
+
+/** A tabular reading whose label may start with a color dot. */
+function VisualFactIndicator({
+  indicatorColor,
+  label,
+  value,
+}: {
+  indicatorColor?: string | undefined;
+  label: ReactNode;
+  value: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <dt className="flex items-center gap-2 text-muted-foreground">
+        {indicatorColor ? (
+          <span
+            aria-hidden="true"
+            className="size-2 rounded-full"
+            style={{ backgroundColor: indicatorColor }}
+          />
+        ) : null}
+        {label}
+      </dt>
+      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
+    </div>
+  );
+}
+
+export {
+  VisualFact,
+  VisualFactCompact,
+  VisualFactIndicator,
+  VisualFactTabular,
+};

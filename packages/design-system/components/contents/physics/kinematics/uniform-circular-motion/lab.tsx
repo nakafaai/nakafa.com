@@ -34,6 +34,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -136,15 +137,15 @@ export function UniformCircularMotionLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
-          <LabFact
+          <VisualFactTabular
             label={labels.period}
             value={<InlineMath math={formatPeriodMath(motion.period)} />}
           />
-          <LabFact
+          <VisualFactTabular
             label={labels.radius}
             value={<InlineMath math={formatRadiusMath(motion.radius)} />}
           />
-          <LabFact
+          <VisualFactTabular
             label={labels.speed}
             value={
               <InlineMath
@@ -155,7 +156,7 @@ export function UniformCircularMotionLab({
               />
             }
           />
-          <LabFact
+          <VisualFactTabular
             label={labels.acceleration}
             value={
               <InlineMath
@@ -293,15 +294,6 @@ function CarModel() {
       bodyColor={UNIFORM_CIRCULAR_MOTION_COLORS.carBody}
       modelPath={UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH}
     />
-  );
-}
-
-function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }
 

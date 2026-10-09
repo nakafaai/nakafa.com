@@ -20,6 +20,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactCompact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
@@ -97,11 +98,14 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
       </VisualCardBody>
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <GreenhouseFact
+          <VisualFactCompact
             label={labels.heatFlowLabel}
             value={labels.heatFlow}
           />
-          <GreenhouseFact label={labels.meaningLabel} value={labels.meaning} />
+          <VisualFactCompact
+            label={labels.meaningLabel}
+            value={labels.meaning}
+          />
         </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
@@ -242,15 +246,6 @@ function getHeatParticlePosition(index: number, total: number) {
     Math.sin(angle) * radius * 0.9,
     0.56 + (index % 2) * 0.08,
   ] as const;
-}
-
-function GreenhouseFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
-  );
 }
 
 function createGasParticles(level: number) {

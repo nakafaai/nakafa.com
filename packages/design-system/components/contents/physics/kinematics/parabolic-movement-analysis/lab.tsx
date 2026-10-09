@@ -32,6 +32,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
@@ -189,7 +190,7 @@ export function ParabolicMovementAnalysisLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           {Arr.map(facts, (fact) => (
-            <LabFact
+            <VisualFactTabular
               key={fact.id}
               label={fact.label}
               value={<InlineMath math={fact.math} />}
@@ -199,14 +200,5 @@ export function ParabolicMovementAnalysisLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }
