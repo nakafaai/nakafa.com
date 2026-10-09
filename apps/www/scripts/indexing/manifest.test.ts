@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, MutableList } from "effect";
 
 const sitemapMocks = vi.hoisted(() => ({
@@ -14,8 +14,9 @@ vi.mock("@/lib/sitemap/catalog", () => ({
   readSitemapPageDescriptors: sitemapMocks.readSitemapPageDescriptors,
 }));
 
-afterEach(() => {
-  vi.clearAllMocks();
+beforeEach(() => {
+  sitemapMocks.getSitemapEntries.mockReset();
+  sitemapMocks.readSitemapPageDescriptors.mockReset();
 });
 
 describe("forEachSiteIndexUrlBatch", () => {
