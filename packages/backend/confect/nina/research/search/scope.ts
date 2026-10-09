@@ -135,10 +135,7 @@ function getVersionAdjacentKeys(text: string) {
     }
 
     return Arr.flatMap(
-      [
-        index === 0 ? Arr.last(tokens) : Arr.get(tokens, index - 1),
-        Arr.get(tokens, index + 1),
-      ],
+      [Arr.get(tokens, index - 1), Arr.get(tokens, index + 1)],
       (candidate) => {
         if (
           Option.isNone(candidate) ||
