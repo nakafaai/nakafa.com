@@ -12,7 +12,7 @@ import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Returns a stable empty material page before Aksara owns the family. */
 function emptyPage() {
@@ -93,7 +93,7 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
         concurrency: "unbounded",
       }
     );
-    const page = verified.map(({ resolved }) => resolved.projectionJson);
+    const page = Arr.map(verified, ({ resolved }) => resolved.projectionJson);
     return {
       activeManifestHash: activePublication.manifestHash,
       activeReleaseId: activePublication.releaseId,

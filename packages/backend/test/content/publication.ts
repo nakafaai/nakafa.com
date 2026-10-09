@@ -20,6 +20,7 @@ import {
   testTextHash,
 } from "@repo/backend/test/content/release";
 import {
+  Array as Arr,
   Data,
   Effect,
   MutableHashMap,
@@ -167,7 +168,8 @@ export const createTestPublication = Effect.fn("TestContent.createPublication")(
               });
             }
             const fields = Rec.fromEntries(
-              Rec.toEntries(input).filter(
+              Arr.filter(
+                Rec.toEntries(input),
                 ([field]) => field !== "_id" && field !== "_creationTime"
               )
             );

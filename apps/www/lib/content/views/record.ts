@@ -3,7 +3,7 @@
 import { useMutation } from "@confect/react";
 import { useDocumentVisibility } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
-import refs from "@repo/backend/confect/_generated/refs";
+import contents from "@repo/backend/confect/_generated/refs/contents";
 import { Effect, Option, Result } from "effect";
 import { useEffect } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -40,9 +40,7 @@ export function useRecordContentView({
   section,
   delay = 3000,
 }: UseRecordContentViewOptions) {
-  const recordView = useMutation(
-    refs.public.contents.mutations.views.recordContentView
-  );
+  const recordView = useMutation(contents.mutations.views.recordContentView);
 
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);

@@ -20,7 +20,7 @@ const readSubjectCandidate = Effect.fn(
     domain: route.materialDomain,
     // Each ancestor's authored order from the program root down, then the
     // subject's own order among its siblings.
-    position: [...ancestors.map(({ order }) => order), row.order],
+    position: [...Arr.map(ancestors, ({ order }) => order), row.order],
     row,
   };
 });

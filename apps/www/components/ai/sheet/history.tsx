@@ -7,7 +7,7 @@ import {
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import chats from "@repo/backend/confect/_generated/refs/chats";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -55,7 +55,7 @@ function SheetHistoryContent() {
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const pagination = usePaginatedQuery(
-    refs.public.chats.queries.getOwnChats,
+    chats.queries.getOwnChats,
     {
       type: "study",
     },

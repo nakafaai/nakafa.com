@@ -4,7 +4,7 @@ import {
   type AppLocale,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
@@ -101,7 +101,7 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     return null;
   }
   const reference = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.reference.read, {
+    client.query(contentRelease.reference.read, {
       input: {
         appLocale,
         kind: "route",

@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 import { Duration, Effect } from "effect";
@@ -17,12 +17,8 @@ import type { ConversationScrollSnapshot } from "@/components/school/classes/for
 export type BrowserViewportScroller = ReturnType<typeof createViewportScroller>;
 
 type MarkForumReadMutation = (
-  args: Ref.Args<
-    typeof refs.public.classes.forums.mutations.readState.markForumRead
-  >
-) => InvokeReturn<
-  typeof refs.public.classes.forums.mutations.readState.markForumRead
->;
+  args: Ref.Args<typeof classes.forums.mutations.readState.markForumRead>
+) => InvokeReturn<typeof classes.forums.mutations.readState.markForumRead>;
 
 /** Creates the browser-backed Effect adapters for one live Conversation viewport. */
 export function createBrowserViewportAdapters({

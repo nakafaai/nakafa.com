@@ -1,7 +1,7 @@
 "use client";
 
 import { useAction } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import customers from "@repo/backend/confect/_generated/refs/customers";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
@@ -21,10 +21,10 @@ export function useBillingNavigation() {
   const t = useTranslations("Auth");
   const [isPending, startTransition] = useTransition();
   const createCheckout = useAction(
-    refs.public.customers.actions.sessions.generateCheckoutLink
+    customers.actions.sessions.generateCheckoutLink
   );
   const createPortal = useAction(
-    refs.public.customers.actions.sessions.generateCustomerPortalUrl
+    customers.actions.sessions.generateCustomerPortalUrl
   );
 
   function runBillingRequest<E>(

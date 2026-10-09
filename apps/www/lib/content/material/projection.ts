@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { slugify } from "@repo/utilities/slug";
 
@@ -27,7 +27,7 @@ export const decodePublishedMaterialContext = Effect.fn(
   locale: Locale,
   material: PublishedMaterialIdentity,
   context: MaterialContextIdentity,
-  result: Ref.Returns<typeof refs.public.contentRelease.program.context>
+  result: Ref.Returns<typeof contentRelease.program.context>
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   if (!result.managed) {

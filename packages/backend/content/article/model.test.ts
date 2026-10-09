@@ -21,7 +21,7 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const localizedRoutes = [
   {
@@ -197,20 +197,22 @@ describe("contentRelease/article/model", () => {
           expect(decodeProjection(result.projectionJson ?? "")).toEqual(
             requested
           );
-          expect(result.alternateJson.map(decodeProjection)).toMatchObject([
-            {
-              appLocale: "en",
-              publicPath: localizedArticle(0).publicPath,
-            },
-            {
-              appLocale: "id",
-              publicPath: localizedArticle(1).publicPath,
-            },
-            {
-              appLocale: "de",
-              publicPath: localizedArticle(2).publicPath,
-            },
-          ]);
+          expect(Arr.map(result.alternateJson, decodeProjection)).toMatchObject(
+            [
+              {
+                appLocale: "en",
+                publicPath: localizedArticle(0).publicPath,
+              },
+              {
+                appLocale: "id",
+                publicPath: localizedArticle(1).publicPath,
+              },
+              {
+                appLocale: "de",
+                publicPath: localizedArticle(2).publicPath,
+              },
+            ]
+          );
         })
       );
     })

@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useLocale } from "next-intl";
 import { type ReactNode, useState } from "react";
@@ -118,7 +118,7 @@ function LiveTryoutSetPage({
   const [terminalState, setTerminalState] = useState<SetState | undefined>();
   // An unauthenticated response during hydration is not a terminal attempt.
   const liveState = useQuery(
-    refs.public.tryouts.queries.runtime.getSetAttemptState,
+    tryouts.queries.runtime.getSetAttemptState,
     !isLoading && terminalState === undefined
       ? { attemptId: binding.attemptId, locale }
       : "skip"

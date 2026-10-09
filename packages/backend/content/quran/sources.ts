@@ -14,7 +14,7 @@ import {
 } from "@nakafa/aksara-contracts/quran/identity";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { readQuranAttributionRow } from "@repo/backend/content/quran/attribution";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type QuranAttribution = Effect.Success<
   ReturnType<typeof readQuranAttributionRow>
@@ -31,19 +31,27 @@ const projectEmbeddedQuranSource = Effect.fn(
   sourceId: SourceId
 ) {
   const source = yield* Effect.fromNullishOr(
-    attribution.payload.sources.find(
-      (
-        candidate
-      ): candidate is Extract<
-        QuranAttributedSource,
-        {
-          readonly kind: "embedded";
-        }
-      > => candidate.kind === "embedded" && candidate.id === sourceId
+    Option.getOrUndefined(
+      Arr.findFirst(
+        attribution.payload.sources,
+        (
+          candidate
+        ): candidate is Extract<
+          QuranAttributedSource,
+          {
+            readonly kind: "embedded";
+          }
+        > => candidate.kind === "embedded" && candidate.id === sourceId
+      )
     )
   );
   const copy = yield* Effect.fromNullishOr(
-    source.copy.find((candidate) => candidate.appLocale === appLocale)
+    Option.getOrUndefined(
+      Arr.findFirst(
+        source.copy,
+        (candidate) => candidate.appLocale === appLocale
+      )
+    )
   );
   return {
     artifact: source.artifact,
@@ -69,19 +77,27 @@ const projectExternalQuranSource = Effect.fn(
   sourceId: SourceId
 ) {
   const source = yield* Effect.fromNullishOr(
-    attribution.payload.sources.find(
-      (
-        candidate
-      ): candidate is Extract<
-        QuranAttributedSource,
-        {
-          readonly kind: "external";
-        }
-      > => candidate.kind === "external" && candidate.id === sourceId
+    Option.getOrUndefined(
+      Arr.findFirst(
+        attribution.payload.sources,
+        (
+          candidate
+        ): candidate is Extract<
+          QuranAttributedSource,
+          {
+            readonly kind: "external";
+          }
+        > => candidate.kind === "external" && candidate.id === sourceId
+      )
     )
   );
   const copy = yield* Effect.fromNullishOr(
-    source.copy.find((candidate) => candidate.appLocale === appLocale)
+    Option.getOrUndefined(
+      Arr.findFirst(
+        source.copy,
+        (candidate) => candidate.appLocale === appLocale
+      )
+    )
   );
   return {
     id: sourceId,
@@ -167,8 +183,11 @@ export const readQuranLocaleSources = Effect.fn(
   // complete localized copy, and exact Tafsir access for every active locale.
   const sources = yield* projectQuranReadingSources(attribution, appLocale);
   const access = yield* Effect.fromNullishOr(
-    attribution.payload.tafsirAccess.find(
-      (candidate) => candidate.appLocale === appLocale
+    Option.getOrUndefined(
+      Arr.findFirst(
+        attribution.payload.tafsirAccess,
+        (candidate) => candidate.appLocale === appLocale
+      )
     )
   ).pipe(Effect.orDie);
   if (access.kind === "embedded") {

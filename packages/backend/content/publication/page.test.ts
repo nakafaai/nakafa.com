@@ -9,6 +9,7 @@ import { insertTestPage } from "@repo/backend/test/content/page";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
+import { MutableList } from "effect";
 
 describe("contentRelease/page/catalog", () => {
   it("keeps page ownership absent before its signed family cutover", async () => {
@@ -36,7 +37,7 @@ describe("contentRelease/page/catalog", () => {
 
   it("returns every current locale-equivalent page in canonical order", async () => {
     const t = convexTest(schema, convexModules);
-    const expected: string[] = [];
+    const expected = MutableList.make<string>();
     await t.mutation(async (ctx) => {
       await insertRuntimeRelease(ctx, ["page"]);
       for (const appLocale of ACTIVE_APP_LOCALE_CODES) {
@@ -48,7 +49,7 @@ describe("contentRelease/page/catalog", () => {
           0
         );
         const imprint = await insertTestPage(ctx, appLocale, "imprint");
-        expected.push(imprint, terms);
+        MutableList.appendAll(expected, [imprint, terms]);
       }
       await ctx.db.insert("contentKeys", {
         artifactLocale: "en",
@@ -62,7 +63,7 @@ describe("contentRelease/page/catalog", () => {
       {
         activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
         managed: true,
-        projectionJson: expected,
+        projectionJson: MutableList.toArray(expected),
       }
     );
   });

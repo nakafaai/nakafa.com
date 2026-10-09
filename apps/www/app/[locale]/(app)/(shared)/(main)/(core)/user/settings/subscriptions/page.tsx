@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import { products } from "@repo/backend/confect/utils/polar/products";
 import { Effect } from "effect";
 import type { Metadata } from "next";
@@ -44,7 +44,7 @@ async function AuthenticatedSubscriptions({
   const subscription = await Effect.runPromise(
     HttpClient.HttpClient.pipe(
       Effect.flatMap((client) =>
-        client.query(refs.public.subscriptions.queries.hasActiveSubscription, {
+        client.query(subscriptions.queries.hasActiveSubscription, {
           productId: products.pro.id,
         })
       ),

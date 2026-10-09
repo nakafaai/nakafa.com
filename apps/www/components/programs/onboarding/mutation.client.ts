@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { Option } from "effect";
 import {
   applyOnboardingAnswer,
@@ -12,31 +12,31 @@ import {
 export function useSaveOnboardingAnswerMutation(
   initialProfile: OnboardingProfile
 ) {
-  return useMutation(
-    refs.public.onboarding.mutations.saveAnswer
-  ).withOptimisticUpdate((localStore, { answer }) => {
-    const subscribed = Option.getOrUndefined(
-      localStore.getQuery(refs.public.onboarding.queries.getStatus, {})
-    );
-    if (subscribed?.isAuthenticated === false) {
-      return;
+  return useMutation(onboarding.mutations.saveAnswer).withOptimisticUpdate(
+    (localStore, { answer }) => {
+      const subscribed = Option.getOrUndefined(
+        localStore.getQuery(onboarding.queries.getStatus, {})
+      );
+      if (subscribed?.isAuthenticated === false) {
+        return;
+      }
+      const current = subscribed ?? {
+        isAuthenticated: true as const,
+        isRequired: true,
+        profile: initialProfile,
+      };
+      localStore.setQuery(
+        onboarding.queries.getStatus,
+        {},
+        Option.some({
+          ...current,
+          profile: applyOnboardingAnswer(
+            current.profile,
+            answer,
+            current.profile?.updatedAt ?? initialProfile?.updatedAt ?? 0
+          ),
+        })
+      );
     }
-    const current = subscribed ?? {
-      isAuthenticated: true as const,
-      isRequired: true,
-      profile: initialProfile,
-    };
-    localStore.setQuery(
-      refs.public.onboarding.queries.getStatus,
-      {},
-      Option.some({
-        ...current,
-        profile: applyOnboardingAnswer(
-          current.profile,
-          answer,
-          current.profile?.updatedAt ?? initialProfile?.updatedAt ?? 0
-        ),
-      })
-    );
-  });
+  );
 }

@@ -31,7 +31,7 @@ import {
   testSignedArtifact,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
-import { Effect, Schema, Stream } from "effect";
+import { Array as Arr, Effect, Order, Schema, Stream } from "effect";
 
 /** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -112,11 +112,14 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
         };
       })
     );
-    const routes = [...entries]
-      .sort((left, right) =>
-        left.projection.publicPath < right.projection.publicPath ? -1 : 1
-      )
-      .map(({ projection }, index) =>
+    const routes = Arr.map(
+      Arr.sort(
+        entries,
+        Order.make<(typeof entries)[number]>((left, right) =>
+          left.projection.publicPath < right.projection.publicPath ? -1 : 1
+        )
+      ),
+      ({ projection }, index) =>
         ContentRouteItemSchema.make({
           change: {
             appLocale: projection.appLocale,
@@ -127,23 +130,23 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
           index,
           releaseId,
         })
-      );
+    );
     const digests = yield* Effect.all({
       items: digestItems(
         releaseId,
-        Stream.fromIterable(entries.map(({ item }) => item))
+        Stream.fromIterable(Arr.map(entries, ({ item }) => item))
       ),
       projections: digestProjections(
         releaseId,
-        Stream.fromIterable(entries.map(({ projection }) => projection))
+        Stream.fromIterable(Arr.map(entries, ({ projection }) => projection))
       ),
       result: digestResultCatalog(
         releaseId,
-        Stream.fromIterable(entries.map(({ head }) => head))
+        Stream.fromIterable(Arr.map(entries, ({ head }) => head))
       ),
       rollback: digestRollbackSnapshot(
         releaseId,
-        Stream.fromIterable(entries.map(({ rollback }) => rollback))
+        Stream.fromIterable(Arr.map(entries, ({ rollback }) => rollback))
       ),
       routes: digestRoutes(releaseId, Stream.fromIterable(routes)),
     });
@@ -174,26 +177,26 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
       yield* stageItemProgram(
         releaseId,
         batchIndex,
-        batch.map(({ item }) => encodeJson(item))
+        Arr.map(batch, ({ item }) => encodeJson(item))
       );
       yield* stageArtifacts(
         releaseId,
         batchIndex,
-        batch.map(({ artifact }) => encodeJson(artifact))
+        Arr.map(batch, ({ artifact }) => encodeJson(artifact))
       );
       yield* stageProjectionProgram(
         releaseId,
         batchIndex,
-        batch.map(({ projectionJson }) => projectionJson)
+        Arr.map(batch, ({ projectionJson }) => projectionJson)
       );
     }
     for (let start = 0; start < count; start += MAX_ITEM_BATCH_COUNT) {
       yield* stageRoutes(
         releaseId,
         start / MAX_ITEM_BATCH_COUNT,
-        routes
-          .slice(start, start + MAX_ITEM_BATCH_COUNT)
-          .map((route) => encodeJson(route))
+        Arr.map(routes.slice(start, start + MAX_ITEM_BATCH_COUNT), (route) =>
+          encodeJson(route)
+        )
       );
     }
     return signed.manifestHash;

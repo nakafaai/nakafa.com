@@ -11,7 +11,8 @@ import {
   ArrowTurnBackwardIcon,
   ArrowUpRight01Icon,
 } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import auth from "@repo/backend/confect/_generated/refs/auth";
+import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
@@ -42,11 +43,11 @@ import { getCleanHref } from "@/lib/utils/link";
 /** Render the incrementally loaded comments for one user profile. */
 export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
-  const userQuery = useQuery(refs.public.auth.queries.getUserById, {
+  const userQuery = useQuery(auth.queries.getUserById, {
     userId,
   });
   const pagination = usePaginatedQuery(
-    refs.public.comments.queries.getCommentsByUserId,
+    comments.queries.getCommentsByUserId,
     {
       userId,
     },
@@ -93,7 +94,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
   );
 }
 type UserComment = Ref.Returns<
-  typeof refs.public.comments.queries.getCommentsByUserId
+  typeof comments.queries.getCommentsByUserId
 >["page"][number];
 
 /** Render one profile comment with optimistic viewer actions. */
@@ -102,7 +103,7 @@ function CommentThread({
   user,
 }: {
   comment: UserComment;
-  user: Ref.Returns<typeof refs.public.auth.queries.getUserById>;
+  user: Ref.Returns<typeof auth.queries.getUserById>;
 }) {
   const t = useTranslations("Common");
   const userName = user?.name ?? t("anonymous");

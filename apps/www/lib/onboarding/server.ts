@@ -2,7 +2,7 @@ import "server-only";
 
 import { HttpClient } from "@confect/js";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
-import refs from "@repo/backend/confect/_generated/refs";
+import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { Effect, Schema } from "effect";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -23,7 +23,7 @@ export const readOnboardingStatus = Effect.fn("www.onboarding.readStatus")(
   function* (token: string) {
     return yield* Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient;
-      return yield* client.query(refs.public.onboarding.queries.getStatus, {});
+      return yield* client.query(onboarding.queries.getStatus, {});
     }).pipe(
       Effect.provide(httpLayer({ auth: token })),
       Effect.mapError((cause) => new OnboardingStatusReadError({ cause }))
@@ -42,7 +42,7 @@ export const recordOnboardingAdmission = Effect.fn(
 )(function* (token: string) {
   return yield* Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
-    return yield* client.mutation(refs.public.onboarding.mutations.admit, {});
+    return yield* client.mutation(onboarding.mutations.admit, {});
   }).pipe(
     Effect.timeout(NETWORK_ATTEMPT_DEADLINE),
     Effect.provide(httpLayer({ auth: token })),

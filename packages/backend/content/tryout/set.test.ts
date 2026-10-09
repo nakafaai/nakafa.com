@@ -29,7 +29,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 
 const identity: TryoutSetIdentity = {
   countryKey: TRYOUT_START_COUNTRY,
@@ -48,14 +48,14 @@ async function activateSet(
 ) {
   const t = convexTest(schema, convexModules);
   const catalog = transform(
-    ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+    Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
       makeTryoutStartCatalog(locale, visibility)
     )
   );
   const snapshotId = await t.mutation((ctx) =>
     activateTryoutSnapshot(ctx, {
       catalog,
-      placements: ACTIVE_APP_LOCALE_CODES.map(makeTryoutStartPlacement),
+      placements: Arr.map(ACTIVE_APP_LOCALE_CODES, makeTryoutStartPlacement),
     })
   );
   return {
@@ -72,7 +72,7 @@ describe("contentRelease/tryout/set", () => {
         for (const questionCount of [1, 2]) {
           const { t } = yield* Effect.promise(() =>
             activateSet((rows) =>
-              rows.map((row) =>
+              Arr.map(rows, (row) =>
                 Schema.decodeSync(TryoutCatalogRowSchema)(
                   row.kind === "set"
                     ? {
@@ -193,7 +193,7 @@ describe("contentRelease/tryout/set", () => {
   });
   it("rejects signed set counts that do not match their sections", async () => {
     const { t } = await activateSet((rows) =>
-      rows.map((row) => {
+      Arr.map(rows, (row) => {
         if (row.kind !== "set") {
           return row;
         }
@@ -263,7 +263,7 @@ describe("contentRelease/tryout/set", () => {
   });
   it("rejects a set beyond the aggregate placement budget", async () => {
     const { t } = await activateSet((rows) =>
-      rows.map((row) => {
+      Arr.map(rows, (row) => {
         if (row.kind !== "set") {
           return row;
         }
@@ -292,7 +292,7 @@ describe("contentRelease/tryout/set", () => {
   });
   it("rejects an internal entry key bound to a visible section", async () => {
     const { t } = await activateSet((rows) =>
-      rows.map((row) => {
+      Arr.map(rows, (row) => {
         if (row.kind !== "set") {
           return row;
         }
@@ -323,7 +323,7 @@ describe("contentRelease/tryout/set", () => {
   it("rejects a set whose internal entry section is missing", async () => {
     const { t } = await activateSet(
       (rows) =>
-        rows.map((row) => {
+        Arr.map(rows, (row) => {
           if (row.kind !== "set") {
             return row;
           }
@@ -365,8 +365,8 @@ describe("contentRelease/tryout/set", () => {
         )
       )
     );
-    expect(set.sections.map(({ section }) => section.row.visibility)).toContain(
-      "internal-entry"
-    );
+    expect(
+      Arr.map(set.sections, ({ section }) => section.row.visibility)
+    ).toContain("internal-entry");
   });
 });

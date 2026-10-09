@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import { PartyIcon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import schools from "@repo/backend/confect/_generated/refs/schools";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -39,7 +39,7 @@ export function SchoolOnboardingCreateForm() {
     value: option.value,
   }));
   const router = useRouter();
-  const createSchool = useMutation(refs.public.schools.mutations.createSchool);
+  const createSchool = useMutation(schools.mutations.createSchool);
   const form = useForm({
     defaultValues: schoolCreateDefaultValues,
     validators: {

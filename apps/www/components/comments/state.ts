@@ -1,9 +1,9 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 type Comment = Ref.Returns<
-  typeof refs.public.comments.queries.getCommentsByUserId
+  typeof comments.queries.getCommentsByUserId
 >["page"][number];
 type Vote = -1 | 0 | 1;
 

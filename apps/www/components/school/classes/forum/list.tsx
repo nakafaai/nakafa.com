@@ -6,7 +6,7 @@ import {
   MessageMultiple02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import type { forumListItemValidator } from "@repo/backend/confect/classes/forums/validators";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -60,7 +60,7 @@ function SchoolClassesForumListContent() {
   const [{ q }] = useQueryStates(searchParsers);
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
   const pagination = usePaginatedQuery(
-    refs.public.classes.forums.queries.forums.getForums,
+    classes.forums.queries.forums.getForums,
     {
       classId,
       q: debouncedQ,

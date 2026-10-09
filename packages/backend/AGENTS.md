@@ -28,7 +28,9 @@ pnpm --dir packages/backend setup
 
 Run `pnpm --dir packages/backend codegen` before a Convex binding refresh. Confect
 owns the authored contract generation; Convex owns `convex/_generated`, including
-the static client API. `pnpm acceptance:prepare` and `pnpm acceptance:build`
+the static client API. `pnpm --filter @repo/backend codegen` also writes the
+per-domain refs under `confect/_generated/refs`, and the web app imports only
+those. `pnpm acceptance:prepare` and `pnpm acceptance:build`
 refresh these bindings against the owned local backend. CI verifies the result
 before building consumers. Use the repository's pnpm CLI
 and never print secrets. Never copy `CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`,

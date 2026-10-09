@@ -8,7 +8,7 @@ import {
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, Exit, Layer } from "effect";
+import { Effect, Exit, Layer, MutableList } from "effect";
 
 const mocks = vi.hoisted(() => ({
   discard: vi.fn(),
@@ -168,8 +168,9 @@ layer(services)("signed acceptance lifecycle", (it) => {
     "clears foreign signed responses once the backend is ready, before building",
     () =>
       Effect.gen(function* () {
-        const steps: string[] = [];
-        const record = (step: string) => Effect.sync(() => steps.push(step));
+        const steps = MutableList.make<string>();
+        const record = (step: string) =>
+          Effect.sync(() => MutableList.append(steps, step));
         mocks.backend.mockImplementation((_runtime, program) =>
           record("backend ready").pipe(Effect.andThen(program))
         );
@@ -181,25 +182,29 @@ layer(services)("signed acceptance lifecycle", (it) => {
         yield* runAcceptance("/test", "build", []);
         expect(mocks.discard).toHaveBeenCalledWith("/test");
         expect(mocks.sink).not.toHaveBeenCalled();
-        expect(steps).toEqual(["backend ready", "discard", "command"]);
-        steps.length = 0;
+        expect(MutableList.toArray(steps)).toEqual([
+          "backend ready",
+          "discard",
+          "command",
+        ]);
+        MutableList.clear(steps);
         yield* runAcceptance("/test", "start", []);
         expect(mocks.sink).toHaveBeenCalledWith(
           runtime.analytics,
           expect.anything()
         );
-        expect(steps).toEqual([
+        expect(MutableList.toArray(steps)).toEqual([
           "analytics stand-in",
           "backend ready",
           "command",
         ]);
         const failure = acceptanceRuntimeError("test cache failure");
         mocks.discard.mockReturnValue(Effect.fail(failure));
-        steps.length = 0;
+        MutableList.clear(steps);
         expect(
           yield* runAcceptance("/test", "build", []).pipe(Effect.flip)
         ).toBe(failure);
-        expect(steps).toEqual(["backend ready"]);
+        expect(MutableList.toArray(steps)).toEqual(["backend ready"]);
       })
   );
 

@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import schools from "@repo/backend/confect/_generated/refs/schools";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Effect } from "effect";
 import { redirect } from "next/navigation";
@@ -40,7 +40,7 @@ async function AuthenticatedSchoolSelection({
     }),
     Effect.runPromise(
       Effect.flatMap(HttpClient.HttpClient, (client) =>
-        client.query(refs.public.schools.queries.getMySchoolsPage, {
+        client.query(schools.queries.getMySchoolsPage, {
           paginationOpts: { cursor: null, numItems: 20 },
         })
       ).pipe(

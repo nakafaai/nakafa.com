@@ -7,7 +7,7 @@ import { verifyArticle } from "@repo/backend/content/article/verify";
 import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
 import { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads every locale-specific counterpart for one stable article identity. */
 const readAlternates = Effect.fn("contentRelease.readArticleAlternates")(
@@ -77,7 +77,10 @@ const assembleArticleModel = Effect.fn("contentRelease.assembleArticleModel")(
     return {
       activeAppLocales,
       activeReleaseId: route.active.releaseId,
-      alternateJson: alternates.map(({ resolved }) => resolved.projectionJson),
+      alternateJson: Arr.map(
+        alternates,
+        ({ resolved }) => resolved.projectionJson
+      ),
       projectionJson: route.article.resolved.projectionJson,
     };
   }

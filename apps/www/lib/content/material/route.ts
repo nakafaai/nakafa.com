@@ -13,7 +13,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, HashSet, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
@@ -104,7 +104,7 @@ export const readPublishedMaterialRoute = Effect.fn(
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.material.publication, {
+    client.query(contentRelease.material.publication, {
       ...(expectedActiveReleaseId === undefined
         ? {}
         : {
@@ -126,7 +126,7 @@ export const readPublishedMaterialRoute = Effect.fn(
 export const decodePublishedMaterialRoute = Effect.fn(
   "NakafaMaterial.decodePublishedRoute"
 )(function* (
-  result: Ref.Returns<typeof refs.public.contentRelease.material.publication>,
+  result: Ref.Returns<typeof contentRelease.material.publication>,
   locale: Locale,
   publicPath: string,
   expectedActiveReleaseId?: ContentReleasePin

@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { useRouter } from "@repo/internationalization/src/navigation";
@@ -45,7 +45,7 @@ function SchoolClassesForumPanelFrame({
     slug: string;
   }>();
   const searchParams = useSearchParams();
-  const query = useQuery(refs.public.classes.forums.queries.forums.getForum, {
+  const query = useQuery(classes.forums.queries.forums.getForum, {
     forumId,
   });
   const forum = QueryResult.isSuccess(query) ? query.value : undefined;

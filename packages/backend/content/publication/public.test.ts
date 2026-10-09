@@ -12,7 +12,7 @@ import {
   createTestPublication,
   makePageRuntimeSource,
 } from "@repo/backend/test/content/publication";
-import { Effect, HashMap, Struct } from "effect";
+import { Array as Arr, Effect, HashMap, Struct } from "effect";
 
 describe("active public body selection", () => {
   it.effect(
@@ -133,7 +133,7 @@ describe("active public body selection", () => {
             Struct.omit(fixture.binding, ["contentKey"]),
           ]),
           HashMap.set(base, "contentHeads", []),
-          ...incomplete.map((head) =>
+          ...Arr.map(incomplete, (head) =>
             HashMap.set(base, "contentHeads", [head])
           ),
         ];

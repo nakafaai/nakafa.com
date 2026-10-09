@@ -1,9 +1,9 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type classes from "@repo/backend/confect/_generated/refs/classes";
 import type { MaterialGroup } from "@/components/school/classes/materials/types";
 
 type UpdateArgs = Ref.Args<
-  typeof refs.public.classes.materials.mutations.updateMaterialGroup
+  typeof classes.materials.mutations.updateMaterialGroup
 >;
 type UpdatePatch = Omit<UpdateArgs, "groupId">;
 type MaterialGroupState = Pick<

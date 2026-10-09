@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -56,7 +56,7 @@ export async function readOgMetadata(
     }
     const reference = await Effect.runPromise(
       Effect.flatMap(HttpClient.HttpClient, (client) =>
-        client.query(refs.public.contentRelease.reference.read, {
+        client.query(contentRelease.reference.read, {
           input: {
             appLocale: locale,
             kind: "route",

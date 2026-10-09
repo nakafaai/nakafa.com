@@ -38,7 +38,7 @@ import {
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const testDigest = Sha256HashSchema.make(`sha256:${"1".repeat(64)}`);
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
@@ -218,9 +218,9 @@ export function makeQuranAttribution(
   return Schema.decodeUnknownSync(QuranAttributionRowSchema)({
     activeAppLocales,
     kind: "quran-attribution",
-    sources: quranSourceIds(activeAppLocales).map((id) => {
+    sources: Arr.map(quranSourceIds(activeAppLocales), (id) => {
       const source = {
-        copy: activeAppLocales.map((appLocale) => ({
+        copy: Arr.map(activeAppLocales, (appLocale) => ({
           appLocale,
           notice: `Technical attribution notice ${appLocale}`,
           title: `Technical source ${id} ${appLocale}`,
@@ -252,7 +252,7 @@ export function makeQuranAttribution(
         },
       };
     }),
-    tafsirAccess: activeAppLocales.map((appLocale) =>
+    tafsirAccess: Arr.map(activeAppLocales, (appLocale) =>
       makeQuranTafsirAccess(appLocale)
     ),
   });

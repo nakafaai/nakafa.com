@@ -15,7 +15,7 @@ import {
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/nina/research/tools/search", () => ({
   searchWeb: vi.fn(),
@@ -130,7 +130,7 @@ describe("research Agent evidence boundary", () => {
     expect(result.text).not.toContain("Invented finding.");
     expect(scrapeUrl).toHaveBeenCalledTimes(researchMaxSources);
     expect(usageHandler).toHaveBeenCalledTimes(3);
-    expect(artifacts).toEqual([]);
+    expect(MutableList.toArray(artifacts)).toEqual([]);
     expect(model.doGenerateCalls[0]?.toolChoice).toEqual({
       type: "tool",
       toolName: "webSearch",

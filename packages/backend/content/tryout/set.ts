@@ -9,7 +9,7 @@ import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { readTryoutSectionRows } from "@repo/backend/content/tryout/section";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 /** Stable authored keys that select one localized signed try-out set. */
 export type TryoutSetIdentity = typeof tryoutSetIdentityValidator.Type;
 /** Loads one complete verified set snapshot for immutable attempt creation. */
@@ -65,14 +65,15 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
     const sections = yield* Effect.forEach(storedSections, (storedSection) =>
       readTryoutSectionRows(snapshotId, storedSection)
     );
-    const hasChangedOrder = sections.some(
+    const hasChangedOrder = Arr.some(
+      sections,
       ({ section }, index) => section.row.order !== index + 1
     );
     if (
       hasChangedOrder ||
       !provesSetInventory(
         setRow,
-        sections.map(({ section }) => section.row)
+        Arr.map(sections, ({ section }) => section.row)
       )
     ) {
       return yield* releaseFail(
@@ -87,7 +88,8 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
     const entrySectionKey = setRow.internalEntrySectionKey;
     if (
       entrySectionKey &&
-      !sections.some(
+      !Arr.some(
+        sections,
         ({ section }) =>
           section.row.sectionKey === entrySectionKey &&
           section.row.visibility === "internal-entry"
