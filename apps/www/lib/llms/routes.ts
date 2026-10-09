@@ -4,7 +4,7 @@ import {
   HttpMediaTypeSchema,
   negotiateMediaType,
 } from "@repo/utilities/http/accept";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
 
 export const LocalizedLlmsRouteSchema = Schema.Struct({
@@ -157,14 +157,17 @@ function getLocalizedLlmsRoute(
     });
   }
 
-  const [rawLocale, ...routeSegments] = pathname.split("/").filter(Boolean);
+  const [rawLocale, ...routeSegments] = Arr.filter(
+    pathname.split("/"),
+    Boolean
+  );
   const locale = getSupportedLocale(rawLocale);
 
   if (Option.isNone(locale)) {
     return Option.none();
   }
 
-  const rawRoute = `/${routeSegments.join("/")}`;
+  const rawRoute = `/${Arr.join(routeSegments, "/")}`;
   const { markdownExtension, pathname: routeWithoutExtension } =
     readLlmsMarkdownPathname(rawRoute);
 

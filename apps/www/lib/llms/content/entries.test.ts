@@ -2,10 +2,9 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
-import type { LlmsEntry } from "@/lib/llms/entries";
 import {
   previewNextProjection,
   previewProjection,
@@ -71,7 +70,7 @@ const publishedArticles = [
 function makeMaterialSummary(projection: MaterialLessonProjection) {
   const metadata = projection.metadata;
   return {
-    authors: metadata.authors.map(({ name }) => ({ name })),
+    authors: Arr.map(metadata.authors, ({ name }) => ({ name })),
     dateModified: metadata.dateModified,
     datePublished: metadata.datePublished,
     description: metadata.description,
@@ -155,19 +154,12 @@ describe("llms content entries", () => {
           section: "quran",
         }),
       ]);
-      const entries: LlmsEntry[] = [];
-
       for (const group of entryGroups) {
         expect(group).not.toBeNull();
-
-        if (group === null) {
-          continue;
-        }
-
-        entries.push(...group);
       }
+      const entries = Arr.flatMap(entryGroups, (group) => group ?? []);
 
-      expect(entries.map((entry) => entry.route)).toEqual([
+      expect(Arr.map(entries, (entry) => entry.route)).toEqual([
         "/articles/politics/dynastic-politics-asian-values",
         "/articles/politics/regional-elections-turmoil",
         `/${previewProjection.publicPath}`,
@@ -246,7 +238,8 @@ describe("llms content entries", () => {
         mockReadPublishedMaterialBucket.mockReturnValue(
           Effect.succeed({
             activeReleaseId: activeMaterialReleaseId,
-            materials: [previewProjection, previewNextProjection].map(
+            materials: Arr.map(
+              [previewProjection, previewNextProjection],
               makeMaterialSummary
             ),
           })
@@ -258,7 +251,9 @@ describe("llms content entries", () => {
           section: "material",
         });
 
-        expect(entries?.map(({ route }) => route)).toEqual([
+        expect(
+          entries === null ? undefined : Arr.map(entries, ({ route }) => route)
+        ).toEqual([
           "/subjects/mathematics/function-composition-inverse-function/function-concept",
           "/subjects/mathematics/function-composition-inverse-function/injective-surjective-bijective-function",
         ]);

@@ -1,4 +1,5 @@
 import { cleanSlug } from "@repo/utilities/helper";
+import { Array as Arr, Option, pipe } from "effect";
 import { LLMS_TEXT_PATH } from "@/lib/discovery";
 import {
   BASE_URL,
@@ -37,21 +38,19 @@ export function buildHeader({
   title: string;
   url: string;
 }) {
-  const header = [
+  return [
     `# ${title}`,
     "",
     AGENT_MARKDOWN_DIRECTIVE,
     "",
     `URL: ${url}`,
+    ...(source ? [`Source: ${source}`] : []),
+    "",
+    description,
+    "",
+    "---",
+    "",
   ];
-
-  if (source) {
-    header.push(`Source: ${source}`);
-  }
-
-  header.push("", description, "", "---", "");
-
-  return header;
 }
 
 /** Returns one stable agent-facing description from authored MDX metadata. */
@@ -82,14 +81,18 @@ export function formatRouteTitle(route: string) {
     return "Home";
   }
 
-  return formatSegmentTitle(route.split("/").filter(Boolean).at(-1) ?? route);
+  const lastSegment = Option.getOrElse(
+    Arr.last(Arr.filter(route.split("/"), Boolean)),
+    () => route
+  );
+  return formatSegmentTitle(lastSegment);
 }
 
 /** Converts one kebab-case route segment into title case. */
 function formatSegmentTitle(segment: string) {
-  return segment
-    .split("-")
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+  return pipe(
+    Arr.filter(segment.split("-"), Boolean),
+    Arr.map((word) => word.charAt(0).toUpperCase() + word.slice(1)),
+    Arr.join(" ")
+  );
 }

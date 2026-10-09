@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { getContentListingLlmsEntries } from "@/lib/llms/content/listing";
 
 const mockReadPublishedCategoryArticles = vi.hoisted(() => vi.fn());
@@ -70,7 +70,9 @@ describe("llms content listing", () => {
         route: "articles/politics",
       });
 
-      expect(entries?.map((entry) => entry.route)).toEqual([
+      expect(
+        entries === null ? undefined : Arr.map(entries, (entry) => entry.route)
+      ).toEqual([
         "/articles/politics/dynastic-politics-asian-values",
         "/articles/politics/regional-elections-turmoil",
       ]);

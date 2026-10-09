@@ -1,5 +1,5 @@
 import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
-import { Option, Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Order, Record as Rec, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   BASE_URL,
@@ -48,7 +48,7 @@ export function isLlmsSection(
 
 /** Returns the configured llms sections in display order. */
 export function getLlmsSections() {
-  return Rec.keys(SECTION_LABELS).filter(isLlmsSection);
+  return Arr.filter(Rec.keys(SECTION_LABELS), isLlmsSection);
 }
 
 /** Builds site entries from derived indexes and signed Page projections. */
@@ -57,38 +57,47 @@ export function buildSiteLlmsEntries(
   pages: readonly PublicPageProjection[],
   applicationPages: readonly ApplicationSiteSummary[]
 ) {
-  const entries: LlmsEntry[] = derivedSiteRoutes.flatMap((route) =>
-    Option.toArray(buildLocalizedSiteLlmsEntry({ locale, route }))
-  );
-
-  entries.push(
-    ...applicationPages.map((page) =>
+  const entries: LlmsEntry[] = [
+    ...Arr.flatMap(derivedSiteRoutes, (route) =>
+      Option.toArray(buildLocalizedSiteLlmsEntry({ locale, route }))
+    ),
+    ...Arr.map(applicationPages, (page) =>
       buildSiteLlmsEntry({
         description: page.description,
         locale,
         publicRoute: page.route,
         title: page.title,
       })
-    )
-  );
-
-  for (const page of pages) {
-    if (page.appLocale !== locale) {
-      continue;
-    }
-    const route = `/${page.publicPath}`;
-    entries.push({
-      description: page.metadata.description,
-      href: `${BASE_URL}/${locale}${route}`,
-      route,
-      section: "site",
-      segments: ["site", ...page.publicPath.split("/")],
-      title: page.metadata.title,
-    });
-  }
+    ),
+    ...Arr.map(
+      Arr.filter(pages, (page) => page.appLocale === locale),
+      (page): LlmsEntry => {
+        const route = `/${page.publicPath}`;
+        return {
+          description: page.metadata.description,
+          href: `${BASE_URL}/${locale}${route}`,
+          route,
+          section: "site",
+          segments: ["site", ...page.publicPath.split("/")],
+          title: page.metadata.title,
+        };
+      }
+    ),
+  ];
 
   return entries;
 }
+
+/** Orders entries by route with the locale-aware comparison used for agent indexes. */
+const compareEntryRoutes = Order.make<{ readonly route: string }>(
+  (left, right) => {
+    const order = left.route.localeCompare(right.route);
+    if (order === 0) {
+      return 0;
+    }
+    return order < 0 ? -1 : 1;
+  }
+);
 
 /** Builds sorted agent entries from compact published content summaries. */
 export function buildPublishedContentLlmsEntries({
@@ -100,8 +109,8 @@ export function buildPublishedContentLlmsEntries({
   rows: readonly PublishedContentSummary[];
   section: Exclude<LlmsSection, "site">;
 }) {
-  return rows
-    .map((row) => {
+  return Arr.sort(
+    Arr.map(rows, (row) => {
       const route = `/${row.publicPath}`;
       return {
         ...(row.description === undefined
@@ -116,8 +125,9 @@ export function buildPublishedContentLlmsEntries({
         segments: row.publicPath.split("/"),
         title: row.title,
       };
-    })
-    .sort((left, right) => left.route.localeCompare(right.route));
+    }),
+    compareEntryRoutes
+  );
 }
 
 /** Builds one locale-specific llms entry from a sitemap route. */
@@ -153,7 +163,7 @@ function buildSiteLlmsEntry({
 }) {
   const hrefBase = `${BASE_URL}/${locale}${publicRoute}`;
   const routePath = publicRoute.slice(1);
-  const routeSegments = ["site", ...routePath.split("/").filter(Boolean)];
+  const routeSegments = ["site", ...Arr.filter(routePath.split("/"), Boolean)];
   const section: LlmsSection = "site";
 
   return {

@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 
@@ -11,18 +12,21 @@ export function renderLlmsIndexText({
   summary: string;
   title: string;
 }) {
-  return [
-    `# ${title}`,
-    "",
-    `> ${summary}`,
-    "",
-    AGENT_MARKDOWN_DIRECTIVE,
-    "",
-    "## Pages",
-    "",
-    ...lines,
-    "",
-  ].join("\n");
+  return Arr.join(
+    [
+      `# ${title}`,
+      "",
+      `> ${summary}`,
+      "",
+      AGENT_MARKDOWN_DIRECTIVE,
+      "",
+      "## Pages",
+      "",
+      ...lines,
+      "",
+    ],
+    "\n"
+  );
 }
 
 /** Formats one page-level llms entry line. */
