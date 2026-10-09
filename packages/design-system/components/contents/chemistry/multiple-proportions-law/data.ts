@@ -1,10 +1,8 @@
+import type { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import {
   type ElementName,
   ElementNameSchema,
 } from "@repo/design-system/components/contents/chemistry/element";
-import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { getColor } from "@repo/design-system/lib/color";
-import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Schema } from "effect";
 
 export const WATER_PEROXIDE_MODE_ID = "water-peroxide";
@@ -21,7 +19,7 @@ export type MultipleProportionsModeId =
   (typeof MULTIPLE_PROPORTIONS_MODE_IDS)[number];
 
 export type MultipleProportionsSceneColors = ReturnType<
-  typeof getMultipleProportionsSceneColors
+  typeof getAtomSceneColors
 >;
 
 const MultipleProportionsScenePointSchema = Schema.Tuple([
@@ -195,23 +193,6 @@ export function isMultipleProportionsModeId(
   value: string
 ): value is MultipleProportionsModeId {
   return value in MULTIPLE_PROPORTIONS_MODELS;
-}
-
-export function getMultipleProportionsSceneColors(
-  resolvedTheme: string | undefined
-) {
-  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
-
-  return {
-    bond: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
-    carbon: isDarkTheme ? getColor("ZINC") : getColor("STONE"),
-    hydrogen: isDarkTheme ? getColor("ZINC") : getColor("NEUTRAL"),
-    nitrogen: getColor("VIOLET"),
-    oxygen: getColor("SKY"),
-    sphereText: ORIGIN_COLOR.LIGHT,
-    sphereTextOutline: isDarkTheme ? ORIGIN_COLOR.DARK : getColor("SLATE"),
-    text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-  };
 }
 
 function atom(

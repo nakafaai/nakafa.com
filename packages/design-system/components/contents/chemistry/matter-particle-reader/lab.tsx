@@ -1,9 +1,9 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
+import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import {
   ATOM_MODE_ID,
-  getMatterParticleSceneColors,
   isMatterParticleModeId,
   MATTER_PARTICLE_MODE_IDS,
   MATTER_PARTICLE_SCENE_VIEW,
@@ -69,7 +69,7 @@ export function MatterParticleReaderLab({
   const [selectedModeId, setSelectedModeId] =
     useState<MatterParticleModeId>(ATOM_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];
-  const sceneColors = getMatterParticleSceneColors(resolvedTheme);
+  const sceneColors = getAtomSceneColors(resolvedTheme);
 
   function handleModeChange(value: string) {
     if (!value) {

@@ -6,6 +6,10 @@ import {
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import {
+  createPath,
+  createQuadraticPath,
+} from "@repo/design-system/components/contents/chemistry/path";
+import {
   ATOM_MAP_MODE_ID,
   CATHODE_RAY_MODE_ID,
   GOLD_FOIL_MODE_ID,
@@ -34,11 +38,13 @@ const ALPHA_LOWER_POINTS = createPath(
   (progress) => new Vector3(-2.6 + 5.2 * progress, -0.72, 0)
 );
 const ALPHA_DEFLECTED_POINTS = createQuadraticPath(
+  PATH_POINT_COUNT,
   new Vector3(-2.6, -0.02, 0),
   new Vector3(0.05, -0.08, 0),
   new Vector3(2.55, 0.82, 0)
 );
 const ALPHA_BACKSCATTER_POINTS = createQuadraticPath(
+  PATH_POINT_COUNT,
   new Vector3(-2.6, -0.02, 0.18),
   new Vector3(0.06, -0.04, 0.18),
   new Vector3(-1.25, 0.72, 0.18)
@@ -68,37 +74,6 @@ const NUCLEON_POSITIONS = [
   { kind: "proton", math: "p^+", position: [0.48, -0.34, 0.16] },
 ];
 const ATOM_MAP_SCALE = 1.1;
-
-/**
- * Generates a fixed-resolution 3D path from a continuous point function.
- */
-function createPath(
-  pointCount: number,
-  getPointAtProgress: (progress: number) => Vector3
-) {
-  return Array.from({ length: pointCount }, (_, index) => {
-    const progress = index / (pointCount - 1);
-
-    return getPointAtProgress(progress);
-  });
-}
-
-/**
- * Generates a smooth quadratic path for schematic beam deflections.
- */
-function createQuadraticPath(start: Vector3, control: Vector3, end: Vector3) {
-  return createPath(PATH_POINT_COUNT, (progress) => {
-    const startWeight = (1 - progress) ** 2;
-    const controlWeight = 2 * (1 - progress) * progress;
-    const endWeight = progress ** 2;
-
-    return start
-      .clone()
-      .multiplyScalar(startWeight)
-      .add(control.clone().multiplyScalar(controlWeight))
-      .add(end.clone().multiplyScalar(endWeight));
-  });
-}
 
 /**
  * Places the cathode ray on a gentle S curve toward the positive plate.

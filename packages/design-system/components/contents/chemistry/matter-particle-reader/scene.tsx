@@ -13,6 +13,7 @@ import {
   getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
+import { atomSymbol } from "@repo/design-system/components/contents/chemistry/symbol";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, HashMap, Option } from "effect";
@@ -122,22 +123,6 @@ function atomRadius(element: ElementName) {
   }
 
   return 0.15;
-}
-
-function atomSymbol(element: ElementName) {
-  if (element === "carbon") {
-    return "C";
-  }
-
-  if (element === "hydrogen") {
-    return "H";
-  }
-
-  if (element === "nitrogen") {
-    return "N";
-  }
-
-  return "O";
 }
 
 function atomColor(element: ElementName, colors: MatterParticleSceneColors) {
