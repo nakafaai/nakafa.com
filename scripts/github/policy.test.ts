@@ -32,7 +32,7 @@ const readRepositoryFile = Effect.fn("GithubPolicyTest.readRepositoryFile")(
 const parseWorkflow = Effect.fn("GithubPolicyTest.parseWorkflow")(
   (source: string) =>
     Effect.try({
-      try: () => yamlParse(source) as unknown,
+      try: (): unknown => yamlParse(source),
       catch: (cause) => String(cause),
     })
 );

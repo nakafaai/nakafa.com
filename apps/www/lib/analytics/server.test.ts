@@ -9,13 +9,16 @@ import {
 
 const userAgent = "Mozilla/5.0 (compatible; Googlebot/2.1)";
 
-const analyticsMocks = vi.hoisted(() => ({
-  after: vi.fn(),
-  captureServerException: vi.fn(),
-  headers: vi.fn(),
-  isServerExceptionReportingEnabled: vi.fn(),
-  tasks: [] as Array<() => unknown>,
-}));
+const analyticsMocks = vi.hoisted(() => {
+  const tasks: Array<() => unknown> = [];
+  return {
+    after: vi.fn(),
+    captureServerException: vi.fn(),
+    headers: vi.fn(),
+    isServerExceptionReportingEnabled: vi.fn(),
+    tasks,
+  };
+});
 
 vi.mock("@repo/analytics/posthog/server", () => ({
   captureServerException: analyticsMocks.captureServerException,
