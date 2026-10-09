@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown01Icon, BrainIcon } from "@hugeicons/core-free-icons";
+import { useTimeout } from "@mantine/hooks";
 import {
   Collapsible,
   CollapsibleContent,
@@ -108,18 +109,20 @@ export const Reasoning = memo(
 
     const duration = durationProp ?? timing.duration;
 
+    const { start: startAutoClose, clear: clearAutoClose } = useTimeout(() => {
+      setIsOpen(false);
+      hasAutoClosedRef.current = true;
+    }, AUTO_CLOSE_DELAY);
+
     // Auto-open when streaming starts, auto-close when streaming ends (once only)
     useEffect(() => {
       if (defaultOpen && !isStreaming && isOpen && !hasAutoClosedRef.current) {
         // Add a small delay before closing to allow user to see the content
-        const timer = setTimeout(() => {
-          setIsOpen(false);
-          hasAutoClosedRef.current = true;
-        }, AUTO_CLOSE_DELAY);
+        startAutoClose();
 
-        return () => clearTimeout(timer);
+        return clearAutoClose;
       }
-    }, [isStreaming, isOpen, defaultOpen, setIsOpen]);
+    }, [isStreaming, isOpen, defaultOpen, startAutoClose, clearAutoClose]);
 
     const reasoning = useMemo(
       () => ({ duration, hasContent, isOpen, isStreaming }),

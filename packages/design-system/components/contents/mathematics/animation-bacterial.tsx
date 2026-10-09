@@ -1,6 +1,6 @@
 "use client";
 
-import { useIntersection } from "@mantine/hooks";
+import { useIntersection, useInterval } from "@mantine/hooks";
 import {
   BacterialGenerations,
   BacterialPlayback,
@@ -117,22 +117,23 @@ export function BacterialGrowth({
   });
   const frame = getBacterialGrowthFrame(frameInput);
 
+  const { start: startInterval, stop: stopInterval } = useInterval(() => {
+    setGeneration((prev) => {
+      if (prev < maxGenerations) {
+        return prev + 1;
+      }
+      return prev;
+    });
+  }, SPEED_INTERVAL / speed);
+
   useEffect(() => {
     if (!isAnimating) {
       return;
     }
 
-    const interval = setInterval(() => {
-      setGeneration((prev) => {
-        if (prev < maxGenerations) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, SPEED_INTERVAL / speed);
-
-    return () => clearInterval(interval);
-  }, [isAnimating, maxGenerations, speed]);
+    startInterval();
+    return stopInterval;
+  }, [isAnimating, startInterval, stopInterval]);
 
   function resetAnimation() {
     setGeneration(0);

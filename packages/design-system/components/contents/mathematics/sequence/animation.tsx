@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
-import { useIntersection, useMediaQuery } from "@mantine/hooks";
+import { useIntersection, useInterval, useMediaQuery } from "@mantine/hooks";
 import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
 import { getTableChairArrangement } from "@repo/design-system/components/contents/mathematics/sequence/arrangement";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -89,6 +89,18 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
   // Calculate chair count based on the formula U_n = 2n + 2
   const chairCount = 2 * deferredTableCount + 2;
 
+  const { start: startTableInterval, stop: stopTableInterval } = useInterval(
+    () => {
+      setTableCount((prev) => {
+        if (prev < maxTables) {
+          return prev + 1;
+        }
+        return prev;
+      });
+    },
+    ANIMATION_INTERVAL_MS / speed
+  );
+
   useEffect(() => {
     // Stop playing when maximum table count is reached
     if (deferredTableCount >= maxTables) {
@@ -100,17 +112,15 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
       return;
     }
 
-    const interval = setInterval(() => {
-      setTableCount((prev) => {
-        if (prev < maxTables) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, ANIMATION_INTERVAL_MS / speed);
-
-    return () => clearInterval(interval);
-  }, [deferredAnimating, deferredTableCount, maxTables, speed]);
+    startTableInterval();
+    return stopTableInterval;
+  }, [
+    deferredAnimating,
+    deferredTableCount,
+    maxTables,
+    startTableInterval,
+    stopTableInterval,
+  ]);
 
   const resetAnimation = useCallback(() => {
     setTableCount(1);
