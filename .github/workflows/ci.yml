@@ -126,6 +126,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Boundaries
+        run: pnpm boundaries
+
       - name: Typecheck
         # Production receives these from the acceptance runtime.
         env:

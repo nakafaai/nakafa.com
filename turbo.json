@@ -21,6 +21,60 @@
     "CONVEX_SITE_URL",
     "BETTER_AUTH_SECRET"
   ],
+  "boundaries": {
+    "tags": {
+      "utilities": {
+        "dependencies": {
+          "deny": [
+            "app",
+            "analytics",
+            "backend",
+            "contents",
+            "design-system",
+            "mail",
+            "math"
+          ]
+        }
+      },
+      "math": {
+        "dependencies": {
+          "deny": [
+            "app",
+            "analytics",
+            "backend",
+            "contents",
+            "design-system",
+            "mail"
+          ]
+        }
+      },
+      "analytics": {
+        "dependencies": {
+          "deny": ["app", "backend", "contents", "design-system", "mail"]
+        }
+      },
+      "design-system": {
+        "dependencies": {
+          "deny": ["app", "backend", "contents", "mail"]
+        }
+      },
+      "contents": {
+        "dependencies": {
+          "deny": ["app", "backend", "mail"]
+        }
+      },
+      "mail": {
+        "dependencies": {
+          "deny": ["app", "backend", "contents"]
+        }
+      },
+      "backend": {
+        "dependencies": {
+          "deny": ["app"]
+        }
+      }
+    }
+  },
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
