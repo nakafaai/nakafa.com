@@ -1,12 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import {
   deleteCommentFromPage,
   updateCommentVote,
 } from "@/components/comments/state";
 
-const parentId = "parent" as Id<"comments">;
-const replyId = "reply" as Id<"comments">;
+const parentId = Schema.decodeUnknownSync(Id("comments"))("parent");
+const replyId = Schema.decodeUnknownSync(Id("comments"))("reply");
+const userId = Schema.decodeUnknownSync(Id("users"))("user");
+const missingId = Schema.decodeUnknownSync(Id("comments"))("missing");
 const parent = {
   _creationTime: 1,
   _id: parentId,
@@ -15,7 +18,7 @@ const parent = {
   slug: "lesson",
   text: "Parent",
   upvoteCount: 2,
-  userId: "user" as Id<"users">,
+  userId,
   viewerVote: 1 as const,
 };
 const reply = {
@@ -66,6 +69,6 @@ describe("comment optimistic state", () => {
 
   it("preserves the original page when the target is not loaded", () => {
     const page = [parent, reply];
-    expect(deleteCommentFromPage(page, "missing" as Id<"comments">)).toBe(page);
+    expect(deleteCommentFromPage(page, missingId)).toBe(page);
   });
 });

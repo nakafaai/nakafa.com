@@ -1,8 +1,9 @@
 // @vitest-environment node
 
+import { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
 import { SessionRequired } from "@repo/backend/confect/auth/spec";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Layer, Result, Schema } from "effect";
@@ -19,9 +20,14 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@repo/analytics/posthog/browser", () => ({
   captureException: mocks.captureException,
 }));
-const forumId = "forum_1" as Id<"schoolClassForums">;
-const postId = "post_1" as Id<"schoolClassForumPosts">;
-const storageId = "storage_1" as Id<"_storage">;
+const decodeUploadId = Schema.decodeUnknownSync(
+  Id("schoolClassForumPendingUploads")
+);
+const forumId = Schema.decodeUnknownSync(Id("schoolClassForums"))("forum_1");
+const postId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))("post_1");
+const storageId = Schema.decodeUnknownSync(GenericId.GenericId("_storage"))(
+  "storage_1"
+);
 const uploadUrl = "https://upload.example.test/file?token=signed-upload-secret";
 type SubmitForumPostInput = Parameters<typeof submitForumPost>[0];
 const TestHttpClient = Layer.succeed(
@@ -80,8 +86,7 @@ describe("submitForumPost", () => {
           code: "UNAUTHENTICATED",
           message: "Unauthenticated",
         });
-        const uploadId =
-          "upload_native" as Id<"schoolClassForumPendingUploads">;
+        const uploadId = decodeUploadId("upload_native");
         const mutations = makeMutations({
           generateUploadUrl: vi.fn(async () =>
             stage === "url"
@@ -179,8 +184,7 @@ describe("submitForumPost", () => {
   );
   it.effect("uploads new File objects and ignores existing file metadata", () =>
     Effect.gen(function* () {
-      const uploadId =
-        "upload_for_file" as Id<"schoolClassForumPendingUploads">;
+      const uploadId = decodeUploadId("upload_for_file");
       const files = [
         {
           file: {
@@ -249,8 +253,7 @@ describe("submitForumPost", () => {
     "discards successful uploads when another attachment upload fails",
     () =>
       Effect.gen(function* () {
-        const successfulUploadId =
-          "upload_success" as Id<"schoolClassForumPendingUploads">;
+        const successfulUploadId = decodeUploadId("upload_success");
         const files = [makeFile("first"), makeFile("second")];
         const mutations = makeMutations({
           generateUploadUrl: vi
@@ -286,8 +289,7 @@ describe("submitForumPost", () => {
     "captures cleanup failures without masking storage upload errors",
     () =>
       Effect.gen(function* () {
-        const uploadId =
-          "upload_storage" as Id<"schoolClassForumPendingUploads">;
+        const uploadId = decodeUploadId("upload_storage");
         const files = [makeFile("storage")];
         mocks.response.mockReturnValue(
           new Response("storage failed", {
@@ -340,8 +342,7 @@ describe("submitForumPost", () => {
   );
   it.effect("discards the pending upload when metadata save fails", () =>
     Effect.gen(function* () {
-      const uploadId =
-        "upload_metadata" as Id<"schoolClassForumPendingUploads">;
+      const uploadId = decodeUploadId("upload_metadata");
       const files = [makeFile("metadata")];
       const mutations = makeMutations({
         generateUploadUrl: vi.fn(() =>
@@ -372,8 +373,7 @@ describe("submitForumPost", () => {
   );
   it.effect("discards uploaded attachments when creating the post fails", () =>
     Effect.gen(function* () {
-      const uploadId =
-        "upload_for_post" as Id<"schoolClassForumPendingUploads">;
+      const uploadId = decodeUploadId("upload_for_post");
       const files = [makeFile("attachment")];
       const mutations = makeMutations({
         createPost: vi.fn(() => Promise.reject(new Error("post failed"))),

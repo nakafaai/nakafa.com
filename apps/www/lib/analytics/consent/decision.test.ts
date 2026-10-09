@@ -4,8 +4,8 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
+import { Id } from "@repo/backend/confect/_generated/id";
 import type consents from "@repo/backend/confect/_generated/refs/consents";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 import {
   Array as Arr,
@@ -17,6 +17,7 @@ import {
   MutableList,
   Option,
   Result,
+  Schema,
 } from "effect";
 import { TestClock } from "effect/testing";
 import {
@@ -33,6 +34,7 @@ import { AnalyticsConsentStorageFailed } from "@/lib/analytics/consent/storage";
 import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
 const promptIdentity = `anonymous:${ANALYTICS_CONSENT_NOTICE_VERSION}` as const;
+const expectedUserId = Schema.decodeUnknownSync(Id("users"))("user-1");
 
 type OverridesUpdate = Parameters<
   AnalyticsConsentStoreState["setSessionOverrides"]
@@ -299,7 +301,6 @@ describe("explicit consent save actions", () => {
 
   it.effect("records a save failure when account persistence rejects", () =>
     Effect.gen(function* () {
-      const expectedUserId = "user-1" as Id<"users">;
       const overrides = MutableList.make<OverridesUpdate>();
       const action = createConsentSaveAction({
         ...createOptions(overrides, {}),
@@ -330,7 +331,6 @@ describe("explicit consent save actions", () => {
 
   it.effect("persists an account grant for the active user", () =>
     Effect.gen(function* () {
-      const expectedUserId = "user-1" as Id<"users">;
       let seenArgs: unknown[] = [];
       const setAccountConsent = vi.fn(
         (...args: unknown[]): InvokeReturn<typeof consents.current.set> => {
