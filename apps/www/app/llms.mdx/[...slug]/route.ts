@@ -53,7 +53,7 @@ export async function GET(
   const requestedLocale = slug[0];
   const hasLocalePrefix = hasLocale(routing.locales, requestedLocale);
   const locale = hasLocalePrefix ? requestedLocale : routing.defaultLocale;
-  const slugParts = hasLocalePrefix ? slug.slice(1) : slug;
+  const slugParts = hasLocalePrefix ? Arr.drop(slug, 1) : slug;
   const cleanSlug = stripLlmsRouteExtension(Arr.join(slugParts, "/"));
 
   const isPublicLocaleIndex =
