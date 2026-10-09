@@ -1,10 +1,8 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
-import { encodeJsonText } from "@repo/utilities/json";
+import { preprocessLaTeX } from "@repo/math/latex";
 import { Array as Arr } from "effect";
-import { Lexer } from "marked";
 
 describe("preprocessLaTeX", () => {
   it("returns empty text unchanged", () => {
@@ -45,11 +43,8 @@ describe("preprocessLaTeX", () => {
     );
 
     const output = preprocessLaTeX(markdown);
-    const tokens = Lexer.lex(output, { gfm: true });
 
     expect(output).toContain("> ```math\n> w = m \\cdot g\n> ```");
-    expect(tokens).toHaveLength(1);
-    expect(tokens[0]?.type).toBe("blockquote");
   });
 
   it("ignores indented prose that is not part of a list", () => {
@@ -85,9 +80,6 @@ describe("preprocessLaTeX", () => {
         "    *Ingat:* Domainnya adalah $$x \\neq 3$$, karena penyebut tidak boleh nol."
       );
       expect(output).not.toContain("\n\n```math");
-      expect(encodeJsonText(Lexer.lex(output, { gfm: true }))).not.toContain(
-        '"codeBlockStyle":"indented"'
-      );
     }
   );
 

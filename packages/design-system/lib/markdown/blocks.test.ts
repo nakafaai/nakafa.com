@@ -3,6 +3,8 @@ import {
   parseMarkdownIntoBlocks,
   readMarkdownBlocks,
 } from "@repo/design-system/lib/markdown/blocks";
+import { preprocessLaTeX } from "@repo/math/latex";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Option } from "effect";
 import { Lexer, type Tokens } from "marked";
 
@@ -120,4 +122,40 @@ describe("markdown blocks", () => {
       first.length
     );
   });
+
+  it("keeps preprocessed display math inside one blockquote block", () => {
+    const markdown = Arr.join(
+      [
+        "> **Rumus Hubungannya:**",
+        "> \\[w = m \\cdot g\\]",
+        "> (\\(w\\) = berat, \\(m\\) = massa, \\(g\\) = percepatan gravitasi)",
+      ],
+      "\n"
+    );
+
+    const tokens = Lexer.lex(preprocessLaTeX(markdown), { gfm: true });
+
+    expect(tokens).toHaveLength(1);
+    expect(tokens[0]?.type).toBe("blockquote");
+  });
+
+  it.each(["-", "*", "+"])(
+    "keeps preprocessed math in %s bullet lists out of indented code blocks",
+    (marker) => {
+      const markdown = Arr.join(
+        [
+          `${marker}   **Penyederhanaan:**`,
+          "    \\[\\frac{x^2 - 9}{x - 3} = x + 3\\]",
+          "    *Ingat:* Domainnya adalah \\(x \\neq 3\\), karena penyebut tidak boleh nol.",
+        ],
+        "\n"
+      );
+
+      const output = preprocessLaTeX(markdown);
+
+      expect(encodeJsonText(Lexer.lex(output, { gfm: true }))).not.toContain(
+        '"codeBlockStyle":"indented"'
+      );
+    }
+  );
 });

@@ -1,5 +1,4 @@
 import { formatCodeBlockData } from "@repo/contents/llms/code";
-import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
 import {
   getCos,
   getRadians,
@@ -7,6 +6,7 @@ import {
   getTan,
   ISOSCELES_RIGHT_TRIANGLE_ANGLE,
 } from "@repo/math/angles";
+import { preprocessLaTeX } from "@repo/math/latex";
 import { Array as Arr, Effect, Option, Predicate, Schema } from "effect";
 import type { Parent, Root, RootContent } from "mdast";
 import type {
