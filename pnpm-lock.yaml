@@ -223,8 +223,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1(supports-color@7.2.0)
       '@nakafa/aksara-contracts':
-        specifier: 0.48.0
-        version: 0.48.0(effect@4.0.2)
+        specifier: 0.48.2
+        version: 0.48.2(effect@4.0.2)
       '@paper-design/shaders-react':
         specifier: ^0.0.81
         version: 0.0.81(@types/react@19.2.18)(react@19.2.8)
@@ -474,8 +474,8 @@ importers:
         specifier: ^4.46.0
         version: 4.46.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       '@nakafa/aksara-contracts':
-        specifier: 0.48.0
-        version: 0.48.0(effect@4.0.2)
+        specifier: 0.48.2
+        version: 0.48.2(effect@4.0.2)
       '@polar-sh/sdk':
         specifier: ^1.0.2
         version: 1.0.2
@@ -637,8 +637,8 @@ importers:
         specifier: ^4.3.5
         version: 4.3.5
       '@nakafa/aksara-contracts':
-        specifier: 0.48.0
-        version: 0.48.0(effect@4.0.2)
+        specifier: 0.48.2
+        version: 0.48.2(effect@4.0.2)
       '@repo/design-system':
         specifier: workspace:*
         version: link:../design-system
@@ -879,8 +879,8 @@ importers:
   packages/email:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: 0.48.0
-        version: 0.48.0(effect@4.0.2)
+        specifier: 0.48.2
+        version: 0.48.2(effect@4.0.2)
       '@react-email/render':
         specifier: 2.1.0
         version: 2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -928,8 +928,8 @@ importers:
   packages/internationalization:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: 0.48.0
-        version: 0.48.0(effect@4.0.2)
+        specifier: 0.48.2
+        version: 0.48.2(effect@4.0.2)
       '@repo/next-config':
         specifier: workspace:*
         version: link:../next-config
@@ -1015,8 +1015,8 @@ importers:
   packages/seo:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: 0.48.0
-        version: 0.48.0(effect@4.0.2)
+        specifier: 0.48.2
+        version: 0.48.2(effect@4.0.2)
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -2710,8 +2710,8 @@ packages:
     resolution: {integrity: sha512-XyroGQXcHrZdvmrGJvsA9KNeOOgGMg1Vg9OlheUsBOSKznLMDl+YChxbkboRHvtFYJEMRYmlV3uoo/njCw05iw==}
     engines: {node: '>=16'}
 
-  '@nakafa/aksara-contracts@0.48.0':
-    resolution: {integrity: sha512-gybWA65txSZWAP+09wZ9PGiL4HPps2LfcfVVSCnvvty9XMkBr3kUswvneMQrKcrUqVubFbekfPv4Qd+OA9AqKg==}
+  '@nakafa/aksara-contracts@0.48.2':
+    resolution: {integrity: sha512-oCImifmWx/qUsyGqn2+NB/uGCGSb3zRoOZ6yeF+h1MF4JLW+HOcRNO0R1xua64e5pszsvpz8IcPa+ZrxPlm3OQ==}
     engines: {node: '>=24.0.0 <25.0.0'}
     peerDependencies:
       effect: 4.0.2
@@ -9271,7 +9271,7 @@ snapshots:
       chevrotain: 10.5.0
       lilconfig: 2.1.0
 
-  '@nakafa/aksara-contracts@0.48.0(effect@4.0.2)':
+  '@nakafa/aksara-contracts@0.48.2(effect@4.0.2)':
     dependencies:
       effect: 4.0.2
 
