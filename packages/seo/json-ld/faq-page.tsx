@@ -1,6 +1,6 @@
+import { JsonLd } from "@repo/seo/json-ld";
 import { Array as Arr, Schema } from "effect";
 import type { FAQPage, Question, WithContext } from "schema-dts";
-import { JsonLd } from ".";
 
 const FaqItemSchema = Schema.Struct({
   acceptedAnswer: Schema.Struct({
