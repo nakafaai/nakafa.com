@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import type {
@@ -180,7 +180,11 @@ describe("MathVisual geometry", () => {
       expect(point.z).toBe(0);
     }
     expect(geometry.paths[0].points[0]).toEqual({ x: -2, y: 4, z: 0 });
-    expect(geometry.paths[0].points.at(-1)).toEqual({ x: 2, y: 4, z: 0 });
+    expect(Option.getOrUndefined(Arr.last(geometry.paths[0].points))).toEqual({
+      x: 2,
+      y: 4,
+      z: 0,
+    });
   });
   it("creates twelve straight cuboid edges with collision-free IDs", () => {
     const geometry = resolveVisualGeometry(
@@ -304,7 +308,7 @@ describe("MathVisual geometry", () => {
     });
     expect(geometry.paths[0]?.points).toHaveLength(5);
     expect(geometry.paths[0]?.points[0]).toEqual(
-      geometry.paths[0]?.points.at(-1)
+      Option.getOrUndefined(Arr.last(geometry.paths[0]?.points ?? []))
     );
     expect(
       Arr.dedupe(

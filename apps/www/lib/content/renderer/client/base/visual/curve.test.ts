@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, BigDecimal } from "effect";
+import { Array as Arr, BigDecimal, Option } from "effect";
 import {
   resolvePlaneCurve,
   resolvePlaneQuadratic,
@@ -107,7 +107,7 @@ describe("MathVisual analytic curves", () => {
       )
     ).toBe(true);
     expect(points[0].y).toBe(-5);
-    expect(points.at(-1)?.y).toBe(5);
+    expect(Option.getOrUndefined(Arr.last(points))?.y).toBe(5);
     expect(points[32].y).toBe(-1.25);
   });
   it.each(["x", "y"] as const)(
@@ -156,7 +156,7 @@ describe("MathVisual analytic curves", () => {
       },
       projection()
     );
-    expect(points[0]).toEqual(points.at(-1));
+    expect(points[0]).toEqual(Option.getOrUndefined(Arr.last(points)));
     for (const point of points) {
       expect(Math.hypot(point.x - 1, point.y + 1)).toBeCloseTo(2, 12);
     }
