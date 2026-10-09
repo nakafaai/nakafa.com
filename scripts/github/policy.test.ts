@@ -1,21 +1,14 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import {
-  Array as Arr,
-  Effect,
-  FileSystem,
-  Option,
-  Record as Rec,
-} from "effect";
+import { Array as Arr, Effect, FileSystem, Option } from "effect";
 import { parse as yamlParse } from "yaml";
 import {
   GITHUB_ACTION_REVIEWS,
   type GithubActionUse,
-  inspectGithubActionPolicy,
-  readWorkflowActionUses,
   validateGithubActionPolicy,
 } from "#scripts/github/policy";
+import { inspectGithubActionPolicy } from "#scripts/github/source";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const PLAYWRIGHT_SUITE_ENVIRONMENT =
@@ -36,26 +29,6 @@ const parseWorkflow = Effect.fn("GithubPolicyTest.parseWorkflow")(
       catch: (cause) => String(cause),
     })
 );
-
-/** Creates a repository root whose workflow directory holds the given files. */
-const makeWorkflows = Effect.fn("GithubPolicyTest.makeWorkflows")(function* (
-  files: Record<string, string>
-) {
-  const fileSystem = yield* FileSystem.FileSystem;
-  const root = yield* fileSystem.makeTempDirectoryScoped({
-    prefix: "github-policy-",
-  });
-  yield* fileSystem.makeDirectory(`${root}/.github/workflows`, {
-    recursive: true,
-  });
-  for (const [file, content] of Rec.toEntries(files)) {
-    yield* fileSystem.writeFileString(
-      `${root}/.github/workflows/${file}`,
-      content
-    );
-  }
-  return root;
-});
 
 function validActionUses(): GithubActionUse[] {
   return Arr.flatMap(GITHUB_ACTION_REVIEWS, (review) =>
@@ -278,73 +251,6 @@ describe("GitHub Action policy", () => {
     })
   );
 
-  it.effect("reads external action uses from every workflow file", () =>
-    Effect.gen(function* () {
-      const root = yield* makeWorkflows({
-        "README.md": "uses: example/ignored@0123456789abcdef\n",
-        "ci.yml": Arr.join(
-          [
-            "jobs:",
-            "  build:",
-            "    steps:",
-            "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
-            "      - uses: ./.github/actions/local",
-            "      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
-            "        with:",
-            "          cache: true",
-            "",
-          ],
-          "\n"
-        ),
-        "release.yaml":
-          "jobs:\n  release:\n    uses: example/reusable/.github/workflows/release.yml@main\n",
-      });
-
-      expect(yield* readWorkflowActionUses(root)).toEqual([
-        {
-          inputs: {},
-          reference:
-            "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
-          workflowPath: ".github/workflows/ci.yml",
-        },
-        {
-          inputs: { cache: true },
-          reference: "pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
-          workflowPath: ".github/workflows/ci.yml",
-        },
-        {
-          inputs: {},
-          reference: "example/reusable/.github/workflows/release.yml@main",
-          workflowPath: ".github/workflows/release.yaml",
-        },
-      ]);
-    }).pipe(Effect.provide(NodeServices.layer))
-  );
-
-  it.effect("reports workflows it cannot read or decode", () =>
-    Effect.gen(function* () {
-      const fileSystem = yield* FileSystem.FileSystem;
-      const missing = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "github-policy-missing-",
-      });
-      const unreadable = yield* makeWorkflows({});
-      yield* fileSystem.makeDirectory(
-        `${unreadable}/.github/workflows/broken.yml`
-      );
-      const invalid = yield* makeWorkflows({ "invalid.yml": "jobs: [\n" });
-
-      const problems = yield* Effect.forEach(
-        [missing, unreadable, invalid],
-        inspectGithubActionPolicy
-      );
-      expect(Arr.flatten(problems)).toEqual([
-        "Unable to inspect GitHub Actions: Unable to read GitHub workflow files.",
-        "Unable to inspect GitHub Actions: Unable to read .github/workflows/broken.yml.",
-        "Unable to inspect GitHub Actions: Unable to decode .github/workflows/invalid.yml.",
-      ]);
-    }).pipe(Effect.provide(NodeServices.layer))
-  );
-
   it("reports unpinned references, missing inputs, and unused reviews", () => {
     const actionUses = Arr.filter(
       validActionUses(),
@@ -394,6 +300,27 @@ describe("GitHub Action policy", () => {
     ]);
   });
 
+  it("accepts a local action below .github/actions and reports one anywhere else", () => {
+    const problems = validateGithubActionPolicy(
+      Arr.appendAll(validActionUses(), [
+        {
+          inputs: {},
+          reference: "./.github/actions/install",
+          workflowPath: ".github/workflows/example.yml",
+        },
+        {
+          inputs: {},
+          reference: "./.github/tools/install",
+          workflowPath: ".github/workflows/example.yml",
+        },
+      ])
+    );
+
+    expect(problems).toEqual([
+      ".github/workflows/example.yml uses the local action ./.github/tools/install; keep a local action below .github/actions, where this policy reads the actions it uses.",
+    ]);
+  });
+
   it("reports mutable, unreviewed, missing, and misconfigured actions", () => {
     const validUses = validActionUses();
     const firstUse = validUses[0];
@@ -430,7 +357,8 @@ describe("GitHub Action policy", () => {
     if (!(setupReview && setupUse)) {
       return;
     }
-    const candidateUses = Arr.remove(
+    // The setup review allows one use, so a second use breaks its count.
+    const candidateUses = Arr.append(
       Arr.map(actionUses, (use, index) =>
         index === setupIndex
           ? {
@@ -443,7 +371,7 @@ describe("GitHub Action policy", () => {
             }
           : use
       ),
-      setupIndex + 1
+      setupUse
     );
 
     const problems = validateGithubActionPolicy(candidateUses);

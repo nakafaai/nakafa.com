@@ -71,14 +71,8 @@ jobs:
           git fetch --no-tags origin "$CANDIDATE_REF"
           test "$(git rev-parse FETCH_HEAD)" = "$HEAD_SHA"
 
-      - name: Setup toolchain
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
-        with:
-          cache: false
-          install: false
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        uses: ./.github/actions/install
 
       - name: Export trusted candidate decision
         id: trust
@@ -105,12 +99,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup toolchain
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
-        with:
-          cache: false
-          install: false
-
       - name: Setup uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
@@ -118,7 +106,7 @@ jobs:
           cache-dependency-glob: apps/cas/uv.lock
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        uses: ./.github/actions/install
 
       - name: Audit dependencies
         run: bash scripts/osv
@@ -167,14 +155,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup toolchain
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
-        with:
-          cache: false
-          install: false
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        uses: ./.github/actions/install
 
       - name: Run backend tests
         run: pnpm --dir packages/backend test
@@ -202,12 +184,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup toolchain
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
-        with:
-          cache: false
-          install: false
-
       - name: Setup uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
@@ -215,7 +191,7 @@ jobs:
           cache-dependency-glob: apps/cas/uv.lock
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        uses: ./.github/actions/install
 
       # The browsers need only the installed Playwright package, so they install
       # while acceptance prepares and builds instead of after them. Idle CPU and
@@ -356,14 +332,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup toolchain
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
-        with:
-          cache: false
-          install: false
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        uses: ./.github/actions/install
 
       - name: Run changed React Doctor
         if: needs.scope.result == 'success'
@@ -398,14 +368,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup toolchain
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
-        with:
-          cache: false
-          install: false
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        uses: ./.github/actions/install
 
       - name: Verify required result
         if: always()

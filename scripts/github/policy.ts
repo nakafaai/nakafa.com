@@ -1,18 +1,8 @@
-import {
-  Array as Arr,
-  Effect,
-  FileSystem,
-  HashMap,
-  Option,
-  Order,
-  Path,
-  Record as Rec,
-  Schema,
-} from "effect";
-import { parse as yamlParse } from "yaml";
+import { Array as Arr, HashMap, Option, Record as Rec, Schema } from "effect";
 import { problemWhen } from "#scripts/problem";
 
-const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
+/** The one folder whose composite actions this policy reads. */
+const LOCAL_ACTION_ROOT = "./.github/actions/";
 const UnknownRecord = Schema.Record(Schema.String, Schema.Unknown);
 const NonNegativeInteger = Schema.Finite.pipe(
   Schema.check(Schema.isInt()),
@@ -51,7 +41,7 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     approvedSha: "fbda4c85fc2e1e08721cd8763afea8f48d60f024",
     expectedInputs: { cache: "false", install: "false" },
     expectedTag: "v3.0.0",
-    expectedUsages: 7,
+    expectedUsages: 1,
     reason:
       "The signed successor action owns Node and pnpm. The store stays uncached because a cold install beats restoring it on hosted runners.",
   },
@@ -91,17 +81,8 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   },
 ]);
 
-/** Expected failure while reading or decoding repository workflow policy. */
-export class GithubActionPolicyError extends Schema.TaggedError<GithubActionPolicyError>()(
-  "GithubActionPolicyError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
-
 /** Returns every action one workflow value uses, at any depth, in document order. */
-function collectActionUses(
+export function collectActionUses(
   value: unknown,
   workflowPath: string
 ): GithubActionUse[] {
@@ -164,55 +145,7 @@ function inputProblems(
   );
 }
 
-function policyError(message: string, cause: unknown) {
-  return new GithubActionPolicyError({ cause, message });
-}
-
-/** Reads every external action used by first-party GitHub workflows. */
-export const readWorkflowActionUses = Effect.fn(
-  "RepositoryPolicy.readWorkflowActionUses"
-)(function* (root: string) {
-  const fileSystem = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const workflowRoot = path.join(root, ".github", "workflows");
-  const workflowFiles = yield* fileSystem.readDirectory(workflowRoot).pipe(
-    Effect.map((files) =>
-      Arr.sort(
-        Arr.filter(files, (fileName) => WORKFLOW_FILE_PATTERN.test(fileName)),
-        Order.String
-      )
-    ),
-    Effect.mapError((cause) =>
-      policyError("Unable to read GitHub workflow files.", cause)
-    )
-  );
-  const uses = yield* Effect.forEach(
-    workflowFiles,
-    Effect.fnUntraced(function* (fileName) {
-      const workflowPath = path.join(".github", "workflows", fileName);
-      const source = yield* fileSystem
-        .readFileString(path.join(root, workflowPath))
-        .pipe(
-          Effect.mapError((cause) =>
-            policyError(`Unable to read ${workflowPath}.`, cause)
-          )
-        );
-      const workflow = yield* Effect.try({
-        try: () => yamlParse(source),
-        catch: (cause) =>
-          policyError(`Unable to decode ${workflowPath}.`, cause),
-      });
-      return collectActionUses(workflow, workflowPath);
-    })
-  );
-
-  return Arr.filter(
-    Arr.flatten(uses),
-    ({ reference }) => !reference.startsWith("./")
-  );
-});
-
-/** Validates immutable revisions, exact reviewed inputs, and complete action coverage. */
+/** Validates immutable revisions, exact reviewed inputs, complete action coverage, and where local actions live. */
 export function validateGithubActionPolicy(
   actionUses: readonly GithubActionUse[]
 ) {
@@ -220,6 +153,16 @@ export function validateGithubActionPolicy(
     Arr.map(GITHUB_ACTION_REVIEWS, (review) => [review.action, review])
   );
   const inspected = Arr.map(actionUses, (use) => {
+    if (use.reference.startsWith("./")) {
+      return {
+        problems: problemWhen(
+          !use.reference.startsWith(LOCAL_ACTION_ROOT),
+          `${use.workflowPath} uses the local action ${use.reference}; keep a local action below .github/actions, where this policy reads the actions it uses.`
+        ),
+        reviewed: [],
+      };
+    }
+
     const parsed = parseActionReference(use.reference);
     if (!parsed) {
       return {
@@ -269,15 +212,3 @@ export function validateGithubActionPolicy(
     })
   );
 }
-
-/** Reads and validates the repository GitHub Action policy. */
-export const inspectGithubActionPolicy = Effect.fn(
-  "RepositoryPolicy.inspectGithubActions"
-)((root: string) =>
-  readWorkflowActionUses(root).pipe(
-    Effect.map(validateGithubActionPolicy),
-    Effect.catch((error) =>
-      Effect.succeed([`Unable to inspect GitHub Actions: ${error.message}`])
-    )
-  )
-);
