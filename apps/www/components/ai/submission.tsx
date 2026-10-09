@@ -16,6 +16,7 @@ import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/su
 import { encodeJsonText } from "@repo/utilities/json";
 import { randomUuid } from "@repo/utilities/uuid";
 import type { FileUIPart } from "ai";
+import { type ConvexReactClient, useConvex } from "convex/react";
 import {
   Array as Arr,
   DateTime,
@@ -37,6 +38,7 @@ import {
   ninaFailureFeedback,
   reportNinaFailure,
 } from "@/components/ai/feedback";
+import { requireConvexOnline } from "@/lib/convex/online";
 import {
   getLocale,
   getMaterialContextHint,
@@ -132,11 +134,25 @@ function optimisticPrompt(
   };
 }
 
+/** A call refused while offline fails like a transport failure that sent nothing. */
+function requireNinaConnection(convex: ConvexReactClient) {
+  return requireConvexOnline(convex.connectionState()).pipe(
+    Effect.mapError(
+      (offline) =>
+        new NinaConnectionError({
+          code: "NINA_CONNECTION_FAILED",
+          message: offline.message,
+        })
+    )
+  );
+}
+
 const uploadAttachment = Effect.fn("nina.upload")(function* (
   attachment: NonNullable<NinaDraft["files"]>[number],
   upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
   uploaded: WeakMap<File, Id<"ninaUploads">>,
-  previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>
+  previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>,
+  convex: ConvexReactClient
 ) {
   const cached = uploaded.get(attachment.file);
   if (cached) {
@@ -161,6 +177,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
         message: "Unable to read this attachment.",
       }),
   });
+  yield* requireNinaConnection(convex);
   const id = yield* Effect.tryPromise({
     try: () => upload({ bytes, mediaType, filename: attachment.file.name }),
     catch: () =>
@@ -184,7 +201,8 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
   files: NonNullable<NinaDraft["files"]>,
   upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
   uploaded: WeakMap<File, Id<"ninaUploads">>,
-  previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>
+  previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>,
+  convex: ConvexReactClient
 ) {
   if (exceedsDocumentLimit(Arr.map(files, (attachment) => attachment.file))) {
     return yield* new NinaUploadError({
@@ -193,7 +211,7 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
     });
   }
   return yield* Effect.forEach(files, (attachment) =>
-    uploadAttachment(attachment, upload, uploaded, previews)
+    uploadAttachment(attachment, upload, uploaded, previews, convex)
   );
 });
 
@@ -205,6 +223,8 @@ export function useNinaSubmission() {
     MutableHashMap.empty<Id<"ninaUploads">, FileUIPart>()
   );
   const start = useMutation(nina.turns.start);
+  /** Reads the live state when a call starts; a subscription would re-render ChatProvider, which wraps streamed content (ADR 0017). */
+  const convex = useConvex();
   const getModel = useAi((state) => state.getModel);
   const addChatDraft = useAi((state) => state.addChatDraft);
   const removeChatDraft = useAi((state) => state.removeChatDraft);
@@ -229,6 +249,7 @@ export function useNinaSubmission() {
     }
     const result = await Effect.runPromise(
       inputProgram.pipe(
+        Effect.tap(() => requireNinaConnection(convex)),
         Effect.flatMap((input) => {
           const payload = {
             ...(chatId ? { chatId } : {}),
@@ -312,7 +333,8 @@ export function useNinaSubmission() {
         prompt.files ?? [],
         upload,
         uploaded.current,
-        previews
+        previews,
+        convex
       ).pipe(
         Effect.map((uploadIds) => ({
           kind: "message" as const,
