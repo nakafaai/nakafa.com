@@ -14,8 +14,9 @@ import {
   type Node,
   type SourceFile,
 } from "typescript/unstable/ast";
-import { imports } from "#scripts/check/rules";
+import { imports } from "#scripts/check/kinds";
 import { descendants, type parseSources } from "#scripts/check/source";
+import { wrapped } from "#scripts/check/wrapper";
 
 const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;
 const MODULE_EXTENSION_PATTERN = /\.[cm]?tsx?$/u;
@@ -167,9 +168,18 @@ export function pageFunctionKeys(
 }
 
 /**
+ * Whether a statement is a direct statement of the module, so that a declaration
+ * in it is top-level. A nested function with the name of a page function is
+ * ordinary code, because the Playwright call passes the module's top-level one.
+ */
+function isTopLevel(statement: Node) {
+  return isSourceFile(statement.parent);
+}
+
+/**
  * Whether a node is a function that runs in the browser page: one written in
- * a Playwright call of a Playwright module, or one this module declares under
- * a name that satisfies `passed`.
+ * a Playwright call of a Playwright module, or one this module declares at the
+ * top level under a name that satisfies `passed`.
  */
 function isPageFunction(
   node: Node,
@@ -177,16 +187,24 @@ function isPageFunction(
   passed: (name: string) => boolean
 ) {
   if (isFunctionDeclaration(node)) {
-    return node.name !== undefined && passed(node.name.text);
+    return (
+      node.name !== undefined && isTopLevel(node) && passed(node.name.text)
+    );
   }
   if (!(isArrowFunction(node) || isFunctionExpression(node))) {
     return false;
   }
-  const { parent } = node;
+  // Parentheses, an assertion, or satisfies around the function keep it the same value.
+  const value = wrapped(node);
+  const { parent } = value;
   if (isVariableDeclaration(parent)) {
-    return isIdentifier(parent.name) && passed(parent.name.text);
+    return (
+      isIdentifier(parent.name) &&
+      isTopLevel(parent.parent.parent) &&
+      passed(parent.name.text)
+    );
   }
-  return inline && pageArgument(parent) === node;
+  return inline && pageArgument(parent) === value;
 }
 
 /** Whether a node sits inside a function that runs in the browser page. */
@@ -211,7 +229,7 @@ function runsInPage(
  * covers a function written in a `page.evaluate`, `addInitScript`, or sibling
  * call of a Playwright module, and a function this module declares that some
  * Playwright module passes to such a call by reference (`keys`, from
- * `pageFunctionKeys`).
+ * `pageFunctionKeys`), when this module declares it at the top level.
  */
 export function outsidePage(
   file: string,
