@@ -85,7 +85,7 @@ describe("submitUrlsToIndexNow", () => {
         expect(String(input)).toBe(INDEXNOW_ENDPOINT);
         expect(init?.method).toBe("POST");
         expect(
-          Schema.decodeSync(RequestBodySchema)(String(init?.body))
+          yield* Schema.decodeEffect(RequestBodySchema)(String(init?.body))
         ).toMatchObject({ host: "nakafa.com", key: KEY, urlList: urls });
       })
   );

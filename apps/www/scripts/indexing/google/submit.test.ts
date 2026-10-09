@@ -83,10 +83,9 @@ describe("submitUrlsToGoogle", () => {
       expect(new Headers(init?.headers).get("authorization")).toBe(
         `Bearer ${ACCESS_TOKEN}`
       );
-      expect(Schema.decodeSync(PublishBodySchema)(String(init?.body))).toEqual({
-        type: "URL_UPDATED",
-        url: firstUrl,
-      });
+      expect(
+        yield* Schema.decodeEffect(PublishBodySchema)(String(init?.body))
+      ).toEqual({ type: "URL_UPDATED", url: firstUrl });
     })
   );
 

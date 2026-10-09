@@ -1,10 +1,7 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
-import { Config, Effect, MutableList, Option, Schema } from "effect";
+import { Config, Effect, MutableList, Option, Result, Schema } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
-import {
-  BingSubmitError,
-  type SubmissionHistoryError,
-} from "@/scripts/indexing/errors";
+import { BingSubmitError } from "@/scripts/indexing/errors";
 import { INDEXING_HOST } from "@/scripts/indexing/paths";
 
 const BATCH_SIZE = 100;
@@ -42,21 +39,15 @@ export const readBingWebmasterApiKey = Effect.fn(
  * Submits canonical sitemap URLs to Bing's URL Submission API.
  *
  * The adapter respects Bing quota messages by reducing batch size or stopping
- * when the endpoint reports the daily quota has already been exhausted. Each
- * accepted group goes to `onAccepted` before the next batch is sent, so a later
- * failure keeps the URLs that Bing already accepted.
+ * when the endpoint reports the daily quota has already been exhausted. It
+ * returns the URLs Bing accepted and, when a batch fails, the typed failure
+ * that ended the call, so the caller saves the accepted URLs before it fails.
  */
 export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
-  function* (
-    urls: readonly string[],
-    apiKey: string,
-    onAccepted: (
-      submittedUrls: readonly string[]
-    ) => Effect.Effect<void, SubmissionHistoryError>
-  ) {
+  function* (urls: readonly string[], apiKey: string) {
     if (urls.length === 0) {
       yield* Effect.logInfo("No new URLs to submit to Bing.");
-      return [];
+      return { failure: Option.none(), submittedUrls: [] };
     }
     let batchSize = BATCH_SIZE;
     let submittedCount = 0;
@@ -75,15 +66,21 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
       );
       const startIndex = submittedCount + 1;
       const endIndex = submittedCount + batch.length;
-      const result = yield* submitBatchToBing({
+      const outcome = yield* submitBatchToBing({
         apiKey,
         batch,
         endIndex,
         startIndex,
-      });
+      }).pipe(Effect.result);
+      if (Result.isFailure(outcome)) {
+        return {
+          failure: Option.some(outcome.failure),
+          submittedUrls: MutableList.toArray(successfullySubmitted),
+        };
+      }
+      const result = outcome.success;
       if (result.submittedUrls.length > 0) {
         MutableList.appendAll(successfullySubmitted, result.submittedUrls);
-        yield* onAccepted(result.submittedUrls);
         submittedCount += result.submittedUrls.length;
       }
       if (result.shouldStop) {
@@ -111,7 +108,10 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
     yield* Effect.logInfo(
       `Bing URL Submission API process completed. Submitted ${successfullySubmitted.length}/${urls.length} URLs.`
     );
-    return MutableList.toArray(successfullySubmitted);
+    return {
+      failure: Option.none(),
+      submittedUrls: MutableList.toArray(successfullySubmitted),
+    };
   }
 );
 /** Submits one Bing batch and converts quota responses into caller decisions. */

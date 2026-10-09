@@ -1,4 +1,4 @@
-import { Effect, Record as Rec } from "effect";
+import { Effect, Option, Record as Rec } from "effect";
 import {
   ensureSubmissionHistoryFolder,
   listUnsubmittedUrls,
@@ -181,21 +181,28 @@ const submitBingBatch = Effect.fn("scripts.indexing.indexNow.runBingBatch")(
       return history;
     }
 
-    // Each accepted group is saved before the next batch, so a later failure keeps it.
-    let updatedHistory = history;
-    yield* submitUrlsToBing(unsubmittedUrls, apiKey, (successfulUrls) =>
-      Effect.gen(function* () {
-        updatedHistory = yield* updateSubmissionHistory({
-          history: updatedHistory,
-          service: "bing",
-          urls: successfulUrls,
-        });
-        yield* saveSubmissionHistory(updatedHistory);
-        yield* Effect.logInfo(
-          `Submission history updated for Bing with ${successfulUrls.length} successfully submitted URLs.`
-        );
-      })
+    const { failure, submittedUrls } = yield* submitUrlsToBing(
+      unsubmittedUrls,
+      apiKey
     );
+
+    let updatedHistory = history;
+    if (submittedUrls.length > 0) {
+      updatedHistory = yield* updateSubmissionHistory({
+        history,
+        service: "bing",
+        urls: submittedUrls,
+      });
+      yield* saveSubmissionHistory(updatedHistory);
+      yield* Effect.logInfo(
+        `Submission history updated for Bing with ${submittedUrls.length} successfully submitted URLs.`
+      );
+    }
+
+    // The accepted URLs are saved first, so the failure that ended the batch comes after them.
+    if (Option.isSome(failure)) {
+      return yield* failure.value;
+    }
 
     return updatedHistory;
   }

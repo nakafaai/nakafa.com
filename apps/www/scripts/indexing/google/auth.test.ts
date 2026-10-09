@@ -27,8 +27,8 @@ const JwtHeaderSchema = Schema.fromJsonString(
 const JwtClaimsSchema = Schema.fromJsonString(
   Schema.Struct({
     aud: Schema.String,
-    exp: Schema.Number,
-    iat: Schema.Number,
+    exp: Schema.Finite,
+    iat: Schema.Finite,
     iss: Schema.String,
     scope: Schema.String,
   })
@@ -141,10 +141,10 @@ describe("getGoogleAccessToken", () => {
         expect(assertion.split(".")).toHaveLength(3);
         const [header = "", claims = "", signature = ""] = assertion.split(".");
         expect(
-          Schema.decodeSync(JwtHeaderSchema)(decodeSegment(header))
+          yield* Schema.decodeEffect(JwtHeaderSchema)(decodeSegment(header))
         ).toEqual({ alg: "RS256", typ: "JWT" });
         expect(
-          Schema.decodeSync(JwtClaimsSchema)(decodeSegment(claims))
+          yield* Schema.decodeEffect(JwtClaimsSchema)(decodeSegment(claims))
         ).toEqual({
           aud: TOKEN_ENDPOINT,
           exp: now + 3600,
