@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr, Option } from "effect";
 import {
   conversationTestFirstPost as firstPost,
   conversationTestRows as rows,
@@ -26,7 +27,7 @@ describe("conversation/viewport/service", () => {
       (state) => state.pendingPlacement?.view.kind === "bottom"
     );
 
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       view: { kind: "bottom" },
     });
     await dispatchMeasure(viewport, makeMeasurement());
