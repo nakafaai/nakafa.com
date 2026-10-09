@@ -78,7 +78,11 @@ export const recordLogs = (lines: MutableList.MutableList<string>) =>
     }),
   ]);
 
-/** Runs an effect to its end while the test clock passes every wait between its requests. */
+/**
+ * Runs an effect to its end. The test clock advances once, by one minute, after
+ * the effect starts, so the waits of the run must add up to at most one minute.
+ * A run that waits longer in total does not finish.
+ */
 export function runToEnd<A, E>(effect: Effect.Effect<A, E>) {
   return Effect.gen(function* () {
     const fiber = yield* Effect.forkChild(effect);
