@@ -14,7 +14,6 @@ import {
   MutableHashMap,
   MutableHashSet,
   MutableList,
-  Option,
   Path,
   PlatformError,
   Record as Rec,
@@ -112,18 +111,16 @@ function memoryFiles(
         MutableHashSet.add(directories, path);
       }),
     readFileString: (path) =>
-      Option.match(MutableHashMap.get(files, path), {
-        onNone: () =>
-          Effect.fail(
-            PlatformError.systemError({
-              _tag: "NotFound",
-              method: "readFileString",
-              module: "FileSystem",
-              pathOrDescriptor: path,
-            })
-          ),
-        onSome: (text) => Effect.succeed(text),
-      }),
+      Effect.fromOption(MutableHashMap.get(files, path)).pipe(
+        Effect.mapError(() =>
+          PlatformError.systemError({
+            _tag: "NotFound",
+            method: "readFileString",
+            module: "FileSystem",
+            pathOrDescriptor: path,
+          })
+        )
+      ),
     writeFileString: (path, text) =>
       Effect.sync(() => {
         MutableHashMap.set(files, path, text);
@@ -156,14 +153,12 @@ function runIndexNowWith(
   env: Readonly<Record<string, string>>
 ) {
   return runIndexNow().pipe(
-    Effect.provide(FetchClient),
+    Effect.provide(Layer.mergeAll(FetchClient, files, recordLogs(lines))),
     Effect.provideService(FetchHttpClient.Fetch, fetcher),
-    Effect.provide(files),
     Effect.provideService(
       ConfigProvider.ConfigProvider,
       ConfigProvider.fromEnvRecord(env)
-    ),
-    Effect.provide(recordLogs(lines))
+    )
   );
 }
 
@@ -208,7 +203,7 @@ describe("runIndexNow", () => {
         const [input, init] = fetcher.mock.calls[0] ?? [];
         expect(new URL(String(input)).hostname).toBe(INDEXNOW_HOSTNAME);
         expect(
-          Schema.decodeSync(RequestBodySchema)(String(init?.body))
+          yield* Schema.decodeEffect(RequestBodySchema)(String(init?.body))
         ).toEqual({
           host: "nakafa.com",
           key: INDEXNOW_KEY,

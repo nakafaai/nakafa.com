@@ -13,7 +13,6 @@ import {
   MutableHashMap,
   MutableHashSet,
   MutableList,
-  Option,
   Path,
   PlatformError,
   Record as Rec,
@@ -147,18 +146,16 @@ function memoryFiles(
         MutableHashSet.add(directories, path);
       }),
     readFileString: (path) =>
-      Option.match(MutableHashMap.get(files, path), {
-        onNone: () =>
-          Effect.fail(
-            PlatformError.systemError({
-              _tag: "NotFound",
-              method: "readFileString",
-              module: "FileSystem",
-              pathOrDescriptor: path,
-            })
-          ),
-        onSome: (text) => Effect.succeed(text),
-      }),
+      Effect.fromOption(MutableHashMap.get(files, path)).pipe(
+        Effect.mapError(() =>
+          PlatformError.systemError({
+            _tag: "NotFound",
+            method: "readFileString",
+            module: "FileSystem",
+            pathOrDescriptor: path,
+          })
+        )
+      ),
     writeFileString: (path, text) =>
       Effect.sync(() => {
         MutableHashMap.set(files, path, text);
@@ -194,10 +191,8 @@ function runGoogle(
   lines: MutableList.MutableList<string>
 ) {
   return runGoogleIndexing().pipe(
-    Effect.provide(FetchClient),
-    Effect.provideService(FetchHttpClient.Fetch, fetcher),
-    Effect.provide(files),
-    Effect.provide(recordLogs(lines))
+    Effect.provide(Layer.mergeAll(FetchClient, files, recordLogs(lines))),
+    Effect.provideService(FetchHttpClient.Fetch, fetcher)
   );
 }
 
