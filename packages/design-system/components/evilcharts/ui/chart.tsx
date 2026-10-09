@@ -8,6 +8,7 @@ import {
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import type { ChartSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { cn } from "cn";
+import { Result } from "effect";
 import { domAnimation, LazyMotion } from "motion/react";
 import {
   type ComponentProps,
@@ -79,8 +80,10 @@ function ChartContainer({
   const uniqueId = useId();
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
   const contextValue = useMemo(() => ({ config }), [config]);
-
-  validateChartConfigColors(config);
+  const configValidation = validateChartConfigColors(config);
+  if (Result.isFailure(configValidation)) {
+    throw configValidation.failure;
+  }
 
   return (
     <LazyMotion features={domAnimation} strict>

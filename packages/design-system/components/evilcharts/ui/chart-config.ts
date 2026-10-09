@@ -5,6 +5,7 @@ import {
   MutableList,
   Predicate,
   Record as Rec,
+  Result,
   Schema,
 } from "effect";
 
@@ -43,8 +44,19 @@ const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/;
 
 export type ChartConfig = ChartContainerProps["config"];
 
+/** Expected failure: a chart config entry has colors but no theme key. */
+export class ChartConfigColorsError extends Schema.TaggedError<ChartConfigColorsError>()(
+  "ChartConfigColorsError",
+  {
+    key: Schema.String,
+    message: Schema.String,
+  }
+) {}
+
 // Validation for chart config colors at runtime
-function validateChartConfigColors(config: ChartConfigValidationInput): void {
+function validateChartConfigColors(
+  config: ChartConfigValidationInput
+): Result.Result<void, ChartConfigColorsError> {
   for (const [key, value] of Rec.toEntries(config)) {
     const { colors } = value;
 
@@ -55,12 +67,17 @@ function validateChartConfigColors(config: ChartConfigValidationInput): void {
       );
 
       if (!hasValidThemeKey) {
-        throw new Error(
-          `[EvilCharts] Invalid chart config for "${key}": colors object must have at least one theme key (${Arr.join(VALID_THEME_KEYS, ", ")}). Received empty object or invalid keys.`
+        return Result.fail(
+          new ChartConfigColorsError({
+            key,
+            message: `[EvilCharts] Invalid chart config for "${key}": colors object must have at least one theme key (${Arr.join(VALID_THEME_KEYS, ", ")}). Received empty object or invalid keys.`,
+          })
         );
       }
     }
   }
+
+  return Result.succeed(undefined);
 }
 
 // Distribute colors evenly across slots, extra slots go to last color(s)
