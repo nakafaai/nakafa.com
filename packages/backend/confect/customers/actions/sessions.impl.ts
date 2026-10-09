@@ -24,50 +24,48 @@ const generateCheckoutLink = FunctionImpl.make(
       const ctx = yield* ActionCtxService;
       const { appUser } = yield* requireAuth();
       const appUserId = appUser._id;
-      return yield* Effect.gen(function* () {
-        const { runMutation } = yield* MutationRunner;
-        const request = yield* validateCheckoutRequest(args);
-        const requestMetadata = yield* Effect.tryPromise({
-          try: () => ctx.meta.getRequestMetadata(),
-          catch: checkoutSessionIoError,
-        });
-        const customer = yield* requireCustomer(appUserId);
-        const checkout = yield* createAdmittedCheckoutSession({
-          createCheckout: polarGateway.createCheckoutSession({
-            customerId: customer.id,
-            customerIpAddress: requestMetadata.ip,
-            locale: request.polarLocale,
-            productIds: [...request.productIds],
-            successUrl: request.successUrl,
-          }),
-          admitCheckout: Clock.currentTimeMillis.pipe(
-            Effect.flatMap((timestamp) =>
-              runMutation(
-                refs.internal.customers.checkout.admission.admitCheckoutSession,
-                {
-                  event: {
-                    name: "checkout started",
-                    properties: {
-                      checkout_locale: request.polarLocale,
-                      customer_ip_available: requestMetadata.ip !== null,
-                      locale: request.locale,
-                      product_count: request.productIds.length,
-                      product_id: request.primaryProductId,
-                    },
-                  },
-                  timestamp,
-                  userId: appUserId,
-                }
-              )
-            ),
-            Effect.mapError(checkoutSessionIoError),
-            Effect.catchDefect(flow(checkoutSessionIoError, Effect.fail))
-          ),
-        });
-        return {
-          url: checkout.url,
-        };
+      const { runMutation } = yield* MutationRunner;
+      const request = yield* validateCheckoutRequest(args);
+      const requestMetadata = yield* Effect.tryPromise({
+        try: () => ctx.meta.getRequestMetadata(),
+        catch: checkoutSessionIoError,
       });
+      const customer = yield* requireCustomer(appUserId);
+      const checkout = yield* createAdmittedCheckoutSession({
+        createCheckout: polarGateway.createCheckoutSession({
+          customerId: customer.id,
+          customerIpAddress: requestMetadata.ip,
+          locale: request.polarLocale,
+          productIds: [...request.productIds],
+          successUrl: request.successUrl,
+        }),
+        admitCheckout: Clock.currentTimeMillis.pipe(
+          Effect.flatMap((timestamp) =>
+            runMutation(
+              refs.internal.customers.checkout.admission.admitCheckoutSession,
+              {
+                event: {
+                  name: "checkout started",
+                  properties: {
+                    checkout_locale: request.polarLocale,
+                    customer_ip_available: requestMetadata.ip !== null,
+                    locale: request.locale,
+                    product_count: request.productIds.length,
+                    product_id: request.primaryProductId,
+                  },
+                },
+                timestamp,
+                userId: appUserId,
+              }
+            )
+          ),
+          Effect.mapError(checkoutSessionIoError),
+          Effect.catchDefect(flow(checkoutSessionIoError, Effect.fail))
+        ),
+      });
+      return {
+        url: checkout.url,
+      };
     }
   )
 );
@@ -78,10 +76,8 @@ const generateCustomerPortalUrl = FunctionImpl.make(
   Effect.fn("customers.actions.sessions.generateCustomerPortalUrl")(
     function* () {
       const { appUser } = yield* requireAuth();
-      return yield* Effect.gen(function* () {
-        const customer = yield* requireCustomer(appUser._id);
-        return yield* polarGateway.createCustomerPortalSession(customer.id);
-      });
+      const customer = yield* requireCustomer(appUser._id);
+      return yield* polarGateway.createCustomerPortalSession(customer.id);
     }
   )
 );

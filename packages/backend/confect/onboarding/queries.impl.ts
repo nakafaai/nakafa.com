@@ -12,18 +12,16 @@ const getStatus = FunctionImpl.make(
   spec,
   "getStatus",
   Effect.fn("onboarding.queries.getStatus")(function* () {
-    return yield* Effect.gen(function* () {
-      const user = yield* getOptionalAppUserForRead();
-      if (!user) {
-        return {
-          isAuthenticated: false as const,
-          isRequired: false as const,
-          profile: null,
-        };
-      }
-      const profile = yield* readOnboardingProfileByUserId(user.appUser._id);
-      return toOnboardingStatus(user.appUser, profile);
-    });
+    const user = yield* getOptionalAppUserForRead();
+    if (!user) {
+      return {
+        isAuthenticated: false as const,
+        isRequired: false as const,
+        profile: null,
+      };
+    }
+    const profile = yield* readOnboardingProfileByUserId(user.appUser._id);
+    return toOnboardingStatus(user.appUser, profile);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
