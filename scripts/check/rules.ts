@@ -37,6 +37,7 @@ export const Rule = Schema.Literals([
   "object-helper",
   "promise",
   "random",
+  "switch",
   "timer",
   "try-catch",
   "typeof-object",
@@ -140,6 +141,11 @@ export const RULES = {
     message:
       "draw random values from Random in effect instead of Math.random, and draw a UUID with randomUuid from @repo/utilities/uuid, which reads Effect's Crypto service, instead of crypto.randomUUID.",
     scope: "code",
+  },
+  switch: {
+    message:
+      "match on the value with Match from effect, such as Match.value with Match.tags, Match.discriminators, or Match.when, instead of a switch statement.",
+    scope: "every",
   },
   timer: {
     message:

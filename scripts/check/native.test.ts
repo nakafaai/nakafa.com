@@ -138,7 +138,7 @@ export function text(value: unknown) {
   }
 }
 `),
-        ["2 typeof-object"]
+        ["2 switch", "2 typeof-object", "10 switch"]
       );
     })
   );
@@ -165,7 +165,13 @@ export function asserted(value: unknown) {
   }
 }
 `),
-          ["2 typeof-object", "10 assertion", "10 typeof-object"]
+          [
+            "2 switch",
+            "2 typeof-object",
+            "10 assertion",
+            "10 switch",
+            "10 typeof-object",
+          ]
         );
       })
   );
@@ -208,7 +214,7 @@ export const flipped = ("object") === typeof value;
   }
 }
 `),
-        ["2 typeof-object"]
+        ["2 switch", "2 typeof-object"]
       );
     })
   );
