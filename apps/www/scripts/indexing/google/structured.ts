@@ -27,7 +27,7 @@ function hasSchemaType(value: unknown, schemaType: string): boolean {
     return false;
   }
 
-  if (readSchemaTypes(value).includes(schemaType)) {
+  if (Arr.contains(readSchemaTypes(value), schemaType)) {
     return true;
   }
 
@@ -47,7 +47,7 @@ function hasBroadcastEventInsideVideoObject(value: unknown): boolean {
   }
 
   if (
-    readSchemaTypes(value).includes("VideoObject") &&
+    Arr.contains(readSchemaTypes(value), "VideoObject") &&
     hasSchemaType(value, "BroadcastEvent")
   ) {
     return true;

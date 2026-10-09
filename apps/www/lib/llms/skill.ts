@@ -1,7 +1,7 @@
-import { createHash } from "node:crypto";
 import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/agent/constants";
 import { languages } from "@repo/internationalization/data/lang";
-import { Array as Arr } from "effect";
+import { sha256Hex } from "@repo/utilities/digest";
+import { Array as Arr, Effect } from "effect";
 
 const NAKAFA_SKILL_NAME = "nakafa";
 const NAKAFA_SKILL_DESCRIPTION =
@@ -61,7 +61,10 @@ export function getNakafaSkillText() {
 }
 
 /** Builds the recommended agent-skills discovery manifest. */
-export function getNakafaAgentSkillIndex() {
+export const getNakafaAgentSkillIndex = Effect.fn(
+  "llms.getNakafaAgentSkillIndex"
+)(function* () {
+  const digest = yield* sha256Hex(getNakafaSkillText());
   return {
     $schema: "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
     skills: [
@@ -70,10 +73,8 @@ export function getNakafaAgentSkillIndex() {
         type: "skill-md",
         description: NAKAFA_SKILL_DESCRIPTION,
         url: NAKAFA_AGENT_SKILL_PATH,
-        digest: `sha256:${createHash("sha256")
-          .update(getNakafaSkillText())
-          .digest("hex")}`,
+        digest: `sha256:${digest}`,
       },
     ],
   };
-}
+});

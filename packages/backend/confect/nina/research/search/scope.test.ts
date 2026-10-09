@@ -38,7 +38,7 @@ describe("scopeSources", () => {
     ]);
   });
 
-  it("keeps the last word as the neighbor of a leading number", () => {
+  it("gives a leading number no neighbor on its left", () => {
     const sources = scopeSources({
       query: "for",
       task: "19 Alpha",
@@ -52,7 +52,6 @@ describe("scopeSources", () => {
 
     expect(Arr.map(sources, (source) => source.url)).toEqual([
       "https://alpha.io/guide",
-      "https://format.org/notes",
     ]);
   });
 

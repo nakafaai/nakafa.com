@@ -80,6 +80,21 @@ export const arrow = async () => 1;
   );
 
   it.effect(
+    "reports a Promise built through a global object or with resolvers",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export const direct = new globalThis.Promise(start);
+export const keyed = new window["Promise"](start);
+export const resolvers = Promise.withResolvers();
+export const all = Promise.all([direct, keyed]);
+`),
+          ["1 new-promise", "2 new-promise", "3 new-promise"]
+        );
+      })
+  );
+
+  it.effect(
     "never reports new Promise inside a page function or through a local class named Promise",
     () =>
       Effect.gen(function* () {

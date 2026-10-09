@@ -3,6 +3,7 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/agent/errors";
+import { matchesSecret } from "@repo/utilities/digest";
 import { Array as Arr, Config, Effect } from "effect";
 
 const MAX_EDGE_SECRETS = 2;
@@ -27,37 +28,19 @@ export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
       return false;
     }
     const comparisons = yield* Effect.forEach(acceptedSecrets, (expected) =>
-      constantTimeEqual(expected, supplied)
+      matchesSecret(expected, supplied).pipe(
+        Effect.mapError(
+          (error) =>
+            new NakafaAgentDataReadError({
+              cause: getUnknownErrorMessage(error.reason.cause),
+              message: "The public agent edge boundary is unavailable.",
+            })
+        )
+      )
     );
     return Arr.some(comparisons, Boolean);
   }
 );
-
-/** Compares secret values through fixed-size SHA-256 digests. */
-const constantTimeEqual = Effect.fn("agent.constantTimeEqual")(function* (
-  expected: string,
-  supplied: string
-) {
-  const [expectedDigest, suppliedDigest] = yield* Effect.tryPromise({
-    catch: (error) =>
-      new NakafaAgentDataReadError({
-        cause: getUnknownErrorMessage(error),
-        message: "The public agent edge boundary is unavailable.",
-      }),
-    try: () =>
-      Promise.all([
-        crypto.subtle.digest("SHA-256", new TextEncoder().encode(expected)),
-        crypto.subtle.digest("SHA-256", new TextEncoder().encode(supplied)),
-      ]),
-  });
-  const left = new DataView(expectedDigest);
-  const right = new DataView(suppliedDigest);
-  let difference = 0;
-  for (let index = 0; index < left.byteLength; index += 1) {
-    difference += Math.abs(left.getUint8(index) - right.getUint8(index));
-  }
-  return difference === 0;
-});
 
 /** Builds the typed fail-closed error for missing or malformed configuration. */
 function unavailableEdgeSecret() {

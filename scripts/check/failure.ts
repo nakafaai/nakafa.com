@@ -91,14 +91,18 @@ function builderHandlers(
       return [];
     }
     const callee = node.expression;
-    const [options] = node.arguments;
-    return Arr.contains(builders, callee.text) &&
-      options !== undefined &&
-      isObjectLiteralExpression(options)
-      ? Arr.map(handlerFunctions(options), (handler) =>
-          Tuple.make(callee, handler)
-        )
-      : [];
+    if (!Arr.contains(builders, callee.text)) {
+      return [];
+    }
+    // Parentheses, an assertion, or satisfies around the options keep them the same object.
+    return Arr.flatMap(Arr.take(node.arguments, 1), (argument) => {
+      const options = unwrapped(argument);
+      return isObjectLiteralExpression(options)
+        ? Arr.map(handlerFunctions(options), (handler) =>
+            Tuple.make(callee, handler)
+          )
+        : [];
+    });
   });
 }
 

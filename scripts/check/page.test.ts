@@ -104,6 +104,7 @@ run(() => Object.keys(routes));
 evaluate(() => Object.keys(routes));
 page.locator(() => Object.keys(routes));
 Array.from(routes);
+page.evaluate((() => Object.keys(window.state)) satisfies () => string[]);
 `;
 
 /** A helper module that exports functions Playwright modules may pass to the page. */
@@ -188,6 +189,7 @@ page.$eval("main", countMain);
             "11 Object",
             "12 Object",
             "13 Array",
+            "14 Object",
           ]
         );
       })
@@ -210,6 +212,8 @@ page.addInitScript(count);
 page.evaluate(upShared);
 page.evaluate(countFrames);
 Object.keys(routes);
+const countWrapped = (() => Object.keys(window.frames));
+page.evaluate(countWrapped);
 `,
           },
           {

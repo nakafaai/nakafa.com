@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256Hex } from "@repo/utilities/digest";
 import {
   Array as Arr,
   Effect,
@@ -187,49 +187,53 @@ function missingSource(
   );
 }
 
-function trustedPublishProblems(publish: WorkflowJob, source: string) {
-  const commands = pipe(
-    publish.steps,
-    Arr.flatMap(({ run }) => (run === undefined ? [] : [run])),
-    Arr.map(executableSource),
-    Arr.join("\n")
-  );
-  const sha256 = createHash("sha256")
-    .update(Schema.encodeSync(WorkflowJobJson)(publish))
-    .digest("hex");
-  return Arr.flatten([
-    problemWhen(
-      commands.split('npx --yes "$NPM_CLI" publish "$TARBALL"').length !== 2,
-      "CLI publication may execute only one npm publish command."
-    ),
-    problemWhen(
-      sha256 !== TRUSTED_PUBLISH_SHA256,
-      "CLI publication must match the exact trusted job."
-    ),
-    problemWhen(
-      source.includes("cli-verifier") ||
-        source.includes("provenance.mjs") ||
-        source.includes("VERIFIER"),
-      "CLI publication must not receive the verifier artifact."
-    ),
-    problemWhen(
-      Arr.some(
-        publish.steps,
-        ({ uses }) => uses?.startsWith("actions/checkout@") === true
+const trustedPublishProblems = Effect.fn("GithubCli.trustedPublishProblems")(
+  function* (publish: WorkflowJob, source: string) {
+    const commands = pipe(
+      publish.steps,
+      Arr.flatMap(({ run }) => (run === undefined ? [] : [run])),
+      Arr.map(executableSource),
+      Arr.join("\n")
+    );
+    const json = yield* Schema.encodeEffect(WorkflowJobJson)(publish);
+    const sha256 = yield* sha256Hex(json);
+    return Arr.flatten([
+      problemWhen(
+        commands.split('npx --yes "$NPM_CLI" publish "$TARBALL"').length !== 2,
+        "CLI publication may execute only one npm publish command."
       ),
-      "CLI publication must not checkout repository code."
-    ),
-  ]);
-}
+      problemWhen(
+        sha256 !== TRUSTED_PUBLISH_SHA256,
+        "CLI publication must match the exact trusted job."
+      ),
+      problemWhen(
+        source.includes("cli-verifier") ||
+          source.includes("provenance.mjs") ||
+          source.includes("VERIFIER"),
+        "CLI publication must not receive the verifier artifact."
+      ),
+      problemWhen(
+        Arr.some(
+          publish.steps,
+          ({ uses }) => uses?.startsWith("actions/checkout@") === true
+        ),
+        "CLI publication must not checkout repository code."
+      ),
+    ]);
+  },
+  Effect.orDie
+);
 
-function trustedVerifyProblems(verify: WorkflowJob) {
-  const sha256 = createHash("sha256")
-    .update(Schema.encodeSync(WorkflowJobJson)(verify))
-    .digest("hex");
-  return sha256 === TRUSTED_VERIFY_SHA256
-    ? []
-    : ["CLI verification must match the exact trusted job."];
-}
+const trustedVerifyProblems = Effect.fn("GithubCli.trustedVerifyProblems")(
+  function* (verify: WorkflowJob) {
+    const json = yield* Schema.encodeEffect(WorkflowJobJson)(verify);
+    const sha256 = yield* sha256Hex(json);
+    return sha256 === TRUSTED_VERIFY_SHA256
+      ? []
+      : ["CLI verification must match the exact trusted job."];
+  },
+  Effect.orDie
+);
 
 /** Reports a publication or verification job that leaves the repository runtime. */
 function runtimeProblems(
@@ -328,7 +332,9 @@ const BUILD_OUTPUTS = [
   "verifier_size",
 ];
 
-export function validateCliWorkflow(source: string): string[] {
+export const validateCliWorkflow = Effect.fn("GithubCli.validate")(function* (
+  source: string
+) {
   const sourceProblems = forbiddenSourceProblems(source);
   const decoded = decodeWorkflow(source);
   if (Option.isNone(decoded)) {
@@ -390,19 +396,19 @@ export function validateCliWorkflow(source: string): string[] {
       "CLI build artifacts must be replaceable on rerun."
     ),
     executionBoundaryProblems(jobs, publish, verify),
-    trustedPublishProblems(publish, publishSource),
+    yield* trustedPublishProblems(publish, publishSource),
     problemWhen(
       verifyCommands.split('node "$VERIFIER"').length !== 2,
       "CLI verification must execute one transported verifier."
     ),
-    trustedVerifyProblems(verify),
+    yield* trustedVerifyProblems(verify),
   ]);
-}
+});
 
 export const verifyCliWorkflow = Effect.fn("GithubCli.verify")(function* (
   source: string
 ) {
-  const problems = validateCliWorkflow(source);
+  const problems = yield* validateCliWorkflow(source);
   const [first, ...rest] = problems;
   if (first) {
     return yield* new CliWorkflowPolicyError({

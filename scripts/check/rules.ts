@@ -68,7 +68,7 @@ export const RULES = {
   },
   "array-method": {
     message:
-      "transform arrays with the Array module from effect, such as Array.map, Array.filter, and Array.join, instead of a native array method.",
+      "transform arrays with the Array module from effect, such as Array.map, Array.filter, Array.join, Array.contains, Array.drop, or Array.appendAll, instead of a native array method; take indexes from the callback of Array.map, Array.forEach, or Effect.forEach instead of entries.",
     scope: "code",
   },
   "array-mutation": {
@@ -78,7 +78,7 @@ export const RULES = {
   },
   "array-search": {
     message:
-      "search arrays with Array.findFirst, Array.findLast, or their index forms from effect, which return an Option, instead of a native find method.",
+      "search arrays with Array.findFirst, Array.findLast, Array.findFirstIndex, Array.findLastIndex, Array.get, Array.head, or Array.last from effect, which return an Option, instead of a native find, at, indexOf, or lastIndexOf method.",
     scope: "code",
   },
   assertion: {
@@ -137,7 +137,7 @@ export const RULES = {
   },
   "new-promise": {
     message:
-      "build the value with Effect.callback, Effect.promise, or a Deferred from effect, and run it at the framework boundary, instead of new Promise.",
+      "build the value with Effect.callback, Effect.promise, or a Deferred from effect, and run it at the framework boundary, instead of new Promise or Promise.withResolvers.",
     scope: "source",
   },
   promise: {
