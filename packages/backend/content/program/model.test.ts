@@ -29,18 +29,19 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const root = "curriculum/technical-program-1";
 const appLocale = ActiveAppLocaleSchema.make("en");
 const technicalProgram = makeTechnicalProgram(1);
-const englishTranslation = technicalProgram.translations.find(
+const englishTranslation = Arr.findFirst(
+  technicalProgram.translations,
   (translation) => translation.appLocale === appLocale
 );
-assert(englishTranslation);
+assert(Option.isSome(englishTranslation));
 const englishProgram = {
   ...technicalProgram,
-  translations: [englishTranslation] as const,
+  translations: [englishTranslation.value] as const,
 };
 
 /** Builds a signed nested route that keeps the real direct-parent contract. */
@@ -103,13 +104,14 @@ describe("program route relationship integrity", () => {
               const rows = yield* Effect.promise(() =>
                 tCtx.db.query("programCatalog").collect()
               );
-              const program = rows.find(
+              const program = Arr.findFirst(
+                rows,
                 (row) => row.programKey === "technical-program-1"
               );
-              assert(program);
+              assert(Option.isSome(program));
               yield* Effect.promise(() =>
-                tCtx.db.patch("programCatalog", program._id, {
-                  displayOrder: program.displayOrder + 1,
+                tCtx.db.patch("programCatalog", program.value._id, {
+                  displayOrder: program.value.displayOrder + 1,
                 })
               );
             });
@@ -257,14 +259,17 @@ describe("program route relationship integrity", () => {
                 length: PROGRAM_ANCESTOR_LIMIT + 1,
               },
               (_, index) =>
-                `${root}/${Array.from(
-                  {
-                    length: index + 1,
-                  },
-                  (_, segment) => `level-${segment}`
-                ).join("/")}`
+                `${root}/${Arr.join(
+                  Array.from(
+                    {
+                      length: index + 1,
+                    },
+                    (_, segment) => `level-${segment}`
+                  ),
+                  "/"
+                )}`
             );
-            const routes = paths.map((path, index) =>
+            const routes = Arr.map(paths, (path, index) =>
               nestedRoute(path, `level-${index}`)
             );
             const requested = routes.at(-1);
@@ -335,14 +340,15 @@ describe("program route relationship integrity", () => {
               const rows = yield* Effect.promise(() =>
                 tCtx.db.query("curriculumRoutes").collect()
               );
-              const german = rows.find(
+              const german = Arr.findFirst(
+                rows,
                 (row) =>
                   row.appLocale === "de" &&
                   row.programKey === "technical-program-1"
               );
-              assert(german);
+              assert(Option.isSome(german));
               yield* Effect.promise(() =>
-                tCtx.db.delete("curriculumRoutes", german._id)
+                tCtx.db.delete("curriculumRoutes", german.value._id)
               );
             });
             expect(

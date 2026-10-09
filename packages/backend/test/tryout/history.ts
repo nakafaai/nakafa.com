@@ -23,7 +23,14 @@ import {
 } from "@repo/backend/test/content/proof";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableList,
+  Order,
+  Record as Rec,
+  Schema,
+} from "effect";
 
 /** Plain codec whose output equals JSON.stringify, keeping the legacy row and hash text exact. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -42,11 +49,11 @@ async function retainChoicesSnapshot(
       index.eq("snapshotId", runtime.snapshotId)
     )
     .take(3);
-  const records: {
+  const records = MutableList.make<{
     stored: Doc<"tryoutPlacements">;
     rowJson: string;
     rowHash: typeof Sha256HashSchema.Type;
-  }[] = [];
+  }>();
   const digest = createHash("sha256").update(
     "nakafa.aksara.tryout-placements\n"
   );
@@ -65,19 +72,22 @@ async function retainChoicesSnapshot(
     const row = { ...identity, choices: response.options };
     const canonical = encodeJson(
       Rec.fromEntries(
-        Rec.toEntries<string, unknown>(row).sort(([left], [right]) => {
-          if (left < right) {
-            return -1;
-          }
-          return left > right ? 1 : 0;
-        })
+        Arr.sort(
+          Rec.toEntries<string, unknown>(row),
+          Order.make<[string, unknown]>(([left], [right]) => {
+            if (left < right) {
+              return -1;
+            }
+            return left > right ? 1 : 0;
+          })
+        )
       )
     );
     const rowHash = Sha256HashSchema.make(
       `sha256:${createHash("sha256").update("nakafa.aksara.tryout-placements\n").update(canonical).digest("hex")}`
     );
     digest.update(`${canonical}\0${rowHash}\n`);
-    records.push({
+    MutableList.append(records, {
       stored,
       rowJson: encodeJson({
         family: "tryout",
@@ -113,8 +123,11 @@ async function retainChoicesSnapshot(
           baseSnapshotId: null,
           resultSnapshotId: snapshot.snapshotId,
           rowCount:
-            Rec.values(snapshot.counts).reduce((sum, count) => sum + count, 0) +
-            snapshot.placementCount,
+            Arr.reduce(
+              Rec.values(snapshot.counts),
+              0,
+              (sum, count) => sum + count
+            ) + snapshot.placementCount,
           rowDigest: snapshot.snapshotId,
         }),
       },
@@ -126,7 +139,7 @@ async function retainChoicesSnapshot(
     snapshotId: snapshot.snapshotId,
     snapshotJson: encodeJson({ family: "tryout", manifest: snapshot }),
   });
-  for (const record of records) {
+  for (const record of MutableList.toArray(records)) {
     await ctx.db.patch(record.stored._id, {
       rowHash: record.rowHash,
       rowJson: record.rowJson,

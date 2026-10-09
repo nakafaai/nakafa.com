@@ -25,7 +25,7 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
-import { Result, Schema } from "effect";
+import { Array as Arr, Result, Schema } from "effect";
 
 const decodeArtifact = Schema.decodeUnknownSync(
   Schema.fromJsonString(SignedContentArtifactSchema)
@@ -95,7 +95,7 @@ describe("public content runtime batch contract", () => {
     const result = decode({ responses: [found, { kind: "missing" }] });
     expect(Result.isSuccess(result)).toBe(true);
     if (Result.isSuccess(result)) {
-      expect(result.success.responses.map(({ kind }) => kind)).toEqual([
+      expect(Arr.map(result.success.responses, ({ kind }) => kind)).toEqual([
         "found",
         "missing",
       ]);

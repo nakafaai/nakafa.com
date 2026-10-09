@@ -30,7 +30,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 
 const trackIdentity = {
   countryKey: TRYOUT_START_COUNTRY,
@@ -75,14 +75,14 @@ describe("signed try-out hierarchy relationships", () => {
         const rows = makeTryoutStartHierarchy("id", "visible");
         const catalog = yield* loadCatalog([
           ...rows,
-          ...rows
-            .filter((row) => row.kind === "country")
-            .map((row) =>
+          ...Arr.map(
+            Arr.filter(rows, (row) => row.kind === "country"),
+            (row) =>
               Schema.decodeSync(TryoutCatalogRowSchema)({
                 ...row,
                 countryKey: "malaysia",
               })
-            ),
+          ),
         ]);
         expect(
           yield* indexPublishedCatalog(catalog).pipe(Effect.flip)
@@ -98,7 +98,8 @@ describe("signed try-out hierarchy relationships", () => {
       Effect.gen(function* () {
         for (const kind of ["country", "exam", "track"] as const) {
           const catalog = yield* loadCatalog(
-            makeTryoutStartHierarchy("id", "visible").filter(
+            Arr.filter(
+              makeTryoutStartHierarchy("id", "visible"),
               (row) => row.kind !== kind
             )
           );
@@ -129,7 +130,7 @@ describe("signed try-out hierarchy relationships", () => {
           })
         ).toBeNull();
         const changedTrack = yield* loadCatalog(
-          makeTryoutStartHierarchy("id", "visible").map((row) =>
+          Arr.map(makeTryoutStartHierarchy("id", "visible"), (row) =>
             Schema.decodeSync(TryoutCatalogRowSchema)(
               row.kind === "track"
                 ? {
@@ -158,7 +159,7 @@ describe("signed try-out hierarchy relationships", () => {
           },
         ]) {
           const changed = yield* loadCatalog(
-            makeTryoutStartHierarchy("id", "visible").map((row) =>
+            Arr.map(makeTryoutStartHierarchy("id", "visible"), (row) =>
               Schema.decodeSync(TryoutCatalogRowSchema)(
                 row.kind === "set"
                   ? {
@@ -187,7 +188,8 @@ describe("signed try-out hierarchy relationships", () => {
     () =>
       Effect.gen(function* () {
         const catalog = yield* loadCatalog(
-          makeTryoutStartHierarchy("id", "visible").filter(
+          Arr.filter(
+            makeTryoutStartHierarchy("id", "visible"),
             (row) => row.kind !== "set"
           )
         );
@@ -206,7 +208,7 @@ describe("signed try-out hierarchy relationships", () => {
           message: expect.stringContaining("lost its set"),
         });
         const internal = yield* loadCatalog(
-          makeTryoutStartHierarchy("id", "internal-entry").map((row) =>
+          Arr.map(makeTryoutStartHierarchy("id", "internal-entry"), (row) =>
             Schema.decodeSync(TryoutCatalogRowSchema)(
               row.kind === "set"
                 ? {

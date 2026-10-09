@@ -9,7 +9,7 @@ import {
   insertRuntimeRelease,
 } from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const article = api.contentRelease.article;
 const firstPage = {
@@ -136,12 +136,12 @@ describe("article publication pages", () => {
               Promise.all([categories, publications])
             );
             expect(
-              results.every((result) => result.result.page.length === 1)
+              Arr.every(results, (result) => result.result.page.length === 1)
             ).toBe(true);
           } else {
             yield* Effect.promise(() =>
               Promise.all(
-                [categories, publications].map((query) =>
+                Arr.map([categories, publications], (query) =>
                   expect(query).rejects.toMatchObject({
                     data: { code: "CONTENT_RELEASE_LIMIT" },
                   })

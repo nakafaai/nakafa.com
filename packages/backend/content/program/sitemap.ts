@@ -7,7 +7,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadProgramOwner } from "@repo/backend/content/program/owner";
 import { readProgramPartition } from "@repo/backend/content/program/partition";
 import { ProgramSource } from "@repo/backend/content/program/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Lists non-empty curriculum sitemap partitions for one active snapshot. */
 export const readProgramBuckets = Effect.fn(
@@ -46,9 +46,13 @@ export const readProgramBuckets = Effect.fn(
     }
   }
   return {
-    buckets: rows.map(({ bucket }) => bucket),
+    buckets: Arr.map(rows, ({ bucket }) => bucket),
     managed: true,
-    routeCount: rows.reduce((total, { routeCount }) => total + routeCount, 0),
+    routeCount: Arr.reduce(
+      rows,
+      0,
+      (total, { routeCount }) => total + routeCount
+    ),
   };
 });
 
@@ -64,7 +68,7 @@ export const readProgramSitemap = Effect.fn(
     return null;
   }
   return {
-    routes: partition.routes.map(({ publicPath }) => ({
+    routes: Arr.map(partition.routes, ({ publicPath }) => ({
       publicPath,
     })),
   };

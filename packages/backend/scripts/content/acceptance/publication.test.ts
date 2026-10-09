@@ -10,7 +10,7 @@ import {
 import source from "@repo/backend/scripts/content/acceptance/source.json" with {
   type: "json",
 };
-import { Effect, FileSystem } from "effect";
+import { Array as Arr, Effect, FileSystem } from "effect";
 
 const mocks = vi.hoisted(() => ({ command: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
@@ -69,14 +69,14 @@ describe("pinned Aksara acceptance publication", () => {
         expect(
           (yield* fs.stat(`${runtime.directory}/renderer.json`)).mode % 0o1000
         ).toBe(0o600);
-        const calls = mocks.command.mock.calls.map(([spec]) => spec);
+        const calls = Arr.map(mocks.command.mock.calls, ([spec]) => spec);
         expect(calls[0]).toMatchObject({
           command: "pnpm",
           cwd: "/test/nakafa",
           args: ["--silent", "--filter", "www", "renderer:manifest"],
         });
         expect(
-          calls.slice(1, 6).map(({ command, args }) => [command, ...args])
+          Arr.map(calls.slice(1, 6), ({ command, args }) => [command, ...args])
         ).toEqual([
           ["git", "init", "--quiet"],
           ["git", "remote", "add", "origin", source.repository],

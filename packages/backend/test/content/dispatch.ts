@@ -134,7 +134,7 @@ export async function publishIngressCandidate(
       Effect.promise(() => sendPublication(target, request))
     )
   );
-  responses.push(await verifyPublication(target, ingressRelease));
+  const verified = await verifyPublication(target, ingressRelease);
   const afterVerification = [
     {
       afterIndex: -1,
@@ -151,14 +151,12 @@ export async function publishIngressCandidate(
       rollbackOfManifestHash: ingressRelease.manifestHash,
     },
   ];
-  responses.push(
-    ...(await Effect.runPromise(
-      Effect.forEach(afterVerification, (request) =>
-        Effect.promise(() => sendPublication(target, request))
-      )
-    ))
+  const afterResponses = await Effect.runPromise(
+    Effect.forEach(afterVerification, (request) =>
+      Effect.promise(() => sendPublication(target, request))
+    )
   );
-  return responses;
+  return [...responses, verified, ...afterResponses];
 }
 
 /** Verifies, activates, and then activates the retained technical inverse. */
@@ -196,7 +194,7 @@ export async function publishIngressRecovery(
       Effect.promise(() => sendPublication(target, request))
     )
   );
-  responses.push(await verifyPublication(target, ingressRecovery));
+  const verified = await verifyPublication(target, ingressRecovery);
   const afterVerification = [
     {
       operation: "recovery",
@@ -239,12 +237,10 @@ export async function publishIngressRecovery(
       operation: "headPage",
     },
   ];
-  responses.push(
-    ...(await Effect.runPromise(
-      Effect.forEach(afterVerification, (request) =>
-        Effect.promise(() => sendPublication(target, request))
-      )
-    ))
+  const afterResponses = await Effect.runPromise(
+    Effect.forEach(afterVerification, (request) =>
+      Effect.promise(() => sendPublication(target, request))
+    )
   );
-  return responses;
+  return [...responses, verified, ...afterResponses];
 }

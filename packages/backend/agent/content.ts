@@ -28,7 +28,7 @@ import {
   NakafaAgentReadableContentRefSchema,
 } from "@repo/contents/agent/schema/ref";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const PublishedRefSchema = Schema.Struct({
   ...NakafaAgentReadableContentRefSchema.fields,
@@ -135,7 +135,7 @@ const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
           : {
               description,
             }),
-        text: [`# ${metadata.title}`, "", body.trim()].join("\n"),
+        text: Arr.join([`# ${metadata.title}`, "", body.trim()], "\n"),
         title: metadata.title,
       },
       "Unable to build Nakafa agent markdown."
@@ -173,26 +173,29 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
     {
       ...ref,
       description,
-      text: [
-        `# ${title}`,
-        "",
-        `Meaning: ${meaning}`,
-        `Revelation: ${surah.revelation.place}`,
-        "",
-        ...renderQuranReadingSourcesMarkdown(publication.sources),
-        ...renderQuranTafsirAccessMarkdown(publication.tafsirAccess),
-        "## Verses",
-        "",
-        ...preBismillah,
-        ...publication.verses.flatMap((verse) => [
-          `### Verse ${verse.number.inSurah}`,
+      text: Arr.join(
+        [
+          `# ${title}`,
           "",
-          verse.arabic,
+          `Meaning: ${meaning}`,
+          `Revelation: ${surah.revelation.place}`,
           "",
-          ...renderQuranTranslationMarkdown(verse.translation),
+          ...renderQuranReadingSourcesMarkdown(publication.sources),
+          ...renderQuranTafsirAccessMarkdown(publication.tafsirAccess),
+          "## Verses",
           "",
-        ]),
-      ].join("\n"),
+          ...preBismillah,
+          ...Arr.flatMap(publication.verses, (verse) => [
+            `### Verse ${verse.number.inSurah}`,
+            "",
+            verse.arabic,
+            "",
+            ...renderQuranTranslationMarkdown(verse.translation),
+            "",
+          ]),
+        ],
+        "\n"
+      ),
       title,
     },
     "Unable to build Nakafa agent markdown."

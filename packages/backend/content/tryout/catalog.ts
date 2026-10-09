@@ -9,16 +9,16 @@ import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout
 import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
 import { findTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { Effect, Option, Record as Rec } from "effect";
+import { Array as Arr, Effect, Option, Record as Rec } from "effect";
 
 /** Counts each hierarchy kind in one verified localized catalog. */
 function countCatalog(rows: readonly TryoutCatalogRow[]) {
   return {
-    country: rows.filter(({ kind }) => kind === "country").length,
-    exam: rows.filter(({ kind }) => kind === "exam").length,
-    section: rows.filter(({ kind }) => kind === "section").length,
-    set: rows.filter(({ kind }) => kind === "set").length,
-    track: rows.filter(({ kind }) => kind === "track").length,
+    country: Arr.filter(rows, ({ kind }) => kind === "country").length,
+    exam: Arr.filter(rows, ({ kind }) => kind === "exam").length,
+    section: Arr.filter(rows, ({ kind }) => kind === "section").length,
+    set: Arr.filter(rows, ({ kind }) => kind === "set").length,
+    track: Arr.filter(rows, ({ kind }) => kind === "track").length,
   };
 }
 
@@ -28,7 +28,7 @@ function localizedCounts(
   localeCount: number
 ): TryoutCatalogCounts | undefined {
   const entries = Rec.toEntries(counts);
-  if (entries.some(([, count]) => count % localeCount !== 0)) {
+  if (Arr.some(entries, ([, count]) => count % localeCount !== 0)) {
     return;
   }
   return {
@@ -142,7 +142,11 @@ const loadStoredTryoutCatalog = Effect.fn(
       "Active try-out catalog counts do not divide across its locales."
     );
   }
-  const total = Rec.values(expected).reduce((count, value) => count + value, 0);
+  const total = Arr.reduce(
+    Rec.values(expected),
+    0,
+    (count, value) => count + value
+  );
   if (total > TRYOUT_CATALOG_LIMIT) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
@@ -167,14 +171,15 @@ const loadStoredTryoutCatalog = Effect.fn(
       }))
     )
   );
-  const rows = entries.map(({ row }) => row);
+  const rows = Arr.map(entries, ({ row }) => row);
   if (!hasExpectedCounts(countCatalog(rows), expected)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Try-out catalog for ${locale} changed its hierarchy counts.`
     );
   }
-  const actualRouteCount = rows.filter(
+  const actualRouteCount = Arr.filter(
+    rows,
     ({ publicPath }) => publicPath !== undefined
   ).length;
   if (actualRouteCount !== expectedRouteCount) {
@@ -201,7 +206,7 @@ export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(
     return {
       activeManifestHash: catalog.activeManifestHash,
       activeReleaseId: catalog.activeReleaseId,
-      rowJson: catalog.entries.map(({ rowJson }) => rowJson),
+      rowJson: Arr.map(catalog.entries, ({ rowJson }) => rowJson),
       snapshotId: catalog.snapshotId,
       sourceRevision: catalog.sourceRevision,
     };

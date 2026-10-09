@@ -20,7 +20,7 @@ import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { resolveActiveRoute } from "@repo/backend/content/publication/route";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { PublicationSource } from "@repo/backend/content/publication/source";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type AppLocale = typeof appLocaleValidator.Type;
 type ActiveIdentity = NonNullable<
@@ -237,7 +237,7 @@ export const resolvePublicRoutes = Effect.fn(
   }
   const active = yield* loadActiveIdentity();
   if (!active) {
-    return requests.map(() => null);
+    return Arr.map(requests, () => null);
   }
   return yield* Effect.forEach(requests, (request) =>
     resolvePublicRouteForActive(active, request.appLocale, request.publicPath)

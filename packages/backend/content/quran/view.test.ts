@@ -13,7 +13,7 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
@@ -357,7 +357,7 @@ describe("contentRelease/quran/view", () => {
           const snapshotId = yield* Effect.promise(() =>
             activateQuranSnapshot(
               tCtx,
-              viewRows().filter((row) => row.kind !== "quran-search")
+              Arr.filter(viewRows(), (row) => row.kind !== "quran-search")
             )
           );
           expect(

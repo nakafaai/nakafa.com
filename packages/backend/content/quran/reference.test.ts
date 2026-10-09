@@ -10,7 +10,7 @@ import {
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Creates two chunks and their signed metadata for one seven-verse surah. */
 function referenceRows() {
@@ -139,7 +139,7 @@ describe("contentRelease/quran/reference", () => {
           yield* Effect.promise(() =>
             activateQuranSnapshot(
               tCtx,
-              referenceRows().filter((row) => row.kind !== "quran-search")
+              Arr.filter(referenceRows(), (row) => row.kind !== "quran-search")
             )
           );
           expect(

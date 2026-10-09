@@ -23,14 +23,14 @@ import {
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 describe("material navigation reuse", () => {
   it.each([2, 10])(
     "keeps lesson reads constant for %i authenticated siblings",
     async (siblingCount) => {
       const target = convexTest(schema, convexModules);
-      const projections = ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) =>
+      const projections = Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (appLocale) =>
         Array.from(
           {
             length: siblingCount,
@@ -89,9 +89,13 @@ describe("material navigation reuse", () => {
         canonicalizeMaterialProjection(requested)
       );
       expect(navigation.siblingJson).toEqual(
-        projections
-          .filter((projection) => projection.appLocale === "en")
-          .map(canonicalizeMaterialProjection)
+        Arr.map(
+          Arr.filter(
+            projections,
+            (projection) => projection.appLocale === "en"
+          ),
+          canonicalizeMaterialProjection
+        )
       );
       expect(current.metrics.databaseQueries.used).toBe(12);
       expect(group.metrics.databaseQueries.used).toBe(3 + 2 * siblingCount);

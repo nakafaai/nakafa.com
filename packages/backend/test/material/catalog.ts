@@ -35,7 +35,7 @@ import {
   insertRuntimeBinding,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 export const MATERIAL_IDENTITY = {
   manifestHash: TEST_MANIFEST_HASH,
   releaseId: TEST_RELEASE_ID,
@@ -46,7 +46,8 @@ const NEXT_MATERIAL_IDENTITY = {
   releaseId: ReleaseIdSchema.make("release-next"),
   sequence: 2,
 } satisfies TestIdentity;
-const defaultMaterialProjections = ACTIVE_APP_LOCALE_CODES.flatMap(
+const defaultMaterialProjections = Arr.flatMap(
+  ACTIVE_APP_LOCALE_CODES,
   (appLocale) => [
     makeMaterialProjection(appLocale, 1),
     makeMaterialProjection(appLocale, 2),
