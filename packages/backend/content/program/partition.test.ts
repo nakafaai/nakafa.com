@@ -84,27 +84,25 @@ describe("contentRelease/program/partition", () => {
               },
             ],
           });
-          yield* Effect.gen(function* () {
-            const count = yield* Effect.promise(() =>
-              targetCtx.db
-                .query("programBuckets")
-                .withIndex("by_snapshotId_and_appLocale_and_bucket", (query) =>
-                  query
-                    .eq("snapshotId", data.snapshotId)
-                    .eq("appLocale", "en")
-                    .eq("bucket", bucket)
-                )
-                .unique()
-            );
-            if (!count) {
-              throw new Error("Expected one program sitemap bucket.");
-            }
-            yield* Effect.promise(() =>
-              targetCtx.db.patch("programBuckets", count._id, {
-                routeCount: count.routeCount + 1,
-              })
-            );
-          });
+          const count = yield* Effect.promise(() =>
+            targetCtx.db
+              .query("programBuckets")
+              .withIndex("by_snapshotId_and_appLocale_and_bucket", (query) =>
+                query
+                  .eq("snapshotId", data.snapshotId)
+                  .eq("appLocale", "en")
+                  .eq("bucket", bucket)
+              )
+              .unique()
+          );
+          if (!count) {
+            throw new Error("Expected one program sitemap bucket.");
+          }
+          yield* Effect.promise(() =>
+            targetCtx.db.patch("programBuckets", count._id, {
+              routeCount: count.routeCount + 1,
+            })
+          );
           expect(
             yield* readProgramPartition("en", bucket).pipe(
               Effect.provide(programLayer),

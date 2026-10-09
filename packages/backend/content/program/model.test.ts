@@ -100,21 +100,19 @@ describe("program route relationship integrity", () => {
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
             yield* activateProgramSnapshot(data);
-            yield* Effect.gen(function* () {
-              const rows = yield* Effect.promise(() =>
-                tCtx.db.query("programCatalog").collect()
-              );
-              const program = Arr.findFirst(
-                rows,
-                (row) => row.programKey === "technical-program-1"
-              );
-              assert(Option.isSome(program));
-              yield* Effect.promise(() =>
-                tCtx.db.patch("programCatalog", program.value._id, {
-                  displayOrder: program.value.displayOrder + 1,
-                })
-              );
-            });
+            const rows = yield* Effect.promise(() =>
+              tCtx.db.query("programCatalog").collect()
+            );
+            const program = Arr.findFirst(
+              rows,
+              (row) => row.programKey === "technical-program-1"
+            );
+            assert(Option.isSome(program));
+            yield* Effect.promise(() =>
+              tCtx.db.patch("programCatalog", program.value._id, {
+                displayOrder: program.value.displayOrder + 1,
+              })
+            );
             expect(
               yield* (yield* QueryRunner)
                 .runQuery(refs.public.contentRelease.program.route, {
@@ -336,21 +334,19 @@ describe("program route relationship integrity", () => {
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
             yield* activateProgramSnapshot(data);
-            yield* Effect.gen(function* () {
-              const rows = yield* Effect.promise(() =>
-                tCtx.db.query("curriculumRoutes").collect()
-              );
-              const german = Arr.findFirst(
-                rows,
-                (row) =>
-                  row.appLocale === "de" &&
-                  row.programKey === "technical-program-1"
-              );
-              assert(Option.isSome(german));
-              yield* Effect.promise(() =>
-                tCtx.db.delete("curriculumRoutes", german.value._id)
-              );
-            });
+            const rows = yield* Effect.promise(() =>
+              tCtx.db.query("curriculumRoutes").collect()
+            );
+            const german = Arr.findFirst(
+              rows,
+              (row) =>
+                row.appLocale === "de" &&
+                row.programKey === "technical-program-1"
+            );
+            assert(Option.isSome(german));
+            yield* Effect.promise(() =>
+              tCtx.db.delete("curriculumRoutes", german.value._id)
+            );
             expect(
               yield* (yield* QueryRunner)
                 .runQuery(refs.public.contentRelease.program.route, {

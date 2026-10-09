@@ -179,24 +179,21 @@ describe("protected try-out exchange", () => {
               contentKey: fixture.question.contentKey,
               rawMdx: "## Replaced signed question",
             });
-            yield* Effect.gen(function* () {
-              const stored = yield* Effect.promise(() =>
-                tCtx.db
-                  .query("contentArtifacts")
-                  .withIndex("by_artifactHash", (index) =>
-                    index.eq("artifactHash", fixture.question.artifactHash)
-                  )
-                  .unique()
-              );
-              if (stored === null) {
-                return;
-              }
+            const stored = yield* Effect.promise(() =>
+              tCtx.db
+                .query("contentArtifacts")
+                .withIndex("by_artifactHash", (index) =>
+                  index.eq("artifactHash", fixture.question.artifactHash)
+                )
+                .unique()
+            );
+            if (stored !== null) {
               yield* Effect.promise(() =>
                 tCtx.db.patch(stored._id, {
                   artifactJson: encodeJsonText(artifact),
                 })
               );
-            });
+            }
             expect(
               yield* readProtectedProgram(fixture.request).pipe(
                 Effect.provide(tryoutLayer),
