@@ -287,7 +287,7 @@ describe("classes/forums/attachments/route", () => {
         "expiry",
       ],
       (failure) =>
-        ["claim", "settle", "release"].includes(failure)
+        Arr.contains(["claim", "settle", "release"], failure)
           ? [
               {
                 failure,
