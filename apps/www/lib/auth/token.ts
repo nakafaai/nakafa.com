@@ -1,18 +1,12 @@
 import {
-  createNetworkRequestError,
-  isRetryableNetworkError,
-  NETWORK_ATTEMPT_DEADLINE,
-  NETWORK_RETRY_SCHEDULE,
+  classifyNetworkFailure,
+  RetryableNetworkAttempt,
+  retryNetworkAttempt,
 } from "@repo/backend/client/network";
 import { FetchClient } from "@repo/utilities/http/client";
 import { getSessionCookie } from "better-auth/cookies";
-import { Data, Effect, Schema } from "effect";
-import {
-  HttpClient,
-  type HttpClientError,
-  HttpClientRequest,
-  HttpClientResponse,
-} from "effect/http";
+import { Effect, Schema } from "effect";
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
 /**
  * The Better Auth route that issues the Convex token, at the helper's default
@@ -34,11 +28,6 @@ export class SessionTokenUnavailable extends Schema.TaggedError<SessionTokenUnav
   }
 ) {}
 
-/** One attempt that failed in a way the retry schedule may run again. */
-class RetryableTokenAttempt extends Data.TaggedError("RetryableTokenAttempt")<{
-  readonly failure: SessionTokenUnavailable;
-}> {}
-
 const TokenResponseSchema = Schema.Struct({
   token: Schema.String,
 });
@@ -56,14 +45,6 @@ function tokenRequestHeaders(site: URL, requestHeaders: Headers) {
   headers.set("accept-encoding", "identity");
   headers.set("host", site.host);
   return headers;
-}
-
-/** Keeps only the retry classification of a rejected fetch, never its message. */
-function classifyTransportFailure(error: HttpClientError.HttpClientError) {
-  const failure = new SessionTokenUnavailable({ reason: "fetch" });
-  return isRetryableNetworkError(createNetworkRequestError(error.reason.cause))
-    ? new RetryableTokenAttempt({ failure })
-    : failure;
 }
 
 /**
@@ -89,7 +70,7 @@ const readTokenAnswer = Effect.fn("www.auth.readTokenAnswer")(function* (
     status: response.status,
   });
   if (response.status >= 500) {
-    return yield* new RetryableTokenAttempt({ failure });
+    return yield* new RetryableNetworkAttempt({ failure });
   }
   return yield* failure;
 });
@@ -104,29 +85,16 @@ const sendTokenRequest = Effect.fn("www.auth.sendTokenRequest")(function* (
   const client = (yield* HttpClient.HttpClient).pipe(HttpClient.withScope);
   const response = yield* client
     .execute(request)
-    .pipe(Effect.mapError(classifyTransportFailure));
+    .pipe(
+      Effect.mapError((error) =>
+        classifyNetworkFailure(
+          error.reason.cause,
+          new SessionTokenUnavailable({ reason: "fetch" })
+        )
+      )
+    );
   return yield* readTokenAnswer(response);
 }, Effect.scoped);
-
-/**
- * Runs one attempt, which ends at its deadline even when the route never
- * answers.
- */
-const attemptTokenRequest = Effect.fn("www.auth.attemptTokenRequest")(
-  function* (request: HttpClientRequest.HttpClientRequest) {
-    return yield* sendTokenRequest(request).pipe(
-      Effect.timeoutOrElse({
-        duration: NETWORK_ATTEMPT_DEADLINE,
-        orElse: () =>
-          Effect.fail(
-            new RetryableTokenAttempt({
-              failure: new SessionTokenUnavailable({ reason: "deadline" }),
-            })
-          ),
-      })
-    );
-  }
-);
 
 /**
  * Reads the Better Auth Convex token for one request. Without a session cookie
@@ -146,14 +114,9 @@ export const readSessionToken = Effect.fn("www.auth.readSessionToken")(
     const request = HttpClientRequest.get(new URL(TOKEN_PATH, site), {
       headers: tokenRequestHeaders(site, requestHeaders),
     });
-    return yield* attemptTokenRequest(request).pipe(
-      Effect.retry({
-        schedule: NETWORK_RETRY_SCHEDULE,
-        while: (error) => error instanceof RetryableTokenAttempt,
-      }),
-      Effect.catchTag("RetryableTokenAttempt", ({ failure }) =>
-        Effect.fail(failure)
-      )
+    return yield* retryNetworkAttempt(
+      sendTokenRequest(request),
+      new SessionTokenUnavailable({ reason: "deadline" })
     );
   },
   Effect.provide(FetchClient)

@@ -66,6 +66,7 @@ describe("requestLocalizedHref", () => {
         .mockRejectedValue(new TypeError("offline"));
       const error = yield* request(fetcher).pipe(Effect.flip);
       expect(error._tag).toBe("LocalizedHrefRequestError");
+      expect(fetcher).toHaveBeenCalledOnce();
     })
   );
   it.effect(
