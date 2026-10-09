@@ -4,10 +4,8 @@ import {
 } from "@repo/backend/agent/decode";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
-import {
-  getUnknownErrorMessage,
-  NakafaAgentDataReadError,
-} from "@repo/contents/agent/errors";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import {
   NakafaAgentSearchOptionsSchema,
   NakafaAgentSearchResultSchema,

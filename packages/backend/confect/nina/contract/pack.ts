@@ -125,13 +125,7 @@ export function createNinaContextSnapshot({
   placement,
   source,
   tools,
-}: {
-  readonly capturedAt: string;
-  readonly learning: NinaLearningContext;
-  readonly placement?: LearningPlacementContext;
-  readonly source: NinaContextSnapshot["source"];
-  readonly tools: NinaToolContext;
-}): NinaContextSnapshot {
+}: NinaContextSnapshot): NinaContextSnapshot {
   return {
     capturedAt,
     learning,

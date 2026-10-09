@@ -3,22 +3,16 @@ import {
   validateInitialPage,
 } from "@repo/backend/confect/contentRelease/cursor";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { validateProjectionPage } from "@repo/backend/confect/contentRelease/paging";
+import {
+  emptyPage,
+  validateProjectionPage,
+} from "@repo/backend/confect/contentRelease/paging";
 import { readSourceRevision } from "@repo/backend/confect/contentRelease/runtime/origin";
 import { loadProgramOwner } from "@repo/backend/content/program/owner";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { Array as Arr, Effect } from "effect";
-
-/** Returns a stable empty page before Aksara owns programs and materials. */
-function emptyPage() {
-  return {
-    continueCursor: "",
-    isDone: true,
-    page: [],
-  };
-}
 
 /** Reads one release-bound page of immutable localized curriculum routes. */
 export const readProgramPage = Effect.fn("contentRelease.readProgramPage")(

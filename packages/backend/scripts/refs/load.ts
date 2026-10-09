@@ -1,4 +1,4 @@
-import { getUnknownMessage } from "@repo/backend/scripts/lib/errors";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { RefsLoadError } from "@repo/backend/scripts/refs/errors";
 import { asLeafGroup } from "@repo/backend/scripts/refs/leaf";
 import { Effect, Path } from "effect";
@@ -37,7 +37,7 @@ const loadLeafGroup = Effect.fn("RefsLoad.loadLeafGroup")(function* (
     try: () => server.ssrLoadModule(file),
     catch: (cause) =>
       new RefsLoadError({
-        message: `Unable to load ${specifier}: ${getUnknownMessage(cause)}`,
+        message: `Unable to load ${specifier}: ${getUnknownErrorMessage(cause)}`,
       }),
   });
   return yield* asLeafGroup(specifier, moduleExports);

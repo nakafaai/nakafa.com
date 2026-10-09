@@ -3,12 +3,10 @@ import { MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { AgentRateLimitError } from "@repo/backend/confect/routes/agent/quota";
 import spec from "@repo/backend/confect/routes/agent/quota.spec";
-import {
-  getUnknownErrorMessage,
-  NakafaAgentDataReadError,
-} from "@repo/contents/agent/errors";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Effect, Layer } from "effect";
 
 const limiter = new RateLimiter(components.agentRateLimiter, {
