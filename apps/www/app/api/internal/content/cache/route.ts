@@ -76,7 +76,7 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
 export const POST = (request: NextRequest) =>
   Effect.runPromise(
     Effect.gen(function* () {
-      const isAuthorized = isInternalContentAuthorized(
+      const isAuthorized = yield* isInternalContentAuthorized(
         request.headers.get("Authorization"),
         env.AKSARA_PUBLICATION_TOKEN
       );

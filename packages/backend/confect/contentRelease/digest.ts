@@ -1,31 +1,23 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Array as Arr, Effect, Schema } from "effect";
+import { sha256Hex } from "@repo/utilities/digest";
+import { Effect, Schema } from "effect";
 
-/** Converts deterministic digest bytes into lower-case hexadecimal. */
-function toHex(buffer: ArrayBuffer) {
-  return Arr.join(
-    Array.from(new Uint8Array(buffer), (byte) =>
-      byte.toString(16).padStart(2, "0")
-    ),
-    ""
-  );
-}
 /** Computes one SHA-256 identity through the Convex Web Crypto runtime. */
 export const hashText = Effect.fn("contentRelease.hashText")(function* (
   label: string,
   source: string
 ) {
-  const encoded = new TextEncoder().encode(source);
-  const digest = yield* Effect.tryPromise({
-    catch: () =>
-      new ReleaseError({
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: `Unable to identify ${label}.`,
-      }),
-    try: () => crypto.subtle.digest("SHA-256", encoded),
-  });
-  return yield* Schema.decodeEffect(Sha256HashSchema)(
-    `sha256:${toHex(digest)}`
-  ).pipe(Effect.orDie);
+  const hex = yield* sha256Hex(source).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Unable to identify ${label}.`,
+        })
+    )
+  );
+  return yield* Schema.decodeEffect(Sha256HashSchema)(`sha256:${hex}`).pipe(
+    Effect.orDie
+  );
 });
