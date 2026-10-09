@@ -42,6 +42,8 @@ const NOT_ARRAYS = {
     'import * as Arr from "./arr";\nexport const mapped = Arr.map([1], String);\n',
   "scripts/plain/arr.ts":
     "export function map(values: unknown, apply: (value: unknown) => unknown) {\n  return apply(values);\n}\n",
+  "scripts/plain/never.ts":
+    "declare const nothing: never;\nexport const seen = nothing.forEach(() => {});\n",
   "scripts/plain/nullish.ts":
     "declare const nothing: null | undefined;\nexport const doubled = nothing?.map(String);\n",
   "scripts/plain/object.ts":
@@ -131,6 +133,7 @@ describe("array receivers by declared type", () => {
         "scripts/plain/mixed.ts:2 not array",
         "scripts/plain/named.ts:2 not array",
         "scripts/plain/namespace.ts:2 not array",
+        "scripts/plain/never.ts:2 not array",
         "scripts/plain/nullish.ts:2 not array",
         "scripts/plain/object.ts:2 not array",
         "scripts/plain/path.ts:2 not array",

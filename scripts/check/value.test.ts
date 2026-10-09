@@ -123,6 +123,24 @@ export interface Entry {
   );
 
   it.effect(
+    "holds an AI SDK type under its imported name, and only from a named import",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* holds(`import type { TextUIPart as Part, JSONValue } from "ai";
+import type * as AI from "ai";
+export interface Entry {
+  readonly part: Part;
+  readonly json: JSONValue;
+  readonly namespaced: AI.TextUIPart;
+}
+`),
+          [true, false, false]
+        );
+      })
+  );
+
+  it.effect(
     "reads a member through an indexed access, an intersection, a nested object, and type arguments",
     () =>
       Effect.gen(function* () {
