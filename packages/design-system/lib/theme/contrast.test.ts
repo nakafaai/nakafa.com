@@ -192,7 +192,9 @@ function getHueDistance(first: number, second: number) {
 }
 
 /** Finds border and input colors that no longer form one visual family. */
-function findBorderInputFamilyViolations(profiles: readonly ProfileSource[]) {
+const findBorderInputFamilyViolations = Effect.fn(
+  "theme.contrast.findBorderInputFamilyViolations"
+)(function* (profiles: readonly ProfileSource[]) {
   const violations = MutableList.make<ThemeCohesionViolation>();
 
   for (const profile of profiles) {
@@ -208,8 +210,10 @@ function findBorderInputFamilyViolations(profiles: readonly ProfileSource[]) {
       continue;
     }
 
-    const { chroma: borderChroma, hue: borderHue } = readOklchChannels(border);
-    const { chroma: inputChroma, hue: inputHue } = readOklchChannels(input);
+    const { chroma: borderChroma, hue: borderHue } =
+      yield* readOklchChannels(border);
+    const { chroma: inputChroma, hue: inputHue } =
+      yield* readOklchChannels(input);
     const perceptualDistance = new Color(border).deltaE(new Color(input), "OK");
     const chromaDifference = Math.abs(borderChroma - inputChroma);
     const hueDifference = getHueDistance(borderHue, inputHue);
@@ -238,7 +242,7 @@ function findBorderInputFamilyViolations(profiles: readonly ProfileSource[]) {
   }
 
   return MutableList.toArray(violations);
-}
+});
 
 /** Finds semantic borders that disappear against their owning surfaces. */
 function findErasedBoundaries(profiles: readonly ProfileSource[]) {
@@ -272,7 +276,9 @@ function findErasedBoundaries(profiles: readonly ProfileSource[]) {
 }
 
 /** Finds status colors outside their declared chroma and hue families. */
-function findStatusColorFamilyViolations(profiles: readonly ProfileSource[]) {
+const findStatusColorFamilyViolations = Effect.fn(
+  "theme.contrast.findStatusColorFamilyViolations"
+)(function* (profiles: readonly ProfileSource[]) {
   const violations = MutableList.make<ThemeCohesionViolation>();
 
   for (const profile of profiles) {
@@ -288,7 +294,7 @@ function findStatusColorFamilyViolations(profiles: readonly ProfileSource[]) {
         continue;
       }
 
-      const { chroma, hue } = readOklchChannels(value);
+      const { chroma, hue } = yield* readOklchChannels(value);
       if (
         chroma < family.minimumChroma ||
         hue < family.minimumHue ||
@@ -304,7 +310,7 @@ function findStatusColorFamilyViolations(profiles: readonly ProfileSource[]) {
   }
 
   return MutableList.toArray(violations);
-}
+});
 
 describe("theme color quality", () => {
   it.effect("authors every semantic color as opaque, sRGB-gamut OKLCH", () =>
@@ -333,7 +339,7 @@ describe("theme color quality", () => {
     () =>
       Effect.gen(function* () {
         const profiles = yield* readProfiles;
-        expect(findBorderInputFamilyViolations(profiles)).toEqual([]);
+        expect(yield* findBorderInputFamilyViolations(profiles)).toEqual([]);
       })
   );
 
@@ -347,7 +353,7 @@ describe("theme color quality", () => {
   it.effect("keeps status roles inside familiar semantic hue families", () =>
     Effect.gen(function* () {
       const profiles = yield* readProfiles;
-      expect(findStatusColorFamilyViolations(profiles)).toEqual([]);
+      expect(yield* findStatusColorFamilyViolations(profiles)).toEqual([]);
     })
   );
 });

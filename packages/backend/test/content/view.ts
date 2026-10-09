@@ -1,4 +1,4 @@
-import { expect } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
 import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/helpers/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
@@ -50,9 +50,7 @@ export async function insertContentViewArticle(ctx: MutationCtx) {
         .eq("appLocale", ARTICLE_VIEW_PROJECTION.appLocale)
     )
     .unique();
-  if (!row) {
-    throw new Error("Expected one current signed article fixture.");
-  }
+  assert.ok(row, "Expected one current signed article fixture.");
   return { contentId: ARTICLE_VIEW_ID, id: row._id };
 }
 

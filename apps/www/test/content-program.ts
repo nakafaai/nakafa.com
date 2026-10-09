@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import {
   CorpusSourcePathSchema,
   PublicPathSchema,
@@ -249,9 +250,10 @@ export function readTestPublishedRoute(
       candidate.appLocale === locale && candidate.publicPath === publicPath
   );
 
-  if (Option.isNone(route)) {
-    throw new Error(`Missing published route fixture: ${locale}/${publicPath}`);
-  }
+  assert.ok(
+    Option.isSome(route),
+    `Missing published route fixture: ${locale}/${publicPath}`
+  );
 
   return route.value;
 }

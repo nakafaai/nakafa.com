@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
   type Sha256Hash,
@@ -126,9 +127,7 @@ async function completeTestRelease(ctx: MutationCtx) {
     ctx.db.query("contentReleases").unique(),
     ctx.db.query("contentState").unique(),
   ]);
-  if (!(release && state)) {
-    throw new Error("Expected one technical Quran release.");
-  }
+  assert.ok(release && state, "Expected one technical Quran release.");
   await ctx.db.patch("contentReleases", release._id, {
     completedAt: 1,
     status: "completed",
@@ -246,9 +245,7 @@ export async function restoreAbsentQuranSnapshot(
     status: "completed",
   });
   const state = await ctx.db.query("contentState").unique();
-  if (!state) {
-    throw new Error("Expected active technical Quran state.");
-  }
+  assert.ok(state, "Expected active technical Quran state.");
   await ctx.db.patch("contentState", state._id, {
     activeManifestHash: recovery.manifestHash,
     activeReleaseId: recovery.releaseId,

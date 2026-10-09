@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
@@ -277,9 +278,7 @@ export async function patchStoredOriginRelease(
     .query("contentReleases")
     .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
     .unique();
-  if (!release) {
-    throw new Error(`Expected stored release ${releaseId}.`);
-  }
+  assert.ok(release, `Expected stored release ${releaseId}.`);
   const stored = decodeStoredObject(release.releaseJson);
   const manifest = Schema.decodeUnknownSync(StoredObjectSchema)(
     stored.manifest

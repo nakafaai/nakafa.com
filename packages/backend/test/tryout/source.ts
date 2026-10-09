@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALE_CODES,
@@ -86,17 +87,14 @@ export async function activateTryoutStartSource(
     placements,
     ({ appLocale }) => appLocale === "id"
   );
-  if (
-    !(
-      Option.isSome(section) &&
+  assert.ok(
+    Option.isSome(section) &&
       section.value.kind === "section" &&
       Option.isSome(set) &&
       set.value.kind === "set" &&
-      Option.isSome(placement)
-    )
-  ) {
-    throw new Error("Expected one Indonesian signed try-out source.");
-  }
+      Option.isSome(placement),
+    "Expected one Indonesian signed try-out source."
+  );
 
   const sectionIdentity = tryoutCatalogIdentity(section.value);
   const storedSection = await ctx.db
@@ -112,9 +110,10 @@ export async function activateTryoutStartSource(
       index.eq("snapshotId", snapshotId).eq("identity", placementIdentity)
     )
     .unique();
-  if (!(storedSection && storedPlacement)) {
-    throw new Error("Expected the signed try-out source to be stored.");
-  }
+  assert.ok(
+    storedSection && storedPlacement,
+    "Expected the signed try-out source to be stored."
+  );
 
   return {
     placementIdentity,
@@ -434,9 +433,7 @@ function makeReusedTryoutStartPlacement(appLocale: ActiveAppLocaleCode) {
 /** Retires the active signed snapshot so a test can activate the next one. */
 export async function clearActiveTryoutSnapshot(ctx: MutationCtx) {
   const state = await ctx.db.query("contentState").unique();
-  if (!state) {
-    throw new Error("Expected active content state before source replacement.");
-  }
+  assert.ok(state, "Expected active content state before source replacement.");
   await ctx.db.delete(state._id);
 
   const releases = await ctx.db.query("contentReleases").collect();

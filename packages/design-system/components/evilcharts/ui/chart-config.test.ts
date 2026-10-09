@@ -13,6 +13,7 @@ import {
   THEMES,
   validateChartConfigColors,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { Result } from "effect";
 
 const chartConfig = {
   selected: {
@@ -27,6 +28,11 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+/** Returns the failure message of a color validation, or undefined when valid. */
+function failureMessage(result: ReturnType<typeof validateChartConfigColors>) {
+  return Result.isFailure(result) ? result.failure.message : undefined;
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -40,16 +46,18 @@ describe("chart config utilities", () => {
   });
 
   it("validates runtime color config shapes", () => {
-    expect(() =>
-      validateChartConfigColors({
-        motion: {},
-        selected: {
-          colors: {
-            light: ["var(--chart-1)"],
+    expect(
+      Result.isSuccess(
+        validateChartConfigColors({
+          motion: {},
+          selected: {
+            colors: {
+              light: ["var(--chart-1)"],
+            },
           },
-        },
-      })
-    ).not.toThrow();
+        })
+      )
+    ).toBe(true);
 
     const invalidConfig = {
       selected: {
@@ -59,17 +67,19 @@ describe("chart config utilities", () => {
       },
     };
 
-    expect(() => validateChartConfigColors(invalidConfig)).toThrow(
+    expect(failureMessage(validateChartConfigColors(invalidConfig))).toContain(
       'Invalid chart config for "selected"'
     );
 
-    expect(() =>
-      validateChartConfigColors({
-        selected: {
-          colors: {},
-        },
-      })
-    ).toThrow('Invalid chart config for "selected"');
+    expect(
+      failureMessage(
+        validateChartConfigColors({
+          selected: {
+            colors: {},
+          },
+        })
+      )
+    ).toContain('Invalid chart config for "selected"');
   });
 
   it("distributes color stops across requested slots", () => {

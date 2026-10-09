@@ -4,6 +4,7 @@ import {
   generateKeyPairSync,
   sign as signBytes,
 } from "node:crypto";
+import { assert } from "@effect/vitest";
 import { hashCompiledContentPayload } from "@nakafa/aksara-contracts/artifact/integrity";
 import {
   CompiledContentPayloadSchema,
@@ -286,9 +287,10 @@ export function testSignedTryoutRuntimeBundle(input: {
   readonly rendererManifest: RendererManifestEnvelope;
   readonly snapshot: TryoutSnapshot;
 }) {
-  if (input.release.manifest.origin.kind !== "git") {
-    throw new Error("Expected a Git release for a test runtime bundle.");
-  }
+  assert.ok(
+    input.release.manifest.origin.kind === "git",
+    "Expected a Git release for a test runtime bundle."
+  );
   const payload = {
     format: TRYOUT_RUNTIME_BUNDLE_FORMAT,
     rendererManifestHash: input.rendererManifest.hash,

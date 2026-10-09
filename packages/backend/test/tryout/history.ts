@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { assert } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { replaceContentSnapshot } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
@@ -58,13 +59,12 @@ async function retainChoicesSnapshot(
     const original = await Effect.runPromise(
       decodeSnapshotRowJson(stored.rowJson)
     );
-    if (
-      original.family !== "tryout" ||
-      original.rowKind !== "placement" ||
-      original.record.row.response.kind !== "single-choice"
-    ) {
-      throw new Error("Expected one technical single-choice placement.");
-    }
+    assert.ok(
+      original.family === "tryout" &&
+        original.rowKind === "placement" &&
+        original.record.row.response.kind === "single-choice",
+      "Expected one technical single-choice placement."
+    );
     const { response, languagePolicy, ...identity } = original.record.row;
     const row = { ...identity, choices: response.options };
     const canonical = encodeJsonText(
@@ -105,9 +105,10 @@ async function retainChoicesSnapshot(
       index.eq("family", "tryout").eq("snapshotId", runtime.snapshotId)
     )
     .unique();
-  if (!(release && storedSnapshot)) {
-    throw new Error("Expected one technical signed publication.");
-  }
+  assert.ok(
+    release && storedSnapshot,
+    "Expected one technical signed publication."
+  );
   const signedRelease = await Effect.runPromise(
     decodeReleaseJson(release.releaseJson)
   );
@@ -169,9 +170,7 @@ export async function insertHistoryAttempt(
 ) {
   const fixture = await insertProtectedRuntime(ctx, options);
   const initialRuntime = await ctx.db.get(fixture.runtimeId);
-  if (!initialRuntime) {
-    throw new Error("Expected one signed runtime bundle.");
-  }
+  assert.ok(initialRuntime, "Expected one signed runtime bundle.");
   if (historical) {
     await retainChoicesSnapshot(ctx, initialRuntime);
   }
@@ -181,9 +180,7 @@ export async function insertHistoryAttempt(
     suffix: "history-owner",
   });
   await ctx.db.patch("users", identity.userId, { plan: "pro" });
-  if (!runtime) {
-    throw new Error("Expected one retained runtime bundle.");
-  }
+  assert.ok(runtime, "Expected one retained runtime bundle.");
   const placement = fixture.placement;
   const retained = await ctx.db
     .query("tryoutPlacements")
@@ -193,9 +190,7 @@ export async function insertHistoryAttempt(
         .eq("identity", tryoutPlacementIdentity(placement))
     )
     .unique();
-  if (!retained) {
-    throw new Error("Expected one retained signed placement.");
-  }
+  assert.ok(retained, "Expected one retained signed placement.");
   const sectionIdentity = tryoutCatalogNodeIdentity({
     ...placement,
     kind: "section",

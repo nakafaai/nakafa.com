@@ -78,7 +78,7 @@ describe("theme registry", () => {
           continue;
         }
 
-        expect(theme.shaderColor).toBe(toRgbProjection(primary));
+        expect(theme.shaderColor).toBe(yield* toRgbProjection(primary));
       }
     })
   );

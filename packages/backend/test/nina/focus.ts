@@ -1,4 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
+import { assert } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import type { NinaFocus } from "@repo/backend/confect/nina/contract/focus";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -35,9 +36,7 @@ export async function createFocusTest() {
   const focusTurn = () =>
     nina.t.mutation(async (ctx) => {
       const turn = await ctx.db.get("ninaTurns", nina.turnId);
-      if (!turn?.page) {
-        throw new Error("Expected one active Nina turn.");
-      }
+      assert.ok(turn?.page, "Expected one active Nina turn.");
       await ctx.db.patch("ninaTurns", nina.turnId, {
         page: { ...turn.page, nina: { ...turn.page.nina, focus: frozen } },
       });
