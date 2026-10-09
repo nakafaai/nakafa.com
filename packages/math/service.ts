@@ -39,7 +39,7 @@ export class MathService extends Context.Service<
       request: MathRequest
     ) => Effect.Effect<MathResult, MathCasRequestError | MathCasResponseError>;
   }
->()("@repo/math/Math", {
+>()("@repo/math/service/MathService", {
   make: Effect.gen(function* () {
     const baseUrl = yield* casUrl;
     const apiKey = yield* casApiKey;

@@ -18,8 +18,8 @@ const client = {
   setPersonProperties: vi.fn(),
 };
 
-vi.mock("@repo/analytics/keys", () => ({
-  keys: () => ({
+vi.mock("@repo/analytics/public", () => ({
+  postHogPublicKeys: () => ({
     NEXT_PUBLIC_POSTHOG_KEY: "phc_test",
     NEXT_PUBLIC_POSTHOG_UI_HOST: "https://eu.posthog.com",
   }),

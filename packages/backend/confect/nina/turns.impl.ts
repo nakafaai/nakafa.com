@@ -19,7 +19,15 @@ import { DEFAULT_TITLE } from "@repo/backend/confect/nina/presentation.spec";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Clock, Duration, Effect, Layer, Schema } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  DateTime,
+  Duration,
+  Effect,
+  Layer,
+  Schema,
+} from "effect";
 
 const writeFailure = () =>
   new NinaTurnError({
@@ -110,7 +118,7 @@ const start = FunctionImpl.make(
       appUser,
       chat,
       args.input,
-      new Date(now).toISOString()
+      DateTime.formatIso(DateTime.makeUnsafe(now))
     );
     const ctx = yield* MutationCtx;
     const threadId =
@@ -182,7 +190,7 @@ const start = FunctionImpl.make(
           model_id: args.modelId,
         },
       },
-      timestamp: new Date(now),
+      timestamp: now,
     });
     const [message] = toUIMessages([saved.message]);
     if (!message) {

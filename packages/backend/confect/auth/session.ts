@@ -19,7 +19,7 @@ export class Session extends Context.Service<
     readonly authId: string | undefined;
     readonly appUser: UsersDoc | null;
   }
->()("@repo/backend/auth/Session") {}
+>()("@repo/backend/confect/auth/session") {}
 
 /** Prepared users remain readable for account recovery. */
 export const getOptionalAppUserForRead = Effect.fn("auth.optionalRead")(

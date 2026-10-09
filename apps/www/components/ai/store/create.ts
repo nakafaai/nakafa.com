@@ -3,7 +3,6 @@
 import { Array as Arr, DateTime } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
 
@@ -11,12 +10,12 @@ import type { AiStore } from "@/components/ai/store/types";
 export function createAiStore() {
   return createStore<AiStore>()(
     persist(
-      immer((set, get) => ({
+      (set, get) => ({
         ...initialState,
         addChatDraft: (key) =>
-          set((state) => {
-            state.chatDrafts = Arr.prepend(state.chatDrafts, key);
-          }),
+          set((state) => ({
+            chatDrafts: Arr.prepend(state.chatDrafts, key),
+          })),
         getModel: () => get().model,
         // One new-chat admission at a time: a pending ask or composer draft
         // owns it, so a second one is refused atomically.
@@ -30,37 +29,47 @@ export function createAiStore() {
         },
         removeChatDraft: (key) =>
           set((state) => {
-            state.chatDrafts = Arr.filter(
-              state.chatDrafts,
-              (draft) => draft !== key
-            );
+            if (!Arr.contains(state.chatDrafts, key)) {
+              return state;
+            }
+            return {
+              chatDrafts: Arr.filter(
+                state.chatDrafts,
+                (draft) => draft !== key
+              ),
+            };
           }),
         // The admitted chat opens only while the sheet still shows its prompt,
         // so a conversation the learner picked meanwhile stays open.
         resolveAsk: (id, chatId) =>
           set((state) => {
             if (state.ask?.id !== id) {
-              return;
+              return state;
             }
-            state.ask = null;
-            if (chatId && state.activeChatId === null) {
-              state.activeChatId = chatId;
-            }
+            return {
+              activeChatId:
+                chatId && state.activeChatId === null
+                  ? chatId
+                  : state.activeChatId,
+              ask: null,
+            };
           }),
         resolveChatDraft: (key, receipt) =>
           set((state) => {
-            if (!state.chatDrafts.includes(key)) {
-              return;
+            if (!Arr.contains(state.chatDrafts, key)) {
+              return state;
             }
             // Convex resolves mutations after subscribed queries include the write.
-            state.chatDrafts = Arr.filter(
-              state.chatDrafts,
-              (draft) => draft !== key
-            );
-            state.openingChat = {
-              receipt,
-              prompt: receipt.prompt,
-              submittedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+            return {
+              chatDrafts: Arr.filter(
+                state.chatDrafts,
+                (draft) => draft !== key
+              ),
+              openingChat: {
+                receipt,
+                prompt: receipt.prompt,
+                submittedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+              },
             };
           }),
         setActiveChatId: (activeChatId) => set({ activeChatId }),
@@ -76,7 +85,7 @@ export function createAiStore() {
           set((state) => ({
             text: typeof text === "function" ? text(state.text) : text,
           })),
-      })),
+      }),
       {
         name: "nakafa-ai",
         partialize: (state) => ({ activeChatId: state.activeChatId }),

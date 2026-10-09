@@ -71,4 +71,4 @@ export class MaterialSource extends Context.Service<
       limit: number
     ) => Effect.Effect<readonly BucketRow[], ReleaseError>;
   }
->()("content/MaterialSource") {}
+>()("@repo/backend/content/material/source/MaterialSource") {}

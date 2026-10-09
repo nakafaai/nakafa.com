@@ -46,7 +46,7 @@ export class ProofPollCoordinator extends Context.Service<
       workflowId: WorkflowId
     ) => Effect.Effect<WorkflowStatus, ReleaseError>;
   }
->()("@repo/backend/contentRelease/ProofPollCoordinator") {}
+>()("@repo/backend/confect/contentRelease/proof/poll/ProofPollCoordinator") {}
 
 /** The Workflow coordinator's shape, which a test runtime replaces with a fake. */
 export type ProofPollCoordinatorService = Context.Service.Shape<
@@ -86,7 +86,7 @@ export class ProofPollStatus extends Context.Service<
       workflowId: WorkflowId
     ) => Effect.Effect<WorkflowStatus, ReleaseError>;
   }
->()("@repo/backend/contentRelease/ProofPollStatus") {}
+>()("@repo/backend/confect/contentRelease/proof/poll/ProofPollStatus") {}
 
 /** Reads Workflow status through a query context, which cannot start or clean one. */
 export const ProofPollStatusLive = Layer.effect(

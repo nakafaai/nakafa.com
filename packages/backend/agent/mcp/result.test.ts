@@ -138,9 +138,9 @@ describe("Nakafa MCP tool results", () => {
 
   it.effect("advertises success and error structured content", () =>
     Effect.gen(function* () {
-      const schema = yield* toMcpOutputSchema(
-        mcpToolOutputSchema(Schema.Struct({ status: Schema.Literal("ok") }))
-      );
+      const schema = yield* Schema.Struct({
+        status: Schema.Literal("ok"),
+      }).pipe(mcpToolOutputSchema, toMcpOutputSchema);
 
       expect(schema).toMatchObject({
         anyOf: [

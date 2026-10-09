@@ -1,22 +1,20 @@
-import { Array as Arr, HashSet, Match, Result, Schema } from "effect";
+import { Array as Arr, Match, Schema } from "effect";
 import {
+  type ExportDeclaration,
   type Identifier,
-  isArrowFunction,
-  isCallExpression,
+  type ImportDeclaration,
   isExportAssignment,
-  isFunctionDeclaration,
-  isFunctionExpression,
+  isExportDeclaration,
   isIdentifier,
   isImportDeclaration,
+  isNamedExports,
   isNamedImports,
-  isPropertyAccessExpression,
   isSatisfiesExpression,
-  isSourceFile,
   isStringLiteral,
   isTypeReferenceNode,
-  isVariableDeclaration,
   type Node,
   type SourceFile,
+  SyntaxKind,
 } from "typescript/unstable/ast";
 import type { Binding } from "#scripts/check/source";
 
@@ -26,16 +24,29 @@ export const Rule = Schema.Literals([
   "array-method",
   "array-mutation",
   "array-search",
+  "clock",
+  "console",
+  "data-type",
+  "env",
+  "error-class",
+  "fetch",
+  "json",
+  "map-set",
+  "node-module",
   "object-helper",
+  "promise",
+  "random",
+  "timer",
   "try-catch",
   "typeof-object",
 ]);
 
 /**
  * The authored modules a rule inspects: every module, code outside framework
- * configuration, or the strict Confect and script modules.
+ * configuration, code outside React modules, or the domain code of the strict
+ * Confect and script folders, tests excluded.
  */
-const RuleScope = Schema.Literals(["every", "code", "strict"]);
+const RuleScope = Schema.Literals(["every", "code", "logic", "domain"]);
 
 /** One rule's scope and the Effect-native replacement it names. */
 const RuleDefinition = Schema.Struct({
@@ -53,22 +64,81 @@ export const RULES = {
   "array-method": {
     message:
       "transform arrays with the Array module from effect, such as Array.map, Array.filter, and Array.join, instead of a native array method.",
-    scope: "strict",
+    scope: "code",
   },
   "array-mutation": {
     message:
       "build a new array with the Array module from effect, such as Array.append, Array.sort, and Array.reverse, or collect into a MutableList, instead of changing an array in place.",
-    scope: "strict",
+    scope: "code",
   },
   "array-search": {
     message:
       "search arrays with Array.findFirst, Array.findLast, or their index forms from effect, which return an Option, instead of a native find method.",
-    scope: "strict",
+    scope: "code",
+  },
+  clock: {
+    message:
+      "read time from Clock or DateTime.now in effect, or DateTime.nowUnsafe in synchronous React code, instead of Date.now, Date(), or new Date().",
+    scope: "code",
+  },
+  console: {
+    message:
+      "log through Effect.log or the Console module in effect instead of console.",
+    scope: "code",
+  },
+  "data-type": {
+    message:
+      "derive this shape from an Effect Schema with typeof X.Type, or declare a service shape inline in Context.Service, instead of a hand-written interface or object type.",
+    scope: "code",
+  },
+  env: {
+    message:
+      "read configuration through Config in effect, or in code that Next.js bundles through the record of a readEnvironment call from @repo/utilities/env, instead of process.env; only the bundler-inlined NODE_ENV and NEXT_RUNTIME stay direct.",
+    scope: "code",
+  },
+  "error-class": {
+    message:
+      "define expected failures with Schema.TaggedError or Data.TaggedError instead of a class that extends Error.",
+    scope: "code",
+  },
+  fetch: {
+    message: "call HTTP through HttpClient from effect/http instead of fetch.",
+    scope: "code",
+  },
+  json: {
+    message:
+      "decode and encode JSON through Schema.fromJsonString instead of JSON.parse or JSON.stringify.",
+    scope: "code",
+  },
+  "map-set": {
+    message:
+      "use HashMap or HashSet from effect, or MutableHashMap or MutableHashSet for local mutation, instead of a native Map or Set.",
+    scope: "code",
+  },
+  "node-module": {
+    message:
+      "use FileSystem, Path, and ChildProcess from effect with NodeServices from @effect/platform-node instead of node:fs, node:path, or node:child_process.",
+    scope: "code",
   },
   "object-helper": {
     message:
       "use Record.keys, Record.values, Record.toEntries, or Record.fromEntries from effect instead of the Object helper.",
     scope: "code",
+  },
+  promise: {
+    message:
+      "compose Effects with Effect.fn, wrapping a Promise SDK once in Effect.tryPromise, instead of new Promise, async functions, or await.",
+    scope: "domain",
+  },
+  random: {
+    message:
+      "draw random values from Random in effect instead of Math.random, and draw a UUID with randomUuid from @repo/utilities/uuid, which reads Effect's Crypto service, instead of crypto.randomUUID.",
+    scope: "code",
+  },
+  timer: {
+    message:
+      "schedule with Effect.sleep, Effect.delay, or Schedule and Duration from effect instead of setTimeout, setInterval, setImmediate, or queueMicrotask outside React modules.",
+    scope: "logic",
   },
   "try-catch": {
     message: "model failure with Effect instead of a raw try/catch statement.",
@@ -82,29 +152,25 @@ export const RULES = {
 } satisfies Record<typeof Rule.Type, typeof RuleDefinition.Type>;
 
 const CONFIGURATION_FILE_PATTERN = /(?:^|\/)[^/]+\.config\.[cm]?tsx?$/u;
-/** The Vitest configuration API, which shared configuration modules import. */
-const CONFIGURATION_MODULE_PATTERN = /^vitest\/config$/u;
-const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;
-const MODULE_EXTENSION_PATTERN = /\.[cm]?tsx?$/u;
-/** Playwright methods that serialize a function and run it in the browser page. */
-const PAGE_METHODS = HashSet.make(
-  "$$eval",
-  "$eval",
-  "addInitScript",
-  "evaluate",
-  "evaluateAll",
-  "evaluateHandle",
-  "waitForFunction"
-);
+/**
+ * The configuration APIs that framework configuration imports: Vitest's, and
+ * Vercel's by any of its subpaths.
+ */
+const CONFIGURATION_MODULE_PATTERN =
+  /^(?:vitest\/config|@vercel\/config(?:\/.*)?)$/u;
 const STRICT_PATTERN = /^(?:packages\/backend\/confect|scripts)\//u;
+/** Tests and the `test.*.ts` modules that set up and support them. */
+const TEST_PATTERN = /(?:\.test\.tsx?|(?:^|\/)test\.[^/]+\.ts)$/u;
+const JSX_PATTERN = /\.tsx$/u;
+const REACT_PATTERN = /^react(?:-dom)?(?:\/|$)/u;
 const GLOBAL_ONLY: readonly (typeof Binding.Type)[] = ["global"];
 /** Framework configuration types name what they configure, such as `NextConfig` or Convex's `AuthConfig`. */
 const CONFIGURATION_TYPE_PATTERN = /Config$/u;
 /** Relative paths, app aliases, and workspace packages name repository modules rather than framework packages. */
-const LOCAL_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;
+export const REPOSITORY_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;
 
 /** Whether a module imports a module specifier that `pattern` matches. */
-function imports(sourceFile: SourceFile, pattern: RegExp) {
+export function imports(sourceFile: SourceFile, pattern: RegExp) {
   return Arr.some(
     sourceFile.statements,
     (statement) =>
@@ -122,7 +188,7 @@ function importsFromPackage(sourceFile: SourceFile, name: string) {
         isImportDeclaration(statement) &&
         isStringLiteral(statement.moduleSpecifier)
       ) ||
-      LOCAL_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
+      REPOSITORY_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
     ) {
       return false;
     }
@@ -174,180 +240,62 @@ function isConfiguration(file: string, sourceFile: SourceFile) {
 }
 
 /**
- * Returns the function a Playwright call serializes into the browser page: the
- * first argument of `evaluate` and its siblings, the second of `$eval` and
- * `$$eval`.
+ * Whether an import declaration loads at runtime: it is not `import type`, and it
+ * does not name only types.
  */
-function pageArgument(node: Node) {
-  if (
-    !(
-      isCallExpression(node) &&
-      isPropertyAccessExpression(node.expression) &&
-      HashSet.has(PAGE_METHODS, node.expression.name.text)
-    )
-  ) {
-    return;
-  }
-  return node.arguments[node.expression.name.text.startsWith("$") ? 1 : 0];
-}
-
-/** Names one function by the module that declares it, such as `apps/www/e2e/support/canvas#patchWebGL`. */
-function functionKey(module: string, name: string) {
-  return `${module}#${name}`;
-}
-
-/** Returns a module's path without its extension, the form an import specifier resolves to. */
-function moduleKey(file: string) {
-  return file.replace(MODULE_EXTENSION_PATTERN, "");
-}
-
-/** Joins path segments, resolving `.` and `..`. */
-function joinSegments(segments: readonly string[]) {
-  return Arr.join(
-    Arr.reduce(segments, Arr.empty<string>(), (path, segment) => {
-      if (segment === "." || segment === "") {
-        return path;
-      }
-      return segment === ".."
-        ? Arr.dropRight(path, 1)
-        : Arr.append(path, segment);
-    }),
-    "/"
+export function loadsImport(node: ImportDeclaration) {
+  const clause = node.importClause;
+  const bindings = clause?.namedBindings;
+  return !(
+    clause?.phaseModifier === SyntaxKind.TypeKeyword ||
+    (clause?.name === undefined &&
+      bindings !== undefined &&
+      isNamedImports(bindings) &&
+      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
   );
 }
 
 /**
- * Resolves a repository import specifier from `file` to a module key: the app
- * alias `@/` from the app's root (its first two path segments), and a relative
- * path from the file's folder.
- * A package specifier names no repository module.
+ * Whether an export declaration loads at runtime: it is not `export type`, and it
+ * does not name only types.
  */
-function resolveSpecifier(file: string, specifier: string) {
-  if (specifier.startsWith("@/")) {
-    return Result.succeed(
-      joinSegments([...Arr.take(file.split("/"), 2), specifier.slice(2)])
-    );
-  }
-  return specifier.startsWith(".")
-    ? Result.succeed(
-        joinSegments([
-          ...Arr.dropRight(file.split("/"), 1),
-          ...specifier.split("/"),
-        ])
-      )
-    : Result.failVoid;
+export function loadsExport(node: ExportDeclaration) {
+  const bindings = node.exportClause;
+  return !(
+    node.isTypeOnly ||
+    (bindings !== undefined &&
+      isNamedExports(bindings) &&
+      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
+  );
 }
 
 /**
- * Returns the function a local name stands for: the module that declares it
- * and its declared name. A named import resolves to the exporting module and
- * the exported name, so an aliased import still names the original function.
+ * Whether a module loads, at runtime, a module whose specifier `pattern` matches,
+ * through an import or a re-export. A type-only import or re-export does not
+ * count, so a helper that imports only React types is not a React module.
  */
-function declaredFunction(file: string, sourceFile: SourceFile, local: string) {
-  for (const statement of sourceFile.statements) {
-    if (
-      !(
-        isImportDeclaration(statement) &&
-        isStringLiteral(statement.moduleSpecifier)
-      )
-    ) {
-      continue;
-    }
-    const bindings = statement.importClause?.namedBindings;
-    if (bindings === undefined || !isNamedImports(bindings)) {
-      continue;
-    }
-    const element = Arr.findFirst(
-      bindings.elements,
-      (candidate) => candidate.name.text === local
-    );
-    if (element._tag === "Some") {
-      const name = element.value.propertyName?.text ?? local;
-      return Result.map(
-        resolveSpecifier(file, statement.moduleSpecifier.text),
-        (module) => functionKey(module, name)
+function loadsModule(sourceFile: SourceFile, pattern: RegExp) {
+  return Arr.some(sourceFile.statements, (statement) => {
+    if (isImportDeclaration(statement)) {
+      return (
+        loadsImport(statement) &&
+        isStringLiteral(statement.moduleSpecifier) &&
+        pattern.test(statement.moduleSpecifier.text)
       );
     }
-  }
-  return Result.succeed(functionKey(moduleKey(file), local));
+    return (
+      isExportDeclaration(statement) &&
+      loadsExport(statement) &&
+      statement.moduleSpecifier !== undefined &&
+      isStringLiteral(statement.moduleSpecifier) &&
+      pattern.test(statement.moduleSpecifier.text)
+    );
+  });
 }
 
-/**
- * Returns the functions a Playwright module passes to the browser page by
- * reference, such as `patchWebGL` in `page.addInitScript(patchWebGL, ...)`,
- * each named by the module that declares it.
- */
-export function pageFunctionKeys(
-  file: string,
-  sourceFile: SourceFile,
-  nodes: readonly Node[]
-) {
-  return imports(sourceFile, PLAYWRIGHT_PATTERN)
-    ? Arr.filterMap(nodes, (node) => {
-        const argument = pageArgument(node);
-        return argument !== undefined && isIdentifier(argument)
-          ? declaredFunction(file, sourceFile, argument.text)
-          : Result.failVoid;
-      })
-    : [];
-}
-
-/**
- * Whether a node is a function that runs in the browser page: one written in
- * a Playwright call of a Playwright module, or one this module declares under
- * a name that satisfies `passed`.
- */
-function isPageFunction(
-  node: Node,
-  inline: boolean,
-  passed: (name: string) => boolean
-) {
-  if (isFunctionDeclaration(node)) {
-    return node.name !== undefined && passed(node.name.text);
-  }
-  if (!(isArrowFunction(node) || isFunctionExpression(node))) {
-    return false;
-  }
-  const { parent } = node;
-  if (isVariableDeclaration(parent)) {
-    return isIdentifier(parent.name) && passed(parent.name.text);
-  }
-  return inline && pageArgument(parent) === node;
-}
-
-/** Whether a node sits inside a function that runs in the browser page. */
-function runsInPage(
-  node: Node,
-  inline: boolean,
-  passed: (name: string) => boolean
-): boolean {
-  if (isSourceFile(node)) {
-    return false;
-  }
-  return (
-    isPageFunction(node, inline, passed) ||
-    runsInPage(node.parent, inline, passed)
-  );
-}
-
-/**
- * Returns the nodes of a module that run where its imports exist. A function
- * that Playwright serializes into the browser page runs without any import,
- * so Effect cannot replace a platform global inside it. That covers a function
- * written in a `page.evaluate`, `addInitScript`, or sibling call of a
- * Playwright module, and a function this module declares that some Playwright
- * module passes to such a call by reference (`keys`, from `pageFunctionKeys`).
- */
-export function outsidePage(
-  file: string,
-  sourceFile: SourceFile,
-  nodes: readonly Node[],
-  keys: HashSet.HashSet<string>
-) {
-  const inline = imports(sourceFile, PLAYWRIGHT_PATTERN);
-  const module = moduleKey(file);
-  const passed = (name: string) => HashSet.has(keys, functionKey(module, name));
-  return Arr.filter(nodes, (node) => !runsInPage(node, inline, passed));
+/** Whether a module renders or hooks into React, where timers belong to effects and handlers. */
+function isReactModule(file: string, sourceFile: SourceFile) {
+  return JSX_PATTERN.test(file) || loadsModule(sourceFile, REACT_PATTERN);
 }
 
 /** Whether `rule` inspects the authored module `file`. */
@@ -359,7 +307,15 @@ export function covers(
   return Match.value(RULES[rule].scope).pipe(
     Match.when("every", () => true),
     Match.when("code", () => !isConfiguration(file, sourceFile)),
-    Match.when("strict", () => STRICT_PATTERN.test(file)),
+    Match.when(
+      "logic",
+      () =>
+        !(isConfiguration(file, sourceFile) || isReactModule(file, sourceFile))
+    ),
+    Match.when(
+      "domain",
+      () => STRICT_PATTERN.test(file) && !TEST_PATTERN.test(file)
+    ),
     Match.exhaustive
   );
 }

@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@t3-oss/env-nextjs": "^0.13.11",
+    "@repo/utilities": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

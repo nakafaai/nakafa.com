@@ -78,7 +78,10 @@ export const compute = Effect.fn("math.compute")(function* ({
     input
   ).pipe(Effect.result);
   if (Result.isFailure(decoded)) {
-    const recovery = decodeRecoveryMessage(formatDecodeError(decoded.failure));
+    const recovery = decoded.failure.pipe(
+      formatDecodeError,
+      decodeRecoveryMessage
+    );
     return Arr.join(
       [
         "# Checked Math Work",

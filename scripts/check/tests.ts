@@ -6,6 +6,7 @@ import {
   Path,
   String as Str,
 } from "effect";
+import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
 import {
   inspectCompilerConfigs,
   isCompilerConfig,
@@ -14,12 +15,13 @@ import {
   effectFindings,
   effectTestViolations,
   findingMessages,
+  sortFindings,
 } from "#scripts/check/effect";
 import { readAuthoredSources, readAuthoredTree } from "#scripts/check/files";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
-import { parseSources } from "#scripts/check/source";
+import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
 import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
@@ -44,16 +46,31 @@ function lineReport(lines: readonly string[]) {
 }
 
 /**
- * Applies the Effect-native, gateway, React, state, and refs source policies to
- * authored modules through one native compiler batch. Every Effect-native finding
- * is a violation: no baseline or allowlist holds one back.
+ * Applies the Effect-native, array, gateway, React, state, and refs source
+ * policies to authored modules. The array rules read each module's types from
+ * its project on disk, and their findings join the Effect-native findings
+ * before the list is sorted. Every finding is a violation: no baseline or
+ * allowlist holds one back.
  */
 const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
-  sources: Parameters<typeof parseSources>[0]
+  root: string,
+  sources: Parameters<typeof parseSources>[0],
+  projectConfigs: readonly string[]
 ) {
   const parsed = yield* parseSources(sources);
+  const arrays = yield* Effect.scoped(
+    Effect.flatMap(
+      openRepositoryCompiler(
+        root,
+        "Unable to start the native project compiler."
+      ),
+      (api) => arrayFindings(api, root, projectConfigs, parsed.modules)
+    )
+  );
   return Arr.appendAll(
-    findingMessages(yield* effectFindings(parsed)),
+    findingMessages(
+      sortFindings(Arr.appendAll(yield* effectFindings(parsed), arrays))
+    ),
     Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
       Arr.flatten([
         inspectGatewaySource(file, sourceFile),
@@ -93,7 +110,6 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       Arr.appendAll(workspaces, scripts)
     );
     const runnerViolations = yield* effectTestViolations(sources);
-    const sourceViolations = yield* inspectSources(sources);
     const relative = (files: readonly string[]) =>
       Arr.map(files, (file) => path.relative(root, file));
     // The policy reads repository paths, which use "/" on every platform. A
@@ -114,6 +130,15 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
           fileSystem.readFileString(path.join(root, file)),
           (sourceText) => ({ file, sourceText })
         )
+    );
+    const projectConfigs = Arr.map(
+      Arr.filter(configs, ({ file }) => isProjectConfig(file)),
+      ({ file }) => file
+    );
+    const sourceViolations = yield* inspectSources(
+      root,
+      sources,
+      projectConfigs
     );
     const reports = Arr.filter(
       [

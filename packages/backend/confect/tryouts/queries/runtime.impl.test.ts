@@ -103,7 +103,7 @@ describe("tryouts/queries/runtime", () => {
     "keeps exact live state compact and skips score reads while active",
     () =>
       Effect.gen(function* () {
-        yield* Effect.sync(() => vi.setSystemTime(new Date(TRYOUT_START_NOW)));
+        yield* Effect.sync(() => vi.setSystemTime(TRYOUT_START_NOW));
 
         const t = createConvexTestWithBetterAuth();
         const identity = yield* Effect.promise(() =>
@@ -179,7 +179,7 @@ describe("tryouts/queries/runtime", () => {
     "binds exact section state to ownership instead of the active catalog",
     () =>
       Effect.gen(function* () {
-        yield* Effect.sync(() => vi.setSystemTime(new Date(TRYOUT_START_NOW)));
+        yield* Effect.sync(() => vi.setSystemTime(TRYOUT_START_NOW));
 
         const t = createConvexTestWithBetterAuth();
         const identity = yield* Effect.promise(() =>

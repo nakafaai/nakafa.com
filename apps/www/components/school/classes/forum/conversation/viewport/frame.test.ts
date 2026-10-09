@@ -63,96 +63,106 @@ describe("conversation/viewport/frame", () => {
     ).not.toThrow();
   });
 
-  it("measures the scroller and forwards normalized viewport events", async () => {
-    let events: ViewportEvent[] = [];
-    const viewport = {
-      changes: Stream.empty,
-      dispatch: (event) =>
-        Effect.sync(() => {
-          events = Arr.append(events, event);
-        }),
-      flushSnapshot: Effect.void,
-      getState: Effect.succeed(initialViewportState),
-      shutdown: Effect.void,
-    } satisfies ConversationViewport;
-    const viewportRef = {
-      current: viewport,
-    } satisfies RefObject<ConversationViewport | null>;
-    const scroller = createFrameScroller();
+  it.live("measures the scroller and forwards normalized viewport events", () =>
+    Effect.gen(function* () {
+      let events: ViewportEvent[] = [];
+      const viewport = {
+        changes: Stream.empty,
+        dispatch: (event) =>
+          Effect.sync(() => {
+            events = Arr.append(events, event);
+          }),
+        flushSnapshot: Effect.void,
+        getState: Effect.succeed(initialViewportState),
+        shutdown: Effect.void,
+      } satisfies ConversationViewport;
+      const viewportRef = {
+        current: viewport,
+      } satisfies RefObject<ConversationViewport | null>;
+      const scroller = createFrameScroller();
 
-    measureViewport(
-      { current: scroller } satisfies RefObject<BrowserViewportScroller | null>,
-      viewportRef,
-      "scroll"
-    );
-    measureViewport(
-      { current: null } satisfies RefObject<BrowserViewportScroller | null>,
-      viewportRef,
-      "frame"
-    );
-    await new Promise((resolve) => setTimeout(resolve, 0));
+      measureViewport(
+        {
+          current: scroller,
+        } satisfies RefObject<BrowserViewportScroller | null>,
+        viewportRef,
+        "scroll"
+      );
+      measureViewport(
+        { current: null } satisfies RefObject<BrowserViewportScroller | null>,
+        viewportRef,
+        "frame"
+      );
+      yield* Effect.sleep(0);
 
-    expect(events).toEqual([
-      { measurement, source: "scroll", type: "measure" },
-      { measurement: null, source: "frame", type: "measure" },
-    ]);
-  });
+      expect(events).toEqual([
+        { measurement, source: "scroll", type: "measure" },
+        { measurement: null, source: "frame", type: "measure" },
+      ]);
+    })
+  );
 
-  it("replaces and cancels animation-frame measurements", async () => {
-    const cancelAnimationFrame = vi.fn();
-    const requestAnimationFrame = vi.fn((_callback: FrameRequestCallback) => 7);
-    let events: ViewportEvent[] = [];
-    const viewport = {
-      changes: Stream.empty,
-      dispatch: (event) =>
-        Effect.sync(() => {
-          events = Arr.append(events, event);
-        }),
-      flushSnapshot: Effect.void,
-      getState: Effect.succeed(initialViewportState),
-      shutdown: Effect.void,
-    } satisfies ConversationViewport;
-    const scroller = createFrameScroller();
-    const frameRef = { current: 5 } satisfies RefObject<number | null>;
-    const viewportRef = {
-      current: viewport,
-    } satisfies RefObject<ConversationViewport | null>;
+  it.live("replaces and cancels animation-frame measurements", () =>
+    Effect.gen(function* () {
+      const cancelAnimationFrame = vi.fn();
+      const requestAnimationFrame = vi.fn(
+        (_callback: FrameRequestCallback) => 7
+      );
+      let events: ViewportEvent[] = [];
+      const viewport = {
+        changes: Stream.empty,
+        dispatch: (event) =>
+          Effect.sync(() => {
+            events = Arr.append(events, event);
+          }),
+        flushSnapshot: Effect.void,
+        getState: Effect.succeed(initialViewportState),
+        shutdown: Effect.void,
+      } satisfies ConversationViewport;
+      const scroller = createFrameScroller();
+      const frameRef = { current: 5 } satisfies RefObject<number | null>;
+      const viewportRef = {
+        current: viewport,
+      } satisfies RefObject<ConversationViewport | null>;
 
-    vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
-    vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
-    requestViewportMeasureFrame({
-      frameRef,
-      scrollerRef: {
-        current: scroller,
-      } satisfies RefObject<BrowserViewportScroller | null>,
-      viewportRef,
-    });
+      vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
+      vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
+      requestViewportMeasureFrame({
+        frameRef,
+        scrollerRef: {
+          current: scroller,
+        } satisfies RefObject<BrowserViewportScroller | null>,
+        viewportRef,
+      });
 
-    expect(cancelAnimationFrame).toHaveBeenCalledWith(5);
-    expect(frameRef.current).toBe(7);
-    const scheduledFrame = requestAnimationFrame.mock.calls[0]?.[0];
+      expect(cancelAnimationFrame).toHaveBeenCalledWith(5);
+      expect(frameRef.current).toBe(7);
+      const scheduledFrame = requestAnimationFrame.mock.calls[0]?.[0];
 
-    if (!scheduledFrame) {
-      throw new Error("Expected an animation frame callback.");
-    }
+      if (!scheduledFrame) {
+        throw new Error("Expected an animation frame callback.");
+      }
 
-    scheduledFrame(0);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+      scheduledFrame(0);
+      yield* Effect.sleep(0);
 
-    expect(frameRef.current).toBeNull();
-    expect(events).toEqual([{ measurement, source: "frame", type: "measure" }]);
+      expect(frameRef.current).toBeNull();
+      expect(events).toEqual([
+        { measurement, source: "frame", type: "measure" },
+      ]);
 
-    cancelViewportMeasureFrame(frameRef);
-    requestViewportMeasureFrame({
-      frameRef,
-      scrollerRef: {
-        current: scroller,
-      } satisfies RefObject<BrowserViewportScroller | null>,
-      viewportRef,
-    });
-    cancelViewportMeasureFrame(frameRef);
-    expect(requestAnimationFrame).toHaveBeenCalledTimes(2);
-    expect(cancelAnimationFrame).toHaveBeenCalledWith(7);
-    expect(frameRef.current).toBeNull();
-  });
+      cancelViewportMeasureFrame(frameRef);
+      requestViewportMeasureFrame({
+        frameRef,
+        scrollerRef: {
+          current: scroller,
+        } satisfies RefObject<BrowserViewportScroller | null>,
+        viewportRef,
+      });
+      cancelViewportMeasureFrame(frameRef);
+      expect(requestAnimationFrame).toHaveBeenCalledTimes(2);
+      expect(cancelAnimationFrame).toHaveBeenCalledWith(7);
+      expect(frameRef.current).toBeNull();
+    })
+  );
 });

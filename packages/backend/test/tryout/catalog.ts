@@ -79,7 +79,7 @@ export const activateTryoutSetCatalog = Effect.fn(
     order: number;
   }[] = defaultSets
 ) {
-  vi.setSystemTime(new Date(TRYOUT_START_NOW));
+  vi.setSystemTime(TRYOUT_START_NOW);
   const t = createConvexTestWithBetterAuth();
   const { identity, snapshotId } = yield* Effect.promise(() =>
     t.mutation(async (ctx) => {

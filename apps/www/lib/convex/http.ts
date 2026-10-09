@@ -7,7 +7,7 @@ import {
   retryNetworkAttempt,
 } from "@repo/backend/client/network";
 import { Data, Effect, Layer, Result, Schema } from "effect";
-import { env } from "@/env";
+import { clientEnv } from "@/env.client";
 
 type HttpClientOptions = Parameters<typeof HttpClient.layer>[1];
 
@@ -102,7 +102,7 @@ export const withQueryRetry = <E, R>(
 export function httpLayer(options?: HttpClientOptions) {
   return withQueryRetry(
     options === undefined
-      ? HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)
-      : HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, options)
+      ? HttpClient.layer(clientEnv.NEXT_PUBLIC_CONVEX_URL)
+      : HttpClient.layer(clientEnv.NEXT_PUBLIC_CONVEX_URL, options)
   );
 }

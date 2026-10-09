@@ -158,7 +158,7 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
                 error_code: failure ?? "interrupted",
               },
             },
-      timestamp: new Date(finishedAt),
+      timestamp: finishedAt,
     });
   }
 });

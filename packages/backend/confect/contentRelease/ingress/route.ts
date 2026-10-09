@@ -19,14 +19,10 @@ import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 const NODE_ACTION_ARGUMENT_BYTES = 5 * 1024 * 1024;
 /** Converts an oversized Node argument envelope into a sanitized response. */
 function rejectOversizedDispatch() {
-  return publicationFailure(
-    predecodeFailure(
-      new ReleaseError({
-        code: "CONTENT_RELEASE_SIZE",
-        message: "Publication request was rejected before dispatch.",
-      })
-    )
-  );
+  return new ReleaseError({
+    code: "CONTENT_RELEASE_SIZE",
+    message: "Publication request was rejected before dispatch.",
+  }).pipe(predecodeFailure, publicationFailure);
 }
 /** Converts one shared HTTP body rejection into publication wire semantics. */
 function publicationBodyError(error: HttpBodyError) {
@@ -49,14 +45,10 @@ function publicationBodyError(error: HttpBodyError) {
 }
 /** Returns the single sanitized publication authentication rejection. */
 function publicationAuthFailure() {
-  return publicationFailure(
-    predecodeFailure(
-      new ReleaseError({
-        code: "CONTENT_RELEASE_UNAUTHORIZED",
-        message: "Content publication authentication failed.",
-      })
-    )
-  );
+  return new ReleaseError({
+    code: "CONTENT_RELEASE_UNAUTHORIZED",
+    message: "Content publication authentication failed.",
+  }).pipe(predecodeFailure, publicationFailure);
 }
 /** Reads one bounded request and invokes the isolated Node verifier. */
 const publicationRoute = Effect.fn("contentRelease.publicationRoute")(
@@ -74,8 +66,10 @@ const publicationRoute = Effect.fn("contentRelease.publicationRoute")(
       MAX_PUBLICATION_REQUEST_BYTES
     ).pipe(Effect.result);
     if (Result.isFailure(body)) {
-      return yield* publicationFailure(
-        predecodeFailure(publicationBodyError(body.failure))
+      return yield* body.failure.pipe(
+        publicationBodyError,
+        predecodeFailure,
+        publicationFailure
       );
     }
     if (getConvexSize(body.success) > NODE_ACTION_ARGUMENT_BYTES) {

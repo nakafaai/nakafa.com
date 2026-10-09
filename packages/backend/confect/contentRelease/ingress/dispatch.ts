@@ -88,7 +88,7 @@ export const dispatchPublication = Effect.fn(
     input.byteLength
   ).pipe(Effect.result);
   if (Result.isFailure(decoded)) {
-    return yield* publicationFailure(predecodeFailure(decoded.failure));
+    return yield* decoded.failure.pipe(predecodeFailure, publicationFailure);
   }
   return yield* performRequest(decoded.success, activeKeyId).pipe(
     Effect.flatMap((response) => publicationSuccess(response)),

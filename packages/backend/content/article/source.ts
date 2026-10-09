@@ -68,4 +68,4 @@ export class ArticleSource extends Context.Service<
       limit: number
     ) => Effect.Effect<readonly BucketRow[], ReleaseError>;
   }
->()("content/ArticleSource") {}
+>()("@repo/backend/content/article/source/ArticleSource") {}

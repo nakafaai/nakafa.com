@@ -23,7 +23,7 @@ const trackPaywallView = FunctionImpl.make(
             source: args.source,
           },
         },
-        timestamp: new Date(now),
+        timestamp: now,
       });
       return null;
     });

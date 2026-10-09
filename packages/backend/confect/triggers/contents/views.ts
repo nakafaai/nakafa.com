@@ -29,6 +29,6 @@ export const learningViewsHandler = Effect.fn(
         route: view.route,
       },
     },
-    timestamp: new Date(view.lastViewedAt),
+    timestamp: view.lastViewedAt,
   });
 });
