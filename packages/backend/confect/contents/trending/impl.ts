@@ -188,5 +188,5 @@ export const listTrendingSubjects = Effect.fn(
       break;
     }
   }
-  return subjects.slice(0, settings.limit);
+  return Arr.take(subjects, settings.limit);
 });

@@ -119,7 +119,7 @@ function getExpansion(
   missingResultCount: number
 ) {
   const first = start % states.length;
-  const rotated = [...states.slice(first), ...states.slice(0, first)];
+  const rotated = [...Arr.drop(states, first), ...Arr.take(states, first)];
   for (const [offset, state] of rotated.entries()) {
     const index = (first + offset) % states.length;
     const requested = getMaximumRequestedRows(
