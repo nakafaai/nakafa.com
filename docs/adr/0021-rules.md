@@ -114,10 +114,9 @@ global binding.
 
 ## Consequences
 
-- Both shared configurations list every rule of the plugin with its decision:
-  `error`, or `off` for a rule in the table above. A rule that the
-  configurations do not list is open work, not a decision. It becomes an error
-  in the pull request that clears its last site.
+- A compiler rule that is neither an error nor in the table above is open work,
+  not a decision. It becomes an error in the pull request that clears its last
+  site.
 - A new place that a framework forces is added to the source check as a
   construction, with a test for the reported and the unreported form.
 - Keep `new X({...})` for Schema error classes.
