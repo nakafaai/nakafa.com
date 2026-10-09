@@ -81,7 +81,7 @@
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@next/playwright": "16.4.0",
-    "@playwright/test": "^1.63.0",
+    "@playwright/test": "^1.64.0",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "19.2.18",
