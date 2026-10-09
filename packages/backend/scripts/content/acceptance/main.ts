@@ -9,16 +9,11 @@ import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptanc
 import { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Array as Arr, Effect, FileSystem, Layer, Path } from "effect";
+import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 
 const main = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  // The URL derives from this module's own file URL, so it always converts.
-  const checkoutPath = yield* path
-    .fromFileUrl(new URL("../../../../../", import.meta.url))
-    .pipe(Effect.orDie);
-  const root = yield* fs.realPath(checkoutPath);
+  const root = yield* fs.realPath(`${import.meta.dirname}/../../../../..`);
   const mode = process.argv[2];
   if (mode === "prepare") {
     return yield* prepareAcceptance(root);

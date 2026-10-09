@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { NodeServices } from "@effect/platform-node";
+import { NodeFileSystem } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
   createThemeProfiles,
@@ -19,7 +19,7 @@ import {
 import { Array as Arr, Effect } from "effect";
 
 const readSources = readThemeStyleSources().pipe(
-  Effect.provide(NodeServices.layer)
+  Effect.provide(NodeFileSystem.layer)
 );
 
 describe("theme registry", () => {

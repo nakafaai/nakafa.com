@@ -73,12 +73,8 @@ const decodeUtf8 = (bytes: Uint8Array) =>
 const readBackendEnv = Effect.fn("customers.readBackendEnv")(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  // This module's own file URL always converts, so a failure stays a defect.
-  const modulePath = yield* path
-    .fromFileUrl(new URL(import.meta.url))
-    .pipe(Effect.orDie);
   const backendEnvPath = path.resolve(
-    path.dirname(modulePath),
+    import.meta.dirname,
     "../..",
     ".env.local"
   );
@@ -124,12 +120,7 @@ const getLocalAccessToken = Effect.fn("customers.getLocalAccessToken")(
   function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    // Reads the process HOME alone, as homedir() did, and keeps an empty value.
     const home = yield* Config.String("HOME").pipe(
-      Effect.provideService(
-        ConfigProvider.ConfigProvider,
-        ConfigProvider.fromEnv({ preserveEmptyStrings: true })
-      ),
       Effect.mapError(
         () =>
           new CustomerConvexConfigError({

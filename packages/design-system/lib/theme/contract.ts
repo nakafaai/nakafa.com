@@ -1,6 +1,6 @@
 import { TEXT_ROLE_PAIRS } from "@repo/design-system/lib/theme/contrast";
 import Color from "colorjs.io";
-import { Array as Arr, Effect, FileSystem, Path, Schema } from "effect";
+import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 import postcss, { type AtRule, Root, type Rule } from "postcss";
 
 /** Complete semantic color surface shared by every concrete profile. */
@@ -76,6 +76,10 @@ export class ThemeStyleSourceLoadError extends Schema.TaggedError<ThemeStyleSour
 ) {}
 
 const SIMPLE_THEME_SELECTOR_PATTERN = /^\.([a-z0-9-]+)$/;
+const DEFAULT_THEME_STYLE_SOURCE_PATHS: ThemeStyleSourcePaths = {
+  customThemes: `${import.meta.dirname}/../../styles/theme.css`,
+  globals: `${import.meta.dirname}/../../styles/globals.css`,
+};
 
 /** Builds one typed stylesheet read failure with its exact source path. */
 function sourceLoadError(path: string, cause: unknown) {
@@ -108,29 +112,12 @@ const readStylesheet = Effect.fn("designSystem.theme.readStylesheet")(
   }
 );
 
-/** Resolves the two theme-owning stylesheets that sit beside this module. */
-const defaultThemeStyleSourcePaths = Effect.fn(
-  "designSystem.theme.defaultStyleSourcePaths"
-)(function* () {
-  const path = yield* Path.Path;
-  // This module's own file URLs always convert, so a failure stays a defect.
-  const customThemes = yield* path
-    .fromFileUrl(new URL("../../styles/theme.css", import.meta.url))
-    .pipe(Effect.orDie);
-  const globals = yield* path
-    .fromFileUrl(new URL("../../styles/globals.css", import.meta.url))
-    .pipe(Effect.orDie);
-
-  return { customThemes, globals } satisfies ThemeStyleSourcePaths;
-});
-
 /** Parses the two theme-owning stylesheets without running Tailwind. */
 export const readThemeStyleSources = Effect.fn(
   "designSystem.theme.readStyleSources"
-)(function* (paths?: ThemeStyleSourcePaths) {
-  const sourcePaths = paths ?? (yield* defaultThemeStyleSourcePaths());
-  const customThemes = yield* readStylesheet(sourcePaths.customThemes);
-  const globals = yield* readStylesheet(sourcePaths.globals);
+)(function* (paths: ThemeStyleSourcePaths = DEFAULT_THEME_STYLE_SOURCE_PATHS) {
+  const customThemes = yield* readStylesheet(paths.customThemes);
+  const globals = yield* readStylesheet(paths.globals);
 
   return { customThemes, globals } satisfies ThemeStyleSources;
 });
