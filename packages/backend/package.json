@@ -40,7 +40,7 @@
     "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
     "@mendable/firecrawl-js": "^4.46.0",
-    "@nakafa/aksara-contracts": "0.48.4",
+    "@nakafa/aksara-contracts": "0.48.5",
     "@polar-sh/sdk": "^1.0.2",
     "@posthog/convex": "2.1.5",
     "@react-email/render": "catalog:",
