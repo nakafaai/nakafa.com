@@ -1,6 +1,8 @@
 import {
   Array as Arr,
   Config,
+  Data,
+  Duration,
   Effect,
   Order,
   Record as Rec,
@@ -8,7 +10,7 @@ import {
   Schema,
 } from "effect";
 import { FetchHttpClient } from "effect/http";
-import { runPnpm } from "#scripts/dependencies/command";
+import { DependencyCommandError, runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
 import { runEntry } from "#scripts/entry";
@@ -42,6 +44,17 @@ export const inspectRepositoryPolicy = Effect.fn(
     inspectGithubActionPolicy(root),
   ]).pipe(Effect.map(([dependency, actions]) => [...dependency, ...actions]))
 );
+
+/**
+ * The longest one `pnpm view` may take. It is the 10 second attempt budget of
+ * the web app's network reads, kept here because the root scripts do not depend
+ * on `@repo/backend`. Only `view` is bounded: `pnpm outdated` scans every
+ * dependency and may run longer.
+ */
+const REGISTRY_VIEW_DEADLINE = Duration.seconds(10);
+
+/** The registry lookup did not finish within its deadline. */
+class RegistryViewDeadline extends Data.TaggedError("RegistryViewDeadline") {}
 
 /** A registry answers with the resolved version as one JSON string. */
 export const RegistryVersionJson = Schema.fromJsonString(Schema.String);
@@ -96,6 +109,17 @@ const reviewRegistryDependencies = Effect.fn("RepositoryPolicy.reviewRegistry")(
           root,
           ["view", registry, "version", "--json"],
           { capture: true }
+        ).pipe(
+          Effect.timeoutOrElse({
+            duration: REGISTRY_VIEW_DEADLINE,
+            orElse: () =>
+              Effect.fail(
+                new DependencyCommandError({
+                  cause: new RegistryViewDeadline(),
+                  message: `pnpm view ${registry} did not finish within 10 seconds.`,
+                })
+              ),
+          })
         );
         if (result.exitCode !== 0) {
           return [

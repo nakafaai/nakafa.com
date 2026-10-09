@@ -1,3 +1,4 @@
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Effect } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
 import { IndexNowSubmitError } from "@/scripts/indexing/errors";
@@ -102,7 +103,17 @@ const submitBatchToIndexNow = Effect.fn(
             cause,
             message: `Error submitting IndexNow batch ${batchCount}.`,
           })
-      )
+      ),
+      Effect.timeoutOrElse({
+        duration: NETWORK_ATTEMPT_DEADLINE,
+        orElse: () =>
+          Effect.fail(
+            new IndexNowSubmitError({
+              cause: "deadline",
+              message: `IndexNow batch ${batchCount} did not answer within 10 seconds.`,
+            })
+          ),
+      })
     );
 
   if (status !== HTTP_STATUS_CODE_OK) {

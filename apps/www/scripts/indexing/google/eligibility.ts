@@ -1,3 +1,4 @@
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Effect, Predicate, Schema } from "effect";
 import { HttpClient } from "effect/http";
 import {
@@ -50,7 +51,18 @@ const readEligibleGoogleIndexingUrl = Effect.fn(
           message: `Failed to fetch ${url} for Google Indexing API eligibility.`,
           url,
         })
-    )
+    ),
+    Effect.timeoutOrElse({
+      duration: NETWORK_ATTEMPT_DEADLINE,
+      orElse: () =>
+        Effect.fail(
+          new GoogleIndexPageFetchError({
+            cause: "deadline",
+            message: `Fetching ${url} for Google Indexing API eligibility did not finish within 10 seconds.`,
+            url,
+          })
+        ),
+    })
   );
   if (response.status < 200 || response.status >= 300) {
     return yield* new GoogleIndexPageFetchError({
@@ -66,7 +78,18 @@ const readEligibleGoogleIndexingUrl = Effect.fn(
           message: `Failed to read ${url} for Google Indexing API eligibility.`,
           url,
         })
-    )
+    ),
+    Effect.timeoutOrElse({
+      duration: NETWORK_ATTEMPT_DEADLINE,
+      orElse: () =>
+        Effect.fail(
+          new GoogleIndexPageFetchError({
+            cause: "deadline",
+            message: `Reading ${url} for Google Indexing API eligibility did not finish within 10 seconds.`,
+            url,
+          })
+        ),
+    })
   );
   const blocks = readJsonLdScriptBodies(html);
   for (const block of blocks) {

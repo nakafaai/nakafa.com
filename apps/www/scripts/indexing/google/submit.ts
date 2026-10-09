@@ -1,3 +1,4 @@
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Effect } from "effect";
 import {
   HttpClient,
@@ -108,7 +109,17 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
           cause,
           message: `Network error submitting ${url}.`,
         })
-    )
+    ),
+    Effect.timeoutOrElse({
+      duration: NETWORK_ATTEMPT_DEADLINE,
+      orElse: () =>
+        Effect.fail(
+          new GoogleIndexSubmitError({
+            cause: "deadline",
+            message: `Submitting ${url} did not answer within 10 seconds.`,
+          })
+        ),
+    })
   );
   const { status } = response;
 
@@ -162,6 +173,16 @@ const readSubmitResponse = Effect.fn("scripts.google.submit.readResponse")(
             cause,
             message: `Failed to read the Indexing API response for ${url}.`,
           })
-      )
+      ),
+      Effect.timeoutOrElse({
+        duration: NETWORK_ATTEMPT_DEADLINE,
+        orElse: () =>
+          Effect.fail(
+            new GoogleIndexSubmitError({
+              cause: "deadline",
+              message: `Reading the Indexing API response for ${url} did not finish within 10 seconds.`,
+            })
+          ),
+      })
     )
 );

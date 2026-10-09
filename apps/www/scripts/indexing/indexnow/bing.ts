@@ -1,3 +1,4 @@
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Config, Effect, Option, Schema } from "effect";
 import { HttpBody, HttpClient, type HttpClientResponse } from "effect/http";
 import { BingSubmitError } from "@/scripts/indexing/errors";
@@ -139,7 +140,17 @@ const submitBatchToBing = Effect.fn("scripts.indexing.bing.submitBatch")(
               cause,
               message: "Error submitting URLs to Bing.",
             })
-        )
+        ),
+        Effect.timeoutOrElse({
+          duration: NETWORK_ATTEMPT_DEADLINE,
+          orElse: () =>
+            Effect.fail(
+              new BingSubmitError({
+                cause: "deadline",
+                message: "Bing did not answer within 10 seconds.",
+              })
+            ),
+        })
       );
     return yield* readBingResponse(response, batch);
   }
@@ -158,7 +169,18 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
             cause,
             message: "Failed to read Bing response text.",
           })
-      )
+      ),
+      Effect.timeoutOrElse({
+        duration: NETWORK_ATTEMPT_DEADLINE,
+        orElse: () =>
+          Effect.fail(
+            new BingSubmitError({
+              cause: "deadline",
+              message:
+                "Reading the Bing response did not finish within 10 seconds.",
+            })
+          ),
+      })
     );
     yield* Effect.logInfo(`Bing API response status: ${status}`);
     if (status === HTTP_STATUS_CODE_OK) {

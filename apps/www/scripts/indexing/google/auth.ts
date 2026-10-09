@@ -1,3 +1,4 @@
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Clock, Effect, FileSystem, Schema } from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import {
@@ -139,7 +140,17 @@ export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
             cause,
             message: "Google token request transport failed.",
           })
-      )
+      ),
+      Effect.timeoutOrElse({
+        duration: NETWORK_ATTEMPT_DEADLINE,
+        orElse: () =>
+          Effect.fail(
+            new GoogleTokenRequestError({
+              cause: "deadline",
+              message: "Google token request did not answer within 10 seconds.",
+            })
+          ),
+      })
     );
     // The body is read whether the endpoint grants or refuses the token.
     const responseText = yield* response.text.pipe(
@@ -149,7 +160,18 @@ export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
             cause,
             message: "Google token response could not be read.",
           })
-      )
+      ),
+      Effect.timeoutOrElse({
+        duration: NETWORK_ATTEMPT_DEADLINE,
+        orElse: () =>
+          Effect.fail(
+            new GoogleTokenRequestError({
+              cause: "deadline",
+              message:
+                "Google token response did not finish within 10 seconds.",
+            })
+          ),
+      })
     );
     if (response.status < 200 || response.status >= 300) {
       return yield* new GoogleTokenRequestError({

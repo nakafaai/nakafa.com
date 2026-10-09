@@ -1,5 +1,7 @@
 import {
   Array as Arr,
+  Data,
+  Duration,
   Effect,
   MutableHashMap,
   Option,
@@ -30,6 +32,16 @@ export class GithubActionReleaseError extends Schema.TaggedError<GithubActionRel
     message: Schema.String,
   }
 ) {}
+
+/**
+ * The longest one release read may take. It is the 10 second attempt budget of
+ * the web app's network reads, kept here because the root scripts do not depend
+ * on `@repo/backend`.
+ */
+const GITHUB_RELEASE_DEADLINE = Duration.seconds(10);
+
+/** The release read did not finish within its deadline. */
+class GithubReleaseDeadline extends Data.TaggedError("GithubReleaseDeadline") {}
 
 function actionRepository(action: string) {
   return Arr.join(action.split("/").slice(0, 2), "/");
@@ -94,6 +106,16 @@ export const fetchLatestGithubActionTag = Effect.fn(
           cause,
           message: `Unable to read the latest ${review.repository} release.`,
         })
-    )
+    ),
+    Effect.timeoutOrElse({
+      duration: GITHUB_RELEASE_DEADLINE,
+      orElse: () =>
+        Effect.fail(
+          new GithubActionReleaseError({
+            cause: new GithubReleaseDeadline(),
+            message: `Unable to read the latest ${review.repository} release within 10 seconds.`,
+          })
+        ),
+    })
   );
 });
