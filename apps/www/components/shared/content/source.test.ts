@@ -68,6 +68,19 @@ describe("requestOpenContentSource", () => {
     })
   );
 
+  it.effect("does not repeat a transport failure without a network code", () =>
+    Effect.gen(function* () {
+      const fetcher = vi
+        .fn<typeof fetch>()
+        .mockRejectedValue(new TypeError("offline"));
+
+      expect((yield* request(fetcher).pipe(Effect.flip)).code).toBe(
+        "OPEN_CONTENT_SOURCE_FETCH_FAILED"
+      );
+      expect(fetcher).toHaveBeenCalledOnce();
+    })
+  );
+
   it.effect("does not repeat a refused source", () =>
     Effect.gen(function* () {
       const fetcher = vi
