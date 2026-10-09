@@ -103,29 +103,37 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
       })
       .pipe(Effect.orDie);
     let records: RollbackRecord[] = [];
-    for (const [offset, row] of rowPage.page.entries()) {
-      if (row.index !== request.afterIndex + offset + 1) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Rollback source ${request.rollbackOf} is not contiguous.`
-        );
-      }
-      const record = yield* rollbackRecord(row);
-      const candidate = makeRollbackPage(request, total, [...records, record]);
-      if (
-        new TextEncoder().encode(canonicalizeRollbackPage(candidate))
-          .byteLength > MAX_ROLLBACK_PAGE_BYTES
-      ) {
-        if (records.length === 0) {
+    // The walk stops at the first row that would pass the byte ceiling, so no
+    // later row is read.
+    yield* Effect.findFirst(rowPage.page, (row, offset) =>
+      Effect.gen(function* () {
+        if (row.index !== request.afterIndex + offset + 1) {
           return yield* releaseFail(
-            "CONTENT_RELEASE_LIMIT",
-            `Rollback transition ${request.rollbackOf}/${row.index} exceeds the page byte ceiling.`
+            "CONTENT_RELEASE_INTEGRITY",
+            `Rollback source ${request.rollbackOf} is not contiguous.`
           );
         }
-        break;
-      }
-      records = Arr.append(records, record);
-    }
+        const record = yield* rollbackRecord(row);
+        const candidate = makeRollbackPage(request, total, [
+          ...records,
+          record,
+        ]);
+        if (
+          new TextEncoder().encode(canonicalizeRollbackPage(candidate))
+            .byteLength > MAX_ROLLBACK_PAGE_BYTES
+        ) {
+          if (records.length === 0) {
+            return yield* releaseFail(
+              "CONTENT_RELEASE_LIMIT",
+              `Rollback transition ${request.rollbackOf}/${row.index} exceeds the page byte ceiling.`
+            );
+          }
+          return true;
+        }
+        records = Arr.append(records, record);
+        return false;
+      })
+    );
     return canonicalizeRollbackPage(makeRollbackPage(request, total, records));
   }
 );
