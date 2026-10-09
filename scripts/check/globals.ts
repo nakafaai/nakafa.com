@@ -282,26 +282,26 @@ function extendsClass(node: ExpressionWithTypeArguments) {
  * `extends globalThis.Error`. The binding check runs on that identifier, so a
  * local declaration of the class or of the global object shadows it.
  */
-function errorClassReference(expression: Node): Identifier | undefined {
+function errorClassReference(expression: Node): Option.Option<Identifier> {
   const value = unwrapped(expression);
   if (isIdentifier(value)) {
-    return HashSet.has(ERROR_CLASSES, value.text) ? value : undefined;
+    return HashSet.has(ERROR_CLASSES, value.text)
+      ? Option.some(value)
+      : Option.none();
   }
   if (
     !(isPropertyAccessExpression(value) || isElementAccessExpression(value))
   ) {
-    return undefined;
+    return Option.none();
   }
   const owner = unwrapped(value.expression);
-  return Option.match(memberRead(value, value.expression), {
-    onNone: () => undefined,
-    onSome: (member) =>
-      isIdentifier(owner) &&
-      HashSet.has(GLOBAL_OBJECTS, owner.text) &&
-      HashSet.has(ERROR_CLASSES, member)
-        ? owner
-        : undefined,
-  });
+  return Option.flatMap(memberRead(value, value.expression), (member) =>
+    isIdentifier(owner) &&
+    HashSet.has(GLOBAL_OBJECTS, owner.text) &&
+    HashSet.has(ERROR_CLASSES, member)
+      ? Option.some(owner)
+      : Option.none()
+  );
 }
 
 /**
@@ -341,12 +341,12 @@ function referenceCandidates(
       : [];
   }
   if (isExpressionWithTypeArguments(node)) {
-    const reference = extendsClass(node)
-      ? errorClassReference(node.expression)
-      : undefined;
-    return reference === undefined
-      ? []
-      : [candidate("error-class", sourceFile, node, reference)];
+    return extendsClass(node)
+      ? Arr.map(
+          Option.toArray(errorClassReference(node.expression)),
+          (reference) => candidate("error-class", sourceFile, node, reference)
+        )
+      : [];
   }
   if (!(isPropertyAccessExpression(node) || isElementAccessExpression(node))) {
     return [];
