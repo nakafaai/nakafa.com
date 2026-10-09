@@ -70,16 +70,7 @@ describe("compiler configuration policy", () => {
           },
           { file: BASE, sourceText: config(undefined, [RULES]) },
           { file: LIBRARY, sourceText: config("./base.json") },
-          {
-            file: NEXT,
-            sourceText: config("./base.json", [
-              { name: "next" },
-              {
-                name: "@effect/language-service",
-                diagnosticSeverity: { instanceOfSchema: "error" },
-              },
-            ]),
-          },
+          { file: NEXT, sourceText: config("./base.json") },
           {
             file: "scripts/tsconfig.json",
             sourceText: config("../packages/typescript-config/base.json"),
@@ -91,7 +82,7 @@ describe("compiler configuration policy", () => {
     );
   });
 
-  it("rejects a shared configuration whose rules differ", () => {
+  it("rejects a second shared configuration that declares plugins", () => {
     assert.deepStrictEqual(
       inspectCompilerConfigs(
         PACKAGE,
@@ -99,15 +90,15 @@ describe("compiler configuration policy", () => {
           { file: BASE, sourceText: config(undefined, [RULES]) },
           {
             file: NEXT,
-            sourceText: config("./base.json", [
-              { ...RULES, diagnosticSeverity: { instanceOfSchema: "off" } },
-            ]),
+            sourceText: config("./base.json", [{ name: "next" }, RULES]),
           },
+          { file: LIBRARY, sourceText: config("./base.json", []) },
         ],
         PLUGIN_RULES
       ),
       [
-        `${NEXT}: its @effect/language-service block differs from ${BASE}; keep them identical so every workspace enforces the same rules.`,
+        `${NEXT}: remove its plugins array and inherit the one in ${BASE}, so the @effect/language-service block is written once.`,
+        `${LIBRARY}: remove its plugins array and inherit the one in ${BASE}, so the @effect/language-service block is written once.`,
       ]
     );
   });

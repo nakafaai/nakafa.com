@@ -1,16 +1,20 @@
-import assert from "node:assert/strict";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { api } from "@repo/backend/convex/_generated/api";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { fetchQuery } from "convex/nextjs";
-import { Array as Arr, Effect, Order, Schema } from "effect";
+import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import { readRuntimeConfig } from "@/runtime";
 
 readRuntimeConfig();
+
+class FeaturedArtifactError extends Schema.TaggedError<FeaturedArtifactError>()(
+  "FeaturedArtifactError",
+  { message: Schema.String }
+) {}
 
 const verifyFeaturedRenderer = Effect.fn(
   "NakafaContent.verifyFeaturedRenderer"
@@ -34,8 +38,13 @@ const verifyFeaturedRenderer = Effect.fn(
     request,
     manifest
   );
-  const item = response.items[0];
-  assert(item, "The featured signed snapshot returned no question artifact.");
+  const featuredItem = Arr.head(response.items);
+  if (Option.isNone(featuredItem)) {
+    return yield* new FeaturedArtifactError({
+      message: "The featured signed snapshot returned no question artifact.",
+    });
+  }
+  const item = featuredItem.value;
 
   // The protected exchange verifies compatibility with both signed and live manifests.
   const requiredRendererNames = Arr.sort(

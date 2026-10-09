@@ -1,5 +1,4 @@
 import { createServer } from "node:http";
-import { fileURLToPath, pathToFileURL } from "node:url";
 import { NodeHttpServer, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -30,7 +29,7 @@ class CliTestCommandError extends Schema.TaggedError<CliTestCommandError>()(
   }
 ) {}
 
-const packageRoot = fileURLToPath(new URL("../", import.meta.url));
+const packageRoot = `${import.meta.dirname}/..`;
 const PackResultSchema = Schema.fromJsonString(
   Schema.NonEmptyArray(
     Schema.Struct({
@@ -99,12 +98,12 @@ describe("Nakafa CLI package", () => {
       yield* fileSystem.writeFileString(validPath, '{"version":"9.8.7"}');
       yield* fileSystem.writeFileString(invalidPath, '{"version":7}');
 
-      const valid = yield* readPackageVersion(pathToFileURL(validPath));
-      const invalid = yield* readPackageVersion(
-        pathToFileURL(invalidPath)
-      ).pipe(Effect.result);
+      const valid = yield* readPackageVersion(validPath);
+      const invalid = yield* readPackageVersion(invalidPath).pipe(
+        Effect.result
+      );
       const missing = yield* readPackageVersion(
-        pathToFileURL(path.join(directory, "missing.json"))
+        path.join(directory, "missing.json")
       ).pipe(Effect.result);
 
       expect(valid).toBe("9.8.7");
@@ -127,7 +126,7 @@ describe("Nakafa CLI package", () => {
           prefix: "cli-pack-",
         });
         const packageVersion = yield* readPackageVersion(
-          pathToFileURL(path.join(packageRoot, "package.json"))
+          path.join(packageRoot, "package.json")
         );
         const packOutput = yield* runCommand(
           "npm",
