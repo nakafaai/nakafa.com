@@ -322,6 +322,64 @@ describe("array findings by project", () => {
   );
 });
 
+describe("array findings by method", () => {
+  it.effect(
+    "reports each array method that Effect replaces by the rule it breaks",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* judge({
+            [PROJECT_CONFIG]: PROJECT,
+            "scripts/methods.ts": `declare const rows: number[];
+export const first = rows.at(0);
+export const index = rows.indexOf(1);
+export const last = rows.lastIndexOf(1);
+export const has = rows.includes(1);
+export const rest = rows.slice(1);
+export const more = rows.concat([2]);
+export const pairs = rows.entries();
+`,
+          }),
+          [
+            "scripts/methods.ts:2 array-search",
+            "scripts/methods.ts:3 array-search",
+            "scripts/methods.ts:4 array-search",
+            "scripts/methods.ts:5 array-method",
+            "scripts/methods.ts:6 array-method",
+            "scripts/methods.ts:7 array-method",
+            "scripts/methods.ts:8 array-method",
+          ]
+        );
+      })
+  );
+
+  it.effect(
+    "leaves a string, a Map, and a typed array with these method names unreported",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* judge({
+            [PROJECT_CONFIG]: PROJECT,
+            "scripts/label.ts": `declare const label: string;
+export const first = label.at(0);
+export const index = label.indexOf("a");
+export const last = label.lastIndexOf("a");
+export const has = label.includes("a");
+export const rest = label.slice(1);
+export const more = label.concat("b");
+`,
+            "scripts/names.ts": `declare const names: Map<string, number>;
+export const pairs = names.entries();
+`,
+            "scripts/bytes.ts":
+              "export const pairs = new Uint8Array(2).entries();\n",
+          }),
+          []
+        );
+      })
+  );
+});
+
 describe("array findings by scope", () => {
   it.effect(
     "keeps browser page functions and generated modules out of the verdict",
