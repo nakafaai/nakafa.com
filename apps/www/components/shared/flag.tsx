@@ -4,8 +4,18 @@ import gbFlag from "country-flag-icons/string/3x2/GB";
 import idFlag from "country-flag-icons/string/3x2/ID";
 import sgFlag from "country-flag-icons/string/3x2/SG";
 import usFlag from "country-flag-icons/string/3x2/US";
-import { Match } from "effect";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
+
+/** Country codes with a bundled flag; onboarding regions use the same set. */
+export const RegionCountryCodeSchema = Schema.Literals([
+  "DE",
+  "GB",
+  "ID",
+  "SG",
+  "US",
+]);
+export type RegionCountryCode = typeof RegionCountryCodeSchema.Type;
 
 function parseFlagSource(source: string) {
   const bodyStart = source.indexOf(">");
@@ -34,18 +44,14 @@ const flagSources = {
   ID: parseFlagSource(idFlag),
   SG: parseFlagSource(sgFlag),
   US: parseFlagSource(usFlag),
-};
+} satisfies Record<RegionCountryCode, ReturnType<typeof parseFlagSource>>;
 
 /** Selects one package-owned SVG without importing the all-country React barrel. */
 function getFlagSource(countryCode: string | undefined) {
-  return Match.value(countryCode).pipe(
-    Match.when("DE", () => flagSources.DE),
-    Match.when("GB", () => flagSources.GB),
-    Match.when("ID", () => flagSources.ID),
-    Match.when("SG", () => flagSources.SG),
-    Match.when("US", () => flagSources.US),
-    Match.orElse(() => undefined)
-  );
+  if (!Schema.is(RegionCountryCodeSchema)(countryCode)) {
+    return;
+  }
+  return flagSources[countryCode];
 }
 
 /** Renders one supported country flag without dynamic component lookup. */
