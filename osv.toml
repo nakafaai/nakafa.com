@@ -6,5 +6,5 @@
 
 [[IgnoredVulns]]
 id = "GHSA-vfj7-8cjw-p6xm"
-ignoreUntil = 2026-10-30
+ignoreUntil = 2026-10-23
 reason = "braces <=3.0.3 has no patched release, and 3.0.3 is the newest release. Only the root devDependency ultracite reaches it (ultracite -> fast-glob -> micromatch -> braces, and ultracite -> find-workspaces -> fast-glob -> micromatch -> braces). Ultracite gives fast-glob only fixed patterns, and find-workspaces expands the workspace globs of this repository's own pnpm-workspace.yaml, so no untrusted input reaches the brace expansion."
