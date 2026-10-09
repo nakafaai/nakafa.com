@@ -144,11 +144,14 @@ jobs:
         run: test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex)"
 
       - name: Run tests
-        # The backend suite runs in its own job. The root test:without-backend
-        # script runs every other suite. Its filter keeps the backend suite out,
-        # and the test tasks reach other packages only through transit nodes,
-        # which run no tests.
-        run: pnpm test:without-backend
+        # The backend suite runs in its own job. Its filter keeps it out of this
+        # run. The test tasks in turbo.json reach other packages only through
+        # transit nodes, which run no tests.
+        run: |
+          pnpm check:patches
+          pnpm check:tests
+          pnpm test:scripts
+          pnpm exec turbo run test --filter='!@repo/backend'
 
   backend:
     name: Backend

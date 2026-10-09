@@ -46,7 +46,6 @@
     "test:scripts": "pnpm typecheck:scripts && vitest run --config scripts/vitest.config.mts",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",
-    "test:without-backend": "pnpm check:patches && pnpm check:tests && pnpm test:scripts && turbo run test --filter='!@repo/backend'",
     "typecheck:scripts": "tsc --project scripts/tsconfig.json --noEmit",
     "version-packages": "changeset version"
   },
