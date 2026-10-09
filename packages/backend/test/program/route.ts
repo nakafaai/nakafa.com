@@ -100,15 +100,16 @@ export const insertCurriculumRoutes = Effect.fn(
   );
 });
 
+/** One group of material rows: its index and how many rows it holds. */
+const MaterialGroupSchema = Schema.Struct({
+  materialIndex: Schema.Finite,
+  rowCount: Schema.Finite,
+});
+
 /** Seeds enough material rows to exercise the aggregate route read budget. */
 export const insertMaterialGroups = Effect.fn(
   "test.program.insertMaterialGroups"
-)(function* (
-  groups: readonly {
-    readonly materialIndex: number;
-    readonly rowCount: number;
-  }[]
-) {
+)(function* (groups: readonly (typeof MaterialGroupSchema.Type)[]) {
   for (const { materialIndex, rowCount } of groups) {
     for (let index = 1; index <= rowCount; index += 1) {
       yield* insertMaterialProjection(

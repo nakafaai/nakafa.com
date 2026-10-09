@@ -75,9 +75,10 @@ const decodeCurrentRuntimeBundle = Effect.fn(
   "contentRelease.decodeCurrentRuntimeBundle"
 )(function* (
   source: string | null,
-  active: {
-    readonly rendererManifest: unknown;
-  } | null
+  active: Pick<
+    Parameters<typeof verifySignedTryoutRuntimeBundle>[0],
+    "rendererManifest"
+  > | null
 ) {
   if (source === null) {
     return null;

@@ -11,10 +11,10 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { languages } from "@repo/internationalization/data/lang";
-import { IconCircleFilled } from "@tabler/icons-react";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { type Locale, useLocale, useTranslations } from "next-intl";
+import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
@@ -64,12 +64,7 @@ export function Language({ compact = false }: { compact?: boolean }) {
             >
               <CountryFlagIcon countryCode={language.countryCode} />
               <span className="truncate">{language.label}</span>
-              <IconCircleFilled
-                className={cn(
-                  "ml-auto size-3 text-primary opacity-0 transition-opacity",
-                  currentLocale === language.value && "opacity-100"
-                )}
-              />
+              <ActiveBadge isActive={currentLocale === language.value} />
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>

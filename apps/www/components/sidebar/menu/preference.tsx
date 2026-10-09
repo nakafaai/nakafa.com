@@ -25,11 +25,10 @@ import {
   useSidebar,
 } from "@repo/design-system/lib/sidebar/context";
 import { languages } from "@repo/internationalization/data/lang";
-import { IconCircleFilled } from "@tabler/icons-react";
-import { cn } from "cn";
 import { Array as Arr } from "effect";
 import dynamic from "next/dynamic";
 import { type Locale, useLocale, useTranslations } from "next-intl";
+import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
@@ -51,18 +50,6 @@ const ThemeSubmenuContent = dynamic(
 /** Opens menus beside the sidebar, or above their trigger on phones, where the sidebar fills the screen. */
 function selectMenuSide(sidebar: SidebarContextValue) {
   return sidebar.isMobile ? "top" : "right";
-}
-
-/** Shows the active menu option without changing the item label layout. */
-function ActiveBadge({ isActive }: { isActive: boolean }) {
-  return (
-    <IconCircleFilled
-      className={cn(
-        "ml-auto size-3 text-primary opacity-0 transition-opacity",
-        isActive && "opacity-100"
-      )}
-    />
-  );
 }
 
 /** Keeps the language control label identical across guest and account menus. */

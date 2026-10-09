@@ -23,9 +23,4 @@ export default Table.make(() =>
     "sequence",
     "family",
     "batchIndex",
-  ])
-  .index("by_snapshotId_and_family_and_batchIndex", [
-    "snapshotId",
-    "family",
-    "batchIndex",
   ]);

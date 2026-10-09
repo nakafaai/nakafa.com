@@ -1,5 +1,8 @@
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import type { NinaLearnerProfile } from "@repo/backend/confect/nina/memory.spec";
+import type {
+  NinaLearnerProfile,
+  NinaMemoryFact,
+} from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, DateTime, pipe } from "effect";
 
 const FOCUS_LABELS = {
@@ -45,7 +48,7 @@ export function formatLearnerPrompt({
   facts,
   profile,
 }: {
-  readonly facts: readonly { readonly text: string }[];
+  readonly facts: readonly Pick<typeof NinaMemoryFact.Type, "text">[];
   readonly profile: typeof NinaLearnerProfile.Type;
 }) {
   const account = formatLearnerProfile(profile);

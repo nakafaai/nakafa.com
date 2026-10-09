@@ -40,10 +40,7 @@ export const readMaterialPartition = Effect.fn(
   if (!(owner.active && owner.managed && owner.slot)) {
     return {
       activeReleaseId,
-      kind: "unmanaged",
-    } satisfies {
-      readonly activeReleaseId: typeof activeReleaseId;
-      readonly kind: "unmanaged";
+      kind: "unmanaged" as const,
     };
   }
   const source = yield* MaterialSource;

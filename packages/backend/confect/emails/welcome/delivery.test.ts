@@ -19,6 +19,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { insertTestPage } from "@repo/backend/test/content/page";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
+import type { FunctionArgs } from "convex/server";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect } from "effect";
 
@@ -84,15 +85,9 @@ async function createActivatedIntent(
 async function completeWelcomeWorkflow(
   test: TestConvex<typeof schema>,
   intentId: Awaited<ReturnType<typeof createActivatedIntent>>["intentId"],
-  runResult:
-    | {
-        kind: "success";
-        returnValue: null;
-      }
-    | {
-        error: string;
-        kind: "failed";
-      }
+  runResult: FunctionArgs<
+    typeof components.workflow.workflow.complete
+  >["runResult"]
 ) {
   const intent = await test.query((ctx) =>
     ctx.db.get("welcomeEmailIntents", intentId)

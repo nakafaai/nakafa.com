@@ -1,4 +1,8 @@
 import { Agent, type UsageHandler } from "@convex-dev/agent";
+import {
+  MAX_TITLE_LENGTH,
+  NinaTitle,
+} from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -11,7 +15,6 @@ import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
 import { assembleContext } from "@repo/backend/confect/nina/history";
-import { NinaTitle } from "@repo/backend/confect/nina/presentation.spec";
 import { nakafaSuggestions } from "@repo/backend/confect/nina/prompt/suggestions";
 import { Output } from "ai";
 import { Effect, Schema } from "effect";
@@ -110,8 +113,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
       name: "title",
       languageModel: naming.model,
       usageHandler,
-      instructions:
-        "Summarize the user's opening request as a descriptive title of 3 to 5 words, at most 80 characters. Use the user's language. Return only the title, without quotes or colons. Do not mention internal tools or services.",
+      instructions: `Summarize the user's opening request as a descriptive title of 3 to 5 words, at most ${MAX_TITLE_LENGTH} characters. Use the user's language. Return only the title, without quotes or colons. Do not mention internal tools or services.`,
       contextOptions: { recentMessages: 50 },
       contextHandler: (_ctx, { inputPrompt }) => Promise.resolve(inputPrompt),
     });
