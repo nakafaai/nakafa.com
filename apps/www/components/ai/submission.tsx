@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 import { type OptimisticUpdate, useAction, useMutation } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import nina from "@repo/backend/confect/_generated/refs/nina";
 import type {
   NinaPageInput,
   NinaPrompt,
@@ -42,7 +42,7 @@ import {
   getPathname,
 } from "@/lib/utils/browser";
 
-type Start = typeof refs.public.nina.turns.start;
+type Start = typeof nina.turns.start;
 export type NinaDraft = PromptInputMessage &
   Pick<typeof NinaPageInput.Type, "focus"> &
   Pick<typeof NinaPrompt.Type, "text">;
@@ -56,7 +56,7 @@ function optimisticPrompt(
     if (!args.chatId) {
       return;
     }
-    const conversation = store.getQuery(refs.public.nina.conversation.get, {
+    const conversation = store.getQuery(nina.conversation.get, {
       chatId: args.chatId,
     });
     if (Option.isNone(conversation)) {
@@ -64,7 +64,7 @@ function optimisticPrompt(
     }
     const threadId = conversation.value.chat.threadId;
     const pages = store
-      .getAllQueries(refs.public.nina.messages.list)
+      .getAllQueries(nina.messages.list)
       .filter(
         (page) =>
           page.args.chatId === args.chatId &&
@@ -104,7 +104,7 @@ function optimisticPrompt(
         continue;
       }
       store.setQuery(
-        refs.public.nina.messages.list,
+        nina.messages.list,
         page.args,
         Option.some({
           ...page.value.value,
@@ -130,7 +130,7 @@ function optimisticPrompt(
 
 const uploadAttachment = Effect.fn("nina.upload")(function* (
   attachment: NonNullable<NinaDraft["files"]>[number],
-  upload: ReturnType<typeof useAction<typeof refs.public.nina.uploads.save>>,
+  upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
   uploaded: WeakMap<File, Id<"ninaUploads">>,
   previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>
 ) {
@@ -178,7 +178,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
 /** Uploads one message's attachments, refusing oversized documents before any upload starts. */
 const uploadAttachments = Effect.fn("nina.uploads")(function* (
   files: NonNullable<NinaDraft["files"]>,
-  upload: ReturnType<typeof useAction<typeof refs.public.nina.uploads.save>>,
+  upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
   uploaded: WeakMap<File, Id<"ninaUploads">>,
   previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>
 ) {
@@ -195,12 +195,12 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
 
 /** Native admission with optimistic query updates and idempotent transport retry. */
 export function useNinaSubmission() {
-  const upload = useAction(refs.public.nina.uploads.save);
+  const upload = useAction(nina.uploads.save);
   const uploaded = useRef(new WeakMap<File, Id<"ninaUploads">>());
   const [previews] = useState(() =>
     MutableHashMap.empty<Id<"ninaUploads">, FileUIPart>()
   );
-  const start = useMutation(refs.public.nina.turns.start);
+  const start = useMutation(nina.turns.start);
   const getModel = useAi((state) => state.getModel);
   const addChatDraft = useAi((state) => state.addChatDraft);
   const removeChatDraft = useAi((state) => state.removeChatDraft);

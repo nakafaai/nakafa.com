@@ -9,9 +9,9 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
+import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { refundCredits } from "@repo/backend/confect/nina/credits/ledger";
 import {
-  type NinaFailureReason,
   NinaSettledTurn,
   NinaTurnError,
 } from "@repo/backend/confect/nina/turns.spec";

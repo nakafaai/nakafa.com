@@ -1,14 +1,6 @@
 import { getLatestUserText } from "@repo/backend/confect/nina/prompt/user";
 import type { ModelMessage } from "ai";
-import {
-  Array as Arr,
-  HashMap,
-  HashSet,
-  MutableHashSet,
-  Option,
-  Schema,
-  Struct,
-} from "effect";
+import { Array as Arr, HashMap, HashSet, MutableHashSet, Option } from "effect";
 import { ParseResultType, parseDomain } from "parse-domain";
 
 const whitespacePattern = /\s+/;
@@ -37,13 +29,6 @@ const pairedBoundaryPunctuation = HashMap.make(
   ["]", "["],
   ["}", "{"]
 );
-/** Runtime contract for one external source reference extracted from user text. */
-export const SourceReferenceSchema = Schema.Struct({
-  href: Schema.String,
-  hostname: Schema.String,
-  text: Schema.String,
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type SourceReference = typeof SourceReferenceSchema.Type;
 /**
  * Extracts every unique external source reference from plain user text.
  */

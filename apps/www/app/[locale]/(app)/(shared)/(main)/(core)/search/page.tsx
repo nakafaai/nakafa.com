@@ -63,7 +63,7 @@ async function SearchHeader() {
   const account = token
     ? await Effect.runPromise(
         Effect.flatMap(HttpClient.HttpClient, (client) =>
-          client.query(refs.public.auth.queries.getCurrentUser, {})
+          client.query(auth.queries.getCurrentUser, {})
         ).pipe(Effect.provide(httpLayer({ auth: token })))
       )
     : null;
@@ -71,6 +71,6 @@ async function SearchHeader() {
 }
 
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import auth from "@repo/backend/confect/_generated/refs/auth";
 import { Effect } from "effect";
 import { httpLayer } from "@/lib/convex/http";

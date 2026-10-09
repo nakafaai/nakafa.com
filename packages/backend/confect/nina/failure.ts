@@ -2,7 +2,7 @@ import {
   classify,
   GatewayFailure,
 } from "@repo/backend/confect/gateway/failure";
-import { NinaFailureReason } from "@repo/backend/confect/nina/turns.spec";
+import { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { Schema } from "effect";
 
 export class NinaGenerationError extends Schema.TaggedError<NinaGenerationError>()(

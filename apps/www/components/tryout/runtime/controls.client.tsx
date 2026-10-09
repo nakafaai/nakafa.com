@@ -3,7 +3,7 @@
 import { useMutation } from "@confect/react";
 import { StopIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -35,9 +35,7 @@ export function TryoutRuntimeControls({
 }: TryoutRuntimeControlsProps) {
   const { expired, returnHref, runtime } = value;
   const router = useRouter();
-  const completeSection = useMutation(
-    refs.public.tryouts.mutations.sections.complete
-  );
+  const completeSection = useMutation(tryouts.mutations.sections.complete);
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
   const [isOpen, { close: closeDialog, open: openDialog }] =

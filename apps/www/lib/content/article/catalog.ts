@@ -14,7 +14,7 @@ import {
   ArticleProjectionSchema,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
@@ -25,19 +25,13 @@ import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { httpLayer } from "@/lib/convex/http";
 /** Stable source root for immutable Aksara article links. */
 export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
-type ArticlePageArgs = Ref.Args<
-  typeof refs.public.contentRelease.article.publications
->;
+type ArticlePageArgs = Ref.Args<typeof contentRelease.article.publications>;
 type ArticlePageResult = Ref.Returns<
-  typeof refs.public.contentRelease.article.publications
+  typeof contentRelease.article.publications
 >;
 type ArticlePageItem = ArticlePageResult["result"]["page"][number];
-type CategoryPageArgs = Ref.Args<
-  typeof refs.public.contentRelease.article.categories
->;
-type CategoryPageResult = Ref.Returns<
-  typeof refs.public.contentRelease.article.categories
->;
+type CategoryPageArgs = Ref.Args<typeof contentRelease.article.categories>;
+type CategoryPageResult = Ref.Returns<typeof contentRelease.article.categories>;
 type CategoryPageItem = CategoryPageResult["result"]["page"][number];
 /** Active release identity required to continue one stable catalog read. */
 const ArticlePageCursorSchema = Schema.Struct({
@@ -191,7 +185,7 @@ export const readPublishedArticlePage = Effect.fn(
     },
   } satisfies ArticlePageArgs;
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.article.publications, args)
+    client.query(contentRelease.article.publications, args)
   ).pipe(Effect.provide(httpLayer()));
   const {
     activeManifestHash: rawManifestHash,
@@ -246,7 +240,7 @@ export const readPublishedCategories = Effect.fn(
     },
   } satisfies CategoryPageArgs;
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.article.categories, args)
+    client.query(contentRelease.article.categories, args)
   ).pipe(Effect.provide(httpLayer()));
   const {
     activeManifestHash: rawManifestHash,

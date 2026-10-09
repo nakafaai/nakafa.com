@@ -8,7 +8,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
@@ -37,7 +37,7 @@ export const readPublishedProgramRoute = Effect.fn(
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.program.route, {
+    client.query(contentRelease.program.route, {
       appLocale,
       publicPath,
     })

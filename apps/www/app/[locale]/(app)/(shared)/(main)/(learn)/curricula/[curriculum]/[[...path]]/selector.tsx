@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import {
   Select,
   SelectContent,
@@ -27,13 +27,11 @@ export type CurriculumSelectorOption = ReturnType<
   typeof readRuntimeCurriculumOptions
 >[number];
 type SavePreferredCurriculumArgs = Ref.Args<
-  typeof refs.public.learningPreferences.mutations.setPreferredCurriculum
+  typeof learningPreferences.mutations.setPreferredCurriculum
 >;
 type SavePreferredCurriculum = (
   args: SavePreferredCurriculumArgs
-) => InvokeReturn<
-  typeof refs.public.learningPreferences.mutations.setPreferredCurriculum
->;
+) => InvokeReturn<typeof learningPreferences.mutations.setPreferredCurriculum>;
 /** Expected failure when a background curriculum preference save fails. */
 class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPreferenceSaveError>()(
   "CurriculumPreferenceSaveError",

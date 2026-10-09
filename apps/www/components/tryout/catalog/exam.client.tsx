@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 
 import type { Locale } from "next-intl";
@@ -18,7 +18,7 @@ import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { getTryoutTrackCatalogArtwork } from "@/lib/tryout/artwork";
 
-type ExamPageQuery = typeof refs.public.tryouts.queries.catalog.getExamPage;
+type ExamPageQuery = typeof tryouts.queries.catalog.getExamPage;
 
 /** Renders one realtime try-out exam page from Convex. */
 export function TryoutExamPageClient({

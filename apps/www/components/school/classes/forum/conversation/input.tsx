@@ -2,7 +2,7 @@ import { useMutation } from "@confect/react";
 import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import {
   MAX_FORUM_ATTACHMENT_BYTES,
   MAX_FORUM_POST_ATTACHMENTS,
@@ -54,13 +54,13 @@ export function ForumPostInput() {
   const [composerRef] = useResizeObserver<HTMLFormElement>();
   const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const generateUploadUrl = useMutation(
-    refs.public.classes.forums.mutations.uploads.generateUploadUrl
+    classes.forums.mutations.uploads.generateUploadUrl
   );
   const discardForumUploads = useMutation(
-    refs.public.classes.forums.mutations.uploads.discardForumUploads
+    classes.forums.mutations.uploads.discardForumUploads
   );
   const saveForumUpload = useMutation(
-    refs.public.classes.forums.mutations.uploads.saveForumUpload
+    classes.forums.mutations.uploads.saveForumUpload
   );
   const createPost = useCreateForumPost();
   const [{ files }, { removeFile, clearFiles, openFileDialog, getInputProps }] =

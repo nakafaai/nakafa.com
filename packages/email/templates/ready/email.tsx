@@ -2,12 +2,14 @@ import { render } from "@react-email/render";
 import { Tailwind } from "@repo/email/tailwind";
 import {
   type AccountReadyEmailInput,
-  AccountReadyEmailInputError,
   AccountReadyEmailInputSchema,
-  AccountReadyEmailRenderError,
   getAccountReadyEmailCopy,
   getPublicEmailUrl,
 } from "@repo/email/templates/ready/content";
+import {
+  AccountReadyEmailInputError,
+  AccountReadyEmailRenderError,
+} from "@repo/email/templates/ready/contract";
 import {
   COMPANY_IDENTITY,
   COMPANY_REGISTERED_ADDRESS,

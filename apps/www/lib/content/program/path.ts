@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
@@ -13,7 +13,7 @@ export const readPublishedProgramPath = Effect.fn(
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.program.path, {
+    client.query(contentRelease.program.path, {
       appLocale,
       publicPath,
     })

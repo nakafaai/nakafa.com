@@ -4,7 +4,7 @@ import { HttpClient } from "@confect/js";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { RoutedContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Layer, Schema } from "effect";
@@ -95,7 +95,7 @@ describe("published content route", () => {
           kind: "unmanaged",
         });
         expect(fetchQueryMock).toHaveBeenCalledExactlyOnceWith(
-          refs.public.contentRelease.ownership.resolve,
+          contentRelease.ownership.resolve,
           input
         );
       })
@@ -144,7 +144,7 @@ describe("published content route", () => {
           projection: previewProjection,
         });
         expect(fetchQueryMock).toHaveBeenCalledExactlyOnceWith(
-          refs.public.contentRelease.ownership.resolve,
+          contentRelease.ownership.resolve,
           input
         );
         expect(yield* readActiveContentRoute(input)).toEqual({

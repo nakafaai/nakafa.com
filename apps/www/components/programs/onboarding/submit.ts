@@ -1,19 +1,17 @@
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 
 import { Effect, Schema } from "effect";
 
-type SaveAnswerArgs = Ref.Args<
-  typeof refs.public.onboarding.mutations.saveAnswer
->;
-type FinishArgs = Ref.Args<typeof refs.public.onboarding.mutations.finish>;
+type SaveAnswerArgs = Ref.Args<typeof onboarding.mutations.saveAnswer>;
+type FinishArgs = Ref.Args<typeof onboarding.mutations.finish>;
 type SaveAnswerMutation = (
   args: SaveAnswerArgs
-) => InvokeReturn<typeof refs.public.onboarding.mutations.saveAnswer>;
+) => InvokeReturn<typeof onboarding.mutations.saveAnswer>;
 type FinishMutation = (
   args: FinishArgs
-) => InvokeReturn<typeof refs.public.onboarding.mutations.finish>;
+) => InvokeReturn<typeof onboarding.mutations.finish>;
 
 /** Expected browser mutation failure while saving onboarding state. */
 export class OnboardingMutationError extends Schema.TaggedError<OnboardingMutationError>()(

@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { httpLayer } from "@/lib/convex/http";
@@ -12,7 +12,7 @@ export const readPublishedProgramBuckets = Effect.fn(
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
   return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.program.sitemapBuckets, {
+    client.query(contentRelease.program.sitemapBuckets, {
       appLocale,
     })
   ).pipe(Effect.provide(httpLayer()));
@@ -24,7 +24,7 @@ export const readPublishedProgramSitemap = Effect.fn(
 )(function* (locale: Locale, bucket: string) {
   const appLocale = AppLocaleSchema.make(locale);
   return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.program.sitemapPage, {
+    client.query(contentRelease.program.sitemapPage, {
       appLocale,
       bucket,
     })

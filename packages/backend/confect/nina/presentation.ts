@@ -9,11 +9,9 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
+import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
 import { assembleContext } from "@repo/backend/confect/nina/history";
-import {
-  NinaSuggestions,
-  NinaTitle,
-} from "@repo/backend/confect/nina/presentation.spec";
+import { NinaTitle } from "@repo/backend/confect/nina/presentation.spec";
 import { nakafaSuggestions } from "@repo/backend/confect/nina/prompt/suggestions";
 import { Output } from "ai";
 import { Effect, Schema } from "effect";

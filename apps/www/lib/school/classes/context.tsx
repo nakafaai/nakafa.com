@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import type { classRouteAccessibleValidator } from "@repo/backend/confect/classes/validators";
 import { createContext, use } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -23,7 +23,7 @@ export function ClassContextProvider({
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const query = useQuery(
-    refs.public.classes.queries.getClassRoute,
+    classes.queries.getClassRoute,
     isAuthenticated ? { classId: initialRoute.class._id } : "skip"
   );
   if (QueryResult.isFailure(query)) {

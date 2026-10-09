@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import auth from "@repo/backend/confect/_generated/refs/auth";
 import { useAuthSession } from "@/components/auth/session";
 import { type AccountRecord, toViewer } from "@/lib/identity/viewer";
 
@@ -83,7 +83,7 @@ export function useViewer<T>(selector: (state: IdentityState) => T): T {
   const sessionId = useAuthSession((session) => session.sessionId);
   const isSessionPending = useAuthSession((session) => session.isPending);
   const query = useQuery(
-    refs.public.auth.queries.getCurrentUser,
+    auth.queries.getCurrentUser,
     sessionId === null ? "skip" : {}
   );
   if (QueryResult.isFailure(query)) {

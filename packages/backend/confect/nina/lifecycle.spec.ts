@@ -5,11 +5,9 @@ import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
-import {
-  NinaFailureReason,
-  NinaTurnError,
-} from "@repo/backend/confect/nina/turns.spec";
+import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { Schema } from "effect";
 
 export default GroupSpec.make()

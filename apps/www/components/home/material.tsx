@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 
-import type refs from "@repo/backend/confect/_generated/refs";
+import type contents from "@repo/backend/confect/_generated/refs/contents";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -18,7 +18,7 @@ import type { ReactNode } from "react";
  * one ranked query returns.
  */
 type RankedMaterial = Ref.Returns<
-  typeof refs.public.contents.queries.recent.getRecentlyViewed
+  typeof contents.queries.recent.getRecentlyViewed
 >[number];
 
 export type HomeMaterial = Pick<

@@ -7,7 +7,7 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, HashSet, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
@@ -47,7 +47,7 @@ export const readPublishedArticleRoute = Effect.fn(
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.article.route, {
+    client.query(contentRelease.article.route, {
       ...(expectedActiveReleaseId === undefined
         ? {}
         : {
@@ -69,7 +69,7 @@ export const readPublishedArticleRoute = Effect.fn(
 export const decodePublishedArticleRoute = Effect.fn(
   "NakafaArticle.decodePublishedRoute"
 )(function* (
-  result: Ref.Returns<typeof refs.public.contentRelease.article.route>,
+  result: Ref.Returns<typeof contentRelease.article.route>,
   locale: Locale,
   publicPath: string,
   expectedActiveReleaseId?: ContentReleasePin

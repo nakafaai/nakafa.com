@@ -1,6 +1,6 @@
 import { HttpClient } from "@confect/js";
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { Effect, Schema } from "effect";
@@ -76,7 +76,7 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
       date: "",
     };
     const reference = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.contentRelease.reference.read, {
+      client.query(contentRelease.reference.read, {
         input: {
           appLocale: locale,
           kind: "route",

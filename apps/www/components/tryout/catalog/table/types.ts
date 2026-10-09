@@ -1,8 +1,8 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 
-type SetListQuery = typeof refs.public.tryouts.queries.sets.list;
-type TrackPageQuery = typeof refs.public.tryouts.queries.catalog.getTrackPage;
+type SetListQuery = typeof tryouts.queries.sets.list;
+type TrackPageQuery = typeof tryouts.queries.catalog.getTrackPage;
 
 /** Number of additional sets requested by each discovery window. */
 export const TRYOUT_SET_PAGE_SIZE = 25;

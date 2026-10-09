@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Effect, Layer, Schema } from "effect";
 import {
@@ -101,7 +101,7 @@ beforeEach(() => {
   queryMock.mockReset().mockImplementation((reference) =>
     Effect.succeed(
       reference.convexFunctionName ===
-        refs.public.contentRelease.material.navigation.convexFunctionName
+        contentRelease.material.navigation.convexFunctionName
         ? {
             activeManifestHash: model.activeManifestHash,
             activeReleaseId,
@@ -171,7 +171,7 @@ describe("coherent material publication", () => {
     expect(queryMock).toHaveBeenCalledTimes(4);
     expect(queryMock).toHaveBeenNthCalledWith(
       4,
-      refs.public.contentRelease.material.navigation,
+      contentRelease.material.navigation,
       {
         appLocale: "en",
         expectedActiveReleaseId: nextRelease,
@@ -265,7 +265,7 @@ describe("coherent material publication", () => {
     });
     expect(queryMock).toHaveBeenNthCalledWith(
       1,
-      refs.public.contentRelease.material.lesson,
+      contentRelease.material.lesson,
       {
         appLocale: "en",
         publicPath: projection.publicPath,
@@ -273,7 +273,7 @@ describe("coherent material publication", () => {
     );
     expect(queryMock).toHaveBeenNthCalledWith(
       2,
-      refs.public.contentRelease.material.navigation,
+      contentRelease.material.navigation,
       {
         appLocale: "en",
         expectedActiveReleaseId: activeReleaseId,
