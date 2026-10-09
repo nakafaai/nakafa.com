@@ -215,7 +215,7 @@ importers:
         specifier: 'catalog:'
         version: 0.12.0
       typescript:
-        specifier: 7.0.2
+        specifier: 'catalog:'
         version: 7.0.2
 
   apps/cas:
@@ -259,7 +259,7 @@ importers:
         specifier: 'catalog:'
         version: 0.12.0
       typescript:
-        specifier: 7.0.2
+        specifier: 'catalog:'
         version: 7.0.2
 
   apps/www:
@@ -452,7 +452,7 @@ importers:
         specifier: 'catalog:'
         version: 4.23.15
       typescript:
-        specifier: 7.0.2
+        specifier: 'catalog:'
         version: 7.0.2
       vitest:
         specifier: 'catalog:'
@@ -682,7 +682,7 @@ importers:
         specifier: 0.28.2
         version: 0.28.2
       typescript:
-        specifier: 7.0.2
+        specifier: 'catalog:'
         version: 7.0.2
       vite:
         specifier: 'catalog:'
