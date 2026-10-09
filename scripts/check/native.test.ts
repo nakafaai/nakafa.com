@@ -16,6 +16,14 @@ const findings = Effect.fn("NativePolicyTest.findings")(function* (
   return Arr.map(found, ({ line, rule }) => `${line} ${rule}`);
 }, Effect.scoped);
 
+/** The four lines of a detached process service: its spawn import, Effect's names, its class, and its layer. */
+const SPAWN = 'import { spawn } from "node:child_process";\n';
+const EFFECT = 'import { Context, Effect, Layer } from "effect";\n';
+const SERVICE =
+  'export class Child extends Context.Service<Child, { readonly pid: number }>()("Child") {}\n';
+const LAYER =
+  'export const ChildLive = Layer.succeed(Child, { pid: Number(spawn("node", [], { detached: true }).pid) });\n';
+
 describe("native syntax", () => {
   it.effect(
     "reports runtime imports of Node file, path, and process modules",
@@ -44,57 +52,83 @@ export const dynamic = import(name);
       })
   );
 
+  it.effect("keeps the spawn import of a detached process service", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`${SPAWN}${EFFECT}${SERVICE}${LAYER}`),
+        []
+      );
+      assert.deepStrictEqual(
+        yield* findings(`import { spawn, type ChildProcess } from "child_process";
+import { Context as C, Layer as L } from "effect";
+export class Child extends C.Service<Child, { readonly pid: number }>()("Child") {}
+export const ChildLive = L.effect(Child, make(spawn("node", { detached: true })));
+`),
+        []
+      );
+    })
+  );
+
   it.effect(
-    "leaves the process module to a module that declares a service and builds its layer",
+    "reports the process module unless the module provides its own service and starts every child detached",
     () =>
       Effect.gen(function* () {
-        const service = `import { spawn } from "node:child_process";
-import { Context, Effect, Layer } from "effect";
-export class Child extends Context.Service<Child, { readonly start: Effect.Effect<number> }>()("Child") {}
-`;
+        const reported = [
+          // No layer, the layer of another service, and a call that only names the service.
+          `${SPAWN}${EFFECT}${SERVICE}export const child = spawn("node", [], { detached: true });\n`,
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace("(Child,", "(Other,")}`,
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace("(Child,", "(Wrapper, Child,")}`,
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace("Layer.succeed", "Layer.updateService")}`,
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace("Layer.succeed", "Other.succeed")}`,
+          // Context or Layer that is not Effect's.
+          `${SPAWN}import { Context } from "effect";\nimport { Layer } from "@repo/utilities/layer";\n${SERVICE}${LAYER}`,
+          `${SPAWN}import { Layer } from "effect";\nimport Context, * as all from "./context";\nimport "./setup";\n${SERVICE}${LAYER}`,
+          // Classes that are no service of the module.
+          `${SPAWN}${EFFECT}export class Child extends Context.Tag("Child") {}\n${LAYER}`,
+          `${SPAWN}${EFFECT}export class Child extends Base implements Runner {}\nclass Plain {}\nexport default class extends Base {}\n${LAYER}`,
+          // A child that is not detached, and one of two that is not.
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace("detached: true", "detached: false")}`,
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace(", { detached: true }", "")}`,
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace("{ detached: true }", "options")}`,
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace("{ detached: true }", "{ detached, [key]: true, ...rest }")}`,
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER}export const second = spawn("node");\n`,
+          // An import that binds more than spawn, or binds it another way.
+          `import { exec, spawn } from "node:child_process";\n${EFFECT}${SERVICE}${LAYER}`,
+          `import { spawn as start } from "node:child_process";\n${EFFECT}${SERVICE}${LAYER}`,
+          `import spawn from "node:child_process";\n${EFFECT}${SERVICE}${LAYER}`,
+          `import * as spawn from "node:child_process";\n${EFFECT}${SERVICE}${LAYER}`,
+          `import "node:child_process";\n${EFFECT}${SERVICE}${LAYER}`,
+        ];
         assert.deepStrictEqual(
-          yield* findings(
-            `${service}export const ChildLive = Layer.succeed(Child, Child.of({ start: Effect.sync(() => Number(spawn("node").pid)) }));\n`
-          ),
-          []
-        );
-        // The layer of another service, a service without a layer, and a class that is no service.
-        assert.deepStrictEqual(
-          yield* findings(
-            `${service}export const OtherLive = Layer.succeed(Other, {});\nexport const merged = Layer.mergeAll();\n`
-          ),
-          ["1 node-module"]
-        );
-        assert.deepStrictEqual(yield* findings(service), ["1 node-module"]);
-        assert.deepStrictEqual(
-          yield* findings(`import { spawn } from "node:child_process";
-import { Layer } from "effect";
-export class Child extends Base implements Runner {}
-class Unnamed extends Context.Tag("Unnamed") {}
-class Plain {}
-export default class extends Base {}
-export const ChildLive = Layer.succeed(Child, {});
-`),
-          ["1 node-module"]
+          yield* Effect.forEach(reported, (source) => findings(source)),
+          Arr.map(reported, () => ["1 node-module"])
         );
       })
   );
 
   it.effect(
-    "still reports every other Node module load in a process service module",
+    "still reports every other Node module load in a detached process service",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* findings(`import { spawn } from "child_process";
-import { readFileSync } from "node:fs";
+          yield* findings(`${SPAWN}${EFFECT}${SERVICE}${LAYER}import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { Context, Layer } from "effect";
-export class Child extends Context.Service<Child, { readonly pid: number }>()("Child") {}
-export const ChildLive = Layer.succeed(Child, { pid: Number(spawn(join("a", "b")).pid) });
+import cp = require("node:child_process");
+export { spawn as run } from "node:child_process";
 export const late = require("node:child_process");
 export const dynamic = import("node:child_process");
+export const builtin = process.getBuiltinModule("node:fs");
+export const other = process.getBuiltinModule("node:crypto");
 `),
-          ["2 node-module", "3 node-module", "7 node-module", "8 node-module"]
+          [
+            "5 node-module",
+            "6 node-module",
+            "7 node-module",
+            "8 node-module",
+            "9 node-module",
+            "10 node-module",
+            "11 node-module",
+          ]
         );
       })
   );

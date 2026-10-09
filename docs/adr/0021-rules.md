@@ -102,25 +102,37 @@ function is in the page too, and a nested function with the same name is
 ordinary code. The page keeps its platform globals, native syntax, shapes, and
 throws, but `switch` statements and assertions are still reported there.
 
-### A process service of its own
+### A detached process service
 
-`node-module` reports every load of Node's file, path, and process modules, with
-one construction: a module may import `node:child_process` when it is a process
-service of its own. It declares a `Context.Service` class and builds that
-class's layer in the same module, as in `Layer.succeed(Service, ...)`.
+`node-module` reports every load of Node's file, path, and process modules, also
+through `require`, `createRequire`, a dynamic import, and
+`process.getBuiltinModule`. It has one construction: the import of `spawn` from
+`node:child_process` in a detached process service. All of these hold:
 
-Effect's spawner owns termination. In 4.0.2 it signals the child's process
-group when the child exits with a code that is not zero, and again when the
-scope closes (`NodeChildProcessSpawner.ts`, lines 549 to 568). No option leaves
-termination to the caller, and `unref` removes the child from the event loop. A
-service that must never signal a group whose leader already ended, and that must
-keep the parent alive while it waits, starts its child with Node's API behind its
-own seam. nakafa.com has no such module. Aksara's CLI has one, and aksara #421
-pins its seven lifetime properties with tests.
+- The module imports `Context` and `Layer` from `effect`, declares a top-level
+  class that extends `Context.Service<Self, Shape>()("Id")`, and builds that
+  class's layer with `Layer.succeed`, `Layer.effect`, or `Layer.sync`.
+- The import declaration binds `spawn` under that name, and nothing else at run
+  time.
+- The module calls `spawn`, and the last argument of every call is an object
+  literal with `detached: true`: each child leads a process group of its own.
 
-The construction covers the import declaration only. A `require`, a dynamic
-import, and the file and path modules are still reported in such a module. When
-the spawner offers a way to own termination, the construction goes away.
+Effect's spawner owns termination (4.0.2, `NodeChildProcessSpawner.ts`, lines
+549 to 568). When the scope closes it signals the child's process group, also
+after the child ended by itself with code zero, as long as the handle is
+referenced. When the child exits with another code it signals the group at
+once. `unref` turns the signals at scope close off, but it also removes the
+child from the event loop, so the parent no longer stays alive for it. No
+option leaves termination to the caller. So a service cannot both never signal
+a group whose leader already ended and keep the parent alive while it waits. It
+starts its child with Node's API behind its own seam. nakafa.com has no such
+module. Aksara's CLI has one, and aksara #421 pins its lifetime properties with
+tests.
+
+Every other load of the process module is still reported in such a module, and
+so are the file and path modules. A child that is not detached has no group to
+own, so Effect's `ChildProcess` starts it. When the spawner offers a way to own
+termination, the construction goes away.
 
 ### Promise syntax
 

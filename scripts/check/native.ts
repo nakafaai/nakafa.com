@@ -17,7 +17,7 @@ import {
 } from "typescript/unstable/ast";
 import { loadsExport, loadsImport } from "#scripts/check/kinds";
 import { candidate } from "#scripts/check/rules";
-import { providesOwnService } from "#scripts/check/service";
+import { detachedSpawnImports } from "#scripts/check/service";
 import { unwrapped } from "#scripts/check/wrapper";
 
 const NODE_MODULES = HashSet.make(
@@ -34,8 +34,6 @@ const NODE_MODULES = HashSet.make(
   "path/posix",
   "path/win32"
 );
-/** The Node process modules, which a process service of its own may import. */
-const PROCESS_MODULES = HashSet.make("child_process", "node:child_process");
 const EQUALITY_OPERATORS = HashSet.make(
   SyntaxKind.EqualsEqualsEqualsToken,
   SyntaxKind.EqualsEqualsToken,
@@ -71,9 +69,9 @@ function isRequireFactory(callee: Node) {
 /**
  * Whether a node loads a Node file system, path, or process module at runtime:
  * an import, an import assignment, a re-export, a dynamic import, or a call of
- * `require` or of a `createRequire` function, each with a literal module name.
- * The callee of a call is unwrapped first, so `(require)` and `(require as
- * NodeRequire)` are the `require` function.
+ * `require`, of a `createRequire` function, or of `getBuiltinModule`, each
+ * with a literal module name. The callee of a call is unwrapped first, so
+ * `(require)` and `(require as NodeRequire)` are the `require` function.
  */
 function isNodeModuleLoad(node: Node) {
   if (isImportDeclaration(node)) {
@@ -96,6 +94,8 @@ function isNodeModuleLoad(node: Node) {
   const loader =
     callee.kind === SyntaxKind.ImportKeyword ||
     (isIdentifier(callee) && callee.text === "require") ||
+    (isPropertyAccessExpression(callee) &&
+      callee.name.text === "getBuiltinModule") ||
     isRequireFactory(callee);
   const [specifier] = node.arguments;
   return loader && namesNodeModule(specifier);
@@ -141,33 +141,21 @@ function syntaxCandidates(sourceFile: SourceFile, node: Node) {
     : [];
 }
 
-/** Whether a node is an import declaration of a Node process module. */
-function isProcessImport(node: Node) {
-  return (
-    isImportDeclaration(node) &&
-    isStringLiteralLikeNode(node.moduleSpecifier) &&
-    HashSet.has(PROCESS_MODULES, node.moduleSpecifier.text)
-  );
-}
-
 /**
  * Returns the native syntax among one module's value-position `nodes` that
  * Effect replaces: Node module imports, raw failure handling, and hand-rolled
  * narrowing. Promise syntax is judged by `promise.ts`, and array methods by the
  * typed pass in `arrays.ts`.
- *
- * A module that is a process service of its own keeps its import of the Node
- * process module: Effect's spawner signals a child's process group by itself
- * and cannot leave termination to its caller, so a service that must own
- * termination starts its child with Node's API behind its own seam.
+ * A detached process service keeps its import of `spawn`, as `service.ts`
+ * sets out.
  */
 export function nativeCandidates(
   sourceFile: SourceFile,
   nodes: readonly Node[]
 ) {
-  const ownsProcess = providesOwnService(sourceFile, nodes);
+  const kept = detachedSpawnImports(sourceFile, nodes);
   return Arr.flatMap(nodes, (node) =>
-    ownsProcess && isProcessImport(node)
+    Arr.some(kept, (statement) => statement === node)
       ? []
       : syntaxCandidates(sourceFile, node)
   );
