@@ -1,9 +1,17 @@
 import { describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { Array as Arr, Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const NOW = 1_760_000_000_000;
+/** The stored fields this migration is about. A key that a row does not hold stays absent. */
+const StoredUsers = Schema.Array(
+  Schema.Struct({
+    displayUsername: Schema.optionalKey(Schema.NullOr(Schema.String)),
+    email: Schema.String,
+    username: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  })
+);
 
 describe("Better Auth retired username fields", () => {
   it.effect(
@@ -65,18 +73,15 @@ describe("Better Auth retired username fields", () => {
             paginationOpts: { cursor: null, numItems: 10 },
           })
         );
-        expect(
-          Arr.map(users.page, (user: Record<string, unknown>) => [
-            user.email,
-            "username" in user,
-            "displayUsername" in user,
-            user.username,
-          ])
-        ).toEqual([
-          ["named@example.com", true, true, "ada"],
-          ["empty@example.com", false, false, undefined],
-          ["half@example.com", false, false, undefined],
-          ["plain@example.com", false, false, undefined],
+        expect(Schema.decodeUnknownSync(StoredUsers)(users.page)).toEqual([
+          {
+            displayUsername: "Ada",
+            email: "named@example.com",
+            username: "ada",
+          },
+          { email: "empty@example.com" },
+          { email: "half@example.com" },
+          { email: "plain@example.com" },
         ]);
       })
   );
