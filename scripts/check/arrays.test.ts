@@ -51,6 +51,19 @@ const judgmentFailure = Effect.fn("ArrayPolicyTest.judgmentFailure")(
 );
 
 describe("array findings by project", () => {
+  it.effect("reports a chained array method at the line of its name", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* judge({
+          [PROJECT_CONFIG]: PROJECT,
+          "scripts/chain.ts":
+            "declare const rows: number[];\nexport const ids = rows\n  .filter(Boolean)\n  .map(String);\n",
+        }),
+        ["scripts/chain.ts:3 array-method", "scripts/chain.ts:4 array-method"]
+      );
+    })
+  );
+
   it.effect("judges an array call inside an extends clause", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

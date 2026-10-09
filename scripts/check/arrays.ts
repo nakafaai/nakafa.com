@@ -74,12 +74,12 @@ const judgeSource = Effect.fnUntraced(function* (
     checker,
     Arr.map(covered, ({ receiver }) => receiver)
   );
-  return Arr.filterMap(Arr.zip(covered, verdicts), ([{ node, rule }, array]) =>
+  return Arr.filterMap(Arr.zip(covered, verdicts), ([{ name, rule }, array]) =>
     array
       ? Result.succeed({
           file,
           line:
-            sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile))
+            sourceFile.getLineAndCharacterOfPosition(name.getStart(sourceFile))
               .line + 1,
           rule,
         })

@@ -64,9 +64,9 @@ function arrayRule(method: string): typeof Rule.Type | undefined {
 }
 
 /**
- * Returns the method that a call invokes and its receiver, for a callee written
- * as a property or as an element access with a string literal, such as
- * `rows.map(format)` or `rows["map"](format)`.
+ * Returns the method that a call invokes, the node that spells its name, and its
+ * receiver, for a callee written as a property or as an element access with a
+ * string literal, such as `rows.map(format)` or `rows["map"](format)`.
  */
 function calledMethod(node: Node) {
   if (!isCallExpression(node)) {
@@ -74,22 +74,36 @@ function calledMethod(node: Node) {
   }
   const callee = unwrapped(node.expression);
   if (isPropertyAccessExpression(callee)) {
-    return { method: callee.name.text, receiver: callee.expression };
+    return {
+      method: callee.name.text,
+      name: callee.name,
+      receiver: callee.expression,
+    };
   }
   return isElementAccessExpression(callee) &&
     isStringLiteralLikeNode(callee.argumentExpression)
     ? {
         method: callee.argumentExpression.text,
+        name: callee.argumentExpression,
         receiver: callee.expression,
       }
     : undefined;
 }
 
-/** Returns the array method call that a node is, with its receiver and the rule it breaks. */
+/**
+ * Returns the array method call that a node is, with the node that names the
+ * method, its receiver, and the rule it breaks. A chained call reports the line of
+ * its method name, not the line where the chain starts.
+ */
 export function arrayCall(node: Node) {
   const call = calledMethod(node);
   const rule = call === undefined ? undefined : arrayRule(call.method);
   return call === undefined || rule === undefined
     ? Result.failVoid
-    : Result.succeed({ node, receiver: call.receiver, rule });
+    : Result.succeed({
+        name: call.name,
+        node,
+        receiver: call.receiver,
+        rule,
+      });
 }
