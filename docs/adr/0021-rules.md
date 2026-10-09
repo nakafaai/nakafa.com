@@ -238,3 +238,11 @@ import, keeps them equal.
 - Judging a configuration file as product code when a product module imports
   it: the one such file must read `process.env`, because Convex evaluates it
   before any Effect runtime exists.
+
+## Tooling Exclusions
+
+Biome excludes `packages/backend/convex/**` because Convex generates its entry
+files there, as `packages/backend/AGENTS.md` states. No use-client closure check
+exists: Next.js fails the build when a Client Component reaches a `server-only`
+module, `readEnvironment` rejects a non-public key in the browser, and the
+JavaScript budget test measures each route's weight.
