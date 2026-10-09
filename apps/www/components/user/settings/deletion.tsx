@@ -22,6 +22,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { useConvexConnectionState } from "convex/react";
 import { Effect, Result } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -41,6 +42,7 @@ import {
 } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { httpLayer } from "@/lib/convex/http";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 const dialogError = {
   generic: "generic",
@@ -61,6 +63,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const prepareAccountDeletion = useMutation(
     auth.deletion.prepareCurrentAccountDeletion
   );
+  const connection = useConvexConnectionState();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<DialogError>(null);
   const [isPending, startTransition] = useTransition();
@@ -79,7 +82,8 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
     setError(null);
     startTransition(async () => {
       const result = await Effect.runPromise(
-        loadOrCreateAccountDeletionAttempt(userId).pipe(
+        requireConvexOnline(connection).pipe(
+          Effect.andThen(loadOrCreateAccountDeletionAttempt(userId)),
           Effect.flatMap((attempt) =>
             deleteCurrentAccount({
               attempt,
