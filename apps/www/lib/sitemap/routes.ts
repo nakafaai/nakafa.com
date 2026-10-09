@@ -90,27 +90,36 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
         return yield* missing;
       }
       return {
-        routes: artifact.paths
-          .map((publicPath) => ({ path: routeToPath(publicPath) }))
-          .sort((left, right) => compareSitemapPaths(left.path, right.path)),
+        routes: Arr.sortWith(
+          Arr.map(artifact.paths, (publicPath) => ({
+            path: routeToPath(publicPath),
+          })),
+          (route) => route.path,
+          compareSitemapPaths
+        ),
       };
     }
 
     if (isPageSitemapPage(page)) {
       const { missing } = yield* pinSitemapRelease(pageId, page.locale);
       const catalog = yield* readPublishedPageCatalog();
-      const projections = catalog.projections.filter(
+      const projections = Arr.filter(
+        catalog.projections,
         (projection) => projection.appLocale === page.locale
       );
       if (projections.length === 0) {
         return yield* missing;
       }
-      const routes = projections.map((projection) => ({
-        lastModified:
-          projection.metadata.dateModified ?? projection.metadata.datePublished,
-        path: routeToPath(projection.publicPath),
-      }));
-      routes.sort((left, right) => compareSitemapPaths(left.path, right.path));
+      const routes = Arr.sortWith(
+        Arr.map(projections, (projection) => ({
+          lastModified:
+            projection.metadata.dateModified ??
+            projection.metadata.datePublished,
+          path: routeToPath(projection.publicPath),
+        })),
+        (route) => route.path,
+        compareSitemapPaths
+      );
       return {
         routes,
       };
@@ -119,14 +128,14 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     if (isQuranSitemapPage(page)) {
       const { surahs } = yield* readPublishedQuranCatalog();
       return {
-        routes: surahs.map((surah) => ({
+        routes: Arr.map(surahs, (surah) => ({
           path: `/quran/${surah.number}`,
         })),
       };
     }
 
     return {
-      routes: baseRoutes.map((path) => ({ path })),
+      routes: Arr.map(baseRoutes, (path) => ({ path })),
     };
   }
 );
@@ -213,13 +222,16 @@ const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
             (bucket) => familyBucketPages[family](locale, bucket),
             { concurrency: 4 }
           );
-    const routes = (yield* Effect.forEach(pages, (page) =>
+    const pageRoutes = yield* Effect.forEach(pages, (page) =>
       page === null
         ? Effect.fail(new PublishedProjectionError(identity))
-        : Effect.succeed(page.routes.map(mapFamilyRoute))
-    ))
-      .flat()
-      .sort((left, right) => compareSitemapPaths(left.path, right.path));
+        : Effect.succeed(Arr.map(page.routes, mapFamilyRoute))
+    );
+    const routes = Arr.sortWith(
+      Arr.flatten(pageRoutes),
+      (route) => route.path,
+      compareSitemapPaths
+    );
     if (routes.length === 0) {
       return yield* missing;
     }
