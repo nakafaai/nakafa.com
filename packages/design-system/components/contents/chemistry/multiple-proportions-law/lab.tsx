@@ -1,8 +1,8 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
+import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import {
-  getMultipleProportionsSceneColors,
   isMultipleProportionsModeId,
   MULTIPLE_PROPORTIONS_MODE_IDS,
   MULTIPLE_PROPORTIONS_SCENE_VIEW,
@@ -66,7 +66,7 @@ export function MultipleProportionsLab({
   const [selectedModeId, setSelectedModeId] =
     useState<MultipleProportionsModeId>(WATER_PEROXIDE_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];
-  const sceneColors = getMultipleProportionsSceneColors(resolvedTheme);
+  const sceneColors = getAtomSceneColors(resolvedTheme);
 
   function handleModeChange(value: string) {
     if (!value) {

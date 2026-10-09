@@ -1,7 +1,9 @@
+import {
+  type DecimalSeparator,
+  formatTrimmedNumber,
+} from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
-
-export type ProjectileAnalysisDecimalSeparator = "comma" | "dot";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const ProjectileScenarioIdSchema = Schema.Literals([
   "sixty-degree",
@@ -77,8 +79,6 @@ export const PROJECTILE_SCENARIOS: ProjectileScenario[] = [
   },
 ];
 
-const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;
-
 export type ProjectileMotionState = ReturnType<typeof getProjectileMotionState>;
 
 export function isProjectileScenarioId(
@@ -125,7 +125,7 @@ export function getProjectilePoint(
   motion: ProjectileMotionState,
   time: number
 ) {
-  const safeTime = clamp(time, 0, motion.flightTime);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: motion.flightTime });
   const xMeters = motion.horizontalVelocity * safeTime;
   const yMeters =
     motion.verticalVelocity * safeTime -
@@ -141,7 +141,7 @@ export function getProjectilePoint(
 }
 
 export function getVelocityAtTime(motion: ProjectileMotionState, time: number) {
-  const safeTime = clamp(time, 0, motion.flightTime);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: motion.flightTime });
   const verticalVelocity =
     motion.verticalVelocity - PROJECTILE_GRAVITY * safeTime;
 
@@ -170,34 +170,13 @@ export function getProjectileLoopSample(
   };
 }
 
-export function formatMeterMath(
-  value: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m}`;
-}
-
-export function formatSecondMath(
-  value: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ s}`;
-}
-
-export function formatSpeedMath(
-  value: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m/s}`;
-}
-
 export function formatVelocityVectorMath(
   horizontalVelocity: number,
   verticalVelocity: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
+  decimalSeparator?: DecimalSeparator
 ) {
-  const horizontal = formatNumber(horizontalVelocity, decimalSeparator);
-  const vertical = formatNumber(verticalVelocity, decimalSeparator);
+  const horizontal = formatTrimmedNumber(horizontalVelocity, decimalSeparator);
+  const vertical = formatTrimmedNumber(verticalVelocity, decimalSeparator);
 
   return `\\langle ${horizontal}, ${vertical}\\rangle\\text{ m/s}`;
 }
@@ -210,21 +189,4 @@ function getMuzzleFlashPower(cycleTime: number) {
   }
 
   return 1 - cycleTime / flashSeconds;
-}
-
-function formatNumber(
-  value: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
-) {
-  const rounded = value.toFixed(1).replace(TRAILING_ZERO_DECIMAL_REGEX, "");
-
-  if (decimalSeparator === "comma") {
-    return rounded.replace(".", "{,}");
-  }
-
-  return rounded;
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }

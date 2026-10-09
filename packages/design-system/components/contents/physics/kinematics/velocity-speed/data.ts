@@ -1,7 +1,17 @@
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
+import {
+  formatKeptZeroNumber,
+  formatSignedKeptZeroNumber,
+} from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
 import type { CameraPose } from "@repo/design-system/lib/geometry/camera";
-import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  Number as Num,
+  Option,
+  Record as Rec,
+  Schema,
+} from "effect";
 
 export const VELOCITY_SPEED_CAR_MODEL_PATH =
   "/models/physics/kinematics/poly-pizza-dodge-charger/dodge-charger.glb";
@@ -131,7 +141,10 @@ export function getVelocitySpeedSample(
   motion: VelocitySpeedState,
   elapsedSeconds: number
 ) {
-  const elapsed = Math.min(Math.max(elapsedSeconds, 0), motion.duration);
+  const elapsed = Num.clamp(elapsedSeconds, {
+    minimum: 0,
+    maximum: motion.duration,
+  });
   const targetDistance = (elapsed / motion.duration) * motion.distance;
   let traveled = 0;
 
@@ -168,20 +181,16 @@ export function isVelocitySpeedCaseId(
   return Arr.some(VELOCITY_SPEED_CASE_IDS, (caseId) => caseId === value);
 }
 
-export function formatMeterMath(value: number) {
-  return `${formatNumber(value)}\\text{ m}`;
-}
-
 export function formatSignedMeterMath(value: number) {
   if (value === 0) {
     return "0\\text{ m}";
   }
 
-  return `${formatSignedNumber(value)}\\text{ m}`;
+  return `${formatSignedKeptZeroNumber(value)}\\text{ m}`;
 }
 
 export function formatSpeedMath(value: number) {
-  return `${formatNumber(value)}\\text{ m/s}`;
+  return `${formatKeptZeroNumber(value)}\\text{ m/s}`;
 }
 
 export function formatSignedSpeedMath(value: number) {
@@ -189,7 +198,7 @@ export function formatSignedSpeedMath(value: number) {
     return "0\\text{ m/s}";
   }
 
-  return `${formatSignedNumber(value)}\\text{ m/s}`;
+  return `${formatSignedKeptZeroNumber(value)}\\text{ m/s}`;
 }
 
 function createMotionSegments({
@@ -293,12 +302,4 @@ function getMotionCenterX(forwardDistance: number) {
     VELOCITY_SPEED_SCENE.worldScale *
     VELOCITY_SPEED_SCENE.motionCenterRatio
   );
-}
-
-function formatNumber(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-
-function formatSignedNumber(value: number) {
-  return value > 0 ? `+${formatNumber(value)}` : formatNumber(value);
 }

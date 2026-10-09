@@ -5,13 +5,15 @@ import {
   ACCELERATION_LAB_SCENE,
   type AccelerationCaseId,
   DEFAULT_ACCELERATION_CASE_ID,
-  formatAccelerationMath,
-  formatMeterPerSecondMath,
-  formatSecondMath,
   getAccelerationMotionState,
   isAccelerationCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { SpaceFlightScene } from "@repo/design-system/components/contents/physics/kinematics/acceleration/scene";
+import {
+  formatAccelerationMath,
+  formatTrimmedSecondMath,
+  formatTrimmedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -28,6 +30,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
@@ -61,7 +64,7 @@ export function AccelerationLab({
     {
       id: "initial-velocity",
       label: labels.factLabels.initialVelocity,
-      math: `v_0=${formatMeterPerSecondMath(motion.scenario.v0)}`,
+      math: `v_0=${formatTrimmedSpeedMath(motion.scenario.v0)}`,
     },
     {
       id: "acceleration",
@@ -72,12 +75,12 @@ export function AccelerationLab({
     {
       id: "final-velocity",
       label: labels.factLabels.finalVelocity,
-      math: `v_t=${formatMeterPerSecondMath(motion.scenario.v1)}`,
+      math: `v_t=${formatTrimmedSpeedMath(motion.scenario.v1)}`,
     },
     {
       id: "time-step",
       label: labels.factLabels.timeStep,
-      math: `\\Delta t=${formatSecondMath(1)}`,
+      math: `\\Delta t=${formatTrimmedSecondMath(1)}`,
     },
   ];
 
@@ -150,7 +153,7 @@ export function AccelerationLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {Arr.map(facts, (fact) => (
-            <LabFact
+            <VisualFactIndicator
               indicatorColor={
                 "indicatorColor" in fact ? fact.indicatorColor : undefined
               }
@@ -163,31 +166,5 @@ export function AccelerationLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-function LabFact({
-  indicatorColor,
-  label,
-  value,
-}: {
-  indicatorColor?: string | undefined;
-  label: ReactNode;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="flex items-center gap-2 text-muted-foreground">
-        {indicatorColor ? (
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: indicatorColor }}
-          />
-        ) : null}
-        {label}
-      </dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }

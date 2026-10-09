@@ -93,18 +93,6 @@ export function isInstantaneousSpeedCaseId(
   );
 }
 
-export function formatSignedSpeedMath(value: number) {
-  return `${formatSignedNumber(value)}\\text{ m/s}`;
-}
-
-export function formatSpeedMath(value: number) {
-  return `${Math.round(value)}\\text{ m/s}`;
-}
-
-export function formatTimeMath(value: number) {
-  return `${Math.round(value)}\\text{ s}`;
-}
-
 function getInstantaneousSpeedCaseById(id: InstantaneousSpeedCaseId) {
   return Option.getOrElse(
     Arr.findFirst(INSTANTANEOUS_SPEED_CASES, (scenario) => scenario.id === id),
@@ -114,16 +102,4 @@ function getInstantaneousSpeedCaseById(id: InstantaneousSpeedCaseId) {
 
 function getRoadLength(trackLength: number) {
   return Math.max(INSTANTANEOUS_SPEED_SCENE.roadMinimumLength, trackLength * 4);
-}
-
-function formatSignedNumber(value: number) {
-  if (value === 0) {
-    return "0";
-  }
-
-  if (value > 0) {
-    return `+${Math.round(value)}`;
-  }
-
-  return `${Math.round(value)}`;
 }

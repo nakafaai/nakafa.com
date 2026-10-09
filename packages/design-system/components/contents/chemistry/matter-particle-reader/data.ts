@@ -1,10 +1,8 @@
+import type { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import {
   type ElementName,
   ElementNameSchema,
 } from "@repo/design-system/components/contents/chemistry/element";
-import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { getColor } from "@repo/design-system/lib/color";
-import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Schema } from "effect";
 
 export const ATOM_MODE_ID = "atom";
@@ -20,9 +18,7 @@ export const MATTER_PARTICLE_MODE_IDS = [
 ] as const;
 
 export type MatterParticleModeId = (typeof MATTER_PARTICLE_MODE_IDS)[number];
-export type MatterParticleSceneColors = ReturnType<
-  typeof getMatterParticleSceneColors
->;
+export type MatterParticleSceneColors = ReturnType<typeof getAtomSceneColors>;
 
 const MatterParticleScenePointSchema = Schema.Tuple([
   Schema.Finite,
@@ -141,23 +137,6 @@ export function isMatterParticleModeId(
   value: string
 ): value is MatterParticleModeId {
   return value in MATTER_PARTICLE_MODELS;
-}
-
-export function getMatterParticleSceneColors(
-  resolvedTheme: string | undefined
-) {
-  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
-
-  return {
-    bond: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
-    carbon: isDarkTheme ? getColor("ZINC") : getColor("STONE"),
-    hydrogen: isDarkTheme ? getColor("ZINC") : getColor("NEUTRAL"),
-    nitrogen: getColor("VIOLET"),
-    oxygen: getColor("SKY"),
-    sphereText: ORIGIN_COLOR.LIGHT,
-    sphereTextOutline: isDarkTheme ? ORIGIN_COLOR.DARK : getColor("SLATE"),
-    text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
-  };
 }
 
 function atom(

@@ -64,11 +64,3 @@ export function isStoppingDistanceSpeed(
 ): value is StoppingDistanceSpeed {
   return Arr.some(STOPPING_DISTANCE_SPEEDS, (speed) => speed === value);
 }
-
-export function formatMeterMath(value: number) {
-  return `${Math.round(value)}\\text{ m}`;
-}
-
-export function formatSpeedMath(value: number) {
-  return `${Math.round(value)}\\text{ m/s}`;
-}

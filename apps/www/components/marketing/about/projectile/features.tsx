@@ -1,9 +1,12 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
+  formatTrimmedMeterMath,
+  formatTrimmedSecondMath,
+  formatTrimmedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
+import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
-  formatMeterMath,
-  formatSecondMath,
-  formatSpeedMath,
   formatVelocityVectorMath,
   getProjectileMotionState,
   getVelocityAtTime,
@@ -20,7 +23,7 @@ const decimalSeparators = {
   de: "comma",
   en: "dot",
   id: "comma",
-} as const satisfies Record<ActiveAppLocaleCode, "comma" | "dot">;
+} as const satisfies Record<ActiveAppLocaleCode, DecimalSeparator>;
 
 /** Renders deterministic projectile formulas on the server for every scenario. */
 export async function FeaturesProjectile() {
@@ -38,7 +41,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-horizontal-component"),
           value: (
             <InlineMath
-              math={`v_{0x}=${formatSpeedMath(
+              math={`v_{0x}=${formatTrimmedSpeedMath(
                 motion.horizontalVelocity,
                 decimalSeparator
               )}`}
@@ -50,7 +53,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-vertical-component"),
           value: (
             <InlineMath
-              math={`v_{0y}=${formatSpeedMath(
+              math={`v_{0y}=${formatTrimmedSpeedMath(
                 motion.verticalVelocity,
                 decimalSeparator
               )}`}
@@ -62,7 +65,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-peak-time"),
           value: (
             <InlineMath
-              math={`t=${formatSecondMath(motion.peakTime, decimalSeparator)}`}
+              math={`t=${formatTrimmedSecondMath(motion.peakTime, decimalSeparator)}`}
             />
           ),
         },
@@ -71,7 +74,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-flight-time"),
           value: (
             <InlineMath
-              math={`T=${formatSecondMath(
+              math={`T=${formatTrimmedSecondMath(
                 motion.flightTime,
                 decimalSeparator
               )}`}
@@ -83,7 +86,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-range"),
           value: (
             <InlineMath
-              math={`R=${formatMeterMath(motion.range, decimalSeparator)}`}
+              math={`R=${formatTrimmedMeterMath(motion.range, decimalSeparator)}`}
             />
           ),
         },

@@ -162,15 +162,15 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <IsotopeCount
+          <VisualFact
             label={labels.protons}
             value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
           />
-          <IsotopeCount
+          <VisualFact
             label={labels.electrons}
             value={<InlineMath math={`${electronCount}`} />}
           />
-          <IsotopeCount label={labels.neutrons} value={selectedLabels.note} />
+          <VisualFact label={labels.neutrons} value={selectedLabels.note} />
         </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
@@ -238,17 +238,5 @@ function ParticleDot({
     <span aria-hidden className={particleDotVariants({ type })}>
       <InlineMath math={label} />
     </span>
-  );
-}
-
-/**
- * Renders one compact particle count in the lab footer.
- */
-function IsotopeCount({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

@@ -25,8 +25,8 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
@@ -167,8 +167,8 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <BiologyFact label={labels.focusLabel} value={selectedItem.focus} />
-          <BiologyFact
+          <VisualFact label={labels.focusLabel} value={selectedItem.focus} />
+          <VisualFact
             label={labels.takeawayLabel}
             value={selectedItem.takeaway}
           />
@@ -195,25 +195,5 @@ function ResponsiveBiologyCamera({ view }: { view: NarrowCameraPose }) {
       cameraTarget={view.cameraTarget}
       fov={45}
     />
-  );
-}
-
-/**
- * Renders one footer fact in the same visual rhythm as physics and chemistry labs.
- */
-function BiologyFact({
-  className,
-  label,
-  value,
-}: {
-  className?: string;
-  label: string;
-  value: ReactNode;
-}) {
-  return (
-    <div className={cn("flex min-w-0 flex-col gap-1", className)}>
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

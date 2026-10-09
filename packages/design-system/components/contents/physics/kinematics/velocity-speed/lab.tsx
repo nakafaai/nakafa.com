@@ -2,8 +2,8 @@
 
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
+import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import {
-  formatMeterMath,
   formatSignedMeterMath,
   formatSignedSpeedMath,
   formatSpeedMath,
@@ -35,6 +35,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
@@ -79,7 +80,7 @@ export function VelocitySpeedLab({
     {
       id: "distance",
       label: labels.factLabels.distance,
-      math: `s=${formatMeterMath(motion.distance)}`,
+      math: `s=${formatKeptZeroMeterMath(motion.distance)}`,
       markerColor: VELOCITY_SPEED_COLORS.distanceGuide,
     },
     {
@@ -173,21 +174,14 @@ export function VelocitySpeedLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {Arr.map(facts, (fact) => (
-            <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
-              <dt className="flex items-center gap-2 text-muted-foreground">
-                {"markerColor" in fact ? (
-                  <span
-                    aria-hidden
-                    className="size-2 rounded-full"
-                    style={{ backgroundColor: fact.markerColor }}
-                  />
-                ) : null}
-                {fact.label}
-              </dt>
-              <dd className="wrap-break-word text-foreground tabular-nums">
-                <InlineMath math={fact.math} />
-              </dd>
-            </div>
+            <VisualFactIndicator
+              indicatorColor={
+                "markerColor" in fact ? fact.markerColor : undefined
+              }
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
           ))}
         </dl>
         <VisualCardFullscreen />

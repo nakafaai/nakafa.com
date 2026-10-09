@@ -6,6 +6,10 @@ import {
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import {
+  createPath,
+  createQuadraticPath,
+} from "@repo/design-system/components/contents/chemistry/path";
+import {
   CHARGE_MODE_ID,
   LOCATION_MODE_ID,
   MASS_MODE_ID,
@@ -23,6 +27,7 @@ import { Vector3 } from "three";
 const PATH_POINT_COUNT = 44;
 
 const ELECTRON_PATH = createQuadraticPath(
+  PATH_POINT_COUNT,
   new Vector3(-2.35, 0, 0),
   new Vector3(-0.25, 0.12, 0),
   new Vector3(2.3, 0.82, 0)
@@ -32,6 +37,7 @@ const NEUTRON_PATH = createPath(
   (progress) => new Vector3(-2.35 + 4.65 * progress, 0, 0)
 );
 const PROTON_PATH = createQuadraticPath(
+  PATH_POINT_COUNT,
   new Vector3(-2.35, 0, 0),
   new Vector3(-0.25, -0.12, 0),
   new Vector3(2.3, -0.82, 0)
@@ -73,37 +79,6 @@ const ELECTRON_POSITIONS = [
   new Vector3(1.18, 0.68, 0.1),
   new Vector3(1.3, -0.76, -0.12),
 ];
-
-/**
- * Generates a fixed-resolution 3D path from a continuous point function.
- */
-function createPath(
-  pointCount: number,
-  getPointAtProgress: (progress: number) => Vector3
-) {
-  return Array.from({ length: pointCount }, (_, index) => {
-    const progress = index / (pointCount - 1);
-
-    return getPointAtProgress(progress);
-  });
-}
-
-/**
- * Generates a smooth schematic path for electric-field deflection.
- */
-function createQuadraticPath(start: Vector3, control: Vector3, end: Vector3) {
-  return createPath(PATH_POINT_COUNT, (progress) => {
-    const startWeight = (1 - progress) ** 2;
-    const controlWeight = 2 * (1 - progress) * progress;
-    const endWeight = progress ** 2;
-
-    return start
-      .clone()
-      .multiplyScalar(startWeight)
-      .add(control.clone().multiplyScalar(controlWeight))
-      .add(end.clone().multiplyScalar(endWeight));
-  });
-}
 
 interface SubatomicParticlePropertiesSceneProps {
   colors: SubatomicParticlePropertiesColors;

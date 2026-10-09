@@ -3,9 +3,12 @@
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import {
+  formatRoundedMeterMath,
+  formatRoundedSecondMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
+import {
   formatCircularMotionDecimal,
-  formatPeriodMath,
-  formatRadiusMath,
   getUniformCircularMotionState,
   isUniformCircularMotionPeriod,
   UNIFORM_CIRCULAR_MOTION_CAMERA,
@@ -13,7 +16,6 @@ import {
   UNIFORM_CIRCULAR_MOTION_COLORS,
   UNIFORM_CIRCULAR_MOTION_PERIODS,
   UNIFORM_CIRCULAR_MOTION_SCENE,
-  type UniformCircularMotionDecimalSeparator,
   type UniformCircularMotionPeriod,
   type UniformCircularMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-circular-motion/data";
@@ -34,6 +36,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -45,7 +48,7 @@ const SHADOW_CAMERA_RADIUS =
   UNIFORM_CIRCULAR_MOTION_SCENE.carScale;
 
 interface UniformCircularMotionLabProps {
-  decimalSeparator?: UniformCircularMotionDecimalSeparator;
+  decimalSeparator?: DecimalSeparator;
   description: ReactNode;
   labels: {
     acceleration: ReactNode;
@@ -96,7 +99,7 @@ export function UniformCircularMotionLab({
         >
           {Arr.map(UNIFORM_CIRCULAR_MOTION_PERIODS, (periodOption) => (
             <ToggleGroupItem key={periodOption} value={String(periodOption)}>
-              <InlineMath math={`T=${formatPeriodMath(periodOption)}`} />
+              <InlineMath math={`T=${formatRoundedSecondMath(periodOption)}`} />
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -136,15 +139,15 @@ export function UniformCircularMotionLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
-          <LabFact
+          <VisualFactTabular
             label={labels.period}
-            value={<InlineMath math={formatPeriodMath(motion.period)} />}
+            value={<InlineMath math={formatRoundedSecondMath(motion.period)} />}
           />
-          <LabFact
+          <VisualFactTabular
             label={labels.radius}
-            value={<InlineMath math={formatRadiusMath(motion.radius)} />}
+            value={<InlineMath math={formatRoundedMeterMath(motion.radius)} />}
           />
-          <LabFact
+          <VisualFactTabular
             label={labels.speed}
             value={
               <InlineMath
@@ -155,7 +158,7 @@ export function UniformCircularMotionLab({
               />
             }
           />
-          <LabFact
+          <VisualFactTabular
             label={labels.acceleration}
             value={
               <InlineMath
@@ -293,15 +296,6 @@ function CarModel() {
       bodyColor={UNIFORM_CIRCULAR_MOTION_COLORS.carBody}
       modelPath={UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH}
     />
-  );
-}
-
-function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }
 
