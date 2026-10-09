@@ -5,7 +5,6 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { GoogleAuthConfigError } from "@repo/backend/confect/auth/config";
 import {
-  ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
   ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
   ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
@@ -23,9 +22,14 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  accountDeletionRequest,
+  betterAuthUser,
+  generateSigningPublicKey,
+  withPostHogErasureConfig,
+} from "@repo/backend/test/auth";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
-import type { User } from "better-auth";
-import { Array as Arr, DateTime, Effect, pipe, Schema } from "effect";
+import { Array as Arr, Effect, pipe, Schema } from "effect";
 
 vi.mock("@convex-dev/better-auth/plugins", async (importOriginal) => {
   const actual =
@@ -39,22 +43,16 @@ vi.mock("@convex-dev/better-auth/plugins", async (importOriginal) => {
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const SITE_URL = new URL("http://localhost:3000");
+/** The rejection that a deletion gets while its preparation is temporarily unavailable. */
+const deletionUnavailable = {
+  body: {
+    code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
+  },
+  status: "INTERNAL_SERVER_ERROR",
+};
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
-});
-const authUser = (id: string): User => ({
-  createdAt: DateTime.toDateUtc(DateTime.makeUnsafe(NOW)),
-  email: "deletion-runtime@example.com",
-  emailVerified: true,
-  id,
-  name: "Deletion Runtime",
-  updatedAt: DateTime.toDateUtc(DateTime.makeUnsafe(NOW)),
-});
-const withPostHogErasureConfig = Effect.sync(() => {
-  vi.stubEnv("POSTHOG_ERASURE_API_KEY", "phx_test_deletion_runtime");
-  vi.stubEnv("POSTHOG_HOST", "https://eu.i.posthog.com");
-  vi.stubEnv("POSTHOG_PROJECT_ID", "1");
 });
 describe("auth/runtime", () => {
   it("preserves every response cookie while scrubbing provider diagnostics", () => {
@@ -376,13 +374,8 @@ describe("auth/runtime", () => {
       yield* Effect.promise(() =>
         test.action((ctx) =>
           createAuthOptions(ctx).user.deleteUser.beforeDelete(
-            authUser(identity.authUserId),
-            new Request("http://localhost:3000/api/auth/delete-user", {
-              headers: {
-                [ACCOUNT_DELETION_ATTEMPT_HEADER]: ATTEMPT_ID,
-              },
-              method: "POST",
-            })
+            betterAuthUser(identity.authUserId, NOW),
+            accountDeletionRequest(ATTEMPT_ID)
           )
         )
       );
@@ -410,21 +403,11 @@ describe("auth/runtime", () => {
         expect(
           test.mutation((ctx) =>
             createAuthOptions(ctx).user.deleteUser.beforeDelete(
-              authUser("mutation-context-user"),
-              new Request("http://localhost:3000/api/auth/delete-user", {
-                headers: {
-                  [ACCOUNT_DELETION_ATTEMPT_HEADER]: ATTEMPT_ID,
-                },
-                method: "POST",
-              })
+              betterAuthUser("mutation-context-user", NOW),
+              accountDeletionRequest(ATTEMPT_ID)
             )
           )
-        ).rejects.toMatchObject({
-          body: {
-            code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-          },
-          status: "INTERNAL_SERVER_ERROR",
-        })
+        ).rejects.toMatchObject(deletionUnavailable)
       );
     }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
@@ -436,32 +419,17 @@ describe("auth/runtime", () => {
         expect(
           test.action((ctx) =>
             createAuthOptions(ctx).user.deleteUser.beforeDelete(
-              authUser("missing-attempt-user"),
+              betterAuthUser("missing-attempt-user", NOW),
               undefined
             )
           )
-        ).rejects.toMatchObject({
-          body: {
-            code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-          },
-          status: "INTERNAL_SERVER_ERROR",
-        })
+        ).rejects.toMatchObject(deletionUnavailable)
       );
     }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
 });
 it("publishes only public key material from configured Better Auth signing keys", async () => {
-  const pair = await crypto.subtle.generateKey(
-    {
-      name: "RSASSA-PKCS1-v1_5",
-      hash: "SHA-256",
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-    },
-    true,
-    ["sign", "verify"]
-  );
-  const publicKey = await crypto.subtle.exportKey("jwk", pair.publicKey);
+  const publicKey = await generateSigningPublicKey();
   vi.stubEnv("CONVEX_SITE_URL", "https://technical-auth.convex.site");
   vi.stubEnv(
     "JWKS",
