@@ -1,5 +1,5 @@
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { getCachedSitemapDescriptors } from "@/lib/sitemap/catalog";
 import { buildSitemapIndexXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
@@ -33,7 +33,8 @@ const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
     const descriptors = yield* Effect.tryPromise(() =>
       getCachedSitemapDescriptors()
     );
-    const urls = descriptors.map(
+    const urls = Arr.map(
+      descriptors,
       (descriptor) => `${canonicalSitemapOrigin}/sitemap/${descriptor.id}.xml`
     );
 

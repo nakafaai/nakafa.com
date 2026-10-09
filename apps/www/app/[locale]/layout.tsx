@@ -8,6 +8,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
+import { Array as Arr } from "effect";
 import type { Metadata } from "next";
 import { io } from "next/cache";
 import Link from "next/link";
@@ -84,9 +85,7 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     category: "education",
-    keywords: t("keywords")
-      .split(",")
-      .map((keyword) => keyword.trim()),
+    keywords: Arr.map(t("keywords").split(","), (keyword) => keyword.trim()),
     twitter: {
       card: "summary_large_image",
       title: t("title"),
@@ -143,7 +142,7 @@ export async function generateStaticParams() {
     return await readPreviewStaticLocaleParams();
   }
 
-  return routing.locales.map((locale) => ({ locale }));
+  return Arr.map(routing.locales, (locale) => ({ locale }));
 }
 
 /**

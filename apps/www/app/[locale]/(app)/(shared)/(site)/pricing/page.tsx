@@ -1,5 +1,6 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
+import { Array as Arr } from "effect";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import { useTranslations } from "next-intl";
@@ -83,7 +84,7 @@ export default async function Page() {
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "PricingPage" }),
   ]);
-  const faqItems: MarketingFaqItem[] = pricingFaqNumbers.map((number) => ({
+  const faqItems: MarketingFaqItem[] = Arr.map(pricingFaqNumbers, (number) => ({
     answer: tPricingPage(`a${number}`),
     question: tPricingPage(`q${number}`),
   }));
@@ -99,7 +100,7 @@ export default async function Page() {
       />
       <FAQPageJsonLd
         inLanguage={locale}
-        mainEntity={faqItems.map((item) => ({
+        mainEntity={Arr.map(faqItems, (item) => ({
           name: item.question,
           acceptedAnswer: {
             "@type": "Answer",
