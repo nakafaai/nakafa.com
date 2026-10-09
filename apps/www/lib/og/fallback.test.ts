@@ -59,15 +59,12 @@ describe("fallback social image", () => {
       namespace: "NotFound",
     });
     expect(mocks.imageCalls).toHaveLength(1);
-    const [{ element, options }] = mocks.imageCalls as [
-      {
-        element: { props: Record<string, unknown> };
-        options: { height: number; width: number };
+    const [{ element, options }] = mocks.imageCalls;
+    expect(element).toMatchObject({
+      props: {
+        description: "NotFound.description",
+        title: "NotFound.title",
       },
-    ];
-    expect(element.props).toMatchObject({
-      description: "NotFound.description",
-      title: "NotFound.title",
     });
     expect(options).toMatchObject({ height: 630, width: 1200 });
     expect(response).toBeInstanceOf(Response);

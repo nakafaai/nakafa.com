@@ -1,12 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import {
   areConversationViewsEqual,
   isConversationViewAtPost,
 } from "@/components/school/classes/forum/conversation/data/view/model";
 
-const postId = "post_1" as Id<"schoolClassForumPosts">;
-const otherPostId = "post_2" as Id<"schoolClassForumPosts">;
+const postId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))("post_1");
+const otherPostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "post_2"
+);
 
 describe("conversation/data/view/model", () => {
   it("compares bottom and post views semantically", () => {

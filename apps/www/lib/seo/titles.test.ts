@@ -355,7 +355,7 @@ describe("createSEOTitle", () => {
   describe("type safety", () => {
     it("accepts readonly arrays", () => {
       const parts: readonly string[] = ["One", "Two"];
-      const result = createSEOTitle(parts as string[]);
+      const result = createSEOTitle(parts);
       expect(result).toBe("One - Two - Nakafa");
     });
 

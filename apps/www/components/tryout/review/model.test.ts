@@ -1,9 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect } from "effect";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Array as Arr, Effect, Schema } from "effect";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { projectTryoutReview } from "@/components/tryout/review/model";
 
+const decodePlacementId = Schema.decodeUnknownSync(
+  Id("tryoutAttemptPlacements")
+);
 const FIRST_IDENTITY = {
   contentHash: "content-1",
   sourcePath: "questions/1",
@@ -193,7 +196,7 @@ function createRuntimeQuestion(
 ) {
   return {
     ...identity,
-    placementId: `placement-${questionOrder}` as Id<"tryoutAttemptPlacements">,
+    placementId: decodePlacementId(`placement-${questionOrder}`),
     questionOrder,
     response: {
       answeredAt: questionOrder * 10,

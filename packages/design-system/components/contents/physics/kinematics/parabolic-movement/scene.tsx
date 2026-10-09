@@ -282,11 +282,12 @@ function getLaunchRampPose(motion: ParabolicMotionState) {
     y: launchY - Math.sin(angle) * length,
   };
   const center = new Vector3((start.x + base.x) / 2, (launchY + base.y) / 2, 0);
+  const centerTuple: VectorTuple = [center.x, center.y, center.z];
 
   return {
     angle,
     base,
-    center: center.toArray() as VectorTuple,
+    center: centerTuple,
     length,
   };
 }

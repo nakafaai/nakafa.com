@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { HashMap, Option } from "effect";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { HashMap, Option, Schema } from "effect";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
   createConversationTestRowsHandle,
@@ -9,6 +10,10 @@ import {
   conversationTestSecondPost as secondPost,
 } from "@/components/school/classes/forum/conversation/fixtures/data";
 import { createViewportScroller } from "@/components/school/classes/forum/conversation/viewport/scroller";
+
+const missingPostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "missing_post"
+);
 
 const activeTranscript = {
   lastPostId: secondPost._id,
@@ -213,7 +218,7 @@ describe("conversation/viewport/scroller", () => {
         highlightPostId: null,
         view: {
           kind: "post",
-          postId: "missing_post" as typeof firstPost._id,
+          postId: missingPostId,
         },
       })
     ).toBe(false);
