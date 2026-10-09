@@ -41,7 +41,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Name new folders and files with one concise domain word per path segment plus conventional suffixes such as `.client` or `.test`: no hyphenated phrases, no repeated parent wording.
 - Do not create new `index.ts` barrels, facade modules, pass-through re-exports, or generic `utils` or `helpers`. A generated or externally mandated package entrypoint needs an explicit exception.
 - TypeScript is strict. Prefer derived and inferred types, fix the source design when inference is unclear, and avoid `any`, assertions, and workaround casts.
-- The root `typescript` package exposes the Effect-patched native TypeScript 7 compiler as `tsc`; `packages/backend` owns its own because Convex resolves it directly. Verify with `pnpm exec tsc --version` from both. React Doctor manages its own TypeScript.
+- The root `typescript` package exposes the Effect-patched native TypeScript 7 compiler as `tsc`; `packages/backend` owns its own because Convex resolves it directly. Verify with `pnpm exec tsc --version` from both. React Doctor manages its own TypeScript. Editors use the same compiler as their language server (`.zed/settings.json`, `.vscode/settings.json`), so Effect diagnostics show while editing.
 - Ultracite owns formatting: run `pnpm format`, never hand-format.
 - Keep Tailwind class strings inside styling utilities or component boundaries, with `cva` or existing variant helpers for variants. The policy check rejects an arbitrary value that a built-in class renders identically; theme-dependent scales such as radius, font size, and tracking are left to review.
 
