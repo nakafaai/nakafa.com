@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { FetchClient } from "@repo/utilities/http/client";
-import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
+import { encodePrettyJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   ConfigProvider,
@@ -10,24 +10,24 @@ import {
   type FileSystem,
   Layer,
   MutableList,
-  Path,
+  type Path,
   Record as Rec,
   Schema,
 } from "effect";
 import { FetchHttpClient } from "effect/http";
 import {
+  answer,
+  indexingPaths,
   memoryFiles,
+  quotaAnswer,
   recordLogs,
   runToEnd,
   runToFailure,
+  urlsOf,
 } from "@/scripts/indexing/fixture";
 import { loadSubmissionHistory } from "@/scripts/indexing/history";
 import { runIndexNow } from "@/scripts/indexing/indexnow/run";
-import {
-  INDEXNOW_KEY,
-  INDEXNOW_KEY_LOCATION,
-  indexingFiles,
-} from "@/scripts/indexing/paths";
+import { INDEXNOW_KEY, INDEXNOW_KEY_LOCATION } from "@/scripts/indexing/paths";
 
 const sitemapMocks = vi.hoisted(() => ({
   getSitemapEntries: vi.fn(),
@@ -61,8 +61,6 @@ const UrlListBodySchema = Schema.fromJsonString(
 );
 /** One fetch double for the whole file, provided to the module's own client. */
 const fetcher = vi.fn<typeof fetch>();
-/** The state paths of the real checkout, read through the real path service. */
-const indexingPaths = indexingFiles.pipe(Effect.provide(Path.layer));
 
 beforeEach(() => {
   fetcher.mockReset();
@@ -79,18 +77,6 @@ function sitemapOf(urls: readonly string[]) {
     Effect.succeed(Arr.map(urls, (url) => ({ url })))
   );
 }
-
-/** Builds n distinct canonical URLs for one sitemap page. */
-function urlsOf(count: number) {
-  return Arr.makeBy(count, (index) => `https://nakafa.com/id/page-${index}`);
-}
-
-/** An answer with the given status and body text. */
-const answer = (status: number, body = "") => new Response(body, { status });
-
-/** A refused answer whose JSON body carries a quota message, as Bing sends it. */
-const quotaAnswer = (message: string) =>
-  new Response(encodeJsonText({ Message: message }), { status: 400 });
 
 /** The host of a request that the flow sent. */
 const hostnameOf = (input: unknown) => new URL(String(input)).hostname;

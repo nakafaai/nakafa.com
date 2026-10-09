@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { FetchClient } from "@repo/utilities/http/client";
-import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
+import { encodePrettyJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   Effect,
@@ -11,12 +11,15 @@ import {
   MutableHashMap,
   MutableHashSet,
   MutableList,
-  Path,
+  type Path,
   Record as Rec,
   Schema,
 } from "effect";
 import { FetchHttpClient } from "effect/http";
 import {
+  ARTICLE,
+  indexingPaths,
+  JOB_POSTING,
   memoryFiles,
   recordLogs,
   runToEnd,
@@ -24,7 +27,6 @@ import {
 } from "@/scripts/indexing/fixture";
 import { runGoogleIndexing } from "@/scripts/indexing/google/run";
 import { loadSubmissionHistory } from "@/scripts/indexing/history";
-import { indexingFiles } from "@/scripts/indexing/paths";
 
 // Signing uses real Web Crypto, which the test clock does not advance, so the
 // token step is doubled here. auth.test.ts covers the signed assertion itself.
@@ -56,20 +58,8 @@ const EARLIER_STAMP = "2026-01-01T00:00:00.000Z";
 const PublishBodySchema = Schema.fromJsonString(
   Schema.Struct({ type: Schema.String, url: Schema.String })
 );
-const JOB_POSTING = encodeJsonText({
-  "@context": "https://schema.org",
-  "@type": "JobPosting",
-  title: "Teacher",
-});
-const ARTICLE = encodeJsonText({
-  "@context": "https://schema.org",
-  "@type": "Article",
-  headline: "Vektor",
-});
 /** One fetch double for the whole file, provided to the module's own client. */
 const fetcher = vi.fn<typeof fetch>();
-/** The state paths of the real checkout, read through the real path service. */
-const indexingPaths = indexingFiles.pipe(Effect.provide(Path.layer));
 /** The canonical URL of the sitemap page at this index. */
 const pageUrl = (index: number) => `https://nakafa.com/id/page-${index}`;
 

@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { FetchClient } from "@repo/utilities/http/client";
-import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   ConfigProvider,
@@ -13,6 +12,7 @@ import {
 } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
+import { answer, quotaAnswer, urlsOf } from "@/scripts/indexing/fixture";
 import {
   readBingWebmasterApiKey,
   submitUrlsToBing,
@@ -52,18 +52,6 @@ function readKeyFrom(env: Readonly<Record<string, string>>) {
     )
   );
 }
-
-/** Builds n distinct canonical URLs for one submission. */
-function urlsOf(count: number) {
-  return Arr.makeBy(count, (index) => `https://nakafa.com/id/page-${index}`);
-}
-
-/** An answer with the given status and body text. */
-const answer = (status: number, body = "") => new Response(body, { status });
-
-/** A refused answer whose JSON body carries a quota message, as Bing sends it. */
-const quotaAnswer = (message: string) =>
-  new Response(encodeJsonText({ Message: message }), { status: 400 });
 
 /** A 200 answer whose body starts and never ends, so the read waits for its deadline. */
 const neverEndingBody = () =>

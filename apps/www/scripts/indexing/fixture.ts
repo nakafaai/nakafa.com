@@ -1,4 +1,6 @@
+import { encodeJsonText } from "@repo/utilities/json";
 import {
+  Array as Arr,
   Effect,
   Fiber,
   FileSystem,
@@ -10,6 +12,7 @@ import {
   Path,
 } from "effect";
 import { TestClock } from "effect/testing";
+import { indexingFiles } from "@/scripts/indexing/paths";
 
 /**
  * A file system held in memory for one indexing test, seeded with `seeded`
@@ -70,3 +73,33 @@ export function runToEnd<A, E>(effect: Effect.Effect<A, E>) {
 export function runToFailure<A, E>(effect: Effect.Effect<A, E>) {
   return runToEnd(Effect.flip(effect));
 }
+
+/** The state paths of the real checkout, read through the real path service. */
+export const indexingPaths = indexingFiles.pipe(Effect.provide(Path.layer));
+
+/** Builds n distinct canonical URLs, in order. */
+export function urlsOf(count: number) {
+  return Arr.makeBy(count, (index) => `https://nakafa.com/id/page-${index}`);
+}
+
+/** An answer with the given status and body text. */
+export const answer = (status: number, body = "") =>
+  new Response(body, { status });
+
+/** A refused answer whose JSON body carries a quota message, as Bing sends it. */
+export const quotaAnswer = (message: string) =>
+  new Response(encodeJsonText({ Message: message }), { status: 400 });
+
+/** A Google Indexing API document that holds a job posting, which the API accepts. */
+export const JOB_POSTING = encodeJsonText({
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  title: "Teacher",
+});
+
+/** A document that holds an article, which the Google Indexing API does not accept. */
+export const ARTICLE = encodeJsonText({
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: "Vektor",
+});
