@@ -1,22 +1,15 @@
-import { Array as Arr, Option, Schema } from "effect";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
+import { Array as Arr, Option } from "effect";
 
 type ArrowPosition = "both" | "end" | "start";
 
-const ArrowPointSchema = Schema.Struct({
-  x: Schema.Finite,
-  y: Schema.Finite,
-  z: Schema.Finite,
-});
-
-type ArrowPoint = typeof ArrowPointSchema.Type;
-
-function distance(from: ArrowPoint, to: ArrowPoint) {
+function distance(from: Point3, to: Point3) {
   return Math.hypot(to.x - from.x, to.y - from.y, to.z - from.z);
 }
 
 /** Caps one arrowhead to its visible terminal segment so shortening cannot reverse it. */
 export function resolveArrowSize(
-  points: readonly ArrowPoint[],
+  points: readonly Point3[],
   requestedSize: number,
   position: ArrowPosition
 ) {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CoordinatePoint } from "@repo/design-system/components/three/frame";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { triangulatePolygon } from "@repo/design-system/lib/geometry/polygon";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
@@ -14,7 +14,7 @@ export function Polygon({
 }: {
   readonly color: ColorRepresentation;
   readonly opacity?: number;
-  readonly vertices: readonly CoordinatePoint[];
+  readonly vertices: readonly Point3[];
 }) {
   const positions = useMemo(
     () => new Float32Array(Arr.flatMap(vertices, ({ x, y, z }) => [x, y, z])),

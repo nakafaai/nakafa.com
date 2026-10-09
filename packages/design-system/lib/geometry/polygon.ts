@@ -1,9 +1,9 @@
-import type { CoordinatePoint } from "@repo/design-system/components/three/frame";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { Array as Arr } from "effect";
 import { ShapeUtils, Vector2 } from "three";
 
 /** Triangulates a validated simple planar polygon, including concave outlines. */
-export function triangulatePolygon(vertices: readonly CoordinatePoint[]) {
+export function triangulatePolygon(vertices: readonly Point3[]) {
   const normal = { x: 0, y: 0, z: 0 };
   Arr.forEach(vertices, (point, index) => {
     const next = vertices[(index + 1) % vertices.length];
