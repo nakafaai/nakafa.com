@@ -135,22 +135,16 @@ function readArrayMetadata(schema: JsonSchema.JsonSchema): ArrayMetadata {
   return { description, maxItems, minItems };
 }
 
-/** The array limits that one union branch states; each limit is set only when stated. */
-const ArrayBoundsSchema = Schema.Struct({
-  maxItems: Schema.mutableKey(Schema.optionalKey(Schema.Finite)),
-  minItems: Schema.mutableKey(Schema.optionalKey(Schema.Finite)),
-});
-
 /** Relaxes shared array bounds enough to represent every union branch. */
 function mergeArrayBounds(left: ArrayMetadata, right: ArrayMetadata) {
-  const bounds: typeof ArrayBoundsSchema.Type = {};
-  if (typeof left.minItems === "number" || typeof right.minItems === "number") {
-    bounds.minItems = Math.min(left.minItems ?? 0, right.minItems ?? 0);
-  }
-  if (typeof left.maxItems === "number" && typeof right.maxItems === "number") {
-    bounds.maxItems = Math.max(left.maxItems, right.maxItems);
-  }
-  return bounds;
+  return {
+    ...(typeof left.minItems === "number" || typeof right.minItems === "number"
+      ? { minItems: Math.min(left.minItems ?? 0, right.minItems ?? 0) }
+      : {}),
+    ...(typeof left.maxItems === "number" && typeof right.maxItems === "number"
+      ? { maxItems: Math.max(left.maxItems, right.maxItems) }
+      : {}),
+  };
 }
 
 /** Preserves one branch-only maximum as model guidance after relaxing it. */
