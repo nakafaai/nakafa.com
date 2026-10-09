@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { NetworkRequestError } from "@repo/backend/client/network";
-import { Effect, Fiber, Schema } from "effect";
+import { Array as Arr, Effect, Fiber, Schema } from "effect";
 import { TestClock } from "effect/testing";
 import {
   AuthProxyDeadline,
@@ -33,6 +33,21 @@ function networkFailure(code: string) {
   });
 }
 
+/**
+ * A rejected fetch whose connection attempts failed with several codes, as Node
+ * reports one failed attempt for each address.
+ */
+function networkFailures(codes: readonly string[]) {
+  return new TypeError("fetch failed", {
+    cause: new AggregateError(
+      Arr.map(codes, (code) =>
+        Object.assign(new Error("private socket detail"), { code })
+      ),
+      "several connection attempts failed"
+    ),
+  });
+}
+
 function neverAnswers() {
   return new Promise<Response>(() => undefined);
 }
@@ -50,11 +65,11 @@ describe("readAuthResponse", () => {
   );
 
   it.effect(
-    "repeats a network failure once, after the shared 500 millisecond wait",
+    "repeats a refused connection once, after the shared 500 millisecond wait",
     () =>
       Effect.gen(function* () {
         handler.GET.mockRejectedValueOnce(
-          networkFailure("ECONNRESET")
+          networkFailure("ECONNREFUSED")
         ).mockResolvedValueOnce(new Response("session"));
         const fiber = yield* Effect.forkChild(
           readAuthResponse(handler, new Request(GET_URL))
@@ -71,7 +86,7 @@ describe("readAuthResponse", () => {
 
   it.effect("fails with the network codes after its one repeat", () =>
     Effect.gen(function* () {
-      handler.GET.mockRejectedValue(networkFailure("ECONNRESET"));
+      handler.GET.mockRejectedValue(networkFailure("ECONNREFUSED"));
       const fiber = yield* Effect.forkChild(
         readAuthResponse(handler, new Request(GET_URL)).pipe(Effect.flip)
       );
@@ -79,7 +94,7 @@ describe("readAuthResponse", () => {
       yield* TestClock.adjust("500 millis");
 
       expect(yield* Fiber.join(fiber)).toStrictEqual(
-        new NetworkRequestError({ networkCodes: ["ECONNRESET"] })
+        new NetworkRequestError({ networkCodes: ["ECONNREFUSED"] })
       );
       expect(handler.GET).toHaveBeenCalledTimes(2);
     })
@@ -119,7 +134,7 @@ describe("readAuthResponse", () => {
   it.effect("counts a repeat inside the same 15 second deadline", () =>
     Effect.gen(function* () {
       handler.GET.mockRejectedValueOnce(
-        networkFailure("ECONNRESET")
+        networkFailure("ECONNREFUSED")
       ).mockImplementationOnce(neverAnswers);
       const fiber = yield* Effect.forkChild(
         readAuthResponse(handler, new Request(GET_URL)).pipe(Effect.flip)
@@ -131,6 +146,48 @@ describe("readAuthResponse", () => {
 
       expect(yield* Fiber.join(fiber)).toStrictEqual(new AuthProxyDeadline());
     })
+  );
+
+  it.effect(
+    "does not repeat a reset connection, because the upstream may already have acted",
+    () =>
+      Effect.gen(function* () {
+        handler.GET.mockRejectedValueOnce(
+          networkFailure("ECONNRESET")
+        ).mockResolvedValueOnce(new Response("session"));
+
+        const error = yield* readAuthResponse(
+          handler,
+          new Request(GET_URL)
+        ).pipe(Effect.flip);
+
+        expect(error).toStrictEqual(
+          new NetworkRequestError({ networkCodes: ["ECONNRESET"] })
+        );
+        expect(handler.GET).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect(
+    "does not repeat a failure that carries a refused and a reset connection",
+    () =>
+      Effect.gen(function* () {
+        handler.GET.mockRejectedValueOnce(
+          networkFailures(["ECONNREFUSED", "ECONNRESET"])
+        ).mockResolvedValueOnce(new Response("session"));
+
+        const error = yield* readAuthResponse(
+          handler,
+          new Request(GET_URL)
+        ).pipe(Effect.flip);
+
+        expect(error).toStrictEqual(
+          new NetworkRequestError({
+            networkCodes: ["ECONNRESET", "ECONNREFUSED"],
+          })
+        );
+        expect(handler.GET).toHaveBeenCalledOnce();
+      })
   );
 });
 

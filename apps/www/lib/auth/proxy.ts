@@ -1,11 +1,18 @@
 import type { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
 import {
   createNetworkRequestError,
-  isRetryableNetworkError,
   NETWORK_RETRY_SCHEDULE,
   type NetworkRequestError,
+  type NetworkRetryCodeSchema,
 } from "@repo/backend/client/network";
-import { Duration, Effect, Schedule, Schema } from "effect";
+import {
+  Array as Arr,
+  Duration,
+  Effect,
+  HashSet,
+  Schedule,
+  Schema,
+} from "effect";
 import { bufferResponse } from "@/lib/auth/body";
 
 /** One method of the Better Auth route handler that the proxy forwards to. */
@@ -22,14 +29,46 @@ type AuthRouteHandler = ReturnType<typeof convexBetterAuthNextJs>["handler"];
 export const AUTH_PROXY_DEADLINE = Duration.seconds(15);
 
 /**
- * A read that fails on the network is repeated once. The shared schedule gives
- * the 500 millisecond wait, and `recurs(1)` stops it after one repeat, so a
- * read never waits through the shared schedule's second retry.
+ * A read is repeated once, and only when its connection was never made. Better
+ * Auth serves one-time callbacks over GET, such as `/api/auth/callback/google`,
+ * which redeems an authorization code, so a read that failed after its
+ * connection may have already acted. The shared schedule gives the 500
+ * millisecond wait, and `recurs(1)` stops it after one repeat.
  */
 const AUTH_READ_RETRY = Schedule.max([
   NETWORK_RETRY_SCHEDULE,
   Schedule.recurs(1),
 ]);
+
+type NetworkRetryCode = typeof NetworkRetryCodeSchema.Type;
+
+/**
+ * The codes that prove the connection was never made, so the upstream cannot
+ * have received the request. ECONNRESET, EPIPE, and UND_ERR_SOCKET are left out
+ * on purpose, because the upstream may already have acted when they occur.
+ */
+const NEVER_CONNECTED_CODES = HashSet.fromIterable<NetworkRetryCode>([
+  "ECONNREFUSED",
+  "ENOTFOUND",
+  "ENETDOWN",
+  "ENETUNREACH",
+  "EHOSTDOWN",
+  "EHOSTUNREACH",
+]);
+
+/**
+ * Whether a failed read proves that no connection reached the upstream. The
+ * failure needs at least one network code, and every code must be a never
+ * connected code, so a failure that also carries a reset is not repeated.
+ */
+function isNeverConnectedError(error: NetworkRequestError) {
+  return (
+    error.networkCodes.length > 0 &&
+    Arr.every(error.networkCodes, (code) =>
+      HashSet.has(NEVER_CONNECTED_CODES, code)
+    )
+  );
+}
 
 /** The proxy did not answer within its deadline. */
 export class AuthProxyDeadline extends Schema.TaggedError<AuthProxyDeadline>()(
@@ -60,8 +99,10 @@ const withAuthDeadline = <A>(
   );
 
 /**
- * Forwards one read. A network failure that Undici classifies as retryable is
- * repeated once inside the deadline. A missed deadline is never repeated.
+ * Forwards one read. A failure that proves the connection was never made is
+ * repeated once inside the deadline. Any other failure, including a reset
+ * connection, is answered at once, because the upstream may already have acted.
+ * A missed deadline is never repeated.
  */
 export const readAuthResponse = Effect.fn("www.auth.proxy.read")(function* (
   handler: AuthRouteHandler,
@@ -70,7 +111,7 @@ export const readAuthResponse = Effect.fn("www.auth.proxy.read")(function* (
   return yield* callAuthHandler(handler.GET, request).pipe(
     Effect.retry({
       schedule: AUTH_READ_RETRY,
-      while: isRetryableNetworkError,
+      while: isNeverConnectedError,
     }),
     withAuthDeadline
   );
