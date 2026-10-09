@@ -26,6 +26,7 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { subjectList } from "@/components/school/classes/data/subject";
 
@@ -47,7 +48,7 @@ export function HeaderAddSubjectField({
 }: HeaderAddSubjectFieldProps) {
   const t = useTranslations("School.Classes");
   const [subjectPopoverOpen, subjectPopoverHandlers] = useDisclosure(false);
-  const subjectOptions = subjectList.map((subject) => ({
+  const subjectOptions = Arr.map(subjectList, (subject) => ({
     label: t(subject),
     value: subject,
   }));

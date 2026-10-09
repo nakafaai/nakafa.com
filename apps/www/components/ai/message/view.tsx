@@ -6,6 +6,7 @@ import {
   MessageContent,
   MessageFooter,
 } from "@repo/design-system/components/ui/message";
+import { Array as Arr } from "effect";
 import { useChat } from "@/components/ai/chat/context";
 import { AiChatPersistedError } from "@/components/ai/chat/error";
 import { AiChatMessageActions } from "@/components/ai/message/actions";
@@ -30,7 +31,7 @@ export function AiChatMessage({ message }: Props) {
       <MessageProvider message={message} turn={turn}>
         <NinaPrompt
           actions={<AiChatMessageActions />}
-          files={message.parts.filter((part) => part.type === "file")}
+          files={Arr.filter(message.parts, (part) => part.type === "file")}
         >
           <Response id={message.id}>{message.text}</Response>
         </NinaPrompt>

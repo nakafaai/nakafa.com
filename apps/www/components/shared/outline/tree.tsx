@@ -21,6 +21,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { slugify } from "@repo/utilities/slug";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
 import { TocProvider, useToc } from "@/components/shared/outline/context";
@@ -47,7 +48,7 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
       <SidebarTreeEntry heading={heading} />
       {!!heading.children && heading.children.length > 0 && (
         <SidebarMenuSub>
-          {heading.children.map((child) => (
+          {Arr.map(heading.children, (child) => (
             <SidebarTreeItem heading={child} key={child.href} />
           ))}
         </SidebarMenuSub>
@@ -191,7 +192,7 @@ export function SidebarTree({ data, title }: Props) {
     <SidebarTreeGroup title={title}>
       <SidebarMenu>
         <TocProvider toc={data}>
-          {data.map((item) => (
+          {Arr.map(data, (item) => (
             <SidebarTreeItem heading={item} key={item.href} />
           ))}
         </TocProvider>

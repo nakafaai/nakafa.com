@@ -1,7 +1,7 @@
 "use client";
 
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
-import { HashMap, HashSet, Option } from "effect";
+import { Array as Arr, HashMap, HashSet, Option } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import {
@@ -81,7 +81,7 @@ function SingleChoiceFields({
         }
         value={selected}
       >
-        {responseSpec.options.map((option) => (
+        {Arr.map(responseSpec.options, (option) => (
           <TryoutSelectableRadioOption
             appearance={previewAppearance(
               value.revealAnswers,
@@ -124,7 +124,7 @@ function MultipleChoiceFields({
   return (
     <fieldset className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2">
       <legend className="sr-only">{answerLabel}</legend>
-      {responseSpec.options.map((option) => (
+      {Arr.map(responseSpec.options, (option) => (
         <TryoutSelectableMultipleChoice
           appearance={previewAppearance(value.revealAnswers, option.isCorrect)}
           checked={HashSet.has(selected, option.optionKey)}
@@ -164,7 +164,7 @@ function CategoryFields({
   }
   const assigned = HashMap.fromIterable(
     selection?.kind === "category"
-      ? selection.assignments.map((assignment) => [
+      ? Arr.map(selection.assignments, (assignment) => [
           assignment.statementKey,
           assignment.categoryKey,
         ])
@@ -172,7 +172,7 @@ function CategoryFields({
   );
   return (
     <div className="space-y-6">
-      {responseSpec.statements.map((statement) => {
+      {Arr.map(responseSpec.statements, (statement) => {
         const statementId = statementLabelId(id, statement.statementKey);
         const statementHeadingId = `${statementId}-label`;
         const assignedCategory = Option.getOrUndefined(
@@ -201,7 +201,7 @@ function CategoryFields({
               }
               value={assignedCategory ?? ""}
             >
-              {responseSpec.categories.map((category) => (
+              {Arr.map(responseSpec.categories, (category) => (
                 <TryoutSelectableRadioOption
                   appearance={previewAppearance(
                     value.revealAnswers,

@@ -305,11 +305,11 @@ function useDefaultSearchGroups(
   const tHoly = useTranslations("Holy");
   const locale = useLocale();
 
-  const subjectGroups = subjectMenu.map((item) => {
+  const subjectGroups = Arr.map(subjectMenu, (item) => {
     const groupTitle = tSubject(item.title);
 
     return {
-      items: item.items.map((subItem) => {
+      items: Arr.map(item.items, (subItem) => {
         const label = tSubject(subItem.title, { grade: subItem.value });
         const href = getSubjectMenuHref(subItem, locale);
 
@@ -329,7 +329,7 @@ function useDefaultSearchGroups(
   return [
     ...subjectGroups,
     {
-      items: articleNavigation.map((item) => ({
+      items: Arr.map(articleNavigation, (item) => ({
         href: item.href,
         icon: getArticleCategoryIcon(item.category),
         key: item.href,
@@ -340,7 +340,7 @@ function useDefaultSearchGroups(
       value: tArticles("articles"),
     },
     {
-      items: holyMenu.map((item) => {
+      items: Arr.map(holyMenu, (item) => {
         const label = tHoly(item.title);
 
         return {
@@ -380,10 +380,11 @@ function getResultGroups(
   sectionLabels: Record<ContentSearchResultItem["section"], string>,
   query: string
 ): SearchCommandGroup[] {
-  return Arr.dedupe(results.map((result) => result.section)).map((section) => ({
-    items: results
-      .filter((result) => result.section === section)
-      .map(
+  return Arr.map(
+    Arr.dedupe(Arr.map(results, (result) => result.section)),
+    (section) => ({
+      items: Arr.map(
+        Arr.filter(results, (result) => result.section === section),
         (result): SearchCommandItem => ({
           excerpt: result.excerpt,
           href: `/${result.route}`,
@@ -394,8 +395,9 @@ function getResultGroups(
           value: `${result.title} ${result.description} ${result.route}`,
         })
       ),
-    value: sectionLabels[section],
-  }));
+      value: sectionLabels[section],
+    })
+  );
 }
 
 function searchCommandItemToString(item: SearchCommandItem) {

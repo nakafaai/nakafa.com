@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { SocialSignInFailed, startGoogleSignIn } from "@/lib/auth/social";
 
 const input = {
@@ -10,10 +10,10 @@ const input = {
 describe("social sign-in", () => {
   it.effect("starts Google with both success and failure destinations", () =>
     Effect.gen(function* () {
-      const calls: unknown[] = [];
+      let calls: unknown[] = [];
 
       yield* startGoogleSignIn(input, (request) => {
-        calls.push(request);
+        calls = Arr.append(calls, request);
         return Promise.resolve({
           data: { redirect: true, url: "https://accounts.google.com" },
         });

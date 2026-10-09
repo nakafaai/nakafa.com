@@ -6,7 +6,7 @@ import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 import { readPublishedArticleRoute } from "@/lib/content/article/route";
 import { makeArticleRuntimeSource } from "@/test/content/article";
 import {
@@ -53,11 +53,14 @@ function foundModel(overrides?: {
         : overrides.activeReleaseId,
     alternateJson:
       overrides?.alternateJson ??
-      [
-        testArticleProjection,
-        testArticleIdProjection,
-        testArticleDeProjection,
-      ].map(canonicalizeArticleProjection),
+      Arr.map(
+        [
+          testArticleProjection,
+          testArticleIdProjection,
+          testArticleDeProjection,
+        ],
+        canonicalizeArticleProjection
+      ),
     projectionJson:
       overrides?.projectionJson === undefined
         ? canonicalizeArticleProjection(testArticleProjection)

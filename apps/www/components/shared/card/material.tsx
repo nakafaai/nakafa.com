@@ -18,6 +18,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { slugify } from "@repo/utilities/slug";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useLayoutEffect, useState } from "react";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 
@@ -110,7 +111,7 @@ export function CardMaterial({ material }: Props) {
         <CollapsibleContent>
           <CardContent className="border-t px-0">
             <CardLinks>
-              {material.items.map((item) => (
+              {Arr.map(material.items, (item) => (
                 <CardLink href={item.href} key={item.href} title={item.title}>
                   <h3 className="flex-1">{item.title}</h3>
                 </CardLink>

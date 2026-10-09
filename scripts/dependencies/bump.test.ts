@@ -4,6 +4,7 @@ import {
   Array as Arr,
   ConfigProvider,
   Effect,
+  Fiber,
   FileSystem,
   Layer,
   Option,
@@ -14,6 +15,7 @@ import {
 } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
+import { TestClock } from "effect/testing";
 import { capture, makeCapture } from "#scripts/capture";
 import {
   bumpDependencies,
@@ -325,5 +327,42 @@ describe("dependency updates", () => {
           "Unable to inspect GitHub Actions: Unable to read GitHub workflow files.\n",
       ]);
     }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "fails the registry review when pnpm view misses its deadline",
+    () =>
+      Effect.gen(function* () {
+        const releases = yield* releaseClient(reviewedRelease);
+        const fiber = yield* Effect.forkChild(
+          bumpDependencies(
+            { root: "/repository" },
+            () => Effect.succeed([]),
+            (_root, args) =>
+              args[0] === "view"
+                ? Effect.never
+                : Effect.succeed({ exitCode: 0, stderr: "", stdout: "" }),
+            () => Effect.void,
+            () => Effect.void
+          ).pipe(
+            Effect.provide(Layer.mergeAll(NodeServices.layer, releases)),
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromEnvRecord({})
+            ),
+            Effect.flip
+          )
+        );
+
+        yield* TestClock.adjust("10 seconds");
+
+        const failure = yield* Fiber.join(fiber);
+        const registry = REGISTRY_REVIEWS[0]?.[0];
+        assert.strictEqual(failure._tag, "DependencyCommandError");
+        assert.strictEqual(
+          failure.message,
+          `pnpm view ${registry} did not finish within 10 seconds.`
+        );
+      })
   );
 });

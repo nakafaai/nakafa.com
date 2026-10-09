@@ -12,6 +12,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Link } from "@repo/internationalization/src/navigation";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 
 /**
@@ -32,19 +33,14 @@ export function OpenInSubmenuContent({
   const markdownUrl = new URL(`${slug}.mdx`, "https://nakafa.com");
   const q = `I'm looking at this ${markdownUrl}, help me understand.`;
 
-  const links: {
+  const sourceLinks: {
     href: string;
     logo: BrandLogoName;
     title: string;
-  }[] = [];
-  if (sourceUrl) {
-    links.push({
-      href: sourceUrl,
-      logo: "github",
-      title: t("open-in-github"),
-    });
-  }
-  links.push(
+  }[] = sourceUrl
+    ? [{ href: sourceUrl, logo: "github", title: t("open-in-github") }]
+    : [];
+  const assistantLinks: (typeof sourceLinks)[number][] = [
     {
       title: t("open-in-chatgpt"),
       href: `https://chatgpt.com/?${new URLSearchParams({ hints: "search", q })}`,
@@ -59,13 +55,14 @@ export function OpenInSubmenuContent({
       title: t("open-in-claude"),
       href: `https://claude.ai/new?${new URLSearchParams({ q })}`,
       logo: "claude",
-    }
-  );
+    },
+  ];
+  const links = Arr.appendAll(sourceLinks, assistantLinks);
 
   return (
     <DropdownMenuSubContent className="w-56">
       <DropdownMenuGroup>
-        {links.map((item) => (
+        {Arr.map(links, (item) => (
           <DropdownMenuItem
             key={item.title}
             render={

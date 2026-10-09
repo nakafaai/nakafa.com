@@ -8,6 +8,7 @@ import {
   Array as Arr,
   Effect,
   MutableHashSet,
+  MutableList,
   Option,
   Record as Rec,
 } from "effect";
@@ -51,20 +52,22 @@ const selectMaterialRoutes = Effect.fn("NakafaProgram.selectMaterialRoutes")(
     if (materialGroup.length === 0) {
       return [];
     }
-    const exact = materialGroup.find(
+    const exact = Arr.findFirst(
+      materialGroup,
       (material) => material.publicPath === canonicalPath
     );
-    if (exact) {
-      return [exact];
+    if (Option.isSome(exact)) {
+      return [exact.value];
     }
-    const matchingParent = materialGroup.filter(
+    const matchingParent = Arr.filter(
+      materialGroup,
       (material) => material.parentPath === canonicalPath
     );
     if (matchingParent.length > 0) {
       return materialGroup;
     }
     const currentParents = Arr.dedupe(
-      materialGroup.map(({ parentPath }) => parentPath)
+      Arr.map(materialGroup, ({ parentPath }) => parentPath)
     );
     if (currentParents.length === 1) {
       return materialGroup;
@@ -136,41 +139,46 @@ export const readPublishedMaterialCards = Effect.fn(
     materials,
     (material): string => material.materialKey
   );
-  const cards: MaterialList = [];
+  const cards = MutableList.make<MaterialList[number]>();
   for (const group of groups) {
     const { hasMaterialContext, selected } = yield* readGroupMaterialPaths(
-      contexts.filter(
+      Arr.filter(
+        contexts,
         (context) => context.materialContextPublicPath === group.publicPath
       ),
       materialsByKey,
       locale,
       route.publicPath
     );
-    const items: MaterialList[number]["items"] = [];
-    for (const material of materials) {
-      if (!MutableHashSet.has(selected, material.publicPath)) {
-        continue;
-      }
-      items.push({
+    const items: MaterialList[number]["items"] = Arr.map(
+      Arr.filter(materials, (material) =>
+        MutableHashSet.has(selected, material.publicPath)
+      ),
+      (material) => ({
         href: toMaterialHref(locale, material, group),
         title: material.metadata.title,
-      });
-    }
+      })
+    );
     const title = group.materialCardTitle ?? group.title;
     const description = group.materialCardDescription;
-    const firstItem = items.at(0);
-    if (!firstItem && hasMaterialContext) {
+    const firstItem = Arr.head(items);
+    if (Option.isNone(firstItem) && hasMaterialContext) {
       continue;
     }
-    if (!(description && firstItem)) {
+    if (!(description && Option.isSome(firstItem))) {
       return yield* new PublishedProjectionError({
         appLocale,
         publicPath: route.publicPath,
       });
     }
-    cards.push({ description, href: firstItem.href, items, title });
+    MutableList.append(cards, {
+      description,
+      href: firstItem.value.href,
+      items,
+      title,
+    });
   }
-  return cards;
+  return MutableList.toArray(cards);
 });
 
 /** Caches material cards while starting Effect only inside the cache boundary. */

@@ -7,6 +7,7 @@ import {
   type SelfSelectableUserRole,
   selfSelectableUserRoles,
 } from "@repo/backend/confect/users/roles";
+import { Array as Arr } from "effect";
 
 export const roleIconByValue: Record<
   SelfSelectableUserRole,
@@ -18,7 +19,7 @@ export const roleIconByValue: Record<
 };
 
 /** Self-selectable user roles with UI-local icon metadata. */
-export const roles = selfSelectableUserRoles.map((value) => ({
+export const roles = Arr.map(selfSelectableUserRoles, (value) => ({
   icon: roleIconByValue[value],
   value,
 }));

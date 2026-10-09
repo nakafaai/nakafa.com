@@ -2,12 +2,12 @@ import {
   type AnalyticsConsentState,
   AnalyticsConsentStateSchema,
 } from "@repo/analytics/consent";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 const AnalyticsConsentPreferencesSchema = Schema.Struct({
   isOpen: Schema.Boolean,
   statusAtOpen: Schema.Union(
-    AnalyticsConsentStateSchema.members.map((state) => state.fields.status)
+    Arr.map(AnalyticsConsentStateSchema.members, (state) => state.fields.status)
   ),
 });
 

@@ -3,7 +3,7 @@ import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
-import { Array as Arr, Effect, HashSet, Record as Rec } from "effect";
+import { Array as Arr, Effect, HashSet, Order, Record as Rec } from "effect";
 import { baseRenderers } from "@/lib/content/renderer/domain/base";
 import { rendererDomainImplementations } from "@/lib/content/renderer/selection";
 
@@ -28,13 +28,13 @@ describe("renderer manifest", () => {
       const manifest = yield* rendererManifest;
 
       expect(yield* validateRendererManifestHash(manifest)).toEqual(manifest);
-      expect(manifest.domains.map(({ name }) => name)).toEqual(
+      expect(Arr.map(manifest.domains, ({ name }) => name)).toEqual(
         RENDERER_DOMAINS
       );
       expect(manifest.publishedDomains).toEqual(RENDERER_DOMAINS);
       for (const names of [
         manifest.base,
-        ...manifest.domains.map(({ components }) => components),
+        ...Arr.map(manifest.domains, ({ components }) => components),
       ]) {
         expect(Arr.dedupe(names).length).toBe(names.length);
       }
@@ -63,11 +63,14 @@ describe("renderer manifest", () => {
             rendererDomain: domain.name,
             requiredComponents,
           });
-          const expectedNames = Arr.dedupe(requiredComponents).sort();
-
-          expect(Rec.keys<string, unknown>(components).sort()).toEqual(
-            expectedNames
+          const expectedNames = Arr.sort(
+            Arr.dedupe(requiredComponents),
+            Order.String
           );
+
+          expect(
+            Arr.sort(Rec.keys<string, unknown>(components), Order.String)
+          ).toEqual(expectedNames);
         }
       }),
     120_000
@@ -84,21 +87,32 @@ describe("renderer manifest", () => {
         const semanticNames = HashSet.fromIterable<string>(
           semanticComponentNames
         );
-        const expectedBaseNames = manifest.base
-          .filter((name) => !HashSet.has(semanticNames, name))
-          .sort();
-
-        expect(baseRenderers.map(({ name }) => name).sort()).toEqual(
-          expectedBaseNames
+        const expectedBaseNames = Arr.sort(
+          Arr.filter(
+            manifest.base,
+            (name) => !HashSet.has(semanticNames, name)
+          ),
+          Order.String
         );
 
+        expect(
+          Arr.sort(
+            Arr.map(baseRenderers, ({ name }) => name),
+            Order.String
+          )
+        ).toEqual(expectedBaseNames);
+
         for (const domain of manifest.domains) {
-          const expectedDomainNames = [...domain.components].sort();
+          const expectedDomainNames = Arr.sort(domain.components, Order.String);
 
           expect(
-            rendererDomainImplementations[domain.name]
-              .map(({ name }) => name)
-              .sort()
+            Arr.sort(
+              Arr.map(
+                rendererDomainImplementations[domain.name],
+                ({ name }) => name
+              ),
+              Order.String
+            )
           ).toEqual(expectedDomainNames);
         }
       })

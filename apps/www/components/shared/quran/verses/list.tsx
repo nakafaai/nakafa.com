@@ -1,6 +1,7 @@
 "use client";
 
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
+import { Array as Arr } from "effect";
 import {
   QuranInterpretationButton,
   QuranInterpretationLink,
@@ -37,7 +38,7 @@ export function QuranVerseList({ items }: QuranVerseListProps) {
 
   return (
     <div>
-      {items.slice(0, QURAN_FLOW_VERSES).map((item) => (
+      {Arr.map(items.slice(0, QURAN_FLOW_VERSES), (item) => (
         <QuranSurahVerse
           isLast={item === last}
           item={item}

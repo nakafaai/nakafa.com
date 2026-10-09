@@ -34,7 +34,7 @@ import {
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   readFeaturedTryout,
@@ -209,7 +209,7 @@ describe("immutable try-out application catalog", () => {
             id: "Matematika Wajib",
             de: "Pflichtmathematik",
           }[locale],
-          alternates: APP_LOCALE_CODES.map((appLocale) => ({
+          alternates: Arr.map(APP_LOCALE_CODES, (appLocale) => ({
             appLocale,
             publicPath: TRACK,
           })),

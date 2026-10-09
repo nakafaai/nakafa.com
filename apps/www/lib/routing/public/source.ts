@@ -4,7 +4,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect, HashSet, Record as Rec, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
@@ -48,13 +48,13 @@ function readRejectedPublicRouteLocale(pathname: string) {
     return routing.defaultLocale;
   }
 
-  const [locale, namespace] = pathname.split("/").filter(Boolean);
+  const [locale, namespace] = Arr.filter(pathname.split("/"), Boolean);
 
   if (!(namespace && hasLocale(routing.locales, locale))) {
     return null;
   }
 
-  const usesRejectedNamespace = PUBLIC_ROUTE_SURFACES.some((surface) => {
+  const usesRejectedNamespace = Arr.some(PUBLIC_ROUTE_SURFACES, (surface) => {
     const expectedNamespace = surface.routeSlugs[locale];
     const knownNamespaces = [
       surface.appSegment,
@@ -64,7 +64,10 @@ function readRejectedPublicRouteLocale(pathname: string) {
 
     return (
       namespace !== expectedNamespace &&
-      knownNamespaces.some((knownNamespace) => knownNamespace === namespace)
+      Arr.some(
+        knownNamespaces,
+        (knownNamespace) => knownNamespace === namespace
+      )
     );
   });
 
@@ -89,7 +92,7 @@ function readMissingHtmlRouteLocale({
     return Effect.succeed(null);
   }
 
-  const [locale, root, ...segments] = pathname.split("/").filter(Boolean);
+  const [locale, root, ...segments] = Arr.filter(pathname.split("/"), Boolean);
 
   if (!(root && hasLocale(routing.locales, locale))) {
     return Effect.succeed(null);
@@ -111,13 +114,13 @@ function readMissingHtmlRouteLocale({
   }
 
   if (isApplicationRouteRoot(locale, root)) {
-    const publicPath = [root, ...segments].join("/");
+    const publicPath = Arr.join([root, ...segments], "/");
     return Effect.succeed(
       isApplicationRoutePath(locale, publicPath) ? null : locale
     );
   }
 
-  const publicPath = [root, ...segments].join("/");
+  const publicPath = Arr.join([root, ...segments], "/");
   if (!Schema.is(PublicPathSchema)(publicPath)) {
     return Effect.succeed(locale);
   }
@@ -139,7 +142,7 @@ function isRenderableQuranPath(segments: readonly string[]) {
     return false;
   }
 
-  const surah = segments.join("");
+  const surah = Arr.join(segments, "");
   const surahNumber = Number.parseInt(surah, 10);
 
   return (

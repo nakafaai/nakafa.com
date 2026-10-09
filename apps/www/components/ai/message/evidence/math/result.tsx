@@ -8,6 +8,7 @@ import type {
   MathItem,
   MathStep,
 } from "@repo/math/schema/shared";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { Expression } from "@/components/ai/message/evidence/math/expression";
 import {
@@ -80,7 +81,7 @@ function StepList({ steps }: StepListProps) {
 
   return (
     <div className="flex max-w-full flex-col gap-2">
-      {steps.map((step, index) => (
+      {Arr.map(steps, (step, index) => (
         <StepRow
           key={`${step.action}-${step.primary.expression}-${step.relation?.expression ?? ""}-${step.secondary?.expression ?? ""}`}
           number={index + 1}
@@ -163,7 +164,7 @@ function ItemList({ items }: ItemListProps) {
 
   return (
     <div className="flex max-w-full flex-col gap-2">
-      {items.map((item) => (
+      {Arr.map(items, (item) => (
         <ItemRow item={item} key={`${item.label}-${item.value}`} />
       ))}
     </div>
@@ -218,7 +219,7 @@ function ConditionList({ conditions }: ConditionListProps) {
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
       <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden py-1">
-        {conditions.map((condition) => (
+        {Arr.map(conditions, (condition) => (
           <Expression key={condition.expression} value={condition.latex} />
         ))}
       </span>

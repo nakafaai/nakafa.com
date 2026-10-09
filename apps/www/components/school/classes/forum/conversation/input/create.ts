@@ -3,7 +3,7 @@ import { useMutation } from "@confect/react";
 import classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { randomUuid } from "@repo/utilities/uuid";
-import { DateTime, Effect, Option } from "effect";
+import { Array as Arr, DateTime, Effect, Option } from "effect";
 
 import { useData } from "@/components/school/classes/forum/conversation/context";
 import { createOptimisticForumPost } from "@/components/school/classes/forum/conversation/input/optimistic";
@@ -41,7 +41,12 @@ export function useCreateForumPost() {
         const posts = cached.value;
 
         const parentPost = optimisticArgs.parentId
-          ? posts.find((post) => post._id === optimisticArgs.parentId)
+          ? Option.getOrUndefined(
+              Arr.findFirst(
+                posts,
+                (post) => post._id === optimisticArgs.parentId
+              )
+            )
           : undefined;
 
         localStore.setQuery(

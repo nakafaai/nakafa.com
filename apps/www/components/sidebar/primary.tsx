@@ -16,6 +16,7 @@ import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
+import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import {
   getForYouNavigationHref,
@@ -42,7 +43,7 @@ export function NavForYou() {
       <SidebarGroupLabel>{tCommon("for-you")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => {
+          {Arr.map(items, (item) => {
             const label =
               item.labelNamespace === "Ai"
                 ? tAi(item.labelKey)

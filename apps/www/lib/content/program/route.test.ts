@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 import {
   getPublishedProgramRoute,
   readPublishedProgramRoute,
@@ -48,8 +48,8 @@ function routeResponse(overrides?: {
       testCurriculumRowJson(testProgramClass),
     ],
     childJson: [],
-    contextJson: testProgramContexts.map(testCurriculumRowJson),
-    groupJson: testProgramGroups.map(testCurriculumRowJson),
+    contextJson: Arr.map(testProgramContexts, testCurriculumRowJson),
+    groupJson: Arr.map(testProgramGroups, testCurriculumRowJson),
     managed: overrides?.managed ?? true,
     materialJson: overrides?.materialJson ?? [
       canonicalizeMaterialProjection(previewProjection),

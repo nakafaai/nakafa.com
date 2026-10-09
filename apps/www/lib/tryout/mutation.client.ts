@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { TryoutCountrySelectorOption } from "@/components/tryout/catalog/options";
 export type TryoutPreferenceOption = Pick<
   TryoutCountrySelectorOption,
@@ -17,12 +17,14 @@ export function useSetPreferredTryoutMutation(
     learningPreferences.mutations.setPreferredTryoutCountry
   ).withOptimisticUpdate(
     (localStore, { locale, preferredTryoutCountryKey }) => {
-      const country = countries.find(
+      const match = Arr.findFirst(
+        countries,
         (candidate) => candidate.countryKey === preferredTryoutCountryKey
       );
-      if (!country) {
+      if (Option.isNone(match)) {
         return;
       }
+      const country = match.value;
       const current = Option.getOrUndefined(
         localStore.getQuery(learningPreferences.queries.getCurrentTryout, {
           locale,

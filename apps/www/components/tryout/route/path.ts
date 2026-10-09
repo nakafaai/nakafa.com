@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { TryoutSectionRoute } from "@/components/tryout/section/model";
 
 /** Route coordinates of an href; each one is optional because a href can omit any of them. */
@@ -29,11 +29,12 @@ export function getTryoutHref({
   set,
   track,
 }: TryoutHrefInput = {}) {
-  const segments = ["try-out", country, exam, track, set, section].filter(
+  const segments = Arr.filter(
+    ["try-out", country, exam, track, set, section],
     (segment): segment is string => Boolean(segment)
   );
 
-  return `/${segments.join("/")}`;
+  return `/${Arr.join(segments, "/")}`;
 }
 
 /** Converts a Convex publicPath row into the href expected by localized links. */

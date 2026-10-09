@@ -15,6 +15,7 @@ import {
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { getAcademicYearList } from "@/components/school/classes/add/utils";
 
@@ -57,7 +58,7 @@ export function HeaderAddYearField({
           }
         />
         <DropdownMenuContent align="start" className="w-(--anchor-width)">
-          {getAcademicYearList().map((year) => (
+          {Arr.map(getAcademicYearList(), (year) => (
             <DropdownMenuItem
               className="cursor-pointer"
               key={year}

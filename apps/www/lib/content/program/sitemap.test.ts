@@ -3,7 +3,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer, Order } from "effect";
 import {
   readPublishedProgramBuckets,
   readPublishedProgramSitemap,
@@ -46,11 +46,12 @@ describe("published curriculum snapshot sitemap", () => {
           readPublishedProgramSitemap("id", bucket)
         );
         expect(
-          pages
-            .flatMap(
-              (page) => page?.routes.map(({ publicPath }) => publicPath) ?? []
-            )
-            .sort()
+          Arr.sort(
+            Arr.flatMap(pages, (page) =>
+              page ? Arr.map(page.routes, ({ publicPath }) => publicPath) : []
+            ),
+            Order.String
+          )
         ).toEqual(["kurikulum/program-teknis-1", "kurikulum/program-teknis-2"]);
         expect(
           yield* readPublishedProgramSitemap("id", "invalid").pipe(Effect.flip)

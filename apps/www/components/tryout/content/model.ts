@@ -3,6 +3,7 @@ import type {
   noTryoutSectionContentAccess,
   TryoutSectionContentAccess,
 } from "@repo/backend/confect/tryouts/runtime/spec";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 /** Signed section content access: every access except the explicit none value. */
@@ -30,7 +31,8 @@ export function projectTryoutRuntimeContent(input: {
   readonly questions: readonly RenderedTryoutContentEntry[];
 }) {
   return {
-    answers: input.answers.map(
+    answers: Arr.map(
+      input.answers,
       ({ body, contentHash, sourcePath, sourceRevision }) => ({
         answer: body,
         contentHash,
@@ -38,7 +40,8 @@ export function projectTryoutRuntimeContent(input: {
         sourceRevision,
       })
     ),
-    questions: input.questions.map(
+    questions: Arr.map(
+      input.questions,
       ({ body, contentHash, sourcePath, sourceRevision }) => ({
         content: body,
         contentHash,

@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { userSettingsSections } from "@/lib/settings/routes";
 
@@ -29,7 +30,7 @@ export function UserSettingsNav() {
       <SidebarGroupLabel>{t("personal")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {userSettingsSections.map((section) => {
+          {Arr.map(userSettingsSections, (section) => {
             const label = t(section.labelKey);
 
             return (

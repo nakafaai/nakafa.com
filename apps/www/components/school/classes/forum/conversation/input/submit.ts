@@ -5,7 +5,7 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
-import { Effect, Result, Schema } from "effect";
+import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 import {
   HttpBody,
   HttpClient,
@@ -82,13 +82,9 @@ function getErrorCause(cause: unknown) {
 }
 /** Returns only browser File objects that can be uploaded for a new post. */
 function getUploadableFiles(files: readonly FileWithPreview[]) {
-  const uploadableFiles: File[] = [];
-  for (const fileWithPreview of files) {
-    if (fileWithPreview.file instanceof File) {
-      uploadableFiles.push(fileWithPreview.file);
-    }
-  }
-  return uploadableFiles;
+  return Arr.flatMap(files, (fileWithPreview) =>
+    fileWithPreview.file instanceof File ? [fileWithPreview.file] : []
+  );
 }
 /** Discards pending uploads and captures cleanup failures without masking the original error. */
 const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
@@ -252,9 +248,8 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
   };
   post: ForumPostSubmitDraft;
 }) {
-  const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
   const uploadResults = yield* Effect.all(
-    getUploadableFiles(files).map((file) =>
+    Arr.map(getUploadableFiles(files), (file) =>
       uploadAttachmentFile({
         file,
         forumId: post.forumId,
@@ -265,19 +260,18 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
       mode: "result",
     }
   );
-  for (const result of uploadResults) {
-    if (Result.isSuccess(result)) {
-      attachmentUploadIds.push(result.success);
-    }
-  }
-  const failedUpload = uploadResults.find(Result.isFailure);
-  if (failedUpload) {
+  const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] =
+    Arr.flatMap(uploadResults, (result) =>
+      Result.isSuccess(result) ? [result.success] : []
+    );
+  const failedUpload = Arr.findFirst(uploadResults, Result.isFailure);
+  if (Option.isSome(failedUpload)) {
     yield* discardPendingUploads({
       mutations,
       source: "forum-upload-discard-batch",
       uploadIds: attachmentUploadIds,
     });
-    return yield* failedUpload.failure;
+    return yield* failedUpload.value.failure;
   }
   yield* Effect.tryPromise({
     try: () =>

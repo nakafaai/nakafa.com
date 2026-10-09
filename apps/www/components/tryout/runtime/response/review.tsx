@@ -1,4 +1,4 @@
-import { HashMap, HashSet, Option } from "effect";
+import { Array as Arr, HashMap, HashSet, Option } from "effect";
 import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface.client";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label.client";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
@@ -29,7 +29,7 @@ export function TryoutReviewedResponse({
   const selected = HashSet.fromIterable(readSelectedOptionKeys(selection));
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-      {responseSpec.options.map((option) => (
+      {Arr.map(responseSpec.options, (option) => (
         <TryoutReviewedChoice
           checked={HashSet.has(selected, option.optionKey)}
           id={`review-question-${questionOrder}-${option.optionKey}`}
@@ -73,7 +73,7 @@ function ReviewedCategoryResponse({
 }) {
   const assigned = HashMap.fromIterable(
     selection?.kind === "category"
-      ? selection.assignments.map((assignment) => [
+      ? Arr.map(selection.assignments, (assignment) => [
           assignment.statementKey,
           assignment.categoryKey,
         ])
@@ -81,7 +81,7 @@ function ReviewedCategoryResponse({
   );
   return (
     <div className="space-y-6">
-      {responseSpec.statements.map((statement) => {
+      {Arr.map(responseSpec.statements, (statement) => {
         const statementId = `review-question-${questionOrder}-${statement.statementKey}`;
         const statementLabelId = `${statementId}-label`;
         const assignedCategory = Option.getOrUndefined(
@@ -98,7 +98,7 @@ function ReviewedCategoryResponse({
               aria-labelledby={statementLabelId}
               className="m-0 grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2"
             >
-              {responseSpec.categories.map((category) => (
+              {Arr.map(responseSpec.categories, (category) => (
                 <TryoutReviewedChoice
                   checked={assignedCategory === category.categoryKey}
                   id={`${statementId}-${category.categoryKey}`}

@@ -16,7 +16,14 @@ import {
   makePageRuntimeSource,
   TEST_PUBLICATION_RELEASE,
 } from "@repo/backend/test/content/publication";
-import { Effect, Layer, MutableHashMap, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Layer,
+  MutableHashMap,
+  Option,
+  Schema,
+} from "effect";
 import {
   getPublishedPageCatalog,
   readPublishedPageCatalog,
@@ -80,7 +87,7 @@ describe("published Page catalog", () => {
     "reads the inherited Page and active release identity from authenticated snapshot rows",
     () =>
       Effect.gen(function* () {
-        const locales = ACTIVE_APP_LOCALE_CODES.map(makePageRuntimeSource);
+        const locales = Arr.map(ACTIVE_APP_LOCALE_CODES, makePageRuntimeSource);
         const fixture = locales[0];
         for (const table of [
           "contentHeads",
@@ -91,7 +98,7 @@ describe("published Page catalog", () => {
           MutableHashMap.set(
             fixture.source,
             table,
-            locales.flatMap(({ source }) =>
+            Arr.flatMap(locales, ({ source }) =>
               Option.getOrElse(MutableHashMap.get(source, table), () => [])
             )
           );
@@ -106,7 +113,7 @@ describe("published Page catalog", () => {
         runtimeQueryMock.mockImplementation(context.query);
         expect(yield* readPublishedPageCatalog()).toEqual({
           activeReleaseId: fixture.state.activeReleaseId,
-          projections: locales.map(({ projection }) => projection),
+          projections: Arr.map(locales, ({ projection }) => projection),
         });
       })
   );
@@ -234,11 +241,10 @@ describe("published Page catalog", () => {
         Effect.succeed({
           activeReleaseId,
           managed: true,
-          projectionJson: [
-            testPageProjection,
-            idPageProjection,
-            dePageProjection,
-          ].map((projection) => encodePageProjection(projection)),
+          projectionJson: Arr.map(
+            [testPageProjection, idPageProjection, dePageProjection],
+            (projection) => encodePageProjection(projection)
+          ),
         })
       );
       const found = yield* readPublishedPageLocalePath({

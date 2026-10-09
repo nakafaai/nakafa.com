@@ -5,7 +5,16 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Duration, Effect, Exit, Fiber, Layer, Logger, Option } from "effect";
+import {
+  Duration,
+  Effect,
+  Exit,
+  Fiber,
+  Layer,
+  Logger,
+  MutableList,
+  Option,
+} from "effect";
 import { TestClock } from "effect/testing";
 import { httpLayer, withQueryRetry } from "@/lib/convex/http";
 
@@ -65,7 +74,10 @@ function scriptQuery(...outcomes: Effect.Effect<unknown, unknown>[]) {
  * Runs one query through the retrying client while the test clock passes
  * `elapsed`, which must cover every attempt the scenario makes.
  */
-function runQuery(messages: unknown[] = [], elapsed = Duration.seconds(2)) {
+function runQuery(
+  messages: MutableList.MutableList<unknown> = MutableList.make(),
+  elapsed = Duration.seconds(2)
+) {
   return Effect.gen(function* () {
     const fiber = yield* Effect.forkChild(
       Effect.flatMap(HttpClient.HttpClient, (client) =>
@@ -76,7 +88,7 @@ function runQuery(messages: unknown[] = [], elapsed = Duration.seconds(2)) {
             withQueryRetry(scripted),
             Logger.layer([
               Logger.make(({ message }) => {
-                messages.push(message);
+                MutableList.append(messages, message);
               }),
             ])
           )
@@ -120,7 +132,7 @@ describe("Convex HTTP query retries", () => {
   it.effect("fails a query that never answers after three attempts", () =>
     Effect.gen(function* () {
       const query = scriptQuery(Effect.never, Effect.never, Effect.never);
-      const messages: unknown[] = [];
+      const messages = MutableList.make<unknown>();
 
       // Three attempts of ten seconds, with the 500 ms and 1 s delays between them.
       const exit = yield* runQuery(messages, Duration.millis(31_500));
@@ -129,7 +141,9 @@ describe("Convex HTTP query retries", () => {
         cause: { _tag: "QueryDeadline" },
       });
       expect(query.runs()).toBe(3);
-      expect(messages).toEqual([["A Convex query failed after its retries."]]);
+      expect(MutableList.toArray(messages)).toEqual([
+        ["A Convex query failed after its retries."],
+      ]);
     })
   );
 
@@ -137,9 +151,9 @@ describe("Convex HTTP query retries", () => {
     Effect.gen(function* () {
       const query = scriptQuery(Effect.never, Effect.succeed("surahs"));
 
-      expect(yield* runQuery([], Duration.millis(10_500))).toStrictEqual(
-        Exit.succeed("surahs")
-      );
+      expect(
+        yield* runQuery(MutableList.make(), Duration.millis(10_500))
+      ).toStrictEqual(Exit.succeed("surahs"));
       expect(query.runs()).toBe(2);
     })
   );
@@ -150,11 +164,11 @@ describe("Convex HTTP query retries", () => {
         cause: new Error("Uncaught Error: Surah not found."),
       });
       const query = scriptQuery(Effect.fail(failure));
-      const messages: unknown[] = [];
+      const messages = MutableList.make<unknown>();
 
       expect(yield* runQuery(messages)).toStrictEqual(Exit.fail(failure));
       expect(query.runs()).toBe(1);
-      expect(messages).toEqual([]);
+      expect(MutableList.toArray(messages)).toEqual([]);
     })
   );
 
@@ -162,11 +176,13 @@ describe("Convex HTTP query retries", () => {
     Effect.gen(function* () {
       const failure = refused("ServiceUnavailable");
       const query = scriptQuery(Effect.fail(failure));
-      const messages: unknown[] = [];
+      const messages = MutableList.make<unknown>();
 
       expect(yield* runQuery(messages)).toStrictEqual(Exit.fail(failure));
       expect(query.runs()).toBe(3);
-      expect(messages).toEqual([["A Convex query failed after its retries."]]);
+      expect(MutableList.toArray(messages)).toEqual([
+        ["A Convex query failed after its retries."],
+      ]);
     })
   );
 
@@ -174,11 +190,11 @@ describe("Convex HTTP query retries", () => {
     Effect.gen(function* () {
       const failure = refused("Unauthenticated");
       const query = scriptQuery(Effect.fail(failure));
-      const messages: unknown[] = [];
+      const messages = MutableList.make<unknown>();
 
       expect(yield* runQuery(messages)).toStrictEqual(Exit.fail(failure));
       expect(query.runs()).toBe(1);
-      expect(messages).toEqual([]);
+      expect(MutableList.toArray(messages)).toEqual([]);
     })
   );
 

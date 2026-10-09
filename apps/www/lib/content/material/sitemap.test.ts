@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer, Order } from "effect";
 import {
   readPublishedMaterialBuckets,
   readPublishedMaterialSitemap,
@@ -53,14 +53,20 @@ describe("published material sitemap", () => {
           materialCount: 2,
         });
         expect(
-          pages
-            .flatMap((page) => page.routes.map((row) => row.publicPath))
-            .sort()
+          Arr.sort(
+            Arr.flatMap(pages, (page) =>
+              Arr.map(page.routes, (row) => row.publicPath)
+            ),
+            Order.String
+          )
         ).toEqual(
-          fixture.projections
-            .filter((row) => row.appLocale === "de")
-            .map((row) => row.publicPath)
-            .sort()
+          Arr.sort(
+            Arr.map(
+              Arr.filter(fixture.projections, (row) => row.appLocale === "de"),
+              (row) => row.publicPath
+            ),
+            Order.String
+          )
         );
       })
   );

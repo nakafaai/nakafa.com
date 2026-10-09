@@ -37,6 +37,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { usePathname } from "@repo/internationalization/src/navigation";
+import { Array as Arr } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -86,7 +87,7 @@ export function SchoolClassesList() {
     <>
       {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {results.map((c) => (
+        {Arr.map(results, (c) => (
           <ClassItem cls={c} key={c._id} />
         ))}
         {PaginatedQueryResult.isCanLoadMore(pagination) && (

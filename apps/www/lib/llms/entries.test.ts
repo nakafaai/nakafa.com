@@ -14,6 +14,7 @@ import {
   PageKeySchema,
   PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
+import { Array as Arr, Option } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
   buildPublishedContentLlmsEntries,
@@ -77,11 +78,11 @@ describe("llms entries", () => {
         },
       ]
     );
-    const englishCurriculum = englishEntries.find(
-      (entry) => entry.route === "/curriculum"
+    const englishCurriculum = Option.getOrUndefined(
+      Arr.findFirst(englishEntries, (entry) => entry.route === "/curriculum")
     );
-    const indonesianCurriculum = indonesianEntries.find(
-      (entry) => entry.route === "/kurikulum"
+    const indonesianCurriculum = Option.getOrUndefined(
+      Arr.findFirst(indonesianEntries, (entry) => entry.route === "/kurikulum")
     );
 
     expect(englishCurriculum).toMatchObject({
@@ -90,7 +91,9 @@ describe("llms entries", () => {
       title: "Curriculum",
     });
     expect(
-      englishEntries.find((entry) => entry.route === "/pricing")
+      Option.getOrUndefined(
+        Arr.findFirst(englishEntries, (entry) => entry.route === "/pricing")
+      )
     ).toMatchObject({
       description:
         "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online Tryouts.",
@@ -103,7 +106,7 @@ describe("llms entries", () => {
       section: "site",
       title: "Kurikulum",
     });
-    expect(englishEntries.map((entry) => entry.route)).toEqual([
+    expect(Arr.map(englishEntries, (entry) => entry.route)).toEqual([
       "/curriculum",
       "/pricing",
       "/privacy-policy",
@@ -116,22 +119,26 @@ describe("llms entries", () => {
       description: page.metadata.description,
       title: page.metadata.title,
     });
-    expect(indonesianEntries.map((entry) => entry.route)).toEqual([
+    expect(Arr.map(indonesianEntries, (entry) => entry.route)).toEqual([
       "/kurikulum",
       "/pricing",
     ]);
     expect(
-      indonesianEntries.find((entry) => entry.route === "/pricing")
+      Option.getOrUndefined(
+        Arr.findFirst(indonesianEntries, (entry) => entry.route === "/pricing")
+      )
     ).toMatchObject({
       description:
         "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan Tryout online.",
       title: "Harga",
     });
-    expect(englishEntries.some((entry) => entry.route === "/")).toBe(false);
-    expect(englishEntries.some((entry) => entry.route === "/contributor")).toBe(
+    expect(Arr.some(englishEntries, (entry) => entry.route === "/")).toBe(
       false
     );
-    expect(englishEntries.some((entry) => entry.route === "/search")).toBe(
+    expect(
+      Arr.some(englishEntries, (entry) => entry.route === "/contributor")
+    ).toBe(false);
+    expect(Arr.some(englishEntries, (entry) => entry.route === "/search")).toBe(
       false
     );
   });

@@ -3,7 +3,7 @@
 import type { Ref } from "@confect/core";
 import { useMutation } from "@confect/react";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 
 type CurriculumPreferenceOption = Ref.Returns<
   typeof learningPreferences.queries.listCurriculumPrograms
@@ -17,12 +17,14 @@ export function useSetPreferredCurriculumMutation(
     learningPreferences.mutations.setPreferredCurriculum
   ).withOptimisticUpdate(
     (localStore, { locale, preferredCurriculumProgramKey }) => {
-      const program = programs.find(
+      const match = Arr.findFirst(
+        programs,
         (candidate) => candidate.key === preferredCurriculumProgramKey
       );
-      if (!program) {
+      if (Option.isNone(match)) {
         return;
       }
+      const program = match.value;
       for (const query of localStore.getAllQueries(
         learningPreferences.queries.getCurrent
       )) {

@@ -1,4 +1,5 @@
 import { getCategoryIcon } from "@repo/contents/curriculum/icons";
+import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 
 const data = [
@@ -36,7 +37,7 @@ const data = [
   },
 ] as const;
 
-export const subjectMenu = data.map((item) => ({
+export const subjectMenu = Arr.map(data, (item) => ({
   ...item,
   icon: getCategoryIcon(item.title),
 }));

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 import {
   getPublishedProgramCatalog,
   getPublishedProgramSubjects,
@@ -137,7 +137,7 @@ describe("published program catalog", () => {
         runtimeQueryMock.mockImplementation(context.query);
         const catalog = yield* readPublishedProgramCatalog("en");
         expect(
-          catalog.entries.map(({ translation }) => translation.title)
+          Arr.map(catalog.entries, ({ translation }) => translation.title)
         ).toEqual(["Technical Program 1", "Technical Program 2"]);
         expect(yield* readPublishedProgramPrerenderRoute("en")).toEqual(
           catalog.entries[0].route

@@ -1,3 +1,4 @@
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Clock, Effect, FileSystem, Schema } from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
@@ -122,36 +123,56 @@ const signGoogleAccessTokenAssertion = Effect.fn(
   });
   return `${signatureInput}.${Buffer.from(signature).toString("base64url")}`;
 });
+/** Sends the token request and reads its body. The caller bounds both with one deadline. */
+const sendGoogleTokenRequest = Effect.fn(
+  "scripts.google.auth.sendTokenRequest"
+)(function* (assertion: string) {
+  const client = yield* HttpClient.HttpClient;
+  const response = yield* HttpClientRequest.post(GOOGLE_TOKEN_ENDPOINT).pipe(
+    HttpClientRequest.bodyUrlParams({
+      assertion,
+      grant_type: GOOGLE_JWT_GRANT_TYPE,
+    }),
+    client.execute,
+    Effect.mapError(
+      (cause) =>
+        new GoogleTokenRequestError({
+          cause,
+          message: "Google token request transport failed.",
+        })
+    )
+  );
+  // The body is read whether the endpoint grants or refuses the token.
+  const responseText = yield* response.text.pipe(
+    Effect.mapError(
+      (cause) =>
+        new GoogleTokenRequestError({
+          cause,
+          message: "Google token response could not be read.",
+        })
+    )
+  );
+  return { responseText, status: response.status };
+});
 /** Exchanges a signed service-account assertion for a Google API access token. */
 export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
   function* () {
     const assertion = yield* signGoogleAccessTokenAssertion();
-    const client = yield* HttpClient.HttpClient;
-    const response = yield* HttpClientRequest.post(GOOGLE_TOKEN_ENDPOINT).pipe(
-      HttpClientRequest.bodyUrlParams({
-        assertion,
-        grant_type: GOOGLE_JWT_GRANT_TYPE,
-      }),
-      client.execute,
-      Effect.mapError(
-        (cause) =>
-          new GoogleTokenRequestError({
-            cause,
-            message: "Google token request transport failed.",
-          })
-      )
+    const { responseText, status } = yield* sendGoogleTokenRequest(
+      assertion
+    ).pipe(
+      Effect.timeoutOrElse({
+        duration: NETWORK_ATTEMPT_DEADLINE,
+        orElse: () =>
+          Effect.fail(
+            new GoogleTokenRequestError({
+              cause: "deadline",
+              message: "Google token request did not answer within 10 seconds.",
+            })
+          ),
+      })
     );
-    // The body is read whether the endpoint grants or refuses the token.
-    const responseText = yield* response.text.pipe(
-      Effect.mapError(
-        (cause) =>
-          new GoogleTokenRequestError({
-            cause,
-            message: "Google token response could not be read.",
-          })
-      )
-    );
-    if (response.status < 200 || response.status >= 300) {
+    if (status < 200 || status >= 300) {
       return yield* new GoogleTokenRequestError({
         message: "Google token request failed.",
         responseText,

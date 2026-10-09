@@ -1,3 +1,4 @@
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Predicate, Result, Schema } from "effect";
 import { HttpClient } from "effect/http";
@@ -40,32 +41,18 @@ export const getEligibleGoogleIndexingUrls = Effect.fn(
 const readEligibleGoogleIndexingUrl = Effect.fn(
   "scripts.google.eligibility.readUrl"
 )(function* (url: string) {
-  const client = yield* HttpClient.HttpClient;
-  const response = yield* client.get(url).pipe(
-    Effect.mapError(
-      (cause) =>
-        new GoogleIndexPageFetchError({
-          cause,
-          message: `Failed to fetch ${url} for Google Indexing API eligibility.`,
-          url,
-        })
-    )
-  );
-  if (response.status < 200 || response.status >= 300) {
-    return yield* new GoogleIndexPageFetchError({
-      message: `Google Indexing API eligibility fetch returned HTTP ${response.status}.`,
-      url,
-    });
-  }
-  const html = yield* response.text.pipe(
-    Effect.mapError(
-      (cause) =>
-        new GoogleIndexPageFetchError({
-          cause,
-          message: `Failed to read ${url} for Google Indexing API eligibility.`,
-          url,
-        })
-    )
+  const html = yield* fetchEligibilityPage(url).pipe(
+    Effect.timeoutOrElse({
+      duration: NETWORK_ATTEMPT_DEADLINE,
+      orElse: () =>
+        Effect.fail(
+          new GoogleIndexPageFetchError({
+            cause: "deadline",
+            message: `Fetching ${url} for Google Indexing API eligibility did not finish within 10 seconds.`,
+            url,
+          })
+        ),
+    })
   );
   const blocks = readJsonLdScriptBodies(html);
   for (const block of blocks) {
@@ -84,6 +71,38 @@ const readEligibleGoogleIndexingUrl = Effect.fn(
     }
   }
 });
+/** Sends one sitemap URL request and reads its body once the status succeeds. */
+const fetchEligibilityPage = Effect.fn("scripts.google.eligibility.fetchPage")(
+  function* (url: string) {
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* client.get(url).pipe(
+      Effect.mapError(
+        (cause) =>
+          new GoogleIndexPageFetchError({
+            cause,
+            message: `Failed to fetch ${url} for Google Indexing API eligibility.`,
+            url,
+          })
+      )
+    );
+    if (response.status < 200 || response.status >= 300) {
+      return yield* new GoogleIndexPageFetchError({
+        message: `Google Indexing API eligibility fetch returned HTTP ${response.status}.`,
+        url,
+      });
+    }
+    return yield* response.text.pipe(
+      Effect.mapError(
+        (cause) =>
+          new GoogleIndexPageFetchError({
+            cause,
+            message: `Failed to read ${url} for Google Indexing API eligibility.`,
+            url,
+          })
+      )
+    );
+  }
+);
 /** Extracts JSON-LD script bodies from a live HTML document. */
 function readJsonLdScriptBodies(html: string) {
   return Arr.filterMap(html.matchAll(JSON_LD_SCRIPT_PATTERN), (match) => {

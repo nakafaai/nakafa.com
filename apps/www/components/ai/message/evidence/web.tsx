@@ -10,6 +10,7 @@ import {
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -77,7 +78,7 @@ function WebSearchPartQueries({ queries }: { queries: string[] }) {
 
   return (
     <div className="flex flex-col gap-1">
-      {queries.map((query) => (
+      {Arr.map(queries, (query) => (
         <WebSearchQueryText key={query} query={query} />
       ))}
     </div>
@@ -102,7 +103,7 @@ function WebSearchPartPreview({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {results.map((item) => (
+      {Arr.map(results, (item) => (
         <Source href={item.url} key={item.url}>
           <SourceTrigger showFavicon />
           <SourceContent description={item.description} title={item.title} />

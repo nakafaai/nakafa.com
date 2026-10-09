@@ -1,3 +1,4 @@
+import { purposes } from "@repo/backend/confect/gateway/purpose";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
 import {
@@ -9,7 +10,21 @@ import { fetchSourceMarkdown } from "@repo/backend/confect/nina/research/tools/m
 import { getDocumentMetadata } from "@repo/backend/confect/nina/research/tools/metadata";
 import { assertPublicResearchUrl } from "@repo/backend/confect/nina/research/tools/safety";
 import dedent from "dedent";
-import { Effect, Result } from "effect";
+import { Duration, Effect, Result } from "effect";
+
+/**
+ * One scrape is a research step, so it ends within the step budget of the
+ * specialist purpose that runs the research agent. With `autoResume: false` the
+ * Firecrawl SDK waits 10 seconds per request, and it retries a 502 up to two
+ * more times, so this deadline is the backstop for the whole call.
+ */
+const SCRAPE_DEADLINE = Duration.millis(purposes.specialist.timeout.stepMs);
+
+const scrapeFailure = () =>
+  new ResearchScrapeError({
+    message: "The page could not be retrieved. Please try again.",
+  });
+
 /**
  * Scrapes one URL and returns structured evidence for citation checks.
  */
@@ -57,14 +72,18 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
           Effect.tryPromise({
             try: () =>
               client.scrape(publicUrl, {
+                // Surfaces a timeout at once instead of waiting for SDK resumes.
+                autoResume: false,
                 formats: ["markdown"],
                 timeout: 5000,
               }),
-            catch: () =>
-              new ResearchScrapeError({
-                message: "The page could not be retrieved. Please try again.",
-              }),
-          })
+            catch: scrapeFailure,
+          }).pipe(
+            Effect.timeoutOrElse({
+              duration: SCRAPE_DEADLINE,
+              orElse: () => Effect.fail(scrapeFailure()),
+            })
+          )
         ),
         Effect.match({
           onFailure: (error) => ({ error: error.message }),

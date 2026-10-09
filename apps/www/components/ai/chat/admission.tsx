@@ -3,6 +3,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { Array as Arr } from "effect";
 import {
   type ComponentProps,
   useEffect,
@@ -93,7 +94,7 @@ export function useChatAdmission({
       startTransition(() => {
         showPrompt({
           text: receipt.prompt.text,
-          files: receipt.prompt.files.map(({ filename, ...file }) => ({
+          files: Arr.map(receipt.prompt.files, ({ filename, ...file }) => ({
             ...file,
             type: "file",
             ...(filename === undefined ? {} : { filename }),

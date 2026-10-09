@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { useForm } from "@tanstack/react-form";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -41,7 +41,7 @@ const formSchema = Schema.toStandardSchemaV1(
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
-  const roleItems = roles.map((role) => ({
+  const roleItems = Arr.map(roles, (role) => ({
     label: (
       <>
         <HugeIcons icon={role.icon} />
@@ -51,9 +51,12 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     value: role.value,
   }));
   const updateUserRole = useUpdateUserRoleMutation();
-  const initialRole = roles.find(
-    (role) => role.value === user.appUser.role
-  )?.value;
+  const initialRole = Option.getOrUndefined(
+    Option.map(
+      Arr.findFirst(roles, (role) => role.value === user.appUser.role),
+      (role) => role.value
+    )
+  );
   const form = useForm({
     defaultValues: {
       role: initialRole,
@@ -125,7 +128,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {roles.map((role) => (
+                      {Arr.map(roles, (role) => (
                         <SelectItem key={role.value} value={role.value}>
                           <HugeIcons icon={role.icon} />
                           {t(role.value)}

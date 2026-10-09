@@ -1,5 +1,6 @@
 import { GraduationScrollIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Array as Arr } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { schools } from "@/components/marketing/about/constants/logos";
@@ -9,8 +10,8 @@ interface SchoolLogoProps {
 }
 
 const marqueeSchools = [
-  ...schools.map((school) => ({ copy: "original", school })),
-  ...schools.map((school) => ({ copy: "duplicate", school })),
+  ...Arr.map(schools, (school) => ({ copy: "original", school })),
+  ...Arr.map(schools, (school) => ({ copy: "duplicate", school })),
 ];
 
 function SchoolLogo({ school }: SchoolLogoProps) {
@@ -70,7 +71,7 @@ export function Logos() {
         <div className="pointer-events-none absolute inset-y-0 right-0 z-1 w-24 bg-linear-to-l from-background to-transparent" />
 
         <div className="group/logos hover:paused mx-auto flex w-max animate-marquee">
-          {marqueeSchools.map(({ copy, school }) => (
+          {Arr.map(marqueeSchools, ({ copy, school }) => (
             <div className="shrink-0" key={`${copy}-${school.href}`}>
               <SchoolLogo school={school} />
             </div>

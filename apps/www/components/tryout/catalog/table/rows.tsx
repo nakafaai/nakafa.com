@@ -4,6 +4,7 @@ import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { TableCell, TableRow } from "@repo/design-system/components/ui/table";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
@@ -33,7 +34,7 @@ export function TryoutTableRows({
       </TableRow>
     );
   }
-  return rows.map((row) => (
+  return Arr.map(rows, (row) => (
     <TryoutSetRowContent key={row.publicPath} row={row} />
   ));
 }
