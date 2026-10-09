@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
-import { Array as Arr, Effect, Match, Option } from "effect";
+import { Array as Arr, Effect, Function as Fn, Match, Option } from "effect";
 
 /**
  * Trigger handler for schoolClassForumReactions table changes.
@@ -22,7 +22,7 @@ export const forumReactionsHandler = Effect.fn(
   const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* Match.value(change).pipe(
-    Match.discriminators("operation")({
+    Match.discriminatorsExhaustive("operation")({
       insert: (insertion) =>
         Effect.gen(function* () {
           const reaction = insertion.newDoc;
@@ -92,7 +92,7 @@ export const forumReactionsHandler = Effect.fn(
             }
           }
         }),
-    }),
-    Match.orElse(() => Effect.void)
+      update: Fn.constant(Effect.void),
+    })
   );
 }, Effect.orDie);

@@ -49,13 +49,13 @@ export const indexPublishedCatalog = Effect.fn(
   const tracks = MutableList.make<TryoutTrack>();
   const publicPaths = MutableHashSet.empty<string>();
   const appendRow = Match.type<typeof TryoutCatalogRowSchema.Type>().pipe(
-    Match.discriminators("kind")({
+    Match.discriminatorsExhaustive("kind")({
       country: (row) => MutableList.append(countries, row),
       exam: (row) => MutableList.append(exams, row),
       section: (row) => MutableList.append(sections, row),
       set: (row) => MutableList.append(sets, row),
-    }),
-    Match.orElse((row) => MutableList.append(tracks, row))
+      track: (row) => MutableList.append(tracks, row),
+    })
   );
   for (const { row } of catalog.entries) {
     if ("publicPath" in row && row.publicPath !== undefined) {

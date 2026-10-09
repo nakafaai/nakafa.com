@@ -229,42 +229,60 @@ function sortJoinedSets(
   rows: readonly PublishedSetRow[],
   sort: ListArgs["sort"]
 ) {
-  /** Compares two rows by the requested field, then by authored order. */
-  const compare = (left: PublishedSetRow, right: PublishedSetRow) => {
-    const authoredOrder =
-      left.set.order - right.set.order ||
-      tryoutCatalogIdentity(left.set).localeCompare(
-        tryoutCatalogIdentity(right.set)
-      );
-    const ordered = (difference: number) =>
-      (sort.direction === "desc" ? -difference : difference) || authoredOrder;
-    return Match.value(sort.field).pipe(
-      Match.when("publishedScore", () => {
-        const leftScore = left.progress?.publishedScore ?? null;
-        const rightScore = right.progress?.publishedScore ?? null;
-        if (leftScore === null && rightScore === null) {
-          return authoredOrder;
-        }
-        if (leftScore === null) {
-          return 1;
-        }
-        if (rightScore === null) {
-          return -1;
-        }
-        return ordered(leftScore - rightScore);
-      }),
-      Match.when("readyQuestionCount", () =>
-        ordered(left.set.questionCount - right.set.questionCount)
-      ),
-      Match.when("durationSeconds", () =>
-        ordered(left.durationSeconds - right.durationSeconds)
-      ),
-      Match.when("title", () =>
-        ordered(left.set.title.localeCompare(right.set.title))
-      ),
-      Match.orElse(() => ordered(authoredOrder))
+  /** Authored order, which also breaks every tie. */
+  const authoredOrder = (left: PublishedSetRow, right: PublishedSetRow) =>
+    left.set.order - right.set.order ||
+    tryoutCatalogIdentity(left.set).localeCompare(
+      tryoutCatalogIdentity(right.set)
     );
-  };
+  /** Applies the requested direction to one field difference. */
+  const directed = (
+    difference: number,
+    left: PublishedSetRow,
+    right: PublishedSetRow
+  ) =>
+    (sort.direction === "desc" ? -difference : difference) ||
+    authoredOrder(left, right);
+  /** Compares two rows by the requested field, then by authored order. */
+  const compare = Match.value(sort.field).pipe(
+    Match.withReturnType<
+      (left: PublishedSetRow, right: PublishedSetRow) => number
+    >(),
+    Match.when(
+      "order",
+      () => (left, right) => directed(authoredOrder(left, right), left, right)
+    ),
+    Match.when("publishedScore", () => (left, right) => {
+      const leftScore = left.progress?.publishedScore ?? null;
+      const rightScore = right.progress?.publishedScore ?? null;
+      if (leftScore === null && rightScore === null) {
+        return authoredOrder(left, right);
+      }
+      if (leftScore === null) {
+        return 1;
+      }
+      if (rightScore === null) {
+        return -1;
+      }
+      return directed(leftScore - rightScore, left, right);
+    }),
+    Match.when(
+      "readyQuestionCount",
+      () => (left, right) =>
+        directed(left.set.questionCount - right.set.questionCount, left, right)
+    ),
+    Match.when(
+      "durationSeconds",
+      () => (left, right) =>
+        directed(left.durationSeconds - right.durationSeconds, left, right)
+    ),
+    Match.when(
+      "title",
+      () => (left, right) =>
+        directed(left.set.title.localeCompare(right.set.title), left, right)
+    ),
+    Match.exhaustive
+  );
   return Arr.sort(
     rows,
     Order.make<PublishedSetRow>((left, right) =>

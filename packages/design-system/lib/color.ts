@@ -134,6 +134,25 @@ type ShadeColorArgs = {
 }[ShadeColorName];
 type ColorArgs = [color: ColorInput] | ShadeColorArgs;
 
+/** Reads one shade. Each color owns its own set of shades. */
+const readShade = Match.type<ShadeColorArgs>().pipe(
+  Match.discriminatorsExhaustive("0")({
+    AMBER: ([, shade]) => COLOR_SHADES.AMBER[shade],
+    BLUE: ([, shade]) => COLOR_SHADES.BLUE[shade],
+    EMERALD: ([, shade]) => COLOR_SHADES.EMERALD[shade],
+    GRAY: ([, shade]) => COLOR_SHADES.GRAY[shade],
+    NEUTRAL: ([, shade]) => COLOR_SHADES.NEUTRAL[shade],
+    ORANGE: ([, shade]) => COLOR_SHADES.ORANGE[shade],
+    RED: ([, shade]) => COLOR_SHADES.RED[shade],
+    SKY: ([, shade]) => COLOR_SHADES.SKY[shade],
+    SLATE: ([, shade]) => COLOR_SHADES.SLATE[shade],
+    STONE: ([, shade]) => COLOR_SHADES.STONE[shade],
+    TEAL: ([, shade]) => COLOR_SHADES.TEAL[shade],
+    VIOLET: ([, shade]) => COLOR_SHADES.VIOLET[shade],
+    ZINC: ([, shade]) => COLOR_SHADES.ZINC[shade],
+  })
+);
+
 /**
  * Get a color from the shared Tailwind palette.
  * @param color - The key of the color to get
@@ -145,26 +164,7 @@ export function getColor(...args: ColorArgs) {
     return COLOR_VALUES[args[0]];
   }
 
-  return Match.value(args).pipe(
-    Match.discriminators("0")({
-      AMBER: ([, shade]) => COLOR_SHADES.AMBER[shade],
-      BLUE: ([, shade]) => COLOR_SHADES.BLUE[shade],
-      EMERALD: ([, shade]) => COLOR_SHADES.EMERALD[shade],
-      GRAY: ([, shade]) => COLOR_SHADES.GRAY[shade],
-      NEUTRAL: ([, shade]) => COLOR_SHADES.NEUTRAL[shade],
-      ORANGE: ([, shade]) => COLOR_SHADES.ORANGE[shade],
-      RED: ([, shade]) => COLOR_SHADES.RED[shade],
-      SKY: ([, shade]) => COLOR_SHADES.SKY[shade],
-      SLATE: ([, shade]) => COLOR_SHADES.SLATE[shade],
-      STONE: ([, shade]) => COLOR_SHADES.STONE[shade],
-      TEAL: ([, shade]) => COLOR_SHADES.TEAL[shade],
-      VIOLET: ([, shade]) => COLOR_SHADES.VIOLET[shade],
-      ZINC: ([, shade]) => COLOR_SHADES.ZINC[shade],
-    }),
-    Match.orElse(() => {
-      throw new Error(`Unknown shaded color: ${args[0]}`);
-    })
-  );
+  return readShade(args);
 }
 
 /**

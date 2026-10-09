@@ -23,7 +23,7 @@ export function runViewportEventLoop(runtime: ViewportRuntime) {
 /** Routes one viewport event to the state-machine branch that owns it. */
 function handleViewportEvent(runtime: ViewportRuntime, event: ViewportEvent) {
   return Match.value(event).pipe(
-    Match.discriminators("type")({
+    Match.discriminatorsExhaustive("type")({
       back: () => handleBackNavigation(runtime),
       "highlight-expired": (expired) =>
         Effect.gen(function* () {
@@ -53,7 +53,6 @@ function handleViewportEvent(runtime: ViewportRuntime, event: ViewportEvent) {
       post: (navigation) => handlePostNavigation(runtime, navigation.postId),
       transcript: (transcript) => handleViewportTranscript(runtime, transcript),
       "user-scroll": (scroll) => handleViewportUserScroll(runtime, scroll),
-    }),
-    Match.orElse(() => Effect.void)
+    })
   );
 }

@@ -28,7 +28,7 @@ export const schoolClassMembersHandler = Effect.fn(
   const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* Match.value(change).pipe(
-    Match.discriminators("operation")({
+    Match.discriminatorsExhaustive("operation")({
       insert: (inserted) =>
         Effect.gen(function* () {
           const member = inserted.newDoc;
@@ -125,8 +125,7 @@ export const schoolClassMembersHandler = Effect.fn(
             })
             .pipe(Effect.orDie);
         }),
-    }),
-    Match.orElse(() => Effect.void)
+    })
   );
 });
 
