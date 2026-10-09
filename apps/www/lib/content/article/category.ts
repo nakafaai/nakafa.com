@@ -140,7 +140,7 @@ export const readPublishedCategoryAlternates = Effect.fn(
     return yield* categoryError(current.appLocale);
   }
 
-  return Arr.map(categories, (category) => ({
+  return Arr.map(categories, (category: PublishedArticleCategoryModel) => ({
     appLocale: category.appLocale,
     publicPath: `articles/${category.route}`,
   }));
