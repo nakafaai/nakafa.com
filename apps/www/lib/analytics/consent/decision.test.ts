@@ -14,6 +14,7 @@ import {
   Exit,
   Fiber,
   HashMap,
+  MutableList,
   Option,
   Result,
 } from "effect";
@@ -144,7 +145,7 @@ describe("consent error resolution", () => {
 
 describe("explicit consent save actions", () => {
   function createOptions(
-    overrides: OverridesUpdate[],
+    overrides: MutableList.MutableList<OverridesUpdate>,
     options?: {
       readonly saveDecision?: (
         granted: boolean
@@ -170,7 +171,7 @@ describe("explicit consent save actions", () => {
       setAccountConsent: () => Promise.reject(new Error("account path unused")),
       setPreferencesOpen: vi.fn(),
       setSessionOverrides: (update: OverridesUpdate) => {
-        overrides.push(update);
+        MutableList.append(overrides, update);
       },
       user: null,
     };
@@ -184,7 +185,7 @@ describe("explicit consent save actions", () => {
   }
 
   it("ignores disallowed decisions without touching persistence", () => {
-    const overrides: OverridesUpdate[] = [];
+    const overrides = MutableList.make<OverridesUpdate>();
     const action = createConsentSaveAction({
       ...createOptions(overrides, {}),
       canGrant: false,
@@ -193,11 +194,11 @@ describe("explicit consent save actions", () => {
     });
 
     expect(action).toEqual({ kind: "ignore" });
-    expect(overrides).toEqual([]);
+    expect(MutableList.toArray(overrides)).toEqual([]);
   });
 
   it("ignores decisions that resolve no account user", () => {
-    const overrides: OverridesUpdate[] = [];
+    const overrides = MutableList.make<OverridesUpdate>();
     const action = createConsentSaveAction({
       ...createOptions(overrides, {}),
       granted: true,
@@ -207,12 +208,12 @@ describe("explicit consent save actions", () => {
     });
 
     expect(action).toEqual({ kind: "ignore" });
-    expect(overrides).toEqual([]);
+    expect(MutableList.toArray(overrides)).toEqual([]);
   });
 
   it.effect("persists an anonymous grant through the save lifecycle", () =>
     Effect.gen(function* () {
-      const overrides: OverridesUpdate[] = [];
+      const overrides = MutableList.make<OverridesUpdate>();
       const action = createConsentSaveAction({
         ...createOptions(overrides, {}),
         granted: true,
@@ -225,7 +226,9 @@ describe("explicit consent save actions", () => {
       expect(action.promptIdentity).toBe(promptIdentity);
       yield* action.program;
 
-      expect(readOverride(overrides, promptIdentity)).toMatchObject({
+      expect(
+        readOverride(MutableList.toArray(overrides), promptIdentity)
+      ).toMatchObject({
         persistence: "saved",
       });
     })
@@ -233,7 +236,7 @@ describe("explicit consent save actions", () => {
 
   it.effect("records a save failure when anonymous persistence rejects", () =>
     Effect.gen(function* () {
-      const overrides: OverridesUpdate[] = [];
+      const overrides = MutableList.make<OverridesUpdate>();
       const action = createConsentSaveAction({
         ...createOptions(overrides, {
           saveDecision: () =>
@@ -249,7 +252,9 @@ describe("explicit consent save actions", () => {
 
       yield* runProgram(action);
 
-      expect(readOverride(overrides, promptIdentity)).toMatchObject({
+      expect(
+        readOverride(MutableList.toArray(overrides), promptIdentity)
+      ).toMatchObject({
         persistence: "failed",
       });
     })
@@ -257,7 +262,7 @@ describe("explicit consent save actions", () => {
 
   it.effect("interrupts a superseded save before persisting", () =>
     Effect.gen(function* () {
-      const overrides: OverridesUpdate[] = [];
+      const overrides = MutableList.make<OverridesUpdate>();
       const first = createConsentSaveAction({
         ...createOptions(overrides, {}),
         granted: true,
@@ -283,16 +288,19 @@ describe("explicit consent save actions", () => {
       yield* runProgram(second);
       const firstExit = yield* Fiber.await(firstFiber);
       expect(Exit.isFailure(firstExit)).toBe(true);
-      expect(readOverride(overrides.slice(0, 2), promptIdentity)).toMatchObject(
-        { owner: second.owner }
-      );
+      expect(
+        readOverride(
+          Arr.take(MutableList.toArray(overrides), 2),
+          promptIdentity
+        )
+      ).toMatchObject({ owner: second.owner });
     })
   );
 
   it.effect("records a save failure when account persistence rejects", () =>
     Effect.gen(function* () {
       const expectedUserId = "user-1" as Id<"users">;
-      const overrides: OverridesUpdate[] = [];
+      const overrides = MutableList.make<OverridesUpdate>();
       const action = createConsentSaveAction({
         ...createOptions(overrides, {}),
         granted: true,
@@ -313,7 +321,7 @@ describe("explicit consent save actions", () => {
 
       expect(
         readOverride(
-          overrides,
+          MutableList.toArray(overrides),
           `account:user-1:${ANALYTICS_CONSENT_NOTICE_VERSION}`
         )
       ).toMatchObject({ persistence: "failed" });
@@ -338,7 +346,7 @@ describe("explicit consent save actions", () => {
           );
         }
       );
-      const overrides: OverridesUpdate[] = [];
+      const overrides = MutableList.make<OverridesUpdate>();
       const action = createConsentSaveAction({
         ...createOptions(overrides, {}),
         granted: true,
