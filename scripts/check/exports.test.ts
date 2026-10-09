@@ -32,14 +32,7 @@ function inspect(
   }));
   return Effect.scoped(
     Effect.map(parseSources(sources), ({ modules }) =>
-      inspectExports(
-        modules,
-        Arr.appendAll(
-          Arr.map(sources, ({ sourceText }) => sourceText),
-          others
-        ),
-        unjudged
-      )
+      inspectExports(modules, others, unjudged)
     )
   );
 }
@@ -115,6 +108,71 @@ export { local as shared };
         yield* inspect(files, [
           'import { total } from "../cart";\nexport type { Price } from "../cart";\n',
         ]),
+        []
+      );
+    })
+  );
+
+  it.effect("reports a copy of a name that each module keeps for itself", () =>
+    Effect.gen(function* () {
+      const copy = "export function decodeBatch() {}\ndecodeBatch();\n";
+      assert.deepStrictEqual(
+        yield* inspect({
+          "packages/shop/batch.ts": copy,
+          "packages/shop/cart.ts": copy,
+          "packages/shop/checkout.ts": copy,
+        }),
+        [
+          report(1, "decodeBatch", "packages/shop/batch.ts"),
+          report(1, "decodeBatch", "packages/shop/cart.ts"),
+          report(1, "decodeBatch", "packages/shop/checkout.ts"),
+        ]
+      );
+    })
+  );
+
+  it.effect("reports a name that a module imports from another module", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect({
+          [MODULE]: "export const total = 1;\n",
+          [READER]:
+            'import { total } from "./price";\nexport const price = total;\n',
+        }),
+        [report(1, "total"), report(2, "price", READER)]
+      );
+    })
+  );
+
+  it.effect("does not count a word that a module holds only in a comment", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect({
+          [MODULE]: "export const total = 1;\nexport const tax = 2;\n",
+          [READER]:
+            '// total is set below\n/** Adds {@link total}. */\nimport { tax } from "./cart";\nexport const rate = tax;\n',
+        }),
+        [report(1, "total"), report(4, "rate", READER)]
+      );
+      assert.deepStrictEqual(
+        yield* inspect({
+          [MODULE]: "export const total = 1;\n",
+          [READER]: '// import { total } from "./cart";\n',
+        }),
+        [report(1, "total")]
+      );
+    })
+  );
+
+  it.effect("judges by word an export that a dynamic import loads", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect({
+          [MODULE]: "export const total = 1;\n",
+          "packages/shop/view.ts": 'export default () => import("./cart");\n',
+          [READER]:
+            'import view from "./view";\nconst total = view;\nexport default total;\n',
+        }),
         []
       );
     })

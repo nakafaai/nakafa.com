@@ -194,14 +194,19 @@ that needs that much explanation holds more than one capability.
 
 ### Exports that nothing names
 
-An exported name is the interface of its module. The check reports an exported
-name that no other module mentions: it loses `export`, and Biome then reports
-the declaration when its own module does not use it either. A name counts as
-mentioned when the word appears in a second module, so the check never reports
-a name that something imports, and it misses an unused name that another
-module happens to spell. Every module can mention a name: generated and
-declaration files, the scripts of the agent skills folder, and the modules at
-the repository root.
+An exported name is the interface of its module, so the check reports each one
+that no other module reads: it loses `export`, and Biome then reports the
+declaration when its own module does not use it either. An authored module
+reads a name when it holds the name in code and loads the declaring module by a
+module specifier (an import, an export from, an `import()`, a `require`, an
+`import()` type, or the path of a `vi` mock), or when it forwards that module
+with `export *`; a specifier names a module by its file name, which is exact
+while no exports map renames a path, and a comment is never a read. A module
+that a runtime `import()` loads is read through its namespace object, which
+names nothing in the reader, so every module with that file name counts its
+names by word alone, and a computed `import()` path does so for every module.
+Generated and declaration files, JavaScript, the agent skill scripts, and the
+modules at the repository root count by word, since no rule parses them.
 
 The check does not judge a module whose exports are read by name from outside
 the repository's imports: the Next.js file conventions of an app, its
