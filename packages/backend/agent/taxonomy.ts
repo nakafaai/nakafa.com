@@ -16,7 +16,7 @@ import {
   NakafaAgentDataReadError,
 } from "@repo/contents/agent/errors";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";
-import { Array as Arr, Effect, Order } from "effect";
+import { Array as Arr, Effect, Option, Order } from "effect";
 
 type ReleasePin = typeof activeIdentityValidator.Type;
 const articleCategoriesReference =
@@ -130,7 +130,13 @@ const readInventories = Effect.fn("agent.readInventories")(function* (
   const byLocaleOrder = Order.mapInput(
     Order.Number,
     (inventory: typeof selected) =>
-      ACTIVE_APP_LOCALE_CODES.indexOf(inventory.locale)
+      Option.getOrElse(
+        Arr.findFirstIndex(
+          ACTIVE_APP_LOCALE_CODES,
+          (code) => code === inventory.locale
+        ),
+        () => -1
+      )
   );
   const inventories = Arr.sort([selected, ...remaining], byLocaleOrder);
   return {
