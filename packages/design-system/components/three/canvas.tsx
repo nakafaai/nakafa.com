@@ -11,6 +11,10 @@ import {
 } from "@react-three/fiber";
 import { CameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
+import {
+  SceneOverlay,
+  SceneOverlayProvider,
+} from "@repo/design-system/components/three/overlay";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -129,7 +133,8 @@ function subscribeToInert(onChange: () => void) {
  * `THREE_RENDER_MARGIN` from the viewport stops rendering and resumes when it
  * returns, so animated scenes cost nothing while nobody can see them. A canvas
  * in an inert part of the page, such as the page behind a visual card shown
- * full screen, stops the same way.
+ * full screen, stops the same way. Scene labels draw in a DOM overlay over the
+ * same frame, so they need no React root of their own.
  *
  * @param children - React Three.js children to render
  * @param frameloop - Frame update strategy ("always" | "demand")
@@ -180,50 +185,54 @@ function ThreeCanvasComponent({
   );
 
   return (
-    <div className="size-full rounded-[inherit]" ref={frameRef}>
-      <ErrorBoundary
-        fallbackRender={({ error, resetErrorBoundary }) => (
-          <ErrorFallback
-            error={error}
-            resetErrorBoundary={resetErrorBoundary}
-          />
-        )}
-      >
-        <Canvas
-          className={cn(
-            "size-full overflow-hidden rounded-[inherit] [&>div]:rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit]",
-            className
+    // The overlay is placed over this frame, so the frame is positioned.
+    <div className="relative size-full rounded-[inherit]" ref={frameRef}>
+      <SceneOverlayProvider>
+        <ErrorBoundary
+          fallbackRender={({ error, resetErrorBoundary }) => (
+            <ErrorFallback
+              error={error}
+              resetErrorBoundary={resetErrorBoundary}
+            />
           )}
-          dpr={[1, 2]}
-          fallback={
-            <div className="flex h-full w-full items-center justify-center">
-              <HugeIcons
-                aria-hidden="true"
-                className="size-4 shrink-0"
-                icon={Sad02Icon}
-              />
-            </div>
-          }
-          frameloop={nearViewport && !behindInert ? frameloop : "never"}
-          gl={{
-            antialias: true,
-            powerPreference,
-            alpha: true,
-          }}
-          key={canvasKey}
-          performance={{
-            min: 0.8,
-            max: 1.0,
-            debounce: 100,
-          }}
-          shadows="percentage"
-          {...props}
         >
-          <AdaptiveDpr />
-          <SceneTime />
-          <CameraFraming>{children}</CameraFraming>
-        </Canvas>
-      </ErrorBoundary>
+          <Canvas
+            className={cn(
+              "size-full overflow-hidden rounded-[inherit] [&>div]:rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit]",
+              className
+            )}
+            dpr={[1, 2]}
+            fallback={
+              <div className="flex h-full w-full items-center justify-center">
+                <HugeIcons
+                  aria-hidden="true"
+                  className="size-4 shrink-0"
+                  icon={Sad02Icon}
+                />
+              </div>
+            }
+            frameloop={nearViewport && !behindInert ? frameloop : "never"}
+            gl={{
+              antialias: true,
+              powerPreference,
+              alpha: true,
+            }}
+            key={canvasKey}
+            performance={{
+              min: 0.8,
+              max: 1.0,
+              debounce: 100,
+            }}
+            shadows="percentage"
+            {...props}
+          >
+            <AdaptiveDpr />
+            <SceneTime />
+            <CameraFraming>{children}</CameraFraming>
+          </Canvas>
+        </ErrorBoundary>
+        <SceneOverlay />
+      </SceneOverlayProvider>
     </div>
   );
 }
