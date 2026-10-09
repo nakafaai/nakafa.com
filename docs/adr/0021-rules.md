@@ -245,7 +245,9 @@ copy the file or move the pin in the other repository, and run its check.
 
 Each repository keeps its own choices: the versions of other tools (Biome,
 Turborepo, esbuild, pnpm), its action pins and their review lists, its advisory
-exceptions in `osv.toml`, its entry points, and its tests.
+exceptions in `osv.toml`, its entry points, its tests, and the service class in
+`scripts/provenance/service.ts`. The Effect deterministic-key rule puts the
+package name in that class's key, so no two repositories can share its text.
 
 ## Rejected Alternatives
 

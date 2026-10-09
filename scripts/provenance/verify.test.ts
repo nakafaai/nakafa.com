@@ -1,11 +1,11 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer, Result, Schema } from "effect";
-import { ProvenanceBundleVerifier } from "#scripts/provenance/bundle";
 import {
   AuditSchema,
   type ProvenanceExpectation,
   ProvenanceStatementSchema,
 } from "#scripts/provenance/schema";
+import { ProvenanceBundleVerifier } from "#scripts/provenance/service";
 import { verifyProvenance } from "#scripts/provenance/verify";
 
 const EXPECTATION = {

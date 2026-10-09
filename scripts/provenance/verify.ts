@@ -1,5 +1,4 @@
 import { Array as Arr, Effect, Schema } from "effect";
-import { ProvenanceBundleVerifier } from "#scripts/provenance/bundle";
 import {
   AuditSchema,
   type ProvenanceExpectation,
@@ -7,6 +6,7 @@ import {
   ProvenanceVerificationError,
   SLSA_PREDICATE,
 } from "#scripts/provenance/schema";
+import { ProvenanceBundleVerifier } from "#scripts/provenance/service";
 
 /** Builds the exact npm registry attestation endpoint for one package version. */
 function expectedAttestationUrl(expectation: ProvenanceExpectation) {

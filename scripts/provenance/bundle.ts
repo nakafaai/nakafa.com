@@ -1,25 +1,14 @@
 import { bundleFromJSON, bundleToJSON } from "@sigstore/bundle";
-import { Context, Effect, Layer } from "effect";
+import { Effect, Layer } from "effect";
 import { type VerifyOptions, verify as verifySigstore } from "sigstore";
 import {
   ProvenanceVerificationError,
   type PublisherIdentity,
 } from "#scripts/provenance/schema";
+import { ProvenanceBundleVerifier } from "#scripts/provenance/service";
 
 const GITHUB_ISSUER = "https://token.actions.githubusercontent.com";
 const GITHUB_REPOSITORY_PREFIX = "https://github.com/";
-
-/** Cryptographically verifies one Sigstore bundle and returns its signed payload. */
-export class ProvenanceBundleVerifier extends Context.Service<
-  ProvenanceBundleVerifier,
-  {
-    /** Verifies one untrusted bundle against the exact publisher identity. */
-    readonly verify: (
-      bundle: unknown,
-      identity: PublisherIdentity
-    ) => Effect.Effect<string, ProvenanceVerificationError>;
-  }
->()("scripts/provenance/bundle/ProvenanceBundleVerifier") {}
 
 /** Escapes one exact certificate identity for anchored regular-expression matching. */
 function escapeRegex(value: string) {
