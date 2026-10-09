@@ -6,7 +6,7 @@ import {
   test,
 } from "@playwright/test";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   countCanvasFrames,
   expectCanvasToMove,
@@ -63,7 +63,7 @@ const withObservedSceneDiagnostics = Effect.fn(
         const text = message.text();
         if (
           SCENE_DIAGNOSTIC.test(text) &&
-          !KNOWN_SCENE_DIAGNOSTICS.some((known) => known.test(text))
+          !Arr.some(KNOWN_SCENE_DIAGNOSTICS, (known) => known.test(text))
         ) {
           record(`${message.type()}: ${text}`);
         }

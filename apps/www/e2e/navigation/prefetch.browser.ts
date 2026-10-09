@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
@@ -32,11 +32,11 @@ const verifyNextLesson = Effect.fn("NakafaE2E.verifyNextLesson")(function* (
   page: Page,
   hasTouch: boolean
 ) {
-  const requested: string[] = [];
+  const requested = MutableList.make<string>();
   yield* Effect.sync(() =>
     page.on("request", (request) => {
       if (request.headers().rsc === "1") {
-        requested.push(new URL(request.url()).pathname);
+        MutableList.append(requested, new URL(request.url()).pathname);
       }
     })
   );
@@ -55,7 +55,9 @@ const verifyNextLesson = Effect.fn("NakafaE2E.verifyNextLesson")(function* (
     hasTouch
   );
   yield* Effect.sync(() =>
-    expect(Arr.contains(requested, privacyPathname)).toBe(false)
+    expect(Arr.contains(MutableList.toArray(requested), privacyPathname)).toBe(
+      false
+    )
   );
 });
 

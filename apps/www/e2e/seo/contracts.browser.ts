@@ -4,7 +4,14 @@ import {
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Record as Rec, Schedule, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Option,
+  Record as Rec,
+  Schedule,
+  Schema,
+} from "effect";
 import { usageDataTrigger } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -118,7 +125,10 @@ const readArticleJsonLd = Effect.fn("NakafaE2E.readArticleJsonLd")(function* (
       Effect.mapError(() => contentSeoError(href, "JSON-LD syntax"))
     )
   );
-  const [articleDocument, ...duplicates] = documents.filter(isArticleDocument);
+  const [articleDocument, ...duplicates] = Arr.filter(
+    documents,
+    isArticleDocument
+  );
   if (articleDocument === undefined || duplicates.length > 0) {
     return yield* contentSeoError(href, "one article JSON-LD document");
   }
@@ -230,8 +240,11 @@ const expectCanonicalAlternates = Effect.fn(
   route: LocalizedContentRoute,
   routes: readonly LocalizedContentRoute[]
 ) {
-  const englishRoute = routes.find((alternate) => alternate.locale === "en");
-  if (!englishRoute) {
+  const englishRoute = Arr.findFirst(
+    routes,
+    (alternate) => alternate.locale === "en"
+  );
+  if (Option.isNone(englishRoute)) {
     return yield* contentSeoError(route.href, "x-default alternate");
   }
   yield* Effect.sync(() => {
@@ -248,7 +261,7 @@ const expectCanonicalAlternates = Effect.fn(
       served,
       "alternate",
       "x-default",
-      `${APP_ORIGIN}${englishRoute.href}`
+      `${APP_ORIGIN}${englishRoute.value.href}`
     );
   });
 });
