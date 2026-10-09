@@ -1,7 +1,4 @@
-import {
-  createHeadingId,
-  createHeadingLabel,
-} from "@repo/design-system/lib/markdown/headings";
+import { createHeadingId, createHeadingLabel } from "@repo/math/heading";
 import { Array as Arr, Schema } from "effect";
 
 /**

@@ -1,3 +1,4 @@
+import { isBundledLanguage } from "@repo/design-system/lib/code-block/language";
 import { preserveShikiLineBreaks } from "@repo/design-system/lib/code-block/lines";
 import {
   transformerNotationDiff,
@@ -7,12 +8,7 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { Effect, Schema } from "effect";
-import {
-  type BundledLanguage,
-  bundledLanguages,
-  type CodeOptionsMultipleThemes,
-  codeToHtml,
-} from "shiki";
+import { type CodeOptionsMultipleThemes, codeToHtml } from "shiki";
 
 const DEFAULT_CODE_THEMES = {
   light: "github-light",
@@ -51,10 +47,6 @@ export class CodeHighlightError extends Schema.TaggedError<CodeHighlightError>()
     message: Schema.String,
   }
 ) {}
-
-function isBundledLanguage(language: string): language is BundledLanguage {
-  return Object.hasOwn(bundledLanguages, language);
-}
 
 function formatHighlightedHtml(
   html: string,

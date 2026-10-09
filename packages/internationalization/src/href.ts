@@ -1,12 +1,12 @@
 import { previewRouting } from "@repo/internationalization/src/routing";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
-import { hasLocale } from "next-intl";
+import { hasLocale, type Locale } from "next-intl";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//;
 const HASH_ONLY_REGEX = /^#/;
 const MAIL_OR_TEL_REGEX = /^(mailto:|tel:)/;
 const PROTOCOL_RELATIVE_REGEX = /^\/\//;
-const URL_BASE = "https://nakafa.com";
 
 /** Returns whether one href should bypass internal locale normalization. */
 function shouldBypassInternalHrefNormalization(href: string) {
@@ -46,14 +46,36 @@ export function normalizeLocalizedInternalHref(href: string) {
     return href;
   }
 
-  const url = new URL(href, URL_BASE);
-  const segments = Arr.filter(url.pathname.split("/"), Boolean);
-  const firstSegment = segments[0];
+  const url = new URL(href, SITE_ORIGIN);
+  const { locale, publicSegments } = splitLocalePathname(
+    url.pathname,
+    previewRouting.locales
+  );
 
-  if (firstSegment && hasLocale(previewRouting.locales, firstSegment)) {
-    const localizedPath = Arr.join(Arr.drop(segments, 1), "/");
+  if (locale) {
+    const localizedPath = Arr.join(publicSegments, "/");
     url.pathname = localizedPath ? `/${localizedPath}` : "/";
   }
 
   return `${url.pathname}${url.search}${url.hash}`;
+}
+
+/**
+ * Splits a pathname at the locale that leads it, when one of `locales` does.
+ * The public segments are the non-empty segments after that locale, or every
+ * non-empty segment when the pathname has no leading locale.
+ */
+export function splitLocalePathname<LocaleType extends Locale>(
+  pathname: string,
+  locales: readonly LocaleType[]
+) {
+  const segments = Arr.filter(pathname.split("/"), Boolean);
+  const firstSegment = segments[0];
+  const locale =
+    firstSegment && hasLocale(locales, firstSegment) ? firstSegment : undefined;
+
+  return {
+    locale,
+    publicSegments: locale ? Arr.drop(segments, 1) : segments,
+  };
 }

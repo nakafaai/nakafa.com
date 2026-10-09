@@ -1,3 +1,4 @@
+import { JsonLd } from "@repo/seo/json-ld";
 import type {
   Book,
   BookFormatType,
@@ -5,7 +6,6 @@ import type {
   Person,
   WithContext,
 } from "schema-dts";
-import { JsonLd } from ".";
 
 interface BookJsonLdProps {
   author?: Person | Organization;

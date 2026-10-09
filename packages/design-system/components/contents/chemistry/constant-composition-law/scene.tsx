@@ -12,11 +12,11 @@ import type { ConstantCompositionLabProps } from "@repo/design-system/components
 import {
   CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
   ChemistryParticleLabel,
-  getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { atomSymbol } from "@repo/design-system/components/contents/chemistry/symbol";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
@@ -244,7 +244,7 @@ function AtomParticle({
       </mesh>
       <ChemistryParticleLabel
         color={colors.sphereText}
-        fontSize={getChemistryParticleLabelFontSize(radius)}
+        fontSize={getThreeParticleLabelFontSize(radius)}
         outlineColor={colors.sphereTextOutline}
         outlineWidth={CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH}
         position={getChemistryParticleLabelPosition(radius)}
