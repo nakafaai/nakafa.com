@@ -27,10 +27,6 @@ export default mergeConfig(config, {
     coverage: {
       /** Client lazy boundaries are verified by analyzer and browser gates. */
       exclude: ["lib/content/renderer/client/**"],
-      thresholds: {
-        100: true,
-        perFile: true,
-      },
     },
   },
 });

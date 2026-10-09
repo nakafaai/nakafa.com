@@ -103,6 +103,17 @@
       }
     },
     {
+      // Vitest loads each workspace's entrypoint to reach the shared testing config.
+      "includes": ["**/vitest.config.mts"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off"
+          }
+        }
+      }
+    },
+    {
       // Next.js requires this PostCSS entrypoint to expose the shared config.
       "includes": ["apps/www/postcss.config.mjs"],
       "linter": {

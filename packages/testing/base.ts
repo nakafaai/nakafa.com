@@ -12,6 +12,11 @@ const config = defineConfig({
     coverage: {
       enabled: true,
       provider: "istanbul",
+      /** Every workspace gates each file at full coverage, and inherits this gate. */
+      thresholds: {
+        100: true,
+        perFile: true,
+      },
     },
   },
 });

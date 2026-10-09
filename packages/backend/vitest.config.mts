@@ -27,10 +27,6 @@ export default mergeConfig(config, {
       exclude: coverageExcludes,
       include: ["**/*.ts"],
       reportsDirectory: "./coverage",
-      thresholds: {
-        100: true,
-        perFile: true,
-      },
     },
     // Keep CPU available for Convex Edge VMs when Turbo runs package tests together.
     maxWorkers: "50%",
