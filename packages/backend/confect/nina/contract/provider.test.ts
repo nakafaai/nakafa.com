@@ -36,6 +36,16 @@ function requireValidator<A>(value: A | undefined) {
   );
 }
 
+/** Reads the provider schema of a fixture that must convert. */
+function compatibleSchema<A, I>(schema: Schema.Codec<A, I, never, never>) {
+  return Result.getOrThrow(providerCompatibleObjectSchema(schema));
+}
+
+/** Adapts one fixture as the tool input schema the AI SDK receives. */
+function toolSchema<A, I>(source: Schema.Codec<A, I, never, never>) {
+  return asSchema(createEffectSchema(source, compatibleSchema(source)));
+}
+
 /** Builds one controlled generated JSON Schema for adapter edge cases. */
 function jsonSchemaFixture(jsonSchema: JsonSchema.JsonSchema) {
   return Schema.Any.pipe(
@@ -77,11 +87,7 @@ describe("providerCompatibleObjectSchema", () => {
         ]).annotate({
           description: "Grouped math input.",
         });
-        const inputSchema = createEffectSchema(
-          groupedSchema,
-          Result.getOrThrow(providerCompatibleObjectSchema(groupedSchema))
-        );
-        const schema = asSchema(inputSchema);
+        const schema = toolSchema(groupedSchema);
         const jsonSchema = readSynchronous(schema.jsonSchema);
         const validate = yield* requireValidator(schema.validate);
         expect(jsonSchema).not.toHaveProperty("anyOf");
@@ -140,13 +146,7 @@ describe("providerCompatibleObjectSchema", () => {
         description: "Shared value.",
       }),
     }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-    const inputSchema = createEffectSchema(
-      Schema.Union([leftSchema, rightSchema]),
-      Result.getOrThrow(
-        providerCompatibleObjectSchema(Schema.Union([leftSchema, rightSchema]))
-      )
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(Schema.Union([leftSchema, rightSchema]));
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       properties: {
@@ -175,9 +175,7 @@ describe("providerCompatibleObjectSchema", () => {
         value: SharedValueSchema,
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const modelSchema = Result.getOrThrow(
-      providerCompatibleObjectSchema(groupedSchema)
-    );
+    const modelSchema = compatibleSchema(groupedSchema);
     expect(modelSchema).not.toHaveProperty("definitions");
     expect(modelSchema).toMatchObject({
       properties: {
@@ -196,9 +194,7 @@ describe("providerCompatibleObjectSchema", () => {
         Schema.suspend((): Schema.Codec<RecursiveValue> => recursive)
       ),
     });
-    const modelSchema = Result.getOrThrow(
-      providerCompatibleObjectSchema(Schema.Struct({ value: recursive }))
-    );
+    const modelSchema = compatibleSchema(Schema.Struct({ value: recursive }));
     expect(modelSchema).toHaveProperty("definitions");
     const imported = SchemaRepresentation.fromJsonSchemaDocument(
       JsonSchema.fromSchemaDraft07(modelSchema)
@@ -234,11 +230,7 @@ describe("providerCompatibleObjectSchema", () => {
         values: fourValues,
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      Result.getOrThrow(providerCompatibleObjectSchema(groupedSchema))
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       properties: {
@@ -268,11 +260,7 @@ describe("providerCompatibleObjectSchema", () => {
         values: boundedValues,
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      Result.getOrThrow(providerCompatibleObjectSchema(groupedSchema))
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     if (!("properties" in jsonSchema && jsonSchema.properties)) {
       expect.fail("Grouped schema must expose object properties.");
@@ -303,11 +291,7 @@ describe("providerCompatibleObjectSchema", () => {
         values: Schema.Array(Schema.String).pipe(Schema.mutable),
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      Result.getOrThrow(providerCompatibleObjectSchema(groupedSchema))
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     if (!("properties" in jsonSchema && jsonSchema.properties)) {
       expect.fail("Grouped schema must expose object properties.");
@@ -336,11 +320,7 @@ describe("providerCompatibleObjectSchema", () => {
         values: Schema.Array(Schema.String).pipe(Schema.mutable),
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      Result.getOrThrow(providerCompatibleObjectSchema(groupedSchema))
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       properties: {
@@ -361,11 +341,7 @@ describe("providerCompatibleObjectSchema", () => {
       value: Schema.String,
     }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
     const groupedSchema = Schema.Union([leftSchema, rightSchema]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      Result.getOrThrow(providerCompatibleObjectSchema(groupedSchema))
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       properties: {
@@ -386,11 +362,7 @@ describe("providerCompatibleObjectSchema", () => {
     }).annotate({
       description: "Object input.",
     });
-    const inputSchema = createEffectSchema(
-      objectSchema,
-      Result.getOrThrow(providerCompatibleObjectSchema(objectSchema))
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(objectSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       description: "Object input.",
@@ -428,26 +400,24 @@ describe("providerCompatibleObjectSchema", () => {
     expect(result.failure.reason).toBe("unionBranchNotObject");
   });
   it("ignores invalid array intersections while retaining branch guidance", () => {
-    const modelSchema = Result.getOrThrow(
-      providerCompatibleObjectSchema(
-        Schema.Union([
-          jsonSchemaFixture({
-            properties: {
-              values: {
-                allOf: [false, { maxItems: 3 }],
-                type: "array",
-              },
+    const modelSchema = compatibleSchema(
+      Schema.Union([
+        jsonSchemaFixture({
+          properties: {
+            values: {
+              allOf: [false, { maxItems: 3 }],
+              type: "array",
             },
-            required: ["values"],
-            type: "object",
-          }),
-          jsonSchemaFixture({
-            properties: { values: { type: "array" } },
-            required: ["values"],
-            type: "object",
-          }),
-        ])
-      )
+          },
+          required: ["values"],
+          type: "object",
+        }),
+        jsonSchemaFixture({
+          properties: { values: { type: "array" } },
+          required: ["values"],
+          type: "object",
+        }),
+      ])
     );
     expect(modelSchema).toMatchObject({
       properties: {
@@ -459,26 +429,24 @@ describe("providerCompatibleObjectSchema", () => {
     });
   });
   it("reads array minimums nested in an intersection and relaxes them across branches", () => {
-    const modelSchema = Result.getOrThrow(
-      providerCompatibleObjectSchema(
-        Schema.Union([
-          jsonSchemaFixture({
-            properties: {
-              values: {
-                allOf: [{ minItems: 2 }, { minItems: 3 }],
-                type: "array",
-              },
+    const modelSchema = compatibleSchema(
+      Schema.Union([
+        jsonSchemaFixture({
+          properties: {
+            values: {
+              allOf: [{ minItems: 2 }, { minItems: 3 }],
+              type: "array",
             },
-            required: ["values"],
-            type: "object",
-          }),
-          jsonSchemaFixture({
-            properties: { values: { minItems: 1, type: "array" } },
-            required: ["values"],
-            type: "object",
-          }),
-        ])
-      )
+          },
+          required: ["values"],
+          type: "object",
+        }),
+        jsonSchemaFixture({
+          properties: { values: { minItems: 1, type: "array" } },
+          required: ["values"],
+          type: "object",
+        }),
+      ])
     );
     expect(modelSchema).toMatchObject({
       properties: { values: { minItems: 1, type: "array" } },
