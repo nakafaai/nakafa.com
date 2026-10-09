@@ -74,10 +74,8 @@ const fixture = Effect.gen(function* () {
   return { fs, root };
 });
 
-const readInput = (spec: CommandSpec | undefined) =>
-  Schema.decodeEffect(CommandInput)(
-    Option.getOrElse(Arr.last(spec?.args ?? []), () => "")
-  );
+const readInput = (spec: CommandSpec) =>
+  Schema.decodeEffect(CommandInput)(Option.getOrThrow(Arr.last(spec.args)));
 
 describe("synthetic acceptance learner", () => {
   afterEach(() => {
@@ -112,7 +110,7 @@ describe("synthetic acceptance learner", () => {
           expect(spec.env?.CONVEX_DEPLOY_KEY).toBeUndefined();
         }
         const [account, profile, session, other] = yield* Effect.forEach(
-          [calls[0], calls[1], calls[2], calls[3]],
+          Arr.take(calls, 4),
           readInput
         );
         expect(account?.input?.model).toBe("user");

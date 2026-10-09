@@ -61,10 +61,7 @@ export const seedResponseFixture = Effect.fn(
         placement?.responseSpec.kind === "single-choice"
           ? placement.responseSpec.options
           : [];
-      const selectedChoice = Option.getOrThrowWith(
-        Arr.head(choices),
-        () => new Error("Expected one frozen choice.")
-      );
+      const selectedChoice = Option.getOrThrow(Arr.head(choices));
       return {
         ...state,
         selectedChoice,
