@@ -89,11 +89,12 @@ describe("readPublishedSearchDocuments", () => {
     );
     await t.mutation(async (ctx) => {
       await insertRuntimeArticles(ctx, texts.length);
-      for (const [index, text] of texts.entries()) {
-        const projection = testArticleProjection(index);
-        await insertRuntimeIndex(ctx, projection.contentKey, {
-          plainText: text,
-        });
+      const indexRows = Arr.map(texts, (plainText, index) => ({
+        contentKey: testArticleProjection(index).contentKey,
+        plainText,
+      }));
+      for (const { contentKey, plainText } of indexRows) {
+        await insertRuntimeIndex(ctx, contentKey, { plainText });
       }
     });
     await activateSearch(t);

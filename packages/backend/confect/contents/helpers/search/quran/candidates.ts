@@ -6,7 +6,7 @@ import {
   QURAN_SEARCH_RESULT_LIMIT,
 } from "@repo/backend/confect/contentRelease/quran/limits";
 import { interleaveSearchGroups } from "@repo/backend/confect/contents/helpers/search/groups";
-import { Array as Arr, Effect, HashSet, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
 
 const TextQueryStateSchema = Schema.Struct({
   exhausted: Schema.Boolean,
@@ -120,22 +120,23 @@ function getExpansion(
 ) {
   const first = start % states.length;
   const rotated = [...Arr.drop(states, first), ...Arr.take(states, first)];
-  for (const [offset, state] of rotated.entries()) {
-    const index = (first + offset) % states.length;
-    const requested = getMaximumRequestedRows(
-      state.requested,
-      availableDocumentReads,
-      missingResultCount
-    );
-    if (requested > state.requested) {
-      return {
-        nextStart: (index + 1) % states.length,
-        requested,
-        state,
-      };
-    }
-  }
-  return null;
+  return Option.getOrNull(
+    Arr.findFirst(rotated, (state, offset) => {
+      const index = (first + offset) % states.length;
+      const requested = getMaximumRequestedRows(
+        state.requested,
+        availableDocumentReads,
+        missingResultCount
+      );
+      return requested > state.requested
+        ? Option.some({
+            nextStart: (index + 1) % states.length,
+            requested,
+            state,
+          })
+        : Option.none();
+    })
+  );
 }
 
 /** Uses every safe prefix row so an overlapping retry cannot strand capacity. */
