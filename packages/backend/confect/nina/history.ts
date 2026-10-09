@@ -187,7 +187,7 @@ export function boundStep(messages: readonly ModelMessage[]) {
     Arr.map(projected, (message) => message.role).lastIndexOf("user"),
     0
   );
-  let turn = projected.slice(start);
+  let turn = Arr.drop(projected, start);
   for (
     let index = 0;
     index < turn.length - 1 && turnTokens(turn) > NINA_BUDGET.turnEvidence;
@@ -197,7 +197,7 @@ export function boundStep(messages: readonly ModelMessage[]) {
       position === index ? excerptMessage(message) : message
     );
   }
-  return [...projected.slice(0, start), ...turn];
+  return [...Arr.take(projected, start), ...turn];
 }
 
 /**

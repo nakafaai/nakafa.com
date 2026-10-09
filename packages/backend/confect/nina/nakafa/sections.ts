@@ -140,7 +140,7 @@ function formatOutline(sections: readonly ReadSection[]) {
   if (sections.length === 0) {
     return "";
   }
-  const listed = Arr.map(sections.slice(0, OUTLINE_LIMIT), formatEntry);
+  const listed = Arr.map(Arr.take(sections, OUTLINE_LIMIT), formatEntry);
   const more = sections.length - listed.length;
   return Arr.join(
     [
@@ -158,10 +158,13 @@ function formatOutline(sections: readonly ReadSection[]) {
  * that join it to the read.
  */
 function outlineReserve(sections: readonly ReadSection[]) {
-  const entries = Arr.sort(
-    Arr.map(sections, (section) => countTextTokens(formatEntry(section)) + 1),
-    Order.flip(Order.Number)
-  ).slice(0, OUTLINE_LIMIT);
+  const entries = Arr.take(
+    Arr.sort(
+      Arr.map(sections, (section) => countTextTokens(formatEntry(section)) + 1),
+      Order.flip(Order.Number)
+    ),
+    OUTLINE_LIMIT
+  );
   const frame = countTextTokens(
     `\n\n## Other Sections\n- ${sections.length} more sections\n\n`
   );
@@ -215,7 +218,7 @@ export function formatRead(
   }
   const bodyBudget = budget - countTextTokens(header) - outlineReserve(parts);
   const from = Math.max(start, 0);
-  const candidates = parts.slice(from);
+  const candidates = Arr.drop(parts, from);
   let count = 0;
   let used = 0;
   for (const candidate of candidates) {
@@ -239,7 +242,7 @@ export function formatRead(
           Arr.map(({ text }) => text),
           Arr.join("\n\n")
         ),
-        formatOutline([...parts.slice(end), ...parts.slice(0, from)]),
+        formatOutline([...Arr.drop(parts, end), ...Arr.take(parts, from)]),
       ],
       Arr.filter(Boolean),
       Arr.join("\n\n")

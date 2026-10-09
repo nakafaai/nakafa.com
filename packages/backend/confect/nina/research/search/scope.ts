@@ -8,7 +8,7 @@ import {
 import type { WebSearchInput } from "@repo/backend/confect/nina/research/schema";
 import type { SearchSource } from "@repo/backend/confect/nina/research/search/source";
 import { getSourceReferences } from "@repo/backend/confect/nina/research/source";
-import { Array as Arr, MutableHashSet } from "effect";
+import { Array as Arr, MutableHashSet, Option } from "effect";
 
 const sourceKeyTokenPattern = /[\p{L}\p{N}][\p{L}\p{N}._-]*/gu;
 const sourceKeyWhitespacePattern = /\s+/gu;
@@ -48,9 +48,9 @@ export function scopeSources({
     return Arr.filter(sources, (source) => sourceHasTerms(source, terms));
   }
 
-  const firstSource = sources.at(0);
+  const firstSource = Arr.head(sources);
 
-  if (!(firstSource && sourceHasTerms(firstSource, terms))) {
+  if (Option.isNone(firstSource) || !sourceHasTerms(firstSource.value, terms)) {
     return sources;
   }
 

@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import { countTokens, decode, encode } from "gpt-tokenizer";
 
 /**
@@ -38,7 +39,7 @@ export function boundText(text: string, limit: number, continuation: string) {
   if (tokens.length <= limit) {
     return text;
   }
-  const kept = decode(tokens.slice(0, Math.max(0, limit - NOTE_TOKENS)));
+  const kept = decode(Arr.take(tokens, Math.max(0, limit - NOTE_TOKENS)));
   // A paragraph break ends with a line break, so this also finds paragraphs.
   const boundary = kept.lastIndexOf("\n");
   const cut = boundary > kept.length * 0.6 ? kept.slice(0, boundary) : kept;
