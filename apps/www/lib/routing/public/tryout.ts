@@ -6,7 +6,7 @@ import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
 import {
   readPublishedTryoutExamPage,
   readPublishedTryoutSectionPage,
-} from "@/lib/content/tryout/page";
+} from "@/lib/content/tryout/catalog";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 
 const TRYOUT_ROOT = "try-out";

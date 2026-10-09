@@ -12,7 +12,7 @@ import { Array as Arr, Effect, Layer } from "effect";
 import {
   readPublishedTryoutExamPage,
   readPublishedTryoutSectionPage,
-} from "@/lib/content/tryout/page";
+} from "@/lib/content/tryout/catalog";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 vi.mock("@confect/js", async (importOriginal) => {

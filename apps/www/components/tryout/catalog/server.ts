@@ -12,7 +12,7 @@ import { decodeSourceRevision } from "@/lib/content/published/origin";
 import {
   readPublishedTryoutExamPage,
   readPublishedTryoutSectionPage,
-} from "@/lib/content/tryout/page";
+} from "@/lib/content/tryout/catalog";
 import { httpLayer } from "@/lib/convex/http";
 
 const TryoutMetadataArgsSchema = Schema.Struct({

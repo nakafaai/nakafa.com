@@ -4,7 +4,7 @@ import { Array as Arr, Effect } from "effect";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 
 const readExamPageMock = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/content/tryout/page", () => ({
+vi.mock("@/lib/content/tryout/catalog", () => ({
   readPublishedTryoutExamPage: readExamPageMock,
 }));
 vi.mock("@/lib/content/tryout/path", () => ({

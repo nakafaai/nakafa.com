@@ -1,6 +1,6 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
-import { readPublishedTryoutExamPage } from "@/lib/content/tryout/page";
+import { readPublishedTryoutExamPage } from "@/lib/content/tryout/catalog";
 import {
   readRetiredSnbtProduct,
   SNBT_EXAM_PATH,

@@ -32,7 +32,7 @@ const readSectionPageMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/content/tryout/path", () => ({
   readPublishedTryoutLocalizedPath: readLocalizedPathMock,
 }));
-vi.mock("@/lib/content/tryout/page", () => ({
+vi.mock("@/lib/content/tryout/catalog", () => ({
   readPublishedTryoutExamPage: readExamPageMock,
   readPublishedTryoutSectionPage: readSectionPageMock,
 }));
