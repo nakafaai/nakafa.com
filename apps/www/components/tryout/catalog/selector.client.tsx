@@ -10,7 +10,7 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
@@ -37,11 +37,14 @@ export function TryoutCountrySelector({
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredTryout = useSetPreferredTryoutMutation(options);
-  const items = options.map((option) => ({
+  const items = Arr.map(options, (option) => ({
     label: option.title,
     value: option.value,
   }));
-  const currentOption = options.find((option) => option.value === currentValue);
+  const currentOption = Arr.findFirst(
+    options,
+    (option) => option.value === currentValue
+  );
 
   /** Persist a selected try-out country for an authenticated viewer. */
   async function handleValueChange(value: string | null) {
@@ -49,9 +52,12 @@ export function TryoutCountrySelector({
       return;
     }
 
-    const selectedOption = options.find((option) => option.value === value);
+    const selectedOption = Arr.findFirst(
+      options,
+      (option) => option.value === value
+    );
 
-    if (!selectedOption) {
+    if (Option.isNone(selectedOption)) {
       return;
     }
 
@@ -65,7 +71,7 @@ export function TryoutCountrySelector({
 
     await Effect.runPromise(
       saveTryoutPreference({
-        countryKey: selectedOption.countryKey,
+        countryKey: selectedOption.value.countryKey,
         errorMessage: tTryouts("preference-save-error"),
         locale,
         setPreferredTryout,
@@ -89,8 +95,17 @@ export function TryoutCountrySelector({
           className="flex min-w-0 items-center gap-2"
           data-slot="select-value"
         >
-          <CountryFlagIcon countryCode={currentOption?.countryCode} />
-          <span className="truncate">{currentOption?.title ?? label}</span>
+          <CountryFlagIcon
+            countryCode={Option.getOrUndefined(
+              Option.map(currentOption, (option) => option.countryCode)
+            )}
+          />
+          <span className="truncate">
+            {Option.getOrElse(
+              Option.map(currentOption, (option) => option.title),
+              () => label
+            )}
+          </span>
         </span>
       </SelectTrigger>
       <SelectContent
@@ -100,7 +115,7 @@ export function TryoutCountrySelector({
       >
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
-          {options.map((option) => (
+          {Arr.map(options, (option) => (
             <SelectItem
               key={option.value}
               render={<IntentLink href={option.href} />}
@@ -128,12 +143,20 @@ export function TryoutExamSelector({
   label: string;
   options: readonly TryoutExamSelectorOption[];
 }) {
-  const items = options.map((option) => ({
+  const items = Arr.map(options, (option) => ({
     label: option.title,
     value: option.value,
   }));
-  const currentOption = options.find((option) => option.value === currentValue);
-  const currentIcon = getTryoutExamIcon(currentOption?.examKey ?? "");
+  const currentOption = Arr.findFirst(
+    options,
+    (option) => option.value === currentValue
+  );
+  const currentIcon = getTryoutExamIcon(
+    Option.getOrElse(
+      Option.map(currentOption, (option) => option.examKey),
+      () => ""
+    )
+  );
 
   return (
     <Select items={items} value={currentValue}>
@@ -146,7 +169,12 @@ export function TryoutExamSelector({
           data-slot="select-value"
         >
           <HugeIcons className="size-4 shrink-0" icon={currentIcon} />
-          <span className="truncate">{currentOption?.title ?? label}</span>
+          <span className="truncate">
+            {Option.getOrElse(
+              Option.map(currentOption, (option) => option.title),
+              () => label
+            )}
+          </span>
         </span>
       </SelectTrigger>
       <SelectContent
@@ -156,7 +184,7 @@ export function TryoutExamSelector({
       >
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
-          {options.map((option) => (
+          {Arr.map(options, (option) => (
             <SelectItem
               key={option.value}
               render={<IntentLink href={option.href} />}

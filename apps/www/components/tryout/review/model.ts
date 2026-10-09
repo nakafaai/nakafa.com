@@ -1,4 +1,12 @@
-import { Effect, HashMap, MutableHashSet, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  HashMap,
+  MutableHashSet,
+  MutableList,
+  Option,
+  Schema,
+} from "effect";
 import type {
   TryoutAnswerContent,
   TryoutQuestionContent,
@@ -53,13 +61,16 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
   }
 
   const questionContent = HashMap.fromIterable(
-    input.content.questions.map((question) => [
+    Arr.map(input.content.questions, (question) => [
       getContentIdentity(question),
       question,
     ])
   );
   const answerContent = HashMap.fromIterable(
-    input.content.answers.map((answer) => [getContentIdentity(answer), answer])
+    Arr.map(input.content.answers, (answer) => [
+      getContentIdentity(answer),
+      answer,
+    ])
   );
 
   if (
@@ -72,7 +83,7 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
   }
 
   const questionOrders = MutableHashSet.empty<number>();
-  const reviewQuestions: TryoutReviewQuestion[] = [];
+  const reviewQuestions = MutableList.make<TryoutReviewQuestion>();
 
   for (const question of input.questions) {
     if (MutableHashSet.has(questionOrders, question.questionOrder)) {
@@ -96,7 +107,7 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
       );
     }
 
-    reviewQuestions.push({
+    MutableList.append(reviewQuestions, {
       answer: signedAnswer.value.answer,
       content: signedQuestion.value.content,
       placementId: question.placementId,
@@ -106,7 +117,7 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
     });
   }
 
-  return reviewQuestions;
+  return MutableList.toArray(reviewQuestions);
 });
 
 /** Builds one collision-safe key from an already trusted content identity. */
