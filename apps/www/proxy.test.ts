@@ -344,6 +344,69 @@ describe("proxy", () => {
     const response = await requestProxy(path);
     expectHardNotFound(response, "en");
   });
+  it("matches the removed finance endpoint only as its exact path", () => {
+    const matches = (url: string) =>
+      unstable_doesMiddlewareMatch({
+        config,
+        url,
+      });
+    expect(matches("/api/chat/finance")).toBe(true);
+    expect(matches("/api/chat/finance/chat-1")).toBe(false);
+  });
+  it.each([
+    "/sitemap-domain.xml",
+    "/en/events",
+    "/en/finance/chat/chat-1",
+    "/en/event/try-out/ABC123",
+    "/api/chat/finance",
+  ])(
+    "answers the removed route %s with a plain gone response",
+    async (path) => {
+      const response = await requestProxy(path);
+      expect(response.status).toBe(410);
+      expect(response.headers.get("content-type")).toBe(
+        "text/plain; charset=utf-8"
+      );
+      expect(response.headers.get("x-robots-tag")).toBe("noindex");
+      expect(await response.text()).toBe("Gone\n");
+      expectNoLocaleProxy();
+      expect(runtimeMocks.readActive).not.toHaveBeenCalled();
+    }
+  );
+  it("answers a retired SNBT product URL gone once its year has no live track", async () => {
+    runtimeMocks.readTryout.mockReturnValueOnce(
+      Effect.succeed({
+        country: {
+          countryCode: "ID",
+          countryKey: "indonesia",
+          publicPath: "try-out/indonesia",
+          title: "Indonesia",
+        },
+        exam: {
+          examKey: "snbt",
+          publicPath: "try-out/indonesia/snbt",
+          scoringStrategy: "irt",
+          title: "SNBT",
+        },
+        tracks: [
+          {
+            publicPath: "try-out/indonesia/snbt/2027",
+            trackKey: "2027",
+            trackKind: "year",
+          },
+        ],
+      })
+    );
+    const response = await requestProxy("/en/try-out/snbt/2026-set-1");
+    expect(response.status).toBe(410);
+    expectNoLocaleProxy();
+  });
+  it("keeps a retired SNBT product URL on the try-out rules for an attempt", async () => {
+    const response = await requestProxy(
+      "/en/try-out/snbt/2026-set-1?attemptId=attempt-id"
+    );
+    expectLocaleProxy(response);
+  });
   it("delegates one retained attempt capability to the authenticated page", async () => {
     const response = await requestProxy(
       "/en/try-out/indonesia/snbt/2027/set-1?attemptId=attempt-id"

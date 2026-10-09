@@ -6,7 +6,7 @@ import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { httpLayer } from "@/lib/convex/http";
-import { readTryoutSectionRedirect } from "@/lib/routing/public/tryout";
+import { readTryoutRedirect } from "@/lib/routing/public/tryout";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
 const PREVIOUS_MATERIAL_LEVELS = HashSet.make(
@@ -178,7 +178,7 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   }
   const tryoutRedirect = hasAttemptCapability
     ? null
-    : yield* readTryoutSectionRedirect(pathname);
+    : yield* readTryoutRedirect(pathname);
   if (tryoutRedirect) {
     return tryoutRedirect;
   }

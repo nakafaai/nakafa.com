@@ -101,6 +101,14 @@ function createAppRewrites() {
   };
 }
 /**
+ * The active app locales as one path group, so a locale segment cannot match
+ * any word. Config loads through `require`, which the `./locale` export of
+ * `@nakafa/aksara-contracts` does not allow, so this list mirrors that
+ * package's `ACTIVE_APP_LOCALE_CODES`.
+ */
+const ACTIVE_LOCALE_PATTERN = "en|id|de";
+
+/**
  * Build the localized redirect list shared by all supported locales.
  */
 function createLocalizedRedirects() {
@@ -120,6 +128,40 @@ function createLocalizedRedirects() {
       destination: "/:locale",
       permanent: true,
     },
+    {
+      source: "/.well-known/skills/index.json",
+      destination: "/.well-known/agent-skills/index.json",
+      permanent: true,
+    },
+  ];
+  // Only the localized paths of retired pages redirect. An unconstrained
+  // `/:locale/settings` would also send the valid bare path `/user/settings`.
+  const retiredPageRedirects = [
+    {
+      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/settings`,
+      destination: "/:locale/user/settings",
+      permanent: true,
+    },
+    {
+      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/user/settings/developers`,
+      destination: "/:locale/user/settings",
+      permanent: true,
+    },
+    {
+      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/onboarding/focus`,
+      destination: "/:locale/onboarding",
+      permanent: true,
+    },
+    {
+      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/onboarding/role`,
+      destination: "/:locale/onboarding",
+      permanent: true,
+    },
+    {
+      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/school/:slug/classes/:id/timeline`,
+      destination: "/:locale/school/:slug/classes/:id/forum",
+      permanent: true,
+    },
   ];
   const redirects = [
     {
@@ -135,6 +177,7 @@ function createLocalizedRedirects() {
   ];
   return [
     ...rootRedirects,
+    ...retiredPageRedirects,
     ...redirects.flatMap(({ source, destination, permanent }) => {
       const isExternal = destination.startsWith("http");
       return [

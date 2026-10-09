@@ -35,25 +35,23 @@ vi.mock("@/lib/content/article/category", () => ({
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: articleMocks.readActiveRoute,
 }));
-const readTryoutSectionRedirectMock = vi.hoisted(() => vi.fn());
+const readTryoutRedirectMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/routing/public/tryout", () => ({
-  readTryoutSectionRedirect: readTryoutSectionRedirectMock,
+  readTryoutRedirect: readTryoutRedirectMock,
 }));
 describe("public URL migration redirects", () => {
   beforeEach(() => {
     readNakafaRuntimeQueryMock.mockReset();
     articleMocks.hasCategory.mockReset();
     articleMocks.readActiveRoute.mockReset();
-    readTryoutSectionRedirectMock.mockReset();
-    readTryoutSectionRedirectMock.mockReturnValue(Effect.succeed(null));
+    readTryoutRedirectMock.mockReset();
+    readTryoutRedirectMock.mockReturnValue(Effect.succeed(null));
   });
   it.effect("redirects a retired try-out section to its live successor", () =>
     Effect.gen(function* () {
       const successor =
         "/id/try-out/indonesia/snbt/2027/set-1/literasi-dalam-bahasa-inggris";
-      readTryoutSectionRedirectMock.mockReturnValueOnce(
-        Effect.succeed(successor)
-      );
+      readTryoutRedirectMock.mockReturnValueOnce(Effect.succeed(successor));
       const redirect = yield* readPublicUrlMigrationRedirect({
         hasAttemptCapability: false,
         method: "GET",
@@ -71,7 +69,7 @@ describe("public URL migration redirects", () => {
         pathname: "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris",
       });
       expect(redirect).toBeNull();
-      expect(readTryoutSectionRedirectMock).not.toHaveBeenCalled();
+      expect(readTryoutRedirectMock).not.toHaveBeenCalled();
     })
   );
   it.effect("redirects a retired URL to its authenticated current route", () =>

@@ -33,6 +33,7 @@ import {
 } from "@/lib/routing/bypass";
 import { resolvePublicDocumentRoute } from "@/lib/routing/public/document";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
+import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const handlePreviewLocalizedRequest = createMiddleware(previewRouting);
@@ -66,18 +67,24 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl, 308);
   }
 
+  const isRetired = await Effect.runPromise(
+    readRetiredPublicRoute({
+      hasAttemptCapability: hasTryoutAttemptCapability(
+        request.nextUrl.searchParams
+      ),
+      pathname,
+    })
+  );
+  if (isRetired) {
+    return plainTextAnswer(410, "Gone\n");
+  }
+
   if (isLocaleBypassPath(pathname)) {
     return NextResponse.next();
   }
 
   if (isUnsupportedSystemPath(pathname)) {
-    return new Response("Not Found\n", {
-      status: 404,
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "X-Robots-Tag": "noindex",
-      },
-    });
+    return plainTextAnswer(404, "Not Found\n");
   }
 
   const previewConfigured = hasPreviewConfig();
@@ -210,6 +217,17 @@ function rewriteToLlmsMdx(
   return response;
 }
 
+/** Answers a retired or unknown resource in plain text that search engines must not index. */
+function plainTextAnswer(status: 404 | 410, body: string) {
+  return new Response(body, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "X-Robots-Tag": "noindex",
+    },
+    status,
+  });
+}
+
 /** Returns a hard 406 when neither public page representation is acceptable. */
 function representationNotAcceptable() {
   return new Response("Not Acceptable\n", {
@@ -259,5 +277,7 @@ export const config: ProxyConfig = {
     "/((?!_next/static|_not-found|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
     "/:locale([A-Za-z]{2})/:path*.png",
     "/:rootFile([^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
+    // The pattern above skips `/api`, so the removed finance endpoint names itself.
+    "/api/chat/finance",
   ],
 };
