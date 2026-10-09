@@ -3,7 +3,7 @@ import {
   createCircleOutlinePoints,
 } from "@repo/design-system/components/contents/mathematics/circle";
 import { getCurveDivisions } from "@repo/design-system/components/three/helpers/quality";
-import { BigDecimal } from "effect";
+import { Array as Arr, BigDecimal } from "effect";
 import type { PlaneObject } from "@/lib/content/renderer/client/base/visual/scene";
 import {
   projectExactPlanePoint,
@@ -85,7 +85,7 @@ export function resolvePlaneCurve(
             startDegrees: object.startDegrees,
             sweepDegrees: object.sweepDegrees,
           });
-    return points.map((point) => ({
+    return Arr.map(points, (point) => ({
       x: center.x + point.x,
       y: center.y + point.y,
       z: 0,

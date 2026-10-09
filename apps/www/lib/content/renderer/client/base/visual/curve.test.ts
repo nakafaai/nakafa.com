@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { BigDecimal } from "effect";
+import { Array as Arr, BigDecimal } from "effect";
 import {
   resolvePlaneCurve,
   resolvePlaneQuadratic,
@@ -101,7 +101,10 @@ describe("MathVisual analytic curves", () => {
       projection({ min: 1, max: 2 }, { min: -1e308, max: 1e308 })
     );
     expect(
-      points.flatMap(({ x, y, z }) => [x, y, z]).every(Number.isFinite)
+      Arr.every(
+        Arr.flatMap(points, ({ x, y, z }) => [x, y, z]),
+        Number.isFinite
+      )
     ).toBe(true);
     expect(points[0].y).toBe(-5);
     expect(points.at(-1)?.y).toBe(5);
