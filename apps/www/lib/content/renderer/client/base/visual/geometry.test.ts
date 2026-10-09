@@ -201,22 +201,23 @@ describe("MathVisual geometry", () => {
         }
       )
     );
-    const pathIds = geometry.paths.map(({ id }) => id);
+    const pathIds = Arr.map(geometry.paths, ({ id }) => id);
 
     expect(geometry.paths).toHaveLength(13);
     expect(Arr.dedupe(pathIds)).toHaveLength(pathIds.length);
     expect(pathIds).toContain("box:edge:1");
     expect(pathIds).toContain("box-edge-1");
-    for (const path of geometry.paths.filter(({ id }) => id.includes(":"))) {
+    for (const path of Arr.filter(geometry.paths, ({ id }) =>
+      id.includes(":")
+    )) {
       const [start, end] = path.points;
       expect(start).toBeDefined();
       expect(end).toBeDefined();
       if (start && end) {
-        const changedAxes = [
-          start.x !== end.x,
-          start.y !== end.y,
-          start.z !== end.z,
-        ].filter(Boolean);
+        const changedAxes = Arr.filter(
+          [start.x !== end.x, start.y !== end.y, start.z !== end.z],
+          Boolean
+        );
         expect(changedAxes).toHaveLength(1);
       }
     }
@@ -236,7 +237,7 @@ describe("MathVisual geometry", () => {
 
     expect(geometry.markers).toEqual([]);
     expect(geometry.paths).toHaveLength(8);
-    expect(geometry.paths.map(({ id }) => id)).not.toEqual(
+    expect(Arr.map(geometry.paths, ({ id }) => id)).not.toEqual(
       expect.arrayContaining([
         "clipped-box:edge:2",
         "clipped-box:edge:6",
@@ -307,7 +308,7 @@ describe("MathVisual geometry", () => {
     );
     expect(
       Arr.dedupe(
-        geometry.paths[0]?.points.map((point) => pointJson(point)) ?? []
+        Arr.map(geometry.paths[0]?.points ?? [], (point) => pointJson(point))
       ).length
     ).toBe(4);
   });
@@ -370,7 +371,10 @@ describe("MathVisual geometry", () => {
       expect(to).toBeDefined();
       expect(from).not.toEqual(to);
       expect(
-        path.points.flatMap(({ x, y, z }) => [x, y, z]).every(Number.isFinite)
+        Arr.every(
+          Arr.flatMap(path.points, ({ x, y, z }) => [x, y, z]),
+          Number.isFinite
+        )
       ).toBe(true);
     }
   });
