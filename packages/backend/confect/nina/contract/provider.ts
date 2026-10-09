@@ -137,14 +137,14 @@ function readArrayMetadata(schema: JsonSchema.JsonSchema): ArrayMetadata {
 
 /** Relaxes shared array bounds enough to represent every union branch. */
 function mergeArrayBounds(left: ArrayMetadata, right: ArrayMetadata) {
-  const bounds: { maxItems?: number; minItems?: number } = {};
-  if (typeof left.minItems === "number" || typeof right.minItems === "number") {
-    bounds.minItems = Math.min(left.minItems ?? 0, right.minItems ?? 0);
-  }
-  if (typeof left.maxItems === "number" && typeof right.maxItems === "number") {
-    bounds.maxItems = Math.max(left.maxItems, right.maxItems);
-  }
-  return bounds;
+  return {
+    ...(typeof left.minItems === "number" || typeof right.minItems === "number"
+      ? { minItems: Math.min(left.minItems ?? 0, right.minItems ?? 0) }
+      : {}),
+    ...(typeof left.maxItems === "number" && typeof right.maxItems === "number"
+      ? { maxItems: Math.max(left.maxItems, right.maxItems) }
+      : {}),
+  };
 }
 
 /** Preserves one branch-only maximum as model guidance after relaxing it. */

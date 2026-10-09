@@ -1,5 +1,6 @@
 import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { createCapabilities } from "@repo/backend/confect/nina/capabilities";
@@ -12,7 +13,6 @@ import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import {
   ResearchGenerationError,
   ResearchSourceLimitError,
-  researchMaxSources,
 } from "@repo/backend/confect/nina/research/schema";
 import { ninaToolInput } from "@repo/backend/test/nina";
 import {

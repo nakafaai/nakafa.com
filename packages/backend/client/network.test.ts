@@ -11,8 +11,15 @@ import {
   retryNetworkAttempt,
 } from "@repo/backend/client/network";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Duration, Effect, Fiber, Ref } from "effect";
+import { Duration, Effect, Fiber, Ref, Schema } from "effect";
 import { TestClock } from "effect/testing";
+
+/** A cause that refers to itself and holds a private value that must not leak. */
+const CyclicCauseSchema = Schema.Struct({
+  cause: Schema.mutableKey(Schema.optionalKey(Schema.Unknown)),
+  code: Schema.String,
+  privateValue: Schema.String,
+});
 
 describe("network request classification", () => {
   it("classifies nested Undici and Node retry codes", () => {
@@ -83,7 +90,7 @@ describe("network request classification", () => {
   });
 
   it("handles cyclic causes without exposing them", () => {
-    const cause: { cause?: unknown; code: string; privateValue: string } = {
+    const cause: typeof CyclicCauseSchema.Type = {
       code: "EPIPE",
       privateValue: "private-cycle-value",
     };

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { getNakafaContent } from "@repo/backend/agent/content";
-import { CapabilityArtifactSchema } from "@repo/backend/confect/nina/capability/progress";
+import { CapabilityArtifactSchema } from "@repo/backend/client/nina/capability";
 import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
 import {
   recordProgress,

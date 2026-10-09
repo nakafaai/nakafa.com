@@ -1,4 +1,9 @@
 import { getFile } from "@convex-dev/agent";
+import {
+  NINA_DOCUMENT_SIZE,
+  NINA_DOCUMENT_SIZE_MESSAGE,
+  NinaUploadError,
+} from "@repo/backend/client/nina/uploads";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
@@ -6,10 +11,6 @@ import {
   DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import {
-  NINA_DOCUMENT_SIZE,
-  NinaUploadError,
-} from "@repo/backend/confect/nina/uploads.spec";
 import { Array as Arr, Clock, Effect } from "effect";
 
 /** Reads one stored attachment: its model part and the storage entry that holds its bytes. */
@@ -58,7 +59,7 @@ const requireDocumentLimit = Effect.fn("nina.attachments.limit")(function* (
   if (documentBytes > NINA_DOCUMENT_SIZE) {
     return yield* new NinaUploadError({
       code: "NINA_UPLOAD_SIZE",
-      message: "The documents in one message can hold at most 10 MiB together.",
+      message: NINA_DOCUMENT_SIZE_MESSAGE,
     });
   }
 });

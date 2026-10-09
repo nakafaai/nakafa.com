@@ -1,4 +1,5 @@
 import { createTool, type UsageHandler } from "@convex-dev/agent";
+import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type {
   ActionCtx,
@@ -6,10 +7,7 @@ import type {
 } from "@repo/backend/confect/_generated/services";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
 import type { ModelId } from "@repo/backend/confect/gateway/model";
-import {
-  CapabilityOutputSchema,
-  streamCapability,
-} from "@repo/backend/confect/nina/capability/progress";
+import { streamCapability } from "@repo/backend/confect/nina/capability/progress";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {

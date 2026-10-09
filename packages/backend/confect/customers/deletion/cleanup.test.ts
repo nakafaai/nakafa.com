@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 // @vitest-environment node
 
 import { afterEach, expect, it } from "@effect/vitest";
@@ -10,6 +10,13 @@ import { encodeJsonText } from "@repo/utilities/json";
 
 const NOW = Date.UTC(2026, 8, 27);
 
+/** One request that the stubbed fetch recorded: its method, URL and body text. */
+const CapturedRequestSchema = Schema.Struct({
+  body: Schema.String,
+  method: Schema.String,
+  url: Schema.String,
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -19,7 +26,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
   vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
   vi.setSystemTime(NOW);
   vi.stubEnv("POSTHOG_HOST", "https://eu.i.posthog.com");
-  let requests: { method: string; url: string; body: string }[] = [];
+  let requests: (typeof CapturedRequestSchema.Type)[] = [];
   vi.stubGlobal(
     "fetch",
     vi.fn<typeof fetch>(async (input, init) => {

@@ -35,9 +35,7 @@ const PostHogBulkEraseJsonSchema = Schema.fromJsonString(
  * that cannot be read leaves the text undefined, so decoding reports the answer
  * as an invalid response.
  */
-function readErasureAnswer(
-  response: Response
-): Promise<{ ok: boolean; status: number; text: string | undefined }> {
+function readErasureAnswer(response: Response) {
   if (!response.ok) {
     return Promise.resolve({
       ok: false,
