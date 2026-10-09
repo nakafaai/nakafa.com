@@ -10,12 +10,12 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "react": "19.2.8",
+    "react": "19.3.0",
     "react-email": "catalog:"
   },
   "devDependencies": {
     "@react-email/ui": "6.11.1",
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "19.2.18"
+    "@types/react": "19.3.0"
   }
 }
