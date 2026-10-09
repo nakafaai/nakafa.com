@@ -1,6 +1,7 @@
 import { Array as Arr, HashSet, Option, Record as Rec, Result } from "effect";
 import {
   type ExpressionWithTypeArguments,
+  type Identifier,
   isBinaryExpression,
   isCallExpression,
   isClassDeclaration,
@@ -276,6 +277,34 @@ function extendsClass(node: ExpressionWithTypeArguments) {
 }
 
 /**
+ * Returns the identifier that a heritage expression reads a global error class
+ * through: the class itself, as in `extends (Error)`, or the global object of
+ * `extends globalThis.Error`. The binding check runs on that identifier, so a
+ * local declaration of the class or of the global object shadows it.
+ */
+function errorClassReference(expression: Node): Identifier | undefined {
+  const value = unwrapped(expression);
+  if (isIdentifier(value)) {
+    return HashSet.has(ERROR_CLASSES, value.text) ? value : undefined;
+  }
+  if (
+    !(isPropertyAccessExpression(value) || isElementAccessExpression(value))
+  ) {
+    return undefined;
+  }
+  const owner = unwrapped(value.expression);
+  return Option.match(memberRead(value, value.expression), {
+    onNone: () => undefined,
+    onSome: (member) =>
+      isIdentifier(owner) &&
+      HashSet.has(GLOBAL_OBJECTS, owner.text) &&
+      HashSet.has(ERROR_CLASSES, member)
+        ? owner
+        : undefined,
+  });
+}
+
+/**
  * Returns each use of the platform global `name` through `reference`, with the
  * node that names it: a direct use, or a member that a declaration
  * destructures from it.
@@ -312,11 +341,12 @@ function referenceCandidates(
       : [];
   }
   if (isExpressionWithTypeArguments(node)) {
-    return isIdentifier(node.expression) &&
-      HashSet.has(ERROR_CLASSES, node.expression.text) &&
-      extendsClass(node)
-      ? [candidate("error-class", sourceFile, node, node.expression)]
-      : [];
+    const reference = extendsClass(node)
+      ? errorClassReference(node.expression)
+      : undefined;
+    return reference === undefined
+      ? []
+      : [candidate("error-class", sourceFile, node, reference)];
   }
   if (!(isPropertyAccessExpression(node) || isElementAccessExpression(node))) {
     return [];

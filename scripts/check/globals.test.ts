@@ -143,6 +143,58 @@ export class Holder extends makeBase(JSON.parse(text)) {}
   );
 
   it.effect(
+    "reports a class that extends a global error through a wrapper or a global object",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export class Failure extends globalThis.Error {}
+export class Parenthesized extends (Error) {}
+export class Asserted extends (TypeError as ErrorConstructor) {}
+export class Satisfied extends (RangeError satisfies ErrorConstructor) {}
+export class Negated extends RangeError! {}
+export class Named extends window["SyntaxError"] {}
+export class Member extends self.URIError {}
+`),
+          [
+            "1 error-class",
+            "2 error-class",
+            "3 error-class",
+            "4 error-class",
+            "5 error-class",
+            "6 error-class",
+            "7 error-class",
+          ]
+        );
+      })
+  );
+
+  it.effect("ignores a heritage member that names no global error class", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`export class Client extends client.Error {}
+export class Built extends make().Error {}
+export class Mapped extends globalThis.Map {}
+export class Dynamic extends window[name] {}
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "ignores a global error class that a local global object shadows",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`const window = { Error: class {} };
+export class Local extends window.Error {}
+`),
+          []
+        );
+      })
+  );
+
+  it.effect(
     "reports crypto.randomUUID through each name of the crypto global",
     () =>
       Effect.gen(function* () {
