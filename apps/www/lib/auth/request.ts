@@ -1,5 +1,6 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Effect, Schema } from "effect";
+import { bufferResponse } from "@/lib/auth/body";
 
 /** The browser could not send a Better Auth request or read its answer. */
 export class AuthRequestFailed extends Schema.TaggedError<AuthRequestFailed>()(
@@ -33,12 +34,14 @@ const abortedByCaller = (caller: AbortSignal) =>
 
 /**
  * Sends one Better Auth request under the shared attempt deadline, and fails at
- * once when the caller aborts.
+ * once when the caller aborts. The deadline covers the answer's body as well as
+ * its headers: `fetch` resolves with the headers, and Better Fetch reads the body
+ * afterwards, so the body is read here, inside the deadline.
  *
  * Better-fetch arms its own `timeout` only for a request without a signal, and
  * Better Auth's session read always sends one. The deadline therefore lives here,
- * where every request passes. Interrupting the request aborts its fetch, so the
- * deadline and the caller's abort both close the connection.
+ * where every request passes. Interrupting the request aborts its fetch and its
+ * body read, so the deadline and the caller's abort both close the connection.
  */
 export const requestWithDeadline = Effect.fn("www.auth.requestWithDeadline")(
   function* (
@@ -47,7 +50,7 @@ export const requestWithDeadline = Effect.fn("www.auth.requestWithDeadline")(
     init: RequestInit = {}
   ) {
     const request = Effect.tryPromise({
-      try: (signal) => send(input, { ...init, signal }),
+      try: (signal) => send(input, { ...init, signal }).then(bufferResponse),
       catch: (cause) => new AuthRequestFailed({ cause }),
     }).pipe(
       Effect.timeoutOrElse({

@@ -96,6 +96,31 @@ describe("requestWithDeadline", () => {
       })
   );
 
+  it.effect(
+    "aborts a response body that never ends at the 10 second deadline",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValueOnce(
+          new Response(new ReadableStream<Uint8Array>())
+        );
+        const fiber = yield* Effect.forkChild(
+          requestWithDeadline(fetcher, AUTH_URL).pipe(Effect.flip)
+        );
+
+        yield* TestClock.adjust("9999 millis");
+        const signal = fetcher.mock.calls[0]?.[1]?.signal;
+        // pollUnsafe reads the exit without waiting: no exit means the body is pending.
+        expect(fiber.pollUnsafe()).toBeUndefined();
+        expect(signal?.aborted).toBe(false);
+        yield* TestClock.adjust("1 millis");
+
+        expect(yield* Fiber.join(fiber)).toStrictEqual(
+          new AuthRequestDeadline()
+        );
+        expect(signal?.aborted).toBe(true);
+      })
+  );
+
   it.effect("aborts at once when the caller aborts", () =>
     Effect.gen(function* () {
       fetcher.mockImplementation(waitsForAbort());
