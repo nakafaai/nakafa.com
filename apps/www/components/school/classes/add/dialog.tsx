@@ -13,6 +13,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
+import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ import { HeaderAddSubjectField } from "@/components/school/classes/add/subject";
 import { HeaderAddVisibilityField } from "@/components/school/classes/add/visibility";
 import { HeaderAddYearField } from "@/components/school/classes/add/year";
 import { reportClientException } from "@/lib/analytics/client";
+import { requireConvexOnline } from "@/lib/convex/online";
 import { useSchool } from "@/lib/school/context";
 /** Render the school class creation dialog. */
 export function CreateSchoolClassDialog({
@@ -39,6 +41,7 @@ export function CreateSchoolClassDialog({
   const pathname = usePathname();
   const schoolId = useSchool((state) => state.school._id);
   const createClass = useMutation(classes.mutations.createClass);
+  const convex = useConvex();
   const form = useForm({
     defaultValues: classCreateDefaultValues,
     validators: {
@@ -46,13 +49,22 @@ export function CreateSchoolClassDialog({
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(() =>
-          createClass({
-            ...value,
-            schoolId,
-          })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            Effect.tryPromise(() =>
+              createClass({
+                ...value,
+                schoolId,
+              })
+            ).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tapError((error) =>
+                reportClientException(error, {
+                  source: "school-class-create",
+                })
+              )
+            )
+          ),
           Effect.tap((classId) =>
             Effect.sync(() => {
               router.push(`${pathname}/${classId}`);
@@ -61,16 +73,10 @@ export function CreateSchoolClassDialog({
             })
           ),
           Effect.matchEffect({
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "school-class-create",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(t("create-class-failed"));
-                  })
-                )
-              ),
+            onFailure: () =>
+              Effect.sync(() => {
+                toast.error(t("create-class-failed"));
+              }),
             onSuccess: () => Effect.void,
           })
         )

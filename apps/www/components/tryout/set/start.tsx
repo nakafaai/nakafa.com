@@ -10,6 +10,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
+import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -23,6 +24,7 @@ import {
   startAttemptProgram,
   startEntrySectionProgram,
 } from "@/components/tryout/set/program";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 type StartAttempt = Pick<
   CurrentAttempt,
@@ -65,6 +67,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const startAttempt = useMutation(tryouts.mutations.attempts.startAttempt);
   const startSection = useMutation(tryouts.mutations.sections.start);
+  const convex = useConvex();
   const t = useTranslations("Tryouts");
   const now = useTryoutClock(false);
   const [isPending, startTransition] = useTransition();
@@ -114,13 +117,24 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       const sectionKey = attempt.resumeSectionKey ?? request.entrySectionKey;
       startTransition(() =>
         Effect.runPromise(
-          startEntrySectionProgram({
-            attemptId: attempt.attemptId,
-            failureMessage: t("start-part-error"),
-            mutation: startSection,
-            sectionKey,
-            successMessage: t("start-entry-success"),
-          })
+          requireConvexOnline(convex).pipe(
+            Effect.andThen(
+              startEntrySectionProgram({
+                attemptId: attempt.attemptId,
+                failureMessage: t("start-part-error"),
+                mutation: startSection,
+                sectionKey,
+                successMessage: t("start-entry-success"),
+              })
+            ),
+            Effect.catchTag("ConvexOfflineError", () =>
+              Effect.sync(() => {
+                toast.error(t("start-part-error"), {
+                  position: "bottom-center",
+                });
+              })
+            )
+          )
         )
       );
       return;
@@ -173,7 +187,20 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
           router.push(href);
         }),
     });
-    startTransition(() => Effect.runPromise(program));
+    startTransition(() =>
+      Effect.runPromise(
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(program),
+          Effect.catchTag("ConvexOfflineError", () =>
+            Effect.sync(() => {
+              toast.error(t("start-error"), {
+                position: "bottom-center",
+              });
+            })
+          )
+        )
+      )
+    );
   }
   return (
     <>
