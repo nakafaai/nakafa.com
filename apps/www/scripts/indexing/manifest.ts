@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Effect, MutableList, Schema } from "effect";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 
@@ -38,26 +38,29 @@ export function forEachSiteIndexUrlBatch<Success, Failure, Requirements>(
     const descriptors = yield* readSitemapPageDescriptors();
     let batchIndex = 0;
     let canonicalUrlCount = 0;
-    let currentBatch: string[] = [];
+    let currentBatch = MutableList.make<string>();
 
     for (const descriptor of descriptors) {
       const entries = yield* getSitemapEntries({ pageId: descriptor.id });
 
       for (const entry of entries) {
         canonicalUrlCount += 1;
-        currentBatch.push(entry.url);
+        MutableList.append(currentBatch, entry.url);
 
         if (currentBatch.length >= batchSize) {
           batchIndex += 1;
-          yield* process({ batchIndex, urls: currentBatch });
-          currentBatch = [];
+          yield* process({
+            batchIndex,
+            urls: MutableList.toArray(currentBatch),
+          });
+          currentBatch = MutableList.make<string>();
         }
       }
     }
 
     if (currentBatch.length > 0) {
       batchIndex += 1;
-      yield* process({ batchIndex, urls: currentBatch });
+      yield* process({ batchIndex, urls: MutableList.toArray(currentBatch) });
     }
 
     return {

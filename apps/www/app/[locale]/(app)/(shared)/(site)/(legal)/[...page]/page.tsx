@@ -1,6 +1,6 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { io } from "next/cache";
 import { notFound } from "next/navigation";
@@ -29,7 +29,7 @@ type PublicPageProps = PageProps<"/[locale]/[...page]">;
 async function resolvePageParams(params: PublicPageProps["params"]) {
   const { locale: rawLocale, page } = await params;
   const locale = getActiveLocaleOrThrow(rawLocale);
-  const publicPath = page.join("/");
+  const publicPath = Arr.join(page, "/");
   if (!Schema.is(PublicPathSchema)(publicPath)) {
     notFound();
   }
@@ -77,14 +77,13 @@ export async function generateStaticParams({
     return await readPagePreviewStaticParams(AppLocaleSchema.make(locale));
   }
   const catalog = await getPublishedPageCatalog();
-  const routes: { page: string[] }[] = [];
-  for (const projection of catalog.projections) {
-    if (projection.appLocale !== locale) {
-      continue;
-    }
-    routes.push({ page: projection.publicPath.split("/") });
-  }
-  return routes;
+  return Arr.map(
+    Arr.filter(
+      catalog.projections,
+      (projection) => projection.appLocale === locale
+    ),
+    (projection) => ({ page: projection.publicPath.split("/") })
+  );
 }
 
 /** Builds Page metadata and alternates from one pinned signed release. */

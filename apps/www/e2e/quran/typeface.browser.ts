@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Deferred, Duration, Effect } from "effect";
+import { Array as Arr, Deferred, Duration, Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   PRELOADED_FONT_SELECTOR,
@@ -80,7 +80,7 @@ const readQuranTextFonts = Effect.fn("NakafaE2E.readQuranTextFonts")(function* (
     const { fonts } = await cdp.send("CSS.getPlatformFontsForNode", {
       nodeId,
     });
-    return fonts.map((font) => font.familyName);
+    return Arr.map(fonts, (font) => font.familyName);
   });
 });
 
@@ -107,7 +107,7 @@ const verifySurahPreloadsTypeface = Effect.fn(
       )
   );
   yield* Effect.sync(() =>
-    expect(files.filter((file) => preloads.includes(file))).toHaveLength(2)
+    expect(Arr.filter(files, (file) => preloads.includes(file))).toHaveLength(2)
   );
 
   yield* openSurah(page, href);
@@ -128,14 +128,14 @@ const verifyLateTypefaceKeepsSurahStill = Effect.fn(
   const href = `/en/quran/${surah}`;
   yield* openSurah(page, href);
   const files = yield* readTypefaceFiles(page);
-  const held: string[] = [];
+  const held = MutableList.make<string>();
   const release = yield* Deferred.make<void>();
   const services = yield* Effect.context<never>();
   yield* Effect.promise(() =>
     page.route(
       (url) => files.includes(url.pathname),
       (route) => {
-        held.push(route.request().url());
+        MutableList.append(held, route.request().url());
         return Effect.runPromiseWith(services)(
           Deferred.await(release).pipe(
             Effect.andThen(() => Effect.promise(() => route.continue()))
@@ -160,7 +160,7 @@ const verifyLateTypefaceKeepsSurahStill = Effect.fn(
   const layoutShift = yield* readLayoutShift(page);
   const fonts = yield* readQuranTextFonts(page);
   yield* Effect.sync(() => {
-    expect(held).not.toHaveLength(0);
+    expect(MutableList.toArray(held)).not.toHaveLength(0);
     expect(fonts).not.toContain("Amiri");
     expect(layoutShift).toBe(0);
   });

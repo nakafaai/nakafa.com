@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
 import type { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
@@ -207,18 +207,21 @@ describe("proxy", () => {
     });
   });
   it("matches localized PNG aliases without intercepting static assets", () => {
-    expect([...matched, "/MISSING.XML", "/llms.txt"].every(matchesProxy)).toBe(
-      true
-    );
     expect(
-      [
-        "/en/example.og",
-        "/fr/example.png",
-        "/FR/example.png",
-        "/EN/example.png",
-      ].every(matchesProxy)
+      Arr.every([...matched, "/MISSING.XML", "/llms.txt"], matchesProxy)
     ).toBe(true);
-    expect(bypassed.some(matchesProxy)).toBe(false);
+    expect(
+      Arr.every(
+        [
+          "/en/example.og",
+          "/fr/example.png",
+          "/FR/example.png",
+          "/EN/example.png",
+        ],
+        matchesProxy
+      )
+    ).toBe(true);
+    expect(Arr.some(bypassed, matchesProxy)).toBe(false);
   });
   it.each(["/en/example.og", "/en/example.png", "/og/example/image.png"])(
     "delegates the active OG alias %s before document routing",

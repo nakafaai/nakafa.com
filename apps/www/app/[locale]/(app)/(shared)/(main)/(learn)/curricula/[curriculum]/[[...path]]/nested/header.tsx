@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
@@ -28,7 +29,7 @@ export default function CurriculumNestedHeader({
             href: getCurriculumIndexHref(locale),
             label: subjectLabel,
           },
-          ...ancestors.map((ancestor) => ({
+          ...Arr.map(ancestors, (ancestor) => ({
             href: `/${ancestor.publicPath}`,
             label: ancestor.title,
           })),

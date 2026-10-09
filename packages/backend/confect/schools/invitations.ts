@@ -1,5 +1,7 @@
+import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
 import { InvitationError } from "@repo/backend/confect/schools/invitations/spec";
-import { Clock, Effect } from "effect";
+import { Clock, Crypto, Effect } from "effect";
+import { Base64Url } from "effect/encoding";
 /** Validate one invite code's enabled, expiry, and usage-limit state. */
 export const validateInviteCodeState = Effect.fn(
   "schools.invitations.validateInviteCodeState"
@@ -46,3 +48,25 @@ export const validateNotExistingMembership = Effect.fn(
     message: `You are already a member of this ${entityName}.`,
   });
 });
+
+const INVITE_CODE_LENGTH = 10;
+/** Each symbol uses six random bits, so ten symbols need 60 bits from eight bytes. */
+const INVITE_CODE_BYTES = Math.ceil((INVITE_CODE_LENGTH * 6) / 8);
+
+/**
+ * Generate one invite code: ten URL-safe symbols from the runtime's Web Crypto
+ * source. Six bits index the 64-symbol base64url alphabet exactly, so every
+ * symbol is uniform. Eight bytes encode to eleven symbols; the eleventh carries
+ * only four random bits, so it is cut off.
+ */
+export const generateInviteCode = Effect.fn(
+  "schools.invitations.generateInviteCode"
+)(
+  function* () {
+    const crypto = yield* Crypto.Crypto;
+    const bytes = yield* crypto.randomBytes(INVITE_CODE_BYTES);
+    return Base64Url.encode(bytes).slice(0, INVITE_CODE_LENGTH);
+  },
+  Effect.orDie,
+  Effect.provide(WebCryptoLayer)
+);

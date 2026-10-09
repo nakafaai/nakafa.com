@@ -14,7 +14,7 @@ import {
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -55,7 +55,7 @@ export function CurriculumSelector({
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(
-    options.flatMap((option) =>
+    Arr.flatMap(options, (option) =>
       option.publicSlug
         ? [
             {
@@ -70,24 +70,29 @@ export function CurriculumSelector({
         : []
     )
   );
-  const items = options.map((option) => ({
+  const items = Arr.map(options, (option) => ({
     label: option.title,
     value: option.value,
   }));
-  const currentOption = options.find((option) => option.value === currentValue);
+  const currentOption = Option.getOrUndefined(
+    Arr.findFirst(options, (option) => option.value === currentValue)
+  );
   /** Navigate to a selected curriculum and persist it for signed-in viewers. */
   async function handleValueChange(value: string | null) {
     if (!value || value === currentValue) {
       return;
     }
-    const selectedOption = options.find((option) => option.value === value);
-    if (!selectedOption) {
+    const selectedOption = Arr.findFirst(
+      options,
+      (option) => option.value === value
+    );
+    if (Option.isNone(selectedOption)) {
       return;
     }
     if (isLoading) {
       return;
     }
-    router.push(normalizeLocalizedInternalHref(selectedOption.href));
+    router.push(normalizeLocalizedInternalHref(selectedOption.value.href));
     if (!(isAuthenticated && isActiveLocale(locale))) {
       return;
     }
@@ -95,7 +100,7 @@ export function CurriculumSelector({
       saveCurriculumPreference({
         errorMessage: t("preference-save-error"),
         locale,
-        programKey: selectedOption.programKey,
+        programKey: selectedOption.value.programKey,
         setPreferredCurriculum,
       })
     );
@@ -126,7 +131,7 @@ export function CurriculumSelector({
       >
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
-          {options.map((option) => (
+          {Arr.map(options, (option) => (
             <SelectItem key={option.value} value={option.value}>
               <CountryFlagIcon countryCode={option.countryCode} />
               <span className="min-w-0 whitespace-normal leading-snug sm:whitespace-nowrap">

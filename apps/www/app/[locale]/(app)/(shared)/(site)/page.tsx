@@ -1,5 +1,6 @@
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
+import { Array as Arr } from "effect";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import type { Locale } from "next-intl";
@@ -93,8 +94,8 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
   ]);
 
   const collectionItems = [
-    ...subjectMenu.flatMap((category) =>
-      category.items.map((item) => {
+    ...Arr.flatMap(subjectMenu, (category) =>
+      Arr.map(category.items, (item) => {
         const name =
           item.title === "grade"
             ? `${tSubject(category.title)} ${tSubject("grade", { grade: item.value })}`
@@ -109,7 +110,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
     ),
   ];
 
-  const faqItems: MarketingFaqItem[] = landingFaqNumbers.map((number) => ({
+  const faqItems: MarketingFaqItem[] = Arr.map(landingFaqNumbers, (number) => ({
     answer: tFaq(`a${number}`),
     question: tFaq(`q${number}`),
   }));
@@ -126,7 +127,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
       />
       <FAQPageJsonLd
         inLanguage={locale}
-        mainEntity={faqItems.map((item) => ({
+        mainEntity={Arr.map(faqItems, (item) => ({
           name: item.question,
           acceptedAnswer: {
             "@type": "Answer",

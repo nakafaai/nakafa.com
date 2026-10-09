@@ -1,5 +1,6 @@
 import type { ArticleRouteSlug } from "@nakafa/aksara-contracts/projection/article";
 import { getHeadings } from "@repo/contents/toc";
+import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -100,7 +101,7 @@ export async function ArticleShell({
           <SidebarRightFooter>
             {content.kind === "published" ? <CommentsButton /> : null}
             <ReferenceButton
-              references={content.references.map((reference) => ({
+              references={Arr.map(content.references, (reference) => ({
                 ...reference,
               }))}
               title={metadata.title}

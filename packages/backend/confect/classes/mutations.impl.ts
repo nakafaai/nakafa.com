@@ -17,13 +17,13 @@ import {
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import {
+  generateInviteCode,
   validateInviteCodeState,
   validateNotExistingMembership,
 } from "@repo/backend/confect/schools/invitations";
 import { getSchoolMembership } from "@repo/backend/confect/schools/membership";
 import { requirePermission } from "@repo/backend/confect/schools/permission/access";
 import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
-import { generateNanoId } from "@repo/backend/confect/utils/id";
 import { Clock, Effect, Layer } from "effect";
 
 /** Create one class and its default teacher/student invite codes. */
@@ -76,7 +76,7 @@ const createClass = FunctionImpl.make(
           classId,
           schoolId: args.schoolId,
           role,
-          code: generateNanoId(),
+          code: yield* generateInviteCode(),
           enabled: true,
           currentUsage: 0,
           createdBy: userId,

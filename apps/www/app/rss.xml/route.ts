@@ -1,7 +1,7 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect, Order } from "effect";
 import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
@@ -45,7 +45,7 @@ async function readFeed() {
 
   const feed = new Feed({
     updated: new Date(
-      Math.max(0, ...routes.map((route) => route.dateModified))
+      Math.max(0, ...Arr.map(routes, (route) => route.dateModified))
     ),
     title: t("title"),
     description: t("description"),
@@ -60,11 +60,9 @@ async function readFeed() {
     }),
   });
 
-  const feedItems: Item[] = [];
-
-  for (const route of routes) {
+  const feedItems: Item[] = Arr.map(routes, (route) => {
     const link = `${baseUrl}/${route.appLocale}/${route.route}`;
-    feedItems.push({
+    return {
       title: route.title,
       description: route.description ?? route.title,
       link,
@@ -72,11 +70,13 @@ async function readFeed() {
       id: link,
       author: route.authors,
       image: `${baseUrl}/${route.appLocale}/og/${route.route}/image.png`,
-    });
-  }
+    };
+  });
 
-  const sortedItems = feedItems.sort(
-    (left, right) => right.date.getTime() - left.date.getTime()
+  const sortedItems = Arr.sortWith(
+    feedItems,
+    (item) => item.date.getTime(),
+    Order.flip(Order.Number)
   );
   for (const item of sortedItems) {
     feed.addItem(item);
@@ -116,10 +116,11 @@ function getFeedContentRoutes() {
         }
       );
 
-      return routes
-        .flat(2)
-        .sort((left, right) => right.datePublished - left.datePublished)
-        .slice(0, RSS_CONTENT_ROUTE_LIMIT);
+      return Arr.sortWith(
+        Arr.flatten(Arr.flatten(routes)),
+        (route) => route.datePublished,
+        Order.flip(Order.Number)
+      ).slice(0, RSS_CONTENT_ROUTE_LIMIT);
     })
   );
 }
@@ -135,7 +136,7 @@ const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
     RSS_CONTENT_ROUTE_LIMIT,
     expectedActiveReleaseId
   );
-  return published.articles.map((article) => ({
+  return Arr.map(published.articles, (article) => ({
     authors: article.authors,
     appLocale,
     datePublished: Date.parse(`${article.datePublished}T00:00:00.000Z`),
@@ -159,7 +160,7 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
     RSS_CONTENT_ROUTE_LIMIT,
     expectedActiveReleaseId
   );
-  const publishedRoutes = published.materials.map((material) => ({
+  const publishedRoutes = Arr.map(published.materials, (material) => ({
     authors: material.authors,
     datePublished: Date.parse(`${material.datePublished}T00:00:00.000Z`),
     dateModified: Date.parse(

@@ -1,5 +1,12 @@
 import { expect, type Page, type Request, test } from "@playwright/test";
-import { Effect, MutableHashSet, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashSet,
+  MutableList,
+  Option,
+  Schema,
+} from "effect";
 import {
   openConsentPreferences,
   seedAnalyticsConsent,
@@ -38,12 +45,12 @@ function readIngestBody(request: Request): CapturedIngest | null {
 const observeIngest = Effect.fn("NakafaE2E.observeIngest")(function* (
   page: Page
 ) {
-  const captured: CapturedIngest[] = [];
+  const captured = MutableList.make<CapturedIngest>();
   yield* Effect.promise(() =>
     page.route("**/_nakafa/**", (route) => {
       const ingest = readIngestBody(route.request());
       if (ingest) {
-        captured.push(ingest);
+        MutableList.append(captured, ingest);
       }
       return route.abort();
     })
@@ -52,10 +59,10 @@ const observeIngest = Effect.fn("NakafaE2E.observeIngest")(function* (
 });
 
 /** Counts distinct pageviews so transport retries cannot inflate the total. */
-function pageviewCount(captured: CapturedIngest[]) {
+function pageviewCount(captured: MutableList.MutableList<CapturedIngest>) {
   const uuids = MutableHashSet.empty<unknown>();
   let count = 0;
-  for (const entry of captured) {
+  for (const entry of MutableList.toArray(captured)) {
     if (entry.event !== "$pageview") {
       continue;
     }
@@ -67,9 +74,9 @@ function pageviewCount(captured: CapturedIngest[]) {
   return count;
 }
 
-function pageviews(captured: CapturedIngest[]) {
+function pageviews(captured: MutableList.MutableList<CapturedIngest>) {
   const seen = MutableHashSet.empty<unknown>();
-  return captured.filter((entry) => {
+  return Arr.filter(MutableList.toArray(captured), (entry) => {
     if (entry.event !== "$pageview" || MutableHashSet.has(seen, entry.uuid)) {
       return false;
     }
@@ -78,7 +85,10 @@ function pageviews(captured: CapturedIngest[]) {
   });
 }
 
-const waitForPageviews = (captured: CapturedIngest[], count: number) =>
+const waitForPageviews = (
+  captured: MutableList.MutableList<CapturedIngest>,
+  count: number
+) =>
   Effect.promise(() =>
     expect
       .poll(() => pageviewCount(captured), {
@@ -119,7 +129,8 @@ test("baseline counts one cookieless pageview without consent", async ({
                 page.evaluate(() => Object.keys(window.localStorage))
               );
               expect(
-                keys.filter(
+                Arr.filter(
+                  keys,
                   (key) =>
                     key.startsWith("ph_") || key.startsWith("__ph_opt_in_out")
                 )

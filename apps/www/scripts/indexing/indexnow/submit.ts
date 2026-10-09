@@ -1,5 +1,5 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
-import { Effect } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
 import { IndexNowSubmitError } from "@/scripts/indexing/errors";
 import {
@@ -15,13 +15,7 @@ const INDEXNOW_ENDPOINT = "https://api.indexnow.org";
 
 /** Splits canonical sitemap URLs into IndexNow's supported batch size. */
 export function chunkIndexNowUrls(urls: readonly string[]) {
-  const batches: string[][] = [];
-
-  for (let index = 0; index < urls.length; index += BATCH_SIZE) {
-    batches.push(urls.slice(index, index + BATCH_SIZE));
-  }
-
-  return batches;
+  return Arr.chunksOf(urls, BATCH_SIZE);
 }
 
 /**
@@ -39,7 +33,7 @@ export const submitUrlsToIndexNow = Effect.fn(
   }
 
   const batches = chunkIndexNowUrls(urls);
-  const successfullySubmitted: string[] = [];
+  const successfullySubmitted = MutableList.make<string>();
 
   yield* Effect.logInfo(`Submitting ${urls.length} URLs to IndexNow...`);
 
@@ -50,7 +44,7 @@ export const submitUrlsToIndexNow = Effect.fn(
       key,
       totalBatches: batches.length,
     });
-    successfullySubmitted.push(...batchResult);
+    MutableList.appendAll(successfullySubmitted, batchResult);
 
     if (index < batches.length - 1) {
       yield* Effect.sleep(RATE_LIMIT_DELAY);
@@ -61,7 +55,7 @@ export const submitUrlsToIndexNow = Effect.fn(
     `IndexNow submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} URLs.`
   );
 
-  return successfullySubmitted;
+  return MutableList.toArray(successfullySubmitted);
 });
 
 /** Submits one IndexNow batch and fails if the endpoint rejects it. */

@@ -5,6 +5,7 @@ import {
   type PromptInputFileConstraintError,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
+import { randomUuid } from "@repo/utilities/uuid";
 import {
   Array as Arr,
   Effect,
@@ -14,7 +15,6 @@ import {
   Result,
   Schema,
 } from "effect";
-import { nanoid } from "nanoid";
 import {
   type RefObject,
   useCallback,
@@ -63,7 +63,7 @@ export function usePromptInputFiles({
   const addLocal = useCallback(
     (selectedFiles: readonly File[]) => {
       const next = Arr.map(selectedFiles, (file): PromptInputFile => {
-        const id = nanoid();
+        const id = Effect.runSync(randomUuid);
         const url = URL.createObjectURL(file);
         MutableHashMap.set(localUrls, id, url);
         return {

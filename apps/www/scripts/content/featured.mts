@@ -4,7 +4,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { fetchQuery } from "convex/nextjs";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Order, Schema } from "effect";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
@@ -38,9 +38,10 @@ const verifyFeaturedRenderer = Effect.fn(
   assert(item, "The featured signed snapshot returned no question artifact.");
 
   // The protected exchange verifies compatibility with both signed and live manifests.
-  const requiredRendererNames = [
-    ...item.artifact.payload.requiredComponents,
-  ].sort();
+  const requiredRendererNames = Arr.sort(
+    item.artifact.payload.requiredComponents,
+    Order.String
+  );
 
   return {
     contentKey: item.artifact.payload.contentKey,

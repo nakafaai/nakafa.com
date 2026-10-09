@@ -23,6 +23,7 @@ import {
   type ContentSnapshotRow,
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { Array as Arr, Option } from "effect";
 
 const rowHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const sourcePath = CorpusSourcePathSchema.make(
@@ -242,16 +243,17 @@ export function readTestPublishedRoute(
   publicPath: string,
   locale: ActiveAppLocaleCode = "en"
 ) {
-  const route = testPublishedCurriculumRoutes.find(
+  const route = Arr.findFirst(
+    testPublishedCurriculumRoutes,
     (candidate) =>
       candidate.appLocale === locale && candidate.publicPath === publicPath
   );
 
-  if (!route) {
+  if (Option.isNone(route)) {
     throw new Error(`Missing published route fixture: ${locale}/${publicPath}`);
   }
 
-  return route;
+  return route.value;
 }
 
 /** Serializes one program as a verified snapshot row fixture. */

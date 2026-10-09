@@ -3,7 +3,7 @@ import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { slugify } from "@repo/utilities/slug";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -153,7 +153,9 @@ async function getSurahMetadataData(surahNumber: number) {
   "use cache";
 
   const catalog = await getPublishedQuranCatalog();
-  return catalog.surahs.find(({ number }) => number === surahNumber) ?? null;
+  return Option.getOrNull(
+    Arr.findFirst(catalog.surahs, ({ number }) => number === surahNumber)
+  );
 }
 
 /** Renders the cached Quran surah body, controls, pagination, and table of contents. */
@@ -190,7 +192,7 @@ async function CachedSurahShell({
   const descriptionLanguage = meaning.appLocale;
   const title = getQuranSurahName(surahData.name);
 
-  const verseItems = result.verses.map((verse) => {
+  const verseItems = Arr.map(result.verses, (verse) => {
     const label = t("verse-count", { count: verse.number.inSurah });
 
     return {
@@ -201,7 +203,7 @@ async function CachedSurahShell({
   });
   // Verses in document flow link by fragment; later ones scroll through the
   // virtualizer, which knows them only by their index in its list.
-  const headings = verseItems.map(({ id, label }, index) =>
+  const headings = Arr.map(verseItems, ({ id, label }, index) =>
     index < QURAN_FLOW_VERSES
       ? { label, href: `#${id}`, children: [] }
       : {

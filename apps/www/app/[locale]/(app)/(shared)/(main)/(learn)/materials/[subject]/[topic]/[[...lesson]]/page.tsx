@@ -1,5 +1,5 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import {
@@ -54,7 +54,10 @@ export async function generateMetadata({
   return {
     title: { absolute: title },
     description,
-    authors: metadata?.authors.map(({ name }) => ({ name })),
+    authors:
+      metadata === undefined
+        ? undefined
+        : Arr.map(metadata.authors, ({ name }) => ({ name })),
     alternates: createResolvedRouteAlternates(route, source.alternates, {
       types: { "text/markdown": `${path}.md` },
     }),
