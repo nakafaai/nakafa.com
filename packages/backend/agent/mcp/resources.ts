@@ -2,13 +2,12 @@ import { getNakafaContent } from "@repo/backend/agent/content";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
 import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { getNakafaMcpUsageMarkdown } from "@repo/contents/agent/usage";
-import { Context, Effect, Option, Schema } from "effect";
+import { encodePrettyJsonText } from "@repo/utilities/json";
+import { Context, Effect, Option } from "effect";
 import { McpSchema, McpServer } from "effect/ai";
 
 const USAGE_URI = "nakafa://usage";
 const TAXONOMY_URI = "nakafa://taxonomy";
-/** The taxonomy document, indented by two spaces. */
-const TaxonomyJson = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 /**
  * The content template's route. FindMyWay escapes the scheme's colon as "::" and
  * names the single parameter `:0`, the same route Effect compiles for
@@ -46,14 +45,11 @@ export const registerNakafaMcpResources = Effect.fn(
     annotations: Context.empty(),
     handle: getNakafaTaxonomy().pipe(
       Effect.mapError(toInternalError),
-      Effect.flatMap((taxonomy) =>
-        Schema.encodeUnknownEffect(TaxonomyJson)(taxonomy).pipe(Effect.orDie)
-      ),
-      Effect.map((text) => ({
+      Effect.map((taxonomy) => ({
         contents: [
           {
             mimeType: "application/json",
-            text,
+            text: encodePrettyJsonText(taxonomy),
             uri: TAXONOMY_URI,
           },
         ],

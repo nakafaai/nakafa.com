@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, HashMap, HashSet, Option } from "effect";
 
 /**
  * Reports Tailwind arbitrary values that repeat a value a built-in class
@@ -56,11 +56,15 @@ const COUNTS = [
 ];
 
 /** Sizes and positions also take fractions of their container. */
-const FRACTIONAL = new Set([...SIZES, ...INSETS, ...SIDES]);
+const FRACTIONAL = HashSet.fromIterable([...SIZES, ...INSETS, ...SIDES]);
 /** A 1px border or divider is the bare class. */
-const HAIRLINES = new Set([...BORDERS, ...BORDER_SIDES, ...DIVIDES]);
+const HAIRLINES = HashSet.fromIterable([
+  ...BORDERS,
+  ...BORDER_SIDES,
+  ...DIVIDES,
+]);
 /** Utilities that take a leading `-` for a negative value. */
-const NEGATABLE = new Set([
+const NEGATABLE = HashSet.fromIterable([
   ...INSETS,
   ...SIDES,
   ...MARGINS,
@@ -135,7 +139,7 @@ function spacing(utility: string): Resolve {
   const axis = utility.replace(BOUND_PREFIX_PATTERN, "");
   return (value) =>
     spacingStep(value) ??
-    (FRACTIONAL.has(utility) ? fraction(value) : undefined) ??
+    (HashSet.has(FRACTIONAL, utility) ? fraction(value) : undefined) ??
     VIEWPORTS[axis]?.[value];
 }
 
@@ -143,7 +147,7 @@ function spacing(utility: string): Resolve {
 function lineWidth(utility: string): Resolve {
   return (value) => {
     const pixels = value === "0" ? "0" : PIXELS_PATTERN.exec(value)?.[1];
-    return pixels === "1" && HAIRLINES.has(utility) ? "" : pixels;
+    return pixels === "1" && HashSet.has(HAIRLINES, utility) ? "" : pixels;
   };
 }
 
@@ -191,7 +195,7 @@ function gridTracks(value: string) {
   return GRID_PATTERN.exec(value)?.[1];
 }
 
-const RESOLVERS = new Map<string, Resolve>([
+const RESOLVERS = HashMap.fromIterable<string, Resolve>([
   ...Arr.map(
     [
       ...SIZES,
@@ -226,12 +230,12 @@ const RESOLVERS = new Map<string, Resolve>([
 /** Returns the built-in class that renders an arbitrary value, if one does. */
 function builtInClass(negative: boolean, utility: string, value: string) {
   const valueNegative = value.startsWith("-");
-  const suffix = RESOLVERS.get(utility)?.(
+  const suffix = Option.getOrUndefined(HashMap.get(RESOLVERS, utility))?.(
     valueNegative ? value.slice(1) : value
   );
   // A leading `-` on the utility or on the value negates it; both cancel out.
   const flipped = negative !== valueNegative;
-  if (suffix === undefined || (flipped && !NEGATABLE.has(utility))) {
+  if (suffix === undefined || (flipped && !HashSet.has(NEGATABLE, utility))) {
     return;
   }
   const name = suffix === "" ? utility : `${utility}-${suffix}`;

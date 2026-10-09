@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
-import { Effect, Schema } from "effect";
+import {
+  encodeJsonText,
+  encodePrettyJsonText,
+  JsonTextSchema,
+} from "@repo/utilities/json";
+import { Array as Arr, Effect, Schema } from "effect";
 
 describe("encodeJsonText", () => {
   it("writes the same text as JSON.stringify, keeping escapes and key order", () => {
@@ -16,6 +20,38 @@ describe("encodeJsonText", () => {
 
     expect(encodeJsonText(value)).toBe(
       '{"outer":{"text":"say \\"hi\\"\\n","count":3,"nothing":null,"list":[1,"two",false],"inner":{"zebra":true,"alpha":"kept"}}}'
+    );
+  });
+});
+
+describe("encodePrettyJsonText", () => {
+  it("indents nested values by two spaces and writes non-ASCII text unescaped", () => {
+    const value = {
+      name: "Caf\u00e9",
+      nested: {
+        empty: {},
+        list: [1, { ok: true }],
+      },
+    };
+
+    expect(encodePrettyJsonText(value)).toBe(
+      Arr.join(
+        [
+          "{",
+          '  "name": "Caf\u00e9",',
+          '  "nested": {',
+          '    "empty": {},',
+          '    "list": [',
+          "      1,",
+          "      {",
+          '        "ok": true',
+          "      }",
+          "    ]",
+          "  }",
+          "}",
+        ],
+        "\n"
+      )
     );
   });
 });

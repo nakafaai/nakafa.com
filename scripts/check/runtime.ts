@@ -1,4 +1,4 @@
-import { Array as Arr, pipe } from "effect";
+import { Array as Arr, HashSet, MutableHashMap, Option, pipe } from "effect";
 import {
   type Expression,
   isAwaitExpression,
@@ -18,15 +18,19 @@ import {
   SyntaxKind,
   type VariableDeclaration,
 } from "typescript/unstable/ast";
-import type { Symbol as NativeSymbol } from "typescript/unstable/sync";
-import { convexTestBoundary } from "#scripts/check/convex";
+import {
+  convexTestBoundary,
+  type Symbols,
+  symbolAt,
+} from "#scripts/check/convex";
+import { unwrapped } from "#scripts/check/wrapper";
 
-const EFFECT_RUNNERS = new Set(
+const EFFECT_RUNNERS = HashSet.fromIterable(
   "runCallback runCallbackWith runFork runForkWith runPromise runPromiseExit runPromiseExitWith runPromiseWith runSync runSyncExit runSyncExitWith runSyncWith".split(
     " "
   )
 );
-const MANAGED_RUNTIME_RUNNERS = new Set(
+const MANAGED_RUNTIME_RUNNERS = HashSet.fromIterable(
   "runCallback runFork runPromise runPromiseExit runSync runSyncExit".split(" ")
 );
 
@@ -37,11 +41,8 @@ type RuntimeKind =
   | "managed-runtime"
   | "root";
 
-interface RuntimeImports {
-  readonly bindings: Map<NativeSymbol, RuntimeKind>;
-  readonly directRunner: boolean;
-  readonly symbols: ReadonlyMap<Node, NativeSymbol | undefined>;
-}
+/** The local bindings of runtime modules, the symbols they resolve through, and whether a runner is imported directly. */
+type RuntimeImports = ReturnType<typeof runtimeImports>;
 
 function importedModule(node: Node) {
   if (isImportDeclaration(node) && isStringLiteral(node.moduleSpecifier)) {
@@ -85,11 +86,8 @@ function importedRuntimeKind(node: Node): RuntimeKind | undefined {
 }
 
 /** Collects local bindings that expose Effect runtime modules. */
-function runtimeImports(
-  nodes: readonly Node[],
-  symbols: RuntimeImports["symbols"]
-): RuntimeImports {
-  const bindings = new Map<NativeSymbol, RuntimeKind>();
+function runtimeImports(nodes: readonly Node[], symbols: Symbols) {
+  const bindings = MutableHashMap.empty<number, RuntimeKind>();
   let directRunner = false;
 
   for (const node of nodes) {
@@ -117,14 +115,14 @@ function runtimeImports(
             return {
               name: binding.name,
               kind: runtimeMemberKind(kind, name),
-              runner: kind === "effect" && EFFECT_RUNNERS.has(name),
+              runner: kind === "effect" && HashSet.has(EFFECT_RUNNERS, name),
             };
           })
         );
     for (const candidate of candidates) {
-      const symbol = symbols.get(candidate.name);
+      const symbol = symbolAt(symbols, candidate.name);
       if (candidate.kind !== undefined && symbol !== undefined) {
-        bindings.set(symbol, candidate.kind);
+        MutableHashMap.set(bindings, symbol.id, candidate.kind);
       }
       directRunner ||= candidate.runner;
     }
@@ -135,15 +133,18 @@ function runtimeImports(
 
 /** Resolves an imported Effect module, factory, or runtime expression. */
 function runtimeKind(
-  node: Node,
+  expression: Node,
   imports: RuntimeImports
 ): RuntimeKind | undefined {
+  const node = unwrapped(expression);
   if (isAwaitExpression(node)) {
     return runtimeKind(node.expression, imports);
   }
   if (isIdentifier(node)) {
-    const symbol = imports.symbols.get(node);
-    return symbol === undefined ? undefined : imports.bindings.get(symbol);
+    const symbol = symbolAt(imports.symbols, node);
+    return symbol === undefined
+      ? undefined
+      : Option.getOrUndefined(MutableHashMap.get(imports.bindings, symbol.id));
   }
   if (isPropertyAccessExpression(node) || isElementAccessExpression(node)) {
     const member = isPropertyAccessExpression(node)
@@ -189,13 +190,13 @@ function collectMemberBindings(
     }
     const member = staticProperty(element.propertyName ?? element.name);
     const kind = runtimeMemberKind(owner, member);
-    const symbol = imports.symbols.get(element.name);
+    const symbol = symbolAt(imports.symbols, element.name);
     if (
       kind !== undefined &&
       symbol !== undefined &&
-      !imports.bindings.has(symbol)
+      !MutableHashMap.has(imports.bindings, symbol.id)
     ) {
-      imports.bindings.set(symbol, kind);
+      MutableHashMap.set(imports.bindings, symbol.id, kind);
       changed = true;
     }
   }
@@ -217,16 +218,16 @@ function collectVariableAlias(
     );
   }
   const symbol = isIdentifier(declaration.name)
-    ? imports.symbols.get(declaration.name)
+    ? symbolAt(imports.symbols, declaration.name)
     : undefined;
   if (
     kind === undefined ||
     symbol === undefined ||
-    imports.bindings.has(symbol)
+    MutableHashMap.has(imports.bindings, symbol.id)
   ) {
     return false;
   }
-  imports.bindings.set(symbol, kind);
+  MutableHashMap.set(imports.bindings, symbol.id, kind);
   return true;
 }
 
@@ -249,7 +250,6 @@ function runtimeRunners(node: Node, imports: RuntimeImports) {
   }
   return kind === "managed-runtime" ? MANAGED_RUNTIME_RUNNERS : undefined;
 }
-
 function isRunnerMember(node: Node, imports: RuntimeImports) {
   if (!(isPropertyAccessExpression(node) || isElementAccessExpression(node))) {
     return false;
@@ -261,7 +261,7 @@ function isRunnerMember(node: Node, imports: RuntimeImports) {
   const member = isPropertyAccessExpression(node)
     ? node.name.text
     : staticElement(node.argumentExpression);
-  return member === undefined || runners.has(member);
+  return member === undefined || HashSet.has(runners, member);
 }
 
 /**
@@ -285,7 +285,7 @@ function destructuresRunner(node: Node, imports: RuntimeImports) {
       return (
         element.dotDotDotToken !== undefined ||
         member === undefined ||
-        runners.has(member)
+        HashSet.has(runners, member)
       );
     })
   );
@@ -294,7 +294,7 @@ function destructuresRunner(node: Node, imports: RuntimeImports) {
 /** Detect runtime execution, preserving only SDK-owned transaction callbacks. */
 export function effectRunnerViolation(
   nodes: readonly Node[],
-  symbols: RuntimeImports["symbols"]
+  symbols: Symbols
 ) {
   const imports = runtimeImports(nodes, symbols);
   collectAliases(nodes, imports);

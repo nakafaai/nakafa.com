@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import {
   inspectCompilerConfigs,
   isCompilerConfig,
@@ -18,7 +18,7 @@ function config(
   parent: unknown,
   plugins?: readonly Readonly<Record<string, unknown>>[]
 ) {
-  return JSON.stringify({
+  return Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
     ...(plugins === undefined ? {} : { compilerOptions: { plugins } }),
     ...(parent === undefined ? {} : { extends: parent }),
   });

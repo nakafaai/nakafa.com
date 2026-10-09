@@ -20,6 +20,62 @@ describe("platform globals", () => {
   it.effect("reports each platform global an Effect module replaces", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
+        yield* findings(`new Map();
+new Set();
+Object.keys(value);
+Object.entries(value);
+Object.values(value);
+Object.fromEntries(value);
+Array.isArray(value);
+JSON.parse(text);
+JSON.stringify(value);
+fetch(url);
+process.env.SECRET;
+Date.now();
+new Date();
+new Date;
+Math.random();
+setTimeout(run, 1);
+setInterval(run, 1);
+console.log(value);
+class Failure extends Error {}
+const Rejection = class extends TypeError {};
+globalThis.fetch(url);
+window.setTimeout(run, 1);
+self.console.info(value);
+`),
+        [
+          "1 map-set",
+          "2 map-set",
+          "3 object-helper",
+          "4 object-helper",
+          "5 object-helper",
+          "6 object-helper",
+          "7 array-check",
+          "8 json",
+          "9 json",
+          "10 fetch",
+          "11 env",
+          "12 clock",
+          "13 clock",
+          "14 clock",
+          "15 random",
+          "16 timer",
+          "17 timer",
+          "18 console",
+          "19 error-class",
+          "20 error-class",
+          "21 fetch",
+          "22 timer",
+          "23 console",
+        ]
+      );
+    })
+  );
+
+  it.effect("reads Object and Array members through global objects", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
         yield* findings(`Object.keys(value);
 Object.entries(value);
 Object.values(value);
@@ -75,10 +131,177 @@ const { "entries": list } = (Object);
     })
   );
 
+  it.effect("reads platform globals inside an extends call", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`declare function makeBase<T>(value: T): new () => object;
+export class Holder extends makeBase(JSON.parse(text)) {}
+`),
+        ["2 json"]
+      );
+    })
+  );
+
+  it.effect(
+    "reports a class that extends a global error through a wrapper or a global object",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export class Failure extends globalThis.Error {}
+export class Parenthesized extends (Error) {}
+export class Asserted extends (TypeError as ErrorConstructor) {}
+export class Satisfied extends (RangeError satisfies ErrorConstructor) {}
+export class Negated extends RangeError! {}
+export class Named extends window["SyntaxError"] {}
+export class Member extends self.URIError {}
+`),
+          [
+            "1 error-class",
+            "2 error-class",
+            "3 error-class",
+            "4 error-class",
+            "5 error-class",
+            "6 error-class",
+            "7 error-class",
+          ]
+        );
+      })
+  );
+
+  it.effect("ignores a heritage member that names no global error class", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`export class Client extends client.Error {}
+export class Built extends make().Error {}
+export class Mapped extends globalThis.Map {}
+export class Dynamic extends window[name] {}
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "ignores a global error class that a local global object shadows",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`const window = { Error: class {} };
+export class Local extends window.Error {}
+`),
+          []
+        );
+      })
+  );
+
+  it.effect(
+    "reports crypto.randomUUID through each name of the crypto global",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`crypto.randomUUID();
+globalThis.crypto.randomUUID();
+window.crypto.randomUUID();
+self.crypto.randomUUID();
+`),
+          ["1 random", "2 random", "3 random", "4 random"]
+        );
+      })
+  );
+
+  it.effect("keeps crypto.subtle and crypto.getRandomValues allowed", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`crypto.getRandomValues(bytes);
+crypto.subtle.digest("SHA-256", bytes);
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "leaves a crypto.randomUUID read through a local crypto binding alone",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { Crypto, Effect } from "effect";
+export const randomUuid = Effect.gen(function* () {
+  const crypto = yield* Crypto.Crypto;
+  return yield* crypto.randomUUID;
+});
+`,
+            "packages/utilities/uuid.ts"
+          ),
+          []
+        );
+      })
+  );
+
+  it.effect(
+    "reads crypto.randomUUID only where no local binding shadows crypto",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(yield* findings("crypto.randomUUID();\n"), [
+          "1 random",
+        ]);
+        assert.deepStrictEqual(
+          yield* findings(`const crypto = { randomUUID: () => "id" };
+export const id = crypto.randomUUID();
+`),
+          []
+        );
+      })
+  );
+
+  it.effect("reports setImmediate, queueMicrotask, and a bare Date call", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`setImmediate(run);
+queueMicrotask(run);
+const now = Date();
+const stamp = new Date(0);
+`),
+        ["1 timer", "2 timer", "3 clock"]
+      );
+    })
+  );
+
   it.effect("ignores other members, shadowed names, and lookalikes", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
-        yield* findings(`import { Array as Arr, Record } from "effect";
+        yield* findings(`import { Array as Arr, Option } from "effect";
+const Map = Option.some;
+new Map(1);
+new Date(0);
+Date.parse(text);
+Object.assign(target, source);
+Math.max(1, 2);
+Array.from(items);
+JSON;
+client.fetch(url);
+fetch;
+console;
+Promise.resolve(value);
+Map(1);
+class Failure extends Base {}
+interface Rejection extends Error {}
+function read(process: Source) {
+  return process.env.SECRET;
+}
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "ignores shadowed Object and Array names and unrelated members",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { Array as Arr, Record } from "effect";
 const Object = Record;
 Object.keys(value);
 Arr.isArray(value);
@@ -100,6 +323,109 @@ client["Object"].keys(value);
 function read(Array: Source) {
   return Array.isArray(value);
 }
+`),
+          []
+        );
+      })
+  );
+
+  it.effect(
+    "leaves platform globals inside a function that the browser page runs",
+    () =>
+      Effect.gen(function* () {
+        const e2e = "apps/www/e2e/page.browser.ts";
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { test } from "@playwright/test";
+page.evaluate(() => new Map(Object.entries(window.state)));
+page.addInitScript(() => {
+  JSON.parse(window.name);
+  setTimeout(run, Date.now());
+});
+page.$eval("main", (node) => new Set(Object.keys(node.dataset)));
+function countFrames() {
+  return new Map(Object.values(window.frames));
+}
+page.evaluate(countFrames);
+const cache = new Map();
+Object.keys(routes);
+`,
+            e2e
+          ),
+          ["12 map-set", "13 object-helper"]
+        );
+        assert.deepStrictEqual(
+          yield* findings(
+            `page.evaluate(() => new Map(Object.entries(window.state)));
+page.addInitScript(() => {
+  JSON.parse(window.name);
+  setTimeout(run, Date.now());
+});
+`,
+            "apps/www/lib/page.ts"
+          ),
+          ["1 map-set", "1 object-helper", "3 json", "4 clock", "4 timer"]
+        );
+      })
+  );
+});
+
+describe("environment reads", () => {
+  it.effect("keeps writes, build constants, and the createEnv seam", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`import { createEnv } from "@t3-oss/env-nextjs";
+process.env.NODE_ENV === "production";
+process.env.NEXT_RUNTIME === "nodejs";
+process.env.SITE_URL = "https://nakafa.com";
+process.env.SITE_URL ??= "https://nakafa.com";
+delete process.env.SITE_URL;
+export const env = createEnv({
+  runtimeEnv: { SITE_URL: process.env.SITE_URL },
+});
+export const server = createEnv({ runtimeEnv: process.env });
+export const preview = createEnv({
+  experimental__runtimeEnv: { PREVIEW: process.env.PREVIEW },
+});
+`),
+        []
+      );
+    })
+  );
+
+  it.effect("reports every read outside those seams", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`import { createEnv } from "@t3-oss/env-core";
+const url = process.env.SITE_URL;
+const name = process.env[key];
+const inherited = { ...process.env };
+const mapping = { runtimeEnv: { SITE_URL: process.env.SITE_URL } };
+const local = makeEnv({ runtimeEnv: process.env });
+const fallback = createEnv({ runtimeEnv: process.env.SITE_URL ?? {} });
+process.env.SITE_URL += "/";
+process.env.SITE_URL === url;
+`),
+        ["2 env", "3 env", "4 env", "5 env", "6 env", "7 env", "8 env", "9 env"]
+      );
+      assert.deepStrictEqual(
+        yield* findings(`import { createEnv } from "@t3-oss/env-nextjs/presets";
+import type { Preset } from "@t3-oss/env-nextjs";
+import * as Env from "@t3-oss/env-nextjs";
+import envCore from "@t3-oss/env-core";
+export const env = createEnv({ runtimeEnv: { SITE_URL: process.env.SITE_URL } });
+`),
+        ["5 env"]
+      );
+    })
+  );
+
+  it.effect("leaves the other members of a global object alone", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`window.localStorage;
+globalThis.location;
+self.navigator.userAgent;
 `),
         []
       );

@@ -1,6 +1,7 @@
 import { Effect, Schedule, Schema } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 
+/** The longest one request to the weather service may wait for its answer. */
 const WEATHER_REQUEST_TIMEOUT = "10 seconds";
 
 class WeatherClientRequestError extends Schema.TaggedError<WeatherClientRequestError>()(

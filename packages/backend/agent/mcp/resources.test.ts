@@ -11,12 +11,11 @@ import {
   sendMcpRequest,
 } from "@repo/backend/test/mcp/harness";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";
-import { JsonTextSchema } from "@repo/utilities/json";
+import { encodePrettyJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/agent/taxonomy", () => ({ getNakafaTaxonomy: vi.fn() }));
 
-const IndentedJson = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 const TAXONOMY_REQUEST = modernPost(
   50,
   "resources/read",
@@ -43,7 +42,7 @@ describe("Nakafa MCP resources", () => {
       const response = yield* Effect.promise(() =>
         sendMcpRequest(createConvexTestWithBetterAuth(), TAXONOMY_REQUEST)
       );
-      const text = yield* Schema.encodeUnknownEffect(IndentedJson)(taxonomy);
+      const text = encodePrettyJsonText(taxonomy);
 
       expect(response.status).toBe(200);
       expect(yield* Effect.promise(() => response.json())).toMatchObject({

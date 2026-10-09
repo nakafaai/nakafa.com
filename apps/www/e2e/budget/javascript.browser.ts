@@ -1,12 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Schema } from "effect";
+import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
+import { Effect } from "effect";
 import { measureRouteJavascript } from "@/e2e/support/resources";
 import { appRoutes } from "@/e2e/support/route";
-
-const prettyMeasurementJson = Schema.fromJsonString(Schema.Unknown, {
-  space: 2,
-});
 
 // Remeasured at 1,048,575 encoded / 3,092,340 decoded bytes.
 // Limits keep the ~6% margin.
@@ -47,9 +43,7 @@ for (const budget of routeBudgets) {
     await testInfo.attach(
       `${budget.href.replaceAll("/", "_")}-resources.json`,
       {
-        body: Buffer.from(
-          Schema.encodeSync(prettyMeasurementJson)(measurement)
-        ),
+        body: Buffer.from(encodePrettyJsonText(measurement)),
         contentType: "application/json",
       }
     );
