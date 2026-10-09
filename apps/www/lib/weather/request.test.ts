@@ -69,20 +69,17 @@ describe("createWeatherReader", () => {
 describe("a request that fails late", () => {
   it("does not drop the newer request that replaced it", async () => {
     let now = 0;
-    let failOlder = () => {};
-    const older = new Promise<WeatherRead>((resolve) => {
-      failOlder = () => resolve(Option.none());
-    });
     const load = vi
       .fn<() => Promise<WeatherRead>>()
-      .mockReturnValueOnce(older)
+      .mockReturnValueOnce(Promise.resolve(Option.none()))
       .mockReturnValue(Promise.resolve(Option.some(summary)));
     const read = createWeatherReader({ load, now: () => now });
 
+    // Both reads start before the first one settles, so its failure arrives
+    // after the second request took its place.
     const first = read();
     now = 60_000;
     const second = read();
-    failOlder();
     await first;
 
     expect(read()).toBe(second);
