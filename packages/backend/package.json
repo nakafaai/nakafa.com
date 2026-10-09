@@ -54,7 +54,7 @@
     "better-auth": "1.6.33",
     "buffer": "^6.0.3",
     "convex": "1.46.0",
-    "convex-helpers": "0.1.126",
+    "convex-helpers": "0.1.128",
     "dedent": "^1.7.2",
     "effect": "catalog:",
     "gpt-tokenizer": "^4.0.0",
