@@ -1,12 +1,12 @@
 // @vitest-environment node
 
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Effect, HashSet, Predicate, Schema } from "effect";
+import { encodePrettyJsonText } from "@repo/utilities/json";
+import { Array as Arr, Effect, HashSet, Predicate } from "effect";
 import { runAfdocs } from "@/checks/afdocs";
 
 const TIMEOUT_MS = 600_000;
 const ALLOWED_SKIPS = HashSet.make("auth-alternative-access");
-const PrettyJsonSchema = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 
 /** Keeps a failed CI check actionable without dumping every passing page. */
 function formatFailureDetails(details: Record<string, unknown> | undefined) {
@@ -16,7 +16,7 @@ function formatFailureDetails(details: Record<string, unknown> | undefined) {
 
   const { pageResults, ...summary } = details;
   if (!Arr.isArray(pageResults)) {
-    return `\n${Schema.encodeSync(PrettyJsonSchema)(details)}`;
+    return `\n${encodePrettyJsonText(details)}`;
   }
 
   const failures = pageResults.filter(
@@ -26,7 +26,7 @@ function formatFailureDetails(details: Record<string, unknown> | undefined) {
       page.status !== "pass"
   );
 
-  return `\n${Schema.encodeSync(PrettyJsonSchema)({ ...summary, pageResults: failures })}`;
+  return `\n${encodePrettyJsonText({ ...summary, pageResults: failures })}`;
 }
 
 describe("AFDocs", () => {

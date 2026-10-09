@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { encodePrettyJsonText } from "@repo/utilities/json";
 import { type FunctionArgs, getFunctionName } from "convex/server";
 import { ConfigProvider, Effect, Schema } from "effect";
 
@@ -23,8 +24,7 @@ const originalArgv = process.argv;
 const originalExitCode = process.exitCode;
 
 /** The bytes the script writes for a report: two-space JSON and a trailing newline. */
-const printedLine = (report: unknown) =>
-  `${Schema.encodeSync(Schema.fromJsonString(Schema.Unknown, { space: 2 }))(report)}\n`;
+const printedLine = (report: unknown) => `${encodePrettyJsonText(report)}\n`;
 
 const ada = { authId: "auth-1", email: "ada@example.com", userId: "user-1" };
 const grace = {

@@ -18,11 +18,9 @@ import {
   makeRuntimeIngressFixture,
   makeRuntimeIngressRenderer,
 } from "@repo/backend/test/runtime/ingress";
-import { JsonTextSchema } from "@repo/utilities/json";
+import { encodePrettyJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Cause, Effect, Exit, Schema } from "effect";
-
-const PrettyJson = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 
 /** Returns the complete failure cause from one rejected Convex test program. */
 const failureCause = Effect.fn("test.runtime.failureCause")(function* (
@@ -214,7 +212,7 @@ describe("tryouts/runtime signed storage", () => {
           expect(stored).not.toBeNull();
           if (stored) {
             await ctx.db.patch("tryoutRuntimeBundles", stored._id, {
-              rendererJson: Schema.encodeSync(PrettyJson)(
+              rendererJson: encodePrettyJsonText(
                 Schema.decodeSync(JsonTextSchema)(stored.rendererJson)
               ),
             });
