@@ -995,6 +995,9 @@ importers:
 
   packages/next-config:
     dependencies:
+      '@repo/utilities':
+        specifier: workspace:*
+        version: link:../utilities
       effect:
         specifier: 'catalog:'
         version: 4.0.1
