@@ -13,7 +13,10 @@ export function buildContentSearchResult(
   queryTexts: readonly string[]
 ) {
   const items = Arr.map(
-    ranked.slice(args.offset, args.offset + args.limit),
+    Arr.take(
+      Arr.drop(ranked, args.offset),
+      Math.trunc(args.offset + args.limit) - Math.trunc(args.offset)
+    ),
     (document) => ({
       alignmentId: document.alignmentId,
       assetId: document.assetId,
