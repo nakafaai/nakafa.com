@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import { Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Order, Record as Rec } from "effect";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
@@ -60,8 +60,13 @@ describe("renderer components", () => {
         });
 
         expect(components).toMatchObject(semanticMdxComponents);
-        expect(Rec.keys<string, unknown>(components).sort()).toEqual(
-          [...Rec.keys(semanticMdxComponents), "InlineMath"].sort()
+        expect(
+          Arr.sort(Rec.keys<string, unknown>(components), Order.String)
+        ).toEqual(
+          Arr.sort(
+            [...Rec.keys(semanticMdxComponents), "InlineMath"],
+            Order.String
+          )
         );
         expect(components).not.toHaveProperty("BlockMath");
         expect(components).not.toHaveProperty("Mermaid");
@@ -186,8 +191,10 @@ describe("renderer components", () => {
         requiredComponents: ["Triangle"],
       });
 
-      expect(Rec.keys<string, unknown>(components).sort()).toEqual(
-        [...Rec.keys(semanticMdxComponents), "Triangle"].sort()
+      expect(
+        Arr.sort(Rec.keys<string, unknown>(components), Order.String)
+      ).toEqual(
+        Arr.sort([...Rec.keys(semanticMdxComponents), "Triangle"], Order.String)
       );
       expect(components).not.toHaveProperty("UnitCircle");
     })
