@@ -181,20 +181,20 @@ const submitBingBatch = Effect.fn("scripts.indexing.indexNow.runBingBatch")(
       return history;
     }
 
-    const successfulUrls = yield* submitUrlsToBing(unsubmittedUrls, apiKey);
-
-    if (successfulUrls.length === 0) {
-      return history;
-    }
-
-    const updatedHistory = yield* updateSubmissionHistory({
-      history,
-      service: "bing",
-      urls: successfulUrls,
-    });
-    yield* saveSubmissionHistory(updatedHistory);
-    yield* Effect.logInfo(
-      `Submission history updated for Bing with ${successfulUrls.length} successfully submitted URLs.`
+    // Each accepted group is saved before the next batch, so a later failure keeps it.
+    let updatedHistory = history;
+    yield* submitUrlsToBing(unsubmittedUrls, apiKey, (successfulUrls) =>
+      Effect.gen(function* () {
+        updatedHistory = yield* updateSubmissionHistory({
+          history: updatedHistory,
+          service: "bing",
+          urls: successfulUrls,
+        });
+        yield* saveSubmissionHistory(updatedHistory);
+        yield* Effect.logInfo(
+          `Submission history updated for Bing with ${successfulUrls.length} successfully submitted URLs.`
+        );
+      })
     );
 
     return updatedHistory;

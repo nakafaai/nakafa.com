@@ -1,7 +1,10 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Config, Effect, MutableList, Option, Schema } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
-import { BingSubmitError } from "@/scripts/indexing/errors";
+import {
+  BingSubmitError,
+  type SubmissionHistoryError,
+} from "@/scripts/indexing/errors";
 import { INDEXING_HOST } from "@/scripts/indexing/paths";
 
 const BATCH_SIZE = 100;
@@ -39,10 +42,18 @@ export const readBingWebmasterApiKey = Effect.fn(
  * Submits canonical sitemap URLs to Bing's URL Submission API.
  *
  * The adapter respects Bing quota messages by reducing batch size or stopping
- * when the endpoint reports the daily quota has already been exhausted.
+ * when the endpoint reports the daily quota has already been exhausted. Each
+ * accepted group goes to `onAccepted` before the next batch is sent, so a later
+ * failure keeps the URLs that Bing already accepted.
  */
 export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
-  function* (urls: readonly string[], apiKey: string) {
+  function* (
+    urls: readonly string[],
+    apiKey: string,
+    onAccepted: (
+      submittedUrls: readonly string[]
+    ) => Effect.Effect<void, SubmissionHistoryError>
+  ) {
     if (urls.length === 0) {
       yield* Effect.logInfo("No new URLs to submit to Bing.");
       return [];
@@ -72,6 +83,7 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
       });
       if (result.submittedUrls.length > 0) {
         MutableList.appendAll(successfullySubmitted, result.submittedUrls);
+        yield* onAccepted(result.submittedUrls);
         submittedCount += result.submittedUrls.length;
       }
       if (result.shouldStop) {
@@ -203,21 +215,26 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
         submittedUrls: [],
       };
     }
-    if (responseText.includes("Quota remaining")) {
-      const quotaRemaining = yield* readRemainingBingQuota(responseText);
-      if (quotaRemaining !== undefined) {
-        yield* Effect.logInfo(
-          `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
-        );
-        return {
-          quotaRemaining,
-          shouldStop: false,
-          submittedUrls: [],
-        };
-      }
+    if (!responseText.includes("Quota remaining")) {
+      return yield* new BingSubmitError({
+        cause: status,
+        message: `Bing failed with HTTP ${status}.`,
+      });
     }
+    const quotaRemaining = yield* readRemainingBingQuota(responseText);
+    if (quotaRemaining === undefined) {
+      // A quota message without a usable number stops the run quietly.
+      return {
+        quotaRemaining: undefined,
+        shouldStop: true,
+        submittedUrls: [],
+      };
+    }
+    yield* Effect.logInfo(
+      `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
+    );
     return {
-      quotaRemaining: undefined,
+      quotaRemaining,
       shouldStop: false,
       submittedUrls: [],
     };
@@ -242,7 +259,7 @@ const readRemainingBingQuota = Effect.fn("scripts.indexing.bing.readQuota")(
       return;
     }
     const remainingQuota = Number.parseInt(remainingQuotaMatch[1], 10);
-    if (Number.isNaN(remainingQuota) || remainingQuota <= 0) {
+    if (remainingQuota <= 0) {
       return;
     }
     return remainingQuota;
