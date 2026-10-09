@@ -10,6 +10,7 @@ import {
 const BATCH_SIZE = 100;
 const RATE_LIMIT_DELAY = 1000;
 const HTTP_STATUS_CODE_OK = 200;
+const HTTP_STATUS_CODE_ACCEPTED = 202;
 const JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 const INDEXNOW_ENDPOINT = "https://api.indexnow.org";
 
@@ -109,6 +110,14 @@ const submitBatchToIndexNow = Effect.fn(
           ),
       })
     );
+
+  // A 202 means IndexNow received the URLs and validates the key afterwards.
+  if (status === HTTP_STATUS_CODE_ACCEPTED) {
+    yield* Effect.logInfo(
+      `Batch ${batchCount} received with HTTP 202. IndexNow key validation is pending.`
+    );
+    return [...batch];
+  }
 
   if (status !== HTTP_STATUS_CODE_OK) {
     return yield* new IndexNowSubmitError({
