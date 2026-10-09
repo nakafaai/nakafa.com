@@ -40,8 +40,8 @@ describe("scopeSources", () => {
 
   it("keeps the last word as the neighbor of a leading number", () => {
     const sources = scopeSources({
-      query: "19 Alpha for",
-      task: "19 Alpha for",
+      query: "for",
+      task: "19 Alpha",
       sourcePreference: "primary",
       sources: [
         makeSearchSource("Alpha", "https://alpha.io/guide"),
