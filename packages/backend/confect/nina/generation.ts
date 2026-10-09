@@ -15,7 +15,7 @@ import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { createNinaPrepareStep } from "@repo/backend/confect/nina/step";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 /** The scheduled Confect action owns generation; Agent owns its persistent stream. */
 export const generateResponse = Effect.fn("nina.generate")(function* (
@@ -27,7 +27,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   const runPromise = Effect.runPromiseWith(services);
   const usageHandler = yield* createUsageHandler(turn._id);
   const runtime = {
-    currentDate: new Date(turn._creationTime).toISOString(),
+    currentDate: DateTime.formatIso(DateTime.makeUnsafe(turn._creationTime)),
   };
   const context = createNinaAgentContext({
     page: turn.page,

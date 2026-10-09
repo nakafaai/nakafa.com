@@ -76,7 +76,6 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
   ) {
     const writer = yield* DatabaseWriter;
     const previousPlan = user.plan;
-    const timestamp = new Date(now);
     const newCreditConfig = getPlanCreditConfig(newPlan);
     const nextResetTimestamp = yield* resolveCurrentCreditResetTimestamp(
       newPlan,
@@ -125,7 +124,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
             status: subscription.status,
           },
         },
-        timestamp,
+        timestamp: now,
       });
       yield* captureProductEvent({
         distinctId: user._id,
@@ -136,7 +135,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
             previous_plan: previousPlan,
           },
         },
-        timestamp,
+        timestamp: now,
       });
       return;
     }
@@ -183,7 +182,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
             status: subscription.status,
           },
         },
-        timestamp,
+        timestamp: now,
       });
     }
     yield* captureProductEvent({
@@ -195,7 +194,7 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
           previous_plan: previousPlan,
         },
       },
-      timestamp,
+      timestamp: now,
     });
   },
   Effect.catchDefect(flow(toSubscriptionPlanSyncIoError, Effect.fail))

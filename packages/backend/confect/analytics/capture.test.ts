@@ -61,7 +61,7 @@ describe("analytics/capture", () => {
                   name: "content viewed",
                   properties: contentViewProperties,
                 },
-                timestamp: new Date(NOW),
+                timestamp: NOW,
               }).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
@@ -122,7 +122,7 @@ describe("analytics/capture", () => {
                 name: "content viewed",
                 properties: contentViewProperties,
               },
-              timestamp: new Date(NOW),
+              timestamp: NOW,
             }).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(confectSchema, ctx)

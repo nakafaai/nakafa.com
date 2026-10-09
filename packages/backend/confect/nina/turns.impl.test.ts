@@ -118,6 +118,9 @@ describe("native Nina admission", () => {
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
     );
+    expect(vi.mocked(resolveNinaContext).mock.lastCall?.[2]).toBe(
+      new Date(NOW).toISOString()
+    );
     expect(
       Ref.decodeReturnsSync(
         refs.public.nina.turns.start,

@@ -16,7 +16,7 @@ export const ExpectedConvexFailure = Schema.Struct({
 export type ExpectedConvexFailure = typeof ExpectedConvexFailure.Type;
 export const setResponseClock = Effect.fn("test.tryout.response.setClock")(
   (offset: number) =>
-    Effect.sync(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW + offset)))
+    Effect.sync(() => vi.setSystemTime(TRYOUT_TEST_NOW + offset))
 );
 export const readResponseState = Effect.fn("test.tryout.response.readState")(
   (t: ConvexTest, fixture: ResponseFixture) =>

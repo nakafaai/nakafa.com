@@ -230,7 +230,7 @@ Effect.runPromise(
   }).pipe(
     Effect.catchCause((cause) =>
       Effect.sync(() => {
-        writeError(formatScriptCause(cause));
+        cause.pipe(formatScriptCause, writeError);
         process.exitCode = 1;
       })
     ),

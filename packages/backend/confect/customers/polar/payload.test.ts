@@ -9,7 +9,7 @@ import {
   decodePolarSubscription,
   PolarPayloadError,
 } from "@repo/backend/confect/customers/polar/payload";
-import { Effect, Struct } from "effect";
+import { DateTime, Effect, Struct } from "effect";
 
 const individual = {
   avatar_url: null,
@@ -253,11 +253,15 @@ describe("Polar payload contracts", () => {
         recurringInterval: "month",
         status: "active",
       });
-      expect(subscription.createdAt).toEqual(new Date("2026-09-01T00:00:00Z"));
-      expect(subscription.currentPeriodEnd).toEqual(
-        new Date("2026-10-01T00:00:00.123Z")
+      expect(subscription.createdAt).toEqual(
+        DateTime.toDateUtc(DateTime.makeUnsafe("2026-09-01T00:00:00Z"))
       );
-      expect(subscription.startedAt).toEqual(new Date("2026-09-01T00:00:00Z"));
+      expect(subscription.currentPeriodEnd).toEqual(
+        DateTime.toDateUtc(DateTime.makeUnsafe("2026-10-01T00:00:00.123Z"))
+      );
+      expect(subscription.startedAt).toEqual(
+        DateTime.toDateUtc(DateTime.makeUnsafe("2026-09-01T00:00:00Z"))
+      );
     })
   );
 

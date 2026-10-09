@@ -18,7 +18,8 @@ export type ProductAnalyticsCtx = Pick<MutationCtx, "db" | "scheduler">;
 const ProductAnalyticsCaptureArgsSchema = Schema.Struct({
   distinctId: IdSchema("users"),
   event: productAnalyticsEventValidator,
-  timestamp: Schema.optionalKey(Schema.Date),
+  /** Event time as epoch milliseconds. */
+  timestamp: Schema.optionalKey(Schema.Finite),
 });
 export type ProductAnalyticsCaptureArgs =
   typeof ProductAnalyticsCaptureArgsSchema.Type;
@@ -62,7 +63,7 @@ export const captureProductEvent = Effect.fn(
           ...(timestamp === undefined
             ? {}
             : {
-                timestamp: timestamp.getTime(),
+                timestamp,
               }),
         }
       )

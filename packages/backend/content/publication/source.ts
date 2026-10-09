@@ -45,4 +45,4 @@ export class PublicationSource extends Context.Service<
       limit: number
     ) => Effect.Effect<readonly PublicationRow<"contentKeys">[], ReleaseError>;
   }
->()("content/PublicationSource") {}
+>()("@repo/backend/content/publication/source/PublicationSource") {}
