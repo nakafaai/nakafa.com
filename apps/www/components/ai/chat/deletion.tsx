@@ -6,12 +6,14 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
+import { requireConvexOnline } from "@/lib/convex/online";
 import { useViewer } from "@/lib/identity/client";
 
 /** Owns destructive confirmation and routes away only after confirmed deletion. */
@@ -30,35 +32,35 @@ export function ChatDeletion({
   const user = useViewer((s) => s.account);
   const [isPending, startTransition] = useTransition();
   const deleteChat = useDeleteChatMutation();
+  const convex = useConvex();
   /** Leave the current route and delete the owned chat. */
   const handleDelete = () => {
     if (!user || isPending) {
       return;
     }
-    onOpenChange(false);
     startTransition(async () =>
       Effect.runPromise(
-        Effect.tryPromise(() =>
-          deleteChat({
-            chatId: chat._id,
-          })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
+        requireConvexOnline(convex).pipe(
+          Effect.tap(() => Effect.sync(() => onOpenChange(false))),
+          Effect.andThen(
+            Effect.tryPromise(() => deleteChat({ chatId: chat._id })).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tapError((error) =>
+                reportClientException(error, {
+                  source: "components/ai/chat/deletion",
+                })
+              )
+            )
+          ),
           Effect.tap(() =>
             Effect.sync(() => router.replace(`/user/${user.appUser._id}/chat`))
           ),
           Effect.matchEffect({
             onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/ai/chat/deletion",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(actionErrorMessage);
-                  })
-                )
-              ),
+            onFailure: () =>
+              Effect.sync(() => {
+                toast.error(actionErrorMessage);
+              }),
           })
         )
       )

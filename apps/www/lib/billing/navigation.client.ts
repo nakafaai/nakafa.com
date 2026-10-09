@@ -3,12 +3,14 @@
 import { useAction } from "@confect/react";
 import customers from "@repo/backend/confect/_generated/refs/customers";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
+import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { billingNavigationProgram } from "@/lib/billing/navigation";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 const BillingSourceSchema = Schema.Struct({
   source: Schema.String,
@@ -20,6 +22,7 @@ type BillingSource = typeof BillingSourceSchema.Type;
 export function useBillingNavigation() {
   const t = useTranslations("Auth");
   const [isPending, startTransition] = useTransition();
+  const convex = useConvex();
   const createCheckout = useAction(
     customers.actions.sessions.generateCheckoutLink
   );
@@ -37,15 +40,19 @@ export function useBillingNavigation() {
           navigate: (url) => {
             window.location.href = url;
           },
-          onFailure: (cause) =>
-            reportClientException(cause, { source: failure.source }).pipe(
-              Effect.tap(() =>
-                Effect.sync(() => {
-                  toast.error(failure.message, { position: "bottom-center" });
-                })
+          onFailure: () =>
+            Effect.sync(() => {
+              toast.error(failure.message, { position: "bottom-center" });
+            }),
+          request: requireConvexOnline(convex).pipe(
+            Effect.andThen(
+              request.pipe(
+                Effect.tapError((cause) =>
+                  reportClientException(cause, { source: failure.source })
+                )
               )
-            ),
-          request,
+            )
+          ),
         })
       )
     );

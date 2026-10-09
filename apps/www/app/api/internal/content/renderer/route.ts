@@ -20,7 +20,7 @@ export const GET = (request: NextRequest) =>
   Effect.runPromise(
     Effect.gen(function* () {
       const authorization = request.headers.get("Authorization");
-      const isInternalAuthorized = isInternalContentAuthorized(
+      const isInternalAuthorized = yield* isInternalContentAuthorized(
         authorization,
         rendererAuth.AKSARA_PUBLICATION_TOKEN
       );
@@ -45,7 +45,7 @@ export const GET = (request: NextRequest) =>
         return unauthorizedResponse;
       }
 
-      const isPreviewAuthorized = isInternalContentAuthorized(
+      const isPreviewAuthorized = yield* isInternalContentAuthorized(
         authorization,
         Redacted.value(previewConfig.value.token)
       );

@@ -18,6 +18,7 @@ import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { DEFAULT_TITLE } from "@repo/backend/confect/nina/presentation.spec";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
+import { sha256Hex } from "@repo/utilities/digest";
 import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
@@ -48,19 +49,8 @@ const start = FunctionImpl.make(
       args.modelId,
       args.input,
     ]).pipe(Effect.mapError(writeFailure));
-    const digest = yield* Effect.tryPromise({
-      try: () =>
-        crypto.subtle.digest(
-          "SHA-256",
-          new TextEncoder().encode(fingerprintText)
-        ),
-      catch: writeFailure,
-    });
-    const fingerprint = Arr.join(
-      Array.from(new Uint8Array(digest), (byte) =>
-        byte.toString(16).padStart(2, "0")
-      ),
-      ""
+    const fingerprint = yield* sha256Hex(fingerprintText).pipe(
+      Effect.mapError(writeFailure)
     );
     const existing = yield* reader
       .table("ninaTurns")
