@@ -3,8 +3,8 @@ import { HttpClient } from "@confect/js";
 import {
   createNetworkRequestError,
   isRetryableNetworkError,
-  NETWORK_ATTEMPT_DEADLINE,
-  NETWORK_RETRY_SCHEDULE,
+  RetryableNetworkAttempt,
+  retryNetworkAttempt,
 } from "@repo/backend/client/network";
 import { Data, Effect, Layer, Result, Schema } from "effect";
 import { env } from "@/env";
@@ -78,18 +78,17 @@ export const withQueryRetry = <E, R>(
         ref: Query,
         ...rest: OptionalArgs<Query>
       ) =>
-        client.query(ref, ...rest).pipe(
-          Effect.timeoutOrElse({
-            duration: NETWORK_ATTEMPT_DEADLINE,
-            orElse: () =>
-              Effect.fail(
-                new HttpClient.HttpClientError({ cause: new QueryDeadline() })
-              ),
-          }),
-          Effect.retry({
-            schedule: NETWORK_RETRY_SCHEDULE,
-            while: isTransientQueryFailure,
-          }),
+        retryNetworkAttempt(
+          client.query(ref, ...rest).pipe(
+            // Only a transient failure joins the shared retry schedule.
+            Effect.mapError((error) =>
+              isTransientQueryFailure(error)
+                ? new RetryableNetworkAttempt({ failure: error })
+                : error
+            )
+          ),
+          new HttpClient.HttpClientError({ cause: new QueryDeadline() })
+        ).pipe(
           Effect.tapError((error) =>
             isTransientQueryFailure(error)
               ? Effect.logWarning("A Convex query failed after its retries.")

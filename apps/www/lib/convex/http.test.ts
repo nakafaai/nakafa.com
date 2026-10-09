@@ -166,7 +166,9 @@ describe("Convex HTTP query retries", () => {
       const query = scriptQuery(Effect.fail(failure));
       const messages = MutableList.make<unknown>();
 
-      expect(yield* runQuery(messages)).toStrictEqual(Exit.fail(failure));
+      expect(
+        Option.getOrUndefined(Exit.findErrorOption(yield* runQuery(messages)))
+      ).toBe(failure);
       expect(query.runs()).toBe(1);
       expect(MutableList.toArray(messages)).toEqual([]);
     })
@@ -178,7 +180,9 @@ describe("Convex HTTP query retries", () => {
       const query = scriptQuery(Effect.fail(failure));
       const messages = MutableList.make<unknown>();
 
-      expect(yield* runQuery(messages)).toStrictEqual(Exit.fail(failure));
+      expect(
+        Option.getOrUndefined(Exit.findErrorOption(yield* runQuery(messages)))
+      ).toBe(failure);
       expect(query.runs()).toBe(3);
       expect(MutableList.toArray(messages)).toEqual([
         ["A Convex query failed after its retries."],
@@ -192,7 +196,9 @@ describe("Convex HTTP query retries", () => {
       const query = scriptQuery(Effect.fail(failure));
       const messages = MutableList.make<unknown>();
 
-      expect(yield* runQuery(messages)).toStrictEqual(Exit.fail(failure));
+      expect(
+        Option.getOrUndefined(Exit.findErrorOption(yield* runQuery(messages)))
+      ).toBe(failure);
       expect(query.runs()).toBe(1);
       expect(MutableList.toArray(messages)).toEqual([]);
     })
