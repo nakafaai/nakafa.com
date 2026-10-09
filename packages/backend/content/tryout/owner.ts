@@ -1,7 +1,7 @@
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { loadActiveSnapshot } from "@repo/backend/content/publication/snapshot";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Finds one active try-out snapshot whose question bodies are also active. */
 export const findTryoutOwner = Effect.fn("contentRelease.findTryoutOwner")(
@@ -11,7 +11,7 @@ export const findTryoutOwner = Effect.fn("contentRelease.findTryoutOwner")(
       return Option.none();
     }
     const families = yield* loadReleaseFamilies(selected.active.release);
-    if (!families.result.includes("question")) {
+    if (!Arr.contains(families.result, "question")) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         "The active try-out release does not own its signed questions."

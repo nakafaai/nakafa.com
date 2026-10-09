@@ -78,7 +78,7 @@ export const readPageCatalog = Effect.fn("contentRelease.readPageCatalog")(
       };
     }
     const families = yield* loadReleaseFamilies(active.release);
-    if (!families.result.includes("page")) {
+    if (!Arr.contains(families.result, "page")) {
       return {
         activeReleaseId: active.releaseId,
         managed: false,

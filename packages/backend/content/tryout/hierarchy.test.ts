@@ -30,7 +30,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 
 const trackIdentity = {
   countryKey: TRYOUT_START_COUNTRY,
@@ -104,12 +104,12 @@ describe("signed try-out hierarchy relationships", () => {
             )
           );
           const index = yield* indexPublishedCatalog(catalog);
-          const set = index.sets.at(0);
-          if (set === undefined) {
+          const set = Arr.head(index.sets);
+          if (Option.isNone(set)) {
             return yield* Effect.die("Expected a signed set.");
           }
           expect(
-            yield* readPublishedSetParents(index, set).pipe(Effect.flip)
+            yield* readPublishedSetParents(index, set.value).pipe(Effect.flip)
           ).toMatchObject({
             code: "CONTENT_RELEASE_INTEGRITY",
           });
@@ -171,12 +171,12 @@ describe("signed try-out hierarchy relationships", () => {
             )
           );
           const index = yield* indexPublishedCatalog(changed);
-          const set = index.sets.at(0);
-          if (set === undefined) {
+          const set = Arr.head(index.sets);
+          if (Option.isNone(set)) {
             return yield* Effect.die("Expected a signed set.");
           }
           expect(
-            yield* readPublishedSetSections(index, set).pipe(Effect.flip)
+            yield* readPublishedSetSections(index, set.value).pipe(Effect.flip)
           ).toMatchObject({
             code: "CONTENT_RELEASE_INTEGRITY",
           });

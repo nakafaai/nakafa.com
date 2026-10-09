@@ -272,7 +272,7 @@ describe("program route relationship integrity", () => {
             const routes = Arr.map(paths, (path, index) =>
               nestedRoute(path, `level-${index}`)
             );
-            const requested = routes.at(-1);
+            const requested = Option.getOrThrow(Arr.last(routes));
             assert(requested);
             yield* activateProgramSnapshot(data);
             yield* stageRoutes(data.snapshotId, routes);

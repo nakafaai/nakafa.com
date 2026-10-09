@@ -2,7 +2,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Loads article ownership only after its active read model is complete. */
 export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
@@ -16,7 +16,7 @@ export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
       };
     }
     const families = yield* loadReleaseFamilies(active.release);
-    if (!families.result.includes("article")) {
+    if (!Arr.contains(families.result, "article")) {
       return {
         active,
         managed: false,
