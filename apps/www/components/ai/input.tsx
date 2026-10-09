@@ -97,17 +97,17 @@ export function NinaInput({
           autoFocus={autoFocus}
           className="text-(length:--text-chat) md:text-(length:--text-chat) px-3 py-3"
           onChange={(event) => setText(event.target.value)}
-          onFocus={() => {
+          onFocus={() =>
             // Load the stylesheet's math faces before streamed formulas arrive.
-            return Effect.runPromise(
+            Effect.runPromise(
               Effect.tryPromise(() =>
                 Promise.all([
                   document.fonts.load("16px KaTeX_Main"),
                   document.fonts.load("italic 16px KaTeX_Math"),
                 ])
               ).pipe(Effect.ignore)
-            );
-          }}
+            )
+          }
           placeholder={t("text-placeholder")}
           value={text}
         />
