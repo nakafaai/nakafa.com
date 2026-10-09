@@ -301,7 +301,7 @@ describe("tryouts/queries/sets", () => {
         expect(first.isDone).toBe(false);
         expect(grown.isDone).toBe(true);
         expect(grown.page).toHaveLength(125);
-        expect(grown.page.slice(0, 25)).toEqual(first.page);
+        expect(Arr.take(grown.page, 25)).toEqual(first.page);
         expect(
           Arr.dedupe(Arr.map(grown.page, ({ setKey }) => setKey)).length
         ).toBe(125);
@@ -324,7 +324,7 @@ describe("tryouts/queries/sets", () => {
         expect(refreshed.snapshotId).toBe(grown.snapshotId);
         expect(
           Arr.map(
-            refreshed.page.slice(0, 2),
+            Arr.take(refreshed.page, 2),
             ({ publishedScore }) => publishedScore
           )
         ).toEqual([0, 0]);

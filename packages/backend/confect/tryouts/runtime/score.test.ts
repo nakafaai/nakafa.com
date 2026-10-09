@@ -24,7 +24,7 @@ import {
   seedFrozenTryoutScoreState,
 } from "@repo/backend/test/tryout/score";
 import { convexTest } from "convex-test";
-import { Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Option, Record as Rec } from "effect";
 
 describe("tryouts/runtime/score", () => {
   it("masks unexpected owned attempt lookup failures", async () => {
@@ -146,7 +146,9 @@ describe("tryouts/runtime/score", () => {
               }
               const choice =
                 placement.responseSpec.kind === "single-choice"
-                  ? placement.responseSpec.options.at(0)
+                  ? Option.getOrUndefined(
+                      Arr.head(placement.responseSpec.options)
+                    )
                   : undefined;
               if (!choice) {
                 return yield* Effect.die("Expected one frozen try-out choice.");
@@ -267,7 +269,9 @@ describe("tryouts/runtime/score", () => {
                 const section = yield* Effect.promise(() =>
                   ctx.db.get(fixture.sectionAttemptId)
                 );
-                const snapshot = attempt?.sectionSnapshots.at(0);
+                const snapshot = Option.getOrUndefined(
+                  Arr.head(attempt?.sectionSnapshots ?? [])
+                );
                 if (!(attempt && placement && section && snapshot)) {
                   return yield* Effect.die(
                     "Expected a complete try-out integrity fixture."

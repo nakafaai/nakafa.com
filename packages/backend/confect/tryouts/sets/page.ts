@@ -44,7 +44,10 @@ export const paginatePublishedSets = Effect.fn(
   // A growing first-page subscription never exceeds the verified whole-catalog ceiling.
   const size = Math.min(pagination.numItems, TRYOUT_CATALOG_LIMIT);
   const end = Math.min(offset + size, rows.length);
-  const page = Arr.map(rows.slice(offset, end), projectPublishedSet);
+  const page = Arr.map(
+    Arr.take(Arr.drop(rows, offset), end - offset),
+    projectPublishedSet
+  );
   const isDone = end >= rows.length;
   return {
     continueCursor: isDone ? "" : encodeCursor(snapshotId, revision, end),

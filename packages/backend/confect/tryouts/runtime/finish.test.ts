@@ -24,7 +24,7 @@ import {
 } from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const EXPIRED_AT = NOW - 1000;
@@ -251,7 +251,9 @@ describe("tryouts/runtime/finish", () => {
         const attempt = await ctx.db.get(fixture.attemptId);
         const placement = await ctx.db.get(fixture.placementId);
         const section = await ctx.db.get(fixture.sectionAttemptId);
-        const snapshot = attempt?.sectionSnapshots.at(0);
+        const snapshot = Option.getOrUndefined(
+          Arr.head(attempt?.sectionSnapshots ?? [])
+        );
         assert(attempt && placement && section && snapshot);
         if (kind === "attempt question total mismatch") {
           await ctx.db.patch(attempt._id, {
@@ -343,7 +345,9 @@ describe("tryouts/runtime/finish", () => {
       });
       const signedSectionFixture = makeSignedTryoutSection(section);
       const signedSection = signedSectionFixture.signed;
-      const signedPlacement = signedSection.placements.at(0);
+      const signedPlacement = Option.getOrUndefined(
+        Arr.head(signedSection.placements)
+      );
       assert.isDefined(
         signedPlacement,
         "Expected one signed try-out placement fixture."
