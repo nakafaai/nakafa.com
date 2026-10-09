@@ -1,5 +1,6 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { ORGANIZATION_REFERENCE } from "@repo/seo/json-ld/constants";
+import { Schema } from "effect";
 import { type Locale, useTranslations } from "next-intl";
 import type { SearchAction, WebSite, WithContext } from "schema-dts";
 import { JsonLd } from ".";
@@ -8,6 +9,11 @@ interface Props {
   locale: Locale;
 }
 
+/** The query-input property that a schema.org search action adds to its SearchAction. */
+const SearchActionInputSchema = Schema.Struct({
+  "query-input": Schema.String,
+});
+
 const searchAction = {
   "@type": "SearchAction",
   target: {
@@ -15,7 +21,7 @@ const searchAction = {
     urlTemplate: `${COMPANY_IDENTITY.url}/search?q={search_term_string}`,
   },
   "query-input": "required name=search_term_string",
-} satisfies SearchAction & { "query-input": string };
+} satisfies SearchAction & typeof SearchActionInputSchema.Type;
 
 export function WebsiteJsonLd({ locale }: Props) {
   const t = useTranslations("Metadata");
