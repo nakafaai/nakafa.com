@@ -134,13 +134,13 @@ function optimisticPrompt(
   };
 }
 
-/** A call refused while offline fails like a transport failure that sent nothing. */
+/** A call refused while offline shows the connection failure and its retry, without a report. */
 function requireNinaConnection(convex: ConvexReactClient) {
   return requireConvexOnline(convex).pipe(
     Effect.mapError(
       (offline) =>
         new NinaConnectionError({
-          code: "NINA_CONNECTION_FAILED",
+          code: "NINA_OFFLINE",
           message: offline.message,
         })
     )

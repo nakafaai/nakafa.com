@@ -1,5 +1,6 @@
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import { Effect, Fiber } from "effect";
+import { TestClock } from "effect/testing";
 import {
   ConvexOfflineError,
   isConvexOffline,
@@ -7,14 +8,24 @@ import {
 } from "@/lib/convex/online";
 
 type ConnectionState = Parameters<typeof isConvexOffline>[0];
+type Reading = Pick<
+  ConnectionState,
+  "connectionCount" | "connectionRetries" | "isWebSocketConnected"
+>;
+
+const CONNECTED: Reading = {
+  connectionCount: 1,
+  connectionRetries: 0,
+  isWebSocketConnected: true,
+};
+const DROPPED: Reading = {
+  connectionCount: 1,
+  connectionRetries: 0,
+  isWebSocketConnected: false,
+};
 
 /** Builds a connection state whose fields the rule does not read are at rest. */
-function connection(
-  state: Pick<
-    ConnectionState,
-    "connectionCount" | "connectionRetries" | "isWebSocketConnected"
-  >
-): ConnectionState {
+function connection(state: Reading): ConnectionState {
   return {
     ...state,
     hasEverConnected: state.connectionCount > 0,
@@ -25,12 +36,35 @@ function connection(
   };
 }
 
-/** Builds the part of the Convex client the guard reads at the moment of a call. */
-function client(state: Parameters<typeof connection>[0]) {
-  return { connectionState: () => connection(state) };
+/** Builds the part of the Convex client the guard reads, with a way to change its state. */
+function client(initial: Reading) {
+  let state = connection(initial);
+  let subscribers = 0;
+  let notify = (_state: ConnectionState) => undefined;
+  return {
+    change: (next: Reading) => {
+      state = connection(next);
+      notify(state);
+    },
+    connectionState: () => state,
+    subscribers: () => subscribers,
+    subscribeToConnectionState: (
+      callback: (state: ConnectionState) => undefined
+    ) => {
+      subscribers += 1;
+      notify = callback;
+      return () => {
+        subscribers -= 1;
+      };
+    },
+  };
 }
 
 describe("Convex online state", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it.each([
     {
       name: "before the first attempt, not connected",
@@ -51,28 +85,20 @@ describe("Convex online state", () => {
       offline: false,
     },
     {
-      name: "connected after an earlier connection",
-      state: {
-        connectionCount: 2,
-        connectionRetries: 0,
-        isWebSocketConnected: true,
-      },
+      name: "connected after one connection",
+      state: CONNECTED,
       offline: false,
     },
     {
-      name: "not connected after an earlier connection",
-      state: {
-        connectionCount: 2,
-        connectionRetries: 0,
-        isWebSocketConnected: false,
-      },
+      name: "not connected after one connection",
+      state: DROPPED,
       offline: true,
     },
     {
-      name: "not connected after failed attempts only",
+      name: "not connected after one failed attempt",
       state: {
         connectionCount: 0,
-        connectionRetries: 3,
+        connectionRetries: 1,
         isWebSocketConnected: false,
       },
       offline: true,
@@ -81,51 +107,72 @@ describe("Convex online state", () => {
     expect(isConvexOffline(connection(state))).toBe(offline);
   });
 
-  it.effect("fails with ConvexOfflineError while the socket is down", () =>
+  it.effect("lets a call start at once while the socket is connected", () =>
     Effect.gen(function* () {
-      const error = yield* Effect.flip(
-        requireConvexOnline(
-          client({
-            connectionCount: 2,
-            connectionRetries: 0,
-            isWebSocketConnected: false,
-          })
-        )
+      const convex = client(CONNECTED);
+
+      yield* requireConvexOnline(convex);
+
+      expect(convex.subscribers()).toBe(0);
+    })
+  );
+
+  it.effect("lets a call start at once before the first attempt", () =>
+    Effect.gen(function* () {
+      const convex = client({
+        connectionCount: 0,
+        connectionRetries: 0,
+        isWebSocketConnected: false,
+      });
+
+      yield* requireConvexOnline(convex);
+
+      expect(convex.subscribers()).toBe(0);
+    })
+  );
+
+  it.effect(
+    "waits for a socket that returns, such as after a session refresh",
+    () =>
+      Effect.gen(function* () {
+        const convex = client(DROPPED);
+        const fiber = yield* Effect.forkChild(requireConvexOnline(convex));
+        yield* TestClock.adjust("4 seconds");
+        expect(convex.subscribers()).toBe(1);
+
+        convex.change(CONNECTED);
+        yield* Fiber.join(fiber);
+
+        expect(convex.subscribers()).toBe(0);
+      })
+  );
+
+  it.effect("refuses a call when the socket stays down for five seconds", () =>
+    Effect.gen(function* () {
+      const convex = client(DROPPED);
+      const fiber = yield* Effect.forkChild(
+        Effect.flip(requireConvexOnline(convex))
       );
+      yield* TestClock.adjust("4999 millis");
+      expect(fiber.pollUnsafe()).toBeUndefined();
+
+      yield* TestClock.adjust("1 millis");
+      const error = yield* Fiber.join(fiber);
 
       expect(error).toBeInstanceOf(ConvexOfflineError);
+      expect(convex.subscribers()).toBe(0);
     })
   );
 
-  it.effect("succeeds before the first attempt", () =>
+  it.effect("refuses at once when the browser reports no network", () =>
     Effect.gen(function* () {
-      const result = yield* Effect.result(
-        requireConvexOnline(
-          client({
-            connectionCount: 0,
-            connectionRetries: 0,
-            isWebSocketConnected: false,
-          })
-        )
-      );
+      vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+      const convex = client(CONNECTED);
 
-      expect(Result.isSuccess(result)).toBe(true);
-    })
-  );
+      const error = yield* Effect.flip(requireConvexOnline(convex));
 
-  it.effect("succeeds while the socket is connected", () =>
-    Effect.gen(function* () {
-      const result = yield* Effect.result(
-        requireConvexOnline(
-          client({
-            connectionCount: 2,
-            connectionRetries: 0,
-            isWebSocketConnected: true,
-          })
-        )
-      );
-
-      expect(Result.isSuccess(result)).toBe(true);
+      expect(error).toBeInstanceOf(ConvexOfflineError);
+      expect(convex.subscribers()).toBe(0);
     })
   );
 });

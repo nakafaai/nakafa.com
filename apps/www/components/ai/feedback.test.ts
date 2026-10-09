@@ -44,6 +44,24 @@ describe("chat runtime feedback", () => {
     );
   }
 
+  it.effect("shows a call refused offline without recording an exception", () =>
+    Effect.gen(function* () {
+      yield* reportNinaFailure(
+        new NinaConnectionError({
+          code: "NINA_OFFLINE",
+          message: "Convex is offline, so the request was not started.",
+        }),
+        copy.fallbackMessage
+      );
+
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+        copy.fallbackMessage,
+        { position: "bottom-center" }
+      );
+      expect(captureException).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("reports an unexpected failure with generic user copy", () =>
     Effect.gen(function* () {
       const error = new NinaConnectionError({

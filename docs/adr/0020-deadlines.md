@@ -32,12 +32,18 @@ Convex React hook calls get no client deadline.
 - The analytics consent write is the one bounded hook call. Its server write
   returns the stored decision when the decision already matches, and a newer
   decision interrupts the older save.
-- A hook call whose answer starts a navigation, a clock, or a redirect is
-  refused before it starts while the socket is down. `requireConvexOnline` in
-  `apps/www/lib/convex/online.ts` reads the client's connection state at the
-  moment of the call, and the call site shows its usual failure at once.
-  Nothing was queued, so that failure is true, and it is not reported as an
-  exception. The call does not need a deadline.
+- A hook call whose answer starts a navigation, a clock, or a redirect starts
+  only while the client is online. `requireConvexOnline` in
+  `apps/www/lib/convex/online.ts` stands in front of the call. It refuses at
+  once when the browser reports no network. When the client has no socket it
+  waits up to five seconds for it, because a session refresh and a first
+  reconnect restore it in under two, and refuses after that. The call site
+  then shows its usual failure. Nothing was queued, so that failure is true,
+  and it is not reported as an exception. The call does not need a deadline.
+- The guard reads what the browser and the client report. A socket that is
+  dead but not yet closed, and a socket paused for a session token, still read
+  as connected: a call started then is stored and delivered when the client
+  recovers, as before.
 - A mutation that was already sent when the socket drops stays pending with
   its control, and the client delivers it after the reconnect. The guard does
   not end it: an error there would again report a failure for a write that
