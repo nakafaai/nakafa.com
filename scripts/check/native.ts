@@ -6,6 +6,7 @@ import {
   isAwaitExpression,
   isBinaryExpression,
   isCallExpression,
+  isCaseClause,
   isComputedPropertyName,
   isExportDeclaration,
   isForOfStatement,
@@ -22,6 +23,7 @@ import {
   isSourceFile,
   isStringLiteral,
   isStringLiteralLikeNode,
+  isSwitchStatement,
   isTryStatement,
   isTypeOfExpression,
   type Node,
@@ -118,8 +120,23 @@ function isNodeModuleLoad(node: Node) {
   return loader && namesNodeModule(specifier);
 }
 
-/** Whether a node compares a typeof result against the object tag. */
+/**
+ * Whether a node compares a typeof result against the object tag, or switches on
+ * a typeof result with an `object` case.
+ */
 function isTypeofObjectComparison(node: Node) {
+  if (isSwitchStatement(node)) {
+    return (
+      isTypeOfExpression(node.expression) &&
+      Arr.some(
+        node.caseBlock.clauses,
+        (clause) =>
+          isCaseClause(clause) &&
+          isStringLiteralLikeNode(clause.expression) &&
+          clause.expression.text === "object"
+      )
+    );
+  }
   if (
     !(
       isBinaryExpression(node) &&

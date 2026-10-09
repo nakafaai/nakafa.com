@@ -86,6 +86,31 @@ const config = require(name);
     })
   );
 
+  it.effect("reports a switch on typeof with an object case", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`export function read(value: unknown) {
+  switch (typeof value) {
+    case "object":
+      return value;
+    default:
+      return null;
+  }
+}
+export function text(value: unknown) {
+  switch (typeof value) {
+    case "string":
+      return value;
+    default:
+      return "";
+  }
+}
+`),
+        ["2 typeof-object"]
+      );
+    })
+  );
+
   it.effect("reports raw failure handling and typeof-object narrowing", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
