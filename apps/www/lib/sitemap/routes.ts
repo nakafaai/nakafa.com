@@ -89,11 +89,12 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       if (!artifact) {
         return yield* missing;
       }
+      const artifactRoutes = Arr.map(artifact.paths, (publicPath) => ({
+        path: routeToPath(publicPath),
+      }));
       return {
         routes: Arr.sortWith(
-          Arr.map(artifact.paths, (publicPath) => ({
-            path: routeToPath(publicPath),
-          })),
+          artifactRoutes,
           (route) => route.path,
           compareSitemapPaths
         ),
@@ -110,13 +111,13 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       if (projections.length === 0) {
         return yield* missing;
       }
+      const projectionRoutes = Arr.map(projections, (projection) => ({
+        lastModified:
+          projection.metadata.dateModified ?? projection.metadata.datePublished,
+        path: routeToPath(projection.publicPath),
+      }));
       const routes = Arr.sortWith(
-        Arr.map(projections, (projection) => ({
-          lastModified:
-            projection.metadata.dateModified ??
-            projection.metadata.datePublished,
-          path: routeToPath(projection.publicPath),
-        })),
+        projectionRoutes,
         (route) => route.path,
         compareSitemapPaths
       );
