@@ -86,22 +86,28 @@ export const writeAuthResponse = Effect.fn("www.auth.proxy.write")(function* (
   return yield* withAuthDeadline(callAuthHandler(handler.POST, request));
 });
 
+/** Every failure that the proxy ends with before it becomes an HTTP answer. */
+type AuthProxyFailure = NetworkRequestError | AuthProxyDeadline;
+
 /** Answers a missed deadline with a 504 and a JSON error body. */
-export const answerAuthDeadline = Effect.catchTag("AuthProxyDeadline", () =>
-  Effect.logWarning(
-    "The Better Auth route did not answer within its deadline."
-  ).pipe(
-    Effect.as(
-      Response.json(
-        {
-          code: "AUTH_PROXY_DEADLINE",
-          message: "The authentication service did not answer in time.",
-        },
-        { status: 504 }
+export const answerAuthDeadline = (
+  self: Effect.Effect<Response, AuthProxyFailure>
+) =>
+  Effect.catchTag(self, "AuthProxyDeadline", () =>
+    Effect.logWarning(
+      "The Better Auth route did not answer within its deadline."
+    ).pipe(
+      Effect.as(
+        Response.json(
+          {
+            code: "AUTH_PROXY_DEADLINE",
+            message: "The authentication service did not answer in time.",
+          },
+          { status: 504 }
+        )
       )
     )
-  )
-);
+  );
 
 /**
  * Builds the Next.js route methods for the Better Auth handler. A network
