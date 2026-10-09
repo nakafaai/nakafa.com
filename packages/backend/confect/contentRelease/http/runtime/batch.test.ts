@@ -19,6 +19,7 @@ import {
   runtimeContentKey,
 } from "@repo/backend/test/content/runtime";
 import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
+import { JsonTextSchema } from "@repo/utilities/json";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
@@ -28,9 +29,7 @@ const batchJson = Schema.encodeUnknownSync(
   Schema.fromJsonString(PublicContentRuntimeBatchRequestSchema)
 );
 /** Encodes a body the contract rejects, keeping its exact invalid wire bytes. */
-const malformedJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const malformedJson = Schema.encodeUnknownSync(JsonTextSchema);
 /** Decodes the found request with the strict contract production uses, so an unmodeled key fails here. */
 const foundRequest = Schema.decodeSync(
   Schema.fromJsonString(PublicContentRuntimeRequestSchema)

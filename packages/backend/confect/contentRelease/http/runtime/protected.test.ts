@@ -15,6 +15,7 @@ import {
   PROTECTED_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
+import { JsonTextSchema } from "@repo/utilities/json";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
@@ -37,9 +38,7 @@ const requestJson = Schema.encodeUnknownSync(
   Schema.fromJsonString(ProtectedContentRuntimeRequestSchema)
 );
 /** Encodes a body the contract rejects, keeping its exact invalid wire bytes. */
-const malformedJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const malformedJson = Schema.encodeUnknownSync(JsonTextSchema);
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
 /** Sends one request through the registered protected Convex route. */

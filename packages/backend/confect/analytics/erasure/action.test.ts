@@ -7,6 +7,7 @@ import {
   PostHogErasureConfigError,
   PostHogErasureRequestError,
 } from "@repo/backend/confect/analytics/erasure/action.spec";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { ConfigProvider, Effect, Schema } from "effect";
 
 const config = {
@@ -14,7 +15,6 @@ const config = {
   host: "https://eu.i.posthog.com",
   projectId: "114144",
 };
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 describe("analytics erasure action", () => {
   it.effect.each([
     "POSTHOG_ERASURE_API_KEY",
@@ -37,7 +37,7 @@ describe("analytics erasure action", () => {
           Effect.flip
         );
         expect(failure).toBeInstanceOf(PostHogErasureConfigError);
-        const serializedFailure = yield* Schema.encodeEffect(JsonText)(
+        const serializedFailure = yield* Schema.encodeEffect(JsonTextSchema)(
           failure
         ).pipe(Effect.orDie);
         expect(serializedFailure).not.toContain("phx_private_test");
@@ -63,7 +63,7 @@ describe("analytics erasure action", () => {
       const request = vi.fn(() =>
         Promise.resolve(
           new Response(
-            Schema.encodeSync(JsonText)({
+            encodeJsonText({
               deletion_errors: [],
               events_queued_for_deletion: true,
               persons_deleted: 1,
@@ -80,7 +80,7 @@ describe("analytics erasure action", () => {
         config,
         request,
       });
-      const body = yield* Schema.encodeEffect(JsonText)({
+      const body = yield* Schema.encodeEffect(JsonTextSchema)({
         delete_events: true,
         delete_recordings: true,
         distinct_ids: ["user-1"],
@@ -106,7 +106,7 @@ describe("analytics erasure action", () => {
         const request = vi.fn(() =>
           Promise.resolve(
             new Response(
-              Schema.encodeSync(JsonText)({
+              encodeJsonText({
                 events_queued_for_deletion: false,
                 persons_deleted: 0,
                 persons_found: 0,
@@ -236,7 +236,7 @@ describe("analytics erasure action", () => {
         request: () =>
           Promise.resolve(
             new Response(
-              Schema.encodeSync(JsonText)({
+              encodeJsonText({
                 deletion_errors: [
                   {
                     person_uuid: "person-1",
@@ -285,7 +285,7 @@ describe("analytics erasure action", () => {
         request: () =>
           Promise.resolve(
             new Response(
-              Schema.encodeSync(JsonText)({
+              encodeJsonText({
                 deletion_errors: [],
                 ...result,
               }),

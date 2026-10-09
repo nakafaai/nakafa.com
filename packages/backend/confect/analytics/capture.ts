@@ -11,9 +11,9 @@ import { hasCurrentConsent } from "@repo/backend/confect/consents/impl";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Duration, Effect, flow, Result, Schema } from "effect";
 
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 export type ProductAnalyticsCtx = Pick<MutationCtx, "db" | "scheduler">;
 const ProductAnalyticsCaptureArgsSchema = Schema.Struct({
   distinctId: IdSchema("users"),
@@ -47,7 +47,7 @@ export const captureProductEvent = Effect.fn(
     if (!(yield* hasProductAnalyticsConsent(distinctId))) {
       return;
     }
-    const properties = yield* Schema.encodeEffect(JsonText)(
+    const properties = yield* Schema.encodeEffect(JsonTextSchema)(
       event.properties
     ).pipe(Effect.orDie);
     yield* scheduler

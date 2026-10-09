@@ -43,10 +43,9 @@ import {
   testRendererJson,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Exit, Schema } from "effect";
 
-/** Encodes raw JSON, so fixtures can carry fields their contract rejects. */
-const RawJson = Schema.fromJsonString(Schema.Unknown);
 const ArtifactJson = Schema.fromJsonString(SignedContentArtifactSchema);
 const ItemJson = Schema.fromJsonString(ContentReleaseItemSchema);
 const ProjectionJson = Schema.fromJsonString(ContentProjectionSchema);
@@ -97,7 +96,7 @@ describe("contentRelease/parse", () => {
         const proof = yield* decodeProofJson(testProofJson());
 
         expect(encodeReleaseJson(release)).toBe(
-          yield* Schema.encodeEffect(RawJson)(release)
+          yield* Schema.encodeEffect(JsonTextSchema)(release)
         );
         expect(
           yield* Schema.decodeEffect(ItemJson, { onExcessProperty: "error" })(
@@ -123,7 +122,7 @@ describe("contentRelease/parse", () => {
     Effect.gen(function* () {
       const current = yield* decodeArtifactJson(testArtifactJson());
       const rejected = yield* decodeArtifactJson(
-        yield* Schema.encodeEffect(RawJson)({
+        yield* Schema.encodeEffect(JsonTextSchema)({
           ...current,
           payload: { ...current.payload, ignored: true },
         })
@@ -139,7 +138,7 @@ describe("contentRelease/parse", () => {
         testProjectionJson()
       );
       const { datePublished, ...metadata } = current.metadata;
-      const storedJson = yield* Schema.encodeEffect(RawJson)({
+      const storedJson = yield* Schema.encodeEffect(JsonTextSchema)({
         ...current,
         metadata: { ...metadata, date: datePublished },
       });
@@ -169,7 +168,7 @@ describe("contentRelease/parse", () => {
           },
         ]) {
           const rejected = yield* decodeProjectionJson(
-            yield* Schema.encodeEffect(RawJson)(value)
+            yield* Schema.encodeEffect(JsonTextSchema)(value)
           ).pipe(Effect.flip);
           expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
         }
@@ -191,7 +190,7 @@ describe("contentRelease/parse", () => {
         // The content contract keeps rejecting unknown manifest fields.
         expect(
           yield* decodeReleaseJson(
-            yield* Schema.encodeEffect(RawJson)({ ...stored, manifest })
+            yield* Schema.encodeEffect(JsonTextSchema)({ ...stored, manifest })
           ).pipe(Effect.flip)
         ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
       })
@@ -235,7 +234,7 @@ describe("contentRelease/parse", () => {
 
       expect(
         yield* decodeProjectionJson(
-          yield* Schema.encodeEffect(RawJson)(incomplete)
+          yield* Schema.encodeEffect(JsonTextSchema)(incomplete)
         ).pipe(Effect.flip)
       ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
     })
