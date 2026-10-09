@@ -178,6 +178,15 @@ export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
         responseText,
       });
     }
-    return (yield* decodeGoogleTokenResponse(responseText)).access_token;
+    const token = yield* decodeGoogleTokenResponse(responseText).pipe(
+      Effect.mapError(
+        () =>
+          new GoogleTokenRequestError({
+            cause: "malformed",
+            message: "Google token response did not contain an access token.",
+          })
+      )
+    );
+    return token.access_token;
   }
 );
