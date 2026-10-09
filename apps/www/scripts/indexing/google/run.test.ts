@@ -317,33 +317,46 @@ describe("runGoogleIndexing", () => {
     }
   );
 
-  it.effect("fails when Google accepts no URL, and writes nothing", () => {
-    const events = MutableList.make<string>();
-    const lines = MutableList.make<string>();
-    return Effect.gen(function* () {
-      const { submissionHistory } = yield* indexingPaths;
-      const memory = memoryFiles(events, []);
-      sitemapOf([FIRST, SECOND]);
-      answerRun(events, [FIRST, SECOND], refused);
+  it.effect.each([
+    {
+      label: "accepts no URL, because each answer is a 500",
+      publish: refused,
+      published: [FIRST, SECOND],
+    },
+    {
+      label: "accepts no URL, because the first answer is a 429",
+      publish: rateLimited,
+      published: [FIRST],
+    },
+  ])(
+    "fails when Google $label, and writes nothing",
+    ({ publish, published }) => {
+      const events = MutableList.make<string>();
+      const lines = MutableList.make<string>();
+      return Effect.gen(function* () {
+        const { submissionHistory } = yield* indexingPaths;
+        const memory = memoryFiles(events, []);
+        sitemapOf([FIRST, SECOND]);
+        answerRun(events, [FIRST, SECOND], publish);
 
-      const failure = yield* runToFailure(runGoogle(memory.layer, lines));
+        const failure = yield* runToFailure(runGoogle(memory.layer, lines));
 
-      expect(failure).toMatchObject({
-        _tag: "GoogleIndexSubmitError",
-        message: "Google Indexing API submission submitted zero queued URLs.",
+        expect(failure).toMatchObject({
+          _tag: "GoogleIndexSubmitError",
+          message: "Google Indexing API submission submitted zero queued URLs.",
+        });
+        expect(MutableList.toArray(events)).toEqual(
+          Arr.map(published, (url) => `publish ${url}`)
+        );
+        expect(MutableHashMap.has(memory.files, submissionHistory)).toBe(false);
+        const logged = MutableList.toArray(lines);
+        expect(logged).toContain(
+          "Low success rate indicates Google API rate limiting or errors."
+        );
+        expect(logged).toContain("Success rate: 0%");
       });
-      expect(MutableList.toArray(events)).toEqual([
-        `publish ${FIRST}`,
-        `publish ${SECOND}`,
-      ]);
-      expect(MutableHashMap.has(memory.files, submissionHistory)).toBe(false);
-      const logged = MutableList.toArray(lines);
-      expect(logged).toContain(
-        "Low success rate indicates Google API rate limiting or errors."
-      );
-      expect(logged).toContain("Success rate: 0%");
-    });
-  });
+    }
+  );
 
   it.effect(
     "stops the whole run at a 429, saves the accepted URLs of that batch, and sends nothing from the next sitemap batch",
@@ -430,11 +443,10 @@ describe("runGoogleIndexing", () => {
     () => {
       const events = MutableList.make<string>();
       const lines = MutableList.make<string>();
-      const urls = Arr.makeBy(501, pageUrl);
       return Effect.gen(function* () {
         const { submissionHistory } = yield* indexingPaths;
         const memory = memoryFiles(events, []);
-        sitemapOf(urls);
+        sitemapOf(Arr.makeBy(501, pageUrl));
         answerRun(events, [pageUrl(500)], accepted);
 
         yield* runToEnd(runGoogle(memory.layer, lines));
@@ -459,13 +471,12 @@ describe("runGoogleIndexing", () => {
     () => {
       const events = MutableList.make<string>();
       const lines = MutableList.make<string>();
-      const urls = Arr.makeBy(501, pageUrl);
       return Effect.gen(function* () {
         const { submissionHistory } = yield* indexingPaths;
         const memory = memoryFiles(events, [
           [submissionHistory, historyWith(pageUrl(0))],
         ]);
-        sitemapOf(urls);
+        sitemapOf(Arr.makeBy(501, pageUrl));
         answerRun(events, [pageUrl(0), pageUrl(500)], accepted);
 
         yield* runToEnd(runGoogle(memory.layer, lines));
