@@ -45,7 +45,7 @@ export const VITEST_COHORT_VERSION = "5.0.3";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.2.1",
-  ai: "7.0.130",
+  ai: "7.0.135",
 } as const;
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [

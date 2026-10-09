@@ -22,8 +22,8 @@ catalogs:
       specifier: 5.0.3
       version: 5.0.3
     ai:
-      specifier: 7.0.130
-      version: 7.0.130
+      specifier: 7.0.135
+      version: 7.0.135
     effect:
       specifier: 4.0.1
       version: 4.0.1
@@ -203,7 +203,7 @@ importers:
         version: 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)(react@19.2.8)
       '@convex-dev/agent':
         specifier: 0.7.7
-        version: 0.7.7(@ai-sdk/provider-utils@5.0.56(zod@4.6.5))(@ai-sdk/provider@4.0.24)(ai@7.0.130(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
+        version: 0.7.7(@ai-sdk/provider-utils@5.0.58(zod@4.6.5))(@ai-sdk/provider@4.0.26)(ai@7.0.135(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/better-auth':
         specifier: 0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.33(next@16.4.0(@babel/core@8.0.5)(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.16)(vitest@5.0.3))(convex@1.46.0(react@19.2.8))(hono@4.13.13)(next@16.4.0(@babel/core@8.0.5)(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
@@ -278,7 +278,7 @@ importers:
         version: 3.9.11(ws@8.22.0)
       ai:
         specifier: 'catalog:'
-        version: 7.0.130(zod@4.6.5)
+        version: 7.0.135(zod@4.6.5)
       any-ascii:
         specifier: ^0.3.3
         version: 0.3.3
@@ -445,13 +445,13 @@ importers:
         version: 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       '@convex-dev/agent':
         specifier: 0.7.7
-        version: 0.7.7(@ai-sdk/provider-utils@5.0.56(zod@4.6.5))(@ai-sdk/provider@4.0.24)(ai@7.0.130(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
+        version: 0.7.7(@ai-sdk/provider-utils@5.0.58(zod@4.6.5))(@ai-sdk/provider@4.0.26)(ai@7.0.135(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/aggregate':
         specifier: ^0.3.1
         version: 0.3.1(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5)
       '@convex-dev/ai-sdk-provider':
         specifier: 'catalog:'
-        version: 0.2.1(ai@7.0.130(zod@4.6.5))(convex@1.46.0(react@19.2.8))
+        version: 0.2.1(ai@7.0.135(zod@4.6.5))(convex@1.46.0(react@19.2.8))
       '@convex-dev/better-auth':
         specifier: 0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.33(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.16)(vitest@5.0.3))(convex@1.46.0(react@19.2.8))(hono@4.13.13)(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
@@ -511,7 +511,7 @@ importers:
         version: 0.12.0
       ai:
         specifier: 'catalog:'
-        version: 7.0.130(zod@4.6.5)
+        version: 7.0.135(zod@4.6.5)
       better-auth:
         specifier: 1.6.33
         version: 1.6.33(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.16)(vitest@5.0.3)
@@ -744,7 +744,7 @@ importers:
         version: 2.0.14
       ai:
         specifier: 'catalog:'
-        version: 7.0.130(zod@4.6.5)
+        version: 7.0.135(zod@4.6.5)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1117,8 +1117,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/gateway@4.0.106':
-    resolution: {integrity: sha512-NprSdFzyVnbEp2SDWtIgsCFIUHFCehOD9S6FQkF/dLrCmnke8w4SOK3KcmUUiEbwtVzlUF8prkaELp+ohcQaQw==}
+  '@ai-sdk/gateway@4.0.109':
+    resolution: {integrity: sha512-5285aXDemutkSNF08ESzp3uUXqnvUCahtq7iaEqwvJNAGY8l8k3G0PGCWNnRg8l18BbDI3nj/bs+/20DkGl4cQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1147,14 +1147,14 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.56':
-    resolution: {integrity: sha512-F7/U1YpVXEfSxRHbxScm0PVdr9lN6GaUWHnt8ws2UjuGeuxWHqCkV25dGpHAkpDHkuIXoC+aak/OqSylKSJmHw==}
+  '@ai-sdk/provider-utils@5.0.58':
+    resolution: {integrity: sha512-iXSwKR/7LpHzAlyrUl+bTinwzmZ3Nmup1viwPisM5Gn5cogRdIG4rV9w1ZDuKFcrXyu/AeVs42E1CX/0aNwrfQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider@4.0.24':
-    resolution: {integrity: sha512-iztFqJTdxNN0ZzqZAAnVPMhRMaL1bfQFa3GIPAffWQ0+dP2FXIkyMD8kHeEI7EpB/C6TR45cqOkrS7YZZ1sATA==}
+  '@ai-sdk/provider@4.0.26':
+    resolution: {integrity: sha512-BZ443uBEq6HuMA+Z4b7Hpm65GpZSo7pWqnYqpf/7tAO3C48JbtvAhOE2JnODFj+jodsZzfRHkAyQb64xuD2tZQ==}
     engines: {node: '>=22'}
 
   '@ai-sdk/provider@4.0.3':
@@ -4219,8 +4219,8 @@ packages:
     resolution: {integrity: sha512-TQf59BsZnytt8GdJKLPfUZ54g/iaUL2OWDSFCCvMOhsHduDQxO8xC4PNeyIkVcA5KwL2phPSv0douC0fgWzmnA==}
     engines: {node: '>= 20'}
 
-  ai@7.0.130:
-    resolution: {integrity: sha512-QkBkCogl46jXUg0SrSsdqQlOI2ZVMCjfnbBQS8t3gE21U/SO17oNMVFyjmcC9z20wOoYUA+2O2vsso0maoS7dw==}
+  ai@7.0.135:
+    resolution: {integrity: sha512-/fR5b8VX2U0U0oMmD0hSrNNWXtT1vVi+BK0He6g3tjOi2m+rerW501WLMw5auDBFbsgg2xdaMqthVMioVhDbDQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -7743,10 +7743,10 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.28(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/gateway@4.0.106(zod@4.6.5)':
+  '@ai-sdk/gateway@4.0.109(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/provider': 4.0.24
-      '@ai-sdk/provider-utils': 5.0.56(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.26
+      '@ai-sdk/provider-utils': 5.0.58(zod@4.6.5)
       '@vercel/oidc': 3.2.0
       zod: 4.6.5
 
@@ -7779,16 +7779,16 @@ snapshots:
       undici: 7.29.1
       zod: 4.6.5
 
-  '@ai-sdk/provider-utils@5.0.56(zod@4.6.5)':
+  '@ai-sdk/provider-utils@5.0.58(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/provider': 4.0.24
+      '@ai-sdk/provider': 4.0.26
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.1
       undici: 7.29.1
       zod: 4.6.5
 
-  '@ai-sdk/provider@4.0.24':
+  '@ai-sdk/provider@4.0.26':
     dependencies:
       json-schema: 0.4.0
 
@@ -8464,11 +8464,11 @@ snapshots:
       convex-test: 0.0.60(convex@1.46.0(react@19.2.8))
       effect: 4.0.1
 
-  '@convex-dev/agent@0.7.7(@ai-sdk/provider-utils@5.0.56(zod@4.6.5))(@ai-sdk/provider@4.0.24)(ai@7.0.130(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)':
+  '@convex-dev/agent@0.7.7(@ai-sdk/provider-utils@5.0.58(zod@4.6.5))(@ai-sdk/provider@4.0.26)(ai@7.0.135(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@ai-sdk/provider': 4.0.24
-      '@ai-sdk/provider-utils': 5.0.56(zod@4.6.5)
-      ai: 7.0.130(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.26
+      '@ai-sdk/provider-utils': 5.0.58(zod@4.6.5)
+      ai: 7.0.135(zod@4.6.5)
       convex: 1.46.0(react@19.2.8)
       convex-helpers: 0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5)
     optionalDependencies:
@@ -8487,12 +8487,12 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/ai-sdk-provider@0.2.1(ai@7.0.130(zod@4.6.5))(convex@1.46.0(react@19.2.8))':
+  '@convex-dev/ai-sdk-provider@0.2.1(ai@7.0.135(zod@4.6.5))(convex@1.46.0(react@19.2.8))':
     dependencies:
       '@ai-sdk/anthropic': 4.0.40(zod@4.6.5)
       '@ai-sdk/openai': 4.0.45(zod@4.6.5)
       '@ai-sdk/openai-compatible': 3.0.14(zod@4.6.5)
-      ai: 7.0.130(zod@4.6.5)
+      ai: 7.0.135(zod@4.6.5)
       convex: 1.46.0(react@19.2.8)
       zod: 4.6.5
 
@@ -10607,11 +10607,11 @@ snapshots:
 
   agent-base@9.0.0: {}
 
-  ai@7.0.130(zod@4.6.5):
+  ai@7.0.135(zod@4.6.5):
     dependencies:
-      '@ai-sdk/gateway': 4.0.106(zod@4.6.5)
-      '@ai-sdk/provider': 4.0.24
-      '@ai-sdk/provider-utils': 5.0.56(zod@4.6.5)
+      '@ai-sdk/gateway': 4.0.109(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.26
+      '@ai-sdk/provider-utils': 5.0.58(zod@4.6.5)
       zod: 4.6.5
 
   ajv-draft-04@1.0.0(ajv@8.20.0):
