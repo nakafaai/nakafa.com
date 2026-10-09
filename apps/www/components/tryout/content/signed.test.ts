@@ -43,14 +43,8 @@ import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { JsonTextSchema } from "@repo/utilities/json";
-import {
-  Array as Arr,
-  type Context,
-  Effect,
-  Layer,
-  Predicate,
-  Schema,
-} from "effect";
+import type { FunctionReference } from "convex/server";
+import { Array as Arr, Effect, Layer, Predicate, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
@@ -66,7 +60,12 @@ const cacheMock = vi.hoisted(() => vi.fn());
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const tokenMock = vi.hoisted(() => vi.fn());
 const queryMock = vi.hoisted(() =>
-  vi.fn<Context.Service.Shape<typeof HttpClient.HttpClient>["query"]>()
+  vi.fn<
+    (
+      functionReference: FunctionReference<"query">,
+      encodedArgs: unknown
+    ) => PromiseLike<unknown>
+  >()
 );
 const siteUrl = "https://runtime.example.test";
 const endpoint = `${siteUrl}${PROTECTED_CONTENT_RUNTIME_PATH}`;
@@ -84,8 +83,15 @@ vi.mock("@confect/js", async (importOriginal) => {
             const client = yield* HttpClient.HttpClient;
             return {
               ...client,
-              query: (reference, ...request) =>
-                queryMock(reference, request[0] ?? {}),
+              query: (reference, ...[args]) => {
+                assert(args !== undefined);
+                return Ref.runWithCodec(
+                  reference,
+                  args,
+                  queryMock,
+                  (cause) => new HttpClient.HttpClientError({ cause })
+                );
+              },
             };
           })
         ).pipe(Layer.provide(HttpClient.layer(...args)));
@@ -166,19 +172,12 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
         (selector) => selector.delivery === "authenticated"
       ),
     };
-    queryMock.mockImplementation((reference, ...args) => {
+    queryMock.mockImplementation((functionReference, encodedArgs) => {
       expect(layerMock).toHaveBeenLastCalledWith("https://test.convex.cloud", {
         auth: "technical-session-token",
       });
-      return Ref.runWithCodec(
-        reference,
-        args[0] ?? {},
-        (functionReference, encodedArgs) => {
-          assert(Predicate.isObject(encodedArgs));
-          return owned.query(functionReference, encodedArgs);
-        },
-        (cause) => new HttpClient.HttpClientError({ cause })
-      );
+      assert(Predicate.isObject(encodedArgs));
+      return owned.query(functionReference, encodedArgs);
     });
     const question = yield* Effect.fromNullishOr(access.questions[0]);
     const answer = yield* Effect.fromNullishOr(access.answers[0]);
@@ -193,6 +192,12 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
     };
   }
 );
+/** Loads the attempt's signed content and returns the failure it must end in. */
+const loadFailure = (
+  fixture: Effect.Success<ReturnType<typeof readOwnedFixture>>
+) =>
+  loadSignedTryoutContent(fixture.attemptId, fixture.access).pipe(Effect.flip);
+
 beforeEach(() => {
   vi.setSystemTime(TRYOUT_TEST_NOW);
   cacheMock.mockReset();
@@ -338,18 +343,11 @@ describe("signed try-out execution", () => {
         );
         expect(row).not.toBeNull();
         const found = yield* Effect.fromNullishOr(row);
-        queryMock.mockReturnValue(
-          Effect.succeed({
-            ...found,
-            items: Arr.take(found.items, 1),
-          })
-        );
-        expect(
-          yield* loadSignedTryoutContent(
-            fixture.attemptId,
-            fixture.access
-          ).pipe(Effect.flip)
-        ).toMatchObject({
+        queryMock.mockResolvedValue({
+          ...found,
+          items: Arr.take(found.items, 1),
+        });
+        expect(yield* loadFailure(fixture)).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause: {
             _tag: "ContentRuntimeVerificationError",
@@ -443,11 +441,7 @@ describe("signed try-out execution", () => {
           })
         )
       );
-      expect(
-        yield* loadSignedTryoutContent(fixture.attemptId, fixture.access).pipe(
-          Effect.flip
-        )
-      ).toMatchObject({
+      expect(yield* loadFailure(fixture)).toMatchObject({
         _tag: "ContentRuntimeVerificationError",
         cause: {
           _tag: "ContentRuntimeMissingError",
@@ -463,23 +457,13 @@ describe("signed try-out execution", () => {
       Effect.gen(function* () {
         const fixture = yield* readOwnedFixture();
         tokenMock.mockResolvedValueOnce(null);
-        expect(
-          yield* loadSignedTryoutContent(
-            fixture.attemptId,
-            fixture.access
-          ).pipe(Effect.flip)
-        ).toMatchObject({
+        expect(yield* loadFailure(fixture)).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause: "Try-out content requires an active session.",
         });
         const cause = new TypeError("Session transport unavailable.");
         tokenMock.mockRejectedValueOnce(cause);
-        expect(
-          yield* loadSignedTryoutContent(
-            fixture.attemptId,
-            fixture.access
-          ).pipe(Effect.flip)
-        ).toMatchObject({
+        expect(yield* loadFailure(fixture)).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause,
         });
@@ -495,13 +479,8 @@ describe("signed try-out execution", () => {
         const cause = new HttpClient.HttpClientError({
           cause: new TypeError("Authorization query unavailable."),
         });
-        queryMock.mockReturnValueOnce(Effect.fail(cause));
-        expect(
-          yield* loadSignedTryoutContent(
-            fixture.attemptId,
-            fixture.access
-          ).pipe(Effect.flip)
-        ).toMatchObject({
+        queryMock.mockRejectedValueOnce(cause.cause);
+        expect(yield* loadFailure(fixture)).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause,
         });

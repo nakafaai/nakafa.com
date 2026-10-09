@@ -4,16 +4,44 @@ import { VISUAL_CARD } from "@/e2e/support/selector";
 
 /**
  * Records, from the first script on, the start time and value of every layout
- * shift the browser reports, in the page global `key`. Pass it to
+ * shift the browser reports, in the page global `key`, with one line per
+ * element that moved: what it is, where it was, and where it went. Pass it to
  * `page.addInitScript` before the page loads, with the global's name.
  */
 export function recordLayoutShifts(key: string) {
-  const shifts: { time: number; value: number }[] = [];
+  const shifts: { sources: string[]; time: number; value: number }[] = [];
   Object.defineProperty(window, key, { value: shifts });
+  const box = (rect: unknown) =>
+    rect instanceof DOMRectReadOnly
+      ? `${Math.round(rect.x)},${Math.round(rect.y)} ${Math.round(rect.width)}x${Math.round(rect.height)}`
+      : "unknown";
+  // The element a source names, or the parent of the text it names.
+  const name = (node: unknown) => {
+    const element = node instanceof Element ? node : null;
+    const owner = element ?? (node instanceof Node ? node.parentElement : null);
+    if (!owner) {
+      return "detached node";
+    }
+    const slot = owner.getAttribute("data-slot");
+    const classes = owner.getAttribute("class") ?? "";
+    return `${owner.tagName.toLowerCase()}${slot ? `[data-slot=${slot}]` : ""} class="${classes.slice(0, 80)}"${element ? "" : " (text)"}`;
+  };
   new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       if ("value" in entry && typeof entry.value === "number") {
-        shifts.push({ time: entry.startTime, value: entry.value });
+        const sources = Array.from<{
+          currentRect: unknown;
+          node: unknown;
+          previousRect: unknown;
+        }>(Reflect.get(entry, "sources") ?? []);
+        shifts.push({
+          sources: sources.map(
+            (source) =>
+              `${name(source.node)}: ${box(source.previousRect)} to ${box(source.currentRect)}`
+          ),
+          time: entry.startTime,
+          value: entry.value,
+        });
       }
     }
   }).observe({ buffered: true, type: "layout-shift" });

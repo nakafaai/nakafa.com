@@ -84,10 +84,13 @@ const browserAnalyticsLoadFailure = () =>
   new BrowserAnalyticsLoadFailed({ code: browserAnalyticsLoadFailedCode });
 
 /** Loads the PostHog browser SDK that the baseline client is built on. */
-const loadBrowserAnalyticsSdk: Effect.Effect<BrowserAnalyticsClient, unknown> =
-  Effect.tryPromise(() => import("posthog-js")).pipe(
-    Effect.map((module) => module.default)
-  );
+const loadBrowserAnalyticsSdk: Effect.Effect<
+  BrowserAnalyticsClient,
+  BrowserAnalyticsLoadFailed
+> = Effect.tryPromise({
+  try: () => import("posthog-js"),
+  catch: browserAnalyticsLoadFailure,
+}).pipe(Effect.map((module) => module.default));
 
 /** Returns the gate to baseline and revokes identity without SDK calls. */
 function revokeGate() {
@@ -128,16 +131,18 @@ function captureInitialPageview(client: BrowserAnalyticsClient) {
  */
 export const enableBaselineAnalytics = Effect.fn(
   "Analytics.enableBaselineAnalytics"
-)(function* (
-  load: Effect.Effect<BrowserAnalyticsClient, unknown> = loadBrowserAnalyticsSdk
-) {
+)(function* <E = never>(load?: Effect.Effect<BrowserAnalyticsClient, E>) {
   return yield* Effect.gen(function* () {
     if (MutableRef.get(analyticsClient)) {
       return;
     }
 
     revokeGate();
-    const client: BrowserAnalyticsClient = yield* load.pipe(
+    const sdk: Effect.Effect<
+      BrowserAnalyticsClient,
+      E | BrowserAnalyticsLoadFailed
+    > = load ?? loadBrowserAnalyticsSdk;
+    const client: BrowserAnalyticsClient = yield* sdk.pipe(
       Effect.mapError(browserAnalyticsLoadFailure)
     );
     const runtimeKeys = yield* Effect.try({

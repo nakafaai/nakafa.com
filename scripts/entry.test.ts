@@ -1,9 +1,9 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Schema } from "effect";
+import { Effect, FileSystem, Result, Schema } from "effect";
 import { runEntry } from "#scripts/entry";
 
 const runtime = vi.hoisted(() => ({
-  runMain: vi.fn<(program: Effect.Effect<unknown, unknown>) => void>(),
+  runMain: vi.fn<(program: Effect.Effect<unknown, EntryFailure>) => void>(),
 }));
 vi.mock("@effect/platform-node/NodeRuntime", () => ({
   runMain: runtime.runMain,
@@ -67,7 +67,9 @@ describe("script entry", () => {
     Effect.gen(function* () {
       const failure = new EntryFailure({ message: "Policy failed." });
       runEntry(true, Effect.fail(failure));
-      assert.strictEqual(yield* runStartedProgram().pipe(Effect.flip), failure);
+      const result = yield* Effect.result(runStartedProgram());
+      assert(Result.isFailure(result));
+      assert.strictEqual(result.failure, failure);
       assert.strictEqual(process.exitCode, undefined);
     })
   );

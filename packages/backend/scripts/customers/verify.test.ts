@@ -142,7 +142,7 @@ const answerQueries =
     args: FunctionArgs<
       typeof internal.customers.integrity.internal.listUsersForCustomerIntegrity
     >,
-    schema: Schema.Top
+    schema: Schema.Codec<unknown>
   ) =>
     answers[getFunctionName(query)](args.paginationOpts.cursor).pipe(
       Effect.flatMap((page) => Schema.decodeUnknownEffect(schema)(page))

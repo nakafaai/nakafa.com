@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
@@ -154,7 +155,7 @@ describe("The production gateway", () => {
         const parts = yield* Stream.runCollect(
           Stream.fromReadableStream({
             evaluate: () => stream,
-            onError: (cause) => cause,
+            onError: () => new GatewayFailure({ reason: "network" }),
           })
         );
         const finish = Arr.findFirst(parts, (part) => part.type === "finish");

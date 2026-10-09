@@ -3,7 +3,7 @@ import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.
 import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 export type ConvexTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 export type ResponseFixture = Effect.Success<
   ReturnType<typeof seedResponseFixture>
@@ -34,7 +34,9 @@ export const expectConvexFailure = Effect.fn(
   operation: () => Promise<unknown>,
   expected: ExpectedConvexFailure
 ) {
-  const failure = yield* Effect.tryPromise(operation).pipe(Effect.flip);
+  const result = yield* Effect.result(Effect.tryPromise(operation));
+  assert(Result.isFailure(result));
+  const failure = result.failure;
   expect(failure.cause).toMatchObject({
     data: expected,
   });
