@@ -142,7 +142,7 @@ function isNodeModuleLoad(node: Node) {
 function isTypeofObjectComparison(node: Node) {
   if (isSwitchStatement(node)) {
     return (
-      isTypeOfExpression(node.expression) &&
+      isTypeOfExpression(unwrapped(node.expression)) &&
       Arr.some(
         node.caseBlock.clauses,
         (clause) =>

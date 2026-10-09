@@ -142,6 +142,33 @@ export function text(value: unknown) {
     })
   );
 
+  it.effect(
+    "reports a switch on a parenthesized or asserted typeof result",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export function parenthesized(value: unknown) {
+  switch ((typeof value)) {
+    case "object":
+      return value;
+    default:
+      return null;
+  }
+}
+export function asserted(value: unknown) {
+  switch ((typeof value) as string) {
+    case "object":
+      return value;
+    default:
+      return null;
+  }
+}
+`),
+          ["2 typeof-object", "10 typeof-object"]
+        );
+      })
+  );
+
   it.effect("reports raw failure handling and typeof-object narrowing", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
