@@ -30,7 +30,7 @@ describe("refs codegen entry", () => {
     "regenerates the refs under the backend package's confect folder",
     () =>
       Effect.gen(function* () {
-        mocks.generate.mockReturnValue(Effect.void);
+        mocks.generate.mockReturnValue(Effect.succeed([]));
         yield* Effect.promise(() => import("@repo/backend/scripts/refs/main"));
         const entry = yield* Effect.fromNullishOr(mocks.getEntry());
         yield* entry;
