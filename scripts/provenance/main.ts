@@ -1,12 +1,12 @@
 import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 import { runEntry } from "#scripts/entry";
-import { SigstoreProvenanceBundleVerifierLive } from "#scripts/github/provenance/bundle";
+import { writeOutput } from "#scripts/output";
+import { SigstoreProvenanceBundleVerifierLive } from "#scripts/provenance/bundle";
 import {
   CliArgumentsSchema,
   ProvenanceVerificationError,
-} from "#scripts/github/provenance/schema";
-import { verifyProvenance } from "#scripts/github/provenance/verify";
-import { writeOutput } from "#scripts/output";
+} from "#scripts/provenance/schema";
+import { verifyProvenance } from "#scripts/provenance/verify";
 
 /** Verifies one transported npm signature audit named by CLI arguments. */
 export const verifyProvenanceAudit = Effect.fn("GithubProvenance.verifyAudit")(

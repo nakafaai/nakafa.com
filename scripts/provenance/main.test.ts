@@ -10,12 +10,12 @@ import {
   Stdio,
 } from "effect";
 import { capture, makeCapture } from "#scripts/capture";
-import { ProvenanceBundleVerifier } from "#scripts/github/provenance/bundle";
-import { verifyProvenanceAudit } from "#scripts/github/provenance/main";
+import { ProvenanceBundleVerifier } from "#scripts/provenance/bundle";
+import { verifyProvenanceAudit } from "#scripts/provenance/main";
 import {
   AuditSchema,
   ProvenanceStatementSchema,
-} from "#scripts/github/provenance/schema";
+} from "#scripts/provenance/schema";
 
 const SLSA_PREDICATE = "https://slsa.dev/provenance/v1";
 const PACKAGE_SHA512 = "ab".repeat(64);

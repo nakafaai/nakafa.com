@@ -5,8 +5,8 @@ import {
   ProvenanceBundleVerifier,
   publisherPolicy,
   SigstoreProvenanceBundleVerifierLive,
-} from "#scripts/github/provenance/bundle";
-import type { PublisherIdentity } from "#scripts/github/provenance/schema";
+} from "#scripts/provenance/bundle";
+import type { PublisherIdentity } from "#scripts/provenance/schema";
 
 const sigstore = vi.hoisted(() => ({
   verify: vi.fn<(bundle: unknown, options: unknown) => Promise<unknown>>(),

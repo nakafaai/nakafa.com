@@ -4,7 +4,7 @@ import { type VerifyOptions, verify as verifySigstore } from "sigstore";
 import {
   ProvenanceVerificationError,
   type PublisherIdentity,
-} from "#scripts/github/provenance/schema";
+} from "#scripts/provenance/schema";
 
 const GITHUB_ISSUER = "https://token.actions.githubusercontent.com";
 const GITHUB_REPOSITORY_PREFIX = "https://github.com/";
@@ -13,17 +13,20 @@ const GITHUB_REPOSITORY_PREFIX = "https://github.com/";
 export class ProvenanceBundleVerifier extends Context.Service<
   ProvenanceBundleVerifier,
   {
+    /** Verifies one untrusted bundle against the exact publisher identity. */
     readonly verify: (
       bundle: unknown,
       identity: PublisherIdentity
     ) => Effect.Effect<string, ProvenanceVerificationError>;
   }
->()("nakafa/scripts/github/provenance/bundle/ProvenanceBundleVerifier") {}
+>()("scripts/provenance/bundle/ProvenanceBundleVerifier") {}
 
+/** Escapes one exact certificate identity for anchored regular-expression matching. */
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }
 
+/** Encodes one short GitHub certificate extension as a DER UTF-8 string. */
 function derUtf8(value: string) {
   return `${String.fromCharCode(12, Buffer.byteLength(value))}${value}`;
 }
@@ -48,41 +51,44 @@ export function publisherPolicy(identity: PublisherIdentity): VerifyOptions {
   };
 }
 
-const normalizeBundle = Effect.fn("GithubProvenance.normalizeBundle")(
-  function* (bundle: unknown) {
-    return yield* Effect.try({
-      try: () => bundleToJSON(bundleFromJSON(bundle)),
-      catch: (cause) =>
-        new ProvenanceVerificationError({
-          cause,
-          message: "The npm audit returned an invalid Sigstore bundle.",
-        }),
-    });
-  }
-);
+/** Converts untrusted npm audit JSON into one validated serialized bundle. */
+const normalizeBundle = Effect.fn("Provenance.normalizeBundle")(function* (
+  bundle: unknown
+) {
+  return yield* Effect.try({
+    catch: (cause) =>
+      new ProvenanceVerificationError({
+        cause,
+        message: "The npm audit returned an invalid Sigstore bundle.",
+      }),
+    try: () => bundleToJSON(bundleFromJSON(bundle)),
+  });
+});
 
-const verifySigstoreBundle = Effect.fn("GithubProvenance.verifyBundle")(
-  function* (bundle: unknown, identity: PublisherIdentity) {
-    const serialized = yield* normalizeBundle(bundle);
-    if (!("dsseEnvelope" in serialized && serialized.dsseEnvelope)) {
-      return yield* new ProvenanceVerificationError({
-        message: "The npm provenance bundle has no signed DSSE payload.",
-      });
-    }
-    yield* Effect.tryPromise({
-      try: () => verifySigstore(serialized, publisherPolicy(identity)),
-      catch: (cause) =>
-        new ProvenanceVerificationError({
-          cause,
-          message:
-            "The npm provenance signer does not match the trusted publisher.",
-        }),
+/** Verifies one bundle against the exact certificate policy. */
+const verifySigstoreBundle = Effect.fn("Provenance.verifyBundle")(function* (
+  bundle: unknown,
+  identity: PublisherIdentity
+) {
+  const serialized = yield* normalizeBundle(bundle);
+  if (!("dsseEnvelope" in serialized && serialized.dsseEnvelope)) {
+    return yield* new ProvenanceVerificationError({
+      message: "The npm provenance bundle has no signed DSSE payload.",
     });
-    return Buffer.from(serialized.dsseEnvelope.payload, "base64").toString(
-      "utf8"
-    );
   }
-);
+  yield* Effect.tryPromise({
+    catch: (cause) =>
+      new ProvenanceVerificationError({
+        cause,
+        message:
+          "The npm provenance signer does not match the trusted publisher.",
+      }),
+    try: () => verifySigstore(serialized, publisherPolicy(identity)),
+  });
+  return Buffer.from(serialized.dsseEnvelope.payload, "base64").toString(
+    "utf8"
+  );
+});
 
 /** Live Sigstore implementation for the bundle-verification seam. */
 export const SigstoreProvenanceBundleVerifierLive = Layer.succeed(

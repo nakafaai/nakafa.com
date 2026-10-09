@@ -49,7 +49,7 @@ jobs:
           RELEASE_ROOT: ${{ runner.temp }}/cli-release
         run: |
           mkdir -p "$RELEASE_ROOT"
-          pnpm exec esbuild scripts/github/provenance/main.ts \
+          pnpm exec esbuild scripts/provenance/main.ts \
             --banner:js="import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" \
             --bundle \
             --format=esm \
