@@ -40,17 +40,19 @@ export const readBingWebmasterApiKey = Effect.fn(
  *
  * The adapter respects Bing quota messages by reducing batch size or stopping
  * when the endpoint reports the daily quota has already been exhausted. It
- * returns the URLs Bing accepted and, when a batch fails, the typed failure
- * that ended the call, so the caller saves the accepted URLs before it fails.
+ * returns the URLs Bing accepted, whether a quota stop ended the call, and,
+ * when a batch fails, the typed failure that ended the call. The caller saves
+ * the accepted URLs before it fails, and a quota stop is not a failure.
  */
 export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
   function* (urls: readonly string[], apiKey: string) {
     if (urls.length === 0) {
       yield* Effect.logInfo("No new URLs to submit to Bing.");
-      return { failure: Option.none(), submittedUrls: [] };
+      return { failure: Option.none(), stopped: false, submittedUrls: [] };
     }
     let batchSize = BATCH_SIZE;
     let submittedCount = 0;
+    let stopped = false;
     const successfullySubmitted = MutableList.make<string>();
     yield* Effect.logInfo("Starting Bing URL Submission API process...");
     yield* Effect.logInfo(`URLs to submit: ${urls.length}`);
@@ -75,6 +77,7 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
       if (Result.isFailure(outcome)) {
         return {
           failure: Option.some(outcome.failure),
+          stopped: false,
           submittedUrls: MutableList.toArray(successfullySubmitted),
         };
       }
@@ -84,6 +87,7 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
         submittedCount += result.submittedUrls.length;
       }
       if (result.shouldStop) {
+        stopped = true;
         break;
       }
       if (result.quotaRemaining !== undefined) {
@@ -95,7 +99,9 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
           continue;
         }
       }
+      // A quota message that allows the refused batch also ends the run quietly.
       if (result.submittedUrls.length === 0) {
+        stopped = true;
         break;
       }
       if (submittedCount < urls.length) {
@@ -110,6 +116,7 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
     );
     return {
       failure: Option.none(),
+      stopped,
       submittedUrls: MutableList.toArray(successfullySubmitted),
     };
   }

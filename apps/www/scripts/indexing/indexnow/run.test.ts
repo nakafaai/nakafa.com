@@ -88,6 +88,13 @@ function urlsOf(count: number) {
 /** An answer with the given status and body text. */
 const answer = (status: number, body = "") => new Response(body, { status });
 
+/** The host of a request that the flow sent. */
+const hostnameOf = (input: unknown) => new URL(String(input)).hostname;
+
+/** The requests that the flow sent to one host, in order. */
+const requestsTo = (hostname: string) =>
+  Arr.filter(fetcher.mock.calls, ([input]) => hostnameOf(input) === hostname);
+
 /**
  * A file system held in memory for one test, seeded with `seeded` entries and
  * merged with the real path service. Each write is logged in `events`, in the
@@ -402,6 +409,52 @@ describe("runIndexNow", () => {
         );
         expect(Rec.keys(history.indexNow)).toEqual(urls);
         expect(Rec.keys(history.bing)).toEqual(Arr.take(urls, 100));
+      });
+    }
+  );
+
+  it.effect(
+    "stops Bing at the daily quota text, saves the accepted Bing URLs, and sends nothing from the next sitemap batch",
+    () => {
+      const events = MutableList.make<string>();
+      const lines = MutableList.make<string>();
+      const bingRequests = MutableList.make<string>();
+      const urls = urlsOf(501);
+      return Effect.gen(function* () {
+        const memory = memoryFiles(events, []);
+        sitemapOf(urls);
+        fetcher.mockImplementation((input) => {
+          if (hostnameOf(input) === INDEXNOW_HOSTNAME) {
+            return Promise.resolve(answer(200));
+          }
+          MutableList.append(bingRequests, String(input));
+          return Promise.resolve(
+            bingRequests.length === 1
+              ? answer(200)
+              : answer(
+                  403,
+                  "You have exceeded your daily URL submission quota."
+                )
+          );
+        });
+
+        yield* runToEnd(
+          runIndexNowWith(memory.layer, lines, {
+            BING_WEBMASTER_API_KEY: BING_KEY,
+          })
+        );
+
+        // IndexNow reads both sitemap batches: five requests for 500 URLs, one for the last URL.
+        expect(requestsTo(INDEXNOW_HOSTNAME)).toHaveLength(6);
+        expect(bingRequests.length).toBe(2);
+        const logged = MutableList.toArray(lines);
+        expect(logged).toContain("Bing sitemap batches processed: 1");
+        expect(logged).toContain("Bing canonical URLs inspected: 500");
+        const history = yield* loadSubmissionHistory().pipe(
+          Effect.provide(memory.layer)
+        );
+        expect(Rec.keys(history.bing)).toEqual(Arr.take(urls, 100));
+        expect(Rec.keys(history.indexNow)).toEqual(urls);
       });
     }
   );

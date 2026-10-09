@@ -119,6 +119,7 @@ describe("submitUrlsToBing", () => {
     Effect.gen(function* () {
       expect(yield* submitUrls([])).toEqual({
         failure: Option.none(),
+        stopped: false,
         submittedUrls: [],
       });
       expect(fetcher).not.toHaveBeenCalled();
@@ -140,6 +141,7 @@ describe("submitUrlsToBing", () => {
 
         expect(yield* Fiber.join(fiber)).toEqual({
           failure: Option.none(),
+          stopped: false,
           submittedUrls: urls,
         });
         expect(sentBatchSizes()).toEqual([100, 50]);
@@ -166,6 +168,7 @@ describe("submitUrlsToBing", () => {
 
         expect(yield* Fiber.join(fiber)).toEqual({
           failure: Option.none(),
+          stopped: true,
           submittedUrls: Arr.take(urls, 100),
         });
         expect(fetcher).toHaveBeenCalledTimes(2);
@@ -186,6 +189,7 @@ describe("submitUrlsToBing", () => {
 
         expect(yield* Fiber.join(fiber)).toEqual({
           failure: Option.none(),
+          stopped: false,
           submittedUrls: urls,
         });
         expect(sentBatchSizes()).toEqual([100, 30, 30, 30, 10]);
@@ -202,6 +206,7 @@ describe("submitUrlsToBing", () => {
 
         expect(yield* submitUrls(urlsOf(1))).toEqual({
           failure: Option.none(),
+          stopped: true,
           submittedUrls: [],
         });
         expect(sentBatchSizes()).toEqual([1]);
@@ -223,6 +228,7 @@ describe("submitUrlsToBing", () => {
 
       expect(yield* submitUrls(urlsOf(2))).toEqual({
         failure: Option.none(),
+        stopped: true,
         submittedUrls: [],
       });
       expect(fetcher).toHaveBeenCalledOnce();

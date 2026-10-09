@@ -68,6 +68,8 @@ const ARTICLE = encodeJsonText({
 const fetcher = vi.fn<typeof fetch>();
 /** The state paths of the real checkout, read through the real path service. */
 const indexingPaths = indexingFiles.pipe(Effect.provide(Path.layer));
+/** The canonical URL of the sitemap page at this index. */
+const pageUrl = (index: number) => `https://nakafa.com/id/page-${index}`;
 
 beforeEach(() => {
   fetcher.mockReset();
@@ -88,6 +90,8 @@ const pageWith = (jsonLd: string) =>
 const accepted = async () => new Response("{}", { status: 200 });
 /** Google refuses the URL with a server error, which does not stop the run. */
 const refused = async () => new Response("", { status: 500 });
+/** Google answers that it is rate limiting, which stops the run. */
+const rateLimited = async () => new Response("", { status: 429 });
 /** The request never reaches Google. */
 const unreachable = () => Promise.reject(new TypeError("fetch failed"));
 
@@ -414,6 +418,47 @@ describe("runGoogleIndexing", () => {
       expect(logged).toContain("Success rate: 0%");
     });
   });
+
+  it.effect(
+    "stops the whole run at a 429, saves the accepted URLs of that batch, and sends nothing from the next sitemap batch",
+    () => {
+      const events = MutableList.make<string>();
+      const lines = MutableList.make<string>();
+      const urls = Arr.makeBy(501, pageUrl);
+      return Effect.gen(function* () {
+        const { submissionHistory } = yield* indexingPaths;
+        const memory = memoryFiles(events, []);
+        sitemapOf(urls);
+        answerRun(events, [pageUrl(0), pageUrl(1), pageUrl(500)], (url) =>
+          url === pageUrl(1) ? rateLimited() : accepted()
+        );
+
+        yield* runToEnd(runGoogle(memory.layer, lines));
+
+        expect(MutableList.toArray(events)).toEqual([
+          `publish ${pageUrl(0)}`,
+          `publish ${pageUrl(1)}`,
+          `write ${submissionHistory}`,
+        ]);
+        expect(
+          Arr.some(
+            fetcher.mock.calls,
+            ([input]) => String(input) === pageUrl(500)
+          )
+        ).toBe(false);
+        const logged = MutableList.toArray(lines);
+        expect(logged).toContain("Google sitemap batches processed: 1");
+        expect(logged).toContain("Google canonical URLs inspected: 500");
+        expect(logged).toContain("Total eligible URLs queued: 2");
+        expect(logged).toContain("Successfully submitted: 1");
+        expect(logged).toContain("Rejected or skipped: 1");
+        const history = yield* loadSubmissionHistory().pipe(
+          Effect.provide(memory.layer)
+        );
+        expect(Rec.keys(history.googleIndexingApi)).toEqual([pageUrl(0)]);
+      });
+    }
+  );
 
   it.effect("keeps one history across sitemap batches of 500 URLs", () => {
     const events = MutableList.make<string>();
