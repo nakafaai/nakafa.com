@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -24,13 +24,13 @@ interface TryoutHubClientProps {
   locale: Locale;
   page: {
     readonly countries: Ref.Returns<
-      typeof refs.public.tryouts.queries.catalog.getHubPage
+      typeof tryouts.queries.catalog.getHubPage
     >["countries"];
   };
 }
 
 type HubCountry = Ref.Returns<
-  typeof refs.public.tryouts.queries.catalog.getHubPage
+  typeof tryouts.queries.catalog.getHubPage
 >["countries"][number];
 
 /** Renders the realtime country-first try-out hub from Convex. */

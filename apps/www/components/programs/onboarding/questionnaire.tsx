@@ -6,7 +6,7 @@ import {
   ArrowRight02Icon,
   PartyIcon,
 } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Questionnaire,
@@ -71,7 +71,7 @@ export function OnboardingQuestionnaire({
   const t = useTranslations("LearningPrograms");
   const locale = useLocale();
   const router = useRouter();
-  const reactiveStatus = useQuery(refs.public.onboarding.queries.getStatus, {});
+  const reactiveStatus = useQuery(onboarding.queries.getStatus, {});
   const profile = QueryResult.isSuccess(reactiveStatus)
     ? reactiveStatus.value.profile
     : initialProfile;
@@ -86,7 +86,7 @@ export function OnboardingQuestionnaire({
   );
   const [isFinishing, startFinishTransition] = useTransition();
   const saveAnswer = useSaveOnboardingAnswerMutation(initialProfile);
-  const finish = useMutation(refs.public.onboarding.mutations.finish);
+  const finish = useMutation(onboarding.mutations.finish);
 
   if (QueryResult.isFailure(reactiveStatus)) {
     throw reactiveStatus.error;

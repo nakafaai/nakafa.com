@@ -4,7 +4,7 @@ import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, useStreamPaginatedQuery } from "@confect/react";
 import { StudentIcon, TeacherIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import {
   Avatar,
   AvatarFallback,
@@ -29,7 +29,7 @@ export function SchoolClassesPeopleList({
   initialPage,
   initialQuery,
 }: {
-  initialPage: Ref.Returns<typeof refs.public.classes.roster.list>;
+  initialPage: Ref.Returns<typeof classes.roster.list>;
   initialQuery: string;
 }) {
   const t = useTranslations("School.Classes");
@@ -104,7 +104,7 @@ export function SchoolClassesPeopleList({
 
 /** Retains the last real roster while its search subscription changes. */
 function usePeople(
-  initialPage: Ref.Returns<typeof refs.public.classes.roster.list>,
+  initialPage: Ref.Returns<typeof classes.roster.list>,
   initialQuery: string
 ) {
   const classId = useClass((state) => state.class._id);
@@ -113,7 +113,7 @@ function usePeople(
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const pagination = useStreamPaginatedQuery(
-    refs.public.classes.roster.list,
+    classes.roster.list,
     isAuthenticated && !isLoading
       ? {
           classId,

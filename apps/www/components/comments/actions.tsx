@@ -6,7 +6,7 @@ import {
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "@hugeicons/core-free-icons";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type comments from "@repo/backend/confect/_generated/refs/comments";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
@@ -29,9 +29,7 @@ import { useViewer } from "@/lib/identity/client";
 
 /** The fields of a comment that its viewer actions read, in every feed. */
 type ActionComment = Pick<
-  Ref.Returns<
-    typeof refs.public.comments.queries.getCommentsBySlug
-  >["page"][number],
+  Ref.Returns<typeof comments.queries.getCommentsBySlug>["page"][number],
   "_id" | "downvoteCount" | "upvoteCount" | "userId" | "viewerVote"
 >;
 

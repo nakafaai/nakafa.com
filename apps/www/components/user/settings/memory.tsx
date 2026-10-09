@@ -3,7 +3,7 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -29,7 +29,7 @@ import {
 } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 
-type Memory = Ref.Returns<typeof refs.public.nina.memory.get>;
+type Memory = Ref.Returns<typeof nina.memory.get>;
 
 /**
  * Renders Nina memory from the value the settings route already resolved:
@@ -43,10 +43,7 @@ export function UserSettingsMemory({
   const t = useTranslations("Auth");
   const actionErrorMessage = useTranslations("Common")("action-error");
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
-  const query = useQuery(
-    refs.public.nina.memory.get,
-    isAuthenticated ? {} : "skip"
-  );
+  const query = useQuery(nina.memory.get, isAuthenticated ? {} : "skip");
   if (QueryResult.isFailure(query)) {
     throw query.error;
   }

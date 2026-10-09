@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
@@ -87,10 +87,8 @@ export const decodeMaterialDelivery = Effect.fn(
 /** Authenticates the publication shared by a lesson and its cached navigation. */
 const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(
   function* (
-    source: Ref.Returns<typeof refs.public.contentRelease.material.lesson>,
-    navigation: Ref.Returns<
-      typeof refs.public.contentRelease.material.navigation
-    > | null,
+    source: Ref.Returns<typeof contentRelease.material.lesson>,
+    navigation: Ref.Returns<typeof contentRelease.material.navigation> | null,
     locale: Locale,
     publicPath: string
   ) {
@@ -142,7 +140,7 @@ async function readMaterialNavigation(
   cacheLife("max");
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.contentRelease.material.navigation, {
+      client.query(contentRelease.material.navigation, {
         appLocale: AppLocaleSchema.make(locale),
         expectedActiveReleaseId,
         materialKey,
@@ -162,7 +160,7 @@ class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
 async function fetchMaterialLesson(locale: Locale, publicPath: string) {
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.contentRelease.material.lesson, {
+      client.query(contentRelease.material.lesson, {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
@@ -171,7 +169,7 @@ async function fetchMaterialLesson(locale: Locale, publicPath: string) {
 }
 const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
   function* (
-    source: Ref.Returns<typeof refs.public.contentRelease.material.lesson>,
+    source: Ref.Returns<typeof contentRelease.material.lesson>,
     locale: Locale,
     publicPath: string
   ) {
@@ -202,7 +200,7 @@ const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
  * Next serializes errors across cache boundaries, so a fresh lesson identity
  * proves the transition without relying on a preserved ConvexError class. */
 const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
-  initial: Ref.Returns<typeof refs.public.contentRelease.material.lesson>,
+  initial: Ref.Returns<typeof contentRelease.material.lesson>,
   locale: Locale,
   publicPath: string
 ) {

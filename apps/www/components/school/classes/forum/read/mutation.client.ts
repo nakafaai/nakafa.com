@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import { Option } from "effect";
 import { markTranscriptRead } from "@/components/school/classes/forum/read/state";
 
@@ -13,14 +13,14 @@ function updateForumLists(
   unreadCount: number
 ) {
   const queries = localStore.getAllQueries(
-    refs.public.classes.forums.queries.forums.getForums
+    classes.forums.queries.forums.getForums
   );
   for (const query of queries) {
     if (Option.isNone(query.value)) {
       continue;
     }
     localStore.setQuery(
-      refs.public.classes.forums.queries.forums.getForums,
+      classes.forums.queries.forums.getForums,
       query.args,
       Option.some({
         ...query.value.value,
@@ -40,15 +40,12 @@ function updateForumLists(
 /** Return a read-state mutation that updates the transcript and forum list. */
 export function useMarkForumReadMutation() {
   return useMutation(
-    refs.public.classes.forums.mutations.readState.markForumRead
+    classes.forums.mutations.readState.markForumRead
   ).withOptimisticUpdate((localStore, { forumId, lastReadPostId }) => {
     const posts = Option.getOrUndefined(
-      localStore.getQuery(
-        refs.public.classes.forums.queries.pages.getForumPosts,
-        {
-          forumId,
-        }
-      )
+      localStore.getQuery(classes.forums.queries.pages.getForumPosts, {
+        forumId,
+      })
     );
     if (!posts) {
       return;
@@ -58,7 +55,7 @@ export function useMarkForumReadMutation() {
       return;
     }
     localStore.setQuery(
-      refs.public.classes.forums.queries.pages.getForumPosts,
+      classes.forums.queries.pages.getForumPosts,
       {
         forumId,
       },

@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 import type { Metadata } from "next";
@@ -13,7 +13,7 @@ const getChatTitle = cache(async (id: Id<"chats">) => {
   const token = await getToken();
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.chats.queries.getChatTitle, {
+      client.query(chats.queries.getChatTitle, {
         chatId: id,
       })
     ).pipe(

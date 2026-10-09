@@ -2,7 +2,7 @@ import { HttpClient } from "@confect/js";
 import { Effect } from "effect";
 import "server-only";
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import contents from "@repo/backend/confect/_generated/refs/contents";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
@@ -32,7 +32,7 @@ async function getHomeTrendingSubjects(locale: PublicAppLocale) {
   cacheLife("minutes");
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.contents.queries.trending.getTrendingSubjects, {
+      client.query(contents.queries.trending.getTrendingSubjects, {
         locale,
         windowKey: "7d",
       })

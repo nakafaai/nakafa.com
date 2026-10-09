@@ -2,15 +2,13 @@
 
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import contents from "@repo/backend/confect/_generated/refs/contents";
 import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/agent/search";
 
 import { useLocale } from "next-intl";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-type ContentSearchResponse = Ref.Returns<
-  typeof refs.public.contents.queries.search.search
->;
+type ContentSearchResponse = Ref.Returns<typeof contents.queries.search.search>;
 
 export type ContentSearchResultItem = ContentSearchResponse["items"][number];
 
@@ -27,7 +25,7 @@ export function useSearchQuery({
   const shouldSearch =
     enabled && normalizedQuery.length > 0 && isActiveLocale(locale);
   const state = useQuery(
-    refs.public.contents.queries.search.search,
+    contents.queries.search.search,
     shouldSearch
       ? {
           limit: NAKAFA_AGENT_DEFAULT_LIMIT,

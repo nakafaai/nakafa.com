@@ -9,7 +9,7 @@ import {
   Time04Icon,
 } from "@hugeicons/core-free-icons";
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
 import {
@@ -85,7 +85,7 @@ export function CreateMaterialGroupDialog({
   const t = useTranslations("School.Classes");
   const classId = useClass((state) => state.class._id);
   const createMaterialGroup = useMutation(
-    refs.public.classes.materials.mutations.createMaterialGroup
+    classes.materials.mutations.createMaterialGroup
   );
   return (
     <MaterialGroupDialogShell

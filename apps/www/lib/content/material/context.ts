@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -23,7 +23,7 @@ export const readPublishedMaterialContext = Effect.fn(
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.program.context, {
+    client.query(contentRelease.program.context, {
       ...(expectedActiveReleaseId === undefined
         ? {}
         : {

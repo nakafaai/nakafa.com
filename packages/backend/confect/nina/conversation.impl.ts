@@ -4,9 +4,8 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import session from "@repo/backend/confect/middleware/session.impl";
-import spec, {
-  NinaTurnSummary,
-} from "@repo/backend/confect/nina/conversation.spec";
+import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
+import spec from "@repo/backend/confect/nina/conversation.spec";
 import { Effect, Layer, Option, Schema } from "effect";
 
 const get = FunctionImpl.make(

@@ -1,6 +1,6 @@
 import { HttpClient } from "@confect/js";
 import { Id } from "@repo/backend/confect/_generated/id";
-import refs from "@repo/backend/confect/_generated/refs";
+import auth from "@repo/backend/confect/_generated/refs/auth";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Effect, Schema } from "effect";
 import { Suspense } from "react";
@@ -32,11 +32,11 @@ async function UserLayoutContent(props: LayoutProps<"/[locale]/user/[id]">) {
             Effect.all(
               {
                 userId: Effect.succeed(userId),
-                profile: client.query(refs.public.auth.queries.getUserById, {
+                profile: client.query(auth.queries.getUserById, {
                   userId,
                 }),
                 account: token
-                  ? client.query(refs.public.auth.queries.getCurrentUser, {})
+                  ? client.query(auth.queries.getCurrentUser, {})
                   : Effect.succeed(null),
               },
               { concurrency: "unbounded" }

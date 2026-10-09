@@ -4,7 +4,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -25,7 +25,7 @@ export const readActiveContentIdentity = Effect.fn(
   "NakafaContent.readActiveContentIdentity"
 )(function* () {
   const identity = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.runtime.active.read, {})
+    client.query(contentRelease.runtime.active.read, {})
   ).pipe(Effect.provide(httpLayer()));
   return yield* Schema.decodeEffect(ActiveContentIdentitySchema)(identity);
 });
