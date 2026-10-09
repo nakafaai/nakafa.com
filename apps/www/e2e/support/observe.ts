@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 
 /**
  * Keeps the text that each page event reports to `record` while `use` runs.
@@ -14,11 +14,11 @@ export const withObservedEvents = Effect.fn("NakafaE2E.withObservedEvents")(
   ) {
     return yield* Effect.acquireUseRelease(
       Effect.sync(() => {
-        const texts: string[] = [];
-        const detach = attach((text) => texts.push(text));
+        const texts = MutableList.make<string>();
+        const detach = attach((text) => MutableList.append(texts, text));
         return { detach, texts };
       }),
-      ({ texts }) => use(texts),
+      ({ texts }) => use(MutableList.toArray(texts)),
       ({ detach }) => Effect.sync(detach)
     );
   }

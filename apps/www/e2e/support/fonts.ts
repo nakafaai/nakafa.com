@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** The link elements that ask the browser to preload a font file. */
 export const PRELOADED_FONT_SELECTOR = 'link[rel="preload"][as="font"]';
@@ -54,12 +54,18 @@ export const readMathFonts = Effect.fn("NakafaE2E.readMathFonts")(function* (
     )
   );
   return {
-    fetched: state.fetched.flatMap(({ initiator, url }) => {
+    fetched: Arr.flatMap(state.fetched, ({ initiator, url }) => {
       const face = fileFace(url);
       return face ? [`${face} ${initiator}`] : [];
     }),
-    loaded: state.loaded.flatMap((font) => loadedFace(font) ?? []),
-    preloaded: state.preloaded.flatMap((url) => fileFace(url) ?? []),
+    loaded: Arr.flatMap(state.loaded, (font) => {
+      const face = loadedFace(font);
+      return face === undefined ? [] : [face];
+    }),
+    preloaded: Arr.flatMap(state.preloaded, (url) => {
+      const face = fileFace(url);
+      return face === undefined ? [] : [face];
+    }),
   };
 });
 
