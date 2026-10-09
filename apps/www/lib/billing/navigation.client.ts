@@ -3,14 +3,14 @@
 import { useAction } from "@confect/react";
 import customers from "@repo/backend/confect/_generated/refs/customers";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { useConvexConnectionState } from "convex/react";
+import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { billingNavigationProgram } from "@/lib/billing/navigation";
-import { ConvexOfflineError, requireConvexOnline } from "@/lib/convex/online";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 const BillingSourceSchema = Schema.Struct({
   source: Schema.String,
@@ -18,18 +18,11 @@ const BillingSourceSchema = Schema.Struct({
 
 type BillingSource = typeof BillingSourceSchema.Type;
 
-/** An offline start never reached Convex, so it is a refused click, not an exception. */
-function reportBillingFailure(cause: unknown, source: string) {
-  return Schema.is(ConvexOfflineError)(cause)
-    ? Effect.void
-    : reportClientException(cause, { source });
-}
-
 /** Owns checkout and customer-portal requests for every client purchase CTA. */
 export function useBillingNavigation() {
   const t = useTranslations("Auth");
   const [isPending, startTransition] = useTransition();
-  const connection = useConvexConnectionState();
+  const convex = useConvex();
   const createCheckout = useAction(
     customers.actions.sessions.generateCheckoutLink
   );
@@ -47,16 +40,18 @@ export function useBillingNavigation() {
           navigate: (url) => {
             window.location.href = url;
           },
-          onFailure: (cause) =>
-            reportBillingFailure(cause, failure.source).pipe(
-              Effect.tap(() =>
-                Effect.sync(() => {
-                  toast.error(failure.message, { position: "bottom-center" });
-                })
+          onFailure: () =>
+            Effect.sync(() => {
+              toast.error(failure.message, { position: "bottom-center" });
+            }),
+          request: requireConvexOnline(convex).pipe(
+            Effect.andThen(
+              request.pipe(
+                Effect.tapError((cause) =>
+                  reportClientException(cause, { source: failure.source })
+                )
               )
-            ),
-          request: requireConvexOnline(connection).pipe(
-            Effect.andThen(request)
+            )
           ),
         })
       )

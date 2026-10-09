@@ -136,7 +136,7 @@ function optimisticPrompt(
 
 /** A call refused while offline fails like a transport failure that sent nothing. */
 function requireNinaConnection(convex: ConvexReactClient) {
-  return requireConvexOnline(convex.connectionState()).pipe(
+  return requireConvexOnline(convex).pipe(
     Effect.mapError(
       (offline) =>
         new NinaConnectionError({
@@ -223,7 +223,6 @@ export function useNinaSubmission() {
     MutableHashMap.empty<Id<"ninaUploads">, FileUIPart>()
   );
   const start = useMutation(nina.turns.start);
-  /** Reads the live state when a call starts; a subscription would re-render ChatProvider, which wraps streamed content (ADR 0017). */
   const convex = useConvex();
   const getModel = useAi((state) => state.getModel);
   const addChatDraft = useAi((state) => state.addChatDraft);

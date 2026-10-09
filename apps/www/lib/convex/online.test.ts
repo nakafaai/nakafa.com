@@ -25,6 +25,11 @@ function connection(
   };
 }
 
+/** Builds the part of the Convex client the guard reads at the moment of a call. */
+function client(state: Parameters<typeof connection>[0]) {
+  return { connectionState: () => connection(state) };
+}
+
 describe("Convex online state", () => {
   it.each([
     {
@@ -80,7 +85,7 @@ describe("Convex online state", () => {
     Effect.gen(function* () {
       const error = yield* Effect.flip(
         requireConvexOnline(
-          connection({
+          client({
             connectionCount: 2,
             connectionRetries: 0,
             isWebSocketConnected: false,
@@ -96,7 +101,7 @@ describe("Convex online state", () => {
     Effect.gen(function* () {
       const result = yield* Effect.result(
         requireConvexOnline(
-          connection({
+          client({
             connectionCount: 0,
             connectionRetries: 0,
             isWebSocketConnected: false,
@@ -112,7 +117,7 @@ describe("Convex online state", () => {
     Effect.gen(function* () {
       const result = yield* Effect.result(
         requireConvexOnline(
-          connection({
+          client({
             connectionCount: 2,
             connectionRetries: 0,
             isWebSocketConnected: true,

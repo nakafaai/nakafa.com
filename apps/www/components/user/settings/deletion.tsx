@@ -22,7 +22,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useConvexConnectionState } from "convex/react";
+import { useConvex } from "convex/react";
 import { Effect, Result } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -63,7 +63,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const prepareAccountDeletion = useMutation(
     auth.deletion.prepareCurrentAccountDeletion
   );
-  const connection = useConvexConnectionState();
+  const convex = useConvex();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<DialogError>(null);
   const [isPending, startTransition] = useTransition();
@@ -82,7 +82,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
     setError(null);
     startTransition(async () => {
       const result = await Effect.runPromise(
-        requireConvexOnline(connection).pipe(
+        requireConvexOnline(convex).pipe(
           Effect.andThen(loadOrCreateAccountDeletionAttempt(userId)),
           Effect.flatMap((attempt) =>
             deleteCurrentAccount({

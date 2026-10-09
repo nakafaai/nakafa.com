@@ -1,7 +1,7 @@
-import type { useConvexConnectionState } from "convex/react";
+import type { ConvexReactClient } from "convex/react";
 import { Effect, Schema } from "effect";
 
-type ConvexConnectionState = ReturnType<typeof useConvexConnectionState>;
+type ConvexConnectionState = ReturnType<ConvexReactClient["connectionState"]>;
 
 /** Raised before a Convex call starts while the socket is down, so the client never queues it. */
 export class ConvexOfflineError extends Schema.TaggedError<ConvexOfflineError>()(
@@ -19,10 +19,14 @@ export function isConvexOffline(state: ConvexConnectionState) {
   return hadOrTriedConnection && !state.isWebSocketConnected;
 }
 
-/** Refuses a Convex mutation or action before it starts while the socket is down. */
+/**
+ * Refuses a Convex mutation or action before it starts while the socket is
+ * down. It reads the client at the moment of the call, so the caller needs no
+ * subscription to the connection state.
+ */
 export const requireConvexOnline = Effect.fn("www.convex.requireOnline")(
-  function* (state: ConvexConnectionState) {
-    if (isConvexOffline(state)) {
+  function* (convex: Pick<ConvexReactClient, "connectionState">) {
+    if (isConvexOffline(convex.connectionState())) {
       return yield* new ConvexOfflineError({
         message: "Convex is offline, so the request was not started.",
       });

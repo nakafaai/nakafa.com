@@ -25,8 +25,8 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { redirect, useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { useConvexConnectionState } from "convex/react";
-import { Array as Arr, Effect, Schema } from "effect";
+import { useConvex } from "convex/react";
+import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -52,7 +52,6 @@ import {
 } from "@/components/programs/onboarding/state";
 import {
   finishOnboarding,
-  type OnboardingMutationError,
   saveOnboardingDraft,
 } from "@/components/programs/onboarding/submit";
 import { reportClientException } from "@/lib/analytics/client";
@@ -61,16 +60,7 @@ import {
   getPostAuthSignInHref,
   type PostAuthIntentResolution,
 } from "@/lib/auth/admission";
-import { ConvexOfflineError, requireConvexOnline } from "@/lib/convex/online";
-
-/** An offline start never reached Convex, so it is a refused click, not an exception. */
-function reportOnboardingFinishFailure(
-  error: OnboardingMutationError | ConvexOfflineError
-) {
-  return Schema.is(ConvexOfflineError)(error)
-    ? Effect.void
-    : reportClientException(error.cause, { source: "onboarding-finish" });
-}
+import { requireConvexOnline } from "@/lib/convex/online";
 
 /** Runs the complete resumable questionnaire inside the shared entry shell. */
 export function OnboardingQuestionnaire({
@@ -99,7 +89,7 @@ export function OnboardingQuestionnaire({
   const [isFinishing, startFinishTransition] = useTransition();
   const saveAnswer = useSaveOnboardingAnswerMutation(initialProfile);
   const finish = useMutation(onboarding.mutations.finish);
-  const connection = useConvexConnectionState();
+  const convex = useConvex();
 
   if (QueryResult.isFailure(reactiveStatus)) {
     throw reactiveStatus.error;
@@ -161,17 +151,19 @@ export function OnboardingQuestionnaire({
 
     startFinishTransition(async () => {
       const outcome = await Effect.runPromise(
-        requireConvexOnline(connection).pipe(
+        requireConvexOnline(convex).pipe(
           Effect.andThen(
-            finishOnboarding(finish, { answers: completeAnswers })
+            finishOnboarding(finish, { answers: completeAnswers }).pipe(
+              Effect.tapError((error) =>
+                reportClientException(error.cause, {
+                  source: "onboarding-finish",
+                })
+              )
+            )
           ),
-          Effect.matchEffect({
-            onFailure: (error) =>
-              reportOnboardingFinishFailure(error).pipe(
-                Effect.as({ status: "error" } as const)
-              ),
-            onSuccess: (result) =>
-              Effect.succeed({ result, status: "success" } as const),
+          Effect.match({
+            onFailure: () => ({ status: "error" }) as const,
+            onSuccess: (result) => ({ result, status: "success" }) as const,
           })
         )
       );
