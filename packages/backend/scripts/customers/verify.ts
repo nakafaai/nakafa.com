@@ -7,6 +7,7 @@ import {
   loadCustomerEnvProvider,
 } from "@repo/backend/scripts/customers/convex";
 import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
+import { encodePrettyJsonText } from "@repo/utilities/json";
 import type {
   FunctionArgs,
   FunctionReference,
@@ -25,7 +26,6 @@ import {
 } from "effect";
 
 const CUSTOMER_PAGE_SIZE = 100;
-const PrettyJsonSchema = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 const writeLine = (message: string) => {
   process.stdout.write(`${message}\n`);
 };
@@ -195,7 +195,7 @@ const main = Effect.fn("customers.verify")(function* () {
   const args = yield* Effect.sync(() => process.argv.slice(2));
   const prod = args.includes("--prod");
   const report = yield* getCustomerIntegrityReport(prod);
-  const json = yield* Schema.encodeEffect(PrettyJsonSchema)({
+  const json = encodePrettyJsonText({
     customerCount: report.customerCount,
     customersWithExternalIdMismatchCount:
       report.customersWithExternalIdMismatch.length,
@@ -210,7 +210,7 @@ const main = Effect.fn("customers.verify")(function* () {
       report.subscriptionsWithoutLocalCustomer.length,
     userCount: report.userCount,
     usersWithoutCustomerCount: report.usersWithoutCustomer.length,
-  }).pipe(Effect.orDie);
+  });
   writeLine(json);
   const hasIntegrityIssues =
     report.usersWithoutCustomer.length > 0 ||

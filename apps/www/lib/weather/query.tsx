@@ -4,7 +4,12 @@ import { Effect } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { CurrentWeatherSummarySchema } from "@/lib/weather/schema";
 
-const WEATHER_REQUEST_TIMEOUT = "10 seconds";
+/**
+ * The longest the browser waits for the app's weather route. It is the
+ * browser's own budget, not the server's budget for the weather service, so it
+ * lives here and keeps the server transport out of the browser's code.
+ */
+const WEATHER_ROUTE_TIMEOUT = "10 seconds";
 
 /** Load the current weather summary through the app API route. */
 const fetchWeather = Effect.fn("www.weather.fetch")(function* () {
@@ -13,7 +18,7 @@ const fetchWeather = Effect.fn("www.weather.fetch")(function* () {
     Effect.flatMap(
       HttpClientResponse.schemaBodyJson(CurrentWeatherSummarySchema)
     ),
-    Effect.timeout(WEATHER_REQUEST_TIMEOUT)
+    Effect.timeout(WEATHER_ROUTE_TIMEOUT)
   );
 });
 

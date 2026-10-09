@@ -1,3 +1,4 @@
+import { encodePrettyJsonText } from "@repo/utilities/json";
 import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
 import { SubmissionHistoryError } from "@/scripts/indexing/errors";
 import { indexingFiles } from "@/scripts/indexing/paths";
@@ -19,7 +20,6 @@ const decodeSubmissionHistory = Schema.decodeUnknownEffect(
 const decodeEmptySubmissionHistory = Schema.decodeUnknownEffect(
   SubmissionHistorySchema
 );
-const PrettyJsonSchema = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 export type SubmissionHistory = typeof SubmissionHistorySchema.Type;
 export type SubmissionService = typeof SubmissionServiceSchema.Type;
 /** Builds an empty local submission-history value for a first script run. */
@@ -106,9 +106,7 @@ export const saveSubmissionHistory = Effect.fn("scripts.indexing.history.save")(
   function* (history: SubmissionHistory) {
     const fs = yield* FileSystem.FileSystem;
     const { submissionHistory } = yield* indexingFiles;
-    const text = yield* Schema.encodeEffect(PrettyJsonSchema)(history).pipe(
-      Effect.orDie
-    );
+    const text = encodePrettyJsonText(history);
     yield* fs.writeFileString(submissionHistory, text).pipe(
       Effect.mapError(
         (cause) =>
