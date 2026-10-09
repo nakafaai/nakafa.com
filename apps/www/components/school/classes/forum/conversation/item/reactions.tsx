@@ -5,7 +5,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
-import { Effect, HashSet } from "effect";
+import { Array as Arr, Effect, HashSet } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import {
@@ -25,7 +25,7 @@ export function PostReactions({ post }: { post: ForumPost }) {
   const myReactions = HashSet.fromIterable(post.myReactions);
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {post.reactionUsers.map(({ emoji, count, reactors }) => {
+      {Arr.map(post.reactionUsers, ({ emoji, count, reactors }) => {
         const isMyReaction = HashSet.has(myReactions, emoji);
         const moreCount = count - reactors.length;
         return (
@@ -78,11 +78,11 @@ export function PostReactions({ post }: { post: ForumPost }) {
                 <p className="line-clamp-2 text-sm leading-tight">
                   {moreCount > 0
                     ? t("reacted-by-more", {
-                        names: reactors.join(", "),
+                        names: Arr.join(reactors, ", "),
                         count: moreCount,
                       })
                     : t("reacted-by", {
-                        names: reactors.join(", "),
+                        names: Arr.join(reactors, ", "),
                       })}
                 </p>
               </div>

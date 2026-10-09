@@ -2,7 +2,7 @@
 
 import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import { cn } from "cn";
-import { Match } from "effect";
+import { Array as Arr, Match } from "effect";
 import { useTranslations } from "next-intl";
 import { useActivity } from "@/components/ai/message/activity";
 import { getMathIcon } from "@/components/ai/message/evidence/math/icons";
@@ -15,7 +15,7 @@ import { WebSearchPart } from "@/components/ai/message/evidence/web";
 /** Renders every persisted artifact of the surrounding live activity. */
 export function EvidenceList() {
   const artifacts = useActivity((invocation) => invocation.artifacts);
-  return artifacts.map((artifact) => (
+  return Arr.map(artifacts, (artifact) => (
     <Evidence artifact={artifact} key={`${artifact.type}:${artifact.id}`} />
   ));
 }

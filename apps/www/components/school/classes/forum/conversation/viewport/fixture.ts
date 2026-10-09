@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, Queue, Ref, SubscriptionRef } from "effect";
+import { Array as Arr, Effect, Queue, Ref, SubscriptionRef } from "effect";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/data/view/model";
 import {
@@ -70,9 +70,9 @@ export function createAdapters() {
   let measurement: ViewportMeasurement | null = makeMeasurement();
   let placeResult = true;
   let transcript: ActiveTranscriptModel = viewportTestTranscript;
-  const placements: ViewportPlacement[] = [];
-  const readPostIds: Id<"schoolClassForumPosts">[] = [];
-  const snapshots: ConversationScrollSnapshot[] = [];
+  let placements: ViewportPlacement[] = [];
+  let readPostIds: Id<"schoolClassForumPosts">[] = [];
+  let snapshots: ConversationScrollSnapshot[] = [];
   const isViewReached = (view: NonNullable<ViewportMeasurement["view"]>) => {
     if (!measurement) {
       return false;
@@ -88,7 +88,7 @@ export function createAdapters() {
     read: {
       markPostRead: (postId) =>
         Effect.sync(() => {
-          readPostIds.push(postId);
+          readPostIds = Arr.append(readPostIds, postId);
         }),
     },
     scroller: {
@@ -99,14 +99,14 @@ export function createAdapters() {
       isViewVisible: isViewReached,
       measure: () => measurement,
       place: vi.fn((placement: ViewportPlacement) => {
-        placements.push(placement);
+        placements = Arr.append(placements, placement);
         return placeResult;
       }),
     },
     session: {
       saveSnapshot: (snapshot) =>
         Effect.sync(() => {
-          snapshots.push(snapshot);
+          snapshots = Arr.append(snapshots, snapshot);
         }),
     },
     timer: {
@@ -116,8 +116,12 @@ export function createAdapters() {
 
   return {
     adapters,
-    placements,
-    readPostIds,
+    get placements() {
+      return placements;
+    },
+    get readPostIds() {
+      return readPostIds;
+    },
     setMeasurement: (nextMeasurement: ViewportMeasurement | null) => {
       measurement = nextMeasurement;
     },
@@ -127,7 +131,9 @@ export function createAdapters() {
     setTranscript: (nextTranscript: ActiveTranscriptModel) => {
       transcript = nextTranscript;
     },
-    snapshots,
+    get snapshots() {
+      return snapshots;
+    },
   };
 }
 

@@ -3,6 +3,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { CurriculaArt } from "@/components/marketing/about/curricula/art";
@@ -64,7 +65,7 @@ export async function Curricula({ locale }: { locale: Locale }) {
           aria-label={t("navigation")}
           className="grid grid-cols-2 border-t lg:grid-cols-4"
         >
-          {curricula.map((curriculum, index) => (
+          {Arr.map(curricula, (curriculum, index) => (
             <NavigationLink
               className={cn(
                 "group relative flex min-h-40 flex-col items-start justify-between bg-background p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-44 sm:p-6 lg:min-h-48 lg:p-8",

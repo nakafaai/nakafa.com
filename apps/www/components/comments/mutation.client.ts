@@ -5,7 +5,7 @@ import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   deleteCommentFromPage,
   updateCommentVote,
@@ -32,7 +32,7 @@ function updateSlugFeeds(
       query.args,
       Option.some({
         ...query.value.value,
-        page: query.value.value.page.map((comment) =>
+        page: Arr.map(query.value.value.page, (comment) =>
           comment._id === commentId ? update(comment) : comment
         ),
       })
@@ -58,7 +58,7 @@ export function useVoteCommentMutation() {
           query.args,
           Option.some({
             ...query.value.value,
-            page: query.value.value.page.map((comment) =>
+            page: Arr.map(query.value.value.page, (comment) =>
               comment._id === commentId
                 ? updateCommentVote(comment, vote)
                 : comment

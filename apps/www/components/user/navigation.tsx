@@ -6,6 +6,7 @@ import {
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
 import { Link } from "@repo/internationalization/src/navigation";
+import { Array as Arr } from "effect";
 
 interface Props {
   tabs: {
@@ -21,7 +22,7 @@ export function SharedTabs({ tabs, value }: Props) {
     <nav className="scrollbar-hide sticky top-18 z-40 flex overflow-x-auto rounded-xl border bg-card p-1 shadow-xs lg:top-2">
       <Tabs className="contents" value={value}>
         <TabsList className="bg-transparent p-0 [&_[data-slot=tab-indicator]]:bg-accent">
-          {tabs.map((tab) => (
+          {Arr.map(tabs, (tab) => (
             <TabsTab
               className="h-8 px-3 text-muted-foreground data-active:text-accent-foreground"
               key={tab.href}

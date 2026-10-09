@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { Array as Arr, Option } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { AnalyticsConsentFooterItem } from "@/components/analytics/consent/actions";
@@ -22,8 +23,13 @@ import {
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 
-const highSchoolSubjects =
-  subjectMenu.find((subject) => subject.title === "high-school")?.items || [];
+const highSchoolSubjects = Option.getOrElse(
+  Option.map(
+    Arr.findFirst(subjectMenu, (subject) => subject.title === "high-school"),
+    (subject) => subject.items || []
+  ),
+  () => []
+);
 
 /**
  * Composes the shared marketing footer from product, policy, and social links
@@ -55,7 +61,7 @@ export function Footer({
                 {tCommon("subject")}
               </span>
               <ul className="flex flex-col gap-2">
-                {highSchoolSubjects.map((subject) => (
+                {Arr.map(highSchoolSubjects, (subject) => (
                   <li key={subject.value}>
                     <LinkItem
                       href={getSubjectMenuHref(subject, locale)}
@@ -71,7 +77,7 @@ export function Footer({
                 {tHoly("holy")}
               </span>
               <ul className="flex flex-col gap-2">
-                {holyMenu.map((holy) => (
+                {Arr.map(holyMenu, (holy) => (
                   <li key={holy.title}>
                     <LinkItem href={holy.href} label={tHoly(holy.title)} />
                   </li>
@@ -84,7 +90,7 @@ export function Footer({
                 {tCommon("articles")}
               </span>
               <ul className="flex flex-col gap-2">
-                {articleNavigation.map((article) => (
+                {Arr.map(articleNavigation, (article) => (
                   <li key={article.category}>
                     <LinkItem href={article.href} label={article.title} />
                   </li>
@@ -134,15 +140,16 @@ export function Footer({
                 {tLegal("terms-and-policies")}
               </span>
               <ul className="flex flex-col gap-2">
-                {pageNavigation?.legalItems.map((page) => (
-                  <li key={page.pageKey}>
-                    <LinkItem
-                      href={page.href}
-                      label={page.title}
-                      prefetch={false}
-                    />
-                  </li>
-                ))}
+                {pageNavigation &&
+                  Arr.map(pageNavigation.legalItems, (page) => (
+                    <li key={page.pageKey}>
+                      <LinkItem
+                        href={page.href}
+                        label={page.title}
+                        prefetch={false}
+                      />
+                    </li>
+                  ))}
                 <AnalyticsConsentFooterItem />
               </ul>
             </div>
@@ -169,7 +176,7 @@ export function Footer({
           </p>
           <div className="flex flex-col items-center gap-4 lg:flex-row">
             <div className="flex items-center gap-1">
-              {socialMedia.map((social) => (
+              {Arr.map(socialMedia, (social) => (
                 <Button
                   key={social.label}
                   nativeButton={false}

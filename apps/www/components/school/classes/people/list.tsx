@@ -13,6 +13,7 @@ import {
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
@@ -56,7 +57,7 @@ export function SchoolClassesPeopleList({
       {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
       {results.length > 0 && (
         <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
-          {results.map((person) => (
+          {Arr.map(results, (person) => (
             <article
               className="flex items-center justify-between gap-4 p-4"
               key={person._id}

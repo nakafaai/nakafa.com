@@ -17,6 +17,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { randomUuid } from "@repo/utilities/uuid";
 import type { FileUIPart } from "ai";
 import {
+  Array as Arr,
   DateTime,
   Effect,
   Exit,
@@ -63,39 +64,42 @@ function optimisticPrompt(
       return;
     }
     const threadId = conversation.value.chat.threadId;
-    const pages = store
-      .getAllQueries(nina.messages.list)
-      .filter(
-        (page) =>
-          page.args.chatId === args.chatId &&
-          page.args.threadId === threadId &&
-          !page.args.streamArgs
-      );
-    const messages = pages.flatMap((page) =>
+    const pages = Arr.filter(
+      store.getAllQueries(nina.messages.list),
+      (page) =>
+        page.args.chatId === args.chatId &&
+        page.args.threadId === threadId &&
+        !page.args.streamArgs
+    );
+    const messages = Arr.flatMap(pages, (page) =>
       Option.isSome(page.value) ? page.value.value.page : []
     );
-    const order = 1 + Math.max(-1, ...messages.map((message) => message.order));
+    const order =
+      1 + Math.max(-1, ...Arr.map(messages, (message) => message.order));
     const input = args.input;
-    const prompt =
+    const prompt: Option.Option<
+      Pick<(typeof messages)[number], "parts" | "text">
+    > =
       input.kind === "message"
-        ? {
+        ? Option.some({
             text: input.prompt.text,
             parts: [
               { type: "text", text: input.prompt.text },
-              ...(input.prompt.uploadIds ?? []).flatMap((id) => {
+              ...Arr.flatMap(input.prompt.uploadIds ?? [], (id) => {
                 const file = Option.getOrUndefined(HashMap.get(previews, id));
                 return file ? [file] : [];
               }),
             ],
-          }
-        : messages.find(
+          })
+        : Arr.findFirst(
+            messages,
             (message) =>
               message.order === input.order && message.role === "user"
           );
-    if (!prompt) {
+    if (Option.isNone(prompt)) {
       return;
     }
-    const { text, parts } = prompt;
+    const { text, parts } = prompt.value;
     for (const page of pages) {
       if (
         page.args.paginationOpts.cursor !== null ||
@@ -182,7 +186,7 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
   uploaded: WeakMap<File, Id<"ninaUploads">>,
   previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>
 ) {
-  if (exceedsDocumentLimit(files.map((attachment) => attachment.file))) {
+  if (exceedsDocumentLimit(Arr.map(files, (attachment) => attachment.file))) {
     return yield* new NinaUploadError({
       code: "NINA_UPLOAD_SIZE",
       message: "The documents in one message can hold at most 10 MiB together.",

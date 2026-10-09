@@ -32,7 +32,7 @@ const SNBT_SECTIONS = [
 
 describe("try-out icons", () => {
   it("keeps visible exam selector options unique by icon", () => {
-    const icons = ["snbt", "tka"].map((key) =>
+    const icons = Arr.map(["snbt", "tka"], (key) =>
       serializeIcon(getTryoutExamIcon(key))
     );
 
@@ -44,10 +44,10 @@ describe("try-out icons", () => {
   });
 
   it("gives every UTBK-SNBT subtest its own icon", () => {
-    const icons = SNBT_SECTIONS.map((key) => getTryoutSubjectIcon(key));
+    const icons = Arr.map(SNBT_SECTIONS, (key) => getTryoutSubjectIcon(key));
 
     expect(icons).not.toContain(BulbIcon);
-    expect(Arr.dedupe(icons.map(serializeIcon)).length).toBe(
+    expect(Arr.dedupe(Arr.map(icons, serializeIcon)).length).toBe(
       SNBT_SECTIONS.length
     );
   });

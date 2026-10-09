@@ -4,7 +4,7 @@ import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -67,7 +67,7 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {page.countries.map((country, index) => {
+      {Arr.map(page.countries, (country, index) => {
         const imageSrc = getTryoutCountryCatalogArtwork(locale, {
           countryKey: country.countryKey,
         });

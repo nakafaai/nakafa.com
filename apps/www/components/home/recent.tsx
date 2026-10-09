@@ -8,6 +8,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { MaterialRow } from "@/components/home/material";
 
@@ -41,7 +42,7 @@ export function HomeContinueLearning({
         <HugeIcons className="size-4" icon={Progress03Icon} />
       </h2>
       <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-        {subjects.map((subject) => (
+        {Arr.map(subjects, (subject) => (
           <MaterialRow
             key={`${subject.content_id}:${subject.contextKey}`}
             material={subject}

@@ -35,6 +35,7 @@ import {
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -117,7 +118,7 @@ export function SchoolSwitcher({
                 }}
               >
                 {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
-                {schools.map((school) => {
+                {Arr.map(schools, (school) => {
                   const schoolIcon = getSchoolIcon(school.type);
                   return (
                     <DropdownMenuItem

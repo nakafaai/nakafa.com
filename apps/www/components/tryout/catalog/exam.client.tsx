@@ -5,6 +5,7 @@ import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 
+import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import {
@@ -37,7 +38,7 @@ export function TryoutExamPageClient({
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-24">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {page.tracks.map((track, index) => {
+        {Arr.map(page.tracks, (track, index) => {
           const imageSrc = getTryoutTrackCatalogArtwork(locale, {
             countryKey: page.country.countryKey,
             examKey: page.exam.examKey,

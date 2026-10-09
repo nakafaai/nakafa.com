@@ -8,6 +8,7 @@ import {
 import { STUDENT_FORUM_TAGS } from "@repo/backend/confect/classes/forums/constants";
 import type { SchoolClassMemberRole } from "@repo/backend/confect/classes/role";
 import type { SchoolMemberRole } from "@repo/backend/confect/schools/schema";
+import { Array as Arr, Option } from "effect";
 
 const tagList = [
   {
@@ -37,7 +38,13 @@ export type TagValue = (typeof tagList)[number]["value"];
  * Resolve the icon used to represent one forum tag.
  */
 export function getTagIcon(tag: TagValue) {
-  return tagList.find((t) => t.value === tag)?.icon ?? ChatIcon;
+  return Option.match(
+    Arr.findFirst(tagList, (t) => t.value === tag),
+    {
+      onNone: () => ChatIcon,
+      onSome: (t) => t.icon,
+    }
+  );
 }
 
 /**
@@ -58,8 +65,8 @@ export function getTagsByRole(
   ) {
     return tagList;
   }
-  return tagList.filter((tag) =>
-    STUDENT_FORUM_TAGS.some((studentTag) => studentTag === tag.value)
+  return Arr.filter(tagList, (tag) =>
+    Arr.some(STUDENT_FORUM_TAGS, (studentTag) => studentTag === tag.value)
   );
 }
 
@@ -70,5 +77,8 @@ export function getTagsByRole(
  */
 export function getTag(value: TagValue) {
   // Default to general if no tag is found
-  return tagList.find((t) => t.value === value) ?? tagList[0];
+  return Option.getOrElse(
+    Arr.findFirst(tagList, (t) => t.value === value),
+    () => tagList[0]
+  );
 }

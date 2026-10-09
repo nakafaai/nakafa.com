@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { HashMap, Option } from "effect";
+import { Array as Arr, HashMap, Option } from "effect";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import { createActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
@@ -34,7 +34,7 @@ describe("conversation/data/transcript/active", () => {
       },
     });
 
-    expect(model.rows.map((row) => row.type)).toEqual([
+    expect(Arr.map(model.rows, (row) => row.type)).toEqual([
       "header",
       "date",
       "post",

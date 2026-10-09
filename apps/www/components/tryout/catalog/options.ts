@@ -4,7 +4,7 @@ import {
   publicTryoutCountryValidator,
   publicTryoutExamValidator,
 } from "@repo/backend/confect/tryouts/queries/catalogModel";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { Locale } from "next-intl";
 
 type TryoutHubPage = Ref.Returns<typeof tryouts.queries.catalog.getHubPage>;
@@ -39,7 +39,7 @@ export function buildTryoutCountryOptions(
   locale: Locale,
   countries: TryoutHubPage["countries"]
 ): readonly TryoutCountrySelectorOption[] {
-  return countries.map((country) => ({
+  return Arr.map(countries, (country) => ({
     countryCode: country.countryCode,
     countryKey: country.countryKey,
     href: `/${locale}/${country.publicPath}`,
@@ -54,7 +54,7 @@ export function buildTryoutExamOptions(
   locale: Locale,
   exams: TryoutCountryPage["exams"]
 ): readonly TryoutExamSelectorOption[] {
-  return exams.map((exam) => ({
+  return Arr.map(exams, (exam) => ({
     examKey: exam.examKey,
     href: `/${locale}/${exam.publicPath}`,
     title: exam.title,

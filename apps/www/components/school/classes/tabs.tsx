@@ -12,6 +12,7 @@ import {
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
+import { Array as Arr, Option } from "effect";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -40,10 +41,14 @@ export function SchoolClassesTabs() {
     },
   ];
 
-  const value =
-    tabs.find(
-      (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
-    )?.href || tabs[0]?.href;
+  const current = Arr.findFirst(
+    tabs,
+    (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+  );
+  const value = Option.match(current, {
+    onNone: () => tabs[0]?.href,
+    onSome: (tab) => tab.href || tabs[0]?.href,
+  });
 
   return (
     <div className="sticky top-0 z-10 -mt-2 flex h-12 w-full shrink-0 border-b bg-background">
@@ -51,7 +56,7 @@ export function SchoolClassesTabs() {
         <div className="scrollbar-hide flex w-full overflow-x-auto px-6">
           <Tabs className="contents" value={value}>
             <TabsList className="bg-transparent p-0 [&_[data-slot=tab-indicator]]:bg-accent">
-              {tabs.map((tab) => (
+              {Arr.map(tabs, (tab) => (
                 <TabsTab
                   className="h-8 px-3 text-muted-foreground data-active:text-accent-foreground"
                   key={tab.href}

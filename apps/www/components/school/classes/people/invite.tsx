@@ -20,7 +20,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { HashMap, Option } from "effect";
+import { Array as Arr, HashMap, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -72,7 +72,7 @@ export function SchoolClassesPeopleInvite() {
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
             <DropdownMenuLabel>{t("role")}</DropdownMenuLabel>
-            {inviteRoleList.map((role) => (
+            {Arr.map(inviteRoleList, (role) => (
               <DropdownMenuItem
                 className="cursor-pointer"
                 key={role.value}

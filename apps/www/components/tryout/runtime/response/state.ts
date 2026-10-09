@@ -1,7 +1,13 @@
 import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { select } from "@repo/backend/confect/response/selection";
-import { MutableHashMap, MutableHashSet, Option, Result } from "effect";
+import {
+  Array as Arr,
+  MutableHashMap,
+  MutableHashSet,
+  Option,
+  Result,
+} from "effect";
 
 import type { TryoutResponseFieldsProps } from "@/components/tryout/runtime/response/fields.client";
 import type {
@@ -29,7 +35,7 @@ export function applyOptimisticTryoutResponse(
   let answeredDelta = 0;
   let foundQuestion = false;
   let validSelection = true;
-  const questions = runtime.questions.map((question) => {
+  const questions = Arr.map(runtime.questions, (question) => {
     if (question.placementId !== args.placementId) {
       return question;
     }
@@ -91,7 +97,7 @@ export function toggleMultipleChoiceSelection(
   } else {
     MutableHashSet.add(selected, optionKey);
   }
-  const optionKeys = state.responseSpec.options.flatMap(({ optionKey }) =>
+  const optionKeys = Arr.flatMap(state.responseSpec.options, ({ optionKey }) =>
     MutableHashSet.has(selected, optionKey) ? [optionKey] : []
   );
   return optionKeys.length > 0 ? { kind: "multiple-choice", optionKeys } : null;
@@ -108,7 +114,7 @@ export function assignCategorySelection(
   }
   const assignments = MutableHashMap.fromIterable(
     state.selection?.kind === "category"
-      ? state.selection.assignments.map((assignment) => [
+      ? Arr.map(state.selection.assignments, (assignment) => [
           assignment.statementKey,
           assignment.categoryKey,
         ])
@@ -116,7 +122,7 @@ export function assignCategorySelection(
   );
   MutableHashMap.set(assignments, statementKey, categoryKey);
   return {
-    assignments: state.responseSpec.statements.flatMap((statement) => {
+    assignments: Arr.flatMap(state.responseSpec.statements, (statement) => {
       const assignedCategory = Option.getOrUndefined(
         MutableHashMap.get(assignments, statement.statementKey)
       );

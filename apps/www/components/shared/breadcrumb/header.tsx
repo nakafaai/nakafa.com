@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
@@ -52,7 +52,7 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
       <h1 className="sr-only">{title}</h1>
       <BreadcrumbHeaderPath
         homeLabel={homeLabel}
-        items={items.map((item, index) =>
+        items={Arr.map(items, (item, index) =>
           index === items.length - 1 ? { ...item, href: undefined } : item
         )}
         menuLabel={menuLabel}
@@ -86,7 +86,7 @@ export function BreadcrumbHeaderPath({
         {hiddenItems.length > 0 && (
           <BreadcrumbMenu items={hiddenItems} menuLabel={menuLabel} />
         )}
-        {visibleItems.map((item) => (
+        {Arr.map(visibleItems, (item) => (
           <BreadcrumbHeaderSegment
             item={item}
             key={`${item.label}:${item.href ?? "current"}`}
@@ -125,7 +125,7 @@ function BreadcrumbMenu({
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuGroup>
               <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
-              {items.map((item) => (
+              {Arr.map(items, (item) => (
                 <BreadcrumbMenuItem
                   item={item}
                   key={`${item.label}:${item.href ?? "current"}`}

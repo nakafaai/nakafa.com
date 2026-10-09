@@ -18,7 +18,7 @@ import type {
   FunctionReference,
   FunctionReturnType,
 } from "convex/server";
-import { DateTime, Effect, Option, Result } from "effect";
+import { Array as Arr, DateTime, Effect, Option, Result } from "effect";
 import {
   createContext,
   type PropsWithChildren,
@@ -123,7 +123,7 @@ function useMessages(
             text: opening.prompt.text,
             parts: [
               { type: "text", text: opening.prompt.text },
-              ...opening.prompt.files.map(({ filename, ...file }) => ({
+              ...Arr.map(opening.prompt.files, ({ filename, ...file }) => ({
                 ...file,
                 ...(filename === undefined ? {} : { filename }),
                 type: "file" as const,
@@ -135,7 +135,8 @@ function useMessages(
       : pagination.results;
   const messages: NinaMessage[] =
     draft &&
-    !committed.some(
+    !Arr.some(
+      committed,
       (message) => message.role === "user" && message.order >= draft.order
     )
       ? [
@@ -150,7 +151,7 @@ function useMessages(
             text: draft.prompt.text,
             parts: [
               { type: "text", text: draft.prompt.text },
-              ...(draft.prompt.files ?? []).map(({ file, url }) => ({
+              ...Arr.map(draft.prompt.files ?? [], ({ file, url }) => ({
                 type: "file" as const,
                 url,
                 filename: file.name,
@@ -242,7 +243,7 @@ function useChatState(chatId: Id<"chats">) {
           1 +
           Math.max(
             -1,
-            ...latestMessages.current.map((message) => message.order)
+            ...Arr.map(latestMessages.current, (message) => message.order)
           ),
         createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
       });
@@ -278,21 +279,20 @@ function useChatState(chatId: Id<"chats">) {
   }
 
   function retry(order?: number) {
-    const prompt = [...latestMessages.current]
-      .reverse()
-      .find(
-        (message) =>
-          message.role === "user" &&
-          (order === undefined || message.order === order)
-      );
-    if (!prompt) {
+    const prompt = Arr.findFirst(
+      Arr.reverse(latestMessages.current),
+      (message) =>
+        message.role === "user" &&
+        (order === undefined || message.order === order)
+    );
+    if (Option.isNone(prompt)) {
       return;
     }
     if (busy || isLoading || isPending) {
       return;
     }
     startTransition(async () => {
-      await submission.retry(prompt.order, chatId);
+      await submission.retry(prompt.value.order, chatId);
     });
   }
 
@@ -305,7 +305,8 @@ function useChatState(chatId: Id<"chats">) {
     isPending,
     error: submission.error ?? cancelError,
     /** Whether the assistant's reply to the current turn failed in the transcript. */
-    hasTurnFailure: messages.some(
+    hasTurnFailure: Arr.some(
+      messages,
       (message) =>
         message.role === "assistant" &&
         message.order === turn?.order &&

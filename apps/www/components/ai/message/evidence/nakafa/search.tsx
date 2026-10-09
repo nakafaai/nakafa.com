@@ -44,7 +44,7 @@ export function SearchPart({ message }: Props) {
       <SearchPartQueries message={message} />
       {hasItems ? (
         <div className="flex flex-wrap items-center gap-2">
-          {items.map((item) => (
+          {Arr.map(items, (item) => (
             <Button
               className="max-w-full"
               key={item.content_id}
@@ -83,7 +83,7 @@ SearchPart.displayName = "SearchPart";
 
 function SearchPartQueries({ message }: Props) {
   const queries = Arr.dedupe(
-    (message.input.queries ?? []).flatMap((query) => {
+    Arr.flatMap(message.input.queries ?? [], (query) => {
       const text = query.trim();
 
       if (!text) {
@@ -100,7 +100,7 @@ function SearchPartQueries({ message }: Props) {
 
   return (
     <div className="flex flex-col gap-1">
-      {queries.map((query) => (
+      {Arr.map(queries, (query) => (
         <SearchQueryText key={query} query={query} />
       ))}
     </div>

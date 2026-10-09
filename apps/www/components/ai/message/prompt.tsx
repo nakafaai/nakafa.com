@@ -8,6 +8,7 @@ import {
   MessageFooter,
 } from "@repo/design-system/components/ui/message";
 import type { FileUIPart } from "ai";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { NinaAttachment } from "@/components/ai/attachment";
 
@@ -28,7 +29,7 @@ export function NinaPrompt({
     <MessageContent>
       {files.length > 0 ? (
         <AttachmentGroup className="max-w-full justify-end">
-          {files.map((file) => (
+          {Arr.map(files, (file) => (
             <NinaAttachment file={file} key={file.url} />
           ))}
         </AttachmentGroup>

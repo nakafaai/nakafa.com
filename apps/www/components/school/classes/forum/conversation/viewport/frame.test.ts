@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Stream } from "effect";
+import { Array as Arr, Effect, Stream } from "effect";
 import type { RefObject } from "react";
 import type { BrowserViewportScroller } from "@/components/school/classes/forum/conversation/viewport/browser";
 import { viewportTestTranscript } from "@/components/school/classes/forum/conversation/viewport/fixture";
@@ -64,12 +64,12 @@ describe("conversation/viewport/frame", () => {
   });
 
   it("measures the scroller and forwards normalized viewport events", async () => {
-    const events: ViewportEvent[] = [];
+    let events: ViewportEvent[] = [];
     const viewport = {
       changes: Stream.empty,
       dispatch: (event) =>
         Effect.sync(() => {
-          events.push(event);
+          events = Arr.append(events, event);
         }),
       flushSnapshot: Effect.void,
       getState: Effect.succeed(initialViewportState),
@@ -101,12 +101,12 @@ describe("conversation/viewport/frame", () => {
   it("replaces and cancels animation-frame measurements", async () => {
     const cancelAnimationFrame = vi.fn();
     const requestAnimationFrame = vi.fn((_callback: FrameRequestCallback) => 7);
-    const events: ViewportEvent[] = [];
+    let events: ViewportEvent[] = [];
     const viewport = {
       changes: Stream.empty,
       dispatch: (event) =>
         Effect.sync(() => {
-          events.push(event);
+          events = Arr.append(events, event);
         }),
       flushSnapshot: Effect.void,
       getState: Effect.succeed(initialViewportState),

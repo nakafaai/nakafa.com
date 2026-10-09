@@ -9,7 +9,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { getTranslations } from "next-intl/server";
 import {
   PricingPrice,
@@ -91,7 +91,7 @@ export async function TryoutReviewLocked({
         className="pointer-events-none absolute inset-x-0 top-0 select-none space-y-12 px-6 pt-1"
         inert
       >
-        {preview.map((question) => (
+        {Arr.map(preview, (question) => (
           <TryoutLockedQuestionShell
             key={question.questionOrder}
             questionOrder={question.questionOrder}
