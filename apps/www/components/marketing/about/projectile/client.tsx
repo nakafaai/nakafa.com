@@ -11,7 +11,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
@@ -169,17 +169,19 @@ export function ProjectileClient({
   const { sceneFrameRef, sceneVisible } = useProjectileSceneVisibility();
   const shouldReduceMotion = useReducedMotion() ?? false;
   const [scenarioId, setScenarioId] = useState(initialScenario.id);
-  const activeScenario =
-    scenarios.find(({ id }) => id === scenarioId) ?? initialScenario;
+  const activeScenario = Option.getOrElse(
+    Arr.findFirst(scenarios, ({ id }) => id === scenarioId),
+    () => initialScenario
+  );
 
   /** Selects a verified projectile scenario for the interactive lesson scene. */
   function handleScenarioChange(value: string) {
-    const scenario = scenarios.find(({ id }) => id === value);
-    if (!scenario) {
+    const scenario = Arr.findFirst(scenarios, ({ id }) => id === value);
+    if (Option.isNone(scenario)) {
       return;
     }
 
-    setScenarioId(scenario.id);
+    setScenarioId(scenario.value.id);
   }
 
   return (
@@ -198,7 +200,7 @@ export function ProjectileClient({
             value={scenarioId}
             variant="outline"
           >
-            {scenarios.map((scenario) => (
+            {Arr.map(scenarios, (scenario) => (
               <ToggleGroupItem key={scenario.id} value={scenario.id}>
                 {scenario.label}
               </ToggleGroupItem>
@@ -222,7 +224,7 @@ export function ProjectileClient({
 
       <div className="border-t p-8 lg:p-10">
         <dl className="grid w-full grid-cols-1 gap-x-6 gap-y-5 text-sm sm:grid-cols-2 xl:grid-cols-3">
-          {activeScenario.facts.map((fact) => (
+          {Arr.map(activeScenario.facts, (fact) => (
             <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
               <dt className="text-muted-foreground">{fact.label}</dt>
               <dd className="wrap-break-word text-foreground tabular-nums">

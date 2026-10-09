@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { SubjectsArt } from "@/components/marketing/about/features/subjects";
@@ -42,7 +43,7 @@ export async function Features({ locale }: { locale: Locale }) {
                 aria-label={t("subjects-navigation")}
                 className="mt-auto w-full max-w-lg"
               >
-                {subjects.map((route) => (
+                {Arr.map(subjects, (route) => (
                   <SubjectItem
                     href={`/${locale}/${route.publicPath}`}
                     icon={readCurriculumRouteIcon(route)}

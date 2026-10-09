@@ -6,12 +6,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@repo/design-system/components/ui/accordion";
+import { Array as Arr } from "effect";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 
 export function FaqAccordion({ faqs }: { faqs: readonly MarketingFaqItem[] }) {
   return (
     <Accordion className="w-full">
-      {faqs.map((faq) => (
+      {Arr.map(faqs, (faq) => (
         <AccordionItem key={faq.question} value={faq.question}>
           <AccordionTrigger className="text-base transition-colors ease-out hover:text-primary hover:no-underline">
             {faq.question}
