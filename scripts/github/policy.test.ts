@@ -173,7 +173,14 @@ describe("GitHub Action policy", () => {
         expect(workflow).toEqual(
           expect.objectContaining({
             jobs: expect.objectContaining({
-              backend: expect.objectContaining({ name: "Backend" }),
+              backend: expect.objectContaining({
+                name: "Backend",
+                steps: expect.arrayContaining([
+                  expect.objectContaining({
+                    run: "pnpm --dir packages/backend test",
+                  }),
+                ]),
+              }),
               required: expect.objectContaining({
                 needs: ["scope", "quality", "backend", "production", "doctor"],
               }),
@@ -183,9 +190,9 @@ describe("GitHub Action policy", () => {
         expect(source).toContain(
           "pnpm exec turbo run test --filter='!@repo/backend'"
         );
-        expect(source).toContain(
-          "pnpm exec turbo run test --filter=@repo/backend"
-        );
+        // A workspace filter exits 0 without running anything when the backend
+        // has no test script, so the backend job runs its package script.
+        expect(source).not.toContain("turbo run test --filter=@repo/backend");
       }).pipe(Effect.provide(NodeServices.layer))
   );
 

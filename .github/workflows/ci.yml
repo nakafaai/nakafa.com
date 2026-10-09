@@ -156,6 +156,8 @@ jobs:
     name: Backend
     needs: scope
     # The backend suite takes most of the test time, so it runs in its own job.
+    # The package directory runs its own test script. A workspace filter would
+    # exit 0 without running anything when that script is missing.
     if: ${{ !cancelled() && needs.scope.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -174,7 +176,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run backend tests
-        run: pnpm exec turbo run test --filter=@repo/backend
+        run: pnpm --dir packages/backend test
 
   production:
     name: Production
