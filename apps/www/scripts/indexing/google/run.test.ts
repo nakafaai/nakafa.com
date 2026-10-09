@@ -216,16 +216,18 @@ describe("runGoogleIndexing", () => {
       const events = MutableList.make<string>();
       const lines = MutableList.make<string>();
       return Effect.gen(function* () {
+        const { submissionHistory } = yield* indexingPaths;
         const memory = memoryFiles(events, []);
         sitemapOf([FIRST, SECOND, THIRD]);
         answerRun(events, [FIRST, THIRD], accepted);
 
         yield* runToEnd(runGoogle(memory.layer, lines));
 
-        expect(MutableList.toArray(events)).toEqual(
-          expect.arrayContaining([`publish ${FIRST}`, `publish ${THIRD}`])
-        );
-        expect(MutableList.toArray(events)).not.toContain(`publish ${SECOND}`);
+        expect(MutableList.toArray(events)).toEqual([
+          `publish ${FIRST}`,
+          `publish ${THIRD}`,
+          `write ${submissionHistory}`,
+        ]);
         expect(MutableList.toArray(lines)).toContain(
           "Canonical URLs in sitemap batch 1: 3"
         );
