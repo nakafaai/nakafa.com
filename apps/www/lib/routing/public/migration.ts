@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Effect, HashSet, Option, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
@@ -206,7 +206,7 @@ function readPreviousMaterialIdentity(pathname: string) {
     topic,
     section,
     ...extraSegments
-  ] = pathname.split("/").filter(Boolean);
+  ] = Arr.filter(pathname.split("/"), Boolean);
   if (
     !(
       namespace === PREVIOUS_SUBJECT_NAMESPACE &&

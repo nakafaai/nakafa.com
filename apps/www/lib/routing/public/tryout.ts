@@ -1,4 +1,4 @@
-import { Effect, HashMap, Option } from "effect";
+import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 
 const TRYOUT_ROOT = "try-out";
@@ -41,7 +41,7 @@ function isRetiredSectionLocale(
 /** Reads one retired SNBT section URL as its retired and successor routes. */
 function readRetiredSnbtSection(pathname: string) {
   const [appLocale, root, country, exam, track, set, section, ...rest] =
-    pathname.split("/").filter(Boolean);
+    Arr.filter(pathname.split("/"), Boolean);
   if (
     !(
       isRetiredSectionLocale(appLocale) &&
@@ -60,7 +60,7 @@ function readRetiredSnbtSection(pathname: string) {
   if (Option.isNone(successor)) {
     return null;
   }
-  const setPath = [root, country, exam, track, set].join("/");
+  const setPath = Arr.join([root, country, exam, track, set], "/");
   return {
     appLocale,
     previousPath: `${setPath}/${section}`,
