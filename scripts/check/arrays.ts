@@ -5,7 +5,6 @@ import {
   Option,
   Order,
   Path,
-  Record as Rec,
   Result,
   String as Str,
 } from "effect";
@@ -27,6 +26,9 @@ type ParsedModule = Effect.Success<
   ReturnType<typeof parseSources>
 >["modules"][number];
 
+/** One array method call that breaks a rule, reported by the project that judged its module. */
+type ArrayFinding = Effect.Success<ReturnType<typeof judgeSource>>[number];
+
 const PROJECT_CONFIG_NAME = "tsconfig.json";
 const PROJECT_CONFIG_PATTERN = /(?:^|\/)tsconfig\.json$/u;
 
@@ -35,10 +37,13 @@ export function isProjectConfig(file: string) {
   return PROJECT_CONFIG_PATTERN.test(file);
 }
 
-/** Returns the nearest project configuration at or above a file's folder, when one exists. */
-function nearestConfig(file: string, configs: HashSet.HashSet<string>) {
+/**
+ * Returns the project configurations at or above a file's folder that exist, nearest
+ * first. The first of them whose project contains the file judges it.
+ */
+function projectsUpward(file: string, configs: HashSet.HashSet<string>) {
   const folders = Arr.dropRight(Str.split(file, "/"), 1);
-  return Arr.findFirst(
+  return Arr.filter(
     Arr.makeBy(folders.length + 1, (depth) =>
       Arr.join(
         Arr.append(
@@ -50,6 +55,11 @@ function nearestConfig(file: string, configs: HashSet.HashSet<string>) {
     ),
     (candidate) => HashSet.has(configs, candidate)
   );
+}
+
+/** Returns how many folders a project configuration sits below the repository root. */
+function depthOf(config: string) {
+  return Str.split(config, "/").length - 1;
 }
 
 /**
@@ -87,11 +97,13 @@ const judgeSource = Effect.fnUntraced(function* (
   );
 });
 
-/** Judges one module in the project that opened it, failing when that project does not contain it. */
+/**
+ * Judges one module in the project that opened it. A module that the project does
+ * not contain fails the result, so the next project up its folder tree judges it.
+ */
 const judgeModule = Effect.fnUntraced(function* (
   project: Project,
   root: string,
-  config: string,
   pageKeys: HashSet.HashSet<string>,
   file: string
 ) {
@@ -105,21 +117,23 @@ const judgeModule = Effect.fnUntraced(function* (
       }),
   });
   if (sourceFile === undefined) {
-    return yield* new TestCompilerError({
-      cause: file,
-      message: `${file} is not part of its nearest project ${config}, so the array rules cannot read its types.`,
-    });
+    return Result.fail(file);
   }
-  return yield* judgeSource(project.checker, file, sourceFile, pageKeys);
+  return Result.succeed(
+    yield* judgeSource(project.checker, file, sourceFile, pageKeys)
+  );
 });
 
-/** Opens one project, judges its modules in it, and releases its snapshot before the next project opens. */
+/**
+ * Opens one project, judges the modules it contains, and releases its snapshot before
+ * the next project opens. Returns the findings, and the files the project does not contain.
+ */
 const inspectProject = Effect.fn("RepositoryPolicy.inspectArrays")(function* (
   api: API,
   root: string,
   pageKeys: HashSet.HashSet<string>,
   config: string,
-  previous: string | undefined,
+  previous: Option.Option<string>,
   files: readonly string[]
 ) {
   const path = yield* Path.Path;
@@ -130,8 +144,10 @@ const inspectProject = Effect.fn("RepositoryPolicy.inspectArrays")(function* (
       try: () =>
         api.updateSnapshot({
           openProjects: [path.join(root, config)],
-          closeProjects:
-            previous === undefined ? [] : [path.join(root, previous)],
+          closeProjects: Option.match(previous, {
+            onNone: () => [],
+            onSome: (project) => [path.join(root, project)],
+          }),
         }),
       catch: openFailure,
     }),
@@ -147,17 +163,19 @@ const inspectProject = Effect.fn("RepositoryPolicy.inspectArrays")(function* (
       message: `Unable to open ${config}.`,
     });
   }
-  const findings = yield* Effect.forEach(files, (file) =>
-    judgeModule(project, root, config, pageKeys, file)
+  const judged = yield* Effect.forEach(files, (file) =>
+    judgeModule(project, root, pageKeys, file)
   );
-  return Arr.flatten(findings);
+  const [found, missing] = Arr.separate(judged);
+  return { findings: Arr.flatten(found), missing };
 }, Effect.scoped);
 
 /**
  * Reports the array method calls whose receiver the compiler types as an array.
- * Each covered module is judged in the project of its nearest `tsconfig.json`.
- * Projects open one at a time, and each opening closes the one before it. A
- * covered module that no project contains fails the check, so none is skipped.
+ * Each covered module is judged by the nearest project up its folder tree that
+ * contains it. Projects open one at a time, deepest first, so each opens once and
+ * closes the one before it. A covered module that no project contains fails the
+ * check, and the failure names every project tried, so none is skipped.
  */
 export const arrayFindings = Effect.fn("RepositoryPolicy.arrayFindings")(
   function* (
@@ -175,34 +193,73 @@ export const arrayFindings = Effect.fn("RepositoryPolicy.arrayFindings")(
       Arr.some(ARRAY_RULES, (rule) => covers(rule, file, sourceFile))
     );
     const configSet = HashSet.fromIterable(configs);
-    const located = yield* Effect.forEach(covered, ({ file }) =>
-      Option.match(nearestConfig(file, configSet), {
-        onNone: () =>
-          Effect.fail(
+    const located = yield* Effect.forEach(covered, ({ file }) => {
+      const chain = projectsUpward(file, configSet);
+      return Arr.isReadonlyArrayEmpty(chain)
+        ? Effect.fail(
             new TestCompilerError({
               cause: file,
               message: `${file} has no tsconfig.json up its folder tree, so the array rules cannot read its types.`,
             })
+          )
+        : Effect.succeed({ chain, file });
+    });
+    // Each chain lists its projects nearest first, and a nearer project is always deeper,
+    // so opening the deepest projects first gives every module its nearest project first.
+    const ordered = Arr.sort(
+      Arr.dedupe(Arr.flatMap(located, ({ chain }) => chain)),
+      Order.combine(
+        Order.mapInput(Order.flip(Order.Number), depthOf),
+        Order.String
+      )
+    );
+    const judgment = yield* Effect.reduce(
+      ordered,
+      () => ({
+        findings: Arr.empty<ArrayFinding>(),
+        opened: Option.none<string>(),
+        pending: located,
+      }),
+      (state, config) => {
+        const batch = Arr.filter(state.pending, ({ chain }) =>
+          Arr.contains(chain, config)
+        );
+        if (Arr.isReadonlyArrayEmpty(batch)) {
+          return Effect.succeed(state);
+        }
+        const rest = Arr.filter(
+          state.pending,
+          ({ chain }) => !Arr.contains(chain, config)
+        );
+        return Effect.map(
+          inspectProject(
+            api,
+            root,
+            pageKeys,
+            config,
+            state.opened,
+            Arr.map(batch, ({ file }) => file)
           ),
-        onSome: (config) => Effect.succeed({ config, file }),
-      })
+          ({ findings, missing }) => ({
+            findings: Arr.appendAll(state.findings, findings),
+            opened: Option.some(config),
+            pending: Arr.appendAll(
+              rest,
+              Arr.filter(batch, ({ file }) => Arr.contains(missing, file))
+            ),
+          })
+        );
+      }
     );
-    const groups = Arr.groupBy(located, ({ config }) => config);
-    const names = Arr.sort(Rec.keys(groups), Order.String);
-    const previous = Arr.prepend(Arr.dropRight(names, 1), undefined);
-    const findings = yield* Effect.forEach(
-      Arr.zip(names, previous),
-      ([config, before]) =>
-        inspectProject(
-          api,
-          root,
-          pageKeys,
-          config,
-          before,
-          Arr.map(groups[config], ({ file }) => file)
+    return yield* Option.match(Arr.head(judgment.pending), {
+      onNone: () => Effect.succeed(judgment.findings),
+      onSome: ({ chain, file }) =>
+        Effect.fail(
+          new TestCompilerError({
+            cause: file,
+            message: `${file} is not part of any project up its folder tree (tried ${Arr.join(chain, ", ")}), so the array rules cannot read its types.`,
+          })
         ),
-      { concurrency: 1 }
-    );
-    return Arr.flatten(findings);
+    });
   }
 );

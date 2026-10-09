@@ -5,6 +5,7 @@ import {
   isCompilerConfig,
 } from "#scripts/check/compiler";
 
+const PACKAGE = "@repo/typescript-config";
 const BASE = "packages/typescript-config/base.json";
 const LIBRARY = "packages/typescript-config/library.json";
 const NEXT = "packages/typescript-config/nextjs.json";
@@ -50,7 +51,7 @@ describe("compiler configuration policy", () => {
 
   it("accepts configurations that reach the same shared rules", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs([
+      inspectCompilerConfigs(PACKAGE, [
         {
           file: "apps/www/tsconfig.json",
           sourceText: config("@repo/typescript-config/nextjs.json"),
@@ -86,7 +87,7 @@ describe("compiler configuration policy", () => {
 
   it("rejects a shared configuration whose rules differ", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs([
+      inspectCompilerConfigs(PACKAGE, [
         { file: BASE, sourceText: config(undefined, [RULES]) },
         {
           file: NEXT,
@@ -103,7 +104,7 @@ describe("compiler configuration policy", () => {
 
   it("rejects every configuration a dropped block leaves without rules", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs([
+      inspectCompilerConfigs(PACKAGE, [
         {
           file: "apps/api/tsconfig.json",
           sourceText: config("@repo/typescript-config/library.json"),
@@ -128,7 +129,7 @@ describe("compiler configuration policy", () => {
 
   it("rejects a workspace configuration that declares plugins", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs([
+      inspectCompilerConfigs(PACKAGE, [
         {
           file: "apps/www/tsconfig.json",
           sourceText: config("@repo/typescript-config/base.json", [
@@ -150,7 +151,7 @@ describe("compiler configuration policy", () => {
 
   it("rejects a configuration it cannot read or follow", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs([
+      inspectCompilerConfigs(PACKAGE, [
         { file: "apps/api/tsconfig.json", sourceText: config(undefined) },
         {
           file: "apps/cycle/tsconfig.json",
