@@ -9,7 +9,7 @@ const STORAGE_KEY = "nakafa-ai";
 const StoredAiState = Schema.fromJsonString(
   Schema.Struct({
     state: Schema.Record(Schema.String, Schema.Unknown),
-    version: Schema.Number,
+    version: Schema.Finite,
   })
 );
 const chatId = Schema.decodeUnknownSync(Id("chats"))("chat_1");

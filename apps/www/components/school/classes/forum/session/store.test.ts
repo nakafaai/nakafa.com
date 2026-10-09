@@ -37,7 +37,7 @@ const STORAGE_KEY = "nakafa-forum-session:class-session-test";
 const StoredForumSession = Schema.fromJsonString(
   Schema.Struct({
     state: Schema.Record(Schema.String, Schema.Unknown),
-    version: Schema.Number,
+    version: Schema.Finite,
   })
 );
 

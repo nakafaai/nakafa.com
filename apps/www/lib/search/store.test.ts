@@ -8,7 +8,7 @@ const STORAGE_KEY = "nakafa-search";
 const StoredSearch = Schema.fromJsonString(
   Schema.Struct({
     state: Schema.Record(Schema.String, Schema.Unknown),
-    version: Schema.Number,
+    version: Schema.Finite,
   })
 );
 
