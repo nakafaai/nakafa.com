@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "react": "19.2.8",
-    "react-email": "6.11.1"
+    "react-email": "catalog:"
   },
   "devDependencies": {
     "@react-email/ui": "6.11.1",

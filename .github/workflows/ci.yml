@@ -145,7 +145,8 @@ jobs:
 
       - name: Run tests
         # The backend suite runs in its own job. Its filter keeps it out of this
-        # run, and the test tasks in turbo.json depend on no other package's tests.
+        # run. The test tasks in turbo.json reach other packages only through
+        # transit nodes, which run no tests.
         run: |
           pnpm check:patches
           pnpm check:tests

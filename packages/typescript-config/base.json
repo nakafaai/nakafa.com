@@ -11,6 +11,7 @@
     "module": "NodeNext",
     "moduleDetection": "force",
     "moduleResolution": "NodeNext",
+    "noEmit": true,
     "plugins": [
       {
         "name": "@effect/language-service",
