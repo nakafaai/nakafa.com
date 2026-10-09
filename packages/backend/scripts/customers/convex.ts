@@ -1,5 +1,6 @@
 import { parseEnv } from "node:util";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
+import { getUnknownMessage } from "@repo/backend/scripts/lib/errors";
 import { FetchClient } from "@repo/utilities/http/client";
 import type {
   DefaultFunctionArgs,
@@ -58,8 +59,6 @@ class CustomerConvexResponseError extends Schema.TaggedError<CustomerConvexRespo
   "CustomerConvexResponseError",
   { message: Schema.String }
 ) {}
-const getUnknownMessage = (error: unknown) =>
-  error instanceof Error ? error.message : String(error);
 /** Reports why Convex's answer could not be read, in the words of its cause. */
 const toResponseError = (error: HttpClientError.HttpClientError) =>
   new CustomerConvexResponseError({
