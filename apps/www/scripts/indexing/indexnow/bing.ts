@@ -38,11 +38,14 @@ export const readBingWebmasterApiKey = Effect.fn(
 /**
  * Submits canonical sitemap URLs to Bing's URL Submission API.
  *
- * The adapter respects Bing quota messages by reducing batch size or stopping
- * when the endpoint reports the daily quota has already been exhausted. It
- * returns the URLs Bing accepted, whether a quota stop ended the call, and,
- * when a batch fails, the typed failure that ended the call. The caller saves
- * the accepted URLs before it fails, and a quota stop is not a failure.
+ * A quota message whose remaining quota is smaller than the refused batch
+ * shrinks the next batch to that quota. A quota message that allows the refused
+ * batch is a typed failure, because Bing refused for a reason the script does
+ * not know. A quota message that reports the daily quota as spent, or no usable
+ * quota number, stops the call quietly. The call returns the URLs Bing accepted,
+ * whether a quota stop ended it, and, when a batch fails, the typed failure that
+ * ended it. The caller saves the accepted URLs before it fails, and a quota stop
+ * is not a failure.
  */
 export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
   function* (urls: readonly string[], apiKey: string) {
@@ -92,17 +95,10 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
       }
       if (result.quotaRemaining !== undefined) {
         batchSize = result.quotaRemaining;
-        if (batch.length > result.quotaRemaining) {
-          yield* Effect.logInfo(
-            `Retrying with smaller batch size of ${result.quotaRemaining}`
-          );
-          continue;
-        }
-      }
-      // A quota message that allows the refused batch also ends the run quietly.
-      if (result.submittedUrls.length === 0) {
-        stopped = true;
-        break;
+        yield* Effect.logInfo(
+          `Retrying with smaller batch size of ${result.quotaRemaining}`
+        );
+        continue;
       }
       if (submittedCount < urls.length) {
         yield* Effect.logInfo(
@@ -198,7 +194,12 @@ const sendBingBatch = Effect.fn("scripts.indexing.bing.sendBatch")(function* ({
   );
   return { responseText, status: response.status };
 });
-/** Reads Bing's response and preserves quota semantics for the submit loop. */
+/**
+ * Reads Bing's response and preserves quota semantics for the submit loop. A
+ * refused batch that the reported quota allows is a typed failure. A batch
+ * larger than the reported quota returns that quota, so the loop retries with a
+ * smaller batch.
+ */
 const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
   function* (status: number, responseText: string, batch: readonly string[]) {
     yield* Effect.logInfo(`Bing API response status: ${status}`);
@@ -236,6 +237,12 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
         shouldStop: true,
         submittedUrls: [],
       };
+    }
+    if (batch.length <= quotaRemaining) {
+      return yield* new BingSubmitError({
+        cause: status,
+        message: `Bing refused ${batch.length} URLs with HTTP ${status} although its quota allows ${quotaRemaining}.`,
+      });
     }
     yield* Effect.logInfo(
       `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`

@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { FetchClient } from "@repo/utilities/http/client";
-import { encodePrettyJsonText } from "@repo/utilities/json";
+import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   ConfigProvider,
@@ -87,6 +87,10 @@ function urlsOf(count: number) {
 
 /** An answer with the given status and body text. */
 const answer = (status: number, body = "") => new Response(body, { status });
+
+/** A refused answer whose JSON body carries a quota message, as Bing sends it. */
+const quotaAnswer = (message: string) =>
+  new Response(encodeJsonText({ Message: message }), { status: 400 });
 
 /** The host of a request that the flow sent. */
 const hostnameOf = (input: unknown) => new URL(String(input)).hostname;
@@ -332,6 +336,54 @@ describe("runIndexNow", () => {
           message: "Bing failed with HTTP 500.",
         });
         // IndexNow's 150 URLs are saved, then Bing's first 100 are saved.
+        expect(MutableList.toArray(events)).toEqual([
+          `write ${submissionHistory}`,
+          `write ${submissionHistory}`,
+        ]);
+        const history = yield* loadSubmissionHistory().pipe(
+          Effect.provide(memory.layer)
+        );
+        expect(Rec.keys(history.indexNow)).toEqual(urls);
+        expect(Rec.keys(history.bing)).toEqual(Arr.take(urls, 100));
+      });
+    }
+  );
+
+  it.effect(
+    "saves the URLs of the first Bing request when the second is refused within the quota, then fails with BingSubmitError",
+    () => {
+      const events = MutableList.make<string>();
+      const lines = MutableList.make<string>();
+      const bingRequests = MutableList.make<string>();
+      const urls = urlsOf(150);
+      return Effect.gen(function* () {
+        const { submissionHistory } = yield* indexingPaths;
+        const memory = memoryFiles(events, []);
+        sitemapOf(urls);
+        fetcher.mockImplementation((input) => {
+          if (hostnameOf(input) === INDEXNOW_HOSTNAME) {
+            return Promise.resolve(answer(200));
+          }
+          MutableList.append(bingRequests, String(input));
+          return Promise.resolve(
+            bingRequests.length === 1
+              ? answer(200)
+              : quotaAnswer("Quota remaining for today: 50")
+          );
+        });
+
+        const failure = yield* runToFailure(
+          runIndexNowWith(memory.layer, lines, {
+            BING_WEBMASTER_API_KEY: BING_KEY,
+          })
+        );
+
+        expect(failure).toMatchObject({
+          _tag: "BingSubmitError",
+          message:
+            "Bing refused 50 URLs with HTTP 400 although its quota allows 50.",
+        });
+        // IndexNow saves its 150 URLs, then Bing saves the 100 URLs of its first request.
         expect(MutableList.toArray(events)).toEqual([
           `write ${submissionHistory}`,
           `write ${submissionHistory}`,

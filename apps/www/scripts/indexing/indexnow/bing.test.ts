@@ -197,19 +197,47 @@ describe("submitUrlsToBing", () => {
   );
 
   it.effect(
-    "stops quietly when a quota message allows the batch it refused, so no smaller batch is sent",
+    "fails with a typed failure when a quota message allows the batch it refused, so no smaller batch is sent",
     () =>
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(
           quotaAnswer("Quota remaining for today: 5")
         );
 
-        expect(yield* submitUrls(urlsOf(1))).toEqual({
-          failure: Option.none(),
-          stopped: true,
-          submittedUrls: [],
+        const outcome = yield* submitUrls(urlsOf(2));
+
+        expect(outcome.stopped).toBe(false);
+        expect(outcome.submittedUrls).toEqual([]);
+        expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
+          _tag: "BingSubmitError",
+          message:
+            "Bing refused 2 URLs with HTTP 400 although its quota allows 5.",
         });
-        expect(sentBatchSizes()).toEqual([1]);
+        expect(sentBatchSizes()).toEqual([2]);
+      })
+  );
+
+  it.effect(
+    "keeps the URLs accepted before a batch that the quota allows, then reports the refusal",
+    () =>
+      Effect.gen(function* () {
+        const urls = urlsOf(150);
+        fetcher
+          .mockResolvedValueOnce(answer(200))
+          .mockResolvedValueOnce(quotaAnswer("Quota remaining for today: 50"));
+        const fiber = yield* Effect.forkChild(submitUrls(urls));
+
+        yield* TestClock.adjust("1 second");
+
+        const outcome = yield* Fiber.join(fiber);
+        expect(outcome.stopped).toBe(false);
+        expect(outcome.submittedUrls).toEqual(Arr.take(urls, 100));
+        expect(Option.getOrUndefined(outcome.failure)).toMatchObject({
+          _tag: "BingSubmitError",
+          message:
+            "Bing refused 50 URLs with HTTP 400 although its quota allows 50.",
+        });
+        expect(fetcher).toHaveBeenCalledTimes(2);
       })
   );
 
