@@ -45,7 +45,7 @@ export function makePublicationReceipt(
   const manifest = signed.manifest;
   return {
     activatedHeads: release.stagedUpserts,
-    activeAppLocales: [...manifest.activeAppLocales],
+    activeAppLocales: Array.from(manifest.activeAppLocales),
     deletedHeads: release.stagedDeletes,
     manifestHash: signed.manifestHash,
     projectionDigest: manifest.projectionDigest,
