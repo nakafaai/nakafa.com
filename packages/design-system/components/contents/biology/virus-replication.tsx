@@ -1,10 +1,7 @@
 "use client";
 
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
-import type {
-  BiologySceneColors,
-  BiologySceneView,
-} from "@repo/design-system/components/contents/biology/data";
+import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
@@ -15,13 +12,14 @@ import {
   BacteriophageModel,
   VirusTube,
 } from "@repo/design-system/components/contents/biology/virus-parts";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 
 const REPLICATION_SCENE_POSITION = [0, 0.06, 0] as const;
 const REPLICATION_VIEW = {
   cameraPosition: [2.65, 1.5, 3.35],
   cameraTarget: [0, 0.05, 0],
   narrowCameraPosition: [3.05, 1.78, 3.75],
-} satisfies BiologySceneView;
+} satisfies NarrowCameraPose;
 const REPLICATION_SCENE_SCALE = 1.08;
 const LYTIC_LABEL_TARGETS = [
   {

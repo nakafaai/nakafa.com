@@ -1,10 +1,7 @@
 "use client";
 
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
-import type {
-  BiologyScenePoint,
-  BiologySceneView,
-} from "@repo/design-system/components/contents/biology/data";
+import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
@@ -12,13 +9,14 @@ import {
 } from "@repo/design-system/components/contents/biology/lab-frame";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import { BiologyTube } from "@repo/design-system/components/contents/biology/parts";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
 
 const FUNGI_VIEW = {
   cameraPosition: [2.25, 1.7, 3.05],
   cameraTarget: [0.02, 0.18, 0.02],
   narrowCameraPosition: [2.78, 2.1, 3.85],
-} satisfies BiologySceneView;
+} satisfies NarrowCameraPose;
 
 const AERIAL_HYPHA_POINTS = [
   [0.16, 0.02, 0],
