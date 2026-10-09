@@ -161,6 +161,26 @@ describe("Effect-native rule scopes", () => {
     })
   );
 
+  it.effect("reports timers in a module that imports only React types", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings([
+          {
+            file: "apps/www/lib/retry.ts",
+            sourceText:
+              'import type { ReactNode } from "react";\nimport { type FC } from "react";\nexport const retry = (run: () => void) => setTimeout(run, 300);\n',
+          },
+          {
+            file: "apps/www/hooks/poll.ts",
+            sourceText:
+              'import { useEffect } from "react";\nexport const poll = () => setInterval(refresh, 1);\n',
+          },
+        ]),
+        ["apps/www/lib/retry.ts timer"]
+      );
+    })
+  );
+
   it.effect("holds Confect and script domain code to Effect composition", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

@@ -1,6 +1,7 @@
 import { Array as Arr, Match, Schema } from "effect";
 import {
   type Identifier,
+  type ImportDeclaration,
   isExportAssignment,
   isIdentifier,
   isImportDeclaration,
@@ -10,6 +11,7 @@ import {
   isTypeReferenceNode,
   type Node,
   type SourceFile,
+  SyntaxKind,
 } from "typescript/unstable/ast";
 import type { Binding } from "#scripts/check/source";
 
@@ -240,9 +242,41 @@ function isConfiguration(file: string, sourceFile: SourceFile) {
   );
 }
 
+/**
+ * Whether an import declaration loads at runtime: it is not `import type`, and it
+ * does not name only types.
+ */
+export function loadsImport(node: ImportDeclaration) {
+  const clause = node.importClause;
+  const bindings = clause?.namedBindings;
+  return !(
+    clause?.phaseModifier === SyntaxKind.TypeKeyword ||
+    (clause?.name === undefined &&
+      bindings !== undefined &&
+      isNamedImports(bindings) &&
+      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
+  );
+}
+
+/**
+ * Whether a module loads, at runtime, an import whose specifier `pattern`
+ * matches. A type-only import does not count, so a helper that imports only
+ * React types is not a React module.
+ */
+function loadsModule(sourceFile: SourceFile, pattern: RegExp) {
+  return Arr.some(
+    sourceFile.statements,
+    (statement) =>
+      isImportDeclaration(statement) &&
+      loadsImport(statement) &&
+      isStringLiteral(statement.moduleSpecifier) &&
+      pattern.test(statement.moduleSpecifier.text)
+  );
+}
+
 /** Whether a module renders or hooks into React, where timers belong to effects and handlers. */
 function isReactModule(file: string, sourceFile: SourceFile) {
-  return JSX_PATTERN.test(file) || imports(sourceFile, REACT_PATTERN);
+  return JSX_PATTERN.test(file) || loadsModule(sourceFile, REACT_PATTERN);
 }
 
 /** Whether `rule` inspects the authored module `file`. */

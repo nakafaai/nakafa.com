@@ -1,7 +1,6 @@
 import { Array as Arr, HashSet } from "effect";
 import {
   type ExportDeclaration,
-  type ImportDeclaration,
   isAsyncKeyword,
   isAwaitExpression,
   isBinaryExpression,
@@ -31,7 +30,7 @@ import {
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { candidate } from "#scripts/check/rules";
+import { candidate, loadsImport } from "#scripts/check/rules";
 import { boundFunctions, isFunctionValue } from "#scripts/check/scope";
 import { unwrapped } from "#scripts/check/wrapper";
 
@@ -71,19 +70,6 @@ function namesNodeModule(specifier: Node | undefined) {
     specifier !== undefined &&
     isStringLiteralLikeNode(specifier) &&
     HashSet.has(NODE_MODULES, specifier.text)
-  );
-}
-
-/** Whether an import declaration loads at runtime: it is not `import type`, and it does not name only types. */
-function loadsImport(node: ImportDeclaration) {
-  const clause = node.importClause;
-  const bindings = clause?.namedBindings;
-  return !(
-    clause?.phaseModifier === SyntaxKind.TypeKeyword ||
-    (clause?.name === undefined &&
-      bindings !== undefined &&
-      isNamedImports(bindings) &&
-      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
   );
 }
 
