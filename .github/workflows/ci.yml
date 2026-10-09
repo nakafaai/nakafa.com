@@ -232,8 +232,10 @@ jobs:
           setsid bash -c "nice -n 19 ionice -c 3 pnpm --filter www exec playwright install --with-deps $browsers; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
             > "$RUNNER_TEMP/browsers.log" 2>&1 &
 
+      # Quality regenerates the Confect output and verifies it unchanged for this
+      # same commit, so prepare does not repeat that codegen.
       - name: Prepare signed acceptance publication
-        run: pnpm acceptance:prepare
+        run: pnpm --dir packages/backend acceptance prepare
 
       - name: Verify generated Convex bindings
         run: test -z "$(git status --porcelain -- packages/backend/convex/_generated)"

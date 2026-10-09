@@ -114,7 +114,9 @@ describe("GitHub Action policy", () => {
             jobs: expect.objectContaining({
               production: expect.objectContaining({
                 steps: expect.arrayContaining([
-                  expect.objectContaining({ run: "pnpm acceptance:prepare" }),
+                  expect.objectContaining({
+                    run: "pnpm --dir packages/backend acceptance prepare",
+                  }),
                   expect.objectContaining({
                     run: "pnpm --dir packages/backend acceptance build",
                   }),
