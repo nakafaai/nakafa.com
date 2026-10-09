@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./*": "./*.ts",
+    "./convex/_generated/*": "./convex/_generated/*.js",
     "./scripts/content/acceptance/source.json": "./scripts/content/acceptance/source.json"
   },
   "scripts": {
@@ -16,7 +17,7 @@
     "customers:verify:prod": "tsx scripts/customers/verify.ts --prod",
     "deploy": "pnpm codegen && convex deploy",
     "dev": "convex dev --tail-logs",
-    "generate-schema": "cd components/betterAuth && auth generate --yes && pnpm --workspace-root exec ultracite fix packages/backend/components/betterAuth/schema.ts",
+    "generate-schema": "cd components/betterAuth && auth generate --config cli.config.ts --yes && pnpm --workspace-root exec ultracite fix packages/backend/components/betterAuth/schema.ts",
     "insights": "convex insights",
     "setup": "pnpm codegen && convex dev --once",
     "test": "pnpm codegen && vitest run",
@@ -39,7 +40,7 @@
     "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
     "@mendable/firecrawl-js": "^4.46.0",
-    "@nakafa/aksara-contracts": "0.47.2",
+    "@nakafa/aksara-contracts": "0.48.0",
     "@polar-sh/sdk": "^1.0.2",
     "@posthog/convex": "2.1.5",
     "@react-email/render": "2.1.0",

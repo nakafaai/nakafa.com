@@ -44,7 +44,7 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
     Arr.map(
       Rec.toEntries(THEMES),
       ([theme, prefix]) =>
-        `${prefix} [data-chart="${id}"] {\n${generateCssVars(theme as keyof typeof THEMES)}\n}`
+        `${prefix} [data-chart="${id}"] {\n${generateCssVars(theme)}\n}`
     ),
     "\n"
   );

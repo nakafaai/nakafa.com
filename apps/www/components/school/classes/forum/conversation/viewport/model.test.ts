@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
   conversationTestFirstPost as firstPost,
@@ -15,6 +16,13 @@ import {
   pushViewportBackView,
   type ViewportMeasurement,
 } from "@/components/school/classes/forum/conversation/viewport/model";
+
+const stalePostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "stale_post"
+);
+const missingPostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "missing_post"
+);
 
 const activeTranscript = {
   lastPostId: secondPost._id,
@@ -74,7 +82,7 @@ describe("conversation/viewport/model", () => {
       getOpeningPlacement({
         activeTranscript,
         savedSnapshot: {
-          lastPostId: "stale_post" as Id<"schoolClassForumPosts">,
+          lastPostId: stalePostId,
           offset: 240,
           renderedRowCount: rows.length,
           view: { kind: "bottom" },
@@ -160,7 +168,7 @@ describe("conversation/viewport/model", () => {
           renderedRowCount: rows.length,
           view: {
             kind: "post",
-            postId: "missing_post" as Id<"schoolClassForumPosts">,
+            postId: missingPostId,
           },
           wasAtBottom: false,
         },

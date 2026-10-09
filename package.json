@@ -54,7 +54,7 @@
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
     "@effect/platform-node": "catalog:",
-    "@effect/tsgo": "0.48.1",
+    "@effect/tsgo": "0.51.1",
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@sigstore/bundle": "5.0.0",
