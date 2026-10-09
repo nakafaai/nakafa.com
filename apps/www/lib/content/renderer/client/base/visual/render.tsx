@@ -5,6 +5,7 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { Polygon } from "@repo/design-system/components/three/polygon";
+import { Array as Arr } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import { resolveMathAppearance } from "@/lib/content/renderer/client/base/visual/palette";
@@ -65,8 +66,8 @@ export function MathScene({ labels, scene }: MathSceneProps) {
   const view = resolveMathView(scene, projection);
   const origin = projectVisualPoint({ x: 0, y: 0, z: 0 }, projection);
   // Schema validation guarantees that each label has exactly one object owner.
-  const anchors = scene.objects.flatMap((object) =>
-    (scene.labels ?? []).flatMap((label) =>
+  const anchors = Arr.flatMap(scene.objects, (object) =>
+    Arr.flatMap(scene.labels ?? [], (label) =>
       label.objectId === object.id
         ? [{ ...label, appearance: object.appearance }]
         : []
@@ -81,14 +82,14 @@ export function MathScene({ labels, scene }: MathSceneProps) {
       origin={origin}
       showOrigin={false}
     >
-      {geometry.regions.map((region) => (
+      {Arr.map(geometry.regions, (region) => (
         <Polygon
           color={resolveMathAppearance(region.appearance)}
           key={region.id}
           vertices={region.vertices}
         />
       ))}
-      {geometry.paths.map((path) => (
+      {Arr.map(geometry.paths, (path) => (
         <LineEquation
           color={resolveMathAppearance(path.appearance)}
           cone={resolveArrow(path.arrows, 0.25)}
@@ -98,7 +99,7 @@ export function MathScene({ labels, scene }: MathSceneProps) {
           smooth={false}
         />
       ))}
-      {geometry.markers.map((marker) => (
+      {Arr.map(geometry.markers, (marker) => (
         <Origin
           color={resolveMathAppearance(marker.appearance)}
           key={marker.id}
@@ -106,7 +107,7 @@ export function MathScene({ labels, scene }: MathSceneProps) {
           size={0.125}
         />
       ))}
-      {anchors.map((label) => (
+      {Arr.map(anchors, (label) => (
         <ThreeLabel
           {...resolveLabelAnchor(label.placement)}
           color={resolveMathAppearance(label.appearance)}
