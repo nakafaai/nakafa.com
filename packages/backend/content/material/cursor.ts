@@ -2,6 +2,7 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const MATERIAL_POSITION_PREFIX = "material-route|";
@@ -17,10 +18,9 @@ export function isMaterialPosition(cursor: string) {
   return cursor.startsWith(MATERIAL_POSITION_PREFIX);
 }
 
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Encodes the unique localized material boundary shared by build and live reads. */
 export function materialPosition(row: MaterialRow) {
-  return `${MATERIAL_POSITION_PREFIX}${encodeJson([row.slot, row.appLocale, row.publicPath])}`;
+  return `${MATERIAL_POSITION_PREFIX}${encodeJsonText([row.slot, row.appLocale, row.publicPath])}`;
 }
 
 /** Rejects a semantic material position that belongs to another query. */

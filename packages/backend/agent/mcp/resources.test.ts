@@ -11,12 +11,12 @@ import {
   sendMcpRequest,
 } from "@repo/backend/test/mcp/harness";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/agent/taxonomy", () => ({ getNakafaTaxonomy: vi.fn() }));
 
 const IndentedJson = Schema.fromJsonString(Schema.Unknown, { space: 2 });
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 const TAXONOMY_REQUEST = modernPost(
   50,
   "resources/read",
@@ -80,7 +80,7 @@ describe("Nakafa MCP resources", () => {
           },
         });
         expect(
-          yield* Schema.encodeUnknownEffect(JsonText)(answer)
+          yield* Schema.encodeUnknownEffect(JsonTextSchema)(answer)
         ).not.toContain("private storage failure");
       })
   );

@@ -2,6 +2,7 @@ import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Cause, Effect, Option, Schema } from "effect";
 
 type AgentToolError = NakafaAgentDataReadError | NakafaAgentInputError;
@@ -52,7 +53,6 @@ export function runMcpTool<Output extends Readonly<Record<string, unknown>>>(
   );
 }
 
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 const JsonValue = Schema.fromJsonString(Schema.Json);
 
 /**
@@ -64,7 +64,7 @@ const JsonValue = Schema.fromJsonString(Schema.Json);
 const toSuccessResult = Effect.fn("agent.mcp.toSuccessResult")(function* (
   output: Readonly<Record<string, unknown>>
 ) {
-  const text = yield* Schema.encodeUnknownEffect(JsonText)(output);
+  const text = yield* Schema.encodeUnknownEffect(JsonTextSchema)(output);
   return {
     content: [
       {
@@ -90,7 +90,7 @@ export function toMcpToolError(
   return {
     content: [
       {
-        text: Schema.encodeUnknownSync(JsonText)(structuredContent),
+        text: Schema.encodeUnknownSync(JsonTextSchema)(structuredContent),
         type: "text" as const,
       },
     ],

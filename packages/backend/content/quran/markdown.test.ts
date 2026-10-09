@@ -12,9 +12,8 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { Effect, Schema } from "effect";
-
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect } from "effect";
 
 describe("contentRelease/quran/markdown", () => {
   it.effect("returns a normalized unmanaged markdown projection", () =>
@@ -93,9 +92,9 @@ describe("contentRelease/quran/markdown", () => {
               },
             },
           ]);
-          expect(encodeJson(markdown)).not.toContain("Terjemahan teknis");
-          expect(encodeJson(markdown)).not.toContain("Tafsir teknis");
-          expect(encodeJson(markdown)).not.toContain("inQuran");
+          expect(encodeJsonText(markdown)).not.toContain("Terjemahan teknis");
+          expect(encodeJsonText(markdown)).not.toContain("Tafsir teknis");
+          expect(encodeJsonText(markdown)).not.toContain("inQuran");
         })
       );
     })

@@ -10,9 +10,9 @@ import {
   makeQuranChunk,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import { Array as Arr, Effect, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Effect } from "effect";
 
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const snapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
 const first = makeQuranChunk({
   firstQuranNumber: 1,
@@ -87,7 +87,7 @@ it.effect.each([
 
 it.effect.each([
   "{",
-  Schema.encodeSync(JsonTextSchema)({ family: "quran", record: {} }),
+  encodeJsonText({ family: "quran", record: {} }),
   encodeTestQuranRow(
     Sha256HashSchema.make(`sha256:${"c".repeat(64)}`),
     makeQuranSurah(1, 7)
