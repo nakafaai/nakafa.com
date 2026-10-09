@@ -23,7 +23,7 @@ const expressionReservedNames = HashSet.make(
 );
 const symbolPattern = /[A-Za-z_][A-Za-z0-9_]*/gu;
 /** Builds a non-empty string with model-facing metadata on its base schema. */
-function describedNonEmptyString(description: string) {
+export function describedNonEmptyString(description: string) {
   return Schema.String.annotate({ description }).pipe(
     Schema.check(Schema.isMinLength(1))
   );
