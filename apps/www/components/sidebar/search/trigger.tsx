@@ -8,7 +8,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { IconCommand, IconLetterK } from "@tabler/icons-react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { preloadSearchCommand } from "@/components/search/command/module";
@@ -53,10 +52,7 @@ export function SearchMenu() {
               <HugeIcons className="size-3.5 shrink-0" icon={CommandIcon} />
               <span className="sr-only">Command/Ctrl</span>
             </kbd>
-            <kbd className="rounded">
-              <IconLetterK className="size-3.5 shrink-0" />
-              <span className="sr-only">K</span>
-            </kbd>
+            <kbd className="rounded">K</kbd>
           </div>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -93,13 +89,10 @@ export function HeaderSearch() {
       </span>
       <span className="hidden items-center gap-1 lg:flex">
         <kbd className="rounded border p-0.75">
-          <IconCommand className="size-3 shrink-0" />
+          <HugeIcons className="size-3 shrink-0" icon={CommandIcon} />
           <span className="sr-only">Command/Ctrl</span>
         </kbd>
-        <kbd className="rounded border p-0.75">
-          <IconLetterK className="size-3 shrink-0" strokeWidth={2} />
-          <span className="sr-only">K</span>
-        </kbd>
+        <kbd className="rounded border p-0.75">K</kbd>
       </span>
     </Button>
   );
