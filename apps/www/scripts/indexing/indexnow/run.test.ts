@@ -43,6 +43,7 @@ vi.mock("@/lib/sitemap/entries", () => ({
 }));
 
 const BING_KEY = "test-bing-key";
+const BING_ENV = { BING_WEBMASTER_API_KEY: BING_KEY };
 const FIRST = "https://nakafa.com/id/first";
 const SECOND = "https://nakafa.com/id/second";
 const INDEXNOW_HOSTNAME = "api.indexnow.org";
@@ -340,28 +341,20 @@ describe("runIndexNow", () => {
     () => {
       const events = MutableList.make<string>();
       const lines = MutableList.make<string>();
-      const bingRequests = MutableList.make<string>();
       const urls = urlsOf(150);
       return Effect.gen(function* () {
         const { submissionHistory } = yield* indexingPaths;
         const memory = memoryFiles(events, []);
         sitemapOf(urls);
-        fetcher.mockImplementation((input) => {
-          if (hostnameOf(input) === INDEXNOW_HOSTNAME) {
-            return Promise.resolve(answer(200));
-          }
-          MutableList.append(bingRequests, String(input));
-          return Promise.resolve(
-            bingRequests.length === 1
-              ? answer(200)
-              : quotaAnswer("Quota remaining for today: 50")
-          );
-        });
+        // IndexNow answers its two batches first, then Bing answers its two.
+        fetcher
+          .mockResolvedValueOnce(answer(200))
+          .mockResolvedValueOnce(answer(200))
+          .mockResolvedValueOnce(answer(200))
+          .mockResolvedValueOnce(quotaAnswer("Quota remaining for today: 50"));
 
         const failure = yield* runToFailure(
-          runIndexNowWith(memory.layer, lines, {
-            BING_WEBMASTER_API_KEY: BING_KEY,
-          })
+          runIndexNowWith(memory.layer, lines, BING_ENV)
         );
 
         expect(failure).toMatchObject({
@@ -425,6 +418,81 @@ describe("runIndexNow", () => {
         );
         expect(Rec.keys(history.bing)).toEqual(Arr.take(urls, 100));
         expect(Rec.keys(history.indexNow)).toEqual(urls);
+      });
+    }
+  );
+
+  it.effect.each([
+    {
+      bingSeeded: 0,
+      label:
+        "saves the Bing entries of both sitemap batches, when Bing accepts both",
+    },
+    {
+      bingSeeded: 500,
+      label:
+        "sends Bing only the URLs of a sitemap batch its history lacks, and saves them",
+    },
+  ])("$label", ({ bingSeeded }) => {
+    const recorded = "2026-01-01T00:00:00.000Z";
+    const urls = urlsOf(501);
+    const bingUrls = Arr.take(urls, bingSeeded);
+    return Effect.gen(function* () {
+      const { submissionHistory } = yield* indexingPaths;
+      const memory = memoryFiles(MutableList.make<string>(), [
+        [
+          submissionHistory,
+          encodePrettyJsonText({
+            bing: Rec.fromIterableWith(bingUrls, (url) => [url, recorded]),
+            googleIndexingApi: {},
+            indexNow: Rec.fromIterableWith(urls, (url) => [url, recorded]),
+          }),
+        ],
+      ]);
+      sitemapOf(urls);
+      fetcher.mockImplementation(async () => answer(200));
+
+      yield* runToEnd(
+        runIndexNowWith(memory.layer, MutableList.make<string>(), BING_ENV)
+      );
+
+      expect(Arr.flatten(sentUrlLists())).toEqual(Arr.drop(urls, bingSeeded));
+      const history = yield* loadSubmissionHistory().pipe(
+        Effect.provide(memory.layer)
+      );
+      expect(Rec.keys(history.bing)).toEqual(urls);
+      expect(Rec.keys(history.indexNow)).toEqual(urls);
+    });
+  });
+
+  it.effect(
+    "completes the run and keeps the IndexNow entries when Bing reports its quota spent on the first request",
+    () => {
+      const events = MutableList.make<string>();
+      return Effect.gen(function* () {
+        const { submissionHistory } = yield* indexingPaths;
+        const memory = memoryFiles(events, []);
+        sitemapOf([FIRST, SECOND]);
+        // IndexNow answers its one batch first, then Bing answers its first request.
+        fetcher
+          .mockResolvedValueOnce(answer(200))
+          .mockResolvedValueOnce(
+            answer(403, "You have exceeded your daily URL submission quota.")
+          );
+
+        yield* runToEnd(
+          runIndexNowWith(memory.layer, MutableList.make<string>(), BING_ENV)
+        );
+
+        expect(requestsTo(BING_HOSTNAME)).toHaveLength(1);
+        expect(MutableList.toArray(events)).toEqual([
+          `write ${submissionHistory}`,
+        ]);
+        const history = yield* loadSubmissionHistory().pipe(
+          Effect.provide(memory.layer)
+        );
+        expect(Rec.keys(history.indexNow)).toEqual([FIRST, SECOND]);
+        expect(history.bing).toEqual({});
       });
     }
   );
