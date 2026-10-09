@@ -1,3 +1,4 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   type QuranEmbeddedSourceId,
   type QuranExternalSourceId,
@@ -6,6 +7,7 @@ import {
 } from "@nakafa/aksara-contracts/quran/identity";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import {
+  NAKAFA_AGENT_SECTIONS,
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
   NAKAFA_MCP_ENDPOINT,
@@ -211,11 +213,11 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
     default_locale: "en",
     endpoints: NAKAFA_MCP_GUIDANCE,
     locale: "en",
-    locales: ["en", "id", "de"],
+    locales: ACTIVE_APP_LOCALE_CODES,
     quran: {
       surah_count: QURAN_SURAH_COUNT,
     },
-    sections: ["articles", "material", "tryout", "quran"],
+    sections: NAKAFA_AGENT_SECTIONS,
     tools: [
       "nakafa_search_content",
       "nakafa_get_content",
