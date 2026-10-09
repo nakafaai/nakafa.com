@@ -86,7 +86,7 @@ function SidebarTreeTooltip({
  */
 function useActiveHeading({ label }: Pick<ParsedHeading, "label">) {
   const id = slugify(label);
-  return useToc((context) => context.activeHeadings.includes(id));
+  return useToc((context) => Arr.contains(context.activeHeadings, id));
 }
 
 /**

@@ -44,7 +44,7 @@ const GITHUB_RELEASE_DEADLINE = Duration.seconds(10);
 class GithubReleaseDeadline extends Data.TaggedError("GithubReleaseDeadline") {}
 
 function actionRepository(action: string) {
-  return Arr.join(action.split("/").slice(0, 2), "/");
+  return Arr.join(Arr.take(action.split("/"), 2), "/");
 }
 
 /** Returns one consistent latest-release review for each upstream repository. */

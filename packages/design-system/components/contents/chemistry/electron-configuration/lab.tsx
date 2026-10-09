@@ -21,7 +21,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -63,15 +63,14 @@ export function ElectronConfigurationLab({
     shellConfiguration,
     (shell) => shell.electronCount > 0
   );
-  const outerShell = visibleShells.at(-1);
+  const outerShell = Option.getOrThrowWith(
+    Arr.last(visibleShells),
+    () => new Error("Electron configuration requires at least one shell.")
+  );
   const configurationMath = Arr.join(
     Arr.map(visibleShells, (shell) => String(shell.electronCount)),
     ", "
   );
-
-  if (!outerShell) {
-    throw new Error("Electron configuration requires at least one shell.");
-  }
 
   /**
    * Keeps one atom selected when ToggleGroup emits an empty value.

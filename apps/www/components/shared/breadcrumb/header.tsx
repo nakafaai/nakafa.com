@@ -73,8 +73,8 @@ export function BreadcrumbHeaderPath({
   children?: ReactNode;
   visibleItemCount?: 1 | 2;
 }) {
-  const hiddenItems = items.slice(0, -visibleItemCount);
-  const visibleItems = items.slice(-visibleItemCount);
+  const hiddenItems = Arr.dropRight(items, visibleItemCount);
+  const visibleItems = Arr.takeRight(items, visibleItemCount);
   return (
     <Breadcrumb className="min-w-0">
       <BreadcrumbList className="flex-nowrap">

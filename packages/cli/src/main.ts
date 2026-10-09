@@ -3,7 +3,7 @@
 import { layerFetch as nodeHttpClientLayer } from "@effect/platform-node/NodeHttpClient";
 import { runMain } from "@effect/platform-node/NodeRuntime";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import { Cause, Effect, Layer } from "effect";
+import { Array as Arr, Cause, Effect, Layer } from "effect";
 import { writeJson } from "#cli/output";
 import { readPackageVersion } from "#cli/package";
 import { runCli } from "#cli/program";
@@ -25,7 +25,7 @@ const program = Effect.gen(function* () {
   const version = yield* readPackageVersion(
     new URL("../package.json", import.meta.url)
   );
-  return yield* runCli(process.argv.slice(2), {
+  return yield* runCli(Arr.drop(process.argv, 2), {
     version,
   });
 }).pipe(

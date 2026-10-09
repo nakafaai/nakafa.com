@@ -41,9 +41,17 @@ const brokenBody = () =>
     { status: 200 }
   );
 
-/** A submission that finished without a failure and accepted these URLs. */
+/** A submission that finished without a failure or a stop, and accepted these URLs. */
 const noFailure = (submittedUrls: string[]) => ({
   failure: Option.none(),
+  stopped: false,
+  submittedUrls,
+});
+
+/** A submission that a stop status ended, after it accepted these URLs. */
+const stoppedAfter = (submittedUrls: string[]) => ({
+  failure: Option.none(),
+  stopped: true,
   submittedUrls,
 });
 
@@ -105,7 +113,7 @@ describe("submitUrlsToGoogle", () => {
           .mockResolvedValueOnce(accepted());
 
         expect(yield* submitAll([firstUrl, secondUrl, thirdUrl])).toEqual(
-          noFailure([firstUrl])
+          stoppedAfter([firstUrl])
         );
         expect(fetcher).toHaveBeenCalledTimes(2);
       })
@@ -117,7 +125,9 @@ describe("submitUrlsToGoogle", () => {
       Effect.gen(function* () {
         fetcher.mockResolvedValueOnce(refused(status));
 
-        expect(yield* submitAll([firstUrl, secondUrl])).toEqual(noFailure([]));
+        expect(yield* submitAll([firstUrl, secondUrl])).toEqual(
+          stoppedAfter([])
+        );
         expect(fetcher).toHaveBeenCalledOnce();
       })
   );
@@ -129,7 +139,7 @@ describe("submitUrlsToGoogle", () => {
     Effect.gen(function* () {
       fetcher.mockResolvedValueOnce(refused(500, body));
 
-      expect(yield* submitAll([firstUrl, secondUrl])).toEqual(noFailure([]));
+      expect(yield* submitAll([firstUrl, secondUrl])).toEqual(stoppedAfter([]));
       expect(fetcher).toHaveBeenCalledOnce();
     })
   );
@@ -159,7 +169,7 @@ describe("submitUrlsToGoogle", () => {
   );
 
   it.effect(
-    "returns to a 1 s wait after an accepted URL, so the wait after a 500 ends at 1 s",
+    "waits 2 s after a 500, then returns to a 1 s wait after an accepted URL",
     () =>
       Effect.gen(function* () {
         fetcher

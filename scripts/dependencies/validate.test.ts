@@ -46,7 +46,7 @@ function validInput(): PolicyInput {
         Arr.map(
           Arr.filter(DEPENDENCY_HOLDS, (hold) =>
             "declarationPaths" in hold
-              ? hold.declarationPaths.includes(path)
+              ? Arr.contains(hold.declarationPaths, path)
               : index === 0
           ),
           (hold) => [

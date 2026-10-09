@@ -1,4 +1,4 @@
-import { Array as Arr, BigDecimal, MutableList } from "effect";
+import { Array as Arr, BigDecimal, MutableList, Option } from "effect";
 
 import type {
   PlanePoint,
@@ -9,10 +9,55 @@ import type {
 
 type AxisRange = PlaneVisual["frame"]["x"];
 type Decimal = BigDecimal.BigDecimal;
+/** The lower and upper line parameter that still lie inside every axis read so far. */
+type ParameterBounds = readonly [
+  minimum: Option.Option<Decimal>,
+  maximum: Option.Option<Decimal>,
+];
 const ZERO = BigDecimal.fromBigInt(0n);
 
 function decimal(value: number) {
   return BigDecimal.fromNumberUnsafe(value);
+}
+
+/**
+ * Narrows the parameter bounds of a line to one axis range. Answers none when
+ * the line misses the range, so no later axis can bring it back.
+ */
+function clipAxis(
+  [minimum, maximum]: ParameterBounds,
+  range: AxisRange,
+  coordinate: Decimal,
+  delta: Decimal
+): Option.Option<ParameterBounds> {
+  if (BigDecimal.equals(delta, ZERO)) {
+    return BigDecimal.isLessThan(coordinate, decimal(range.min)) ||
+      BigDecimal.isGreaterThan(coordinate, decimal(range.max))
+      ? Option.none()
+      : Option.some([minimum, maximum]);
+  }
+
+  const first = BigDecimal.divideUnsafe(
+    BigDecimal.subtract(decimal(range.min), coordinate),
+    delta
+  );
+  const second = BigDecimal.divideUnsafe(
+    BigDecimal.subtract(decimal(range.max), coordinate),
+    delta
+  );
+  const lower = BigDecimal.min(first, second);
+  const upper = BigDecimal.max(first, second);
+  const narrowedMinimum = Option.match(minimum, {
+    onNone: () => lower,
+    onSome: (value) => BigDecimal.max(value, lower),
+  });
+  const narrowedMaximum = Option.match(maximum, {
+    onNone: () => upper,
+    onSome: (value) => BigDecimal.min(value, upper),
+  });
+  return BigDecimal.isGreaterThan(narrowedMinimum, narrowedMaximum)
+    ? Option.none()
+    : Option.some([Option.some(narrowedMinimum), Option.some(narrowedMaximum)]);
 }
 
 function clipParameters(
@@ -26,40 +71,26 @@ function clipParameters(
     return;
   }
 
-  let minimum = start === undefined ? undefined : decimal(start);
-  let maximum = end === undefined ? undefined : decimal(end);
-
-  for (const [index, range] of frame.entries()) {
-    const coordinate = origin[index] ?? ZERO;
-    const delta = direction[index] ?? ZERO;
-    if (BigDecimal.equals(delta, ZERO)) {
-      if (
-        BigDecimal.isLessThan(coordinate, decimal(range.min)) ||
-        BigDecimal.isGreaterThan(coordinate, decimal(range.max))
-      ) {
-        return;
-      }
-      continue;
-    }
-
-    const first = BigDecimal.divideUnsafe(
-      BigDecimal.subtract(decimal(range.min), coordinate),
-      delta
-    );
-    const second = BigDecimal.divideUnsafe(
-      BigDecimal.subtract(decimal(range.max), coordinate),
-      delta
-    );
-    const lower = BigDecimal.min(first, second);
-    const upper = BigDecimal.max(first, second);
-    minimum = minimum ? BigDecimal.max(minimum, lower) : lower;
-    maximum = maximum ? BigDecimal.min(maximum, upper) : upper;
-    if (BigDecimal.isGreaterThan(minimum, maximum)) {
-      return;
-    }
-  }
-
-  return minimum && maximum ? [minimum, maximum] : undefined;
+  const unclipped: ParameterBounds = [
+    Option.map(Option.fromUndefinedOr(start), decimal),
+    Option.map(Option.fromUndefinedOr(end), decimal),
+  ];
+  const clipped = Arr.reduce(
+    frame,
+    Option.some(unclipped),
+    (bounds, range, index) =>
+      Option.flatMap(bounds, (current) =>
+        clipAxis(
+          current,
+          range,
+          origin[index] ?? ZERO,
+          direction[index] ?? ZERO
+        )
+      )
+  );
+  return Option.getOrUndefined(
+    Option.flatMap(clipped, (bounds) => Option.all(bounds))
+  );
 }
 
 function endpoint(

@@ -81,7 +81,7 @@ vi.mock("@nakafa/aksara-contracts/locale", async (importOriginal) => ({
 }));
 vi.mock("next-intl/middleware", () => ({
   default: vi.fn((config: { locales: readonly string[] }) =>
-    config.locales.includes("fr")
+    Arr.contains(config.locales, "fr")
       ? mockLocaleRouting.previewMiddleware
       : mockLocaleRouting.activeMiddleware
   ),

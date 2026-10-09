@@ -36,7 +36,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
@@ -301,11 +301,15 @@ function RailTrack({ trackLength }: { trackLength: number }) {
 
 function PositionMarkers({ motion }: { motion: GlbbMotionState }) {
   const firstSample = motion.positionSamples[0];
-  const lastSample = motion.positionSamples.at(-1);
+  const lastSample = Arr.last(motion.positionSamples);
   const traceLength =
-    firstSample && lastSample ? lastSample.x - firstSample.x : 0;
+    firstSample && Option.isSome(lastSample)
+      ? lastSample.value.x - firstSample.x
+      : 0;
   const traceCenterX =
-    firstSample && lastSample ? firstSample.x + traceLength / 2 : 0;
+    firstSample && Option.isSome(lastSample)
+      ? firstSample.x + traceLength / 2
+      : 0;
 
   return (
     <group>

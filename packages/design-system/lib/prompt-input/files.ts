@@ -116,7 +116,7 @@ export const validatePromptInputFiles = Effect.fn(
     return { files: sized } satisfies PromptInputFileSelection;
   }
   return {
-    files: sized.slice(0, capacity),
+    files: Arr.take(sized, capacity),
     warning: new PromptInputFileConstraintError({
       code: "max_files",
       message: "Too many files. Some were not added.",

@@ -341,7 +341,7 @@ describe("signed try-out execution", () => {
         queryMock.mockReturnValue(
           Effect.succeed({
             ...found,
-            items: found.items.slice(0, 1),
+            items: Arr.take(found.items, 1),
           })
         );
         expect(

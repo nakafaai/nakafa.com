@@ -10,6 +10,7 @@ import {
   createCircleRadiusPoints,
   createCircleSegmentBoundaryLines,
 } from "@repo/design-system/components/contents/mathematics/circle";
+import { Array as Arr, Option } from "effect";
 
 const EXPECTED_PRECISION = 12;
 
@@ -43,7 +44,7 @@ describe("circle visual geometry", () => {
     expect(arcPoints).toHaveLength(5);
     expectPointClose(arcPoints[0], createCirclePoint(4, 45));
     expectPointClose(
-      arcPoints.at(-1) ?? arcPoints[0],
+      Option.getOrElse(Arr.last(arcPoints), () => arcPoints[0]),
       createCirclePoint(4, 285)
     );
   });
@@ -58,7 +59,7 @@ describe("circle visual geometry", () => {
     expect(arcPoints.length).toBeGreaterThan(4);
     expectPointClose(arcPoints[0], createCirclePoint(4, 30));
     expectPointClose(
-      arcPoints.at(-1) ?? arcPoints[0],
+      Option.getOrElse(Arr.last(arcPoints), () => arcPoints[0]),
       createCirclePoint(4, 150)
     );
   });
@@ -69,7 +70,7 @@ describe("circle visual geometry", () => {
     expect(outlinePoints.length).toBeGreaterThan(4);
     expectPointClose(
       outlinePoints[0],
-      outlinePoints.at(-1) ?? outlinePoints[0]
+      Option.getOrElse(Arr.last(outlinePoints), () => outlinePoints[0])
     );
   });
 
@@ -88,7 +89,10 @@ describe("circle visual geometry", () => {
 
     expect(chordPoints).toHaveLength(2);
     expectPointClose(chordPoints[0], arcPoints[0]);
-    expectPointClose(chordPoints[1], arcPoints.at(-1) ?? arcPoints[0]);
+    expectPointClose(
+      chordPoints[1],
+      Option.getOrElse(Arr.last(arcPoints), () => arcPoints[0])
+    );
   });
 
   it("creates arc lines with progress-based labels", () => {
@@ -173,7 +177,7 @@ describe("circle visual geometry", () => {
     expectPointClose(chordLine.points[0], arcLine.points[0]);
     expectPointClose(
       chordLine.points[1],
-      arcLine.points.at(-1) ?? arcLine.points[0]
+      Option.getOrElse(Arr.last(arcLine.points), () => arcLine.points[0])
     );
   });
 
