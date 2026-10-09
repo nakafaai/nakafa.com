@@ -3,7 +3,7 @@
 import { LinkSquare02Icon } from "@hugeicons/core-free-icons";
 import {
   BrandLogo,
-  type BrandLogoName,
+  brandLogoNames,
 } from "@repo/design-system/components/logos/brand";
 import {
   DropdownMenuGroup,
@@ -12,8 +12,15 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Link } from "@repo/internationalization/src/navigation";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "next-intl";
+
+/** One link that a content page offers its reader, with a brand logo of its own. */
+const SourceLinkSchema = Schema.Struct({
+  href: Schema.String,
+  logo: Schema.Literals(brandLogoNames),
+  title: Schema.String,
+});
 
 /**
  * Lists where a reader can open one content page: its source and three
@@ -33,11 +40,7 @@ export function OpenInSubmenuContent({
   const markdownUrl = new URL(`${slug}.mdx`, "https://nakafa.com");
   const q = `I'm looking at this ${markdownUrl}, help me understand.`;
 
-  const sourceLinks: {
-    href: string;
-    logo: BrandLogoName;
-    title: string;
-  }[] = sourceUrl
+  const sourceLinks: (typeof SourceLinkSchema.Type)[] = sourceUrl
     ? [{ href: sourceUrl, logo: "github", title: t("open-in-github") }]
     : [];
   const assistantLinks: (typeof sourceLinks)[number][] = [

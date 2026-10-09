@@ -11,10 +11,8 @@ describe("current user optimistic state", () => {
   });
 
   it("updates a role without replacing other app-user fields", () => {
-    const user: { id: string; role?: "student" | "teacher" } = {
-      id: "user-1",
-      role: "student",
-    };
+    const role: Parameters<typeof updateUserRole>[1] = "student";
+    const user = { id: "user-1", role };
     const result = updateUserRole(user, "teacher");
 
     expect(result).toEqual({ id: "user-1", role: "teacher" });
