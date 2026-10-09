@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from "@effect/vitest";
+import { afterEach, describe, expect, expectTypeOf, it } from "@effect/vitest";
 import { InvalidEnvironmentError, readEnvironment } from "@repo/utilities/env";
 import { Result, Schema } from "effect";
 
@@ -7,6 +7,10 @@ const fields = {
   REGION: Schema.UndefinedOr(Schema.String),
   TOKEN: Schema.NonEmptyString,
 };
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("readEnvironment", () => {
   it("decodes each value with the Schema of its key", () => {
@@ -36,18 +40,19 @@ describe("readEnvironment", () => {
     ).toBe("");
   });
 
-  it("throws a typed error that names the invalid variable", () => {
+  it("names every invalid variable in one line, without its value", () => {
     const failure = Result.try(() =>
-      readEnvironment(fields, { PORT: "3000", REGION: undefined, TOKEN: "" })
+      readEnvironment(fields, {
+        PORT: "not-a-number",
+        REGION: undefined,
+        TOKEN: "",
+      })
     );
 
-    expect(Result.isFailure(failure)).toBe(true);
     expect(Result.merge(failure)).toBeInstanceOf(InvalidEnvironmentError);
     expect(Result.merge(failure)).toMatchObject({
-      message: expect.stringContaining("Invalid environment variables: "),
-    });
-    expect(Result.merge(failure)).toMatchObject({
-      message: expect.stringContaining("TOKEN"),
+      message:
+        "Invalid environment variables: PORT: Expected a finite number; TOKEN: Expected a value with a length of at least 1",
     });
   });
 
@@ -58,6 +63,26 @@ describe("readEnvironment", () => {
         REGION: undefined,
         TOKEN: "secret",
       })
-    ).toThrow("PORT");
+    ).toThrow("PORT: Expected string");
+  });
+
+  it("rejects a server variable in the browser and keeps public ones", () => {
+    vi.stubGlobal("window", {});
+
+    expect(() =>
+      readEnvironment(fields, {
+        PORT: "3000",
+        REGION: undefined,
+        TOKEN: "secret",
+      })
+    ).toThrow(
+      "Invalid environment variables: PORT, REGION, TOKEN: a server variable was read in the browser"
+    );
+    expect(
+      readEnvironment(
+        { NEXT_PUBLIC_ORIGIN: Schema.NonEmptyString },
+        { NEXT_PUBLIC_ORIGIN: "https://nakafa.com" }
+      )
+    ).toEqual({ NEXT_PUBLIC_ORIGIN: "https://nakafa.com" });
   });
 });

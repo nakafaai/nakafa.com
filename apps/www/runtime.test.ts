@@ -4,7 +4,13 @@ import { fileURLToPath } from "node:url";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import { Effect, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Record as Rec,
+  String as Str,
+  Stream,
+} from "effect";
 import { ChildProcess } from "effect/process";
 import {
   assertRuntimeTarget,
@@ -303,33 +309,6 @@ describe("content runtime target", () => {
 
 const LOOPBACK_QUERY = "http://127.0.0.1:3210";
 const LOOPBACK_SITE = "http://127.0.0.1:3211";
-const RUNTIME_ENVIRONMENT_NAMES = [
-  "CONVEX_AGENT_MODE",
-  "NEXT_PUBLIC_CONVEX_SITE_URL",
-  "NEXT_PUBLIC_CONVEX_URL",
-  "VERCEL",
-  "VERCEL_DEPLOYMENT_ID",
-  "VERCEL_ENV",
-  "VERCEL_GIT_COMMIT_REF",
-  "VERCEL_GIT_COMMIT_SHA",
-  "VERCEL_GIT_PROVIDER",
-  "VERCEL_GIT_REPO_OWNER",
-  "VERCEL_GIT_REPO_SLUG",
-  "VERCEL_PROJECT_ID",
-  "VERCEL_TARGET_ENV",
-] as const;
-/** The Vercel identity names that the protected production check compares. */
-const PROTECTED_IDENTITY_NAMES = [
-  "VERCEL_DEPLOYMENT_ID",
-  "VERCEL_ENV",
-  "VERCEL_GIT_COMMIT_REF",
-  "VERCEL_GIT_COMMIT_SHA",
-  "VERCEL_GIT_PROVIDER",
-  "VERCEL_GIT_REPO_OWNER",
-  "VERCEL_GIT_REPO_SLUG",
-  "VERCEL_PROJECT_ID",
-  "VERCEL_TARGET_ENV",
-] as const;
 const PROTECTED_ENVIRONMENT = {
   NEXT_PUBLIC_CONVEX_SITE_URL: productionTarget.site,
   NEXT_PUBLIC_CONVEX_URL: productionTarget.query,
@@ -344,6 +323,19 @@ const PROTECTED_ENVIRONMENT = {
   VERCEL_PROJECT_ID: "prj_QfxvXBST46wuSTOXPn4PE32NqbF4",
   VERCEL_TARGET_ENV: "production",
 };
+/** Every name the runtime reader reads. */
+const RUNTIME_ENVIRONMENT_NAMES = [
+  "CONVEX_AGENT_MODE",
+  ...Rec.keys(PROTECTED_ENVIRONMENT),
+] as const;
+/**
+ * The free-text Vercel identity names that the protected production check
+ * compares. The `VERCEL` marker is a literal and has its own case.
+ */
+const PROTECTED_IDENTITY_NAMES = Arr.filter(
+  Rec.keys(PROTECTED_ENVIRONMENT),
+  Str.startsWith("VERCEL_")
+);
 
 /** Sets the whole runtime environment, so an unnamed key never inherits a shell value. */
 function stubRuntimeEnvironment(

@@ -400,6 +400,9 @@ importers:
 
   packages/analytics:
     dependencies:
+      '@repo/utilities':
+        specifier: workspace:*
+        version: link:../utilities
       effect:
         specifier: 'catalog:'
         version: 4.0.1
@@ -422,9 +425,6 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      '@repo/utilities':
-        specifier: workspace:*
-        version: link:../utilities
       '@vitest/coverage-istanbul':
         specifier: 'catalog:'
         version: 5.0.3(vitest@5.0.3)

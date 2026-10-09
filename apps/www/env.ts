@@ -1,9 +1,11 @@
+import "server-only";
 import { publicationKeys, siteUrlKeys } from "@repo/next-config/keys";
 import { clientEnv } from "@/env.client";
 
 /**
  * Validates environment values consumed by `www` server modules. The browser
- * imports `@/env.client`, which holds only public values.
+ * imports `@/env.client`, which holds only public values, and the build rejects
+ * a Client Component that imports this module.
  *
  * Package-specific integrations such as AI clients, CAS, Polar, and Convex
  * backend functions keep their own env contracts at the capability that reads
