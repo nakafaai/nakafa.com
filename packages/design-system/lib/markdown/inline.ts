@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const MATH_DELIMITERS = [
   ["$$", "$$"],
@@ -252,13 +252,14 @@ function stepProse(
   if (line.startsWith("__", index)) {
     return stepStrongUnderscore(line, index, position, length, state);
   }
-  const delimiter = MATH_DELIMITERS.find(([open]) =>
+  const delimiter = Arr.findFirst(MATH_DELIMITERS, ([open]) =>
     line.startsWith(open, index)
   );
-  if (delimiter) {
+  if (Option.isSome(delimiter)) {
+    const [open, closer] = delimiter.value;
     return {
-      index: index + delimiter[0].length,
-      state: { ...state, math: { closer: delimiter[1], start: position } },
+      index: index + open.length,
+      state: { ...state, math: { closer, start: position } },
     };
   }
   if (character === "*" || character === "_") {

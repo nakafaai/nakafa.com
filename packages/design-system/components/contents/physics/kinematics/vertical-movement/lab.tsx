@@ -19,6 +19,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
@@ -81,7 +82,7 @@ export function VerticalMovementLab({
           value={mode}
           variant="outline"
         >
-          {MODES.map((modeOption) => (
+          {Arr.map(MODES, (modeOption) => (
             <ToggleGroupItem key={modeOption} value={modeOption}>
               {labels.modeLabels[modeOption]}
             </ToggleGroupItem>
@@ -303,7 +304,7 @@ function getHeight(motion: MotionState, time: number) {
 }
 
 function isMode(value: string): value is Mode {
-  return MODES.some((mode) => mode === value);
+  return Arr.some(MODES, (mode) => mode === value);
 }
 
 function formatInitialConditionMath(motion: MotionState) {

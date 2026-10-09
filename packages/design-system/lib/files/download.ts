@@ -1,4 +1,4 @@
-import { Effect, Result, Schema } from "effect";
+import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 /** Runtime contract for one browser file download. */
 export const FileDownloadRequest = Schema.Struct({
   content: Schema.Union([Schema.String, Schema.instanceOf(Blob)]),
@@ -41,7 +41,6 @@ export const downloadFile = Effect.fn("designSystem.files.download")(
       return yield* preparation.failure;
     }
     const { anchor, objectUrl } = preparation.success;
-    const failures: BrowserFileDownloadError[] = [];
     const attachment = yield* Effect.try({
       try: () => {
         anchor.href = objectUrl;
@@ -50,17 +49,14 @@ export const downloadFile = Effect.fn("designSystem.files.download")(
       },
       catch: (cause) => downloadError(filename, cause),
     }).pipe(Effect.result);
-    if (Result.isFailure(attachment)) {
-      failures.push(attachment.failure);
-    } else {
-      const activation = yield* Effect.try({
-        try: () => anchor.click(),
-        catch: (cause) => downloadError(filename, cause),
-      }).pipe(Effect.result);
-      if (Result.isFailure(activation)) {
-        failures.push(activation.failure);
-      }
-    }
+    // A failed attachment is the step's failure. The click runs only after a
+    // successful attachment.
+    const activation = Result.isFailure(attachment)
+      ? attachment
+      : yield* Effect.try({
+          try: () => anchor.click(),
+          catch: (cause) => downloadError(filename, cause),
+        }).pipe(Effect.result);
     const anchorCleanup = yield* Effect.try({
       try: () => anchor.remove(),
       catch: (cause) => downloadError(filename, cause),
@@ -69,15 +65,11 @@ export const downloadFile = Effect.fn("designSystem.files.download")(
       try: () => URL.revokeObjectURL(objectUrl),
       catch: (cause) => downloadError(filename, cause),
     }).pipe(Effect.result);
-    if (Result.isFailure(anchorCleanup)) {
-      failures.push(anchorCleanup.failure);
-    }
-    if (Result.isFailure(objectUrlCleanup)) {
-      failures.push(objectUrlCleanup.failure);
-    }
-    const firstFailure = failures[0];
-    if (firstFailure) {
-      return yield* firstFailure;
+    const firstFailure = Arr.head(
+      Arr.getFailures([activation, anchorCleanup, objectUrlCleanup])
+    );
+    if (Option.isSome(firstFailure)) {
+      return yield* firstFailure.value;
     }
   }
 );

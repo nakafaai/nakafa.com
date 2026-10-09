@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { createVisualStore } from "@repo/design-system/components/visual/store";
-import { Duration, Effect } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 
 /** The space the test card takes in the page, as its slot keeps it. */
 const CARD_PLACE = { height: 480, marginBottom: "24px", marginTop: "16px" };
 /** Every element outside the card, in document order, while it fills the screen. */
 const HELD_PAGE = ["header", "before", "aside", "footer"];
 /** Stores a test created, so each test ends its own session. */
-const stores: ReturnType<typeof createVisualStore>[] = [];
+let stores: ReturnType<typeof createVisualStore>[] = [];
 
 /** Builds a page where the card sits two levels below `body`. */
 function renderPage() {
@@ -30,7 +30,7 @@ function renderPage() {
     new DOMRect(0, 0, 640, CARD_PLACE.height)
   );
   const store = createVisualStore();
-  stores.push(store);
+  stores = Arr.append(stores, store);
   store.getState().bind(card);
   return { card, store, trigger: element("trigger") };
 }
@@ -158,7 +158,8 @@ afterEach(async () => {
   // An open session keeps its document listeners, which would answer the
   // next test's events. A card in the browser's full screen returns once the
   // browser has left it.
-  const ended = stores.splice(0);
+  const ended = stores;
+  stores = [];
   for (const store of ended) {
     store.getState().exit();
   }
@@ -369,7 +370,8 @@ describe("visual card store with the Fullscreen API", () => {
         expect(browser.exitFullscreen).toHaveBeenCalledTimes(2);
         expect(store.getState().presentation).toBe("inline");
         expect(
-          removeListener.mock.calls.filter(
+          Arr.filter(
+            removeListener.mock.calls,
             ([type]) => type === "fullscreenchange"
           )
         ).toHaveLength(1);

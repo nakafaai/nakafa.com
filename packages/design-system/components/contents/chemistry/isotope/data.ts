@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const HYDROGEN_1_ID = "hydrogen-1";
 const DEUTERIUM_ID = "deuterium";
@@ -67,5 +67,5 @@ export const ISOTOPE_SAMPLES = {
  * Narrows ToggleGroup string values to the available isotope examples.
  */
 export function isIsotopeSampleId(value: string): value is IsotopeSampleId {
-  return ISOTOPE_SAMPLE_IDS.some((sampleId) => sampleId === value);
+  return Arr.some(ISOTOPE_SAMPLE_IDS, (sampleId) => sampleId === value);
 }

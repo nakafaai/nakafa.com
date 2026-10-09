@@ -11,7 +11,7 @@ import type {
 import { writeCodeToClipboard } from "@repo/design-system/lib/code-block/clipboard";
 import { useCodeBlock } from "@repo/design-system/lib/code-block/context";
 import { cn } from "cn";
-import { Duration, Effect, Fiber } from "effect";
+import { Array as Arr, Duration, Effect, Fiber, Option } from "effect";
 import type { ComponentProps } from "react";
 import { useEffect, useRef, useState } from "react";
 
@@ -33,8 +33,13 @@ export function CodeBlockCopyButton({
 }: CodeBlockCopyButtonProps) {
   const [isCopied, setIsCopied] = useState(false);
   const copyFiberRef = useRef<Fiber.Fiber<void, never> | null>(null);
+  // The selector returns a string or undefined: a store selector must return a
+  // stable value, and an Option is a new object on every call.
   const code = useCodeBlock(
-    (state) => state.data.find((item) => item.language === state.value)?.code
+    (state) =>
+      Option.getOrUndefined(
+        Arr.findFirst(state.data, (item) => item.language === state.value)
+      )?.code
   );
 
   useEffect(

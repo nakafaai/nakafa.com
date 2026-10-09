@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import type { ExtraProps, Options } from "react-markdown";
 
 export type ReactMarkdownComponents = NonNullable<Options["components"]>;
@@ -24,5 +25,5 @@ export function readMarkdownNodeText(
     return "";
   }
 
-  return node.children.map(readMarkdownNodeText).join("");
+  return Arr.join(Arr.map(node.children, readMarkdownNodeText), "");
 }

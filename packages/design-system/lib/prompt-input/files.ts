@@ -1,5 +1,5 @@
 import type { JSONValue } from "ai";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** JSON value typed exactly as the AI SDK's `JSONValue`. */
 const JsonValueSchema: Schema.Codec<JSONValue> = Schema.suspend(() =>
@@ -67,11 +67,11 @@ function matchesAccept(file: File, accept?: string) {
   }
   const filename = file.name.toLowerCase();
   const mediaType = file.type.toLowerCase();
-  const specifiers = accept
-    .split(",")
-    .map((specifier) => specifier.trim().toLowerCase())
-    .filter(Boolean);
-  return specifiers.some((specifier) => {
+  const specifiers = Arr.filter(
+    Arr.map(accept.split(","), (specifier) => specifier.trim().toLowerCase()),
+    Boolean
+  );
+  return Arr.some(specifiers, (specifier) => {
     if (specifier.startsWith(".")) {
       return filename.endsWith(specifier);
     }
@@ -91,14 +91,15 @@ export const validatePromptInputFiles = Effect.fn(
   maxFileSize,
   maxFiles,
 }: ValidatePromptInputFilesOptions) {
-  const accepted = files.filter((file) => matchesAccept(file, accept));
+  const accepted = Arr.filter(files, (file) => matchesAccept(file, accept));
   if (files.length > 0 && accepted.length === 0) {
     return yield* new PromptInputFileConstraintError({
       code: "accept",
       message: "No files match the accepted types.",
     });
   }
-  const sized = accepted.filter(
+  const sized = Arr.filter(
+    accepted,
     (file) => maxFileSize === undefined || file.size <= maxFileSize
   );
   if (accepted.length > 0 && sized.length === 0) {

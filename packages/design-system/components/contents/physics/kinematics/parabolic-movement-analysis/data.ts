@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 export type ProjectileAnalysisDecimalSeparator = "comma" | "dot";
 
@@ -84,13 +84,14 @@ export type ProjectileMotionState = ReturnType<typeof getProjectileMotionState>;
 export function isProjectileScenarioId(
   value: string
 ): value is ProjectileScenarioId {
-  return PROJECTILE_SCENARIOS.some((scenario) => scenario.id === value);
+  return Arr.some(PROJECTILE_SCENARIOS, (scenario) => scenario.id === value);
 }
 
 export function getProjectileMotionState(id: ProjectileScenarioId) {
-  const scenario =
-    PROJECTILE_SCENARIOS.find((item) => item.id === id) ??
-    PROJECTILE_SCENARIOS[0];
+  const scenario = Option.getOrElse(
+    Arr.findFirst(PROJECTILE_SCENARIOS, (item) => item.id === id),
+    () => PROJECTILE_SCENARIOS[0]
+  );
   const angleRadians = (scenario.angleDegrees * Math.PI) / 180;
   const horizontalVelocity = scenario.initialSpeed * Math.cos(angleRadians);
   const verticalVelocity = scenario.initialSpeed * Math.sin(angleRadians);

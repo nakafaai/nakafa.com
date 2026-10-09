@@ -30,6 +30,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -117,7 +118,7 @@ export function SubatomicParticlePropertiesLab({
           value={selectedModeId}
           variant="outline"
         >
-          {SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS.map((modeId) => (
+          {Arr.map(SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS, (modeId) => (
             <ToggleGroupItem key={modeId} value={modeId}>
               {labels.modes[modeId].tab}
             </ToggleGroupItem>
@@ -159,7 +160,7 @@ export function SubatomicParticlePropertiesLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          {selectedLabels.facts.map((fact) => (
+          {Arr.map(selectedLabels.facts, (fact) => (
             <PropertyFact fact={fact} key={fact.label} />
           ))}
         </dl>

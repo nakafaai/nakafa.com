@@ -11,7 +11,7 @@ import {
 } from "@repo/contents/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const CONTENT_RESOURCE_PREFIX = "nakafa://content/";
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
@@ -50,7 +50,7 @@ export function parseNakafaUrlRoute(input: string) {
   const cleanInput = cleanSlug(
     normalized.replace(MARKDOWN_EXTENSION_PATTERN, "")
   );
-  const segments = cleanInput.split("/").filter(Boolean);
+  const segments = Arr.filter(cleanInput.split("/"), Boolean);
   const firstSegment = segments.at(0);
 
   if (!firstSegment) {
@@ -62,7 +62,7 @@ export function parseNakafaUrlRoute(input: string) {
     return Option.none<NakafaUrlRoute>();
   }
 
-  const route = segments.slice(1).join("/");
+  const route = Arr.join(segments.slice(1), "/");
   const parsedRoute = Schema.decodeOption(NakafaAgentContentRouteSchema)(route);
 
   if (Option.isNone(parsedRoute)) {

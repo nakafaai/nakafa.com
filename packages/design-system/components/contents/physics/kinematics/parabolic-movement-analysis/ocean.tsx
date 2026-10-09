@@ -6,6 +6,7 @@ import {
   type ProjectileMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
 import {
   DoubleSide,
@@ -117,7 +118,7 @@ function WindParticles({
 }) {
   return (
     <group>
-      {WIND_PARTICLES.map((particle) => (
+      {Arr.map(WIND_PARTICLES, (particle) => (
         <WindParticle
           centerX={centerX}
           key={particle.id}

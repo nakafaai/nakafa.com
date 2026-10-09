@@ -1,6 +1,7 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 
 /** Renders the quantitative graph for SNBT set 5 question 9. */
@@ -18,15 +19,18 @@ export function QuestionGraph({
   const indexD = Math.round((intersectionX - startExp) / step);
 
   // Function 1: y = 2^x - 2
-  const expPoints = Array.from({
-    length: Math.floor((endExp - startExp) / step) + 1,
-  }).map((_, i) => {
-    const x = i === indexD ? intersectionX : startExp + i * step;
-    return { x, y: 2 ** x - 2, z: 0 };
-  });
+  const expPoints = Arr.map(
+    Array.from({
+      length: Math.floor((endExp - startExp) / step) + 1,
+    }),
+    (_, i) => {
+      const x = i === indexD ? intersectionX : startExp + i * step;
+      return { x, y: 2 ** x - 2, z: 0 };
+    }
+  );
 
   // Function 2: y = -2x + 4
-  const linePoints = [startLine, 2, endLine].map((x) => ({
+  const linePoints = Arr.map([startLine, 2, endLine], (x) => ({
     x,
     y: -2 * x + 4,
     z: 0,

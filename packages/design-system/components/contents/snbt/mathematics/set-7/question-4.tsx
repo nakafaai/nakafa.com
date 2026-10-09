@@ -1,6 +1,7 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -57,7 +58,7 @@ export function Graph({ title, description }: GraphProps) {
       cameraPosition={[-8, 5, 10]}
       data={[
         // Cube Edges
-        ...cubeEdges.map((edge) => ({
+        ...Arr.map(cubeEdges, (edge) => ({
           points: edge,
           color: COLOR_CUBE,
           showPoints: false,
@@ -65,7 +66,7 @@ export function Graph({ title, description }: GraphProps) {
         })),
 
         // Diagonals
-        ...diagonals.map((edge) => ({
+        ...Arr.map(diagonals, (edge) => ({
           points: edge,
           color: COLOR_DIAGONAL,
           showPoints: false,

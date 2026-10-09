@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Ref, Result } from "effect";
+import { Array as Arr, Effect, Ref, Result } from "effect";
 import { CliError, Command } from "effect/cli";
 import { TestConsole } from "effect/testing";
 import type { CliRequest } from "#cli/command/spec";
@@ -42,7 +42,10 @@ describe("Nakafa CLI command tree", () => {
       expect(yield* readRequests(["--help"])).toEqual([]);
       expect(yield* readRequests(["--version"])).toEqual([]);
 
-      const output = (yield* TestConsole.logLines).map(String).join("\n");
+      const output = Arr.join(
+        Arr.map(yield* TestConsole.logLines, String),
+        "\n"
+      );
       expect(output).toContain("Nakafa CLI");
       expect(output).toContain("0.1.0");
     })

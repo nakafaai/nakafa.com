@@ -2,7 +2,7 @@ import {
   createHeadingId,
   createHeadingLabel,
 } from "@repo/design-system/lib/markdown/headings";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /**
  * Extracts heading hierarchy from markdown content.
@@ -25,31 +25,64 @@ export function getHeadings(content: string): ParsedHeading[] {
     .replace(/~~~[\s\S]*?~~~/g, "");
 
   const markdownHeadingRegex = /^\s*(#{1,6})(?:\s+(.*))?$/gm;
-  const headings: ParsedHeading[] = [];
-  const ancestors: { level: number; heading: ParsedHeading }[] = [];
-
-  for (const match of cleanedContent.matchAll(markdownHeadingRegex)) {
-    const level = match[1].length;
-    const text = match[2]?.trim() ?? "";
-    const heading: ParsedHeading = {
-      label: createHeadingLabel(text),
-      href: `#${createHeadingId(text)}`,
-      children: [],
-    };
-    const peerIndex = ancestors.findIndex((parent) => parent.level >= level);
-    if (peerIndex >= 0) {
-      ancestors.length = peerIndex;
+  const entries = Arr.map(
+    Arr.fromIterable(cleanedContent.matchAll(markdownHeadingRegex)),
+    (match) => {
+      const text = match[2]?.trim() ?? "";
+      return {
+        href: `#${createHeadingId(text)}`,
+        label: createHeadingLabel(text),
+        level: match[1].length,
+      };
     }
-    const siblings = ancestors.at(-1)?.heading.children ?? headings;
-    siblings.push(heading);
-    ancestors.push({ level, heading });
-  }
-  return headings;
+  );
+  return nestHeadings(entries);
+}
+
+/** A heading in document order, before its children are nested under it. */
+const HeadingEntrySchema = Schema.Struct({
+  href: Schema.String,
+  label: Schema.String,
+  level: Schema.Finite,
+});
+
+type HeadingEntry = typeof HeadingEntrySchema.Type;
+
+/**
+ * Nests each entry under the nearest earlier entry with a smaller level. An
+ * entry with no such earlier entry starts a sibling run, and the entries after
+ * it, up to the next run, are its descendants.
+ */
+function nestHeadings(entries: readonly HeadingEntry[]): ParsedHeading[] {
+  const starts = siblingStarts(entries);
+  const ends = Arr.append(Arr.drop(starts, 1), entries.length);
+  return Arr.map(Arr.zip(starts, ends), ([start, end]) => {
+    const entry = entries[start];
+    return {
+      label: entry.label,
+      href: entry.href,
+      children: nestHeadings(entries.slice(start + 1, end)),
+    };
+  });
+}
+
+/** Lists the indexes of the entries with no earlier entry of a smaller level. */
+function siblingStarts(entries: readonly HeadingEntry[]) {
+  // shallowestBefore[index] is the smallest level among the entries before it.
+  const shallowestBefore = Arr.scan(
+    entries,
+    Number.POSITIVE_INFINITY,
+    (shallowest, entry) => Math.min(shallowest, entry.level)
+  );
+  return Arr.filter(
+    Arr.map(entries, (_entry, index) => index),
+    (index) => entries[index].level <= shallowestBefore[index]
+  );
 }
 
 /**
  * Extracts all heading IDs from a parsed heading hierarchy.
- * Uses iterative DFS traversal to collect all heading slugs including nested children.
+ * Uses a depth-first traversal to collect all heading slugs including nested children.
  *
  * @param headings - Array of parsed headings with potential nested children
  * @returns Array of heading slugs/IDs
@@ -61,24 +94,10 @@ export function getHeadings(content: string): ParsedHeading[] {
  * ```
  */
 export function extractAllHeadingIds(headings: ParsedHeading[]): string[] {
-  const ids: string[] = [];
-  const stack: ParsedHeading[] = [...headings].reverse();
-  let stackIndex = stack.length - 1;
-
-  while (stackIndex >= 0) {
-    const heading = stack[stackIndex];
-    stack.splice(stackIndex, 1);
-
-    ids.push(createHeadingId(heading.label));
-
-    if (heading.children && heading.children.length > 0) {
-      stack.splice(stackIndex, 0, ...[...heading.children].reverse());
-    }
-
-    stackIndex = stack.length - 1;
-  }
-
-  return ids;
+  return Arr.flatMap(headings, (heading) => [
+    createHeadingId(heading.label),
+    ...extractAllHeadingIds(heading.children),
+  ]);
 }
 
 export const ParsedHeadingSchema = Schema.Struct({

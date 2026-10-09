@@ -28,20 +28,24 @@ describe("theme registry", () => {
   });
 
   it("defines every selectable theme exactly once", () => {
-    const values = themes.map((theme) => theme.value);
+    const values = Arr.map(themes, (theme) => theme.value);
 
     expect(Arr.dedupe(values).length).toBe(values.length);
     expect(values).toContain("darkmatter");
   });
 
   it("keeps system dynamic and every concrete theme explicit", () => {
-    const dynamicThemes = themes.filter(
+    const dynamicThemes = Arr.filter(
+      themes,
       (theme) => theme.appearance === "dynamic"
     );
-    const darkThemes = themes.filter((theme) => theme.appearance === "dark");
+    const darkThemes = Arr.filter(
+      themes,
+      (theme) => theme.appearance === "dark"
+    );
 
-    expect(dynamicThemes.map((theme) => theme.value)).toEqual(["system"]);
-    expect(darkThemes.map((theme) => theme.value)).toEqual(["dark"]);
+    expect(Arr.map(dynamicThemes, (theme) => theme.value)).toEqual(["system"]);
+    expect(Arr.map(darkThemes, (theme) => theme.value)).toEqual(["dark"]);
   });
 
   it.effect("derives every shader color from its profile primary", () =>

@@ -35,6 +35,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
@@ -104,7 +105,7 @@ export function InstantaneousVelocitySpeedLab({
           value={caseId}
           variant="outline"
         >
-          {INSTANTANEOUS_SPEED_CASES.map((scenario) => (
+          {Arr.map(INSTANTANEOUS_SPEED_CASES, (scenario) => (
             <ToggleGroupItem key={scenario.id} value={scenario.id}>
               <InlineMath math={`t=${formatTimeMath(scenario.time)}`} />
             </ToggleGroupItem>
@@ -150,7 +151,7 @@ export function InstantaneousVelocitySpeedLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          {facts.map((fact) => (
+          {Arr.map(facts, (fact) => (
             <LabFact key={fact.id} label={fact.label} math={fact.math} />
           ))}
         </dl>
@@ -197,7 +198,7 @@ function Road({ roadLength }: { roadLength: number }) {
         />
       </mesh>
 
-      {stripePositions.map((x) => (
+      {Arr.map(stripePositions, (x) => (
         <mesh key={x} position={[x, 0.035, 0]}>
           <boxGeometry
             args={[
@@ -238,7 +239,7 @@ function MeasurementPoint({ x }: { x: number }) {
         />
       </mesh>
 
-      {sensorSides.map((side) => (
+      {Arr.map(sensorSides, (side) => (
         <group key={side} position={[0, 0, side * sensorZ]}>
           <mesh castShadow position={[0, 0.1, 0]}>
             <cylinderGeometry

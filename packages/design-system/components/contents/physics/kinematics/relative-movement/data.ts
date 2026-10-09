@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 export const RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/hatchback-sports.glb";
 
@@ -65,7 +66,7 @@ export function getRelativeMovementState(caseId: RelativeMovementCaseId) {
 export function isRelativeMovementCaseId(
   value: string
 ): value is RelativeMovementCaseId {
-  return RELATIVE_MOVEMENT_CASE_IDS.some((caseId) => caseId === value);
+  return Arr.some(RELATIVE_MOVEMENT_CASE_IDS, (caseId) => caseId === value);
 }
 
 export function formatSignedSpeedMath(value: number) {

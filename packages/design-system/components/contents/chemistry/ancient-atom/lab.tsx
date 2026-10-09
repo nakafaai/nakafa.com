@@ -18,6 +18,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr, Option } from "effect";
 import {
   AnimatePresence,
   domMax,
@@ -59,20 +60,21 @@ export function AncientAtomLab({
   const [selectedLevelId, setSelectedLevelId] = useState<AncientAtomLevelId>(
     WHOLE_MATTER_LEVEL_ID
   );
-  const selectedLevel = ANCIENT_ATOM_LEVELS.find(
+  const selectedLevel = Arr.findFirst(
+    ANCIENT_ATOM_LEVELS,
     (level) => level.id === selectedLevelId
   );
 
-  if (!selectedLevel) {
+  if (Option.isNone(selectedLevel)) {
     return null;
   }
 
   const pieces = Array.from(
-    { length: selectedLevel.pieces },
+    { length: selectedLevel.value.pieces },
     (_, pieceIndex) => pieceIndex
   );
-  const visibleColumns = Math.min(selectedLevel.pieces, 4);
-  const visibleRows = Math.ceil(selectedLevel.pieces / visibleColumns);
+  const visibleColumns = Math.min(selectedLevel.value.pieces, 4);
+  const visibleRows = Math.ceil(selectedLevel.value.pieces / visibleColumns);
 
   /**
    * Keeps one cutting stage selected when ToggleGroup emits an empty value.
@@ -82,13 +84,16 @@ export function AncientAtomLab({
       return;
     }
 
-    const nextLevel = ANCIENT_ATOM_LEVELS.find((level) => level.id === levelId);
+    const nextLevel = Arr.findFirst(
+      ANCIENT_ATOM_LEVELS,
+      (level) => level.id === levelId
+    );
 
-    if (!nextLevel) {
+    if (Option.isNone(nextLevel)) {
       return;
     }
 
-    setSelectedLevelId(nextLevel.id);
+    setSelectedLevelId(nextLevel.value.id);
   }
 
   return (
@@ -106,7 +111,7 @@ export function AncientAtomLab({
               value={selectedLevelId}
               variant="outline"
             >
-              {ANCIENT_ATOM_LEVELS.map((level) => (
+              {Arr.map(ANCIENT_ATOM_LEVELS, (level) => (
                 <ToggleGroupItem key={level.id} value={level.id}>
                   {labels.levels[level.id].tab}
                 </ToggleGroupItem>
@@ -122,7 +127,7 @@ export function AncientAtomLab({
                 }}
               >
                 <AnimatePresence mode="popLayout">
-                  {pieces.map((pieceIndex) => (
+                  {Arr.map(pieces, (pieceIndex) => (
                     <m.div
                       animate={{ opacity: 1, scale: 1 }}
                       className="relative rounded-md shadow-sm"

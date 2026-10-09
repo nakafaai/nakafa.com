@@ -2,6 +2,7 @@ import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
+import { Array as Arr } from "effect";
 
 const languageMetadata = {
   de: {
@@ -23,8 +24,14 @@ const languageMetadata = {
   };
 };
 
+/**
+ * The active locale codes as a plain readonly array. Mapping the tuple itself
+ * would infer a non-empty tuple for `languages`, which changes its exported type.
+ */
+const localeCodes: readonly ActiveAppLocaleCode[] = ACTIVE_APP_LOCALE_CODES;
+
 /** Language options derived from every canonical Nakafa locale. */
-export const languages = ACTIVE_APP_LOCALE_CODES.map((value) => ({
+export const languages = Arr.map(localeCodes, (value) => ({
   ...languageMetadata[value],
   value,
 }));

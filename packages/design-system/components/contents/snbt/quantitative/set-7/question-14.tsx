@@ -1,9 +1,14 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
 
-const linearPoints = [-1, -0.5, 0, 5, 6].map((x) => ({ x, y: 5 - x, z: 0 }));
+const linearPoints = Arr.map([-1, -0.5, 0, 5, 6], (x) => ({
+  x,
+  y: 5 - x,
+  z: 0,
+}));
 
 const exponentialPoints = Array.from({ length: 181 }, (_, i) => {
   const x = -1 + i * 0.025;
@@ -31,12 +36,18 @@ export function Graph({
             },
             {
               text: <InlineMath math="5" />,
-              at: linearPoints.findIndex((p) => p.x === 0),
+              at: Option.getOrElse(
+                Arr.findFirstIndex(linearPoints, (p) => p.x === 0),
+                () => -1
+              ),
               offset: [-0.5, 0, 0],
             },
             {
               text: <InlineMath math="5" />,
-              at: linearPoints.findIndex((p) => p.x === 5),
+              at: Option.getOrElse(
+                Arr.findFirstIndex(linearPoints, (p) => p.x === 5),
+                () => -1
+              ),
               offset: [0.5, 0.5, 0],
             },
           ],
@@ -50,12 +61,18 @@ export function Graph({
           labels: [
             {
               text: <InlineMath math="y = g(x)" />,
-              at: exponentialPoints.findIndex((p) => p.x === 2),
+              at: Option.getOrElse(
+                Arr.findFirstIndex(exponentialPoints, (p) => p.x === 2),
+                () => -1
+              ),
               offset: [2, 1, 0],
             },
             {
               text: <InlineMath math="(2, 3)" />,
-              at: exponentialPoints.findIndex((p) => p.x === 2),
+              at: Option.getOrElse(
+                Arr.findFirstIndex(exponentialPoints, (p) => p.x === 2),
+                () => -1
+              ),
               offset: [2, 0, 0],
             },
           ],

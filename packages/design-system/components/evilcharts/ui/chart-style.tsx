@@ -8,8 +8,9 @@ import {
 import { Array as Arr, Record as Rec } from "effect";
 
 function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
-  const colorConfig = Rec.toEntries(config).filter(
-    ([, itemConfig]) => itemConfig.colors
+  const colorConfig = Arr.filter(
+    Rec.toEntries(config),
+    ([, itemConfig]) => !!itemConfig.colors
   );
 
   if (!colorConfig.length) {
@@ -17,8 +18,8 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
   }
 
   const generateCssVars = (theme: keyof typeof THEMES) =>
-    colorConfig
-      .flatMap(([key, itemConfig]) => {
+    Arr.join(
+      Arr.flatMap(colorConfig, ([key, itemConfig]) => {
         const colorsArray = itemConfig.colors?.[theme];
         if (
           !(colorsArray && Arr.isArray(colorsArray)) ||
@@ -30,19 +31,23 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
         const maxCount = getColorsCount(itemConfig);
         const distributedColors = distributeColors(colorsArray, maxCount);
 
-        return distributedColors.map(
+        return Arr.map(
+          distributedColors,
           (color, index) =>
             `  ${getChartColorVariableName(key, index)}: ${color};`
         );
-      })
-      .join("\n");
+      }),
+      "\n"
+    );
 
-  const css = Rec.toEntries(THEMES)
-    .map(
+  const css = Arr.join(
+    Arr.map(
+      Rec.toEntries(THEMES),
       ([theme, prefix]) =>
         `${prefix} [data-chart="${id}"] {\n${generateCssVars(theme as keyof typeof THEMES)}\n}`
-    )
-    .join("\n");
+    ),
+    "\n"
+  );
 
   return <style>{css}</style>;
 }

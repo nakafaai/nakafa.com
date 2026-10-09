@@ -6,6 +6,7 @@ import {
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import type { EvilBrushVariant } from "@repo/design-system/components/evilcharts/ui/evil-brush";
+import { Array as Arr } from "effect";
 import { type ComponentProps, lazy } from "react";
 
 type RechartsModule = typeof import("recharts");
@@ -72,7 +73,7 @@ function renderEvilBrushPreview(
               variant={variant}
             />
           </defs>
-          {keys.map((dataKey) => (
+          {Arr.map(keys, (dataKey) => (
             <Line
               activeDot={false}
               connectNulls={connectNulls}
@@ -118,7 +119,7 @@ function renderEvilBrushPreview(
               variant={variant}
             />
           </defs>
-          {keys.map((dataKey) => (
+          {Arr.map(keys, (dataKey) => (
             <Bar
               dataKey={dataKey}
               fill={`url(#${getChartSeriesId(chartId, "zm", dataKey)})`}
@@ -145,7 +146,7 @@ function renderEvilBrushPreview(
             variant={variant}
           />
         </defs>
-        {keys.map((dataKey) => (
+        {Arr.map(keys, (dataKey) => (
           <Area
             activeDot={false}
             connectNulls={connectNulls}

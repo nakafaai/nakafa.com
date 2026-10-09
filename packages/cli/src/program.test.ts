@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import {
+  Array as Arr,
   Effect,
   FileSystem,
   Layer,
@@ -96,10 +97,10 @@ function execute(
       Effect.provide(layer)
     );
     const consoleAfter = yield* TestConsole.logLines;
-    const consoleOutput = consoleAfter
-      .slice(consoleBefore.length)
-      .map(String)
-      .join("\n");
+    const consoleOutput = Arr.join(
+      Arr.map(consoleAfter.slice(consoleBefore.length), String),
+      "\n"
+    );
     const capturedStdout = yield* Ref.get(stdout);
     return {
       exitCode,
@@ -221,7 +222,7 @@ describe("Nakafa CLI execution", () => {
         stderr: "",
         stdout: '{"ok":true}\n',
       });
-      expect((yield* Ref.get(requests)).map(({ url }) => url)).toEqual([
+      expect(Arr.map(yield* Ref.get(requests), ({ url }) => url)).toEqual([
         expectedUrl,
       ]);
     })

@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 
 export const UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/sedan-sports.glb";
@@ -77,7 +78,7 @@ export function getUniformLinearMotionState(speed: UniformLinearMotionSpeed) {
 export function isUniformLinearMotionSpeed(
   value: number
 ): value is UniformLinearMotionSpeed {
-  return UNIFORM_LINEAR_MOTION_SPEEDS.some((speed) => speed === value);
+  return Arr.some(UNIFORM_LINEAR_MOTION_SPEEDS, (speed) => speed === value);
 }
 
 export function formatMeterMath(value: number) {

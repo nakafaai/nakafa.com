@@ -13,7 +13,7 @@ import {
 import { Ocean } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/ocean";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import { useMemo, useRef } from "react";
 import {
   CatmullRomCurve3,
@@ -169,7 +169,7 @@ function Trajectory({ motion }: { motion: ProjectileMotionState }) {
 function GhostBalls({ motion }: { motion: ProjectileMotionState }) {
   return (
     <group>
-      {motion.ghostTimes.map((time) => {
+      {Arr.map(motion.ghostTimes, (time) => {
         const point = getProjectilePoint(motion, time);
         const progress = time / motion.flightTime;
         const markerScale = 0.62 + progress * 0.24;
@@ -328,7 +328,7 @@ function MuzzleBlast({ motion }: { motion: ProjectileMotionState }) {
 function SmokePuffs({ motion }: { motion: ProjectileMotionState }) {
   return (
     <group>
-      {SMOKE_PUFFS.map((puff) => (
+      {Arr.map(SMOKE_PUFFS, (puff) => (
         <SmokePuff index={puff.index} key={puff.id} motion={motion} />
       ))}
     </group>

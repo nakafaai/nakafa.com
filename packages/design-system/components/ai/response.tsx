@@ -9,6 +9,7 @@ import { MarkdownFrame } from "@repo/design-system/components/markdown/frame";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
 import { trimIncompleteTail } from "@repo/design-system/lib/markdown/stream";
+import { Array as Arr } from "effect";
 import { memo, useMemo } from "react";
 
 export type HardenedMarkdownProps = MarkdownSecurityProps;
@@ -32,7 +33,7 @@ function Blocks({
     [children, id]
   );
 
-  return blocks.map((block) => (
+  return Arr.map(blocks, (block) => (
     <MemoizedMarkdownBlock
       allowedImagePrefixes={allowedImagePrefixes}
       allowedLinkPrefixes={allowedLinkPrefixes}

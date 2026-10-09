@@ -25,7 +25,13 @@ import {
   type LineMarkerIndices,
   resolveLineMarkers,
 } from "@repo/design-system/lib/geometry/markers";
-import { Effect, MutableHashMap, Option } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashMap,
+  MutableList,
+  Option,
+} from "effect";
 import { type ComponentProps, type ReactNode, useMemo } from "react";
 import {
   CatmullRomCurve3,
@@ -174,7 +180,7 @@ export function LineEquation({
   cone,
 }: Props) {
   const vectorPoints = useMemo(
-    () => points.map((point) => new Vector3(point.x, point.y, point.z)),
+    () => Arr.map(points, (point) => new Vector3(point.x, point.y, point.z)),
     [points]
   );
 
@@ -187,14 +193,17 @@ export function LineEquation({
       resolveLineMarkers(vectorPoints, pointIndices)
     );
     const ordinary = showPoints
-      ? selected.filter(
-          (point) => !endpointMarkers.some((marker) => marker.point === point)
+      ? Arr.filter(
+          selected,
+          (point) =>
+            !Arr.some(endpointMarkers, (marker) => marker.point === point)
         )
       : [];
     return ordinary.concat(
-      endpointMarkers
-        .filter((marker) => marker.state === "closed")
-        .map((marker) => marker.point)
+      Arr.map(
+        Arr.filter(endpointMarkers, (marker) => marker.state === "closed"),
+        (marker) => marker.point
+      )
     );
   }, [pointIndices, vectorPoints, showPoints, endpointMarkers]);
 
@@ -267,7 +276,10 @@ export function LineEquation({
       return null;
     }
 
-    const cones: { position: Vector3; quaternion: Quaternion }[] = [];
+    const cones = MutableList.make<{
+      position: Vector3;
+      quaternion: Quaternion;
+    }>();
 
     // Add start cone if position is "start" or "both"
     if (cone.position === "start" || cone.position === "both") {
@@ -287,7 +299,7 @@ export function LineEquation({
           new Vector3(0, 1, 0),
           direction.clone().negate()
         );
-        cones.push({ position: conePosition, quaternion });
+        MutableList.append(cones, { position: conePosition, quaternion });
       }
     }
 
@@ -308,17 +320,17 @@ export function LineEquation({
           new Vector3(0, 1, 0),
           direction
         );
-        cones.push({ position: conePosition, quaternion });
+        MutableList.append(cones, { position: conePosition, quaternion });
       }
     }
 
-    return cones.length > 0 ? cones : null;
+    return cones.length > 0 ? MutableList.toArray(cones) : null;
   }, [cone, vectorPoints, arrowSize]);
 
   // Pre-calculate label data to avoid recreating in render
   const labelData = useMemo(
     () =>
-      labels.flatMap((label, idx) => {
+      Arr.flatMap(labels, (label, idx) => {
         const mid = Math.floor(vectorPoints.length / 2);
         const index = label.at ?? mid;
         const base = vectorPoints[index];
@@ -368,7 +380,7 @@ export function LineEquation({
       {!!coneData &&
         !!coneGeometry &&
         !!coneMaterial &&
-        coneData.map((data) => (
+        Arr.map(coneData, (data) => (
           <mesh
             frustumCulled
             geometry={coneGeometry}
@@ -387,7 +399,7 @@ export function LineEquation({
         material={pointMat}
         visible={markerPoints.length > 0}
       >
-        {markerPoints.map((v, index) => (
+        {Arr.map(markerPoints, (v, index) => (
           <Instance
             // biome-ignore lint/suspicious/noArrayIndexKey: Coordinates may appear multiple times, need index for uniqueness
             key={`point-${index}-${v.x}-${v.y}-${v.z}`}
@@ -396,19 +408,20 @@ export function LineEquation({
         ))}
       </Instances>
 
-      {endpointMarkers
-        .filter((marker) => marker.state === "open")
-        .map((marker) => (
+      {Arr.map(
+        Arr.filter(endpointMarkers, (marker) => marker.state === "open"),
+        (marker) => (
           <EndpointRing
             key={`open-${marker.index}`}
             material={pointMat}
             position={marker.point}
             radius={SPHERE_GEOMETRY_RADIUS}
           />
-        ))}
+        )
+      )}
 
       {/* Render custom labels at specified indices */}
-      {labelData.map((data) => (
+      {Arr.map(labelData, (data) => (
         <ThreeLabel
           anchorX={data.anchorX}
           color={color}

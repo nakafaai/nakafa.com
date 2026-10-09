@@ -1,6 +1,6 @@
 import { NAKAFA_AGENT_SECTIONS } from "@repo/contents/agent/constants";
 import { LocaleSchema } from "@repo/contents/content";
-import { Schema, Struct } from "effect";
+import { Array as Arr, Schema, Struct } from "effect";
 
 const MARKDOWN_EXTENSION = ".md";
 const ABSOLUTE_URL_PATTERN =
@@ -29,11 +29,10 @@ function isSafeNakafaContentRoute(value: string) {
   if (value.length === 0) {
     return false;
   }
-  return value
-    .split("/")
-    .every(
-      (segment) => segment.length > 0 && segment !== "." && segment !== ".."
-    );
+  return Arr.every(
+    value.split("/"),
+    (segment) => segment.length > 0 && segment !== "." && segment !== ".."
+  );
 }
 /**
  * Checks whether a string is a safe graph-backed content asset ID.
@@ -43,7 +42,7 @@ function isSafeNakafaContentId(value: string) {
   if (prefix !== "asset" || segments.length < 3) {
     return false;
   }
-  return segments.every(isSafeGraphIdSegment);
+  return Arr.every(segments, isSafeGraphIdSegment);
 }
 /** Checks one graph ID segment for path-safe, delimiter-safe text. */
 function isSafeGraphIdSegment(segment: string) {
@@ -84,7 +83,7 @@ const NakafaAgentGraphIdSchema = Schema.String.pipe(
         return (
           isSafeGraphIdSegment(prefix) &&
           segments.length > 0 &&
-          segments.every(isSafeGraphIdSegment)
+          Arr.every(segments, isSafeGraphIdSegment)
         );
       },
       { message: "Expected a safe Nakafa graph ID." }

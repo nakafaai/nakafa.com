@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 const MAX_SEED = 2_147_483_647;
 const MIN_SEED = 0;
 const SEED_INCREMENT = 2_147_483_646;
@@ -99,10 +101,7 @@ export function createSeed(...inputs: (string | number)[]): number {
       seed += input;
     } else {
       // Convert string to number using character codes
-      seed += Array.from(input).reduce(
-        (acc, char) => acc + char.charCodeAt(0),
-        0
-      );
+      seed += Arr.reduce(input, 0, (acc, char) => acc + char.charCodeAt(0));
     }
   }
   return Math.abs(seed) % MAX_SEED;

@@ -1,6 +1,7 @@
 "use client";
 
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 /** Renders one bacterial wall stack with visible layer count. */
@@ -17,7 +18,7 @@ export function BacterialWallStack({
 }) {
   return (
     <group position={[x, 0, 0]}>
-      {colors.map((color, index) => {
+      {Arr.map(colors, (color, index) => {
         const radius = 0.25 - index * 0.035;
         const length = 0.8 - index * 0.08;
         const opacity = index === colors.length - 1 ? 0.78 : 0.34;
