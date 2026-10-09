@@ -27,6 +27,7 @@
     },
     {
       "includes": [
+        "*.{ts,tsx,mts,cts}",
         "apps/**/*.{ts,tsx,mts,cts}",
         "packages/**/*.{ts,tsx,mts,cts}",
         "scripts/**/*.{ts,tsx,mts,cts}"
@@ -81,32 +82,6 @@
                       "#scripts/**/*.js"
                     ],
                     "message": "Use extensionless local aliases."
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "includes": ["*.{ts,tsx,mts,cts}"],
-      "linter": {
-        "rules": {
-          "style": {
-            "noRestrictedImports": {
-              "level": "error",
-              "options": {
-                "paths": {
-                  "@effect/vitest": {
-                    "importNames": ["vi"],
-                    "message": "Use the configured global vi for mocks. Import the remaining test APIs from @effect/vitest."
-                  }
-                },
-                "patterns": [
-                  {
-                    "group": ["vitest", "vitest/*", "!vitest/config"],
-                    "message": "Import test APIs from @effect/vitest. Keep vitest only as the required runner and config package."
                   }
                 ]
               }
