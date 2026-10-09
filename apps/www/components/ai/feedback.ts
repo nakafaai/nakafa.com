@@ -3,7 +3,6 @@ import { captureException } from "@repo/analytics/posthog/browser";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { Effect, Schema } from "effect";
-import type { AppConfig } from "next-intl";
 import { toast } from "sonner";
 
 /**
@@ -25,16 +24,29 @@ export type NinaFailure =
   | NinaConnectionError;
 
 /** The recovery the chat offers after a failure. */
-type FeedbackAction =
-  | "retry"
-  | "edit"
-  | "wait"
-  | "credits"
-  | "sign-in"
-  | "new-chat";
+const FeedbackActionSchema = Schema.Literals([
+  "retry",
+  "edit",
+  "wait",
+  "credits",
+  "sign-in",
+  "new-chat",
+]);
 
-/** The localized message that explains a failure. */
-type FeedbackMessage = keyof AppConfig["Messages"]["Ai"]["failures"];
+/**
+ * The recovery and the localized message of one failure. The message is a key
+ * of `Ai.failures`, and the `t(...)` calls that read it check that key.
+ */
+const FeedbackRowSchema = Schema.Struct({
+  action: FeedbackActionSchema,
+  message: Schema.String,
+});
+
+/** A typed admission failure: the same row, and whether it is reported. */
+const FailureFeedbackRowSchema = Schema.Struct({
+  ...FeedbackRowSchema.fields,
+  report: Schema.Boolean,
+});
 
 /** Every typed admission failure has localized copy and an appropriate recovery. */
 export const ninaFailureFeedback = {
@@ -103,7 +115,7 @@ export const ninaFailureFeedback = {
   },
 } as const satisfies Record<
   NinaFailure["code"],
-  { action: FeedbackAction; message: FeedbackMessage; report: boolean }
+  typeof FailureFeedbackRowSchema.Type
 >;
 
 /** Persisted failures retain their own recovery policy when history is reopened. */
@@ -120,7 +132,7 @@ export const ninaResponseFeedback = {
   unknown: { message: "unknown", action: "retry" },
 } as const satisfies Record<
   typeof NinaFailureReason.Type,
-  { action: FeedbackAction; message: FeedbackMessage }
+  typeof FeedbackRowSchema.Type
 >;
 
 /** Report operational failures and show only the caller's localized message. */

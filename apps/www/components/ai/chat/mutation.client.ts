@@ -4,6 +4,7 @@ import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import nina from "@repo/backend/confect/_generated/refs/nina";
+import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option } from "effect";
 import {
@@ -18,7 +19,7 @@ function patchChatDetail(
   chatId: Id<"chats">,
   patch: {
     title?: string;
-    visibility?: "private" | "public";
+    visibility?: ChatVisibility;
   }
 ) {
   const conversation = localStore.getQuery(nina.conversation.get, {
@@ -59,7 +60,7 @@ function patchLoadedLists(
   chatId: Id<"chats">,
   patch: {
     title?: string;
-    visibility?: "private" | "public";
+    visibility?: ChatVisibility;
   }
 ) {
   for (const query of localStore.getAllQueries(chats.queries.getOwnChats)) {

@@ -4,7 +4,7 @@ const BillingDestinationSchema = Schema.Struct({
   url: Schema.String,
 });
 
-type BillingDestination = typeof BillingDestinationSchema.Type;
+export type BillingDestination = typeof BillingDestinationSchema.Type;
 type BillingNavigate = (url: string) => void;
 type BillingFailureHandler<E> = (cause: E) => Effect.Effect<void>;
 

@@ -1,5 +1,6 @@
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { slugify } from "@repo/utilities/slug";
@@ -240,7 +241,7 @@ async function CachedSurahShell({
         name={title}
         position={surahNumber}
         totalPages={surahData.numberOfVerses}
-        url={`https://nakafa.com/${locale}/quran/${surah}`}
+        url={`${COMPANY_IDENTITY.url}/${locale}/quran/${surah}`}
       />
       <VirtualProvider>
         <SidebarRightProvider>

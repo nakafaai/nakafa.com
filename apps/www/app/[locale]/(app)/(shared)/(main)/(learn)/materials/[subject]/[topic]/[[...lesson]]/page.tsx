@@ -13,7 +13,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { readPublishedMaterialPrerenderRoute } from "@/lib/content/material/prerender";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readMaterialPreviewStaticParams } from "@/lib/content/preview/route";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 
@@ -24,7 +24,7 @@ type MaterialPageProps =
 export async function generateStaticParams({
   params,
 }: {
-  params: { locale: string };
+  params: LocaleRouteParams;
 }) {
   const locale = getLocaleOrThrow(params.locale);
   if (hasPreviewConfig()) {

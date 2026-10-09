@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import { releaseRoleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 export const proofRowValidator = Schema.Struct({
   index: Schema.Finite,
@@ -16,7 +17,7 @@ export const proofStateValidator = Schema.Struct({
   checkedIndex: Schema.Finite,
   releaseJson: Schema.String,
   rendererJson: Schema.String,
-  role: Schema.Literals(["candidate", "recovery"]),
+  role: releaseRoleValidator,
   stagedArtifacts: Schema.Finite,
   stagedDeletes: Schema.Finite,
   stagedItems: Schema.Finite,

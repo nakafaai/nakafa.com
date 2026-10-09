@@ -10,6 +10,9 @@ import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
+/** The locale param that a parent route passes to the `generateStaticParams` of its child routes. */
+export type LocaleRouteParams = Awaited<LayoutProps<"/[locale]">["params"]>;
+
 /** Narrows one route locale to the product's current public locale set. */
 export function getActiveLocaleOrThrow(locale: string): PublicAppLocale {
   if (hasLocale(routing.locales, locale)) {

@@ -5,6 +5,9 @@ import {
 import { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { Schema } from "effect";
 
+/** The Nina step that failed: reading stored state or generating a new result. */
+export const NinaFailureOperation = Schema.Literals(["read", "generate"]);
+
 export class NinaGenerationError extends Schema.TaggedError<NinaGenerationError>()(
   "NinaGenerationError",
   {

@@ -6,7 +6,6 @@
   "envMode": "loose",
   "globalEnv": ["NEXT_RUNTIME", "NODE_ENV"],
   "globalPassThroughEnv": [
-    "REDIS_URL",
     "BING_WEBMASTER_API_KEY",
     "FIRECRAWL_API_KEY",
     "MATH_CAS_API_KEY",
@@ -34,7 +33,11 @@
         "storybook-static/**"
       ]
     },
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
     "test": {
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "test:watch": {
@@ -46,6 +49,7 @@
       "persistent": true
     },
     "test:coverage": {
+      "dependsOn": ["transit"],
       "outputs": ["coverage/**"]
     },
     "format": {

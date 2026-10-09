@@ -56,6 +56,11 @@ const operationalExceptionName = "OperationalError";
 const stackFramePattern = /^\s*at\s/;
 const requestUserAgentMaxLength = 512;
 
+/** The optional PostHog system property that classifies the traffic behind a capture. */
+const OperationalRequestPropertiesSchema = Schema.Struct({
+  $raw_user_agent: Schema.optionalKey(Schema.String),
+});
+
 /**
  * Returns the PostHog system property that lets ingestion classify the traffic
  * behind an operational exception.
@@ -67,9 +72,9 @@ const requestUserAgentMaxLength = 512;
  * automation before triage. The value is request-derived and untrusted, so it
  * stays bounded and never enters the redacted exception itself.
  */
-export function operationalRequestProperties(requestUserAgent?: string): {
-  $raw_user_agent?: string;
-} {
+export function operationalRequestProperties(
+  requestUserAgent?: string
+): typeof OperationalRequestPropertiesSchema.Type {
   const userAgent = requestUserAgent?.trim();
   if (!userAgent) {
     return {};

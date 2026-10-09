@@ -9,7 +9,10 @@ import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
-import { billingNavigationProgram } from "@/lib/billing/navigation";
+import {
+  type BillingDestination,
+  billingNavigationProgram,
+} from "@/lib/billing/navigation";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 const BillingSourceSchema = Schema.Struct({
@@ -31,7 +34,7 @@ export function useBillingNavigation() {
   );
 
   function runBillingRequest<E>(
-    request: Effect.Effect<{ readonly url: string }, E>,
+    request: Effect.Effect<BillingDestination, E>,
     failure: BillingSource & { readonly message: string }
   ) {
     startTransition(() =>

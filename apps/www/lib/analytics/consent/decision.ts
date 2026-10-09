@@ -52,10 +52,7 @@ export function resolveConsentAffordances({
   readonly isAnonymousResolved: boolean;
   readonly isAuthenticated: boolean;
   readonly isBlocked: boolean;
-}): {
-  readonly canDecline: boolean;
-  readonly canGrant: boolean;
-} {
+}) {
   const canDecline =
     !isBlocked && (isAuthenticated ? isAccountResolved : isAnonymousResolved);
   return {

@@ -1,7 +1,12 @@
 import { assert, describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Ref, Result, Stdio } from "effect";
+import { ConfigProvider, Effect, Ref, Result, Schema, Stdio } from "effect";
 import { capture, makeCapture } from "#scripts/capture";
-import { type GateInput, runGate, validateGate } from "#scripts/github/gate";
+import {
+  type GateInput,
+  GateInputSchema,
+  runGate,
+  validateGate,
+} from "#scripts/github/gate";
 
 const required: GateInput = {
   backendOutcome: "success",
@@ -41,6 +46,12 @@ const runCapturedGate = Effect.fn("CiGateTest.runCapturedGate")(function* (
     Effect.result
   );
   return { result, stdout: yield* Ref.get(stdout) };
+});
+
+/** One gate input that a rejection case names by the evidence it lacks. */
+const RejectionCaseSchema = Schema.Struct({
+  input: GateInputSchema,
+  name: Schema.String,
 });
 
 describe("terminal CI gate", () => {
@@ -114,18 +125,17 @@ describe("terminal CI gate", () => {
       },
       name: "unexpected production",
     },
-  ] satisfies ReadonlyArray<{
-    readonly input: GateInput;
-    readonly name: string;
-  }>)("rejects invalid $name evidence", ({ input }) =>
-    validateGate(input).pipe(
-      Effect.result,
-      Effect.tap((result) =>
-        Effect.sync(() => {
-          expect(Result.isFailure(result)).toBe(true);
-        })
+  ] satisfies readonly (typeof RejectionCaseSchema.Type)[])(
+    "rejects invalid $name evidence",
+    ({ input }) =>
+      validateGate(input).pipe(
+        Effect.result,
+        Effect.tap((result) =>
+          Effect.sync(() => {
+            expect(Result.isFailure(result)).toBe(true);
+          })
+        )
       )
-    )
   );
 
   it.effect("decodes the Doctor environment, which skips production", () =>

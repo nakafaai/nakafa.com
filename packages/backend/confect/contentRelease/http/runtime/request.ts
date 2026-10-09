@@ -8,6 +8,7 @@ import {
   failureResult,
   RuntimeHttpResultSchema,
 } from "@repo/backend/confect/contentRelease/runtime/result";
+import { CONTENT_TOKEN_HEADER } from "@repo/backend/content/endpoint";
 import { Effect, Result, Schema } from "effect";
 
 const AcceptedRuntimeRequestSchema = Schema.Struct({
@@ -39,7 +40,7 @@ export const readRuntimeRequest = Effect.fn(
   "contentRelease.readRuntimeRequest"
 )(function* (request: Request, secret: string, maxBytes: number) {
   const trustedServer = yield* matchesHttpSecret(
-    request.headers.get("x-nakafa-content-token") ?? "",
+    request.headers.get(CONTENT_TOKEN_HEADER) ?? "",
     secret
   ).pipe(Effect.result);
   if (Result.isFailure(trustedServer)) {

@@ -12,7 +12,7 @@
     "effect": "catalog:",
     "posthog-js": "1.438.3",
     "posthog-node": "^5.55.1",
-    "server-only": "0.0.1"
+    "server-only": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

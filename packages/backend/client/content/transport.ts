@@ -10,6 +10,7 @@ import {
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
+  CONTENT_TOKEN_HEADER,
 } from "@repo/backend/content/endpoint";
 import { parseContentLength, readBoundedStream } from "@repo/utilities/body";
 import { FetchClient } from "@repo/utilities/http/client";
@@ -206,7 +207,7 @@ export const requestContentResponse = Effect.fn(
   const client = yield* HttpClient.HttpClient;
   const request = HttpClientRequest.post(input.endpoint).pipe(
     HttpClientRequest.acceptJson,
-    HttpClientRequest.setHeader("x-nakafa-content-token", input.target.token),
+    HttpClientRequest.setHeader(CONTENT_TOKEN_HEADER, input.target.token),
     HttpClientRequest.bodyText(input.source, "application/json")
   );
   /** Reads one response until the deadline of the attempt that received it. */

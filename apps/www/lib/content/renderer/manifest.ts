@@ -1,7 +1,10 @@
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import "server-only";
 
-import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
+import {
+  RENDERER_DOMAINS,
+  type RendererDomain,
+} from "@nakafa/aksara-contracts/renderer/domain";
 import { createRendererManifest } from "@nakafa/aksara-contracts/renderer/manifest";
 import {
   aiDsComponentNames,
@@ -19,28 +22,28 @@ import {
   tkaMathComponentNames,
 } from "@repo/design-system/lib/markdown/names";
 
+/** Component names of each renderer domain, keyed by its Aksara domain name. */
+const domainComponentNames = {
+  "ai-ds": Rec.values(aiDsComponentNames),
+  biology: Rec.values(biologyComponentNames),
+  chemistry: Rec.values(chemistryComponentNames),
+  mathematics: Rec.values(mathematicsComponentNames),
+  physics: Rec.values(physicsComponentNames),
+  politics: Rec.values(politicsComponentNames),
+  site: Rec.values(siteComponentNames),
+  "snbt-general": Rec.values(snbtGeneralComponentNames),
+  "snbt-math": Rec.values(snbtMathComponentNames),
+  "snbt-plain": Rec.values(snbtPlainComponentNames),
+  "snbt-quant": Rec.values(snbtQuantComponentNames),
+  "tka-math": Rec.values(tkaMathComponentNames),
+} satisfies Record<RendererDomain, readonly string[]>;
+
 /** Authenticated renderer envelope derived without loading React implementations. */
 export const rendererManifest = createRendererManifest({
   base: Rec.values(baseComponentNames),
-  domains: [
-    { name: "ai-ds", components: Rec.values(aiDsComponentNames) },
-    { name: "biology", components: Rec.values(biologyComponentNames) },
-    { name: "chemistry", components: Rec.values(chemistryComponentNames) },
-    {
-      name: "mathematics",
-      components: Rec.values(mathematicsComponentNames),
-    },
-    { name: "physics", components: Rec.values(physicsComponentNames) },
-    { name: "politics", components: Rec.values(politicsComponentNames) },
-    { name: "site", components: Rec.values(siteComponentNames) },
-    {
-      name: "snbt-general",
-      components: Rec.values(snbtGeneralComponentNames),
-    },
-    { name: "snbt-math", components: Rec.values(snbtMathComponentNames) },
-    { name: "snbt-plain", components: Rec.values(snbtPlainComponentNames) },
-    { name: "snbt-quant", components: Rec.values(snbtQuantComponentNames) },
-    { name: "tka-math", components: Rec.values(tkaMathComponentNames) },
-  ],
+  domains: Arr.map(RENDERER_DOMAINS, (name) => ({
+    components: domainComponentNames[name],
+    name,
+  })),
   publishedDomains: RENDERER_DOMAINS,
 });

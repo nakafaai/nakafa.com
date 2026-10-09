@@ -109,6 +109,8 @@ export function createAnonymousAnalyticsBrowserSignalDenial(
 }
 
 const AnalyticsConsentScopeSchema = Schema.Literals(["account", "anonymous"]);
+/** Identity scope that one analytics consent decision belongs to. */
+export type AnalyticsConsentScope = typeof AnalyticsConsentScopeSchema.Type;
 
 export const AnalyticsConsentStateSchema = Schema.Union([
   Schema.Struct({

@@ -42,16 +42,40 @@ update:
     - vitest
 
 catalog:
+  '@confect/core': 10.1.0
+  '@convex-dev/agent': 0.7.7
   '@convex-dev/ai-sdk-provider': 0.2.1
   '@effect/platform-browser': 4.0.2
   '@effect/platform-node': 4.0.2
   '@effect/vitest': 4.0.2
+  '@hugeicons/core-free-icons': ^4.3.5
+  '@hugeicons/react': ^1.1.10
+  '@mantine/hooks': ^9.7.1
+  '@react-email/render': 2.1.0
+  '@shadcn/react': 0.3.1
+  '@tailwindcss/postcss': ^4.3.3
+  '@vercel/config': ^0.12.0
   '@vitest/coverage-istanbul': 5.0.3
   '@vitest/ui': 5.0.3
   ai: 7.0.136
+  class-variance-authority: ^0.7.1
+  cn: 0.4.0
   effect: 4.0.2
+  motion: ^14.0.0
+  next-intl: ^4.14.9
+  next-themes: ^0.4.6
+  react-email: 6.11.1
+  remark-mdx: 3.1.1
+  remark-parse: 11.0.0
+  server-only: 0.0.1
+  sonner: ^2.0.8
+  tsx: ^4.23.15
   typescript: 7.0.2
+  unified: 11.0.5
+  virtua: ^0.53.3
+  vite: ^8.3.4
   vitest: 5.0.3
+  zustand: ^5.0.15
 
 overrides:
   "react": "19.2.8"
