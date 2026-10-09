@@ -30,6 +30,27 @@ const PostHogBulkEraseJsonSchema = Schema.fromJsonString(
   PostHogBulkEraseResponseSchema
 );
 
+/**
+ * Reads one erasure answer: its status, and for a success its body text. A body
+ * that cannot be read leaves the text undefined, so decoding reports the answer
+ * as an invalid response.
+ */
+function readErasureAnswer(
+  response: Response
+): Promise<{ ok: boolean; status: number; text: string | undefined }> {
+  if (!response.ok) {
+    return Promise.resolve({
+      ok: false,
+      status: response.status,
+      text: undefined,
+    });
+  }
+  return response.text().then(
+    (text) => ({ ok: true, status: response.status, text }),
+    () => ({ ok: true, status: response.status, text: undefined })
+  );
+}
+
 /** Reads named Convex settings without exposing credentials in decode errors. */
 const readPostHogErasureConfig = Effect.fn(
   "analytics.erasure.readPostHogErasureConfig"
@@ -137,8 +158,8 @@ export const erasePostHogPerson = Effect.fn(
   // The signal belongs to the send and to the body read, so the deadline aborts
   // both and the socket closes with the request.
   const answer = yield* Effect.tryPromise({
-    try: async (signal) => {
-      const response = await request(endpoint, {
+    try: (signal) =>
+      request(endpoint, {
         body,
         headers: {
           Authorization: `Bearer ${deletionApiKey}`,
@@ -146,15 +167,7 @@ export const erasePostHogPerson = Effect.fn(
         },
         method: "POST",
         signal,
-      });
-      return {
-        ok: response.ok,
-        status: response.status,
-        text: response.ok
-          ? await response.text().catch(() => undefined)
-          : undefined,
-      };
-    },
+      }).then(readErasureAnswer),
     catch: requestNotSent,
   }).pipe(
     Effect.timeoutOrElse({
