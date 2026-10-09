@@ -70,4 +70,56 @@ describe("Agent Mode trust keys", () => {
     expect(keys.NEXT_PUBLIC_CONVEX_URL).toBeUndefined();
     expect(keys.VERCEL_ENV).toBeUndefined();
   });
+
+  it("keeps every set value unchanged", () => {
+    vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", "agent-key-id");
+    vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", "agent-public-key");
+    vi.stubEnv("CONVEX_CLOUD_URL", "https://example.convex.cloud");
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "https://example.convex.cloud");
+    vi.stubEnv("VERCEL_ENV", "preview");
+
+    expect(agentTrustKeys()).toStrictEqual({
+      AKSARA_AGENT_SIGNING_KEY_ID: "agent-key-id",
+      AKSARA_AGENT_SIGNING_PUBLIC_KEY: "agent-public-key",
+      CONVEX_CLOUD_URL: "https://example.convex.cloud",
+      NEXT_PUBLIC_CONVEX_URL: "https://example.convex.cloud",
+      VERCEL_ENV: "preview",
+    });
+  });
+
+  it("keeps an empty public key, Convex URL and deployment environment as set values", () => {
+    vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", "");
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "");
+    vi.stubEnv("VERCEL_ENV", "");
+
+    expect(agentTrustKeys()).toMatchObject({
+      AKSARA_AGENT_SIGNING_PUBLIC_KEY: "",
+      NEXT_PUBLIC_CONVEX_URL: "",
+      VERCEL_ENV: "",
+    });
+  });
+});
+
+describe("Convex and Polar values at their boundaries", () => {
+  it("keeps an empty Convex URL as a value, because it is only a required string", () => {
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "");
+
+    expect(convexKeys()).toStrictEqual({ NEXT_PUBLIC_CONVEX_URL: "" });
+  });
+
+  it("throws when the Convex site URL is unset or empty", () => {
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", undefined);
+    expect(convexSiteKeys).toThrow();
+
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", "");
+    expect(convexSiteKeys).toThrow();
+  });
+
+  it("passes the production Polar selection and an empty selection through unchanged", () => {
+    vi.stubEnv("NEXT_PUBLIC_POLAR_SERVER", "production");
+    expect(polarKeys().NEXT_PUBLIC_POLAR_SERVER).toBe("production");
+
+    vi.stubEnv("NEXT_PUBLIC_POLAR_SERVER", "");
+    expect(polarKeys().NEXT_PUBLIC_POLAR_SERVER).toBe("");
+  });
 });

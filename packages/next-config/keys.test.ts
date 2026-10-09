@@ -86,3 +86,95 @@ describe("Aksara preview keys", () => {
     });
   });
 });
+
+/** Gives every Aksara preview field the same value, or removes each one when undefined. */
+function stubPreviewFields(value: string | undefined) {
+  vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", value);
+  vi.stubEnv("AKSARA_PREVIEW_KEY_ID", value);
+  vi.stubEnv("AKSARA_PREVIEW_MANIFEST_PATH", value);
+  vi.stubEnv("AKSARA_PREVIEW_ORIGIN", value);
+  vi.stubEnv("AKSARA_PREVIEW_PUBLIC_KEY", value);
+  vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", value);
+  vi.stubEnv("AKSARA_PREVIEW_RENDERER_SECRET", value);
+  vi.stubEnv("AKSARA_PREVIEW_RENDERER_TOKEN", value);
+}
+
+describe("required server values", () => {
+  it("throws when the publication token is unset or empty", () => {
+    stubValidEnvironment();
+    vi.stubEnv("AKSARA_PUBLICATION_TOKEN", undefined);
+    expect(publicationKeys).toThrow();
+
+    vi.stubEnv("AKSARA_PUBLICATION_TOKEN", "");
+    expect(publicationKeys).toThrow();
+  });
+
+  it("throws when the content runtime token is unset", () => {
+    stubValidEnvironment();
+    vi.stubEnv("CONTENT_RUNTIME_TOKEN", undefined);
+
+    expect(contentRuntimeKeys).toThrow();
+  });
+
+  it("throws when the site URL is unset or empty", () => {
+    stubValidEnvironment();
+    vi.stubEnv("SITE_URL", undefined);
+    expect(siteUrlKeys).toThrow();
+
+    vi.stubEnv("SITE_URL", "");
+    expect(siteUrlKeys).toThrow();
+  });
+
+  it("throws when the public app origin is unset", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", undefined);
+
+    expect(appUrlKeys).toThrow();
+  });
+});
+
+describe("optional Aksara preview values", () => {
+  it("keeps every unset preview field undefined", () => {
+    stubPreviewFields(undefined);
+
+    expect(previewKeys()).toStrictEqual({
+      AKSARA_PREVIEW_EVENTS_PATH: undefined,
+      AKSARA_PREVIEW_KEY_ID: undefined,
+      AKSARA_PREVIEW_MANIFEST_PATH: undefined,
+      AKSARA_PREVIEW_ORIGIN: undefined,
+      AKSARA_PREVIEW_PUBLIC_KEY: undefined,
+      AKSARA_PREVIEW_PROVIDER_TOKEN: undefined,
+      AKSARA_PREVIEW_RENDERER_SECRET: undefined,
+      AKSARA_PREVIEW_RENDERER_TOKEN: undefined,
+    });
+  });
+
+  it("keeps every empty preview field as a set empty string", () => {
+    stubPreviewFields("");
+
+    expect(previewKeys()).toStrictEqual({
+      AKSARA_PREVIEW_EVENTS_PATH: "",
+      AKSARA_PREVIEW_KEY_ID: "",
+      AKSARA_PREVIEW_MANIFEST_PATH: "",
+      AKSARA_PREVIEW_ORIGIN: "",
+      AKSARA_PREVIEW_PUBLIC_KEY: "",
+      AKSARA_PREVIEW_PROVIDER_TOKEN: "",
+      AKSARA_PREVIEW_RENDERER_SECRET: "",
+      AKSARA_PREVIEW_RENDERER_TOKEN: "",
+    });
+  });
+
+  it("passes every preview field value through unchanged", () => {
+    stubPreviewFields("preview-value");
+
+    expect(previewKeys()).toStrictEqual({
+      AKSARA_PREVIEW_EVENTS_PATH: "preview-value",
+      AKSARA_PREVIEW_KEY_ID: "preview-value",
+      AKSARA_PREVIEW_MANIFEST_PATH: "preview-value",
+      AKSARA_PREVIEW_ORIGIN: "preview-value",
+      AKSARA_PREVIEW_PUBLIC_KEY: "preview-value",
+      AKSARA_PREVIEW_PROVIDER_TOKEN: "preview-value",
+      AKSARA_PREVIEW_RENDERER_SECRET: "preview-value",
+      AKSARA_PREVIEW_RENDERER_TOKEN: "preview-value",
+    });
+  });
+});

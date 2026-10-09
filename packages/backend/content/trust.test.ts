@@ -154,3 +154,93 @@ describe("content trust", () => {
       })
   );
 });
+
+const AGENT_TRUST_NAMES = [
+  "AKSARA_AGENT_SIGNING_KEY_ID",
+  "AKSARA_AGENT_SIGNING_PUBLIC_KEY",
+  "CONVEX_CLOUD_URL",
+  "NEXT_PUBLIC_CONVEX_URL",
+  "VERCEL_ENV",
+] as const;
+
+/** Sets every Agent Mode trust input, so each case names only the values it changes. */
+function stubAgentTrust(
+  values: Partial<Record<(typeof AGENT_TRUST_NAMES)[number], string>>
+) {
+  for (const name of AGENT_TRUST_NAMES) {
+    vi.stubEnv(name, values[name]);
+  }
+}
+
+describe("Agent Mode trust inputs", () => {
+  it.effect("keeps only the code-owned key active when no input is set", () =>
+    Effect.gen(function* () {
+      stubAgentTrust({});
+      vi.resetModules();
+
+      const trust = yield* Effect.promise(
+        () => import("@repo/backend/content/trust")
+      );
+
+      expect(trust.activeContentSigningKeyId).toBe(ACTIVE_SIGNING_KEY_ID);
+    })
+  );
+
+  it.effect("accepts a complete loopback pair whose VERCEL_ENV is empty", () =>
+    Effect.gen(function* () {
+      const key = TRUSTED_CONTENT_KEYS[0];
+      if (key === undefined) {
+        return yield* Effect.die("Expected a retained signing key.");
+      }
+      stubAgentTrust({
+        AKSARA_AGENT_SIGNING_KEY_ID: agentKeyId,
+        AKSARA_AGENT_SIGNING_PUBLIC_KEY: key.publicKeyPem,
+        CONVEX_CLOUD_URL: "http://127.0.0.1:3210",
+        VERCEL_ENV: "",
+      });
+      vi.resetModules();
+
+      const trust = yield* Effect.promise(
+        () => import("@repo/backend/content/trust")
+      );
+
+      expect(trust.activeContentSigningKeyId).toBe(agentKeyId);
+    })
+  );
+
+  it.effect("rejects a key identity whose public key is empty", () =>
+    Effect.gen(function* () {
+      stubAgentTrust({
+        AKSARA_AGENT_SIGNING_KEY_ID: agentKeyId,
+        AKSARA_AGENT_SIGNING_PUBLIC_KEY: "",
+        CONVEX_CLOUD_URL: "http://127.0.0.1:3210",
+      });
+      vi.resetModules();
+
+      yield* Effect.promise(() =>
+        expect(import("@repo/backend/content/trust")).rejects.toThrow()
+      );
+    })
+  );
+
+  it.effect(
+    "rejects an empty public Convex URL when the Convex cloud URL is unset",
+    () =>
+      Effect.gen(function* () {
+        const key = TRUSTED_CONTENT_KEYS[0];
+        if (key === undefined) {
+          return yield* Effect.die("Expected a retained signing key.");
+        }
+        stubAgentTrust({
+          AKSARA_AGENT_SIGNING_KEY_ID: agentKeyId,
+          AKSARA_AGENT_SIGNING_PUBLIC_KEY: key.publicKeyPem,
+          NEXT_PUBLIC_CONVEX_URL: "",
+        });
+        vi.resetModules();
+
+        yield* Effect.promise(() =>
+          expect(import("@repo/backend/content/trust")).rejects.toThrow()
+        );
+      })
+  );
+});

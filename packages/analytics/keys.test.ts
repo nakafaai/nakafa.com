@@ -56,4 +56,71 @@ describe("deployment keys for server reporting", () => {
     expect(deploymentKeys().VERCEL_ENV).toBe("unknown-environment");
     expect(deploymentKeys().NEXT_PHASE).toBeUndefined();
   });
+
+  it("keeps an unset VERCEL_ENV undefined", () => {
+    vi.stubEnv("VERCEL_ENV", undefined);
+    vi.stubEnv("NEXT_PHASE", undefined);
+
+    expect(deploymentKeys()).toStrictEqual({
+      NEXT_PHASE: undefined,
+      VERCEL_ENV: undefined,
+    });
+  });
+
+  it("keeps empty deployment fields as set empty strings", () => {
+    vi.stubEnv("VERCEL_ENV", "");
+    vi.stubEnv("NEXT_PHASE", "");
+
+    expect(deploymentKeys()).toStrictEqual({ NEXT_PHASE: "", VERCEL_ENV: "" });
+  });
+});
+
+describe("required PostHog values", () => {
+  it("requires a URL proxy host that is set, non-empty and parseable", () => {
+    stubAnalyticsEnvironment();
+    vi.stubEnv("POSTHOG_PROXY_HOST", undefined);
+    expect(postHogProxyKeys).toThrow();
+
+    vi.stubEnv("POSTHOG_PROXY_HOST", "");
+    expect(postHogProxyKeys).toThrow();
+
+    vi.stubEnv("POSTHOG_PROXY_HOST", "not a url");
+    expect(postHogProxyKeys).toThrow();
+  });
+
+  it("requires a project key with the phc_ prefix", () => {
+    stubAnalyticsEnvironment();
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", undefined);
+    expect(postHogPublicKeys).toThrow();
+
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    expect(postHogPublicKeys).toThrow();
+
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "ph_test");
+    expect(postHogPublicKeys).toThrow();
+  });
+
+  it("requires a URL UI host that is set and parseable", () => {
+    stubAnalyticsEnvironment();
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", undefined);
+    expect(postHogPublicKeys).toThrow();
+
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", "");
+    expect(postHogPublicKeys).toThrow();
+
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", "not a url");
+    expect(postHogPublicKeys).toThrow();
+  });
+
+  it("throws from the merged analytics keys when any one value is invalid", () => {
+    stubAnalyticsEnvironment();
+    expect(keys).not.toThrow();
+
+    vi.stubEnv("POSTHOG_PROXY_HOST", "");
+    expect(keys).toThrow();
+
+    stubAnalyticsEnvironment();
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", undefined);
+    expect(keys).toThrow();
+  });
 });
