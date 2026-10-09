@@ -31,6 +31,11 @@ const MoleculeSchema = Schema.Struct({
 });
 export type Molecule = typeof MoleculeSchema.Type;
 
+const DaltonLayoutSchema = Schema.Struct({
+  after: Schema.Array(MoleculeSchema),
+  before: Schema.Array(MoleculeSchema),
+});
+
 const DaltonFactSchema = Schema.Struct({
   label: Schema.String,
   value: Schema.String,
@@ -99,10 +104,7 @@ export const DALTON_LAYOUTS = {
       molecule("dioxide-right", "\\mathrm{CO_2}", ["C", "O", "O"]),
     ],
   },
-} satisfies Record<
-  DaltonModeId,
-  { after: readonly Molecule[]; before: readonly Molecule[] }
->;
+} satisfies Record<DaltonModeId, typeof DaltonLayoutSchema.Type>;
 
 /**
  * Narrows ToggleGroup string values to the available Dalton evidence modes.

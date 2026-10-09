@@ -33,6 +33,10 @@ export const ChemicalReactionTypeSceneLabelsSchema = Schema.Struct({
   before: Schema.String,
 });
 
+const ChemicalReactionTypeDefinitionSchema = Schema.Struct({
+  kind: Schema.Literals(CHEMICAL_REACTION_TYPE_IDS),
+});
+
 const CHEMICAL_REACTION_TYPES = {
   [COMBUSTION_TYPE_ID]: {
     kind: COMBUSTION_TYPE_ID,
@@ -48,9 +52,7 @@ const CHEMICAL_REACTION_TYPES = {
   },
 } satisfies Record<
   ChemicalReactionTypeId,
-  {
-    kind: ChemicalReactionTypeId;
-  }
+  typeof ChemicalReactionTypeDefinitionSchema.Type
 >;
 
 export const CHEMICAL_REACTION_TYPES_SCENE_VIEW = {

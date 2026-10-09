@@ -35,14 +35,17 @@ const NOBLE_GAS_CATEGORY_ID = "noble-gas";
 const INNER_TRANSITION_CATEGORY_ID = "inner-transition";
 export const SERIES_MARKER_CATEGORY_ID = "series-marker";
 
+const PeriodicElementCategoryIdSchema = Schema.Literals([
+  METAL_CATEGORY_ID,
+  TRANSITION_CATEGORY_ID,
+  METALLOID_CATEGORY_ID,
+  NONMETAL_CATEGORY_ID,
+  NOBLE_GAS_CATEGORY_ID,
+  INNER_TRANSITION_CATEGORY_ID,
+  SERIES_MARKER_CATEGORY_ID,
+]);
 export type PeriodicElementCategoryId =
-  | typeof METAL_CATEGORY_ID
-  | typeof TRANSITION_CATEGORY_ID
-  | typeof METALLOID_CATEGORY_ID
-  | typeof NONMETAL_CATEGORY_ID
-  | typeof NOBLE_GAS_CATEGORY_ID
-  | typeof INNER_TRANSITION_CATEGORY_ID
-  | typeof SERIES_MARKER_CATEGORY_ID;
+  typeof PeriodicElementCategoryIdSchema.Type;
 
 export const PERIODIC_ELEMENT_CATEGORY_IDS = [
   METAL_CATEGORY_ID,
@@ -74,6 +77,11 @@ const MODERN_PERIODIC_TABLE_CATEGORY_COLOR_KEYS = {
     | "transitionMetal"
   >
 >;
+
+const ElementCategoryGroupSchema = Schema.Struct({
+  id: PeriodicElementCategoryIdSchema,
+  symbols: Schema.String,
+});
 
 const ELEMENT_CATEGORY_GROUPS = [
   {
@@ -107,7 +115,7 @@ const ELEMENT_CATEGORY_GROUPS = [
     id: SERIES_MARKER_CATEGORY_ID,
     symbols: "57-71 89-103",
   },
-] satisfies { id: PeriodicElementCategoryId; symbols: string }[];
+] satisfies (typeof ElementCategoryGroupSchema.Type)[];
 
 const MAIN_PERIODIC_TABLE_SOURCE = [
   { period: 1, entries: "1:H:1 18:He:2" },

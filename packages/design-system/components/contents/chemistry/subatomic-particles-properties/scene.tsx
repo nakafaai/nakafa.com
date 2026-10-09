@@ -15,7 +15,7 @@ import {
 import type { SubatomicParticlePropertiesLabProps } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
 import { Vector3 } from "three";
 
@@ -50,22 +50,19 @@ const CHARGE_PARTICLES = [
   progress: number;
 }[];
 
+const ParticleNameSchema = Schema.Literals(["electron", "neutron", "proton"]);
+const MassBarSchema = Schema.Struct({
+  color: ParticleNameSchema,
+  height: Schema.Finite,
+  label: ParticleNameSchema,
+  x: Schema.Finite,
+});
+
 const MASS_BARS = [
   { color: "proton", height: 1.16, label: "proton", x: -1.45 },
   { color: "neutron", height: 1.18, label: "neutron", x: 0 },
   { color: "electron", height: 0.16, label: "electron", x: 1.45 },
-] satisfies {
-  color: keyof Pick<
-    SubatomicParticlePropertiesColors,
-    "electron" | "neutron" | "proton"
-  >;
-  height: number;
-  label: keyof Pick<
-    SubatomicParticlePropertiesLabProps["labels"]["scene"],
-    "electron" | "neutron" | "proton"
-  >;
-  x: number;
-}[];
+] satisfies (typeof MassBarSchema.Type)[];
 
 const NUCLEUS_PARTICLES = [
   { color: "proton", math: "p^+", position: new Vector3(-0.38, 0.26, 0.15) },

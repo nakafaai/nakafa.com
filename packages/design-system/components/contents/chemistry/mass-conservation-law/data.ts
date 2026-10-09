@@ -24,6 +24,10 @@ export const MassConservationScenePointSchema = Schema.Tuple([
 ]);
 type MassConservationScenePoint = typeof MassConservationScenePointSchema.Type;
 
+const MassConservationModeDefinitionSchema = Schema.Struct({
+  kind: Schema.Literals(MASS_CONSERVATION_MODE_IDS),
+});
+
 const MASS_CONSERVATION_MODES = {
   [CLOSED_SYSTEM_MODE_ID]: {
     kind: CLOSED_SYSTEM_MODE_ID,
@@ -33,9 +37,7 @@ const MASS_CONSERVATION_MODES = {
   },
 } satisfies Record<
   MassConservationModeId,
-  {
-    kind: MassConservationModeId;
-  }
+  typeof MassConservationModeDefinitionSchema.Type
 >;
 
 export const MASS_CONSERVATION_SCENE_VIEW = {

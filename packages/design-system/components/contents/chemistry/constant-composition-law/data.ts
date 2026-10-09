@@ -27,6 +27,10 @@ export const ConstantCompositionScenePointSchema = Schema.Tuple([
 export type ConstantCompositionScenePoint =
   typeof ConstantCompositionScenePointSchema.Type;
 
+const ConstantCompositionModeDefinitionSchema = Schema.Struct({
+  kind: Schema.Literals(CONSTANT_COMPOSITION_MODE_IDS),
+});
+
 const CONSTANT_COMPOSITION_MODES = {
   [EXACT_RATIO_MODE_ID]: {
     kind: EXACT_RATIO_MODE_ID,
@@ -39,9 +43,7 @@ const CONSTANT_COMPOSITION_MODES = {
   },
 } satisfies Record<
   ConstantCompositionModeId,
-  {
-    kind: ConstantCompositionModeId;
-  }
+  typeof ConstantCompositionModeDefinitionSchema.Type
 >;
 
 export const CONSTANT_COMPOSITION_SCENE_VIEW = {
