@@ -13,6 +13,7 @@ import {
   readThemeStyleSources,
   SEMANTIC_COLOR_TOKENS,
   THEME_METADATA_PROPERTIES,
+  ThemeColorChannelError,
   ThemeStyleSourceLoadError,
   toRgbProjection,
 } from "@repo/design-system/lib/theme/contract";
@@ -114,16 +115,27 @@ describe("theme profile contract", () => {
     expect(REQUIRED_THEME_TOKENS).toHaveLength(47);
     expect(Arr.dedupe(REQUIRED_THEME_TOKENS).length).toBe(47);
   });
-  it("projects canonical OKLCH into comma-form sRGB bytes", () => {
-    expect(toRgbProjection("oklch(1 0 0)")).toBe("rgb(255, 255, 255)");
-    expect(toRgbProjection("oklch(0 0 0)")).toBe("rgb(0, 0, 0)");
-    expect(toRgbProjection("oklch(0.5 0.1 240)")).toBe("rgb(31, 106, 150)");
-  });
-  it("rejects an OKLCH color with an omitted numeric channel", () => {
-    expect(() => readOklchChannels("oklch(none 0.1 240)")).toThrow(
-      'Theme color "oklch(none 0.1 240)" has a missing channel.'
-    );
-  });
+  it.effect("projects canonical OKLCH into comma-form sRGB bytes", () =>
+    Effect.gen(function* () {
+      expect(yield* toRgbProjection("oklch(1 0 0)")).toBe("rgb(255, 255, 255)");
+      expect(yield* toRgbProjection("oklch(0 0 0)")).toBe("rgb(0, 0, 0)");
+      expect(yield* toRgbProjection("oklch(0.5 0.1 240)")).toBe(
+        "rgb(31, 106, 150)"
+      );
+    })
+  );
+  it.effect("rejects an OKLCH color with an omitted numeric channel", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        readOklchChannels("oklch(none 0.1 240)")
+      );
+
+      expect(error).toBeInstanceOf(ThemeColorChannelError);
+      expect(error.message).toBe(
+        'Theme color "oklch(none 0.1 240)" has a missing channel.'
+      );
+    })
+  );
   it("registers exactly 31 concrete profiles plus system preference", () => {
     expect(concreteThemeNames).toHaveLength(EXPECTED_CONCRETE_THEME_COUNT);
     expect(

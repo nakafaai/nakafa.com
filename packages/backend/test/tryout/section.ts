@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import type {
   TryoutSection,
   TryoutSet,
@@ -87,9 +88,10 @@ export function makeSignedTryoutSection(
     }
   );
   const record = makeTryoutCatalogRecord(section);
-  if (record.row.kind !== "section") {
-    throw new Error("Expected one signed section record.");
-  }
+  assert.ok(
+    record.row.kind === "section",
+    "Expected one signed section record."
+  );
 
   const signed: TryoutSnapshotSource["snapshot"]["sections"][number] = {
     placements: Arr.map(placements, makeTryoutPlacementRecord),
@@ -112,9 +114,7 @@ export function makeSignedTryoutSource(
   snapshotId = testTextHash("tryout-runtime-snapshot")
 ): TryoutSnapshotSource {
   const record = makeTryoutCatalogRecord(set);
-  if (record.row.kind !== "set") {
-    throw new Error("Expected one signed set record.");
-  }
+  assert.ok(record.row.kind === "set", "Expected one signed set record.");
   const setRecord = { row: record.row, rowHash: record.rowHash };
 
   return {
@@ -130,9 +130,10 @@ export function makeSignedTryoutSource(
 /** Requires the canonical corpus prefix before building content keys. */
 function requireCorpusRelativePath(sourcePath: string) {
   const prefix = "packages/corpus/";
-  if (!sourcePath.startsWith(prefix)) {
-    throw new Error("Expected a package-owned try-out corpus path.");
-  }
+  assert.ok(
+    sourcePath.startsWith(prefix),
+    "Expected a package-owned try-out corpus path."
+  );
 
   return sourcePath.slice(prefix.length);
 }

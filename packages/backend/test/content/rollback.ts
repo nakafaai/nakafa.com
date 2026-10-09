@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   ContentKeySchema,
@@ -105,9 +106,7 @@ export async function activateRollbackFixture(
   });
   const release = await ctx.db.query("contentReleases").unique();
   const state = await ctx.db.query("contentState").unique();
-  if (!(release && state)) {
-    throw new Error("Expected release fixtures.");
-  }
+  assert.ok(release && state, "Expected release fixtures.");
   const receipt = {
     activatedHeads: itemCount,
     activeAppLocales: ACTIVE_APP_LOCALE_CODES,

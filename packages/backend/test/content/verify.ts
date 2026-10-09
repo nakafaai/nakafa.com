@@ -1,5 +1,6 @@
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { vWorkflowId, type WorkflowStatus } from "@convex-dev/workflow";
+import { assert } from "@effect/vitest";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
@@ -226,9 +227,7 @@ export async function stageDeleteFixture(
       });
     }
     const state = await ctx.db.query("contentState").unique();
-    if (!state) {
-      throw new Error("Expected publication state.");
-    }
+    assert.ok(state, "Expected publication state.");
     await ctx.db.patch("contentState", state._id, {
       activeManifestHash: state.candidateManifestHash,
       activeReleaseId: "release-base",
@@ -288,9 +287,7 @@ export async function prepareContentProof(
       .query("contentReleases")
       .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
       .unique();
-    if (release === null) {
-      throw new Error(`Expected content release ${releaseId}.`);
-    }
+    assert.isNotNull(release, `Expected content release ${releaseId}.`);
     await ctx.db.patch("contentReleases", release._id, {
       proofWorkflowId: TEST_PROOF_WORKFLOW_ID,
     });

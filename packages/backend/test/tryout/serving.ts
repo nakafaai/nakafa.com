@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
@@ -74,9 +75,10 @@ export const makeTryoutRuntimeSource = Effect.fn(
         artifact.payload.contentKey === placement.answerContentKey &&
         artifact.payload.artifactLocale === placement.answerArtifactLocale
     );
-    if (!(Option.isSome(question) && Option.isSome(answer))) {
-      throw new Error("Missing technical try-out artifacts.");
-    }
+    assert.ok(
+      Option.isSome(question) && Option.isSome(answer),
+      "Missing technical try-out artifacts."
+    );
     return {
       ...placement,
       questionArtifactHash: question.value.artifactHash,
@@ -94,13 +96,12 @@ export const makeTryoutRuntimeSource = Effect.fn(
   const stored = yield* Effect.promise(() =>
     t.query((ctx) => ctx.db.query("contentSnapshots").unique())
   );
-  if (!stored) {
-    throw new Error("Missing technical try-out snapshot.");
-  }
+  assert.ok(stored, "Missing technical try-out snapshot.");
   const snapshot = yield* decodeSnapshotJson(stored.snapshotJson);
-  if (snapshot.family !== "tryout") {
-    throw new Error("Expected a technical try-out snapshot.");
-  }
+  assert.ok(
+    snapshot.family === "tryout",
+    "Expected a technical try-out snapshot."
+  );
   const snapshots = {
     ...inheritContentSnapshots(null),
     tryout: replaceContentSnapshot({

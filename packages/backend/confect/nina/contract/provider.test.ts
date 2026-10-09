@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { providerCompatibleObjectSchema } from "@repo/backend/confect/nina/contract/provider";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { asSchema } from "ai";
@@ -6,6 +6,7 @@ import {
   Effect,
   JsonSchema,
   Predicate,
+  Result,
   Schema,
   SchemaRepresentation,
   Struct,
@@ -33,6 +34,16 @@ function requireValidator<A>(value: A | undefined) {
       ? Effect.die("AI SDK schema adapter omitted its validator.")
       : Effect.succeed(value)
   );
+}
+
+/** Reads the provider schema of a fixture that must convert. */
+function compatibleSchema<A, I>(schema: Schema.Codec<A, I, never, never>) {
+  return Result.getOrThrow(providerCompatibleObjectSchema(schema));
+}
+
+/** Adapts one fixture as the tool input schema the AI SDK receives. */
+function toolSchema<A, I>(source: Schema.Codec<A, I, never, never>) {
+  return asSchema(createEffectSchema(source, compatibleSchema(source)));
 }
 
 /** Builds one controlled generated JSON Schema for adapter edge cases. */
@@ -76,11 +87,7 @@ describe("providerCompatibleObjectSchema", () => {
         ]).annotate({
           description: "Grouped math input.",
         });
-        const inputSchema = createEffectSchema(
-          groupedSchema,
-          providerCompatibleObjectSchema(groupedSchema)
-        );
-        const schema = asSchema(inputSchema);
+        const schema = toolSchema(groupedSchema);
         const jsonSchema = readSynchronous(schema.jsonSchema);
         const validate = yield* requireValidator(schema.validate);
         expect(jsonSchema).not.toHaveProperty("anyOf");
@@ -139,11 +146,7 @@ describe("providerCompatibleObjectSchema", () => {
         description: "Shared value.",
       }),
     }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-    const inputSchema = createEffectSchema(
-      Schema.Union([leftSchema, rightSchema]),
-      providerCompatibleObjectSchema(Schema.Union([leftSchema, rightSchema]))
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(Schema.Union([leftSchema, rightSchema]));
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       properties: {
@@ -172,7 +175,7 @@ describe("providerCompatibleObjectSchema", () => {
         value: SharedValueSchema,
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const modelSchema = providerCompatibleObjectSchema(groupedSchema);
+    const modelSchema = compatibleSchema(groupedSchema);
     expect(modelSchema).not.toHaveProperty("definitions");
     expect(modelSchema).toMatchObject({
       properties: {
@@ -191,9 +194,7 @@ describe("providerCompatibleObjectSchema", () => {
         Schema.suspend((): Schema.Codec<RecursiveValue> => recursive)
       ),
     });
-    const modelSchema = providerCompatibleObjectSchema(
-      Schema.Struct({ value: recursive })
-    );
+    const modelSchema = compatibleSchema(Schema.Struct({ value: recursive }));
     expect(modelSchema).toHaveProperty("definitions");
     const imported = SchemaRepresentation.fromJsonSchemaDocument(
       JsonSchema.fromSchemaDraft07(modelSchema)
@@ -201,9 +202,12 @@ describe("providerCompatibleObjectSchema", () => {
     const accepts = Schema.is(imported);
     expect(accepts({ value: { next: {} } })).toBe(true);
     expect(accepts({ value: { next: 1 } })).toBe(false);
-    expect(() => providerCompatibleObjectSchema(recursive)).toThrow(
+    const result = providerCompatibleObjectSchema(recursive);
+    assert(Result.isFailure(result));
+    expect(result.failure.message).toBe(
       "Provider-compatible tool schemas require an object or object union."
     );
+    expect(result.failure.reason).toBe("notObjectOrUnion");
   });
   it("combines branch descriptions and relaxes shared array bounds", () => {
     const twoValues = Schema.Array(Schema.String)
@@ -226,11 +230,7 @@ describe("providerCompatibleObjectSchema", () => {
         values: fourValues,
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      providerCompatibleObjectSchema(groupedSchema)
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       properties: {
@@ -260,11 +260,7 @@ describe("providerCompatibleObjectSchema", () => {
         values: boundedValues,
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      providerCompatibleObjectSchema(groupedSchema)
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     if (!("properties" in jsonSchema && jsonSchema.properties)) {
       expect.fail("Grouped schema must expose object properties.");
@@ -295,11 +291,7 @@ describe("providerCompatibleObjectSchema", () => {
         values: Schema.Array(Schema.String).pipe(Schema.mutable),
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      providerCompatibleObjectSchema(groupedSchema)
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     if (!("properties" in jsonSchema && jsonSchema.properties)) {
       expect.fail("Grouped schema must expose object properties.");
@@ -328,11 +320,7 @@ describe("providerCompatibleObjectSchema", () => {
         values: Schema.Array(Schema.String).pipe(Schema.mutable),
       }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
     ]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      providerCompatibleObjectSchema(groupedSchema)
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       properties: {
@@ -353,11 +341,7 @@ describe("providerCompatibleObjectSchema", () => {
       value: Schema.String,
     }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
     const groupedSchema = Schema.Union([leftSchema, rightSchema]);
-    const inputSchema = createEffectSchema(
-      groupedSchema,
-      providerCompatibleObjectSchema(groupedSchema)
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(groupedSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       properties: {
@@ -378,11 +362,7 @@ describe("providerCompatibleObjectSchema", () => {
     }).annotate({
       description: "Object input.",
     });
-    const inputSchema = createEffectSchema(
-      objectSchema,
-      providerCompatibleObjectSchema(objectSchema)
-    );
-    const schema = asSchema(inputSchema);
+    const schema = toolSchema(objectSchema);
     const jsonSchema = readSynchronous(schema.jsonSchema);
     expect(jsonSchema).toMatchObject({
       description: "Object input.",
@@ -397,28 +377,30 @@ describe("providerCompatibleObjectSchema", () => {
     });
   });
   it("rejects malformed object branches without dropping them", () => {
-    expect(() =>
-      providerCompatibleObjectSchema(
-        Schema.Union([
-          jsonSchemaFixture({ required: [], type: "object" }),
-          Schema.Struct({ value: Schema.String }),
-        ])
-      )
-    ).toThrow(
+    const result = providerCompatibleObjectSchema(
+      Schema.Union([
+        jsonSchemaFixture({ required: [], type: "object" }),
+        Schema.Struct({ value: Schema.String }),
+      ])
+    );
+    assert(Result.isFailure(result));
+    expect(result.failure.message).toBe(
       "Provider-compatible tool schema unions require every branch to be an object."
     );
+    expect(result.failure.reason).toBe("unionBranchNotObject");
   });
   it("rejects mixed object and primitive unions without dropping variants", () => {
-    expect(() =>
-      providerCompatibleObjectSchema(
-        Schema.Union([Schema.Struct({ value: Schema.String }), Schema.String])
-      )
-    ).toThrow(
+    const result = providerCompatibleObjectSchema(
+      Schema.Union([Schema.Struct({ value: Schema.String }), Schema.String])
+    );
+    assert(Result.isFailure(result));
+    expect(result.failure.message).toBe(
       "Provider-compatible tool schema unions require every branch to be an object."
     );
+    expect(result.failure.reason).toBe("unionBranchNotObject");
   });
   it("ignores invalid array intersections while retaining branch guidance", () => {
-    const modelSchema = providerCompatibleObjectSchema(
+    const modelSchema = compatibleSchema(
       Schema.Union([
         jsonSchemaFixture({
           properties: {
@@ -447,7 +429,7 @@ describe("providerCompatibleObjectSchema", () => {
     });
   });
   it("reads array minimums nested in an intersection and relaxes them across branches", () => {
-    const modelSchema = providerCompatibleObjectSchema(
+    const modelSchema = compatibleSchema(
       Schema.Union([
         jsonSchemaFixture({
           properties: {
@@ -471,26 +453,32 @@ describe("providerCompatibleObjectSchema", () => {
     });
   });
   it("rejects unsupported generated property schemas", () => {
-    expect(() =>
-      providerCompatibleObjectSchema(
-        Schema.Union([
-          jsonSchemaFixture({
-            properties: { value: true },
-            required: ["value"],
-            type: "object",
-          }),
-          jsonSchemaFixture({
-            properties: { value: { type: "string" } },
-            required: ["value"],
-            type: "object",
-          }),
-        ])
-      )
-    ).toThrow("Effect generated an unsupported schema for property value.");
+    const result = providerCompatibleObjectSchema(
+      Schema.Union([
+        jsonSchemaFixture({
+          properties: { value: true },
+          required: ["value"],
+          type: "object",
+        }),
+        jsonSchemaFixture({
+          properties: { value: { type: "string" } },
+          required: ["value"],
+          type: "object",
+        }),
+      ])
+    );
+    assert(Result.isFailure(result));
+    expect(result.failure.message).toBe(
+      "Effect generated an unsupported schema for property value."
+    );
+    expect(result.failure.reason).toBe("unsupportedProperty");
   });
   it("rejects non-object model metadata", () => {
-    expect(() => providerCompatibleObjectSchema(Schema.String)).toThrow(
+    const result = providerCompatibleObjectSchema(Schema.String);
+    assert(Result.isFailure(result));
+    expect(result.failure.message).toBe(
       "Provider-compatible tool schemas require an object or object union."
     );
+    expect(result.failure.reason).toBe("notObjectOrUnion");
   });
 });

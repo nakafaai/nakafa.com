@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -52,9 +53,7 @@ export async function insertCompletedRelease(
       query.eq("releaseId", identity.releaseId)
     )
     .unique();
-  if (!release) {
-    throw new Error(`Expected release ${identity.releaseId}.`);
-  }
+  assert.ok(release, `Expected release ${identity.releaseId}.`);
   await ctx.db.patch("contentReleases", release._id, { createdAt });
 }
 
@@ -135,9 +134,10 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
   const third = releases[2];
   const fourth = releases[3];
   const fifth = releases[4];
-  if (!(first && third && fourth && fifth)) {
-    throw new Error("Expected five compaction releases.");
-  }
+  assert.ok(
+    first && third && fourth && fifth,
+    "Expected five compaction releases."
+  );
   await insertTestState(ctx, { active: fifth, nextSequence: 6 });
   for (let index = 0; index < 40; index += 1) {
     const contentKey = `test:compact-${index}`;

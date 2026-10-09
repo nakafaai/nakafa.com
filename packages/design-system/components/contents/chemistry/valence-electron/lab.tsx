@@ -22,7 +22,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Result } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -58,7 +58,9 @@ export function ValenceElectronLab({
     useState<ValenceElectronSampleId>(CALCIUM_ID);
   const selectedSample = VALENCE_ELECTRON_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
-  const facts = getValenceElectronFacts(selectedSample.atomicNumber);
+  const facts = Result.getOrThrow(
+    getValenceElectronFacts(selectedSample.atomicNumber)
+  );
 
   /** Keeps the current atom selected when ToggleGroup emits an empty value. */
   function handleSampleChange(value: string) {

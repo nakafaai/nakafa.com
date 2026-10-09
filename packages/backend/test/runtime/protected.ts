@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentSnapshotManifestSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
@@ -110,9 +111,7 @@ export async function insertProtectedRuntime(
     ({ placement }) => placement.appLocale === "en"
   );
   const first = english[0];
-  if (!first) {
-    throw new Error("Expected a protected runtime question.");
-  }
+  assert.ok(first, "Expected a protected runtime question.");
   const snapshotId = await activateTryoutSnapshot(ctx, {
     catalog: [
       makeTryoutCatalogRow("en").record.row,
@@ -124,9 +123,7 @@ export async function insertProtectedRuntime(
     ctx.db.query("contentReleases").unique(),
     ctx.db.query("contentState").unique(),
   ]);
-  if (!(release && state)) {
-    throw new Error("Expected protected runtime release state.");
-  }
+  assert.ok(release && state, "Expected protected runtime release state.");
   const storedRelease = Schema.decodeSync(SignedReleaseJsonSchema)(
     release.releaseJson
   );
@@ -136,15 +133,14 @@ export async function insertProtectedRuntime(
       index.eq("family", "tryout").eq("snapshotId", snapshotId)
     )
     .unique();
-  if (!storedSnapshot) {
-    throw new Error("Expected protected runtime snapshot.");
-  }
+  assert.ok(storedSnapshot, "Expected protected runtime snapshot.");
   const snapshot = Schema.decodeSync(SnapshotJsonSchema)(
     storedSnapshot.snapshotJson
   );
-  if (snapshot.family !== "tryout") {
-    throw new Error("Expected a try-out snapshot manifest.");
-  }
+  assert.ok(
+    snapshot.family === "tryout",
+    "Expected a try-out snapshot manifest."
+  );
   const signedRelease = testSignedRelease({
     ...storedRelease.manifest,
     rendererManifestHash: TEST_PROOF_RENDERER.hash,
