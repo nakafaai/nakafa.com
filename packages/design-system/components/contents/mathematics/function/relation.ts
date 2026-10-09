@@ -67,13 +67,11 @@ export const resolveRelation = Effect.fn("Relation.resolve")(function* (
     domain,
     codomain,
     mappings: Arr.map(relation.mappings, ({ from, to }, index) => {
-      const domainIndex = Option.getOrElse(
-        Arr.findFirstIndex(relation.domain, (item) => item === from),
-        () => -1
+      const domainIndex = Option.getOrThrow(
+        Arr.findFirstIndex(relation.domain, (item) => item === from)
       );
-      const codomainIndex = Option.getOrElse(
-        Arr.findFirstIndex(relation.codomain, (item) => item === to),
-        () => -1
+      const codomainIndex = Option.getOrThrow(
+        Arr.findFirstIndex(relation.codomain, (item) => item === to)
       );
       return {
         id: `mapping-${index}`,
