@@ -12,6 +12,7 @@ import {
   isCompilerConfig,
   sharedPackageName,
 } from "#scripts/check/compiler";
+import { inspectDeploySource } from "#scripts/check/deploy";
 import {
   effectFindings,
   effectTestViolations,
@@ -81,6 +82,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
         inspectModuleSize(file, sourceFile),
+        inspectDeploySource(file, sourceFile),
       ])
     )
   );

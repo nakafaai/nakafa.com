@@ -192,6 +192,14 @@ with its count, tests included, and a module that a tool generated is not
 judged. The limit is on physical lines, so a long comment counts: a module
 that needs that much explanation holds more than one capability.
 
+### Vercel deployment policy
+
+Each app's `vercel.ts` sets `git.deploymentEnabled` to exactly
+`{ "**": false, main: true }`, and the check reports any other form. The four
+files repeat the policy on purpose: each Vercel project reads only its own
+file, and the Python app cannot import a shared value. The check, not an
+import, keeps them equal.
+
 ## Consequences
 
 - `packages/typescript-config/base.json` lists every rule the installed plugin
