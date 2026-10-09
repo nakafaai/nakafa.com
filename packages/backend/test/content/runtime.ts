@@ -4,6 +4,7 @@ import {
   type ContentFamily,
   ContentFamilySchema,
 } from "@nakafa/aksara-contracts/content";
+import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
@@ -157,9 +158,7 @@ export function testLocalizedArticleProjection(
 }
 
 /** Builds one realistic material identity for a delivery-specific fixture. */
-export function runtimeContentKey(
-  delivery: "authenticated" | "entitled" | "public"
-) {
+export function runtimeContentKey(delivery: ContentDeliveryClass) {
   return `material/lesson/test/${delivery}`;
 }
 
