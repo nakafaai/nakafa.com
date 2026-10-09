@@ -191,7 +191,7 @@ export function formatSecondMath(value: number) {
 function getTimeSamples(duration: number) {
   const wholeSecondCount = Math.floor(duration) + 1;
   const samples = Array.from({ length: wholeSecondCount }, (_, index) => index);
-  const lastSample = samples.at(-1) ?? 0;
+  const lastSample = Option.getOrElse(Arr.last(samples), () => 0);
 
   if (lastSample === duration) {
     return samples;

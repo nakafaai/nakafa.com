@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 export const DISPLACEMENT_DISTANCE_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/taxi.glb";
@@ -59,7 +59,7 @@ export function getDisplacementDistanceState(
   const route = ROUTES[caseId];
   const segments = getRouteSegments(route);
   const start = route[0];
-  const end = route.at(-1) ?? start;
+  const end = Option.getOrElse(Arr.last(route), () => start);
   const distance = Arr.reduce(
     segments,
     0,
@@ -131,10 +131,13 @@ export function getRouteSampleAtProgress(
     traveled = nextTraveled;
   }
 
-  const lastSegment = state.segments.at(-1);
+  const lastSegment = Arr.last(state.segments);
 
   return {
-    angle: lastSegment?.angle ?? 0,
+    angle: Option.match(lastSegment, {
+      onNone: () => 0,
+      onSome: (segment) => segment.angle,
+    }),
     x: state.end.x,
     z: state.end.z,
   };
@@ -192,7 +195,7 @@ function createLoopRoute(width: number, height: number) {
 }
 
 function getRouteSegments(route: RoutePoint[]): RouteSegment[] {
-  return Arr.map(route.slice(0, -1), (start, index) => {
+  return Arr.map(Arr.dropRight(route, 1), (start, index) => {
     const end = route[index + 1];
     const length = getPointDistance(start, end);
 

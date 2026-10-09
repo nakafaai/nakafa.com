@@ -1,7 +1,7 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Order } from "effect";
+import { Array as Arr, Option, Order } from "effect";
 import type { ComponentProps } from "react";
 
 /** Renders the quantitative graph for SNBT set 6 question 19. */
@@ -61,7 +61,13 @@ export function Graph({
           labels: [
             {
               text: <InlineMath math="y = \left(\frac{1}{2}\right)^x - 3" />,
-              at: exponentialInputs.indexOf(curveLabelX),
+              at: Option.getOrElse(
+                Arr.findFirstIndex(
+                  exponentialInputs,
+                  (input) => input === curveLabelX
+                ),
+                () => -1
+              ),
               offset: [0, -0.6, 0],
             },
           ],
