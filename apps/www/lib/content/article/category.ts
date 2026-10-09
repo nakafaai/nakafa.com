@@ -10,7 +10,7 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   type ArticlePageCursor,
@@ -59,10 +59,10 @@ const findPublishedCategory = Effect.fn("www.articles.findCategory")(function* (
       return yield* categoryError(locale);
     }
 
-    const category = page.categories.find(matches);
-    if (category) {
+    const category = Arr.findFirst(page.categories, matches);
+    if (Option.isSome(category)) {
       return Option.some({
-        ...category,
+        ...category.value,
         activeManifestHash: page.activeManifestHash,
         activeReleaseId: page.activeReleaseId,
         appLocale: locale,
@@ -118,15 +118,20 @@ export const readPublishedCategoryAlternates = Effect.fn(
     { concurrency: ACTIVE_APP_LOCALE_CODES.length }
   );
 
-  const selected = categories.find(
+  const match = Arr.findFirst(
+    categories,
     (category) => category.appLocale === current.appLocale
   );
+  if (Option.isNone(match)) {
+    return yield* categoryError(current.appLocale);
+  }
+  const selected = match.value;
   if (
-    !selected ||
     selected.route !== current.route ||
     selected.title !== current.title ||
     selected.rendererDomain !== current.rendererDomain ||
-    categories.some(
+    Arr.some(
+      categories,
       (category) =>
         category.activeManifestHash !== selected.activeManifestHash ||
         category.activeReleaseId !== selected.activeReleaseId
@@ -135,7 +140,7 @@ export const readPublishedCategoryAlternates = Effect.fn(
     return yield* categoryError(current.appLocale);
   }
 
-  return categories.map((category) => ({
+  return Arr.map(categories, (category) => ({
     appLocale: category.appLocale,
     publicPath: `articles/${category.route}`,
   }));
@@ -157,7 +162,8 @@ export const readPublishedCategoryPage = Effect.fn(
     return page;
   }
 
-  const mismatched = page.articles.some(
+  const mismatched = Arr.some(
+    page.articles,
     (article) =>
       article.category !== current.category ||
       article.categoryTitle !== current.title ||

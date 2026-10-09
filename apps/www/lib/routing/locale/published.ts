@@ -2,7 +2,7 @@ import { isRenderableCurriculumLevel } from "@nakafa/aksara-contracts/program/cu
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   readPublishedArticleCategory,
   readPublishedCategoryAlternates,
@@ -62,10 +62,11 @@ const readLocalizedArticleHref = Effect.fn("www.routing.locale.readArticle")(
       }
 
       const alternates = yield* readPublishedCategoryAlternates(current.value);
-      const target = alternates.find(
+      const target = Arr.findFirst(
+        alternates,
         (alternate) => alternate.appLocale === input.locale
       );
-      if (!target) {
+      if (Option.isNone(target)) {
         return yield* new MissingLocalizedRouteProjectionError({
           locale: input.locale,
           publicPath: input.publicPath,
@@ -73,7 +74,7 @@ const readLocalizedArticleHref = Effect.fn("www.routing.locale.readArticle")(
       }
 
       return toNavigationHref(
-        target.publicPath,
+        target.value.publicPath,
         `${stripArticlePagination(input.search)}${input.hash}`
       );
     }

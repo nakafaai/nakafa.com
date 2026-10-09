@@ -5,7 +5,7 @@ import {
   ArticleCategorySchema,
   ArticleCategoryTitleSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   type ArticlePageCursor,
@@ -28,7 +28,7 @@ export type ArticleNavigationItem = typeof ArticleNavigationItemSchema.Type;
 /** Reads every signed article category under one immutable release identity. */
 export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
   function* (locale: Locale) {
-    const navigation: ArticleNavigationItem[] = [];
+    const navigation = MutableList.make<ArticleNavigationItem>();
     let cursor: ArticlePageCursor = {
       cursor: null,
       expectedManifestHash: null,
@@ -47,15 +47,16 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
         });
       }
 
-      navigation.push(
-        ...page.categories.map(({ category, route, title }) => ({
+      MutableList.appendAll(
+        navigation,
+        Arr.map(page.categories, ({ category, route, title }) => ({
           category,
           href: `/articles/${route}`,
           title,
         }))
       );
       if (page.done) {
-        return navigation;
+        return MutableList.toArray(navigation);
       }
 
       cursor = {

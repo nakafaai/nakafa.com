@@ -7,7 +7,7 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 import {
   getArticleModel,
   getArticlePublication,
@@ -31,7 +31,7 @@ const encodeProjection = Schema.encodeSync(
 const model = {
   activeReleaseId,
   activeAppLocales: ["en", "id", "de"],
-  alternateJson: [projection, idProjection, deProjection].map((value) =>
+  alternateJson: Arr.map([projection, idProjection, deProjection], (value) =>
     encodeProjection(value)
   ),
   projectionJson: encodeProjection(projection),
