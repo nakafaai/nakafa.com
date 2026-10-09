@@ -6,6 +6,6 @@
     },
     "types": ["node"]
   },
-  "include": ["scripts/**/*.ts", "src/**/*.ts"],
+  "include": ["scripts/**/*.ts", "src/**/*.ts", "*.mts"],
   "exclude": ["coverage", "dist", "node_modules"]
 }

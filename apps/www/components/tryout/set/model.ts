@@ -1,16 +1,14 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { routing } from "@repo/internationalization/src/routing";
 
 import { Schema } from "effect";
 
 /** Convex query contract for the set discovery page. */
-type SetPageQuery = typeof refs.public.tryouts.queries.catalog.getSetPage;
+type SetPageQuery = typeof tryouts.queries.catalog.getSetPage;
 
 type SetAttemptPageResult = Extract<
-  NonNullable<
-    Ref.Returns<typeof refs.public.tryouts.queries.attemptPage.getSet>
-  >,
+  NonNullable<Ref.Returns<typeof tryouts.queries.attemptPage.getSet>>,
   { kind: "current" | "retained" }
 >;
 
@@ -27,13 +25,13 @@ export type SetEntrySection = NonNullable<SetPage["entrySection"]>;
 
 /** Current attempt payload returned by Convex. */
 export type CurrentAttempt = NonNullable<
-  Ref.Returns<typeof refs.public.tryouts.queries.runtime.getSetAttemptState>
+  Ref.Returns<typeof tryouts.queries.runtime.getSetAttemptState>
 >["attempt"];
 
 /** Loaded section runtime payload after null checks. */
 export type LoadedRuntime = NonNullable<
   NonNullable<
-    Ref.Returns<typeof refs.public.tryouts.queries.runtime.getSetAttemptState>
+    Ref.Returns<typeof tryouts.queries.runtime.getSetAttemptState>
   >["runtime"]
 >;
 

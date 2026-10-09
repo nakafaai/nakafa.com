@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { cache } from "react";
@@ -25,7 +25,7 @@ import { httpLayer } from "@/lib/convex/http";
  * so their module graph never renders interactive renderers. */
 export const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(
   function* (
-    source: Ref.Returns<typeof refs.public.contentRelease.article.delivery>,
+    source: Ref.Returns<typeof contentRelease.article.delivery>,
     locale: Locale,
     publicPath: string
   ) {
@@ -66,7 +66,7 @@ export const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(
 /** Verifies the complete query result before evaluating its immutable body. */
 export const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
   function* (
-    source: Ref.Returns<typeof refs.public.contentRelease.article.delivery>,
+    source: Ref.Returns<typeof contentRelease.article.delivery>,
     locale: Locale,
     publicPath: string
   ) {
@@ -86,7 +86,7 @@ export const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
 async function fetchArticleSource(locale: Locale, publicPath: string) {
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.contentRelease.article.delivery, {
+      client.query(contentRelease.article.delivery, {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })

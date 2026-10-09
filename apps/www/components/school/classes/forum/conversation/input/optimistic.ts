@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 import type {
@@ -8,7 +8,7 @@ import type {
 } from "@/components/school/classes/forum/conversation/data/entities";
 
 type CreateForumPostArgs = Ref.Args<
-  typeof refs.public.classes.forums.mutations.posts.createForumPost
+  typeof classes.forums.mutations.posts.createForumPost
 >;
 
 type ForumPostUser = NonNullable<ForumPost["user"]>;

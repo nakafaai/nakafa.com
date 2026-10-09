@@ -2,7 +2,7 @@ import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec"
 import { Id } from "@repo/backend/confect/_generated/id";
 import { ModelId } from "@repo/backend/confect/gateway/model";
 import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
-import { SourceReferenceSchema } from "@repo/backend/confect/nina/research/source";
+import { SourceReferenceSchema } from "@repo/backend/confect/nina/contract/source";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { LocaleSchema } from "@repo/contents/content";
 import { Schema, Struct } from "effect";

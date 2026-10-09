@@ -1,7 +1,7 @@
 "use client";
 
 import type { InvokeReturn } from "@confect/react";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type {
   StartAttemptArgs,
   StartAttemptResult,
@@ -21,7 +21,7 @@ class TryoutClientRequestError extends Data.TaggedError(
 /** Calls the Convex start mutation with the attempt arguments. */
 type StartAttemptMutation = (
   args: StartAttemptArgs
-) => InvokeReturn<typeof refs.public.tryouts.mutations.attempts.startAttempt>;
+) => InvokeReturn<typeof tryouts.mutations.attempts.startAttempt>;
 
 /** Continues the client flow with the result of a started attempt. */
 type StartAttemptSuccess = (result: StartAttemptResult) => Effect.Effect<void>;
@@ -59,7 +59,7 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
     readonly mutation: (args: {
       attemptId: Id<"tryoutAttempts">;
       sectionKey: string;
-    }) => InvokeReturn<typeof refs.public.tryouts.mutations.sections.start>;
+    }) => InvokeReturn<typeof tryouts.mutations.sections.start>;
     readonly sectionKey: string;
     readonly successMessage: string;
   }) =>

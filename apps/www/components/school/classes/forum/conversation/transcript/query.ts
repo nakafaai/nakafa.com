@@ -1,5 +1,5 @@
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useData } from "@/components/school/classes/forum/conversation/context";
 import { createActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
@@ -12,12 +12,9 @@ export function useTranscriptData({
   forumId: Id<"schoolClassForums">;
 }) {
   const forum = useData((state) => state.forum);
-  const query = useQuery(
-    refs.public.classes.forums.queries.pages.getForumPosts,
-    {
-      forumId,
-    }
-  );
+  const query = useQuery(classes.forums.queries.pages.getForumPosts, {
+    forumId,
+  });
 
   const transcriptPosts = QueryResult.isSuccess(query) ? query.value : [];
   const isPending = QueryResult.isLoading(query);

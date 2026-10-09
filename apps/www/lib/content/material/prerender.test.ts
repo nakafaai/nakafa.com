@@ -4,7 +4,7 @@ import type { Ref } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer } from "effect";
 import { readPublishedMaterialPrerenderRoute } from "@/lib/content/material/prerender";
@@ -34,7 +34,7 @@ vi.mock("@confect/js", async (importOriginal) => {
 
 /** Supplies the first real lesson while retaining a continuation cursor. */
 function materialPage(): Ref.Returns<
-  typeof refs.public.contentRelease.material.publications
+  typeof contentRelease.material.publications
 > {
   return {
     activeManifestHash: `sha256:${"a".repeat(64)}`,

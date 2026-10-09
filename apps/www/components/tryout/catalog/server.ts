@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -33,7 +33,7 @@ export async function readFeaturedTryout(locale: Locale) {
   applyContentCache("tryout");
   const featured = await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.tryouts.queries.catalog.getFeaturedQuestion, {
+      client.query(tryouts.queries.catalog.getFeaturedQuestion, {
         appLocale: AppLocaleSchema.make(locale),
       })
     ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
@@ -56,7 +56,7 @@ export async function readTryoutMetadata(args: TryoutMetadataArgs) {
   applyContentCache("tryout");
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.tryouts.queries.catalog.getMetadata, args)
+      client.query(tryouts.queries.catalog.getMetadata, args)
     ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
@@ -69,7 +69,7 @@ export async function readTryoutHubPage(locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.tryouts.queries.catalog.getHubPage, {
+      client.query(tryouts.queries.catalog.getHubPage, {
         appLocale,
       })
     ).pipe(
@@ -107,7 +107,7 @@ export async function readTryoutCountryPage(
   const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.tryouts.queries.catalog.getCountryPage, {
+      client.query(tryouts.queries.catalog.getCountryPage, {
         appLocale,
         publicPath,
       })
@@ -145,7 +145,7 @@ export async function readTryoutExamPage(locale: Locale, publicPath: string) {
   applyContentCache("tryout");
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.tryouts.queries.catalog.getExamPage, {
+      client.query(tryouts.queries.catalog.getExamPage, {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
@@ -160,7 +160,7 @@ export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
   applyContentCache("tryout");
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.tryouts.queries.catalog.getTrackPage, {
+      client.query(tryouts.queries.catalog.getTrackPage, {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
@@ -172,10 +172,10 @@ export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
 export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
   function* (
     token: string | undefined,
-    args: Ref.Args<typeof refs.public.tryouts.queries.sets.list>
+    args: Ref.Args<typeof tryouts.queries.sets.list>
   ) {
     return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.tryouts.queries.sets.list, args)
+      client.query(tryouts.queries.sets.list, args)
     ).pipe(
       Effect.provide(
         httpLayer(
@@ -204,7 +204,7 @@ export async function readTryoutSetPage(locale: Locale, publicPath: string) {
   applyContentCache("tryout");
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.tryouts.queries.catalog.getSetPage, {
+      client.query(tryouts.queries.catalog.getSetPage, {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
@@ -217,12 +217,10 @@ export const readTryoutSetAttemptPage = Effect.fn(
   "www.tryout.catalog.readSetAttemptPage"
 )(function* (
   token: string,
-  request: Ref.Args<
-    typeof refs.public.tryouts.queries.attemptPage.getSet
-  >["request"]
+  request: Ref.Args<typeof tryouts.queries.attemptPage.getSet>["request"]
 ) {
   return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.tryouts.queries.attemptPage.getSet, {
+    client.query(tryouts.queries.attemptPage.getSet, {
       request,
     })
   ).pipe(
@@ -251,7 +249,7 @@ export async function readTryoutSectionPage(
   applyContentCache("tryout");
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.tryouts.queries.catalog.getSectionPage, {
+      client.query(tryouts.queries.catalog.getSectionPage, {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
@@ -264,12 +262,10 @@ export const readTryoutSectionAttemptPage = Effect.fn(
   "www.tryout.catalog.readSectionAttemptPage"
 )(function* (
   token: string,
-  request: Ref.Args<
-    typeof refs.public.tryouts.queries.attemptPage.getSection
-  >["request"]
+  request: Ref.Args<typeof tryouts.queries.attemptPage.getSection>["request"]
 ) {
   return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.tryouts.queries.attemptPage.getSection, {
+    client.query(tryouts.queries.attemptPage.getSection, {
       request,
     })
   ).pipe(

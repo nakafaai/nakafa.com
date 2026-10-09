@@ -8,7 +8,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/confect/classes/forums/constants";
 import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -85,9 +85,7 @@ function SchoolClassesForumNewContent() {
   const classMembership = useClass((c) => c.classMembership);
   const schoolMembership = useClass((c) => c.schoolMembership);
   const { can } = useClassPermissions();
-  const createForum = useMutation(
-    refs.public.classes.forums.mutations.forums.createForum
-  );
+  const createForum = useMutation(classes.forums.mutations.forums.createForum);
   const canModerateForum = can(PERMISSIONS.FORUM_MODERATE);
   // Get available tags based on the same permission split enforced by Convex.
   const availableTags = getTagsByRole(

@@ -2,7 +2,8 @@
 
 import { HttpClient } from "@confect/js";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
+import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import {
   Duration,
   Effect,
@@ -78,7 +79,7 @@ function runQuery(messages: unknown[] = [], elapsed = Duration.seconds(2)) {
   return Effect.gen(function* () {
     const fiber = yield* Effect.forkChild(
       Effect.flatMap(HttpClient.HttpClient, (client) =>
-        client.query(refs.public.contentRelease.quran.surahs, {})
+        client.query(contentRelease.quran.surahs, {})
       ).pipe(
         Effect.provide(
           Layer.mergeAll(
@@ -221,7 +222,7 @@ describe("Convex HTTP query retries", () => {
       mutationMock.mockReturnValueOnce(Effect.fail(failure));
 
       const exit = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-        client.mutation(refs.public.onboarding.mutations.admit, {})
+        client.mutation(onboarding.mutations.admit, {})
       ).pipe(Effect.provide(withQueryRetry(scripted)), Effect.exit);
 
       expect(exit).toStrictEqual(Exit.fail(failure));

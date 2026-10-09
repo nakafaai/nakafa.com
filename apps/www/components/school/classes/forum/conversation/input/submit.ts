@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog/browser";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import { Effect, Result, Schema } from "effect";
@@ -44,33 +44,17 @@ const UploadAttachmentFileInputSchema = Schema.Struct({
 });
 type UploadAttachmentFileInput = typeof UploadAttachmentFileInputSchema.Type;
 type GenerateUploadUrlMutation = (
-  args: Ref.Args<
-    typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
-  >
-) => InvokeReturn<
-  typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
->;
+  args: Ref.Args<typeof classes.forums.mutations.uploads.generateUploadUrl>
+) => InvokeReturn<typeof classes.forums.mutations.uploads.generateUploadUrl>;
 type DiscardForumUploadsMutation = (
-  args: Ref.Args<
-    typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
-  >
-) => InvokeReturn<
-  typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
->;
+  args: Ref.Args<typeof classes.forums.mutations.uploads.discardForumUploads>
+) => InvokeReturn<typeof classes.forums.mutations.uploads.discardForumUploads>;
 type SaveForumUploadMutation = (
-  args: Ref.Args<
-    typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
-  >
-) => InvokeReturn<
-  typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
->;
+  args: Ref.Args<typeof classes.forums.mutations.uploads.saveForumUpload>
+) => InvokeReturn<typeof classes.forums.mutations.uploads.saveForumUpload>;
 type CreateForumPostMutation = (
-  args: Ref.Args<
-    typeof refs.public.classes.forums.mutations.posts.createForumPost
-  >
-) => InvokeReturn<
-  typeof refs.public.classes.forums.mutations.posts.createForumPost
->;
+  args: Ref.Args<typeof classes.forums.mutations.posts.createForumPost>
+) => InvokeReturn<typeof classes.forums.mutations.posts.createForumPost>;
 class ForumAttachmentUploadError extends Schema.TaggedError<ForumAttachmentUploadError>()(
   "ForumAttachmentUploadError",
   {

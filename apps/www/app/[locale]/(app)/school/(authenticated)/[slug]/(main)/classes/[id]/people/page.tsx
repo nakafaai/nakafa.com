@@ -22,7 +22,7 @@ export default async function Page(
   }
   const initialPage = await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.classes.roster.list, {
+      client.query(classes.roster.list, {
         classId: route.class._id,
         q,
         paginationOpts: { cursor: null, numItems: 50 },
@@ -39,7 +39,7 @@ export default async function Page(
 }
 
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import { Effect } from "effect";
 import { createLoader } from "nuqs/server";
 import { httpLayer } from "@/lib/convex/http";

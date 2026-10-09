@@ -1,13 +1,11 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 
 import type { PostAuthIntentResolution } from "@/lib/auth/admission";
 import { getPostAuthDestination } from "@/lib/auth/admission";
 import { getCurriculumProgramHref } from "@/lib/curriculum/routes";
 
-type OnboardingFinishResult = Ref.Returns<
-  typeof refs.public.onboarding.mutations.finish
->;
+type OnboardingFinishResult = Ref.Returns<typeof onboarding.mutations.finish>;
 
 /** Converts the backend destination contract into one localized app href. */
 export function getOnboardingDestination(

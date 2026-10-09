@@ -9,7 +9,7 @@ import {
 } from "@confect/react";
 import { type UIMessagesQuery, useUIMessages } from "@convex-dev/agent/react";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import nina from "@repo/backend/confect/_generated/refs/nina";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/nina/presentation.spec";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -39,7 +39,7 @@ import { useViewer } from "@/lib/identity/client";
 // Agent owns delta decoding, reconnection and pagination. Confect registers
 // and authorizes the query; the streaming hook uses the SDK reference boundary.
 type MessageFeed = UIMessagesQuery<
-  Pick<Ref.Args<typeof refs.public.nina.messages.list>, "chatId">,
+  Pick<Ref.Args<typeof nina.messages.list>, "chatId">,
   NinaMessage
 >;
 type MessagesQuery = FunctionReference<
@@ -50,19 +50,20 @@ type MessagesQuery = FunctionReference<
     Required<Pick<FunctionReturnType<MessageFeed>, "streams">>
 >;
 const messagesQuery: MessagesQuery = Ref.getFunctionReference(
-  refs.public.nina.messages.list
+  nina.messages.list
 );
 // Declared outside the provider: a type query naming `cancel` inside it
 // stops the React Compiler from memoizing the provider's `cancel` action.
-type CancelError = Ref.Error<typeof refs.public.nina.lifecycle.cancel>;
+type CancelError = Ref.Error<typeof nina.lifecycle.cancel>;
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 const ChatMessagesContext = createContext<ChatMessagesValue | null>(null);
 
-const optimisticCancel: OptimisticUpdate<
-  typeof refs.public.nina.lifecycle.cancel
-> = (store, args) => {
-  const current = store.getQuery(refs.public.nina.conversation.get, args);
+const optimisticCancel: OptimisticUpdate<typeof nina.lifecycle.cancel> = (
+  store,
+  args
+) => {
+  const current = store.getQuery(nina.conversation.get, args);
   if (Option.isNone(current) || !current.value.turn) {
     return;
   }
@@ -71,7 +72,7 @@ const optimisticCancel: OptimisticUpdate<
     return;
   }
   store.setQuery(
-    refs.public.nina.conversation.get,
+    nina.conversation.get,
     args,
     Option.some({
       ...current.value,
@@ -167,7 +168,7 @@ function useMessages(
 function useConversation(chatId: Id<"chats">) {
   const authenticating = useConvexAuth((auth) => auth.isLoading);
   const result = useQuery(
-    refs.public.nina.conversation.get,
+    nina.conversation.get,
     authenticating ? "skip" : { chatId }
   );
   const chat = QueryResult.isSuccess(result) ? result.value.chat : undefined;
@@ -191,9 +192,9 @@ function useChatState(chatId: Id<"chats">) {
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
   const setText = useAi((state) => state.setText);
   const viewer = useViewer((state) => state.viewer);
-  const cancelTurn = useMutation(
-    refs.public.nina.lifecycle.cancel
-  ).withOptimisticUpdate(optimisticCancel);
+  const cancelTurn = useMutation(nina.lifecycle.cancel).withOptimisticUpdate(
+    optimisticCancel
+  );
   const [cancelError, setCancelError] = useState<
     CancelError | NinaConnectionError | null
   >(null);

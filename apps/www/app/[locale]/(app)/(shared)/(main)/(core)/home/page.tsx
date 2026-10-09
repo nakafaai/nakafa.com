@@ -1,5 +1,6 @@
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import auth from "@repo/backend/confect/_generated/refs/auth";
+import contents from "@repo/backend/confect/_generated/refs/contents";
 import { redirect } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
@@ -59,9 +60,9 @@ async function AuthenticatedHome({
       Effect.flatMap((client) =>
         Effect.all(
           {
-            account: client.query(refs.public.auth.queries.getCurrentUser, {}),
+            account: client.query(auth.queries.getCurrentUser, {}),
             recentRows: client.query(
-              refs.public.contents.queries.recent.getRecentlyViewed,
+              contents.queries.recent.getRecentlyViewed,
               { locale, limit: 5 }
             ),
           },

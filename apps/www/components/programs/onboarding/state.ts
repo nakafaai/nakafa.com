@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import type { onboardingProfileValidator } from "@repo/backend/confect/onboarding/schema";
 
 import type {
@@ -8,7 +8,7 @@ import type {
 } from "@/components/programs/onboarding/options";
 
 export type OnboardingProfile = Ref.Returns<
-  typeof refs.public.onboarding.queries.getStatus
+  typeof onboarding.queries.getStatus
 >["profile"];
 
 type OnboardingAnswers = Pick<

@@ -11,17 +11,13 @@ import {
   familyForProjection,
   RoutedContentProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/spec";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { httpLayer } from "@/lib/convex/http";
 
-type ContentRouteArgs = Ref.Args<
-  typeof refs.public.contentRelease.ownership.resolve
->;
-type ContentRouteResult = Ref.Returns<
-  typeof refs.public.contentRelease.ownership.resolve
->;
+type ContentRouteArgs = Ref.Args<typeof contentRelease.ownership.resolve>;
+type ContentRouteResult = Ref.Returns<typeof contentRelease.ownership.resolve>;
 /** One active Aksara route selected without exposing executable code. */
 const ActiveContentRouteSchema = Schema.Union([
   Schema.Struct({
@@ -80,7 +76,7 @@ export const readActiveContentRoute = Effect.fn(
     publicPath: input.publicPath,
   };
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.ownership.resolve, args)
+    client.query(contentRelease.ownership.resolve, args)
   ).pipe(Effect.provide(httpLayer()));
   if (result.kind === "unmanaged") {
     const activeReleaseId = yield* Schema.decodeEffect(

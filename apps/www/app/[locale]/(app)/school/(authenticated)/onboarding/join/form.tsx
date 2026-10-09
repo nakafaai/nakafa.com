@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import { InLoveIcon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import schools from "@repo/backend/confect/_generated/refs/schools";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -25,7 +25,7 @@ import { reportClientException } from "@/lib/analytics/client";
 export function SchoolOnboardingJoinForm() {
   const t = useTranslations("School.Onboarding");
   const router = useRouter();
-  const joinSchool = useMutation(refs.public.schools.mutations.joinSchool);
+  const joinSchool = useMutation(schools.mutations.joinSchool);
   const form = useForm({
     defaultValues: schoolJoinDefaultValues,
     validators: {

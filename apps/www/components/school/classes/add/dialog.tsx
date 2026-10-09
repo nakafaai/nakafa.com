@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import { Button } from "@repo/design-system/components/ui/button";
 import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -38,7 +38,7 @@ export function CreateSchoolClassDialog({
   const router = useRouter();
   const pathname = usePathname();
   const schoolId = useSchool((state) => state.school._id);
-  const createClass = useMutation(refs.public.classes.mutations.createClass);
+  const createClass = useMutation(classes.mutations.createClass);
   const form = useForm({
     defaultValues: classCreateDefaultValues,
     validators: {

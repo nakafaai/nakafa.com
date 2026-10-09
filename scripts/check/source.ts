@@ -9,6 +9,11 @@ import {
 } from "effect";
 import {
   type Identifier,
+  isCallExpression,
+  isExportDeclaration,
+  isImportDeclaration,
+  isImportTypeNode,
+  isLiteralTypeNode,
   isTypeNode,
   type Node,
   type SourceFile,
@@ -105,6 +110,21 @@ export function descendants(sourceFile: SourceFile, skipTypes = true) {
     }
   }
   return MutableList.takeAll(visited);
+}
+
+/**
+ * Whether a string literal names the module of an import, a re-export, an
+ * import type, or a dynamic import.
+ */
+export function namesModule(node: Node) {
+  const owner = node.parent;
+  return (
+    isImportDeclaration(owner) ||
+    isExportDeclaration(owner) ||
+    (isLiteralTypeNode(owner) && isImportTypeNode(owner.parent)) ||
+    (isCallExpression(owner) &&
+      owner.expression.kind === SyntaxKind.ImportKeyword)
+  );
 }
 
 /** Scopes one native compiler, closing it when the scope ends. */

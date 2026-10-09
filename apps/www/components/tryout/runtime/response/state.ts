@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { select } from "@repo/backend/confect/response/selection";
 import { MutableHashMap, MutableHashSet, Option, Result } from "effect";
 
@@ -9,9 +9,7 @@ import type {
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
 
-type SaveResponseArgs = Ref.Args<
-  typeof refs.public.tryouts.mutations.responses.save
->;
+type SaveResponseArgs = Ref.Args<typeof tryouts.mutations.responses.save>;
 export type TryoutResponseSelection = NonNullable<
   TryoutRuntimeQuestion["response"]
 >["selection"];

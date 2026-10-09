@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -21,9 +21,7 @@ export function StartSectionButton({
   attemptId,
   sectionKey,
 }: StartSectionButtonProps) {
-  const startSection = useMutation(
-    refs.public.tryouts.mutations.sections.start
-  );
+  const startSection = useMutation(tryouts.mutations.sections.start);
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
 
