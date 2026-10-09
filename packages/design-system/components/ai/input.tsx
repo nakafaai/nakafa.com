@@ -13,6 +13,7 @@ import {
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import {
   type ChangeEventHandler,
   type ClipboardEventHandler,
@@ -199,17 +200,10 @@ export function PromptInputTextarea({
       return;
     }
 
-    const files: File[] = [];
-    for (const item of items) {
-      if (item.kind !== "file") {
-        continue;
-      }
-
-      const file = item.getAsFile();
-      if (file) {
-        files.push(file);
-      }
-    }
+    const files = Arr.flatMap(Arr.fromIterable(items), (item) => {
+      const file = item.kind === "file" ? item.getAsFile() : null;
+      return file ? [file] : [];
+    });
 
     if (files.length === 0) {
       return;

@@ -21,6 +21,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -58,13 +59,15 @@ export function ElectronConfigurationLab({
   const shellConfiguration = getSimpleShellConfiguration(
     selectedSample.atomicNumber
   );
-  const visibleShells = shellConfiguration.filter(
+  const visibleShells = Arr.filter(
+    shellConfiguration,
     (shell) => shell.electronCount > 0
   );
   const outerShell = visibleShells.at(-1);
-  const configurationMath = visibleShells
-    .map((shell) => shell.electronCount)
-    .join(", ");
+  const configurationMath = Arr.join(
+    Arr.map(visibleShells, (shell) => String(shell.electronCount)),
+    ", "
+  );
 
   if (!outerShell) {
     throw new Error("Electron configuration requires at least one shell.");
@@ -98,7 +101,7 @@ export function ElectronConfigurationLab({
           value={selectedSampleId}
           variant="outline"
         >
-          {ELECTRON_CONFIGURATION_SAMPLE_IDS.map((sampleId) => {
+          {Arr.map(ELECTRON_CONFIGURATION_SAMPLE_IDS, (sampleId) => {
             const sample = ELECTRON_CONFIGURATION_SAMPLES[sampleId];
 
             return (

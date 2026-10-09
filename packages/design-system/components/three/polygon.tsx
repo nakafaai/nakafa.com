@@ -2,6 +2,7 @@
 
 import type { CoordinatePoint } from "@repo/design-system/components/three/frame";
 import { triangulatePolygon } from "@repo/design-system/lib/geometry/polygon";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { type ColorRepresentation, DoubleSide } from "three";
 
@@ -16,7 +17,7 @@ export function Polygon({
   readonly vertices: readonly CoordinatePoint[];
 }) {
   const positions = useMemo(
-    () => new Float32Array(vertices.flatMap(({ x, y, z }) => [x, y, z])),
+    () => new Float32Array(Arr.flatMap(vertices, ({ x, y, z }) => [x, y, z])),
     [vertices]
   );
   const indices = useMemo(

@@ -1,5 +1,5 @@
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.check(Schema.isNonEmpty());
 const UrlStringSchema = Schema.String.check(
@@ -91,11 +91,14 @@ export const COMPANY_IDENTITY = Schema.decodeSync(CompanyIdentitySchema)({
   socialProfiles: COMPANY_SOCIAL_PROFILES,
 });
 
-export const COMPANY_REGISTERED_ADDRESS = [
-  COMPANY_IDENTITY.registeredAddress.streetAddress,
-  COMPANY_IDENTITY.registeredAddress.village,
-  COMPANY_IDENTITY.registeredAddress.district,
-  COMPANY_IDENTITY.registeredAddress.regency,
-  `${COMPANY_IDENTITY.registeredAddress.region} ${COMPANY_IDENTITY.registeredAddress.postalCode}`,
-  COMPANY_IDENTITY.registeredAddress.country,
-].join(", ");
+export const COMPANY_REGISTERED_ADDRESS = Arr.join(
+  [
+    COMPANY_IDENTITY.registeredAddress.streetAddress,
+    COMPANY_IDENTITY.registeredAddress.village,
+    COMPANY_IDENTITY.registeredAddress.district,
+    COMPANY_IDENTITY.registeredAddress.regency,
+    `${COMPANY_IDENTITY.registeredAddress.region} ${COMPANY_IDENTITY.registeredAddress.postalCode}`,
+    COMPANY_IDENTITY.registeredAddress.country,
+  ],
+  ", "
+);

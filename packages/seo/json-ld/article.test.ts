@@ -5,7 +5,7 @@ import {
   ArticleJsonLdSchema,
   makeArticleJsonLd,
 } from "@repo/seo/json-ld/article";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 const decodeJsonLd = Schema.decodeUnknownSync(
   Schema.fromJsonString(ArticleJsonLdSchema)
@@ -156,10 +156,11 @@ describe("article JSON-LD", () => {
       ],
     });
 
-    expect(article.author?.map((author) => author.name)).toStrictEqual([
-      "Nabil Akbarazzima Fatih",
-      "Nur Sita Utami",
-    ]);
+    expect(
+      article.author === undefined
+        ? undefined
+        : Arr.map(article.author, (author) => author.name)
+    ).toStrictEqual(["Nabil Akbarazzima Fatih", "Nur Sita Utami"]);
   });
 
   it.each<
@@ -215,7 +216,7 @@ describe("article JSON-LD", () => {
         article,
         {
           ...breadcrumb,
-          itemListElement: breadcrumb.itemListElement.map((item) => ({
+          itemListElement: Arr.map(breadcrumb.itemListElement, (item) => ({
             ...item,
             position: item.position + 1,
           })),
@@ -229,9 +230,10 @@ describe("article JSON-LD", () => {
         article,
         {
           ...breadcrumb,
-          itemListElement: breadcrumb.itemListElement
-            .slice(-1)
-            .map((item) => ({ ...item, position: 1 })),
+          itemListElement: Arr.map(
+            breadcrumb.itemListElement.slice(-1),
+            (item) => ({ ...item, position: 1 })
+          ),
         },
       ],
       "Expected a value with a length of at least 2",
@@ -242,7 +244,7 @@ describe("article JSON-LD", () => {
         article,
         {
           ...breadcrumb,
-          itemListElement: breadcrumb.itemListElement.map((item) => ({
+          itemListElement: Arr.map(breadcrumb.itemListElement, (item) => ({
             ...item,
             item: "https://nakafa.com/id",
           })),

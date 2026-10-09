@@ -6,6 +6,7 @@ import {
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
 import {
+  Array as Arr,
   Effect,
   HashSet,
   MutableHashMap,
@@ -52,14 +53,16 @@ export function usePromptInputFiles({
   const fileIdsRef = useRef(HashSet.empty<string>());
   useLayoutEffect(() => {
     fileCountRef.current = files.length;
-    fileIdsRef.current = HashSet.fromIterable(files.map((file) => file.id));
+    fileIdsRef.current = HashSet.fromIterable(
+      Arr.map(files, (file) => file.id)
+    );
   }, [files]);
   const openFileDialogLocal = useCallback(() => {
     inputRef.current?.click();
   }, [inputRef]);
   const addLocal = useCallback(
     (selectedFiles: readonly File[]) => {
-      const next = selectedFiles.map((file): PromptInputFile => {
+      const next = Arr.map(selectedFiles, (file): PromptInputFile => {
         const id = nanoid();
         const url = URL.createObjectURL(file);
         MutableHashMap.set(localUrls, id, url);
@@ -85,7 +88,10 @@ export function usePromptInputFiles({
         URL.revokeObjectURL(url.value);
         MutableHashMap.remove(localUrls, id);
       }
-      const nextItems = localItemsRef.current.filter((file) => file.id !== id);
+      const nextItems = Arr.filter(
+        localItemsRef.current,
+        (file) => file.id !== id
+      );
       localItemsRef.current = nextItems;
       setItems(nextItems);
     },
@@ -147,7 +153,7 @@ export function usePromptInputFiles({
     // Activity preserves the draft while releasing effects. Restore preview
     // resources before the preserved input becomes visible again.
     let restored = false;
-    const next = localItemsRef.current.map((item) => {
+    const next = Arr.map(localItemsRef.current, (item) => {
       if (MutableHashMap.has(localUrls, item.id)) {
         return item;
       }

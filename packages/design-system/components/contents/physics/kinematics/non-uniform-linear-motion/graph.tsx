@@ -16,14 +16,14 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 const MAX_TIME = getAxisMaximum(
-  Math.max(...GLBB_SCENARIOS.map((scenario) => scenario.duration)),
+  Math.max(...Arr.map(GLBB_SCENARIOS, (scenario) => scenario.duration)),
   1
 );
 const MAX_OBSERVED_VELOCITY = Math.max(
-  ...GLBB_SCENARIOS.flatMap((scenario) => [
+  ...Arr.flatMap(GLBB_SCENARIOS, (scenario) => [
     scenario.initialVelocity,
     getFinalVelocity(scenario),
   ])

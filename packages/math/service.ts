@@ -3,7 +3,7 @@ import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
 import type { MathRequest } from "@repo/math/schema/request";
 import { type MathResult, MathResultSchema } from "@repo/math/schema/result";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Context, Effect, Layer, Result, Schema } from "effect";
+import { Array as Arr, Context, Effect, Layer, Result, Schema } from "effect";
 import {
   HttpClient,
   HttpClientRequest,
@@ -123,5 +123,8 @@ const readResponseError = Effect.fn("Math.readResponseError")(function* (
   if (typeof decoded.success.detail === "string") {
     return decoded.success.detail;
   }
-  return decoded.success.detail.map((issue) => issue.msg).join(" ");
+  return Arr.join(
+    Arr.map(decoded.success.detail, (issue) => issue.msg),
+    " "
+  );
 });

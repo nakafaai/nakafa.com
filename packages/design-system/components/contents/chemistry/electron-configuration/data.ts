@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
@@ -67,7 +67,8 @@ const ELECTRON_CONFIGURATION_SHELLS = [
 export function isElectronConfigurationSampleId(
   value: string
 ): value is ElectronConfigurationSampleId {
-  return ELECTRON_CONFIGURATION_SAMPLE_IDS.some(
+  return Arr.some(
+    ELECTRON_CONFIGURATION_SAMPLE_IDS,
     (sampleId) => sampleId === value
   );
 }
@@ -84,7 +85,7 @@ export function getSimpleShellConfiguration(atomicNumber: number) {
 
   let remainingElectrons = atomicNumber;
 
-  const shellConfiguration = ELECTRON_CONFIGURATION_SHELLS.map((shell) => {
+  const shellConfiguration = Arr.map(ELECTRON_CONFIGURATION_SHELLS, (shell) => {
     const electronCount = Math.min(remainingElectrons, shell.patternLimit);
     remainingElectrons -= electronCount;
 

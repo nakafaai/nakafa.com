@@ -15,6 +15,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 interface ReadingRoomProblemProps {
@@ -82,7 +83,7 @@ export function ReadingRoomProblem({
             >
               {heightLabel}
             </ThreeLabel>
-            {CORNERS.map(({ id, x, y, dx, dy, color }) => {
+            {Arr.map(CORNERS, ({ id, x, y, dx, dy, color }) => {
               const insideX = x + dx * CORNER_SIDE;
               const insideY = y + dy * CORNER_SIDE;
               const vertices = [

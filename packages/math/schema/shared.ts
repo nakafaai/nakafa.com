@@ -1,4 +1,4 @@
-import { Array as Arr, HashSet, Schema, Struct } from "effect";
+import { Array as Arr, HashSet, pipe, Schema, Struct } from "effect";
 
 const expressionReservedNames = HashSet.make(
   "Abs",
@@ -30,10 +30,11 @@ function describedNonEmptyString(description: string) {
 }
 /** Returns variable-looking identifiers while ignoring supported functions. */
 export function getExpressionSymbols(expression: string) {
-  return Arr.dedupe(
-    [...expression.matchAll(symbolPattern)]
-      .map(([symbol]) => symbol)
-      .filter((symbol) => !HashSet.has(expressionReservedNames, symbol))
+  return pipe(
+    [...expression.matchAll(symbolPattern)],
+    Arr.map(([symbol]) => symbol),
+    Arr.filter((symbol) => !HashSet.has(expressionReservedNames, symbol)),
+    Arr.dedupe
   );
 }
 export const expressionInputSchema = describedNonEmptyString(

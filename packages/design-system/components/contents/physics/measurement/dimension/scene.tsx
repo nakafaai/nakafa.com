@@ -11,6 +11,7 @@ import {
 } from "@repo/design-system/components/contents/physics/measurement/dimension/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Array as Arr } from "effect";
 import { DoubleSide } from "three";
 
 const GRAIN_LINES = [-0.42, -0.14, 0.18, 0.46];
@@ -89,7 +90,7 @@ function ReferenceBlock({ colors }: { colors: SceneColors }) {
 function MeasurementBlockDetails({ colors }: { colors: SceneColors }) {
   return (
     <group>
-      {GRAIN_LINES.map((z) => (
+      {Arr.map(GRAIN_LINES, (z) => (
         <mesh
           key={`grain-${z}`}
           position={[0, DETAIL_SURFACE_Y, z]}
@@ -101,8 +102,8 @@ function MeasurementBlockDetails({ colors }: { colors: SceneColors }) {
         </mesh>
       ))}
 
-      {[-1, 1].map((xSide) =>
-        [-1, 1].map((zSide) => (
+      {Arr.map([-1, 1], (xSide) =>
+        Arr.map([-1, 1], (zSide) => (
           <mesh
             key={`corner-${xSide}-${zSide}`}
             position={[
@@ -137,7 +138,7 @@ function LengthLayer({ colors }: { colors: SceneColors }) {
         <meshStandardMaterial color={colors.edge} roughness={0.42} />
       </mesh>
 
-      {[-1, 1].map((side) => (
+      {Arr.map([-1, 1], (side) => (
         <mesh
           key={`length-cap-${side}`}
           position={[

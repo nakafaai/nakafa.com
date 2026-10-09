@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { Array as Arr } from "effect";
 
 const rawLine = {
   color: "blue",
@@ -81,7 +82,8 @@ describe("authored mathematical lines", () => {
     expect(lines[6]).toMatchObject({ smooth: false });
     expect(lines.slice(7)).toHaveLength(12);
     expect(lines.slice(7)).toSatisfy((cuboidLines: typeof lines) =>
-      cuboidLines.every(
+      Arr.every(
+        cuboidLines,
         (line) =>
           line.color === "slategray" &&
           line.points.length === 2 &&

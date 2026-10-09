@@ -2,6 +2,7 @@
 
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import { DnaDoubleHelix } from "@repo/design-system/components/contents/biology/parts";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Vector3 } from "three";
 
@@ -104,8 +105,11 @@ export function CoccusClusterModel({
 }) {
   return (
     <group scale={scale}>
-      {COCCUS_CLUSTER.map((position, index) => (
-        <group key={position.join("-")} position={position}>
+      {Arr.map(COCCUS_CLUSTER, (position, index) => (
+        <group
+          key={Arr.join(Arr.map(position, String), "-")}
+          position={position}
+        >
           <mesh>
             <sphereGeometry args={[0.17, 24, 18]} />
             <meshStandardMaterial color={colors.microbe} roughness={0.82} />
@@ -152,8 +156,11 @@ export function SpirillumBacteriumModel({
         radius={0.102}
         transparent
       />
-      {SPIRILLUM_SURFACE_GRAINS.map((position) => (
-        <mesh key={position.join("-")} position={position}>
+      {Arr.map(SPIRILLUM_SURFACE_GRAINS, (position) => (
+        <mesh
+          key={Arr.join(Arr.map(position, String), "-")}
+          position={position}
+        >
           <sphereGeometry args={[0.026, 9, 7]} />
           <meshStandardMaterial color={colors.spore} roughness={0.78} />
         </mesh>
@@ -216,9 +223,9 @@ export function BacillusBacteriumModel({
           />
         </mesh>
       ) : null}
-      {BACILLUS_SURFACE_SIDES.map((side) => (
+      {Arr.map(BACILLUS_SURFACE_SIDES, (side) => (
         <group key={`bacillus-surface-${side}`} scale={[1, 1, side]}>
-          {BACILLUS_SURFACE_GRAINS.map((grain) => (
+          {Arr.map(BACILLUS_SURFACE_GRAINS, (grain) => (
             <mesh key={grain.id} position={grain.position} scale={grain.scale}>
               <sphereGeometry args={[0.026, 10, 8]} />
               <meshStandardMaterial color={colors.microbe} roughness={0.88} />
@@ -228,9 +235,9 @@ export function BacillusBacteriumModel({
       ))}
       {showInterior ? <BacillusInterior colors={colors} /> : null}
       {showPili
-        ? BACILLUS_SURFACE_SIDES.map((side) => (
+        ? Arr.map(BACILLUS_SURFACE_SIDES, (side) => (
             <group key={`bacillus-pili-${side}`} scale={[1, 1, side]}>
-              {BACILLUS_PILI.map((pilus) => (
+              {Arr.map(BACILLUS_PILI, (pilus) => (
                 <BacterialAppendage
                   color={colors.microbe}
                   key={pilus.id}
@@ -242,7 +249,7 @@ export function BacillusBacteriumModel({
           ))
         : null}
       {showFlagellum
-        ? BACILLUS_SURFACE_SIDES.map((side) => (
+        ? Arr.map(BACILLUS_SURFACE_SIDES, (side) => (
             <group key={`bacillus-flagellum-${side}`} scale={[1, 1, side]}>
               <BacterialAppendage
                 color={colors.microbe}
@@ -271,7 +278,8 @@ function BacterialAppendage({
   transparent?: boolean;
 }) {
   const curve = useMemo(
-    () => new CatmullRomCurve3(points.map((point) => new Vector3(...point))),
+    () =>
+      new CatmullRomCurve3(Arr.map(points, (point) => new Vector3(...point))),
     [points]
   );
 
@@ -313,7 +321,7 @@ function BacillusInterior({
         <torusGeometry args={[0.08, 0.009, 8, 40]} />
         <meshStandardMaterial color={colors.genome} roughness={0.74} />
       </mesh>
-      {BACILLUS_RIBOSOMES.map((ribosome) => (
+      {Arr.map(BACILLUS_RIBOSOMES, (ribosome) => (
         <mesh
           key={ribosome.id}
           position={ribosome.position}

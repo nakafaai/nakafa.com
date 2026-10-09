@@ -18,6 +18,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 const VALUE_AXIS_PADDING_RATIO = 0.12;
@@ -74,7 +75,7 @@ export function ElectabilityChart({
       value: 16,
     },
   ];
-  const maxValue = Math.max(...electabilityData.map(({ value }) => value));
+  const maxValue = Math.max(...Arr.map(electabilityData, ({ value }) => value));
   const valueAxisMax = Math.ceil(maxValue * (1 + VALUE_AXIS_PADDING_RATIO));
 
   const chartConfig = {

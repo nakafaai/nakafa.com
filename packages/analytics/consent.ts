@@ -1,4 +1,4 @@
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** Consent categories currently presented by Nakafa's privacy controls. */
 export const CONSENT_CATEGORIES = ["analytics"] satisfies readonly [
@@ -148,7 +148,7 @@ export function hasBrowserPrivacySignal({
     return true;
   }
 
-  return doNotTrack.some((signal) => signal === "1" || signal === "yes");
+  return Arr.some(doNotTrack, (signal) => signal === "1" || signal === "yes");
 }
 
 /** Resolves the only analytics state the browser may enforce right now. */

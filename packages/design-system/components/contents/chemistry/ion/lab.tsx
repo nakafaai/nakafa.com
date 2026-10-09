@@ -21,6 +21,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -93,7 +94,7 @@ export function IonLab({ title, description, labels }: IonLabProps) {
           value={selectedSampleId}
           variant="outline"
         >
-          {ION_SAMPLE_IDS.map((sampleId) => {
+          {Arr.map(ION_SAMPLE_IDS, (sampleId) => {
             const sample = ION_SAMPLES[sampleId];
             const ionFormula = `\\mathrm{${sample.symbol}}^{${getChargeMath(sample.charge)}}`;
 

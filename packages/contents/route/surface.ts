@@ -2,7 +2,7 @@ import {
   type AppLocaleCode,
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 type SchemaType<T extends Schema.Constraint> = Schema.Schema.Type<T>;
 type SchemaEncoded<T extends Schema.Constraint> = Schema.Codec.Encoded<T>;
@@ -56,6 +56,7 @@ export function readNamespaceSegment(
   namespace: PublicRouteSurfaceKey,
   locale: AppLocaleCode
 ) {
-  return PUBLIC_ROUTE_SURFACES.find((item) => item.key === namespace)
-    ?.routeSlugs[locale];
+  return Option.getOrUndefined(
+    Arr.findFirst(PUBLIC_ROUTE_SURFACES, (item) => item.key === namespace)
+  )?.routeSlugs[locale];
 }

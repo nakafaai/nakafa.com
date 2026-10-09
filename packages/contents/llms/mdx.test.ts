@@ -4,7 +4,7 @@ import {
   projectMdxForAgentMarkdown,
   readMdxBody,
 } from "@repo/contents/llms/mdx";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 describe("authored MDX body", () => {
   it.effect("omits module metadata while preserving all lesson bytes", () =>
@@ -327,15 +327,18 @@ print("Hello, World!")
     "projects the cooked backslashes rendered by template literal code",
     () =>
       Effect.gen(function* () {
-        const body = [
-          "<CodeBlock",
-          "  data={[{",
-          '    language: "python",',
-          "    code: `>>> 'He said: \"I\\\\'m Bob.\"'",
-          '>>> print("C:\\\\\\\\Users\\\\\\\\Documents")`',
-          "  }]}",
-          "/>",
-        ].join("\n");
+        const body = Arr.join(
+          [
+            "<CodeBlock",
+            "  data={[{",
+            '    language: "python",',
+            "    code: `>>> 'He said: \"I\\\\'m Bob.\"'",
+            '>>> print("C:\\\\\\\\Users\\\\\\\\Documents")`',
+            "  }]}",
+            "/>",
+          ],
+          "\n"
+        );
         const markdown = yield* projectMdxForAgentMarkdown(body);
 
         expect(markdown).toContain(">>> 'He said: \"I\\'m Bob.\"'");

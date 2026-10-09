@@ -21,6 +21,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -72,9 +73,13 @@ export function GrowthChart({ description, title, yAxisLabel }: Props) {
               content={({ content, ...props }) => (
                 <ChartTooltipContent
                   {...props}
-                  payload={props.payload?.filter(
-                    (item) => item.dataKey !== "barValue"
-                  )}
+                  payload={
+                    props.payload &&
+                    Arr.filter(
+                      props.payload,
+                      (item) => item.dataKey !== "barValue"
+                    )
+                  }
                 />
               )}
             />

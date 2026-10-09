@@ -19,6 +19,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -88,7 +89,7 @@ export function AtomSymbolLab({
           value={selectedSampleId}
           variant="outline"
         >
-          {ATOM_SYMBOL_SAMPLE_IDS.map((sampleId) => (
+          {Arr.map(ATOM_SYMBOL_SAMPLE_IDS, (sampleId) => (
             <ToggleGroupItem
               aria-label={labels.samples[sampleId].ariaName}
               key={sampleId}

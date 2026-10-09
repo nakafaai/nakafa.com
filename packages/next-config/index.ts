@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import type { NextConfig } from "next";
 
 const BASE_CONTENT_SECURITY_POLICY = {
@@ -67,26 +68,35 @@ export function createSecurityHeaders({
   return [
     {
       key: "Content-Security-Policy",
-      value: [
-        "default-src 'self'",
-        `script-src ${BASE_CONTENT_SECURITY_POLICY.scriptSrc.join(" ")}`,
-        "style-src 'self' 'unsafe-inline' https://accounts.google.com https://cdn.jsdelivr.net",
+      value: Arr.join(
         [
-          "img-src 'self' blob: data: https: https://*.googleusercontent.com",
-          ...additionalImageSources,
-        ].join(" "),
-        "font-src 'self'",
-        `connect-src ${[
-          ...BASE_CONTENT_SECURITY_POLICY.connectSrc,
-          ...additionalConnectSources,
-        ].join(" ")}`,
-        "frame-src 'self' https://accounts.google.com https://www.youtube-nocookie.com https://www.youtube.com",
-        `media-src ${BASE_CONTENT_SECURITY_POLICY.mediaSrc.join(" ")}`,
-        "frame-ancestors 'none'",
-        "base-uri 'self'",
-        "form-action 'self' https://accounts.google.com",
-        "manifest-src 'self' https://nakafa.com",
-      ].join("; "),
+          "default-src 'self'",
+          `script-src ${Arr.join(BASE_CONTENT_SECURITY_POLICY.scriptSrc, " ")}`,
+          "style-src 'self' 'unsafe-inline' https://accounts.google.com https://cdn.jsdelivr.net",
+          Arr.join(
+            [
+              "img-src 'self' blob: data: https: https://*.googleusercontent.com",
+              ...additionalImageSources,
+            ],
+            " "
+          ),
+          "font-src 'self'",
+          `connect-src ${Arr.join(
+            [
+              ...BASE_CONTENT_SECURITY_POLICY.connectSrc,
+              ...additionalConnectSources,
+            ],
+            " "
+          )}`,
+          "frame-src 'self' https://accounts.google.com https://www.youtube-nocookie.com https://www.youtube.com",
+          `media-src ${Arr.join(BASE_CONTENT_SECURITY_POLICY.mediaSrc, " ")}`,
+          "frame-ancestors 'none'",
+          "base-uri 'self'",
+          "form-action 'self' https://accounts.google.com",
+          "manifest-src 'self' https://nakafa.com",
+        ],
+        "; "
+      ),
     },
     {
       key: "X-Frame-Options",
@@ -106,16 +116,19 @@ export function createSecurityHeaders({
     },
     {
       key: "Permissions-Policy",
-      value: [
-        "camera=()",
-        "microphone=()",
-        "geolocation=()",
-        "payment=()",
-        "usb=()",
-        "magnetometer=()",
-        "gyroscope=()",
-        "sync-xhr=()",
-      ].join(", "),
+      value: Arr.join(
+        [
+          "camera=()",
+          "microphone=()",
+          "geolocation=()",
+          "payment=()",
+          "usb=()",
+          "magnetometer=()",
+          "gyroscope=()",
+          "sync-xhr=()",
+        ],
+        ", "
+      ),
     },
   ];
 }

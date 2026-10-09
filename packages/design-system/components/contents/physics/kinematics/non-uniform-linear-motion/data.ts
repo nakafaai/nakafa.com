@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const GlbbScenarioIdSchema = Schema.Literals([
   "from-rest",
@@ -87,13 +87,14 @@ export const GLBB_SCENARIOS: GlbbScenario[] = [
 const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;
 
 export function getGlbbScenarioById(id: GlbbScenarioId) {
-  return (
-    GLBB_SCENARIOS.find((scenario) => scenario.id === id) ?? GLBB_SCENARIOS[0]
+  return Option.getOrElse(
+    Arr.findFirst(GLBB_SCENARIOS, (scenario) => scenario.id === id),
+    () => GLBB_SCENARIOS[0]
   );
 }
 
 export function isGlbbScenarioId(value: string): value is GlbbScenarioId {
-  return GLBB_SCENARIOS.some((scenario) => scenario.id === value);
+  return Arr.some(GLBB_SCENARIOS, (scenario) => scenario.id === value);
 }
 
 export function getFinalVelocity(scenario: GlbbScenario) {
@@ -109,7 +110,7 @@ export function getGlbbMotionState(id: GlbbScenarioId) {
   const trainStartX = getTrainStartX(worldDisplacement);
   const trackLength = getTrackLength(worldDisplacement);
   const timeSamples = getTimeSamples(scenario.duration);
-  const positionSamples = timeSamples.map((time) =>
+  const positionSamples = Arr.map(timeSamples, (time) =>
     getGlbbPositionSample(scenario, time, trainStartX)
   );
 

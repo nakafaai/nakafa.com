@@ -34,6 +34,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
@@ -113,7 +114,7 @@ export function UniformLinearMotionLab({
           value={String(speed)}
           variant="outline"
         >
-          {UNIFORM_LINEAR_MOTION_SPEEDS.map((speedOption) => (
+          {Arr.map(UNIFORM_LINEAR_MOTION_SPEEDS, (speedOption) => (
             <ToggleGroupItem key={speedOption} value={String(speedOption)}>
               <InlineMath math={formatSpeedMath(speedOption)} />
             </ToggleGroupItem>
@@ -159,7 +160,7 @@ export function UniformLinearMotionLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          {facts.map((fact) => (
+          {Arr.map(facts, (fact) => (
             <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
               <dt className="flex items-center gap-2 text-muted-foreground">
                 {fact.indicatorColor ? (
@@ -200,7 +201,7 @@ function UniformLinearMotionScene({
           roughness={0.44}
         />
       </mesh>
-      {motion.samples.map((sample) => (
+      {Arr.map(motion.samples, (sample) => (
         <mesh key={sample.time} position={[sample.x, POSITION_MARK_Y, TRACK_Z]}>
           <cylinderGeometry args={[0.13, 0.13, 0.12, 24]} />
           <meshStandardMaterial
@@ -281,7 +282,7 @@ function Road({ roadLength }: { roadLength: number }) {
         />
       </mesh>
 
-      {stripePositions.map((x) => (
+      {Arr.map(stripePositions, (x) => (
         <mesh key={x} position={[x, 0.035, 0]}>
           <boxGeometry
             args={[

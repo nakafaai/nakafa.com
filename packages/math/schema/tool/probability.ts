@@ -67,7 +67,8 @@ const probabilityDistributionParameters = {
 >;
 /** Checks that the selected named distribution receives all required parameters. */
 function hasRequiredProbabilityParameters(value: ProbabilityBaseInput) {
-  return probabilityDistributionParameters[value.distribution].every(
+  return Arr.every(
+    probabilityDistributionParameters[value.distribution],
     (parameter) => Boolean(value.parameters[parameter])
   );
 }

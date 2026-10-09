@@ -21,6 +21,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -84,7 +85,7 @@ function AccelerationCaseToggle({
       value={caseId}
       variant="outline"
     >
-      {ACCELERATION_CASES.map((item) => (
+      {Arr.map(ACCELERATION_CASES, (item) => (
         <ToggleGroupItem key={item.id} value={item.id}>
           {labels.scenarioNames[item.id]}
         </ToggleGroupItem>

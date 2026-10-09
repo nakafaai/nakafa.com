@@ -8,6 +8,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
@@ -115,7 +116,7 @@ export function NumberLine({
   title,
   description,
 }: NumberLineProps) {
-  const allValues = segments.flatMap(getFiniteSegmentValues);
+  const allValues = Arr.flatMap(segments, getFiniteSegmentValues);
 
   const rangeMin = min ?? (allValues.length > 0 ? Math.min(...allValues) : -10);
   const rangeMax = max ?? (allValues.length > 0 ? Math.max(...allValues) : 10);
@@ -136,7 +137,7 @@ export function NumberLine({
     return ((value - paddedMin) / paddedRange) * 100;
   };
 
-  const processedSegments = segments.map((segment, index) => {
+  const processedSegments = Arr.map(segments, (segment, index) => {
     const startPos = getPosition(segment.start);
     const endPos = getPosition(segment.end);
     const width = endPos - startPos;
@@ -169,7 +170,7 @@ export function NumberLine({
       <VisualCardBody>
         <div className="w-full">
           <div className="relative h-20 w-full">
-            {processedSegments.map((segment) => (
+            {Arr.map(processedSegments, (segment) => (
               <div key={`bg-${segment.start}-${segment.end}-${segment.index}`}>
                 {!!segment.shaded && (
                   <div
@@ -191,7 +192,7 @@ export function NumberLine({
 
             <div className="absolute top-1/2 h-px w-full bg-foreground" />
 
-            {processedSegments.map((segment) => (
+            {Arr.map(processedSegments, (segment) => (
               <div
                 key={`label-${segment.start}-${segment.end}-${segment.index}`}
               >
@@ -206,7 +207,7 @@ export function NumberLine({
               </div>
             ))}
 
-            {processedSegments.map((segment) => (
+            {Arr.map(processedSegments, (segment) => (
               <div
                 key={`points-${segment.start}-${segment.end}-${segment.index}`}
               >

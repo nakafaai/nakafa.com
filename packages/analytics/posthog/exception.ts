@@ -1,4 +1,4 @@
-import { Predicate, Schema } from "effect";
+import { Array as Arr, Predicate, Schema } from "effect";
 
 const shortTextSchema = Schema.String.check(Schema.isMaxLength(128));
 const identityTextSchema = Schema.String.check(Schema.isMaxLength(512));
@@ -89,10 +89,11 @@ export function operationalRequestProperties(requestUserAgent?: string): {
 function deriveOperationalExceptionName(
   properties: OperationalExceptionProperties
 ) {
-  const refinements = [properties.operation, properties.error_location].filter(
+  const refinements = Arr.filter(
+    [properties.operation, properties.error_location],
     Predicate.isNotUndefined
   );
-  const scope = [properties.source, ...refinements].join(".");
+  const scope = Arr.join([properties.source, ...refinements], ".");
   return `${operationalExceptionName}(${scope})`;
 }
 
@@ -109,12 +110,12 @@ export function createOperationalException(
     return operationalError;
   }
 
-  const frames = error.stack
-    .split("\n")
-    .filter((line) => stackFramePattern.test(line));
-  operationalError.stack = [
-    `${name}: ${operationalExceptionMessage}`,
-    ...frames,
-  ].join("\n");
+  const frames = Arr.filter(error.stack.split("\n"), (line) =>
+    stackFramePattern.test(line)
+  );
+  operationalError.stack = Arr.join(
+    [`${name}: ${operationalExceptionMessage}`, ...frames],
+    "\n"
+  );
   return operationalError;
 }

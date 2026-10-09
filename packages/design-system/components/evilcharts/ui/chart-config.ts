@@ -1,6 +1,12 @@
 import type { ChartContainerProps } from "@repo/design-system/components/evilcharts/ui/chart";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
-import { Predicate, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  MutableList,
+  Predicate,
+  Record as Rec,
+  Schema,
+} from "effect";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -32,7 +38,7 @@ function isThemeKey(key: string): key is ThemeKey {
   return key in THEMES;
 }
 
-const VALID_THEME_KEYS = Rec.keys(THEMES).filter(isThemeKey);
+const VALID_THEME_KEYS = Arr.filter(Rec.keys(THEMES), isThemeKey);
 const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/;
 
 export type ChartConfig = ChartContainerProps["config"];
@@ -43,13 +49,14 @@ function validateChartConfigColors(config: ChartConfigValidationInput): void {
     const { colors } = value;
 
     if (colors) {
-      const hasValidThemeKey = VALID_THEME_KEYS.some(
+      const hasValidThemeKey = Arr.some(
+        VALID_THEME_KEYS,
         (themeKey) => themeKey in colors
       );
 
       if (!hasValidThemeKey) {
         throw new Error(
-          `[EvilCharts] Invalid chart config for "${key}": colors object must have at least one theme key (${VALID_THEME_KEYS.join(", ")}). Received empty object or invalid keys.`
+          `[EvilCharts] Invalid chart config for "${key}": colors object must have at least one theme key (${Arr.join(VALID_THEME_KEYS, ", ")}). Received empty object or invalid keys.`
         );
       }
     }
@@ -65,7 +72,7 @@ function distributeColors(colorsArray: string[], maxCount: number): string[] {
     return colorsArray.slice(0, maxCount);
   }
 
-  const result: string[] = [];
+  const result = MutableList.make<string>();
   const baseSlots = Math.floor(maxCount / availableCount);
   const extraSlots = maxCount % availableCount;
 
@@ -75,23 +82,26 @@ function distributeColors(colorsArray: string[], maxCount: number): string[] {
     const isExtraColor = colorIndex >= availableCount - extraSlots;
     const slotsForThisColor = baseSlots + (isExtraColor ? 1 : 0);
     for (let slot = 0; slot < slotsForThisColor; slot += 1) {
-      result.push(colorsArray[colorIndex]);
+      MutableList.append(result, colorsArray[colorIndex]);
     }
   }
 
-  return result;
+  return MutableList.toArray(result);
 }
 
 /** Converts a chart series key into a stable CSS and SVG identifier suffix. */
 function getChartKeySuffix(key: string) {
-  return Array.from(key, (character) => {
-    if (CHART_KEY_SAFE_CHAR_PATTERN.test(character)) {
-      return character;
-    }
+  return Arr.join(
+    Array.from(key, (character) => {
+      if (CHART_KEY_SAFE_CHAR_PATTERN.test(character)) {
+        return character;
+      }
 
-    const codePoint = Number(character.codePointAt(0));
-    return `_${codePoint.toString(16)}_`;
-  }).join("");
+      const codePoint = Number(character.codePointAt(0));
+      return `_${codePoint.toString(16)}_`;
+    }),
+    ""
+  );
 }
 
 /** Returns the scoped CSS custom property name for one chart color stop. */
@@ -195,7 +205,10 @@ function getColorsCount(config: ChartConfig[string]): number {
     return 1;
   }
 
-  const counts = VALID_THEME_KEYS.map((theme) => colors[theme]?.length ?? 0);
+  const counts = Arr.map(
+    VALID_THEME_KEYS,
+    (theme) => colors[theme]?.length ?? 0
+  );
   return Math.max(...counts, 1);
 }
 

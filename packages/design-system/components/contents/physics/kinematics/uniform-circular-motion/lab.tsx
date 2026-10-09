@@ -35,6 +35,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { DoubleSide, type Group } from "three";
@@ -93,7 +94,7 @@ export function UniformCircularMotionLab({
           value={String(period)}
           variant="outline"
         >
-          {UNIFORM_CIRCULAR_MOTION_PERIODS.map((periodOption) => (
+          {Arr.map(UNIFORM_CIRCULAR_MOTION_PERIODS, (periodOption) => (
             <ToggleGroupItem key={periodOption} value={String(periodOption)}>
               <InlineMath math={`T=${formatPeriodMath(periodOption)}`} />
             </ToggleGroupItem>
@@ -222,7 +223,7 @@ function CircularTrack() {
         />
       </mesh>
 
-      {markerPositions.map(({ angle, x, z }) => (
+      {Arr.map(markerPositions, ({ angle, x, z }) => (
         <mesh
           key={`${x}-${z}`}
           position={[x, 0.035, z]}

@@ -15,6 +15,7 @@ import {
 import type { SubatomicParticlePropertiesLabProps } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Vector3 } from "three";
 
@@ -162,7 +163,7 @@ function ChargeScene({
       <Line color={colors.neutron} lineWidth={3} points={NEUTRON_PATH} />
       <Line color={colors.protonPath} lineWidth={5} points={PROTON_PATH} />
 
-      {CHARGE_PARTICLES.map((particle) => (
+      {Arr.map(CHARGE_PARTICLES, (particle) => (
         <Particle
           color={colors[particle.color]}
           key={particle.math}
@@ -210,7 +211,7 @@ function MassScene({
 }) {
   return (
     <group position={[0, -0.15, 0]}>
-      {MASS_BARS.map((bar) => (
+      {Arr.map(MASS_BARS, (bar) => (
         <group key={bar.label} position={[bar.x, 0, 0]}>
           <RoundedBox
             args={[0.52, bar.height, 0.52]}
@@ -260,7 +261,7 @@ function LocationScene({
         rotation={[Math.PI / 2.5, 0, Math.PI / 3.2]}
       />
 
-      {NUCLEUS_PARTICLES.map((particle) => (
+      {Arr.map(NUCLEUS_PARTICLES, (particle) => (
         <Particle
           color={colors[particle.color]}
           key={`${particle.color}-${particle.position.x}-${particle.position.y}`}
@@ -271,7 +272,7 @@ function LocationScene({
         />
       ))}
 
-      {ELECTRON_POSITIONS.map((position) => (
+      {Arr.map(ELECTRON_POSITIONS, (position) => (
         <Particle
           color={colors.electron}
           key={`electron-${position.x}-${position.y}`}

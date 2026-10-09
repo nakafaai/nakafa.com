@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 export const GROUP_ONE_FOCUS_ID = "group-one";
 export const PERIOD_THREE_FOCUS_ID = "period-three";
@@ -162,15 +162,15 @@ export type PeriodicSeriesRowKey =
  * Finds the learning category used for one element tile.
  */
 function getElementCategory(symbol: string) {
-  const category = ELEMENT_CATEGORY_GROUPS.find(({ symbols }) =>
+  const category = Arr.findFirst(ELEMENT_CATEGORY_GROUPS, ({ symbols }) =>
     symbols.split(" ").includes(symbol)
   );
 
-  if (!category) {
+  if (Option.isNone(category)) {
     throw new Error(`Missing periodic-table category for ${symbol}.`);
   }
 
-  return category.id;
+  return category.value.id;
 }
 
 /**
@@ -220,17 +220,21 @@ function parseSeriesEntry(source: string) {
   };
 }
 
-export const MAIN_PERIODIC_TABLE_ROWS = MAIN_PERIODIC_TABLE_SOURCE.map(
+export const MAIN_PERIODIC_TABLE_ROWS = Arr.map(
+  MAIN_PERIODIC_TABLE_SOURCE,
   (row) => ({
     period: row.period,
-    entries: row.entries.split(" ").map(parseMainEntry),
+    entries: Arr.map(row.entries.split(" "), parseMainEntry),
   })
 );
 
-export const PERIODIC_SERIES_ROWS = PERIODIC_SERIES_ROW_SOURCE.map((row) => ({
-  key: row.key,
-  entries: row.entries.split(" ").map(parseSeriesEntry),
-}));
+export const PERIODIC_SERIES_ROWS = Arr.map(
+  PERIODIC_SERIES_ROW_SOURCE,
+  (row) => ({
+    key: row.key,
+    entries: Arr.map(row.entries.split(" "), parseSeriesEntry),
+  })
+);
 
 export type PeriodicElementEntry =
   (typeof MAIN_PERIODIC_TABLE_ROWS)[number]["entries"][number];
@@ -289,7 +293,10 @@ export type ModernPeriodicTableSceneLabels =
 export function isModernPeriodicTableFocusId(
   value: string
 ): value is ModernPeriodicTableFocusId {
-  return MODERN_PERIODIC_TABLE_FOCUS_IDS.some((focusId) => focusId === value);
+  return Arr.some(
+    MODERN_PERIODIC_TABLE_FOCUS_IDS,
+    (focusId) => focusId === value
+  );
 }
 
 export type ModernPeriodicTableSceneColors = ReturnType<

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "analyze": "next experimental-analyze",
-    "build": "pnpm verify:featured-renderer && tsx scripts/build/main.ts next build",
+    "build": "pnpm verify:featured-renderer && tsx scripts/build/main.ts next build --experimental-build-mode compile && tsx scripts/build/main.ts next build --experimental-build-mode generate",
     "build:vercel": "pnpm --dir ../../packages/backend run deploy --yes --typecheck enable && pnpm --dir ../.. run build --filter=www",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "portless run --name nakafa next dev",
@@ -32,7 +32,7 @@
     "@hugeicons/react": "^1.1.10",
     "@mantine/hooks": "^9.7.1",
     "@mdx-js/mdx": "3.1.1",
-    "@nakafa/aksara-contracts": "0.46.0",
+    "@nakafa/aksara-contracts": "0.47.0",
     "@paper-design/shaders-react": "^0.0.81",
     "@repo/analytics": "workspace:*",
     "@repo/backend": "workspace:*",

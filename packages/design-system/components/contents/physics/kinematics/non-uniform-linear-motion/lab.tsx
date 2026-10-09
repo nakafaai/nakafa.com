@@ -36,6 +36,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
@@ -91,7 +92,7 @@ export function NonUniformLinearMotionLab({
           value={scenarioId}
           variant="outline"
         >
-          {GLBB_SCENARIOS.map((scenario) => (
+          {Arr.map(GLBB_SCENARIOS, (scenario) => (
             <ToggleGroupItem key={scenario.id} value={scenario.id}>
               {labels.scenarioNames[scenario.id]}
             </ToggleGroupItem>
@@ -265,7 +266,7 @@ function RailTrack({ trackLength }: { trackLength: number }) {
         <meshStandardMaterial color={TRACK_COLOR} roughness={0.8} />
       </mesh>
 
-      {[-1, 1].map((side) => (
+      {Arr.map([-1, 1], (side) => (
         <mesh
           key={side}
           position={[0, 0.025, (side * GLBB_SCENE.railGap) / 2]}
@@ -282,7 +283,7 @@ function RailTrack({ trackLength }: { trackLength: number }) {
         </mesh>
       ))}
 
-      {sleeperPositions.map((x) => (
+      {Arr.map(sleeperPositions, (x) => (
         <mesh key={x} position={[x, -0.005, 0]} receiveShadow>
           <boxGeometry
             args={[
@@ -318,7 +319,7 @@ function PositionMarkers({ motion }: { motion: GlbbMotionState }) {
         </mesh>
       ) : null}
 
-      {motion.positionSamples.map((sample) => (
+      {Arr.map(motion.positionSamples, (sample) => (
         <mesh
           key={sample.time}
           position={[sample.x, 0.075, GLBB_SCENE.markerSideOffset]}

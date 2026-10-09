@@ -11,6 +11,7 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
 
@@ -150,7 +151,7 @@ function Trajectory({ motion }: { motion: ParabolicMotionState }) {
 function GhostBalls({ motion }: { motion: ParabolicMotionState }) {
   return (
     <group>
-      {motion.ghostTimes.map((time) => {
+      {Arr.map(motion.ghostTimes, (time) => {
         const point = getProjectilePoint(motion, time);
         const progress = time / motion.flightTime;
         const opacity = 0.18 + progress * 0.12;

@@ -77,7 +77,7 @@ export const readMdxBody = Effect.fn("contents.llms.mdx.body")(function* (
 ) {
   const tree = yield* parseMdxTree(source);
   let body = source;
-  for (const node of [...tree.children].reverse()) {
+  for (const node of Arr.reverse(tree.children)) {
     if (node.type !== "mdxjsEsm") {
       continue;
     }
@@ -96,7 +96,7 @@ export const projectMdxForAgentMarkdown = Effect.fn(
 )(function* (body: string) {
   const tree = yield* parseMdxTree(body);
   return yield* Effect.try({
-    try: () => cleanAgentMarkdown(renderChildren(tree, body).join("\n\n")),
+    try: () => cleanAgentMarkdown(Arr.join(renderChildren(tree, body), "\n\n")),
     catch: makeMdxAgentProjectionError,
   });
 });
@@ -133,7 +133,7 @@ function renderNode(node: RootContent, source: string): string {
 
 /** Renders a parent node by preserving only visible child markdown rows. */
 function renderChildren(node: Parent, source: string): string[] {
-  return node.children.flatMap((child) => {
+  return Arr.flatMap(node.children, (child) => {
     const renderedChild = renderNode(child, source).trim();
 
     return renderedChild ? [renderedChild] : [];
@@ -148,7 +148,7 @@ function renderMdxElement(
   const { name } = node;
 
   if (!name) {
-    return renderChildren(node, source).join("\n\n");
+    return Arr.join(renderChildren(node, source), "\n\n");
   }
 
   const { attributes } = node;
@@ -191,28 +191,36 @@ function renderTriangle(
   );
   const initialAngle = readTriangleAngle(attributes);
   if (Option.isNone(initialAngle)) {
-    rows.push("Initial trigonometric values require a static numeric angle.");
-    return rows.join("\n");
+    return Arr.join(
+      Arr.append(
+        rows,
+        "Initial trigonometric values require a static numeric angle."
+      ),
+      "\n"
+    );
   }
 
   const angle = initialAngle.value;
   const tangent = getTan(angle);
-  rows.push("Initial interactive values (rounded to two decimal places):");
-  rows.push(
-    `Sin (${angle}°) = ${getSin(angle).toFixed(2)} Cos (${angle}°) = ${getCos(angle).toFixed(2)} Tan (${angle}°) = ${Number.isFinite(tangent) ? tangent.toFixed(2) : "undefined"}`
+  return Arr.join(
+    Arr.appendAll(rows, [
+      "Initial interactive values (rounded to two decimal places):",
+      `Sin (${angle}°) = ${getSin(angle).toFixed(2)} Cos (${angle}°) = ${getCos(angle).toFixed(2)} Tan (${angle}°) = ${Number.isFinite(tangent) ? tangent.toFixed(2) : "undefined"}`,
+      `Angle: ${angle}° = ${getRadians(angle).toFixed(2)} radians.`,
+    ]),
+    "\n"
   );
-  rows.push(`Angle: ${angle}° = ${getRadians(angle).toFixed(2)} radians.`);
-  return rows.join("\n");
 }
 
 /** Reads literal angle syntax without evaluating authored JavaScript. */
 function readTriangleAngle(attributes: MdxAttribute[]) {
-  if (attributes.some(isExpressionAttribute)) {
+  if (Arr.some(attributes, isExpressionAttribute)) {
     return Option.none();
   }
-  const attribute = attributes
-    .filter((candidate) => readAttributeName(candidate) === "angle")
-    .at(-1);
+  const attribute = Arr.filter(
+    attributes,
+    (candidate) => readAttributeName(candidate) === "angle"
+  ).at(-1);
   if (!attribute) {
     return Option.some(ISOSCELES_RIGHT_TRIANGLE_ANGLE);
   }
@@ -261,11 +269,7 @@ function renderMermaid(
     "chart",
   ]);
 
-  rows.push("```mermaid");
-  rows.push(chart);
-  rows.push("```");
-
-  return rows.join("\n");
+  return Arr.join(Arr.appendAll(rows, ["```mermaid", chart, "```"]), "\n");
 }
 
 /** Renders an unknown MDX component as a named component block. */
@@ -275,7 +279,8 @@ function renderGenericComponent(
   node: MdxJsxFlowElement | MdxJsxTextElement,
   source: string
 ) {
-  return renderGenericComponentRows(name, attributes, node, source, []).join(
+  return Arr.join(
+    renderGenericComponentRows(name, attributes, node, source, []),
     "\n"
   );
 }
@@ -288,25 +293,18 @@ function renderGenericComponentRows(
   source: string,
   omittedAttributes: string[]
 ) {
-  const rows = [`Component: ${name}`];
-  const props = attributes.flatMap((attribute) => {
+  const props = Arr.flatMap(attributes, (attribute) => {
     const renderedAttribute = renderAttribute(attribute, omittedAttributes);
 
     return renderedAttribute ? [renderedAttribute] : [];
   });
-  const children = renderChildren(node, source).join("\n\n").trim();
+  const children = Arr.join(renderChildren(node, source), "\n\n").trim();
+  const propRows = props.length > 0 ? ["Props:", ...props] : [];
+  const childRows = children
+    ? ["Children:", limitText(children, COMPONENT_CHILD_LIMIT)]
+    : [];
 
-  if (props.length > 0) {
-    rows.push("Props:");
-    rows.push(...props);
-  }
-
-  if (children) {
-    rows.push("Children:");
-    rows.push(limitText(children, COMPONENT_CHILD_LIMIT));
-  }
-
-  return rows;
+  return [`Component: ${name}`, ...propRows, ...childRows];
 }
 
 /** Formats one MDX attribute row unless the caller intentionally omits it. */

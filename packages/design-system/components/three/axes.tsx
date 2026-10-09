@@ -10,6 +10,7 @@ import {
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
 import { COLORS } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { type ComponentProps, useCallback, useMemo, useRef } from "react";
 import { Frustum, type Group, Matrix4, Vector2, Vector3 } from "three";
 
@@ -205,21 +206,24 @@ export function Axes({
       0,
       origin
     );
-    return [
-      { name: "X", color: COLORS.RED, geometry: geometry.x },
-      { name: "Y", color: COLORS.GREEN, geometry: geometry.y },
-      { name: "Z", color: COLORS.BLUE, geometry: geometry.z },
-    ].map(({ geometry: axis, ...identity }) => ({
-      ...identity,
-      visible: axis.visible && (identity.name !== "Z" || showZAxis),
-      from: new Vector3(axis.from.x, axis.from.y, axis.from.z),
-      to: new Vector3(axis.to.x, axis.to.y, axis.to.z),
-    }));
+    return Arr.map(
+      [
+        { name: "X", color: COLORS.RED, geometry: geometry.x },
+        { name: "Y", color: COLORS.GREEN, geometry: geometry.y },
+        { name: "Z", color: COLORS.BLUE, geometry: geometry.z },
+      ],
+      ({ geometry: axis, ...identity }) => ({
+        ...identity,
+        visible: axis.visible && (identity.name !== "Z" || showZAxis),
+        from: new Vector3(axis.from.x, axis.from.y, axis.from.z),
+        to: new Vector3(axis.to.x, axis.to.y, axis.to.z),
+      })
+    );
   }, [frame, origin, showZAxis, size]);
 
   return (
     <group {...props}>
-      {axes.map((axis) =>
+      {Arr.map(axes, (axis) =>
         axis.visible ? (
           <group key={axis.name}>
             <Line
