@@ -246,6 +246,10 @@ describe("Effect-native rule scopes", () => {
           ])
         ),
         [
+          "apps/www/lib/load.ts async",
+          "packages/backend/confect/test.helpers.ts async",
+          "packages/backend/confect/test.setup.ts async",
+          "packages/backend/confect/users/load.test.ts async",
           "packages/backend/confect/users/load.ts promise",
           "scripts/load.ts promise",
         ]

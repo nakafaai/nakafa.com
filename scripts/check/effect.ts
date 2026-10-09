@@ -13,6 +13,7 @@ import {
 } from "typescript/unstable/ast";
 import type { API } from "typescript/unstable/sync";
 import { assertionCandidates } from "#scripts/check/assertion";
+import { asyncCandidates } from "#scripts/check/async";
 import { symbolTable } from "#scripts/check/convex";
 import { dispatchCandidates } from "#scripts/check/dispatch";
 import { failureCandidates } from "#scripts/check/failure";
@@ -184,6 +185,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
           nativeCandidates(sourceFile, runtime),
           shapeCandidates(file, sourceFile, nodes, runtime),
           assertionCandidates(sourceFile, nodes),
+          asyncCandidates(file, sourceFile, nodes),
           dispatchCandidates(sourceFile, nodes),
           failureCandidates(sourceFile, nodes),
         ]),

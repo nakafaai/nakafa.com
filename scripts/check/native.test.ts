@@ -39,7 +39,13 @@ export const arrow = async () => 1;
         "8 promise",
         "9 promise",
       ]);
-      assert.deepStrictEqual(yield* findings(source), []);
+      assert.deepStrictEqual(yield* findings(source), [
+        "1 async",
+        "2 async",
+        "4 async",
+        "8 async",
+        "9 async",
+      ]);
     })
   );
 

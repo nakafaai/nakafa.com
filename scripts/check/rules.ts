@@ -25,6 +25,7 @@ export const Rule = Schema.Literals([
   "array-mutation",
   "array-search",
   "assertion",
+  "async",
   "clock",
   "console",
   "data-type",
@@ -82,6 +83,11 @@ export const RULES = {
   assertion: {
     message:
       "narrow the value with a Schema or a Predicate from effect instead of an as, angle-bracket, satisfies, or non-null assertion.",
+    scope: "every",
+  },
+  async: {
+    message:
+      "compose the Promise with Effect.fn and Effect.tryPromise from effect instead of an async function, await, or for await.",
     scope: "every",
   },
   clock: {
