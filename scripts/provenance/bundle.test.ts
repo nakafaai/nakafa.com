@@ -2,11 +2,11 @@ import { afterEach, assert, describe, it } from "@effect/vitest";
 import { bundleFromJSON, bundleToJSON } from "@sigstore/bundle";
 import { Array as Arr, Effect } from "effect";
 import {
-  ProvenanceBundleVerifier,
   publisherPolicy,
   SigstoreProvenanceBundleVerifierLive,
-} from "#scripts/github/provenance/bundle";
-import type { PublisherIdentity } from "#scripts/github/provenance/schema";
+} from "#scripts/provenance/bundle";
+import type { PublisherIdentity } from "#scripts/provenance/schema";
+import { ProvenanceBundleVerifier } from "#scripts/provenance/service";
 
 const sigstore = vi.hoisted(() => ({
   verify: vi.fn<(bundle: unknown, options: unknown) => Promise<unknown>>(),

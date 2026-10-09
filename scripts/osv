@@ -57,8 +57,13 @@ if [[ "${osv_actual}" != "${osv_checksum}" ]]; then
   exit 1
 fi
 
+# Every argument names one more lockfile, scanned after the pnpm lockfile.
+lockfile_arguments=("--lockfile=pnpm-lock.yaml")
+for lockfile in "$@"; do
+  lockfile_arguments+=("--lockfile=${lockfile}")
+done
+
 chmod 700 "${osv_binary}"
 "${osv_binary}" scan source \
   --config=osv.toml \
-  --lockfile=pnpm-lock.yaml \
-  --lockfile=apps/cas/uv.lock
+  "${lockfile_arguments[@]}"
