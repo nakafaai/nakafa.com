@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/contentRelease/cursor";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
+  emptyPage,
   validateProjectionPage,
   validatePublicationPage,
 } from "@repo/backend/confect/contentRelease/paging";
@@ -21,15 +22,6 @@ import {
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { hasArticlePublicationCursorPrefix } from "@repo/contents/publication";
 import { Effect } from "effect";
-
-/** Returns a stable empty page when Aksara does not own articles yet. */
-function emptyPage() {
-  return {
-    continueCursor: "",
-    isDone: true,
-    page: [],
-  };
-}
 
 /** Reads newest active articles from one exact category index. */
 export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
