@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
+import { Array as Arr } from "effect";
 import { groupMessageParts } from "@/components/ai/message/group";
 
 type Part = NinaMessage["parts"][number];
@@ -32,10 +33,13 @@ const file: Part = {
 
 /** Reduces groups to their kinds, entry keys, and each answer's trailing keys. */
 function outline(parts: Part[]) {
-  return groupMessageParts(parts).map((group) => ({
-    entries: group.entries.map((entry) =>
+  return Arr.map(groupMessageParts(parts), (group) => ({
+    entries: Arr.map(group.entries, (entry) =>
       entry.type === "answer"
-        ? `${entry.key} > ${entry.trailing.map(({ key }) => key).join(", ")}`
+        ? `${entry.key} > ${Arr.join(
+            Arr.map(entry.trailing, ({ key }) => key),
+            ", "
+          )}`
         : entry.key
     ),
     key: group.key,

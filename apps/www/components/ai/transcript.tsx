@@ -10,7 +10,7 @@ import {
 } from "@repo/design-system/components/ui/scroller";
 import { loadMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
-import { Effect, Fiber } from "effect";
+import { Array as Arr, Effect, Fiber } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { useChat, useChatMessages } from "@/components/ai/chat/context";
@@ -47,7 +47,7 @@ export function NinaTranscript() {
             aria-busy={busy}
             className="mx-auto w-full max-w-3xl p-6"
           >
-            {messages.map((message, index) => (
+            {Arr.map(messages, (message, index) => (
               <MessageScrollerItem
                 key={message.key}
                 messageId={message.key}

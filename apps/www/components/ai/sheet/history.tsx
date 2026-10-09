@@ -20,6 +20,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context";
 import { Authenticated } from "@/components/auth/gate";
@@ -74,7 +75,7 @@ function SheetHistoryContent() {
     <DropdownMenuContent align="end" className="max-h-64 w-72">
       <DropdownMenuGroup>
         <DropdownMenuLabel>{t("recent-chats")}</DropdownMenuLabel>
-        {results.map((chat) => {
+        {Arr.map(results, (chat) => {
           const isPrivate = chat.visibility === "private";
           return (
             <DropdownMenuItem

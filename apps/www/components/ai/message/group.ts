@@ -1,6 +1,6 @@
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { isToolUIPart, type StepStartUIPart, type TextUIPart } from "ai";
-import { MutableHashMap, Option } from "effect";
+import { Array as Arr, MutableHashMap, MutableList, Option } from "effect";
 
 type MessagePart = NinaMessage["parts"][number];
 
@@ -33,6 +33,23 @@ export interface MessageGroup {
   readonly kind: "activity" | "response";
 }
 
+/** An answer entry while its trailing parts are still arriving. */
+interface AnswerBuilder {
+  readonly key: string;
+  readonly part: AnswerPart;
+  readonly trailing: MutableList.MutableList<PartEntry>;
+  readonly type: "answer";
+}
+
+type EntryBuilder = AnswerBuilder | PartEntry;
+
+/** A group while its entries are still arriving. */
+interface GroupBuilder {
+  readonly entries: MutableList.MutableList<EntryBuilder>;
+  readonly key: string;
+  readonly kind: MessageGroup["kind"];
+}
+
 /**
  * Groups a message's parts into activity and response sections in Agent order.
  *
@@ -43,8 +60,10 @@ export interface MessageGroup {
  * has finished pacing and its last lines never push them down.
  */
 export function groupMessageParts(parts: readonly MessagePart[]) {
-  const groups: MessageGroup[] = [];
+  const groups = MutableList.make<GroupBuilder>();
   const counts = MutableHashMap.empty<string, number>();
+  let group: GroupBuilder | undefined;
+  let previous: EntryBuilder | undefined;
   for (const part of parts) {
     if (
       part.type === "step-start" ||
@@ -60,21 +79,37 @@ export function groupMessageParts(parts: readonly MessagePart[]) {
     );
     MutableHashMap.set(counts, part.type, count + 1);
     const key = tool ? part.toolCallId : `${part.type}-${count}`;
-    const entry: MessageEntry =
+    const entry: EntryBuilder =
       part.type === "text"
-        ? { key, part, trailing: [], type: "answer" }
+        ? { key, part, trailing: MutableList.make<PartEntry>(), type: "answer" }
         : { key, part, type: "part" };
-    const group = groups.at(-1);
-    if (group?.kind !== kind) {
-      groups.push({ entries: [entry], key, kind });
-      continue;
+    if (group === undefined || group.kind !== kind) {
+      group = { entries: MutableList.make<EntryBuilder>(), key, kind };
+      MutableList.append(groups, group);
+      previous = undefined;
     }
-    const previous = group.entries.at(-1);
     if (entry.type === "part" && previous?.type === "answer") {
-      previous.trailing.push(entry);
+      MutableList.append(previous.trailing, entry);
       continue;
     }
-    group.entries.push(entry);
+    MutableList.append(group.entries, entry);
+    previous = entry;
   }
-  return groups;
+  return Arr.map(MutableList.toArray(groups), (builder) => ({
+    entries: Arr.map(MutableList.toArray(builder.entries), finishEntry),
+    key: builder.key,
+    kind: builder.kind,
+  }));
+}
+
+/** Converts an entry's builder into the shape the view reads. */
+function finishEntry(entry: EntryBuilder): MessageEntry {
+  return entry.type === "part"
+    ? entry
+    : {
+        key: entry.key,
+        part: entry.part,
+        trailing: MutableList.toArray(entry.trailing),
+        type: "answer",
+      };
 }
