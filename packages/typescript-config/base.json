@@ -68,6 +68,7 @@
           "mapSomeToAsSome": "error",
           "matchEffectToMapBoth": "error",
           "matchEffectToMatch": "error",
+          "missedPipeableOpportunity": "error",
           "missingEffectContext": "error",
           "missingEffectError": "error",
           "missingLayerContext": "error",
