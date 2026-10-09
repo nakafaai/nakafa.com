@@ -199,7 +199,8 @@ export function LineEquation({
             !Arr.some(endpointMarkers, (marker) => marker.point === point)
         )
       : [];
-    return ordinary.concat(
+    return Arr.appendAll(
+      ordinary,
       Arr.map(
         Arr.filter(endpointMarkers, (marker) => marker.state === "closed"),
         (marker) => marker.point
@@ -305,16 +306,16 @@ export function LineEquation({
 
     // Add end cone if position is "end" or "both"
     if (cone.position === "end" || cone.position === "both") {
-      const targetPoint = vectorPoints.at(-1);
-      const prevPoint = vectorPoints.at(-2);
+      const targetPoint = Arr.last(vectorPoints);
+      const prevPoint = Arr.get(vectorPoints, vectorPoints.length - 2);
 
       // Ensure both points exist before proceeding
-      if (targetPoint && prevPoint) {
+      if (Option.isSome(targetPoint) && Option.isSome(prevPoint)) {
         const direction = new Vector3()
-          .subVectors(targetPoint, prevPoint)
+          .subVectors(targetPoint.value, prevPoint.value)
           .normalize();
         const conePosition = new Vector3()
-          .copy(targetPoint)
+          .copy(targetPoint.value)
           .sub(direction.clone().multiplyScalar(arrowSize / 2));
         const quaternion = new Quaternion().setFromUnitVectors(
           new Vector3(0, 1, 0),

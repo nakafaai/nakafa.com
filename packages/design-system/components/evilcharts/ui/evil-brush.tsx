@@ -9,7 +9,7 @@ import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-s
 import { EvilBrushControls } from "@repo/design-system/components/evilcharts/ui/evil-brush-controls";
 import { useBrushSelection } from "@repo/design-system/components/evilcharts/ui/evil-brush-selection";
 import { cn } from "cn";
-import { Record as Rec, Schema } from "effect";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 import {
   Suspense,
   useDeferredValue,
@@ -219,7 +219,11 @@ function useEvilBrush<TData extends Record<string, unknown>>({
   const deferredRange = useDeferredValue(clampedRange);
 
   const visibleData = useMemo(
-    () => data.slice(deferredRange.startIndex, deferredRange.endIndex + 1),
+    () =>
+      Arr.take(
+        Arr.drop(data, deferredRange.startIndex),
+        deferredRange.endIndex + 1 - deferredRange.startIndex
+      ),
     [data, deferredRange.startIndex, deferredRange.endIndex]
   );
 
