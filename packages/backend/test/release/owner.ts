@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
@@ -70,9 +71,7 @@ export async function markOwnerVerified(
       .query("contentReleases")
       .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
       .unique();
-    if (!release) {
-      throw new Error("Expected staged exact release.");
-    }
+    assert.ok(release, "Expected staged exact release.");
     await ctx.db.patch("contentReleases", release._id, {
       proofAt: 1,
       proofJson: "{}",

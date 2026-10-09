@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALES,
@@ -308,9 +309,7 @@ export async function activateTryoutSnapshot(
     ctx.db.query("contentReleases").unique(),
     ctx.db.query("contentState").unique(),
   ]);
-  if (!(release && state)) {
-    throw new Error("Expected one technical content release.");
-  }
+  assert.ok(release && state, "Expected one technical content release.");
   await ctx.db.patch("contentReleases", release._id, {
     completedAt: 1,
     status: "completed",

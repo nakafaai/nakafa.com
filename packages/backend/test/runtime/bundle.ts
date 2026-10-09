@@ -1,4 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
+import { assert } from "@effect/vitest";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentSnapshotManifestSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
@@ -100,9 +101,10 @@ export async function insertTestTryoutRuntimeBundle(
       )
       .unique(),
   ]);
-  if (!(release && snapshot)) {
-    throw new Error("Expected active release and try-out snapshot fixtures.");
-  }
+  assert.ok(
+    release && snapshot,
+    "Expected active release and try-out snapshot fixtures."
+  );
   const signedRelease = Schema.decodeSync(SignedReleaseJsonSchema)(
     release.releaseJson
   );
@@ -110,9 +112,10 @@ export async function insertTestTryoutRuntimeBundle(
   const decodedSnapshot = Schema.decodeSync(SnapshotJsonSchema)(
     snapshot.snapshotJson
   );
-  if (decodedSnapshot.family !== "tryout") {
-    throw new Error("Expected a try-out snapshot fixture.");
-  }
+  assert.ok(
+    decodedSnapshot.family === "tryout",
+    "Expected a try-out snapshot fixture."
+  );
   const bundle = testSignedTryoutRuntimeBundle({
     release: signedRelease,
     rendererManifest: renderer,

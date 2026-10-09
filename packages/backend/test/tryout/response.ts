@@ -1,4 +1,4 @@
-import { expect } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
@@ -61,9 +61,7 @@ export const seedResponseFixture = Effect.fn(
         placement?.responseSpec.kind === "single-choice"
           ? placement.responseSpec.options.at(0)
           : undefined;
-      if (!selectedChoice) {
-        throw new Error("Expected one frozen choice.");
-      }
+      assert.ok(selectedChoice, "Expected one frozen choice.");
       return {
         ...state,
         selectedChoice,

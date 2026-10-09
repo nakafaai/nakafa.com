@@ -1,4 +1,5 @@
 import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
+import { assert } from "@effect/vitest";
 import {
   type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
@@ -115,9 +116,7 @@ export async function seedTryoutContentAccessState(
   const signedSection = makeSignedTryoutSection(section);
   const signedSource = makeSignedTryoutSource(set, [signedSection]);
   const signedPlacement = signedSection.signed.placements[0];
-  if (!signedPlacement) {
-    throw new Error("Expected one signed try-out placement fixture.");
-  }
+  assert.ok(signedPlacement, "Expected one signed try-out placement fixture.");
   const englishSet = Schema.decodeSync(TryoutCatalogRowSchema)({
     ...signedSource.snapshot.set.row,
     appLocale: "en",
@@ -212,9 +211,10 @@ export async function seedTryoutContentAccessState(
     placementRow.response,
     placementRow.deliveryLanguage
   );
-  if (responseSpec.kind !== "single-choice") {
-    throw new Error("Expected one single-choice runtime fixture.");
-  }
+  assert.ok(
+    responseSpec.kind === "single-choice",
+    "Expected one single-choice runtime fixture."
+  );
   const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
     answerArtifactHash: placementRow.answerArtifactHash,
     answerContentKey: placementRow.answerContentKey,
@@ -445,9 +445,10 @@ export async function insertIrtScaleItem(
         .eq("sectionIdentity", sectionIdentity)
     )
     .take(2);
-  if (existingRuns.length > 1) {
-    throw new Error("Expected at most one IRT calibration run fixture.");
-  }
+  assert.ok(
+    existingRuns.length <= 1,
+    "Expected at most one IRT calibration run fixture."
+  );
   const existingRun = existingRuns[0];
   const calibrationRunId = existingRun
     ? existingRun._id

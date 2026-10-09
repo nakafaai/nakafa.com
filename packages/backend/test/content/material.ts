@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
 import {
   ContentKeySchema,
@@ -53,9 +54,10 @@ export function makeMaterialContentRef(projection: MaterialLessonProjection) {
     section: "material",
     sourcePath: projection.contentKey,
   });
-  if (Option.isNone(ref)) {
-    throw new Error("Expected one valid material content reference.");
-  }
+  assert.ok(
+    Option.isSome(ref),
+    "Expected one valid material content reference."
+  );
   return ref.value;
 }
 

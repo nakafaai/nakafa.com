@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import {
   CorpusSourcePathSchema,
   PublicPathSchema,
@@ -106,11 +107,10 @@ function technicalCurriculum(
     program.translations,
     (candidate) => candidate.appLocale === appLocale
   );
-  if (Option.isNone(translation)) {
-    throw new Error(
-      `Technical program ${program.key} is missing ${appLocale} copy.`
-    );
-  }
+  assert.ok(
+    Option.isSome(translation),
+    `Technical program ${program.key} is missing ${appLocale} copy.`
+  );
   return CurriculumRouteSchema.make({
     appLocale,
     iconKey: program.iconKey,
