@@ -15,6 +15,7 @@ import type { API } from "typescript/unstable/sync";
 import { assertionCandidates } from "#scripts/check/assertion";
 import { symbolTable } from "#scripts/check/convex";
 import { dispatchCandidates } from "#scripts/check/dispatch";
+import { failureCandidates } from "#scripts/check/failure";
 import { globalCandidates } from "#scripts/check/globals";
 import { nativeCandidates } from "#scripts/check/native";
 import { outsidePage, pageKeysOf } from "#scripts/check/page";
@@ -184,6 +185,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
           shapeCandidates(file, sourceFile, nodes, runtime),
           assertionCandidates(sourceFile, nodes),
           dispatchCandidates(sourceFile, nodes),
+          failureCandidates(sourceFile, nodes),
         ]),
         (found) =>
           covers(found.rule, file, sourceFile)

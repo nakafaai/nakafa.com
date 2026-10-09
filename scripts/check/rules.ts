@@ -38,6 +38,7 @@ export const Rule = Schema.Literals([
   "promise",
   "random",
   "switch",
+  "throw",
   "timer",
   "try-catch",
   "typeof-object",
@@ -145,6 +146,11 @@ export const RULES = {
   switch: {
     message:
       "match on the value with Match from effect, such as Match.value with Match.tags, Match.discriminators, or Match.when, instead of a switch statement.",
+    scope: "every",
+  },
+  throw: {
+    message:
+      "fail with a Schema.TaggedError or Data.TaggedError through Effect.fail from effect instead of a throw statement.",
     scope: "every",
   },
   timer: {
