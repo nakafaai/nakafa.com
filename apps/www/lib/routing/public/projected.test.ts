@@ -329,8 +329,3 @@ describe("projected public html route rejection", () => {
       })
   );
 });
-vi.mock("@/env", () => ({
-  env: {
-    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
-  },
-}));
