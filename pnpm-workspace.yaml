@@ -84,7 +84,7 @@ overrides:
   "@types/react-dom": "19.2.7"
   "@effect/ai-openai-compat": "4.0.2"
   "@effect/ai-openrouter": "4.0.2"
-  "@effect/platform-node": "catalog:"
+  "@effect/platform-node": "4.0.2"
   "@effect/platform-node-shared": "4.0.2"
   "@react-email/ui@6.11.1>next": "16.4.0"
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
