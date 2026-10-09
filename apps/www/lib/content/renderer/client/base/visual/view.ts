@@ -1,4 +1,3 @@
-import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import type {
   PlaneVisual,
   SpacePoint,
@@ -17,18 +16,14 @@ function tuple({ x, y, z }: SpacePoint): [number, number, number] {
 export function resolveMathView(
   scene: PlaneVisual | SpaceVisual,
   projection = resolveVisualProjection(scene)
-): {
-  readonly position: [number, number, number];
-  readonly target: [number, number, number];
-  readonly projection: CameraProjection;
-} {
+) {
   const bounds = projectVisualFrame(scene, projection, true);
   if (scene.view.kind === "camera") {
     return {
       position: tuple(projectVisualPoint(scene.view.position, projection)),
       target: tuple(projectVisualPoint(scene.view.target, projection)),
       projection: { kind: "perspective" },
-    };
+    } as const;
   }
   const target =
     scene.view.kind === "isometric" && scene.view.target
@@ -43,11 +38,11 @@ export function resolveMathView(
       ? { x: 0, y: 0, z: 15 }
       : { x: 12, y: scene.view.kind === "isometric" ? 12 : 8, z: 12 };
   return {
-    position: [
-      target.x + direction.x,
-      target.y + direction.y,
-      target.z + direction.z,
-    ],
+    position: tuple({
+      x: target.x + direction.x,
+      y: target.y + direction.y,
+      z: target.z + direction.z,
+    }),
     target: tuple(target),
     projection: {
       kind:
@@ -55,5 +50,5 @@ export function resolveMathView(
           ? "orthographic"
           : "perspective",
     },
-  };
+  } as const;
 }

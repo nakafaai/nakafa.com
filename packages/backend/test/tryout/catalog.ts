@@ -65,19 +65,13 @@ const defaultSets = [
     durationSeconds: 4500,
     order: 4,
   },
-] as const;
+];
 
 /** Publishes distinct authored sets and starts two real authenticated attempts. */
 export const activateTryoutSetCatalog = Effect.fn(
   "tryouts.sets.test.activateList"
 )(function* (
-  setDefinitions: readonly {
-    questionCount: number;
-    setKey: string;
-    title: string;
-    durationSeconds: number;
-    order: number;
-  }[] = defaultSets
+  setDefinitions: readonly (typeof defaultSets)[number][] = defaultSets
 ) {
   vi.setSystemTime(TRYOUT_START_NOW);
   const t = createConvexTestWithBetterAuth();
