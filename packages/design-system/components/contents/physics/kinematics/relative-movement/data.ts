@@ -13,13 +13,7 @@ export const RELATIVE_MOVEMENT_CASE_IDS = [
 export type RelativeMovementCaseId =
   (typeof RELATIVE_MOVEMENT_CASE_IDS)[number];
 
-const RELATIVE_MOVEMENT_CASES: Record<
-  RelativeMovementCaseId,
-  {
-    observerSpeed: number;
-    targetSpeed: number;
-  }
-> = {
+const RELATIVE_MOVEMENT_CASES = {
   "opposite-direction": {
     observerSpeed: 12,
     targetSpeed: -12,
