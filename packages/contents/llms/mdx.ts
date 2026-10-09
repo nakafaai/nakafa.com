@@ -1,4 +1,5 @@
 import { formatCodeBlockData } from "@repo/contents/llms/code";
+import { absoluteSiteLinks } from "@repo/contents/llms/links";
 import {
   getCos,
   getRadians,
@@ -94,9 +95,14 @@ export const readMdxBody = Effect.fn("contents.llms.mdx.body")(function* (
 export const projectMdxForAgentMarkdown = Effect.fn(
   "contents.llms.mdx.project"
 )(function* (body: string) {
-  const tree = yield* parseMdxTree(body);
+  const parsed = yield* parseMdxTree(body);
+  const source = absoluteSiteLinks(body, parsed);
+  // The renderer reads each node from the source by position, so a source
+  // that gained absolute links is parsed again.
+  const tree = source === body ? parsed : yield* parseMdxTree(source);
   return yield* Effect.try({
-    try: () => cleanAgentMarkdown(Arr.join(renderChildren(tree, body), "\n\n")),
+    try: () =>
+      cleanAgentMarkdown(Arr.join(renderChildren(tree, source), "\n\n")),
     catch: makeMdxAgentProjectionError,
   });
 });

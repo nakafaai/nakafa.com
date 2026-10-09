@@ -153,7 +153,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@react-three/fiber",
     minimumDeclarations: 1,
   },
-  { approved: "0.20.0", dependency: "afdocs", minimumDeclarations: 1 },
+  { approved: "0.22.2", dependency: "afdocs", minimumDeclarations: 1 },
 ];
 
 export const REGISTRY_REVIEWS = [
@@ -296,7 +296,7 @@ export const REGISTRY_REVIEWS = [
   [
     "afdocs@latest",
     "0.22.2",
-    "AFDocs 0.21 adds the page-size-transfer check, and Quran surah pages serve 1.1 to 1.7 MB of hydration payload for about 40 KB of text; the site contract moves after the surah payload shrinks.",
+    "AFDocs 0.21 adds the page-size-transfer check. A cached surah page serves 0.73 to 0.88 MB; its first render after a deploy or a publication also carries the stream Next.js embeds for Partial Prefetching and serves up to 1.24 MB, so agent-docs.config.yml sets the pass line at 1.5 MB. AFDocs 0.22 adds the markdown-link-portability check, which the agent Markdown passes because site paths are written as absolute URLs. That check sends its first requests right after three checks that only compute, and for 50 large pages they hold the event loop longer than the 5 seconds a Node server keeps an idle connection, so the checker reused connections that the local server had closed (fetch failed, ECONNRESET). The start script of apps/www therefore keeps idle connections for 70 seconds, as a production proxy does.",
   ],
 ];
 
