@@ -39,6 +39,8 @@ const CONSTRUCTED: Readonly<Record<string, RuleId>> = {
 /** Platform functions whose calls Effect services replace. */
 const CALLED: Readonly<Record<string, RuleId>> = {
   fetch: "fetch",
+  queueMicrotask: "timer",
+  setImmediate: "timer",
   setInterval: "timer",
   setTimeout: "timer",
 };
@@ -246,7 +248,8 @@ function directRule(
     return dated ? Option.none() : Rec.get(CONSTRUCTED, name);
   }
   if (isCallExpression(parent) && parent.expression === outer) {
-    return Rec.get(CALLED, name);
+    // Date() returns the current time as text, whatever its arguments.
+    return name === "Date" ? Option.some("clock") : Rec.get(CALLED, name);
   }
   return Option.flatMap(memberRead(parent, outer), (member) => {
     if (name === "console") {

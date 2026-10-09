@@ -187,6 +187,19 @@ export const randomUuid = Effect.gen(function* () {
       })
   );
 
+  it.effect("reports setImmediate, queueMicrotask, and a bare Date call", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`setImmediate(run);
+queueMicrotask(run);
+const now = Date();
+const stamp = new Date(0);
+`),
+        ["1 timer", "2 timer", "3 clock"]
+      );
+    })
+  );
+
   it.effect("ignores other members, shadowed names, and lookalikes", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

@@ -79,7 +79,7 @@ export const RULES = {
   },
   clock: {
     message:
-      "read time from Clock or DateTime.now in effect, or DateTime.nowUnsafe in synchronous React code, instead of Date.now or new Date().",
+      "read time from Clock or DateTime.now in effect, or DateTime.nowUnsafe in synchronous React code, instead of Date.now, Date(), or new Date().",
     scope: "code",
   },
   console: {
@@ -138,7 +138,7 @@ export const RULES = {
   },
   timer: {
     message:
-      "schedule with Effect.sleep, Effect.delay, or Schedule and Duration from effect instead of setTimeout or setInterval outside React modules.",
+      "schedule with Effect.sleep, Effect.delay, or Schedule and Duration from effect instead of setTimeout, setInterval, setImmediate, or queueMicrotask outside React modules.",
     scope: "logic",
   },
   "try-catch": {
