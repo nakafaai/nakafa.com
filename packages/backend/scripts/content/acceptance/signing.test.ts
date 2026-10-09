@@ -1,4 +1,3 @@
-import { tmpdir } from "node:os";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -22,7 +21,6 @@ vi.mock("node:crypto", async (importOriginal) => {
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const temporary = yield* fs.makeTempDirectoryScoped({
-    directory: tmpdir(),
     prefix: "acceptance-signing-test-",
   });
   const directory = yield* fs.realPath(temporary);
@@ -37,7 +35,6 @@ describe("isolated acceptance signing identity", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const directory = yield* fs.makeTempDirectoryScoped({
-          directory: tmpdir(),
           prefix: "acceptance-signing-test-",
         });
         cryptoMock.generateKeyPairSync.mockImplementationOnce(() => {

@@ -1,5 +1,4 @@
 import { createServer } from "node:net";
-import { tmpdir } from "node:os";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
@@ -150,7 +149,6 @@ describe("owned signed acceptance runtime", () => {
     Effect.gen(function* () {
       const { fs, root } = yield* fixture;
       const shared = yield* fs.makeTempDirectoryScoped({
-        directory: tmpdir(),
         prefix: "acceptance-shared-cache-",
       });
       yield* fs.makeDirectory(`${shared}/fetch-cache`);
