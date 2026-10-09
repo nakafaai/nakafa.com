@@ -1,4 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import {
+  NINA_FILE_COUNT,
+  NinaUploadError,
+} from "@repo/backend/client/nina/uploads";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
@@ -17,10 +21,6 @@ import {
   NinaCreditError,
   NinaCreditHold,
 } from "@repo/backend/confect/nina/credits/schema";
-import {
-  NINA_FILE_COUNT,
-  NinaUploadError,
-} from "@repo/backend/confect/nina/uploads.spec";
 import { LocaleSchema } from "@repo/contents/content";
 import { Schema } from "effect";
 

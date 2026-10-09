@@ -12,7 +12,7 @@ import {
   NINA_FILE_COUNT,
   NINA_FILE_SIZE,
   NinaFileType,
-} from "@repo/backend/confect/nina/uploads.spec";
+} from "@repo/backend/client/nina/uploads";
 import {
   PromptInput,
   PromptInputTextarea,

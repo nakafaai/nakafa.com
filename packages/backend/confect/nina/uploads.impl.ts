@@ -1,6 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { storeFile } from "@convex-dev/agent";
 import { MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
+import {
+  NINA_FILE_COUNT,
+  NINA_FILE_SIZE,
+  NinaUploadError,
+} from "@repo/backend/client/nina/uploads";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
@@ -14,11 +19,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
-import spec, {
-  NINA_FILE_COUNT,
-  NINA_FILE_SIZE,
-  NinaUploadError,
-} from "@repo/backend/confect/nina/uploads.spec";
+import spec from "@repo/backend/confect/nina/uploads.spec";
 import { Clock, Duration, Effect, Exit, Layer } from "effect";
 
 const uploadQuota = new RateLimiter(components.agentRateLimiter, {

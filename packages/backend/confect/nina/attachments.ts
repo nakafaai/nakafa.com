@@ -1,4 +1,8 @@
 import { getFile } from "@convex-dev/agent";
+import {
+  NINA_DOCUMENT_SIZE,
+  NinaUploadError,
+} from "@repo/backend/client/nina/uploads";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
@@ -6,10 +10,6 @@ import {
   DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import {
-  NINA_DOCUMENT_SIZE,
-  NinaUploadError,
-} from "@repo/backend/confect/nina/uploads.spec";
 import { Array as Arr, Clock, Effect } from "effect";
 
 /** Reads one stored attachment: its model part and the storage entry that holds its bytes. */

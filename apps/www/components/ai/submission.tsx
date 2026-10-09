@@ -2,15 +2,15 @@
 
 import type { Ref } from "@confect/core";
 import { type OptimisticUpdate, useAction, useMutation } from "@confect/react";
+import {
+  NinaFileType,
+  NinaUploadError,
+} from "@repo/backend/client/nina/uploads";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type {
   NinaPageInput,
   NinaPrompt,
 } from "@repo/backend/confect/nina/turns.spec";
-import {
-  NinaFileType,
-  NinaUploadError,
-} from "@repo/backend/confect/nina/uploads.spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { encodeJsonText } from "@repo/utilities/json";
