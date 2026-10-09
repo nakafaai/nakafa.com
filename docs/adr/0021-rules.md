@@ -24,7 +24,9 @@ It never gets an allowlist, a baseline, or a suppression.
 | `missingPipeableSignature` | 479 | 11 framework exports can never take a data-last form |
 | `newPromise` | 30 | 28 are test doubles that must be Promises at a Promise-typed seam, and 2 run in the browser page. The source rule `new-promise` judges the rest of the code |
 | `newSchemaClass` | 1,104 | `X.make(...)` builds a tagged error nine frames deeper than `new X(...)`. With the engine's limit of ten frames the stack keeps 1 application frame of 5 (measured) |
-| `unstableApiUsage`, `experimentalApiUsage` | | Effect moves as one exact cohort that is reviewed at every upgrade |
+| `processEnv` | 89 | Next.js inlines only a literal `process.env.NAME` read into the browser bundle and defines `NEXT_RUNTIME` per compile, so the environment contract modules pass literal reads to `readEnvironment`. The source rule `env` judges every other read |
+| `nodeBuiltinImport` | 22 | Framework configuration needs a Node path, and one test server must be a Node `http.Server`. The source rule `node-module` judges the file, path, and process modules |
+| `unstableApiUsage`, `experimentalApiUsage`, `apiStabilityLeak` | | Effect moves as one exact cohort that is reviewed at every upgrade, so an unstable Effect module in a signature is not a leak here |
 
 ### Source rules for raw TypeScript forms
 
@@ -110,9 +112,10 @@ global binding.
 
 ## Consequences
 
-- A compiler rule that is neither an error nor in the table above is open work,
-  not a decision. It becomes an error in the pull request that clears its last
-  site.
+- Both shared configurations list every rule of the plugin with its decision:
+  `error`, or `off` for a rule in the table above. A rule that the
+  configurations do not list is open work, not a decision. It becomes an error
+  in the pull request that clears its last site.
 - A new place that a framework forces is added to the source check as a
   construction, with a test for the reported and the unreported form.
 - Keep `new X({...})` for Schema error classes.
