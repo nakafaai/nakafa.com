@@ -10,6 +10,7 @@ export const GateOutcomeSchema = Schema.Literals([
 ]);
 export const GateRoleSchema = Schema.Literals(["doctor", "required"]);
 export const GateInputSchema = Schema.Struct({
+  backendOutcome: GateOutcomeSchema,
   fullOutcome: GateOutcomeSchema,
   productionOutcome: GateOutcomeSchema,
   productionRequired: Schema.Boolean,
@@ -60,6 +61,7 @@ export const validateGate = Effect.fn("CiGate.validate")(function* (
     return "React Doctor completed on the current candidate.";
   }
 
+  yield* requireOutcome(input.backendOutcome, "success", "Backend tests");
   const expectedProduction =
     input.trusted && input.productionRequired ? "success" : "skipped";
   yield* requireOutcome(
@@ -98,6 +100,11 @@ export const runGate = Effect.fn("CiGate.run")(
       decodeConfig("PRODUCTION_OUTCOME", GateOutcomeSchema),
       decodeConfig("SCOPE_OUTCOME", GateOutcomeSchema),
     ]);
+    // Only the required check waits for the backend suite. The Doctor job never runs it.
+    const backendOutcome =
+      role === "required"
+        ? yield* decodeConfig("BACKEND_OUTCOME", GateOutcomeSchema)
+        : "skipped";
     const flags = yield* Config.all({
       productionRequired: Config.Boolean("PRODUCTION_REQUIRED"),
       trusted: Config.Boolean("TRUSTED_CANDIDATE"),
@@ -111,6 +118,7 @@ export const runGate = Effect.fn("CiGate.run")(
       )
     );
     const message = yield* validateGate({
+      backendOutcome,
       fullOutcome,
       productionOutcome,
       productionRequired: flags.productionRequired,

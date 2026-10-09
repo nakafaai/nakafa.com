@@ -18,6 +18,8 @@ import {
 } from "#scripts/github/policy";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
+const PLAYWRIGHT_SUITE_ENVIRONMENT =
+  /PLAYWRIGHT_SUITE: \$\{\{ matrix\.suite \}\}/u;
 const readRepositoryFile = Effect.fn("GithubPolicyTest.readRepositoryFile")(
   function* (relativeUrl: string) {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -112,7 +114,9 @@ describe("GitHub Action policy", () => {
             jobs: expect.objectContaining({
               production: expect.objectContaining({
                 steps: expect.arrayContaining([
-                  expect.objectContaining({ run: "pnpm acceptance:prepare" }),
+                  expect.objectContaining({
+                    run: "pnpm --dir packages/backend acceptance prepare",
+                  }),
                   expect.objectContaining({
                     run: "pnpm --dir packages/backend acceptance build",
                   }),
@@ -157,6 +161,65 @@ describe("GitHub Action policy", () => {
         ),
         Effect.provide(NodeServices.layer)
       )
+  );
+
+  it.effect(
+    "runs the backend suite in its own job and gates Required on it",
+    () =>
+      Effect.gen(function* () {
+        const source = yield* readRepositoryFile(
+          "../../.github/workflows/ci.yml"
+        );
+        const workflow = yield* parseWorkflow(source);
+
+        expect(workflow).toEqual(
+          expect.objectContaining({
+            jobs: expect.objectContaining({
+              backend: expect.objectContaining({
+                name: "Backend",
+                steps: expect.arrayContaining([
+                  expect.objectContaining({
+                    run: "pnpm --dir packages/backend test",
+                  }),
+                ]),
+              }),
+              required: expect.objectContaining({
+                needs: ["scope", "quality", "backend", "production", "doctor"],
+              }),
+            }),
+          })
+        );
+        expect(source).toContain(
+          "pnpm exec turbo run test --filter='!@repo/backend'"
+        );
+        // A workspace filter exits 0 without running anything when the backend
+        // has no test script, so the backend job runs its package script.
+        expect(source).not.toContain("turbo run test --filter=@repo/backend");
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("runs one production leg per browser suite", () =>
+    Effect.gen(function* () {
+      const source = yield* readRepositoryFile(
+        "../../.github/workflows/ci.yml"
+      );
+      const workflow = yield* parseWorkflow(source);
+
+      expect(workflow).toEqual(
+        expect.objectContaining({
+          jobs: expect.objectContaining({
+            production: expect.objectContaining({
+              name: "Production",
+              strategy: {
+                "fail-fast": false,
+                matrix: { suite: ["runtime", "visual", "navigation"] },
+              },
+            }),
+          }),
+        })
+      );
+      expect(source).toMatch(PLAYWRIGHT_SUITE_ENVIRONMENT);
+    }).pipe(Effect.provide(NodeServices.layer))
   );
 
   it.effect("runs every required check on each candidate head", () =>
