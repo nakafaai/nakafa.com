@@ -28,7 +28,14 @@ import {
   readPublishedSetSections,
   readPublishedTrackSets,
 } from "@repo/backend/content/tryout/hierarchy";
-import { Array as Arr, Effect, MutableHashMap, Option, Order } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Match,
+  MutableHashMap,
+  Option,
+  Order,
+} from "effect";
 
 type Progress = Docs["tryoutSetProgress"];
 type User = Docs["users"];
@@ -229,9 +236,10 @@ function sortJoinedSets(
       tryoutCatalogIdentity(left.set).localeCompare(
         tryoutCatalogIdentity(right.set)
       );
-    let comparison = authoredOrder;
-    switch (sort.field) {
-      case "publishedScore": {
+    const ordered = (difference: number) =>
+      (sort.direction === "desc" ? -difference : difference) || authoredOrder;
+    return Match.value(sort.field).pipe(
+      Match.when("publishedScore", () => {
         const leftScore = left.progress?.publishedScore ?? null;
         const rightScore = right.progress?.publishedScore ?? null;
         if (leftScore === null && rightScore === null) {
@@ -243,23 +251,19 @@ function sortJoinedSets(
         if (rightScore === null) {
           return -1;
         }
-        comparison = leftScore - rightScore;
-        break;
-      }
-      case "readyQuestionCount":
-        comparison = left.set.questionCount - right.set.questionCount;
-        break;
-      case "durationSeconds":
-        comparison = left.durationSeconds - right.durationSeconds;
-        break;
-      case "title":
-        comparison = left.set.title.localeCompare(right.set.title);
-        break;
-      default:
-        break;
-    }
-    const directed = sort.direction === "desc" ? -comparison : comparison;
-    return directed || authoredOrder;
+        return ordered(leftScore - rightScore);
+      }),
+      Match.when("readyQuestionCount", () =>
+        ordered(left.set.questionCount - right.set.questionCount)
+      ),
+      Match.when("durationSeconds", () =>
+        ordered(left.durationSeconds - right.durationSeconds)
+      ),
+      Match.when("title", () =>
+        ordered(left.set.title.localeCompare(right.set.title))
+      ),
+      Match.orElse(() => ordered(authoredOrder))
+    );
   };
   return Arr.sort(
     rows,

@@ -8,7 +8,7 @@ import type {
   Id,
 } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
-import { Clock, Effect, Struct } from "effect";
+import { Clock, Effect, Match, Struct } from "effect";
 
 /**
  * Trigger handler for schoolClassMembers table changes.
@@ -27,102 +27,107 @@ export const schoolClassMembersHandler = Effect.fn(
 )(function* (change: Change<DataModel, "schoolClassMembers">) {
   const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  // biome-ignore lint/style/useDefaultSwitchClause: Convex Change is a closed union checked by TypeScript.
-  switch (change.operation) {
-    case "insert": {
-      const member = change.newDoc;
-      if (member.inviteCodeId) {
-        const inviteCodeId = member.inviteCodeId;
-        const inviteCode = yield* database
-          .table("schoolClassInviteCodes")
-          .get(inviteCodeId)
-          .pipe(
-            Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-            Effect.orDie
-          );
-        if (inviteCode) {
+  yield* Match.value(change).pipe(
+    Match.discriminators("operation")({
+      insert: (inserted) =>
+        Effect.gen(function* () {
+          const member = inserted.newDoc;
+          if (member.inviteCodeId) {
+            const inviteCodeId = member.inviteCodeId;
+            const inviteCode = yield* database
+              .table("schoolClassInviteCodes")
+              .get(inviteCodeId)
+              .pipe(
+                Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+                Effect.orDie
+              );
+            if (inviteCode) {
+              yield* writer
+                .table("schoolClassInviteCodes")
+                .patch(inviteCodeId, {
+                  currentUsage: inviteCode.currentUsage + 1,
+                  updatedAt: yield* Clock.currentTimeMillis,
+                })
+                .pipe(Effect.orDie);
+            }
+          }
+          yield* updateClassMemberCount(member.classId, member.role, 1);
           yield* writer
-            .table("schoolClassInviteCodes")
-            .patch(inviteCodeId, {
-              currentUsage: inviteCode.currentUsage + 1,
-              updatedAt: yield* Clock.currentTimeMillis,
+            .table("schoolActivityLogs")
+            .insert({
+              schoolId: member.schoolId,
+              userId: member.addedBy ?? member.userId,
+              action: "class_member_added",
+              entityType: "schoolClassMembers",
+              entityId: inserted.id,
+              metadata: {
+                classId: member.classId,
+                addedUserId: member.userId,
+                role: member.role,
+                ...Struct.pick(member, ["teacherRole", "enrollMethod"]),
+              },
             })
             .pipe(Effect.orDie);
-        }
-      }
-      yield* updateClassMemberCount(member.classId, member.role, 1);
-      yield* writer
-        .table("schoolActivityLogs")
-        .insert({
-          schoolId: member.schoolId,
-          userId: member.addedBy ?? member.userId,
-          action: "class_member_added",
-          entityType: "schoolClassMembers",
-          entityId: change.id,
-          metadata: {
-            classId: member.classId,
-            addedUserId: member.userId,
-            role: member.role,
-            ...Struct.pick(member, ["teacherRole", "enrollMethod"]),
-          },
-        })
-        .pipe(Effect.orDie);
-      break;
-    }
-    case "update": {
-      const member = change.newDoc;
-      const oldMember = change.oldDoc;
-      if (oldMember.role !== member.role) {
-        yield* handleRoleChange(change.id, member, oldMember);
-      }
-      if (
-        oldMember.teacherRole !== member.teacherRole &&
-        member.role === "teacher"
-      ) {
-        yield* writer
-          .table("schoolActivityLogs")
-          .insert({
-            schoolId: member.schoolId,
-            userId: member.userId,
-            action: "class_member_teacher_role_changed",
-            entityType: "schoolClassMembers",
-            entityId: change.id,
-            metadata: {
-              classId: member.classId,
-              ...Struct.renameKeys(Struct.pick(oldMember, ["teacherRole"]), {
-                teacherRole: "oldTeacherRole",
-              }),
-              ...Struct.renameKeys(Struct.pick(member, ["teacherRole"]), {
-                teacherRole: "newTeacherRole",
-              }),
-            },
-          })
-          .pipe(Effect.orDie);
-      }
-      break;
-    }
-    case "delete": {
-      const oldMember = change.oldDoc;
-      yield* updateClassMemberCount(oldMember.classId, oldMember.role, -1);
-      yield* writer
-        .table("schoolActivityLogs")
-        .insert({
-          schoolId: oldMember.schoolId,
-          userId: oldMember.removedBy ?? oldMember.userId,
-          action: "class_member_removed",
-          entityType: "schoolClassMembers",
-          entityId: change.id,
-          metadata: {
-            classId: oldMember.classId,
-            removedUserId: oldMember.userId,
-            role: oldMember.role,
-            ...Struct.pick(oldMember, ["removedAt"]),
-          },
-        })
-        .pipe(Effect.orDie);
-      break;
-    }
-  }
+        }),
+      update: (updated) =>
+        Effect.gen(function* () {
+          const member = updated.newDoc;
+          const oldMember = updated.oldDoc;
+          if (oldMember.role !== member.role) {
+            yield* handleRoleChange(updated.id, member, oldMember);
+          }
+          if (
+            oldMember.teacherRole !== member.teacherRole &&
+            member.role === "teacher"
+          ) {
+            yield* writer
+              .table("schoolActivityLogs")
+              .insert({
+                schoolId: member.schoolId,
+                userId: member.userId,
+                action: "class_member_teacher_role_changed",
+                entityType: "schoolClassMembers",
+                entityId: updated.id,
+                metadata: {
+                  classId: member.classId,
+                  ...Struct.renameKeys(
+                    Struct.pick(oldMember, ["teacherRole"]),
+                    {
+                      teacherRole: "oldTeacherRole",
+                    }
+                  ),
+                  ...Struct.renameKeys(Struct.pick(member, ["teacherRole"]), {
+                    teacherRole: "newTeacherRole",
+                  }),
+                },
+              })
+              .pipe(Effect.orDie);
+          }
+        }),
+      delete: (deleted) =>
+        Effect.gen(function* () {
+          const oldMember = deleted.oldDoc;
+          yield* updateClassMemberCount(oldMember.classId, oldMember.role, -1);
+          yield* writer
+            .table("schoolActivityLogs")
+            .insert({
+              schoolId: oldMember.schoolId,
+              userId: oldMember.removedBy ?? oldMember.userId,
+              action: "class_member_removed",
+              entityType: "schoolClassMembers",
+              entityId: deleted.id,
+              metadata: {
+                classId: oldMember.classId,
+                removedUserId: oldMember.userId,
+                role: oldMember.role,
+                ...Struct.pick(oldMember, ["removedAt"]),
+              },
+            })
+            .pipe(Effect.orDie);
+        }),
+    }),
+    Match.orElse(() => Effect.void)
+  );
 });
 
 /** Convex trigger boundary, preserving atomic writes within its mutation. */

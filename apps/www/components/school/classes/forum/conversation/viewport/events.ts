@@ -1,4 +1,4 @@
-import { Effect, Queue, Ref } from "effect";
+import { Effect, Match, Queue, Ref } from "effect";
 import {
   handleViewportMeasurement,
   handleViewportUserScroll,
@@ -22,42 +22,38 @@ export function runViewportEventLoop(runtime: ViewportRuntime) {
 
 /** Routes one viewport event to the state-machine branch that owns it. */
 function handleViewportEvent(runtime: ViewportRuntime, event: ViewportEvent) {
-  switch (event.type) {
-    case "back":
-      return handleBackNavigation(runtime);
-    case "highlight-expired":
-      return Effect.gen(function* () {
-        const token = yield* Ref.get(runtime.highlightTokenRef);
+  return Match.value(event).pipe(
+    Match.discriminators("type")({
+      back: () => handleBackNavigation(runtime),
+      "highlight-expired": (expired) =>
+        Effect.gen(function* () {
+          const token = yield* Ref.get(runtime.highlightTokenRef);
 
-        if (token !== event.token) {
-          return;
-        }
+          if (token !== expired.token) {
+            return;
+          }
 
-        yield* updateViewportState(runtime, (state) => ({
-          ...state,
-          highlightedPostId: null,
-        }));
-      });
-    case "latest":
-      return startViewportPlacement(runtime, {
-        highlightPostId: null,
-        view: { kind: "bottom" },
-      });
-    case "measure":
-      return handleViewportMeasurement(
-        runtime,
-        event.measurement,
-        event.source
-      );
-    case "persist":
-      return persistCurrentSnapshot(runtime);
-    case "post":
-      return handlePostNavigation(runtime, event.postId);
-    case "transcript":
-      return handleViewportTranscript(runtime, event);
-    case "user-scroll":
-      return handleViewportUserScroll(runtime, event);
-    default:
-      return Effect.void;
-  }
+          yield* updateViewportState(runtime, (state) => ({
+            ...state,
+            highlightedPostId: null,
+          }));
+        }),
+      latest: () =>
+        startViewportPlacement(runtime, {
+          highlightPostId: null,
+          view: { kind: "bottom" },
+        }),
+      measure: (measured) =>
+        handleViewportMeasurement(
+          runtime,
+          measured.measurement,
+          measured.source
+        ),
+      persist: () => persistCurrentSnapshot(runtime),
+      post: (navigation) => handlePostNavigation(runtime, navigation.postId),
+      transcript: (transcript) => handleViewportTranscript(runtime, transcript),
+      "user-scroll": (scroll) => handleViewportUserScroll(runtime, scroll),
+    }),
+    Match.orElse(() => Effect.void)
+  );
 }
