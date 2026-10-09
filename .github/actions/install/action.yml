@@ -1,0 +1,14 @@
+name: Install dependencies
+description: Sets up pnpm without a store cache and installs the workspace from its frozen lockfile. The calling job checks out the repository first, because GitHub reads a local action from the checked-out workspace.
+runs:
+  using: composite
+  steps:
+    - name: Setup toolchain
+      uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+      with:
+        cache: false
+        install: false
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile

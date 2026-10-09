@@ -14,11 +14,11 @@ import { DependencyCommandError, runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
 import { runEntry } from "#scripts/entry";
-import { inspectGithubActionPolicy } from "#scripts/github/policy";
 import {
   fetchLatestGithubActionTag,
   githubActionReleaseReviews,
 } from "#scripts/github/release";
+import { inspectGithubActionPolicy } from "#scripts/github/source";
 import { writeError, writeOutput } from "#scripts/output";
 import { problemWhen } from "#scripts/problem";
 
