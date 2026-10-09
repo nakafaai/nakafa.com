@@ -375,7 +375,6 @@ jobs:
       - name: Verify Doctor result
         if: always()
         env:
-          BACKEND_OUTCOME: skipped
           FULL_OUTCOME: ${{ steps.full.outcome }}
           PRODUCTION_OUTCOME: skipped
           PRODUCTION_REQUIRED: ${{ needs.scope.outputs.required }}

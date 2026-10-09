@@ -95,13 +95,16 @@ export const runGate = Effect.fn("CiGate.run")(
           new CiGateError({ cause, message: "CI gate role is invalid." })
       )
     );
-    const [backendOutcome, fullOutcome, productionOutcome, scopeOutcome] =
-      yield* Effect.all([
-        decodeConfig("BACKEND_OUTCOME", GateOutcomeSchema),
-        decodeConfig("FULL_OUTCOME", GateOutcomeSchema),
-        decodeConfig("PRODUCTION_OUTCOME", GateOutcomeSchema),
-        decodeConfig("SCOPE_OUTCOME", GateOutcomeSchema),
-      ]);
+    const [fullOutcome, productionOutcome, scopeOutcome] = yield* Effect.all([
+      decodeConfig("FULL_OUTCOME", GateOutcomeSchema),
+      decodeConfig("PRODUCTION_OUTCOME", GateOutcomeSchema),
+      decodeConfig("SCOPE_OUTCOME", GateOutcomeSchema),
+    ]);
+    // Only the required check waits for the backend suite. The Doctor job never runs it.
+    const backendOutcome =
+      role === "required"
+        ? yield* decodeConfig("BACKEND_OUTCOME", GateOutcomeSchema)
+        : "skipped";
     const flags = yield* Config.all({
       productionRequired: Config.Boolean("PRODUCTION_REQUIRED"),
       trusted: Config.Boolean("TRUSTED_CANDIDATE"),

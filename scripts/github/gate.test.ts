@@ -128,20 +128,20 @@ describe("terminal CI gate", () => {
     )
   );
 
-  it.effect(
-    "decodes the Doctor environment, which skips production and backend",
-    () =>
-      Effect.gen(function* () {
-        const { result, stdout } = yield* runCapturedGate("doctor", {
-          ...validEnvironment,
-          BACKEND_OUTCOME: "skipped",
-          PRODUCTION_OUTCOME: "skipped",
-        });
-        expect(Result.isSuccess(result)).toBe(true);
-        expect(stdout).toEqual([
-          "React Doctor completed on the current candidate.\n",
-        ]);
-      })
+  it.effect("decodes the Doctor environment, which skips production", () =>
+    Effect.gen(function* () {
+      const { result, stdout } = yield* runCapturedGate("doctor", {
+        FULL_OUTCOME: "success",
+        PRODUCTION_OUTCOME: "skipped",
+        PRODUCTION_REQUIRED: "true",
+        SCOPE_OUTCOME: "success",
+        TRUSTED_CANDIDATE: "true",
+      });
+      expect(Result.isSuccess(result)).toBe(true);
+      expect(stdout).toEqual([
+        "React Doctor completed on the current candidate.\n",
+      ]);
+    })
   );
 
   it.effect("decodes the complete required-check environment", () =>
