@@ -6,11 +6,13 @@ import {
   ContentDeleteSchema,
   ContentUpsertSchema,
 } from "@nakafa/aksara-contracts/release";
+import { StagedContentReleaseSchema } from "@nakafa/aksara-contracts/release/current/state";
 import {
   ContentRouteBindSchema,
   ContentRouteDeleteSchema,
 } from "@nakafa/aksara-contracts/release/route/spec";
 import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import { ContentSnapshotStateSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Schema } from "effect";
 /** Current Convex data-read ceiling for one query or mutation transaction. */
@@ -188,7 +190,7 @@ export const tryoutRuntimeBundleReceiptValidator = Schema.Struct({
 });
 const snapshotStateValidator = Schema.Struct({
   baseSnapshotId: Schema.Union([Schema.String, Schema.Null]),
-  mode: Schema.Literals(["inherit", "replace", "restore"]),
+  mode: ContentSnapshotStateSchema.fields.mode,
   resultSnapshotId: Schema.Union([Schema.String, Schema.Null]),
   rowCount: Schema.Finite,
   rowDigest: Schema.String,
@@ -197,7 +199,7 @@ const snapshotStateValidator = Schema.Struct({
 /** Snapshot transition facts history retention reads without the manifest. */
 export const releaseSnapshotTransitionValidator = Schema.Struct({
   baseSnapshotId: Schema.Union([Schema.String, Schema.Null]),
-  mode: Schema.Literals(["inherit", "replace", "restore"]),
+  mode: ContentSnapshotStateSchema.fields.mode,
   resultSnapshotId: Schema.Union([Schema.String, Schema.Null]),
 });
 
@@ -256,12 +258,7 @@ const storedBundleValidator = Schema.Struct({
   releaseJson: Schema.String,
   rendererJson: Schema.String,
 });
-const stagedPhaseValidator = Schema.Literals([
-  "staging",
-  "verifying",
-  "verified",
-  "aborting",
-]);
+const stagedPhaseValidator = StagedContentReleaseSchema.fields.phase;
 
 /** Authenticated release bundles used for exact crash recovery. */
 export const currentValidator = Schema.Struct({
