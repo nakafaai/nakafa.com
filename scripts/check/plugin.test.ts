@@ -1,7 +1,11 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Path, Result } from "effect";
-import { pluginRuleNames, undecidedRules } from "#scripts/check/plugin";
+import {
+  divergentRules,
+  pluginRuleNames,
+  undecidedRules,
+} from "#scripts/check/plugin";
 
 const FILE = "packages/typescript-config/base.json";
 const SCHEMA = "node_modules/@effect/tsgo/schema.json";
@@ -67,6 +71,42 @@ describe("compiler plugin rules", () => {
       );
     }).pipe(Effect.provide(NodeServices.layer))
   );
+
+  it("reports a rule the block decides another way than the owning repository", () => {
+    assert.deepStrictEqual(
+      divergentRules(
+        FILE,
+        {
+          diagnosticSeverity: {
+            floatingEffect: "error",
+            globalDate: "off",
+            ownOnly: "error",
+          },
+        },
+        {
+          diagnosticSeverity: {
+            floatingEffect: "error",
+            globalDate: "error",
+            schemaSync: "off",
+          },
+        }
+      ),
+      [
+        `${FILE}: set globalDate to "error" in diagnosticSeverity, as the repository that owns this check decides it, so both repositories enforce the same rules.`,
+        `${FILE}: set schemaSync to "off" in diagnosticSeverity, as the repository that owns this check decides it, so both repositories enforce the same rules.`,
+      ]
+    );
+    assert.deepStrictEqual(
+      divergentRules(FILE, {}, { diagnosticSeverity: { globalDate: "error" } }),
+      [
+        `${FILE}: set globalDate to "error" in diagnosticSeverity, as the repository that owns this check decides it, so both repositories enforce the same rules.`,
+      ]
+    );
+    assert.deepStrictEqual(
+      divergentRules(FILE, { diagnosticSeverity: { globalDate: "off" } }, {}),
+      []
+    );
+  });
 
   it("accepts a block that decides every rule as an error or as off", () => {
     assert.deepStrictEqual(

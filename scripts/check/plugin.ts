@@ -63,6 +63,36 @@ export const pluginRuleNames = Effect.fn("RepositoryPolicy.pluginRuleNames")(
   }
 );
 
+/** Returns the rule decisions that one Effect block lists, or none when it lists no severities. */
+function decisionsOf(block: Readonly<Record<string, unknown>>) {
+  return Option.match(decodeRuleDecisions(block), {
+    onNone: () => Rec.empty<string, unknown>(),
+    onSome: ({ diagnosticSeverity }) => diagnosticSeverity,
+  });
+}
+
+/**
+ * Reports the rules that one Effect block decides another way than the block of
+ * the repository that owns this check: a rule it does not list, or lists with
+ * another severity. The owner decides each rule once, with its reason in the
+ * owner's `docs/adr/0021-rules.md`, and a repository that runs the owner's
+ * check carries the same decisions.
+ */
+export function divergentRules(
+  file: string,
+  block: Readonly<Record<string, unknown>>,
+  owner: Readonly<Record<string, unknown>>
+) {
+  const decisions = decisionsOf(block);
+  return Arr.flatMap(Rec.toEntries(decisionsOf(owner)), ([rule, severity]) =>
+    Option.exists(Rec.get(decisions, rule), (own) => own === severity)
+      ? []
+      : [
+          `${file}: set ${rule} to "${String(severity)}" in diagnosticSeverity, as the repository that owns this check decides it, so both repositories enforce the same rules.`,
+        ]
+  );
+}
+
 /**
  * Reports the plugin rules that one Effect block leaves without a decision: a
  * rule it does not list, a name the plugin does not define, and a severity
@@ -74,10 +104,7 @@ export function undecidedRules(
   block: Readonly<Record<string, unknown>>,
   rules: readonly string[]
 ) {
-  const decisions = Option.match(decodeRuleDecisions(block), {
-    onNone: () => Arr.empty<readonly [string, unknown]>(),
-    onSome: ({ diagnosticSeverity }) => Rec.toEntries(diagnosticSeverity),
-  });
+  const decisions = Rec.toEntries(decisionsOf(block));
   const listed = Arr.map(decisions, ([rule]) => rule);
   return Arr.appendAll(
     Arr.map(
