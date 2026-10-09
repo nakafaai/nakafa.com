@@ -38,14 +38,11 @@ function isExamSubjectKey(key: string): key is ExamSubjectKey {
 
 /** Resolves one try-out exam identity to its stable selector icon. */
 export function getTryoutExamIcon(examKey: string): IconSvgElement {
-  switch (examKey) {
-    case "snbt":
-      return RankingIcon;
-    case "tka":
-      return SchoolReportCardIcon;
-    default:
-      return Certificate02Icon;
-  }
+  return Match.value(examKey).pipe(
+    Match.when("snbt", () => RankingIcon),
+    Match.when("tka", () => SchoolReportCardIcon),
+    Match.orElse(() => Certificate02Icon)
+  );
 }
 
 /**

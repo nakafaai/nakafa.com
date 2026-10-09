@@ -2,7 +2,7 @@ import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import type { PublicationFailure } from "@nakafa/aksara-contracts/transport/failure";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Effect, Schema } from "effect";
+import { Effect, Match, Schema } from "effect";
 
 /** Marks an impossible request/error pairing as an internal programming defect. */
 export class PublicationFailureDefect extends Schema.TaggedError<PublicationFailureDefect>()(
@@ -55,28 +55,29 @@ export function requestReleaseId(request: PublicationRequest) {
 
 /** Sanitizes a failure raised before a publication operation was decoded. */
 export function predecodeFailure(error: ReleaseError): PublicationFailure {
-  switch (error.code) {
-    case "CONTENT_RELEASE_UNAUTHORIZED":
-      return {
-        code: error.code,
-        kind: "unauthorized",
-      };
-    case "CONTENT_RELEASE_SIZE":
-    case "CONTENT_RELEASE_UNSUPPORTED":
-      return {
-        code: error.code,
+  return Match.value(error.code).pipe(
+    Match.withReturnType<PublicationFailure>(),
+    Match.when("CONTENT_RELEASE_UNAUTHORIZED", (code) => ({
+      code,
+      kind: "unauthorized",
+    })),
+    Match.whenOr(
+      "CONTENT_RELEASE_SIZE",
+      "CONTENT_RELEASE_UNSUPPORTED",
+      (code) => ({
+        code,
         kind: "rejected",
         operation: null,
         releaseId: null,
-      };
-    default:
-      return {
-        code: "CONTENT_RELEASE_INVALID_REQUEST",
-        kind: "rejected",
-        operation: null,
-        releaseId: null,
-      };
-  }
+      })
+    ),
+    Match.orElse(() => ({
+      code: "CONTENT_RELEASE_INVALID_REQUEST",
+      kind: "rejected",
+      operation: null,
+      releaseId: null,
+    }))
+  );
 }
 
 /** Builds the exact immutable-conflict shape owned by one request operation. */

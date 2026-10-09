@@ -11,7 +11,7 @@ import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Match, Option } from "effect";
 import { useTranslations } from "next-intl";
 
 const MAX_SHOWN_RESULTS = 5;
@@ -123,16 +123,11 @@ function getSearchLabel(
   );
   const section = message.input.section ?? Option.getOrUndefined(firstSection);
 
-  switch (section) {
-    case "articles":
-      return t("nakafa-search-articles");
-    case "material":
-      return t("nakafa-search-subject");
-    case "tryout":
-      return t("nakafa-search-tryout");
-    case "quran":
-      return t("nakafa-search-quran");
-    default:
-      return t("nakafa-search-results");
-  }
+  return Match.value(section).pipe(
+    Match.when("articles", () => t("nakafa-search-articles")),
+    Match.when("material", () => t("nakafa-search-subject")),
+    Match.when("tryout", () => t("nakafa-search-tryout")),
+    Match.when("quran", () => t("nakafa-search-quran")),
+    Match.orElse(() => t("nakafa-search-results"))
+  );
 }

@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
-import { Clock, Effect, Struct } from "effect";
+import { Clock, Effect, Match, Struct } from "effect";
 
 /** Records membership lifecycle changes after invite usage is updated. */
 export const schoolMembersHandler = Effect.fn(
@@ -34,9 +34,9 @@ export const schoolMembersHandler = Effect.fn(
           .pipe(Effect.orDie);
       }
     }
-    switch (member.status) {
-      case "active": {
-        yield* writer
+    yield* Match.value(member.status).pipe(
+      Match.when("active", () =>
+        writer
           .table("schoolActivityLogs")
           .insert({
             schoolId: member.schoolId,
@@ -49,11 +49,10 @@ export const schoolMembersHandler = Effect.fn(
               joinedAt: member.joinedAt,
             },
           })
-          .pipe(Effect.orDie);
-        break;
-      }
-      case "invited": {
-        yield* writer
+          .pipe(Effect.orDie)
+      ),
+      Match.when("invited", () =>
+        writer
           .table("schoolActivityLogs")
           .insert({
             schoolId: member.schoolId,
@@ -67,13 +66,10 @@ export const schoolMembersHandler = Effect.fn(
               ...Struct.pick(member, ["invitedAt"]),
             },
           })
-          .pipe(Effect.orDie);
-        break;
-      }
-      default: {
-        break;
-      }
-    }
+          .pipe(Effect.orDie)
+      ),
+      Match.orElse(() => Effect.void)
+    );
     return;
   }
   if (change.operation === "update") {
@@ -95,9 +91,9 @@ export const schoolMembersHandler = Effect.fn(
         .pipe(Effect.orDie);
     }
     const statusTransition = `${oldMember.status}-${member.status}` as const;
-    switch (statusTransition) {
-      case "invited-active": {
-        yield* writer
+    yield* Match.value(statusTransition).pipe(
+      Match.when("invited-active", () =>
+        writer
           .table("schoolActivityLogs")
           .insert({
             schoolId: member.schoolId,
@@ -110,30 +106,30 @@ export const schoolMembersHandler = Effect.fn(
               joinedAt: member.joinedAt,
             },
           })
-          .pipe(Effect.orDie);
-        break;
-      }
-      default: {
-        if (oldMember.status !== "removed" && member.status === "removed") {
-          yield* writer
-            .table("schoolActivityLogs")
-            .insert({
-              schoolId: member.schoolId,
-              userId: member.removedBy ?? member.userId,
-              action: "member_removed",
-              entityType: "schoolMembers",
-              entityId: change.id,
-              metadata: {
-                removedUserId: member.userId,
-                role: member.role,
-                ...Struct.pick(member, ["removedAt"]),
-              },
-            })
-            .pipe(Effect.orDie);
-        }
-        break;
-      }
-    }
+          .pipe(Effect.orDie)
+      ),
+      Match.orElse(() =>
+        Effect.gen(function* () {
+          if (oldMember.status !== "removed" && member.status === "removed") {
+            yield* writer
+              .table("schoolActivityLogs")
+              .insert({
+                schoolId: member.schoolId,
+                userId: member.removedBy ?? member.userId,
+                action: "member_removed",
+                entityType: "schoolMembers",
+                entityId: change.id,
+                metadata: {
+                  removedUserId: member.userId,
+                  role: member.role,
+                  ...Struct.pick(member, ["removedAt"]),
+                },
+              })
+              .pipe(Effect.orDie);
+          }
+        })
+      )
+    );
     return;
   }
   const oldMember = change.oldDoc;
