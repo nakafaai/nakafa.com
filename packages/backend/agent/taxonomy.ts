@@ -6,15 +6,13 @@ import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { activeIdentityValidator } from "@repo/backend/content/publication/spec";
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_MCP_GUIDANCE,
 } from "@repo/contents/agent/constants";
-import {
-  getUnknownErrorMessage,
-  NakafaAgentDataReadError,
-} from "@repo/contents/agent/errors";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";
 import { Array as Arr, Effect } from "effect";
 

@@ -1,10 +1,8 @@
 import { NAKAFA_EDGE_CLIENT_IP_HEADER } from "@repo/backend/agent/edge";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
-import {
-  getUnknownErrorMessage,
-  NakafaAgentDataReadError,
-} from "@repo/contents/agent/errors";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { sha256Hex } from "@repo/utilities/digest";
 import { Effect } from "effect";
 
