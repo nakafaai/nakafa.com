@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { NodeFileSystem } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
   createThemeProfiles,
@@ -38,7 +38,7 @@ const THEME_IDENTITY_TOKENS = [
 ] as const;
 const EXPECTED_CONCRETE_THEME_COUNT = 31;
 const readSources = readThemeStyleSources().pipe(
-  Effect.provide(NodeFileSystem.layer)
+  Effect.provide(NodeServices.layer)
 );
 const registeredThemeNames = Arr.map(themes, (theme) => theme.value);
 const concreteThemeNames = Arr.filter(
@@ -62,7 +62,7 @@ describe("theme profile contract", () => {
         readThemeStyleSources({
           customThemes: missingPath,
           globals: missingPath,
-        }).pipe(Effect.provide(NodeFileSystem.layer))
+        }).pipe(Effect.provide(NodeServices.layer))
       );
       expect(result._tag).toBe("Failure");
       if (result._tag !== "Failure") {

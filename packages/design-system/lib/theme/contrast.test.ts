@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { NodeFileSystem } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
   createThemeProfiles,
@@ -74,7 +74,7 @@ const concreteThemeNames = Arr.flatMap(themes, (theme) =>
 );
 const readProfiles = readThemeStyleSources().pipe(
   Effect.map((sources) => createThemeProfiles(concreteThemeNames, sources)),
-  Effect.provide(NodeFileSystem.layer)
+  Effect.provide(NodeServices.layer)
 );
 const textPairs = Arr.appendAll(
   Arr.map(

@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { NodeFileSystem } from "@effect/platform-node";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import {
@@ -15,7 +15,7 @@ import { Array as Arr, Effect, Option, Order, Record as Rec } from "effect";
 
 const readProfiles = readThemeStyleSources().pipe(
   Effect.map((sources) => createThemeProfiles(["light", "dark"], sources)),
-  Effect.provide(NodeFileSystem.layer)
+  Effect.provide(NodeServices.layer)
 );
 
 describe("theme compatibility colors", () => {
