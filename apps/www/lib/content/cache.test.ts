@@ -16,9 +16,7 @@ const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
 const revalidateTagMock = vi.hoisted(() => vi.fn());
 
-class TestCacheFailure extends Data.TaggedError("TestCacheFailure")<{
-  readonly layer: "next" | "sitemap";
-}> {}
+class TestCacheFailure extends Data.TaggedError("TestCacheFailure") {}
 
 vi.mock("next/cache", () => ({
   /** Records cache profile usage without touching Next internals. */
@@ -60,12 +58,12 @@ describe("content runtime cache", () => {
   it.effect("keeps a failed Next invalidation in the typed error channel", () =>
     Effect.gen(function* () {
       revalidateTagMock.mockImplementationOnce(() => {
-        throw new TestCacheFailure({ layer: "next" });
+        throw new TestCacheFailure();
       });
 
       expect(
         yield* invalidateContentCache("material").pipe(Effect.flip)
-      ).toEqual(new ContentCacheInvalidationError({ layer: "next" }));
+      ).toEqual(new ContentCacheInvalidationError());
     })
   );
 });

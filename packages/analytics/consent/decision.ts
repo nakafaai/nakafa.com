@@ -1,14 +1,3 @@
-import { Schema } from "effect";
-
-const AnalyticsConsentErrorSchema = Schema.Literals([
-  "load",
-  "runtime",
-  "save",
-]);
-
-/** One consent failure kind that the surface names in its message. */
-export type AnalyticsConsentError = typeof AnalyticsConsentErrorSchema.Type;
-
 /** Resolves the single surfaced error with load errors winning over retries. */
 export function resolveConsentError({
   hasLoadError,
@@ -18,7 +7,7 @@ export function resolveConsentError({
   readonly hasLoadError: boolean;
   readonly hasRuntimeError: boolean;
   readonly hasSaveError: boolean;
-}): AnalyticsConsentError | null {
+}) {
   if (hasLoadError) {
     return "load";
   }

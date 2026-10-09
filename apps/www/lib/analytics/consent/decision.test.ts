@@ -49,7 +49,7 @@ function readOverride(
   ).pipe(HashMap.get(identity), Option.getOrUndefined);
 }
 
-describe("consent affordance resolution", () => {
+describe("explicit consent save actions", () => {
   function createOptions(
     overrides: MutableList.MutableList<OverridesUpdate>,
     options?: {

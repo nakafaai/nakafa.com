@@ -9,10 +9,7 @@ import { Effect, Schema } from "effect";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import {
-  ContentCacheInvalidationError,
-  invalidateContentCache,
-} from "@/lib/content/cache";
+import { invalidateContentCache } from "@/lib/content/cache";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { invalidateSitemapCache } from "@/lib/sitemap/cache";
@@ -79,11 +76,7 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
 const invalidateContentRuntime = Effect.fn("NakafaContent.invalidateRuntime")(
   function* (scope: ContentCacheScope) {
     yield* invalidateContentCache(scope);
-    yield* invalidateSitemapCache().pipe(
-      Effect.mapError(
-        () => new ContentCacheInvalidationError({ layer: "sitemap" })
-      )
-    );
+    yield* invalidateSitemapCache();
   }
 );
 
