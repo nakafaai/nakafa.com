@@ -1,15 +1,16 @@
 ---
 "www": patch
-"@repo/backend": patch
 "@repo/analytics": patch
+"@repo/backend": patch
 "@repo/design-system": patch
+"@repo/internationalization": patch
+"@repo/next-config": patch
+"@repo/seo": patch
 ---
 
-Dependencies move to their latest releases. No application code changes.
-
-- `www`: nuqs 2.10.2, @convex-dev/agent 0.7.7, the AI SDK 7.0.135.
-- `@repo/backend`: convex-helpers 0.1.128, @convex-dev/agent 0.7.7, @mendable/firecrawl-js 4.46.0, the AI SDK 7.0.135.
-- `@repo/analytics`: posthog-js 1.438.3, posthog-node 5.55.1.
-- `@repo/design-system`: react-resizable-panels 4.14.3, react-aria-components 1.22.0, the AI SDK 7.0.135.
-
-Development tools also move: pnpm 11.28.5, vite 8.3.4, @playwright/test 1.64.0, @vercel/config 0.12.0, @scalar/openapi-parser 0.29.12.
+Run on Next.js 16.3.8, a security release that fixes request forgery in image
+optimization and cache leaks across `use cache` fills and root params. Every
+other dependency moves to its current release, including the AI SDK 7.0.128
+cohort, Motion 14, KaTeX 0.19, the Convex Agent component 0.7.4, and the MCP
+SDK 2.3.1. The dependency audit now runs OSV Scanner 2.6.0 and no longer
+ignores the http-cache-semantics advisory, which a patched release closed.
