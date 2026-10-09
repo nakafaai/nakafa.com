@@ -19,7 +19,8 @@ function formatFailureDetails(details: Record<string, unknown> | undefined) {
     return `\n${Schema.encodeSync(PrettyJsonSchema)(details)}`;
   }
 
-  const failures = pageResults.filter(
+  const failures = Arr.filter(
+    pageResults,
     (page) =>
       Predicate.isObject(page) &&
       Predicate.hasProperty(page, "status") &&

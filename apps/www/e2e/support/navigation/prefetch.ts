@@ -5,7 +5,7 @@ import {
   type Page,
   type Request,
 } from "@playwright/test";
-import { Clock, Duration, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import {
@@ -34,7 +34,7 @@ export class PrefetchSettleTimeout extends Schema.TaggedError<PrefetchSettleTime
   }
 ) {
   get message() {
-    return `Prefetch requests kept loading for ${this.timeoutMilliseconds} ms: ${this.pending.join(", ") || "none pending, new requests kept starting"}`;
+    return `Prefetch requests kept loading for ${this.timeoutMilliseconds} ms: ${Arr.join(this.pending, ", ") || "none pending, new requests kept starting"}`;
   }
 }
 
@@ -87,10 +87,13 @@ export const settlePrefetch = Effect.fn("NakafaE2E.settlePrefetch")(function* <
           }
           if (now - startedAt > readinessTimeoutMilliseconds) {
             return yield* new PrefetchSettleTimeout({
-              pending: [
-                ...tracker.pendingRequests("javascript"),
-                ...tracker.pendingRequests("prefetch"),
-              ].map(({ url }) => url),
+              pending: Arr.map(
+                [
+                  ...tracker.pendingRequests("javascript"),
+                  ...tracker.pendingRequests("prefetch"),
+                ],
+                ({ url }) => url
+              ),
               timeoutMilliseconds: readinessTimeoutMilliseconds,
             });
           }

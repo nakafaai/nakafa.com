@@ -14,7 +14,6 @@ import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { compareCodeUnits } from "@nakafa/aksara-contracts/text/order";
 import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
@@ -28,6 +27,7 @@ import {
   Array as Arr,
   Effect,
   MutableHashMap,
+  Order,
   Record as Rec,
   Stream,
 } from "effect";
@@ -41,11 +41,10 @@ export const makeProgramContextRuntimeSource = Effect.fn(
   "TestContent.programContextRuntimeSource"
 )(function* () {
   const catalog = yield* makeProgramSnapshotRow(testPublishedProgram);
-  const routes = [...testPublishedCurriculumRoutes].sort((left, right) =>
-    compareCodeUnits(
-      `${left.programKey}\0${left.appLocale}\0${left.publicPath}`,
-      `${right.programKey}\0${right.appLocale}\0${right.publicPath}`
-    )
+  const routes = Arr.sortWith(
+    testPublishedCurriculumRoutes,
+    (route) => `${route.programKey}\0${route.appLocale}\0${route.publicPath}`,
+    Order.String
   );
   const curriculum = yield* Effect.forEach(routes, makeCurriculumSnapshotRow);
   const evidence = yield* digestProgramRows({
@@ -95,7 +94,8 @@ export const makeProgramContextRuntimeSource = Effect.fn(
       snapshotId: manifest.snapshotId,
     },
   ]);
-  const storedRoutes: PublicationRow<"curriculumRoutes">[] = curriculum.map(
+  const storedRoutes: PublicationRow<"curriculumRoutes">[] = Arr.map(
+    curriculum,
     (record, index) => ({
       ...(record.row.materialKey === undefined
         ? {}
@@ -120,18 +120,21 @@ export const makeProgramContextRuntimeSource = Effect.fn(
       sourcePath: record.row.sourcePath,
     })
   );
-  const sitemapRows = storedRoutes.flatMap((row) =>
+  const sitemapRows = Arr.flatMap(storedRoutes, (row) =>
     row.bucket === undefined ? [] : [{ ...row, bucket: row.bucket }]
   );
-  const buckets = Rec.values(
-    Arr.groupBy(sitemapRows, (row) => `${row.appLocale}/${row.bucket}`)
-  ).map((rows) => ({
-    appLocale: rows[0].appLocale,
-    bucket: rows[0].bucket,
-    index: rows[0].index,
-    routeCount: rows.length,
-    snapshotId: manifest.snapshotId,
-  }));
+  const buckets = Arr.map(
+    Rec.values(
+      Arr.groupBy(sitemapRows, (row) => `${row.appLocale}/${row.bucket}`)
+    ),
+    (rows) => ({
+      appLocale: rows[0].appLocale,
+      bucket: rows[0].bucket,
+      index: rows[0].index,
+      routeCount: rows.length,
+      snapshotId: manifest.snapshotId,
+    })
+  );
   MutableHashMap.set(fixture.source, "curriculumRoutes", storedRoutes);
   MutableHashMap.set(fixture.source, "programBuckets", buckets);
   return fixture;

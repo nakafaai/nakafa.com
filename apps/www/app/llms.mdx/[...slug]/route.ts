@@ -1,5 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { NextRequest } from "next/server";
 import { hasLocale } from "next-intl";
 import { AGENT_DISCOVERY_LINK_HEADER, LLMS_TEXT_PATH } from "@/lib/discovery";
@@ -22,13 +22,13 @@ import { buildUnsupportedMarkdownRouteText } from "@/lib/llms/unsupported";
 const MARKDOWN_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": LLMS_MARKDOWN_MEDIA_TYPE,
-  Vary: LLMS_REPRESENTATION_VARY_FIELDS.join(", "),
+  Vary: Arr.join(LLMS_REPRESENTATION_VARY_FIELDS, ", "),
 };
 
 const TEXT_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": "text/plain; charset=utf-8",
-  Vary: LLMS_REPRESENTATION_VARY_FIELDS.join(", "),
+  Vary: Arr.join(LLMS_REPRESENTATION_VARY_FIELDS, ", "),
 };
 
 const MARKDOWN_NOT_FOUND_HEADERS = {
@@ -54,7 +54,7 @@ export async function GET(
   const hasLocalePrefix = hasLocale(routing.locales, requestedLocale);
   const locale = hasLocalePrefix ? requestedLocale : routing.defaultLocale;
   const slugParts = hasLocalePrefix ? slug.slice(1) : slug;
-  const cleanSlug = stripLlmsRouteExtension(slugParts.join("/"));
+  const cleanSlug = stripLlmsRouteExtension(Arr.join(slugParts, "/"));
 
   const isPublicLocaleIndex =
     hasLocalePrefix && isPublicLlmsLocaleIndexRoute(cleanSlug);

@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { scrollToElement } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -33,7 +33,7 @@ const reducedMotionByViewport = {
   touch: "no-preference",
 } as const;
 
-const featureViewports = targetViewports.map((viewport) => ({
+const featureViewports = Arr.map(targetViewports, (viewport) => ({
   ...viewport,
   reducedMotion: reducedMotionByViewport[viewport.name],
 }));

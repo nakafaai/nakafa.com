@@ -176,6 +176,37 @@ describe("material lesson navigation", () => {
     });
   });
 
+  it("orders equal authored order by canonical path in both input orders", () => {
+    const tiedNext = {
+      ...previewNextProjection,
+      order: previewProjection.order,
+      publicPath: PublicPathSchema.make(`${previewProjection.parentPath}/z`),
+    };
+    expect(
+      readMaterialNavigation(
+        { ...publishedPage, siblings: [previewProjection, tiedNext] },
+        null
+      )
+    ).toMatchObject({
+      pagination: { next: { href: toMaterialHref(tiedNext) } },
+    });
+  });
+
+  it("keeps the input order of siblings with the same canonical path", () => {
+    const duplicate = {
+      ...previewProjection,
+      metadata: { ...previewProjection.metadata, title: "Duplicate" },
+    };
+    expect(
+      readMaterialNavigation(
+        { ...publishedPage, siblings: [previewProjection, duplicate] },
+        null
+      )
+    ).toMatchObject({
+      pagination: { next: { title: "Duplicate" } },
+    });
+  });
+
   it("keeps preview navigation canonical even with a supplied context", () => {
     expect(
       readMaterialNavigation(

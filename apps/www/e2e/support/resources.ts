@@ -1,5 +1,13 @@
 import type { Browser, Page, Request } from "@playwright/test";
-import { Clock, Duration, Effect, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Duration,
+  Effect,
+  MutableList,
+  Option,
+  Schema,
+} from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
@@ -236,7 +244,7 @@ const readSettledJavascriptRun = Effect.fn(
 export const measureRouteJavascript = Effect.fn(
   "NakafaE2E.measureRouteJavascript"
 )(function* (browser: Browser, baseURL: string, href: string) {
-  const runs: JavascriptRun[] = [];
+  const runs = MutableList.make<JavascriptRun>();
 
   for (let run = 0; run < 3; run += 1) {
     const javascriptRun = yield* withBrowserContext(
@@ -288,20 +296,21 @@ export const measureRouteJavascript = Effect.fn(
           );
         })
     );
-    runs.push(javascriptRun);
+    MutableList.append(runs, javascriptRun);
   }
 
+  const measured = MutableList.toArray(runs);
   return {
-    runs,
+    runs: measured,
     worst: {
       decodedBodySize: Math.max(
-        ...runs.map(({ decodedBodySize }) => decodedBodySize)
+        ...Arr.map(measured, ({ decodedBodySize }) => decodedBodySize)
       ),
       encodedBodySize: Math.max(
-        ...runs.map(({ encodedBodySize }) => encodedBodySize)
+        ...Arr.map(measured, ({ encodedBodySize }) => encodedBodySize)
       ),
       resourceCount: Math.max(
-        ...runs.map(({ resourceCount }) => resourceCount)
+        ...Arr.map(measured, ({ resourceCount }) => resourceCount)
       ),
     },
   };

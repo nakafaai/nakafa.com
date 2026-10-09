@@ -23,41 +23,53 @@ import { TestClock } from "effect/testing";
 import { runWatchedBuild, watchSilence } from "@/scripts/build/watch";
 
 /** A child that starts a second process, prints both process ids and one line, then sleeps. */
-const SILENT_TREE = [
-  'const child = require("node:child_process").spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });',
-  'console.log(process.pid + " " + child.pid);',
-  'console.log("compiling");',
-  "setInterval(() => {}, 1000);",
-].join("\n");
+const SILENT_TREE = Arr.join(
+  [
+    'const child = require("node:child_process").spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });',
+    'console.log(process.pid + " " + child.pid);',
+    'console.log("compiling");',
+    "setInterval(() => {}, 1000);",
+  ],
+  "\n"
+);
 
 /**
  * A child that leaves a grandchild holding its output open and then exits with
  * status 0. The grandchild stays silent and ends by itself after 30 seconds, so
  * a failing run cannot leave it running for long.
  */
-const OUTPUT_HELD = [
-  'const { spawn } = require("node:child_process");',
-  'const grandchild = spawn(process.execPath, ["-e", "setTimeout(() => {}, 30000)"], { stdio: "inherit" });',
-  "grandchild.unref();",
-  "console.log(grandchild.pid);",
-  'console.log("done");',
-].join("\n");
+const OUTPUT_HELD = Arr.join(
+  [
+    'const { spawn } = require("node:child_process");',
+    'const grandchild = spawn(process.execPath, ["-e", "setTimeout(() => {}, 30000)"], { stdio: "inherit" });',
+    "grandchild.unref();",
+    "console.log(grandchild.pid);",
+    'console.log("done");',
+  ],
+  "\n"
+);
 
 /**
  * A child that writes one euro sign split across two chunks, then stays silent.
  * The bytes are E2 82 AC, and the second chunk starts with the last one.
  */
-const SPLIT_CHARACTER = [
-  "process.stdout.write(Buffer.from([0xe2, 0x82]));",
-  "setTimeout(() => process.stdout.write(Buffer.from([0xac, 0x0a])), 100);",
-  "setTimeout(() => {}, 30000);",
-].join("\n");
+const SPLIT_CHARACTER = Arr.join(
+  [
+    "process.stdout.write(Buffer.from([0xe2, 0x82]));",
+    "setTimeout(() => process.stdout.write(Buffer.from([0xac, 0x0a])), 100);",
+    "setTimeout(() => {}, 30000);",
+  ],
+  "\n"
+);
 
 /** A child that writes half a line, waits past several heartbeats, then finishes the line. */
-const HALF_LINE = [
-  'process.stdout.write("half");',
-  'setTimeout(() => process.stdout.write(" line\\n"), 300);',
-].join("\n");
+const HALF_LINE = Arr.join(
+  [
+    'process.stdout.write("half");',
+    'setTimeout(() => process.stdout.write(" line\\n"), 300);',
+  ],
+  "\n"
+);
 
 /** The 2 second silence limit keeps the real-process tests short; production waits five minutes. */
 const SHORT_CADENCE = {

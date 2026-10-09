@@ -28,6 +28,7 @@ import {
   Array as Arr,
   Effect,
   MutableHashMap,
+  MutableList,
   Record as Rec,
   Schema,
   Struct,
@@ -37,7 +38,7 @@ const SignedArtifactJsonSchema = Schema.fromJsonString(
   SignedContentArtifactSchema
 );
 
-const defaultProjections = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
+const defaultProjections = Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
   makeMaterialProjection(locale, 1),
   makeMaterialProjection(locale, 2),
 ]);
@@ -53,11 +54,11 @@ export const makeMaterialRuntimeSource = Effect.fn(
     scope: testPublicationScope({ families: ["material"] }),
   });
   const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
-  const heads: PublicationRow<"contentHeads">[] = [];
-  const bindings: PublicationRow<"contentBindings">[] = [];
-  const artifacts: PublicationRow<"contentArtifacts">[] = [];
-  const catalog: PublicationRow<"materialCatalog">[] = [];
-  const search: PublicationRow<"contentIndex">[] = [];
+  const heads = MutableList.make<PublicationRow<"contentHeads">>();
+  const bindings = MutableList.make<PublicationRow<"contentBindings">>();
+  const artifacts = MutableList.make<PublicationRow<"contentArtifacts">>();
+  const catalog = MutableList.make<PublicationRow<"materialCatalog">>();
+  const search = MutableList.make<PublicationRow<"contentIndex">>();
   for (const [index, projection] of projections.entries()) {
     const artifact = testSignedArtifact("mathematics", {
       artifactLocale: activeAppLocaleCode(projection.appLocale),
@@ -73,7 +74,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
       releaseId: signed.manifest.releaseId,
       sequence: fixture.state.activeSequence,
     };
-    heads.push({
+    MutableList.append(heads, {
       ...Struct.omit(publicIdentity, ["publicPath"]),
       artifactHash: artifact.artifactHash,
       artifactLocale: projection.artifactLocale,
@@ -87,7 +88,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
       sourceHash: artifact.payload.sourceHash,
       sourcePath,
     });
-    bindings.push({
+    MutableList.append(bindings, {
       appLocale: projection.appLocale,
       batchHash: testTextHash("material snapshot routes"),
       batchIndex: 0,
@@ -105,7 +106,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
       }),
       sequence: fixture.state.activeSequence,
     });
-    artifacts.push({
+    MutableList.append(artifacts, {
       artifactHash: artifact.artifactHash,
       artifactJson: yield* Schema.encodeEffect(SignedArtifactJsonSchema)(
         artifact
@@ -113,7 +114,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
     });
     const topic = yield* deriveMaterialTopicReference(projection);
     const bucket = getHashBucket(projectionHash);
-    catalog.push({
+    MutableList.append(catalog, {
       ...publicIdentity,
       appLocale: projection.appLocale,
       assetId: projection.graph.assetId,
@@ -129,7 +130,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
       sourcePath,
       topicAssetId: topic.graph.assetId,
     });
-    search.push({
+    MutableList.append(search, {
       ...publicIdentity,
       appLocale: projection.appLocale,
       family: "material",
@@ -137,19 +138,39 @@ export const makeMaterialRuntimeSource = Effect.fn(
       text: projection.metadata.title,
     });
   }
-  const buckets = Rec.values(
-    Arr.groupBy(catalog, (row) => `${row.appLocale}/${row.bucket}`)
-  ).map((rows) => ({
-    appLocale: rows[0].appLocale,
-    bucket: rows[0].bucket,
-    count: rows.length,
-    slot: fixture.state.materialSlot,
-  }));
-  MutableHashMap.set(fixture.source, "contentHeads", heads);
-  MutableHashMap.set(fixture.source, "contentBindings", bindings);
-  MutableHashMap.set(fixture.source, "contentArtifacts", artifacts);
-  MutableHashMap.set(fixture.source, "materialCatalog", catalog);
+  const catalogRows = MutableList.toArray(catalog);
+  const buckets = Arr.map(
+    Rec.values(
+      Arr.groupBy(catalogRows, (row) => `${row.appLocale}/${row.bucket}`)
+    ),
+    (rows) => ({
+      appLocale: rows[0].appLocale,
+      bucket: rows[0].bucket,
+      count: rows.length,
+      slot: fixture.state.materialSlot,
+    })
+  );
+  MutableHashMap.set(
+    fixture.source,
+    "contentHeads",
+    MutableList.toArray(heads)
+  );
+  MutableHashMap.set(
+    fixture.source,
+    "contentBindings",
+    MutableList.toArray(bindings)
+  );
+  MutableHashMap.set(
+    fixture.source,
+    "contentArtifacts",
+    MutableList.toArray(artifacts)
+  );
+  MutableHashMap.set(fixture.source, "materialCatalog", catalogRows);
   MutableHashMap.set(fixture.source, "materialBuckets", buckets);
-  MutableHashMap.set(fixture.source, "contentIndex", search);
+  MutableHashMap.set(
+    fixture.source,
+    "contentIndex",
+    MutableList.toArray(search)
+  );
   return { ...fixture, projections };
 });

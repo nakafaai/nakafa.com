@@ -22,7 +22,7 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -34,7 +34,7 @@ import { reportClientException } from "@/lib/analytics/client";
 /** Render the onboarding form for creating a new school. */
 export function SchoolOnboardingCreateForm() {
   const t = useTranslations("School.Onboarding");
-  const schoolTypeItems = schoolTypeOptions.map((option) => ({
+  const schoolTypeItems = Arr.map(schoolTypeOptions, (option) => ({
     label: t(option.value),
     value: option.value,
   }));
@@ -257,7 +257,7 @@ export function SchoolOnboardingCreateForm() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {schoolTypeOptions.map((option) => (
+                      {Arr.map(schoolTypeOptions, (option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {t(option.value)}
                         </SelectItem>
