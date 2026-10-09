@@ -6,7 +6,7 @@ import {
   resetBrowserAnalyticsIdentity,
   revokeToBaselineAnalytics,
 } from "@repo/analytics/posthog/browser";
-import { Clock, Effect, type Effect as EffectType, Schema } from "effect";
+import { Clock, Effect, Schema } from "effect";
 import { saveAnonymousAnalyticsConsent } from "@/lib/analytics/consent/storage";
 import { authClient } from "@/lib/auth/client";
 
@@ -55,10 +55,8 @@ type BrowserAccountIdentityCleanup =
 
 const defaultDeletedAccountIdentityCleanup = {
   ...defaultBrowserAccountIdentityCleanup,
-  denyAnonymousAnalytics: (): EffectType.Effect<void, unknown> =>
-    denyAnonymousAnalytics,
-  revokeAnalytics: (): EffectType.Effect<void, unknown> =>
-    revokeToBaselineAnalytics(),
+  denyAnonymousAnalytics: () => denyAnonymousAnalytics,
+  revokeAnalytics: () => revokeToBaselineAnalytics(),
 };
 
 /** The deleted-account cleanup seam, shaped by its default implementation. */

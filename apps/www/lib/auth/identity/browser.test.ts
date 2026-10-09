@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY } from "@repo/analytics/consent";
 import {
+  BrowserAnalyticsLoadFailed,
   resetBrowserAnalyticsIdentity,
   revokeToBaselineAnalytics,
 } from "@repo/analytics/posthog/browser";
 import { Effect } from "effect";
+import { AnalyticsConsentStorageFailed } from "@/lib/analytics/consent/storage";
 import { authClient } from "@/lib/auth/client";
 import {
   AccountSignOutFailed,
@@ -17,7 +19,8 @@ vi.mock("@/lib/auth/client", () => ({
   authClient: { signOut: vi.fn() },
 }));
 
-vi.mock("@repo/analytics/posthog/browser", () => ({
+vi.mock(import("@repo/analytics/posthog/browser"), async (importOriginal) => ({
+  ...(await importOriginal()),
   revokeToBaselineAnalytics: vi.fn(() => Effect.void),
   resetBrowserAnalyticsIdentity: vi.fn(),
 }));
@@ -135,8 +138,17 @@ describe("account browser identity", () => {
         expect(
           yield* clearDeletedAccountBrowserIdentity({
             denyAnonymousAnalytics: () =>
-              Effect.fail("privacy storage unavailable"),
-            revokeAnalytics: () => Effect.fail("analytics queue unavailable"),
+              Effect.fail(
+                new AnalyticsConsentStorageFailed({
+                  code: "ANALYTICS_CONSENT_STORAGE_FAILED",
+                })
+              ),
+            revokeAnalytics: () =>
+              Effect.fail(
+                new BrowserAnalyticsLoadFailed({
+                  code: "BROWSER_ANALYTICS_LOAD_FAILED",
+                })
+              ),
             removePersistedAccountState: () => {
               throw new Error("storage unavailable");
             },
