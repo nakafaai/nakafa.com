@@ -392,6 +392,78 @@ describe("retired try-out redirects", () => {
         ).toBeNull();
       })
     );
+
+    it.effect(
+      "waits until the localized set is live before a renamed part",
+      () =>
+        Effect.gen(function* () {
+          serveCatalog({
+            exams: SNBT_EXAM_PAGES,
+            routes: [SNBT_EXAM],
+            sections: [
+              {
+                appLocale: "en",
+                publicPath:
+                  "try-out/indonesia/snbt/2027/set-1/literacy-in-english",
+              },
+            ],
+          });
+
+          expect(
+            yield* readTryoutRedirect(
+              "/en/try-out/snbt/2027-set-1/part/english-language"
+            )
+          ).toBeNull();
+        })
+    );
+
+    it.effect("keeps a retired part path that the catalog still serves", () =>
+      Effect.gen(function* () {
+        serveCatalog({
+          exams: SNBT_EXAM_PAGES,
+          routes: [
+            SNBT_EXAM,
+            SNBT_2027_TRACK,
+            SNBT_2027_SET_1,
+            { en: "try-out/snbt/2027-set-1/part/english-language" },
+          ],
+          sections: [
+            {
+              appLocale: "en",
+              publicPath:
+                "try-out/indonesia/snbt/2027/set-1/literacy-in-english",
+            },
+          ],
+        });
+
+        expect(
+          yield* readTryoutRedirect(
+            "/en/try-out/snbt/2027-set-1/part/english-language"
+          )
+        ).toBeNull();
+      })
+    );
+
+    it.effect("keeps a part key that the rename map does not rename", () =>
+      Effect.gen(function* () {
+        serveCatalog({
+          exams: SNBT_EXAM_PAGES,
+          routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+          sections: [
+            {
+              appLocale: "en",
+              publicPath: "try-out/indonesia/snbt/2027/set-1/matematika-wajib",
+            },
+          ],
+        });
+
+        expect(
+          yield* readTryoutRedirect(
+            "/en/try-out/snbt/2027-set-1/part/matematika-wajib"
+          )
+        ).toBe("/en/try-out/indonesia/snbt/2027/set-1/matematika-wajib");
+      })
+    );
   });
 
   describe("retired track-less set URLs", () => {
@@ -439,6 +511,24 @@ describe("retired try-out redirects", () => {
           expect(
             yield* readTryoutRedirect("/en/try-out/indonesia/snbt/set-1")
           ).toBe("/en/try-out/indonesia/snbt/2026/set-1");
+        })
+    );
+
+    it.effect(
+      "keeps a track-less set on the 404 when the SNBT exam is not live",
+      () =>
+        Effect.gen(function* () {
+          serveCatalog({
+            routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+          });
+
+          expect(
+            yield* readTryoutRedirect("/en/try-out/indonesia/snbt/set-1")
+          ).toBeNull();
+          expect(readExamPageMock).toHaveBeenCalledWith({
+            appLocale: "en",
+            publicPath: "try-out/indonesia/snbt",
+          });
         })
     );
 
@@ -494,7 +584,7 @@ describe("retired try-out redirects", () => {
       ],
     ] as const)(
       "keeps a track-less set on the 404 when %s",
-      (_reason, exams, routes) =>
+      ([_reason, exams, routes]) =>
         Effect.gen(function* () {
           serveCatalog({ exams, routes: [...routes] });
 
@@ -557,6 +647,59 @@ describe("retired try-out redirects", () => {
           serveCatalog({
             exams: SNBT_EXAM_PAGES,
             routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
+          });
+
+          expect(
+            yield* readTryoutRedirect(
+              "/en/try-out/indonesia/snbt/set-1/reading-and-writing-skills"
+            )
+          ).toBeNull();
+        })
+    );
+
+    it.effect(
+      "keeps a track-less section when no year track serves its set",
+      () =>
+        Effect.gen(function* () {
+          serveCatalog({
+            exams: SNBT_EXAM_PAGES,
+            routes: [SNBT_EXAM],
+            sections: [
+              {
+                appLocale: "en",
+                publicPath:
+                  "try-out/indonesia/snbt/2027/set-1/reading-comprehension-and-writing",
+              },
+            ],
+          });
+
+          expect(
+            yield* readTryoutRedirect(
+              "/en/try-out/indonesia/snbt/set-1/reading-and-writing-skills"
+            )
+          ).toBeNull();
+        })
+    );
+
+    it.effect(
+      "keeps a track-less section when its retired path is still served",
+      () =>
+        Effect.gen(function* () {
+          serveCatalog({
+            exams: SNBT_EXAM_PAGES,
+            routes: [
+              SNBT_EXAM,
+              SNBT_2027_TRACK,
+              SNBT_2027_SET_1,
+              { en: "try-out/indonesia/snbt/set-1/reading-and-writing-skills" },
+            ],
+            sections: [
+              {
+                appLocale: "en",
+                publicPath:
+                  "try-out/indonesia/snbt/2027/set-1/reading-comprehension-and-writing",
+              },
+            ],
           });
 
           expect(
