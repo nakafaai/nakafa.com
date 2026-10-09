@@ -73,7 +73,9 @@ const withObservedSceneDiagnostics = Effect.fn(
     },
     (diagnostics) =>
       use.pipe(
-        Effect.tap(() => Effect.sync(() => expect(diagnostics).toEqual([])))
+        Effect.tap(() =>
+          Effect.map(diagnostics, (seen) => expect(seen).toEqual([]))
+        )
       )
   );
 });

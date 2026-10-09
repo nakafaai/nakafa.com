@@ -3,14 +3,16 @@ import { Effect, MutableList } from "effect";
 
 /**
  * Keeps the text that each page event reports to `record` while `use` runs.
- * `attach` listens to the page and returns its detach function, so the listener
- * ends however `use` ends. Playwright types each event on its own, so the
- * caller attaches the listener for the event it observes.
+ * `use` gets an Effect that reads the texts recorded so far, so a read after
+ * the page work sees the events that arrived during it. `attach` listens to
+ * the page and returns its detach function, so the listener ends however `use`
+ * ends. Playwright types each event on its own, so the caller attaches the
+ * listener for the event it observes.
  */
 export const withObservedEvents = Effect.fn("NakafaE2E.withObservedEvents")(
   function* <A, E, R>(
     attach: (record: (text: string) => void) => () => void,
-    use: (texts: string[]) => Effect.Effect<A, E, R>
+    use: (texts: Effect.Effect<readonly string[]>) => Effect.Effect<A, E, R>
   ) {
     return yield* Effect.acquireUseRelease(
       Effect.sync(() => {
@@ -18,7 +20,7 @@ export const withObservedEvents = Effect.fn("NakafaE2E.withObservedEvents")(
         const detach = attach((text) => MutableList.append(texts, text));
         return { detach, texts };
       }),
-      ({ texts }) => use(MutableList.toArray(texts)),
+      ({ texts }) => use(Effect.sync(() => MutableList.toArray(texts))),
       ({ detach }) => Effect.sync(detach)
     );
   }
@@ -38,6 +40,8 @@ export const withObservedPageErrors = Effect.fn(
       return () => page.off("pageerror", listener);
     },
     (errors) =>
-      use.pipe(Effect.tap(() => Effect.sync(() => expect(errors).toEqual([]))))
+      use.pipe(
+        Effect.tap(() => Effect.map(errors, (seen) => expect(seen).toEqual([])))
+      )
   );
 });

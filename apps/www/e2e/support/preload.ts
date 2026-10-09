@@ -25,7 +25,7 @@ export const collectUnusedPreloads = Effect.fn(
     },
     (warnings) =>
       Effect.andThen(interaction, Effect.sleep(UNUSED_PRELOAD_SETTLE)).pipe(
-        Effect.as(warnings)
+        Effect.andThen(warnings)
       )
   );
 });
