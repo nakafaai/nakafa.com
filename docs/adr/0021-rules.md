@@ -66,7 +66,7 @@ run time, or a module that starts with `"use client"` as its first statement.
 
 A test file is named `*.test.ts`, `*.test.tsx`, or `test.<name>.ts`, such as
 `test.setup.ts` or `test.helpers.ts`, which only tests load. Any other module
-that supports tests, such as `apps/www/test/fixtures.ts`, is product code.
+that supports tests, such as `apps/www/test/content-page.ts`, is product code.
 
 A framework configuration file is named `*.config.ts`, `.mts`, `.cts`, or
 `.tsx`, imports the Vitest or Vercel configuration API, or has a default export
@@ -214,6 +214,12 @@ import, keeps them equal.
   no decision, a name the plugin no longer defines, any other severity, and a
   second `plugins` array anywhere. So a plugin upgrade that adds a rule fails
   the check until the rule is decided.
+- This repository owns the rule decisions for every repository that runs its
+  source check. When the check judges another repository, it reads the block of
+  the repository that holds the check, at the commit the other repository
+  pins, and reports each rule the other block does not list or lists with
+  another severity. So Aksara cannot keep a shorter or a different block: its
+  required check fails until the two are equal.
 - A new place that a framework forces is added to the source check as a
   construction, with a test for the reported and the unreported form.
 - Keep `new X({...})` for Schema error classes.

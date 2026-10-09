@@ -1,7 +1,6 @@
 {
   "extends": "../packages/typescript-config/base.json",
   "compilerOptions": {
-    "noEmit": true,
     "types": ["node", "vitest/globals"]
   },
   "include": ["./**/*.ts", "./**/*.mts"]

@@ -46,17 +46,11 @@ const MaterialPreviewStaticParamsSchema = Schema.Struct({
   subject: Schema.Trimmed.check(Schema.isNonEmpty()),
   topic: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
-/** Concrete child params Next prerenders for one selected material preview. */
-export type MaterialPreviewStaticParams =
-  typeof MaterialPreviewStaticParamsSchema.Type;
 /** Runtime contract for one concrete article preview route. */
 const ArticlePreviewStaticParamsSchema = Schema.Struct({
   category: ArticleRouteSlugSchema,
   slug: ArticleRouteSlugSchema,
 });
-/** Concrete child params Next prerenders for one selected article preview. */
-export type ArticlePreviewStaticParams =
-  typeof ArticlePreviewStaticParamsSchema.Type;
 /** Concrete child params Next prerenders for one selected Page preview. */
 const PagePreviewStaticParamsSchema = Schema.Struct({
   page: Schema.Array(Schema.String),

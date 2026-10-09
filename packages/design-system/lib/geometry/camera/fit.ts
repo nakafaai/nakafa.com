@@ -234,11 +234,7 @@ const solvePixelConstraints = Effect.fn("camera.solvePixelConstraints")(
         constraints: vertical,
         availablePixels: height - 2 * VIEWPORT_EDGE_SPACE,
       },
-    ] satisfies readonly {
-      axis: CameraLabelFitError["axis"];
-      constraints: readonly AxisConstraint[];
-      availablePixels: number;
-    }[];
+    ] as const;
     for (const { axis, availablePixels, constraints } of dimensions) {
       for (const { lower } of constraints) {
         for (const { upper } of constraints) {

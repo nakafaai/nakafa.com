@@ -29,7 +29,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Stack: pnpm, Turborepo, Next.js, React, native TypeScript, Confect and Effect on Convex, Biome through Ultracite, Vitest.
 - Apps: `apps/www`, `apps/api`, `apps/mcp`, `apps/email`. Main packages: `packages/backend`, `packages/design-system`, `packages/contents`, `packages/testing`.
 - Same-app imports use `@/*`, colocated modules and tests included; cross-package imports use `@repo/*`. Import the owning file directly.
-- `packages/testing` owns shared Vitest defaults by runtime, `@repo/testing/node` and `@repo/testing/react`. A workspace keeps only local aliases, setup, projects, and coverage policy.
+- `packages/testing` owns shared Vitest defaults by runtime, `@repo/testing/node` and `@repo/testing/react`, including the per-file 100% coverage gate. A workspace keeps only local aliases, setup, projects, and its own coverage include and exclude lists.
 - `packages/utilities` owns generic cross-domain primitives only. Content contracts, roles, taxonomy, Convex values, AI vocabulary, UI copy, and product helpers stay in their domain-owning package.
 - Aksara exclusively owns authored content and signed publication for every content scope. For authored content work, open the Aksara repository and use its repository-local `nakafa-content` skill. Never copy that skill into Nakafa or global storage, and never add a second authored source, filesystem copy, or local publication writer. `packages/contents` owns only live Nakafa product, formatting, route-context, learner, and agent contracts.
 
@@ -41,7 +41,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Name new folders and files with one concise domain word per path segment plus conventional suffixes such as `.client` or `.test`: no hyphenated phrases, no repeated parent wording.
 - Do not create new `index.ts` barrels, facade modules, pass-through re-exports, or generic `utils` or `helpers`. A generated or externally mandated package entrypoint needs an explicit exception.
 - TypeScript is strict. Prefer derived and inferred types, fix the source design when inference is unclear, and avoid `any`, assertions, and workaround casts.
-- The root `typescript` package exposes the Effect-patched native TypeScript 7 compiler as `tsc`; `packages/backend` owns its own because Convex resolves it directly. Verify with `pnpm exec tsc --version` from both. React Doctor manages its own TypeScript.
+- The root `typescript` package exposes the Effect-patched native TypeScript 7 compiler as `tsc`; `packages/backend` owns its own because Convex resolves it directly. Verify with `pnpm exec tsc --version` from both. React Doctor manages its own TypeScript. Editors use the same compiler as their language server (`.zed/settings.json`, `.vscode/settings.json`), so Effect diagnostics show while editing.
 - Ultracite owns formatting: run `pnpm format`, never hand-format.
 - Keep Tailwind class strings inside styling utilities or component boundaries, with `cva` or existing variant helpers for variants. The policy check rejects an arbitrary value that a built-in class renders identically; theme-dependent scales such as radius, font size, and tracking are left to review.
 
@@ -96,7 +96,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 - Vitest runs every test. Keep `*.test.ts` beside the real owning `.ts` module: no orphan concept tests, `*.test.tsx`, renamed React tests, or nested test folders. Import test APIs from `@effect/vitest` and use the shared configured `vi` global; never import `vi` or `vitest` directly.
 - A test proves meaningful behavior, a regression, or a failure contract at the owning public seam, typed failures included. Never create a module or a test because a file exists, for coverage, or for a test-name check, and delete tests that only restate configuration or trivial branches.
-- Every workspace keeps its per-file 100% statement, branch, function, and line coverage gate. Never lower, remove, or exclude around it; declarative files without executable behavior stay outside the coverage surface.
+- Every workspace inherits its per-file 100% statement, branch, function, and line coverage gate from `packages/testing`. Never lower, remove, or exclude around it; declarative files without executable behavior stay outside the coverage surface.
 - Do not unit-test `.tsx` or mock children to verify static markup. Move testable behavior into an owning `.ts` seam with independent production value and verify rendered behavior through production-mode Browser or E2E acceptance.
 - Tests reach HTTP through `FetchHttpClient.Fetch`: one `vi.fn<typeof fetch>()` per file, provided with `Effect.provideService(FetchHttpClient.Fetch, fetcher)`. Effect's client keeps the first global `fetch` it reads, so a fresh global stub per test only works for the first one; a seam that ends in a Promise stubs that one file-level double globally and resets it between tests.
 - No `.only` or `.skip`. Run the nearest test first, then the workspace suite when risk warrants it.

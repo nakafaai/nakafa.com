@@ -204,5 +204,3 @@ export type NakafaAgentSection = typeof NakafaAgentSectionSchema.Type;
 export type NakafaAgentContentRef = typeof NakafaAgentContentRefSchema.Type;
 export type NakafaAgentReadableContentRef =
   typeof NakafaAgentReadableContentRefSchema.Type;
-export type NakafaAgentContentSummary =
-  typeof NakafaAgentContentSummarySchema.Type;

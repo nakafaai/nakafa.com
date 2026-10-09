@@ -10,6 +10,7 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
+import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
 import { Array as Arr, Effect, Schema } from "effect";
 
 /** Complete turns kept verbatim after the summary. */
@@ -38,7 +39,7 @@ const INSTRUCTIONS = Arr.join(
 
 class NinaSummaryError extends Schema.TaggedError<NinaSummaryError>()(
   "NinaSummaryError",
-  { operation: Schema.Literals(["read", "generate"]) }
+  { operation: NinaFailureOperation }
 ) {}
 
 /**

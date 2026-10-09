@@ -10,6 +10,7 @@ import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
 import {
   inspectCompilerConfigs,
   isCompilerConfig,
+  ownerBlock,
   sharedPackageName,
 } from "#scripts/check/compiler";
 import { inspectDeploySource } from "#scripts/check/deploy";
@@ -88,9 +89,14 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
   );
 }, Effect.scoped);
 
-/** Validates test ownership, source policy, compiler configuration, and repository layout. */
+/**
+ * Validates test ownership, source policy, compiler configuration, and
+ * repository layout of the repository at `root`. `owner` is the repository
+ * that owns the rule decisions: the one being judged, unless another
+ * repository runs this check.
+ */
 export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
-  function* (root: string) {
+  function* (root: string, owner: string = root) {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const { scripts, workspaces } = yield* readAuthoredTree(root);
@@ -139,6 +145,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     );
     const sharedPackage = yield* sharedPackageName(root);
     const pluginRules = yield* pluginRuleNames(root);
+    const ownerRules = yield* ownerBlock(root, owner);
     const projectConfigs = Arr.map(
       Arr.filter(configs, ({ file }) => isProjectConfig(file)),
       ({ file }) => file
@@ -164,7 +171,14 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         ),
         lineReport(runnerViolations),
         lineReport(sourceViolations),
-        lineReport(inspectCompilerConfigs(sharedPackage, configs, pluginRules)),
+        lineReport(
+          inspectCompilerConfigs(
+            sharedPackage,
+            configs,
+            pluginRules,
+            ownerRules
+          )
+        ),
         lineReport(
           Arr.flatMap(sources, ({ file, sourceText }) =>
             inspectTailwindSource(file, sourceText)
@@ -183,4 +197,9 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   }
 );
 
-runEntry(import.meta.main, checkTestPolicy(process.cwd()));
+// The repository that holds this script owns the rule decisions. Another
+// repository that runs it from its own root is compared with them.
+runEntry(
+  import.meta.main,
+  checkTestPolicy(process.cwd(), `${import.meta.dirname}/../..`)
+);

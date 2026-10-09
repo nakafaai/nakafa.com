@@ -27,9 +27,9 @@
     "typecheck": "pnpm codegen && tsc --project tsconfig.json --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@confect/core": "10.1.0",
+    "@confect/core": "catalog:",
     "@confect/server": "10.1.0",
-    "@convex-dev/agent": "0.7.7",
+    "@convex-dev/agent": "catalog:",
     "@convex-dev/aggregate": "^0.3.1",
     "@convex-dev/ai-sdk-provider": "catalog:",
     "@convex-dev/better-auth": "0.12.5",
@@ -40,16 +40,16 @@
     "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
     "@mendable/firecrawl-js": "^4.46.0",
-    "@nakafa/aksara-contracts": "0.48.3",
+    "@nakafa/aksara-contracts": "0.48.4",
     "@polar-sh/sdk": "^1.0.2",
     "@posthog/convex": "2.1.5",
-    "@react-email/render": "2.1.0",
+    "@react-email/render": "catalog:",
     "@repo/analytics": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/email": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
-    "@vercel/config": "^0.12.0",
+    "@vercel/config": "catalog:",
     "ai": "catalog:",
     "better-auth": "1.6.33",
     "buffer": "^6.0.3",
@@ -61,12 +61,12 @@
     "parse-domain": "^8.4.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-email": "6.11.1",
-    "remark-mdx": "3.1.1",
-    "remark-parse": "11.0.0",
-    "server-only": "0.0.1",
+    "react-email": "catalog:",
+    "remark-mdx": "catalog:",
+    "remark-parse": "catalog:",
+    "server-only": "catalog:",
     "strip-ansi": "^7.2.0",
-    "unified": "11.0.5"
+    "unified": "catalog:"
   },
   "devDependencies": {
     "@confect/cli": "10.1.0",
@@ -78,9 +78,9 @@
     "@vitest/coverage-istanbul": "catalog:",
     "auth": "1.6.33",
     "convex-test": "^0.0.60",
-    "tsx": "^4.23.15",
+    "tsx": "catalog:",
     "typescript": "npm:typescript@7.0.2",
-    "vite": "^8.3.4",
+    "vite": "catalog:",
     "vitest": "catalog:"
   }
 }

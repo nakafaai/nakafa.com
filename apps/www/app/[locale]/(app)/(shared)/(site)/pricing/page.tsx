@@ -1,3 +1,4 @@
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import { Array as Arr } from "effect";
@@ -88,7 +89,7 @@ export default async function Page() {
     answer: tPricingPage(`a${number}`),
     question: tPricingPage(`q${number}`),
   }));
-  const url = `https://nakafa.com/${locale}/pricing`;
+  const url = `${COMPANY_IDENTITY.url}/${locale}/pricing`;
 
   return (
     <>

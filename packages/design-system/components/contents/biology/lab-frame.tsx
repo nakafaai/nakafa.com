@@ -4,7 +4,6 @@ import { useThree } from "@react-three/fiber";
 import {
   BIOLOGY_DEFAULT_VIEW,
   type BiologySceneColors,
-  type BiologySceneView,
   getBiologySceneColors,
   isBiologyItemIndex,
 } from "@repo/design-system/components/contents/biology/data";
@@ -26,6 +25,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
@@ -80,7 +80,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   view = BIOLOGY_DEFAULT_VIEW,
 }: BiologyLabProps<Item> & {
   scene: ComponentType<BiologySceneProps<Item>>;
-  view?: BiologySceneView;
+  view?: NarrowCameraPose;
 }) {
   const { resolvedTheme } = useTheme();
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -182,7 +182,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
 /**
  * Keeps the active biology scene framed on narrow and wide canvases.
  */
-function ResponsiveBiologyCamera({ view }: { view: BiologySceneView }) {
+function ResponsiveBiologyCamera({ view }: { view: NarrowCameraPose }) {
   const size = useThree((state) => state.size);
   const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
     ? view.narrowCameraPosition

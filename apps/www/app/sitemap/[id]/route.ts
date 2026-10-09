@@ -10,7 +10,7 @@ const sitemapPageExtension = ".xml";
 /** Serves one bounded sitemap page from materialized Convex route rows. */
 export async function GET(
   _request: Request,
-  ctx: { params: Promise<{ id: string }> }
+  ctx: RouteContext<"/sitemap/[id]">
 ) {
   const { id } = await ctx.params;
   const pageId = parseSitemapPageId(id);

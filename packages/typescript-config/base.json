@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
+  "$schema": "../../node_modules/@effect/tsgo/schema.json",
   "display": "Default",
   "compilerOptions": {
     "esModuleInterop": true,
@@ -11,6 +11,7 @@
     "module": "NodeNext",
     "moduleDetection": "force",
     "moduleResolution": "NodeNext",
+    "noEmit": true,
     "plugins": [
       {
         "name": "@effect/language-service",

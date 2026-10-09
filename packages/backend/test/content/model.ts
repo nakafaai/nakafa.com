@@ -82,20 +82,6 @@ export function insertReleaseItem(
   });
 }
 
-/** Selects one completed release before its current read models catch up. */
-export async function selectActiveRelease(
-  ctx: MutationCtx,
-  identity: TestIdentity
-) {
-  const state = await ctx.db.query("contentState").unique();
-  assert.ok(state, "Expected content release state.");
-  await ctx.db.patch("contentState", state._id, {
-    activeManifestHash: identity.manifestHash,
-    activeReleaseId: identity.releaseId,
-    activeSequence: identity.sequence,
-  });
-}
-
 /** Creates a native inactive-buffer coordinator for bounded model acceptance. */
 export async function insertModelBuild(
   ctx: MutationCtx,

@@ -11,7 +11,10 @@ export const creditTransactionTypeValidator = Schema.Literals([
   "expiration",
 ]);
 export type CreditTransactionType = typeof creditTransactionTypeValidator.Type;
-export type CreditGrantType = Extract<CreditTransactionType, `${string}-grant`>;
+const creditGrantTypeValidator = creditTransactionTypeValidator.pick([
+  "daily-grant",
+  "monthly-grant",
+]);
 
 /** Scalar audit values allowed on credit transaction metadata. */
 export const creditTransactionMetadataValueValidator = Schema.Union([
@@ -26,8 +29,6 @@ export const creditTransactionMetadataValidator = Schema.Record(
   Schema.String,
   creditTransactionMetadataValueValidator
 );
-export type CreditTransactionMetadata =
-  typeof creditTransactionMetadataValidator.Type;
 export const creditTransactionValidator = Schema.Struct({
   userId: IdSchema("users"),
   amount: Schema.Finite,
@@ -38,4 +39,10 @@ export const creditTransactionValidator = Schema.Struct({
 export const creditResetPeriodValidator = Schema.Struct({
   plan: userPlanValidator,
   resetAt: Schema.Finite,
+});
+export const planCreditValidator = Schema.Struct({
+  /** Amount of credits granted per reset cycle */
+  amount: Schema.Finite,
+  /** Grant type for transaction logging */
+  grantType: creditGrantTypeValidator,
 });

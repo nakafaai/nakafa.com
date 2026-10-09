@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import type { CameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 
 export const VELOCITY_SPEED_CAR_MODEL_PATH =
@@ -87,11 +88,7 @@ export const VELOCITY_SPEED_CAMERA = {
   cameraPosition: CAMERA_POSITION,
   cameraTarget: CAMERA_TARGET,
   fov: CAMERA_COMPOSITION.fov,
-} satisfies {
-  cameraPosition: readonly [number, number, number];
-  cameraTarget: readonly [number, number, number];
-  fov: number;
-};
+} satisfies CameraPose;
 
 export type VelocitySpeedState = ReturnType<typeof getVelocitySpeedState>;
 

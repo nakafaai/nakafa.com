@@ -14,12 +14,15 @@ import {
   SunCloudSlowWindIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { getCountryName } from "@repo/design-system/lib/locale/country";
-import { Match } from "effect";
+import { Match, Option } from "effect";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
-import { useWeather } from "@/lib/weather/query";
+import { type ComponentProps, Suspense, use, useState } from "react";
+import {
+  WeatherCard,
+  WeatherCardHeader,
+  WeatherSkeleton,
+} from "@/components/ai/home/weather/card";
+import { readWeatherSummary, type WeatherRead } from "@/lib/weather/request";
 
 const KELVIN_TO_CELSIUS = 273.15;
 
@@ -47,32 +50,29 @@ function getWeatherIcon(
   );
 }
 
-export function Weather() {
+/** Reads the weather once per mount; the shared request is reused for a minute. */
+export function WeatherWidget() {
+  const [weather] = useState(() => readWeatherSummary());
+
+  return (
+    <Suspense fallback={<WeatherSkeleton />}>
+      <WeatherSummary weather={weather} />
+    </Suspense>
+  );
+}
+
+/** Shows the summary once its request settles. A failed request shows nothing. */
+function WeatherSummary({ weather }: { weather: Promise<WeatherRead> }) {
   const t = useTranslations("Weather");
-  const { data, isLoading } = useWeather();
+  const read = use(weather);
 
-  if (isLoading) {
-    return (
-      <WeatherCard>
-        <WeatherCardHeader>
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-6 w-16" />
-            <Skeleton className="h-3 w-20" />
-          </div>
-          <Skeleton className="size-8" />
-        </WeatherCardHeader>
-
-        <Skeleton className="h-3 w-24" />
-      </WeatherCard>
-    );
-  }
-
-  if (!data) {
+  if (Option.isNone(read)) {
     return null;
   }
 
+  const data = read.value;
   const city = data.city || t("unknown-location");
-  const country = getCountryName(data.country) || t("unknown-country");
+  const country = data.countryName ?? t("unknown-country");
   const currentTemp = kelvinToCelsius(data.temperatureKelvin);
   const condition = data.condition || "Clear";
   const conditionTitle = condition.charAt(0).toUpperCase() + condition.slice(1);
@@ -93,19 +93,5 @@ export function Weather() {
         {city}, {country}
       </p>
     </WeatherCard>
-  );
-}
-
-function WeatherCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex aspect-square flex-col justify-between overflow-hidden rounded-md border bg-linear-to-br from-[color-mix(in_oklch,var(--secondary)_19%,var(--card))] to-[color-mix(in_oklch,var(--primary)_19%,var(--card))] p-3 text-card-foreground shadow-xs">
-      {children}
-    </div>
-  );
-}
-
-function WeatherCardHeader({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-2">{children}</div>
   );
 }

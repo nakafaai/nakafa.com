@@ -1,10 +1,9 @@
+import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
-/** Eight exact sources bound selected scrape context to 64,000 characters. */
-export const researchMaxSources = 8;
 /** Reject excess sources before provider work instead of silently dropping any. */
 export class ResearchSourceLimitError extends Schema.TaggedError<ResearchSourceLimitError>()(
   "ResearchSourceLimitError",
@@ -206,7 +205,6 @@ export const ResearchOutputSchema = Schema.Struct({
     }),
   }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export const scrapeInputSchema = createEffectSchema(ScrapeInputSchema);
 export const webSearchInputSchema = createEffectSchema(WebSearchInputSchema);
 export const researchOutputSchema = createEffectSchema(ResearchOutputSchema);
 /** Search provider failed before returning usable source data. */
@@ -240,7 +238,6 @@ export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerati
     text: Schema.optional(Schema.String),
   }
 ) {}
-export type ScrapeInput = typeof ScrapeInputSchema.Type;
 export type ScrapeOutput = typeof ScrapeOutputSchema.Type;
 export type ResearchOutput = typeof ResearchOutputSchema.Type;
 export type WebSearchInput = typeof WebSearchInputSchema.Type;

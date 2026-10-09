@@ -10,15 +10,15 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@hugeicons/core-free-icons": "^4.3.5",
-    "@nakafa/aksara-contracts": "0.48.3",
+    "@hugeicons/core-free-icons": "catalog:",
+    "@nakafa/aksara-contracts": "0.48.4",
     "@repo/design-system": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
-    "remark-mdx": "3.1.1",
-    "remark-parse": "11.0.0",
-    "unified": "11.0.5"
+    "remark-mdx": "catalog:",
+    "remark-parse": "catalog:",
+    "unified": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

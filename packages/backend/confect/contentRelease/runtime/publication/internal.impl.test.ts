@@ -1,7 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import type { PublicRuntimeRow } from "@repo/backend/content/publication/spec";
+import type {
+  PublicRuntimeRow,
+  publicRequestValidator,
+} from "@repo/backend/content/publication/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -35,10 +38,7 @@ import { Array as Arr } from "effect";
 const routeArgs = {
   appLocale: "en",
   publicPath: TEST_RUNTIME_PATH,
-} satisfies {
-  readonly appLocale: ActiveAppLocaleCode;
-  readonly publicPath: string;
-};
+} satisfies typeof publicRequestValidator.Type;
 const readPublic = internal.contentRelease.runtime.publication.internal.read;
 const readPublicBatch = makeFunctionReference<
   "query",

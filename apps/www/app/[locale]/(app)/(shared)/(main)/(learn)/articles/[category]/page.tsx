@@ -3,6 +3,7 @@ import {
   type ArticleCategory,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { Array as Arr, Effect, Option, Schema } from "effect";
@@ -36,7 +37,7 @@ import {
 } from "@/lib/content/article/query";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
@@ -107,7 +108,7 @@ export async function generateMetadata({
 export async function generateStaticParams({
   params,
 }: {
-  params: { locale: string };
+  params: LocaleRouteParams;
 }) {
   const locale = getLocaleOrThrow(params.locale);
   if (hasPreviewConfig()) {
@@ -215,11 +216,11 @@ async function CategoryPage({
       <CollectionPageJsonLd
         description={t("description")}
         items={Arr.map(articles, (article) => ({
-          url: `https://nakafa.com/${locale}/${article.publicPath}`,
+          url: `${COMPANY_IDENTITY.url}/${locale}/${article.publicPath}`,
           name: article.title,
         }))}
         name={label}
-        url={`https://nakafa.com/${locale}${categoryPath}`}
+        url={`${COMPANY_IDENTITY.url}/${locale}${categoryPath}`}
       />
       <HeaderContent
         description={t("description")}

@@ -19,6 +19,7 @@ import {
   loadIdentityItem,
   loadItem,
   loadVersion,
+  type ReleaseRole,
 } from "@repo/backend/confect/contentRelease/model";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { contentHead } from "@repo/backend/content/publication/projection";
@@ -150,7 +151,7 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
     readonly item: ContentReleaseItem;
     readonly itemJson: string;
     readonly priorSequence: number | undefined;
-    readonly role: "candidate" | "recovery";
+    readonly role: ReleaseRole;
     readonly sequence: number;
   }) {
     const writer = yield* DatabaseWriter;

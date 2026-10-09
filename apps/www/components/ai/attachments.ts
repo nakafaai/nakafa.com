@@ -1,4 +1,4 @@
-import { NINA_DOCUMENT_SIZE } from "@repo/backend/confect/nina/uploads.spec";
+import { NINA_DOCUMENT_SIZE } from "@repo/backend/client/nina/uploads";
 import { Array as Arr } from "effect";
 
 /** Documents are the attachments that are not images. Images reach the model by URL and are not counted. */

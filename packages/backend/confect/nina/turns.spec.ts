@@ -1,4 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { NinaReceipt } from "@repo/backend/client/nina/receipt";
+import {
+  NINA_FILE_COUNT,
+  NinaUploadError,
+} from "@repo/backend/client/nina/uploads";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
@@ -17,10 +22,6 @@ import {
   NinaCreditError,
   NinaCreditHold,
 } from "@repo/backend/confect/nina/credits/schema";
-import {
-  NINA_FILE_COUNT,
-  NinaUploadError,
-} from "@repo/backend/confect/nina/uploads.spec";
 import { LocaleSchema } from "@repo/contents/content";
 import { Schema } from "effect";
 
@@ -102,30 +103,6 @@ export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
     message: Schema.String,
   }
 ) {}
-
-/** Committed prompt presentation used while the first reactive page arrives. */
-export const NinaPromptPreview = Schema.Struct({
-  text: Schema.String,
-  files: Schema.mutable(
-    Schema.Array(
-      Schema.Struct({
-        type: Schema.Literal("file"),
-        url: Schema.String,
-        mediaType: Schema.String,
-        filename: Schema.optional(Schema.String),
-      })
-    )
-  ),
-});
-
-export const NinaReceipt = Schema.Struct({
-  prompt: NinaPromptPreview,
-  chatId: Id("chats"),
-  threadId: Schema.String,
-  turnId: Id("ninaTurns"),
-  promptMessageId: Schema.String,
-  order: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
-});
 
 export default GroupSpec.make().addFunction(
   FunctionSpec.publicMutation({

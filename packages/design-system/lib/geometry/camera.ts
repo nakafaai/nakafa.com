@@ -35,6 +35,25 @@ const CameraFramingSchema = Schema.Struct({
 });
 
 /**
+ * An authored camera pose: where the camera sits, what it looks at, and its
+ * vertical field of view in degrees.
+ */
+const CameraPoseSchema = Schema.Struct({
+  cameraPosition: ScenePointSchema,
+  cameraTarget: ScenePointSchema,
+  fov: Schema.Finite,
+});
+export type CameraPose = typeof CameraPoseSchema.Type;
+
+/** An authored camera pose with a second camera position for narrow canvases. */
+const NarrowCameraPoseSchema = Schema.Struct({
+  cameraPosition: ScenePointSchema,
+  cameraTarget: ScenePointSchema,
+  narrowCameraPosition: ScenePointSchema,
+});
+export type NarrowCameraPose = typeof NarrowCameraPoseSchema.Type;
+
+/**
  * A canvas an authored pose is framed on: its size in pixels and the pose's
  * vertical field of view in degrees.
  */

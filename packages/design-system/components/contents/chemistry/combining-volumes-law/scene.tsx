@@ -40,21 +40,22 @@ const MoleculeAtomSchema = Schema.Struct({
 });
 type MoleculeAtom = typeof MoleculeAtomSchema.Type;
 
+const AtomStyleSchema = Schema.Struct({
+  color: CombiningVolumesElementSchema,
+  radius: Schema.Finite,
+  symbol: Schema.String,
+});
+
 const ATOM_STYLE = {
   hydrogen: { color: "hydrogen", radius: 0.045, symbol: "H" },
   nitrogen: { color: "nitrogen", radius: 0.064, symbol: "N" },
   oxygen: { color: "oxygen", radius: 0.064, symbol: "O" },
-} satisfies Record<
-  CombiningVolumesElement,
-  {
-    color: keyof Pick<
-      CombiningVolumesSceneColors,
-      "hydrogen" | "nitrogen" | "oxygen"
-    >;
-    radius: number;
-    symbol: string;
-  }
->;
+} satisfies Record<CombiningVolumesElement, typeof AtomStyleSchema.Type>;
+
+const MoleculeSpecSchema = Schema.Struct({
+  atoms: Schema.Array(MoleculeAtomSchema),
+  bonds: Schema.Array(Schema.Tuple([Schema.String, Schema.String])),
+});
 
 const MOLECULE_SPECS = {
   ammonia: molecule([
@@ -82,10 +83,7 @@ const MOLECULE_SPECS = {
   ]),
 } satisfies Record<
   CombiningVolumesMoleculeKind,
-  {
-    atoms: readonly MoleculeAtom[];
-    bonds: readonly (readonly [string, string])[];
-  }
+  typeof MoleculeSpecSchema.Type
 >;
 
 export function CombiningVolumesScene({

@@ -15,7 +15,6 @@ export type NakafaSection = typeof nakafaSectionValidator.Type;
 /** Content families used by runtime tables and analytics events. */
 export const CONTENT_TYPE_VALUES = ["article", "material", "question"] as const;
 export const contentTypeValidator = Schema.Literals([...CONTENT_TYPE_VALUES]);
-export type ContentType = typeof contentTypeValidator.Type;
 
 /** Material domains authenticated by Aksara before analytics storage. */
 export const materialDomainValidator = Schema.String;

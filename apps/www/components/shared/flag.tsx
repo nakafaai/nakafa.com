@@ -4,7 +4,7 @@ import gbFlag from "country-flag-icons/string/3x2/GB";
 import idFlag from "country-flag-icons/string/3x2/ID";
 import sgFlag from "country-flag-icons/string/3x2/SG";
 import usFlag from "country-flag-icons/string/3x2/US";
-import { Match } from "effect";
+import { Option, Record as Rec } from "effect";
 import type { ReactNode } from "react";
 
 function parseFlagSource(source: string) {
@@ -36,15 +36,15 @@ const flagSources = {
   US: parseFlagSource(usFlag),
 };
 
+/** A country code with a bundled flag; onboarding regions use the same set. */
+export type RegionCountryCode = keyof typeof flagSources;
+
 /** Selects one package-owned SVG without importing the all-country React barrel. */
 function getFlagSource(countryCode: string | undefined) {
-  return Match.value(countryCode).pipe(
-    Match.when("DE", () => flagSources.DE),
-    Match.when("GB", () => flagSources.GB),
-    Match.when("ID", () => flagSources.ID),
-    Match.when("SG", () => flagSources.SG),
-    Match.when("US", () => flagSources.US),
-    Match.orElse(() => undefined)
+  return Option.getOrUndefined(
+    Option.flatMap(Option.fromNullishOr(countryCode), (code) =>
+      Rec.get<string, ReturnType<typeof parseFlagSource>>(flagSources, code)
+    )
   );
 }
 

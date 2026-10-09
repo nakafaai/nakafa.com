@@ -1,10 +1,7 @@
 "use client";
 
 import { LinkSquare02Icon } from "@hugeicons/core-free-icons";
-import {
-  BrandLogo,
-  type BrandLogoName,
-} from "@repo/design-system/components/logos/brand";
+import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
@@ -12,6 +9,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Link } from "@repo/internationalization/src/navigation";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 
@@ -30,17 +28,15 @@ export function OpenInSubmenuContent({
   sourceUrl: null | string | undefined;
 }) {
   const t = useTranslations("Common");
-  const markdownUrl = new URL(`${slug}.mdx`, "https://nakafa.com");
+  const markdownUrl = new URL(`${slug}.mdx`, COMPANY_IDENTITY.url);
   const q = `I'm looking at this ${markdownUrl}, help me understand.`;
 
-  const sourceLinks: {
-    href: string;
-    logo: BrandLogoName;
-    title: string;
-  }[] = sourceUrl
-    ? [{ href: sourceUrl, logo: "github", title: t("open-in-github") }]
+  const sourceLinks = sourceUrl
+    ? ([
+        { href: sourceUrl, logo: "github", title: t("open-in-github") },
+      ] as const)
     : [];
-  const assistantLinks: (typeof sourceLinks)[number][] = [
+  const assistantLinks = [
     {
       title: t("open-in-chatgpt"),
       href: `https://chatgpt.com/?${new URLSearchParams({ hints: "search", q })}`,
@@ -56,7 +52,7 @@ export function OpenInSubmenuContent({
       href: `https://claude.ai/new?${new URLSearchParams({ q })}`,
       logo: "claude",
     },
-  ];
+  ] as const;
   const links = Arr.appendAll(sourceLinks, assistantLinks);
 
   return (

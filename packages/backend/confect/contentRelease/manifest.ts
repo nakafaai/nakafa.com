@@ -11,7 +11,10 @@ import {
 } from "@repo/backend/confect/contentRelease/base";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { ensureState } from "@repo/backend/confect/contentRelease/model";
+import {
+  ensureState,
+  type ReleaseRole,
+} from "@repo/backend/confect/contentRelease/model";
 import {
   decodeReleaseJson,
   decodeRendererJson,
@@ -30,7 +33,6 @@ import {
 } from "@repo/backend/confect/contentRelease/wire";
 import type { WithoutSystemFields } from "convex/server";
 import { Clock, Effect } from "effect";
-export type ReleaseRole = Docs["contentReleases"]["role"];
 export type ReleaseStatus = typeof statusValidator.Type;
 
 /** Projects one durable release into its exact shared lifecycle status. */
@@ -221,9 +223,5 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     manifestHash: signed.manifestHash,
     phase: "staging",
     releaseId: signed.manifest.releaseId,
-  } satisfies {
-    readonly manifestHash: string;
-    readonly phase: "staging";
-    readonly releaseId: string;
-  };
+  } satisfies ReleaseStatus;
 });

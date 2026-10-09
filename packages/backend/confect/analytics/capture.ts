@@ -10,11 +10,9 @@ import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/
 import { hasCurrentConsent } from "@repo/backend/confect/consents/impl";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Duration, Effect, flow, Result, Schema } from "effect";
 
-export type ProductAnalyticsCtx = Pick<MutationCtx, "db" | "scheduler">;
 const ProductAnalyticsCaptureArgsSchema = Schema.Struct({
   distinctId: IdSchema("users"),
   event: productAnalyticsEventValidator,

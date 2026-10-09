@@ -9,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -39,7 +40,7 @@ export function ChatSharing({
   const isPrivate = chat.visibility === "private";
   const link = `${getAppUrl()}/chat/${chat._id}`;
   /** Persist the selected chat visibility. */
-  const handleUpdateVisibility = (visibility: "public" | "private") => {
+  const handleUpdateVisibility = (visibility: ChatVisibility) => {
     startTransition(async () =>
       Effect.runPromise(
         Effect.asVoid(

@@ -131,12 +131,7 @@ export const runProgram = Effect.fn("contentRelease.runCompaction")(
   function* () {
     const { runMutation } = yield* MutationRunner;
     let deleted = 0;
-    let latest: {
-      readonly complete: boolean;
-      readonly deleted: number;
-      readonly floor: number;
-      readonly phase: CompactionCycle["phase"];
-    } = {
+    let latest: CompactionReceipt = {
       complete: true,
       deleted: 0,
       floor: 0,

@@ -11,9 +11,11 @@ import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { boundText } from "@repo/backend/confect/nina/budget";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
+import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
 import {
   type NinaLearner,
   NinaMemoryChanges,
+  type NinaMemoryFact,
 } from "@repo/backend/confect/nina/memory.spec";
 import { formatLearnerProfile } from "@repo/backend/confect/nina/prompt/learner";
 import { Output } from "ai";
@@ -37,13 +39,13 @@ const INSTRUCTIONS = Arr.join(
 
 class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
   "NinaMemoryError",
-  { operation: Schema.Literals(["read", "generate"]) }
+  { operation: NinaFailureOperation }
 ) {}
 
 /** Lists what curation must not repeat: account facts and keyed known facts. */
 function formatKnown(
   profile: typeof NinaLearner.Type.profile,
-  facts: readonly { readonly key: number; readonly text: string }[]
+  facts: readonly Pick<typeof NinaMemoryFact.Type, "key" | "text">[]
 ) {
   return Arr.join(
     [

@@ -35,15 +35,6 @@ const NOBLE_GAS_CATEGORY_ID = "noble-gas";
 const INNER_TRANSITION_CATEGORY_ID = "inner-transition";
 export const SERIES_MARKER_CATEGORY_ID = "series-marker";
 
-export type PeriodicElementCategoryId =
-  | typeof METAL_CATEGORY_ID
-  | typeof TRANSITION_CATEGORY_ID
-  | typeof METALLOID_CATEGORY_ID
-  | typeof NONMETAL_CATEGORY_ID
-  | typeof NOBLE_GAS_CATEGORY_ID
-  | typeof INNER_TRANSITION_CATEGORY_ID
-  | typeof SERIES_MARKER_CATEGORY_ID;
-
 export const PERIODIC_ELEMENT_CATEGORY_IDS = [
   METAL_CATEGORY_ID,
   TRANSITION_CATEGORY_ID,
@@ -51,7 +42,14 @@ export const PERIODIC_ELEMENT_CATEGORY_IDS = [
   NONMETAL_CATEGORY_ID,
   NOBLE_GAS_CATEGORY_ID,
   INNER_TRANSITION_CATEGORY_ID,
-] satisfies PeriodicElementCategoryId[];
+] as const;
+
+const PeriodicElementCategoryIdSchema = Schema.Literals([
+  ...PERIODIC_ELEMENT_CATEGORY_IDS,
+  SERIES_MARKER_CATEGORY_ID,
+]);
+export type PeriodicElementCategoryId =
+  typeof PeriodicElementCategoryIdSchema.Type;
 
 const MODERN_PERIODIC_TABLE_CATEGORY_COLOR_KEYS = {
   [METAL_CATEGORY_ID]: "metal",
@@ -74,6 +72,11 @@ const MODERN_PERIODIC_TABLE_CATEGORY_COLOR_KEYS = {
     | "transitionMetal"
   >
 >;
+
+const ElementCategoryGroupSchema = Schema.Struct({
+  id: PeriodicElementCategoryIdSchema,
+  symbols: Schema.String,
+});
 
 const ELEMENT_CATEGORY_GROUPS = [
   {
@@ -107,7 +110,7 @@ const ELEMENT_CATEGORY_GROUPS = [
     id: SERIES_MARKER_CATEGORY_ID,
     symbols: "57-71 89-103",
   },
-] satisfies { id: PeriodicElementCategoryId; symbols: string }[];
+] satisfies (typeof ElementCategoryGroupSchema.Type)[];
 
 const MAIN_PERIODIC_TABLE_SOURCE = [
   { period: 1, entries: "1:H:1 18:He:2" },
@@ -277,6 +280,13 @@ export const PERIODIC_SERIES_ROWS = Result.getOrThrow(
 export type PeriodicElementEntry =
   (typeof MAIN_PERIODIC_TABLE_ROWS)[number]["entries"][number];
 
+/** The categories, series rows, and symbols one periodic-table focus highlights. */
+const ModernPeriodicTableFocusSchema = Schema.Struct({
+  categories: Schema.Array(PeriodicElementCategoryIdSchema),
+  seriesKeys: Schema.Array(Schema.String),
+  symbols: Schema.Array(Schema.String),
+});
+
 export const MODERN_PERIODIC_TABLE_FOCI = {
   [GROUP_ONE_FOCUS_ID]: {
     categories: [],
@@ -310,11 +320,7 @@ export const MODERN_PERIODIC_TABLE_FOCI = {
   },
 } satisfies Record<
   ModernPeriodicTableFocusId,
-  {
-    categories: PeriodicElementCategoryId[];
-    seriesKeys: PeriodicSeriesRowKey[];
-    symbols: string[];
-  }
+  typeof ModernPeriodicTableFocusSchema.Type
 >;
 
 const ModernPeriodicTableSceneLabelsSchema = Schema.Struct({
