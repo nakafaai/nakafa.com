@@ -1,3 +1,4 @@
+import { formatTrimmedFixedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -76,8 +77,6 @@ export const PROJECTILE_SCENARIOS: ProjectileScenario[] = [
     initialSpeed: 34,
   },
 ];
-
-const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;
 
 export type ProjectileMotionState = ReturnType<typeof getProjectileMotionState>;
 
@@ -170,34 +169,16 @@ export function getProjectileLoopSample(
   };
 }
 
-export function formatMeterMath(
-  value: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m}`;
-}
-
-export function formatSecondMath(
-  value: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ s}`;
-}
-
-export function formatSpeedMath(
-  value: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m/s}`;
-}
-
 export function formatVelocityVectorMath(
   horizontalVelocity: number,
   verticalVelocity: number,
   decimalSeparator?: ProjectileAnalysisDecimalSeparator
 ) {
-  const horizontal = formatNumber(horizontalVelocity, decimalSeparator);
-  const vertical = formatNumber(verticalVelocity, decimalSeparator);
+  const horizontal = formatTrimmedFixedNumber(
+    horizontalVelocity,
+    decimalSeparator
+  );
+  const vertical = formatTrimmedFixedNumber(verticalVelocity, decimalSeparator);
 
   return `\\langle ${horizontal}, ${vertical}\\rangle\\text{ m/s}`;
 }
@@ -210,19 +191,6 @@ function getMuzzleFlashPower(cycleTime: number) {
   }
 
   return 1 - cycleTime / flashSeconds;
-}
-
-function formatNumber(
-  value: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
-) {
-  const rounded = value.toFixed(1).replace(TRAILING_ZERO_DECIMAL_REGEX, "");
-
-  if (decimalSeparator === "comma") {
-    return rounded.replace(".", "{,}");
-  }
-
-  return rounded;
 }
 
 function clamp(value: number, min: number, max: number) {

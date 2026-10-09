@@ -4,9 +4,11 @@ import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import {
-  formatMeterMath,
-  formatSecondMath,
-  formatSpeedMath,
+  formatRoundedMeterMath,
+  formatRoundedSecondMath,
+  formatRoundedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
   getUniformLinearMotionState,
   isUniformLinearMotionSpeed,
   UNIFORM_LINEAR_MOTION_CAMERA,
@@ -68,23 +70,23 @@ export function UniformLinearMotionLab({
     {
       id: "speed",
       label: labels.speed,
-      math: formatSpeedMath(motion.speed),
+      math: formatRoundedSpeedMath(motion.speed),
     },
     {
       id: "position-step",
       label: labels.positionStep,
-      math: formatSecondMath(motion.timeStep),
+      math: formatRoundedSecondMath(motion.timeStep),
     },
     {
       id: "step-distance",
       indicatorColor: UNIFORM_LINEAR_MOTION_COLORS.positionMark,
       label: labels.stepDistance,
-      math: formatMeterMath(motion.stepDistance),
+      math: formatRoundedMeterMath(motion.stepDistance),
     },
     {
       id: "duration",
       label: labels.duration,
-      math: formatSecondMath(motion.duration),
+      math: formatRoundedSecondMath(motion.duration),
     },
   ];
 
@@ -117,7 +119,7 @@ export function UniformLinearMotionLab({
         >
           {Arr.map(UNIFORM_LINEAR_MOTION_SPEEDS, (speedOption) => (
             <ToggleGroupItem key={speedOption} value={String(speedOption)}>
-              <InlineMath math={formatSpeedMath(speedOption)} />
+              <InlineMath math={formatRoundedSpeedMath(speedOption)} />
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

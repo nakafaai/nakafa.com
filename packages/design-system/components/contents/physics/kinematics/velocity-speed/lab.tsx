@@ -2,8 +2,8 @@
 
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
+import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import {
-  formatMeterMath,
   formatSignedMeterMath,
   formatSignedSpeedMath,
   formatSpeedMath,
@@ -79,7 +79,7 @@ export function VelocitySpeedLab({
     {
       id: "distance",
       label: labels.factLabels.distance,
-      math: `s=${formatMeterMath(motion.distance)}`,
+      math: `s=${formatKeptZeroMeterMath(motion.distance)}`,
       markerColor: VELOCITY_SPEED_COLORS.distanceGuide,
     },
     {

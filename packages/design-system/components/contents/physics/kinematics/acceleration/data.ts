@@ -1,3 +1,4 @@
+import { formatTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -242,16 +243,12 @@ export function getMotionPoints() {
   return [firstSegment.start, ...Arr.map(segments, (segment) => segment.end)];
 }
 
-export function formatAccelerationMath(value: number) {
-  return `${formatSignedNumber(value)}\\text{ m/s}^2`;
-}
-
 export function formatMeterPerSecondMath(value: number) {
-  return `${formatNumber(value)}\\text{ m/s}`;
+  return `${formatTrimmedNumber(value)}\\text{ m/s}`;
 }
 
 export function formatSecondMath(value: number) {
-  return `${formatNumber(value)}\\text{ s}`;
+  return `${formatTrimmedNumber(value)}\\text{ s}`;
 }
 
 function getAccelerationDisplacementAt(item: AccelerationCase, time: number) {
@@ -266,26 +263,4 @@ function getTimeSamples(duration: number) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
-}
-
-const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;
-
-function formatNumber(value: number) {
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
-
-  return value.toFixed(1).replace(TRAILING_ZERO_DECIMAL_REGEX, "");
-}
-
-function formatSignedNumber(value: number) {
-  if (value === 0) {
-    return "0";
-  }
-
-  if (value > 0) {
-    return `+${formatNumber(value)}`;
-  }
-
-  return formatNumber(value);
 }

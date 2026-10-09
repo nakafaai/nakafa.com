@@ -82,18 +82,6 @@ export function isUniformLinearMotionSpeed(
   return Arr.some(UNIFORM_LINEAR_MOTION_SPEEDS, (speed) => speed === value);
 }
 
-export function formatMeterMath(value: number) {
-  return `${Math.round(value)}\\text{ m}`;
-}
-
-export function formatSecondMath(value: number) {
-  return `${Math.round(value)}\\text{ s}`;
-}
-
-export function formatSpeedMath(value: number) {
-  return `${Math.round(value)}\\text{ m/s}`;
-}
-
 function getRoadLength(distanceMeters: number) {
   const distanceLength =
     distanceMeters * UNIFORM_LINEAR_MOTION_SCENE.worldScale;

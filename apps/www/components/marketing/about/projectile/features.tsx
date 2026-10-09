@@ -1,9 +1,11 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
+  formatTrimmedFixedMeterMath,
+  formatTrimmedFixedSecondMath,
+  formatTrimmedFixedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
-  formatMeterMath,
-  formatSecondMath,
-  formatSpeedMath,
   formatVelocityVectorMath,
   getProjectileMotionState,
   getVelocityAtTime,
@@ -38,7 +40,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-horizontal-component"),
           value: (
             <InlineMath
-              math={`v_{0x}=${formatSpeedMath(
+              math={`v_{0x}=${formatTrimmedFixedSpeedMath(
                 motion.horizontalVelocity,
                 decimalSeparator
               )}`}
@@ -50,7 +52,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-vertical-component"),
           value: (
             <InlineMath
-              math={`v_{0y}=${formatSpeedMath(
+              math={`v_{0y}=${formatTrimmedFixedSpeedMath(
                 motion.verticalVelocity,
                 decimalSeparator
               )}`}
@@ -62,7 +64,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-peak-time"),
           value: (
             <InlineMath
-              math={`t=${formatSecondMath(motion.peakTime, decimalSeparator)}`}
+              math={`t=${formatTrimmedFixedSecondMath(motion.peakTime, decimalSeparator)}`}
             />
           ),
         },
@@ -71,7 +73,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-flight-time"),
           value: (
             <InlineMath
-              math={`T=${formatSecondMath(
+              math={`T=${formatTrimmedFixedSecondMath(
                 motion.flightTime,
                 decimalSeparator
               )}`}
@@ -83,7 +85,7 @@ export async function FeaturesProjectile() {
           label: t("projectile-range"),
           value: (
             <InlineMath
-              math={`R=${formatMeterMath(motion.range, decimalSeparator)}`}
+              math={`R=${formatTrimmedFixedMeterMath(motion.range, decimalSeparator)}`}
             />
           ),
         },

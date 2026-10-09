@@ -9,7 +9,6 @@ import {
   DISPLACEMENT_DISTANCE_SCENE,
   type DisplacementDistanceCaseId,
   type DisplacementDistanceState,
-  formatMeterMath,
   formatVectorMath,
   getDisplacementDistanceState,
   getDisplacementDistanceView,
@@ -17,6 +16,7 @@ import {
   isDisplacementDistanceCaseId,
   type RouteSegment,
 } from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/data";
+import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
@@ -137,7 +137,9 @@ export function DisplacementDistanceLab({
             indicatorColor={ROUTE_COLOR}
             label={labels.factLabels.distance}
             value={
-              <InlineMath math={`s=${formatMeterMath(motion.distance)}`} />
+              <InlineMath
+                math={`s=${formatKeptZeroMeterMath(motion.distance)}`}
+              />
             }
           />
           <VisualFactIndicator
@@ -145,7 +147,7 @@ export function DisplacementDistanceLab({
             label={labels.factLabels.displacement}
             value={
               <InlineMath
-                math={`|\\Delta\\vec{r}|=${formatMeterMath(
+                math={`|\\Delta\\vec{r}|=${formatKeptZeroMeterMath(
                   motion.displacement
                 )}`}
               />

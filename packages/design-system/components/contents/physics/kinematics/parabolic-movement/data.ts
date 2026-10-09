@@ -1,3 +1,4 @@
+import { formatTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -152,28 +153,28 @@ export function getParabolicLoopSample(
 }
 
 export function formatAngleMath(value: number) {
-  return `\\theta=${formatNumber(value)}^\\circ`;
+  return `\\theta=${formatTrimmedNumber(value)}^\\circ`;
 }
 
 export function formatMeterMath(
   value: number,
   decimalSeparator?: ParabolicMovementDecimalSeparator
 ) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m}`;
+  return `${formatTrimmedNumber(value, decimalSeparator)}\\text{ m}`;
 }
 
 export function formatSecondMath(
   value: number,
   decimalSeparator?: ParabolicMovementDecimalSeparator
 ) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ s}`;
+  return `${formatTrimmedNumber(value, decimalSeparator)}\\text{ s}`;
 }
 
 export function formatSpeedMath(
   value: number,
   decimalSeparator?: ParabolicMovementDecimalSeparator
 ) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m/s}`;
+  return `${formatTrimmedNumber(value, decimalSeparator)}\\text{ m/s}`;
 }
 
 function getEqualTimeSamples(duration: number, sampleCount: number) {
@@ -183,23 +184,6 @@ function getEqualTimeSamples(duration: number, sampleCount: number) {
   );
 }
 
-function formatNumber(
-  value: number,
-  decimalSeparator?: ParabolicMovementDecimalSeparator
-) {
-  const rounded = Number.isInteger(value)
-    ? value.toString()
-    : value.toFixed(1).replace(TRAILING_ZERO_DECIMAL_REGEX, "");
-
-  if (decimalSeparator === "comma") {
-    return rounded.replace(".", "{,}");
-  }
-
-  return rounded;
-}
-
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
-
-const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;

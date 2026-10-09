@@ -5,8 +5,6 @@ import { PhysicsCarModel } from "@repo/design-system/components/contents/physics
 import {
   DEFAULT_INSTANTANEOUS_SPEED_CASE_ID,
   formatSignedSpeedMath,
-  formatSpeedMath,
-  formatTimeMath,
   getInstantaneousVelocitySpeedState,
   INSTANTANEOUS_SPEED_CAMERA,
   INSTANTANEOUS_SPEED_CAR_MODEL_PATH,
@@ -18,6 +16,10 @@ import {
   isInstantaneousSpeedCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/instantaneous-velocity-speed/data";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
+import {
+  formatRoundedSecondMath,
+  formatRoundedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
@@ -73,12 +75,12 @@ export function InstantaneousVelocitySpeedLab({
     {
       id: "time",
       label: labels.factLabels.time,
-      math: `t=${formatTimeMath(motion.scenario.time)}`,
+      math: `t=${formatRoundedSecondMath(motion.scenario.time)}`,
     },
     {
       id: "speed",
       label: labels.factLabels.speed,
-      math: formatSpeedMath(motion.scenario.speed),
+      math: formatRoundedSpeedMath(motion.scenario.speed),
     },
     {
       id: "velocity",
@@ -108,7 +110,9 @@ export function InstantaneousVelocitySpeedLab({
         >
           {Arr.map(INSTANTANEOUS_SPEED_CASES, (scenario) => (
             <ToggleGroupItem key={scenario.id} value={scenario.id}>
-              <InlineMath math={`t=${formatTimeMath(scenario.time)}`} />
+              <InlineMath
+                math={`t=${formatRoundedSecondMath(scenario.time)}`}
+              />
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

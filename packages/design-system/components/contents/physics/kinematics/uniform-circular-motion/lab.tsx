@@ -3,9 +3,11 @@
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import {
+  formatRoundedMeterMath,
+  formatRoundedSecondMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
   formatCircularMotionDecimal,
-  formatPeriodMath,
-  formatRadiusMath,
   getUniformCircularMotionState,
   isUniformCircularMotionPeriod,
   UNIFORM_CIRCULAR_MOTION_CAMERA,
@@ -97,7 +99,7 @@ export function UniformCircularMotionLab({
         >
           {Arr.map(UNIFORM_CIRCULAR_MOTION_PERIODS, (periodOption) => (
             <ToggleGroupItem key={periodOption} value={String(periodOption)}>
-              <InlineMath math={`T=${formatPeriodMath(periodOption)}`} />
+              <InlineMath math={`T=${formatRoundedSecondMath(periodOption)}`} />
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -139,11 +141,11 @@ export function UniformCircularMotionLab({
         <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
           <VisualFactTabular
             label={labels.period}
-            value={<InlineMath math={formatPeriodMath(motion.period)} />}
+            value={<InlineMath math={formatRoundedSecondMath(motion.period)} />}
           />
           <VisualFactTabular
             label={labels.radius}
-            value={<InlineMath math={formatRadiusMath(motion.radius)} />}
+            value={<InlineMath math={formatRoundedMeterMath(motion.radius)} />}
           />
           <VisualFactTabular
             label={labels.speed}

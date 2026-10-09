@@ -5,13 +5,13 @@ import {
   ACCELERATION_LAB_SCENE,
   type AccelerationCaseId,
   DEFAULT_ACCELERATION_CASE_ID,
-  formatAccelerationMath,
   formatMeterPerSecondMath,
   formatSecondMath,
   getAccelerationMotionState,
   isAccelerationCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { SpaceFlightScene } from "@repo/design-system/components/contents/physics/kinematics/acceleration/scene";
+import { formatAccelerationMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";

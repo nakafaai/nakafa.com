@@ -67,8 +67,6 @@ type ReturnRouteConfig = typeof ReturnRouteConfigSchema.Type;
 
 type RouteConfig = DetourRouteConfig | ReturnRouteConfig | StraightRouteConfig;
 
-const TRAILING_ZERO_PATTERN = /\.0$/;
-
 export const AVERAGE_VELOCITY_SPEED_SCENE = {
   ballRadius: 0.22,
   ghostCount: 7,
@@ -228,27 +226,6 @@ export function toWorldRoutePoint(
   };
 }
 
-export function formatMeterMath(
-  value: number,
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m}`;
-}
-
-export function formatSecondsMath(
-  value: number,
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ s}`;
-}
-
-export function formatSpeedMath(
-  value: number,
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m/s}`;
-}
-
 function createRouteSegments(config: RouteConfig) {
   if (config.kind === "straight") {
     const halfLength = config.length / 2;
@@ -385,17 +362,4 @@ function getArcPoint(segment: ArcSegment, progress: number) {
     x: segment.center.x + segment.radius * Math.cos(angle),
     z: segment.center.z + segment.radius * Math.sin(angle),
   };
-}
-
-function formatNumber(
-  value: number,
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
-) {
-  const formatted = value.toFixed(1).replace(TRAILING_ZERO_PATTERN, "");
-
-  if (decimalSeparator === "comma") {
-    return formatted.replace(".", "{,}");
-  }
-
-  return formatted;
 }

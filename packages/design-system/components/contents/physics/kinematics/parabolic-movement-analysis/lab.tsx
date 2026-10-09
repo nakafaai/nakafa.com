@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  formatTrimmedFixedMeterMath,
+  formatTrimmedFixedSecondMath,
+  formatTrimmedFixedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
-  formatMeterMath,
-  formatSecondMath,
-  formatSpeedMath,
   formatVelocityVectorMath,
   getProjectileMotionState,
   getVelocityAtTime,
@@ -76,7 +78,7 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "horizontal-component",
       label: labels.factLabels.horizontalComponent,
-      math: `v_{0x}=${formatSpeedMath(
+      math: `v_{0x}=${formatTrimmedFixedSpeedMath(
         motion.horizontalVelocity,
         decimalSeparator
       )}`,
@@ -84,7 +86,7 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "vertical-component",
       label: labels.factLabels.verticalComponent,
-      math: `v_{0y}=${formatSpeedMath(
+      math: `v_{0y}=${formatTrimmedFixedSpeedMath(
         motion.verticalVelocity,
         decimalSeparator
       )}`,
@@ -92,17 +94,17 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "peak-time",
       label: labels.factLabels.peakTime,
-      math: `t=${formatSecondMath(motion.peakTime, decimalSeparator)}`,
+      math: `t=${formatTrimmedFixedSecondMath(motion.peakTime, decimalSeparator)}`,
     },
     {
       id: "flight-time",
       label: labels.factLabels.flightTime,
-      math: `T=${formatSecondMath(motion.flightTime, decimalSeparator)}`,
+      math: `T=${formatTrimmedFixedSecondMath(motion.flightTime, decimalSeparator)}`,
     },
     {
       id: "range",
       label: labels.factLabels.range,
-      math: `R=${formatMeterMath(motion.range, decimalSeparator)}`,
+      math: `R=${formatTrimmedFixedMeterMath(motion.range, decimalSeparator)}`,
     },
     {
       id: "instantaneous-velocity",

@@ -1,4 +1,5 @@
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
+import { formatKeptZeroNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
 import type { CameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
@@ -168,10 +169,6 @@ export function isVelocitySpeedCaseId(
   return Arr.some(VELOCITY_SPEED_CASE_IDS, (caseId) => caseId === value);
 }
 
-export function formatMeterMath(value: number) {
-  return `${formatNumber(value)}\\text{ m}`;
-}
-
 export function formatSignedMeterMath(value: number) {
   if (value === 0) {
     return "0\\text{ m}";
@@ -181,7 +178,7 @@ export function formatSignedMeterMath(value: number) {
 }
 
 export function formatSpeedMath(value: number) {
-  return `${formatNumber(value)}\\text{ m/s}`;
+  return `${formatKeptZeroNumber(value)}\\text{ m/s}`;
 }
 
 export function formatSignedSpeedMath(value: number) {
@@ -295,10 +292,8 @@ function getMotionCenterX(forwardDistance: number) {
   );
 }
 
-function formatNumber(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-
 function formatSignedNumber(value: number) {
-  return value > 0 ? `+${formatNumber(value)}` : formatNumber(value);
+  return value > 0
+    ? `+${formatKeptZeroNumber(value)}`
+    : formatKeptZeroNumber(value);
 }

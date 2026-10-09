@@ -71,11 +71,3 @@ export function formatCircularMotionDecimal(
 
   return rounded;
 }
-
-export function formatPeriodMath(value: number) {
-  return `${Math.round(value)}\\text{ s}`;
-}
-
-export function formatRadiusMath(value: number) {
-  return `${Math.round(value)}\\text{ m}`;
-}

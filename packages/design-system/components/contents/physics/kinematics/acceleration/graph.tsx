@@ -3,6 +3,7 @@ import {
   type AccelerationLabels,
   getMotionPoints,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
+import { formatTooltipTime } from "@repo/design-system/components/contents/physics/kinematics/tooltip";
 import { Line } from "@repo/design-system/components/evilcharts/charts/line/series";
 import {
   EvilLineChart,
@@ -15,7 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr } from "effect";
 
 interface AccelerationGraphProps {
   labels: AccelerationLabels;
@@ -167,25 +168,3 @@ const CHART_MARGIN = {
   bottom: 8,
   left: 8,
 };
-
-const TooltipPayloadItemSchema = Schema.Struct({
-  payload: Schema.optionalKey(
-    Schema.Struct({
-      time: Schema.optionalKey(Schema.Unknown),
-    })
-  ),
-});
-type TooltipPayloadItem = typeof TooltipPayloadItemSchema.Type;
-
-function formatTooltipTime(
-  _: unknown,
-  payload: readonly TooltipPayloadItem[] = []
-) {
-  const time = payload[0]?.payload?.time;
-
-  if (typeof time !== "number") {
-    return "t";
-  }
-
-  return `t = ${time} s`;
-}

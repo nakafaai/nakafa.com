@@ -4,8 +4,10 @@ import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import {
-  formatMeterMath,
-  formatSpeedMath,
+  formatRoundedMeterMath,
+  formatRoundedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
   getStoppingDistanceState,
   isStoppingDistanceSpeed,
   STOPPING_DISTANCE_BRAKING_DECELERATION,
@@ -99,7 +101,7 @@ export function StoppingDistanceLab({
         >
           {Arr.map(STOPPING_DISTANCE_SPEEDS, (speedOption) => (
             <ToggleGroupItem key={speedOption} value={String(speedOption)}>
-              <InlineMath math={formatSpeedMath(speedOption)} />
+              <InlineMath math={formatRoundedSpeedMath(speedOption)} />
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -143,26 +145,32 @@ export function StoppingDistanceLab({
         <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
           <VisualFactIndicator
             label={labels.speed}
-            value={<InlineMath math={formatSpeedMath(motion.speed)} />}
+            value={<InlineMath math={formatRoundedSpeedMath(motion.speed)} />}
           />
           <VisualFactIndicator
             indicatorColor={REACTION_DISTANCE_COLOR}
             label={labels.reactionDistance}
             value={
-              <InlineMath math={formatMeterMath(motion.reactionDistance)} />
+              <InlineMath
+                math={formatRoundedMeterMath(motion.reactionDistance)}
+              />
             }
           />
           <VisualFactIndicator
             indicatorColor={BRAKING_DISTANCE_COLOR}
             label={labels.brakingDistance}
             value={
-              <InlineMath math={formatMeterMath(motion.brakingDistance)} />
+              <InlineMath
+                math={formatRoundedMeterMath(motion.brakingDistance)}
+              />
             }
           />
           <VisualFactIndicator
             label={labels.stoppingDistance}
             value={
-              <InlineMath math={formatMeterMath(motion.stoppingDistance)} />
+              <InlineMath
+                math={formatRoundedMeterMath(motion.stoppingDistance)}
+              />
             }
           />
         </dl>

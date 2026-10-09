@@ -5,13 +5,15 @@ import {
   AVERAGE_VELOCITY_SPEED_COLORS,
   type AverageVelocitySpeedCaseId,
   type AverageVelocitySpeedDecimalSeparator,
-  formatMeterMath,
-  formatSecondsMath,
-  formatSpeedMath,
   getAverageVelocitySpeedState,
   isAverageVelocitySpeedCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
 import { AverageMotionStage } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/scene";
+import {
+  formatTrimmedFixedMeterMath,
+  formatTrimmedFixedSecondMath,
+  formatTrimmedFixedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -60,7 +62,7 @@ export function AverageVelocitySpeedLab({
     {
       id: "distance",
       label: labels.factLabels.distance,
-      math: `s_{\\text{total}}=${formatMeterMath(
+      math: `s_{\\text{total}}=${formatTrimmedFixedMeterMath(
         motion.distance,
         decimalSeparator
       )}`,
@@ -69,7 +71,7 @@ export function AverageVelocitySpeedLab({
     {
       id: "displacement",
       label: labels.factLabels.displacement,
-      math: `|\\Delta \\vec r|=${formatMeterMath(
+      math: `|\\Delta \\vec r|=${formatTrimmedFixedMeterMath(
         motion.displacement,
         decimalSeparator
       )}`,
@@ -78,12 +80,12 @@ export function AverageVelocitySpeedLab({
     {
       id: "time",
       label: labels.factLabels.time,
-      math: `\\Delta t=${formatSecondsMath(motion.duration, decimalSeparator)}`,
+      math: `\\Delta t=${formatTrimmedFixedSecondMath(motion.duration, decimalSeparator)}`,
     },
     {
       id: "speed",
       label: labels.factLabels.speed,
-      math: `\\frac{s_{\\text{total}}}{\\Delta t}=${formatSpeedMath(
+      math: `\\frac{s_{\\text{total}}}{\\Delta t}=${formatTrimmedFixedSpeedMath(
         motion.speed,
         decimalSeparator
       )}`,
@@ -91,7 +93,7 @@ export function AverageVelocitySpeedLab({
     {
       id: "velocity",
       label: labels.factLabels.velocity,
-      math: `\\frac{|\\Delta \\vec r|}{\\Delta t}=${formatSpeedMath(
+      math: `\\frac{|\\Delta \\vec r|}{\\Delta t}=${formatTrimmedFixedSpeedMath(
         motion.velocityMagnitude,
         decimalSeparator
       )}`,
