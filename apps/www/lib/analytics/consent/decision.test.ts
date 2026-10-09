@@ -323,10 +323,10 @@ describe("explicit consent save actions", () => {
   it.effect("persists an account grant for the active user", () =>
     Effect.gen(function* () {
       const expectedUserId = "user-1" as Id<"users">;
-      const seenArgs: unknown[] = [];
+      let seenArgs: unknown[] = [];
       const setAccountConsent = vi.fn(
         (...args: unknown[]): InvokeReturn<typeof consents.current.set> => {
-          seenArgs.push(args[0]);
+          seenArgs = Arr.append(seenArgs, args[0]);
           return Promise.resolve(
             Result.succeed({
               category: "analytics",

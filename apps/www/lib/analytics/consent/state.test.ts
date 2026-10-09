@@ -5,7 +5,7 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
-import { Option, Struct } from "effect";
+import { Array as Arr, Option, Struct } from "effect";
 import {
   type BrowserAnalyticsUser,
   createBrowserAnalyticsIdentity,
@@ -88,7 +88,7 @@ describe("browser analytics consent state", () => {
       },
     ];
     expect(
-      inputs.map((input) => shouldPersistAnonymousAnalyticsDenial(input))
+      Arr.map(inputs, (input) => shouldPersistAnonymousAnalyticsDenial(input))
     ).toEqual([false, true, true, true, false, false]);
     expect(
       Reflect.apply(shouldPersistAnonymousAnalyticsDenial, undefined, [
@@ -133,7 +133,7 @@ describe("browser analytics consent state", () => {
       { ...baseInput, isAuthenticated: false },
     ];
     expect(
-      inputs.map((input) =>
+      Arr.map(inputs, (input) =>
         shouldRevokeAccountAnalyticsGrant({
           accountConsent: input.accountConsent,
           browserConsent: input.browserConsent,
@@ -302,7 +302,7 @@ describe("browser analytics consent state", () => {
       { accountConsent, anonymousConsent: Option.none(), user: null },
     ];
     expect(
-      rejectedInputs.map((input) =>
+      Arr.map(rejectedInputs, (input) =>
         createBrowserAnalyticsIdentity({
           ...input,
           isAuthenticated: true,

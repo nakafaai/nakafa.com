@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { getTestInstance } from "better-auth/test";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   getPostAuthDestination,
   getPostAuthIntentSource,
@@ -131,10 +131,13 @@ describe("post-auth admission", () => {
       const state = yield* Effect.fromNullishOr(
         new URL(authorizationLocation).searchParams.get("state")
       ).pipe(Effect.orDie);
-      const cookie = signInResponse.headers
-        .getSetCookie()
-        .map((value) => value.split(";", 1)[0])
-        .join("; ");
+      const cookie = Arr.join(
+        Arr.map(
+          signInResponse.headers.getSetCookie(),
+          (value) => value.split(";", 1)[0]
+        ),
+        "; "
+      );
 
       const providerResponse = yield* Effect.promise(() =>
         auth.handler(
