@@ -16,7 +16,7 @@ import {
 } from "@repo/design-system/components/ui/autocomplete";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
-import { Array as Arr, Predicate } from "effect";
+import { Array as Arr, Predicate, Schema } from "effect";
 import type * as React from "react";
 
 const CommandDialog = CommandDialogPrimitive.Root;
@@ -31,9 +31,13 @@ type CommandProps<ItemValue> = Omit<
   items?: readonly ItemValue[] | readonly { items: readonly ItemValue[] }[];
 };
 
+const GroupedCommandItemsSchema = Schema.Struct({
+  items: Schema.Array(Schema.Unknown),
+});
+
 function hasGroupedItems(
   value: unknown
-): value is { items: readonly unknown[] } {
+): value is typeof GroupedCommandItemsSchema.Type {
   return (
     Predicate.isObject(value) &&
     Predicate.hasProperty(value, "items") &&
