@@ -29,7 +29,10 @@ function isAnyType(type: Type) {
  * the compiler cannot give, and `any`, count as arrays, so an untyped value gets
  * no pass. A union is an array when every member other than `undefined` and
  * `null` is one, an intersection when one member is, and a type parameter when
- * its base constraint is. An unconstrained type parameter is not an array.
+ * its base constraint is. An unconstrained type parameter is not an array. Any
+ * other type is an array when the compiler finds it assignable to a readonly
+ * array, which admits a subtype of Array or ReadonlyArray and refuses a string,
+ * a typed array, or a Set.
  */
 const isArrayReceiver = Effect.fnUntraced(function* (
   checker: Checker,
@@ -37,6 +40,9 @@ const isArrayReceiver = Effect.fnUntraced(function* (
 ): Effect.fn.Return<boolean, TestCompilerError> {
   if (type === undefined || isAnyType(type)) {
     return true;
+  }
+  if (intrinsicNamed(type, ["never"])) {
+    return false;
   }
   if (type.isUnionType()) {
     const members = yield* ask(() => type.getTypes());
@@ -65,8 +71,7 @@ const isArrayReceiver = Effect.fnUntraced(function* (
       constraint !== undefined && (yield* isArrayReceiver(checker, constraint))
     );
   }
-  const isArray = yield* ask(() => checker.isArrayType(type));
-  return isArray || (yield* ask(() => checker.isTupleType(type)));
+  return yield* ask(() => checker.isArrayLikeType(type));
 });
 
 /**

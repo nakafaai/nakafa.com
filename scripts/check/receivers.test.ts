@@ -86,6 +86,24 @@ const verdicts = Effect.fn("ReceiverTest.verdicts")(function* (
 
 describe("array receivers by declared type", () => {
   it.effect(
+    "reads a receiver whose type extends Array or ReadonlyArray as an array",
+    () =>
+      Effect.gen(function* () {
+        const files = {
+          "scripts/verdicts/extends.ts":
+            "export interface Rows extends Array<number> {}\ndeclare const rows: Rows;\nexport const doubled = rows.map(String);\n",
+          "scripts/verdicts/readonly-extends.ts":
+            "export interface Names extends ReadonlyArray<string> {}\ndeclare const names: Names;\nexport const lengths = names.map((name) => name.length);\n",
+        };
+        const project = yield* typedProject(withProject(files));
+        assert.deepStrictEqual(yield* verdicts(project, Rec.keys(files)), [
+          "scripts/verdicts/extends.ts:3 array",
+          "scripts/verdicts/readonly-extends.ts:3 array",
+        ]);
+      })
+  );
+
+  it.effect(
     "reads an array receiver through the type the compiler gives it",
     () =>
       Effect.gen(function* () {
@@ -150,9 +168,11 @@ describe("array receivers by declared type", () => {
             ARRAYS["scripts/verdicts/declared.ts"],
         })
       );
-      vi.spyOn(Checker.prototype, "isArrayType").mockImplementationOnce(() => {
-        throw cause;
-      });
+      vi.spyOn(Checker.prototype, "isArrayLikeType").mockImplementationOnce(
+        () => {
+          throw cause;
+        }
+      );
       const failure = yield* verdicts(project, [
         "scripts/verdicts/declared.ts",
       ]).pipe(Effect.flip);
