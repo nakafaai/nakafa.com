@@ -200,10 +200,18 @@ describe("content release runtime bundle staging", () => {
         ),
       ]);
 
-      for (const drift of drifts) {
+      // The renderer, the source commit, and the snapshot, in the order built above.
+      const failures = [
+        "TryoutRuntimeBundleRendererMismatchError",
+        "TryoutRuntimeBundleSourceError",
+        "TryoutRuntimeBundleSourceError",
+      ];
+      for (const [drift, failure] of Arr.zip(drifts, failures)) {
         const t = convexTest(schema, convexModules);
         yield* insertRuntimeIngressSource(t, staged);
-        yield* failureMessage(stageRuntimeIngress(t, drift));
+        expect(yield* failureMessage(stageRuntimeIngress(t, drift))).toContain(
+          failure
+        );
       }
     })
   );

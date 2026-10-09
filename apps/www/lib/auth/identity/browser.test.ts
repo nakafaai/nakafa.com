@@ -135,28 +135,36 @@ describe("account browser identity", () => {
     "does not fail a completed deletion when browser cleanup fails",
     () =>
       Effect.gen(function* () {
+        const cleanup = {
+          denyAnonymousAnalytics: vi.fn(() =>
+            Effect.fail(
+              new AnalyticsConsentStorageFailed({
+                code: "ANALYTICS_CONSENT_STORAGE_FAILED",
+              })
+            )
+          ),
+          removePersistedAccountState: vi.fn(() => {
+            throw new Error("storage unavailable");
+          }),
+          resetAnalytics: vi.fn(() => {
+            throw new Error("analytics unavailable");
+          }),
+          revokeAnalytics: vi.fn(() =>
+            Effect.fail(
+              new BrowserAnalyticsLoadFailed({
+                code: "BROWSER_ANALYTICS_LOAD_FAILED",
+              })
+            )
+          ),
+        };
         expect(
-          yield* clearDeletedAccountBrowserIdentity({
-            denyAnonymousAnalytics: () =>
-              Effect.fail(
-                new AnalyticsConsentStorageFailed({
-                  code: "ANALYTICS_CONSENT_STORAGE_FAILED",
-                })
-              ),
-            revokeAnalytics: () =>
-              Effect.fail(
-                new BrowserAnalyticsLoadFailed({
-                  code: "BROWSER_ANALYTICS_LOAD_FAILED",
-                })
-              ),
-            removePersistedAccountState: () => {
-              throw new Error("storage unavailable");
-            },
-            resetAnalytics: () => {
-              throw new Error("analytics unavailable");
-            },
-          })
+          yield* clearDeletedAccountBrowserIdentity(cleanup)
         ).toBeUndefined();
+        // Every step runs although each one before it failed.
+        expect(cleanup.revokeAnalytics).toHaveBeenCalledOnce();
+        expect(cleanup.denyAnonymousAnalytics).toHaveBeenCalledOnce();
+        expect(cleanup.resetAnalytics).toHaveBeenCalledOnce();
+        expect(cleanup.removePersistedAccountState).toHaveBeenCalledOnce();
       })
   );
 
