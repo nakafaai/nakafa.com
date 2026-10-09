@@ -37,7 +37,7 @@ It never gets an allowlist, a baseline, or a suppression.
 | `switch` | every `switch` statement | nothing |
 | `assertion` | `x as T`, `<T>x`, `x!` | `as const`; `satisfies`; definite assignment (`let x!: T`); import and export aliases; framework configuration |
 | `throw` | a raw `throw` in product code | tests; framework configuration; React modules, where a hook throws for its error boundary; a `ConvexError` thrown in a Convex handler, as set out below; a throw inside a browser page function |
-| `new-promise` | `new Promise(...)` that builds the global `Promise` | tests; framework configuration; a browser page function; a local class or binding named `Promise` |
+| `new-promise` | `new Promise(...)` and `Promise.withResolvers()` on the global `Promise`, also through a global object such as `globalThis.Promise` | tests; framework configuration; a browser page function; a local class or binding named `Promise` |
 
 `switch` reports a `switch (typeof x)` once, as a switch, not also as a
 `typeof-object` comparison.
@@ -64,8 +64,9 @@ Scopes name the modules a rule inspects:
 A React module is a `.tsx` file, a module that loads `react` or `react-dom` at
 run time, or a module that starts with `"use client"` as its first statement.
 
-A test file is named `*.test.ts`, `*.test.tsx`, or `test.<name>.ts`. A test
-support module, such as a plain module under a `test` folder, is product code.
+A test file is named `*.test.ts`, `*.test.tsx`, or `test.<name>.ts`, such as
+`test.setup.ts` or `test.helpers.ts`, which only tests load. Any other module
+that supports tests, such as `apps/www/test/fixtures.ts`, is product code.
 
 A framework configuration file is named `*.config.ts`, `.mts`, `.cts`, or
 `.tsx`, imports the Vitest or Vercel configuration API, or has a default export
@@ -89,7 +90,9 @@ hold:
   name.
 
 The compiler resolves the builder and the error class. A local binding with
-either name makes the throw an ordinary throw.
+either name makes the throw an ordinary throw. Parentheses, an assertion, or
+`satisfies` around the options object or around a page function do not change
+what the engine reads.
 
 A browser page function is a function that Playwright serializes into the page.
 It is a function written inline in `evaluate`, `addInitScript`, or a sibling
@@ -108,9 +111,9 @@ transitions, Playwright tests, `convex-test` callbacks, and Vitest mocks.
 A Confect workflow handler keeps its native promise syntax, because the workflow
 engine owns when its steps start.
 
-`new Promise(...)` is judged everywhere except tests and framework
-configuration, by `new-promise`. The rule counts only while `Promise` is the
-global binding.
+`new Promise(...)` and `Promise.withResolvers()` are judged everywhere except
+tests and framework configuration, by `new-promise`. The rule counts only while
+`Promise` is the global binding, read by name or through a global object.
 
 ## Consequences
 

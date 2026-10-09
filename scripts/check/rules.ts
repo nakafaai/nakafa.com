@@ -137,7 +137,7 @@ export const RULES = {
   },
   "new-promise": {
     message:
-      "build the value with Effect.callback, Effect.promise, or a Deferred from effect, and run it at the framework boundary, instead of new Promise.",
+      "build the value with Effect.callback, Effect.promise, or a Deferred from effect, and run it at the framework boundary, instead of new Promise or Promise.withResolvers.",
     scope: "source",
   },
   promise: {

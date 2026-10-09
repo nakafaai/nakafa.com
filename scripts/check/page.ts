@@ -16,6 +16,7 @@ import {
 } from "typescript/unstable/ast";
 import { imports } from "#scripts/check/kinds";
 import { descendants, type parseSources } from "#scripts/check/source";
+import { wrapped } from "#scripts/check/wrapper";
 
 const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;
 const MODULE_EXTENSION_PATTERN = /\.[cm]?tsx?$/u;
@@ -193,7 +194,9 @@ function isPageFunction(
   if (!(isArrowFunction(node) || isFunctionExpression(node))) {
     return false;
   }
-  const { parent } = node;
+  // Parentheses, an assertion, or satisfies around the function keep it the same value.
+  const value = wrapped(node);
+  const { parent } = value;
   if (isVariableDeclaration(parent)) {
     return (
       isIdentifier(parent.name) &&
@@ -201,7 +204,7 @@ function isPageFunction(
       passed(parent.name.text)
     );
   }
-  return inline && pageArgument(parent) === node;
+  return inline && pageArgument(parent) === value;
 }
 
 /** Whether a node sits inside a function that runs in the browser page. */

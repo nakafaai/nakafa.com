@@ -217,7 +217,7 @@ export const wrapped = wrap({
   );
 
   it.effect(
-    "exempts a Convex application error in a handler, its method, or a function it names, but not in a callback it contains",
+    "exempts a Convex application error in a handler, its method, a function it names, or wrapped options, but not in a callback it contains",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -239,6 +239,8 @@ function handleBound(ctx) {
   throw new ConvexError("bound");
 }
 export const bound = internalMutation({ handler: handleBound });
+export const kept = query(({ handler: (ctx) => { throw new ConvexError("kept"); } }) satisfies Options);
+export const shared = query(sharedOptions);
 `),
           ["6 throw"]
         );
