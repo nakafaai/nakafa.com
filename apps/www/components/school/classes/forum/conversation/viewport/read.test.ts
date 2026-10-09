@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Deferred, Effect } from "effect";
+import { Array as Arr, Deferred, Effect } from "effect";
 import {
   conversationTestFirstPost as firstPost,
   conversationTestSecondPost as secondPost,
@@ -62,20 +62,20 @@ describe("conversation/viewport/read", () => {
   });
   it("retries the same visible post after failed read sync", async () => {
     const rig = createAdapters();
-    const readAttempts: Id<"schoolClassForumPosts">[] = [];
+    let readAttempts: Id<"schoolClassForumPosts">[] = [];
     const viewport = await createViewport({
       ...rig.adapters,
       read: {
         markPostRead: (postId) =>
           Effect.gen(function* () {
-            readAttempts.push(postId);
+            readAttempts = Arr.append(readAttempts, postId);
             if (readAttempts.length === 1) {
               return yield* new ViewportReadError({
                 cause: "test",
                 message: "First read sync failed in test.",
               });
             }
-            rig.readPostIds.push(postId);
+            yield* rig.adapters.read.markPostRead(postId);
           }),
       },
     });
@@ -90,13 +90,13 @@ describe("conversation/viewport/read", () => {
   });
   it("suppresses duplicate read sync while the post is in flight", async () => {
     const rig = createAdapters();
-    const readAttempts: Id<"schoolClassForumPosts">[] = [];
+    let readAttempts: Id<"schoolClassForumPosts">[] = [];
     const viewport = await createViewport({
       ...rig.adapters,
       read: {
         markPostRead: (postId) =>
           Effect.gen(function* () {
-            readAttempts.push(postId);
+            readAttempts = Arr.append(readAttempts, postId);
             return yield* Effect.never;
           }),
       },
@@ -144,13 +144,13 @@ describe("conversation/viewport/read", () => {
       Effect.gen(function* () {
         const rig = createAdapters();
         const readGate = yield* Deferred.make<void>();
-        const readAttempts: Id<"schoolClassForumPosts">[] = [];
+        let readAttempts: Id<"schoolClassForumPosts">[] = [];
         const viewport = yield* Effect.promise(() =>
           createViewport({
             ...rig.adapters,
             read: {
               markPostRead: (postId) => {
-                readAttempts.push(postId);
+                readAttempts = Arr.append(readAttempts, postId);
                 return Deferred.await(readGate).pipe(
                   Effect.andThen(rig.adapters.read.markPostRead(postId))
                 );
@@ -179,13 +179,13 @@ describe("conversation/viewport/read", () => {
     Effect.gen(function* () {
       const rig = createAdapters();
       const firstRead = yield* Deferred.make<void, ViewportReadError>();
-      const readAttempts: Id<"schoolClassForumPosts">[] = [];
+      let readAttempts: Id<"schoolClassForumPosts">[] = [];
       const viewport = yield* Effect.promise(() =>
         createViewport({
           ...rig.adapters,
           read: {
             markPostRead: (postId) => {
-              readAttempts.push(postId);
+              readAttempts = Arr.append(readAttempts, postId);
               if (postId === firstPost._id) {
                 return Deferred.await(firstRead);
               }
