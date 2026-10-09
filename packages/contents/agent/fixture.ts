@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/agent/refs";
@@ -46,9 +47,10 @@ export function readNakafaContentRefFixture(
     section,
   });
 
-  if (Option.isNone(decoded)) {
-    throw new Error(`Invalid Nakafa content reference fixture: ${route}`);
-  }
+  assert(
+    Option.isSome(decoded),
+    `Invalid Nakafa content reference fixture: ${route}`
+  );
 
   const ref = decoded.value;
 
