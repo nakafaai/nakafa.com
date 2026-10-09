@@ -44,6 +44,61 @@ export const dynamic = import(name);
       })
   );
 
+  it.effect(
+    "leaves the process module to a module that declares a service and builds its layer",
+    () =>
+      Effect.gen(function* () {
+        const service = `import { spawn } from "node:child_process";
+import { Context, Effect, Layer } from "effect";
+export class Child extends Context.Service<Child, { readonly start: Effect.Effect<number> }>()("Child") {}
+`;
+        assert.deepStrictEqual(
+          yield* findings(
+            `${service}export const ChildLive = Layer.succeed(Child, Child.of({ start: Effect.sync(() => Number(spawn("node").pid)) }));\n`
+          ),
+          []
+        );
+        // The layer of another service, a service without a layer, and a class that is no service.
+        assert.deepStrictEqual(
+          yield* findings(
+            `${service}export const OtherLive = Layer.succeed(Other, {});\nexport const merged = Layer.mergeAll();\n`
+          ),
+          ["1 node-module"]
+        );
+        assert.deepStrictEqual(yield* findings(service), ["1 node-module"]);
+        assert.deepStrictEqual(
+          yield* findings(`import { spawn } from "node:child_process";
+import { Layer } from "effect";
+export class Child extends Base implements Runner {}
+class Unnamed extends Context.Tag("Unnamed") {}
+class Plain {}
+export default class extends Base {}
+export const ChildLive = Layer.succeed(Child, {});
+`),
+          ["1 node-module"]
+        );
+      })
+  );
+
+  it.effect(
+    "still reports every other Node module load in a process service module",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { spawn } from "child_process";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { Context, Layer } from "effect";
+export class Child extends Context.Service<Child, { readonly pid: number }>()("Child") {}
+export const ChildLive = Layer.succeed(Child, { pid: Number(spawn(join("a", "b")).pid) });
+export const late = require("node:child_process");
+export const dynamic = import("node:child_process");
+`),
+          ["2 node-module", "3 node-module", "7 node-module", "8 node-module"]
+        );
+      })
+  );
+
   it.effect("reports Node module re-exports and literal require calls", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

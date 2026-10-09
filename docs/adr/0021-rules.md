@@ -102,6 +102,26 @@ function is in the page too, and a nested function with the same name is
 ordinary code. The page keeps its platform globals, native syntax, shapes, and
 throws, but `switch` statements and assertions are still reported there.
 
+### A process service of its own
+
+`node-module` reports every load of Node's file, path, and process modules, with
+one construction: a module may import `node:child_process` when it is a process
+service of its own. It declares a `Context.Service` class and builds that
+class's layer in the same module, as in `Layer.succeed(Service, ...)`.
+
+Effect's spawner owns termination. In 4.0.2 it signals the child's process
+group when the child exits with a code that is not zero, and again when the
+scope closes (`NodeChildProcessSpawner.ts`, lines 549 to 568). No option leaves
+termination to the caller, and `unref` removes the child from the event loop. A
+service that must never signal a group whose leader already ended, and that must
+keep the parent alive while it waits, starts its child with Node's API behind its
+own seam. nakafa.com has no such module. Aksara's CLI has one, and aksara #421
+pins its seven lifetime properties with tests.
+
+The construction covers the import declaration only. A `require`, a dynamic
+import, and the file and path modules are still reported in such a module. When
+the spawner offers a way to own termination, the construction goes away.
+
 ### Promise syntax
 
 `async` and `await` are a rule only in the domain folders. Most of that code
