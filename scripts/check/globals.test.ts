@@ -221,7 +221,7 @@ crypto.subtle.digest("SHA-256", bytes);
   );
 
   it.effect(
-    "leaves the Effect Crypto service that randomUuid reads alone",
+    "leaves a crypto.randomUUID read through a local crypto binding alone",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -229,11 +229,27 @@ crypto.subtle.digest("SHA-256", bytes);
             `import { Crypto, Effect } from "effect";
 export const randomUuid = Effect.gen(function* () {
   const crypto = yield* Crypto.Crypto;
-  return yield* crypto.randomUUIDv4;
+  return yield* crypto.randomUUID;
 });
 `,
             "packages/utilities/uuid.ts"
           ),
+          []
+        );
+      })
+  );
+
+  it.effect(
+    "reads crypto.randomUUID only where no local binding shadows crypto",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(yield* findings("crypto.randomUUID();\n"), [
+          "1 random",
+        ]);
+        assert.deepStrictEqual(
+          yield* findings(`const crypto = { randomUUID: () => "id" };
+export const id = crypto.randomUUID();
+`),
           []
         );
       })

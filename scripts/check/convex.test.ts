@@ -1,31 +1,68 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Effect, MutableHashMap, Tuple } from "effect";
-import { isIdentifier } from "typescript/unstable/ast";
-import { symbolTable } from "#scripts/check/convex";
+import { Array as Arr, Effect, Order, Tuple } from "effect";
+import {
+  type Identifier,
+  isIdentifier,
+  type Node,
+} from "typescript/unstable/ast";
+import { symbolAt, symbolTable } from "#scripts/check/convex";
 import { effectTestViolations } from "#scripts/check/effect";
-import { descendants, parseSources } from "#scripts/check/source";
+import { descendants } from "#scripts/check/source";
+import { ROOT, typedProject, withProject } from "#scripts/check/test.helpers";
 
 const file = "packages/backend/example.test.ts";
 
 describe("symbol table", () => {
-  it.effect("keys each identifier by its node, not by its spelling", () =>
-    Effect.gen(function* () {
-      const { modules } = yield* parseSources([
-        { file: "scripts/names.ts", sourceText: "a;\na;\n" },
-      ]);
-      const [{ sourceFile }] = modules;
-      const identifiers = Arr.take(
-        Arr.filter(descendants(sourceFile, false), isIdentifier),
-        2
-      );
-      const table = symbolTable(
-        Arr.map(Arr.take(identifiers, 1), (node) => Tuple.make(node, undefined))
-      );
-      assert.deepStrictEqual(
-        Arr.map(identifiers, (node) => MutableHashMap.has(table, node)),
-        [true, false]
-      );
-    }).pipe(Effect.scoped)
+  it.effect(
+    "resolves a name to the symbol of its own scope, and a later entry replaces an earlier one",
+    () =>
+      Effect.gen(function* () {
+        const project = yield* typedProject(
+          withProject({
+            "scripts/names.ts":
+              "const value = 1;\nexport function read(value: number) {\n  return value;\n}\nexport const copy = value;\n",
+          })
+        );
+        const sourceFile = yield* Effect.fromNullishOr(
+          project.program.getSourceFile(`${ROOT}/scripts/names.ts`)
+        );
+        const named = Arr.sort(
+          Arr.filter(
+            descendants(sourceFile, false),
+            (node): node is Identifier =>
+              isIdentifier(node) && node.text === "value"
+          ),
+          Order.mapInput(Order.Number, (node: Node) =>
+            node.getStart(sourceFile)
+          )
+        );
+        const pairs = Arr.zip(
+          named,
+          project.checker.getSymbolAtLocation(named)
+        );
+        const [declared, parameter, inside, outside] = pairs;
+        const table = symbolTable(pairs);
+        const idAt = (node: Identifier) => symbolAt(table, node)?.id;
+        assert.deepStrictEqual(
+          [
+            idAt(inside[0]) === idAt(parameter[0]),
+            idAt(outside[0]) === idAt(declared[0]),
+            idAt(parameter[0]) === idAt(declared[0]),
+            idAt(declared[0]) !== undefined,
+          ],
+          [true, true, false, true]
+        );
+        const replaced = symbolTable(
+          Arr.append(pairs, Tuple.make(outside[0], parameter[1]))
+        );
+        assert.deepStrictEqual(
+          [
+            symbolAt(replaced, outside[0])?.id === parameter[1]?.id,
+            parameter[1] !== undefined,
+          ],
+          [true, true]
+        );
+      }).pipe(Effect.scoped)
   );
 });
 

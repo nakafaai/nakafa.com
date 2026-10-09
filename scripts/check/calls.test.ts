@@ -68,6 +68,22 @@ items[name](String);
     })
   );
 
+  it.effect("sees a method through each wrapper around its callee", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* calls(`(items.map as typeof items.map)(String);
+(items.filter satisfies unknown)(Boolean);
+items.push!(2);
+`),
+        [
+          "1 array-method items",
+          "2 array-method items",
+          "3 array-mutation items",
+        ]
+      );
+    })
+  );
+
   it.effect(
     "recognizes a method on a call result and a namespace receiver",
     () =>

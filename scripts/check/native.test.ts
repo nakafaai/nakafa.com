@@ -214,6 +214,35 @@ export const bare = (async () => {
     })
   );
 
+  it.effect("sees a handler through each wrapper of its value or binding", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          `import { workflow } from "@repo/backend/confect/workflow";
+export const asserted = workflow.define({
+  handler: (async (step) => step.runAction(run)) as Handler,
+});
+export const satisfied = workflow.define({
+  handler: (async (step) => step.runAction(run)) satisfies Handler,
+});
+export const negated = workflow.define({
+  handler: (async (step) => step.runAction(run))!,
+});
+const retry = (async (step) => {
+  await step.runAction(retry);
+}) as Handler;
+export const again = workflow.define({ handler: retry satisfies Handler });
+export const bare = (async () => {
+  await run();
+}) as Other;
+`,
+          WORKFLOW
+        ),
+        ["15 promise", "16 promise"]
+      );
+    })
+  );
+
   it.effect("lets a Confect workflow handler use native promise syntax", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

@@ -395,6 +395,26 @@ export function build(other) {
     })
   );
 
+  it.effect("binds a function that a variable holds through each wrapper", () =>
+    Effect.gen(function* () {
+      const source = `export function build() {
+  const parenthesized = (() => {});
+  const asserted = (() => {}) as Handler;
+  const satisfied = (() => {}) satisfies Handler;
+  const negated = (() => {})!;
+  use(parenthesized);
+  use(asserted);
+  use(satisfied);
+  use(negated);
+}
+`;
+      assert.deepStrictEqual(yield* boundLines(source, "parenthesized"), [[2]]);
+      assert.deepStrictEqual(yield* boundLines(source, "asserted"), [[3]]);
+      assert.deepStrictEqual(yield* boundLines(source, "satisfied"), [[4]]);
+      assert.deepStrictEqual(yield* boundLines(source, "negated"), [[5]]);
+    })
+  );
+
   it.effect("binds a name inside an array destructuring pattern", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

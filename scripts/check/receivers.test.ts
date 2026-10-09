@@ -22,6 +22,8 @@ const ARRAYS = {
     "export function doubled<T extends number[]>(rows: T) {\n  return rows.map(String);\n}\n",
   "scripts/verdicts/readonly.ts":
     "declare const names: readonly string[];\nexport const lengths = names.map((name) => name.length);\n",
+  "scripts/verdicts/split.ts":
+    'export const parts = "a,b".split(",").map(String);\n',
   "scripts/verdicts/tuple.ts":
     "declare const pair: [number, string];\nexport const first = pair.map(String);\n",
   "scripts/verdicts/union.ts":
@@ -42,6 +44,8 @@ const NOT_ARRAYS = {
     'import * as Arr from "./arr";\nexport const mapped = Arr.map([1], String);\n',
   "scripts/plain/arr.ts":
     "export function map(values: unknown, apply: (value: unknown) => unknown) {\n  return apply(values);\n}\n",
+  "scripts/plain/locator.ts":
+    'declare class Locator {\n  filter(options: { hasText: string }): Locator;\n}\ndeclare const save: Locator;\nexport const narrowed = save.filter({ hasText: "Save" });\n',
   "scripts/plain/never.ts":
     "declare const nothing: never;\nexport const seen = nothing.forEach(() => {});\n",
   "scripts/plain/nullish.ts":
@@ -52,6 +56,8 @@ const NOT_ARRAYS = {
     'declare const path: { join(left: string, right: string): string };\nexport const joined = path.join("a", "b");\n',
   "scripts/plain/set.ts":
     "declare const names: Set<string>;\nexport const seen = names.forEach(() => {});\n",
+  "scripts/plain/string.ts":
+    "declare const label: string;\nexport const kept = label.filter(Boolean);\n",
   "scripts/plain/typed.ts":
     "export const doubled = new Uint8Array(2).map((value) => value + 1);\n",
   "scripts/plain/unconstrained.ts":
@@ -118,6 +124,7 @@ describe("array receivers by declared type", () => {
           "scripts/verdicts/optional.ts:2 array",
           "scripts/verdicts/parameter.ts:2 array",
           "scripts/verdicts/readonly.ts:2 array",
+          "scripts/verdicts/split.ts:1 array",
           "scripts/verdicts/tuple.ts:2 array",
           "scripts/verdicts/union.ts:2 array",
           "scripts/verdicts/unresolved.ts:2 array",
@@ -133,11 +140,13 @@ describe("array receivers by declared type", () => {
         "scripts/plain/mixed.ts:2 not array",
         "scripts/plain/named.ts:2 not array",
         "scripts/plain/namespace.ts:2 not array",
+        "scripts/plain/locator.ts:5 not array",
         "scripts/plain/never.ts:2 not array",
         "scripts/plain/nullish.ts:2 not array",
         "scripts/plain/object.ts:2 not array",
         "scripts/plain/path.ts:2 not array",
         "scripts/plain/set.ts:2 not array",
+        "scripts/plain/string.ts:2 not array",
         "scripts/plain/typed.ts:1 not array",
         "scripts/plain/unconstrained.ts:2 not array",
       ]);
