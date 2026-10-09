@@ -14,8 +14,8 @@ import { useSyncExternalStore } from "react";
  */
 const DeferredDithering = dynamic(
   () =>
-    import("@/components/marketing/about/features.client").then(
-      (module) => module.FeaturesDithering
+    import("@/components/entry/dithering.client").then(
+      (module) => module.EntryDithering
     ),
   {
     loading: () => null,

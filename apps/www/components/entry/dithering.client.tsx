@@ -1,17 +1,19 @@
 "use client";
 
-import { Dithering, type DitheringProps } from "@paper-design/shaders-react";
+import { Dithering } from "@paper-design/shaders-react";
 import { getThemeShaderColor } from "@repo/design-system/lib/theme/registry";
 import { useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 
 /**
- * The hero field's pixel budget, which caps the canvas. The dither block still
- * spans two CSS pixels, so only the field's resolution changes.
+ * This artwork's own canvas budget. Each artwork module keeps its own value,
+ * such as CURRICULA_SHADER_PIXEL_BUDGET, and this one equals the hero field's
+ * value today. The dither block still spans two CSS pixels, so only the
+ * field's resolution changes.
  */
 const DITHERING_PIXEL_BUDGET = 1_200_000;
 
-export function FeaturesDithering({ ...props }: DitheringProps) {
+export function EntryDithering() {
   const { resolvedTheme } = useTheme();
   const shouldReduceMotion = useReducedMotion() ?? false;
 
@@ -28,7 +30,6 @@ export function FeaturesDithering({ ...props }: DitheringProps) {
       size={2}
       speed={shouldReduceMotion ? 0 : 0.15}
       type="4x4"
-      {...props}
     />
   );
 }
