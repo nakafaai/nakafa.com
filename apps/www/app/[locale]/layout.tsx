@@ -15,7 +15,7 @@ import Link from "next/link";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { PreviewRefresh } from "@/components/dev/refresh";
+import { DeferredPreviewRefresh } from "@/components/dev/deferred";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readPreviewManifestForPrerender } from "@/lib/content/preview/manifest";
 import { readPreviewStaticLocaleParams } from "@/lib/content/preview/route";
@@ -133,7 +133,12 @@ async function PreviewUpdates() {
   // Local revisions follow saves and must stream from the running provider.
   await io();
   const preview = await readPreviewManifestForPrerender();
-  return <PreviewRefresh revision={preview.revision} status={preview.status} />;
+  return (
+    <DeferredPreviewRefresh
+      revision={preview.revision}
+      status={preview.status}
+    />
+  );
 }
 
 /** Prebuilds active shells or the single selected local preview shell. */
