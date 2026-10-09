@@ -240,24 +240,53 @@ describe("customer audit configuration", () => {
       )
   );
 
-  it.effect("uses local Convex login only when no deployment key exists", () =>
-    Effect.gen(function* () {
-      expect(yield* getCustomerConvexConfig(false)).toEqual({
-        accessToken: "local-token",
-        url: "https://dev.example",
-      });
-    }).pipe(
-      Effect.provideService(
-        ConfigProvider.ConfigProvider,
-        ConfigProvider.fromEnvRecord({ CONVEX_URL: "https://dev.example" })
-      ),
-      Effect.provide(
-        scriptedFiles({
-          readFile: () =>
-            Effect.succeed(fileBytes('{"accessToken":"local-token"}')),
-        })
-      )
-    )
+  it.effect(
+    "uses local Convex login only when no deployment key exists",
+    () => {
+      const readFile = vi.fn<FileSystem.FileSystem["readFile"]>(() =>
+        Effect.succeed(fileBytes('{"accessToken":"local-token"}'))
+      );
+      return Effect.gen(function* () {
+        expect(yield* getCustomerConvexConfig(false)).toEqual({
+          accessToken: "local-token",
+          url: "https://dev.example",
+        });
+        expect(readFile).toHaveBeenCalledWith(
+          "/home/tester/.convex/config.json"
+        );
+      }).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnvRecord({
+            CONVEX_URL: "https://dev.example",
+            HOME: "/home/tester",
+          })
+        ),
+        Effect.provide(scriptedFiles({ readFile }))
+      );
+    }
+  );
+
+  it.effect(
+    "reports a missing HOME before reading any local Convex login",
+    () => {
+      const readFile = unexpectedRead();
+      return Effect.gen(function* () {
+        expect(
+          yield* getCustomerConvexConfig(false).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "CustomerConvexConfigError",
+          message: "HOME is not configured for local Convex login",
+        });
+        expect(readFile).not.toHaveBeenCalled();
+      }).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnvRecord({ CONVEX_URL: "https://dev.example" })
+        ),
+        Effect.provide(scriptedFiles({ readFile }))
+      );
+    }
   );
 
   it.effect.each([
@@ -290,7 +319,10 @@ describe("customer audit configuration", () => {
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,
-        ConfigProvider.fromEnvRecord({ CONVEX_URL: "https://dev.example" })
+        ConfigProvider.fromEnvRecord({
+          CONVEX_URL: "https://dev.example",
+          HOME: "/home/tester",
+        })
       ),
       Effect.provide(
         scriptedFiles({

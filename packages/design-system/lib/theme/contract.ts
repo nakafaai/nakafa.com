@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { TEXT_ROLE_PAIRS } from "@repo/design-system/lib/theme/contrast";
 import Color from "colorjs.io";
 import { Array as Arr, Effect, FileSystem, Schema } from "effect";
@@ -78,10 +77,8 @@ export class ThemeStyleSourceLoadError extends Schema.TaggedError<ThemeStyleSour
 
 const SIMPLE_THEME_SELECTOR_PATTERN = /^\.([a-z0-9-]+)$/;
 const DEFAULT_THEME_STYLE_SOURCE_PATHS: ThemeStyleSourcePaths = {
-  customThemes: fileURLToPath(
-    new URL("../../styles/theme.css", import.meta.url)
-  ),
-  globals: fileURLToPath(new URL("../../styles/globals.css", import.meta.url)),
+  customThemes: `${import.meta.dirname}/../../styles/theme.css`,
+  globals: `${import.meta.dirname}/../../styles/globals.css`,
 };
 
 /** Builds one typed stylesheet read failure with its exact source path. */
