@@ -1,10 +1,7 @@
 import { learningPopularityWindowValues } from "@repo/backend/confect/contents/popularity";
 import { publicFailure } from "@repo/backend/confect/failure";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
-import {
-  type TrendingSubject,
-  trendingSubjectValidator,
-} from "@repo/backend/confect/lib/validators/trending";
+import { trendingSubjectValidator } from "@repo/backend/confect/lib/validators/trending";
 import { Schema } from "effect";
 export const trendingSubjectIoFailedCode = "TRENDING_SUBJECT_IO_FAILED";
 export const maxTrendingSubjectsLimit = 24;
@@ -25,7 +22,6 @@ export const getTrendingSubjectsResultValidator = Schema.mutable(
 );
 export type GetTrendingSubjectsArgs =
   typeof getTrendingSubjectsArgsValidator.Type;
-export type GetTrendingSubjectsResult = TrendingSubject[];
 
 /** Raised when Convex IO fails while reading trending materials. */
 export class TrendingSubjectIoError extends Schema.TaggedError<TrendingSubjectIoError>()(

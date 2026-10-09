@@ -119,9 +119,6 @@ export const NakafaAgentSearchResultSchema = Schema.Struct({
 })
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   .annotate({ description: "Paginated Nakafa content search result." });
-export type NakafaAgentSearchOptions = Schema.Codec.Encoded<
-  typeof NakafaAgentSearchOptionsSchema
->;
 
 /** Recorded search facts retain the executed request when admission limits change. */
 export const NakafaAgentSearchFactsSchema =

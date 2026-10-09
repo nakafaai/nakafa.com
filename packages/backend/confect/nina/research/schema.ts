@@ -206,7 +206,6 @@ export const ResearchOutputSchema = Schema.Struct({
     }),
   }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export const scrapeInputSchema = createEffectSchema(ScrapeInputSchema);
 export const webSearchInputSchema = createEffectSchema(WebSearchInputSchema);
 export const researchOutputSchema = createEffectSchema(ResearchOutputSchema);
 /** Search provider failed before returning usable source data. */
@@ -240,7 +239,6 @@ export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerati
     text: Schema.optional(Schema.String),
   }
 ) {}
-export type ScrapeInput = typeof ScrapeInputSchema.Type;
 export type ScrapeOutput = typeof ScrapeOutputSchema.Type;
 export type ResearchOutput = typeof ResearchOutputSchema.Type;
 export type WebSearchInput = typeof WebSearchInputSchema.Type;

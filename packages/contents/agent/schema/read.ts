@@ -67,7 +67,4 @@ export const NakafaAgentMarkdownSchema =
   )
     .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
     .annotate({ description: "Full Nakafa content markdown payload." });
-export type NakafaAgentReadOptions = typeof NakafaAgentReadOptionsSchema.Type;
-export type NakafaAgentContentRefInput =
-  typeof NakafaAgentContentRefInputSchema.Type;
 export type NakafaAgentMarkdown = typeof NakafaAgentMarkdownSchema.Type;

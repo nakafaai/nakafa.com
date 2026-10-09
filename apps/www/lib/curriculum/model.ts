@@ -8,7 +8,6 @@ import {
 import {
   LearningProgramSchema,
   ProgramTranslationSchema,
-  type LearningProgram as PublishedLearningProgram,
 } from "@nakafa/aksara-contracts/program/spec";
 import { Array as Arr, Option, Schema } from "effect";
 import { notFound } from "next/navigation";
@@ -24,9 +23,6 @@ type CurriculumParams =
 
 /** Route shape consumed by the shared curriculum presentation. */
 export type CurriculumViewRoute = PublishedCurriculumRoute;
-
-/** Program shape consumed by the shared curriculum presentation. */
-export type CurriculumViewProgram = PublishedLearningProgram;
 
 /** One root curriculum card and its signed program metadata. */
 const CurriculumCatalogEntrySchema = Schema.Struct({

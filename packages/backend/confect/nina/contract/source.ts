@@ -6,4 +6,3 @@ export const SourceReferenceSchema = Schema.Struct({
   hostname: Schema.String,
   text: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type SourceReference = typeof SourceReferenceSchema.Type;
