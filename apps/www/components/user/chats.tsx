@@ -10,6 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import chats from "@repo/backend/confect/_generated/refs/chats";
+import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -55,7 +56,7 @@ function UserChatsList({
 }: {
   canDelete: boolean;
   userId: Id<"users">;
-  visibility?: "public" | "private" | undefined;
+  visibility?: ChatVisibility | undefined;
 }) {
   if (canDelete) {
     return <OwnChatsList />;
@@ -93,7 +94,7 @@ function PublicChatsList({
   visibility,
 }: {
   userId: Id<"users">;
-  visibility?: "public" | "private" | undefined;
+  visibility?: ChatVisibility | undefined;
 }) {
   const type = "study" as const;
   const queryArgs = visibility
