@@ -7,7 +7,7 @@ import {
   resolveAnalyticsConsentState,
 } from "@repo/analytics/consent";
 import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type consents from "@repo/backend/confect/_generated/refs/consents";
 
 import { Option, Schema } from "effect";
 
@@ -30,7 +30,7 @@ const BrowserConsentSnapshotSchema = Schema.Struct({
 export type BrowserConsentSnapshot = typeof BrowserConsentSnapshotSchema.Type;
 
 export type AccountConsentDecision = NonNullable<
-  Ref.Returns<typeof refs.public.consents.current.get>["decision"]
+  Ref.Returns<typeof consents.current.get>["decision"]
 >;
 
 /** Returns whether a browser privacy signal must revoke an account grant. */

@@ -7,7 +7,7 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer } from "effect";
@@ -28,7 +28,7 @@ const generation = {
   stale: false,
 };
 type ArticleRow = Ref.Returns<
-  typeof refs.public.contentRelease.article.publications
+  typeof contentRelease.article.publications
 >["result"]["page"][number];
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: vi.fn(),
@@ -54,9 +54,7 @@ vi.mock("@confect/js", async (importOriginal) => {
 });
 
 /** Provides a category page with more inventory beyond its first bounded read. */
-function categoryPage(): Ref.Returns<
-  typeof refs.public.contentRelease.article.categories
-> {
+function categoryPage(): Ref.Returns<typeof contentRelease.article.categories> {
   return {
     ...generation,
     result: {
@@ -76,7 +74,7 @@ function categoryPage(): Ref.Returns<
 
 /** Provides two real articles while retaining a continuation cursor. */
 function articlePage(): Ref.Returns<
-  typeof refs.public.contentRelease.article.publications
+  typeof contentRelease.article.publications
 > {
   return {
     ...generation,

@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { useConvexConnectionState } from "convex/react";
 import { Schema } from "effect";
@@ -132,10 +132,7 @@ export function useTryoutSetData({
   const size = window.size;
 
   const args = { ...request, paginationOpts: { cursor: null, numItems: size } };
-  const query = useQuery(
-    refs.public.tryouts.queries.sets.list,
-    ready ? args : "skip"
-  );
+  const query = useQuery(tryouts.queries.sets.list, ready ? args : "skip");
   // The canonical query hook returns pending, never stale success or error, for skip.
   const viewerMismatch =
     QueryResult.isSuccess(query) && query.value.viewerId !== activeViewer;

@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
@@ -30,9 +30,7 @@ export function TryoutReviewCheckout() {
   const billing = useBillingNavigation();
   const [isRefreshing, startRefresh] = useTransition();
   const plan = useViewer((state) => state.viewer?.plan);
-  const trackPaywall = useMutation(
-    refs.public.tryouts.mutations.access.trackPaywallView
-  );
+  const trackPaywall = useMutation(tryouts.mutations.access.trackPaywallView);
 
   useEffect(() => {
     Effect.runPromise(

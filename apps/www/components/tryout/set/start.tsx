@@ -3,7 +3,7 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -63,12 +63,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const router = useRouter();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
-  const startAttempt = useMutation(
-    refs.public.tryouts.mutations.attempts.startAttempt
-  );
-  const startSection = useMutation(
-    refs.public.tryouts.mutations.sections.start
-  );
+  const startAttempt = useMutation(tryouts.mutations.attempts.startAttempt);
+  const startSection = useMutation(tryouts.mutations.sections.start);
   const t = useTranslations("Tryouts");
   const now = useTryoutClock(false);
   const [isPending, startTransition] = useTransition();
@@ -77,7 +73,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const finishedAttempt = Boolean(attempt && !activeAttempt);
   const directEntry = Boolean(request.entrySectionKey);
   const access = useQuery(
-    refs.public.tryouts.queries.access.getStartAccess,
+    tryouts.queries.access.getStartAccess,
     isAuthenticated && !activeAttempt
       ? {
           countryKey: request.countryKey,

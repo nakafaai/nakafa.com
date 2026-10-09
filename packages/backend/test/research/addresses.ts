@@ -15,10 +15,11 @@
  *   never public.
  * Any other change is a stop, not an update.
  *
- * The first recording came from the ipaddr.js 2.5.0 implementation. One gap is
- * still recorded as found: the URL check allows the trailing-dot name
- * `localhost.` and the name `127.0.0.1.nip.io`. The DNS check in
- * tools/safety.ts is the only guard for both.
+ * The first recording came from the ipaddr.js 2.5.0 implementation, and every
+ * later change followed the rule above. One gap is still recorded as found:
+ * the URL check allows the trailing-dot name `localhost.` and the name
+ * `127.0.0.1.nip.io`. The DNS check in tools/safety.ts is the only guard for
+ * both.
  */
 export type GoldenAddress = "none" | "public" | "refused";
 
@@ -112,27 +113,27 @@ export const ADDRESS_VERDICTS: readonly GoldenVerdict[] = [
   // ipaddr.js IPv6 uniqueLocal fc00::/7
   ["[fc00::]", "refused", "refused"],
   ["[fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]", "refused", "refused"],
-  ["[fe00::]", "allowed", "public"],
+  ["[fe00::]", "refused", "refused"],
   // ipaddr.js IPv6 ipv4Mapped ::ffff:0:0/96
   ["[::ffff:0:0]", "refused", "refused"],
   ["[::ffff:ffff:ffff]", "refused", "refused"],
-  ["[::1:0:0:0]", "allowed", "public"],
+  ["[::1:0:0:0]", "refused", "refused"],
   // ipaddr.js IPv6 discard 100::/64
   ["[100::]", "refused", "refused"],
   ["[100::ffff:ffff:ffff:ffff]", "refused", "refused"],
-  ["[100:0:0:1::]", "allowed", "public"],
+  ["[100:0:0:1::]", "refused", "refused"],
   // ipaddr.js IPv6 rfc6145 ::ffff:0:0:0/96
   ["[::ffff:0:0:0]", "refused", "refused"],
   ["[::ffff:0:ffff:ffff]", "refused", "refused"],
-  ["[::ffff:1:0:0]", "allowed", "public"],
+  ["[::ffff:1:0:0]", "refused", "refused"],
   // ipaddr.js IPv6 rfc6052 64:ff9b::/96
   ["[64:ff9b::]", "refused", "refused"],
   ["[64:ff9b::ffff:ffff]", "refused", "refused"],
-  ["[64:ff9b::1:0:0]", "allowed", "public"],
+  ["[64:ff9b::1:0:0]", "refused", "refused"],
   // ipaddr.js IPv6 rfc6052 64:ff9b:1::/48
   ["[64:ff9b:1::]", "refused", "refused"],
   ["[64:ff9b:1:ffff:ffff:ffff:ffff:ffff]", "refused", "refused"],
-  ["[64:ff9b:2::]", "allowed", "public"],
+  ["[64:ff9b:2::]", "refused", "refused"],
   // ipaddr.js IPv6 6to4 2002::/16
   ["[2002::]", "refused", "refused"],
   ["[2002:ffff:ffff:ffff:ffff:ffff:ffff:ffff]", "refused", "refused"],
@@ -170,7 +171,7 @@ export const ADDRESS_VERDICTS: readonly GoldenVerdict[] = [
   // ipaddr.js IPv6 segmentRouting 5f00::/16
   ["[5f00::]", "refused", "refused"],
   ["[5f00:ffff:ffff:ffff:ffff:ffff:ffff:ffff]", "refused", "refused"],
-  ["[5f01::]", "allowed", "public"],
+  ["[5f01::]", "refused", "refused"],
   // ipaddr.js IPv6 reserved 2001::/23
   ["[2001:1ff:ffff:ffff:ffff:ffff:ffff:ffff]", "refused", "refused"],
   ["[2001:200::]", "allowed", "public"],
@@ -247,6 +248,17 @@ export const ADDRESS_VERDICTS: readonly GoldenVerdict[] = [
   ["admin.localhost", "refused", "none"],
   ["localhost.", "allowed", "none"],
   ["127.0.0.1.nip.io", "allowed", "none"],
+  // The global unicast space 2000::/3 and the reserved space around it
+  ["[1fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]", "refused", "refused"],
+  ["[2000::]", "allowed", "public"],
+  ["[3fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]", "allowed", "public"],
+  ["[4000::]", "refused", "refused"],
+  ["[e000::1]", "refused", "refused"],
+  // ISATAP interface identifiers below the zero prefix, with IPv4 inside
+  ["[::5efe:7f00:1]", "refused", "refused"],
+  ["[::5efe:a9fe:a9fe]", "refused", "refused"],
+  ["[::200:5efe:a00:1]", "refused", "refused"],
+  ["::5efe:10.0.0.1", "refused", "refused"],
   // Empty and garbage text, and zone-suffixed addresses, judged by judgeAddress.
   ["", "refused", "none"],
   ["not-an-address", "allowed", "none"],

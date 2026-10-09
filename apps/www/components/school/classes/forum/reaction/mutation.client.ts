@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import { Option } from "effect";
 import { toggleReactionState } from "@/components/school/classes/forum/reaction/state";
 import { useViewer } from "@/lib/identity/client";
@@ -15,14 +15,14 @@ function updateForumLists(
   reactorName?: string
 ) {
   const queries = localStore.getAllQueries(
-    refs.public.classes.forums.queries.forums.getForums
+    classes.forums.queries.forums.getForums
   );
   for (const query of queries) {
     if (Option.isNone(query.value)) {
       continue;
     }
     localStore.setQuery(
-      refs.public.classes.forums.queries.forums.getForums,
+      classes.forums.queries.forums.getForums,
       query.args,
       Option.some({
         ...query.value.value,
@@ -40,16 +40,16 @@ function updateForumLists(
 export function useForumReactionMutation() {
   const reactorName = useViewer((state) => state.viewer?.name);
   return useMutation(
-    refs.public.classes.forums.mutations.reactions.toggleForumReaction
+    classes.forums.mutations.reactions.toggleForumReaction
   ).withOptimisticUpdate((localStore, { emoji, forumId }) => {
     const forum = Option.getOrUndefined(
-      localStore.getQuery(refs.public.classes.forums.queries.forums.getForum, {
+      localStore.getQuery(classes.forums.queries.forums.getForum, {
         forumId,
       })
     );
     if (forum) {
       localStore.setQuery(
-        refs.public.classes.forums.queries.forums.getForum,
+        classes.forums.queries.forums.getForum,
         {
           forumId,
         },
@@ -64,17 +64,17 @@ export function useForumReactionMutation() {
 export function usePostReactionMutation() {
   const reactorName = useViewer((state) => state.viewer?.name);
   return useMutation(
-    refs.public.classes.forums.mutations.reactions.togglePostReaction
+    classes.forums.mutations.reactions.togglePostReaction
   ).withOptimisticUpdate((localStore, { emoji, postId }) => {
     const queries = localStore.getAllQueries(
-      refs.public.classes.forums.queries.pages.getForumPosts
+      classes.forums.queries.pages.getForumPosts
     );
     for (const query of queries) {
       if (Option.isNone(query.value)) {
         continue;
       }
       localStore.setQuery(
-        refs.public.classes.forums.queries.pages.getForumPosts,
+        classes.forums.queries.pages.getForumPosts,
         query.args,
         Option.some(
           query.value.value.map((post) =>

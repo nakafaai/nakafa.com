@@ -1,5 +1,6 @@
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
+import schools from "@repo/backend/confect/_generated/refs/schools";
 import { Effect } from "effect";
 import { cache } from "react";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
@@ -19,7 +20,7 @@ export const getSchoolRouteSnapshot = cache(async (slug: string) => {
     Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient;
       return yield* client
-        .query(refs.public.schools.queries.getSchoolBySlug, { slug })
+        .query(schools.queries.getSchoolBySlug, { slug })
         .pipe(
           Effect.catchTag("SchoolReadError", (error) =>
             error.code === "SCHOOL_NOT_FOUND" ||
@@ -48,7 +49,7 @@ export const getClassRouteSnapshot = cache(async (classId: string) => {
       return yield* Effect.gen(function* () {
         const client = yield* HttpClient.HttpClient;
         return yield* client
-          .query(refs.public.classes.queries.getClassRoute, { classId })
+          .query(classes.queries.getClassRoute, { classId })
           .pipe(
             Effect.catchTag("ClassAccessError", (error) =>
               error.code === "ACCESS_DENIED" ||
@@ -79,7 +80,7 @@ export const getSchoolSwitcherPage = Effect.fn(
   }
   return yield* Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
-    return yield* client.query(refs.public.schools.queries.getMySchoolsPage, {
+    return yield* client.query(schools.queries.getMySchoolsPage, {
       paginationOpts: { cursor: null, numItems: SCHOOL_SWITCHER_PAGE_SIZE },
     });
   }).pipe(

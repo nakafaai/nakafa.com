@@ -1,5 +1,7 @@
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import auth from "@repo/backend/confect/_generated/refs/auth";
+import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
+import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -46,14 +48,13 @@ async function AuthenticatedSettings({
       Effect.flatMap((client) =>
         Effect.all(
           {
-            account: client.query(refs.public.auth.queries.getCurrentUser, {}),
-            memory: client.query(refs.public.nina.memory.get, {}),
-            preference: client.query(
-              refs.public.learningPreferences.queries.getCurrent,
-              { locale }
-            ),
+            account: client.query(auth.queries.getCurrentUser, {}),
+            memory: client.query(nina.memory.get, {}),
+            preference: client.query(learningPreferences.queries.getCurrent, {
+              locale,
+            }),
             programs: client.query(
-              refs.public.learningPreferences.queries.listCurriculumPrograms,
+              learningPreferences.queries.listCurriculumPrograms,
               { locale }
             ),
           },

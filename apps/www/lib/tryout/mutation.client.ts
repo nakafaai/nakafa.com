@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import { Option } from "effect";
 import type { TryoutCountrySelectorOption } from "@/components/tryout/catalog/options";
 export type TryoutPreferenceOption = Pick<
@@ -14,7 +14,7 @@ export function useSetPreferredTryoutMutation(
   countries: readonly TryoutPreferenceOption[]
 ) {
   return useMutation(
-    refs.public.learningPreferences.mutations.setPreferredTryoutCountry
+    learningPreferences.mutations.setPreferredTryoutCountry
   ).withOptimisticUpdate(
     (localStore, { locale, preferredTryoutCountryKey }) => {
       const country = countries.find(
@@ -24,18 +24,15 @@ export function useSetPreferredTryoutMutation(
         return;
       }
       const current = Option.getOrUndefined(
-        localStore.getQuery(
-          refs.public.learningPreferences.queries.getCurrentTryout,
-          {
-            locale,
-          }
-        )
+        localStore.getQuery(learningPreferences.queries.getCurrentTryout, {
+          locale,
+        })
       );
       if (current === undefined) {
         return;
       }
       localStore.setQuery(
-        refs.public.learningPreferences.queries.getCurrentTryout,
+        learningPreferences.queries.getCurrentTryout,
         {
           locale,
         },

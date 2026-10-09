@@ -9,7 +9,7 @@ import {
   ArticleCategoryTitleSchema,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
@@ -21,7 +21,7 @@ import {
 import { httpLayer } from "@/lib/convex/http";
 
 type DiscoveryItem = Ref.Returns<
-  typeof refs.public.contentRelease.article.latest
+  typeof contentRelease.article.latest
 >["articles"][number];
 /** Decodes one backend-verified discovery row into the article card contract. */
 const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
@@ -86,7 +86,7 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
   ) {
     const appLocale = AppLocaleSchema.make(locale);
     const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.contentRelease.article.bucket, {
+      client.query(contentRelease.article.bucket, {
         appLocale,
         bucket,
       })
@@ -129,7 +129,7 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
   ) {
     const appLocale = AppLocaleSchema.make(locale);
     const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.contentRelease.article.latest, {
+      client.query(contentRelease.article.latest, {
         appLocale,
         limit,
       })
@@ -168,7 +168,7 @@ export const readPublishedCategoryArticles = Effect.fn(
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.article.listing, {
+    client.query(contentRelease.article.listing, {
       appLocale,
       category,
       limit,

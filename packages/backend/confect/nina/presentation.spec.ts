@@ -1,15 +1,11 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
 import { Schema } from "effect";
 
 export const DEFAULT_TITLE = "New Chat";
 export const MAX_TITLE_LENGTH = 80;
 
-export const NinaSuggestions = Schema.mutable(
-  Schema.Array(
-    Schema.Trim.check(Schema.isMinLength(1), Schema.isMaxLength(300))
-  )
-).check(Schema.isBetweenLength(1, 5));
 export const NinaTitle = Schema.Trim.check(
   Schema.isMinLength(1),
   Schema.isMaxLength(MAX_TITLE_LENGTH)

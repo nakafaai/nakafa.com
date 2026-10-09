@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
@@ -18,7 +18,7 @@ export const readPublishedMaterialBuckets = Effect.fn(
 )(function* (locale: Locale, expectedActiveReleaseId?: ContentReleasePin) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.material.sitemapBuckets, {
+    client.query(contentRelease.material.sitemapBuckets, {
       appLocale,
     })
   ).pipe(Effect.provide(httpLayer()));
@@ -48,13 +48,11 @@ export const readPublishedMaterialSitemap = Effect.fn(
   "www.materials.readSitemapPage"
 )(function* (
   locale: Locale,
-  bucket: Ref.Args<
-    typeof refs.public.contentRelease.material.sitemapPage
-  >["bucket"]
+  bucket: Ref.Args<typeof contentRelease.material.sitemapPage>["bucket"]
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.material.sitemapPage, {
+    client.query(contentRelease.material.sitemapPage, {
       appLocale,
       bucket,
     })

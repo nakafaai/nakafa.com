@@ -7,7 +7,7 @@ import {
   LearningProgramSchema,
   ProgramTranslationSchema,
 } from "@nakafa/aksara-contracts/program/spec";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -26,7 +26,7 @@ export const readPublishedProgramCatalog = Effect.fn(
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.program.catalog, {
+    client.query(contentRelease.program.catalog, {
       appLocale,
     })
   ).pipe(Effect.provide(httpLayer()));
@@ -114,7 +114,7 @@ export const readPublishedProgramSubjects = Effect.fn(
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.program.subjects, {
+    client.query(contentRelease.program.subjects, {
       appLocale,
     })
   ).pipe(Effect.provide(httpLayer()));

@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
   publicTryoutCountryValidator,
   publicTryoutExamValidator,
@@ -7,11 +7,9 @@ import {
 import { Schema } from "effect";
 import type { Locale } from "next-intl";
 
-type TryoutHubPage = Ref.Returns<
-  typeof refs.public.tryouts.queries.catalog.getHubPage
->;
+type TryoutHubPage = Ref.Returns<typeof tryouts.queries.catalog.getHubPage>;
 type TryoutCountryPage = NonNullable<
-  Ref.Returns<typeof refs.public.tryouts.queries.catalog.getCountryPage>
+  Ref.Returns<typeof tryouts.queries.catalog.getCountryPage>
 >;
 
 const TryoutCountrySelectorOptionSchema = Schema.Struct({

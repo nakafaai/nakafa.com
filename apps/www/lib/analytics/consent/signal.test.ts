@@ -8,7 +8,7 @@ import {
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type consents from "@repo/backend/confect/_generated/refs/consents";
 import { ConsentAccountChanged } from "@repo/backend/confect/consents/current.spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Duration, Effect, Fiber, Option, Result } from "effect";
@@ -28,7 +28,7 @@ const revokedDecision = {
   granted: false,
   mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-} satisfies Ref.Returns<typeof refs.public.consents.current.set>;
+} satisfies Ref.Returns<typeof consents.current.set>;
 
 describe("browser analytics privacy signal", () => {
   it.effect("reads current browser values on every execution", () =>

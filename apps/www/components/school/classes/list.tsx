@@ -10,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import {
   getClassImageUrl,
   getRandomClassImage,
@@ -54,7 +54,7 @@ export function SchoolClassesList() {
   const [{ q }] = useQueryStates(searchParsers);
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
   const pagination = usePaginatedQuery(
-    refs.public.classes.queries.getClasses,
+    classes.queries.getClasses,
     {
       schoolId,
       q: debouncedQ,

@@ -1,9 +1,9 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type auth from "@repo/backend/confect/_generated/refs/auth";
 
 /** The stored account row the identity module resolves. */
 export type AccountRecord = NonNullable<
-  Ref.Returns<typeof refs.public.auth.queries.getCurrentUser>
+  Ref.Returns<typeof auth.queries.getCurrentUser>
 >;
 
 /**

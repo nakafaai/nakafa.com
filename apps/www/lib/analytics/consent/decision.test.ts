@@ -4,7 +4,7 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type consents from "@repo/backend/confect/_generated/refs/consents";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 import {
@@ -325,9 +325,7 @@ describe("explicit consent save actions", () => {
       const expectedUserId = "user-1" as Id<"users">;
       const seenArgs: unknown[] = [];
       const setAccountConsent = vi.fn(
-        (
-          ...args: unknown[]
-        ): InvokeReturn<typeof refs.public.consents.current.set> => {
+        (...args: unknown[]): InvokeReturn<typeof consents.current.set> => {
           seenArgs.push(args[0]);
           return Promise.resolve(
             Result.succeed({

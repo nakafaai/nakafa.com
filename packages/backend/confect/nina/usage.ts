@@ -2,7 +2,7 @@ import type { ProviderMetadata, UsageHandler } from "@convex-dev/agent";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
-import { NinaUsage } from "@repo/backend/confect/nina/usage.spec";
+import { NinaUsage } from "@repo/backend/confect/nina/contract/usage";
 import { Effect, Schema } from "effect";
 
 /** The cost the gateway reports for one call; a call that reports none has no cost. */

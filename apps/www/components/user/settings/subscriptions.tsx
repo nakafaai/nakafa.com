@@ -3,7 +3,7 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import { products } from "@repo/backend/confect/utils/polar/products";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -22,7 +22,7 @@ import { isActiveLocale } from "@/lib/i18n/active";
 
 interface UserSettingsSubscriptionsProps {
   initialSubscription: Ref.Returns<
-    typeof refs.public.subscriptions.queries.hasActiveSubscription
+    typeof subscriptions.queries.hasActiveSubscription
   >;
 }
 
@@ -40,7 +40,7 @@ export function UserSettingsSubscriptions({
 
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const subscription = useQuery(
-    refs.public.subscriptions.queries.hasActiveSubscription,
+    subscriptions.queries.hasActiveSubscription,
     isAuthenticated ? { productId: products.pro.id } : "skip"
   );
   if (QueryResult.isFailure(subscription)) {
