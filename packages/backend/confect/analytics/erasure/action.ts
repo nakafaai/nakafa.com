@@ -30,6 +30,13 @@ const PostHogBulkEraseJsonSchema = Schema.fromJsonString(
   PostHogBulkEraseResponseSchema
 );
 
+/** One erasure answer: its status and, for a success, its body text. */
+const ErasureAnswerSchema = Schema.Struct({
+  ok: Schema.Boolean,
+  status: Schema.Finite,
+  text: Schema.UndefinedOr(Schema.String),
+});
+
 /**
  * Reads one erasure answer: its status, and for a success its body text. A body
  * that cannot be read leaves the text undefined, so decoding reports the answer
@@ -37,7 +44,7 @@ const PostHogBulkEraseJsonSchema = Schema.fromJsonString(
  */
 function readErasureAnswer(
   response: Response
-): Promise<{ ok: boolean; status: number; text: string | undefined }> {
+): Promise<typeof ErasureAnswerSchema.Type> {
   if (!response.ok) {
     return Promise.resolve({
       ok: false,

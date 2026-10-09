@@ -20,7 +20,7 @@ import schema from "@repo/backend/convex/schema";
 import { insertTestPage } from "@repo/backend/test/content/page";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 8, 0, 0);
 const testResend = new Resend(components.resend, {
@@ -81,18 +81,16 @@ async function createActivatedIntent(
     };
   });
 }
+/** The run result that completes a welcome email workflow in these tests. */
+const WorkflowRunResultSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("success"), returnValue: Schema.Null }),
+  Schema.Struct({ error: Schema.String, kind: Schema.Literal("failed") }),
+]);
+
 async function completeWelcomeWorkflow(
   test: TestConvex<typeof schema>,
   intentId: Awaited<ReturnType<typeof createActivatedIntent>>["intentId"],
-  runResult:
-    | {
-        kind: "success";
-        returnValue: null;
-      }
-    | {
-        error: string;
-        kind: "failed";
-      }
+  runResult: typeof WorkflowRunResultSchema.Type
 ) {
   const intent = await test.query((ctx) =>
     ctx.db.get("welcomeEmailIntents", intentId)
