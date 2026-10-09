@@ -1,3 +1,4 @@
+import { getCountryName } from "@repo/design-system/lib/locale/country";
 import { timeOperation } from "@repo/utilities/logging/effect";
 import { Array as Arr, Config, Effect, Option, Redacted, Schema } from "effect";
 import {
@@ -65,6 +66,7 @@ export const getCurrentWeather = Effect.fn("weather.getCurrentWeather")(
           city: response.name,
           condition: condition?.description ?? DEFAULT_CONDITION,
           country: response.sys.country,
+          countryName: getCountryName(response.sys.country) ?? "",
           icon: condition?.icon ?? DEFAULT_ICON,
           temperatureKelvin: response.main.temp,
         } satisfies CurrentWeatherSummary;

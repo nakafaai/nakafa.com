@@ -4,7 +4,6 @@ import { AnalyticsConsentControls } from "@/components/analytics/consent/control
 import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { ConvexProvider } from "@/components/providers/convex";
-import { ReactQueryProviders } from "@/components/providers/query";
 import { clientEnv } from "@/env.client";
 import { PageNavigationProvider } from "@/lib/content/page/context";
 import type { PageNavigation } from "@/lib/content/page/navigation";
@@ -12,12 +11,12 @@ import type { PageNavigation } from "@/lib/content/page/navigation";
 /**
  * Mounts the app-wide client runtime providers for the localized app subtree.
  *
- * `NuqsAdapter` and `ReactQueryProviders` are global router/query config, and
- * the Convex, session, and analytics consent providers are mounted once at the
- * shared `(app)` boundary. Every value these providers put in context stays
- * the same after hydration: React client-renders a streamed Suspense boundary
- * that is still pending when an ancestor context changes, so state that
- * resolves in the browser reaches readers through stores instead.
+ * `NuqsAdapter` is global router config, and the Convex, session, and analytics
+ * consent providers are mounted once at the shared `(app)` boundary. Every
+ * value these providers put in context stays the same after hydration: React
+ * client-renders a streamed Suspense boundary that is still pending when an
+ * ancestor context changes, so state that resolves in the browser reaches
+ * readers through stores instead.
  *
  * @see https://github.com/47ng/nuqs#readme
  * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering
@@ -32,26 +31,24 @@ export function AppProviders({
 }) {
   return (
     <NuqsAdapter>
-      <ReactQueryProviders>
-        <ConvexProvider convexUrl={clientEnv.NEXT_PUBLIC_CONVEX_URL}>
-          <PageNavigationProvider navigation={pageNavigation}>
-            {pageNavigation ? (
-              <AnalyticsConsentProvider
-                isPreviewChild={
-                  clientEnv.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true"
-                }
-              >
-                {children}
-                <AnalyticsConsentControls />
-              </AnalyticsConsentProvider>
-            ) : (
-              <AnalyticsUnavailableProvider>
-                {children}
-              </AnalyticsUnavailableProvider>
-            )}
-          </PageNavigationProvider>
-        </ConvexProvider>
-      </ReactQueryProviders>
+      <ConvexProvider convexUrl={clientEnv.NEXT_PUBLIC_CONVEX_URL}>
+        <PageNavigationProvider navigation={pageNavigation}>
+          {pageNavigation ? (
+            <AnalyticsConsentProvider
+              isPreviewChild={
+                clientEnv.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true"
+              }
+            >
+              {children}
+              <AnalyticsConsentControls />
+            </AnalyticsConsentProvider>
+          ) : (
+            <AnalyticsUnavailableProvider>
+              {children}
+            </AnalyticsUnavailableProvider>
+          )}
+        </PageNavigationProvider>
+      </ConvexProvider>
     </NuqsAdapter>
   );
 }

@@ -107,6 +107,7 @@ describe("getCurrentWeather", () => {
           city: "Jakarta",
           condition: "light rain",
           country: "ID",
+          countryName: "Indonesia",
           icon: "10d",
           temperatureKelvin: 300.4,
         })
@@ -152,6 +153,27 @@ describe("getCurrentWeather", () => {
       }
       expect(result.failure).toMatchObject({ _tag: "SchemaError" });
     })
+  );
+  it.effect(
+    "leaves the country name empty when OpenWeather omits the country",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
+        const result = yield* runWeather(() =>
+          Response.json({
+            ...currentWeatherResponse,
+            sys: { country: "" },
+          })
+        );
+        expect(result).toEqual(
+          Result.succeed(
+            expect.objectContaining({
+              country: "",
+              countryName: "",
+            })
+          )
+        );
+      })
   );
   it.effect(
     "preserves the visible condition defaults when conditions are absent",
