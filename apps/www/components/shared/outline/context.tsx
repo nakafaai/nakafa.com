@@ -2,7 +2,14 @@
 
 import type { ParsedHeading } from "@repo/contents/toc";
 import { extractAllHeadingIds } from "@repo/contents/toc";
-import { Array as Arr, Equal, HashSet, MutableHashSet, Schema } from "effect";
+import {
+  Array as Arr,
+  Equal,
+  HashSet,
+  MutableHashSet,
+  Option,
+  Schema,
+} from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 
@@ -124,11 +131,11 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     }
     const ids = HashSet.fromIterable(visibleIds());
     const inView = Arr.filter(watch, (id) => HashSet.has(ids, id));
-    const lastId = watch.at(-1);
+    const lastId = Arr.last(watch);
     if (inView.length > 0) {
       publish(inView);
-    } else if (lastId) {
-      publish([lastId]);
+    } else if (Option.isSome(lastId) && lastId.value) {
+      publish([lastId.value]);
     }
   }
 

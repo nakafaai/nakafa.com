@@ -75,7 +75,7 @@ export function usePromptInputFiles({
           filename: file.name,
         };
       });
-      const nextItems = localItemsRef.current.concat(next);
+      const nextItems = Arr.appendAll(localItemsRef.current, next);
       localItemsRef.current = nextItems;
       setItems(nextItems);
     },

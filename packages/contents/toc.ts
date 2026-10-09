@@ -61,7 +61,9 @@ function nestHeadings(entries: readonly HeadingEntry[]): ParsedHeading[] {
     return {
       label: entry.label,
       href: entry.href,
-      children: nestHeadings(entries.slice(start + 1, end)),
+      children: nestHeadings(
+        Arr.take(Arr.drop(entries, start + 1), end - start - 1)
+      ),
     };
   });
 }

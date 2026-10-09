@@ -80,8 +80,8 @@ describe("authored mathematical lines", () => {
     });
     expect(lines[5]).toMatchObject({ smooth: false });
     expect(lines[6]).toMatchObject({ smooth: false });
-    expect(lines.slice(7)).toHaveLength(12);
-    expect(lines.slice(7)).toSatisfy((cuboidLines: typeof lines) =>
+    expect(Arr.drop(lines, 7)).toHaveLength(12);
+    expect(Arr.drop(lines, 7)).toSatisfy((cuboidLines: typeof lines) =>
       Arr.every(
         cuboidLines,
         (line) =>

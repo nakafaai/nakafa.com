@@ -107,9 +107,9 @@ interface TryoutAttemptHistoryProps {
 /** Renders the prior production attempt-history picker styling. */
 function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   const tTryouts = useTranslations("Tryouts");
-  const firstAttempt = value.attempts.at(0);
+  const firstAttempt = Arr.head(value.attempts);
 
-  if (!firstAttempt || value.attempts.length < 2) {
+  if (Option.isNone(firstAttempt) || value.attempts.length < 2) {
     return null;
   }
 
@@ -148,7 +148,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
               (attempt) => attempt.attemptId === value.selectedAttemptId
             ),
             {
-              onNone: () => firstAttempt.attemptNumber,
+              onNone: () => firstAttempt.value.attemptNumber,
               onSome: (attempt) => attempt.attemptNumber,
             }
           ),

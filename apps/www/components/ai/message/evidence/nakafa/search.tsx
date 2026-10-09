@@ -11,7 +11,7 @@ import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Match } from "effect";
+import { Array as Arr, Match, Option } from "effect";
 import { useTranslations } from "next-intl";
 
 const MAX_SHOWN_RESULTS = 5;
@@ -26,7 +26,7 @@ export function SearchPart({ message }: Props) {
   const [expanded, { toggle }] = useDisclosure(false);
   const items = expanded
     ? message.result.items
-    : message.result.items.slice(0, MAX_SHOWN_RESULTS);
+    : Arr.take(message.result.items, MAX_SHOWN_RESULTS);
   const hasItems = items.length > 0;
 
   return (
@@ -117,8 +117,11 @@ function getSearchLabel(
   message: Props["message"],
   t: ReturnType<typeof useTranslations>
 ) {
-  const firstItem = message.result.items.at(0);
-  const section = message.input.section ?? firstItem?.section;
+  const firstSection = Option.map(
+    Arr.head(message.result.items),
+    (item) => item.section
+  );
+  const section = message.input.section ?? Option.getOrUndefined(firstSection);
 
   return Match.value(section).pipe(
     Match.when("articles", () => t("nakafa-search-articles")),

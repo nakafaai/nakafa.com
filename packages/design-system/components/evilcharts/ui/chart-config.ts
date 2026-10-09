@@ -69,7 +69,7 @@ function validateChartConfigColors(config: ChartConfigValidationInput): void {
 function distributeColors(colorsArray: string[], maxCount: number): string[] {
   const availableCount = colorsArray.length;
   if (availableCount >= maxCount) {
-    return colorsArray.slice(0, maxCount);
+    return Arr.take(colorsArray, maxCount);
   }
 
   const result = MutableList.make<string>();

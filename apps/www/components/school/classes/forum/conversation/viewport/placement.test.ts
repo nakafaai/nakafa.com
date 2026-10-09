@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr, Option } from "effect";
 import {
   conversationTestFirstPost as firstPost,
   conversationTestSecondPost as secondPost,
@@ -45,7 +46,7 @@ describe("conversation/viewport/placement", () => {
     );
 
     expect(rig.placements).toHaveLength(2);
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       view: { kind: "bottom" },
     });
     expect(retrying.lifecycle).toBe("placing");
@@ -198,7 +199,7 @@ describe("conversation/viewport/placement", () => {
       (state) => state.pendingPlacement?.view.kind === "post"
     );
 
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       align: "start",
       view: { kind: "post", postId: firstPost._id },
     });

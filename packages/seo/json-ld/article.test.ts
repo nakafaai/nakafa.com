@@ -230,7 +230,7 @@ describe("article JSON-LD", () => {
         {
           ...breadcrumb,
           itemListElement: Arr.map(
-            breadcrumb.itemListElement.slice(-1),
+            Arr.takeRight(breadcrumb.itemListElement, 1),
             (item) => ({ ...item, position: 1 })
           ),
         },

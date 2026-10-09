@@ -1,4 +1,4 @@
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** Rejects an entire selection that exceeds the multiple-file limit. */
 export class FileCountError extends Schema.TaggedError<FileCountError>()(
@@ -25,9 +25,11 @@ function acceptsFile(file: File, accept: string) {
   }
 
   const nameParts = file.name.split(".");
-  const lastPart = nameParts.at(-1);
+  const lastPart = Option.filter(Arr.last(nameParts), (part) => part !== "");
   const extension =
-    nameParts.length > 1 && lastPart ? `.${lastPart.toLowerCase()}` : "";
+    nameParts.length > 1 && Option.isSome(lastPart)
+      ? `.${lastPart.value.toLowerCase()}`
+      : "";
 
   return Arr.some(accept.split(","), (entry) => {
     const type = entry.trim();

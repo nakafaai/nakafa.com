@@ -47,24 +47,24 @@ function updateReactors(
   count: number
 ) {
   if (!reactorName) {
-    return reactors.slice(0, count);
+    return Arr.take(reactors, count);
   }
 
-  if (added && !reactors.includes(reactorName)) {
-    return [...reactors, reactorName].slice(0, count);
+  if (added && !Arr.contains(reactors, reactorName)) {
+    return Arr.take([...reactors, reactorName], count);
   }
 
   if (!added) {
-    const index = reactors.indexOf(reactorName);
-    if (index >= 0) {
-      return [...reactors.slice(0, index), ...reactors.slice(index + 1)].slice(
-        0,
-        count
-      );
+    const index = Arr.findFirstIndex(
+      reactors,
+      (reactor) => reactor === reactorName
+    );
+    if (Option.isSome(index)) {
+      return Arr.take(Arr.remove(reactors, index.value), count);
     }
   }
 
-  return reactors.slice(0, count);
+  return Arr.take(reactors, count);
 }
 
 /** Apply one reaction delta to detailed reactor previews. */
@@ -121,7 +121,7 @@ export function toggleReactionState<T extends ReactionState>(
   emoji: string,
   reactorName?: string
 ): T {
-  const added = !state.myReactions.includes(emoji);
+  const added = !Arr.contains(state.myReactions, emoji);
   const myReactions = added
     ? [...state.myReactions, emoji]
     : Arr.filter(state.myReactions, (reaction) => reaction !== emoji);

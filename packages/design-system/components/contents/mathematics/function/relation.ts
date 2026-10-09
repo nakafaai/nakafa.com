@@ -1,4 +1,4 @@
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const RelationElementsSchema = Schema.Array(Schema.String).pipe(
   Schema.check(
@@ -23,7 +23,8 @@ const RelationSchema = Schema.Struct({
       ({ domain, codomain, mappings }) =>
         Arr.every(
           mappings,
-          ({ from, to }) => domain.includes(from) && codomain.includes(to)
+          ({ from, to }) =>
+            Arr.contains(domain, from) && Arr.contains(codomain, to)
         ),
       {
         message:
@@ -66,8 +67,12 @@ export const resolveRelation = Effect.fn("Relation.resolve")(function* (
     domain,
     codomain,
     mappings: Arr.map(relation.mappings, ({ from, to }, index) => {
-      const domainIndex = relation.domain.indexOf(from);
-      const codomainIndex = relation.codomain.indexOf(to);
+      const domainIndex = Option.getOrThrow(
+        Arr.findFirstIndex(relation.domain, (item) => item === from)
+      );
+      const codomainIndex = Option.getOrThrow(
+        Arr.findFirstIndex(relation.codomain, (item) => item === to)
+      );
       return {
         id: `mapping-${index}`,
         domainIndex,

@@ -163,7 +163,7 @@ export type PeriodicSeriesRowKey =
  */
 function getElementCategory(symbol: string) {
   const category = Arr.findFirst(ELEMENT_CATEGORY_GROUPS, ({ symbols }) =>
-    symbols.split(" ").includes(symbol)
+    Arr.contains(symbols.split(" "), symbol)
   );
 
   if (Option.isNone(category)) {
