@@ -17,7 +17,7 @@ import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/re
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, DateTime, Effect, Option } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -490,7 +490,7 @@ describe("Nina generation through the real Agent component", () => {
     await f.t.action(run, { turnId: f.turnId });
     const turn = await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId));
     expect(encodeJsonText(languageModel.doStreamCalls[0]?.prompt)).toContain(
-      `- date: ${new Date(turn?._creationTime ?? 0).toISOString()}`
+      `- date: ${DateTime.formatIso(DateTime.makeUnsafe(turn?._creationTime ?? 0))}`
     );
   });
 });

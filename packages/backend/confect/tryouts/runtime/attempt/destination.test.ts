@@ -32,7 +32,7 @@ const englishSectionPath = `${englishSetPath}/mathematics`;
 
 describe("retained attempt navigation", () => {
   it("uses the localized archived route for navigation and reactive resume state", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const owner = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {

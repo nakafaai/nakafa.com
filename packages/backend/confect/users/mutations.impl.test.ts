@@ -17,7 +17,7 @@ import { Effect } from "effect";
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 describe("users/mutations", () => {
   beforeEach(() => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
   });
   it("updates the authenticated user's role", async () => {
     const t = createConvexTestWithBetterAuth();

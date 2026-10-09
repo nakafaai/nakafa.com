@@ -129,7 +129,7 @@ function process(
 describe("contents/analytics/impl", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
   });
   afterEach(() => {
     vi.useRealTimers();

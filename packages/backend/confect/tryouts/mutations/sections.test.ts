@@ -9,7 +9,7 @@ import {
 
 describe("tryouts/mutations/sections", () => {
   it("rejects an unknown frozen section without starting a timer", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation(async (ctx) => {
       const seeded = await seedTryoutContentAccessState(ctx, {
@@ -44,7 +44,7 @@ describe("tryouts/mutations/sections", () => {
   it.each(["terminal", "expired"])(
     "rejects completion of an %s attempt without scoring",
     async (kind) => {
-      vi.setSystemTime(new Date(NOW));
+      vi.setSystemTime(NOW);
       const t = createConvexTestWithBetterAuth();
       const fixture = await t.mutation(async (ctx) => {
         const seeded = await seedTryoutContentAccessState(ctx, {
@@ -74,7 +74,7 @@ describe("tryouts/mutations/sections", () => {
   );
 
   it("scores a timed-out section after its subscription attribution expires", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation(async (ctx) => {
       const seeded = await seedTryoutContentAccessState(ctx, {

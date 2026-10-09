@@ -6,9 +6,11 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
-const NOW = new Date(Date.UTC(2026, 3, 5, 12, 0, 0)).toISOString();
+const NOW = DateTime.formatIso(
+  DateTime.makeUnsafe(Date.UTC(2026, 3, 5, 12, 0, 0))
+);
 const seedCustomerIntegrityState = Effect.fn(
   "customers.integrity.test.seedState"
 )(function* (ctx: MutationCtx) {

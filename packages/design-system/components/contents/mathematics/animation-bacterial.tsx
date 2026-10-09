@@ -17,7 +17,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Effect, Fiber, Schedule, Schema } from "effect";
 import {
   AnimatePresence,
   domMax,
@@ -122,16 +122,23 @@ export function BacterialGrowth({
       return;
     }
 
-    const interval = setInterval(() => {
-      setGeneration((prev) => {
-        if (prev < maxGenerations) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, SPEED_INTERVAL / speed);
+    const interval = Effect.runFork(
+      Effect.schedule(
+        Effect.sync(() => {
+          setGeneration((prev) => {
+            if (prev < maxGenerations) {
+              return prev + 1;
+            }
+            return prev;
+          });
+        }),
+        Schedule.spaced(SPEED_INTERVAL / speed)
+      )
+    );
 
-    return () => clearInterval(interval);
+    return () => {
+      Effect.runFork(Fiber.interrupt(interval));
+    };
   }, [isAnimating, maxGenerations, speed]);
 
   function resetAnimation() {

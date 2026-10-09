@@ -284,7 +284,7 @@ describe("contentRelease/compact", () => {
   });
 });
 describe("contentRelease/compact permanent history", () => {
-  beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
+  beforeEach(() => vi.setSystemTime(TRYOUT_TEST_NOW));
   it("preserves frozen attempt history after its source release expires", async () => {
     const t = createConvexTestWithBetterAuth();
     const seed = await t.mutation(async (ctx) => {

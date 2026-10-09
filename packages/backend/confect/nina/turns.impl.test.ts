@@ -12,7 +12,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, DateTime, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -57,7 +57,7 @@ describe("native Nina admission", () => {
     vi.setSystemTime(NOW);
     vi.mocked(resolveNinaContext).mockReturnValue(
       openNinaLearningSession({
-        capturedAt: new Date(NOW).toISOString(),
+        capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
         source: "current-page",
         learning: {
           locale: "en",
@@ -119,7 +119,7 @@ describe("native Nina admission", () => {
       await owner.mutation(start, args)
     );
     expect(vi.mocked(resolveNinaContext).mock.lastCall?.[2]).toBe(
-      new Date(NOW).toISOString()
+      DateTime.formatIso(DateTime.makeUnsafe(NOW))
     );
     expect(
       Ref.decodeReturnsSync(
@@ -328,7 +328,7 @@ describe("native Nina admission", () => {
     expect(vi.mocked(resolveNinaContext)).toHaveBeenLastCalledWith(
       args.input.page,
       expect.objectContaining({ _id: f.identity.userId }),
-      new Date(NOW).toISOString(),
+      DateTime.formatIso(DateTime.makeUnsafe(NOW)),
       first.chatId
     );
   });

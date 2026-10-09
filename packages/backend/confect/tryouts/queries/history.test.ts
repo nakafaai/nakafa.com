@@ -86,7 +86,7 @@ async function insertHistoryAttempt(
 
 describe("tryouts/queries/history", () => {
   it("keeps immutable identity history after a public route rename", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {

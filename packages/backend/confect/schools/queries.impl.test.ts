@@ -60,7 +60,7 @@ async function insertMembership({
 }
 describe("schools/queries:getSchoolBySlug", () => {
   it("distinguishes a missing school from a missing membership", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const viewer = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, { now: NOW });
@@ -88,7 +88,7 @@ describe("schools/queries:getSchoolBySlug", () => {
     ).rejects.toMatchObject({ data: { code: "MEMBERSHIP_NOT_FOUND" } });
   });
   it("returns the current school and membership for the viewer", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {
@@ -134,7 +134,7 @@ describe("schools/queries:getSchoolBySlug", () => {
 });
 describe("schools/queries:getMySchoolLandingState", () => {
   it("returns none when the viewer has no schools", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(
       async (ctx) =>
@@ -154,7 +154,7 @@ describe("schools/queries:getMySchoolLandingState", () => {
     });
   });
   it("returns single when the viewer belongs to one school", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {
@@ -187,7 +187,7 @@ describe("schools/queries:getMySchoolLandingState", () => {
     });
   });
   it("returns multiple when the viewer belongs to many schools", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {
@@ -235,7 +235,7 @@ describe("schools/queries:getMySchoolsPage", () => {
   it.each(["landing", "page"] as const)(
     "reports a missing membership target in the %s view",
     async (view) => {
-      vi.setSystemTime(new Date(NOW));
+      vi.setSystemTime(NOW);
       const t = createConvexTestWithBetterAuth();
       const viewer = await t.mutation(async (ctx) => {
         const identity = await seedAuthenticatedUser(ctx, { now: NOW });
@@ -270,7 +270,7 @@ describe("schools/queries:getMySchoolsPage", () => {
     }
   );
   it("returns paginated school summaries", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {

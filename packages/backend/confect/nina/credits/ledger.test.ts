@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { products } from "@repo/backend/confect/utils/polar/products";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, DateTime, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 8, 1);
 async function fixture(credits = 2, creditsResetAt = NOW) {
@@ -183,16 +183,16 @@ describe("Nina credit transactions", () => {
       const subscription = {
         id: "grant-subscription",
         customerId: "grant-customer",
-        createdAt: new Date(NOW).toISOString(),
+        createdAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
         modifiedAt: null,
         amount: null,
         currency: null,
         recurringInterval: null,
         status: "active",
-        currentPeriodStart: new Date(NOW).toISOString(),
+        currentPeriodStart: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
         currentPeriodEnd: null,
         cancelAtPeriodEnd: false,
-        startedAt: new Date(NOW).toISOString(),
+        startedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
         endedAt: null,
         productId: products.pro.id,
         checkoutId: null,

@@ -45,7 +45,7 @@ async function readFailure(
     message: decoded.value.message,
   };
 }
-beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
+beforeEach(() => vi.setSystemTime(TRYOUT_TEST_NOW));
 describe("tryouts/runtime/history/placement", () => {
   it("withholds a body hash that is not the frozen question or localized explanation", async () => {
     const { owned, seed } = await setup();

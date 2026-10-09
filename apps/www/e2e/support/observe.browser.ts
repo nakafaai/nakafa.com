@@ -10,7 +10,7 @@ function throwInPage(page: Page) {
     const reported = page.waitForEvent("pageerror");
     return page
       .evaluate((message) => {
-        setTimeout(() => {
+        queueMicrotask(() => {
           throw new Error(message);
         });
       }, PROBE_MESSAGE)

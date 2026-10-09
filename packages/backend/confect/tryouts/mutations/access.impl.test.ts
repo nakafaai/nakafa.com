@@ -13,7 +13,7 @@ const NOW = Date.UTC(2026, 6, 22, 9, 0, 0);
 
 describe("tryouts/mutations/access", () => {
   it("records the authenticated paywall source", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     posthogTest.register(t);
     const identity = await t.mutation(async (ctx) => {

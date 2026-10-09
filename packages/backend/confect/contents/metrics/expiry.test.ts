@@ -107,7 +107,7 @@ async function insertCycle(ctx: MutationCtx, day = DAY) {
 describe("contents/metrics/expiry", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(DAY));
+    vi.setSystemTime(DAY);
   });
 
   afterEach(() => {

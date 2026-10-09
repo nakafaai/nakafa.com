@@ -397,7 +397,9 @@ function MaterialGroupDialogShell<E>({
                               }}
                               selected={
                                 field.state.value
-                                  ? new Date(field.state.value)
+                                  ? DateTime.toDateUtc(
+                                      DateTime.makeUnsafe(field.state.value)
+                                    )
                                   : undefined
                               }
                             />

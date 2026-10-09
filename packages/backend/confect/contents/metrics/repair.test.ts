@@ -114,7 +114,7 @@ async function insertCycle(ctx: MutationCtx) {
 describe("contents/metrics/repair", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(DAY));
+    vi.setSystemTime(DAY);
   });
 
   afterEach(() => {

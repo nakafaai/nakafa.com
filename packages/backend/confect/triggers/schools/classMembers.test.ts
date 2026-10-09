@@ -18,7 +18,7 @@ describe("triggers/schools/classMembers", () => {
   });
   it("keeps class member counts and invite usage in sync through class mutations", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const users = await t.mutation(async (ctx) => ({
       admin: await seedAuthenticatedUser(ctx, {
