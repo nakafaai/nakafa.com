@@ -198,10 +198,19 @@ jobs:
       # disk priority leave the local backend's queries within Convex's limits.
       # Only the navigation suite runs WebKit: its visual card project serves
       # Safari on iPad and iPhone, so the other legs install Chromium alone.
+      #
+      # The install updates the package index first. The runner lists several
+      # mirrors and apt moves to the next one when a mirror does not answer,
+      # but only after its 30 second timeout for each index file: on 9 October
+      # a silent first mirror held one install for 17 minutes. Ten seconds
+      # lets the fallback take over while the app still builds.
+      # https://manpages.ubuntu.com/manpages/noble/man1/apt-transport-http.1.html
       - name: Start browser install
         env:
           SUITE: ${{ matrix.suite }}
         run: |
+          echo 'Acquire::http::Timeout "10"; Acquire::https::Timeout "10";' \
+            | sudo tee /etc/apt/apt.conf.d/99-mirror-timeout > /dev/null
           browsers=chromium
           if [ "$SUITE" = navigation ]; then
             browsers="chromium webkit"
