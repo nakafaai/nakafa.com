@@ -195,9 +195,10 @@ const trustedPublishProblems = Effect.fn("GithubCli.trustedPublishProblems")(
       Arr.map(executableSource),
       Arr.join("\n")
     );
-    const sha256 = yield* sha256Hex(
-      Schema.encodeSync(WorkflowJobJson)(publish)
+    const json = yield* Schema.encodeEffect(WorkflowJobJson)(publish).pipe(
+      Effect.orDie
     );
+    const sha256 = yield* sha256Hex(json);
     return Arr.flatten([
       problemWhen(
         commands.split('npx --yes "$NPM_CLI" publish "$TARBALL"').length !== 2,
@@ -226,7 +227,10 @@ const trustedPublishProblems = Effect.fn("GithubCli.trustedPublishProblems")(
 
 const trustedVerifyProblems = Effect.fn("GithubCli.trustedVerifyProblems")(
   function* (verify: WorkflowJob) {
-    const sha256 = yield* sha256Hex(Schema.encodeSync(WorkflowJobJson)(verify));
+    const json = yield* Schema.encodeEffect(WorkflowJobJson)(verify).pipe(
+      Effect.orDie
+    );
+    const sha256 = yield* sha256Hex(json);
     return sha256 === TRUSTED_VERIFY_SHA256
       ? []
       : ["CLI verification must match the exact trusted job."];
