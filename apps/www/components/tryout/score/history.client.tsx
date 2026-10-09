@@ -28,6 +28,7 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
 import { format } from "date-fns";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -112,7 +113,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
     return null;
   }
 
-  const attemptOptions = value.attempts.map((attempt) => ({
+  const attemptOptions = Arr.map(value.attempts, (attempt) => ({
     attemptId: attempt.attemptId,
     label: tTryouts("attempt-select-label", {
       number: attempt.attemptNumber,
@@ -141,10 +142,16 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
       >
         <HugeIcons icon={TransactionHistoryIcon} />
         {tTryouts("attempt-select-label", {
-          number:
-            value.attempts.find(
+          number: Option.match(
+            Arr.findFirst(
+              value.attempts,
               (attempt) => attempt.attemptId === value.selectedAttemptId
-            )?.attemptNumber ?? firstAttempt.attemptNumber,
+            ),
+            {
+              onNone: () => firstAttempt.attemptNumber,
+              onSome: (attempt) => attempt.attemptNumber,
+            }
+          ),
         })}
         <HugeIcons
           className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
@@ -224,11 +231,14 @@ export function TryoutAttemptResults({ value }: TryoutAttemptResultsProps) {
     isAuthenticated ? value.identity : "skip",
     { initialNumItems: 25 }
   );
-  const attempts = history.results.filter(hasScore);
+  const attempts = Arr.filter(history.results, hasScore);
   const selectedAttempt = selectedAttemptId
-    ? attempts.find((attempt) => attempt.attemptId === selectedAttemptId)
-    : undefined;
-  const visibleAttempt = selectedAttempt ?? value.attempt;
+    ? Arr.findFirst(
+        attempts,
+        (attempt) => attempt.attemptId === selectedAttemptId
+      )
+    : Option.none();
+  const visibleAttempt = Option.getOrElse(selectedAttempt, () => value.attempt);
 
   return (
     <TryoutScoreCard

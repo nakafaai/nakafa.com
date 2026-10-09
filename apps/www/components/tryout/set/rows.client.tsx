@@ -1,6 +1,6 @@
 "use client";
 
-import { HashSet } from "effect";
+import { Array as Arr, HashSet } from "effect";
 import { useTranslations } from "next-intl";
 import { getTryoutSubjectIcon } from "@/components/tryout/catalog/icons";
 import { TryoutList } from "@/components/tryout/catalog/list";
@@ -43,7 +43,7 @@ export function TryoutSectionRows({
   return (
     <TryoutList
       emptyLabel={tTryouts("list-empty")}
-      rows={sections.flatMap((section) => {
+      rows={Arr.flatMap(sections, (section) => {
         const publicPath = section.publicPath;
         if (!publicPath) {
           return [];
