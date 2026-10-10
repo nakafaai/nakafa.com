@@ -14,10 +14,20 @@ import {
   SheetHeader as SheetHeaderPrimitive,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Activity } from "react";
 import { useAi } from "@/components/ai/context";
-import { SheetHistory } from "@/components/ai/sheet/history";
+import { useViewer } from "@/lib/identity/client";
+
+/** The chat list and its query load with the sheet's body, not with the shell. */
+const SheetHistory = dynamic(
+  () =>
+    import("@/components/ai/sheet/history").then(
+      (module) => module.SheetHistory
+    ),
+  { loading: () => null, ssr: false }
+);
 
 interface Props {
   expanded: boolean;
@@ -52,7 +62,7 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
               <span className="sr-only">{t("Ai.new-chat")}</span>
             </Button>
           </Activity>
-          <SheetHistory />
+          <HistorySlot />
           <Button
             className="hidden sm:inline-flex"
             onClick={onResizeToggle}
@@ -62,7 +72,9 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
             <HugeIcons
               icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
             />
-            <span className="sr-only">{t("Ai.resize")}</span>
+            <span className="sr-only">
+              {t(expanded ? "Ai.narrower" : "Ai.wider")}
+            </span>
           </Button>
           <Button onClick={() => setOpen(false)} size="icon-sm" variant="ghost">
             <HugeIcons icon={Cancel01Icon} />
@@ -71,8 +83,26 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
         </div>
       </SheetTitle>
       <SheetDescription className="sr-only">
-        {t("Ai.new-chat-description")}
+        {t("Ai.sheet-description")}
       </SheetDescription>
     </SheetHeaderPrimitive>
+  );
+}
+
+/**
+ * Holds the history button's place for a signed-in learner, so the header
+ * does not shift when the button's code arrives.
+ */
+function HistorySlot() {
+  const signedIn = useViewer(
+    (state) => !state.isPending && state.viewer !== null
+  );
+  if (!signedIn) {
+    return null;
+  }
+  return (
+    <span className="inline-flex size-8">
+      <SheetHistory />
+    </span>
   );
 }

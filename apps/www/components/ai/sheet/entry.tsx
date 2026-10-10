@@ -23,7 +23,7 @@ export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
 
   // A reader who scrolls, types or presses is reading this page, so the sheet
   // renders its body in the browser's next idle moment. A visit that never
-  // interacts loads nothing.
+  // interacts never loads the body.
   useEffect(() => {
     const controller = new AbortController();
     function warmWhenIdle() {
@@ -35,7 +35,9 @@ export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
       warm();
     }
     for (const type of FIRST_INTERACTION) {
+      // Captured, because a scroll inside a nested container does not bubble.
       window.addEventListener(type, warmWhenIdle, {
+        capture: true,
         passive: true,
         signal: controller.signal,
       });

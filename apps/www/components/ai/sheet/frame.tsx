@@ -4,9 +4,10 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
+import { Array as Arr, Option } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { Activity, useRef } from "react";
+import { Activity, useRef, useState } from "react";
 import { useAi } from "@/components/ai/context";
 import { AiSheetHeader } from "@/components/ai/sheet/header";
 import { Authenticated, Unauthenticated } from "@/components/auth/gate";
@@ -31,7 +32,9 @@ const SheetConversation = dynamic(
  * Nina's resizable side sheet. The frame is part of the app shell and stays
  * mounted while closed, so a press opens it in the same frame. Its content
  * sits in a hidden Activity: once the reader shows intent, React renders the
- * body ahead of the press, without its effects, and opening only reveals it.
+ * body ahead of the press, without its effects, so a warmed sheet only has to
+ * be revealed. A sheet opened cold shows its frame at once and its body when
+ * the body's code arrives.
  */
 export function AiSheet() {
   const t = useTranslations("Ai");
@@ -39,6 +42,9 @@ export function AiSheet() {
   const setOpen = useAi((state) => state.setOpen);
   const warmed = useAi((state) => state.warmed);
   const content = useRef<HTMLDivElement>(null);
+  // True from the end of the opening slide to the end of the closing one, so
+  // the content stays in the sheet while it slides out.
+  const [settledOpen, setSettledOpen] = useState(false);
 
   const { width, isResizing, resizerProps, setWidth } = useResizable({
     initialWidth: MIN_WIDTH,
@@ -52,9 +58,18 @@ export function AiSheet() {
     setWidth(expanded ? MIN_WIDTH : MAX_WIDTH);
   }
 
-  /** Opening lands in the composer when it is there, not on a header button. */
+  /**
+   * Opening lands in the composer that is showing, not on a header button. The
+   * body holds two composers once a chat is open, and one of them is hidden.
+   */
   function focusComposer() {
-    return content.current?.querySelector("textarea") ?? true;
+    return Option.getOrElse(
+      Arr.findFirst(
+        content.current?.querySelectorAll("textarea") ?? [],
+        (composer) => composer.getClientRects().length > 0
+      ),
+      () => true
+    );
   }
 
   return (
@@ -62,6 +77,7 @@ export function AiSheet() {
       disablePointerDismissal
       modal={false}
       onOpenChange={setOpen}
+      onOpenChangeComplete={setSettledOpen}
       open={open}
     >
       <SheetContent
@@ -74,7 +90,7 @@ export function AiSheet() {
         showCloseButton={false}
         style={{ "--nina-width": `${width}px` }}
       >
-        <Activity mode={open ? "visible" : "hidden"}>
+        <Activity mode={open || settledOpen ? "visible" : "hidden"}>
           <button
             aria-label={t("resize")}
             className={cn(

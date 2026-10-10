@@ -84,7 +84,7 @@ export function createAiStore() {
             text: typeof text === "function" ? text(state.text) : text,
           })),
         // The reader showed intent: the sheet's body renders hidden from now
-        // on, so the press that opens it has nothing left to load.
+        // on, so the press that opens it usually finds it ready.
         warm: () => set({ warmed: true }),
       }),
       {
