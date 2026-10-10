@@ -110,9 +110,9 @@ export const api: {
                   | "image"
                   | "createdAt"
                   | "updatedAt"
-                  | "username"
-                  | "displayUsername"
                   | "userId"
+                  | "displayUsername"
+                  | "username"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -304,9 +304,9 @@ export const api: {
                   | "image"
                   | "createdAt"
                   | "updatedAt"
-                  | "username"
-                  | "displayUsername"
                   | "userId"
+                  | "displayUsername"
+                  | "username"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -570,9 +570,9 @@ export const api: {
                   | "image"
                   | "createdAt"
                   | "updatedAt"
-                  | "username"
-                  | "displayUsername"
                   | "userId"
+                  | "displayUsername"
+                  | "username"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -811,9 +811,9 @@ export const api: {
                   | "image"
                   | "createdAt"
                   | "updatedAt"
-                  | "username"
-                  | "displayUsername"
                   | "userId"
+                  | "displayUsername"
+                  | "username"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -1038,20 +1038,6 @@ export const api: {
       "public",
       { authId: string; name: string },
       null
-    >;
-  };
-  username: {
-    clearEmptyUsernameFields: FunctionReference<
-      "mutation",
-      "public",
-      { cursor: null | string },
-      {
-        cleared: number;
-        continueCursor: string;
-        isDone: boolean;
-        scanned: number;
-        text: number;
-      }
     >;
   };
 } = anyApi as any;
