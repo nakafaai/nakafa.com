@@ -197,26 +197,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       enabled: false,
     },
     user: {
-      // The username plugin is no longer configured, but 690 of the 726
-      // production users still hold the username it stored (counted on 10
-      // October 2026). The two fields stay declared, so the generated schema
-      // describes that data. Nothing reads or writes them, a client cannot set
-      // them, and no response returns them. Removing people's stored usernames
-      // is a separate decision.
-      additionalFields: {
-        displayUsername: {
-          input: false,
-          required: false,
-          returned: false,
-          type: "string",
-        },
-        username: {
-          input: false,
-          required: false,
-          returned: false,
-          type: "string",
-        },
-      },
       deleteUser: {
         beforeDelete: (user, request): Promise<void> =>
           Effect.gen(function* () {

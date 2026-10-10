@@ -1052,4 +1052,18 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    username: {
+      clearUsernameFields: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: null | string },
+        {
+          cleared: number;
+          continueCursor: string;
+          isDone: boolean;
+          scanned: number;
+        },
+        Name
+      >;
+    };
   };

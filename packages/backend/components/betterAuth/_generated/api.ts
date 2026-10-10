@@ -1040,6 +1040,19 @@ export const api: {
       null
     >;
   };
+  username: {
+    clearUsernameFields: FunctionReference<
+      "mutation",
+      "public",
+      { cursor: null | string },
+      {
+        cleared: number;
+        continueCursor: string;
+        isDone: boolean;
+        scanned: number;
+      }
+    >;
+  };
 } = anyApi as any;
 
 /**
