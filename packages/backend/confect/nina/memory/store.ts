@@ -57,6 +57,15 @@ export const deleteMemory = Effect.fn("nina.memory.store.delete")(function* (
     .pipe(Effect.orDie);
 });
 
+/** Deletes every memory of a learner. */
+export const deleteMemories = Effect.fn("nina.memory.store.deleteAll")(
+  function* (userId: UserId) {
+    for (const memory of yield* readMemories(userId)) {
+      yield* deleteMemory(memory._id);
+    }
+  }
+);
+
 /** Memories one expiry call deletes, so its writes stay far below the transaction limit. */
 export const EXPIRY_PAGE = 200;
 

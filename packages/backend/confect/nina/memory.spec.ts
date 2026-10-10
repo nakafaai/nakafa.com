@@ -229,9 +229,10 @@ export default GroupSpec.make()
     }).middleware(Session)
   )
   // The four functions below are what browser tabs opened before October 2026
-  // still call from the old settings card. They change nothing and report
-  // memory as off. They are deleted with the retired model key, after three
-  // days without a call.
+  // still call from the old settings card. The card shows memory as on with no
+  // fact or as off, turns it on, and turns it off with every memory deleted.
+  // They are deleted with the retired model key, after three days without a
+  // call.
   .addFunction(
     FunctionSpec.publicQuery({
       name: "get",

@@ -135,6 +135,9 @@ one Nina wrote from that chat. Only four things delete a memory:
   deleted before this schema deploys. Convex refuses a schema that a stored
   document does not match, so a deploy that succeeds proves that none is left.
 - `get`, `enable`, `disable` and `forget` stay only for browser tabs opened
-  before October 2026. They change nothing and report memory as off. They are
-  deleted with the retired model key.
+  before October 2026, which still show the old settings card. That card shows
+  memory as it is: on with no fact to list, or off. Its "Turn on" button turns
+  memory on, and its "Turn off and forget" button turns memory off and deletes
+  every memory, as the card says. `forget` changes nothing, because the card
+  has no fact to forget. They are deleted with the retired model key.
 - The learner profile derived on read, which ADR 0010 defined, is unchanged.

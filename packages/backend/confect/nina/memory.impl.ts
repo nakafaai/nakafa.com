@@ -28,6 +28,7 @@ import {
   selectMemories,
 } from "@repo/backend/confect/nina/memory/select";
 import {
+  deleteMemories,
   deleteMemory,
   EXPIRY_PAGE,
   expireMemories,
@@ -182,9 +183,7 @@ const clear = FunctionImpl.make(
   "clear",
   Effect.fn("nina.memory.clear")(function* () {
     const { appUser } = yield* requireAuth();
-    for (const memory of yield* readMemories(appUser._id)) {
-      yield* deleteMemory(memory._id);
-    }
+    yield* deleteMemories(appUser._id);
     return null;
   })
 );
