@@ -18,6 +18,7 @@ export class ClassQueryError extends Schema.TaggedError<ClassQueryError>()(
       "CLASS_MEMBER_SEARCH_LIMIT_EXCEEDED",
       "CLASS_MEMBER_COUNT_EXCEEDED",
       "INVALID_PAGINATION_CURSOR",
+      "INVALID_PAGINATION_LIMIT",
       "CLASS_INVITE_CODE_LIMIT_EXCEEDED",
     ]),
     message: Schema.String,

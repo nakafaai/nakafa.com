@@ -2,10 +2,19 @@ import { createServer } from "node:net";
 import { availableParallelism } from "node:os";
 import {
   acceptanceRuntimeError,
+  retryVersionServiceStart,
   sanitizeAcceptanceCommandError,
 } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { Array as Arr, Effect, FileSystem, Schedule, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Exit,
+  FileSystem,
+  Schedule,
+  Scope,
+  Stream,
+} from "effect";
 import { HttpClient } from "effect/http";
 import { ChildProcess } from "effect/process";
 
@@ -158,13 +167,10 @@ export const makeConvexTemporaryRoot = Effect.fn(
   return yield* fileSystem.makeTempDirectoryScoped({ prefix: "convex-" });
 });
 
-/** Refreshes Convex bindings and owns the local backend through application acceptance. */
-export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
-  function* <A, E, R>(runtime: LocalRuntime, program: Effect.Effect<A, E, R>) {
-    // Refuse occupied ports before Convex can reuse or stop any existing backend.
-    yield* assertLocalPortsFree(runtime);
+/** Starts the local backend in the scope it is given and returns it once it answers. */
+const startLocalBackend = Effect.fn("contentAcceptance.startLocalBackend")(
+  function* (runtime: LocalRuntime, logPath: string) {
     const fileSystem = yield* FileSystem.FileSystem;
-    const logPath = `${runtime.directory}/convex.log`;
     yield* fileSystem.writeFileString(logPath, "", { mode: 0o600 });
     const temporaryRoot = yield* makeConvexTemporaryRoot();
     const child = yield* ChildProcess.make(
@@ -233,6 +239,31 @@ export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
             "The local Convex process did not become ready."
           ),
       })
+    );
+    return child;
+  }
+);
+
+/** A failed start releases its own scope before a retry; a started backend keeps it. */
+const startLocalBackendAttempt = Effect.fn(
+  "contentAcceptance.startLocalBackendAttempt"
+)(function* (runtime: LocalRuntime, logPath: string) {
+  const attempt = yield* Scope.fork(yield* Effect.scope);
+  return yield* startLocalBackend(runtime, logPath).pipe(
+    Effect.provideService(Scope.Scope, attempt),
+    Effect.onExitIf(Exit.isFailure, (exit) => Scope.close(attempt, exit))
+  );
+});
+
+/** Refreshes Convex bindings and owns the local backend through application acceptance. */
+export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
+  function* <A, E, R>(runtime: LocalRuntime, program: Effect.Effect<A, E, R>) {
+    // Refuse occupied ports before Convex can reuse or stop any existing backend.
+    yield* assertLocalPortsFree(runtime);
+    const fileSystem = yield* FileSystem.FileSystem;
+    const logPath = `${runtime.directory}/convex.log`;
+    const child = yield* retryVersionServiceStart(
+      startLocalBackendAttempt(runtime, logPath)
     );
     return yield* Effect.raceFirst(
       program,

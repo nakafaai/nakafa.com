@@ -237,17 +237,24 @@ const getPeople = FunctionImpl.make(
           message: "Invalid class people search cursor.",
         });
       }
+      if (
+        !Number.isInteger(paginationOpts.numItems) ||
+        paginationOpts.numItems <= 0
+      ) {
+        return yield* new ClassQueryError({
+          code: "INVALID_PAGINATION_LIMIT",
+          message:
+            "Class people search page size must be a positive whole number.",
+        });
+      }
       const endIndex = Math.min(
         startIndex + paginationOpts.numItems,
         people.length
       );
-      // A negative end counts back from the end, as slice did.
-      const wholeEnd = Math.trunc(endIndex);
-      const pageEnd = wholeEnd < 0 ? people.length + wholeEnd : endIndex;
       return {
         continueCursor: `${endIndex}`,
         isDone: endIndex >= people.length,
-        page: Arr.take(Arr.drop(people, startIndex), pageEnd - startIndex),
+        page: Arr.take(Arr.drop(people, startIndex), endIndex - startIndex),
       };
     }
     const membersPage = yield* database

@@ -9,7 +9,10 @@ import {
   LOCAL_AUTH_SECRET,
 } from "@repo/backend/scripts/content/acceptance/auth";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import {
+  acceptanceRuntimeError,
+  retryVersionServiceStart,
+} from "@repo/backend/scripts/content/acceptance/error";
 import {
   assertLocalPortsFree,
   localConvexEnvironment,
@@ -235,7 +238,7 @@ export const initializeLocalRuntime = Effect.fn(
       ...(stdin === undefined ? {} : { stdin }),
     });
   }, Effect.scoped);
-  yield* command(["init"]);
+  yield* retryVersionServiceStart(command(["init"]));
   const source = yield* fs.readFileString(`${backend}/.env.local`);
   const environment = parseEnv(source);
   const urls = yield* Schema.decodeUnknownEffect(
@@ -254,24 +257,26 @@ export const initializeLocalRuntime = Effect.fn(
     );
   }
   const jwks = yield* createLocalJwks();
-  yield* command(
-    ["env", "set", "--force"],
-    Arr.join(
-      [
-        ...Arr.map(
-          Rec.toEntries({
-            ...localEnvironment,
-            AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
-            AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
-            AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
-          }),
-          ([key, value]) => `${key}=${encodeJsonText(value)}`
-        ),
-        // Convex reads these lines with dotenv, which keeps a double-quoted
-        // value's escaped quotes but takes a single-quoted one literally.
-        `JWKS='${jwks}'`,
-      ],
-      "\n"
+  yield* retryVersionServiceStart(
+    command(
+      ["env", "set", "--force"],
+      Arr.join(
+        [
+          ...Arr.map(
+            Rec.toEntries({
+              ...localEnvironment,
+              AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
+              AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
+              AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
+            }),
+            ([key, value]) => `${key}=${encodeJsonText(value)}`
+          ),
+          // Convex reads these lines with dotenv, which keeps a double-quoted
+          // value's escaped quotes but takes a single-quoted one literally.
+          `JWKS='${jwks}'`,
+        ],
+        "\n"
+      )
     )
   );
   const database = yield* fs.stat(`${backend}/.convex`);
