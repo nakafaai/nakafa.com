@@ -1,4 +1,4 @@
-import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
 import {
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,

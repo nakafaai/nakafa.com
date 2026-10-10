@@ -1,12 +1,12 @@
 import { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
-import { interleaveSearchGroups } from "@repo/backend/confect/contents/helpers/search/groups";
+import { interleaveSearchGroups } from "@repo/backend/confect/contents/search/groups";
 import {
   getPublishedSearchFamilies,
   readPublishedSearchDocuments,
-} from "@repo/backend/confect/contents/helpers/search/published";
-import { readSignedQuranSearchDocuments } from "@repo/backend/confect/contents/helpers/search/quran/read";
-import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
-import { readSignedTryoutSearchDocuments } from "@repo/backend/confect/contents/helpers/search/tryout";
+} from "@repo/backend/confect/contents/search/published";
+import { readSignedQuranSearchDocuments } from "@repo/backend/confect/contents/search/quran/read";
+import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
+import { readSignedTryoutSearchDocuments } from "@repo/backend/confect/contents/search/tryout";
 import type { NakafaSection } from "@repo/backend/confect/lib/validators/contents";
 import { Effect } from "effect";
 

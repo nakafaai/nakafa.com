@@ -4,7 +4,7 @@ import {
 } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { readContentSearchDocuments } from "@repo/backend/confect/contents/helpers/search/read";
+import { readContentSearchDocuments } from "@repo/backend/confect/contents/search/read";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {

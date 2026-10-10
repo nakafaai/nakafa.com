@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
-import { interleaveSearchGroups } from "@repo/backend/confect/contents/helpers/search/groups";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
+import { interleaveSearchGroups } from "@repo/backend/confect/contents/search/groups";
 import { testArticleGraph } from "@repo/backend/test/content/release";
 import { Array as Arr } from "effect";
 

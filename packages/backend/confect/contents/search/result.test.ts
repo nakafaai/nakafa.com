@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
-import { buildContentSearchResult } from "@repo/backend/confect/contents/helpers/search/result";
+import type { ContentSearchDocument } from "@repo/backend/confect/contents/search/groups";
+import { buildContentSearchResult } from "@repo/backend/confect/contents/search/result";
 import { Array as Arr } from "effect";
 
 /** Builds one ranked search document whose title names its position. */

@@ -5,7 +5,7 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
-import { readPublishedSearchDocuments } from "@repo/backend/confect/contents/helpers/search/published";
+import { readPublishedSearchDocuments } from "@repo/backend/confect/contents/search/published";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {

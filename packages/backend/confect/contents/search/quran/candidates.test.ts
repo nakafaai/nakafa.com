@@ -5,7 +5,7 @@ import {
   QURAN_SEARCH_DOCUMENT_READ_LIMIT,
   QURAN_SEARCH_RESULT_LIMIT,
 } from "@repo/backend/confect/contentRelease/quran/limits";
-import { readTextCandidates } from "@repo/backend/confect/contents/helpers/search/quran/candidates";
+import { readTextCandidates } from "@repo/backend/confect/contents/search/quran/candidates";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
@@ -13,7 +13,7 @@ import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, HashSet } from "effect";
 
-describe("contents/helpers/search/quran/candidates", () => {
+describe("contents/search/quran/candidates", () => {
   it("stops overlap expansion while preserving enough reads to authenticate selected results", async () => {
     const t = convexTest(schema, convexModules);
     const snapshotId = await t.mutation((ctx) =>

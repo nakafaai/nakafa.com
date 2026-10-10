@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { Array as Arr } from "effect";
 

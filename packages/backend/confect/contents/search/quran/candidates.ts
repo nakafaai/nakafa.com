@@ -5,7 +5,7 @@ import {
   QURAN_SEARCH_DOCUMENT_READ_LIMIT,
   QURAN_SEARCH_RESULT_LIMIT,
 } from "@repo/backend/confect/contentRelease/quran/limits";
-import { interleaveSearchGroups } from "@repo/backend/confect/contents/helpers/search/groups";
+import { interleaveSearchGroups } from "@repo/backend/confect/contents/search/groups";
 import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
 
 const TextQueryStateSchema = Schema.Struct({

@@ -1,4 +1,4 @@
-import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
+import type { ContentSearchDocument } from "@repo/backend/confect/contents/search/groups";
 import { Array as Arr, HashSet, Order, pipe } from "effect";
 
 /** Minimal persisted search fields required by deterministic reranking. */

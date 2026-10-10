@@ -3,7 +3,7 @@ import {
   type ContentSearchRankDocument,
   matchesContentSearchQuery,
   rankContentSearchDocuments,
-} from "@repo/backend/confect/contents/helpers/search/rank";
+} from "@repo/backend/confect/contents/search/rank";
 import { Array as Arr } from "effect";
 
 /** Builds a persisted search row slice for rank tests without Convex IDs. */

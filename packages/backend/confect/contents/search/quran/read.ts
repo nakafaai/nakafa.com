@@ -5,15 +5,15 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { quranSearchIdentity } from "@repo/backend/confect/contentRelease/quran/facts";
 import { QURAN_SEARCH_RESULT_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
 import { validateSearchQuery } from "@repo/backend/confect/contentRelease/search/input";
-import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
-import { interleaveSearchGroups } from "@repo/backend/confect/contents/helpers/search/groups";
-import { readTextCandidates } from "@repo/backend/confect/contents/helpers/search/quran/candidates";
-import { rankContentSearchDocuments } from "@repo/backend/confect/contents/helpers/search/rank";
-import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
+import { interleaveSearchGroups } from "@repo/backend/confect/contents/search/groups";
+import { readTextCandidates } from "@repo/backend/confect/contents/search/quran/candidates";
+import { rankContentSearchDocuments } from "@repo/backend/confect/contents/search/rank";
+import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
 import {
   getExactRouteQuery,
   getRouteSearchText,
-} from "@repo/backend/confect/contents/helpers/search/terms";
+} from "@repo/backend/confect/contents/search/terms";
 import { quranLayer } from "@repo/backend/content/quran/confect";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { readQuranRow } from "@repo/backend/content/quran/row";

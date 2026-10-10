@@ -1,6 +1,6 @@
-import { buildContentSearchExcerpt } from "@repo/backend/confect/contents/helpers/search/excerpt";
-import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
-import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import { buildContentSearchExcerpt } from "@repo/backend/confect/contents/search/excerpt";
+import type { ContentSearchDocument } from "@repo/backend/confect/contents/search/groups";
+import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
 import { NAKAFA_AGENT_MAX_OFFSET } from "@repo/contents/agent/search";
 import { Array as Arr } from "effect";
 

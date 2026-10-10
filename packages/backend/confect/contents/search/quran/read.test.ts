@@ -1,13 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { QURAN_SEARCH_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
-import { readSignedQuranSearchDocuments } from "@repo/backend/confect/contents/helpers/search/quran/read";
+import { readSignedQuranSearchDocuments } from "@repo/backend/confect/contents/search/quran/read";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { Array as Arr, Effect } from "effect";
 
-describe("contents/helpers/search/quran/read", () => {
+describe("contents/search/quran/read", () => {
   it.effect(
     "deduplicates equivalent canonical route variants before signed reads",
     () =>

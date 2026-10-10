@@ -1,7 +1,7 @@
 import { identityCollision } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
-import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";

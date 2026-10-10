@@ -1,4 +1,4 @@
-import type { contentSearchDocumentValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import type { contentSearchDocumentValidator } from "@repo/backend/confect/contents/search/schema";
 import { Array as Arr, MutableHashSet } from "effect";
 /** Search document shape shared by source-owned and release-owned read models. */
 export type ContentSearchDocument = typeof contentSearchDocumentValidator.Type;

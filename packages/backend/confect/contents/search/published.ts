@@ -4,14 +4,14 @@ import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot
 import type { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
 import type { SearchFamily } from "@repo/backend/confect/contentRelease/search/spec";
 import { resolveSearchProjection } from "@repo/backend/confect/contentRelease/search/verify";
-import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
 import {
   type ContentSearchDocument,
   interleaveSearchGroups,
-} from "@repo/backend/confect/contents/helpers/search/groups";
-import { rankContentSearchDocuments } from "@repo/backend/confect/contents/helpers/search/rank";
-import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
-import { getExactRouteQuery } from "@repo/backend/confect/contents/helpers/search/terms";
+} from "@repo/backend/confect/contents/search/groups";
+import { rankContentSearchDocuments } from "@repo/backend/confect/contents/search/rank";
+import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
+import { getExactRouteQuery } from "@repo/backend/confect/contents/search/terms";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 

@@ -4,12 +4,12 @@ import {
   QueryCtx as QueryCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { toLearningContextQuery } from "@repo/backend/confect/contents/context";
-import { buildContentSearchRef } from "@repo/backend/confect/contents/helpers/search/documents";
 import {
   getDefaultPopularityWindow,
   type LearningPopularityWindow,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
+import { buildContentSearchRef } from "@repo/backend/confect/contents/search/documents";
 import {
   type GetTrendingSubjectsArgs,
   maxTrendingSubjectsLimit,

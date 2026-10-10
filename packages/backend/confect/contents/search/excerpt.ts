@@ -1,4 +1,4 @@
-import { contentSearchDocumentValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import { contentSearchDocumentValidator } from "@repo/backend/confect/contents/search/schema";
 import { Array as Arr, Struct } from "effect";
 
 const EXCERPT_CONTEXT_RADIUS = 90;

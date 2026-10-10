@@ -1,17 +1,17 @@
-import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
 import {
   type ContentSearchDocument,
   interleaveSearchGroups,
-} from "@repo/backend/confect/contents/helpers/search/groups";
+} from "@repo/backend/confect/contents/search/groups";
 import {
   matchesContentSearchQuery,
   rankContentSearchDocuments,
-} from "@repo/backend/confect/contents/helpers/search/rank";
-import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+} from "@repo/backend/confect/contents/search/rank";
+import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
 import {
   getExactRouteQuery,
   getRouteSearchText,
-} from "@repo/backend/confect/contents/helpers/search/terms";
+} from "@repo/backend/confect/contents/search/terms";
 import { findTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";

@@ -1,5 +1,5 @@
 import { expect, it } from "@effect/vitest";
-import { buildContentSearchExcerpt } from "@repo/backend/confect/contents/helpers/search/excerpt";
+import { buildContentSearchExcerpt } from "@repo/backend/confect/contents/search/excerpt";
 
 it("selects complete terms and the last prefix instead of unrelated substrings", () => {
   const text = `Nonlinear models. ${"Background context. ".repeat(25)} Linear functions provide the relevant example. ${"Further reading. ".repeat(25)}`;

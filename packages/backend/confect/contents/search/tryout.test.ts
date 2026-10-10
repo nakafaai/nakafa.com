@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
-import { readSignedTryoutSearchDocuments } from "@repo/backend/confect/contents/helpers/search/tryout";
+import { readSignedTryoutSearchDocuments } from "@repo/backend/confect/contents/search/tryout";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   activateTryoutSnapshot,
@@ -39,7 +39,7 @@ function makeInternalSection(appLocale: ActiveAppLocaleCode) {
     visibility: "internal-entry",
   });
 }
-describe("contents/helpers/search/tryout", () => {
+describe("contents/search/tryout", () => {
   it.effect("returns no source fallback before signed Tryout activation", () =>
     Effect.gen(function* () {
       const t = yield* Confect.pipe(Effect.provide(confectLayer));

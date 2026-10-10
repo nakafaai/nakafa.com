@@ -2,7 +2,7 @@ import { HttpClient } from "@confect/js";
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
-import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/search/schema";
 import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";

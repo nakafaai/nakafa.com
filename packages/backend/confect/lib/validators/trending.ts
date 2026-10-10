@@ -1,4 +1,4 @@
-import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/search/schema";
 import { materialDomainValidator } from "@repo/backend/confect/lib/validators/contents";
 import { Schema } from "effect";
 /**
