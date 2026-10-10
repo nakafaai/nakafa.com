@@ -27,7 +27,8 @@ export const decodePartnerCursor = Effect.fn(
     return null;
   }
   if (!cursor.startsWith(PARTNER_CURSOR_PREFIX)) {
-    return yield* invalidCursor(
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
       "Partner API cursor has an unsupported format."
     );
   }
@@ -48,7 +49,10 @@ export const decodePartnerCursor = Effect.fn(
     encodedContentKey === undefined ||
     extra.length > 0
   ) {
-    return yield* invalidCursor("Partner API cursor has an invalid identity.");
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Partner API cursor has an invalid identity."
+    );
   }
   const decoded = yield* Effect.try({
     try: () => ({
@@ -100,7 +104,3 @@ export const encodePartnerCursor = Effect.fn(
   );
   return `${PARTNER_CURSOR_PREFIX}${cursor.family}:${cursor.activeReleaseId}:${cursor.appLocale}:${encodeURIComponent(cursor.prefix)}:${encodeURIComponent(cursor.contentKey)}`;
 });
-/** Produces one typed cursor failure without accepting historical formats. */
-function invalidCursor(message: string) {
-  return releaseFail("CONTENT_RELEASE_INTEGRITY", message);
-}
