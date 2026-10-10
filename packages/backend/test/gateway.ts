@@ -3,8 +3,9 @@ import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { Gateway, make } from "@repo/backend/confect/gateway/handle";
 import { Effect, Layer } from "effect";
 
-/** The deterministic provider behind the test adapter; each test programs its model. */
+/** The deterministic provider behind the test adapter; each test programs its models. */
 export const provider = {
+  embeddingModel: vi.fn<Parameters<typeof make>[0]["embeddingModel"]>(),
   languageModel: vi.fn<Parameters<typeof make>[0]["languageModel"]>(),
 };
 

@@ -132,6 +132,32 @@ describe("The production gateway", () => {
     }
   );
 
+  it.effect("sends embeddings to the Convex AI gateway at the index length", () => {
+    const embedding = Arr.makeBy(768, (index) => index / 768);
+    serviceToken.mockResolvedValue("service-token");
+    fetch.mockResolvedValue(
+      Response.json({ data: [{ embedding }], usage: { prompt_tokens: 2 } })
+    );
+    return Effect.gen(function* () {
+      const embeddings = yield* (yield* Gateway).embed(["persamaan kuadrat"]);
+      expect(embeddings).toEqual([embedding]);
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const [url, init] = fetch.mock.calls[0] ?? [];
+      expect(url).toBe("https://ai-gateway.convex.dev/v1/embeddings");
+      expect(new Headers(init?.headers).get("authorization")).toBe(
+        "Bearer service-token"
+      );
+      const body = yield* Schema.decodeUnknownEffect(JsonTextSchema)(
+        init?.body
+      );
+      expect(body).toMatchObject({
+        dimensions: 768,
+        input: ["persamaan kuadrat"],
+        model: "google/gemini-embedding-2",
+      });
+    }).pipe(deployed);
+  });
+
   it.effect(
     "reports the tokens and the cost of a streamed answer from its last chunk",
     () => {
