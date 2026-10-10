@@ -16,6 +16,7 @@ import { readLearnerProfile } from "@repo/backend/confect/nina/memory/profile";
 import {
   MEMORY_FIELD,
   openMemories,
+  TITLE_FIELD,
 } from "@repo/backend/confect/nina/memory/seal";
 import {
   newestFirst,
@@ -36,9 +37,17 @@ import spec, {
 } from "@repo/backend/confect/nina/memory.spec";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
-import { Array as Arr, Clock, Duration, Effect, HashSet, Layer } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Duration,
+  Effect,
+  HashSet,
+  Layer,
+  String as Str,
+} from "effect";
 
-/** Reads a learner's memories with their text opened, the most recently confirmed first. */
+/** Reads a learner's memories with their words and titles opened, the most recently confirmed first. */
 const readOpened = Effect.fn("nina.memory.readOpened")(function* (
   userId: Docs["users"]["_id"]
 ) {
@@ -49,8 +58,8 @@ const readOpened = Effect.fn("nina.memory.readOpened")(function* (
 });
 
 /**
- * The Memory page: every memory of the learner, newest first, with its words
- * opened and whether Nina reads it. A visitor gets nothing.
+ * The Memory page: every memory of the learner, newest first, with its title
+ * and words opened and whether Nina reads it. A visitor gets nothing.
  */
 const list = FunctionImpl.make(
   schema,
@@ -81,6 +90,7 @@ const list = FunctionImpl.make(
         id: memory._id,
         inUse: HashSet.has(inUse, memory._id),
         text: memory.text,
+        ...(memory.title === undefined ? {} : { title: memory.title }),
         ...(memory.validUntil === undefined
           ? {}
           : { validUntil: memory.validUntil }),
@@ -90,23 +100,53 @@ const list = FunctionImpl.make(
   })
 );
 
-/** Writes a memory in the learner's own words, up to `MEMORY_LIMIT` of them. */
+/** Whether a draft says nothing: it has no title and no words. */
+function isEmpty(draft: { readonly text: string; readonly title?: string }) {
+  return draft.title === undefined && Str.isEmpty(draft.text);
+}
+
+/**
+ * Seals what the learner wrote for one memory: its words, and its title when
+ * it has one.
+ */
+const sealDraft = Effect.fn("nina.memory.sealDraft")(function* (
+  userId: Docs["users"]["_id"],
+  draft: { readonly text: string; readonly title?: string }
+) {
+  const keys = yield* ensureLearnerKeys(userId);
+  return {
+    text: yield* sealText(keys, MEMORY_FIELD, draft.text),
+    title:
+      draft.title === undefined
+        ? undefined
+        : yield* sealText(keys, TITLE_FIELD, draft.title),
+  };
+}, Effect.orDie);
+
+/**
+ * Writes a memory in the learner's own words, with the title they gave it, up
+ * to `MEMORY_LIMIT` memories.
+ */
 const add = FunctionImpl.make(
   schema,
   spec,
   "add",
-  Effect.fn("nina.memory.add")(function* ({ text }) {
+  Effect.fn("nina.memory.add")(function* (draft) {
     const { appUser } = yield* requireAuth();
+    if (isEmpty(draft)) {
+      return yield* new NinaMemoryRejected({ reason: "empty" });
+    }
     if (Arr.length(yield* readMemories(appUser._id)) >= MEMORY_LIMIT) {
       return yield* new NinaMemoryRejected({ reason: "limit" });
     }
-    const keys = yield* ensureLearnerKeys(appUser._id).pipe(Effect.orDie);
+    const { text, title } = yield* sealDraft(appUser._id, draft);
     return yield* (yield* DatabaseWriter)
       .table("ninaMemories")
       .insert({
         author: "learner",
         confirmedAt: yield* Clock.currentTimeMillis,
-        text: yield* sealText(keys, MEMORY_FIELD, text).pipe(Effect.orDie),
+        text,
+        ...(title === undefined ? {} : { title }),
         userId: appUser._id,
       })
       .pipe(Effect.orDie);
@@ -114,26 +154,30 @@ const add = FunctionImpl.make(
 );
 
 /**
- * Rewrites a memory as the learner's own words. Its kind, lesson and end date
- * stay as they are.
+ * Rewrites a memory as the learner's own words and title; a write without a
+ * title takes the title off. Its kind, lesson and end date stay as they are.
  */
 const edit = FunctionImpl.make(
   schema,
   spec,
   "edit",
-  Effect.fn("nina.memory.edit")(function* ({ id, text }) {
+  Effect.fn("nina.memory.edit")(function* ({ id, ...draft }) {
     const { appUser } = yield* requireAuth();
+    if (isEmpty(draft)) {
+      return yield* new NinaMemoryRejected({ reason: "empty" });
+    }
     const memory = yield* readOwnMemory(appUser._id, id);
     if (!memory) {
       return yield* new NinaMemoryRejected({ reason: "missing" });
     }
-    const keys = yield* ensureLearnerKeys(appUser._id).pipe(Effect.orDie);
+    const { text, title } = yield* sealDraft(appUser._id, draft);
     yield* (yield* DatabaseWriter)
       .table("ninaMemories")
       .patch(id, {
         author: "learner",
         confirmedAt: yield* Clock.currentTimeMillis,
-        text: yield* sealText(keys, MEMORY_FIELD, text).pipe(Effect.orDie),
+        text,
+        title,
       })
       .pipe(Effect.orDie);
     return null;
@@ -243,6 +287,7 @@ const read = FunctionImpl.make(
       id: memory._id,
       ...(memory.kind === undefined ? {} : { kind: memory.kind }),
       text: memory.text,
+      ...(memory.title === undefined ? {} : { title: memory.title }),
     });
     return {
       known: Arr.map(memories, note),

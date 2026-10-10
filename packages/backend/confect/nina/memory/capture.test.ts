@@ -244,16 +244,39 @@ describe("memory capture", () => {
 
   it("shows the model a memory the learner wrote as its words alone, and gives it the kind the model names", async () => {
     const f = await fixture();
-    const id = await f.seed({ author: "learner", text: "Kelas 11." });
+    const id = await f.seed({ author: "learner", text: "Kelas 12 IPA" });
     const model = answers({ ...level, known: id, text: "Kelas 12 IPA." });
     await f.capture();
     expect(encodeJsonText(model.doGenerateCalls[0]?.prompt)).toContain(
-      `- [${id}] Kelas 11.`
+      `- [${id}] Kelas 12 IPA`
     );
-    expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
+    // The words stay the learner's, and the memory takes the kind.
+    expect(await f.texts()).toEqual(["Kelas 12 IPA"]);
     expect(await f.stored()).toEqual([
-      expect.objectContaining({ author: "nina", kind: "level" }),
+      expect.objectContaining({ author: "learner", kind: "level" }),
     ]);
+  });
+
+  it("shows the model a memory with its title and its first 240 characters, and keeps what the learner wrote when the model names it and says something else", async () => {
+    const f = await fixture();
+    const id = await f.seed({
+      author: "learner",
+      text: `Kelas 11.${"x".repeat(1991)}`,
+      title: "Sekolah",
+    });
+    const [before] = await f.stored();
+    const model = answers({ ...level, known: id, text: "Kelas 12 IPA." });
+    await f.capture();
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    // The title with its colon and the first words take 18 of the 240.
+    expect(prompt).toContain(
+      `- [${id}] Sekolah: Kelas 11.${"x".repeat(222)}...`
+    );
+    expect(prompt).not.toContain("x".repeat(223));
+    const [learners, written] = await f.stored();
+    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
+    expect(learners).toStrictEqual(before);
+    expect(written).toMatchObject({ author: "nina", kind: "level" });
   });
 
   it("keeps the words the learner edits while the model reads the message, and gives the memory no kind", async () => {
@@ -262,7 +285,7 @@ describe("memory capture", () => {
     answersAfter(() => f.owner.mutation(edit, { id, text: "Kelas 12 SMA" }), {
       ...level,
       known: id,
-      text: "Kelas 12 IPA.",
+      text: "Kelas 12 SMA.",
     });
     await f.capture();
     expect(await f.texts()).toEqual(["Kelas 12 SMA"]);
@@ -288,6 +311,26 @@ describe("memory capture", () => {
         validUntil: Date.UTC(2026, 9, 20, 23, 59, 59, 999),
       }),
     ]);
+  });
+
+  it.each([
+    ["is 280 characters long", "x".repeat(280), true],
+    ["is 281 characters long", "x".repeat(281), false],
+    ["is empty", "", false],
+    ["holds only spaces", "   ", false],
+  ])("checks a sentence that %s", async (_, text, fits) => {
+    // The test names the numbers, not the constant. A sentence that does not fit
+    // refuses the whole answer.
+    const f = await fixture();
+    await f.seed({ author: "learner", text: "Sudah ada" });
+    answers(level, { kind: "goal", quote: "mau ikut SNBT 2027", text });
+    await f.capture();
+    expect(await f.texts()).toEqual(
+      fits ? ["Sudah ada", "Kelas 12.", text] : ["Sudah ada"]
+    );
+    expect(MutableRef.get(f.logged)).toEqual(
+      fits ? [] : unavailable({ operation: "generate", rejected: true })
+    );
   });
 
   it("saves nothing the learner's words do not support, but still counts the call", async () => {

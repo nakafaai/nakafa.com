@@ -110,7 +110,7 @@ function logFailure(error: NinaMemoryError) {
   });
 }
 
-/** What the model reads: today, the account, the memories it can name, and the learner's message. */
+/** What the model reads: today, the account, the memories it can name (each cut short), and the learner's message. */
 function formatPrompt({
   learner,
   message,

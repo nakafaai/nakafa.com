@@ -1,8 +1,17 @@
+import { Ref } from "@confect/core";
 import { RegisteredConvexFunction } from "@confect/server";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
-import { MEMORY_FIELD } from "@repo/backend/confect/nina/memory/seal";
-import type { NinaMemory } from "@repo/backend/confect/nina/memory.spec";
+import {
+  MEMORY_FIELD,
+  TITLE_FIELD,
+} from "@repo/backend/confect/nina/memory/seal";
+import type {
+  NinaMemory,
+  NinaMemoryCandidate,
+  NinaMemorySeen,
+} from "@repo/backend/confect/nina/memory.spec";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import {
   ensureLearnerKeys,
@@ -35,7 +44,8 @@ function run<A, E>(
 /**
  * Inserts one memory for a learner. Nina wrote it, with a kind, unless the row
  * says otherwise. A memory the learner wrote has no kind unless the row names
- * one.
+ * one, and has no title unless the row gives one. The words and the title are
+ * sealed in their own fields, as the product seals them.
  */
 export async function insertMemory(
   ctx: MutationCtx,
@@ -45,6 +55,7 @@ export async function insertMemory(
     kind = author === "nina" ? "goal" : undefined,
     lesson,
     text = "Mau ikut SNBT 2027.",
+    title,
     userId,
     validUntil,
   }: {
@@ -53,22 +64,31 @@ export async function insertMemory(
     readonly kind?: typeof NinaMemory.Type.kind;
     readonly lesson?: string;
     readonly text?: string;
+    readonly title?: string;
     readonly userId: UserId;
     readonly validUntil?: number;
   }
 ) {
   const sealed = await run(
     ctx,
-    Effect.flatMap(ensureLearnerKeys(userId), (keys) =>
-      sealText(keys, MEMORY_FIELD, text)
-    )
+    Effect.gen(function* () {
+      const keys = yield* ensureLearnerKeys(userId);
+      return {
+        text: yield* sealText(keys, MEMORY_FIELD, text),
+        title:
+          title === undefined
+            ? undefined
+            : yield* sealText(keys, TITLE_FIELD, title),
+      };
+    })
   );
   return ctx.db.insert("ninaMemories", {
     author,
     confirmedAt,
     ...(kind === undefined ? {} : { kind }),
     ...(lesson === undefined ? {} : { lesson }),
-    text: sealed,
+    text: sealed.text,
+    ...(sealed.title === undefined ? {} : { title: sealed.title }),
     userId,
     ...(validUntil === undefined ? {} : { validUntil }),
   });
@@ -155,7 +175,30 @@ export function memoryTools(f: NinaTest) {
       );
     });
 
-  return { fill, openLesson, seed, stored, stranger, texts };
+  /**
+   * The opened title of every stored memory of a learner, in storage order:
+   * `null` for a memory that has none, because a Convex result has no
+   * `undefined`.
+   */
+  const titles = (userId: UserId = f.identity.userId) =>
+    f.t.mutation(async (ctx) => {
+      const rows = Arr.filter(
+        await ctx.db.query("ninaMemories").collect(),
+        (row) => row.userId === userId
+      );
+      return run(
+        ctx,
+        Effect.flatMap(readLearnerKeys(userId), (keys) =>
+          Effect.forEach(rows, ({ title }) =>
+            title === undefined
+              ? Effect.succeed(null)
+              : openText(keys, TITLE_FIELD, title)
+          )
+        )
+      );
+    });
+
+  return { fill, openLesson, seed, stored, stranger, texts, titles };
 }
 
 /** A Nina fixture together with its memory helpers. */
@@ -164,4 +207,52 @@ export async function createMemoryTest(
 ) {
   const f = await createNinaTest(options);
   return { ...f, ...memoryTools(f) };
+}
+
+const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
+
+/** A candidate that states a level, with any field replaced. */
+export function candidate(
+  fields: Partial<typeof NinaMemoryCandidate.Type> = {}
+): typeof NinaMemoryCandidate.Type {
+  return {
+    kind: "level",
+    quote: "aku kelas 12",
+    text: "Kelas 12 IPA.",
+    ...fields,
+  };
+}
+
+/**
+ * A memory fixture that also runs one capture write for its turn. `seen` is
+ * what the capture call read before the model read the message: every memory of
+ * the learner when the run starts, unless a test names others.
+ */
+export async function createCaptureTest() {
+  const f = await createMemoryTest();
+  const readNow = async () =>
+    Arr.map(
+      Arr.filter(
+        await f.stored(),
+        ({ userId }) => userId === f.identity.userId
+      ),
+      ({ _id, confirmedAt }) => ({ confirmedAt, id: _id })
+    );
+  const run = async (
+    candidates: (typeof NinaMemoryCandidate.Type)[],
+    {
+      lesson,
+      seen,
+    }: { lesson?: string; seen?: (typeof NinaMemorySeen.Type)[] } = {}
+  ) =>
+    f.t.mutation(capture, {
+      candidates,
+      ...(lesson === undefined ? {} : { lesson }),
+      seen: seen ?? (await readNow()),
+      turnId: f.turnId,
+      userId: f.identity.userId,
+    });
+  const remembered = async () =>
+    (await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId)))?.remembered;
+  return { ...f, remembered, run };
 }

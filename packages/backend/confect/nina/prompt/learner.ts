@@ -79,7 +79,7 @@ export function formatLearnerPrompt({
   memories,
   profile,
 }: {
-  readonly memories: readonly Pick<Note, "kind" | "text">[];
+  readonly memories: readonly Pick<Note, "kind" | "text" | "title">[];
   readonly profile: typeof NinaLearnerProfile.Type;
 }) {
   const account = formatLearnerProfile(profile);

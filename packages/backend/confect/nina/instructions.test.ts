@@ -122,11 +122,23 @@ describe("Nina instructions", () => {
     );
     await f.seed({ kind: "struggle", text: "Sulit di peluang." });
     await f.seed({ author: "learner", text: "Kelas 12 IPA." });
+    await f.seed({
+      author: "learner",
+      confirmedAt: 3,
+      text: "Ikut SNBT 2027.",
+      title: "Tujuan",
+    });
+    await f.seed({
+      author: "learner",
+      confirmedAt: 2,
+      text: "",
+      title: "Ujian akhir",
+    });
     const result = await instructionsFor(f);
     for (const expected of [
       "# Learner",
       "- Focus: preparing for try-outs",
-      "<memories>\n- Kelas 12 IPA.\n- (struggle) Sulit di peluang.\n</memories>",
+      "<memories>\n- Tujuan: Ikut SNBT 2027.\n- Ujian akhir\n- Kelas 12 IPA.\n- (struggle) Sulit di peluang.\n</memories>",
     ]) {
       expect(result).toHaveProperty(
         "instructions",

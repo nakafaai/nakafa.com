@@ -4,7 +4,11 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { endOfDay } from "@repo/backend/confect/nina/memory/check";
-import { findTarget, sameWords } from "@repo/backend/confect/nina/memory/match";
+import {
+  findTarget,
+  sameWords,
+  saysSame,
+} from "@repo/backend/confect/nina/memory/match";
 import {
   MEMORY_FIELD,
   type Opened,
@@ -59,10 +63,11 @@ function endOf(candidate: Candidate) {
 
 /**
  * Says a memory again: it was confirmed now. The candidate's words replace the
- * memory's, with Nina as their author, only when they say something new and
- * nobody changed the memory since the call read it. On the same terms the
- * memory takes the candidate's kind, which is how a memory the learner wrote
- * gets one, and a situation takes a new end date.
+ * memory's only when Nina wrote the memory, they say something new, and nobody
+ * changed the memory since the call read it. Words the learner wrote are never
+ * replaced. A memory that nobody changed since takes the candidate's kind,
+ * which is how a memory the learner wrote gets one, and a situation takes a new
+ * end date.
  */
 const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
   candidate,
@@ -80,7 +85,10 @@ const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
   readonly validUntil: Option.Option<number>;
 }) {
   const mayRewrite = !changed;
-  const rewrites = mayRewrite && !sameWords(memory.text, candidate.text);
+  const rewrites =
+    mayRewrite &&
+    memory.author === "nina" &&
+    !sameWords(memory.text, candidate.text);
   yield* (yield* DatabaseWriter)
     .table("ninaMemories")
     .patch(memory._id, {
@@ -169,7 +177,13 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
     return Option.none();
   }
   const memories = yield* openWith(keys, yield* readMemories(userId));
-  const target = findTarget(memories, candidate);
+  // What the learner wrote is theirs. A candidate that says something else
+  // about it leaves it as it is and becomes a memory of Nina's.
+  const target = Option.filter(
+    findTarget(memories, candidate),
+    (memory) =>
+      memory.author === "nina" || saysSame(memory.text, candidate.text)
+  );
   if (Option.isNone(target)) {
     return yield* createMemory({
       candidate,
@@ -196,11 +210,12 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
  * Writes what one capture call found the learner saying about themself, and
  * returns how many memories it wrote or confirmed, which it also stores in the
  * turn. A candidate that names a known memory, or says what a memory of its
- * kind (or a memory without a kind) already says, confirms that memory. Any
+ * kind (or a memory without a kind) already says, confirms that memory, unless
+ * the learner wrote the memory and the candidate says something else. Any
  * other candidate is a new memory. The model read the message some time ago, so
  * the write first checks what could have changed meanwhile: paused memory, a
  * deleted turn, or a memory the learner removed writes nothing, and a memory
- * changed since keeps its words, its kind and its end date.
+ * written or changed since keeps its words, its kind and its end date.
  */
 export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   readonly candidates: readonly Candidate[];
