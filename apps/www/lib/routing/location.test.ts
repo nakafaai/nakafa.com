@@ -4,7 +4,7 @@ import {
   getLocale,
   getMaterialContextHint,
   getPathname,
-} from "@/lib/utils/browser";
+} from "@/lib/routing/location";
 
 describe("browser utilities", () => {
   beforeEach(() => {
