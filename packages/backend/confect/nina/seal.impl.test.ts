@@ -10,12 +10,15 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { showsText } from "@repo/backend/test/seal";
 import { Array as Arr, Predicate } from "effect";
 
-const sealPlain = Ref.getFunctionReference(refs.internal.nina.seal.sealPlain);
+const sealChats = Ref.getFunctionReference(refs.internal.nina.seal.sealChats);
+const sealSummaries = Ref.getFunctionReference(
+  refs.internal.nina.seal.sealSummaries
+);
 const saveSummary = Ref.getFunctionReference(refs.internal.nina.summaries.save);
 const readSummary = Ref.getFunctionReference(refs.internal.nina.summaries.read);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
-const FIRST_PASS = { chats: 0, summaries: 0 } as const;
+const FIRST_PAGE = { cursor: null } as const;
 const PAGE = 100;
 const ALGEBRA = "Latihan aljabar linear";
 const PHYSICS = "Fisika gerak lurus";
@@ -71,7 +74,10 @@ async function fixture() {
   return { addChat, addSummary, as, chatOf, first, second, snapshot, t };
 }
 
-/** Chats and summaries in every stored form the migration meets. */
+/**
+ * Chats and summaries in every stored form the migration meets, among them a
+ * plain summary whose chat was deleted without the chat cleanup running.
+ */
 async function mixed() {
   const f = await fixture();
   const plain = await f.addChat(f.first, ALGEBRA);
@@ -103,15 +109,15 @@ const bytesOf = (value: string | ArrayBuffer | undefined) =>
     : new Uint8Array(value);
 
 describe("nina/seal", () => {
-  it("seals every plain title and summary under the key of its owner and leaves the rest", async () => {
+  it("seals every plain title under the key of its owner and leaves the rest", async () => {
     const f = await mixed();
     const sealedBefore = bytesOf((await f.chatOf(f.sealed))?.title);
     expect(sealedBefore).toBeDefined();
     expect((await f.snapshot()).keys).toHaveLength(1);
 
-    expect(await f.t.mutation(sealPlain, FIRST_PASS)).toEqual({
-      chats: { next: null, sealed: 2 },
-      summaries: { next: null, sealed: 2 },
+    expect(await f.t.mutation(sealChats, FIRST_PAGE)).toEqual({
+      next: null,
+      sealed: 2,
     });
 
     for (const [chatId, text] of [
@@ -126,12 +132,34 @@ describe("nina/seal", () => {
     // A sealed row is not rewritten, and a chat without a title gets none.
     expect(bytesOf((await f.chatOf(f.sealed))?.title)).toEqual(sealedBefore);
     expect(await f.chatOf(f.untitled)).not.toHaveProperty("title");
+    // The first learner's key was reused and the second learner's was created.
+    expect(Arr.map((await f.snapshot()).keys, (key) => key.userId)).toEqual([
+      f.first.userId,
+      f.second.userId,
+    ]);
+  });
+
+  it("seals every plain summary under the key of its chat owner and deletes the one whose chat is gone", async () => {
+    const f = await mixed();
+    expect((await f.snapshot()).summaries).toHaveLength(4);
+
+    expect(await f.t.mutation(sealSummaries, FIRST_PAGE)).toEqual({
+      next: null,
+      removed: 1,
+      sealed: 2,
+    });
 
     const { keys, summaries } = await f.snapshot();
     const texts = Arr.map(summaries, (summary) => summary.text);
-    // A summary whose chat is gone has no owner key to seal it with.
-    expect(Arr.filter(texts, Predicate.isString)).toEqual([ORPHAN_SUMMARY]);
-    for (const text of [ALGEBRA_SUMMARY, PHYSICS_SUMMARY, CHEMISTRY_SUMMARY]) {
+    // Nothing stays readable, and the summary without a chat is gone.
+    expect(texts).toHaveLength(3);
+    expect(Arr.filter(texts, Predicate.isString)).toEqual([]);
+    for (const text of [
+      ALGEBRA_SUMMARY,
+      PHYSICS_SUMMARY,
+      CHEMISTRY_SUMMARY,
+      ORPHAN_SUMMARY,
+    ]) {
       expect(Arr.some(texts, (stored) => showsText(stored, text))).toBe(false);
     }
     // The first learner's key was reused and the second learner's was created.
@@ -143,7 +171,8 @@ describe("nina/seal", () => {
 
   it("opens what it sealed for the learner who owns the chat", async () => {
     const f = await mixed();
-    await f.t.mutation(sealPlain, FIRST_PASS);
+    await f.t.mutation(sealChats, FIRST_PAGE);
+    await f.t.mutation(sealSummaries, FIRST_PAGE);
     const getChat = api.chats.queries.getChat;
     expect(
       await f.as(f.first).query(getChat, { chatId: f.plain })
@@ -172,18 +201,24 @@ describe("nina/seal", () => {
     ).rejects.toThrow("FORBIDDEN");
   });
 
-  it("seals nothing on a second pass and leaves every row as it was", async () => {
+  it("seals and removes nothing on a second pass and leaves every row as it was", async () => {
     const f = await mixed();
-    await f.t.mutation(sealPlain, FIRST_PASS);
+    await f.t.mutation(sealChats, FIRST_PAGE);
+    await f.t.mutation(sealSummaries, FIRST_PAGE);
     const sealed = await f.snapshot();
-    expect(await f.t.mutation(sealPlain, FIRST_PASS)).toEqual({
-      chats: { next: null, sealed: 0 },
-      summaries: { next: null, sealed: 0 },
+    expect(await f.t.mutation(sealChats, FIRST_PAGE)).toEqual({
+      next: null,
+      sealed: 0,
+    });
+    expect(await f.t.mutation(sealSummaries, FIRST_PAGE)).toEqual({
+      next: null,
+      removed: 0,
+      sealed: 0,
     });
     expect(await f.snapshot()).toEqual(sealed);
   });
 
-  it("scans one page of each table and resumes from the cursor it returns", async () => {
+  it("reads one page of each table and resumes from the cursor it returns", async () => {
     const f = await fixture();
     await f.t.mutation(async (ctx) => {
       for (let index = 0; index <= PAGE; index += 1) {
@@ -204,28 +239,31 @@ describe("nina/seal", () => {
         });
       }
     });
-    const rows = await f.snapshot();
-    expect(rows.chats).toHaveLength(PAGE + 1);
+    expect((await f.snapshot()).chats).toHaveLength(PAGE + 1);
 
-    const page = await f.t.mutation(sealPlain, FIRST_PASS);
-    expect(page.chats.sealed).toBe(PAGE);
-    expect(page.summaries.sealed).toBe(PAGE);
-    expect(page.chats.next).toBe(rows.chats[PAGE - 1]?._creationTime);
-    expect(page.summaries.next).toBe(rows.summaries[PAGE - 1]?._creationTime);
+    const chats = await f.t.mutation(sealChats, FIRST_PAGE);
+    expect(chats.sealed).toBe(PAGE);
+    expect(chats.next).not.toBeNull();
+    const summaries = await f.t.mutation(sealSummaries, FIRST_PAGE);
+    expect(summaries.sealed).toBe(PAGE);
+    expect(summaries.next).not.toBeNull();
     const midway = await f.snapshot();
     expect(
       Arr.filter(midway.chats, (chat) => Predicate.isString(chat.title))
     ).toHaveLength(1);
-
     expect(
-      await f.t.mutation(sealPlain, {
-        chats: page.chats.next,
-        summaries: page.summaries.next,
-      })
-    ).toEqual({
-      chats: { next: null, sealed: 1 },
-      summaries: { next: null, sealed: 1 },
+      Arr.filter(midway.summaries, (summary) =>
+        Predicate.isString(summary.text)
+      )
+    ).toHaveLength(1);
+
+    expect(await f.t.mutation(sealChats, { cursor: chats.next })).toEqual({
+      next: null,
+      sealed: 1,
     });
+    expect(
+      await f.t.mutation(sealSummaries, { cursor: summaries.next })
+    ).toEqual({ next: null, removed: 0, sealed: 1 });
     const done = await f.snapshot();
     expect(
       Arr.filter(done.chats, (chat) => Predicate.isString(chat.title))
@@ -235,28 +273,5 @@ describe("nina/seal", () => {
     ).toEqual([]);
     // One key serves every row of the learner.
     expect(done.keys).toHaveLength(1);
-  });
-
-  it("leaves a table alone when its cursor is null", async () => {
-    const f = await mixed();
-    expect(
-      await f.t.mutation(sealPlain, { chats: null, summaries: 0 })
-    ).toEqual({
-      chats: { next: null, sealed: 0 },
-      summaries: { next: null, sealed: 2 },
-    });
-    const { chats } = await f.snapshot();
-    expect(
-      Arr.filter(
-        Arr.map(chats, (chat) => chat.title),
-        Predicate.isString
-      )
-    ).toEqual([ALGEBRA, CHEMISTRY]);
-    expect(
-      await f.t.mutation(sealPlain, { chats: 0, summaries: null })
-    ).toEqual({
-      chats: { next: null, sealed: 2 },
-      summaries: { next: null, sealed: 0 },
-    });
   });
 });
