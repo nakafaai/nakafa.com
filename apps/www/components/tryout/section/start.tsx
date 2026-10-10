@@ -6,10 +6,12 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 interface StartSectionButtonProps {
   attemptId: Id<"tryoutAttempts">;
@@ -22,6 +24,7 @@ export function StartSectionButton({
   sectionKey,
 }: StartSectionButtonProps) {
   const startSection = useMutation(tryouts.mutations.sections.start);
+  const convex = useConvex();
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
 
@@ -33,19 +36,23 @@ export function StartSectionButton({
 
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise(() =>
-          startSection({
-            attemptId,
-            sectionKey,
-          })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.tap(() =>
-            Effect.sync(() => {
-              toast.success(tTryouts("start-part-success"), {
-                position: "bottom-center",
-              });
-            })
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            Effect.tryPromise(() =>
+              startSection({
+                attemptId,
+                sectionKey,
+              })
+            ).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tap(() =>
+                Effect.sync(() => {
+                  toast.success(tTryouts("start-part-success"), {
+                    position: "bottom-center",
+                  });
+                })
+              )
+            )
           ),
           Effect.catch(() =>
             Effect.sync(() => {

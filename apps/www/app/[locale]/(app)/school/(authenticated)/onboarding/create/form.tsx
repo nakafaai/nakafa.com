@@ -22,6 +22,7 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
+import { useConvex } from "convex/react";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ import {
   schoolTypeSchema,
 } from "@/app/[locale]/(app)/school/(authenticated)/onboarding/create/schema";
 import { reportClientException } from "@/lib/analytics/client";
+import { requireConvexOnline } from "@/lib/convex/online";
 /** Render the onboarding form for creating a new school. */
 export function SchoolOnboardingCreateForm() {
   const t = useTranslations("School.Onboarding");
@@ -40,6 +42,7 @@ export function SchoolOnboardingCreateForm() {
   }));
   const router = useRouter();
   const createSchool = useMutation(schools.mutations.createSchool);
+  const convex = useConvex();
   const form = useForm({
     defaultValues: schoolCreateDefaultValues,
     validators: {
@@ -47,24 +50,27 @@ export function SchoolOnboardingCreateForm() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(() => createSchool(value)).pipe(
-          Effect.flatMap(Effect.fromResult),
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            Effect.tryPromise(() => createSchool(value)).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tapError((error) =>
+                reportClientException(error, {
+                  source: "school-onboarding-create",
+                })
+              )
+            )
+          ),
           Effect.tap(({ slug }) =>
             Effect.sync(() => {
               router.push(`/school/${slug}`);
             })
           ),
           Effect.matchEffect({
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "school-onboarding-create",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(t("school-creation-failed"));
-                  })
-                )
-              ),
+            onFailure: () =>
+              Effect.sync(() => {
+                toast.error(t("school-creation-failed"));
+              }),
             onSuccess: () => Effect.void,
           })
         )

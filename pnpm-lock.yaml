@@ -443,8 +443,8 @@ importers:
         specifier: 'catalog:'
         version: 5.0.3(vitest@5.0.3)
       afdocs:
-        specifier: 0.20.0
-        version: 0.20.0
+        specifier: 0.22.2
+        version: 0.22.2(supports-color@7.2.0)
       jsdom:
         specifier: ^30.1.2
         version: 30.1.2(@noble/hashes@2.3.0)
@@ -4110,8 +4110,8 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  afdocs@0.20.0:
-    resolution: {integrity: sha512-jq+Sj4kDVJfzKb2+T+FN3BT8pWWS54m+F1pMvjyBTBvVLUw5wF8QHcd1FWyyuZgTls9Wg8rvqMNzyNMJF0qqmA==}
+  afdocs@0.22.2:
+    resolution: {integrity: sha512-00JZYWOjSJmRFdesDxW5zuGHHdGTE6/rHmEZK+W32guZQ5XOUbLqL5rEAOHHctgGgqDo2x6pwqc35yteWqtkJg==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -10307,15 +10307,20 @@ snapshots:
 
   acorn@8.19.0: {}
 
-  afdocs@0.20.0:
+  afdocs@0.22.2(supports-color@7.2.0):
     dependencies:
       chalk: 5.6.2
       commander: 13.1.0
+      mdast-util-from-markdown: 2.1.0(supports-color@7.2.0)
+      mdast-util-gfm-table: 2.0.0(supports-color@7.2.0)
+      micromark-extension-gfm-table: 2.1.2
       node-html-parser: 7.1.0
       picomatch: 4.0.7
       turndown: 7.2.4
       turndown-plugin-gfm: 1.0.2
       yaml: 2.9.1
+    transitivePeerDependencies:
+      - supports-color
 
   agent-base@6.0.2(supports-color@7.2.0):
     dependencies:
