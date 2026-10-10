@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { CHAT_SEARCH_LIMIT } from "@repo/backend/confect/chats/list";
+import { CHAT_SEARCH_WINDOW } from "@repo/backend/confect/chats/list";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import {
   createConvexTestWithBetterAuth,
@@ -135,10 +135,10 @@ describe("chat lists with sealed titles", () => {
     expect(titles(result.page)).toEqual([LEGACY, BOOLEAN, ALGEBRA]);
   });
 
-  it("opens only the newest chats for a search, so its work stays bounded", async () => {
+  it("reads a bounded window per search page and reaches older chats through the cursor", async () => {
     const f = await fixture();
     await f.t.mutation(async (ctx) => {
-      for (let index = 0; index < CHAT_SEARCH_LIMIT; index += 1) {
+      for (let index = 0; index < CHAT_SEARCH_WINDOW; index += 1) {
         await ctx.db.insert("chats", {
           threadId: "fixture-thread",
           title: `Obrolan ${index}`,
@@ -149,27 +149,36 @@ describe("chat lists with sealed titles", () => {
         });
       }
     });
-    const older = await f.asOwner.query(api.chats.queries.getOwnChats, {
+    const newest = await f.asOwner.query(api.chats.queries.getOwnChats, {
+      paginationOpts,
+      q: `Obrolan ${CHAT_SEARCH_WINDOW - 1}`,
+    });
+    expect(titles(newest.page)).toEqual([`Obrolan ${CHAT_SEARCH_WINDOW - 1}`]);
+    expect(newest.isDone).toBe(false);
+    // The four older chats lie past the first window: the page says so.
+    const first = await f.asOwner.query(api.chats.queries.getOwnChats, {
       paginationOpts,
       q: "aljabar",
     });
-    expect(older.page).toEqual([]);
-    const newest = await f.asOwner.query(api.chats.queries.getOwnChats, {
-      paginationOpts,
-      q: `Obrolan ${CHAT_SEARCH_LIMIT - 1}`,
+    expect(first.page).toEqual([]);
+    expect(first.isDone).toBe(false);
+    expect(first.continueCursor).not.toBe("");
+    const second = await f.asOwner.query(api.chats.queries.getOwnChats, {
+      paginationOpts: { cursor: first.continueCursor, numItems: 10 },
+      q: "aljabar",
     });
-    expect(titles(newest.page)).toEqual([`Obrolan ${CHAT_SEARCH_LIMIT - 1}`]);
+    expect(titles(second.page)).toEqual([BOOLEAN, ALGEBRA]);
+    expect(second.isDone).toBe(true);
   });
 
-  it("ends a search with one page of the requested size", async () => {
+  it("returns every match of a window whatever page size was asked, and ends at the oldest chat", async () => {
     const f = await fixture();
     const result = await f.asOwner.query(api.chats.queries.getOwnChats, {
       paginationOpts: { cursor: null, numItems: 1 },
       q: "aljabar",
     });
-    expect(titles(result.page)).toEqual([BOOLEAN]);
+    expect(titles(result.page)).toEqual([BOOLEAN, ALGEBRA]);
     expect(result.isDone).toBe(true);
-    expect(result.continueCursor).toBe("");
   });
 
   it("searches only the titles of the learner who asks", async () => {
