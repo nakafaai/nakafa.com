@@ -23,7 +23,7 @@ import {
 } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
-/** How long a removed memory can still be brought back. */
+/** How long the toast of a deleted memory offers an Undo. */
 const UNDO = Duration.seconds(5);
 
 /**
@@ -50,9 +50,9 @@ function patch(
 export function useMemoryActions() {
   const t = useTranslations("Memory");
   const other = useTranslations("Common")("action-error");
-  const hide = useMemoryPage((state) => state.hide);
+
   const reopen = useMemoryPage((state) => state.reopen);
-  const restore = useMemoryPage((state) => state.restore);
+
   const addDraft = useMutation(nina.memory.add);
   const editDraft = useMutation(nina.memory.edit);
   const removeById = useMutation(nina.memory.remove).withOptimisticUpdate(
@@ -128,29 +128,20 @@ export function useMemoryActions() {
   }
 
   /**
-   * Hides a memory at once and offers an Undo. The memory is deleted when the
-   * toast closes without one.
+   * Deletes a memory at once, on the page and on the server, so that closing
+   * the page can never leave it stored. The toast offers an Undo, which writes
+   * the words back as the learner's own memory: the chats the deleted memory
+   * came from and the end date of a situation do not come back.
    */
   function remove(memory: Memory) {
-    hide(memory.id);
-
-    /** Deletes the memory, unless an Undo brought it back or it is gone. */
-    const claim = () => {
-      if (restore(memory.id)) {
-        settle(() => removeById({ id: memory.id }));
-      }
-    };
+    settle(() => removeById({ id: memory.id }));
 
     toast(t("deleted"), {
       action: {
         label: t("undo"),
-        onClick: () => {
-          restore(memory.id);
-        },
+        onClick: () => add({ kind: memory.kind, text: memory.text }),
       },
       duration: Duration.toMillis(UNDO),
-      onAutoClose: claim,
-      onDismiss: claim,
     });
   }
 

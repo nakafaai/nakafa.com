@@ -6,7 +6,7 @@ import { createMemoryStore } from "@/components/user/settings/memory/store";
 const memoryId = Schema.decodeUnknownSync(Id("ninaMemories"));
 
 describe("memory page store", () => {
-  it("starts with nothing open, no search and nothing hidden", () => {
+  it("starts with nothing open and no search", () => {
     const { getState } = createMemoryStore();
 
     expect(getState()).toMatchObject({
@@ -14,7 +14,6 @@ describe("memory page store", () => {
       draft: null,
       editing: null,
       query: "",
-      removed: [],
     });
   });
 
@@ -135,44 +134,6 @@ describe("memory page store", () => {
       store.getState().reopen(memoryId("a"), words);
       store.getState().openNew();
       expect(store.getState().draft).toBeNull();
-    });
-  });
-
-  describe("removals that wait for an Undo", () => {
-    it("hides a memory once, however often it is hidden", () => {
-      const store = createMemoryStore();
-
-      store.getState().hide(memoryId("a"));
-      store.getState().hide(memoryId("a"));
-      store.getState().hide(memoryId("b"));
-
-      expect(store.getState().removed).toEqual([memoryId("a"), memoryId("b")]);
-    });
-
-    it("brings a hidden memory back and says it was hidden", () => {
-      const store = createMemoryStore();
-
-      store.getState().hide(memoryId("a"));
-      store.getState().hide(memoryId("b"));
-
-      expect(store.getState().restore(memoryId("a"))).toBe(true);
-      expect(store.getState().removed).toEqual([memoryId("b")]);
-    });
-
-    it("lets only the first of two claims act on a memory", () => {
-      const store = createMemoryStore();
-
-      store.getState().hide(memoryId("a"));
-
-      expect(store.getState().restore(memoryId("a"))).toBe(true);
-      expect(store.getState().restore(memoryId("a"))).toBe(false);
-    });
-
-    it("says a memory that was never hidden was not hidden", () => {
-      const store = createMemoryStore();
-
-      expect(store.getState().restore(memoryId("a"))).toBe(false);
-      expect(store.getState().removed).toEqual([]);
     });
   });
 });
