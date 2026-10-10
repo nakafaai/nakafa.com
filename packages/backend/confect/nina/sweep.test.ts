@@ -20,6 +20,7 @@ const PAGE = 50;
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const sweep = Ref.getFunctionReference(refs.internal.nina.lifecycle.sweep);
+const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 
 async function fixture() {
   const seeded = await createNinaTest({ now: NOW });
@@ -38,7 +39,9 @@ async function fixture() {
   /** The arguments of every job the function has queued, oldest first. */
   const queued = async (name: string) =>
     pipe(
-      await t.query((ctx) => ctx.db.system.query("_scheduled_functions").collect()),
+      await t.query((ctx) =>
+        ctx.db.system.query("_scheduled_functions").collect()
+      ),
       Arr.filter((job) => job.name === name),
       Arr.map((job) => job.args[0])
     );
@@ -83,9 +86,9 @@ describe("Nina turn sweep", () => {
       reason: "response-timeout",
     });
     expect(state.user?.credits).toBe(10);
-    expect(Arr.filter(state.ledger, (row) => row.type === "refund")).toHaveLength(
-      1
-    );
+    expect(
+      Arr.filter(state.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
     expect(state.chat?.activeTurnId).toBeUndefined();
     expect(state.messages.page[0]).toMatchObject({
       message: { role: "user" },
@@ -166,7 +169,9 @@ describe("Nina turn sweep", () => {
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
     expect(state.user?.credits).toBe(5);
-    expect(Arr.filter(state.ledger, (row) => row.type === "refund")).toEqual([]);
+    expect(Arr.filter(state.ledger, (row) => row.type === "refund")).toEqual(
+      []
+    );
     expect(await f.queued("nina/response:present")).toEqual([
       { turnId: f.turnId },
     ]);
@@ -200,9 +205,9 @@ describe("Nina turn sweep", () => {
     await f.t.mutation(sweep, next);
     const settled = await f.queued("nina/lifecycle:recover");
     expect(settled).toHaveLength(PAGE + 1);
-    expect(Arr.dedupeWith(settled, (a, b) => a.turnId === b.turnId)).toHaveLength(
-      PAGE + 1
-    );
+    expect(
+      Arr.dedupeWith(settled, (a, b) => a.turnId === b.turnId)
+    ).toHaveLength(PAGE + 1);
     expect(await f.queued("nina/lifecycle:sweep")).toHaveLength(1);
   });
 
@@ -232,6 +237,36 @@ describe("Nina turn sweep", () => {
     expect(state.chat?.activeTurnId).toBeUndefined();
   });
 
+  it("settles a stopped turn whose run never exited as cancelled, with no failure event", async () => {
+    const f = await fixture();
+    await f.t.mutation((ctx) =>
+      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
+    );
+    await f.t.mutation(claim, { turnId: f.turnId });
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    expect((await f.inspect()).turn?.state.status).toBe("running");
+
+    const overdue = NOW + DEADLINE + 1;
+    vi.setSystemTime(overdue);
+    await f.t.mutation(sweep, {});
+    await f.settle();
+
+    const state = await f.inspect();
+    expect(state.turn?.state).toEqual({
+      status: "cancelled",
+      finishedAt: overdue,
+    });
+    expect(state.user?.credits).toBe(10);
+    expect(state.chat?.activeTurnId).toBeUndefined();
+    const events = Arr.filter(
+      await f.t.query((ctx) =>
+        ctx.db.system.query("_scheduled_functions").collect()
+      ),
+      (job) => job.name.includes("deliverProductEvent")
+    );
+    expect(events).toEqual([]);
+  });
+
   it("settles once however many sweeps and late results reach the turn", async () => {
     const f = await fixture();
     await f.t.mutation((ctx) =>
@@ -255,9 +290,9 @@ describe("Nina turn sweep", () => {
       reason: "response-timeout",
     });
     expect(state.user?.credits).toBe(10);
-    expect(Arr.filter(state.ledger, (row) => row.type === "refund")).toHaveLength(
-      1
-    );
+    expect(
+      Arr.filter(state.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
     const events = Arr.filter(
       await f.t.query((ctx) =>
         ctx.db.system.query("_scheduled_functions").collect()

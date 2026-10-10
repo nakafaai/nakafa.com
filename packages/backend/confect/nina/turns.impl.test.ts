@@ -165,6 +165,13 @@ describe("native Nina admission", () => {
     expect(
       Arr.filter(state.schedules, (row) => row.name === "nina/response:run")
     ).toHaveLength(1);
+    // The recovery sweep covers a stuck turn, so admission schedules no check.
+    expect(
+      Arr.filter(
+        state.schedules,
+        (row) => row.name === "nina/lifecycle:recover"
+      )
+    ).toEqual([]);
     expect(state.messages.page).toHaveLength(1);
   });
 

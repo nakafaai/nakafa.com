@@ -4,7 +4,7 @@ import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
 import { Effect } from "effect";
 
 /** The most turns one learner may have queued or running at once. */
-export const OPEN_TURN_LIMIT = 2;
+const OPEN_TURN_LIMIT = 2;
 
 /**
  * Refuses a learner who already has the most open turns, with the rejection

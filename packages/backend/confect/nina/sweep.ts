@@ -58,11 +58,10 @@ export const sweepTurns = Effect.fn("nina.sweep")(function* (
   yield* Effect.forEach(
     overdue,
     (turn) =>
-      scheduler.runAfter(
-        Duration.zero,
-        refs.internal.nina.lifecycle.recover,
-        { turnId: turn._id, failure: "response-timeout" }
-      ),
+      scheduler.runAfter(Duration.zero, refs.internal.nina.lifecycle.recover, {
+        turnId: turn._id,
+        failure: "response-timeout",
+      }),
     { discard: true }
   );
   if (!page.isDone) {

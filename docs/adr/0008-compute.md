@@ -23,15 +23,33 @@ Successful persistence closes the hold and completes its existing ledger entry.
 Failure refunds it at most once. A refund can restore only the allowance from
 which the hold was taken: both the reset timestamp and the plan grant identity
 must still match. Upgrades, downgrades, account deletion, and calendar resets
-cannot turn an old hold into extra credits. A turn still queued or running
-fifteen minutes after admission settles as failed and refunds, beyond the
-generation action's seven-minute stream deadline. The native scheduled recovery
-is intentionally retained even when it becomes an idempotent no-op.
+cannot turn an old hold into extra credits.
+
+A recovery sweep settles a turn that cannot finish on its own. A turn still
+queued or running past its deadline settles as failed with `response-timeout`
+and refunds. The deadline is the chat call's total budget in
+`confect/gateway/purpose.ts` plus one minute, counted from the start of the
+run, or from admission for a turn that never started. A cron every five minutes
+finds these turns through the `by_phase` index and settles each one in its own
+scheduled mutation, through the settlement a failed run uses. One turn that
+cannot settle never blocks the others, and the next sweep tries it again.
+Admission schedules no per-turn check. Only an active turn settles, so a late
+result, a second sweep, or a cancel that races a completion changes nothing and
+never refunds twice.
+
+A learner may have two turns queued or running at once. A third is refused with
+`RATE_LIMITED` before any credit is held.
 
 The scheduled generation action owns one stream deadline with time left for
-settlement within Convex's action limit. Cancellation settles the turn and
-aborts its Agent stream, which propagates through the main AI SDK stream,
-specialist agents, tool repair, and abortable HTTP clients. Titles, follow-up
+settlement within Convex's action limit. Cancelling a queued turn settles it at
+once, since no run exists. Cancelling a running turn cuts off its Agent stream,
+marks its prompt failed, and records the request. The refund, the state change,
+and the chat unlock wait until the run has exited, so a stream that may still be
+running is never paid back. The run checks its turn every second and aborts its
+generation when the turn was stopped or settled elsewhere, which also stops a
+silent provider call. A saved answer wins a race with a cancel and settles as
+complete. The abort propagates through the main AI SDK stream, specialist
+agents, tool repair, and abortable HTTP clients. Titles, follow-up
 suggestions, the rolling summary, and learner memory curation run later,
 concurrently, in a separate action with their own deadlines, so optional work
 never discards a completed answer. External
