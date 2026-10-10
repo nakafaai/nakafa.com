@@ -14,9 +14,20 @@ import {
   SheetHeader as SheetHeaderPrimitive,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
+import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { Activity } from "react";
 import { useAi } from "@/components/ai/context";
-import { SheetHistory } from "@/components/ai/sheet/history";
+import { useViewer } from "@/lib/identity/client";
+
+/** The chat list and its query load with the sheet's body, not with the shell. */
+const SheetHistory = dynamic(
+  () =>
+    import("@/components/ai/sheet/history").then(
+      (module) => module.SheetHistory
+    ),
+  { loading: () => null, ssr: false }
+);
 
 interface Props {
   expanded: boolean;
@@ -28,6 +39,7 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const setOpen = useAi((state) => state.setOpen);
+  const t = useTranslations();
 
   return (
     <SheetHeaderPrimitive className="border-b p-3">
@@ -47,25 +59,50 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
               variant="ghost"
             >
               <HugeIcons icon={Add01Icon} />
-              <span className="sr-only">New Chat</span>
+              <span className="sr-only">{t("Ai.new-chat")}</span>
             </Button>
           </Activity>
-          <SheetHistory />
-          <Button onClick={onResizeToggle} size="icon-sm" variant="ghost">
+          <HistorySlot />
+          <Button
+            className="hidden sm:inline-flex"
+            onClick={onResizeToggle}
+            size="icon-sm"
+            variant="ghost"
+          >
             <HugeIcons
               icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
             />
-            <span className="sr-only">Resize</span>
+            <span className="sr-only">
+              {t(expanded ? "Ai.narrower" : "Ai.wider")}
+            </span>
           </Button>
           <Button onClick={() => setOpen(false)} size="icon-sm" variant="ghost">
             <HugeIcons icon={Cancel01Icon} />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t("Common.close")}</span>
           </Button>
         </div>
       </SheetTitle>
       <SheetDescription className="sr-only">
-        Nina is a chatbot that can help you with your questions.
+        {t("Ai.sheet-description")}
       </SheetDescription>
     </SheetHeaderPrimitive>
+  );
+}
+
+/**
+ * Holds the history button's place for a signed-in learner, so the header
+ * does not shift when the button's code arrives.
+ */
+function HistorySlot() {
+  const signedIn = useViewer(
+    (state) => !state.isPending && state.viewer !== null
+  );
+  if (!signedIn) {
+    return null;
+  }
+  return (
+    <span className="inline-flex size-8">
+      <SheetHistory />
+    </span>
   );
 }

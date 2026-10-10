@@ -24,22 +24,17 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context";
 import { Authenticated } from "@/components/auth/gate";
-import { useViewer } from "@/lib/identity/client";
 
-/** Opens the recent Nina chat list when a user is signed in. */
+/** Opens the recent Nina chat list. The header renders it for a signed-in learner. */
 export function SheetHistory() {
-  const isPending = useViewer((state) => state.isPending);
-  const viewer = useViewer((state) => state.viewer);
-  if (isPending || viewer === null) {
-    return null;
-  }
+  const t = useTranslations("Ai");
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         render={
           <Button size="icon-sm" variant="ghost">
             <HugeIcons icon={ChatSearch01Icon} />
-            <span className="sr-only">History</span>
+            <span className="sr-only">{t("chat-history")}</span>
           </Button>
         }
       />

@@ -4,15 +4,9 @@ import { StarsIcon } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useNinaAsk } from "@/components/ai/ask";
-import { preloadAiSheet } from "@/components/ai/sheet/module";
-
-/** Warms Nina before the learner finishes the tap. */
-function preloadOnIntent() {
-  Effect.runFork(preloadAiSheet());
-}
+import { useAi } from "@/components/ai/context";
 
 /** Asks Nina about one reviewed question; the backend reads it in full. */
 export function TryoutAskButton({
@@ -25,6 +19,7 @@ export function TryoutAskButton({
   readonly questionOrder: number;
 }) {
   const ask = useNinaAsk();
+  const warm = useAi((state) => state.warm);
   const tAi = useTranslations("Ai");
   const tTryouts = useTranslations("Tryouts");
 
@@ -36,9 +31,9 @@ export function TryoutAskButton({
           text: tTryouts("ask-nina-prompt", { number: questionOrder }),
         })
       }
-      onFocus={preloadOnIntent}
-      onMouseEnter={preloadOnIntent}
-      onTouchStart={preloadOnIntent}
+      onFocus={warm}
+      onMouseEnter={warm}
+      onPointerDown={warm}
       type="button"
       variant="outline"
     >

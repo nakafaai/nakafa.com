@@ -11,6 +11,6 @@ export const initialState = {
   model: defaultModel,
   open: false,
   openingChat: null,
-  sheetActivated: false,
   text: "",
+  warmed: false,
 } satisfies AiState;

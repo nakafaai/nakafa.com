@@ -10,7 +10,7 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
-import { DeferredAiSheetOpen } from "@/components/ai/sheet/trigger";
+import { SheetEntry } from "@/components/ai/sheet/entry";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
@@ -147,7 +147,7 @@ async function ResolvedSurahPage({
       locale={locale}
       surah={surah}
       surahNumber={surahNumber}
-      toolbar={<DeferredAiSheetOpen key={`assistant:${surah}`} />}
+      toolbar={<SheetEntry key={`assistant:${surah}`} />}
     />
   );
 }

@@ -10,8 +10,11 @@ export const DRAWER_BAR = '[data-slot="drawer-bar"]';
 export const DRAWER_TITLE = '[data-slot="drawer-title"]';
 /** The content panel of a drawer, below its title. */
 export const DRAWER_PANEL = '[data-slot="drawer-panel"]';
-/** The popup of a sheet, which a learner opens from the side of a page. */
-export const SHEET_POPUP = '[data-slot="sheet-popup"]';
+/**
+ * The popup of an open sheet, which a learner opens from the side of a page.
+ * Nina's sheet stays mounted while closed, so only the open one is selected.
+ */
+export const SHEET_POPUP = '[data-slot="sheet-popup"][data-open]';
 /** A deferred 3D line scene inside a lesson card. */
 export const LINE_SCENE = '[data-slot="line-scene"]';
 /** The controls below a 3D scene: its grid, its rotation, and its readout. */

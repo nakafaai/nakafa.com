@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { DeferredAiSheet } from "@/components/ai/sheet/deferred";
+import { AiSheet } from "@/components/ai/sheet/frame";
 import { DeferredSearchCommand } from "@/components/search/command/deferred";
 import { NavExplore } from "@/components/sidebar/explore";
 import { Header } from "@/components/sidebar/header/bar";
@@ -33,7 +33,7 @@ export function AppShell({
         <>
           <Header />
           <DeferredSearchCommand articleNavigation={articleNavigation} />
-          <DeferredAiSheet />
+          <AiSheet />
         </>
       }
       sidebar={
