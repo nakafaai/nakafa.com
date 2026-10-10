@@ -1,7 +1,7 @@
 import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { type DynamicToolUIPart, getToolName, type ToolUIPart } from "ai";
-import { Array as Arr, Result, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 /**
  * Validates one native Agent invocation at its rendering seam and never infers
@@ -25,10 +25,6 @@ export function readInvocation(
     capability: Schema.is(LearningCapabilityNameSchema)(name)
       ? name
       : ("unknown" as const),
-    failures: Arr.filter(
-      artifacts,
-      (artifact) => artifact.data.status === "error"
-    ).length,
     state: readState(part, settled, output),
   };
 }
