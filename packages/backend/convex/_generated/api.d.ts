@@ -9542,6 +9542,20 @@ export declare const internal: {
         null
       >;
     };
+    seal: {
+      sealChats: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null },
+        { next: string | null; sealed: number }
+      >;
+      sealSummaries: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null },
+        { next: string | null; removed: number; sealed: number }
+      >;
+    };
     summaries: {
       anchor: FunctionReference<
         "query",
