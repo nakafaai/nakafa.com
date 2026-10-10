@@ -22,7 +22,9 @@ import { MemoryRow } from "@/components/user/settings/memory/row";
 
 /**
  * The body of the list: the memories that match the search, newest first, in
- * a box that scrolls once they are many. With nothing to list it shows why.
+ * a box that scrolls once they are many. The box is a column, so the list
+ * inside it can never grow past the box and over the foot of the card. With
+ * nothing to list it shows why.
  */
 export function MemoryRows() {
   const list = useMemory((current) => current);
@@ -32,7 +34,7 @@ export function MemoryRows() {
   return (
     <CardContent className="border-t px-0">
       {shown.length > 0 ? (
-        <ScrollArea className="h-auto max-h-96" scrollFade>
+        <ScrollArea className="flex h-auto max-h-96 flex-col" scrollFade>
           <ul className="divide-y">
             {Arr.map(shown, (memory) => (
               <MemoryRow key={memory.id} memory={memory} />

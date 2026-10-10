@@ -9,14 +9,15 @@ import { MemoryFacts } from "@/components/user/settings/memory/facts";
 import {
   isPending,
   type Memory,
-  previewText,
+  memoryName,
 } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
 /**
- * One memory in the list: its words and its facts, each on one line. A press
- * opens it in the editor, where the whole text is. The actions show while the
- * pointer or the focus is on the row, and always on a touch screen.
+ * One memory in the list: its title, or its words when it has none, and its
+ * facts, each on one line. A press opens it in the editor, where the whole
+ * text is. The actions show while the pointer or the focus is on the row, and
+ * always on a touch screen.
  */
 export function MemoryRow({ memory }: { memory: Memory }) {
   const t = useTranslations("Memory");
@@ -34,12 +35,12 @@ export function MemoryRow({ memory }: { memory: Memory }) {
       data-selected={selected ? "" : undefined}
     >
       <button
-        className="flex min-w-0 flex-1 cursor-pointer flex-col gap-0.5 py-3 ps-(--card-spacing) text-start outline-none disabled:cursor-default"
+        className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 py-4 ps-(--card-spacing) text-start outline-none disabled:cursor-default"
         disabled={waiting}
         onClick={() => openEdit(memory.id)}
         type="button"
       >
-        <span className="truncate text-sm">{previewText(memory.text)}</span>
+        <span className="truncate text-sm">{memoryName(memory)}</span>
         <span className="truncate text-muted-foreground text-xs">
           <MemoryFacts memory={memory} />
         </span>

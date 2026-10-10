@@ -1,9 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import {
-  MEMORY_TEXT_LIMIT,
-  type NinaMemoryList,
-} from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, Option, Schema, String as Str } from "effect";
+import type { NinaMemoryList } from "@repo/backend/confect/nina/memory.spec";
+import { Array as Arr, Option, Schema, String as Str, Struct } from "effect";
 
 /** What the Memory page lists: every memory, newest first, and whether memory is paused. */
 export type MemoryList = typeof NinaMemoryList.Type;
@@ -11,8 +8,11 @@ export type MemoryList = typeof NinaMemoryList.Type;
 /** One memory on the Memory page. */
 export type Memory = MemoryList["memories"][number];
 
-/** What the learner writes for one memory. */
-export type MemoryDraft = Pick<Memory, "text">;
+/**
+ * What the editor holds of one memory: its title and its words, as the learner
+ * typed them. An empty title means the memory has none.
+ */
+export type MemoryDraft = Required<Pick<Memory, "text" | "title">>;
 
 /**
  * Starts the id of a memory the server has not stored yet. A stored id never
@@ -32,8 +32,41 @@ export function isPending(memory: Memory) {
   return Str.startsWith(PENDING_PREFIX)(memory.id);
 }
 
+/** The title and the words of a memory, or none of either for a new one. */
+export function draftOf(memory: Memory | undefined): MemoryDraft {
+  return { text: memory?.text ?? "", title: memory?.title ?? "" };
+}
+
+/** Whether nothing is written. A memory needs a title or words. */
+export function isBlank(draft: MemoryDraft) {
+  return (
+    Str.isEmpty(Str.trim(draft.title)) && Str.isEmpty(Str.trim(draft.text))
+  );
+}
+
+/** Whether two drafts say the same once the space around them is gone. */
+export function sameDraft(one: MemoryDraft, other: MemoryDraft) {
+  return (
+    Str.trim(one.title) === Str.trim(other.title) &&
+    Str.trim(one.text) === Str.trim(other.text)
+  );
+}
+
 /**
- * Builds the memory the page shows for text the learner just wrote, until the
+ * What the server takes for a draft: the words without the space around them,
+ * and a title only when one is written.
+ */
+export function draftArgs(draft: MemoryDraft) {
+  const title = Str.trim(draft.title);
+
+  return {
+    text: Str.trim(draft.text),
+    ...(Str.isEmpty(title) ? {} : { title }),
+  };
+}
+
+/**
+ * Builds the memory the page shows for what the learner just wrote, until the
  * server answers with the stored one. A memory the learner wrote leads the
  * next prompt, so it is in use.
  */
@@ -48,8 +81,7 @@ export function learnerMemory(
     createdAt: now,
     id,
     inUse: true,
-    sources: 0,
-    text: draft.text,
+    ...draftArgs(draft),
   };
 }
 
@@ -59,32 +91,33 @@ export function addMemory(list: MemoryList, memory: Memory): MemoryList {
 }
 
 /**
- * Rewrites one memory the way the server does: the learner becomes its author
- * and its confirmation moves to `now`, which puts it first. A memory the list
- * does not hold leaves it unchanged.
+ * Rewrites one memory the way the server does: it takes the draft's title and
+ * words, the learner becomes its author, and its confirmation moves to `now`,
+ * which puts it first. A memory the list does not hold leaves it unchanged.
  */
 export function editMemory(
   list: MemoryList,
-  edit: MemoryDraft & Pick<Memory, "id">,
+  id: Memory["id"],
+  draft: MemoryDraft,
   now: number
 ): MemoryList {
-  const found = Arr.findFirst(list.memories, ({ id }) => id === edit.id);
+  const found = Arr.findFirst(list.memories, (memory) => memory.id === id);
 
   if (Option.isNone(found)) {
     return list;
   }
 
   const edited: Memory = {
-    ...found.value,
+    ...Struct.omit(found.value, ["title"]),
     author: "learner",
     confirmedAt: now,
-    text: edit.text,
+    ...draftArgs(draft),
   };
 
   return {
     ...list,
     memories: Arr.prepend(
-      Arr.filter(list.memories, ({ id }) => id !== edit.id),
+      Arr.filter(list.memories, (memory) => memory.id !== id),
       edited
     ),
   };
@@ -110,12 +143,33 @@ export function pauseMemories(list: MemoryList, paused: boolean): MemoryList {
 
 /** A backslash that the Markdown writer put before a character it would otherwise read as formatting. */
 const ESCAPE = /\\(?=[!-/:-@[-`{-~])/gu;
-/** What starts a list item, a heading or a quote at the beginning of a line. */
-const LINE_MARK = /^\s*(?:[-*+]|\d+[.)]|#{1,6}|>)\s+/u;
-/** The marks around bold, italic, struck and code text. */
+/** A line that only opens or closes a code block, or draws a divider. */
+const BLOCK_MARK = /^\s*(?:```.*|-{3,}|\*{3,})\s*$/u;
+/** What starts a task, a list item, a heading or a quote at the beginning of a line. */
+const LINE_MARK = /^\s*(?:[-*+]\s+\[[ xX]\]|[-*+]|\d+[.)]|#{1,6}|>)\s+/u;
+/** A link: its words stay and its address leaves. */
+const LINK = /\[([^\]]*)\]\([^)]*\)/gu;
+/** The marks around bold, italic, underlined, struck, highlighted and code text. */
 const TEXT_MARK =
-  /\*\*|~~|`|(?<![\\\p{L}\p{N}])\*(?=\S)|(?<=\S)(?<!\\)\*(?![\p{L}\p{N}])/gu;
+  /\*\*|~~|\+\+|==|`|(?<![\\\p{L}\p{N}])\*(?=\S)|(?<=\S)(?<!\\)\*(?![\p{L}\p{N}])/gu;
 const WHITESPACE = /\s+/gu;
+
+/** Reads one line of Markdown as plain words. */
+function plainLine(line: string) {
+  if (BLOCK_MARK.test(line)) {
+    return "";
+  }
+
+  return Str.replaceAll(
+    ESCAPE,
+    ""
+  )(
+    Str.replaceAll(
+      TEXT_MARK,
+      ""
+    )(Str.replaceAll(LINK, "$1")(Str.replace(LINE_MARK, "")(line)))
+  );
+}
 
 /**
  * Reads a memory's Markdown as one line of plain words, for the list and for
@@ -126,29 +180,19 @@ export function previewText(markdown: string) {
     Str.replaceAll(
       WHITESPACE,
       " "
-    )(
-      Arr.join(
-        Arr.map(Str.split(markdown, "\n"), (line) =>
-          Str.replaceAll(
-            ESCAPE,
-            ""
-          )(Str.replaceAll(TEXT_MARK, "")(Str.replace(LINE_MARK, "")(line)))
-        ),
-        " "
-      )
-    )
+    )(Arr.join(Arr.map(Str.split(markdown, "\n"), plainLine), " "))
   );
 }
 
-/** Whether words are fit to keep: something is written, and it fits. */
-export function canSave(text: string) {
-  const words = Str.trim(text);
-  return Str.isNonEmpty(words) && Str.length(words) <= MEMORY_TEXT_LIMIT;
+/** What the list calls a memory: its title, or its words when it has none. */
+export function memoryName(memory: Memory) {
+  return memory.title ?? previewText(memory.text);
 }
 
 /**
  * Returns the memories the page shows, in list order. The search ignores case
- * and looks at the words of each memory without their formatting.
+ * and looks at the title of each memory and at its words without their
+ * formatting.
  */
 export function shownMemories(list: MemoryList, query: string) {
   const needle = Str.toLowerCase(Str.trim(query));
@@ -157,6 +201,8 @@ export function shownMemories(list: MemoryList, query: string) {
     list.memories,
     (memory) =>
       Str.isEmpty(needle) ||
-      Str.includes(needle)(Str.toLowerCase(previewText(memory.text)))
+      Str.includes(needle)(
+        Str.toLowerCase(`${memory.title ?? ""} ${previewText(memory.text)}`)
+      )
   );
 }

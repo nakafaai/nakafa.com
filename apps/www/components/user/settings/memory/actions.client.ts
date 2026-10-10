@@ -12,6 +12,8 @@ import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
 import {
   addMemory,
   clearMemories,
+  draftArgs,
+  draftOf,
   editMemory,
   learnerMemory,
   type Memory,
@@ -45,7 +47,7 @@ function patch(
 /**
  * The changes the learner makes on the Memory page. Each one shows at once,
  * and a failure shows a toast while the page rolls back. A new or rewritten
- * memory that fails comes back in its editor with the learner's words.
+ * memory that fails comes back in its editor with what the learner wrote.
  */
 export function useMemoryActions() {
   const t = useTranslations("Memory");
@@ -71,12 +73,17 @@ export function useMemoryActions() {
   };
 
   /**
-   * Sends one change from an event, and tells the learner when it fails. When
-   * the learner can still try again, `retry` gives them back what they wrote.
+   * Sends one change from an event. `done` gets what the server answered. When
+   * the change fails, the learner is told, `failed` runs, and `retry` gives
+   * them back what they wrote while they can still try again.
    */
   function settle<A, E>(
     send: () => Promise<Result.Result<A, E>>,
-    retry?: () => void
+    after: {
+      done?: (answer: A) => void;
+      failed?: () => void;
+      retry?: () => void;
+    } = {}
   ) {
     Effect.runFork(
       Effect.tryPromise(send).pipe(
@@ -85,19 +92,26 @@ export function useMemoryActions() {
           onFailure: (error) =>
             Effect.flatMap(reportMemoryFailure(error, messages), (again) =>
               Effect.sync(() => {
+                after.failed?.();
                 if (again) {
-                  retry?.();
+                  after.retry?.();
                 }
               })
             ),
-          onSuccess: () => Effect.void,
+          onSuccess: (answer) => Effect.sync(() => after.done?.(answer)),
         })
       )
     );
   }
 
-  /** Writes a new memory in the learner's own words. */
-  function add(draft: MemoryDraft) {
+  /**
+   * Writes a new memory in the learner's own words. `done` gets the id the
+   * server gave it, and `failed` runs when the server did not take it.
+   */
+  function add(
+    draft: MemoryDraft,
+    after: { done?: (id: Memory["id"]) => void; failed?: () => void } = {}
+  ) {
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
     const memory = learnerMemory(
       draft,
@@ -109,37 +123,49 @@ export function useMemoryActions() {
       () =>
         addDraft.withOptimisticUpdate((store) =>
           patch(store, (list) => addMemory(list, memory))
-        )(draft),
-      () => reopen(null, draft.text)
+        )(draftArgs(draft)),
+      { ...after, retry: () => reopen(null, draft) }
     );
   }
 
-  /** Rewrites one memory in the learner's own words. */
-  function edit(draft: MemoryDraft & Pick<Memory, "id">) {
+  /**
+   * Rewrites one memory in the learner's own words. `done` runs when the
+   * server took them, and `failed` when it did not.
+   */
+  function edit(
+    id: Memory["id"],
+    draft: MemoryDraft,
+    after: { done?: () => void; failed?: () => void } = {}
+  ) {
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
     settle(
       () =>
-        editDraft.withOptimisticUpdate((store, args) =>
-          patch(store, (list) => editMemory(list, args, now))
-        )(draft),
-      () => reopen(draft.id, draft.text)
+        editDraft.withOptimisticUpdate((store) =>
+          patch(store, (list) => editMemory(list, id, draft, now))
+        )({ ...draftArgs(draft), id }),
+      { ...after, retry: () => reopen(id, draft) }
     );
+  }
+
+  /** Deletes a memory without a word, for one the learner never saw stored. */
+  function drop(id: Memory["id"]) {
+    settle(() => removeById({ id }));
   }
 
   /**
    * Deletes a memory at once, on the page and on the server, so that closing
    * the page can never leave it stored. The toast offers an Undo, which writes
-   * the words back as the learner's own memory: the chats the deleted memory
-   * came from and the end date of a situation do not come back.
+   * the title and the words back as the learner's own memory: the end date of
+   * a situation does not come back.
    */
   function remove(memory: Memory) {
-    settle(() => removeById({ id: memory.id }));
+    drop(memory.id);
 
     toast(t("deleted"), {
       action: {
         label: t("undo"),
-        onClick: () => add({ text: memory.text }),
+        onClick: () => add(draftOf(memory)),
       },
       duration: Duration.toMillis(UNDO),
     });
@@ -155,5 +181,5 @@ export function useMemoryActions() {
     settle(() => clearAll());
   }
 
-  return { add, clear, edit, pause, remove };
+  return { add, clear, drop, edit, pause, remove };
 }

@@ -1,22 +1,19 @@
 "use client";
 
-import {
-  LeftToRightListBulletIcon,
-  LeftToRightListNumberIcon,
-  TextBoldIcon,
-  TextItalicIcon,
-} from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { CharacterCount, Placeholder } from "@tiptap/extensions";
+import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar";
+import { Highlight } from "@tiptap/extension-highlight";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { Placeholder } from "@tiptap/extensions";
 import { Markdown } from "@tiptap/markdown";
+import type { Node } from "@tiptap/pm/model";
+import { Plugin } from "@tiptap/pm/state";
 import type { EditorProps } from "@tiptap/pm/view";
 import {
-  type Editor,
   EditorContent,
+  EditorContext,
+  Extension,
   useEditor,
-  useEditorState,
 } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import type { ComponentProps } from "react";
@@ -29,158 +26,95 @@ interface RichEditorProps {
    * prop does nothing. Mount a new editor to start from other text.
    */
   defaultValue: string;
-  /** The names a reader hears for the formatting controls and the editing surface. */
-  labels: {
-    bold: string;
-    bullets: string;
-    italic: string;
-    numbers: string;
-    text: string;
-  };
-  /** The most characters the text may hold. */
+  /** The accessible name of the editing surface. */
+  label: string;
+  /** The names of the toolbar's controls. */
+  labels: ComponentProps<typeof RichEditorToolbar>["labels"];
+  /** The most characters the Markdown of the text may hold. */
   limit: number;
   /** Called with the whole text as Markdown after each edit. */
   onChange: (markdown: string) => void;
-  /** Called when the reader presses Enter with Command or Control. */
-  onSubmit: () => void;
+  /** Called when the reader presses Escape in the text. */
+  onClose: () => void;
   /** The hint shown while the text is empty. */
   placeholder: string;
 }
 
-/** One formatting control. It shows as pressed while the caret sits in that format. */
-function RichEditorToggle({
-  active,
-  icon,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  icon: ComponentProps<typeof HugeIcons>["icon"];
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <Button
-      aria-label={label}
-      aria-pressed={active}
-      className="aria-pressed:bg-accent aria-pressed:text-accent-foreground"
-      onClick={onClick}
-      // The press must not take the focus from the text, or the caret and the
-      // next keystrokes would be lost for a moment.
-      onMouseDown={(event) => event.preventDefault()}
-      size="icon-sm"
-      title={label}
-      type="button"
-      variant="ghost"
-    >
-      <HugeIcons icon={icon} />
-    </Button>
-  );
-}
+/**
+ * Refuses every edit that would take the Markdown of the text past `limit`
+ * characters, so the text a reader sees is always text that fits. An edit that
+ * makes a text shorter always passes.
+ */
+const Limit = Extension.create<{ limit: number }>({
+  addOptions: () => ({ limit: 0 }),
+  addProseMirrorPlugins() {
+    const { editor, options } = this;
+    const size = (doc: Node) =>
+      editor.markdown?.serialize(doc.toJSON()).trim().length ?? 0;
 
-/** The formatting controls above the text. They wait until the editor exists. */
-function RichEditorToolbar({
-  editor,
-  labels,
-}: {
-  editor: Editor | null;
-  labels: RichEditorProps["labels"];
-}) {
-  const active = useEditorState({
-    editor,
-    selector: ({ editor: current }) => ({
-      bold: current?.isActive("bold") ?? false,
-      bullets: current?.isActive("bulletList") ?? false,
-      italic: current?.isActive("italic") ?? false,
-      numbers: current?.isActive("orderedList") ?? false,
-    }),
-  });
-
-  return (
-    <div
-      className="flex items-center gap-0.5 border-b px-2 py-1.5"
-      data-slot="editor-toolbar"
-      role="toolbar"
-    >
-      <RichEditorToggle
-        active={active?.bold ?? false}
-        icon={TextBoldIcon}
-        label={labels.bold}
-        onClick={() => editor?.chain().focus().toggleBold().run()}
-      />
-      <RichEditorToggle
-        active={active?.italic ?? false}
-        icon={TextItalicIcon}
-        label={labels.italic}
-        onClick={() => editor?.chain().focus().toggleItalic().run()}
-      />
-      <RichEditorToggle
-        active={active?.bullets ?? false}
-        icon={LeftToRightListBulletIcon}
-        label={labels.bullets}
-        onClick={() => editor?.chain().focus().toggleBulletList().run()}
-      />
-      <RichEditorToggle
-        active={active?.numbers ?? false}
-        icon={LeftToRightListNumberIcon}
-        label={labels.numbers}
-        onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-      />
-    </div>
-  );
-}
+    return [
+      new Plugin({
+        filterTransaction: (transaction, state) =>
+          !transaction.docChanged ||
+          size(transaction.doc) <= options.limit ||
+          size(transaction.doc) <= size(state.doc),
+      }),
+    ];
+  },
+  name: "limit",
+});
 
 /**
- * Edits rich text and keeps it as Markdown: bold, italic, bulleted and
- * numbered lists, with undo and redo. The toolbar sits above the text, and the
- * text fills the space its parent gives, so the parent decides the height.
+ * Edits rich text and keeps it as Markdown: headings, bold, italic, underline,
+ * struck, code and highlighted words, links, bulleted, numbered and task
+ * lists, quotes, code blocks and dividers, with undo and redo. The toolbar
+ * sits above the text, and the text fills the space its parent gives, so the
+ * parent decides the height.
  *
  * Load it with `next/dynamic` and `ssr: false`: the editor needs the browser
  * and brings the editing library with it.
  */
 export function RichEditor({
   defaultValue,
+  label,
   labels,
   limit,
   onChange,
-  onSubmit,
+  onClose,
   placeholder,
 }: RichEditorProps) {
   const change = useCallbackRef(onChange);
-  const submit = useCallbackRef(onSubmit);
+  const close = useCallbackRef(onClose);
   const [content] = useState(defaultValue);
   const extensions = useMemo(
     () => [
       StarterKit.configure({
-        blockquote: false,
-        code: false,
-        codeBlock: false,
         dropcursor: false,
         gapcursor: false,
-        heading: false,
-        horizontalRule: false,
-        link: false,
-        strike: false,
-        underline: false,
+        heading: { levels: [1, 2, 3] },
+        link: { autolink: true, defaultProtocol: "https", openOnClick: false },
       }),
+      Highlight,
+      TaskList,
+      TaskItem.configure({ nested: true }),
       Markdown,
-      CharacterCount.configure({ limit }),
+      Limit.configure({ limit }),
       Placeholder.configure({ placeholder }),
     ],
     [limit, placeholder]
   );
   const editorProps = useMemo<EditorProps>(
     () => ({
-      attributes: { "aria-label": labels.text, "aria-multiline": "true" },
+      attributes: { "aria-label": label, "aria-multiline": "true" },
       handleKeyDown: (_view, event) => {
-        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-          submit();
+        if (event.key === "Escape") {
+          close();
           return true;
         }
         return false;
       },
     }),
-    [labels.text, submit]
+    [close, label]
   );
   const editor = useEditor({
     autofocus: "end",
@@ -191,14 +125,17 @@ export function RichEditor({
     immediatelyRender: false,
     onUpdate: ({ editor: current }) => change(current.getMarkdown()),
   });
+  const context = useMemo(() => ({ editor }), [editor]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col" data-slot="editor">
-      <RichEditorToolbar editor={editor} labels={labels} />
-      <EditorContent
-        className="min-h-0 flex-1 overflow-y-auto text-sm/relaxed [&_.ProseMirror]:min-h-full [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:outline-none [&_.is-editor-empty]:before:pointer-events-none [&_.is-editor-empty]:before:float-left [&_.is-editor-empty]:before:h-0 [&_.is-editor-empty]:before:text-muted-foreground [&_.is-editor-empty]:before:content-[attr(data-placeholder)] [&_li>p]:m-0 [&_ol+p]:mt-2 [&_ol]:list-decimal [&_ol]:ps-5 [&_p+ol]:mt-2 [&_p+p]:mt-2 [&_p+ul]:mt-2 [&_ul+p]:mt-2 [&_ul]:list-disc [&_ul]:ps-5"
-        editor={editor}
-      />
-    </div>
+    <EditorContext value={context}>
+      <div className="flex min-h-0 flex-1 flex-col" data-slot="editor">
+        <RichEditorToolbar labels={labels} />
+        <EditorContent
+          className="min-h-0 flex-1 overflow-y-auto text-sm/relaxed [&_.ProseMirror>*+*]:mt-2 [&_.ProseMirror]:min-h-full [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:outline-none [&_.is-editor-empty]:before:pointer-events-none [&_.is-editor-empty]:before:float-left [&_.is-editor-empty]:before:h-0 [&_.is-editor-empty]:before:text-muted-foreground [&_.is-editor-empty]:before:content-[attr(data-placeholder)] [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_blockquote]:border-s-2 [&_blockquote]:ps-3 [&_blockquote]:text-muted-foreground [&_code]:rounded-sm [&_code]:bg-muted [&_code]:px-1 [&_code]:font-mono [&_h1]:font-semibold [&_h1]:text-xl [&_h2]:font-semibold [&_h2]:text-lg [&_h3]:font-semibold [&_h3]:text-base [&_hr]:my-3 [&_li>p]:m-0 [&_mark]:rounded-sm [&_mark]:bg-amber-200 [&_mark]:px-0.5 [&_mark]:text-amber-950 [&_ol]:list-decimal [&_ol]:ps-5 [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_ul:not([data-type=taskList])]:list-disc [&_ul:not([data-type=taskList])]:ps-5 [&_ul[data-type=taskList]_li>div]:min-w-0 [&_ul[data-type=taskList]_li>div]:flex-1 [&_ul[data-type=taskList]_li>label]:mt-0.5 [&_ul[data-type=taskList]_li]:flex [&_ul[data-type=taskList]_li]:items-start [&_ul[data-type=taskList]_li]:gap-2"
+          editor={editor}
+        />
+      </div>
+    </EditorContext>
   );
 }

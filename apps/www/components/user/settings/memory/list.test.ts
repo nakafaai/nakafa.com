@@ -1,20 +1,23 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { MEMORY_TEXT_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Schema } from "effect";
 import {
   addMemory,
-  canSave,
   clearMemories,
+  draftArgs,
+  draftOf,
   editMemory,
+  isBlank,
   isPending,
   learnerMemory,
   type Memory,
   type MemoryList,
+  memoryName,
   pauseMemories,
   pendingId,
   previewText,
   removeMemory,
+  sameDraft,
   shownMemories,
 } from "@/components/user/settings/memory/list";
 
@@ -28,7 +31,6 @@ function stored(name: string, change: Partial<Memory> = {}): Memory {
     createdAt: 500,
     id: memoryId(name),
     inUse: true,
-    sources: 2,
     text: `Text of ${name}`,
     ...change,
   };
@@ -46,16 +48,58 @@ describe("memory list", () => {
     expect(isPending(stored("a"))).toBe(false);
   });
 
-  it("builds the learner's own memory for words just written", () => {
-    expect(learnerMemory({ text: "Kelas 12" }, memoryId("new"), 42)).toEqual({
+  it("reads the title and the words of a memory, or none for a new one", () => {
+    expect(draftOf(undefined)).toEqual({ text: "", title: "" });
+    expect(draftOf(stored("a"))).toEqual({ text: "Text of a", title: "" });
+    expect(draftOf(stored("a", { title: "School" }))).toEqual({
+      text: "Text of a",
+      title: "School",
+    });
+  });
+
+  it("calls a draft blank until it holds a title or words", () => {
+    expect(isBlank({ text: "", title: "" })).toBe(true);
+    expect(isBlank({ text: " \n ", title: "  " })).toBe(true);
+    expect(isBlank({ text: "", title: "School" })).toBe(false);
+    expect(isBlank({ text: "Kelas 12", title: "" })).toBe(false);
+  });
+
+  it("compares two drafts without the space around them", () => {
+    const draft = { text: "Kelas 12", title: "School" };
+
+    expect(sameDraft(draft, { text: " Kelas 12\n", title: "School " })).toBe(
+      true
+    );
+    expect(sameDraft(draft, { text: "Kelas 12", title: "Sekolah" })).toBe(
+      false
+    );
+    expect(sameDraft(draft, { text: "Kelas 11", title: "School" })).toBe(false);
+  });
+
+  it("sends trimmed words, and a title only when one is written", () => {
+    expect(draftArgs({ text: " Kelas 12 ", title: " School " })).toEqual({
+      text: "Kelas 12",
+      title: "School",
+    });
+    expect(draftArgs({ text: "Kelas 12", title: "  " })).toEqual({
+      text: "Kelas 12",
+    });
+  });
+
+  it("builds the learner's own memory for what was just written", () => {
+    expect(
+      learnerMemory({ text: "Kelas 12", title: "" }, memoryId("new"), 42)
+    ).toEqual({
       author: "learner",
       confirmedAt: 42,
       createdAt: 42,
       id: memoryId("new"),
       inUse: true,
-      sources: 0,
       text: "Kelas 12",
     });
+    expect(
+      learnerMemory({ text: "", title: "School" }, memoryId("new"), 42)
+    ).toMatchObject({ text: "", title: "School" });
   });
 
   it("puts a new memory first", () => {
@@ -72,7 +116,8 @@ describe("memory list", () => {
     ]);
     const edited = editMemory(
       list,
-      { id: memoryId("b"), text: "New words" },
+      memoryId("b"),
+      { text: "New words", title: "Plan" },
       77
     );
 
@@ -86,15 +131,33 @@ describe("memory list", () => {
       author: "learner",
       confirmedAt: 77,
       text: "New words",
+      title: "Plan",
+    });
+  });
+
+  it("takes the title off a memory whose draft has none", () => {
+    const list = listOf([stored("a", { title: "School" })]);
+    const edited = editMemory(
+      list,
+      memoryId("a"),
+      { text: "Kelas 12", title: "" },
+      77
+    );
+
+    expect(edited.memories[0]).toEqual({
+      ...stored("a"),
+      author: "learner",
+      confirmedAt: 77,
+      text: "Kelas 12",
     });
   });
 
   it("leaves the list as it is when the memory to rewrite is not in it", () => {
     const list = listOf([stored("a")]);
 
-    expect(editMemory(list, { id: memoryId("gone"), text: "Words" }, 77)).toBe(
-      list
-    );
+    expect(
+      editMemory(list, memoryId("gone"), { text: "Words", title: "" }, 77)
+    ).toBe(list);
   });
 
   it("takes one memory out, or all of them, and keeps the pause", () => {
@@ -126,6 +189,16 @@ describe("memory list", () => {
       );
     });
 
+    it("drops headings, tasks, quotes, links, code fences and dividers and keeps their words", () => {
+      expect(
+        previewText(
+          "# Plan\n\n- [ ] Read ++chapter 3++\n- [x] ==Limits== done\n\n> Ask about [the syllabus](https://example.com/s)\n\n---\n\n```ts\nconst x = 1\n```"
+        )
+      ).toBe(
+        "Plan Read chapter 3 Limits done Ask about the syllabus const x = 1"
+      );
+    });
+
     it("keeps a star that is part of the words and drops the writer's escapes", () => {
       expect(previewText("2 * 3 = 6")).toBe("2 * 3 = 6");
       expect(previewText("Nilai 9\\.5 dan 2 \\* 3")).toBe(
@@ -134,27 +207,16 @@ describe("memory list", () => {
     });
   });
 
-  describe("canSave", () => {
-    it("wants something written", () => {
-      expect(canSave("")).toBe(false);
-      expect(canSave("   \n ")).toBe(false);
-      expect(canSave("Kelas 12")).toBe(true);
-    });
-
-    it("wants the words to fit", () => {
-      const fits = "a".repeat(MEMORY_TEXT_LIMIT);
-
-      expect(canSave(fits)).toBe(true);
-      expect(canSave(`  ${fits}  `)).toBe(true);
-      expect(canSave(`${fits}a`)).toBe(false);
-    });
+  it("calls a memory by its title, or by its words when it has none", () => {
+    expect(memoryName(stored("a", { title: "School" }))).toBe("School");
+    expect(memoryName(stored("a", { text: "Kelas **12**" }))).toBe("Kelas 12");
   });
 
   describe("shownMemories", () => {
     const list = listOf([
       stored("a", { text: "Prefers worked **Examples**" }),
       stored("b", { text: "Finds trigonometry hard" }),
-      stored("c", { text: "- Exam on Friday" }),
+      stored("c", { text: "- Exam on Friday", title: "Chemistry week" }),
     ]);
 
     it("shows every memory for an empty or blank search", () => {
@@ -169,8 +231,13 @@ describe("memory list", () => {
       expect(ids(shownMemories(list, " trig "))).toEqual([memoryId("b")]);
     });
 
+    it("finds a memory by its title", () => {
+      expect(ids(shownMemories(list, "chemistry"))).toEqual([memoryId("c")]);
+      expect(ids(shownMemories(list, "friday"))).toEqual([memoryId("c")]);
+    });
+
     it("shows nothing when no memory matches", () => {
-      expect(shownMemories(list, "chemistry")).toEqual([]);
+      expect(shownMemories(list, "biology")).toEqual([]);
     });
   });
 });

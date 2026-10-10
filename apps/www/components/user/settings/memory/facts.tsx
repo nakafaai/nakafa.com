@@ -10,8 +10,8 @@ import {
 } from "@/components/user/settings/memory/time";
 
 /**
- * Says in one line where a memory came from, when it was last confirmed and,
- * for a situation, when it ends: "From 3 chats · 2 days ago". The time counts
+ * Says in one line who wrote a memory, when it was last confirmed and, for a
+ * situation, when it ends: "Saved by Nina · 2 days ago". The time counts
  * from the moment the server read the page, so the server and the browser
  * render the same words.
  */
@@ -20,9 +20,7 @@ export function MemoryFacts({ memory }: { memory: Memory }) {
   const locale = useLocale();
   const now = useMemoryNow();
   const origin =
-    memory.author === "learner"
-      ? t("written-by-you")
-      : t("from-chats", { count: memory.sources });
+    memory.author === "learner" ? t("written-by-you") : t("saved-by-nina");
 
   return Arr.join(
     Arr.appendAll(
