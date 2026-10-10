@@ -25,14 +25,9 @@ import {
   readResultStream,
   readRouteStream,
 } from "@repo/backend/confect/contentRelease/proof/stream";
-import type {
-  progressValidator,
-  statusValidator,
-} from "@repo/backend/confect/contentRelease/spec";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
-export type Progress = typeof progressValidator.Type;
-export type Status = typeof statusValidator.Type;
+
 /** Authenticates the frozen release and renderer identity shared by proof steps. */
 const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
   function* (manifestHash: string, releaseId: string) {

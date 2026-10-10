@@ -33,27 +33,28 @@ import {
 } from "@repo/backend/confect/contentRelease/wire";
 import type { WithoutSystemFields } from "convex/server";
 import { Clock, Effect } from "effect";
-export type ReleaseStatus = typeof statusValidator.Type;
+
+type ReleaseStatus = typeof statusValidator.Type;
 
 /** Projects one durable release into its exact shared lifecycle status. */
-export const releaseStatus = Effect.fn("contentRelease.releaseStatus")(
-  function* (release: Docs["contentReleases"]) {
-    const signed = yield* decodeReleaseJson(release.releaseJson);
-    if (release.status === "completed") {
-      return {
-        manifestHash: signed.manifestHash,
-        phase: "completed",
-        receipt: yield* completedReceipt(release, signed),
-        releaseId: release.releaseId,
-      } satisfies ReleaseStatus;
-    }
+const releaseStatus = Effect.fn("contentRelease.releaseStatus")(function* (
+  release: Docs["contentReleases"]
+) {
+  const signed = yield* decodeReleaseJson(release.releaseJson);
+  if (release.status === "completed") {
     return {
       manifestHash: signed.manifestHash,
-      phase: release.status,
+      phase: "completed",
+      receipt: yield* completedReceipt(release, signed),
       releaseId: release.releaseId,
     } satisfies ReleaseStatus;
   }
-);
+  return {
+    manifestHash: signed.manifestHash,
+    phase: release.status,
+    releaseId: release.releaseId,
+  } satisfies ReleaseStatus;
+});
 
 /** Confirms an idempotent release still owns the same immutable role slot. */
 const validateExisting = Effect.fn("contentRelease.validateExisting")(

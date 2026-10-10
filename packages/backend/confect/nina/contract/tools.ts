@@ -107,7 +107,7 @@ const ResearchToolInputSchema = Schema.Struct({
 /**
  * Input schema for the deterministic math LearningCapability tool.
  */
-export const MathToolInputSchema = Schema.Struct({
+const MathToolInputSchema = Schema.Struct({
   ...SpecialistToolInputFields,
   given: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
@@ -134,7 +134,7 @@ export const MathToolInputSchema = Schema.Struct({
   });
 type NakafaToolInput = typeof NakafaToolInputSchema.Type;
 type ResearchToolInput = typeof ResearchToolInputSchema.Type;
-export type MathToolInput = typeof MathToolInputSchema.Type;
+type MathToolInput = typeof MathToolInputSchema.Type;
 type SpecialistToolInput = MathToolInput | NakafaToolInput | ResearchToolInput;
 /**
  * Builds the internal Markdown task after the public tool input has separated

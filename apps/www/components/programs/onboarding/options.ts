@@ -20,14 +20,8 @@ export type OnboardingAnswer = Ref.Args<
   typeof onboarding.mutations.saveAnswer
 >["answer"];
 type OnboardingRole = Extract<OnboardingAnswer, { kind: "role" }>["value"];
-export type OnboardingRegion = Extract<
-  OnboardingAnswer,
-  { kind: "region" }
->["value"];
-export type OnboardingFocus = Extract<
-  OnboardingAnswer,
-  { kind: "focus" }
->["value"];
+type OnboardingRegion = Extract<OnboardingAnswer, { kind: "region" }>["value"];
+type OnboardingFocus = Extract<OnboardingAnswer, { kind: "focus" }>["value"];
 export type OnboardingItemName = OnboardingAnswer["kind"];
 
 interface OnboardingOption<Value extends string> {

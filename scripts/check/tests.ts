@@ -98,14 +98,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectDeploySource(file, sourceFile),
       ])
     ),
-    inspectExports(
-      parsed.modules,
-      Arr.appendAll(
-        Arr.map(sources, ({ sourceText }) => sourceText),
-        otherModules
-      ),
-      unjudged
-    ),
+    inspectExports(parsed.modules, otherModules, unjudged),
   ]);
 }, Effect.scoped);
 

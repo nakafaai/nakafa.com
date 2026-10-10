@@ -5,12 +5,12 @@ import {
 import { Array as Arr, Result, Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
-export const HELIUM_ID = "helium";
-export const SODIUM_ID = "sodium";
-export const MAGNESIUM_ID = "magnesium";
+const HELIUM_ID = "helium";
+const SODIUM_ID = "sodium";
+const MAGNESIUM_ID = "magnesium";
 const ALUMINUM_ID = "aluminum";
-export const CHLORINE_ID = "chlorine";
-export const ARGON_ID = "argon";
+const CHLORINE_ID = "chlorine";
+const ARGON_ID = "argon";
 export const CALCIUM_ID = "calcium";
 
 export type ValenceElectronSampleId =

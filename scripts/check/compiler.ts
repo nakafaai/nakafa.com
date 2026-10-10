@@ -42,7 +42,7 @@ const PackageManifest = Schema.fromJsonString(
 );
 
 /** The repository's shared compiler configuration package cannot be named. */
-export class SharedPackageError extends Schema.TaggedError<SharedPackageError>()(
+class SharedPackageError extends Schema.TaggedError<SharedPackageError>()(
   "SharedPackageError",
   {
     cause: Schema.Unknown,

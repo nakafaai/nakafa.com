@@ -19,13 +19,8 @@ import {
   type snapshotReceiptValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import type { WithoutSystemFields } from "convex/server";
 import { Clock, Effect } from "effect";
-export type ReadCtx = MutationCtx | QueryCtx;
 
 /** Loads one immutable family manifest through its exact content identity. */
 export const loadSnapshot = Effect.fn("contentRelease.loadSnapshot")(function* (
