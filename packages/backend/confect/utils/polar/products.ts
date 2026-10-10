@@ -1,4 +1,4 @@
-import { isPolarProduction } from "@repo/backend/confect/utils/polar/config";
+import { isPolarProduction } from "@repo/backend/confect/customers/polar/environment";
 
 /**
  * Public-safe Polar product configuration.
