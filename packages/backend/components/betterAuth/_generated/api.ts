@@ -30,14 +30,12 @@ export const api: {
           | {
               data: {
                 createdAt: number;
-                displayUsername?: null | string;
                 email: string;
                 emailVerified: boolean;
                 image?: null | string;
                 name: string;
                 updatedAt: number;
                 userId?: null | string;
-                username?: null | string;
               };
               model: "user";
             }
@@ -111,8 +109,6 @@ export const api: {
                   | "createdAt"
                   | "updatedAt"
                   | "userId"
-                  | "displayUsername"
-                  | "username"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -305,8 +301,6 @@ export const api: {
                   | "createdAt"
                   | "updatedAt"
                   | "userId"
-                  | "displayUsername"
-                  | "username"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -552,14 +546,12 @@ export const api: {
               model: "user";
               update: {
                 createdAt?: number;
-                displayUsername?: null | string;
                 email?: string;
                 emailVerified?: boolean;
                 image?: null | string;
                 name?: string;
                 updatedAt?: number;
                 userId?: null | string;
-                username?: null | string;
               };
               where?: Array<{
                 connector?: "AND" | "OR";
@@ -571,8 +563,6 @@ export const api: {
                   | "createdAt"
                   | "updatedAt"
                   | "userId"
-                  | "displayUsername"
-                  | "username"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -793,14 +783,12 @@ export const api: {
               model: "user";
               update: {
                 createdAt?: number;
-                displayUsername?: null | string;
                 email?: string;
                 emailVerified?: boolean;
                 image?: null | string;
                 name?: string;
                 updatedAt?: number;
                 userId?: null | string;
-                username?: null | string;
               };
               where?: Array<{
                 connector?: "AND" | "OR";
@@ -812,8 +800,6 @@ export const api: {
                   | "createdAt"
                   | "updatedAt"
                   | "userId"
-                  | "displayUsername"
-                  | "username"
                   | "_id";
                 mode?: "sensitive" | "insensitive";
                 operator?:
@@ -1038,19 +1024,6 @@ export const api: {
       "public",
       { authId: string; name: string },
       null
-    >;
-  };
-  username: {
-    clearUsernameFields: FunctionReference<
-      "mutation",
-      "public",
-      { cursor: null | string },
-      {
-        cleared: number;
-        continueCursor: string;
-        isDone: boolean;
-        scanned: number;
-      }
     >;
   };
 } = anyApi as any;

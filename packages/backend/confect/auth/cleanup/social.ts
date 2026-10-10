@@ -7,39 +7,8 @@ import { findMemory } from "@repo/backend/confect/nina/memory/store";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
 
-const BOOKMARK_BATCH_SIZE = 25;
-const COLLECTION_BATCH_SIZE = 25;
 const COMMENT_VOTE_BATCH_SIZE = 50;
 const COMMENT_REFERENCE_BATCH_SIZE = 25;
-
-/** Deletes one bounded batch of bookmarks and their collections. */
-const cleanupBookmarks = Effect.fn("auth.cleanup.cleanupBookmarks")(
-  function* (userId: Id<"users">) {
-    const database = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const bookmarks = yield* database
-      .table("bookmarks")
-      .index("by_userId", (query) => query.eq("userId", userId))
-      .take(BOOKMARK_BATCH_SIZE)
-      .pipe(Effect.orDie);
-    for (const bookmark of bookmarks) {
-      yield* writer.table("bookmarks").delete(bookmark._id);
-    }
-    if (bookmarks.length > 0) {
-      return true;
-    }
-    const collections = yield* database
-      .table("bookmarkCollections")
-      .index("by_userId", (query) => query.eq("userId", userId))
-      .take(COLLECTION_BATCH_SIZE)
-      .pipe(Effect.orDie);
-    for (const collection of collections) {
-      yield* writer.table("bookmarkCollections").delete(collection._id);
-    }
-    return collections.length > 0;
-  },
-  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-);
 
 /** Deletes one bounded batch of a user's comments and votes. */
 const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
@@ -176,9 +145,6 @@ const cleanupNinaMemory = Effect.fn("auth.cleanup.ninaMemory")(
 export const cleanupUserSocialData = Effect.fn(
   "auth.cleanup.cleanupUserSocialData"
 )(function* (userId: Id<"users">) {
-  if (yield* cleanupBookmarks(userId)) {
-    return true;
-  }
   if (yield* cleanupComments(userId)) {
     return true;
   }

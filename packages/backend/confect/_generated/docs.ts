@@ -10,8 +10,6 @@ export type AccountDeletionSchoolTransfersDoc = Document.Document<typeof schemaD
 export type ArticleBucketsDoc = Document.Document<typeof schemaDefinition, "articleBuckets">;
 export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "articleCatalog">;
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
-export type BookmarkCollectionsDoc = Document.Document<typeof schemaDefinition, "bookmarkCollections">;
-export type BookmarksDoc = Document.Document<typeof schemaDefinition, "bookmarks">;
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
 export type CommentVotesDoc = Document.Document<typeof schemaDefinition, "commentVotes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
@@ -100,8 +98,6 @@ export interface Docs {
   articleBuckets: ArticleBucketsDoc;
   articleCatalog: ArticleCatalogDoc;
   articleCategories: ArticleCategoriesDoc;
-  bookmarkCollections: BookmarkCollectionsDoc;
-  bookmarks: BookmarksDoc;
   chats: ChatsDoc;
   commentVotes: CommentVotesDoc;
   comments: CommentsDoc;

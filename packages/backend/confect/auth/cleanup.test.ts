@@ -52,26 +52,36 @@ describe("auth/cleanup", () => {
             userId,
             createDeletedUserTombstone(userId, NOW)
           );
-          const collectionId = await ctx.db.insert("bookmarkCollections", {
-            bookmarkCount: 1,
-            image: "default",
-            isDefault: true,
-            isPublic: false,
-            name: "Saved",
-            order: 0,
-            updatedAt: NOW,
-            userId,
+          const otherUserId = await ctx.db.insert("users", {
+            authId: "bounded-cleanup-reader",
+            credits: 10,
+            creditsResetAt: NOW,
+            email: "reader@example.com",
+            name: "Reader",
+            plan: "free",
           });
-          const bookmarkId = await ctx.db.insert("bookmarks", {
-            bookmarkedAt: NOW,
-            collectionId,
-            order: 0,
+          const commentId = await ctx.db.insert("comments", {
             slug: "material/algebra",
             userId,
+            text: "Deleted personal comment",
+            upvoteCount: 0,
+            downvoteCount: 0,
+            replyCount: 1,
+          });
+          const replyId = await ctx.db.insert("comments", {
+            slug: "material/algebra",
+            userId: otherUserId,
+            text: "Reply by another user",
+            parentId: commentId,
+            replyToUserId: userId,
+            replyToText: "Deleted personal comment",
+            upvoteCount: 0,
+            downvoteCount: 0,
+            replyCount: 0,
           });
           return {
-            bookmarkId,
-            collectionId,
+            commentId,
+            replyId,
             userId,
           };
         })
@@ -83,17 +93,14 @@ describe("auth/cleanup", () => {
       );
       const remaining = yield* Effect.promise(() =>
         t.query(async (ctx) => ({
-          bookmark: await ctx.db.get("bookmarks", state.bookmarkId),
-          collection: await ctx.db.get(
-            "bookmarkCollections",
-            state.collectionId
-          ),
+          comment: await ctx.db.get("comments", state.commentId),
+          reply: await ctx.db.get("comments", state.replyId),
           user: await ctx.db.get("users", state.userId),
         }))
       );
       expect(hasMore).toBe(true);
-      expect(remaining.bookmark).toBeNull();
-      expect(remaining.collection).not.toBeNull();
+      expect(remaining.reply?.replyToUserId).toBeUndefined();
+      expect(remaining.comment).not.toBeNull();
       expect(remaining.user).toMatchObject({
         authId: expect.stringMatching(deletedAuthIdPattern),
         email: expect.stringMatching(deletedEmailPattern),
@@ -131,23 +138,6 @@ describe("auth/cleanup", () => {
             });
             await seedAnalyticsConsent(ctx, {
               decidedAt: NOW,
-              userId,
-            });
-            const collectionId = await ctx.db.insert("bookmarkCollections", {
-              bookmarkCount: 1,
-              image: "default",
-              isDefault: true,
-              isPublic: false,
-              name: "Saved",
-              order: 0,
-              updatedAt: NOW,
-              userId,
-            });
-            await ctx.db.insert("bookmarks", {
-              bookmarkedAt: NOW,
-              collectionId,
-              order: 0,
-              slug: "material/algebra",
               userId,
             });
             await ctx.db.insert("chats", {
@@ -331,16 +321,8 @@ describe("auth/cleanup", () => {
                   query.eq("userId", userId)
                 )
                 .take(2),
-              bookmarks: await ctx.db
-                .query("bookmarks")
-                .withIndex("by_userId", (query) => query.eq("userId", userId))
-                .collect(),
               chats: await ctx.db
                 .query("chats")
-                .withIndex("by_userId", (query) => query.eq("userId", userId))
-                .collect(),
-              collections: await ctx.db
-                .query("bookmarkCollections")
                 .withIndex("by_userId", (query) => query.eq("userId", userId))
                 .collect(),
               deletedForum: await ctx.db.get(
@@ -386,9 +368,7 @@ describe("auth/cleanup", () => {
           })
         );
         expect(result).toEqual({
-          bookmarks: [],
           chats: [],
-          collections: [],
           consentDecisions: [],
           consents: [],
           creditTransactions: [],
