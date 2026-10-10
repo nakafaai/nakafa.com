@@ -53,12 +53,16 @@ edit and delete every one. After a complete turn:
 1. The gate asks for a message of at least 12 characters with a first-person
    word in Indonesian, English or German. Any other message makes no model call.
 2. One call on the background purpose returns at most three candidates, each
-   with a verbatim quote. Its usage is recorded as agent `memory` in the turn's
-   ledger.
+   with a verbatim quote; an answer with more is rejected whole. The call reads
+   the learner's message and the learner's memories, newest first, within a
+   token budget, so a long list loses its oldest memories. A candidate that
+   repeats one of them still confirms it by saying the same words. Its usage is
+   recorded as agent `memory` in the turn's ledger.
 3. The check keeps a candidate only when its quote is in the message once
    lower-cased and with whitespace collapsed, neither its text nor its quote
-   holds an email address, a link or a run of eight digits, and a situation has
-   an end day of today or later.
+   holds an email address, a link or eight digits in a row, and a situation has
+   an end day of today or later. A dash, a dot or a space ends a run of digits,
+   so a date such as 20-10-2026 stays.
 4. The write first checks what could have changed while the model read the
    message. Paused memory, a deleted turn, and a memory that the call read and
    that is gone now (the learner removed it, or it ended) each stop it. It reads
@@ -67,15 +71,17 @@ edit and delete every one. After a complete turn:
    confirms a memory of its own kind or a memory without a kind, which only the
    learner can have written. It never confirms a memory of another kind, so a
    situation's end day never lands on a goal. Confirming moves the confirmation
-   time. When nobody changed the memory since the call read it, confirming also
-   gives the memory the candidate's kind and, for a situation, its end day, and
-   it replaces the words, making Nina their author, when they say something new
-   rather than the same words in another case, punctuation or spacing. A memory
-   the learner wrote therefore has no kind until a chat says it again, and keeps
-   having none when the learner changed it since the call read it. A repeat is
-   the same normalized text or a word overlap of at least 0.8 with a memory the
-   candidate can confirm. At 100 memories the Nina-written one confirmed longest
-   ago leaves; when the learner wrote them all, the new one is dropped.
+   time. A memory counts as changed when it was confirmed or edited after the
+   call read the list, or written after it. A memory that did not change also
+   takes the candidate's kind and, for a situation, its end day, and its words
+   are replaced, making Nina their author, when the candidate's say something
+   new rather than the same words in another case, punctuation or spacing. A
+   changed memory keeps its words, its kind and its end day, so the learner's
+   newer words win. A memory the learner wrote therefore has no kind until a
+   chat says it again. A repeat is the same normalized text or a word overlap of
+   at least 0.8 with a memory the candidate can confirm. At 100 memories the
+   Nina-written one confirmed longest ago leaves, whichever was created first;
+   when the learner wrote them all, the new one is dropped.
 
 A capture that fails logs one warning with routing facts and changes nothing. It
 never cancels the title, the suggestions or the summary.
@@ -98,7 +104,10 @@ one Nina wrote from that chat. Only four things delete a memory:
 - At 100 memories, a new memory from Nina replaces the Nina-written one that was
   confirmed longest ago.
 - Account deletion removes the learner's memories in bounded batches, before the
-  learner's vault key goes.
+  learner's vault key goes. Every pass looks for memories first, so a capture
+  still running when the deletion starts is swept by the next pass, and one that
+  lands after the key is gone seals nothing, because a deleted account gets no
+  new key. The capture write needs no check of its own for a deleted account.
 
 ## Implementation Contract
 
