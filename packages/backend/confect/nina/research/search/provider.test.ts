@@ -30,6 +30,19 @@ describe("searchFirecrawl", () => {
       })
   );
 
+  it.effect(
+    "asks for results only, so the provider reads no page inside the search",
+    () =>
+      Effect.gen(function* () {
+        firecrawlApp.search.mockResolvedValueOnce({ web: [] });
+        yield* searchFirecrawl("kurikulum merdeka");
+        expect(firecrawlApp.search).toHaveBeenLastCalledWith(
+          "kurikulum merdeka",
+          { limit: 5, sources: ["web", "news"], timeout: 10_000 }
+        );
+      })
+  );
+
   it.effect("has no status when the provider never answered", () =>
     Effect.gen(function* () {
       firecrawlApp.search.mockRejectedValueOnce(new Error("socket hang up"));
@@ -46,7 +59,7 @@ describe("searchFirecrawl", () => {
         const fiber = yield* Effect.forkChild(
           Effect.flip(searchFirecrawl("kurikulum merdeka"))
         );
-        yield* TestClock.adjust("29999 millis");
+        yield* TestClock.adjust("11999 millis");
         expect(fiber.pollUnsafe()).toBeUndefined();
         yield* TestClock.adjust("1 millis");
         const error = yield* Fiber.join(fiber);

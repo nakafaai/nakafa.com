@@ -14,6 +14,12 @@ vi.mock("@repo/backend/confect/nina/research/provider", () => ({
   readFirecrawlApp: () => Effect.succeed(firecrawlApp),
 }));
 
+const readPage = vi.hoisted(() => vi.fn());
+
+vi.mock("@repo/backend/confect/nina/research/tools/scrape", () => ({
+  readPage,
+}));
+
 vi.mock("@repo/backend/confect/nina/research/selection", () => ({
   selectRelevantContent: ({
     content,
@@ -37,6 +43,18 @@ vi.mock("@repo/backend/confect/nina/research/domain", () => ({
 }));
 
 type WrittenPart = CapabilityArtifact;
+
+/** A page reader that reads the given pages; any other page is not read in time. */
+function reads(pages: Readonly<Record<string, string>>) {
+  return (url: string) => {
+    const markdown = pages[url];
+    return Effect.succeed(
+      markdown === undefined
+        ? { error: "The page could not be retrieved.", metadata: {}, url }
+        : { markdown, metadata: {}, url }
+    );
+  };
+}
 
 /** Creates a stream publish harness that records web-search data parts for assertions. */
 function createProgress() {
@@ -64,10 +82,12 @@ function getWebSearchParts(parts: readonly WrittenPart[]) {
 describe("research web search tool", () => {
   beforeEach(() => {
     firecrawlApp.search.mockReset();
+    readPage.mockReset();
+    readPage.mockImplementation(reads({}));
   });
 
   it.effect(
-    "writes loading and done parts while returning text and structured sources",
+    "returns every result and adds the text of the best pages it could read",
     () =>
       Effect.gen(function* () {
         firecrawlApp.search.mockResolvedValue({
@@ -78,7 +98,6 @@ describe("research web search tool", () => {
               url: "https://example.com/research",
             },
             {
-              markdown: "Unique news content.",
               snippet: "Unique source.",
               title: "Unique News",
               url: "https://news.example.com/update",
@@ -94,20 +113,17 @@ describe("research web search tool", () => {
           web: [
             {
               description: "Main source.",
-              markdown: "Main source content.",
               title: "Main Source",
               url: "https://example.com/research",
             },
             {
               description: "Missing URL source.",
-              markdown: "Missing URL content.",
               title: "Missing URL Source",
             },
             {
               url: "https://example.com/without-metadata",
             },
             {
-              markdown: "Document content.",
               metadata: {
                 description: "Document metadata description.",
                 ogTitle: "Document Metadata Title",
@@ -115,7 +131,6 @@ describe("research web search tool", () => {
               },
             },
             {
-              markdown: undefined,
               metadata: {
                 sourceURL: "https://docs.example.com/empty",
                 title: "Empty Document",
@@ -123,6 +138,9 @@ describe("research web search tool", () => {
             },
           ],
         });
+        readPage.mockImplementation(
+          reads({ "https://example.com/research": "Main source content." })
+        );
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: ["latest solar energy research"],
@@ -143,14 +161,32 @@ describe("research web search tool", () => {
         ]);
         expect(output.result.sources).toContainEqual(
           expect.objectContaining({
-            content: "Document content.",
+            content: "",
             description: "Document metadata description.",
             title: "Document Metadata Title",
             url: "https://docs.example.com/document",
           })
         );
+        expect(Arr.map(readPage.mock.calls, ([url]) => url)).toEqual([
+          "https://example.com/research",
+          "https://example.com/without-metadata",
+        ]);
+        expect(readPage).toHaveBeenLastCalledWith(
+          "https://example.com/without-metadata",
+          { deadlineMs: 10_000, timeoutMs: 8000 }
+        );
+        expect(output.result.sources).toContainEqual(
+          expect.objectContaining({
+            content: "",
+            url: "https://example.com/without-metadata",
+          })
+        );
         expect(output.text).toContain(
           "- Inline citation: [example.com](https://example.com/research)"
+        );
+        expect(output.text).toContain("### Content\nMain source content.");
+        expect(output.text).toContain(
+          "- Page text: not read. Only the description above is known."
         );
         expect(parts()).toEqual([
           expect.objectContaining({
@@ -169,6 +205,34 @@ describe("research web search tool", () => {
               status: "done",
             }),
           }),
+        ]);
+      })
+  );
+
+  it.effect(
+    "reads every query's first result before any second result, each page once",
+    () =>
+      Effect.gen(function* () {
+        const result = (name: string) => ({
+          description: `Kurikulum ${name}.`,
+          title: `Kurikulum ${name}`,
+          url: `https://example.com/${name}`,
+        });
+        firecrawlApp.search
+          .mockResolvedValueOnce({ web: [result("a1"), result("a2")] })
+          .mockResolvedValueOnce({ web: [result("shared"), result("b2")] });
+        const { publish } = createProgress();
+        yield* searchWeb({
+          queries: ["kurikulum merdeka", "kurikulum sma"],
+          sourcePreference: "any",
+          task: "kurikulum",
+          toolCallId: "web-search-pages",
+          publish,
+        });
+
+        expect(Arr.map(readPage.mock.calls, ([url]) => url)).toEqual([
+          "https://example.com/a1",
+          "https://example.com/shared",
         ]);
       })
   );
@@ -197,13 +261,7 @@ describe("research web search tool", () => {
       expect(firecrawlApp.search).toHaveBeenCalledTimes(1);
       expect(firecrawlApp.search).toHaveBeenCalledWith(
         "AI SDK docs",
-        expect.objectContaining({
-          scrapeOptions: expect.objectContaining({
-            formats: ["markdown"],
-            onlyMainContent: true,
-            parsers: [],
-          }),
-        })
+        expect.objectContaining({ limit: 5 })
       );
       expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({

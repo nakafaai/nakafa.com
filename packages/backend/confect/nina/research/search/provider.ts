@@ -1,13 +1,13 @@
-import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
 import { ResearchSearchError } from "@repo/backend/confect/nina/research/schema";
 import { Duration, Effect, Option, Schema } from "effect";
 
 /**
- * One query settles within the step budget of the specialist purpose that
- * runs research: as sources or as an error, never as a card left loading.
+ * A search returns results without reading their pages, so it answers in about
+ * two seconds. The provider gets ten seconds; this deadline is the backstop for
+ * a request that never answers, so a card is never left loading.
  */
-const SEARCH_DEADLINE = Duration.millis(purposes.specialist.timeout.stepMs);
+const SEARCH_DEADLINE = Duration.seconds(12);
 
 const searchFailure = (status?: { readonly status: number }) =>
   new ResearchSearchError({
@@ -18,7 +18,11 @@ const searchFailure = (status?: { readonly status: number }) =>
 /** The provider's HTTP status. Its message may repeat the query and is never read. */
 const ProviderFailure = Schema.Struct({ status: Schema.Finite });
 
-/** Calls Firecrawl search with one generated query. */
+/**
+ * Calls Firecrawl search with one generated query. It asks for results only:
+ * reading every result page inside the search took 76 seconds when measured on
+ * 10 October 2026, so `searchWeb` reads the best pages itself, in parallel.
+ */
 export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
   query: string
 ) {
@@ -34,11 +38,6 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
       client.search(query, {
         limit: 5,
         sources: ["web", "news"],
-        scrapeOptions: {
-          formats: ["markdown"],
-          onlyMainContent: true,
-          parsers: [],
-        },
         timeout: 10_000,
       }),
     catch: (cause) =>

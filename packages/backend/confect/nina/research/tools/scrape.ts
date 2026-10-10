@@ -10,15 +10,28 @@ import { fetchSourceMarkdown } from "@repo/backend/confect/nina/research/tools/m
 import { getDocumentMetadata } from "@repo/backend/confect/nina/research/tools/metadata";
 import { assertPublicResearchUrl } from "@repo/backend/confect/nina/research/tools/safety";
 import dedent from "dedent";
-import { Duration, Effect, Result } from "effect";
+import { Duration, Effect, Result, Schema } from "effect";
 
 /**
- * One scrape is a research step, so it ends within the step budget of the
- * specialist purpose that runs the research agent. With `autoResume: false` the
- * Firecrawl SDK waits 10 seconds per request, and it retries a 502 up to two
- * more times, so this deadline is the backstop for the whole call.
+ * How long one page read may take, in milliseconds. `timeoutMs` is the
+ * provider's own limit. With `autoResume: false` the Firecrawl SDK surfaces
+ * that limit at once, and it retries a 502 up to two more times, so
+ * `deadlineMs` is the backstop for the whole read.
  */
-const SCRAPE_DEADLINE = Duration.millis(purposes.specialist.timeout.stepMs);
+const PageLimits = Schema.Struct({
+  deadlineMs: Schema.Finite,
+  timeoutMs: Schema.Finite,
+});
+
+/**
+ * A link the learner gave is the point of the question, so its read gets the
+ * step budget of the specialist purpose that runs research. Measured on 10
+ * October 2026, single page reads took 0.9 to 5.7 seconds.
+ */
+const LEARNER_LINK = {
+  deadlineMs: purposes.specialist.timeout.stepMs,
+  timeoutMs: 15_000,
+};
 
 const scrapeFailure = () =>
   new ResearchScrapeError({
@@ -26,7 +39,69 @@ const scrapeFailure = () =>
   });
 
 /**
- * Scrapes one URL and returns structured evidence for citation checks.
+ * Reads one page as markdown without telling the learner: the page's own
+ * markdown form when it has one, else the provider's. A result without
+ * `markdown` carries the `error`: the address is not public, the page could
+ * not be retrieved in time, or it had no text.
+ */
+export const readPage = Effect.fn("research.readPage")(function* (
+  url: string,
+  limits: typeof PageLimits.Type
+) {
+  const safeUrl = yield* Effect.result(assertPublicResearchUrl(url));
+  if (Result.isFailure(safeUrl)) {
+    return { error: safeUrl.failure.message, metadata: {}, url };
+  }
+  const publicUrl = safeUrl.success.publicUrl;
+  const { nativeMarkdown, scrapeResult } = yield* Effect.all(
+    {
+      nativeMarkdown: safeUrl.success.nativeFetchUrl
+        ? fetchSourceMarkdown(safeUrl.success.nativeFetchUrl)
+        : Effect.as(Effect.void, undefined),
+      scrapeResult: readFirecrawlApp().pipe(
+        Effect.flatMap((client) =>
+          Effect.tryPromise({
+            try: () =>
+              client.scrape(publicUrl, {
+                autoResume: false,
+                formats: ["markdown"],
+                timeout: limits.timeoutMs,
+              }),
+            catch: scrapeFailure,
+          }).pipe(
+            Effect.timeoutOrElse({
+              duration: Duration.millis(limits.deadlineMs),
+              orElse: () => Effect.fail(scrapeFailure()),
+            })
+          )
+        ),
+        Effect.match({
+          onFailure: (error) => ({ error: error.message }),
+          onSuccess: (response) => ({ response }),
+        })
+      ),
+    },
+    { concurrency: "unbounded" }
+  );
+  if ("error" in scrapeResult) {
+    return nativeMarkdown
+      ? { markdown: nativeMarkdown, metadata: {}, url: publicUrl }
+      : { error: scrapeResult.error, metadata: {}, url: publicUrl };
+  }
+  const metadata = getDocumentMetadata({
+    ...(scrapeResult.response.metadata === undefined
+      ? {}
+      : { metadata: scrapeResult.response.metadata }),
+  });
+  const markdown = nativeMarkdown ?? scrapeResult.response.markdown;
+  return markdown
+    ? { markdown, metadata, url: publicUrl }
+    : { error: "No content found.", metadata, url: publicUrl };
+});
+
+/**
+ * Reads one link the learner gave and shows its card: loading, then the
+ * selected text or the reason the page could not be read.
  */
 export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   maxLength = 3000,
@@ -46,98 +121,26 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     type: "data-scrape-url",
     data: { url, status: "loading", content: "" },
   });
-  const safeUrl = yield* Effect.result(assertPublicResearchUrl(url));
-  if (Result.isFailure(safeUrl)) {
-    const error = safeUrl.failure.message;
+  const page = yield* readPage(url, LEARNER_LINK);
+  if (!("markdown" in page)) {
     yield* publish({
       id: toolCallId,
       type: "data-scrape-url",
       data: {
-        url,
+        url: page.url,
         status: "error",
         content: "",
-        error,
-      },
-    });
-    return { data: { url, content: "" }, error } satisfies ScrapeOutput;
-  }
-  const publicUrl = safeUrl.success.publicUrl;
-  const { nativeMarkdown, scrapeResult } = yield* Effect.all(
-    {
-      nativeMarkdown: safeUrl.success.nativeFetchUrl
-        ? fetchSourceMarkdown(safeUrl.success.nativeFetchUrl)
-        : Effect.as(Effect.void, undefined),
-      scrapeResult: readFirecrawlApp().pipe(
-        Effect.flatMap((client) =>
-          Effect.tryPromise({
-            try: () =>
-              client.scrape(publicUrl, {
-                // Surfaces a timeout at once instead of waiting for SDK resumes.
-                autoResume: false,
-                formats: ["markdown"],
-                timeout: 5000,
-              }),
-            catch: scrapeFailure,
-          }).pipe(
-            Effect.timeoutOrElse({
-              duration: SCRAPE_DEADLINE,
-              orElse: () => Effect.fail(scrapeFailure()),
-            })
-          )
-        ),
-        Effect.match({
-          onFailure: (error) => ({ error: error.message }),
-          onSuccess: (response) => ({ response }),
-        })
-      ),
-    },
-    { concurrency: "unbounded" }
-  );
-  if ("error" in scrapeResult && !nativeMarkdown) {
-    yield* publish({
-      id: toolCallId,
-      type: "data-scrape-url",
-      data: {
-        url: publicUrl,
-        status: "error",
-        content: "",
-        error: scrapeResult.error,
+        ...page.metadata,
+        error: page.error,
       },
     });
     return {
-      data: { url: publicUrl, content: "" },
-      error: scrapeResult.error,
-    } satisfies ScrapeOutput;
-  }
-  let markdown = nativeMarkdown;
-  let metadata = {};
-  if ("response" in scrapeResult) {
-    markdown ??= scrapeResult.response.markdown;
-    metadata = getDocumentMetadata({
-      ...(scrapeResult.response.metadata === undefined
-        ? {}
-        : { metadata: scrapeResult.response.metadata }),
-    });
-  }
-  if (!markdown) {
-    yield* publish({
-      id: toolCallId,
-      type: "data-scrape-url",
-      data: {
-        url: publicUrl,
-        status: "error",
-        content: "",
-        ...metadata,
-        error: "No content found.",
-      },
-    });
-    return {
-      data: { url: publicUrl, content: "", ...metadata },
-      error: "No content found.",
+      data: { url: page.url, content: "", ...page.metadata },
+      error: page.error,
     } satisfies ScrapeOutput;
   }
   const processedContent = selectRelevantContent({
-    content: markdown,
+    content: page.markdown,
     maxLength,
     ...(selectionQuery === undefined ? {} : { query: selectionQuery }),
   });
@@ -145,17 +148,17 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     id: toolCallId,
     type: "data-scrape-url",
     data: {
-      url: publicUrl,
+      url: page.url,
       status: "done",
       content: processedContent,
-      ...metadata,
+      ...page.metadata,
     },
   });
   return {
     data: {
-      url: publicUrl,
+      url: page.url,
       content: processedContent,
-      ...metadata,
+      ...page.metadata,
     },
     error: undefined,
   } satisfies ScrapeOutput;

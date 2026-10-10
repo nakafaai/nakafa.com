@@ -89,7 +89,13 @@ tools with a warning.
   call. A step with no tools after a tool call does not make the model write
   notes through the gateway (it emits another, invalid, tool call), so there is
   no notes step. `grounding.ts`, its tests, the prompt sentences that promised
-  grounding, and the `@ai-sdk/google` dependency go with it.
+  grounding, and the `@ai-sdk/google` dependency go with it. The search asks
+  Firecrawl for results only and then reads the two best result pages itself,
+  in parallel, each within 10 seconds. Measured on production on 10 October
+  2026: a search that also read its five result pages took 76 seconds, a search
+  alone 0.5 to 2.3 seconds, one page read 0.9 to 5.7 seconds, and the provider
+  plan refuses more than about ten page reads a minute. A page that is not read
+  keeps the description the search returned, so it is evidence, not a failure.
 - **Attachments.** The documents of one turn, every attachment whose media type
   does not start with `image/`, may total at most 10 MiB (`NINA_DOCUMENT_SIZE`).
   Documents travel inside the request body, which the gateway accepts up to

@@ -6,6 +6,7 @@ import type {
 import {
   formatScrapeOutput,
   isSuccessfulScrapeOutput,
+  readPage,
   scrapeUrl,
 } from "@repo/backend/confect/nina/research/tools/scrape";
 import { Array as Arr, Effect, Fiber, MutableRef, Option } from "effect";
@@ -140,6 +141,32 @@ describe("research scrape tool", () => {
         expect(firecrawlApp.scrape).toHaveBeenCalledWith(
           url,
           expect.objectContaining({ autoResume: false })
+        );
+      })
+  );
+
+  it.effect(
+    "gives a result page its own shorter limits and reports an unread page without a card",
+    () =>
+      Effect.gen(function* () {
+        firecrawlApp.scrape.mockReturnValue(new Promise(() => undefined));
+        const fiber = yield* Effect.forkChild(
+          readPage("https://example.com/slow", {
+            deadlineMs: 10_000,
+            timeoutMs: 8000,
+          })
+        );
+        yield* TestClock.adjust("9999 millis");
+        expect(fiber.pollUnsafe()).toBeUndefined();
+        yield* TestClock.adjust("1 millis");
+        expect(yield* Fiber.join(fiber)).toEqual({
+          error: "The page could not be retrieved. Please try again.",
+          metadata: {},
+          url: "https://example.com/slow",
+        });
+        expect(firecrawlApp.scrape).toHaveBeenLastCalledWith(
+          "https://example.com/slow",
+          { autoResume: false, formats: ["markdown"], timeout: 8000 }
         );
       })
   );

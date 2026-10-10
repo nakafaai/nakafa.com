@@ -25,8 +25,7 @@ export function formatWebSearchOutput(output: WebSearchOutput) {
     - Inline citation: ${source.citation}
     - Description: ${source.description}
 
-    ### Content
-    ${source.content}`
+    ${source.content ? `### Content\n    ${source.content}` : "- Page text: not read. Only the description above is known."}`
       ),
       Arr.join("\n\n")
     )}
