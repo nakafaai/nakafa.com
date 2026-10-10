@@ -21,18 +21,21 @@ function wordsOf(text: string) {
   return HashSet.fromIterable(Str.split(text, " "));
 }
 
+/** Whether two texts hold the same words once case, punctuation and spacing are ignored. */
+export function sameWords(first: string, second: string) {
+  return normalizeText(first) === normalizeText(second);
+}
+
 /**
- * Whether two texts say the same thing: equal once normalized, or sharing at
- * least 80 percent of their words (the words in both, over the words in either).
+ * Whether two texts say the same thing: the same words, or sharing at least 80
+ * percent of their words (the words in both, over the words in either).
  */
 export function saysSame(first: string, second: string) {
-  const left = normalizeText(first);
-  const right = normalizeText(second);
-  if (left === right) {
+  if (sameWords(first, second)) {
     return true;
   }
-  const leftWords = wordsOf(left);
-  const rightWords = wordsOf(right);
+  const leftWords = wordsOf(normalizeText(first));
+  const rightWords = wordsOf(normalizeText(second));
   const shared = HashSet.size(HashSet.intersection(leftWords, rightWords));
   const either = HashSet.size(HashSet.union(leftWords, rightWords));
   return shared / either >= SAME_OVERLAP;

@@ -72,24 +72,27 @@ export const countSources = Effect.fn("nina.memory.store.countSources")(
 );
 
 /**
- * Records that a chat said a memory. A chat counts once for a memory, and a
- * memory keeps at most `SOURCE_LIMIT` chats.
+ * Records that a chat said a memory and tells whether the chat is now one of
+ * its sources. A chat counts once for a memory, and a memory keeps at most
+ * `SOURCE_LIMIT` chats, so a chat past the limit is not recorded and deleting
+ * it forgets nothing.
  */
 export const addSource = Effect.fn("nina.memory.store.addSource")(function* (
   memory: { readonly id: MemoryId; readonly userId: UserId },
   chatId: Docs["chats"]["_id"]
 ) {
   const sources = yield* readSources(memory.id);
-  if (
-    Arr.length(sources) >= SOURCE_LIMIT ||
-    Arr.some(sources, (source) => source.chatId === chatId)
-  ) {
-    return;
+  if (Arr.some(sources, (source) => source.chatId === chatId)) {
+    return true;
+  }
+  if (Arr.length(sources) >= SOURCE_LIMIT) {
+    return false;
   }
   yield* (yield* DatabaseWriter)
     .table("ninaMemorySources")
     .insert({ chatId, memoryId: memory.id, userId: memory.userId })
     .pipe(Effect.orDie);
+  return true;
 });
 
 /** Deletes a memory with the source rows that point at it. */

@@ -34,6 +34,7 @@ import {
   Effect,
   Record as Rec,
   Schema,
+  Struct,
 } from "effect";
 
 /** Learner text one capture call reads. */
@@ -215,6 +216,7 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
         candidates,
         chatId: turn.chatId,
         ...(lesson === undefined ? {} : { lesson }),
+        seen: Arr.map(learner.known, Struct.pick(["confirmedAt", "id"])),
         turnId: turn._id,
         userId: turn.userId,
       })

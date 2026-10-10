@@ -4,8 +4,12 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { endOfDay } from "@repo/backend/confect/nina/memory/check";
-import { saysSame } from "@repo/backend/confect/nina/memory/match";
+import { sameWords, saysSame } from "@repo/backend/confect/nina/memory/match";
 import { MEMORY_FIELD, openWith } from "@repo/backend/confect/nina/memory/seal";
+import {
+  changedSince,
+  lostMemory,
+} from "@repo/backend/confect/nina/memory/seen";
 import {
   addSource,
   deleteMemory,
@@ -15,14 +19,17 @@ import {
 import {
   MEMORY_LIMIT,
   type NinaMemoryCandidate,
+  type NinaMemorySeen,
 } from "@repo/backend/confect/nina/memory.spec";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, HashSet, Option, Order } from "effect";
 
 type ChatId = Docs["chats"]["_id"];
+type MemoryId = Docs["ninaMemories"]["_id"];
 type UserId = Docs["users"]["_id"];
 type Candidate = typeof NinaMemoryCandidate.Type;
+type Seen = typeof NinaMemorySeen.Type;
 type Opened = Effect.Success<ReturnType<typeof openWith>>[number];
 type LearnerKeys = Effect.Success<ReturnType<typeof ensureLearnerKeys>>;
 
@@ -71,12 +78,15 @@ function endOf(candidate: Candidate) {
 }
 
 /**
- * Says a memory again: it was confirmed now, its words are replaced when they
- * differ, and a situation takes the new end date. The learner keeps authorship
- * of words they wrote. The chat becomes one more source.
+ * Says a memory again: it was confirmed now and the chat becomes one more
+ * source. The candidate's words replace the memory's, with Nina as their
+ * author, only when they say something new, nobody changed the memory since the
+ * call read it, and the chat is one of its sources, so that deleting the chat
+ * can forget what it taught. A situation takes a new end date on the same terms.
  */
 const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
   candidate,
+  changed,
   chatId,
   keys,
   memory,
@@ -84,23 +94,34 @@ const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
   validUntil,
 }: {
   readonly candidate: Candidate;
+  readonly changed: boolean;
   readonly chatId: ChatId;
   readonly keys: LearnerKeys;
   readonly memory: Opened;
   readonly now: number;
   readonly validUntil: Option.Option<number>;
 }) {
+  const recorded = yield* addSource(
+    { id: memory._id, userId: memory.userId },
+    chatId
+  );
+  const mayRewrite = recorded && !changed;
+  const rewrites = mayRewrite && !sameWords(memory.text, candidate.text);
   yield* (yield* DatabaseWriter)
     .table("ninaMemories")
     .patch(memory._id, {
       confirmedAt: now,
-      ...(memory.text === candidate.text
-        ? {}
-        : { text: yield* sealText(keys, MEMORY_FIELD, candidate.text) }),
-      ...(Option.isSome(validUntil) ? { validUntil: validUntil.value } : {}),
+      ...(rewrites
+        ? {
+            author: "nina" as const,
+            text: yield* sealText(keys, MEMORY_FIELD, candidate.text),
+          }
+        : {}),
+      ...(mayRewrite && Option.isSome(validUntil)
+        ? { validUntil: validUntil.value }
+        : {}),
     })
     .pipe(Effect.orDie);
-  yield* addSource({ id: memory._id, userId: memory.userId }, chatId);
 });
 
 /**
@@ -157,6 +178,7 @@ const createMemory = Effect.fn("nina.memory.write.create")(function* ({
  */
 const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   candidate,
+  changedIds,
   chatId,
   keys,
   lesson,
@@ -164,6 +186,7 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   userId,
 }: {
   readonly candidate: Candidate;
+  readonly changedIds: HashSet.HashSet<MemoryId>;
   readonly chatId: ChatId;
   readonly keys: LearnerKeys;
   readonly lesson: string | undefined;
@@ -190,6 +213,7 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   }
   yield* confirmMemory({
     candidate,
+    changed: HashSet.has(changedIds, target.value._id),
     chatId,
     keys,
     memory: target.value,
@@ -204,12 +228,15 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
  * returns how many memories it wrote or confirmed, which it also stores in the
  * turn. A candidate that names a known memory, or says what a memory of its
  * kind already says, confirms that memory. Any other candidate is a new memory.
- * Paused memory, a deleted chat, or a deleted turn writes nothing.
+ * The model read the message some time ago, so the write first checks what could
+ * have changed meanwhile: paused memory, a deleted chat or turn, or a memory the
+ * learner removed writes nothing, and a memory edited since keeps its words.
  */
 export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   readonly candidates: readonly Candidate[];
   readonly chatId: ChatId;
   readonly lesson?: string | undefined;
+  readonly seen: readonly Seen[];
   readonly turnId: Docs["ninaTurns"]["_id"];
   readonly userId: UserId;
 }) {
@@ -231,11 +258,17 @@ export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   if (!(chat && turn) || (yield* readPaused(args.userId))) {
     return 0;
   }
+  const current = yield* readMemories(args.userId);
+  if (lostMemory(args.seen, current)) {
+    return 0;
+  }
+  const changedIds = changedSince(args.seen, current);
   const now = yield* Clock.currentTimeMillis;
   const keys = yield* ensureLearnerKeys(args.userId);
   const written = yield* Effect.forEach(args.candidates, (candidate) =>
     writeCandidate({
       candidate,
+      changedIds,
       chatId: args.chatId,
       keys,
       lesson: args.lesson,

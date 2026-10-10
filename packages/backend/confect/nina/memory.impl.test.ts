@@ -362,7 +362,8 @@ describe("Nina memory of the October 2026 settings card", () => {
     expect(await f.owner.mutation(enable, {})).toEqual({ facts: [] });
     expect(await f.owner.mutation(disable, {})).toBeNull();
     expect(await f.owner.mutation(forget, { key: 0 })).toBeNull();
-    expect([await f.stored(), await f.sources()]).toEqual(before);
+    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
+    expect([await f.stored(), await f.sources()]).toStrictEqual(before);
     expect(
       await f.t.query((ctx) => ctx.db.query("learningPreferences").collect())
     ).toEqual([]);
@@ -388,6 +389,7 @@ describe("Nina memory for a turn", () => {
     ]);
     expect(open.known).toHaveLength(MEMORY_PROMPT_LIMIT + 3);
     expect(open.known).toContainEqual({
+      confirmedAt: 1,
       id: expect.any(String),
       kind: "situation",
       text: "Ended",

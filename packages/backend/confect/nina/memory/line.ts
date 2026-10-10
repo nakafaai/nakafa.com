@@ -17,6 +17,10 @@ export function memoryLine({ kind, text }: Pick<Note, "kind" | "text">) {
 }
 
 /** One memory as the capture call reads it, with the id it can name: `- [id] (level) Kelas 12`. */
-export function knownLine({ id, kind, text }: Note) {
+export function knownLine({
+  id,
+  kind,
+  text,
+}: Pick<Note, "id" | "kind" | "text">) {
   return `- [${id}] (${kind}) ${oneLine(text)}`;
 }

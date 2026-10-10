@@ -22,7 +22,8 @@ export const MEMORY_CAPTURE_LIMIT = 3;
 
 /**
  * What a memory is about. `situation` is something with an end, such as an
- * exam date, and carries `validUntil`.
+ * exam date. Nina dates one with `validUntil`; one the learner writes has no
+ * date, so it stays until the learner removes it or a later chat dates it.
  */
 export const NinaMemoryKind = Schema.Literals([
   "level",
@@ -32,11 +33,14 @@ export const NinaMemoryKind = Schema.Literals([
   "situation",
 ]);
 
-/** Who wrote the words: Nina from a chat, or the learner on the Memory page. */
+/**
+ * Who wrote the words as they stand: Nina from a chat, or the learner on the
+ * Memory page. A chat that rewrites the words makes Nina their author.
+ */
 export const NinaMemoryAuthor = Schema.Literals(["nina", "learner"]);
 
 /** One memory as the learner reads and writes it. */
-export const NinaMemoryText = Schema.Trim.check(
+const NinaMemoryText = Schema.Trim.check(
   Schema.isMinLength(1),
   Schema.isMaxLength(MEMORY_TEXT_LIMIT)
 );
@@ -149,10 +153,19 @@ export const NinaLearnerProfile = Schema.Struct({
 
 /** One memory as Nina and the capture call read it. */
 const NinaMemoryNote = Schema.Struct({
+  confirmedAt: Schema.Finite,
   id: Id("ninaMemories"),
   kind: NinaMemoryKind,
   text: NinaMemoryText,
 });
+
+/**
+ * A memory as the capture call read it, before the model read the message.
+ * The write compares it with the stored memory to tell what changed meanwhile.
+ */
+export const NinaMemorySeen = NinaMemoryNote.mapFields(
+  Struct.pick(["confirmedAt", "id"])
+);
 
 /**
  * What a turn knows about one learner. `prompt` holds the memories Nina reads
@@ -267,6 +280,9 @@ export default GroupSpec.make()
       returns: () => NinaLearner,
     })
   )
+  // Writes what a capture call found. `seen` is what the call read before the
+  // model read the message: the write changes nothing when the learner removed
+  // one of those memories meanwhile, and leaves the words of one that changed.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "capture",
@@ -274,6 +290,9 @@ export default GroupSpec.make()
         candidates: NinaMemoryCapture.fields.memories,
         chatId: Id("chats"),
         lesson: Schema.optionalKey(Schema.NonEmptyString),
+        seen: Schema.mutable(Schema.Array(NinaMemorySeen)).check(
+          Schema.isMaxLength(MEMORY_LIMIT)
+        ),
         turnId: Id("ninaTurns"),
         userId: Id("users"),
       }),

@@ -1,5 +1,24 @@
 import { describe, expect, it } from "@effect/vitest";
-import { saysSame } from "@repo/backend/confect/nina/memory/match";
+import { sameWords, saysSame } from "@repo/backend/confect/nina/memory/match";
+
+describe("memory same words", () => {
+  it.each([
+    ["Kelas 12 IPA", "Kelas 12 IPA."],
+    ["Kelas   12,IPA", "kelas 12 ipa"],
+  ])("holds the same words in %j and %j", (first, second) => {
+    expect(sameWords(first, second)).toBe(true);
+  });
+
+  it.each([
+    ["Kelas 12 IPA", "Kelas 12 IPS"],
+    [
+      "Saya kelas 12 IPA di SMA Negeri 1 Bandung",
+      "Saya kelas 12 IPA di SMA Negeri 1 Bandung sekarang",
+    ],
+  ])("does not hold the same words in %j and %j", (first, second) => {
+    expect(sameWords(first, second)).toBe(false);
+  });
+});
 
 describe("memory text match", () => {
   it.each([

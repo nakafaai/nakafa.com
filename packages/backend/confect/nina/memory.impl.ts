@@ -248,6 +248,7 @@ const read = FunctionImpl.make(
     }
     const memories = yield* readOpened(userId);
     const note = (memory: (typeof memories)[number]) => ({
+      confirmedAt: memory.confirmedAt,
       id: memory._id,
       kind: memory.kind,
       text: memory.text,

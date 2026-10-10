@@ -1,10 +1,19 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { NinaLearnerProfile } from "@repo/backend/confect/nina/memory.spec";
+import {
+  countTextTokens,
+  NINA_BUDGET,
+} from "@repo/backend/confect/nina/budget";
+import { memoryLine } from "@repo/backend/confect/nina/memory/line";
+import {
+  MEMORY_PROMPT_LIMIT,
+  MEMORY_TEXT_LIMIT,
+  type NinaLearnerProfile,
+} from "@repo/backend/confect/nina/memory.spec";
 import {
   formatLearnerProfile,
   formatLearnerPrompt,
 } from "@repo/backend/confect/nina/prompt/learner";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option, String as Str } from "effect";
 
 const profile: typeof NinaLearnerProfile.Type = {
   focus: "tryout",
@@ -41,6 +50,16 @@ describe("Nina learner prompt", () => {
         "\n"
       )
     );
+  });
+
+  it("gives the account alone, with no memory block, when Nina has no memories", () => {
+    const prompt = formatLearnerPrompt({
+      memories: [],
+      profile: { region: "germany" },
+    });
+    expect(prompt).toContain("# Learner");
+    expect(prompt).toContain("- Region: germany");
+    expect(prompt).not.toContain("<memories>");
   });
 
   it("adds the chosen memories as marked data, in the order they were chosen, only when there are some", () => {
@@ -100,5 +119,34 @@ describe("Nina learner prompt", () => {
     expect(prompt).toContain("- (goal) Memory 0 ");
     expect(prompt).not.toContain("Memory 59 ");
     expect(prompt).toContain("Learner facts shortened.");
+  });
+
+  it("still closes the memory block, within the budget, when the longest memories the learner may keep do not fit", () => {
+    const memories = Arr.makeBy(MEMORY_PROMPT_LIMIT, (index) => ({
+      kind: "struggle" as const,
+      text: Str.slice(
+        0,
+        MEMORY_TEXT_LIMIT
+      )(
+        `Topik ${index}: ${Arr.join(
+          Arr.makeBy(40, (word) => `x${index}y${word}z`),
+          " "
+        )}`
+      ),
+    }));
+    // The test means something only when the memories alone outgrow the budget.
+    expect(
+      countTextTokens(Arr.join(Arr.map(memories, memoryLine), "\n"))
+    ).toBeGreaterThan(NINA_BUDGET.learner);
+    const prompt = Option.getOrThrow(
+      Option.fromUndefinedOr(formatLearnerPrompt({ memories, profile }))
+    );
+    expect(prompt).toContain("- (struggle) Topik 0: ");
+    expect(prompt).not.toContain(`Topik ${MEMORY_PROMPT_LIMIT - 1}: `);
+    expect(countTextTokens(prompt)).toBeLessThanOrEqual(NINA_BUDGET.learner);
+    // The note about the cut sits inside the data block, which still ends the section.
+    expect(prompt).toContain("Learner facts shortened.]\n</memories>");
+    expect(Str.endsWith("</memories>")(prompt)).toBe(true);
+    expect(prompt).toContain("- Latest finished try-out:");
   });
 });

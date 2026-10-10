@@ -25,7 +25,9 @@ vi.mock("@repo/backend/confect/gateway/live", async () => ({
 const NOW = Date.UTC(2026, 9, 10, 12);
 const MESSAGE = "Aku kelas 12 dan mau ikut SNBT 2027.";
 const LESSON = "material:lesson:mathematics:material-section:limits";
+const edit = Ref.getFunctionReference(refs.public.nina.memory.edit);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
+const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 
 beforeEach(() => {
@@ -45,6 +47,26 @@ function answers(...memories: (typeof NinaMemoryCandidate.Type)[]) {
     doGenerate: providerStep([
       { type: "text", text: encodeJsonText({ memories }) },
     ]),
+  });
+  provider.languageModel.mockReturnValue(model);
+  return model;
+}
+
+/**
+ * A model that answers like `answers`, but only after `meanwhile` ran: the
+ * learner doing something while the model reads the message.
+ */
+function answersAfter(
+  meanwhile: () => Promise<unknown>,
+  ...memories: (typeof NinaMemoryCandidate.Type)[]
+) {
+  const model = new MockLanguageModelV4({
+    doGenerate: async () => {
+      await meanwhile();
+      return providerStep([
+        { type: "text", text: encodeJsonText({ memories }) },
+      ]);
+    },
   });
   provider.languageModel.mockReturnValue(model);
   return model;
@@ -204,6 +226,35 @@ describe("memory capture", () => {
     );
     expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
     expect(await f.stored()).toHaveLength(1);
+  });
+
+  it("saves nothing when the learner removes a memory while the model reads the message", async () => {
+    const f = await fixture();
+    const id = await f.seed({ kind: "level", text: "Kelas 11." });
+    answersAfter(() => f.owner.mutation(remove, { id }), {
+      ...level,
+      known: id,
+    });
+    await f.capture();
+    expect(await f.stored()).toEqual([]);
+    expect((await f.turn())?.remembered).toBeUndefined();
+    expect((await f.turn())?.usage).toEqual([
+      expect.objectContaining({ agent: "memory", calls: 1 }),
+    ]);
+  });
+
+  it("keeps the words the learner edits while the model reads the message", async () => {
+    const f = await fixture();
+    const id = await f.seed({ kind: "level", text: "Kelas 11." });
+    answersAfter(
+      () => f.owner.mutation(edit, { id, kind: "level", text: "Kelas 12 SMA" }),
+      { ...level, known: id, text: "Kelas 12 IPA." }
+    );
+    await f.capture();
+    expect(await f.texts()).toEqual(["Kelas 12 SMA"]);
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({ author: "learner" }),
+    ]);
   });
 
   it("saves a situation with the end of its last day and links a memory to the open lesson", async () => {
