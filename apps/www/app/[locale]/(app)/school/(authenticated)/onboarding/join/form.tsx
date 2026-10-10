@@ -13,6 +13,7 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
+import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -21,11 +22,13 @@ import {
   schoolJoinFormSchema,
 } from "@/app/[locale]/(app)/school/(authenticated)/onboarding/join/schema";
 import { reportClientException } from "@/lib/analytics/client";
+import { requireConvexOnline } from "@/lib/convex/online";
 /** Render the onboarding form for joining an existing school. */
 export function SchoolOnboardingJoinForm() {
   const t = useTranslations("School.Onboarding");
   const router = useRouter();
   const joinSchool = useMutation(schools.mutations.joinSchool);
+  const convex = useConvex();
   const form = useForm({
     defaultValues: schoolJoinDefaultValues,
     validators: {
@@ -33,24 +36,27 @@ export function SchoolOnboardingJoinForm() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(() => joinSchool(value)).pipe(
-          Effect.flatMap(Effect.fromResult),
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            Effect.tryPromise(() => joinSchool(value)).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tapError((error) =>
+                reportClientException(error, {
+                  source: "school-onboarding-join",
+                })
+              )
+            )
+          ),
           Effect.tap(({ slug }) =>
             Effect.sync(() => {
               router.push(`/school/${slug}`);
             })
           ),
           Effect.matchEffect({
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "school-onboarding-join",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(t("school-joining-failed"));
-                  })
-                )
-              ),
+            onFailure: () =>
+              Effect.sync(() => {
+                toast.error(t("school-joining-failed"));
+              }),
             onSuccess: () => Effect.void,
           })
         )

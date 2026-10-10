@@ -32,6 +32,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
+import { useConvex } from "convex/react";
 import { Array as Arr, Effect, Schema } from "effect";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -40,6 +41,7 @@ import { toast } from "sonner";
 import { getTag, getTagsByRole } from "@/components/school/classes/data/tag";
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/routes";
 import { reportClientException } from "@/lib/analytics/client";
+import { requireConvexOnline } from "@/lib/convex/online";
 import { useClass } from "@/lib/school/classes/context";
 import { useClassPermissions } from "@/lib/school/classes/permissions";
 
@@ -86,6 +88,7 @@ function SchoolClassesForumNewContent() {
   const schoolMembership = useClass((c) => c.schoolMembership);
   const { can } = useClassPermissions();
   const createForum = useMutation(classes.forums.mutations.forums.createForum);
+  const convex = useConvex();
   const canModerateForum = can(PERMISSIONS.FORUM_MODERATE);
   // Get available tags based on the same permission split enforced by Convex.
   const availableTags = getTagsByRole(
@@ -100,13 +103,22 @@ function SchoolClassesForumNewContent() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(() =>
-          createForum({
-            ...value,
-            classId,
-          })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            Effect.tryPromise(() =>
+              createForum({
+                ...value,
+                classId,
+              })
+            ).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tapError((error) =>
+                reportClientException(error, {
+                  source: "school-forum-create",
+                })
+              )
+            )
+          ),
           Effect.tap((forumId) =>
             Effect.sync(() => {
               const href = getSchoolClassesForumHref({
@@ -121,16 +133,10 @@ function SchoolClassesForumNewContent() {
             })
           ),
           Effect.matchEffect({
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "school-forum-create",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(t("create-forum-failed"));
-                  })
-                )
-              ),
+            onFailure: () =>
+              Effect.sync(() => {
+                toast.error(t("create-forum-failed"));
+              }),
             onSuccess: () => Effect.void,
           })
         )

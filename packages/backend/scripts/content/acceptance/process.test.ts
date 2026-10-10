@@ -11,6 +11,7 @@ import {
   withTerminal,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
+import { ticking, versionServiceError } from "@repo/backend/test/acceptance";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
@@ -61,6 +62,10 @@ const fixture = Effect.gen(function* () {
 const spawner = Effect.fn("ProcessTest.spawner")(function* (
   options: {
     exit?: Effect.Effect<ChildProcessSpawner.ExitCode>;
+    /** Output of the first spawn, which exits before it becomes ready; later spawns are healthy. */
+    failFirst?: string;
+    /** When set, the output is written here before the spawn returns, so readiness reads it. */
+    log?: string;
     output?: string;
     running?: Effect.Effect<boolean>;
   } = {}
@@ -71,6 +76,7 @@ const spawner = Effect.fn("ProcessTest.spawner")(function* (
   const temporaryRoots = MutableList.make<string>();
   const service = ChildProcessSpawner.make((command) =>
     Effect.gen(function* () {
+      const failure = commands.length === 0 ? options.failFirst : undefined;
       MutableList.append(commands, command);
       const root =
         command._tag === "StandardCommand"
@@ -86,14 +92,25 @@ const spawner = Effect.fn("ProcessTest.spawner")(function* (
           release(present);
         }).pipe(Effect.orDie)
       );
+      const output = failure ?? options.output ?? "Convex functions ready!";
+      if (options.log !== undefined) {
+        yield* fs.writeFileString(options.log, output);
+      }
       return ChildProcessSpawner.makeHandle({
-        all: Stream.succeed(
-          new TextEncoder().encode(options.output ?? "Convex functions ready!")
-        ),
-        exitCode: options.exit ?? Effect.never,
+        all:
+          options.log === undefined
+            ? Stream.succeed(new TextEncoder().encode(output))
+            : Stream.empty,
+        exitCode:
+          failure === undefined
+            ? (options.exit ?? Effect.never)
+            : Effect.succeed(ChildProcessSpawner.ExitCode(1)),
         getInputFd: () => Sink.drain,
         getOutputFd: () => Stream.empty,
-        isRunning: options.running ?? Effect.succeed(true),
+        isRunning:
+          failure === undefined
+            ? (options.running ?? Effect.succeed(true))
+            : Effect.succeed(false),
         kill: () => Effect.void,
         pid: ChildProcessSpawner.ProcessId(1),
         stderr: Stream.empty,
@@ -448,4 +465,30 @@ writeFileSync("ready", "ready");`
         }).pipe(Effect.provide(services))
     );
   }
+
+  it.effect("retries a start answered with a 500 once, then starts clean", () =>
+    Effect.gen(function* () {
+      const { fs, runtime } = yield* fixture;
+      const log = `${runtime.directory}/convex.log`;
+      const child = yield* spawner({
+        failFirst: versionServiceError(500),
+        log,
+      });
+      fetcher.mockImplementation(() => Promise.resolve(new Response("owned")));
+      const result = yield* ticking(
+        withLocalBackend(runtime, Effect.void).pipe(
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            child.service
+          ),
+          Effect.result
+        )
+      );
+      expect(result._tag).toBe("Success");
+      expect(MutableList.toArray(child.commands)).toHaveLength(2);
+      for (const root of MutableList.toArray(child.temporaryRoots)) {
+        expect(yield* fs.exists(root)).toBe(false);
+      }
+    }).pipe(Effect.provide(services))
+  );
 });
