@@ -23,6 +23,7 @@ vi.mock("@convex-dev/agent", async (load) => {
 const NOW = Date.UTC(2026, 8, 27, 12);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
+const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const record = Ref.getFunctionReference(refs.internal.nina.usage.record);
 
@@ -140,6 +141,8 @@ describe("native Nina settlement", () => {
       })
     );
     await f.owner.mutation(cancel, { chatId: f.chatId });
+    // The saved answer wins the race: there is no run left to wait for.
+    expect((await f.inspect()).turn?.state.status).toBe("complete");
     await f.t.mutation(recover, { turnId: f.turnId });
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
@@ -233,6 +236,90 @@ describe("native Nina settlement", () => {
     expect(streams).toEqual([
       expect.objectContaining({ streamId, status: "aborted" }),
     ]);
+  });
+
+  it("asks a running generation to stop and pays back only after its run has exited", async () => {
+    const f = await fixture();
+    await f.t.mutation((ctx) =>
+      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
+    );
+    await f.t.mutation(claim, { turnId: f.turnId });
+    const streamId = await f.t.mutation((ctx) =>
+      ctx.runMutation(components.nina.streams.create, {
+        threadId: f.threadId,
+        order: 0,
+        stepOrder: 1,
+        format: "UIMessageChunk",
+      })
+    );
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+
+    // The stream is cut off, but the turn stays open with its credits held.
+    const stopping = await f.inspect();
+    expect(stopping.turn).toMatchObject({
+      phase: "active",
+      state: { status: "running" },
+      cancelRequestedAt: NOW,
+    });
+    expect(stopping.user?.credits).toBe(5);
+    expect(stopping.chat?.activeTurnId).toBe(f.turnId);
+    expect(Arr.filter(stopping.ledger, (row) => row.type === "refund")).toEqual(
+      []
+    );
+    expect(stopping.messages.page[0]).toMatchObject({
+      message: { role: "user" },
+      status: "failed",
+    });
+    expect(
+      await f.t.query((ctx) =>
+        listStreams(ctx, components.nina, {
+          threadId: f.threadId,
+          includeStatuses: ["aborted"],
+        })
+      )
+    ).toEqual([expect.objectContaining({ streamId, status: "aborted" })]);
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+
+    // The run exits once its stream has stopped, and only then does it settle.
+    await f.t.mutation(recover, { turnId: f.turnId, failure: "interrupted" });
+    const settled = await f.inspect();
+    expect(settled.turn?.state).toEqual({
+      status: "cancelled",
+      finishedAt: NOW,
+    });
+    expect(settled.turn).not.toHaveProperty("cancelRequestedAt");
+    expect(settled.user?.credits).toBe(10);
+    expect(settled.chat?.activeTurnId).toBeUndefined();
+    expect(
+      Arr.filter(settled.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
+    const events = await f.t.query((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(
+      Arr.filter(events, (job) => job.name.includes("deliverProductEvent"))
+    ).toEqual([]);
+  });
+
+  it("keeps the first request when a running turn is stopped twice", async () => {
+    const f = await fixture();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    vi.setSystemTime(NOW + 5000);
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    expect((await f.inspect()).turn).toMatchObject({ cancelRequestedAt: NOW });
+  });
+
+  it("tells a run to halt once its turn was stopped, settled or removed", async () => {
+    const f = await fixture();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(false);
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+    await f.t.mutation(recover, { turnId: f.turnId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+    await f.t.mutation((ctx) => ctx.db.delete("ninaTurns", f.turnId));
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
   });
 
   it("refunds a stopped generation with no final text and never enlarges the next credit period", async () => {

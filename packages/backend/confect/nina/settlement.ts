@@ -23,17 +23,10 @@ const settlementFailure = () =>
     message: "Unable to settle this Nina response.",
   });
 
-/** Inspect the Agent journal and settle its existing hold in the same transaction. */
-export const settleTurn = Effect.fn("nina.settlement")(function* (
-  turn: NinaTurnsDoc,
-  interrupted: "failed" | "cancelled",
-  failure?: typeof NinaFailureReason.Type
+/** True once the Agent journal holds this turn's final answer. */
+const answered = Effect.fn("nina.settlement.answered")(function* (
+  turn: NinaTurnsDoc
 ) {
-  if (turn.phase !== "active") {
-    return;
-  }
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
   const ctx = yield* MutationCtx;
   const messages = yield* Effect.tryPromise({
     try: () =>
@@ -44,7 +37,7 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
     catch: settlementFailure,
   });
   const final = messages.page[0];
-  const completed =
+  return (
     final?.order === turn.order &&
     final.status === "success" &&
     final.message?.role === "assistant" &&
@@ -54,28 +47,59 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
       : Arr.some(
           final.message.content,
           (part) => part.type === "text" && part.text.trim().length > 0
-        ));
+        ))
+  );
+});
+
+/**
+ * Cuts the turn off in the Agent journal: its stream stops taking output and
+ * its prompt is marked failed. Agent propagates a failed prompt to any output
+ * committed afterwards, so a late provider result can never become success
+ * while the user's text stays.
+ */
+const cutOff = Effect.fn("nina.settlement.cutOff")(function* (
+  turn: NinaTurnsDoc,
+  reason: "failed" | "cancelled"
+) {
+  const ctx = yield* MutationCtx;
+  yield* Effect.tryPromise({
+    try: () =>
+      abortStream(ctx, components.nina, {
+        threadId: turn.threadId,
+        order: turn.order,
+        reason,
+      }),
+    catch: settlementFailure,
+  });
+  yield* Effect.tryPromise({
+    try: () =>
+      ctx.runMutation(components.nina.messages.updateMessage, {
+        messageId: turn.promptMessageId,
+        patch: { status: "failed", error: reason },
+      }),
+    catch: settlementFailure,
+  });
+});
+
+/**
+ * Inspect the Agent journal and settle its existing hold in the same
+ * transaction. Only an active turn settles, so a second settlement of the same
+ * turn changes nothing and never refunds twice.
+ */
+export const settleTurn = Effect.fn("nina.settlement")(function* (
+  turn: NinaTurnsDoc,
+  interrupted: "failed" | "cancelled",
+  failure?: typeof NinaFailureReason.Type
+) {
+  if (turn.phase !== "active") {
+    return;
+  }
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const completed = yield* answered(turn);
   const status = completed ? "complete" : interrupted;
   if (!completed) {
-    yield* Effect.tryPromise({
-      try: () =>
-        abortStream(ctx, components.nina, {
-          threadId: turn.threadId,
-          order: turn.order,
-          reason: status,
-        }),
-      catch: settlementFailure,
-    });
-    // Agent propagates a failed prompt to any output committed after cancellation.
-    // Keep the user's text while preventing a late provider result becoming success.
-    yield* Effect.tryPromise({
-      try: () =>
-        ctx.runMutation(components.nina.messages.updateMessage, {
-          messageId: turn.promptMessageId,
-          patch: { status: "failed", error: status },
-        }),
-      catch: settlementFailure,
-    });
+    yield* cutOff(turn, interrupted);
     yield* refundCredits(turn, turn._id);
   }
   yield* writer
@@ -158,4 +182,27 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
       timestamp: finishedAt,
     });
   }
+});
+
+/**
+ * Asks the run of a running turn to stop, and nothing more. The stream is cut
+ * off and the request is stored, but the turn stays open: its credits stay held
+ * and its chat stays locked until the run has exited and `settleTurn` runs, so
+ * a stream that may still be running is never paid back. An answer that is
+ * already saved wins the race and settles at once, with no refund.
+ */
+export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
+  turn: Extract<NinaTurnsDoc, { phase: "active" }>
+) {
+  if (turn.cancelRequestedAt !== undefined) {
+    return;
+  }
+  if (yield* answered(turn)) {
+    return yield* settleTurn(turn, "cancelled");
+  }
+  yield* cutOff(turn, "cancelled");
+  yield* (yield* DatabaseWriter)
+    .table("ninaTurns")
+    .patch(turn._id, { cancelRequestedAt: yield* Clock.currentTimeMillis })
+    .pipe(Effect.orDie);
 });
