@@ -3413,10 +3413,7 @@ export declare const api: {
       add: FunctionReference<
         "mutation",
         "public",
-        {
-          kind: "level" | "goal" | "style" | "struggle" | "situation";
-          text: string;
-        },
+        { text: string },
         Id<"ninaMemories">
       >;
       clear: FunctionReference<"mutation", "public", {}, null>;
@@ -3424,11 +3421,7 @@ export declare const api: {
       edit: FunctionReference<
         "mutation",
         "public",
-        {
-          id: Id<"ninaMemories">;
-          kind: "level" | "goal" | "style" | "struggle" | "situation";
-          text: string;
-        },
+        { id: Id<"ninaMemories">; text: string },
         null
       >;
       enable: FunctionReference<
@@ -3460,7 +3453,6 @@ export declare const api: {
             createdAt: number;
             id: Id<"ninaMemories">;
             inUse: boolean;
-            kind: "level" | "goal" | "style" | "struggle" | "situation";
             sources: number;
             text: string;
             validUntil?: number;
@@ -9489,7 +9481,7 @@ export declare const internal: {
           known: Array<{
             confirmedAt: number;
             id: Id<"ninaMemories">;
-            kind: "level" | "goal" | "style" | "struggle" | "situation";
+            kind?: "level" | "goal" | "style" | "struggle" | "situation";
             text: string;
           }>;
           paused: boolean;
@@ -9517,7 +9509,7 @@ export declare const internal: {
           prompt: Array<{
             confirmedAt: number;
             id: Id<"ninaMemories">;
-            kind: "level" | "goal" | "style" | "struggle" | "situation";
+            kind?: "level" | "goal" | "style" | "struggle" | "situation";
             text: string;
           }>;
         }

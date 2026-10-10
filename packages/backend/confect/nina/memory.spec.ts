@@ -13,8 +13,8 @@ import { Schema, Struct } from "effect";
 
 /** Memories one learner keeps. Beyond it, the memory Nina wrote and confirmed longest ago leaves. */
 export const MEMORY_LIMIT = 100;
-/** Characters of one memory: a short statement, never a note. */
-export const MEMORY_TEXT_LIMIT = 280;
+/** Characters of one memory, its Markdown formatting included. */
+export const MEMORY_TEXT_LIMIT = 1000;
 /** Memories Nina reads in one turn. The Memory page marks them as in use. */
 export const MEMORY_PROMPT_LIMIT = 20;
 /** Memories one capture call may propose from a single message. */
@@ -54,7 +54,7 @@ const NinaMemoryText = Schema.Trim.check(
 export const NinaMemory = Schema.Struct({
   author: NinaMemoryAuthor,
   confirmedAt: Schema.Finite,
-  kind: NinaMemoryKind,
+  kind: Schema.optionalKey(NinaMemoryKind),
   lesson: Schema.optionalKey(Schema.NonEmptyString),
   text: Sealed,
   userId: Id("users"),
@@ -73,9 +73,8 @@ export const NinaMemorySource = Schema.Struct({
 
 /** One memory on the Memory page. `sources` counts the chats it came from. */
 export const NinaMemoryView = Schema.Struct({
-  ...NinaMemory.mapFields(
-    Struct.pick(["author", "confirmedAt", "kind", "validUntil"])
-  ).fields,
+  ...NinaMemory.mapFields(Struct.pick(["author", "confirmedAt", "validUntil"]))
+    .fields,
   createdAt: Schema.Finite,
   id: Id("ninaMemories"),
   inUse: Schema.Boolean,
@@ -91,7 +90,6 @@ export const NinaMemoryList = Schema.Struct({
 
 /** What the learner writes on the Memory page. */
 const NinaMemoryDraft = Schema.Struct({
-  kind: NinaMemoryKind,
   text: NinaMemoryText,
 });
 
@@ -155,7 +153,7 @@ export const NinaLearnerProfile = Schema.Struct({
 const NinaMemoryNote = Schema.Struct({
   confirmedAt: Schema.Finite,
   id: Id("ninaMemories"),
-  kind: NinaMemoryKind,
+  kind: Schema.optionalKey(NinaMemoryKind),
   text: NinaMemoryText,
 });
 

@@ -11,9 +11,14 @@ function oneLine(text: string) {
   return Str.trim(Str.replaceAll(WHITESPACE, " ")(text));
 }
 
-/** One memory as Nina reads it: `- (level) Kelas 12`. */
+/** The kind in front of a memory's words, when Nina gave it one. */
+function label(kind: Note["kind"]) {
+  return kind === undefined ? "" : `(${kind}) `;
+}
+
+/** One memory as Nina reads it: `- (level) Kelas 12`, or `- Kelas 12` for one the learner wrote. */
 export function memoryLine({ kind, text }: Pick<Note, "kind" | "text">) {
-  return `- (${kind}) ${oneLine(text)}`;
+  return `- ${label(kind)}${oneLine(text)}`;
 }
 
 /** One memory as the capture call reads it, with the id it can name: `- [id] (level) Kelas 12`. */
@@ -22,5 +27,5 @@ export function knownLine({
   kind,
   text,
 }: Pick<Note, "id" | "kind" | "text">) {
-  return `- [${id}] (${kind}) ${oneLine(text)}`;
+  return `- [${id}] ${label(kind)}${oneLine(text)}`;
 }

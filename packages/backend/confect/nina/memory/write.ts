@@ -39,6 +39,11 @@ const oldestFirst = Order.mapInput(
   (memory: Opened) => memory.confirmedAt
 );
 
+/** Whether a memory can be of a kind: it is of that kind, or the learner wrote it and it has none yet. */
+function takesKind(memory: Opened, kind: Candidate["kind"]) {
+  return memory.kind === undefined || memory.kind === kind;
+}
+
 /**
  * The memory a candidate confirms: the known memory it names, or else the first
  * memory of its kind that says the same. A known memory of another kind does not
@@ -47,13 +52,14 @@ const oldestFirst = Order.mapInput(
 function findTarget(memories: readonly Opened[], candidate: Candidate) {
   return Arr.findFirst(
     memories,
-    (memory) => memory._id === candidate.known && memory.kind === candidate.kind
+    (memory) =>
+      memory._id === candidate.known && takesKind(memory, candidate.kind)
   ).pipe(
     Option.orElse(() =>
       Arr.findFirst(
         memories,
         (memory) =>
-          memory.kind === candidate.kind &&
+          takesKind(memory, candidate.kind) &&
           saysSame(memory.text, candidate.text)
       )
     )
@@ -117,6 +123,8 @@ const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
             text: yield* sealText(keys, MEMORY_FIELD, candidate.text),
           }
         : {}),
+      // A memory the learner wrote has no kind until a chat says it again.
+      ...(mayRewrite ? { kind: candidate.kind } : {}),
       ...(mayRewrite && Option.isSome(validUntil)
         ? { validUntil: validUntil.value }
         : {}),

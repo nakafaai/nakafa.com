@@ -82,7 +82,6 @@ const list = FunctionImpl.make(
           createdAt: memory._creationTime,
           id: memory._id,
           inUse: HashSet.has(inUse, memory._id),
-          kind: memory.kind,
           sources,
           text: memory.text,
           ...(memory.validUntil === undefined
@@ -100,7 +99,7 @@ const add = FunctionImpl.make(
   schema,
   spec,
   "add",
-  Effect.fn("nina.memory.add")(function* ({ kind, text }) {
+  Effect.fn("nina.memory.add")(function* ({ text }) {
     const { appUser } = yield* requireAuth();
     if (Arr.length(yield* readMemories(appUser._id)) >= MEMORY_LIMIT) {
       return yield* new NinaMemoryRejected({ reason: "limit" });
@@ -111,7 +110,6 @@ const add = FunctionImpl.make(
       .insert({
         author: "learner",
         confirmedAt: yield* Clock.currentTimeMillis,
-        kind,
         text: yield* sealText(keys, MEMORY_FIELD, text).pipe(Effect.orDie),
         userId: appUser._id,
       })
@@ -120,14 +118,14 @@ const add = FunctionImpl.make(
 );
 
 /**
- * Rewrites a memory as the learner's own words. Its lesson and sources stay,
- * and only a situation keeps its end date.
+ * Rewrites a memory as the learner's own words. Its kind, lesson, sources and
+ * end date stay as they are.
  */
 const edit = FunctionImpl.make(
   schema,
   spec,
   "edit",
-  Effect.fn("nina.memory.edit")(function* ({ id, kind, text }) {
+  Effect.fn("nina.memory.edit")(function* ({ id, text }) {
     const { appUser } = yield* requireAuth();
     const memory = yield* readOwnMemory(appUser._id, id);
     if (!memory) {
@@ -139,10 +137,7 @@ const edit = FunctionImpl.make(
       .patch(id, {
         author: "learner",
         confirmedAt: yield* Clock.currentTimeMillis,
-        kind,
         text: yield* sealText(keys, MEMORY_FIELD, text).pipe(Effect.orDie),
-        // Only a situation ends.
-        validUntil: kind === "situation" ? memory.validUntil : undefined,
       })
       .pipe(Effect.orDie);
     return null;
@@ -250,7 +245,7 @@ const read = FunctionImpl.make(
     const note = (memory: (typeof memories)[number]) => ({
       confirmedAt: memory.confirmedAt,
       id: memory._id,
-      kind: memory.kind,
+      ...(memory.kind === undefined ? {} : { kind: memory.kind }),
       text: memory.text,
     });
     return {
