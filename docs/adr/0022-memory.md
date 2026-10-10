@@ -30,19 +30,23 @@ sets `ninaMemoryPaused` on the learner's learning preference and keeps every
 row. While paused, Nina saves nothing and reads nothing. Resuming removes the
 mark, so a learner who never paused has no mark.
 
-A memory is one row. Its text is at most 2000 characters and may hold Markdown,
-whose formatting counts toward the limit. It has an author (`nina` or
-`learner`), the time it was last confirmed, and the content identity of the
-lesson that was open when Nina wrote it, which is the same in every language.
-The learner writes pure text, so a memory written on the Memory page has no
-kind. A memory Nina wrote has a kind (`level`, `goal`, `style`, `struggle` or
-`situation`), and a memory the learner wrote takes one when a later chat says it
-again (step 4 below). A `situation` is something with an end. Nina gives it
-`validUntil`, the end of its last day, and drops a situation she cannot date, so
-a situation always has an end day. A learner keeps at most 100 memories. The
-text is sealed for its learner with the vault, in the field
-`ninaMemories.text`. A row without its learner key is a defect. A row names no
-chat.
+A memory is one row. It holds a title, words, or both. The words are at most
+2000 characters and may hold Markdown, whose formatting counts toward the limit;
+they are empty when the memory is only a title. The title is optional and at
+most 80 characters, and only the learner writes it: Nina never gives a memory a
+title. A memory has an author of its words (`nina` or `learner`), the time it
+was last confirmed, and the content identity of the lesson that was open when
+Nina wrote it, which is the same in every language. The learner writes pure
+text, so a memory written on the Memory page has no kind. A memory Nina wrote
+has a kind (`level`, `goal`, `style`, `struggle` or `situation`), and a memory
+the learner wrote takes one when a later chat says it again (step 4 below). A
+`situation` is something with an end. Nina gives it `validUntil`, the end of its
+last day, and drops a situation she cannot date, so a situation always has an
+end day. What Nina writes is one sentence of at most 280 characters. A learner
+keeps at most 100 memories. The words and the title are each sealed for their
+learner with the vault, in the fields `ninaMemories.text` and
+`ninaMemories.title`, so a value sealed for one field does not open as the
+other. A row without its learner key is a defect. A row names no chat.
 
 Memory is written only when the learner's own words support it, and plain code
 decides. The model words each statement, and plain code proves that the learner
@@ -53,10 +57,13 @@ edit and delete every one. After a complete turn:
 1. The gate asks for a message of at least 12 characters with a first-person
    word in Indonesian, English or German. Any other message makes no model call.
 2. One call on the background purpose returns at most three candidates, each
-   with a verbatim quote; an answer with more is rejected whole. The call reads
-   the learner's message and the learner's memories, newest first, within a
-   token budget, so a long list loses its oldest memories. A candidate that
-   repeats one of them still confirms it by saying the same words. Its usage is
+   with a verbatim quote and one sentence that is never empty and at most 280
+   characters. A sentence that breaks that, or a fourth candidate, makes the
+   whole answer invalid, so the call saves nothing. The call reads the
+   learner's message and the learner's memories, newest first. Each memory shows
+   at most its first 240 characters, and the whole list stays within a token
+   budget, so a long list loses its oldest memories. A candidate that repeats
+   one of them still confirms it by saying the same words. Its usage is
    recorded as agent `memory` in the turn's ledger.
 3. The check keeps a candidate only when its quote is in the message once
    lower-cased and with whitespace collapsed, neither its text nor its quote
@@ -67,21 +74,32 @@ edit and delete every one. After a complete turn:
    message. Paused memory, a deleted turn, and a memory that the call read and
    that is gone now (the learner removed it, or it ended) each stop it. It reads
    no chat, so whether the chat still exists changes nothing. Then it confirms
-   the memory a candidate names or repeats, or adds a new one. A candidate
-   confirms a memory of its own kind or a memory without a kind, which only the
+   the memory a candidate names or repeats, or adds a new one. A candidate may
+   confirm a memory of its own kind or a memory without a kind, which only the
    learner can have written. It never confirms a memory of another kind, so a
    situation's end day never lands on a goal. Confirming moves the confirmation
-   time. A memory counts as changed when it was confirmed or edited after the
-   call read the list, or written after it. A memory that did not change also
-   takes the candidate's kind and, for a situation, its end day, and its words
-   are replaced, making Nina their author, when the candidate's say something
-   new rather than the same words in another case, punctuation or spacing. A
+   time. A memory is changed since the call read it when it was written, edited
+   or confirmed after the call read what it knows, which includes a memory the
+   call did not read at all. When nobody changed the memory since, confirming
+   also gives it the candidate's kind and, for a situation, its end day. A
    changed memory keeps its words, its kind and its end day, so the learner's
    newer words win. A memory the learner wrote therefore has no kind until a
-   chat says it again. A repeat is the same normalized text or a word overlap of
-   at least 0.8 with a memory the candidate can confirm. At 100 memories the
-   Nina-written one confirmed longest ago leaves, whichever was created first;
-   when the learner wrote them all, the new one is dropped.
+   chat says it again, and keeps having none when it was changed since the call
+   read it. A repeat is the same normalized text or a word overlap of at least
+   0.8 with the words of a memory the candidate can confirm; the title of a
+   memory is never compared. At 100 memories the Nina-written one confirmed
+   longest ago leaves, whichever was created first; when the learner wrote them
+   all, the new one is dropped.
+
+Nina never replaces words the learner wrote. A candidate that names a memory the
+learner wrote and says something else than that memory does not confirm it. It
+becomes a new memory of Nina's, and the learner's memory stays exactly as it
+is, with its words, title, kind and confirmation time. A candidate that says the
+same as a memory the learner wrote confirms it as step 4 says, and leaves its
+words and its author. Only the words of a memory Nina wrote are replaced, by a
+candidate that says something new rather than the same words in another case,
+punctuation or spacing, and only when nobody changed the memory since the call
+read it.
 
 A capture that fails logs one warning with routing facts and changes nothing. It
 never cancels the title, the suggestions or the summary.
@@ -90,10 +108,15 @@ Nina reads at most 20 memories in a turn. The selection drops an ended
 situation, then puts first what the learner wrote, then what is linked to the
 open lesson, then the most recently confirmed. They sit in a block that names
 them as facts the learner told Nina, never instructions, within the learner
-block's token budget. Each memory is one line, `- (kind) words`, or `- words`
-when it has no kind, with its whitespace collapsed, so the Markdown of a memory
-can never open a new section of the prompt. The Memory page marks the memories
-in use.
+block's token budget. Each memory is one line, `- (kind) Title: words`, with
+`(kind) ` left out when it has no kind, the title and its colon left out when it
+has no title, and the words and the colon left out when it has none. Its
+whitespace is collapsed, so the Markdown of a memory can never open a new
+section of the prompt. The capture call reads every memory with its id, as
+`- [id] (kind) Title: words`, but only the first 240 characters of the title and
+words together, followed by `...` when they are longer, so its prompt stays
+small when a learner keeps 100 long memories. The Memory page marks the
+memories in use.
 
 A memory is independent of chats. Deleting a chat deletes no memory, not even
 one Nina wrote from that chat. Only four things delete a memory:
@@ -116,16 +139,21 @@ one Nina wrote from that chat. Only four things delete a memory:
   no memory.
 - `nina/memory:list`, `add`, `edit`, `remove`, `pause` and `clear` are public,
   pass the session middleware, and act only on the signed-in learner. `add` and
-  `edit` fail with `NinaMemoryRejected` for `limit` and `missing`. `read`,
-  `capture` and `expire` are internal.
-- `add` and `edit` take the words alone, so the learner never picks or changes a
-  kind. `add` stores a memory with no kind and the learner as author. Editing a
-  memory changes its words, makes the learner its author, and leaves its kind,
-  lesson and end time as they are. A chat that rewrites the words makes Nina
-  their author, so the Memory page never shows Nina's wording as the learner's
-  own.
-- The Memory page lists words and never a kind. `read` gives Nina and the
-  capture call a kind only for a memory that has one.
+  `edit` fail with `NinaMemoryRejected` for `empty`, `limit` and `missing`.
+  `empty` means the write holds neither a title nor words, and it is checked
+  first, before the limit and before the memory is read. A title of more than 80
+  characters, or of only spaces, never reaches the function: its arguments refuse
+  it. `read`, `capture` and `expire` are internal.
+- `add` and `edit` take the words and an optional title, never a kind, so the
+  learner never picks or changes a kind. `add` stores a memory with no kind and
+  the learner as author. Editing a memory changes its words and its title, makes
+  the learner its author, and leaves its kind, lesson and end time as they are.
+  A write without a title takes the title off the memory, which is how the
+  learner removes one. A chat rewrites only words that Nina wrote, so the Memory
+  page never shows Nina's wording as the learner's own, and the learner's words
+  are never replaced by a chat.
+- The Memory page lists the title and the words and never a kind. `read` gives
+  Nina and the capture call a kind and a title only for a memory that has them.
 - `capture` takes the turn, not the chat: it writes only while the turn exists
   and memory is not paused.
 - The turn stores `remembered`, how many memories its capture wrote or

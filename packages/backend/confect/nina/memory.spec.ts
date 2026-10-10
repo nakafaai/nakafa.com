@@ -13,8 +13,12 @@ import { Schema, Struct } from "effect";
 
 /** Memories one learner keeps. Beyond it, the memory Nina wrote and confirmed longest ago leaves. */
 export const MEMORY_LIMIT = 100;
-/** Characters of one memory, its Markdown formatting included. */
+/** Characters of one memory's words, their Markdown formatting included. */
 export const MEMORY_TEXT_LIMIT = 2000;
+/** Characters of the title a learner gives a memory. */
+export const MEMORY_TITLE_LIMIT = 80;
+/** Characters of one memory Nina writes: one short sentence. */
+const MEMORY_SENTENCE_LIMIT = 280;
 /** Memories Nina reads in one turn. The Memory page marks them as in use. */
 export const MEMORY_PROMPT_LIMIT = 20;
 /** Memories one capture call may propose from a single message. */
@@ -36,22 +40,36 @@ export const NinaMemoryKind = Schema.Literals([
 
 /**
  * Who wrote the words as they stand: Nina from a chat, or the learner on the
- * Memory page. A chat that rewrites the words makes Nina their author.
+ * Memory page. A chat rewrites only words that Nina wrote. Words the learner
+ * wrote stay theirs, and a memory the learner edits becomes theirs.
  */
 export const NinaMemoryAuthor = Schema.Literals(["nina", "learner"]);
 
-/** One memory as the learner reads and writes it: words that may hold Markdown. */
-const NinaMemoryText = Schema.Trim.check(
+/**
+ * The words of a memory as the learner reads and writes them. They may hold
+ * Markdown, and they are empty when the memory is only a title.
+ */
+const NinaMemoryText = Schema.Trim.check(Schema.isMaxLength(MEMORY_TEXT_LIMIT));
+
+/** The title a learner gives a memory. */
+const NinaMemoryTitle = Schema.Trim.check(
   Schema.isMinLength(1),
-  Schema.isMaxLength(MEMORY_TEXT_LIMIT)
+  Schema.isMaxLength(MEMORY_TITLE_LIMIT)
+);
+
+/** One memory as Nina writes it: one short sentence. */
+const NinaMemorySentence = Schema.Trim.check(
+  Schema.isMinLength(1),
+  Schema.isMaxLength(MEMORY_SENTENCE_LIMIT)
 );
 
 /**
- * One stored memory. `text` is sealed for its learner. `kind` is what Nina says
- * the memory is about, so a memory the learner wrote has none until a chat says
- * it again. `confirmedAt` moves when the memory is written, edited, or said
- * again in a chat. `lesson` is the content identity of the lesson the learner
- * had open, the same in every language.
+ * One stored memory. `text` and `title` are sealed for its learner. Only the
+ * learner gives a memory a title, and a memory holds a title, words, or both.
+ * `kind` is what Nina says the memory is about, so a memory the learner wrote
+ * has none until a chat says it again. `confirmedAt` moves when the memory is
+ * written, edited, or said again in a chat. `lesson` is the content identity
+ * of the lesson the learner had open, the same in every language.
  */
 export const NinaMemory = Schema.Struct({
   author: NinaMemoryAuthor,
@@ -59,11 +77,12 @@ export const NinaMemory = Schema.Struct({
   kind: Schema.optionalKey(NinaMemoryKind),
   lesson: Schema.optionalKey(Schema.NonEmptyString),
   text: Sealed,
+  title: Schema.optionalKey(Sealed),
   userId: Id("users"),
   validUntil: Schema.optionalKey(Schema.Finite),
 });
 
-/** One memory on the Memory page: its words, never its kind. */
+/** One memory on the Memory page: its title and its words, never its kind. */
 export const NinaMemoryView = Schema.Struct({
   ...NinaMemory.mapFields(Struct.pick(["author", "confirmedAt", "validUntil"]))
     .fields,
@@ -71,6 +90,7 @@ export const NinaMemoryView = Schema.Struct({
   id: Id("ninaMemories"),
   inUse: Schema.Boolean,
   text: NinaMemoryText,
+  title: Schema.optionalKey(NinaMemoryTitle),
 });
 
 /** The Memory page: every memory, newest first, and whether memory is paused. */
@@ -79,32 +99,41 @@ export const NinaMemoryList = Schema.Struct({
   paused: Schema.Boolean,
 });
 
-/** What the learner writes on the Memory page: the words alone, with no kind. */
+/**
+ * What the learner writes on the Memory page: words, a title, or both, with no
+ * kind. A write without a title takes the title off the memory.
+ */
 const NinaMemoryDraft = Schema.Struct({
   text: NinaMemoryText,
+  title: Schema.optionalKey(NinaMemoryTitle),
 });
 
 /**
- * Why a memory could not be written. `limit`: the learner already keeps
- * `MEMORY_LIMIT` memories. `missing`: the memory was deleted meanwhile.
+ * Why a memory could not be written. `empty`: it holds neither a title nor
+ * words. `limit`: the learner already keeps `MEMORY_LIMIT` memories.
+ * `missing`: the memory was deleted meanwhile.
  */
 export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()(
   "NinaMemoryRejected",
-  { reason: Schema.Literals(["limit", "missing"]) }
+  { reason: Schema.Literals(["empty", "limit", "missing"]) }
 ) {}
 
 /**
- * One thing a capture call says the learner stated about themself. `quote`
- * holds the learner's exact words; the write is refused unless the message
- * contains them. `known` names a stored memory that this one confirms or
- * rewrites, and a stored memory without a kind takes this one's kind. `until`
- * is the day a situation ends, as `YYYY-MM-DD`.
+ * One thing a capture call says the learner stated about themself. `text` is
+ * one short sentence: never empty, and at most `MEMORY_SENTENCE_LIMIT`
+ * characters. `quote` holds the learner's exact words; the write is refused
+ * unless the message contains them. `known` names a stored memory that this
+ * one confirms, and a stored memory without a kind takes this one's kind. The
+ * words of the stored memory change only when Nina wrote them: when the
+ * learner wrote them and this one says something else, this one becomes a new
+ * memory and the learner's stays as it is. `until` is the day a situation
+ * ends, as `YYYY-MM-DD`.
  */
 export const NinaMemoryCandidate = Schema.Struct({
   kind: NinaMemoryKind,
   known: Schema.optionalKey(Schema.String),
   quote: Schema.NonEmptyString,
-  text: NinaMemoryText,
+  text: NinaMemorySentence,
   until: Schema.optionalKey(Schema.String),
 });
 
@@ -141,12 +170,16 @@ export const NinaLearnerProfile = Schema.Struct({
   tryoutCountry: Schema.optionalKey(tryoutRouteKeyValidator),
 });
 
-/** One memory as Nina and the capture call read it, with a kind only when it has one. */
+/**
+ * One memory as Nina and the capture call read it, with a kind and a title
+ * only when it has one.
+ */
 const NinaMemoryNote = Schema.Struct({
   confirmedAt: Schema.Finite,
   id: Id("ninaMemories"),
   kind: Schema.optionalKey(NinaMemoryKind),
   text: NinaMemoryText,
+  title: Schema.optionalKey(NinaMemoryTitle),
 });
 
 /**

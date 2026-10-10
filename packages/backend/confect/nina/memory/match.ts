@@ -43,7 +43,7 @@ export function saysSame(first: string, second: string) {
   return shared / either >= SAME_OVERLAP;
 }
 
-/** What a candidate is matched against: the memory's id, its kind when it has one, and its opened words. */
+/** What a candidate is matched against: the memory's id, its kind when it has one, and its opened words, never its title. */
 type Stored = Pick<Opened, "_id" | "kind" | "text">;
 
 /**
@@ -56,10 +56,11 @@ function takesKind(memory: Stored, kind: typeof NinaMemoryCandidate.Type.kind) {
 }
 
 /**
- * The memory a candidate confirms: the known memory it names, or else the first
- * memory that says the same. A memory of another kind does not count in either
- * case, so a situation's date never lands on a goal. A memory without a kind
- * counts for every kind.
+ * The memory a candidate points at: the known memory it names, or else the
+ * first memory that says the same. A memory of another kind does not count in
+ * either case, so a situation's date never lands on a goal. A memory without a
+ * kind counts for every kind. The write may still leave the memory alone: it
+ * confirms a memory the learner wrote only when the candidate says the same.
  */
 export function findTarget<Memory extends Stored>(
   memories: readonly Memory[],

@@ -40,11 +40,11 @@ import {
 const MESSAGE_TOKENS = 1000;
 
 /**
- * Known memories one capture call reads. A learner may keep `MEMORY_LIMIT`
- * memories of `MEMORY_TEXT_LIMIT` characters each, and the list would grow with
- * them. It is newest first, and a list that does not fit loses its oldest
- * memories: a candidate that repeats one of them still confirms it by saying
- * the same words.
+ * The whole list of known memories one capture call reads. Each memory shows
+ * only its first characters there, and a learner may still keep `MEMORY_LIMIT`
+ * long ones. The list is newest first, and one that does not fit loses its
+ * oldest memories: a candidate that repeats one of them still confirms it by
+ * saying the same words.
  */
 const KNOWN_TOKENS = 4000;
 
@@ -119,7 +119,7 @@ function logFailure(error: NinaMemoryError) {
   });
 }
 
-/** The memories the model can name, within `KNOWN_TOKENS`. */
+/** The memories the model can name, each cut short, within `KNOWN_TOKENS`. */
 function formatKnown(known: (typeof NinaLearner.Type)["known"]) {
   return Arr.isReadonlyArrayNonEmpty(known)
     ? boundText(

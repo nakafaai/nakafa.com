@@ -3413,7 +3413,7 @@ export declare const api: {
       add: FunctionReference<
         "mutation",
         "public",
-        { text: string },
+        { text: string; title?: string },
         Id<"ninaMemories">
       >;
       clear: FunctionReference<"mutation", "public", {}, null>;
@@ -3421,7 +3421,7 @@ export declare const api: {
       edit: FunctionReference<
         "mutation",
         "public",
-        { id: Id<"ninaMemories">; text: string },
+        { id: Id<"ninaMemories">; text: string; title?: string },
         null
       >;
       enable: FunctionReference<
@@ -3454,6 +3454,7 @@ export declare const api: {
             id: Id<"ninaMemories">;
             inUse: boolean;
             text: string;
+            title?: string;
             validUntil?: number;
           }>;
           paused: boolean;
@@ -9481,6 +9482,7 @@ export declare const internal: {
             id: Id<"ninaMemories">;
             kind?: "level" | "goal" | "style" | "struggle" | "situation";
             text: string;
+            title?: string;
           }>;
           paused: boolean;
           profile: {
@@ -9509,6 +9511,7 @@ export declare const internal: {
             id: Id<"ninaMemories">;
             kind?: "level" | "goal" | "style" | "struggle" | "situation";
             text: string;
+            title?: string;
           }>;
         }
       >;

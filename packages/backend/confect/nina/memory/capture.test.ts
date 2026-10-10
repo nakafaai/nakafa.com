@@ -7,7 +7,10 @@ import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
 import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
-import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
+import {
+  MEMORY_LIMIT,
+  type NinaMemoryCandidate,
+} from "@repo/backend/confect/nina/memory.spec";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
@@ -25,7 +28,6 @@ vi.mock("@repo/backend/confect/gateway/live", async () => ({
 const NOW = Date.UTC(2026, 9, 10, 12);
 const MESSAGE = "Aku kelas 12 dan mau ikut SNBT 2027.";
 const LESSON = "material:lesson:mathematics:material-section:limits";
-const edit = Ref.getFunctionReference(refs.public.nina.memory.edit);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
@@ -202,16 +204,10 @@ describe("memory capture", () => {
       ],
     });
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    for (const shown of [
-      MESSAGE,
-      "# Today",
-      "2026-10-10",
-      "Account: none",
-      "# Known Memories",
-      "None",
-    ]) {
-      expect(prompt).toContain(shown);
-    }
+    expect(prompt).toContain(MESSAGE);
+    expect(prompt).toContain("# Today\\n\\n2026-10-10");
+    expect(prompt).toContain("Account: none");
+    expect(prompt).toContain("# Known Memories\\n\\nNone");
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
@@ -235,19 +231,19 @@ describe("memory capture", () => {
 
   it("shows the model the newest known memories that fit its budget, and says that older ones are left out", async () => {
     const f = await fixture();
-    // Twelve notes of about 2000 characters are far more than the model reads.
+    // A hundred long notes are more than the model reads, though each is cut short.
     const note = "Catatan belajar saya tentang limit dan turunan.";
-    for (let index = 0; index < 12; index += 1) {
+    for (let index = 0; index < MEMORY_LIMIT; index += 1) {
       await f.seed({
         author: "learner",
         confirmedAt: index + 1,
-        text: `Note ${index}. ${Arr.join(Arr.replicate(note, 40), " ")}`,
+        text: `Note ${index}. ${Arr.join(Arr.replicate(note, 8), " ")}`,
       });
     }
     const model = answers(level);
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    expect(prompt).toContain("Note 11.");
+    expect(prompt).toContain(`Note ${MEMORY_LIMIT - 1}.`);
     expect(prompt).not.toContain("Note 0.");
     expect(prompt).toContain("Older memories are not listed.");
   });
@@ -267,33 +263,26 @@ describe("memory capture", () => {
     ]);
   });
 
-  it("shows the model a memory the learner wrote as its words alone, and gives it the kind the model names", async () => {
+  it("shows the model a memory with its title and its first 240 characters, and keeps what the learner wrote when the model names it and says something else", async () => {
     const f = await fixture();
-    const id = await f.seed({ author: "learner", text: "Kelas 11." });
+    const id = await f.seed({
+      author: "learner",
+      text: `Kelas 11.${"x".repeat(1991)}`,
+      title: "Sekolah",
+    });
+    const [before] = await f.stored();
     const model = answers({ ...level, known: id, text: "Kelas 12 IPA." });
     await f.capture();
-    expect(encodeJsonText(model.doGenerateCalls[0]?.prompt)).toContain(
-      `- [${id}] Kelas 11.`
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    // The title with its colon and the first words take 18 of the 240.
+    expect(prompt).toContain(
+      `- [${id}] Sekolah: Kelas 11.${"x".repeat(222)}...`
     );
-    expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
-    expect(await f.stored()).toEqual([
-      expect.objectContaining({ author: "nina", kind: "level" }),
-    ]);
-  });
-
-  it("keeps the words the learner edits while the model reads the message, and gives the memory no kind", async () => {
-    const f = await fixture();
-    const id = await f.seed({ author: "learner", text: "Kelas 11." });
-    answersAfter(() => f.owner.mutation(edit, { id, text: "Kelas 12 SMA" }), {
-      ...level,
-      known: id,
-      text: "Kelas 12 IPA.",
-    });
-    await f.capture();
-    expect(await f.texts()).toEqual(["Kelas 12 SMA"]);
-    const [row] = await f.stored();
-    expect(row).toMatchObject({ author: "learner" });
-    expect(row).not.toHaveProperty("kind");
+    expect(prompt).not.toContain("x".repeat(223));
+    const [learners, written] = await f.stored();
+    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
+    expect(learners).toStrictEqual(before);
+    expect(written).toMatchObject({ author: "nina", kind: "level" });
   });
 
   it("saves a situation with the end of its last day and links a memory to the open lesson", async () => {
@@ -313,6 +302,26 @@ describe("memory capture", () => {
         validUntil: Date.UTC(2026, 9, 20, 23, 59, 59, 999),
       }),
     ]);
+  });
+
+  it.each([
+    ["is 280 characters long", "x".repeat(280), true],
+    ["is 281 characters long", "x".repeat(281), false],
+    ["is empty", "", false],
+    ["holds only spaces", "   ", false],
+  ])("checks a sentence that %s", async (_, text, fits) => {
+    // The test names the numbers, not the constant. A sentence that does not fit
+    // refuses the whole answer.
+    const f = await fixture();
+    await f.seed({ author: "learner", text: "Sudah ada" });
+    answers(level, { kind: "goal", quote: "mau ikut SNBT 2027", text });
+    await f.capture();
+    expect(await f.texts()).toEqual(
+      fits ? ["Sudah ada", "Kelas 12.", text] : ["Sudah ada"]
+    );
+    expect(MutableRef.get(f.logged)).toEqual(
+      fits ? [] : unavailable({ operation: "generate", rejected: true })
+    );
   });
 
   it("saves nothing the learner's words do not support, but still counts the call", async () => {
