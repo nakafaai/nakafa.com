@@ -210,6 +210,61 @@ describe("createNinaPrompt", () => {
     );
   });
 
+  it("answers with the findings, what they cover and what could not be verified when research returns findings and a limitation", () => {
+    const prompt = createNinaPrompt(base);
+    const taskSection = prompt.slice(
+      prompt.indexOf("# Task Instructions"),
+      prompt.indexOf("# Specialist Input Examples")
+    );
+
+    expect(taskSection).toContain(
+      "If research returns findings and limitations (bullets without a source link):"
+    );
+    expect(taskSection).toContain(
+      "Answer with the findings and their citations."
+    );
+    expect(taskSection).toContain(
+      "Say plainly what the findings cover, such as their year or version, and what could not be verified, in the words of the limitations."
+    );
+    expect(taskSection).toContain(
+      "Name where the learner can check the rest, such as the official site the findings come from."
+    );
+  });
+
+  it("tells the learner what could not be verified and where to check next when research returns no finding", () => {
+    const prompt = createNinaPrompt(base);
+    const taskSection = prompt.slice(
+      prompt.indexOf("# Task Instructions"),
+      prompt.indexOf("# Specialist Input Examples")
+    );
+    const outputSection = prompt.slice(
+      prompt.indexOf("# Output Formatting Guidelines")
+    );
+
+    expect(taskSection).toContain(
+      "If research returns no source-backed finding:"
+    );
+    expect(taskSection).toContain(
+      "Tell the learner what could not be verified, in the words of the research limitations when there are any, and name a direct channel they can check next."
+    );
+    expect(outputSection).toContain("## Research limitations");
+    expect(outputSection).toContain(
+      "Write a research limitation in the user's language as one or two natural sentences, in the words of the limitation."
+    );
+    expect(outputSection).toContain(
+      "Do not say information, evidence, proof, announcements, or sources were found or not found."
+    );
+  });
+
+  it("has no rule that makes a lone limitation sentence the whole answer", () => {
+    const prompt = createNinaPrompt(base);
+
+    expect(prompt).not.toContain("single limitation sentence");
+    expect(prompt).not.toContain("as the full answer");
+    expect(prompt).not.toContain("Do not paraphrase");
+    expect(prompt).not.toContain("Use the research limitation as the answer");
+  });
+
   it("keeps final answer formatting explicit but compact", () => {
     const prompt = createNinaPrompt(base);
 

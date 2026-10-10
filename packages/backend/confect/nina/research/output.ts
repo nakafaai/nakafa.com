@@ -4,10 +4,11 @@ import { Array as Arr, pipe } from "effect";
 
 /**
  * What Nina reads when a research run ends without a source-backed finding.
- * It tells her what to say; she writes it in the learner's language.
+ * It tells her what to say, from the limitations that follow it or from the
+ * request when none follow; she writes it in the learner's language.
  */
 const noFindings =
-  "Research returned no source-backed finding. Tell the learner that this attempt could not verify the request from direct sources, and name a direct channel they can check next. Do not claim that anything is absent or does not exist.";
+  "Research returned no source-backed finding. Tell the learner what this attempt could not verify. The limitations that follow say it; when none follow, it is the request itself. Name a direct channel they can check next. Do not claim that anything is absent or does not exist.";
 
 /**
  * Renders structured research findings as markdown with inline citations.

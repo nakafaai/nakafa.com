@@ -6,12 +6,11 @@ export function formatAnswerPrompt() {
       Use markdown only. Do not use HTML, XML, or other markup.
       Never mention AI, tools, functions, prompts, or internal processes to users.
 
-      ## Limitation-only research answers
+      ## Research limitations
 
-      If research returns a single limitation sentence with no source-backed findings:
-      - Use that sentence as the full answer for the verification part.
-      - Do not paraphrase, decorate, or turn it into a search-result summary.
-      - Do not say information, evidence, proof, announcements, or sources were found or not found.
+      Write a research limitation in the user's language as one or two natural sentences, in the words of the limitation.
+      Do not decorate it or turn it into a search-result summary.
+      Do not say information, evidence, proof, announcements, or sources were found or not found.
 
       ## Mathematical format
 

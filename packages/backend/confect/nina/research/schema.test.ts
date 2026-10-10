@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   ResearchOutputSchema,
+  researchOutputSchema,
   ScrapeInputSchema,
   WebSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Result, Schema } from "effect";
 
 describe("research schema", () => {
@@ -112,5 +114,38 @@ describe("research schema", () => {
       limitations: ["No retrieved direct source supported a citeable claim."],
     });
     expect(Result.isSuccess(valid)).toBe(true);
+  });
+  it("tells the synthesis model to return the closest thing, scoped, and to name what the sources do not cover", async () => {
+    const jsonSchema = await researchOutputSchema.jsonSchema;
+    expect(jsonSchema).toMatchObject({
+      properties: {
+        findings: {
+          description: expect.stringContaining(
+            "what the sources state about the closest thing to the task"
+          ),
+          items: {
+            properties: {
+              text: {
+                description: expect.stringContaining(
+                  "say exactly what it covers, such as its year or version"
+                ),
+              },
+            },
+          },
+        },
+        limitations: {
+          description: expect.stringContaining(
+            "Name the part of the task the collected sources do not cover."
+          ),
+        },
+      },
+    });
+  });
+  it("lets the synthesis model return an empty findings array only when no source states the task or its closest thing", async () => {
+    const json = encodeJsonText(await researchOutputSchema.jsonSchema);
+    expect(json).toContain(
+      "Use an empty array only when no collected source states anything about the task or the closest thing to it."
+    );
+    expect(json).not.toContain("direct citation evidence is unavailable");
   });
 });

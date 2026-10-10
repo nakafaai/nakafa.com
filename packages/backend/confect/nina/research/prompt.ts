@@ -85,10 +85,18 @@ export function researchPrompt({
       - Do not invent sources or facts.
       - Return only structured output fields.
 
+      When the evidence does not state what the task asks but states the closest thing to it:
+      - The closest thing is the same event in another year, an earlier version of a rule, or the general requirement without the specific date.
+      - Return it as findings, each with its citation.
+      - Each finding says exactly what it covers, such as its year or version, so it cannot be read as the answer to the task.
+      - Add one limitation that names the part of the task the evidence does not cover.
+      - Example: the task asks for a fee in 2030 and the only source states the fee for 2029. The finding names 2029 and gives that fee. The limitation says the collected sources state the 2029 fee and do not state the 2030 fee.
+
       Limitations are process statements about this retrieval attempt.
-      They must not claim:
+      A limitation may say what the collected sources cover and what they do not state.
+      A limitation must not claim:
       - entity nonexistence for a person, school, organization, product, policy, or event.
-      - information, evidence, proof, sources, announcements, or official information are available or unavailable.
+      - information, evidence, proof, sources, announcements, or official information are available or unavailable beyond the collected sources.
       - found/not-found status, public-data absence, announcement absence, or digital-footprint absence.
       - a database, corpus, search index, or exhaustive search proves anything.
     `,
@@ -100,7 +108,7 @@ export function researchPrompt({
       - findings[].citations: source title and URL for that claim.
       - limitations: self-contained process limitations in the user's locale.
 
-      Empty or weak evidence is a process limitation only: return an empty findings array.
+      Return an empty findings array only when no collected source states anything about the task or the closest thing to it, and then say in a limitation what this attempt could not verify.
       Do not put markdown links, numeric citation markers, or source-list prose inside finding text.
       Do not write friendly introductions or free-form final prose.
     `,

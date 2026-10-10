@@ -139,6 +139,8 @@ const ResearchFindingSchema = Schema.Struct({
       taskContext: `
       One concise source-backed finding.
 
+      When the source covers only the closest thing to the task, say exactly what it covers, such as its year or version.
+
       Do not include:
       - markdown links.
       - numeric citation markers.
@@ -170,7 +172,8 @@ export const ResearchOutputSchema = Schema.Struct({
         Source-backed findings.
 
         Keep each finding scoped to the cited sources.
-        Use an empty array when direct citation evidence is unavailable.
+        Include what the sources state about the closest thing to the task, such as another year or an earlier version.
+        Use an empty array only when no collected source states anything about the task or the closest thing to it.
       `,
       }),
     }),
@@ -182,7 +185,9 @@ export const ResearchOutputSchema = Schema.Struct({
         Process limitations in the user's locale.
         Use an empty array when there are none.
 
+        Name the part of the task the collected sources do not cover.
         Describe only what this retrieval attempt could not establish.
+        It may say what the collected sources cover and do not state.
         Do not use found or not-found wording.
         Do not make absence claims.
         Do not mention a database, corpus, or search index.
