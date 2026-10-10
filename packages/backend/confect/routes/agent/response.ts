@@ -1,11 +1,11 @@
 import type { AgentHttpInputError } from "@repo/backend/confect/routes/agent/input";
 import type { AgentRateLimitError } from "@repo/backend/confect/routes/agent/quota";
-import { NAKAFA_BASE_URL } from "@repo/contents/agent/constants";
 import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
 import type { NakafaProblemDetails } from "@repo/contents/agent/schema/api";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { encodeJsonText } from "@repo/utilities/json";
 import { type Cause, Effect, Schema } from "effect";
 
@@ -67,7 +67,7 @@ export function problemResponse(input: ProblemInput) {
     resolution: input.resolution,
     status: input.status,
     title: input.title,
-    type: new URL(`/problems/${input.type}`, NAKAFA_BASE_URL).href,
+    type: new URL(`/problems/${input.type}`, SITE_ORIGIN).href,
   };
   return agentJsonResponse(body, input.status, {
     ...input.headers,

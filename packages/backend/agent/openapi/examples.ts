@@ -9,12 +9,12 @@ import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_API_BASE_URL,
-  NAKAFA_BASE_URL,
   NAKAFA_MCP_ENDPOINT,
   NAKAFA_MCP_GUIDANCE,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/agent/constants";
 import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/agent/search";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 export const OPENAPI_CONTENT_ID_EXAMPLE =
   "asset:example:material:linear-equations";
 const CONTENT_REFERENCE_EXAMPLE = {
@@ -25,10 +25,10 @@ const CONTENT_REFERENCE_EXAMPLE = {
   learningObjectId: "learning-object:example:linear-equations",
   lensId: "lens:example:secondary-school",
   locale: "en",
-  markdown_url: `${NAKAFA_BASE_URL}/en/subjects/mathematics/algebra/linear-equations.md`,
+  markdown_url: `${SITE_ORIGIN}/en/subjects/mathematics/algebra/linear-equations.md`,
   route: "subjects/mathematics/algebra/linear-equations",
   section: "material",
-  url: `${NAKAFA_BASE_URL}/en/subjects/mathematics/algebra/linear-equations`,
+  url: `${SITE_ORIGIN}/en/subjects/mathematics/algebra/linear-equations`,
 };
 const EXAMPLE_LOCALE = "en" as const;
 const EXAMPLE_DIGEST = `sha256:${"1".repeat(64)}`;
@@ -98,7 +98,7 @@ const QURAN_REFERENCE_EXAMPLE = {
   learningObjectId: "learning-object:example:quran:1",
   lensId: "lens:example:quran",
   locale: EXAMPLE_LOCALE,
-  markdown_url: `${NAKAFA_BASE_URL}/${EXAMPLE_LOCALE}/quran/1.md`,
+  markdown_url: `${SITE_ORIGIN}/${EXAMPLE_LOCALE}/quran/1.md`,
   meaning: {
     locale: EXAMPLE_LOCALE,
     text: "The Opening",
@@ -113,7 +113,7 @@ const QURAN_REFERENCE_EXAMPLE = {
     translation: TRANSLATION_SOURCE_EXAMPLE,
   },
   tafsir_access: TAFSIR_ACCESS_EXAMPLE,
-  url: `${NAKAFA_BASE_URL}/${EXAMPLE_LOCALE}/quran/1`,
+  url: `${SITE_ORIGIN}/${EXAMPLE_LOCALE}/quran/1`,
   verses: [
     {
       arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
@@ -155,7 +155,7 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
     authentication: "none",
     description:
       "Read-only access to Nakafa's signed educational content for developers and agents.",
-    documentation: `${NAKAFA_BASE_URL}/llms.txt`,
+    documentation: `${SITE_ORIGIN}/llms.txt`,
     mcp: NAKAFA_MCP_ENDPOINT,
     name: "Nakafa Public API",
     openapi: `${NAKAFA_API_BASE_URL}/openapi.json`,
