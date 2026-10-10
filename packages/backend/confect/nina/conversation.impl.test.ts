@@ -1,5 +1,6 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
@@ -87,6 +88,9 @@ describe("Nina conversation visibility", () => {
       refs.public.nina.conversation.get,
       await f.t.query(get, { chatId: f.chatId })
     );
+    // The title was sealed for its owner when the chat began; the shared page
+    // opens it with the owner's key.
+    expect(conversation.chat.title).toBe(DEFAULT_TITLE);
     expect(conversation.turn).toEqual({
       order: 0,
       promptMessageId: f.promptMessageId,

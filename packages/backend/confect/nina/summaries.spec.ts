@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema, Struct } from "effect";
 
 const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
@@ -15,7 +16,10 @@ const NinaSummaryCall = Schema.Struct({ input: Tokens, output: Tokens });
  */
 export const NinaSummary = Schema.Struct({
   chatId: Id("chats"),
-  text: Schema.String,
+  // A new summary is stored sealed. The string form is what rows written before
+  // October 2026 hold, and it leaves with the contract change that follows the
+  // sealing migration.
+  text: Schema.Union([Schema.String, Sealed]),
   throughOrder: TurnOrder,
   updatedAt: Schema.Finite,
   usage: Schema.Struct({
@@ -24,9 +28,9 @@ export const NinaSummary = Schema.Struct({
   }),
 });
 
-/** The summary facts generation and refresh read back. */
+/** The summary facts generation and refresh read back, with the text opened. */
 const NinaSummaryView = NinaSummary.mapFields((fields) => ({
-  text: fields.text,
+  text: Schema.String,
   throughOrder: fields.throughOrder,
 }));
 
@@ -49,9 +53,10 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "save",
       args: () => ({
-        ...NinaSummary.mapFields(
-          Struct.pick(["chatId", "text", "throughOrder"])
-        ).fields,
+        ...NinaSummary.mapFields(Struct.pick(["chatId", "throughOrder"]))
+          .fields,
+        // The caller sends plain text and the mutation seals it.
+        text: Schema.String,
         usage: NinaSummaryCall,
       }),
       returns: () => Schema.Null,

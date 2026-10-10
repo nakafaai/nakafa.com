@@ -8,9 +8,9 @@ import {
   MoreHorizontalIcon,
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -127,7 +127,7 @@ function ChatList({
   isLoading,
 }: {
   canDelete: boolean;
-  results: readonly Docs["chats"][];
+  results: readonly ChatView[];
   isLoading: boolean;
 }) {
   const t = useTranslations("Common");
@@ -184,7 +184,7 @@ function ChatList({
 }
 
 /** Render owner actions for one profile chat row. */
-function UserChatsListActions({ chat }: { chat: Docs["chats"] }) {
+function UserChatsListActions({ chat }: { chat: ChatView }) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
   const deleteChat = useDeleteChatMutation();
