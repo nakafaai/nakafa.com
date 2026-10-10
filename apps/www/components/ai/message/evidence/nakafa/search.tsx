@@ -8,7 +8,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Match, Option } from "effect";
@@ -39,43 +38,44 @@ export function SearchPart({ message }: Props) {
         <span className="text-muted-foreground text-sm">
           {getSearchLabel(message, t)}
         </span>
-        <Badge variant="muted">{message.result.count}</Badge>
       </div>
-      <SearchPartQueries message={message} />
-      {hasItems ? (
-        <div className="flex flex-wrap items-center gap-2">
-          {Arr.map(items, (item) => (
-            <Button
-              className="max-w-full"
-              key={item.content_id}
-              nativeButton={false}
-              render={
-                <a
-                  className="min-w-0"
-                  href={item.url}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <span className="truncate">{item.title}</span>
-                  <HugeIcons icon={ArrowUpRight01Icon} />
-                </a>
-              }
-              size="sm"
-              variant="outline"
-            />
-          ))}
-          {message.result.items.length > MAX_SHOWN_RESULTS ? (
-            <Button onClick={toggle} size="sm" variant="outline">
-              {expanded ? t("show-less") : t("show-more")}
-              <HugeIcons icon={expanded ? ArrowUp01Icon : ArrowDown01Icon} />
-            </Button>
-          ) : null}
-        </div>
-      ) : (
-        <p className="text-muted-foreground text-sm">
-          {t("nakafa-search-empty")}
-        </p>
-      )}
+      <div className="ms-2 flex flex-col gap-3 border-s ps-4">
+        <SearchPartQueries message={message} />
+        {hasItems ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {Arr.map(items, (item) => (
+              <Button
+                className="max-w-full"
+                key={item.content_id}
+                nativeButton={false}
+                render={
+                  <a
+                    className="min-w-0"
+                    href={item.url}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <span className="truncate">{item.title}</span>
+                    <HugeIcons icon={ArrowUpRight01Icon} />
+                  </a>
+                }
+                size="sm"
+                variant="outline"
+              />
+            ))}
+            {message.result.items.length > MAX_SHOWN_RESULTS ? (
+              <Button onClick={toggle} size="sm" variant="outline">
+                {expanded ? t("show-less") : t("show-more")}
+                <HugeIcons icon={expanded ? ArrowUp01Icon : ArrowDown01Icon} />
+              </Button>
+            ) : null}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            {t("nakafa-search-empty")}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

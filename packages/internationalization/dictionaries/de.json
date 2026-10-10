@@ -524,7 +524,6 @@
     "nakafa-search-empty": "Keine passenden Inhalte gefunden.",
     "nakafa-content": "Lernmaterial",
     "nakafa-quran": "Koran",
-    "nakafa-quran-verse-count": "{count, plural, one {# Vers} other {# Verse}}",
     "nakafa-loading": "{kind} wird gelesen...",
     "nakafa-error": "{kind} konnte nicht gelesen werden.",
     "math-apart": "Brüche zerlegen",

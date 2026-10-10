@@ -524,7 +524,6 @@
     "nakafa-search-empty": "Tidak ada konten yang cocok.",
     "nakafa-content": "Materi",
     "nakafa-quran": "Quran",
-    "nakafa-quran-verse-count": "{count, plural, other {# ayat}}",
     "nakafa-loading": "Lagi membaca {kind}...",
     "nakafa-error": "Gagal membaca {kind}.",
     "math-apart": "Mengurai pecahan",
