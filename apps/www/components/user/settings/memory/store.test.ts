@@ -11,6 +11,7 @@ describe("memory page store", () => {
 
     expect(getState()).toMatchObject({
       adding: false,
+      draft: null,
       editing: null,
       query: "",
       removed: [],
@@ -69,6 +70,71 @@ describe("memory page store", () => {
       store.getState().openNew();
       store.getState().close();
       expect(store.getState()).toMatchObject({ adding: false, editing: null });
+    });
+  });
+
+  describe("words of a save that failed", () => {
+    const words = { kind: "goal", text: "Pass the exam in May" } as const;
+
+    it("opens the editor of a new memory again with the words", () => {
+      const store = createMemoryStore();
+
+      store.getState().reopen(null, words);
+
+      expect(store.getState()).toMatchObject({
+        adding: true,
+        draft: words,
+        editing: null,
+      });
+    });
+
+    it("opens the editor of one memory again with the words", () => {
+      const store = createMemoryStore();
+
+      store.getState().reopen(memoryId("a"), words);
+
+      expect(store.getState()).toMatchObject({
+        adding: false,
+        draft: words,
+        editing: memoryId("a"),
+      });
+    });
+
+    it("leaves an editor the learner opened since, whichever kind it is", () => {
+      const store = createMemoryStore();
+
+      store.getState().openEdit(memoryId("b"));
+      store.getState().reopen(null, words);
+      expect(store.getState()).toMatchObject({
+        adding: false,
+        draft: null,
+        editing: memoryId("b"),
+      });
+
+      store.getState().openNew();
+      store.getState().reopen(memoryId("a"), words);
+      expect(store.getState()).toMatchObject({
+        adding: true,
+        draft: null,
+        editing: null,
+      });
+    });
+
+    it("forgets the words when the editor closes or another opens", () => {
+      const store = createMemoryStore();
+
+      store.getState().reopen(null, words);
+      store.getState().close();
+      expect(store.getState().draft).toBeNull();
+
+      store.getState().reopen(null, words);
+      store.getState().openEdit(memoryId("a"));
+      expect(store.getState().draft).toBeNull();
+
+      store.getState().close();
+      store.getState().reopen(memoryId("a"), words);
+      store.getState().openNew();
+      expect(store.getState().draft).toBeNull();
     });
   });
 
