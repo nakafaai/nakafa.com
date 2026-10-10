@@ -2,28 +2,27 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 
-/**
- * Streamed text wraps greedily: pretty wrapping re-breaks earlier lines every
- * time the text grows, so words jump between lines.
- */
-const STREAMED =
-  "[&_[data-nakafa^=heading-]]:text-wrap [&_[data-nakafa^=heading-]]:font-semibold [&_li]:text-wrap [&_p]:text-wrap";
-
 const markdownFrameVariants = cva(
   "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
   {
     variants: {
       variant: {
         document: "",
-        chat: cn(STREAMED, "text-chat [&_[data-nakafa^=heading-]]:text-chat"),
+        chat: "text-chat [&_[data-nakafa^=heading-]]:text-chat",
         // A note under an activity row, such as Nina's reasoning, reads at the
         // size of the row it belongs to.
-        note: cn(
-          STREAMED,
-          "text-sm/relaxed [&_[data-nakafa^=heading-]]:text-sm/relaxed"
-        ),
+        note: "text-sm/relaxed [&_[data-nakafa^=heading-]]:text-sm/relaxed",
       },
     },
+    compoundVariants: [
+      {
+        // Streamed text wraps greedily: pretty wrapping re-breaks earlier
+        // lines every time the text grows, so words jump between lines.
+        variant: ["chat", "note"],
+        class:
+          "[&_[data-nakafa^=heading-]]:text-wrap [&_[data-nakafa^=heading-]]:font-semibold [&_li]:text-wrap [&_p]:text-wrap",
+      },
+    ],
     defaultVariants: { variant: "document" },
   }
 );
