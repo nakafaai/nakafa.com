@@ -14,6 +14,12 @@ import { setNinaMemoryPaused } from "@repo/backend/confect/learningPreferences/i
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { readLearnerProfile } from "@repo/backend/confect/nina/memory/profile";
 import {
+  disable,
+  enable,
+  forget,
+  get,
+} from "@repo/backend/confect/nina/memory/retired";
+import {
   MEMORY_FIELD,
   openMemories,
 } from "@repo/backend/confect/nina/memory/seal";
@@ -179,46 +185,6 @@ const clear = FunctionImpl.make(
     for (const memory of yield* readMemories(appUser._id)) {
       yield* deleteMemory(memory._id);
     }
-    return null;
-  })
-);
-
-// The four functions below answer browser tabs opened before October 2026.
-// They change nothing and report memory as off, and they leave with the
-// retired model key.
-const get = FunctionImpl.make(
-  schema,
-  spec,
-  "get",
-  Effect.fn("nina.memory.get")(() => Effect.succeed(null))
-);
-
-const enable = FunctionImpl.make(
-  schema,
-  spec,
-  "enable",
-  Effect.fn("nina.memory.enable")(function* () {
-    yield* requireAuth();
-    return { facts: [] };
-  })
-);
-
-const disable = FunctionImpl.make(
-  schema,
-  spec,
-  "disable",
-  Effect.fn("nina.memory.disable")(function* () {
-    yield* requireAuth();
-    return null;
-  })
-);
-
-const forget = FunctionImpl.make(
-  schema,
-  spec,
-  "forget",
-  Effect.fn("nina.memory.forget")(function* () {
-    yield* requireAuth();
     return null;
   })
 );

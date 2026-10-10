@@ -19,10 +19,6 @@ const edit = Ref.getFunctionReference(memory.edit);
 const remove = Ref.getFunctionReference(memory.remove);
 const pause = Ref.getFunctionReference(memory.pause);
 const clear = Ref.getFunctionReference(memory.clear);
-const get = Ref.getFunctionReference(memory.get);
-const enable = Ref.getFunctionReference(memory.enable);
-const disable = Ref.getFunctionReference(memory.disable);
-const forget = Ref.getFunctionReference(memory.forget);
 const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
 const expire = Ref.getFunctionReference(refs.internal.nina.memory.expire);
 
@@ -362,24 +358,6 @@ describe("Nina memory pause", () => {
     ).toEqual([
       expect.objectContaining({ preferredTryoutCountryKey: "indonesia" }),
     ]);
-  });
-});
-
-describe("Nina memory of the October 2026 settings card", () => {
-  it("answers old browser tabs and changes nothing", async () => {
-    const f = await createMemoryTest();
-    await f.seed({ text: "Stays as it is" });
-    const before = await f.stored();
-    expect(await f.t.query(get, {})).toBeNull();
-    expect(await f.owner.query(get, {})).toBeNull();
-    expect(await f.owner.mutation(enable, {})).toEqual({ facts: [] });
-    expect(await f.owner.mutation(disable, {})).toBeNull();
-    expect(await f.owner.mutation(forget, { key: 0 })).toBeNull();
-    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
-    expect(await f.stored()).toStrictEqual(before);
-    expect(
-      await f.t.query((ctx) => ctx.db.query("learningPreferences").collect())
-    ).toEqual([]);
   });
 });
 
