@@ -11,13 +11,13 @@ import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { HeaderContent } from "@/components/shared/content/header";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { QuranSurahName } from "@/components/shared/quran/name";
+import { getQuranSurahName } from "@/lib/content/quran/navigation";
 import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/seo/social";
-import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 /** Builds localized Quran index metadata with markdown alternates for agent-readable docs. */
 export async function generateMetadata({

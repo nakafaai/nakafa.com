@@ -3,7 +3,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { Schema } from "effect";
-import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
+import {
+  getQuranPagination,
+  getQuranSurahName,
+} from "@/lib/content/quran/navigation";
 
 const SurahPageSchema = Schema.Struct({
   nextSurah: QuranSurahRowSchema,
