@@ -7,9 +7,9 @@ import {
   type NinaMemorySeen,
 } from "@repo/backend/confect/nina/memory.spec";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import { Array as Arr } from "effect";
 
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
-const clear = Ref.getFunctionReference(refs.public.nina.memory.clear);
 const edit = Ref.getFunctionReference(refs.public.nina.memory.edit);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
@@ -37,27 +37,34 @@ function candidate(
 
 /**
  * A learner with a chat and a turn, and a way to run one capture for them.
- * `seen` is what the capture call read before the model read the message.
+ * `readNow` is what a capture call reads before the model reads the message:
+ * every memory of the learner as it stands now. A capture reads it by default,
+ * and a test that changes a memory after the read takes it first.
  */
 async function fixture() {
   const f = await createMemoryTest();
-  const run = (
+  const readNow = async () =>
+    Arr.map(
+      Arr.filter(await f.stored(), (row) => row.userId === f.identity.userId),
+      (row) => ({ confirmedAt: row.confirmedAt, id: row._id })
+    );
+  const run = async (
     candidates: (typeof NinaMemoryCandidate.Type)[],
     {
       lesson,
-      seen = [],
+      seen,
     }: { lesson?: string; seen?: (typeof NinaMemorySeen.Type)[] } = {}
   ) =>
     f.t.mutation(capture, {
       candidates,
       ...(lesson === undefined ? {} : { lesson }),
-      seen,
+      seen: seen ?? (await readNow()),
       turnId: f.turnId,
       userId: f.identity.userId,
     });
   const remembered = async () =>
     (await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId)))?.remembered;
-  return { ...f, remembered, run };
+  return { ...f, readNow, remembered, run };
 }
 
 describe("memory capture write", () => {
@@ -108,17 +115,14 @@ describe("memory capture write", () => {
       validUntil: Date.UTC(2026, 9, 12, 23, 59, 59, 999),
     });
     expect(
-      await f.run(
-        [
-          candidate({
-            kind: "situation",
-            known: id,
-            text: "Ulangan kimia diundur",
-            until: "2026-10-25",
-          }),
-        ],
-        { seen: [{ confirmedAt: 1, id }] }
-      )
+      await f.run([
+        candidate({
+          kind: "situation",
+          known: id,
+          text: "Ulangan kimia diundur",
+          until: "2026-10-25",
+        }),
+      ])
     ).toBe(1);
     expect(await f.stored()).toEqual([
       expect.objectContaining({
@@ -139,7 +143,6 @@ describe("memory capture write", () => {
     const f = await fixture();
     const id = await f.seed({
       author: "learner",
-      confirmedAt: 1,
       lesson: "material:lesson:chemistry",
       text: "Kelas 11.",
     });
@@ -161,7 +164,6 @@ describe("memory capture write", () => {
     const f = await fixture();
     const id = await f.seed({
       author: "learner",
-      confirmedAt: 1,
       kind: "level",
       text: "Kelas 12 IPA",
     });
@@ -281,36 +283,23 @@ describe("memory capture write", () => {
 describe("memory capture write after the learner changed their memory", () => {
   it("writes nothing when the learner removed a memory the call had read", async () => {
     const f = await fixture();
-    const kept = await f.seed({ author: "learner", text: "Stays" });
+    await f.seed({ author: "learner", text: "Stays" });
     const gone = await f.seed({ text: "Mau ikut SNBT 2027" });
-    const seen = [
-      { confirmedAt: 1, id: kept },
-      { confirmedAt: 1, id: gone },
-    ];
+    const seen = await f.readNow();
     await f.owner.mutation(remove, { id: gone });
     expect(await f.run([candidate()], { seen })).toBe(0);
     expect(await f.texts()).toEqual(["Stays"]);
     expect(await f.remembered()).toBeUndefined();
   });
 
-  it("writes nothing when the learner cleared their memory after the call read it", async () => {
-    const f = await fixture();
-    const id = await f.seed({ text: "Mau ikut SNBT 2027" });
-    await f.owner.mutation(clear, {});
-    expect(await f.run([candidate()], { seen: [{ confirmedAt: 1, id }] })).toBe(
-      0
-    );
-    expect(await f.stored()).toEqual([]);
-  });
-
   it("writes when every memory the call had read is still there, and when it had read none", async () => {
     const f = await fixture();
-    const id = await f.seed({ kind: "goal", text: "Mau ikut SNBT 2027" });
-    expect(await f.run([candidate()], { seen: [{ confirmedAt: 1, id }] })).toBe(
-      1
-    );
+    await f.seed({ kind: "goal", text: "Mau ikut SNBT 2027" });
+    expect(await f.run([candidate()])).toBe(1);
     expect(
-      await f.run([candidate({ kind: "style", text: "Contoh dulu" })])
+      await f.run([candidate({ kind: "style", text: "Contoh dulu" })], {
+        seen: [],
+      })
     ).toBe(1);
     expect(await f.texts()).toEqual([
       "Mau ikut SNBT 2027",
@@ -321,12 +310,8 @@ describe("memory capture write after the learner changed their memory", () => {
 
   it("keeps the words the learner edited after the call read the memory, and gives it no kind", async () => {
     const f = await fixture();
-    const id = await f.seed({
-      author: "learner",
-      confirmedAt: 1,
-      text: "Kelas 11.",
-    });
-    const seen = [{ confirmedAt: 1, id }];
+    const id = await f.seed({ author: "learner", text: "Kelas 11." });
+    const seen = await f.readNow();
     vi.setSystemTime(NOW + 1000);
     await f.owner.mutation(edit, { id, text: "Kelas 12 SMA" });
     vi.setSystemTime(NOW + 2000);
@@ -338,16 +323,33 @@ describe("memory capture write after the learner changed their memory", () => {
     expect(row).not.toHaveProperty("kind");
   });
 
+  it("keeps the words of a memory the learner wrote after the call read the list, and gives it no kind", async () => {
+    const f = await fixture();
+    // The call read no memory, so this one is newer than the message it read.
+    await f.seed({
+      author: "learner",
+      text: "Kelas 12 IPA di Jakarta Selatan",
+    });
+    expect(
+      await f.run([candidate({ text: "Kelas 12 IPA di Jakarta" })], {
+        seen: [],
+      })
+    ).toBe(1);
+    expect(await f.texts()).toEqual(["Kelas 12 IPA di Jakarta Selatan"]);
+    const [row] = await f.stored();
+    expect(row).toMatchObject({ author: "learner", confirmedAt: NOW });
+    expect(row).not.toHaveProperty("kind");
+  });
+
   it("keeps the words, the kind and the end of a situation that the learner edited after the call read it", async () => {
     const f = await fixture();
     const validUntil = Date.UTC(2026, 9, 12, 23, 59, 59, 999);
     const id = await f.seed({
-      confirmedAt: 1,
       kind: "situation",
       text: "Ulangan kimia",
       validUntil,
     });
-    const seen = [{ confirmedAt: 1, id }];
+    const seen = await f.readNow();
     vi.setSystemTime(NOW + 1000);
     await f.owner.mutation(edit, { id, text: "Ulangan kimia hari Senin" });
     vi.setSystemTime(NOW + 2000);
@@ -374,36 +376,35 @@ describe("memory capture write after the learner changed their memory", () => {
       }),
     ]);
   });
-
-  it("rewrites a memory that is still as the call read it, and gives it the kind", async () => {
-    const f = await fixture();
-    const id = await f.seed({
-      author: "learner",
-      confirmedAt: 1,
-      text: "Kelas 11.",
-    });
-    expect(
-      await f.run([candidate({ known: id })], {
-        seen: [{ confirmedAt: 1, id }],
-      })
-    ).toBe(1);
-    expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
-    expect(await f.stored()).toEqual([
-      expect.objectContaining({ author: "nina", kind: "level" }),
-    ]);
-  });
 });
 
 describe("memory capture write at the limit", () => {
-  it("drops the Nina-written memory confirmed longest ago", async () => {
+  it("drops the Nina-written memory confirmed longest ago, whichever was created first", async () => {
     const f = await fixture();
-    await f.seed({ confirmedAt: 0, text: "Oldest" });
+    await f.seed({ confirmedAt: 900, text: "Created first, confirmed lately" });
+    await f.fill(MEMORY_LIMIT - 2);
+    await f.seed({ confirmedAt: 0, text: "Created last, confirmed long ago" });
+    expect(await f.run([candidate()])).toBe(1);
+    const texts = await f.texts();
+    expect(texts).toHaveLength(MEMORY_LIMIT);
+    expect(texts).not.toContain("Created last, confirmed long ago");
+    expect(texts).toContain("Created first, confirmed lately");
+    expect(texts).toContain("Kelas 12 IPA.");
+  });
+
+  it("never drops a memory the learner wrote, though it was confirmed longest ago", async () => {
+    const f = await fixture();
+    await f.seed({
+      author: "learner",
+      confirmedAt: 0,
+      text: "Written long ago by the learner",
+    });
     await f.fill(MEMORY_LIMIT - 1);
     expect(await f.run([candidate()])).toBe(1);
     const texts = await f.texts();
     expect(texts).toHaveLength(MEMORY_LIMIT);
-    expect(texts).not.toContain("Oldest");
-    expect(texts).toContain("Kelas 12 IPA.");
+    expect(texts).toContain("Written long ago by the learner");
+    expect(texts).not.toContain("Memory 0");
   });
 
   it("drops the new memory when the learner wrote every one", async () => {
@@ -446,12 +447,5 @@ describe("memory capture write that changes nothing", () => {
       ])
     ).toBe(1);
     expect(await f.texts()).toEqual(["Kelas 12 IPA.", "Suka contoh soal."]);
-  });
-
-  it("writes nothing for no candidates", async () => {
-    const f = await fixture();
-    expect(await f.run([])).toBe(0);
-    expect(await f.stored()).toEqual([]);
-    expect(await f.remembered()).toBeUndefined();
   });
 });

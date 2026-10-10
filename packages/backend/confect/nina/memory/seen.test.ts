@@ -28,21 +28,29 @@ describe("memory a capture call had read", () => {
     ).toBe(true);
   });
 
-  it("finds the memories confirmed after the call read them, and ignores those it never read", () => {
-    expect(
-      Arr.fromIterable(
-        changedSince(
-          [
-            { confirmedAt: 1, id: first },
-            { confirmedAt: 1, id: second },
-          ],
-          [
-            { _id: first, confirmedAt: 5 },
-            { _id: second, confirmedAt: 1 },
-            { _id: third, confirmedAt: 9 },
-          ]
-        )
+  it("finds the memories confirmed after the call read them and those written after it, and leaves those it read as they are", () => {
+    const changed = Arr.fromIterable(
+      changedSince(
+        [
+          { confirmedAt: 1, id: first },
+          { confirmedAt: 1, id: second },
+        ],
+        [
+          { _id: first, confirmedAt: 5 },
+          { _id: second, confirmedAt: 1 },
+          { _id: third, confirmedAt: 1 },
+        ]
       )
+    );
+    // A hash set keeps no order.
+    expect(changed).toHaveLength(2);
+    expect(changed).toEqual(expect.arrayContaining([first, third]));
+  });
+
+  it("finds every memory when the call read none", () => {
+    expect(
+      Arr.fromIterable(changedSince([], [{ _id: first, confirmedAt: 1 }]))
     ).toEqual([first]);
+    expect(Arr.fromIterable(changedSince([], []))).toEqual([]);
   });
 });

@@ -200,7 +200,8 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
  * other candidate is a new memory. The model read the message some time ago, so
  * the write first checks what could have changed meanwhile: paused memory, a
  * deleted turn, or a memory the learner removed writes nothing, and a memory
- * changed since keeps its words, its kind and its end date.
+ * changed or written since the call read the list keeps its words, its kind and
+ * its end date.
  */
 export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   readonly candidates: readonly Candidate[];

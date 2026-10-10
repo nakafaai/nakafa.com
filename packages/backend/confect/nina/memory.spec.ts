@@ -273,7 +273,7 @@ export default GroupSpec.make()
   // Writes what a capture call found. `seen` is what the call read before the
   // model read the message: the write changes nothing when the learner removed
   // one of those memories meanwhile, and leaves the words, the kind and the end
-  // date of one that changed.
+  // date of one that changed or that was written after the call read the list.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "capture",
