@@ -14,8 +14,8 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
+import { getSocialMetadata } from "@/lib/seo/social";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
-import { getSocialMetadata } from "@/lib/utils/metadata";
 
 /**
  * Builds metadata-only copy for the try-out hub while keeping helper prose out

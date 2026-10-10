@@ -40,8 +40,8 @@ import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
+import { getSocialMetadata } from "@/lib/seo/social";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
-import { getSocialMetadata } from "@/lib/utils/metadata";
 
 type CurriculumPageProps =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">;

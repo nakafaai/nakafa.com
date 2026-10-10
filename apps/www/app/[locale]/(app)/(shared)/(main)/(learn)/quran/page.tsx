@@ -16,7 +16,7 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { getSocialMetadata } from "@/lib/utils/metadata";
+import { getSocialMetadata } from "@/lib/seo/social";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 /** Builds localized Quran index metadata with markdown alternates for agent-readable docs. */

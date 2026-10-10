@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { getOgUrl, getSocialMetadata } from "@/lib/seo/social";
 
 describe("getOgUrl", () => {
   it("builds an image URL for a content path", () => {

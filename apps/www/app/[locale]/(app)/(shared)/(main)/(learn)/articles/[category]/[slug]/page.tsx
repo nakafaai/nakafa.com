@@ -24,7 +24,7 @@ import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
 import type { SEOContext } from "@/lib/seo/contract";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { getOgUrl, getSocialMetadata } from "@/lib/seo/social";
 
 /** Validates localized article route params before metadata and rendering touch content modules. */
 async function getResolvedParams(

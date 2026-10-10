@@ -45,7 +45,7 @@ import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
 import type { SEOContext } from "@/lib/seo/contract";
-import { getSocialMetadata } from "@/lib/utils/metadata";
+import { getSocialMetadata } from "@/lib/seo/social";
 import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
 
 /** Builds localized Quran surah metadata only after the runtime catalog confirms the surah exists. */

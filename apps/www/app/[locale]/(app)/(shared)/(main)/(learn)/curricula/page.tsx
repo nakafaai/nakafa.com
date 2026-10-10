@@ -24,8 +24,8 @@ import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
+import { getSocialMetadata } from "@/lib/seo/social";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
-import { getSocialMetadata } from "@/lib/utils/metadata";
 
 interface CurriculumIndexPageProps {
   params: Promise<{ locale: string }>;
