@@ -25,6 +25,8 @@ export const createUsageHandler = Effect.fn("nina.usage.handler")(function* (
         provider: event.provider,
         input: event.usage.inputTokens ?? 0,
         output: event.usage.outputTokens ?? 0,
+        cached: event.usage.inputTokenDetails.cacheReadTokens ?? 0,
+        reasoning: event.usage.outputTokenDetails.reasoningTokens ?? 0,
         ...reportedCost(event.providerMetadata),
       }).pipe(
         Effect.flatMap((usage) =>

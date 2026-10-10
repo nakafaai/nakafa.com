@@ -76,8 +76,19 @@ tools with a warning.
   `Gateway.language(purpose)` takes only the purpose, and every Nina answer
   costs 5 credits. The model keys learners chose before October 2026 are retired:
   stored rows keep them until a later contract change unsets them.
-- **Routing.** None is sent. Convex rejects routing options and enforces zero
-  data retention itself. `gateway/route.ts` is deleted.
+- **Routing and retention.** No routing choice is sent: Convex rejects
+  `provider.only` and the other routing fields. Every call does send
+  `provider: { zdr: true, data_collection: "deny" }`, which the gateway accepts
+  (measured 10 October 2026), so each request asks for the zero data retention
+  that Convex states for the gateway as a whole. `gateway/route.ts` is deleted.
+- **Prompt cache.** The gateway caches nothing on its own: a repeated prefix of
+  53,624 tokens read zero cached tokens. `gateway/cache.ts` marks the last
+  message before the newest user message with
+  `cache_control: { type: "ephemeral" }`, so every later step of a turn reads
+  the prefix the first step wrote. The provider keeps a prefix for about five
+  minutes, in memory, and ignores one below about 4,000 tokens. Nina keeps her
+  instructions and her tool list the same in every step of a turn, and usage
+  rows record cached and reasoning tokens.
 - **Spend.** No tenant or person identifier goes to the gateway, so the `space`
   argument leaves `Gateway.language`. Nakafa records cost itself: each usage row
   keeps the `providerMetadata.convexGateway.cost` its calls report, summed per

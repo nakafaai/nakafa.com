@@ -1,4 +1,7 @@
-import { formatToolPolicyPrompt } from "@repo/backend/confect/nina/policy/tool";
+import {
+  formatEvidencePrompt,
+  formatToolPolicyPrompt,
+} from "@repo/backend/confect/nina/policy/tool";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { formatExamplesPrompt } from "@repo/backend/confect/nina/prompt/examples";
 import { formatFocusTaskPrompt } from "@repo/backend/confect/nina/prompt/focus";
@@ -52,7 +55,10 @@ export function createNinaPrompt({
       ? Arr.join([formatTaskPrompt(), formatFocusTaskPrompt()], "\n\n")
       : formatTaskPrompt(),
     examples: formatExamplesPrompt(),
-    outputFormatting: formatAnswerPrompt(),
+    outputFormatting: Arr.join(
+      [formatAnswerPrompt(), formatEvidencePrompt()],
+      "\n\n"
+    ),
   });
   return pipe(
     [
