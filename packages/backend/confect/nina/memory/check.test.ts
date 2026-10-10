@@ -84,6 +84,7 @@ describe("memory candidate check", () => {
     ["a link without a scheme", "www.contoh.com"],
     ["a bare domain", "contoh.co"],
     ["a long number", "081234567890"],
+    ["eight digits in a row", "12345678"],
   ])("drops a candidate whose text holds %s", (_, secret) => {
     expect(kept([candidate({ text: `Kontak ${secret}.` })])).toEqual([]);
   });
@@ -97,10 +98,16 @@ describe("memory candidate check", () => {
     expect(quoting("aku bisa dihubungi")).toHaveLength(1);
   });
 
-  it("allows short numbers such as a grade or a year", () => {
+  it("allows short numbers such as a grade or a year, seven digits in a row, and a date written with dashes", () => {
     expect(
       kept([candidate({ quote: "snbt\n2027", text: "SNBT 2027, kelas 12." })])
     ).toEqual(["SNBT 2027, kelas 12."]);
+    expect(
+      kept([
+        candidate({ text: "Nomor 1234567." }),
+        candidate({ text: "Ujian 20-10-2026 pukul 14.30." }),
+      ])
+    ).toEqual(["Nomor 1234567.", "Ujian 20-10-2026 pukul 14.30."]);
   });
 
   it("keeps a situation that ends today or later and its date", () => {

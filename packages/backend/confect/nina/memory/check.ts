@@ -21,7 +21,11 @@ function collapse(text: string) {
   return Str.trim(Str.replaceAll(WHITESPACE, " ")(Str.toLowerCase(text)));
 }
 
-/** Whether a text holds an email address, a link, or a run of eight digits or more. */
+/**
+ * Whether a text holds an email address, a link, or eight digits or more in a
+ * row. A dash, a dot or a space ends a run of digits, because joining them
+ * would also drop a date such as 20-10-2026.
+ */
 function hasPrivateData(text: string) {
   return EMAIL.test(text) || LINK.test(text) || LONG_NUMBER.test(text);
 }

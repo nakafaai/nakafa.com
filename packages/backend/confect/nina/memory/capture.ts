@@ -39,6 +39,15 @@ import {
 /** Learner text one capture call reads. */
 const MESSAGE_TOKENS = 1000;
 
+/**
+ * Known memories one capture call reads. A learner may keep `MEMORY_LIMIT`
+ * memories of `MEMORY_TEXT_LIMIT` characters each, and the list would grow with
+ * them. It is newest first, and a list that does not fit loses its oldest
+ * memories: a candidate that repeats one of them still confirms it by saying
+ * the same words.
+ */
+const KNOWN_TOKENS = 4000;
+
 /** What each kind of memory holds. Adding a kind to the contract fails here until it is described. */
 const KINDS = {
   level: "their grade or school level.",
@@ -110,6 +119,17 @@ function logFailure(error: NinaMemoryError) {
   });
 }
 
+/** The memories the model can name, within `KNOWN_TOKENS`. */
+function formatKnown(known: (typeof NinaLearner.Type)["known"]) {
+  return Arr.isReadonlyArrayNonEmpty(known)
+    ? boundText(
+        Arr.join(Arr.map(known, knownLine), "\n"),
+        KNOWN_TOKENS,
+        "Older memories are not listed."
+      )
+    : "None";
+}
+
 /** What the model reads: today, the account, the memories it can name, and the learner's message. */
 function formatPrompt({
   learner,
@@ -124,7 +144,7 @@ function formatPrompt({
     [
       `# Today\n\n${DateTime.formatIsoDateUtc(today)}`,
       `# Account\n\n${formatLearnerProfile(learner.profile) ?? "Account: none"}`,
-      `# Known Memories\n\n${Arr.isReadonlyArrayNonEmpty(learner.known) ? Arr.join(Arr.map(learner.known, knownLine), "\n") : "None"}`,
+      `# Known Memories\n\n${formatKnown(learner.known)}`,
       `# Learner Message\n\n${boundText(message, MESSAGE_TOKENS, "Message shortened.")}`,
     ],
     "\n\n"

@@ -143,10 +143,11 @@ describe("memory capture", () => {
   it("asks no model about a prompt that holds no words of the learner", async () => {
     const f = await fixture();
     const model = answers(level);
+    // Nina's own reply says the words that pass the gate, which are not the learner's.
     const answer = await f.t.mutation((ctx) =>
       saveMessage(ctx, components.nina, {
         threadId: f.threadId,
-        message: { role: "assistant", content: "Kamu kelas 12." },
+        message: { role: "assistant", content: MESSAGE },
       })
     );
     const picture = await f.t.mutation((ctx) =>
@@ -161,6 +162,7 @@ describe("memory capture", () => {
     await f.capture(answer.messageId);
     await f.capture(picture.messageId);
     expect(model.doGenerateCalls).toHaveLength(0);
+    expect(await f.stored()).toEqual([]);
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
@@ -173,17 +175,21 @@ describe("memory capture", () => {
     expect(await f.stored()).toEqual([]);
   });
 
-  it("saves what the learner said about themself and records the call under the memory agent", async () => {
+  it("saves what the learner said about themself, at most three memories, and records the call under the memory agent", async () => {
     const f = await fixture();
-    const model = answers(level, {
-      kind: "goal",
-      quote: "mau ikut SNBT 2027",
-      text: "Ikut SNBT 2027.",
-    });
+    const model = answers(
+      level,
+      { kind: "goal", quote: "mau ikut SNBT 2027", text: "Ikut SNBT 2027." },
+      { kind: "style", quote: "SNBT 2027", text: "Siap SNBT 2027." }
+    );
     await f.capture();
-    expect(await f.texts()).toEqual(["Kelas 12.", "Ikut SNBT 2027."]);
+    expect(await f.texts()).toEqual([
+      "Kelas 12.",
+      "Ikut SNBT 2027.",
+      "Siap SNBT 2027.",
+    ]);
     expect(await f.turn()).toMatchObject({
-      remembered: 2,
+      remembered: 3,
       usage: [
         {
           agent: "memory",
@@ -225,6 +231,25 @@ describe("memory capture", () => {
     );
     expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
     expect(await f.stored()).toHaveLength(1);
+  });
+
+  it("shows the model the newest known memories that fit its budget, and says that older ones are left out", async () => {
+    const f = await fixture();
+    // Twelve notes of about 2000 characters are far more than the model reads.
+    const note = "Catatan belajar saya tentang limit dan turunan.";
+    for (let index = 0; index < 12; index += 1) {
+      await f.seed({
+        author: "learner",
+        confirmedAt: index + 1,
+        text: `Note ${index}. ${Arr.join(Arr.replicate(note, 40), " ")}`,
+      });
+    }
+    const model = answers(level);
+    await f.capture();
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain("Note 11.");
+    expect(prompt).not.toContain("Note 0.");
+    expect(prompt).toContain("Older memories are not listed.");
   });
 
   it("saves nothing when the learner removes a memory while the model reads the message", async () => {
@@ -339,6 +364,16 @@ describe("memory capture that fails", () => {
       "Private provider detail"
     );
     expect(encodeJsonText(MutableRef.get(f.logged))).not.toContain("Aku");
+    expect(await f.stored()).toEqual([]);
+  });
+
+  it("logs an answer with more than three memories as rejected, and saves none of them", async () => {
+    const f = await fixture();
+    answers(level, level, level, level);
+    await f.capture();
+    expect(MutableRef.get(f.logged)).toEqual(
+      unavailable({ operation: "generate", rejected: true })
+    );
     expect(await f.stored()).toEqual([]);
   });
 
