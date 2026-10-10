@@ -1,8 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { MEMORY_TEXT_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Schema } from "effect";
 import {
   addMemory,
+  canSave,
   clearMemories,
   editMemory,
   isPending,
@@ -11,6 +13,7 @@ import {
   type MemoryList,
   pauseMemories,
   pendingId,
+  previewText,
   removeMemory,
   shownMemories,
 } from "@/components/user/settings/memory/list";
@@ -25,7 +28,6 @@ function stored(name: string, change: Partial<Memory> = {}): Memory {
     createdAt: 500,
     id: memoryId(name),
     inUse: true,
-    kind: "goal",
     sources: 2,
     text: `Text of ${name}`,
     ...change,
@@ -38,193 +40,137 @@ function listOf(memories: Memory[], paused = false): MemoryList {
 
 const ids = (memories: readonly Memory[]) => Arr.map(memories, ({ id }) => id);
 
-const label = (kind: Memory["kind"]) => `kind ${kind}`;
-
 describe("memory list", () => {
-  describe("learnerMemory", () => {
-    it("builds a memory the learner wrote, with no source chat", () => {
-      expect(
-        learnerMemory(
-          { kind: "style", text: "Examples first" },
-          memoryId("new"),
-          5000
-        )
-      ).toEqual({
-        author: "learner",
-        confirmedAt: 5000,
-        createdAt: 5000,
-        id: memoryId("new"),
-        inUse: true,
-        kind: "style",
-        sources: 0,
-        text: "Examples first",
-      });
+  it("tells a memory the server has not stored yet from a stored one", () => {
+    expect(isPending(stored("a", { id: pendingId("token") }))).toBe(true);
+    expect(isPending(stored("a"))).toBe(false);
+  });
+
+  it("builds the learner's own memory for words just written", () => {
+    expect(learnerMemory({ text: "Kelas 12" }, memoryId("new"), 42)).toEqual({
+      author: "learner",
+      confirmedAt: 42,
+      createdAt: 42,
+      id: memoryId("new"),
+      inUse: true,
+      sources: 0,
+      text: "Kelas 12",
     });
   });
 
-  describe("pendingId and isPending", () => {
-    it("marks a memory the server has not stored yet", () => {
-      const waiting = stored("a", { id: pendingId("3f2b-77c1") });
+  it("puts a new memory first", () => {
+    const list = addMemory(listOf([stored("a")]), stored("b"));
 
-      expect(waiting.id).toBe("pending-3f2b-77c1");
-      expect(isPending(waiting)).toBe(true);
-    });
+    expect(ids(list.memories)).toEqual([memoryId("b"), memoryId("a")]);
+  });
 
-    it("does not mark a stored memory", () => {
-      expect(isPending(stored("jd7e9k2m4n5p6q7r8s9t0v1w2x3y4z5a"))).toBe(false);
+  it("rewrites a memory as the learner's, confirms it now and moves it first", () => {
+    const list = listOf([
+      stored("a"),
+      stored("b", { validUntil: 9000 }),
+      stored("c"),
+    ]);
+    const edited = editMemory(
+      list,
+      { id: memoryId("b"), text: "New words" },
+      77
+    );
+
+    expect(ids(edited.memories)).toEqual([
+      memoryId("b"),
+      memoryId("a"),
+      memoryId("c"),
+    ]);
+    expect(edited.memories[0]).toEqual({
+      ...stored("b", { validUntil: 9000 }),
+      author: "learner",
+      confirmedAt: 77,
+      text: "New words",
     });
   });
 
-  describe("addMemory", () => {
-    it("puts the new memory first and keeps the rest in order", () => {
-      const list = listOf([stored("a"), stored("b")], true);
-      const added = addMemory(list, stored("c"));
+  it("leaves the list as it is when the memory to rewrite is not in it", () => {
+    const list = listOf([stored("a")]);
 
-      expect(ids(added.memories)).toEqual([
-        memoryId("c"),
-        memoryId("a"),
-        memoryId("b"),
-      ]);
-      expect(added.paused).toBe(true);
-      expect(ids(list.memories)).toEqual([memoryId("a"), memoryId("b")]);
-    });
+    expect(editMemory(list, { id: memoryId("gone"), text: "Words" }, 77)).toBe(
+      list
+    );
   });
 
-  describe("editMemory", () => {
-    const situation = stored("b", {
-      kind: "situation",
-      validUntil: 9000,
-    });
-    const list = listOf([stored("a"), situation, stored("c")]);
-
-    it("rewrites the memory as the learner's and moves it first", () => {
-      const edited = editMemory(
-        list,
-        { id: memoryId("c"), kind: "level", text: "Grade 12" },
-        7000
-      );
-
-      expect(ids(edited.memories)).toEqual([
-        memoryId("c"),
-        memoryId("a"),
-        memoryId("b"),
-      ]);
-      expect(edited.memories[0]).toEqual({
-        ...stored("c"),
-        author: "learner",
-        confirmedAt: 7000,
-        kind: "level",
-        text: "Grade 12",
-      });
-    });
-
-    it("keeps the day a situation ends when it stays a situation", () => {
-      const edited = editMemory(
-        list,
-        { id: memoryId("b"), kind: "situation", text: "Exam on Friday" },
-        7000
-      );
-
-      expect(edited.memories[0]).toMatchObject({
-        kind: "situation",
-        text: "Exam on Friday",
-        validUntil: 9000,
-      });
-    });
-
-    it("drops the day when the memory stops being a situation", () => {
-      const edited = editMemory(
-        list,
-        { id: memoryId("b"), kind: "goal", text: "Exam on Friday" },
-        7000
-      );
-
-      expect(edited.memories[0]).not.toHaveProperty("validUntil");
-    });
-
-    it("leaves the list unchanged for a memory it does not hold", () => {
-      expect(
-        editMemory(
-          list,
-          { id: memoryId("gone"), kind: "goal", text: "Anything" },
-          7000
-        )
-      ).toBe(list);
-    });
-  });
-
-  describe("removeMemory, clearMemories and pauseMemories", () => {
+  it("takes one memory out, or all of them, and keeps the pause", () => {
     const list = listOf([stored("a"), stored("b")], true);
 
-    it("removes only the named memory", () => {
-      expect(ids(removeMemory(list, memoryId("a")).memories)).toEqual([
-        memoryId("b"),
-      ]);
+    expect(ids(removeMemory(list, memoryId("a")).memories)).toEqual([
+      memoryId("b"),
+    ]);
+    expect(clearMemories(list)).toEqual({ memories: [], paused: true });
+  });
+
+  it("sets whether memory is paused and keeps the memories", () => {
+    const list = listOf([stored("a")]);
+
+    expect(pauseMemories(list, true)).toEqual({
+      memories: list.memories,
+      paused: true,
+    });
+    expect(pauseMemories(listOf([], true), false).paused).toBe(false);
+  });
+
+  describe("previewText", () => {
+    it("reads formatted text as one line of plain words", () => {
+      expect(previewText("Kelas **12** IPA, ikut *SNBT* 2027")).toBe(
+        "Kelas 12 IPA, ikut SNBT 2027"
+      );
+      expect(previewText("- Limit\n- Turunan\n\n1. Integral")).toBe(
+        "Limit Turunan Integral"
+      );
     });
 
-    it("clears every memory and keeps the pause", () => {
-      expect(clearMemories(list)).toEqual({ memories: [], paused: true });
+    it("keeps a star that is part of the words and drops the writer's escapes", () => {
+      expect(previewText("2 * 3 = 6")).toBe("2 * 3 = 6");
+      expect(previewText("Nilai 9\\.5 dan 2 \\* 3")).toBe(
+        "Nilai 9.5 dan 2 * 3"
+      );
+    });
+  });
+
+  describe("canSave", () => {
+    it("wants something written", () => {
+      expect(canSave("")).toBe(false);
+      expect(canSave("   \n ")).toBe(false);
+      expect(canSave("Kelas 12")).toBe(true);
     });
 
-    it("sets the pause and keeps the memories", () => {
-      const resumed = pauseMemories(list, false);
+    it("wants the words to fit", () => {
+      const fits = "a".repeat(MEMORY_TEXT_LIMIT);
 
-      expect(resumed.paused).toBe(false);
-      expect(resumed.memories).toBe(list.memories);
+      expect(canSave(fits)).toBe(true);
+      expect(canSave(`  ${fits}  `)).toBe(true);
+      expect(canSave(`${fits}a`)).toBe(false);
     });
   });
 
   describe("shownMemories", () => {
     const list = listOf([
-      stored("a", { text: "Prefers worked Examples", kind: "style" }),
-      stored("b", { text: "Finds trigonometry hard", kind: "struggle" }),
-      stored("c", { text: "Exam on Friday", kind: "situation" }),
+      stored("a", { text: "Prefers worked **Examples**" }),
+      stored("b", { text: "Finds trigonometry hard" }),
+      stored("c", { text: "- Exam on Friday" }),
     ]);
-    const view = { label, query: "" };
 
     it("shows every memory for an empty or blank search", () => {
-      expect(shownMemories(list, view)).toEqual(list.memories);
-      expect(shownMemories(list, { ...view, query: "   " })).toEqual(
-        list.memories
-      );
+      expect(shownMemories(list, "")).toEqual(list.memories);
+      expect(shownMemories(list, "   ")).toEqual(list.memories);
     });
 
-    it("finds words in the text without regard to case", () => {
-      expect(ids(shownMemories(list, { ...view, query: "EXAMPLES" }))).toEqual([
+    it("finds words without regard to case or formatting", () => {
+      expect(ids(shownMemories(list, "worked EXAMPLES"))).toEqual([
         memoryId("a"),
       ]);
-      expect(ids(shownMemories(list, { ...view, query: " trig " }))).toEqual([
-        memoryId("b"),
-      ]);
-    });
-
-    it("finds the name of the kind", () => {
-      expect(
-        ids(shownMemories(list, { ...view, query: "Kind Situation" }))
-      ).toEqual([memoryId("c")]);
+      expect(ids(shownMemories(list, " trig "))).toEqual([memoryId("b")]);
     });
 
     it("shows nothing when no memory matches", () => {
-      expect(shownMemories(list, { ...view, query: "chemistry" })).toEqual([]);
-    });
-
-    it("shows no memory in use while memory is paused", () => {
-      const memories = [stored("a"), stored("b", { inUse: false })];
-      const inUse = (shown: readonly Memory[]) =>
-        Arr.map(shown, (memory) => memory.inUse);
-
-      expect(inUse(shownMemories(listOf(memories), view))).toEqual([
-        true,
-        false,
-      ]);
-      expect(inUse(shownMemories(listOf(memories, true), view))).toEqual([
-        false,
-        false,
-      ]);
-      expect(shownMemories(listOf(memories, true), view)[0]).toEqual({
-        ...stored("a"),
-        inUse: false,
-      });
+      expect(shownMemories(list, "chemistry")).toEqual([]);
     });
   });
 });
