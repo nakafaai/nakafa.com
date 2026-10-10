@@ -206,7 +206,9 @@ that a runtime `import()` loads is read through its namespace object, which
 names nothing in the reader, so every module with that file name counts its
 names by word alone, and a computed `import()` path does so for every module.
 Generated and declaration files, JavaScript, the agent skill scripts, and the
-modules at the repository root count by word, since no rule parses them.
+modules at the repository root count by word, since no rule parses them. The
+sweep that followed removed 50 names: the `export` keyword of 43 and 7
+declarations that nothing used.
 
 The check does not judge a module whose exports are read by name from outside
 the repository's imports: the Next.js file conventions of an app, its

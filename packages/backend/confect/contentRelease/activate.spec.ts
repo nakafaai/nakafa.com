@@ -5,7 +5,8 @@ import {
 } from "@repo/backend/confect/contentRelease/activation/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Schema } from "effect";
-export const activationArgs = {
+
+const activationArgs = {
   manifestHash: Schema.String,
   releaseId: Schema.String,
   rendererJson: Schema.String,

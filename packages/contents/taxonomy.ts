@@ -46,7 +46,7 @@ const SUBJECT_MATERIALS = [
   ...BACHELOR_MATERIALS,
 ] as const;
 export const MaterialSchema = Schema.Literals(SUBJECT_MATERIALS);
-export type Material = typeof MaterialSchema.Type;
+type Material = typeof MaterialSchema.Type;
 
 /** Material domains with Nakafa-owned presentation labels and icons. */
 export const PRESENTED_MATERIAL_DOMAINS = SUBJECT_MATERIALS;

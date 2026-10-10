@@ -20,13 +20,9 @@ import {
   encodeRendererJson,
   encodeTryoutRuntimeBundleJson,
 } from "@repo/backend/confect/contentRelease/wire";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Clock, Effect } from "effect";
-export type ReadCtx = MutationCtx | QueryCtx;
+
 type RuntimeReceipt = typeof tryoutRuntimeBundleReceiptValidator.Type;
 
 /** Reads one permanent runtime bundle by its content-addressed identity. */

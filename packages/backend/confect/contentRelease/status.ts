@@ -24,7 +24,8 @@ import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/t
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { Effect } from "effect";
-export type ReleaseStatus = typeof statusValidator.Type;
+
+type ReleaseStatus = typeof statusValidator.Type;
 type CurrentStatus = typeof currentValidator.Type;
 type ActiveBundle = NonNullable<CurrentStatus["active"]>;
 type StagedBundle = NonNullable<CurrentStatus["candidate"]>;
@@ -87,7 +88,7 @@ const stagedBundle = Effect.fn("contentRelease.stagedBundle")(function* (
 });
 
 /** Loads the completed active release and its optional permanent runtime pair. */
-export const activePublication = Effect.fn("contentRelease.activePublication")(
+const activePublication = Effect.fn("contentRelease.activePublication")(
   function* () {
     const active = yield* loadActiveIdentity().pipe(
       Effect.provide(publicationLayer)

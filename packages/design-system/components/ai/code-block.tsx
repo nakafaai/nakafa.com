@@ -57,7 +57,7 @@ function useCodeSource<T>(selector: (source: CodeSource) => T) {
 }
 
 /** Copy-button callbacks and duration for its transient success state. */
-export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
+type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;

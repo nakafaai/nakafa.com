@@ -8,15 +8,10 @@ import { applyContentCache } from "@/lib/content/cache";
 import { readRenderedBody } from "@/lib/content/published/body";
 import {
   type PublishedContentData,
-  type PublishedContentInput,
   type PublishedContentRouteInput,
   readCurrentPublishedContent,
-  readPublishedContent,
 } from "@/lib/content/published/exchange";
 import { decodePublishedPage } from "@/lib/content/published/projection";
-
-/** Public Page identity pinned to one selected release. */
-type PublishedPageInput = PublishedContentInput;
 
 /** Current public Page identity resolved from signed runtime state. */
 export type CurrentPublishedPageInput = PublishedContentRouteInput;
@@ -48,14 +43,6 @@ const decodePageData = Effect.fn("NakafaContent.decodePageData")(function* (
 
 /** Verified signed runtime data narrowed to the Page projection contract. */
 type PublishedPageData = typeof PublishedPageDataSchema.Type;
-
-/** Reads a Page pinned to a release selected by another trusted read. */
-export const readPublishedPage = Effect.fn("NakafaContent.readPublishedPage")(
-  function* (input: PublishedPageInput) {
-    const data = yield* readPublishedContent(input);
-    return yield* decodePageData(data, input);
-  }
-);
 
 /** Reads a Page directly from the signed current runtime. */
 const readCurrentPublishedPage = Effect.fn(

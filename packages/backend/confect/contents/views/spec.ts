@@ -27,7 +27,7 @@ export const recordContentViewResultValidator = Schema.Struct({
 export type RecordContentViewArgs = typeof recordContentViewArgsValidator.Type;
 
 /** Raised when Convex IO fails while recording a content view. */
-export class ContentViewIoError extends Schema.TaggedError<ContentViewIoError>()(
+class ContentViewIoError extends Schema.TaggedError<ContentViewIoError>()(
   "ContentViewIoError",
   {
     code: Schema.Literal(contentViewIoFailedCode),

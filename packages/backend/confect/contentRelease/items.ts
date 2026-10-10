@@ -29,42 +29,40 @@ import { getConvexSize } from "convex/values";
 import { Array as Arr, Clock, Effect, Schema } from "effect";
 
 /** Decodes one bounded item batch through the shared wire contract. */
-export const decodeBatch = Effect.fn("contentRelease.decodeItemBatch")(
-  function* (
-    releaseId: string,
-    batchIndex: number,
-    itemJson: readonly string[]
-  ) {
-    if (
-      itemJson.length === 0 ||
-      itemJson.length > MAX_ITEM_BATCH_COUNT ||
-      getConvexSize({
-        batchIndex,
-        itemJson: [...itemJson],
-        releaseId,
-      }) > MAX_ITEM_BATCH_BYTES
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_LIMIT",
-        `Item batch ${batchIndex} exceeds its bounded transport contract.`
-      );
-    }
-    const items = yield* Effect.forEach(itemJson, decodeItemJson);
-    return yield* Schema.decodeUnknownEffect(StageItemBatchInputSchema)({
+const decodeBatch = Effect.fn("contentRelease.decodeItemBatch")(function* (
+  releaseId: string,
+  batchIndex: number,
+  itemJson: readonly string[]
+) {
+  if (
+    itemJson.length === 0 ||
+    itemJson.length > MAX_ITEM_BATCH_COUNT ||
+    getConvexSize({
       batchIndex,
-      items,
+      itemJson: [...itemJson],
       releaseId,
-    }).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Item batch ${batchIndex} violates its exact contract.`,
-          })
-      )
+    }) > MAX_ITEM_BATCH_BYTES
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Item batch ${batchIndex} exceeds its bounded transport contract.`
     );
   }
-);
+  const items = yield* Effect.forEach(itemJson, decodeItemJson);
+  return yield* Schema.decodeUnknownEffect(StageItemBatchInputSchema)({
+    batchIndex,
+    items,
+    releaseId,
+  }).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Item batch ${batchIndex} violates its exact contract.`,
+        })
+    )
+  );
+});
 /** Stages one canonical item batch with exact immutable retry identity. */
 export const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(
   function* (

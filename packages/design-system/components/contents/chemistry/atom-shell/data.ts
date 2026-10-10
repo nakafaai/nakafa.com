@@ -1,6 +1,6 @@
 import { Array as Arr, Result, Schema } from "effect";
 
-export const NEON_ID = "neon";
+const NEON_ID = "neon";
 export const MAGNESIUM_ID = "magnesium";
 export const CHLORINE_ID = "chlorine";
 export const ARGON_ID = "argon";

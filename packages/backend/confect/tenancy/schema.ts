@@ -3,13 +3,12 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema, Struct } from "effect";
 
 /** A normalized address: forms trim and lowercase before sending it. */
-export const Email = Schema.String.check(
+const Email = Schema.String.check(
   Schema.isMaxLength(254),
   Schema.isTrimmed(),
   Schema.isLowercased(),
   Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
 ).pipe(Schema.brand("@Nakafa/Email"));
-export type Email = typeof Email.Type;
 
 const TenantName = Schema.String.check(
   Schema.isTrimmed(),

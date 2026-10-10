@@ -23,7 +23,7 @@ import type { RectRadius } from "recharts/types/shape/Rectangle";
 // Custom bar shape
 
 // Raw geometry Recharts hands to a custom bar shape
-export interface BarShapeProps {
+interface BarShapeProps {
   dataKey?: string;
   fill?: string;
   fillOpacity?: number;
