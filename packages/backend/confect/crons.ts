@@ -11,6 +11,7 @@ const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
+const NINA_TURN_SWEEP_INTERVAL_MINUTES = 5;
 const POPULARITY_RETENTION_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
@@ -24,6 +25,14 @@ export default CronJobs.make()
       "reclaim unused Nina files",
       Duration.hours(24),
       internal.storage.sweep,
+      {}
+    )
+  )
+  .add(
+    /** Settles Nina turns that stayed open past their deadline, so no chat stays busy. */ CronJob.make(
+      "sweep stuck Nina turns",
+      Duration.minutes(NINA_TURN_SWEEP_INTERVAL_MINUTES),
+      internal.nina.lifecycle.sweep,
       {}
     )
   )

@@ -15,6 +15,7 @@ import { requireAuth } from "@repo/backend/confect/auth/session";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { requireOpenCapacity } from "@repo/backend/confect/nina/capacity";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
@@ -101,6 +102,7 @@ const start = FunctionImpl.make(
         message: "A Nina response is already running in this chat.",
       });
     }
+    yield* requireOpenCapacity(appUser._id);
     const now = yield* Clock.currentTimeMillis;
     const reservation = yield* reserveCredits(appUser);
     const prompt = yield* preparePrompt(
@@ -162,14 +164,11 @@ const start = FunctionImpl.make(
       .patch(chatId, { threadId, activeTurnId: turnId, updatedAt: now })
       .pipe(Effect.orDie);
     const scheduler = yield* Scheduler;
+    // No per-turn check follows the run: the recovery sweep settles a turn that
+    // stays open past its deadline.
     yield* scheduler.runAfter(Duration.zero, refs.internal.nina.response.run, {
       turnId,
     });
-    yield* scheduler.runAfter(
-      Duration.minutes(15),
-      refs.internal.nina.lifecycle.recover,
-      { turnId }
-    );
     yield* captureProductEvent({
       distinctId: appUser._id,
       event: {
