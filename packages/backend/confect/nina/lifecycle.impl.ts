@@ -12,6 +12,7 @@ import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/nina/lifecycle.spec";
 import { settleTurn } from "@repo/backend/confect/nina/settlement";
+import { sweepTurns } from "@repo/backend/confect/nina/sweep";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { Clock, Effect, Layer } from "effect";
 
@@ -126,6 +127,16 @@ const recover = FunctionImpl.make(
   }, Effect.catchDefect(lifecycleFailure))
 );
 
+const sweep = FunctionImpl.make(
+  schema,
+  spec,
+  "sweep",
+  Effect.fn("nina.lifecycle.sweep")(function* (args) {
+    yield* sweepTurns(args.resume);
+    return null;
+  })
+);
+
 const cancel = FunctionImpl.make(
   schema,
   spec,
@@ -151,6 +162,7 @@ export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(claim),
   Layer.provide(presentation),
   Layer.provide(recover),
+  Layer.provide(sweep),
   Layer.provide(cancel),
   Layer.provide(atomic),
   Layer.provide(session),

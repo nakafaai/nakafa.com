@@ -10,6 +10,16 @@ import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { Schema } from "effect";
 
+/**
+ * Where one sweep page hands over to the next. The first page fixes the age
+ * cut-off, so every page of one sweep reads the same index range and its
+ * cursor stays valid.
+ */
+export const NinaSweepResume = Schema.Struct({
+  before: Schema.Finite,
+  cursor: Schema.String,
+});
+
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalQuery({
@@ -42,6 +52,13 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () => Schema.Union([NinaCreditError, NinaTurnError]),
     }).middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "sweep",
+      args: () => ({ resume: Schema.optionalKey(NinaSweepResume) }),
+      returns: () => Schema.Null,
+    })
   )
   .addFunction(
     FunctionSpec.publicMutation({

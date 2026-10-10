@@ -4,3 +4,4 @@ export const cancel = registeredFunctions.cancel;
 export const claim = registeredFunctions.claim;
 export const presentation = registeredFunctions.presentation;
 export const recover = registeredFunctions.recover;
+export const sweep = registeredFunctions.sweep;
