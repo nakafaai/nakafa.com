@@ -29,7 +29,6 @@ const AiStateSchema = Schema.Struct({
       submittedAt: Schema.Finite,
     })
   ),
-  sheetActivated: Schema.Boolean,
   text: Schema.String,
 });
 

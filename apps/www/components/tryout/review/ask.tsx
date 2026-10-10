@@ -11,7 +11,7 @@ import { preloadAiSheet } from "@/components/ai/sheet/module";
 
 /** Warms Nina before the learner finishes the tap. */
 function preloadOnIntent() {
-  Effect.runFork(preloadAiSheet());
+  Effect.runFork(preloadAiSheet(true));
 }
 
 /** Asks Nina about one reviewed question; the backend reads it in full. */

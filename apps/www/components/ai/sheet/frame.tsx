@@ -4,19 +4,38 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
+import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { Activity } from "react";
-import { ChatProvider } from "@/components/ai/chat/context";
 import { useAi } from "@/components/ai/context";
-import { SheetMain } from "@/components/ai/sheet/conversation";
 import { AiSheetHeader } from "@/components/ai/sheet/header";
-import { SheetNew } from "@/components/ai/sheet/new";
+import {
+  loadSheetConversation,
+  loadSheetNew,
+} from "@/components/ai/sheet/module";
 import { Authenticated, Unauthenticated } from "@/components/auth/gate";
 
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
 
-/** Renders Nina's resizable side sheet shell. */
+const SheetNew = dynamic(
+  () => loadSheetNew().then((module) => module.SheetNew),
+  { loading: () => null, ssr: false }
+);
+
+const SheetConversation = dynamic(
+  () => loadSheetConversation().then((module) => module.SheetConversation),
+  { loading: () => null, ssr: false }
+);
+
+/**
+ * Nina's resizable side sheet. The frame and its header are part of the app
+ * shell, so a press opens the sheet in the same frame. Only the body is
+ * deferred: the new-chat body is small and warmed on intent, and the
+ * conversation body loads when a chat opens.
+ */
 export function AiSheet() {
+  const t = useTranslations("Ai");
   const open = useAi((state) => state.open);
   const setOpen = useAi((state) => state.setOpen);
   const activeChatId = useAi((state) => state.activeChatId);
@@ -55,7 +74,7 @@ export function AiSheet() {
         style={{ "--nina-width": `${width}px` }}
       >
         <button
-          aria-label="Resize chat sheet"
+          aria-label={t("resize")}
           className={cn(
             "absolute top-0 bottom-0 left-0 z-10 hidden w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-ring focus-visible:bg-ring sm:block",
             !!isResizing && "bg-ring"
@@ -78,11 +97,7 @@ export function AiSheet() {
             onError={handlePrivateChatError}
           >
             <Authenticated>
-              {!!activeChatId && (
-                <ChatProvider chatId={activeChatId}>
-                  <SheetMain />
-                </ChatProvider>
-              )}
+              {!!activeChatId && <SheetConversation chatId={activeChatId} />}
             </Authenticated>
             <Unauthenticated>
               <SheetNew />

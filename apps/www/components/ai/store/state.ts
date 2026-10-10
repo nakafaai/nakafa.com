@@ -11,6 +11,5 @@ export const initialState = {
   model: defaultModel,
   open: false,
   openingChat: null,
-  sheetActivated: false,
   text: "",
 } satisfies AiState;

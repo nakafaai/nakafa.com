@@ -14,8 +14,8 @@ import {
   toMaterialHref,
   toMaterialNavigationPage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
+import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
-import { DeferredAiSheetOpen } from "@/components/ai/sheet/trigger";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ContentDates } from "@/components/content/dates";
 import { ContentHeader } from "@/components/content/header";
@@ -113,7 +113,7 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
             </FooterContent>
           ) : null}
           {allowsInteractions ? (
-            <DeferredAiSheetOpen contextTitle={metadata.title} />
+            <SheetEntry contextTitle={metadata.title} />
           ) : null}
         </LayoutMaterialContent>
         <SidebarRightPanel

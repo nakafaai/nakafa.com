@@ -14,6 +14,7 @@ import {
   SheetHeader as SheetHeaderPrimitive,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
+import { useTranslations } from "next-intl";
 import { Activity } from "react";
 import { useAi } from "@/components/ai/context";
 import { SheetHistory } from "@/components/ai/sheet/history";
@@ -28,6 +29,7 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const setOpen = useAi((state) => state.setOpen);
+  const t = useTranslations();
 
   return (
     <SheetHeaderPrimitive className="border-b p-3">
@@ -47,7 +49,7 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
               variant="ghost"
             >
               <HugeIcons icon={Add01Icon} />
-              <span className="sr-only">New Chat</span>
+              <span className="sr-only">{t("Ai.new-chat")}</span>
             </Button>
           </Activity>
           <SheetHistory />
@@ -55,16 +57,16 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
             <HugeIcons
               icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
             />
-            <span className="sr-only">Resize</span>
+            <span className="sr-only">{t("Ai.resize")}</span>
           </Button>
           <Button onClick={() => setOpen(false)} size="icon-sm" variant="ghost">
             <HugeIcons icon={Cancel01Icon} />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t("Common.close")}</span>
           </Button>
         </div>
       </SheetTitle>
       <SheetDescription className="sr-only">
-        Nina is a chatbot that can help you with your questions.
+        {t("Ai.new-chat-description")}
       </SheetDescription>
     </SheetHeaderPrimitive>
   );

@@ -45,7 +45,7 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
   });
 
   function submit(id: string, prompt: NinaDraft) {
-    Effect.runFork(preloadAiSheet());
+    Effect.runFork(preloadAiSheet(true));
     Effect.runFork(
       Effect.promise(() => latest.current.send(prompt)).pipe(
         Effect.flatMap((receipt) =>

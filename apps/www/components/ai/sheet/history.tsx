@@ -28,6 +28,7 @@ import { useViewer } from "@/lib/identity/client";
 
 /** Opens the recent Nina chat list when a user is signed in. */
 export function SheetHistory() {
+  const t = useTranslations("Ai");
   const isPending = useViewer((state) => state.isPending);
   const viewer = useViewer((state) => state.viewer);
   if (isPending || viewer === null) {
@@ -39,7 +40,7 @@ export function SheetHistory() {
         render={
           <Button size="icon-sm" variant="ghost">
             <HugeIcons icon={ChatSearch01Icon} />
-            <span className="sr-only">History</span>
+            <span className="sr-only">{t("chat-history")}</span>
           </Button>
         }
       />

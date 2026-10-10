@@ -643,6 +643,7 @@
     "suggestion-summary": "Get key points",
     "suggestion-summary-prompt": "Summarize {title} into the key ideas I need to remember.",
     "new-chat": "New chat",
+    "resize": "Change width",
     "chats": "Chats",
     "search-chats": "Search your chats...",
     "rename-chat": "Rename chat",

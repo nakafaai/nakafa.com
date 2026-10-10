@@ -643,6 +643,7 @@
     "suggestion-summary": "Kernaussagen zusammenfassen",
     "suggestion-summary-prompt": "Fasse {title} zu den wichtigsten Gedanken zusammen, die ich mir merken sollte.",
     "new-chat": "Neuer Chat",
+    "resize": "Breite ändern",
     "chats": "Chats",
     "search-chats": "Chats durchsuchen...",
     "rename-chat": "Chat umbenennen",

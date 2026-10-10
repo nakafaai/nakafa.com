@@ -13,9 +13,10 @@ export function AiMenuItem({ contextTitle }: { contextTitle: string }) {
   const t = useTranslations("Ai");
   const setContextTitle = useAi((state) => state.setContextTitle);
   const setOpen = useAi((state) => state.setOpen);
+  const hasChat = useAi((state) => state.activeChatId !== null);
 
   function preload() {
-    Effect.runFork(preloadAiSheet());
+    Effect.runFork(preloadAiSheet(hasChat));
   }
 
   function handleOpen() {
