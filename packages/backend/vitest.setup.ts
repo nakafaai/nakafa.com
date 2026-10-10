@@ -1,4 +1,5 @@
 import { afterEach } from "@effect/vitest";
+import { TEST_ROOT_KEYS } from "@repo/backend/test/vault";
 
 // @posthog/convex reads component env from process.env under convex-test.
 // Override shell env so tests never send real analytics events.
@@ -14,6 +15,7 @@ process.env.AUTH_GOOGLE_SECRET = "test-google-secret";
 process.env.POLAR_ACCESS_TOKEN = "polar_test";
 process.env.POLAR_WEBHOOK_SECRET = "polar_webhook_test";
 process.env.RESEND_API_KEY = "re_test_welcome_delivery";
+process.env.VAULT_ROOT_KEYS = `${TEST_ROOT_KEYS.current},${TEST_ROOT_KEYS.retired}`;
 
 /** Restores real timers after every backend test to prevent timer leakage. */
 afterEach(() => {

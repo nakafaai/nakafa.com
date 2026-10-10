@@ -41,6 +41,7 @@ type Env = {
   readonly POSTHOG_HOST: string;
   readonly POSTHOG_PROJECT_ID: string;
   readonly POSTHOG_PROJECT_TOKEN: string;
+  readonly VAULT_ROOT_KEYS: string;
 };
 
 /**
