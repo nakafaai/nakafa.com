@@ -9,7 +9,7 @@ import { resolveMaterialOwner } from "@/app/[locale]/(app)/(shared)/(main)/(lear
 import { readArticleOgMetadata } from "@/app/og/article";
 import { getMaterialModel } from "@/lib/content/material/publication";
 import { httpLayer } from "@/lib/convex/http";
-import { getCachedMetadataFromSlug } from "@/lib/utils/system";
+import { getCachedMetadataFromSlug } from "@/lib/og/metadata";
 
 const OgCopySchema = Schema.Struct({
   description: Schema.String,

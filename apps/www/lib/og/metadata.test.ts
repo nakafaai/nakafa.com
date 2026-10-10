@@ -8,7 +8,7 @@ import { Effect, Layer } from "effect";
 import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,
-} from "@/lib/utils/system";
+} from "@/lib/og/metadata";
 
 const routeMocks = vi.hoisted(() => ({
   read: vi.fn(),

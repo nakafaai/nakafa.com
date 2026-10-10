@@ -38,7 +38,7 @@ vi.mock("@/app/og/article", () => ({
 vi.mock("@/lib/content/material/publication", () => ({
   getMaterialModel: mocks.getMaterialModel,
 }));
-vi.mock("@/lib/utils/system", () => ({
+vi.mock("@/lib/og/metadata", () => ({
   getCachedMetadataFromSlug: mocks.getCachedMetadataFromSlug,
 }));
 vi.mock("@confect/js", async (importOriginal) => {
