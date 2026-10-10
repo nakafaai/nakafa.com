@@ -46,6 +46,21 @@ describe("memory failure", () => {
   );
 
   it.effect(
+    "reports the refusal of an empty memory, which the page never sends",
+    () =>
+      Effect.gen(function* () {
+        const error = new NinaMemoryRejected({ reason: "empty" });
+        const again = yield* reportMemoryFailure(error, messages);
+
+        expect(captureException).toHaveBeenCalledExactlyOnceWith(error, {
+          source: "components/user/settings/memory",
+        });
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(messages.other);
+        expect(again).toBe(true);
+      })
+  );
+
+  it.effect(
     "reports a failure nobody expected and shows the general words",
     () =>
       Effect.gen(function* () {

@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activate } from "@/e2e/support/input";
@@ -11,17 +11,34 @@ const MEMORY_TITLE = /Memory/;
 const EMPTY = "No memories yet";
 const WRITTEN = "Prefers worked examples before the formula";
 const REWRITTEN = "Prefers a short summary before the examples";
-const DISCARDED = "This text is never saved";
+const NAMED = "Study habits";
 /** How long a step waits for the server to answer a change. */
 const ANSWER_MILLISECONDS = 15_000;
 
-/** One memory on the page, found by its words. */
+/** One memory on the page, found by its title or its words. */
 const memoryRow = (page: Page, text: string) =>
   page.locator("main").getByRole("listitem").filter({ hasText: text });
 
-/** The editor of a memory. Its code loads when the learner opens it. */
+/** The text of a memory in its editor. The editor's code loads when the learner opens it. */
 const editorOf = (page: Page) =>
   page.getByRole("textbox", { name: "Memory text" });
+
+/**
+ * Waits for an editor that just opened to hold `text` and the caret. The
+ * editor takes the focus a moment after it appears, so a press before that
+ * would land in the text instead of where it aimed.
+ */
+const opened = async (page: Page, text: string) => {
+  const editor = editorOf(page);
+  await expect(editor).toHaveText(text, {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(editor).toBeFocused();
+};
+
+/** The title of a memory in its editor. */
+const titleOf = (page: Page) =>
+  page.getByRole("textbox", { exact: true, name: "Title" });
 
 /**
  * Counts the changes the page sent and the ones the server answered. The page
@@ -57,6 +74,18 @@ const saved = (changes: Changes, sentBefore: number) =>
     )
     .toBe(true);
 
+/**
+ * Presses a switch until it shows `checked`. Right after a reload the page
+ * shows the switch before its code runs, and a press in that moment is lost.
+ */
+const switchUntil = (control: Locator, checked: boolean) =>
+  expect(async () => {
+    if ((await control.isChecked()) !== checked) {
+      await control.click();
+    }
+    await expect(control).toBeChecked({ checked, timeout: 1000 });
+  }).toPass({ timeout: ANSWER_MILLISECONDS });
+
 /** Repeats a reload until the server shows what the learner changed. */
 const reloadUntil = (page: Page, check: () => Promise<void>) =>
   expect(async () => {
@@ -64,7 +93,10 @@ const reloadUntil = (page: Page, check: () => Promise<void>) =>
     await check();
   }).toPass({ timeout: 20_000 });
 
-const addMemory = Effect.fn("NakafaE2E.addMemory")(function* (page: Page) {
+const addMemory = Effect.fn("NakafaE2E.addMemory")(function* (
+  page: Page,
+  changes: Changes
+) {
   yield* Effect.promise(async () => {
     await expect(page.getByText(EMPTY)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
@@ -72,48 +104,67 @@ const addMemory = Effect.fn("NakafaE2E.addMemory")(function* (page: Page) {
     await page.getByRole("button", { name: "Add memory" }).click();
 
     const editor = editorOf(page);
-    const save = page.getByRole("button", { exact: true, name: "Save" });
-    await expect(editor).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-    await expect(save).toBeDisabled();
-    await editor.fill(WRITTEN);
-    await save.click();
-    await expect(editor).toHaveCount(0);
-
     const row = memoryRow(page, WRITTEN);
-    await expect(row).toBeVisible();
-    await expect(row.getByText("Written by you")).toBeVisible();
-    await expect(page.getByText(EMPTY)).toBeHidden();
-  });
-});
+    await opened(page, "");
+    await expect(page.getByText("0 / 2,000")).toBeVisible();
 
-const editMemory = Effect.fn("NakafaE2E.editMemory")(function* (page: Page) {
-  yield* Effect.promise(async () => {
-    const row = memoryRow(page, WRITTEN);
-    const editor = editorOf(page);
+    // The editor has no Save: the words are stored a moment after the last key.
+    const before = changes.sent;
+    await page.keyboard.type(WRITTEN);
+    await expect(page.getByText(`${WRITTEN.length} / 2,000`)).toBeVisible();
+    await saved(changes, before);
 
-    // A press on the memory opens it in the editor, and Escape leaves it as it was.
-    await row.getByText(WRITTEN).click();
-    await expect(editor).toHaveText(WRITTEN, {
-      timeout: readinessTimeoutMilliseconds,
-    });
-    await editor.fill(DISCARDED);
+    // The editor stays on the memory it just stored, and Escape closes it.
+    await expect(editor).toHaveText(WRITTEN);
     await editor.press("Escape");
     await expect(editor).toHaveCount(0);
     await expect(row).toBeVisible();
-    await expect(memoryRow(page, DISCARDED)).toHaveCount(0);
+    await expect(row.getByText("Written by you")).toBeVisible();
+    await expect(page.getByText(EMPTY)).toBeHidden();
+    await reloadUntil(page, () => expect(row).toBeVisible({ timeout: 3000 }));
+  });
+});
 
-    // The row's own action opens it too, and Enter with Control keeps the new words.
+const editMemory = Effect.fn("NakafaE2E.editMemory")(function* (
+  page: Page,
+  changes: Changes
+) {
+  yield* Effect.promise(async () => {
+    const editor = editorOf(page);
+    const title = titleOf(page);
+    const row = memoryRow(page, NAMED);
+
+    // A press on the memory opens it. A title written in place is stored like
+    // the words, and Enter moves on to the text.
+    await memoryRow(page, WRITTEN).getByText(WRITTEN).click();
+    await opened(page, WRITTEN);
+    await expect(title).toHaveValue("");
+    const named = changes.sent;
+    await title.fill(NAMED);
+    await saved(changes, named);
+    await title.press("Enter");
+    await expect(editor).toBeFocused();
+
+    // The learner replaces the words by hand: a programmatic fill within a
+    // moment of the focus moving in would race the editor's own selection.
+    // Closing the editor right after the last key still stores the words.
+    const before = changes.sent;
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.type(REWRITTEN);
+    await page.getByRole("button", { exact: true, name: "Close" }).click();
+    await expect(editor).toHaveCount(0);
+    await saved(changes, before);
+    // The list now calls the memory by its title.
+    await expect(row).toBeVisible();
+    await reloadUntil(page, () => expect(row).toBeVisible({ timeout: 3000 }));
+
+    // The row's own action opens it too, with the title and the words it kept.
     await row.hover();
     await row.getByRole("button", { name: "Edit memory" }).click();
-    await expect(editor).toHaveText(WRITTEN, {
-      timeout: readinessTimeoutMilliseconds,
-    });
-    await editor.fill(REWRITTEN);
-    await editor.press("Control+Enter");
+    await opened(page, REWRITTEN);
+    await expect(title).toHaveValue(NAMED);
+    await editor.press("Escape");
     await expect(editor).toHaveCount(0);
-
-    await expect(memoryRow(page, REWRITTEN)).toBeVisible();
-    await expect(memoryRow(page, WRITTEN)).toHaveCount(0);
   });
 });
 
@@ -122,8 +173,10 @@ const pauseMemory = Effect.fn("NakafaE2E.pauseMemory")(function* (
   changes: Changes
 ) {
   yield* Effect.promise(async () => {
-    const remember = page.getByRole("switch", { name: "Let Nina remember" });
-    const row = memoryRow(page, REWRITTEN);
+    const remember = page.getByRole("switch", {
+      name: "Let Nina save and use memories",
+    });
+    const row = memoryRow(page, NAMED);
 
     await expect(remember).toBeChecked();
     const before = changes.sent;
@@ -137,8 +190,7 @@ const pauseMemory = Effect.fn("NakafaE2E.pauseMemory")(function* (
       expect(remember).not.toBeChecked({ timeout: 3000 })
     );
     await expect(row).toBeVisible();
-    await remember.click();
-    await expect(remember).toBeChecked();
+    await switchUntil(remember, true);
   });
 });
 
@@ -147,12 +199,15 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
   changes: Changes
 ) {
   yield* Effect.promise(async () => {
-    const row = memoryRow(page, REWRITTEN);
-    const remove = row.getByRole("button", { name: "Delete memory" });
+    const row = memoryRow(page, NAMED);
+    const editor = editorOf(page);
 
-    // Undo writes the words back as the learner's own memory.
-    await row.hover();
-    await remove.click();
+    // The editor deletes the memory it shows, and Undo writes its title and
+    // its words back as the learner's own memory.
+    await row.getByText(NAMED).click();
+    await opened(page, REWRITTEN);
+    await page.getByRole("button", { exact: true, name: "Delete" }).click();
+    await expect(editor).toHaveCount(0);
     await expect(row).toHaveCount(0);
     await page.getByRole("button", { name: "Undo" }).click();
     await expect(row).toBeVisible();
@@ -162,7 +217,7 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
     // while the toast still offers the Undo.
     const before = changes.sent;
     await row.hover();
-    await remove.click();
+    await row.getByRole("button", { name: "Delete memory" }).click();
     await expect(row).toHaveCount(0);
     await saved(changes, before);
     await reloadUntil(page, () =>
@@ -172,9 +227,9 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
 });
 
 /**
- * Signs a synthetic learner in and walks the Memory page: it adds a memory in
- * the editor, rewrites its words, turns memory off and on, and deletes the
- * memory once with Undo and once for real.
+ * Signs a synthetic learner in and walks the Memory page: it writes a memory
+ * in the editor, which saves by itself, gives it a title and new words, turns
+ * memory off and on, and deletes the memory once with Undo and once for real.
  */
 const verifyMemoryPage = Effect.fn("NakafaE2E.verifyMemoryPage")(function* (
   page: Page,
@@ -193,8 +248,8 @@ const verifyMemoryPage = Effect.fn("NakafaE2E.verifyMemoryPage")(function* (
     expect(decline).toBeHidden({ timeout: readinessTimeoutMilliseconds })
   );
 
-  yield* addMemory(page);
-  yield* editMemory(page);
+  yield* addMemory(page, changes);
+  yield* editMemory(page, changes);
   yield* pauseMemory(page, changes);
   yield* removeMemory(page, changes);
 });
@@ -203,7 +258,7 @@ for (const width of [390, 1440]) {
   test.describe(`Memory page at ${width}px`, () => {
     test.use({ viewport: { height: 900, width } });
 
-    test("adds, edits, turns off and deletes a memory", async ({
+    test("writes, names, turns off and deletes a memory", async ({
       baseURL,
       page,
     }) => {
