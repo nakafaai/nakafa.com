@@ -1,4 +1,4 @@
-import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/search/schema";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import { quranMarkdownValidator } from "@repo/backend/content/quran/contract";
 import { Schema } from "effect";

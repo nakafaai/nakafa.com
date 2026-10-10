@@ -2,12 +2,12 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { toLearningContextQuery } from "@repo/backend/confect/contents/context";
-import { buildContentSearchRef } from "@repo/backend/confect/contents/helpers/search/documents";
 import {
   getRecentlyViewedArgs,
   RecentLearningIoError,
   recentLearningIoFailedCode,
 } from "@repo/backend/confect/contents/queries/recent.spec";
+import { buildContentSearchRef } from "@repo/backend/confect/contents/search/documents";
 import { resolveLearningContext } from "@repo/backend/confect/contents/views/context";
 import { hydrateMaterialTarget } from "@repo/backend/confect/contents/views/target";
 import type { recentlyViewedSubjectValidator } from "@repo/backend/confect/lib/validators/trending";

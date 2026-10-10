@@ -15,6 +15,7 @@ import { RefContent } from "@/components/shared/content/references";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { ComingSoon } from "@/components/shared/upcoming";
+import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getCurriculumIndexSocialImage } from "@/lib/curriculum/artwork";
 import {
   type CurriculumCatalogModel,
@@ -24,8 +25,7 @@ import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { getAksaraTreeUrl } from "@/lib/utils/github";
-import { getSocialMetadata } from "@/lib/utils/metadata";
+import { getSocialMetadata } from "@/lib/seo/social";
 
 interface CurriculumIndexPageProps {
   params: Promise<{ locale: string }>;

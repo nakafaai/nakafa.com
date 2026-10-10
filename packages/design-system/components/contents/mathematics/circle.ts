@@ -6,7 +6,7 @@ import type {
 import {
   GRAPH_ANGLE_ARC_SEGMENTS,
   GRAPH_FULL_CIRCLE_SEGMENTS,
-} from "@repo/design-system/components/three/helpers/quality";
+} from "@repo/design-system/components/three/data/quality";
 import { getRadians } from "@repo/math/angles";
 import { Schema } from "effect";
 

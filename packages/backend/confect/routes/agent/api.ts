@@ -31,7 +31,6 @@ import {
 } from "@repo/backend/confect/routes/middleware/identity";
 import {
   NAKAFA_API_BASE_URL,
-  NAKAFA_BASE_URL,
   NAKAFA_MCP_ENDPOINT,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/agent/constants";
@@ -40,6 +39,7 @@ import {
   NakafaApiIndexSchema,
 } from "@repo/contents/agent/schema/api";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/agent/schema/taxonomy";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Clock, Effect, Layer } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
@@ -75,7 +75,7 @@ const apiRoutes = HttpRouter.addAll(
                 authentication: "none",
                 description:
                   "Read-only access to Nakafa's signed educational content for developers and agents.",
-                documentation: `${NAKAFA_BASE_URL}/llms.txt`,
+                documentation: `${SITE_ORIGIN}/llms.txt`,
                 mcp: NAKAFA_MCP_ENDPOINT,
                 name: "Nakafa Public API",
                 openapi: `${NAKAFA_API_BASE_URL}/openapi.json`,

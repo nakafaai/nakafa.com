@@ -2,10 +2,10 @@ import { OPENAPI_PATHS } from "@repo/backend/agent/openapi/paths";
 import { OPENAPI_SCHEMAS } from "@repo/backend/agent/openapi/schema";
 import {
   NAKAFA_API_BASE_URL,
-  NAKAFA_BASE_URL,
   NAKAFA_PUBLIC_API_PATH,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/agent/constants";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { encodeJsonText } from "@repo/utilities/json";
 
 const ETAG_CHECKSUM_MODULUS = 2_147_483_647;
@@ -19,19 +19,19 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
   },
   externalDocs: {
     description: "Nakafa agent-readable documentation",
-    url: `${NAKAFA_BASE_URL}/llms.txt`,
+    url: `${SITE_ORIGIN}/llms.txt`,
   },
   info: {
     contact: {
       email: "nakafaai@gmail.com",
       name: "Nakafa Support",
-      url: `${NAKAFA_BASE_URL}/contact`,
+      url: `${SITE_ORIGIN}/contact`,
     },
     description:
       "Read-only public access to Nakafa's signed educational content through one supported V1 contract.",
     license: {
       name: "Nakafa terms",
-      url: `${NAKAFA_BASE_URL}/en/terms-of-service`,
+      url: `${SITE_ORIGIN}/en/terms-of-service`,
     },
     title: "Nakafa Public API",
     version: NAKAFA_PUBLIC_API_VERSION,

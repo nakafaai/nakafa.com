@@ -33,9 +33,9 @@ import {
   useCommentActions,
 } from "@/components/comments/actions";
 import { CommentsAdd } from "@/components/comments/add";
+import { getLocale } from "@/lib/i18n/date";
 import { useViewer } from "@/lib/identity/client";
-import { getLocale } from "@/lib/utils/date";
-import { getInitialName } from "@/lib/utils/helper";
+import { getInitialName } from "@/lib/identity/initials";
 
 export type CommentWithUser = Ref.Returns<
   typeof comments.queries.getCommentsBySlug

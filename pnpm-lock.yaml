@@ -557,6 +557,9 @@ importers:
       '@repo/math':
         specifier: workspace:*
         version: link:../math
+      '@repo/seo':
+        specifier: workspace:*
+        version: link:../seo
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities

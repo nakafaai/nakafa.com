@@ -13,7 +13,7 @@ import {
   resolveSocialArtwork,
   resolveStaticArtwork,
 } from "@/lib/og/artwork";
-import { getOgUrl } from "@/lib/utils/metadata";
+import { getOgUrl } from "@/lib/seo/social";
 
 /**
  * Reviewed artwork for exact signed program and node identities.

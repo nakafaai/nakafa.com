@@ -44,7 +44,7 @@ import {
   getLocale,
   getMaterialContextHint,
   getPathname,
-} from "@/lib/utils/browser";
+} from "@/lib/routing/location";
 
 type Start = typeof nina.turns.start;
 export type NinaDraft = PromptInputMessage &

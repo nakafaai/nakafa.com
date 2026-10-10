@@ -1,5 +1,4 @@
 import { LearningGraphIdentitySchema } from "@nakafa/aksara-contracts/graph/spec";
-import { NAKAFA_BASE_URL } from "@repo/contents/agent/constants";
 import type { NakafaAgentContentRef } from "@repo/contents/agent/schema/ref";
 import {
   NakafaAgentContentRefSchema,
@@ -10,6 +9,7 @@ import {
   NakafaAgentSectionSchema,
 } from "@repo/contents/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/content";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -146,7 +146,7 @@ function createNakafaContentRefInput(
     route: input.route,
     section: input.section,
     url: NakafaAgentContentUrlSchema.make(
-      `${NAKAFA_BASE_URL}/${input.locale}/${input.route}`
+      `${SITE_ORIGIN}/${input.locale}/${input.route}`
     ),
   };
 
@@ -157,7 +157,7 @@ function createNakafaContentRefInput(
   return {
     ...ref,
     markdown_url: NakafaAgentMarkdownUrlSchema.make(
-      `${NAKAFA_BASE_URL}/${input.locale}/${input.route}.md`
+      `${SITE_ORIGIN}/${input.locale}/${input.route}.md`
     ),
   };
 }

@@ -6,7 +6,7 @@ import { Videos } from "@/components/ai/home/videos";
 import { DeferredWeather } from "@/components/ai/home/weather/deferred";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
-import { getSocialMetadata } from "@/lib/utils/metadata";
+import { getSocialMetadata } from "@/lib/seo/social";
 
 /** Builds localized metadata for Nakafa's new learning chat. */
 export async function generateMetadata({

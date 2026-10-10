@@ -1,5 +1,5 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { GRAPH_POINT_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
+import { GRAPH_POINT_SEGMENTS } from "@repo/design-system/components/three/data/quality";
 import type { ComponentProps } from "react";
 
 /**

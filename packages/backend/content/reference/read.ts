@@ -1,6 +1,6 @@
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import type { ContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/spec";
-import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
+import type { ContentSearchDocument } from "@repo/backend/confect/contents/search/groups";
 import { readArticleReference } from "@repo/backend/content/article/reference";
 import { readMaterialReference } from "@repo/backend/content/material/reference";
 import { readQuranReference } from "@repo/backend/content/quran/identity";

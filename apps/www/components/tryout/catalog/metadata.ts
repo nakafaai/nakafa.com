@@ -11,8 +11,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
+import { getOgUrl, getSocialMetadata } from "@/lib/seo/social";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 
 const TryoutMetadataQueryInputSchema = Schema.Struct({
   kind: tryoutMetadataArgsValidator.kind,

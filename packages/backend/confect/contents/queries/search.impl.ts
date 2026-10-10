@@ -1,9 +1,9 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { validateContentSearchInput } from "@repo/backend/confect/contents/helpers/search/input";
-import { readContentSearchDocuments } from "@repo/backend/confect/contents/helpers/search/read";
-import { buildContentSearchResult } from "@repo/backend/confect/contents/helpers/search/result";
 import spec from "@repo/backend/confect/contents/queries/search.spec";
+import { validateContentSearchInput } from "@repo/backend/confect/contents/search/input";
+import { readContentSearchDocuments } from "@repo/backend/confect/contents/search/read";
+import { buildContentSearchResult } from "@repo/backend/confect/contents/search/result";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { Effect, Layer } from "effect";
 

@@ -19,9 +19,9 @@ import { useQueryStates } from "nuqs";
 import { useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
+import { getInitialName } from "@/lib/identity/initials";
 import { searchParsers } from "@/lib/nuqs/search";
 import { useClass } from "@/lib/school/classes/context";
-import { getInitialName } from "@/lib/utils/helper";
 
 const DEBOUNCE_TIME = 500;
 

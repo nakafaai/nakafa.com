@@ -1,6 +1,6 @@
 import { assert, expect } from "@effect/vitest";
 import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
-import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/helpers/partitions";
+import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import {
   type createConvexTestWithBetterAuth,

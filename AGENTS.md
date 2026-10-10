@@ -31,6 +31,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Same-app imports use `@/*`, colocated modules and tests included; cross-package imports use `@repo/*`. Import the owning file directly.
 - `packages/testing` owns shared Vitest defaults by runtime, `@repo/testing/node` and `@repo/testing/react`, including the per-file 100% coverage gate. A workspace keeps only local aliases, setup, projects, and its own coverage include and exclude lists.
 - `packages/utilities` owns generic cross-domain primitives only. Content contracts, roles, taxonomy, Convex values, AI vocabulary, UI copy, and product helpers stay in their domain-owning package.
+- `@repo/next-config/domains` owns the production domain, and `@repo/seo/origin` builds the production origin from it. Code that needs an absolute Nakafa URL starts from `SITE_ORIGIN` and composes the path and query with the platform `URL` and `URLSearchParams`: no module wraps them, and no second origin literal is written.
 - Aksara exclusively owns authored content and signed publication for every content scope. For authored content work, open the Aksara repository and use its repository-local `nakafa-content` skill. Never copy that skill into Nakafa or global storage, and never add a second authored source, filesystem copy, or local publication writer. `packages/contents` owns only live Nakafa product, formatting, route-context, learner, and agent contracts.
 
 ## Architecture And TypeScript

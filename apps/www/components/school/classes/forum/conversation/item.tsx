@@ -15,8 +15,8 @@ import { PostAttachments } from "@/components/school/classes/forum/conversation/
 import { PostReactions } from "@/components/school/classes/forum/conversation/item/reactions";
 import { PostReplyIndicator } from "@/components/school/classes/forum/conversation/item/reply";
 import { useForumSession } from "@/components/school/classes/forum/session/context";
-import { getLocale } from "@/lib/utils/date";
-import { getInitialName } from "@/lib/utils/helper";
+import { getLocale } from "@/lib/i18n/date";
+import { getInitialName } from "@/lib/identity/initials";
 
 /** Renders one forum post row with reply, attachment, and reaction controls. */
 export function ForumPostItem({

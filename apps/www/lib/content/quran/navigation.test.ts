@@ -1,0 +1,82 @@
+// @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
+import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
+import { Schema } from "effect";
+import {
+  getQuranPagination,
+  getQuranSurahName,
+} from "@/lib/content/quran/navigation";
+
+const SurahPageSchema = Schema.Struct({
+  nextSurah: QuranSurahRowSchema,
+  prevSurah: Schema.Null,
+  surahData: QuranSurahRowSchema,
+});
+
+describe("quran page helpers", () => {
+  it("builds pagination from source-authenticated surah names", () => {
+    const page = surahPage();
+
+    expect(
+      getQuranPagination({
+        nextSurah: page.nextSurah,
+        prevSurah: page.prevSurah,
+      })
+    ).toEqual({
+      next: {
+        href: "/quran/2",
+        title: "Al-Baqarah",
+      },
+      prev: {
+        href: "",
+        title: "",
+      },
+    });
+    expect(
+      getQuranPagination({
+        nextSurah: null,
+        prevSurah: page.nextSurah,
+      })
+    ).toEqual({
+      next: {
+        href: "",
+        title: "",
+      },
+      prev: {
+        href: "/quran/2",
+        title: "Al-Baqarah",
+      },
+    });
+    expect(getQuranSurahName(page.surahData.name)).toBe("Al-Fatihah");
+  });
+});
+
+/** Builds one Quran surah page fixture matching Convex runtime output. */
+function surahPage(): typeof SurahPageSchema.Type {
+  return {
+    nextSurah: {
+      kind: "quran-surah",
+      name: {
+        arabic: "البقرة",
+        meaning: { de: "Die Kuh", en: "The Cow", id: "Sapi" },
+        transliteration: "Al-Baqarah",
+      },
+      number: 2,
+      numberOfVerses: 286,
+      revelation: { order: 87, place: "Medinan" },
+    },
+    prevSurah: null,
+    surahData: {
+      kind: "quran-surah",
+      name: {
+        arabic: "الفاتحة",
+        meaning: { de: "Die Eröffnende", en: "The Opening", id: "Pembuka" },
+        transliteration: "Al-Fatihah",
+      },
+      number: 1,
+      numberOfVerses: 7,
+      revelation: { order: 5, place: "Meccan" },
+    },
+  };
+}

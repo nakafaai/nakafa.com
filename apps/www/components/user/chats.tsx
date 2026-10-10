@@ -29,8 +29,8 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
+import { getLocale } from "@/lib/i18n/date";
 import { useViewer } from "@/lib/identity/client";
-import { getLocale } from "@/lib/utils/date";
 
 /** Render the correct owned or public chat list for a profile viewer. */
 export function UserChats({ userId }: { userId: Id<"users"> }) {

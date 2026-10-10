@@ -1,7 +1,7 @@
 import { addDays, format, getHours, getMinutes, isToday, set } from "date-fns";
 import { Array as Arr, DateTime } from "effect";
 import type { Locale } from "next-intl";
-import { getLocale } from "@/lib/utils/date";
+import { getLocale } from "@/lib/i18n/date";
 
 /** Formats a scheduled class timestamp with the requested app locale. */
 export function formatScheduledAt(timestamp: number, locale: Locale) {

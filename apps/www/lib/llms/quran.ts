@@ -6,6 +6,7 @@ import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createTranslator, type Locale } from "next-intl";
+import { getQuranSurahName } from "@/lib/content/quran/navigation";
 import {
   readPublishedQuranCatalog,
   readPublishedQuranMarkdown,
@@ -13,7 +14,6 @@ import {
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildPublishedContentLlmsEntries } from "@/lib/llms/entries";
 import { buildHeader } from "@/lib/llms/format";
-import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const QURAN_PAGE_MARKDOWN_VERSE_LIMIT = 80;
 

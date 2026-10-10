@@ -1,0 +1,58 @@
+import { describe, expect, it } from "@effect/vitest";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
+import { interleaveSearchGroups } from "@repo/backend/confect/contents/search/groups";
+import { testArticleGraph } from "@repo/backend/test/content/release";
+import { Array as Arr } from "effect";
+
+/** Builds one complete search document for deterministic group tests. */
+function createDocument(slug: string) {
+  const route = `articles/science/${slug}`;
+  const identity = testArticleGraph(slug);
+
+  return buildContentSearchDocument({
+    ...identity,
+    contentHash: `hash-${slug}`,
+    description: `${slug} description`,
+    hasMarkdownSource: true,
+    locale: "en",
+    route,
+    section: "articles",
+    sourcePath: route,
+    syncedAt: 1,
+    text: `${slug} text`,
+    title: slug,
+  });
+}
+
+const FIRST = createDocument("first");
+const SECOND = createDocument("second");
+const THIRD = createDocument("third");
+const FOURTH = createDocument("fourth");
+
+describe("search groups", () => {
+  it("interleaves groups fairly and removes duplicate identities", () => {
+    expect(
+      Arr.map(
+        interleaveSearchGroups(
+          [
+            [FIRST, SECOND],
+            [THIRD, FIRST],
+          ],
+          3,
+          (document) => document.content_id
+        ),
+        (document) => document.title
+      )
+    ).toEqual(["first", "third", "second"]);
+  });
+
+  it("keeps every smaller page as a prefix of one fixed ordering", () => {
+    const groups = [[], [FIRST, SECOND], [THIRD, FOURTH], [FIRST, FOURTH]];
+    const identify = (document: typeof FIRST) => document.content_id;
+    const firstPage = interleaveSearchGroups(groups, 2, identify);
+    const fullWindow = interleaveSearchGroups(groups, 4, identify);
+
+    expect(firstPage).toEqual(Arr.take(fullWindow, firstPage.length));
+    expect(interleaveSearchGroups(groups, 0, identify)).toEqual([]);
+  });
+});

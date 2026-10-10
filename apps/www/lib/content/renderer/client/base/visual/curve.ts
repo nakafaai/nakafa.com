@@ -2,7 +2,7 @@ import {
   createCircleArcPoints,
   createCircleOutlinePoints,
 } from "@repo/design-system/components/contents/mathematics/circle";
-import { getCurveDivisions } from "@repo/design-system/components/three/helpers/quality";
+import { getCurveDivisions } from "@repo/design-system/components/three/data/quality";
 import { Array as Arr, BigDecimal } from "effect";
 import type { PlaneObject } from "@/lib/content/renderer/client/base/visual/scene";
 import {

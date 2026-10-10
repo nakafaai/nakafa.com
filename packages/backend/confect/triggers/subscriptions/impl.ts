@@ -6,13 +6,13 @@ import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { resolveCurrentCreditResetTimestamp } from "@repo/backend/confect/credits/state";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import {
   SubscriptionPlanSyncIoError,
   subscriptionPlanSyncIoFailedCode,
 } from "@repo/backend/confect/triggers/subscriptions/spec";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
-import { products } from "@repo/backend/confect/utils/polar/products";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { Clock, Effect, flow, Option } from "effect";
 

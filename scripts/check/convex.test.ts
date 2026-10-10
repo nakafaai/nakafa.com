@@ -7,8 +7,8 @@ import {
 } from "typescript/unstable/ast";
 import { symbolAt, symbolTable } from "#scripts/check/convex";
 import { effectTestViolations } from "#scripts/check/effect";
+import { ROOT, typedProject, withProject } from "#scripts/check/fixture";
 import { descendants } from "#scripts/check/source";
-import { ROOT, typedProject, withProject } from "#scripts/check/test.helpers";
 
 const file = "packages/backend/example.test.ts";
 

@@ -4,8 +4,8 @@ import {
   resolveArticleOwner,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/owner";
 import { getArticlePublication } from "@/lib/content/article/publication";
+import { getAksaraUrl } from "@/lib/content/repository";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
-import { getAksaraUrl } from "@/lib/utils/github";
 
 /** Complete article data consumed by the existing page shell. */
 export type ArticlePageContent = Awaited<ReturnType<typeof readArticlePage>>;

@@ -10,12 +10,12 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
 import { readTryoutHubPage } from "@/components/tryout/catalog/server";
+import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { getAksaraTreeUrl } from "@/lib/utils/github";
-import { getSocialMetadata } from "@/lib/utils/metadata";
+import { getSocialMetadata } from "@/lib/seo/social";
 
 /**
  * Builds metadata-only copy for the try-out hub while keeping helper prose out

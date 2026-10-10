@@ -2,9 +2,9 @@ import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, Record as Rec } from "effect";
 import { Checker, type Project } from "typescript/unstable/sync";
 import { arrayCall } from "#scripts/check/calls";
+import { ROOT, typedProject, withProject } from "#scripts/check/fixture";
 import { receiverVerdicts } from "#scripts/check/receivers";
 import { descendants } from "#scripts/check/source";
-import { ROOT, typedProject, withProject } from "#scripts/check/test.helpers";
 
 /** Modules whose array method receivers the compiler types as arrays, each call on line 2. */
 const ARRAYS = {

@@ -4,13 +4,13 @@ import {
 } from "@confect/server";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import {
   getIncludedAttemptAccess,
   getTryoutStartAccess,
 } from "@repo/backend/confect/tryouts/access/impl";
 import { TryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
-import { products } from "@repo/backend/confect/utils/polar/products";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";

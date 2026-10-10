@@ -23,11 +23,11 @@ import {
   getArticleNextHref,
   readArticlePageCursor,
 } from "@/lib/content/article/query";
+import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { getAksaraTreeUrl } from "@/lib/utils/github";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { getOgUrl, getSocialMetadata } from "@/lib/seo/social";
 
 /** Builds locale-specific article index metadata from article copy. */
 export async function generateMetadata({

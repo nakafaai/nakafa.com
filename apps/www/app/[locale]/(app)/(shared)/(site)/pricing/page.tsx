@@ -14,7 +14,7 @@ import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { getSocialMetadata } from "@/lib/utils/metadata";
+import { getSocialMetadata } from "@/lib/seo/social";
 
 /** Owns the dedicated pricing introduction and shared plan comparison. */
 function PricingPagePlans() {

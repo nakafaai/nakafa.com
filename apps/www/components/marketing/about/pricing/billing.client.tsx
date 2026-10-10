@@ -3,7 +3,7 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
-import { products } from "@repo/backend/confect/utils/polar/products";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Effect } from "effect";

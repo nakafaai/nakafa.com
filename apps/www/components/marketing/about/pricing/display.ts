@@ -1,4 +1,4 @@
-import { products } from "@repo/backend/confect/utils/polar/products";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import { HashSet } from "effect";
 
 export const pricingCountryHeaderName = "x-vercel-ip-country";

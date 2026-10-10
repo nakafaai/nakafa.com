@@ -41,12 +41,12 @@ import {
   subjectMenu,
 } from "@/components/sidebar/data/subject";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
+import { getErrorMessage } from "@/lib/error";
 import { useSearch } from "@/lib/search/context";
 import {
   type ContentSearchResultItem,
   useSearchQuery,
 } from "@/lib/search/query";
-import { getErrorMessage } from "@/lib/utils/error";
 
 const DEBOUNCE_TIME = 500;
 
