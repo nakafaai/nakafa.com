@@ -58,7 +58,36 @@ describe("Gateway handles", () => {
         );
         expect(handle.timeout).toEqual(deadlines[purpose]);
         expect(model.doGenerateCalls[0]?.providerOptions).toEqual({
-          convexGateway: { reasoningEffort: reasoning[purpose] },
+          convexGateway: {
+            provider: { data_collection: "deny", zdr: true },
+            reasoningEffort: reasoning[purpose],
+          },
+        });
+      })
+  );
+
+  it.effect(
+    "marks the cached prefix and asks for zero retention on every call",
+    () =>
+      Effect.gen(function* () {
+        const { gateway, model } = serve();
+        yield* Effect.promise(() =>
+          gateway.language("chat").model.doGenerate({
+            prompt: [
+              { role: "system", content: "Static instructions." },
+              ...prompt,
+            ],
+          })
+        );
+        expect(model.doGenerateCalls[0]?.prompt[0]).toEqual({
+          role: "system",
+          content: "Static instructions.",
+          providerOptions: {
+            openaiCompatible: { cache_control: { type: "ephemeral" } },
+          },
+        });
+        expect(model.doGenerateCalls[0]?.providerOptions).toMatchObject({
+          convexGateway: { provider: { data_collection: "deny", zdr: true } },
         });
       })
   );
@@ -74,7 +103,10 @@ describe("Gateway handles", () => {
         })
       );
       expect(model.doGenerateCalls[0]?.providerOptions).toEqual({
-        convexGateway: { reasoningEffort: "minimal" },
+        convexGateway: {
+          provider: { data_collection: "deny", zdr: true },
+          reasoningEffort: "minimal",
+        },
       });
     })
   );

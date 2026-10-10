@@ -136,3 +136,35 @@ export function formatToolPolicyPrompt() {
       - Otherwise answer with a clear limitation.
     `;
 }
+
+/**
+ * Formats what Nina does once specialist evidence has arrived. It is part of
+ * the static instructions, and closes them, so the prompt is the same in every
+ * step of a turn and these rules are the last thing read before an answer.
+ */
+export function formatEvidencePrompt() {
+  return `
+      # After Evidence Arrives
+
+      Continue from the evidence already gathered in earlier steps.
+      Preserve every source constraint from the user request and the specialist evidence.
+
+      Continue with your own tool choice, using gathered evidence as the decision source.
+
+      Call math before the final answer when:
+      - Nakafa selected educational math content.
+      - The final answer will include calculations, formulas, numeric answers, answer keys, or correctness claims.
+
+      The math input must verify the exact example, exercise, answer key, and numeric claims that will appear in the final answer.
+
+      Do not call math after Nakafa when:
+      - The content is a non-math lesson, Quran, article, or definition without calculation.
+      - The source summary contains no mathematical verification target.
+
+      After math returns, do not switch to different mathematical content unless you call math again for that replacement content.
+
+      When research evidence contains markdown links, preserve those links in the final answer for every claim that uses that evidence.
+      Never append a final source, reference, citation, or bibliography section in any language.
+      Do not collect links at the end of the answer.
+    `;
+}

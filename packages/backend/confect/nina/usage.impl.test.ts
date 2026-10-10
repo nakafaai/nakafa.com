@@ -66,4 +66,28 @@ describe("Nina usage ledger", () => {
       { ...call, input: 24, output: 8, calls: 2, cost: 0.5 },
     ]);
   });
+
+  it("adds the cached and reasoning tokens of every call to its row", async () => {
+    const fixture = await createNinaTest();
+    await fixture.t.mutation(record, {
+      turnId: fixture.turnId,
+      usage: { ...call, cached: 0, reasoning: 2 },
+    });
+    await fixture.t.mutation(record, {
+      turnId: fixture.turnId,
+      usage: { ...call, cached: 9, reasoning: 1 },
+    });
+    expect(await readUsage(fixture)).toEqual([
+      { ...call, input: 24, output: 8, calls: 2, cached: 9, reasoning: 3 },
+    ]);
+  });
+
+  it("never invents a cached or reasoning count that no call reported", async () => {
+    const fixture = await createNinaTest();
+    await fixture.t.mutation(record, { turnId: fixture.turnId, usage: call });
+    await fixture.t.mutation(record, { turnId: fixture.turnId, usage: call });
+    const [row] = (await readUsage(fixture)) ?? [];
+    expect(row).not.toHaveProperty("cached");
+    expect(row).not.toHaveProperty("reasoning");
+  });
 });

@@ -3386,12 +3386,14 @@ export declare const api: {
                 | "suggestions"
                 | "title"
                 | "nina-repair";
+              cached?: number;
               calls: number;
               cost?: number;
               input: number;
               model: string;
               output: number;
               provider: string;
+              reasoning?: number;
             }>;
           } | null;
         }
@@ -3494,12 +3496,14 @@ export declare const api: {
                   | "suggestions"
                   | "title"
                   | "nina-repair";
+                cached?: number;
                 calls: number;
                 cost?: number;
                 input: number;
                 model: string;
                 output: number;
                 provider: string;
+                reasoning?: number;
               }>;
             };
             order: number;
@@ -8532,12 +8536,14 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair";
+              cached?: number;
               calls: number;
               cost?: number;
               input: number;
               model: string;
               output: number;
               provider: string;
+              reasoning?: number;
             }>;
             user: {
               curriculumPreference?: {
@@ -8703,12 +8709,14 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair";
+              cached?: number;
               calls: number;
               cost?: number;
               input: number;
               model: string;
               output: number;
               provider: string;
+              reasoning?: number;
             }>;
             user?: {
               curriculumPreference?: {
@@ -8857,12 +8865,14 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair";
+              cached?: number;
               calls: number;
               cost?: number;
               input: number;
               model: string;
               output: number;
               provider: string;
+              reasoning?: number;
             }>;
             user?: {
               curriculumPreference?: {
@@ -9020,12 +9030,14 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair";
+              cached?: number;
               calls: number;
               cost?: number;
               input: number;
               model: string;
               output: number;
               provider: string;
+              reasoning?: number;
             }>;
             user: {
               curriculumPreference?: {
@@ -9191,12 +9203,14 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair";
+              cached?: number;
               calls: number;
               cost?: number;
               input: number;
               model: string;
               output: number;
               provider: string;
+              reasoning?: number;
             }>;
             user?: {
               curriculumPreference?: {
@@ -9345,12 +9359,14 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair";
+              cached?: number;
               calls: number;
               cost?: number;
               input: number;
               model: string;
               output: number;
               provider: string;
+              reasoning?: number;
             }>;
             user?: {
               curriculumPreference?: {
@@ -9515,11 +9531,13 @@ export declare const internal: {
               | "suggestions"
               | "title"
               | "nina-repair";
+            cached?: number;
             cost?: number;
             input: number;
             model: string;
             output: number;
             provider: string;
+            reasoning?: number;
           };
         },
         null

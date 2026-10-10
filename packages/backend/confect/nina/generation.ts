@@ -12,7 +12,7 @@ import {
 import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
-import { createNinaPrepareStep } from "@repo/backend/confect/nina/step";
+import { prepareNinaStep } from "@repo/backend/confect/nina/step";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
 import { DateTime, Effect } from "effect";
@@ -67,7 +67,6 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
         })
       ),
   });
-  const prepare = createNinaPrepareStep({ instructions });
   let streamFailure: NinaGenerationError | undefined;
   const result = yield* Effect.tryPromise({
     try: (signal) =>
@@ -86,7 +85,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
             });
           },
           prepareStep: (step) =>
-            prepare({ ...step, messages: boundStep(step.messages) }),
+            prepareNinaStep({ ...step, messages: boundStep(step.messages) }),
           repairToolCall: (options) =>
             runPromise(
               repairToolCall({
