@@ -12,9 +12,20 @@ import {
   type EvilBrushRange,
   useEvilBrush,
 } from "@repo/design-system/components/evilcharts/ui/evil-brush";
+import {
+  ChartLegend,
+  ChartLegendContent,
+  type ChartLegendVariant,
+} from "@repo/design-system/components/evilcharts/ui/legend";
 import { LoadingArea } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import {
+  ChartTooltip,
+  ChartTooltipContent,
+  type TooltipRoundness,
+  type TooltipVariant,
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
 import { Schema } from "effect";
 import {
   type ComponentProps,
@@ -34,6 +45,7 @@ import {
   YAxis as RechartsYAxis,
 } from "recharts";
 
+const STROKE_WIDTH = 0.8;
 export type CurveType = NonNullable<
   ComponentProps<typeof RechartsArea>["type"]
 >;
@@ -330,6 +342,83 @@ export function Grid({
       strokeDasharray={strokeDasharray}
       vertical={vertical}
       {...props}
+    />
+  );
+}
+
+interface TooltipProps {
+  cursor?: boolean; // whether the vertical cursor line follows the pointer
+  defaultIndex?: number; // data index shown by default with no hover
+  roundness?: TooltipRoundness; // border-radius of the tooltip
+  variant?: TooltipVariant; // visual style of the tooltip surface
+}
+
+/**
+ * The hover tooltip. Reads the chart's selection from context so its content
+ * dims unselected series. Hidden automatically while the chart is loading.
+ */
+export function Tooltip({
+  variant,
+  roundness,
+  defaultIndex,
+  cursor = true,
+}: TooltipProps) {
+  const isLoading = useAreaChart((chart) => chart.isLoading);
+  const selectedDataKey = useAreaChart((chart) => chart.selectedDataKey);
+
+  if (isLoading) {
+    return null;
+  }
+
+  return (
+    <ChartTooltip
+      content={
+        <ChartTooltipContent
+          roundness={roundness}
+          selected={selectedDataKey}
+          variant={variant}
+        />
+      }
+      cursor={
+        cursor ? { strokeDasharray: "3 3", strokeWidth: STROKE_WIDTH } : false
+      }
+      {...(defaultIndex === undefined ? {} : { defaultIndex })}
+    />
+  );
+}
+
+interface LegendProps {
+  align?: "left" | "center" | "right"; // horizontal placement
+  isClickable?: boolean; // lets each entry toggle selection of its series
+  variant?: ChartLegendVariant; // visual style of the legend indicators
+  verticalAlign?: "top" | "middle" | "bottom"; // vertical placement
+}
+
+/**
+ * The series legend. When `isClickable` is set, each entry toggles selection of
+ * its series, driving the shared selection state read by every <Area />.
+ */
+export function Legend({
+  variant,
+  align = "right",
+  verticalAlign = "top",
+  isClickable = false,
+}: LegendProps) {
+  const selectedDataKey = useAreaChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useAreaChart((chart) => chart.selectDataKey);
+
+  return (
+    <ChartLegend
+      align={align}
+      content={
+        <ChartLegendContent
+          isClickable={isClickable}
+          onSelectChange={selectDataKey}
+          selected={selectedDataKey}
+          variant={variant}
+        />
+      }
+      verticalAlign={verticalAlign}
     />
   );
 }

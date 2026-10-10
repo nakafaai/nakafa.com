@@ -14,8 +14,6 @@ import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 
 type QuranViewResult = FunctionReturnType<typeof api.contentRelease.quran.page>;
-/** Minimal validator-derived surah metadata rendered by the Quran web view. */
-export type QuranViewSurah = NonNullable<QuranViewResult["surah"]>;
 /** Dedicated signed Bismillah shown before numbered verses when present. */
 export type QuranViewBismillah = NonNullable<QuranViewResult["preBismillah"]>;
 /** Signed locale-specific Tafsir access rendered by the Quran web view. */

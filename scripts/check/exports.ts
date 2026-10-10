@@ -43,8 +43,15 @@ const FRAMEWORK_MODULE_PATTERNS = [
   /^apps\/[^/]+\/app\/(?:.+\/)?(?:apple-icon|default|error|forbidden|global-error|global-not-found|icon|layout|loading|manifest|not-found|opengraph-image|page|robots|route|sitemap|template|twitter-image|unauthorized)\.tsx?$/u,
   /^apps\/[^/]+\/(?:instrumentation|instrumentation-client|mdx-components|proxy|vercel)\.tsx?$/u,
 ];
-/** The shadcn component set, which keeps every part that its upstream ships. */
-const COMPONENT_SET_DIRECTORY = "packages/design-system/components/ui/";
+/**
+ * The component sets that a registry ships: shadcn and EvilCharts. Each keeps
+ * every part that its upstream ships, so a later update of a component applies
+ * to an unchanged file.
+ */
+const COMPONENT_SET_DIRECTORIES = [
+  "packages/design-system/components/ui/",
+  "packages/design-system/components/evilcharts/",
+];
 
 /** The manifest of one workspace, by repository-relative path. */
 const WORKSPACE_MANIFEST_PATTERN = /^(?:apps|packages)\/[^/]+\/package\.json$/u;
@@ -194,7 +201,9 @@ export function inspectExports(
 ): readonly string[] {
   const declared = Arr.flatMap(modules, ({ file, sourceFile }) =>
     isGenerated(sourceFile) ||
-    Str.startsWith(COMPONENT_SET_DIRECTORY)(file) ||
+    Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
+      Str.startsWith(directory)(file)
+    ) ||
     Arr.some(FRAMEWORK_MODULE_PATTERNS, (pattern) => pattern.test(file)) ||
     Arr.some(unjudged, (directory) => Str.startsWith(directory)(file))
       ? []

@@ -207,15 +207,16 @@ names nothing in the reader, so every module with that file name counts its
 names by word alone, and a computed `import()` path does so for every module.
 Generated and declaration files, JavaScript, the agent skill scripts, and the
 modules at the repository root count by word, since no rule parses them. The
-sweep that followed removed 50 names: the `export` keyword of 43 and 7
+sweep that followed removed 47 names: the `export` keyword of 42 and 5
 declarations that nothing used.
 
 The check does not judge a module whose exports are read by name from outside
 the repository's imports: the Next.js file conventions of an app, its
 `vercel.ts`, a generated module, and a workspace that is published as a
-package. It also leaves `packages/design-system/components/ui`, which keeps
-every part its shadcn upstream ships. A default export has no name to import
-and is not judged.
+package. It also leaves `packages/design-system/components/ui` and
+`packages/design-system/components/evilcharts`, which keep every part that
+their registries, shadcn and EvilCharts, ship. A default export has no name to
+import and is not judged.
 
 Where a compiler configuration turns `declaration` on, the compiler needs an
 exported name wherever an exported signature reaches it, also by inference
