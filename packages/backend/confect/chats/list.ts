@@ -6,10 +6,13 @@ import type { PaginationOptions } from "convex/server";
 import { Array as Arr, Effect, String as Str } from "effect";
 
 /**
- * Most chats one search opens, newest first. The database cannot search sealed
- * titles, so a search opens the newest chats of the learner and filters them.
+ * Chats one search page reads, newest first, whatever page size was asked. The
+ * database cannot search sealed titles, so a search page opens a window of the
+ * learner's chats and keeps those whose title holds every word. A window that
+ * stops before the oldest chat comes back with the cursor of the next one, so
+ * no chat is out of reach.
  */
-export const CHAT_SEARCH_LIMIT = 500;
+export const CHAT_SEARCH_WINDOW = 500;
 
 /** What separates the words of a search query. */
 const SPACES = /\s+/u;
@@ -64,9 +67,9 @@ function titleHasWords(title: string | undefined, words: readonly string[]) {
 
 /**
  * Reads one page of one learner's chats with their titles opened. A search
- * opens the newest `CHAT_SEARCH_LIMIT` chats, keeps those whose title holds
- * every word, and returns the first `numItems` of them as a page that has no
- * next page.
+ * page reads `CHAT_SEARCH_WINDOW` chats from the cursor and returns those whose
+ * title holds every word, so it may hold more titles than `numItems`, or none
+ * while `isDone` is false. The search is over when `isDone` is true.
  */
 export const listChats = Effect.fn("chats.list.page")(function* (list: {
   readonly paginationOpts: PaginationOptions;
@@ -82,14 +85,12 @@ export const listChats = Effect.fn("chats.list.page")(function* (list: {
     const page = yield* chats.paginate(paginationOpts).pipe(Effect.orDie);
     return { ...page, page: yield* openChats(userId, page.page) };
   }
-  const newest = yield* chats.take(CHAT_SEARCH_LIMIT).pipe(Effect.orDie);
-  const opened = yield* openChats(userId, newest);
+  const scanned = yield* chats
+    .paginate({ ...paginationOpts, numItems: CHAT_SEARCH_WINDOW })
+    .pipe(Effect.orDie);
+  const opened = yield* openChats(userId, scanned.page);
   return {
-    continueCursor: "",
-    isDone: true,
-    page: Arr.take(
-      Arr.filter(opened, (chat) => titleHasWords(chat.title, words)),
-      paginationOpts.numItems
-    ),
+    ...scanned,
+    page: Arr.filter(opened, (chat) => titleHasWords(chat.title, words)),
   };
 });
