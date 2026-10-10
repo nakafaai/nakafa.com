@@ -262,6 +262,12 @@ final deletion, the production table inventory reported `remaining=0` for all
 historical completion evidence only; it is not a reusable migration inventory
 or runtime compatibility contract.
 
+On 10 October 2026 the owner approved the disposal of the retired bookmark
+data. A production export taken at 10:38 UTC held zero rows in `bookmarks` and
+`bookmarkCollections`, and a temporary purge function then deleted zero rows
+from each on dev and on production. The two tables, their account deletion
+step, and that function left the schema and the code in the same change.
+
 ## Consequences
 
 - The public practice/exercise pages are intentionally removed.

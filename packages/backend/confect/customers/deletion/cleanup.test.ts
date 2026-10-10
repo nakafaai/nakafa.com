@@ -73,16 +73,14 @@ it("drains all four deletion workflows and their delayed reconciliation before r
       externalId: authId,
       userId: id,
     });
-    for (let index = 0; index < 30; index += 1) {
-      await ctx.db.insert("bookmarkCollections", {
-        name: `Collection ${index}`,
+    for (let index = 0; index < 3; index += 1) {
+      await ctx.db.insert("comments", {
+        slug: "material/algebra",
         userId: id,
-        bookmarkCount: 0,
-        isDefault: false,
-        isPublic: false,
-        image: "test",
-        order: index,
-        updatedAt: NOW,
+        text: `Comment ${index}`,
+        upvoteCount: 0,
+        downvoteCount: 0,
+        replyCount: 0,
       });
     }
     for (let index = 0; index < 22; index += 1) {
@@ -109,7 +107,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
 
   const state = await t.query(async (ctx) => ({
     user: await ctx.db.get("users", userId),
-    collections: await ctx.db.query("bookmarkCollections").collect(),
+    comments: await ctx.db.query("comments").collect(),
     customers: await ctx.db.query("customers").collect(),
     preparations: await ctx.db.query("accountDeletionPreparations").collect(),
     jobs: await ctx.db.system.query("_scheduled_functions").collect(),
@@ -127,7 +125,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
     deletionCleanupStartedAt: expect.any(Number),
   });
   expect(state.user).not.toHaveProperty("authVerificationCleanupCursor");
-  expect(state.collections).toEqual([]);
+  expect(state.comments).toEqual([]);
   expect(state.customers).toEqual([]);
   expect(state.preparations).toEqual([]);
   expect(state.verifications).toMatchObject({

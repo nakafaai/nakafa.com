@@ -6143,16 +6143,6 @@ export declare const internal: {
       >;
     };
   };
-  bookmarks: {
-    purge: {
-      purgeBookmarks: FunctionReference<
-        "mutation",
-        "internal",
-        {},
-        { bookmarks: number; collections: number }
-      >;
-    };
-  };
   classes: {
     forums: {
       attachments: {
