@@ -23,6 +23,40 @@ const memoryRow = (page: Page, text: string) =>
 const editorOf = (page: Page) =>
   page.getByRole("textbox", { name: "Memory text" });
 
+/**
+ * Counts the changes the page sent and the ones the server answered. The page
+ * shows a change before the server has it, and a reload closes the connection
+ * and drops a change that is still on its way, so a step that reloads waits
+ * for the answer first.
+ */
+const trackChanges = (page: Page) => {
+  const changes = { answered: 0, sent: 0 };
+  page.on("websocket", (socket) => {
+    socket.on("framesent", ({ payload }) => {
+      if (String(payload).includes('"type":"Mutation"')) {
+        changes.sent += 1;
+      }
+    });
+    socket.on("framereceived", ({ payload }) => {
+      if (String(payload).includes('"type":"MutationResponse"')) {
+        changes.answered += 1;
+      }
+    });
+  });
+  return changes;
+};
+
+type Changes = ReturnType<typeof trackChanges>;
+
+/** Waits until the page sent a change after `sentBefore` and the server answered every change. */
+const saved = (changes: Changes, sentBefore: number) =>
+  expect
+    .poll(
+      () => changes.sent > sentBefore && changes.answered === changes.sent,
+      { timeout: TOAST_MILLISECONDS }
+    )
+    .toBe(true);
+
 /** Repeats a reload until the server shows what the learner changed. */
 const reloadUntil = (page: Page, check: () => Promise<void>) =>
   expect(async () => {
@@ -86,19 +120,24 @@ const editMemory = Effect.fn("NakafaE2E.editMemory")(function* (page: Page) {
   });
 });
 
-const pauseMemory = Effect.fn("NakafaE2E.pauseMemory")(function* (page: Page) {
+const pauseMemory = Effect.fn("NakafaE2E.pauseMemory")(function* (
+  page: Page,
+  changes: Changes
+) {
   yield* Effect.promise(async () => {
     const pause = page.getByRole("switch", { name: "Pause memory" });
     const row = memoryRow(page, REWRITTEN);
 
     await expect(pause).not.toBeChecked();
     await expect(row.getByText("In use")).toBeVisible();
+    const before = changes.sent;
     await pause.click();
     await expect(pause).toBeChecked();
     // A paused Nina reads nothing, and every memory stays.
     await expect(row.getByText("In use")).toBeHidden();
     await expect(row).toBeVisible();
 
+    await saved(changes, before);
     await reloadUntil(page, () => expect(pause).toBeChecked({ timeout: 3000 }));
     await expect(row).toBeVisible();
     await pause.click();
@@ -108,7 +147,8 @@ const pauseMemory = Effect.fn("NakafaE2E.pauseMemory")(function* (page: Page) {
 });
 
 const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
-  page: Page
+  page: Page,
+  changes: Changes
 ) {
   yield* Effect.promise(async () => {
     const row = memoryRow(page, REWRITTEN);
@@ -122,12 +162,14 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
 
     // Without Undo the memory is deleted when the toast closes. A pointer
     // over the toasts keeps them open, so the pointer leaves first.
+    const before = changes.sent;
     await remove.click();
     await expect(row).toHaveCount(0);
     await page.mouse.move(0, 0);
     await expect(page.locator("[data-sonner-toast]")).toHaveCount(0, {
       timeout: TOAST_MILLISECONDS,
     });
+    await saved(changes, before);
     await reloadUntil(page, () =>
       expect(page.getByText(EMPTY)).toBeVisible({ timeout: 3000 })
     );
@@ -143,6 +185,7 @@ const verifyMemoryPage = Effect.fn("NakafaE2E.verifyMemoryPage")(function* (
   page: Page,
   baseURL: string
 ) {
+  const changes = trackChanges(page);
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* Effect.promise(() => page.goto(MEMORY_PATH));
@@ -157,8 +200,8 @@ const verifyMemoryPage = Effect.fn("NakafaE2E.verifyMemoryPage")(function* (
 
   yield* addMemory(page);
   yield* editMemory(page);
-  yield* pauseMemory(page);
-  yield* removeMemory(page);
+  yield* pauseMemory(page, changes);
+  yield* removeMemory(page, changes);
 });
 
 for (const width of [390, 1440]) {
