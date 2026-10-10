@@ -29,8 +29,10 @@ export function MemoryHeader() {
   const t = useTranslations("Memory");
   const auth = useTranslations("Auth");
   const common = useTranslations("Common");
-  const paused = useMemory((list) => list.paused);
-  const empty = useMemory((list) => list.memories.length === 0);
+  const { empty, paused } = useMemory((list) => ({
+    empty: list.memories.length === 0,
+    paused: list.paused,
+  }));
   const { clear, pause } = useMemoryActions();
   const [confirming, setConfirming] = useState(false);
 

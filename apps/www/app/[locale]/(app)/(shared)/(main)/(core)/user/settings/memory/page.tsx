@@ -1,6 +1,6 @@
 import { HttpClient } from "@confect/js";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -34,21 +34,27 @@ export default function Page({
   );
 }
 
-/** Resolves the memories inside the settings route stream. */
+/**
+ * Resolves the memories inside the settings route stream, with the moment the
+ * server read them. The page counts every "confirmed" time from that moment in
+ * the browser too, so the browser renders the words the server rendered.
+ */
 async function AuthenticatedMemory({
   params,
 }: {
   params: PageProps<"/[locale]/user/settings/memory">["params"];
 }) {
   const { token } = await admitUserSettingsRoute((await params).locale);
-  const memory = await Effect.runPromise(
-    HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) => client.query(nina.memory.list, {})),
-      Effect.provide(httpLayer(token ? { auth: token } : {}))
-    )
+  const { memory, now } = await Effect.runPromise(
+    Effect.all({
+      memory: HttpClient.HttpClient.pipe(
+        Effect.flatMap((client) => client.query(nina.memory.list, {}))
+      ),
+      now: Clock.currentTimeMillis,
+    }).pipe(Effect.provide(httpLayer(token ? { auth: token } : {})))
   );
   if (!memory) {
     notFound();
   }
-  return <UserSettingsMemory initialList={memory} />;
+  return <UserSettingsMemory initialList={memory} now={now} />;
 }

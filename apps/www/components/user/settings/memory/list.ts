@@ -123,18 +123,23 @@ interface MemoryView {
 
 /**
  * Returns the memories the page shows, in list order. The search ignores case
- * and looks at the text and at the name of the kind.
+ * and looks at the text and at the name of the kind. While memory is paused
+ * Nina reads none of them, so none shows as in use, which also covers the
+ * moment between the press on the switch and the answer of the server.
  */
 export function shownMemories(list: MemoryList, view: MemoryView) {
   const needle = Str.toLowerCase(Str.trim(view.query));
 
-  return Arr.filter(
-    list.memories,
-    (memory) =>
-      !Arr.contains(view.removed, memory.id) &&
-      (Str.isEmpty(needle) ||
-        Arr.some([memory.text, view.label(memory.kind)], (words) =>
-          Str.includes(needle)(Str.toLowerCase(words))
-        ))
+  return Arr.map(
+    Arr.filter(
+      list.memories,
+      (memory) =>
+        !Arr.contains(view.removed, memory.id) &&
+        (Str.isEmpty(needle) ||
+          Arr.some([memory.text, view.label(memory.kind)], (words) =>
+            Str.includes(needle)(Str.toLowerCase(words))
+          ))
+    ),
+    (memory) => (list.paused ? { ...memory, inUse: false } : memory)
   );
 }
