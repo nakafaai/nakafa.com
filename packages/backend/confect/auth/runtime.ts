@@ -191,6 +191,9 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         enabled: true,
         allowDifferentEmails: false,
       },
+      // Better Auth encrypts the provider access and refresh tokens with the
+      // auth secret before it stores them. The id token is not covered.
+      encryptOAuthTokens: true,
     },
     disabledPaths: [...disabledCredentialPaths],
     emailAndPassword: {
