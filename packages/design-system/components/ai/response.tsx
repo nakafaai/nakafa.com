@@ -11,7 +11,7 @@ import { trimIncompleteTail } from "@repo/design-system/lib/markdown/stream";
 import { Array as Arr } from "effect";
 import { memo, useMemo } from "react";
 
-type ResponseProps = Omit<MarkdownContentProps, "variant"> & {
+type ResponseProps = MarkdownContentProps & {
   /** Withholds a trailing formula or diagram until its source is complete. */
   readonly isStreaming?: boolean;
 };
@@ -45,7 +45,10 @@ function Blocks({
 
 const MemoizedBlocks = memo(Blocks);
 
-/** Normalizes and renders one streamed markdown response. */
+/**
+ * Normalizes and renders one streamed markdown response: an answer at the chat
+ * size, or with `variant="note"` a note at the size of its activity row.
+ */
 export function Response({
   allowedImagePrefixes,
   allowedLinkPrefixes,
@@ -54,6 +57,7 @@ export function Response({
   defaultOrigin,
   id,
   isStreaming = false,
+  variant = "chat",
 }: ResponseProps) {
   const normalizedChildren = useMemo(() => {
     const text = normalizeText(children);
@@ -61,7 +65,7 @@ export function Response({
   }, [children, isStreaming]);
 
   return (
-    <MarkdownFrame className={className} variant="chat">
+    <MarkdownFrame className={className} variant={variant}>
       <MemoizedBlocks
         allowedImagePrefixes={allowedImagePrefixes}
         allowedLinkPrefixes={allowedLinkPrefixes}

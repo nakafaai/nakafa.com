@@ -62,7 +62,11 @@ export function AiMessagePart({
         <ReasoningTrigger />
         {hasContent ? (
           <ReasoningContent>
-            <Response id={id} isStreaming={part.state === "streaming"}>
+            <Response
+              id={id}
+              isStreaming={part.state === "streaming"}
+              variant="note"
+            >
               {part.text}
             </Response>
           </ReasoningContent>
