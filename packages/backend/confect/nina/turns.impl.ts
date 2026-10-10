@@ -13,6 +13,7 @@ import {
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
+import { sealTitle } from "@repo/backend/confect/chats/title";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
@@ -125,7 +126,7 @@ const start = FunctionImpl.make(
           threadId,
           type: "study",
           visibility: "private",
-          title: DEFAULT_TITLE,
+          title: yield* sealTitle(appUser._id, DEFAULT_TITLE),
           updatedAt: now,
         })
         .pipe(Effect.orDie));

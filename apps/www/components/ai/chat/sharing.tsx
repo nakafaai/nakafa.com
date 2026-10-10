@@ -8,8 +8,8 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -28,7 +28,7 @@ export function ChatSharing({
   open,
   onOpenChange,
 }: {
-  chat: Docs["chats"];
+  chat: ChatView;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {

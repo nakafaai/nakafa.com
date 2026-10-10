@@ -1,8 +1,8 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr } from "effect";
 
-type Chat = Docs["chats"];
+type Chat = ChatView;
 type ChatPatch = Partial<Pick<Chat, "title" | "visibility">>;
 
 /** Patch one chat in an immutable query page. */

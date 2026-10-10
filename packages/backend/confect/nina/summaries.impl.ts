@@ -5,6 +5,10 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import {
+  openSummary,
+  sealSummary,
+} from "@repo/backend/confect/nina/summaries/text";
 import spec from "@repo/backend/confect/nina/summaries.spec";
 import { Clock, Effect, Layer } from "effect";
 
@@ -21,15 +25,40 @@ const findSummary = Effect.fn("nina.summaries.find")(function* (
     );
 });
 
+/** Finds one chat, when it still exists. Its owner holds the key of the summary. */
+const findChat = Effect.fn("nina.summaries.chat")(function* (
+  chatId: Docs["chats"]["_id"]
+) {
+  return yield* (yield* DatabaseReader)
+    .table("chats")
+    .get(chatId)
+    .pipe(
+      Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+      Effect.orDie
+    );
+});
+
+/**
+ * Reads a chat's summary with its text opened. A summary whose chat is gone
+ * reads as none, because only the chat owner's key opens it.
+ */
 const read = FunctionImpl.make(
   schema,
   spec,
   "read",
   Effect.fn("nina.summaries.read")(function* ({ chatId }) {
     const summary = yield* findSummary(chatId);
-    return summary
-      ? { text: summary.text, throughOrder: summary.throughOrder }
-      : null;
+    if (!summary) {
+      return null;
+    }
+    const chat = yield* findChat(chatId);
+    if (!chat) {
+      return null;
+    }
+    return {
+      text: yield* openSummary(chat.userId, summary.text),
+      throughOrder: summary.throughOrder,
+    };
   })
 );
 
@@ -54,9 +83,9 @@ const anchor = FunctionImpl.make(
 );
 
 /**
- * Stores a refreshed summary. Coverage only moves forward, so a slower refresh
- * never replaces a newer one, but its provider usage still counts; a chat
- * deleted meanwhile gets no orphan.
+ * Stores a refreshed summary, sealed for the chat owner. Coverage only moves
+ * forward, so a slower refresh never replaces a newer one, but its provider
+ * usage still counts; a chat deleted meanwhile gets no orphan.
  */
 const save = FunctionImpl.make(
   schema,
@@ -68,13 +97,7 @@ const save = FunctionImpl.make(
     throughOrder,
     usage: call,
   }) {
-    const chat = yield* (yield* DatabaseReader)
-      .table("chats")
-      .get(chatId)
-      .pipe(
-        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
+    const chat = yield* findChat(chatId);
     if (!chat) {
       return null;
     }
@@ -92,17 +115,18 @@ const save = FunctionImpl.make(
         .pipe(Effect.orDie);
       return null;
     }
+    const sealed = yield* sealSummary(chat.userId, text);
     const updatedAt = yield* Clock.currentTimeMillis;
     if (existing) {
       yield* writer
         .table("ninaSummaries")
-        .patch(existing._id, { text, throughOrder, updatedAt, usage })
+        .patch(existing._id, { text: sealed, throughOrder, updatedAt, usage })
         .pipe(Effect.orDie);
       return null;
     }
     yield* writer
       .table("ninaSummaries")
-      .insert({ chatId, text, throughOrder, updatedAt, usage })
+      .insert({ chatId, text: sealed, throughOrder, updatedAt, usage })
       .pipe(Effect.orDie);
     return null;
   })

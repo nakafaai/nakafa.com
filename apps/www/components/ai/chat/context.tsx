@@ -9,8 +9,8 @@ import {
 } from "@confect/react";
 import { type UIMessagesQuery, useUIMessages } from "@convex-dev/agent/react";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import nina from "@repo/backend/confect/_generated/refs/nina";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
@@ -90,7 +90,7 @@ const optimisticCancel: OptimisticUpdate<typeof nina.lifecycle.cancel> = (
 /** Keeps admitted and optimistic prompts stable until the Agent feed catches up. */
 function useMessages(
   chatId: Id<"chats">,
-  chat: Docs["chats"] | undefined,
+  chat: ChatView | undefined,
   pagination: ReturnType<typeof useUIMessages<MessagesQuery>>
 ) {
   const openingChat = useAi((state) => state.openingChat);

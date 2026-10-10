@@ -5,6 +5,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { openChat, sealTitle } from "@repo/backend/confect/chats/title";
 import spec from "@repo/backend/confect/nina/presentation.spec";
 import { Effect, Layer } from "effect";
 
@@ -45,10 +46,15 @@ const save = FunctionImpl.make(
         .patch(turn._id, { suggestions: args.suggestions })
         .pipe(Effect.orDie);
     }
-    if (args.title && (!chat.title || chat.title === DEFAULT_TITLE)) {
+    if (!args.title) {
+      return null;
+    }
+    // Only a chat that still has the default title takes the generated one.
+    const current = (yield* openChat(chat)).title;
+    if (!current || current === DEFAULT_TITLE) {
       yield* writer
         .table("chats")
-        .patch(chat._id, { title: args.title })
+        .patch(chat._id, { title: yield* sealTitle(chat.userId, args.title) })
         .pipe(Effect.orDie);
     }
     return null;

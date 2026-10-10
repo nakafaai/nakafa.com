@@ -10,7 +10,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useTimeout } from "@mantine/hooks";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -58,7 +58,7 @@ export function AiChatHeader() {
 }
 
 /** Render title, visibility, sharing, and deletion controls for one chat. */
-function AiChatHeaderContent({ chat }: { chat: Docs["chats"] }) {
+function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const tCommon = useTranslations("Common");
   const actionErrorMessage = tCommon("action-error");
   const t = useTranslations("Ai");
