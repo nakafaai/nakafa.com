@@ -1,4 +1,4 @@
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import type { MetadataRoute } from "next";
 
 /** Generates robots.txt with the canonical sitemap index URL. */
@@ -8,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: `https://${MAIN_DOMAIN}/sitemap.xml`,
+    sitemap: `${SITE_ORIGIN}/sitemap.xml`,
   };
 }

@@ -1,11 +1,10 @@
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { getCachedSitemapDescriptors } from "@/lib/sitemap/catalog";
 import { buildSitemapIndexXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
 
 const sitemapIndexError = "Internal Server Error";
-const canonicalSitemapOrigin = `https://${MAIN_DOMAIN}`;
 
 /** Serves the conventional sitemap index that points at bounded sitemap pages. */
 export function GET() {
@@ -35,7 +34,7 @@ const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
     );
     const urls = Arr.map(
       descriptors,
-      (descriptor) => `${canonicalSitemapOrigin}/sitemap/${descriptor.id}.xml`
+      (descriptor) => `${SITE_ORIGIN}/sitemap/${descriptor.id}.xml`
     );
 
     return new Response(buildSitemapIndexXml(urls), {

@@ -1,3 +1,4 @@
+import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Array as Arr } from "effect";
 import type { NextConfig } from "next";
 
@@ -93,7 +94,7 @@ export function createSecurityHeaders({
           "frame-ancestors 'none'",
           "base-uri 'self'",
           "form-action 'self' https://accounts.google.com",
-          "manifest-src 'self' https://nakafa.com",
+          `manifest-src 'self' https://${MAIN_DOMAIN}`,
         ],
         "; "
       ),

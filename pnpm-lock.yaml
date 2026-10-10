@@ -1083,6 +1083,9 @@ importers:
       '@nakafa/aksara-contracts':
         specifier: 0.48.7
         version: 0.48.7(effect@4.0.2)
+      '@repo/next-config':
+        specifier: workspace:*
+        version: link:../next-config
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
