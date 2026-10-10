@@ -6,6 +6,7 @@ import {
   TooltipLabel,
   type TooltipLabelProps,
 } from "@repo/design-system/components/evilcharts/ui/tooltip-item";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type * as React from "react";
@@ -15,8 +16,31 @@ import type {
   ValueType,
 } from "recharts/types/component/DefaultTooltipContent";
 
-export type TooltipRoundness = "sm" | "md" | "lg" | "xl";
-export type TooltipVariant = "default" | "frosted-glass";
+/** The tooltip surface: its corner radius and its background. */
+const tooltipVariants = cva(
+  "grid min-w-32 items-start gap-1.5 border border-border/50 px-2.5 py-1.5 text-xs shadow-xl",
+  {
+    variants: {
+      roundness: {
+        lg: "rounded-lg",
+        md: "rounded-md",
+        sm: "rounded-sm",
+        xl: "rounded-xl",
+      },
+      variant: {
+        default: "bg-background",
+        "frosted-glass": "bg-background/70 backdrop-blur-sm",
+      },
+    },
+  }
+);
+
+export type TooltipRoundness = NonNullable<
+  VariantProps<typeof tooltipVariants>["roundness"]
+>;
+export type TooltipVariant = NonNullable<
+  VariantProps<typeof tooltipVariants>["variant"]
+>;
 
 type TooltipPayloadItem = NonNullable<
   DefaultTooltipContentProps<ValueType, NameType>["payload"]
@@ -28,18 +52,6 @@ function getTooltipItemKey(item: TooltipPayloadItem, nameKey?: string) {
   const key = `${payloadName ?? item.name ?? item.dataKey ?? "value"}`;
   return `${key}-${String(item.dataKey ?? item.name ?? item.value)}`;
 }
-
-const roundnessMap: Record<TooltipRoundness, string> = {
-  sm: "rounded-sm",
-  md: "rounded-md",
-  lg: "rounded-lg",
-  xl: "rounded-xl",
-};
-
-const variantMap: Record<TooltipVariant, string> = {
-  default: "bg-background",
-  "frosted-glass": "bg-background/70 backdrop-blur-sm",
-};
 
 function ChartTooltipContent({
   active,
@@ -90,14 +102,7 @@ function ChartTooltipContent({
   };
 
   return (
-    <div
-      className={cn(
-        "grid min-w-32 items-start gap-1.5 border border-border/50 px-2.5 py-1.5 text-xs shadow-xl",
-        roundnessMap[roundness],
-        variantMap[variant],
-        className
-      )}
-    >
+    <div className={cn(tooltipVariants({ roundness, variant }), className)}>
       {nestLabel ? null : <TooltipLabel {...labelProps} />}
       <div className="grid gap-1.5">
         {Arr.map(payload, (item, index) => {
