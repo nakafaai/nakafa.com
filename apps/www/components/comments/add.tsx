@@ -20,7 +20,7 @@ import { useTranslations } from "next-intl";
 import { type SubmitEventHandler, useState, useTransition } from "react";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
-import { getInitialName } from "@/lib/utils/helper";
+import { getInitialName } from "@/lib/identity/initials";
 
 interface Props {
   closeButton?: {

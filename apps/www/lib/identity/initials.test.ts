@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { getInitialName } from "@/lib/utils/helper";
+import { getInitialName } from "@/lib/identity/initials";
 
 describe("getInitialName", () => {
   it("uses the default initials when the name is absent", () => {

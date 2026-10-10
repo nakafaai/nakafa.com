@@ -36,8 +36,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context";
 import { useForumReactionMutation } from "@/components/school/classes/forum/reaction/mutation.client";
-import { getLocale } from "@/lib/utils/date";
-import { getInitialName } from "@/lib/utils/helper";
+import { getLocale } from "@/lib/i18n/date";
+import { getInitialName } from "@/lib/identity/initials";
 
 /** Renders the forum starter card at the top of the transcript. */
 export function ForumHeader() {

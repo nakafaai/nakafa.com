@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { getLocale } from "@/lib/utils/date";
+import { getLocale } from "@/lib/i18n/date";
 
 describe("getLocale", () => {
   it("returns the English date locale", () => {

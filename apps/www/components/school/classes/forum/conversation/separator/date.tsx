@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { useLocale } from "next-intl";
 
-import { getLocale } from "@/lib/utils/date";
+import { getLocale } from "@/lib/i18n/date";
 
 /** Renders the calendar separator between transcript day groups. */
 export function ConversationDateSeparator({ value }: { value: number }) {

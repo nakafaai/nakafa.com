@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/confect/schools/invitations";
 import { InvitationError } from "@repo/backend/confect/schools/invitations/spec";
 import spec from "@repo/backend/confect/schools/mutations.spec";
-import { slugify } from "@repo/backend/confect/utils/text";
+import { slugify } from "@repo/backend/confect/schools/slugify";
 import { Clock, Effect, Layer } from "effect";
 
 /**

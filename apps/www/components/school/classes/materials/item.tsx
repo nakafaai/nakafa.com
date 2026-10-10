@@ -46,7 +46,7 @@ import { getMaterialStatus } from "@/components/school/classes/materials/status"
 import type { MaterialGroup } from "@/components/school/classes/materials/types";
 import { formatScheduledAt } from "@/components/school/classes/schedule";
 import { reportClientException } from "@/lib/analytics/client";
-import { getLocale } from "@/lib/utils/date";
+import { getLocale } from "@/lib/i18n/date";
 
 /** Return the badge variant used for one material-group status. */
 function getBadgeVariant(

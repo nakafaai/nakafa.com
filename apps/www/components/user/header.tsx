@@ -16,7 +16,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { useViewer } from "@/lib/identity/client";
-import { getInitialName } from "@/lib/utils/helper";
+import { getInitialName } from "@/lib/identity/initials";
 
 export function UserHeader({
   userId,
