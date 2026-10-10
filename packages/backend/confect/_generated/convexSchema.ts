@@ -86,6 +86,7 @@ import tryoutSectionAttempts from "./tables/tryoutSectionAttempts";
 import tryoutSetProgress from "./tables/tryoutSetProgress";
 import userLearningRecents from "./tables/userLearningRecents";
 import users from "./tables/users";
+import vaultKeys from "./tables/vaultKeys";
 import welcomeEmailIntents from "./tables/welcomeEmailIntents";
 
 export default $defineSchema({
@@ -174,5 +175,6 @@ export default $defineSchema({
   tryoutSetProgress: $Table.tableDefinition(tryoutSetProgress),
   userLearningRecents: $Table.tableDefinition(userLearningRecents),
   users: $Table.tableDefinition(users),
+  vaultKeys: $Table.tableDefinition(vaultKeys),
   welcomeEmailIntents: $Table.tableDefinition(welcomeEmailIntents),
 });

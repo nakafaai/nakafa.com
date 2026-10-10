@@ -9787,6 +9787,11 @@ export declare const internal: {
       >;
     };
   };
+  vault: {
+    keys: {
+      rewrap: FunctionReference<"mutation", "internal", {}, number>;
+    };
+  };
 };
 
 export declare const components: {

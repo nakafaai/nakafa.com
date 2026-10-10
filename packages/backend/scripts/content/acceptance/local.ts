@@ -81,6 +81,7 @@ const localEnvironment = {
   RESEND_API_KEY: "build-disabled",
   RESEND_WEBHOOK_SECRET: "build-disabled",
   SITE_URL: "http://localhost:3000",
+  VAULT_ROOT_KEYS: "local:YWNjZXB0YW5jZS1sb2NhbC12YXVsdC1yb290LWtleSE=",
 };
 
 /** Returns child-only app values; no application environment file is written. */

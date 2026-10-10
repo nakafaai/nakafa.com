@@ -5,6 +5,7 @@ import { cleanupUserSchoolData } from "@repo/backend/confect/auth/cleanup/school
 import { cleanupUserSocialData } from "@repo/backend/confect/auth/cleanup/social";
 import { cleanupUserTryouts } from "@repo/backend/confect/auth/cleanup/tryouts";
 import { cleanupFinalizedAccountDeletion } from "@repo/backend/confect/auth/deletion/cancel";
+import { shredLearnerKeys } from "@repo/backend/confect/vault/keys";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
@@ -32,6 +33,10 @@ export const cleanupDeletedUserProgram = Effect.fn(
     return true;
   }
   if (yield* cleanupUserConsents(userId)) {
+    return true;
+  }
+  // The vault key goes after every row it sealed, so nothing is left to open.
+  if (yield* shredLearnerKeys(userId)) {
     return true;
   }
   if (yield* cleanupFinalizedAccountDeletion(userId)) {

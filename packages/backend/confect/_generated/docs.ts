@@ -86,6 +86,7 @@ export type TryoutSectionAttemptsDoc = Document.Document<typeof schemaDefinition
 export type TryoutSetProgressDoc = Document.Document<typeof schemaDefinition, "tryoutSetProgress">;
 export type UserLearningRecentsDoc = Document.Document<typeof schemaDefinition, "userLearningRecents">;
 export type UsersDoc = Document.Document<typeof schemaDefinition, "users">;
+export type VaultKeysDoc = Document.Document<typeof schemaDefinition, "vaultKeys">;
 export type WelcomeEmailIntentsDoc = Document.Document<typeof schemaDefinition, "welcomeEmailIntents">;
 
 export interface Docs {
@@ -174,5 +175,6 @@ export interface Docs {
   tryoutSetProgress: TryoutSetProgressDoc;
   userLearningRecents: UserLearningRecentsDoc;
   users: UsersDoc;
+  vaultKeys: VaultKeysDoc;
   welcomeEmailIntents: WelcomeEmailIntentsDoc;
 }

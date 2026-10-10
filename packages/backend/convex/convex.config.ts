@@ -31,6 +31,9 @@ const app = defineApp({
     POSTHOG_HOST: v.string(),
     POSTHOG_PROJECT_ID: v.string(),
     POSTHOG_PROJECT_TOKEN: v.string(),
+    // Root keys that wrap each learner's vault key. A deployment without them
+    // must not start, because nothing sealed could be read or written.
+    VAULT_ROOT_KEYS: v.string(),
   },
 });
 app.use(betterAuth);
