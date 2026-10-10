@@ -41,7 +41,6 @@ const attachment = {
 };
 const admission = {
   requestId: "first",
-  modelId: "nakafa-lite",
   input: {
     kind: "message",
     prompt: { text: "Explain this diagram" },
@@ -154,7 +153,7 @@ describe("native Nina attachment ownership", () => {
       }),
     }));
     expect(state.grant).toBeNull();
-    expect(state.user?.credits).toBe(8);
+    expect(state.user?.credits).toBe(5);
     expect(state.file).toMatchObject({ refcount: 1, mediaType: "image/png" });
     expect(state.prompt[0]).toMatchObject({
       fileIds: [fileId],
@@ -292,7 +291,6 @@ describe("native Nina attachment ownership", () => {
       refs.public.nina.turns.start,
       await owner.mutation(start, {
         requestId: "retry",
-        modelId: "nakafa-lite",
         chatId: first.chatId,
         input: { kind: "retry", order: first.order },
       })
@@ -320,7 +318,6 @@ describe("native Nina attachment ownership", () => {
     await expect(
       owner.mutation(start, {
         requestId: "missing",
-        modelId: "nakafa-lite",
         chatId: first.chatId,
         input: { kind: "retry", order: 999 },
       })
@@ -413,7 +410,6 @@ describe("native Nina attachment ownership", () => {
     await f.owner.mutation(cancel, { chatId: first.chatId });
     const retry = {
       requestId: "retry-error",
-      modelId: "nakafa-lite",
       chatId: first.chatId,
       input: { kind: "retry", order: first.order },
     };

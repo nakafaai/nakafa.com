@@ -10,7 +10,6 @@ import {
   type GatewayFailure,
 } from "@repo/backend/confect/gateway/failure";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
-import type { ModelId } from "@repo/backend/confect/gateway/model";
 import { streamCapability } from "@repo/backend/confect/nina/capability/progress";
 import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
@@ -39,7 +38,6 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
   userId: Docs["users"]["_id"],
   context: AgentContext,
   locale: Locale,
-  modelId: ModelId,
   usageHandler: UsageHandler
 ) {
   const services = yield* Effect.context<ActionCtx | Gateway | QueryRunner>();
@@ -68,7 +66,6 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   userId,
                   context,
                   locale,
-                  modelId,
                   task: formatSpecialistToolTask(input),
                   publish,
                   usageHandler,
@@ -115,7 +112,6 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   userId,
                   context,
                   locale,
-                  modelId,
                   task: formatSpecialistToolTask(input),
                   sourceReferences: getSourceReferencesFromMessages(messages),
                   toolCallId,
@@ -170,7 +166,6 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   userId,
                   context,
                   locale,
-                  modelId,
                   task: formatSpecialistToolTask(input),
                   publish,
                   usageHandler,

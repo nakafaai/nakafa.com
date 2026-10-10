@@ -8,7 +8,6 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { boundText } from "@repo/backend/confect/nina/budget";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
@@ -93,10 +92,7 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
     if (!text) {
       return;
     }
-    const handle = (yield* Gateway).language({
-      purpose: "background",
-      model: defaultModel,
-    });
+    const handle = (yield* Gateway).language("background");
     const agent = new Agent(components.nina, {
       instructions: `${INSTRUCTIONS}\n\n${formatKnown(learner.profile, memory.facts)}`,
       languageModel: handle.model,

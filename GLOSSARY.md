@@ -64,7 +64,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 ## AI Gateway
 
-- **Gateway handle**: A language model prepared for one purpose and model key, with its reasoning default and deadlines. It is the only way Nakafa code reaches a model.
+- **Gateway handle**: A language model prepared for one purpose, with its reasoning default and deadlines. It is the only way Nakafa code reaches a model.
 - **Purpose**: Why Nakafa calls a model, such as chat, specialist, background, suggestion, or presentation. It sets a handle's deadlines and reasoning effort.
 - **Gateway failure**: The one classification of a failed model call, carrying routing facts only and never the prompt, the answer, or a provider message.
 

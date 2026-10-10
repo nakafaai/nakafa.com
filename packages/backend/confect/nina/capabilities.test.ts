@@ -154,7 +154,6 @@ describe("Nina capability execution policy", () => {
                       },
               },
               "en",
-              specialistRequest.modelId,
               vi.fn()
             );
             const ctx = yield* ActionCtx;
@@ -217,7 +216,6 @@ describe("Nina capability execution policy", () => {
             expect.objectContaining({
               userId: expect.any(String),
               locale: "en",
-              modelId: specialistRequest.modelId,
             })
           );
           const expectedText = {

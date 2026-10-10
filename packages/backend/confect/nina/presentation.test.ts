@@ -48,7 +48,7 @@ describe("Nina presentation after an answer", () => {
       expect(state.turn?.state.status).toBe("complete");
       expect(state.turn?.suggestions).toBeUndefined();
       expect(state.chat?.title).toBeUndefined();
-      expect(state.user?.credits).toBe(8);
+      expect(state.user?.credits).toBe(5);
     }
   );
 
@@ -163,7 +163,7 @@ describe("Nina presentation after an answer", () => {
       "How does this relate to continuity?",
     ]);
     expect(state.chat?.title).toBe("Understanding A Function Limit");
-    expect(state.user?.credits).toBe(8);
+    expect(state.user?.credits).toBe(5);
     expect(state.ledger).toHaveLength(1);
   });
 

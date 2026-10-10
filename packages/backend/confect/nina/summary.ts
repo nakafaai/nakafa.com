@@ -8,7 +8,6 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
 import { Array as Arr, Effect, Schema } from "effect";
@@ -128,10 +127,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       anchor
     );
     const ctx = yield* ActionCtx;
-    const handle = (yield* Gateway).language({
-      purpose: "background",
-      model: defaultModel,
-    });
+    const handle = (yield* Gateway).language("background");
     const agent = new Agent(components.nina, {
       instructions: INSTRUCTIONS,
       languageModel: handle.model,

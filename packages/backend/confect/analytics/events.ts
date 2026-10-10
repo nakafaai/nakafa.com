@@ -8,12 +8,14 @@ import {
   checkoutLocaleValidator,
   polarCheckoutLocaleValidator,
 } from "@repo/backend/confect/customers/checkout/localization";
-import { ModelId } from "@repo/backend/confect/gateway/model";
 import {
   contentTypeValidator,
   localeValidator,
 } from "@repo/backend/confect/lib/validators/contents";
-import { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
+import {
+  NinaFailureReason,
+  RetiredModelKey,
+} from "@repo/backend/confect/nina/contract/turn";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/confect/tryouts/access/source";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoreStatusValidator } from "@repo/backend/confect/tryouts/score";
@@ -77,7 +79,7 @@ export const productAnalyticsEventValidator = Schema.Union([
     name: Schema.Literal("chat message sent"),
     properties: Schema.Struct({
       chat_type: chatTypeValidator,
-      model_id: Schema.optionalKey(ModelId),
+      model_id: Schema.optionalKey(RetiredModelKey),
     }),
   }),
   Schema.Struct({
@@ -86,7 +88,6 @@ export const productAnalyticsEventValidator = Schema.Union([
       chat_type: chatTypeValidator,
       credits: optionalNumber,
       input_tokens: optionalNumber,
-      model_id: Schema.optionalKey(ModelId),
       output_tokens: optionalNumber,
       total_tokens: optionalNumber,
     }),
@@ -96,7 +97,6 @@ export const productAnalyticsEventValidator = Schema.Union([
     properties: Schema.Struct({
       chat_type: chatTypeValidator,
       error_code: NinaFailureReason,
-      model_id: Schema.optionalKey(ModelId),
     }),
   }),
   Schema.Struct({

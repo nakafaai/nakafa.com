@@ -308,7 +308,7 @@ describe("Nina generation through the real Agent component", () => {
     ]);
     expect(state.chat?.activeTurnId).toBeUndefined();
     expect(languageModel.doGenerateCalls).toHaveLength(0);
-    expect(state.user?.credits).toBe(8);
+    expect(state.user?.credits).toBe(5);
     expect(state.messages.page).toHaveLength(2);
     const answer = Option.getOrUndefined(
       Arr.findFirst(

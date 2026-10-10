@@ -83,7 +83,6 @@ async function fixture() {
     refs.public.nina.turns.start,
     await owner.mutation(start, {
       requestId: "first",
-      modelId: "nakafa-lite",
       input: {
         kind: "message",
         prompt: { text: "Explain the lesson", uploadIds: [uploadId] },

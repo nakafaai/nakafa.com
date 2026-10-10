@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { defaultModel, ModelId } from "@repo/backend/confect/gateway/model";
 import { encodeJsonText } from "@repo/utilities/json";
 import { DateTime, Record as Rec, Schema } from "effect";
 import { createAiStore } from "@/components/ai/store/create";
@@ -14,7 +13,6 @@ const StoredAiState = Schema.fromJsonString(
 );
 const chatId = Schema.decodeUnknownSync(Id("chats"))("chat_1");
 const otherChatId = Schema.decodeUnknownSync(Id("chats"))("chat_2");
-const otherModel = ModelId.make("nakafa-pro");
 const receipt = {
   chatId,
   order: 0,
@@ -35,7 +33,7 @@ describe("ai/store/create", () => {
     vi.useRealTimers();
   });
 
-  it("starts with a closed sheet, no chat, and the default model", () => {
+  it("starts with a closed sheet and no chat", () => {
     const store = createAiStore();
 
     expect(store.getState()).toMatchObject({
@@ -43,13 +41,11 @@ describe("ai/store/create", () => {
       ask: null,
       chatDrafts: [],
       contextTitle: null,
-      model: defaultModel,
       open: false,
       openingChat: null,
       text: "",
       warmed: false,
     });
-    expect(store.getState().getModel()).toBe(defaultModel);
   });
 
   it("admits one ask at a time and opens the sheet for it", () => {
@@ -87,14 +83,13 @@ describe("ai/store/create", () => {
   it("keeps the reference of every part an admitted ask did not change", () => {
     const store = createAiStore();
     store.getState().setText("Half typed");
-    const { chatDrafts, contextTitle, model, text } = store.getState();
+    const { chatDrafts, contextTitle, text } = store.getState();
 
     store.getState().openAsk({ id: "ask-1", text: "Explain" });
 
     const next = store.getState();
     expect(next.chatDrafts).toBe(chatDrafts);
     expect(next.contextTitle).toBe(contextTitle);
-    expect(next.model).toBe(model);
     expect(next.text).toBe(text);
   });
 
@@ -185,7 +180,7 @@ describe("ai/store/create", () => {
     const store = createAiStore();
     store.getState().addChatDraft("draft-1");
     store.getState().addChatDraft("draft-2");
-    const { model, text } = store.getState();
+    const { text } = store.getState();
 
     store.getState().resolveChatDraft("draft-1", receipt);
 
@@ -199,7 +194,6 @@ describe("ai/store/create", () => {
         ),
       },
     });
-    expect(store.getState().model).toBe(model);
     expect(store.getState().text).toBe(text);
   });
 
@@ -216,14 +210,13 @@ describe("ai/store/create", () => {
     expect(listener).not.toHaveBeenCalled();
   });
 
-  it("sets the chat, title, model, and opening chat without touching the drafts", () => {
+  it("sets the chat, title, and opening chat without touching the drafts", () => {
     const store = createAiStore();
     store.getState().addChatDraft("draft-1");
     const { chatDrafts } = store.getState();
 
     store.getState().setActiveChatId(chatId);
     store.getState().setContextTitle("Algebra");
-    store.getState().setModel(otherModel);
     store.getState().setOpeningChat({
       prompt: receipt.prompt,
       receipt,
@@ -233,10 +226,8 @@ describe("ai/store/create", () => {
     expect(store.getState()).toMatchObject({
       activeChatId: chatId,
       contextTitle: "Algebra",
-      model: otherModel,
       openingChat: { submittedAt: 1 },
     });
-    expect(store.getState().getModel()).toBe(otherModel);
     expect(store.getState().chatDrafts).toBe(chatDrafts);
 
     store.getState().setActiveChatId(null);
@@ -305,7 +296,6 @@ describe("ai/store/create", () => {
 
     expect(store.getState()).toMatchObject({
       activeChatId: chatId,
-      model: defaultModel,
       open: false,
     });
   });

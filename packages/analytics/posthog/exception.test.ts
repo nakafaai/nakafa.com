@@ -85,11 +85,22 @@ describe("operational exception privacy", () => {
     expect(
       Option.getOrUndefined(
         decodeOperationalExceptionProperties({
+          gateway_model_id: "google/gemini-3.8-flash",
+          source: "chat-api",
+        })
+      )
+    ).toEqual({
+      gateway_model_id: "google/gemini-3.8-flash",
+      source: "chat-api",
+    });
+    expect(
+      Option.isNone(
+        decodeOperationalExceptionProperties({
           model_id: "nakafa-lite",
           source: "chat-api",
         })
       )
-    ).toEqual({ model_id: "nakafa-lite", source: "chat-api" });
+    ).toBe(true);
     expect(
       Option.isNone(
         decodeOperationalExceptionProperties({

@@ -82,7 +82,6 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
     .table("creditTransactions")
     .patch(turn.transactionId, {
       metadata: {
-        modelId: turn.modelId,
         chatId: turn.chatId,
         turnId: turn._id,
         phase: status,
@@ -143,7 +142,6 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
               name: "chat response completed",
               properties: {
                 chat_type: chat.type,
-                model_id: turn.modelId,
                 credits: turn.credits,
                 input_tokens: input,
                 output_tokens: output,
@@ -154,7 +152,6 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
               name: "chat response failed",
               properties: {
                 chat_type: chat.type,
-                model_id: turn.modelId,
                 error_code: failure ?? "interrupted",
               },
             },

@@ -3,7 +3,6 @@ import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import type { ModelId } from "@repo/backend/confect/gateway/model";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { encodePrettyJsonText, JsonTextSchema } from "@repo/utilities/json";
 import {
@@ -39,14 +38,12 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   error,
   inputSchema,
   instructions,
-  modelId,
   task,
   toolCall,
   tools,
   usageHandler,
 }: MathRepairOptions & {
   readonly userId: Docs["users"]["_id"];
-  readonly modelId: ModelId;
   readonly task: string;
   readonly usageHandler: UsageHandler;
 }) {
@@ -71,10 +68,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     onSome: (input) => encodePrettyJsonText(input),
   });
   const ctx = yield* ActionCtx;
-  const handle = (yield* Gateway).language({
-    purpose: "background",
-    model: modelId,
-  });
+  const handle = (yield* Gateway).language("background");
   const agent = new Agent(components.nina, {
     name: "math-repair",
     usageHandler,

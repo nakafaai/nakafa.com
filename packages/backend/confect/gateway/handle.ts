@@ -1,22 +1,14 @@
 import {
-  ModelKey,
-  models,
+  languageModelId,
   reasoning,
 } from "@repo/backend/confect/gateway/model";
 import {
   type Deadline,
-  Purpose,
+  type Purpose,
   purposes,
 } from "@repo/backend/confect/gateway/purpose";
 import { defaultSettingsMiddleware, wrapLanguageModel } from "ai";
-import { Context, Schema } from "effect";
-
-/** What one model call is for and which model it runs. */
-const LanguageRequest = Schema.Struct({
-  model: ModelKey,
-  purpose: Purpose,
-});
-type LanguageRequest = typeof LanguageRequest.Type;
+import { Context } from "effect";
 
 /** The one way Nakafa reaches a model. */
 export class Gateway extends Context.Service<
@@ -27,7 +19,7 @@ export class Gateway extends Context.Service<
      * outermost middleware, so a call may override them; call sites pass
      * `timeout` unchanged.
      */
-    readonly language: (request: LanguageRequest) => {
+    readonly language: (purpose: Purpose) => {
       readonly model: ReturnType<typeof wrapLanguageModel>;
       readonly timeout: Deadline;
     };
@@ -45,11 +37,11 @@ export function make(provider: {
   readonly languageModel: (modelId: string) => LanguageModel;
 }): Gateway["Service"] {
   return Gateway.of({
-    language: ({ model, purpose }) => {
+    language: (purpose) => {
       const { effort, timeout } = purposes[purpose];
       return {
         model: wrapLanguageModel({
-          model: provider.languageModel(models[model]),
+          model: provider.languageModel(languageModelId),
           middleware: defaultSettingsMiddleware({
             settings: {
               providerOptions: {

@@ -3,7 +3,6 @@ import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import type { NinaToolSet } from "@repo/backend/confect/nina/step";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -43,10 +42,7 @@ export const repairToolCall = Effect.fn("nina.repair")(
     });
     const tool = tools[toolCall.toolName];
     const ctx = yield* ActionCtx;
-    const handle = (yield* Gateway).language({
-      purpose: "background",
-      model: defaultModel,
-    });
+    const handle = (yield* Gateway).language("background");
     const agent = new Agent(components.nina, {
       name: "nina-repair",
       languageModel: handle.model,

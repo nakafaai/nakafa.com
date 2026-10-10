@@ -11,18 +11,14 @@ import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
 } from "@repo/backend/confect/credits/state";
-import type { ModelId, ModelKey } from "@repo/backend/confect/gateway/model";
 import {
   NinaCreditError,
   type NinaCreditHold,
 } from "@repo/backend/confect/nina/credits/schema";
 import { Clock, Effect, Struct } from "effect";
 
-/** Credits one Nina response holds and charges, by model. */
-const responseCredits = {
-  "nakafa-lite": 2,
-  "nakafa-pro": 5,
-} satisfies Record<ModelKey, number>;
+/** Credits one Nina response holds and charges. */
+const responseCredits = 5;
 
 // Admission quota is independent of refundable credits. Five starts may burst;
 // ten per minute permits interactive retries without unbounded hold cycling.
@@ -37,7 +33,7 @@ const chatRateLimiter = new RateLimiter(components.agentRateLimiter, {
 
 /** Atomically hold credits before provider work, using the SDK's transaction. */
 export const reserveCredits = Effect.fn("nina.credits.reserve")(
-  function* (user: Docs["users"], modelId: ModelId) {
+  function* (user: Docs["users"]) {
     const ctx = yield* MutationCtxService;
     const now = yield* Clock.currentTimeMillis;
     const state = yield* resolveEffectiveCreditState(user, now).pipe(
@@ -49,9 +45,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
           })
       )
     );
-    const model: ModelKey = modelId;
-    const credits = responseCredits[model];
-    if (state.credits < credits) {
+    if (state.credits < responseCredits) {
       return yield* new NinaCreditError({
         code: "INSUFFICIENT_CREDITS",
         message: "Not enough credits to start this response.",
@@ -86,7 +80,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
         })
         .pipe(Effect.orDie);
     }
-    const balance = state.credits - credits;
+    const balance = state.credits - responseCredits;
     yield* database
       .table("users")
       .patch(user._id, {
@@ -98,19 +92,17 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
       .table("creditTransactions")
       .insert({
         userId: user._id,
-        amount: -credits,
+        amount: -responseCredits,
         type: "usage",
         balanceAfter: balance,
         metadata: {
-          modelId,
           phase: "reserved",
         },
       })
       .pipe(Effect.orDie);
     return {
       userId: user._id,
-      modelId,
-      credits,
+      credits: responseCredits,
       creditsResetAt: state.creditsResetAt,
       transactionId,
       ...Struct.pick(user, ["planCreditGrantId"]),
@@ -182,7 +174,6 @@ export const refundCredits = Effect.fn("nina.credits.refund")(
           type: "refund",
           balanceAfter: balance,
           metadata: {
-            modelId: turn.modelId,
             reservationId,
           },
         })

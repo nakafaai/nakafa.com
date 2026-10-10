@@ -26,7 +26,6 @@ const OperationalExceptionPropertiesSchema = Schema.Struct({
   language: Schema.optional(shortTextSchema),
   locale: Schema.optional(shortTextSchema),
   method: Schema.optional(shortTextSchema),
-  model_id: Schema.optional(shortTextSchema),
   nextjs_digest: Schema.optional(identityTextSchema),
   operation: Schema.optional(shortTextSchema),
   programKey: Schema.optional(identityTextSchema),

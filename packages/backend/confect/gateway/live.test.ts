@@ -110,10 +110,7 @@ describe("The production gateway", () => {
       serviceToken.mockResolvedValue("service-token");
       fetch.mockResolvedValue(Response.json(completion));
       return Effect.gen(function* () {
-        const handle = (yield* Gateway).language({
-          purpose,
-          model: "nakafa-pro",
-        });
+        const handle = (yield* Gateway).language(purpose);
         const result = yield* Effect.promise(() =>
           handle.model.doGenerate({ prompt })
         );
@@ -128,7 +125,7 @@ describe("The production gateway", () => {
           init?.body
         );
         expect(body).toMatchObject({
-          model: "google/gemini-3.7-flash",
+          model: "google/gemini-3.8-flash",
           reasoning_effort: effort,
         });
       }).pipe(deployed);
@@ -145,10 +142,7 @@ describe("The production gateway", () => {
         })
       );
       return Effect.gen(function* () {
-        const handle = (yield* Gateway).language({
-          purpose: "chat",
-          model: "nakafa-pro",
-        });
+        const handle = (yield* Gateway).language("chat");
         const { stream } = yield* Effect.promise(() =>
           handle.model.doStream({ prompt })
         );

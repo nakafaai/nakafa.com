@@ -3350,7 +3350,6 @@ export declare const api: {
           };
           turn: {
             credits?: number;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             promptMessageId: string;
             promptedAt?: number;
@@ -3459,7 +3458,6 @@ export declare const api: {
             key: string;
             metadata?: {
               credits?: number;
-              modelId?: "nakafa-lite" | "nakafa-pro";
               order: number;
               promptMessageId: string;
               promptedAt?: number;
@@ -3577,7 +3575,7 @@ export declare const api: {
                   slug: string;
                 };
               };
-          modelId: "nakafa-lite" | "nakafa-pro";
+          modelId?: "nakafa-lite" | "nakafa-pro";
           requestId: string;
         },
         {
@@ -7876,7 +7874,6 @@ export declare const internal: {
                     chat_type: "study";
                     credits?: number;
                     input_tokens?: number;
-                    model_id?: "nakafa-lite" | "nakafa-pro";
                     output_tokens?: number;
                     total_tokens?: number;
                   };
@@ -7896,7 +7893,6 @@ export declare const internal: {
                       | "response-limit"
                       | "interrupted"
                       | "unknown";
-                    model_id?: "nakafa-lite" | "nakafa-pro";
                   };
                 }
               | {
@@ -8401,7 +8397,7 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
-            modelId: "nakafa-lite" | "nakafa-pro";
+            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -8889,7 +8885,7 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
-            modelId: "nakafa-lite" | "nakafa-pro";
+            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page: {
               locale: "en" | "id" | "de";

@@ -50,7 +50,6 @@ const MAX_MATH_STEPS = mathOperations.length;
 export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   userId,
   task,
-  modelId,
   locale,
   context,
   publish,
@@ -60,10 +59,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   readonly usageHandler: UsageHandler;
 }) {
   const ctx = yield* ActionCtx;
-  const { model, timeout } = (yield* Gateway).language({
-    purpose: "specialist",
-    model: modelId,
-  });
+  const { model, timeout } = (yield* Gateway).language("specialist");
   const math = yield* MathService.make.pipe(
     Effect.mapError(makeMathGenerationError)
   );
@@ -87,7 +83,6 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
             runPromise(
               repairMathToolCall({
                 ...options,
-                modelId,
                 task,
                 userId,
                 usageHandler,

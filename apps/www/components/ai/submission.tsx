@@ -225,7 +225,6 @@ export function useNinaSubmission() {
   );
   const start = useMutation(nina.turns.start);
   const convex = useConvex();
-  const getModel = useAi((state) => state.getModel);
   const addChatDraft = useAi((state) => state.addChatDraft);
   const removeChatDraft = useAi((state) => state.removeChatDraft);
   const resolveChatDraft = useAi((state) => state.resolveChatDraft);
@@ -254,7 +253,6 @@ export function useNinaSubmission() {
           const payload = {
             ...(chatId ? { chatId } : {}),
             input,
-            modelId: getModel(),
           };
           const previous = uncertain.current;
           const same =

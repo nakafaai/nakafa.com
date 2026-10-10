@@ -1,9 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { make } from "@repo/backend/confect/gateway/handle";
-import { ModelKey } from "@repo/backend/confect/gateway/model";
 import { Purpose } from "@repo/backend/confect/gateway/purpose";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Effect } from "effect";
 
 const prompt = [
   { role: "user" as const, content: [{ type: "text" as const, text: "Hi" }] },
@@ -16,11 +15,6 @@ const answer = {
     outputTokens: { total: 1, text: 1, reasoning: 0 },
   },
   warnings: [],
-};
-/** The Convex gateway model each key runs. */
-const gatewayModels = {
-  "nakafa-lite": "google/gemini-3.5-flash-lite",
-  "nakafa-pro": "google/gemini-3.7-flash",
 };
 /** Chat reasons deeply; every supporting purpose reasons briefly. */
 const reasoning = {
@@ -52,15 +46,15 @@ function serve() {
 }
 
 describe("Gateway handles", () => {
-  it.effect.each(Arr.cartesian(Purpose.literals, ModelKey.literals))(
-    "gives %s on %s its gateway model, reasoning, and deadlines",
-    ([purpose, key]) =>
+  it.effect.each(Purpose.literals)(
+    "gives %s the gateway model, reasoning, and deadlines",
+    (purpose) =>
       Effect.gen(function* () {
         const { gateway, languageModel, model } = serve();
-        const handle = gateway.language({ purpose, model: key });
+        const handle = gateway.language(purpose);
         yield* Effect.promise(() => handle.model.doGenerate({ prompt }));
         expect(languageModel).toHaveBeenCalledExactlyOnceWith(
-          gatewayModels[key]
+          "google/gemini-3.8-flash"
         );
         expect(handle.timeout).toEqual(deadlines[purpose]);
         expect(model.doGenerateCalls[0]?.providerOptions).toEqual({
@@ -72,10 +66,7 @@ describe("Gateway handles", () => {
   it.effect("lets a call option override the default reasoning", () =>
     Effect.gen(function* () {
       const { gateway, model } = serve();
-      const handle = gateway.language({
-        purpose: "chat",
-        model: "nakafa-pro",
-      });
+      const handle = gateway.language("chat");
       yield* Effect.promise(() =>
         handle.model.doGenerate({
           prompt,
@@ -90,10 +81,7 @@ describe("Gateway handles", () => {
 
   it("keeps the served model's identity for usage accounting", () => {
     const { gateway, model } = serve();
-    const handle = gateway.language({
-      purpose: "background",
-      model: "nakafa-lite",
-    });
+    const handle = gateway.language("background");
     expect(handle.model.provider).toBe(model.provider);
     expect(handle.model.modelId).toBe(model.modelId);
   });

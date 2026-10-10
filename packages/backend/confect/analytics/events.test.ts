@@ -164,9 +164,8 @@ describe("analytics/events", () => {
             name: "chat response completed",
             properties: {
               chat_type: "study",
-              credits: 2,
+              credits: 5,
               input_tokens: 10,
-              model_id: "nakafa-lite",
               output_tokens: 20,
               total_tokens: 30,
             },
@@ -179,13 +178,29 @@ describe("analytics/events", () => {
     ).toBe(true);
     expect(
       Option.isSome(
+        Schema.decodeUnknownOption(productAnalyticsEventValidator)(
+          {
+            name: "chat response completed",
+            properties: {
+              chat_type: "study",
+              credits: 5,
+              model_id: "nakafa-lite",
+            },
+          },
+          {
+            onExcessProperty: "error",
+          }
+        )
+      )
+    ).toBe(false);
+    expect(
+      Option.isSome(
         Schema.decodeOption(productAnalyticsEventValidator)(
           {
             name: "chat response failed",
             properties: {
               chat_type: "study",
               error_code: "provider-unavailable",
-              model_id: "nakafa-lite",
             },
           },
           {

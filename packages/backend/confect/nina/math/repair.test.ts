@@ -9,7 +9,6 @@ import { provider } from "@repo/backend/test/gateway";
 import {
   providerStep,
   runSpecialist,
-  specialistRequest,
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { InvalidToolInputError, NoSuchToolError } from "ai";
@@ -38,7 +37,6 @@ const options = {
   tools: { algebra: { inputSchema: mathAlgebraInput } },
   toolCall,
   task: "Simplify x + x",
-  modelId: specialistRequest.modelId,
   usageHandler: vi.fn(),
 };
 const repaired = { operation: "simplify", expression: "x + x" };

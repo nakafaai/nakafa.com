@@ -33,8 +33,6 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
-
-import { AiChatModel } from "@/components/ai/chat/model";
 import { useAi } from "@/components/ai/context";
 
 interface Props {
@@ -117,7 +115,6 @@ export function NinaInput({
         >
           <NinaAttach />
           <div className="flex items-center gap-1">
-            <AiChatModel />
             <InputGroupButton
               aria-label={
                 status === "streaming" && !disabled

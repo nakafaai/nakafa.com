@@ -16,7 +16,6 @@ export function createAiStore() {
           set((state) => ({
             chatDrafts: Arr.prepend(state.chatDrafts, key),
           })),
-        getModel: () => get().model,
         // One new-chat admission at a time: a pending ask or composer draft
         // owns it, so a second one is refused atomically.
         openAsk: (ask) => {
@@ -74,7 +73,6 @@ export function createAiStore() {
           }),
         setActiveChatId: (activeChatId) => set({ activeChatId }),
         setContextTitle: (contextTitle) => set({ contextTitle }),
-        setModel: (model) => set({ model }),
         setOpeningChat: (openingChat) => set({ openingChat }),
         // An open sheet shows its body, so opening also warms it.
         setOpen: (open) =>

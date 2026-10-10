@@ -6,7 +6,6 @@ import type {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
-import { ModelId } from "@repo/backend/confect/gateway/model";
 import type {
   CapabilityArtifact,
   CapabilityProgress,
@@ -29,7 +28,6 @@ export const specialistRequest = {
     verified: false,
   },
   locale: "en",
-  modelId: ModelId.make("nakafa-lite"),
   task: "Verify the requested evidence.",
 } satisfies Omit<typeof TaskAgentDataSchema.Type, "userId">;
 

@@ -2,7 +2,6 @@ import { RegisteredConvexFunction } from "@confect/server";
 import { createThread, saveMessage, saveMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
-import { ModelId } from "@repo/backend/confect/gateway/model";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import {
@@ -38,7 +37,7 @@ export async function createNinaTest({
       return Promise.reject(new Error("Fixture user missing"));
     }
     const reservation = await Effect.runPromise(
-      reserveCredits(user, ModelId.make("nakafa-lite")).pipe(
+      reserveCredits(user).pipe(
         Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
       )
     );

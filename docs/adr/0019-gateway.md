@@ -71,9 +71,11 @@ tools with a warning.
   imported only inside `packages/backend/confect/gateway`. `@ai-sdk/gateway` is
   imported nowhere. `ai` still installs it as its own dependency, which the
   dependency policy allows.
-- **Models.** `nakafa-lite` runs `google/gemini-3.5-flash-lite` and
-  `nakafa-pro` runs `google/gemini-3.7-flash`. Stored model keys and ids need no
-  migration.
+- **Model.** Every call runs `google/gemini-3.8-flash`, the one model that
+  `gateway/model.ts` names. Learners cannot choose a model, so
+  `Gateway.language(purpose)` takes only the purpose, and every Nina answer
+  costs 5 credits. The model keys learners chose before October 2026 are retired:
+  stored rows keep them until a later contract change unsets them.
 - **Routing.** None is sent. Convex rejects routing options and enforces zero
   data retention itself. `gateway/route.ts` is deleted.
 - **Spend.** No tenant or person identifier goes to the gateway, so the `space`
@@ -214,8 +216,8 @@ Not yet established:
 
 ## Implementation Contract
 
-- `gateway/model.ts` owns the model keys, their gateway model ids, and the
-  reasoning effort of each effort.
+- `gateway/model.ts` owns the gateway model id and the reasoning effort of each
+  effort.
 - `gateway/handle.ts` builds every handle over one AI SDK provider, so the
   production adapter and tests set the same defaults.
 - `gateway/live.ts` holds the production layer and the one service token read.

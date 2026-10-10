@@ -11,7 +11,7 @@ import type { UserPlan } from "@repo/backend/confect/users/schema";
  */
 const PLAN_CREDIT_CONFIG: Record<UserPlan, typeof planCreditValidator.Type> = {
   free: {
-    amount: 10,
+    amount: 25,
     grantType: "daily-grant",
   },
   pro: {

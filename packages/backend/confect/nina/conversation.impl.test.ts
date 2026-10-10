@@ -20,7 +20,6 @@ const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const messages = Ref.getFunctionReference(refs.public.nina.messages.list);
 const input = {
   requestId: "one",
-  modelId: "nakafa-lite",
   input: {
     kind: "message",
     prompt: { text: "Explain a limit" },
@@ -93,8 +92,7 @@ describe("Nina conversation visibility", () => {
       promptMessageId: f.promptMessageId,
       promptedAt: NOW,
       state: { status: "queued" },
-      modelId: "nakafa-lite",
-      credits: 2,
+      credits: 5,
       usage: [],
     });
     const page = Ref.decodeReturnsSync(
