@@ -2,6 +2,7 @@ import { SCHOOL_ROUTE_SLUGS } from "@repo/backend/confect/schools/slug";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, HashSet, Option } from "effect";
+import { userSettingsSections } from "@/lib/settings/routes";
 
 const APPLICATION_ROUTE_ROOTS = HashSet.make(
   "articles",
@@ -54,9 +55,10 @@ function isUserPath(segments: readonly string[]) {
   }
 
   if (identity === "settings") {
-    return (
-      segments.length === 1 ||
-      (segments.length === 2 && child === "subscriptions")
+    // The settings table owns which pages exist below `user/settings`.
+    return Arr.some(
+      userSettingsSections,
+      ({ href }) => href === `/user/${Arr.join(segments, "/")}`
     );
   }
 
