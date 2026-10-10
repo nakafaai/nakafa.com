@@ -15,11 +15,14 @@ const derivation = {
   salt: new Uint8Array(),
 };
 
-/** Runs one Web Crypto call; any failure becomes the same secret-free error. */
-function run<Value>(call: () => PromiseLike<Value>) {
+/** Runs one Web Crypto call; a failure becomes a secret-free error with `reason`. */
+function run<Value>(
+  reason: typeof VaultError.Type.reason,
+  call: () => PromiseLike<Value>
+) {
   return Effect.tryPromise({
     try: () => Promise.resolve(call()),
-    catch: () => new VaultError({ reason: "cipher" }),
+    catch: () => new VaultError({ reason }),
   });
 }
 
@@ -52,10 +55,10 @@ function lengthOf(bytes: Uint8Array) {
 export const deriveKeys = Effect.fn("vault.cipher.deriveKeys")(function* (
   key: Uint8Array
 ) {
-  const base = yield* run(() =>
+  const base = yield* run("runtime", () =>
     crypto.subtle.importKey("raw", join([key]), "HKDF", false, ["deriveKey"])
   );
-  const encrypt = yield* run(() =>
+  const encrypt = yield* run("runtime", () =>
     crypto.subtle.deriveKey(
       { ...derivation, info: encoder.encode("nakafa/vault/seal/v1") },
       base,
@@ -64,7 +67,7 @@ export const deriveKeys = Effect.fn("vault.cipher.deriveKeys")(function* (
       ["encrypt", "decrypt"]
     )
   );
-  const nonce = yield* run(() =>
+  const nonce = yield* run("runtime", () =>
     crypto.subtle.deriveKey(
       { ...derivation, info: encoder.encode("nakafa/vault/nonce/v1") },
       base,
@@ -80,9 +83,12 @@ type Keys = Effect.Success<ReturnType<typeof deriveKeys>>;
 
 /**
  * Seals bytes for one binding with AES-256-GCM. The nonce is an HMAC of the
- * binding and the bytes under its own key, so sealing needs no random source
- * and one nonce can only ever meet one plaintext. The binding is authenticated
- * with the ciphertext: the value opens only under the same binding.
+ * binding and the bytes under its own key: Convex may run a mutation again with
+ * the same random seed, so a random nonce could repeat there, while this one
+ * repeats only for the same binding and the same bytes. The binding is
+ * authenticated with the ciphertext, so the value opens only under the same
+ * binding. Two things stay visible in a sealed value: its length, and whether
+ * two values under one key and one binding hold the same bytes.
  */
 export const seal = Effect.fn("vault.cipher.seal")(function* (
   keys: Keys,
@@ -90,7 +96,7 @@ export const seal = Effect.fn("vault.cipher.seal")(function* (
   plain: Uint8Array
 ) {
   const bound = encoder.encode(binding);
-  const mac = yield* run(() =>
+  const mac = yield* run("runtime", () =>
     crypto.subtle.sign(
       "HMAC",
       keys.nonce,
@@ -98,7 +104,7 @@ export const seal = Effect.fn("vault.cipher.seal")(function* (
     )
   );
   const nonce = new Uint8Array(mac).slice(0, NONCE_BYTES);
-  const sealed = yield* run(() =>
+  const sealed = yield* run("runtime", () =>
     crypto.subtle.encrypt(
       { additionalData: bound, iv: nonce, name: "AES-GCM" },
       keys.encrypt,
@@ -118,7 +124,7 @@ export const open = Effect.fn("vault.cipher.open")(function* (
   if (bytes[0] !== FORMAT || bytes.length < HEADER_BYTES + TAG_BYTES) {
     return yield* new VaultError({ reason: "cipher" });
   }
-  const plain = yield* run(() =>
+  const plain = yield* run("cipher", () =>
     crypto.subtle.decrypt(
       {
         additionalData: encoder.encode(binding),

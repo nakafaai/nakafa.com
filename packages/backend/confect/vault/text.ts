@@ -1,6 +1,7 @@
 import { open, seal } from "@repo/backend/confect/vault/cipher";
 import type { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import type { VaultField } from "@repo/backend/confect/vault/schema";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
 
 type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
@@ -8,9 +9,17 @@ type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-/** What a sealed text is bound to: one learner and one stored field. */
+/**
+ * What a sealed text is bound to: one learner and one stored field. The parts
+ * are encoded as a JSON list, so no two different triples share a binding.
+ */
 function fieldBinding(keys: LearnerKeys, field: typeof VaultField.Type) {
-  return `nakafa/vault/text/v1|user|${keys.userId}|${field.table}|${field.field}`;
+  return encodeJsonText([
+    "nakafa/vault/text/v1",
+    keys.userId,
+    field.table,
+    field.field,
+  ]);
 }
 
 /** Seals a text for one stored field of the learner who owns `keys`. */

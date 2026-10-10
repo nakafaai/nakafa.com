@@ -15,6 +15,7 @@ import { Base64 } from "effect/encoding";
 
 const memory = { field: "text", table: "ninaMemories" };
 const summary = { field: "text", table: "ninaSummaries" };
+const title = { field: "title", table: "ninaMemories" };
 const fact = "Lebih suka contoh soal dulu, baru rumusnya.";
 
 /** Creates one account and returns its id. */
@@ -88,6 +89,7 @@ describe("vault learner keys", () => {
           for (const [keys, field] of [
             [other, memory],
             [owner, summary],
+            [owner, title],
             [{ ...owner, userId: other.userId }, memory],
           ] as const) {
             expect(
@@ -118,6 +120,29 @@ describe("vault learner keys", () => {
       )
   );
 
+  it.effect("gives no key to a deleted or unknown account", () =>
+    scenario(
+      Effect.gen(function* () {
+        const writer = yield* DatabaseWriter;
+        const deleted = yield* learner("deleted");
+        yield* writer.table("users").patch(deleted, { deletedAt: 1 });
+        const gone = yield* learner("gone");
+        yield* writer.table("users").delete(gone);
+        for (const userId of [deleted, gone]) {
+          expect((yield* Effect.flip(ensureLearnerKeys(userId))).reason).toBe(
+            "key"
+          );
+        }
+        expect(
+          yield* (yield* DatabaseReader)
+            .table("vaultKeys")
+            .index("by_creation_time")
+            .collect()
+        ).toEqual([]);
+      })
+    )
+  );
+
   it.effect("shreds a learner's key and leaves another learner's", () =>
     scenario(
       Effect.gen(function* () {
@@ -128,13 +153,19 @@ describe("vault learner keys", () => {
           memory,
           fact
         );
-        yield* ensureLearnerKeys(kept);
+        const keptSealed = yield* sealText(
+          yield* ensureLearnerKeys(kept),
+          memory,
+          fact
+        );
         expect(yield* shredLearnerKeys(userId)).toBe(true);
         expect(yield* shredLearnerKeys(userId)).toBe(false);
         expect((yield* Effect.flip(readLearnerKeys(userId))).reason).toBe(
           "key"
         );
-        yield* readLearnerKeys(kept);
+        expect(
+          yield* openText(yield* readLearnerKeys(kept), memory, keptSealed)
+        ).toBe(fact);
         const fresh = yield* ensureLearnerKeys(userId);
         expect(
           (yield* Effect.flip(openText(fresh, memory, sealed))).reason

@@ -15,6 +15,7 @@ import { Sealed } from "@repo/backend/confect/vault/schema";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { TEST_ROOT_KEYS } from "@repo/backend/test/vault";
 import { Array as Arr, ConfigProvider, Effect, Schema } from "effect";
+import { Base64 } from "effect/encoding";
 
 const memory = { field: "text", table: "ninaMemories" };
 const Learners = Schema.mutable(
@@ -53,7 +54,32 @@ const roots = Effect.fn("test.vault.rotation.roots")(function* () {
   return Arr.map(rows, (row) => row.root);
 });
 
+const former = `former:${Base64.encode(new Uint8Array(32).fill(5))}`;
+
 describe("vault root key rotation", () => {
+  it.effect(
+    "moves keys from every retired root key and refuses to report zero while a key names an unknown one",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect;
+        yield* t.run(
+          Effect.gen(function* () {
+            yield* learner("dewi", former);
+            yield* learner("eko", retired);
+            const all = withRoots(`${current},${retired},${former}`);
+            expect(yield* rewrapLearnerKeys(10)).toBe(1);
+            expect(yield* roots()).toEqual(["former", "test"]);
+            expect((yield* Effect.flip(rewrapLearnerKeys(10))).reason).toBe(
+              "key"
+            );
+            expect(yield* rewrapLearnerKeys(10).pipe(all)).toBe(1);
+            expect(yield* rewrapLearnerKeys(10).pipe(all)).toBe(0);
+            expect(yield* roots()).toEqual(["test", "test"]);
+          }).pipe(Effect.orDie)
+        );
+      }).pipe(Effect.provide(confectLayer))
+  );
+
   it.effect(
     "moves every learner key to the current root key, one page per call, and keeps sealed text readable",
     () =>

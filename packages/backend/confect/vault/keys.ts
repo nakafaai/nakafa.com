@@ -7,7 +7,8 @@ import {
 import { deriveKeys, open, seal } from "@repo/backend/confect/vault/cipher";
 import { readRing } from "@repo/backend/confect/vault/ring";
 import { VaultError } from "@repo/backend/confect/vault/schema";
-import { Clock, Crypto, Effect, HashMap } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Clock, Crypto, Effect, HashMap, Option } from "effect";
 
 const LEARNER_KEY_BYTES = 32;
 
@@ -16,7 +17,7 @@ type Ring = Effect.Success<ReturnType<typeof readRing>>;
 
 /** What a wrapped learner key is bound to: it unwraps only for that learner. */
 function wrapBinding(userId: UserId) {
-  return `nakafa/vault/key/v1|user|${userId}`;
+  return encodeJsonText(["nakafa/vault/key/v1", userId]);
 }
 
 /** Finds the stored key row of one learner. */
@@ -56,7 +57,8 @@ export const readLearnerKeys = Effect.fn("vault.keys.read")(function* (
 
 /**
  * Reads a learner's keys to seal values, and creates the key on first use: 32
- * random bytes, stored only wrapped by the current root key.
+ * random bytes, stored only wrapped by the current root key. A deleted account
+ * gets no key.
  */
 export const ensureLearnerKeys = Effect.fn("vault.keys.ensure")(function* (
   userId: UserId
@@ -66,6 +68,18 @@ export const ensureLearnerKeys = Effect.fn("vault.keys.ensure")(function* (
   if (row) {
     const key = yield* unwrap(ring, row);
     return { ...(yield* deriveKeys(key)), userId };
+  }
+  // A write that outlives its account must not give a deleted learner a new
+  // key: nothing would ever shred it again.
+  const user = yield* (yield* DatabaseReader)
+    .table("users")
+    .get(userId)
+    .pipe(
+      Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+      Effect.orDie
+    );
+  if (!user || user.deletedAt !== undefined) {
+    return yield* new VaultError({ reason: "key" });
   }
   const key = yield* (yield* Crypto.Crypto)
     .randomBytes(LEARNER_KEY_BYTES)
@@ -84,7 +98,8 @@ export const ensureLearnerKeys = Effect.fn("vault.keys.ensure")(function* (
 
 /**
  * Deletes a learner's key. Everything sealed for the learner stays unreadable,
- * in old backups too once the root key that wrapped it is retired.
+ * in old backups too once every copy of the root key that wrapped it is
+ * destroyed.
  */
 export const shredLearnerKeys = Effect.fn("vault.keys.shred")(function* (
   userId: UserId
@@ -103,8 +118,11 @@ export const shredLearnerKeys = Effect.fn("vault.keys.shred")(function* (
 /**
  * Moves one page of learner keys from a retired root key to the current one.
  * Sealed values do not change: only the wrapping of each learner key does.
- * It returns how many keys it moved; zero means the rotation is complete and
- * the retired root keys can leave `VAULT_ROOT_KEYS`.
+ * It returns how many keys it moved; zero means every learner key is wrapped
+ * by the current root key, so the retired root keys can leave
+ * `VAULT_ROOT_KEYS` and be destroyed. It fails with reason `key` while a
+ * learner key names a root key that is not in the environment: such a key
+ * cannot be moved, and reporting zero would hide it.
  */
 export const rewrapLearnerKeys = Effect.fn("vault.keys.rewrap")(function* (
   limit: number
@@ -131,6 +149,19 @@ export const rewrapLearnerKeys = Effect.fn("vault.keys.rewrap")(function* (
     if (rows.length > 0) {
       return rows.length;
     }
+  }
+  const before = yield* reader
+    .table("vaultKeys")
+    .index("by_root", (query) => query.lt("root", ring.current.id))
+    .first()
+    .pipe(Effect.orDie);
+  const after = yield* reader
+    .table("vaultKeys")
+    .index("by_root", (query) => query.gt("root", ring.current.id))
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isSome(before) || Option.isSome(after)) {
+    return yield* new VaultError({ reason: "key" });
   }
   return 0;
 });

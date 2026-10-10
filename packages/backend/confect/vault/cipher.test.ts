@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { deriveKeys, open, seal } from "@repo/backend/confect/vault/cipher";
 import { Array as Arr, Effect } from "effect";
+import { Hex } from "effect/encoding";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -47,6 +48,35 @@ describe("vault cipher", () => {
         expect(new Uint8Array(again)).toEqual(new Uint8Array(first));
         expect(nonce(other)).not.toEqual(nonce(first));
         expect(nonce(moved)).not.toEqual(nonce(first));
+      })
+  );
+
+  it.effect(
+    "keeps the stored format: a fixed key, binding and text seal to the same bytes forever",
+    () =>
+      Effect.gen(function* () {
+        const keys = yield* deriveKeys(key(7));
+        const sealed = yield* seal(
+          keys,
+          "binding",
+          encoder.encode("Kelas 12 IPA")
+        );
+        expect(Hex.encode(new Uint8Array(sealed))).toBe(
+          "01bd2b8ff7aa3cd2d50f7c54ea1ec22d98a394b4a2d1b13e65f12a1f7713c7b36299f29b22909963f3"
+        );
+      })
+  );
+
+  it.effect(
+    "never reuses a nonce when a binding is the start of another binding",
+    () =>
+      Effect.gen(function* () {
+        const keys = yield* deriveKeys(key(1));
+        const nonce = (sealed: ArrayBuffer) =>
+          Arr.fromIterable(new Uint8Array(sealed).slice(1, 13));
+        const short = yield* seal(keys, "memo", encoder.encode("ryX"));
+        const long = yield* seal(keys, "memory", encoder.encode("X"));
+        expect(nonce(short)).not.toEqual(nonce(long));
       })
   );
 

@@ -10,9 +10,9 @@ export const RootKeyId = Schema.String.check(
 export const Sealed = Schema.instanceOf(ArrayBuffer);
 
 /**
- * One learner's key, wrapped by the root key that `root` names. Everything
- * sealed for the learner is unreadable once this row is deleted and that root
- * key is retired, old backups included.
+ * One learner's key, wrapped by the root key that `root` names. Once this row
+ * is deleted and every copy of that root key is destroyed, nothing sealed for
+ * the learner can be read, old backups included.
  */
 export const VaultKey = Schema.Struct({
   createdAt: Schema.Finite,
@@ -32,10 +32,12 @@ export const VaultField = Schema.Struct({
 
 /**
  * Why the vault could not seal or open. `configuration`: `VAULT_ROOT_KEYS` is
- * missing or malformed. `key`: the learner has no key, or no root key in the
- * environment opens it. `cipher`: the value was not sealed for this learner
- * and field, or it was changed. No reason carries key material or text.
+ * missing or malformed. `key`: the learner has no key, the account is deleted,
+ * or no root key in the environment opens the learner's key. `cipher`: the
+ * value was not sealed for this learner and field, or it was changed.
+ * `runtime`: the platform could not derive a key or seal, which says nothing
+ * about stored data. No reason carries key material or text.
  */
 export class VaultError extends Schema.TaggedError<VaultError>()("VaultError", {
-  reason: Schema.Literals(["configuration", "key", "cipher"]),
+  reason: Schema.Literals(["configuration", "key", "cipher", "runtime"]),
 }) {}
