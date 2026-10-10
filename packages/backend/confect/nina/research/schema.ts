@@ -5,6 +5,12 @@ import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
+/**
+ * Requests the search provider's plan serves at once, measured on 10 October
+ * 2026. One past it waits in the provider's queue and can time out there, so
+ * one research run never sends more than this many at a time.
+ */
+export const researchProviderConcurrency = 2;
 /** Reject excess sources before provider work instead of silently dropping any. */
 export class ResearchSourceLimitError extends Schema.TaggedError<ResearchSourceLimitError>()(
   "ResearchSourceLimitError",
