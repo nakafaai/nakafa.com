@@ -1,3 +1,4 @@
+import { describeCause } from "@repo/backend/confect/nina/research/error";
 import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
 import { ResearchSearchError } from "@repo/backend/confect/nina/research/schema";
 import { Effect } from "effect";
@@ -25,8 +26,9 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
         },
         timeout: 10_000,
       }),
-    catch: () =>
+    catch: (cause) =>
       new ResearchSearchError({
+        cause: describeCause(cause),
         message: "Failed to search the web. Please try again.",
       }),
   }).pipe(Effect.map((response) => ({ query, response })));

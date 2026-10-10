@@ -2,6 +2,9 @@ import { ResearchGenerationError } from "@repo/backend/confect/nina/research/sch
 import { NoObjectGeneratedError } from "ai";
 import { Effect, Inspectable, Predicate } from "effect";
 
+// Enough of a rejected answer to see why it did not parse.
+const REJECTED_TEXT_LENGTH = 200;
+
 /** Preserves provider failures as the research phase's typed error. */
 export function makeResearchGenerationError(
   error: unknown,
@@ -31,10 +34,12 @@ export function logResearchFailure(error: ResearchGenerationError) {
     cause: error.cause,
     message: error.message,
     phase: error.phase,
+    text: error.text?.slice(0, REJECTED_TEXT_LENGTH),
   });
 }
 
-function describeCause(cause: unknown) {
+/** Reduces an unknown provider failure to text a log line can carry. */
+export function describeCause(cause: unknown) {
   if (Predicate.isUndefined(cause)) {
     return;
   }

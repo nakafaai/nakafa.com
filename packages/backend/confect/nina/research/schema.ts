@@ -189,6 +189,7 @@ export const researchOutputSchema = createEffectSchema(ResearchOutputSchema);
 export class ResearchSearchError extends Schema.TaggedError<ResearchSearchError>()(
   "ResearchSearchError",
   {
+    cause: Schema.optional(Schema.String),
     message: Schema.String,
   }
 ) {}
