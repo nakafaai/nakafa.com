@@ -52,6 +52,8 @@ describe("Nina response run", () => {
     provider.languageModel.mockReset();
   });
 
+  // The run asks about its turn once a second, so this test waits in real time
+  // and gets a longer limit than the default.
   it("stops a silent provider call when the learner cancels, and pays back only after the run exits", async () => {
     const report = vi
       .spyOn(PostHog.prototype, "captureException")
@@ -112,5 +114,5 @@ describe("Nina response run", () => {
     } finally {
       release();
     }
-  });
+  }, 15_000);
 });

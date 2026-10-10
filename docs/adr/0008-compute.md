@@ -47,8 +47,9 @@ marks its prompt failed, and records the request. The refund, the state change,
 and the chat unlock wait until the run has exited, so a stream that may still be
 running is never paid back. The run checks its turn every second and aborts its
 generation when the turn was stopped or settled elsewhere, which also stops a
-silent provider call. A saved answer wins a race with a cancel and settles as
-complete. The abort propagates through the main AI SDK stream, specialist
+silent provider call. A run that is already gone settles nothing, so the sweep
+settles its stopped turn as cancelled once the deadline passes. A saved answer
+wins a race with a cancel and settles as complete. The abort propagates through the main AI SDK stream, specialist
 agents, tool repair, and abortable HTTP clients. Titles, follow-up
 suggestions, the rolling summary, and learner memory curation run later,
 concurrently, in a separate action with their own deadlines, so optional work

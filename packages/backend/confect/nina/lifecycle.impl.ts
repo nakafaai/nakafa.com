@@ -144,6 +144,7 @@ const halted = FunctionImpl.make(
   })
 );
 
+/** The cron entry: settles every turn that stayed open past its deadline. */
 const sweep = FunctionImpl.make(
   schema,
   spec,
