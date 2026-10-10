@@ -8,17 +8,19 @@ import { MemoryRows } from "@/components/user/settings/memory/rows";
 import { MemoryToolbar } from "@/components/user/settings/memory/toolbar";
 
 /**
- * Renders the Memory page from the memories the settings route already read:
- * the switch that pauses memory, and the memories to search, add, change and
- * delete.
+ * Renders the Memory page from the memories the settings route already read,
+ * and the moment it read them: the switch that pauses memory, and the
+ * memories to search, add, change and delete.
  */
 export function UserSettingsMemory({
   initialList,
+  now,
 }: {
   initialList: MemoryList;
+  now: number;
 }) {
   return (
-    <MemoryProvider initial={initialList}>
+    <MemoryProvider initial={initialList} now={now}>
       <MemoryHeader />
       <CardSection>
         <MemoryToolbar />

@@ -4,14 +4,13 @@ import { Delete02Icon, Edit02Icon } from "@hugeicons/core-free-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
 import { MemoryEditor } from "@/components/user/settings/memory/editor";
 import { isPending, type Memory } from "@/components/user/settings/memory/list";
 import {
-  useMemory,
+  useMemoryNow,
   useMemoryPage,
 } from "@/components/user/settings/memory/provider";
 import {
@@ -74,13 +73,14 @@ function MemoryView({ memory }: { memory: Memory }) {
 
 /**
  * Says what kind of memory it is, who wrote it, when it was last confirmed,
- * when a situation ends, and whether Nina reads it now.
+ * when a situation ends, and whether Nina reads it now. The confirmation
+ * counts from the moment the server read the page, so the server and the
+ * browser render the same words.
  */
 function MemoryFacts({ memory }: { memory: Memory }) {
   const t = useTranslations("Memory");
   const locale = useLocale();
-  const paused = useMemory((list) => list.paused);
-  const [now] = useState(() => DateTime.toEpochMillis(DateTime.nowUnsafe()));
+  const now = useMemoryNow();
   const origin =
     memory.author === "learner"
       ? t("written-by-you")
@@ -101,7 +101,7 @@ function MemoryFacts({ memory }: { memory: Memory }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-xs">
       <p>{Arr.join(facts, " · ")}</p>
-      {memory.inUse && !paused ? (
+      {memory.inUse ? (
         <Badge variant="default-subtle">{t("in-use")}</Badge>
       ) : null}
     </div>

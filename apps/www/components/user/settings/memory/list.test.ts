@@ -218,5 +218,24 @@ describe("memory list", () => {
         )
       ).toEqual([memoryId("b")]);
     });
+
+    it("shows no memory in use while memory is paused", () => {
+      const memories = [stored("a"), stored("b", { inUse: false })];
+      const inUse = (shown: readonly Memory[]) =>
+        Arr.map(shown, (memory) => memory.inUse);
+
+      expect(inUse(shownMemories(listOf(memories), view))).toEqual([
+        true,
+        false,
+      ]);
+      expect(inUse(shownMemories(listOf(memories, true), view))).toEqual([
+        false,
+        false,
+      ]);
+      expect(shownMemories(listOf(memories, true), view)[0]).toEqual({
+        ...stored("a"),
+        inUse: false,
+      });
+    });
   });
 });
