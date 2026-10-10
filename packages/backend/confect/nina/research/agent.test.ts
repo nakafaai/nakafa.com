@@ -222,6 +222,28 @@ describe("research Agent evidence boundary", () => {
     expect(synthesisPrompt).toContain("Inspectable source evidence.");
   });
 
+  it("reads a full address in the task as a link, but not a site the task only names", async () => {
+    vi.mocked(searchWeb).mockReturnValue(found);
+    vi.mocked(scrapeUrl).mockReturnValue(read);
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({ doGenerate: [searchCall, final] })
+    );
+    await runSpecialist((userId) =>
+      runResearchAgent({
+        ...specialistRequest,
+        userId,
+        task: `Cari di kemdikbud.go.id dan baca ${url} tentang kurikulum.`,
+        sourceReferences: [],
+        toolCallId: "research",
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      })
+    );
+    expect(
+      Arr.map(vi.mocked(scrapeUrl).mock.calls, ([read]) => read.url)
+    ).toEqual([url]);
+  });
+
   it("rejects excess exact sources before any provider call without silently dropping URLs", async () => {
     const sources = Array.from({ length: researchMaxSources + 1 }, (_, i) => ({
       ...source,

@@ -49,6 +49,8 @@ import {
 } from "ai";
 import { Array as Arr, Effect, MutableHashSet, Option, Result } from "effect";
 
+/** A reference written as a full web address, not as a bare site name. */
+const FULL_ADDRESS = /^https?:\/\//iu;
 // Keep exact source fetching within the admitted count and provider concurrency.
 const exactSourceScrapeConcurrency = 3;
 const exactSourceContentMaxLength = 8000;
@@ -75,9 +77,14 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     readonly publish: CapabilityProgress;
     readonly usageHandler: UsageHandler;
   }) {
+    // Nina writes the task. A site it only names there, such as
+    // "kemdikbud.go.id", is a hint for the search, not a page the learner
+    // asked for: only a full address in the task is read as a link.
     const sourceReferences = getUniqueSourceReferences([
       ...messageSourceReferences,
-      ...getSourceReferences(task),
+      ...Arr.filter(getSourceReferences(task), (source) =>
+        FULL_ADDRESS.test(source.text)
+      ),
     ]);
     if (sourceReferences.length > researchMaxSources) {
       return yield* new ResearchSourceLimitError({
