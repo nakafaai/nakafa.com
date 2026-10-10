@@ -1,4 +1,6 @@
+import { Ref } from "@confect/core";
 import { afterEach, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
 import { MEMORY_BATCH_SIZE } from "@repo/backend/confect/auth/cleanup/social";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
 import {
@@ -6,7 +8,9 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { insertMemory } from "@repo/backend/test/nina/memory";
+import { createMemoryTest, insertMemory } from "@repo/backend/test/nina/memory";
+
+const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
 
 afterEach(() => vi.useRealTimers());
 
@@ -81,6 +85,49 @@ it("deletes the learner's Nina memories a batch at a time, Nina's and the learne
   expect(await t.query((ctx) => ctx.db.query("vaultKeys").collect())).toEqual([
     expect.objectContaining({ userId: retained }),
   ]);
+});
+
+it("leaves no memory behind when a capture lands during the deletion, and writes none once the key is gone", async () => {
+  vi.useFakeTimers();
+  const now = Date.UTC(2026, 9, 10, 12);
+  vi.setSystemTime(now);
+  const f = await createMemoryTest();
+  const userId = f.identity.userId;
+  const write = () =>
+    f.t.mutation(capture, {
+      candidates: [
+        { kind: "level", quote: "aku kelas 12", text: "Kelas 12 IPA." },
+      ],
+      seen: [],
+      turnId: f.turnId,
+      userId,
+    });
+  const cleanup = () =>
+    f.t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId });
+  const keys = () => f.t.query((ctx) => ctx.db.query("vaultKeys").collect());
+  await f.seed({ author: "learner", text: "Before the deletion" });
+  await f.t.mutation((ctx) =>
+    ctx.db.patch(userId, createDeletedUserTombstone(userId, now))
+  );
+  await expect(cleanup()).resolves.toBe(true);
+  expect(await f.stored()).toEqual([]);
+  // A capture that was still running lands between two passes, while the key
+  // exists. The next pass deletes what it wrote, because every pass looks for
+  // memories before the key goes.
+  await expect(write()).resolves.toBe(1);
+  let passes = 0;
+  while (await cleanup()) {
+    passes += 1;
+  }
+  expect(passes).toBeGreaterThan(0);
+  expect(await f.stored()).toEqual([]);
+  expect(await keys()).toEqual([]);
+  // The turn is still there, but the key is gone and a deleted account gets no
+  // new one, so a capture that lands now cannot seal anything.
+  await expect(write()).rejects.toThrow();
+  expect(await f.stored()).toEqual([]);
+  expect(await keys()).toEqual([]);
+  await f.t.finishAllScheduledFunctions(vi.runAllTimers);
 });
 
 it("deletes both directions of comment votes before their owning comment while keeping shared counters accurate", async () => {
