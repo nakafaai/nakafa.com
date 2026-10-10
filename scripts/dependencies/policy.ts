@@ -26,7 +26,7 @@ export const PACKAGE_MANAGER = "pnpm@11.28.5";
  * release and the workflow checks compare it with this value.
  */
 export const NODE_RUNTIME_VERSION = "24.21.0";
-const CONTRACT_PACKAGE_VERSION = "0.48.8";
+const CONTRACT_PACKAGE_VERSION = "0.48.9";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.2";
 /**

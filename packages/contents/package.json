@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "catalog:",
-    "@nakafa/aksara-contracts": "0.48.8",
+    "@nakafa/aksara-contracts": "0.48.9",
     "@repo/math": "workspace:*",
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
