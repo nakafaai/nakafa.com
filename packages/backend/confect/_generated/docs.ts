@@ -45,6 +45,7 @@ export type LearningViewsDoc = Document.Document<typeof schemaDefinition, "learn
 export type MaterialBucketsDoc = Document.Document<typeof schemaDefinition, "materialBuckets">;
 export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "materialCatalog">;
 export type NinaMemoriesDoc = Document.Document<typeof schemaDefinition, "ninaMemories">;
+export type NinaMemorySourcesDoc = Document.Document<typeof schemaDefinition, "ninaMemorySources">;
 export type NinaSummariesDoc = Document.Document<typeof schemaDefinition, "ninaSummaries">;
 export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
@@ -134,6 +135,7 @@ export interface Docs {
   materialBuckets: MaterialBucketsDoc;
   materialCatalog: MaterialCatalogDoc;
   ninaMemories: NinaMemoriesDoc;
+  ninaMemorySources: NinaMemorySourcesDoc;
   ninaSummaries: NinaSummariesDoc;
   ninaTurns: NinaTurnsDoc;
   ninaUploads: NinaUploadsDoc;

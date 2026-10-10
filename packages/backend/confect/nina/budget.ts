@@ -13,7 +13,7 @@ export const NINA_BUDGET = {
   turnEvidence: 16_000,
   /** Older complete turns kept verbatim after the conversation summary. */
   history: 12_000,
-  /** Account facts and remembered facts about the learner. */
+  /** Account facts and the memories Nina reads about the learner. */
   learner: 1500,
   /** The signed current page placed in the stable prompt context. */
   page: 6000,

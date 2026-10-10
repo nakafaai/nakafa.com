@@ -1,10 +1,12 @@
 import { afterEach, expect, it } from "@effect/vitest";
+import { MEMORY_BATCH_SIZE } from "@repo/backend/confect/auth/cleanup/social";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { insertChat, insertMemory } from "@repo/backend/test/nina/memory";
 
 afterEach(() => vi.useRealTimers());
 
@@ -31,27 +33,51 @@ async function createDeletedOwner(suffix: string) {
   return { t, now, ...users };
 }
 
-it("deletes the learner's Nina memory and keeps another learner's", async () => {
-  const { t, now, owner, retained } = await createDeletedOwner("memory");
+it("deletes the learner's Nina memories with their sources, a batch at a time, and keeps another learner's", async () => {
+  const { t, owner, retained } = await createDeletedOwner("memory");
+  const left = 5;
+  const ownChat = await t.mutation((ctx) => insertChat(ctx, owner));
+  const keptChat = await t.mutation((ctx) => insertChat(ctx, retained));
   await t.mutation(async (ctx) => {
-    for (const userId of [owner, retained]) {
-      await ctx.db.insert("ninaMemories", {
-        facts: [],
-        next: 0,
-        updatedAt: now,
-        usage: { calls: 0, input: 0, output: 0 },
-        userId,
+    for (let index = 0; index < MEMORY_BATCH_SIZE + left; index += 1) {
+      await insertMemory(ctx, {
+        author: index % 2 === 0 ? "nina" : "learner",
+        chats: [ownChat],
+        text: `Memory ${index}`,
+        userId: owner,
       });
     }
+    await insertMemory(ctx, { chats: [keptChat], userId: retained });
   });
+  const state = () =>
+    t.query(async (ctx) => ({
+      memories: await ctx.db.query("ninaMemories").collect(),
+      sources: await ctx.db.query("ninaMemorySources").collect(),
+    }));
   const cleanup = () =>
     t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner });
   await expect(cleanup()).resolves.toBe(true);
-  expect(
-    await t.query((ctx) => ctx.db.query("ninaMemories").collect())
-  ).toEqual([expect.objectContaining({ userId: retained })]);
-  await expect(cleanup()).resolves.toBe(false);
-  await t.finishAllScheduledFunctions(vi.runAllTimers);
+  const batch = await state();
+  expect(batch.memories).toHaveLength(left + 1);
+  expect(batch.sources).toHaveLength(left + 1);
+  await expect(cleanup()).resolves.toBe(true);
+  const emptied = await state();
+  expect(emptied.memories).toEqual([
+    expect.objectContaining({ userId: retained }),
+  ]);
+  expect(emptied.sources).toEqual([
+    expect.objectContaining({ chatId: keptChat, userId: retained }),
+  ]);
+  // The learner's chat goes next, with no source left for it to forget, and
+  // the learner's key goes after every row it sealed.
+  while (await cleanup()) {
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+  }
+  expect(await state()).toEqual(emptied);
+  expect(await t.query((ctx) => ctx.db.get("chats", ownChat))).toBeNull();
+  expect(await t.query((ctx) => ctx.db.query("vaultKeys").collect())).toEqual([
+    expect.objectContaining({ userId: retained }),
+  ]);
 });
 
 it("deletes both directions of comment votes before their owning comment while keeping shared counters accurate", async () => {

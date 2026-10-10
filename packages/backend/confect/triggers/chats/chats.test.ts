@@ -10,6 +10,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { insertChat, insertMemory } from "@repo/backend/test/nina/memory";
 import { Array as Arr, DateTime, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
@@ -102,48 +103,61 @@ describe("native Nina deletion lifecycle", () => {
       await t.query((ctx) => ctx.db.get("chats", receipt.chatId))
     ).toBeNull();
   });
-  it("forgets the facts Nina remembered from a deleted chat", async () => {
+  it("forgets what only a deleted chat taught Nina, and keeps what the learner wrote or said elsewhere", async () => {
     const { t, owner, identity, receipt } = await fixture();
-    const chat = () =>
-      t.mutation(async (ctx) =>
-        ctx.db.insert("chats", {
-          threadId: await createThread(ctx, components.nina, {
-            userId: identity.userId,
-          }),
-          type: "study",
-          updatedAt: NOW,
-          userId: identity.userId,
-          visibility: "private",
-        })
-      );
-    const other = await chat();
-    const quiet = await chat();
-    const fact = (key: number, chatId: typeof other) => ({
-      chatId,
-      key,
-      savedAt: NOW,
-      text: `Fact ${key}.`,
+    const userId = identity.userId;
+    const other = await t.mutation((ctx) => insertChat(ctx, userId));
+    const quiet = await t.mutation((ctx) => insertChat(ctx, userId));
+    const seed = (row: Omit<Parameters<typeof insertMemory>[1], "userId">) =>
+      t.mutation((ctx) => insertMemory(ctx, { ...row, userId }));
+    await seed({ chats: [receipt.chatId], text: "Only this chat" });
+    await seed({ chats: [receipt.chatId, other], text: "Said in two chats" });
+    await seed({
+      author: "learner",
+      chats: [receipt.chatId],
+      text: "Written by the learner",
     });
-    await t.mutation((ctx) =>
-      ctx.db.insert("ninaMemories", {
-        facts: [fact(0, receipt.chatId), fact(1, other)],
-        next: 2,
-        updatedAt: NOW,
-        usage: { calls: 1, input: 300, output: 20 },
+    await seed({ text: "From no chat" });
+    const state = async () => ({
+      memories: Arr.map(
+        await t.query((ctx) => ctx.db.query("ninaMemories").collect()),
+        (memory) => memory.author
+      ),
+      sources: await t.query((ctx) =>
+        ctx.db.query("ninaMemorySources").collect()
+      ),
+    });
+    expect((await state()).memories).toHaveLength(4);
+    await owner.mutation(remove, { chatId: receipt.chatId });
+    expect(await state()).toEqual({
+      memories: ["nina", "learner", "nina"],
+      sources: [expect.objectContaining({ chatId: other })],
+    });
+    await owner.mutation(remove, { chatId: quiet });
+    expect((await state()).memories).toHaveLength(3);
+    await owner.mutation(remove, { chatId: other });
+    expect(await state()).toEqual({
+      memories: ["learner", "nina"],
+      sources: [],
+    });
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+  });
+  it("deletes a chat although a source row names a memory that is already gone", async () => {
+    const { t, owner, identity, receipt } = await fixture();
+    const id = await t.mutation((ctx) =>
+      insertMemory(ctx, {
+        chats: [receipt.chatId],
         userId: identity.userId,
       })
     );
-    const facts = async () =>
-      Arr.map(
-        await t.query((ctx) => ctx.db.query("ninaMemories").collect()),
-        (memory) => Arr.map(memory.facts, (kept) => kept.key)
-      );
+    await t.mutation((ctx) => ctx.db.delete("ninaMemories", id));
     await owner.mutation(remove, { chatId: receipt.chatId });
-    expect(await facts()).toEqual([[1]]);
-    await owner.mutation(remove, { chatId: quiet });
-    expect(await facts()).toEqual([[1]]);
-    await owner.mutation(remove, { chatId: other });
-    expect(await facts()).toEqual([[]]);
+    expect(
+      await t.query((ctx) => ctx.db.get("chats", receipt.chatId))
+    ).toBeNull();
+    expect(
+      await t.query((ctx) => ctx.db.query("ninaMemorySources").collect())
+    ).toEqual([]);
     await t.finishAllScheduledFunctions(() => vi.runAllTimers());
   });
   it("cancels queued generation and removes the Agent journal before late writes can recreate it", async () => {

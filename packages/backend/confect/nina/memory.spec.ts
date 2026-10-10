@@ -17,6 +17,8 @@ export const MEMORY_LIMIT = 100;
 export const MEMORY_TEXT_LIMIT = 280;
 /** Memories Nina reads in one turn. The Memory page marks them as in use. */
 export const MEMORY_PROMPT_LIMIT = 20;
+/** Memories one capture call may propose from a single message. */
+export const MEMORY_CAPTURE_LIMIT = 3;
 
 /**
  * What a memory is about. `situation` is something with an end, such as an
@@ -115,7 +117,7 @@ export const NinaMemoryCandidate = Schema.Struct({
 /** What one capture call proposes. Most messages yield none. */
 export const NinaMemoryCapture = Schema.Struct({
   memories: Schema.mutable(Schema.Array(NinaMemoryCandidate)).check(
-    Schema.isMaxLength(3)
+    Schema.isMaxLength(MEMORY_CAPTURE_LIMIT)
   ),
 });
 
@@ -275,6 +277,14 @@ export default GroupSpec.make()
         turnId: Id("ninaTurns"),
         userId: Id("users"),
       }),
+      returns: () => Schema.Int,
+    })
+  )
+  // Deletes one page of the situations whose end date has passed, with their
+  // source rows, and returns how many it deleted. The daily cron runs it.
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "expire",
       returns: () => Schema.Int,
     })
   );

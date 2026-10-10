@@ -28,6 +28,14 @@ export default CronJobs.make()
     )
   )
   .add(
+    /** Deletes the situations Nina remembered whose end date has passed. */ CronJob.make(
+      "expire ended Nina memories",
+      Duration.hours(24),
+      internal.nina.memory.expire,
+      {}
+    )
+  )
+  .add(
     CronJob.make(
       "sweep account deletion recovery",
       Duration.minutes(ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES),

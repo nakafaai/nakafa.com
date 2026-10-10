@@ -12,8 +12,8 @@ import type { Change } from "convex-helpers/server/triggers";
 import { Duration, Effect } from "effect";
 
 /**
- * Cancels active generation, forgets the facts remembered from the chat, and
- * cascades journal deletion through Agent.
+ * Cancels active generation, forgets the memories that only the chat taught,
+ * and cascades journal deletion through Agent.
  */
 export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
   function* (change: Change<DataModel, "chats">) {
