@@ -17,9 +17,9 @@ import {
   readTryoutHubPage,
 } from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
+import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
-import { getAksaraTreeUrl } from "@/lib/utils/github";
 
 /**
  * Lets a navigation into a country published after the build wait for its

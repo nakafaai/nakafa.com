@@ -27,6 +27,7 @@ import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import { readPublishedProgramPrerenderRoute } from "@/lib/content/program/catalog";
+import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/artwork";
 import {
   type CurriculumRouteModel,
@@ -41,7 +42,6 @@ import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
 import { getSocialMetadata } from "@/lib/seo/social";
-import { getAksaraTreeUrl } from "@/lib/utils/github";
 
 type CurriculumPageProps =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">;

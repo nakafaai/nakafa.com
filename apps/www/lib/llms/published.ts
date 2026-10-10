@@ -21,9 +21,9 @@ import {
   decodePublishedArticle,
   decodePublishedPage,
 } from "@/lib/content/published/projection";
+import { getRawAksaraUrl } from "@/lib/content/repository";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader, getMdxDescription } from "@/lib/llms/format";
-import { getRawAksaraUrl } from "@/lib/utils/github";
 
 type PublishedMarkdownFamily = Extract<
   ContentFamily,

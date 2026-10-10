@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import type { MaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { resolveMaterialOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
 import { getMaterialPublication } from "@/lib/content/material/publication";
+import { getAksaraUrl } from "@/lib/content/repository";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
-import { getAksaraUrl } from "@/lib/utils/github";
 
 /** Complete verified body and shell model consumed by the material page. */
 export type MaterialPageContent = Awaited<ReturnType<typeof readMaterialPage>>;

@@ -8,7 +8,7 @@ import {
   getGithubUrl,
   getRawAksaraUrl,
   getRawGithubUrl,
-} from "@/lib/utils/github";
+} from "@/lib/content/repository";
 
 const revision = GitCommitShaSchema.make("a".repeat(40));
 

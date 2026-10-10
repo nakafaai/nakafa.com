@@ -37,11 +37,11 @@ import {
 } from "@/lib/content/article/query";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
+import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getOgUrl, getSocialMetadata } from "@/lib/seo/social";
-import { getAksaraTreeUrl } from "@/lib/utils/github";
 
 /** Validates one signed article-category route. */
 async function getResolvedParams(
