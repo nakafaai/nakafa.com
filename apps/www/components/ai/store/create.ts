@@ -24,7 +24,7 @@ export function createAiStore() {
           if (state.ask || state.chatDrafts.length > 0) {
             return false;
           }
-          set({ activeChatId: null, ask, open: true });
+          set({ activeChatId: null, ask, open: true, warmed: true });
           return true;
         },
         removeChatDraft: (key) =>
@@ -76,11 +76,16 @@ export function createAiStore() {
         setContextTitle: (contextTitle) => set({ contextTitle }),
         setModel: (model) => set({ model }),
         setOpeningChat: (openingChat) => set({ openingChat }),
-        setOpen: (open) => set({ open }),
+        // An open sheet shows its body, so opening also warms it.
+        setOpen: (open) =>
+          set((state) => ({ open, warmed: state.warmed || open })),
         setText: (text) =>
           set((state) => ({
             text: typeof text === "function" ? text(state.text) : text,
           })),
+        // The reader showed intent: the sheet's body renders hidden from now
+        // on, so the press that opens it has nothing left to load.
+        warm: () => set({ warmed: true }),
       }),
       {
         name: "nakafa-ai",

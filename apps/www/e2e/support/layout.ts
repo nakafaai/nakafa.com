@@ -167,3 +167,31 @@ export const expectUncovered = Effect.fn("NakafaE2E.expectUncovered")(
     );
   }
 );
+
+/**
+ * Waits until a sheet or dialog has finished sliding in. A popup's geometry
+ * read while it still moves is off by a fraction of a pixel, and a jump made
+ * during the slide can still shift on a slow runner.
+ */
+export const waitForSlide = Effect.fn("NakafaE2E.waitForSlide")(
+  (popup: Locator) =>
+    Effect.promise(() =>
+      popup.evaluate(
+        (element) =>
+          new Promise<void>((resolve) => {
+            const settle = () => {
+              if (element.hasAttribute("data-starting-style")) {
+                requestAnimationFrame(settle);
+                return;
+              }
+              Promise.allSettled(
+                element
+                  .getAnimations({ subtree: true })
+                  .map((animation) => animation.finished)
+              ).then(() => resolve());
+            };
+            settle();
+          })
+      )
+    )
+);

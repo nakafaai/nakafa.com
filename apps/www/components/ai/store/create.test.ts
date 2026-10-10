@@ -47,6 +47,7 @@ describe("ai/store/create", () => {
       open: false,
       openingChat: null,
       text: "",
+      warmed: false,
     });
     expect(store.getState().getModel()).toBe(defaultModel);
   });
@@ -61,6 +62,7 @@ describe("ai/store/create", () => {
       activeChatId: null,
       ask: { id: "ask-1", text: "Explain" },
       open: true,
+      warmed: true,
     });
     expect(store.getState().openAsk({ id: "ask-2", text: "Again" })).toBe(
       false
@@ -245,14 +247,24 @@ describe("ai/store/create", () => {
     });
   });
 
-  it("opens and closes the sheet", () => {
+  it("warms the sheet on intent, without opening it", () => {
     const store = createAiStore();
 
-    store.getState().setOpen(true);
-    expect(store.getState().open).toBe(true);
+    store.getState().warm();
+    expect(store.getState()).toMatchObject({ open: false, warmed: true });
+  });
+
+  it("warms the sheet when it opens and keeps it warm after it closes", () => {
+    const store = createAiStore();
 
     store.getState().setOpen(false);
-    expect(store.getState().open).toBe(false);
+    expect(store.getState()).toMatchObject({ open: false, warmed: false });
+
+    store.getState().setOpen(true);
+    expect(store.getState()).toMatchObject({ open: true, warmed: true });
+
+    store.getState().setOpen(false);
+    expect(store.getState()).toMatchObject({ open: false, warmed: true });
   });
 
   it("sets the composer text from a value or from an updater", () => {

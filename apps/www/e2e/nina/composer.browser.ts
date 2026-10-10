@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, HashSet } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { waitForSlide } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { NINA_SHOWCASE, SHEET_POPUP } from "@/e2e/support/selector";
 
@@ -114,6 +115,9 @@ const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
   yield* Effect.promise(() =>
     page.getByRole("button", { name: "Ask Nina", exact: true }).click()
   );
+  // The composer is in the sheet from its first frame, so its geometry is
+  // read once the sheet has stopped sliding.
+  yield* waitForSlide(page.locator(SHEET_POPUP));
   yield* verifyComposer(page.locator(SHEET_POPUP));
 });
 

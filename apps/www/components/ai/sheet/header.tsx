@@ -53,7 +53,12 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
             </Button>
           </Activity>
           <SheetHistory />
-          <Button onClick={onResizeToggle} size="icon-sm" variant="ghost">
+          <Button
+            className="hidden sm:inline-flex"
+            onClick={onResizeToggle}
+            size="icon-sm"
+            variant="ghost"
+          >
             <HugeIcons
               icon={expanded ? ArrowShrink02Icon : ArrowExpand01Icon}
             />

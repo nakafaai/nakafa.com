@@ -65,21 +65,27 @@ function SheetBackdrop({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   );
 }
 
-/** Renders the positioned sheet popup and optional close affordance. */
+/**
+ * Renders the positioned sheet popup and optional close affordance. A sheet
+ * that sets `keepMounted` stays in the document while closed, so its content
+ * can be ready before it opens.
+ */
 function SheetPopup({
   className,
   children,
+  keepMounted = false,
   showCloseButton = true,
   side = "right",
   inset = false,
   ...props
 }: SheetPrimitive.Popup.Props & {
+  keepMounted?: boolean;
   showCloseButton?: boolean;
 } & VariantProps<typeof sheetPopupVariants>) {
   const modal = use(SheetContext);
 
   return (
-    <SheetPortal>
+    <SheetPortal keepMounted={keepMounted}>
       <Activity mode={modal ? "visible" : "hidden"}>
         <SheetBackdrop />
       </Activity>

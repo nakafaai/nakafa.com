@@ -14,7 +14,6 @@ import {
 } from "react";
 import { useAdmissionGate } from "@/components/ai/chat/admission";
 import { useAi } from "@/components/ai/context";
-import { preloadAiSheet } from "@/components/ai/sheet/module";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 
 const AskContext = createContext<((prompt: NinaDraft) => void) | null>(null);
@@ -45,7 +44,6 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
   });
 
   function submit(id: string, prompt: NinaDraft) {
-    Effect.runFork(preloadAiSheet(true));
     Effect.runFork(
       Effect.promise(() => latest.current.send(prompt)).pipe(
         Effect.flatMap((receipt) =>

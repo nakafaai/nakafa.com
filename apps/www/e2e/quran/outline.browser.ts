@@ -2,7 +2,11 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
-import { expectUncovered, readLayoutShift } from "@/e2e/support/layout";
+import {
+  expectUncovered,
+  readLayoutShift,
+  waitForSlide,
+} from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
@@ -196,25 +200,7 @@ const verifyPhoneVerseJump = Effect.fn("NakafaE2E.verifyPhoneVerseJump")(
     const sheet = page.getByRole("dialog");
     // On slow runners the outline can still move after a jump made while the
     // sheet slides in, so the jump waits for the slide to finish.
-    yield* Effect.promise(() =>
-      sheet.evaluate(
-        (dialog) =>
-          new Promise<void>((resolve) => {
-            const settle = () => {
-              if (dialog.hasAttribute("data-starting-style")) {
-                requestAnimationFrame(settle);
-                return;
-              }
-              Promise.allSettled(
-                dialog
-                  .getAnimations({ subtree: true })
-                  .map((animation) => animation.finished)
-              ).then(() => resolve());
-            };
-            settle();
-          })
-      )
-    );
+    yield* waitForSlide(sheet);
     yield* revealVerseEntry(sheet.locator('[data-slot="sidebar-content"]'));
     yield* Effect.promise(() =>
       sheet.getByRole("button", { exact: true, name: "Verse 200" }).click()

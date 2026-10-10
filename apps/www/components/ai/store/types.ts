@@ -30,6 +30,8 @@ const AiStateSchema = Schema.Struct({
     })
   ),
   text: Schema.String,
+  /** Whether the sheet's body may render ahead of the press that opens it. */
+  warmed: Schema.Boolean,
 });
 
 export type AiState = typeof AiStateSchema.Type;
@@ -50,6 +52,7 @@ interface AiActions {
   setOpen: (open: AiState["open"]) => void;
   setOpeningChat: (openingChat: AiState["openingChat"]) => void;
   setText: (text: AiState["text"] | ((previous: string) => string)) => void;
+  warm: () => void;
 }
 
 export type AiStore = AiState & AiActions;
