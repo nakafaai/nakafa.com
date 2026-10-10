@@ -53,7 +53,7 @@ export class RendererImplementationMissing extends Schema.TaggedError<RendererIm
 ) {}
 
 /** Multiple registries claim one signed component. */
-export class RendererComponentCollision extends Schema.TaggedError<RendererComponentCollision>()(
+class RendererComponentCollision extends Schema.TaggedError<RendererComponentCollision>()(
   "RendererComponentCollision",
   {
     componentName: Schema.String,

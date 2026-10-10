@@ -1,5 +1,7 @@
 import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+import schema from "@repo/backend/components/betterAuth/schema";
 import { v } from "convex/values";
+import { stream } from "convex-helpers/server/stream";
 
 /** Rows read by one call: far below the transaction read limit for user rows. */
 const PAGE_SIZE = 500;
@@ -29,7 +31,9 @@ export const clearEmptyUsernameFields = mutation({
     text: v.number(),
   }),
   handler: async (ctx, args) => {
-    const page = await ctx.db
+    // A component cannot use the native paginate: the stream helper pages the
+    // same query, as the deletion module of this component does.
+    const page = await stream(ctx.db, schema)
       .query("user")
       .paginate({ cursor: args.cursor, numItems: PAGE_SIZE });
     let cleared = 0;

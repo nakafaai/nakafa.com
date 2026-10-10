@@ -75,3 +75,14 @@ export class TryoutResponseIntegrityError extends Schema.TaggedError<TryoutRespo
     message: Schema.String,
   }
 ) {}
+
+/** Creates one typed fail-closed response graph error. */
+export function responseIntegrity(
+  code: TryoutResponseIntegrityError["code"],
+  message: string
+) {
+  return new TryoutResponseIntegrityError({
+    code,
+    message,
+  });
+}

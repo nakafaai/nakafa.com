@@ -20,6 +20,12 @@ type DependencyHold = typeof ApprovedSpecsSchema.Type &
 
 /** The exact package manager the root manifest pins for every checkout and CI job. */
 export const PACKAGE_MANAGER = "pnpm@11.28.5";
+/**
+ * The exact Node release the root manifest downloads. A workflow job that does
+ * not check out the repository cannot read the manifest, so it names the same
+ * release and the workflow checks compare it with this value.
+ */
+export const NODE_RUNTIME_VERSION = "24.21.0";
 const CONTRACT_PACKAGE_VERSION = "0.48.8";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.2";
@@ -49,11 +55,11 @@ export const AI_SDK_COHORT = {
 } as const;
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
-  { approved: "19.2.8", dependency: "react", minimumDeclarations: 1 },
-  { approved: "19.2.8", dependency: "react-dom", minimumDeclarations: 1 },
-  { approved: "19.2.18", dependency: "@types/react", minimumDeclarations: 1 },
+  { approved: "19.3.0", dependency: "react", minimumDeclarations: 1 },
+  { approved: "19.3.0", dependency: "react-dom", minimumDeclarations: 1 },
+  { approved: "19.3.0", dependency: "@types/react", minimumDeclarations: 1 },
   {
-    approved: "19.2.7",
+    approved: "19.3.0",
     dependency: "@types/react-dom",
     minimumDeclarations: 1,
   },
@@ -149,7 +155,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "9.7.0",
+    approved: "9.8.1",
     dependency: "@react-three/fiber",
     minimumDeclarations: 1,
   },
@@ -160,22 +166,22 @@ export const REGISTRY_REVIEWS = [
   [
     "react@latest",
     "19.3.0",
-    "Fiber 9.7.0 requires React below 19.3, and Fiber 9.8 cannot move yet (see @react-three/fiber), so the declared React stays on 19.2 while Next.js bundles its own React 19.3 build for App Router routes.",
+    "The declared React is 19.3.0, the latest 19.3 release. Fiber 9.8.1 accepts React 19.3 (its peer range is >=19 <19.4), and scene labels no longer use drei's Html, so no second React root is created per label.",
   ],
   [
     "react-dom@latest",
     "19.3.0",
-    "React DOM stays on the same supported 19.2.8 runtime.",
+    "React DOM is 19.3.0, the same release as React. react-dom 19.3.0 requires react ^19.3.0, and the overrides pin both to 19.3.0.",
   ],
   [
     "@types/react@latest",
     "19.3.0",
-    "React declarations stay on the supported 19.2 runtime line.",
+    "The React declarations match the React runtime at 19.3.0.",
   ],
   [
     "@types/react-dom@latest",
     "19.3.0",
-    "React DOM declarations stay on the supported 19.2 runtime line.",
+    "The React DOM declarations match the React DOM runtime at 19.3.0.",
   ],
   [
     "mermaid@latest",
@@ -291,7 +297,7 @@ export const REGISTRY_REVIEWS = [
   [
     "@react-three/fiber@latest",
     "9.8.1",
-    "Fiber 9.8 accepts React 19.3 and mounts a scene inside the React DOM commit that renders its canvas. Drei's Html replaces its React root during that mount, and React DOM then commits the first label's replaced root last: it clears the label and makes the label's removal throw on lesson navigation, on React 19.2 and 19.3 alike (pmndrs/drei#2867). Fiber 9.8 and React 19.3 move together once Html keeps one root or scene labels stop using it. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene/lines.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
+    "Fiber 9.8.1 accepts React 19.3 (its peer range is >=19 <19.4) and mounts a scene inside the React DOM commit that renders its canvas. Scene labels draw in one DOM overlay per canvas (components/three/overlay.tsx) and no longer use drei's Html, which created a second React root per label. That root's replacement during Fiber's mount cleared the first label of every scene and made a label's removal throw on lesson navigation (pmndrs/drei#2867). drei 10.7.9 peers Fiber ^9.0.0, which 9.8.1 satisfies. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene/lines.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
   ],
   [
     "afdocs@latest",

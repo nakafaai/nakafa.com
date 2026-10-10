@@ -41,3 +41,14 @@ export function toTryoutRuntimeError(error: unknown) {
     message: runtimeFailureMessage,
   });
 }
+
+/** Creates one typed try-out runtime failure with a stable code. */
+export function tryoutRuntimeError(
+  code: TryoutRuntimeError["code"],
+  message: string
+) {
+  return new TryoutRuntimeError({
+    code,
+    message,
+  });
+}

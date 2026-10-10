@@ -10,11 +10,12 @@
   },
   "dependencies": {
     "@nakafa/aksara-contracts": "0.48.8",
+    "@repo/next-config": "workspace:*",
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
     "next": "16.4.0",
     "next-intl": "catalog:",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "schema-dts": "^2.1.0"
   },
   "devDependencies": {

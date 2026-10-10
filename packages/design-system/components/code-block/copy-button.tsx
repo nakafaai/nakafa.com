@@ -16,7 +16,7 @@ import type { ComponentProps } from "react";
 import { useEffect, useRef, useState } from "react";
 
 /** Copy callbacks and duration for the transient success state. */
-export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
+type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;

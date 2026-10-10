@@ -7,7 +7,7 @@ const SchoolSchema = Schema.Struct({
   name: Schema.String,
 });
 
-export type School = typeof SchoolSchema.Type;
+type School = typeof SchoolSchema.Type;
 
 export const schools: School[] = [
   // International Universities

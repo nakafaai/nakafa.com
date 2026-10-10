@@ -21,21 +21,21 @@ type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
 
 /** Projects the public state shared by attempt and runtime responses. */
-export const readCurrentSection = Effect.fn(
-  "tryouts.runtime.readCurrentSection"
-)(function* (section: Docs["tryoutSectionAttempts"]) {
-  return {
-    answeredCount: section.answeredCount,
-    completedAt: section.completedAt,
-    endReason: section.endReason,
-    expiresAt: section.expiresAt,
-    score: yield* getSectionScoreResult(section),
-    sectionKey: section.sectionKey,
-    startedAt: section.startedAt,
-    status: section.status,
-    totalQuestions: section.totalQuestions,
-  };
-});
+const readCurrentSection = Effect.fn("tryouts.runtime.readCurrentSection")(
+  function* (section: Docs["tryoutSectionAttempts"]) {
+    return {
+      answeredCount: section.answeredCount,
+      completedAt: section.completedAt,
+      endReason: section.endReason,
+      expiresAt: section.expiresAt,
+      score: yield* getSectionScoreResult(section),
+      sectionKey: section.sectionKey,
+      startedAt: section.startedAt,
+      status: section.status,
+      totalQuestions: section.totalQuestions,
+    };
+  }
+);
 
 /** Loads one bounded section graph for the exact-attempt runtime contract. */
 const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (

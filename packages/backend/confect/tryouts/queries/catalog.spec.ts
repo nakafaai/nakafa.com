@@ -25,7 +25,7 @@ const sectionPageFields = {
   set: publicTryoutSetValidator,
   track: publicTryoutTrackValidator,
 };
-export const sectionPageValidator = Schema.Union([
+const sectionPageValidator = Schema.Union([
   Schema.Null,
   Schema.Struct(sectionPageFields),
 ]);

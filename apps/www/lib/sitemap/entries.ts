@@ -1,7 +1,7 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { cache } from "react";
@@ -48,8 +48,6 @@ const SitemapRouteEntry = Schema.Struct({
 });
 type SitemapRouteEntry = typeof SitemapRouteEntry.Type;
 
-const host = `https://${MAIN_DOMAIN}`;
-
 /** Expands one route into canonical localized sitemap entries. */
 function getEntries(href: string, options: SitemapEntryOptions) {
   return Arr.map(options.locales, (locale) => ({
@@ -68,8 +66,9 @@ function getUrl(href: string, locale: Locale): string {
   });
 
   return Option.match(mappedPathname, {
-    onNone: () => host + getPathname({ locale, href, forcePrefix: true }),
-    onSome: (pathname) => `${host}/${locale}${pathname}`,
+    onNone: () =>
+      SITE_ORIGIN + getPathname({ locale, href, forcePrefix: true }),
+    onSome: (pathname) => `${SITE_ORIGIN}/${locale}${pathname}`,
   });
 }
 

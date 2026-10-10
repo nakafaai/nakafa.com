@@ -28,7 +28,7 @@ import { Clock, Context, Effect, Layer, Match, Schema } from "effect";
 type ProofFailure = typeof proofFailureValidator.Type;
 type ProofPoll = typeof proofPollValidator.Type;
 export type ProofStatus = typeof proofStatusValidator.Type;
-export type Release = Docs["contentReleases"];
+type Release = Docs["contentReleases"];
 /** Durable Workflow dependency owned only by proof polling. */
 export class ProofPollCoordinator extends Context.Service<
   ProofPollCoordinator,

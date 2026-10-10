@@ -1,7 +1,6 @@
 "use client";
 
-import { Html } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
+import { type ThreeElements, useFrame, useThree } from "@react-three/fiber";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import {
   resolveThreeFontSize,
@@ -9,15 +8,9 @@ import {
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
+import { SceneHtml } from "@repo/design-system/components/three/overlay";
 import { MutableHashMap } from "effect";
-import {
-  type ComponentProps,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Color,
   type Group,
@@ -26,7 +19,6 @@ import {
   Vector3,
 } from "three";
 
-type HtmlProps = ComponentProps<typeof Html>;
 type LabelAnchorX = "center" | "left" | "right";
 type LabelAnchorY = "bottom" | "middle" | "top";
 
@@ -42,18 +34,17 @@ interface ThreeLabelProps {
   maximumFontSize?: number;
   /** Minimum rendered font size in CSS pixels, independent of the world scale. */
   minimumFontSize?: number;
-  /** Enables scene-aware depth occlusion for labels attached to geometry. */
-  occlude?: HtmlProps["occlude"];
+  /** Hides the label while an object of the scene stands between the camera and the label. */
+  occlude?: boolean | undefined;
   outlineColor?: string | undefined;
   outlineWidth?: number | undefined;
-  position: HtmlProps["position"];
+  position: ThreeElements["group"]["position"];
   /** Screen-plane rotation in radians. */
   rotation?: number;
   visible?: boolean;
 }
 
 const LABEL_BASE_FONT_SIZE = 16;
-const LABEL_Z_INDEX_RANGE: [number, number] = [1, 0];
 
 function anchorOffset(anchor: LabelAnchorX | LabelAnchorY) {
   if (anchor === "left" || anchor === "top") {
@@ -85,11 +76,9 @@ function anchorOrigin(anchor: LabelAnchorX | LabelAnchorY) {
  * Renders semantic React content at one camera-facing Three.js world position.
  *
  * A plain string and rich content such as mixed prose and KaTeX use the same
- * authoring contract. The bounded portal layer stays below scene controls and
- * does not intercept pointer input. Visual labels stay hidden from assistive
- * technology because each scene owns its complete accessible description.
- *
- * @see https://drei.docs.pmnd.rs/misc/html
+ * authoring contract. The content draws in the scene overlay beside the canvas,
+ * and the overlay never intercepts pointer input. Visual labels stay hidden from
+ * assistive technology because each scene owns its complete accessible description.
  */
 export function ThreeLabel({
   anchorX = "center",
@@ -170,7 +159,7 @@ export function ThreeLabel({
       if (!element) {
         return;
       }
-      // Html commits through a separate React root after this component.
+      // The content mounts in the scene overlay after this callback is attached.
       // Wake the canvas once its content can be scaled and projected.
       invalidate();
       const object = group.current;
@@ -234,9 +223,9 @@ export function ThreeLabel({
 
   return (
     <group {...(position === undefined ? {} : { position })} ref={group}>
-      <Html
+      <SceneHtml
         distanceFactor={distanceFactor}
-        {...(occlude === undefined ? {} : { occlude })}
+        occlude={occlude}
         ref={measureLabel}
         style={{
           WebkitTextStroke:
@@ -254,7 +243,6 @@ export function ThreeLabel({
           userSelect: "none",
           whiteSpace: "nowrap",
         }}
-        zIndexRange={LABEL_Z_INDEX_RANGE}
       >
         <span
           aria-hidden="true"
@@ -267,7 +255,7 @@ export function ThreeLabel({
         >
           {children}
         </span>
-      </Html>
+      </SceneHtml>
     </group>
   );
 }

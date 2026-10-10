@@ -1,5 +1,5 @@
 import irtScaleItemsTable from "@repo/backend/confect/_generated/tables/irtScaleItems";
-import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
+import { tryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 const MAX_THETA = 4;
@@ -32,7 +32,7 @@ export const estimateIrtScore = Effect.fn("tryouts.runtime.estimateIrtScore")(
         !(Number.isFinite(difficulty) && Number.isFinite(discrimination)) ||
         discrimination <= 0
       ) {
-        return yield* irtEstimationError(
+        return yield* tryoutRuntimeError(
           "TRYOUT_IRT_ITEM_INVALID",
           "IRT item parameters must be finite with positive discrimination."
         );
@@ -60,7 +60,7 @@ export const estimateIrtScore = Effect.fn("tryouts.runtime.estimateIrtScore")(
       return yield* invalidIrtItemEstimate();
     }
     if (information < MIN_INFORMATION) {
-      return yield* irtEstimationError(
+      return yield* tryoutRuntimeError(
         "TRYOUT_IRT_INFORMATION_TOO_LOW",
         "IRT scale information is too low for scoring this attempt."
       );
@@ -123,17 +123,9 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-/** Creates one stable typed IRT estimation failure. */
-function irtEstimationError(code: TryoutRuntimeError["code"], message: string) {
-  return new TryoutRuntimeError({
-    code,
-    message,
-  });
-}
-
 /** Rejects finite item parameters that produce non-finite score math. */
 function invalidIrtItemEstimate() {
-  return irtEstimationError(
+  return tryoutRuntimeError(
     "TRYOUT_IRT_ITEM_INVALID",
     "IRT item parameters must produce finite score calculations."
   );

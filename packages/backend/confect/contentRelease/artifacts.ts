@@ -31,100 +31,96 @@ import { getConvexSize } from "convex/values";
 import { Array as Arr, Clock, Effect, Schema, Struct } from "effect";
 
 /** Decodes one bounded artifact batch through the shared wire contract. */
-export const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(
-  function* (
-    releaseId: string,
-    batchIndex: number,
-    artifactJson: readonly string[]
-  ) {
-    if (
-      artifactJson.length === 0 ||
-      artifactJson.length > MAX_ARTIFACT_BATCH_COUNT ||
-      getConvexSize({
-        artifactJson: [...artifactJson],
-        batchIndex,
-        releaseId,
-      }) > MAX_ARTIFACT_BATCH_BYTES
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_LIMIT",
-        `Artifact batch ${batchIndex} exceeds its bounded transport contract.`
-      );
-    }
-    const artifacts = yield* Effect.forEach(artifactJson, decodeArtifactJson);
-    return yield* Schema.decodeUnknownEffect(StageArtifactBatchInputSchema)({
-      artifacts,
+const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(function* (
+  releaseId: string,
+  batchIndex: number,
+  artifactJson: readonly string[]
+) {
+  if (
+    artifactJson.length === 0 ||
+    artifactJson.length > MAX_ARTIFACT_BATCH_COUNT ||
+    getConvexSize({
+      artifactJson: [...artifactJson],
       batchIndex,
       releaseId,
-    }).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Artifact batch ${batchIndex} violates its exact contract.`,
-          })
-      )
-    );
-  }
-);
-/** Persists one immutable artifact and marks its exact staged item ready. */
-export const stageArtifact = Effect.fn("contentRelease.stageArtifact")(
-  function* (
-    releaseId: string,
-    batchIndex: number,
-    batchHash: string,
-    artifact: SignedContentArtifact,
-    artifactJson: string,
-    now: number
+    }) > MAX_ARTIFACT_BATCH_BYTES
   ) {
-    const writer = yield* DatabaseWriter;
-    const item = yield* loadIdentityItem(
-      releaseId,
-      artifact.payload.contentKey,
-      artifact.payload.artifactLocale
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Artifact batch ${batchIndex} exceeds its bounded transport contract.`
     );
-    if (!item) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_MISSING",
-        `Artifact ${artifact.artifactHash} has no staged item.`
-      );
-    }
-    if (item.artifactReady) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_CONFLICT",
-        `Artifact ${artifact.artifactHash} was already staged in another batch.`
-      );
-    }
-    const decodedItem = yield* decodeItemJson(item.itemJson);
-    if (
-      decodedItem.change.operation !== "upsert" ||
-      decodedItem.change.artifactHash !== artifact.artifactHash ||
-      decodedItem.change.rendererDomain !== artifact.payload.rendererDomain
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Artifact ${artifact.artifactHash} does not match its staged upsert.`
-      );
-    }
-    const stored = yield* storeContentArtifact(
-      artifact,
-      artifactJson,
-      now + ROLLBACK_RETENTION_MS
-    );
-    // Confect patch re-reads the whole row before replacing it, so replace
-    // the row loaded above instead of reading it again per staged artifact.
-    yield* writer
-      .table("contentItems")
-      .replace(item._id, {
-        ...Struct.omit(item, ["_id", "_creationTime"]),
-        artifactBatchHash: batchHash,
-        artifactBatchIndex: batchIndex,
-        artifactReady: true,
-      })
-      .pipe(Effect.orDie);
-    return stored;
   }
-);
+  const artifacts = yield* Effect.forEach(artifactJson, decodeArtifactJson);
+  return yield* Schema.decodeUnknownEffect(StageArtifactBatchInputSchema)({
+    artifacts,
+    batchIndex,
+    releaseId,
+  }).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Artifact batch ${batchIndex} violates its exact contract.`,
+        })
+    )
+  );
+});
+/** Persists one immutable artifact and marks its exact staged item ready. */
+const stageArtifact = Effect.fn("contentRelease.stageArtifact")(function* (
+  releaseId: string,
+  batchIndex: number,
+  batchHash: string,
+  artifact: SignedContentArtifact,
+  artifactJson: string,
+  now: number
+) {
+  const writer = yield* DatabaseWriter;
+  const item = yield* loadIdentityItem(
+    releaseId,
+    artifact.payload.contentKey,
+    artifact.payload.artifactLocale
+  );
+  if (!item) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_MISSING",
+      `Artifact ${artifact.artifactHash} has no staged item.`
+    );
+  }
+  if (item.artifactReady) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_CONFLICT",
+      `Artifact ${artifact.artifactHash} was already staged in another batch.`
+    );
+  }
+  const decodedItem = yield* decodeItemJson(item.itemJson);
+  if (
+    decodedItem.change.operation !== "upsert" ||
+    decodedItem.change.artifactHash !== artifact.artifactHash ||
+    decodedItem.change.rendererDomain !== artifact.payload.rendererDomain
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Artifact ${artifact.artifactHash} does not match its staged upsert.`
+    );
+  }
+  const stored = yield* storeContentArtifact(
+    artifact,
+    artifactJson,
+    now + ROLLBACK_RETENTION_MS
+  );
+  // Confect patch re-reads the whole row before replacing it, so replace
+  // the row loaded above instead of reading it again per staged artifact.
+  yield* writer
+    .table("contentItems")
+    .replace(item._id, {
+      ...Struct.omit(item, ["_id", "_creationTime"]),
+      artifactBatchHash: batchHash,
+      artifactBatchIndex: batchIndex,
+      artifactReady: true,
+    })
+    .pipe(Effect.orDie);
+  return stored;
+});
 /** Stages one canonical artifact batch with exact immutable retry identity. */
 export const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(
   function* (

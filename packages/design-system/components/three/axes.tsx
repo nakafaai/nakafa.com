@@ -1,6 +1,6 @@
 "use client";
 
-import { Html, Line } from "@react-three/drei";
+import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
@@ -8,6 +8,7 @@ import {
   createAxisGeometry,
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
+import { SceneHtml } from "@repo/design-system/components/three/overlay";
 import { COLORS } from "@repo/design-system/lib/color";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { Array as Arr } from "effect";
@@ -75,8 +76,8 @@ function AxisLabel({
 
   // This is camera presentation state: update Three.js and DOM at the native
   // animation-frame boundary without React state or camera-framing feedback.
-  // OrbitControls runs at -1 and Html projects at 0. Move the label between
-  // them so the final demand frame projects the current axis endpoint.
+  // OrbitControls runs at -1 and SceneHtml places the label at 0. Move the label
+  // between them so the final demand frame projects the current axis endpoint.
   useFrame(({ camera, size }) => {
     const object = group.current;
     const element = label.current;
@@ -161,9 +162,9 @@ function AxisLabel({
 
   return (
     <group ref={group}>
-      <Html
-        // Html must never cache the camera's non-finite mount projection.
-        // The axis frame already owns the validated visible endpoint.
+      <SceneHtml
+        // The frame sets scratch.screen only after its finite check, so this
+        // projection always receives a finite point.
         calculatePosition={() => [scratch.screen.x, scratch.screen.y]}
         ref={attachLabel}
         style={{
@@ -175,12 +176,11 @@ function AxisLabel({
           whiteSpace: "nowrap",
           visibility: "hidden",
         }}
-        zIndexRange={[1, 0]}
       >
         <span aria-hidden="true" data-axis-label={name}>
           <InlineMath math={name} />
         </span>
-      </Html>
+      </SceneHtml>
     </group>
   );
 }

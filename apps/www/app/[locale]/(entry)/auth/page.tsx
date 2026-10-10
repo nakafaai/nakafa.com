@@ -2,6 +2,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { Auth } from "@/components/auth";
+import { AuthTitle } from "@/components/auth/title";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { Theme } from "@/components/marketing/shared/footer/action";
 import { BackButton } from "@/components/shared/back";
@@ -23,24 +24,13 @@ export default async function Page(props: PageProps<"/[locale]/auth">) {
         <Theme variant="ghost" />
       </EntryShellHeader>
       <EntryShellBody>
-        <PageTitle />
+        <AuthTitle />
 
         <Auth />
 
         <PageFooter locale={locale} pageNavigation={pageNavigation} />
       </EntryShellBody>
     </>
-  );
-}
-
-function PageTitle() {
-  const t = useTranslations("Metadata");
-
-  return (
-    <div className="flex flex-col items-center">
-      <h1 className="font-semibold text-2xl">Nakafa</h1>
-      <p className="text-muted-foreground">{t("very-short-description")}</p>
-    </div>
   );
 }
 

@@ -1,10 +1,4 @@
-import {
-  type ConsoleMessage,
-  expect,
-  type Locator,
-  type Page,
-  test,
-} from "@playwright/test";
+import { type ConsoleMessage, expect, type Page, test } from "@playwright/test";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
 import { Array as Arr, Effect } from "effect";
 import {
@@ -15,7 +9,6 @@ import {
   PIXEL_READBACKS,
   patchWebGL,
   recordPixelReadbacks,
-  waitForStableCanvas,
 } from "@/e2e/support/canvas";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
@@ -23,12 +16,8 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
-import {
-  COORDINATE_CONTROLS,
-  LINE_SCENE,
-  lineSceneCards,
-} from "@/e2e/support/selector";
-import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { revealLineScene } from "@/e2e/support/scene";
+import { COORDINATE_CONTROLS, lineSceneCards } from "@/e2e/support/selector";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;
@@ -90,25 +79,6 @@ const openLessonScenes = Effect.fn("NakafaE2E.openLessonScenes")(function* (
   const count = yield* Effect.promise(() => cards.count());
   yield* Effect.sync(() => expect(count).toBeGreaterThan(0));
   return { cards, count };
-});
-
-/** Reveals one line-scene card and waits for its canvas to settle. */
-const revealLineScene = Effect.fn("NakafaE2E.revealLineScene")(function* (
-  card: Locator
-) {
-  const scene = card.locator(LINE_SCENE);
-  const canvas = scene.locator("canvas");
-  // Reveal the content-visibility card before scrolling its deferred scene.
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await card.scrollIntoViewIfNeeded();
-      await expect(scene).toBeVisible();
-      await scene.scrollIntoViewIfNeeded();
-      expect(await canvas.isVisible()).toBe(true);
-    }).toPass({ timeout: revealTimeoutMilliseconds })
-  );
-  yield* waitForStableCanvas(canvas);
-  return canvas;
 });
 
 /**

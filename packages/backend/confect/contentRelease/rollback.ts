@@ -38,7 +38,7 @@ const rollbackSource = Effect.fn("contentRelease.rollbackSource")(function* (
   return yield* loadReadableSnapshot(releaseId, manifestHash);
 });
 /** Creates one bounded body-bearing rollback page. */
-export function makeRollbackPage(
+function makeRollbackPage(
   request: typeof RollbackPageRequestSchema.Type,
   total: number,
   records: readonly RollbackRecord[]

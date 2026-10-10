@@ -20,8 +20,7 @@ const CURRICULUM_PROGRAM_LIMIT = 50;
 const curriculumPreferenceIoFailedMessage =
   "Unable to read or persist curriculum preferences.";
 /** Compact curriculum option consumed by selectors and preference storage. */
-export type CurriculumProgramOption =
-  typeof curriculumProgramOptionValidator.Type;
+type CurriculumProgramOption = typeof curriculumProgramOptionValidator.Type;
 /** Maps unknown database failures into the curriculum preference error channel. */
 function toPreferenceIoError() {
   return new CurriculumPreferenceError({

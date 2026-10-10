@@ -2,7 +2,7 @@ import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
-import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
+import { tryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import {
   matchesAttemptIdentity,
   readAttemptSetIdentity,
@@ -49,7 +49,8 @@ export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
         : args.publicPath
     );
     if (!page) {
-      return yield* attemptPageIntegrity(
+      return yield* tryoutRuntimeError(
+        "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
         "Frozen try-out set page no longer matches its attempt snapshot."
       );
     }
@@ -80,7 +81,8 @@ export const readAttemptSectionPage = Effect.fn(
     localized?.publicPath ?? args.publicPath
   );
   if (!page) {
-    return yield* attemptPageIntegrity(
+    return yield* tryoutRuntimeError(
+      "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
       "Frozen try-out section page no longer matches its attempt snapshot."
     );
   }
@@ -103,7 +105,8 @@ const readAttemptSetSelection = Effect.fn("tryouts.attempt.readSetSelection")(
       snapshotId: attempt.tryoutSnapshotId,
     }).pipe(Effect.provide(tryoutLayer));
     if (!(selection && matchesAttemptSelection(attempt, identity, selection))) {
-      return yield* attemptPageIntegrity(
+      return yield* tryoutRuntimeError(
+        "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
         "Frozen try-out catalog no longer matches its attempt snapshot."
       );
     }
@@ -119,7 +122,8 @@ const readAttemptSetSelection = Effect.fn("tryouts.attempt.readSetSelection")(
         }).pipe(Effect.provide(tryoutLayer))
       : null;
     if (!localized) {
-      return yield* attemptPageIntegrity(
+      return yield* tryoutRuntimeError(
+        "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
         "The retained exam has no page in this language."
       );
     }
@@ -175,13 +179,5 @@ function matchesAttemptSelection(
       row.sourceRevision === snapshot.sourceRevision &&
       row.timeLimitSeconds === snapshot.timeLimitSeconds
     );
-  });
-}
-
-/** Rejects any drift inside an immutable attempt-owned page. */
-function attemptPageIntegrity(message: string) {
-  return new TryoutRuntimeError({
-    code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-    message,
   });
 }

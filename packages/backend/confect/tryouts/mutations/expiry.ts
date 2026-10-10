@@ -16,8 +16,8 @@ import { Array as Arr, Clock, Duration, Effect, flow, HashSet } from "effect";
 const EXPIRY_SWEEP_LIMIT = 50;
 const EXPIRY_SWEEP_ATTEMPT_BYTES = 6 * 1024 * 1024;
 const EXPIRY_SWEEP_SECTION_BYTES = 2 * 1024 * 1024;
-export type TryoutAttempt = Docs["tryoutAttempts"];
-export type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
+type TryoutAttempt = Docs["tryoutAttempts"];
+type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 /** Expires one still-matching attempt through the typed runtime program. */
 export const expireScheduledAttempt = Effect.fn("tryouts.expiry.attempt")(
   function* (args: { attemptId: Id<"tryoutAttempts">; expiresAt: number }) {
