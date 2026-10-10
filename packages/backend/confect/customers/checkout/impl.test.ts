@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { validateCheckoutRequest } from "@repo/backend/confect/customers/checkout/impl";
 import { InvalidCheckoutSuccessUrl } from "@repo/backend/confect/customers/checkout/spec";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import { SiteConfigError } from "@repo/backend/confect/site/spec";
-import { products } from "@repo/backend/confect/utils/polar/products";
 import { ConfigProvider, Effect } from "effect";
 
 const siteOrigin = "http://localhost:3000";

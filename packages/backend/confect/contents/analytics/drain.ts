@@ -20,9 +20,9 @@ import {
   CONTENT_ANALYTICS_BATCH_SIZE,
   CONTENT_ANALYTICS_LEASE_DURATION_MS,
 } from "@repo/backend/confect/contents/constants";
-import { isContentAnalyticsPartition } from "@repo/backend/confect/contents/helpers/partitions";
 import { applyContentAnalyticsBatch } from "@repo/backend/confect/contents/metrics/apply";
 import { groupMetricsQueueItems } from "@repo/backend/confect/contents/metrics/batch";
+import { isContentAnalyticsPartition } from "@repo/backend/confect/contents/partitions";
 import { Clock, Duration, Effect, flow } from "effect";
 
 /** Generated internal mutation reference that continues one claimed drain. */

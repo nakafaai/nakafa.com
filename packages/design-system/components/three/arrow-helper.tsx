@@ -5,7 +5,7 @@ import {
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
-import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
+import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/data/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { Predicate } from "effect";

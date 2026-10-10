@@ -8,6 +8,7 @@ import {
   it,
 } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import { ModelId, type ModelKey } from "@repo/backend/confect/gateway/model";
 import {
   refundCredits,
@@ -17,7 +18,6 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { products } from "@repo/backend/confect/utils/polar/products";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
 

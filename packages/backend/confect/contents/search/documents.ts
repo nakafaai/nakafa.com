@@ -1,0 +1,158 @@
+import { learningGraphIdentityValidator } from "@repo/backend/confect/contents/graph";
+import {
+  localeValidator,
+  nakafaSectionValidator,
+} from "@repo/backend/confect/lib/validators/contents";
+import { SITE_ORIGIN } from "@repo/seo/origin";
+import { cleanSlug } from "@repo/utilities/slug";
+import { Array as Arr, pipe, Schema } from "effect";
+
+const WHITESPACE_PATTERN = /\s+/g;
+const FENCE_START_PATTERN = /^\s*(?:```|~~~)/;
+const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/;
+const MARKDOWN_LINK_PATTERN = /(^|[^!])\[([^\]]+)\]\([^)]+\)/g;
+
+/** Convex validator for source rows used to build search documents. */
+const contentSearchSourceValidator = Schema.Struct({
+  ...learningGraphIdentityValidator.fields,
+  contentHash: Schema.String,
+  description: Schema.optionalKey(Schema.String),
+  hasMarkdownSource: Schema.Boolean,
+  locale: localeValidator,
+  route: Schema.String,
+  section: nakafaSectionValidator,
+  sourcePath: Schema.String,
+  syncedAt: Schema.Finite,
+  text: Schema.String,
+  title: Schema.String,
+});
+
+/** Search source row derived from the Convex validator. */
+type ContentSearchSource = typeof contentSearchSourceValidator.Type;
+
+/**
+ * Creates the stable public content reference stored in the search read model.
+ *
+ * Reference: Convex search indexes work over persisted document fields.
+ * https://docs.convex.dev/search/text-search
+ */
+export function buildContentSearchRef(
+  {
+    alignmentId,
+    assetId,
+    conceptId,
+    learningObjectId,
+    lensId,
+    locale,
+    route,
+    section,
+    sourcePath,
+  }: Pick<
+    ContentSearchSource,
+    | "alignmentId"
+    | "assetId"
+    | "conceptId"
+    | "learningObjectId"
+    | "lensId"
+    | "locale"
+    | "route"
+    | "section"
+    | "sourcePath"
+  >,
+  hasMarkdownSource: boolean
+) {
+  const cleanPublicPath = cleanSlug(route);
+  const cleanSourcePath = cleanSlug(sourcePath);
+  const localizedPublicPath = `${locale}/${cleanPublicPath}`;
+  const ref = {
+    alignmentId,
+    assetId,
+    conceptId,
+    content_id: assetId,
+    learningObjectId,
+    lensId,
+    locale,
+    route: cleanPublicPath,
+    section,
+    sourcePath: cleanSourcePath,
+    url: `${SITE_ORIGIN}/${localizedPublicPath}`,
+  };
+  if (!hasMarkdownSource) {
+    return ref;
+  }
+  return {
+    ...ref,
+    markdown_url: `${SITE_ORIGIN}/${localizedPublicPath}.md`,
+  };
+}
+
+/**
+ * Compacts source fields into the single string required by Convex full-text search.
+ *
+ * Reference: Convex `searchIndex` accepts one `searchField`.
+ * https://docs.convex.dev/search/text-search
+ */
+function getContentSearchText(parts: Array<string | undefined>) {
+  return pipe(
+    parts,
+    Arr.map(cleanContentSearchText),
+    Arr.filter((part) => part.length > 0),
+    Arr.join(" ")
+  )
+    .replace(WHITESPACE_PATTERN, " ")
+    .trim();
+}
+
+/** Removes MDX authoring syntax while preserving displayable prose text. */
+function cleanContentSearchText(part: string | undefined) {
+  if (!part) {
+    return "";
+  }
+  return cleanContentSearchLines(part)
+    .replace(MARKDOWN_LINK_PATTERN, "$1$2")
+    .trim();
+}
+
+/** Converts authoring-only Markdown/MDX lines outside fenced code blocks. */
+function cleanContentSearchLines(part: string) {
+  let isInFence = false;
+  const lines = part.split("\n");
+  return pipe(
+    lines,
+    Arr.map((line) => {
+      if (FENCE_START_PATTERN.test(line)) {
+        isInFence = !isInFence;
+        return "";
+      }
+      if (isInFence) {
+        return line;
+      }
+      if (isMdxModuleLine(line)) {
+        return "";
+      }
+      return line.replace(MARKDOWN_HEADING_PATTERN, "$1");
+    }),
+    Arr.join("\n")
+  );
+}
+
+/** Detects authoring-only ESM rows in authored MDX source. */
+function isMdxModuleLine(line: string) {
+  const text = line.trimStart();
+  return text.startsWith("import ") || text.startsWith("export ");
+}
+
+/** Converts source content into the derived content search document payload. */
+export function buildContentSearchDocument(source: ContentSearchSource) {
+  const ref = buildContentSearchRef(source, source.hasMarkdownSource);
+  const description = source.description ?? "";
+  const text = getContentSearchText([source.title, description, source.text]);
+  return {
+    ...ref,
+    contentHash: source.contentHash,
+    description,
+    syncedAt: source.syncedAt,
+    text,
+    title: source.title,
+  };
+}

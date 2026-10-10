@@ -10,7 +10,7 @@ import {
   createArcPoints,
   GRAPH_ANGLE_ARC_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
-} from "@repo/design-system/components/three/helpers/quality";
+} from "@repo/design-system/components/three/data/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
 import { COLORS } from "@repo/design-system/lib/color";

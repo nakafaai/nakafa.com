@@ -47,6 +47,7 @@
     "@repo/contents": "workspace:*",
     "@repo/email": "workspace:*",
     "@repo/math": "workspace:*",
+    "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@vercel/config": "catalog:",
     "ai": "catalog:",

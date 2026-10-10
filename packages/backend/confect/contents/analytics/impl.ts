@@ -14,7 +14,7 @@ import {
   CONTENT_ANALYTICS_LEASE_DURATION_MS,
   CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/confect/contents/constants";
-import { isContentAnalyticsPartition } from "@repo/backend/confect/contents/helpers/partitions";
+import { isContentAnalyticsPartition } from "@repo/backend/confect/contents/partitions";
 import { Clock, Duration, Effect, flow, Option } from "effect";
 
 /** Generated internal mutation reference that claims analytics partitions. */

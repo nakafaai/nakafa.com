@@ -36,7 +36,7 @@ import { CommentsButton } from "@/components/sidebar/actions/comments";
 import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
-import { getOgUrl } from "@/lib/utils/metadata";
+import { getOgUrl } from "@/lib/seo/social";
 
 /** Prerenders the signed lesson; optional curriculum context lives in client controls. */
 export async function MaterialShell({ page }: { page: MaterialPageContent }) {

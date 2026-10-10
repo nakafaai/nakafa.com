@@ -27,9 +27,9 @@ import { useForumReactionMutation } from "@/components/school/classes/forum/reac
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/routes";
 import { DataFailure } from "@/components/shared/failure";
 import { reportClientException } from "@/lib/analytics/client";
+import { getLocale } from "@/lib/i18n/date";
 import { searchParsers } from "@/lib/nuqs/search";
 import { useClass } from "@/lib/school/classes/context";
-import { getLocale } from "@/lib/utils/date";
 
 type ForumListItem = typeof forumListItemValidator.Type;
 const DEBOUNCE_TIME = 500;

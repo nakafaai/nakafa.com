@@ -2,7 +2,7 @@ import { identityCollision } from "@repo/backend/confect/contentRelease/error";
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
-import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";

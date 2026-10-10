@@ -38,8 +38,8 @@ import {
   CommentVotes,
 } from "@/components/comments/actions";
 import { DataFailure } from "@/components/shared/failure";
-import { getInitialName } from "@/lib/utils/helper";
-import { getCleanHref } from "@/lib/utils/link";
+import { getInitialName } from "@/lib/identity/initials";
+import { getCleanHref } from "@/lib/routing/href";
 
 /** Render the incrementally loaded comments for one user profile. */
 export function UserComments({ userId }: { userId: Id<"users"> }) {

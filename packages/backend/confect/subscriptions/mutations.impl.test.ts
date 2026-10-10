@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import { products } from "@repo/backend/confect/utils/polar/products";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type {
   MutationCtx,

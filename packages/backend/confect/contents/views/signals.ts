@@ -8,7 +8,7 @@ import {
   createCanonicalLearningContext,
   type LearningContextStorage,
 } from "@repo/backend/confect/contents/context";
-import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/helpers/partitions";
+import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/partitions";
 import {
   createPopularityViewerKey,
   getPopularitySignalDay,

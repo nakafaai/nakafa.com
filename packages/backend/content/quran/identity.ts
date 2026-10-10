@@ -3,7 +3,7 @@ import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { identityCollision } from "@repo/backend/confect/contentRelease/error";
 import { quranSearchIdentity } from "@repo/backend/confect/contentRelease/quran/facts";
 import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
-import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { readQuranRow } from "@repo/backend/content/quran/row";
 import { authenticateQuranSearchHit } from "@repo/backend/content/quran/search";

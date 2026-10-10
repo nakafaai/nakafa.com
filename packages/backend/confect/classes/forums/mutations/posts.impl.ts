@@ -14,8 +14,8 @@ import spec from "@repo/backend/confect/classes/forums/mutations/posts.spec";
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { truncateText } from "@repo/backend/confect/utils/text";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { truncateText } from "@repo/utilities/text";
 import { Clock, Effect, Layer, Struct } from "effect";
 
 /**

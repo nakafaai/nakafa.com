@@ -4,7 +4,7 @@ import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
-import { products } from "@repo/backend/confect/utils/polar/products";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,

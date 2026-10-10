@@ -1,7 +1,7 @@
 import { identityCollision } from "@repo/backend/confect/contentRelease/error";
 import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
-import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
+import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
 import { findTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { Effect, Option } from "effect";

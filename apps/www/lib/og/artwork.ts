@@ -4,7 +4,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import type { Locale } from "next-intl";
-import { getOgUrl } from "@/lib/utils/metadata";
+import { getOgUrl } from "@/lib/seo/social";
 
 const ALL_ARTWORK_LOCALES = ACTIVE_APP_LOCALE_CODES;
 const ENGLISH_ARTWORK = [ENGLISH_APP_LOCALE_CODE] as const;

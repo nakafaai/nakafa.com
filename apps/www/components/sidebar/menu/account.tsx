@@ -31,7 +31,7 @@ import { clearAiDraftText } from "@/components/ai/store/draft";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import type { CurrentUser } from "@/lib/identity/client";
-import { getInitialName } from "@/lib/utils/helper";
+import { getInitialName } from "@/lib/identity/initials";
 
 /**
  * The account menu every sidebar shares: the account button, the account at

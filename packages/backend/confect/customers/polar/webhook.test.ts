@@ -1,13 +1,13 @@
 import { actionLayer } from "@confect/server/RegisteredFunction";
 import { beforeEach, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import {
   processPolarWebhookEvent,
   upsertPolarCustomerWebhook,
   upsertPolarSubscriptionWebhook,
 } from "@repo/backend/confect/customers/polar/webhook";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
-import { products } from "@repo/backend/confect/utils/polar/products";
 import {
   buildSubscription,
   buildWebhookCustomer,

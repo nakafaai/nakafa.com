@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { products } from "@repo/backend/confect/utils/polar/products";
 import { api } from "@repo/backend/convex/_generated/api";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import type { FunctionArgs } from "convex/server";

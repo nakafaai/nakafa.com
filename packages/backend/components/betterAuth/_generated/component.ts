@@ -113,9 +113,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
-                    | "username"
-                    | "displayUsername"
                     | "userId"
+                    | "displayUsername"
+                    | "username"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -308,9 +308,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
-                    | "username"
-                    | "displayUsername"
                     | "userId"
+                    | "displayUsername"
+                    | "username"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -577,9 +577,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
-                    | "username"
-                    | "displayUsername"
                     | "userId"
+                    | "displayUsername"
+                    | "username"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -819,9 +819,9 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "image"
                     | "createdAt"
                     | "updatedAt"
-                    | "username"
-                    | "displayUsername"
                     | "userId"
+                    | "displayUsername"
+                    | "username"
                     | "_id";
                   mode?: "sensitive" | "insensitive";
                   operator?:
@@ -1049,21 +1049,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "internal",
         { authId: string; name: string },
         null,
-        Name
-      >;
-    };
-    username: {
-      clearEmptyUsernameFields: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: null | string },
-        {
-          cleared: number;
-          continueCursor: string;
-          isDone: boolean;
-          scanned: number;
-          text: number;
-        },
         Name
       >;
     };

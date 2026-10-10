@@ -34,7 +34,7 @@ import { useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { TryoutScoreCard } from "@/components/tryout/score/card";
-import { getLocale } from "@/lib/utils/date";
+import { getLocale } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
 type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;

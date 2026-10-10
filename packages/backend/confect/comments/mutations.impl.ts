@@ -10,8 +10,8 @@ import spec, {
 } from "@repo/backend/confect/comments/mutations.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { truncateText } from "@repo/backend/confect/utils/text";
 import { cleanSlug } from "@repo/utilities/slug";
+import { truncateText } from "@repo/utilities/text";
 import { Effect, Layer, Struct } from "effect";
 
 /**

@@ -3,14 +3,14 @@ import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Order, Path } from "effect";
 import { API, Program, Snapshot } from "typescript/unstable/sync";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
-import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
 import {
   fixture,
   PROJECT,
   PROJECT_CONFIG,
   ROOT,
   withProject,
-} from "#scripts/check/test.helpers";
+} from "#scripts/check/fixture";
+import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
 
 /** A module with one array method call on line 2, judged by the root project. */
 const CALL =

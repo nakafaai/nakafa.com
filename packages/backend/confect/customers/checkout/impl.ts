@@ -8,8 +8,8 @@ import {
   InvalidCheckoutSuccessUrl,
   invalidCheckoutSuccessUrlCode,
 } from "@repo/backend/confect/customers/checkout/spec";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
-import { products } from "@repo/backend/confect/utils/polar/products";
 import { Effect } from "effect";
 
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];

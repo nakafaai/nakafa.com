@@ -32,6 +32,10 @@ import { ReferenceButton } from "@/components/sidebar/actions/reference";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import {
+  getQuranPagination,
+  getQuranSurahName,
+} from "@/lib/content/quran/navigation";
+import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
 } from "@/lib/content/quran/publication";
@@ -45,8 +49,7 @@ import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
 import type { SEOContext } from "@/lib/seo/contract";
-import { getSocialMetadata } from "@/lib/utils/metadata";
-import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
+import { getSocialMetadata } from "@/lib/seo/social";
 
 /** Builds localized Quran surah metadata only after the runtime catalog confirms the surah exists. */
 export async function generateMetadata({

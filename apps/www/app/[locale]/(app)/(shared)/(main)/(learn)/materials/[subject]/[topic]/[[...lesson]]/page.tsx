@@ -15,7 +15,7 @@ import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readMaterialPreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { getOgUrl, getSocialMetadata } from "@/lib/seo/social";
 
 type MaterialPageProps =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">;

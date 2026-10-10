@@ -1,7 +1,7 @@
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import type { TryoutStartScope } from "@repo/backend/confect/tryouts/start/spec";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
-import { products } from "@repo/backend/confect/utils/polar/products";
 import { DateTime, Effect, Option } from "effect";
 
 const activeSubscriptionStatus = "active";
