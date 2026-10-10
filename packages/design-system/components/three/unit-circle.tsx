@@ -11,7 +11,7 @@ import {
   GRAPH_ANGLE_ARC_SEGMENTS,
   GRAPH_FULL_CIRCLE_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
-} from "@repo/design-system/components/three/helpers/quality";
+} from "@repo/design-system/components/three/data/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin } from "@repo/math/angles";

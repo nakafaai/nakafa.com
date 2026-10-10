@@ -1,4 +1,4 @@
-import { GRAPH_BOUNDARY_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
+import { GRAPH_BOUNDARY_SEGMENTS } from "@repo/design-system/components/three/data/quality";
 import type { InequalitySampling } from "@repo/design-system/lib/geometry/inequality/region";
 import { MutableList } from "effect";
 

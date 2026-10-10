@@ -4,7 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   createArcPoints,
   getCurveDivisions,
-} from "@repo/design-system/components/three/helpers/quality";
+} from "@repo/design-system/components/three/data/quality";
 import { Array as Arr } from "effect";
 
 describe("graph quality helpers", () => {

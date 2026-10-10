@@ -6,14 +6,14 @@ import {
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import {
-  EndpointLine,
-  EndpointRing,
-} from "@repo/design-system/components/three/endpoint";
-import {
   GRAPH_ARROW_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
   getCurveDivisions,
-} from "@repo/design-system/components/three/helpers/quality";
+} from "@repo/design-system/components/three/data/quality";
+import {
+  EndpointLine,
+  EndpointRing,
+} from "@repo/design-system/components/three/endpoint";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { resolveArrowSize } from "@repo/design-system/lib/geometry/arrow";
