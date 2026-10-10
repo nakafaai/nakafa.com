@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
+import { DEFAULT_USER_CREDITS } from "@repo/backend/confect/credits/constants";
 import { products } from "@repo/backend/confect/customers/polar/products";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -344,7 +345,7 @@ describe("subscriptions/mutations", () => {
     }));
 
     expect(state.user).toMatchObject({
-      credits: 10,
+      credits: DEFAULT_USER_CREDITS,
       plan: "free",
     });
     expect(state.creditTransactions).toEqual([
@@ -353,7 +354,7 @@ describe("subscriptions/mutations", () => {
         type: "purchase",
       }),
       expect.objectContaining({
-        amount: 10,
+        amount: DEFAULT_USER_CREDITS,
         metadata: expect.objectContaining({
           reason: "plan-downgrade",
           "subscription-id": "sub-trigger-update",

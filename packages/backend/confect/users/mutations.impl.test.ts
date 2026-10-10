@@ -115,19 +115,19 @@ describe("users/mutations", () => {
       );
       expect(result).toEqual({
         role: role ?? null,
-        credits: 7,
+        credits: DEFAULT_USER_CREDITS - 3,
         userId: identity.userId,
       });
-      expect(reconciledUser.user?.credits).toBe(7);
+      expect(reconciledUser.user?.credits).toBe(DEFAULT_USER_CREDITS - 3);
       expect(reconciledUser.user?.creditsResetAt).toBe(
         Date.UTC(2026, 3, 2, 0, 0, 0)
       );
       expect(reconciledUser.creditTransactions).toEqual([
         expect.objectContaining({
           userId: identity.userId,
-          amount: 10,
+          amount: DEFAULT_USER_CREDITS,
           type: "daily-grant",
-          balanceAfter: 7,
+          balanceAfter: DEFAULT_USER_CREDITS - 3,
         }),
       ]);
       expect(storedResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));

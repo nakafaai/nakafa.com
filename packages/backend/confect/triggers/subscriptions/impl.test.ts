@@ -1,6 +1,7 @@
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { DEFAULT_USER_CREDITS } from "@repo/backend/confect/credits/constants";
 import { getStoredCreditResetTimestamp } from "@repo/backend/confect/credits/state";
 import { products } from "@repo/backend/confect/customers/polar/products";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
@@ -343,14 +344,14 @@ describe("triggers/subscriptions/impl", () => {
       };
     });
     expect(result.user).toMatchObject({
-      credits: 10,
+      credits: DEFAULT_USER_CREDITS,
       plan: "free",
       creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
     });
     expect(result.creditTransactions).toEqual([
       expect.objectContaining({
-        amount: 10,
-        balanceAfter: 10,
+        amount: DEFAULT_USER_CREDITS,
+        balanceAfter: DEFAULT_USER_CREDITS,
         type: "daily-grant",
         metadata: expect.objectContaining({
           reason: "plan-downgrade",
@@ -407,7 +408,7 @@ describe("triggers/subscriptions/impl", () => {
       };
     });
     expect(result.user).toMatchObject({
-      credits: 10,
+      credits: DEFAULT_USER_CREDITS,
       plan: "free",
       creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
     });
