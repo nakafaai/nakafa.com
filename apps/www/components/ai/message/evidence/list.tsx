@@ -11,6 +11,7 @@ import { MathPart } from "@/components/ai/message/evidence/math/view";
 import { NakafaPart } from "@/components/ai/message/evidence/nakafa/view";
 import { ScrapeUrlPart } from "@/components/ai/message/evidence/scrape";
 import { WebSearchPart } from "@/components/ai/message/evidence/web";
+import { isProblem } from "@/components/ai/message/invocation";
 
 /** Renders every persisted artifact of the surrounding live activity. */
 export function EvidenceList() {
@@ -22,15 +23,13 @@ export function EvidenceList() {
 
 function Evidence({ artifact }: { artifact: CapabilityArtifact }) {
   const t = useTranslations("Ai");
-  const denied = useActivity((invocation) => invocation.denied);
-  const failed = useActivity((invocation) => invocation.failed);
-  const running = useActivity((invocation) => invocation.running);
-  if (artifact.data.status === "loading" && !running) {
+  const state = useActivity((invocation) => invocation.state);
+  if (artifact.data.status === "loading" && state !== "running") {
     return (
       <p
         className={cn(
           "text-sm",
-          failed || denied ? "text-destructive" : "text-muted-foreground"
+          isProblem(state) ? "text-destructive" : "text-muted-foreground"
         )}
       >
         {t("activity.stopped")}

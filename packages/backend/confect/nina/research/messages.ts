@@ -3,9 +3,13 @@ import type { ModelMessage } from "ai";
 import { Array as Arr } from "effect";
 
 /**
- * Adds pre-fetched source evidence without disabling normal research tools.
+ * Shows the search step what the learner's own links already gave, so its
+ * queries look for what they do not cover.
  */
-export function createResearchMessages(task: string, sourceOutputs: string[]) {
+export function createResearchSearchMessages(
+  task: string,
+  sourceOutputs: readonly string[]
+) {
   if (sourceOutputs.length === 0) {
     return [{ role: "user", content: task }] satisfies ModelMessage[];
   }
@@ -20,13 +24,8 @@ export function createResearchMessages(task: string, sourceOutputs: string[]) {
             taskContext: `
             # Source Evidence Notice
 
-            User-provided source evidence has already been retrieved.
-            Use it for source-specific claims.
-          `,
-            toolUsageGuidelines: `
-            # Tool Usage
-
-            - Use the search tools before producing findings when the task also needs current, external, or corroborating evidence.
+            The user-provided sources below are already retrieved.
+            Search for current, external, or corroborating evidence they do not cover.
           `,
           }),
           "# User-Provided Source Evidence",
@@ -40,14 +39,13 @@ export function createResearchMessages(task: string, sourceOutputs: string[]) {
 
 /**
  * Gives structured synthesis the collected evidence without exposing tools.
+ * Synthesis only runs when at least one source was retrieved.
  */
 export function createResearchSynthesisMessages({
-  collectedEvidence = [],
   evidence,
   task,
 }: {
-  collectedEvidence?: string[];
-  evidence: string;
+  evidence: readonly string[];
   task: string;
 }) {
   return [
@@ -57,31 +55,11 @@ export function createResearchSynthesisMessages({
         [
           "# Research Task",
           task,
-          "# Research Notes",
-          evidence ||
-            createPrompt({
-              taskContext: `
-              No source-backed direct evidence was collected.
-            `,
-              detailedTaskInstructions: `
-              Do not infer absence or nonexistence from failed or empty search results.
-            `,
-            }),
-          ...formatSourceEvidence(collectedEvidence),
+          "# Source Evidence With URLs",
+          Arr.join(evidence, "\n\n"),
         ],
         "\n\n"
       ),
     },
   ] satisfies ModelMessage[];
-}
-
-/**
- * Keeps exact tool source evidence explicit in synthesis.
- */
-function formatSourceEvidence(collectedEvidence: string[]) {
-  if (collectedEvidence.length === 0) {
-    return [];
-  }
-
-  return ["# Source Evidence With URLs", Arr.join(collectedEvidence, "\n\n")];
 }

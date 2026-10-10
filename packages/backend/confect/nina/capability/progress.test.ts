@@ -99,14 +99,56 @@ it.effect("emits pending evidence before the provider finishes", () =>
   })
 );
 
-it.effect("retains gathered steps with a typed specialist failure", () =>
+const done = {
+  ...loading,
+  data: { ...loading.data, status: "done" },
+} satisfies CapabilityArtifact;
+const lost = {
+  ...loading,
+  id: "search-2",
+  data: { ...loading.data, status: "error", error: "Unavailable" },
+} satisfies CapabilityArtifact;
+
+it.effect.each([
+  [
+    "a failed run that loaded nothing stays failed",
+    [loading],
+    "failed",
+    "failed",
+  ],
+  [
+    "a failed run never contradicts loaded evidence",
+    [done],
+    "failed",
+    "partial",
+  ],
+  [
+    "a run that lost a card beside a loaded one is partial",
+    [done, lost],
+    undefined,
+    "partial",
+  ],
+  [
+    "a run that only lost cards keeps what it reported",
+    [lost],
+    undefined,
+    undefined,
+  ],
+  [
+    "a run with every card loaded reports no outcome",
+    [done],
+    undefined,
+    undefined,
+  ],
+  ["a stated outcome survives loaded evidence", [done, lost], "empty", "empty"],
+] as const)("settles the stored outcome: %s", ([, cards, reported, stored]) =>
   Effect.gen(function* () {
     const snapshots = yield* streamCapability(
       (publish) =>
-        publish(loading).pipe(
+        Effect.forEach(cards, publish).pipe(
           Effect.as({
-            text: "Research unavailable",
-            failure: "failed" as const,
+            text: "Research evidence",
+            ...(reported ? { outcome: reported } : {}),
           })
         ),
       options
@@ -115,9 +157,9 @@ it.effect("retains gathered steps with a typed specialist failure", () =>
       Option.getOrThrow(Arr.last(snapshots))
     );
     expect(final).toEqual({
-      artifacts: [loading],
-      failure: "failed",
-      text: "Research unavailable",
+      artifacts: cards,
+      ...(stored ? { outcome: stored } : {}),
+      text: "Research evidence",
     });
   })
 );

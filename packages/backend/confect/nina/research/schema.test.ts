@@ -61,8 +61,8 @@ describe("research schema", () => {
     expect(Result.isFailure(missingPreference)).toBe(true);
     expect(Result.isFailure(invalidPreference)).toBe(true);
   });
-  it("validates structured research findings with citation data", () => {
-    const valid = Schema.decodeResult(ResearchOutputSchema)({
+  it("asks research findings for their shape and leaves citations to the filter", () => {
+    const cited = Schema.decodeResult(ResearchOutputSchema)({
       findings: [
         {
           text: "AI SDK DevTools uses local debugging middleware.",
@@ -75,34 +75,30 @@ describe("research schema", () => {
         },
       ],
       limitations: [],
-      noEvidenceAnswer: "I could not verify this from direct sources.",
     });
-    const invalid = Schema.decodeResult(ResearchOutputSchema)({
+    const stray = Schema.decodeResult(ResearchOutputSchema)({
       findings: [
         {
-          text: "Missing citation URL.",
+          text: "A stray URL drops this finding later, not the whole answer.",
           citations: [{ title: "AI SDK", url: "not-a-url" }],
         },
+        { text: "So does a finding that cites nothing.", citations: [] },
       ],
       limitations: [],
-      noEvidenceAnswer: "I could not verify this from direct sources.",
     });
-    expect(Result.isSuccess(valid)).toBe(true);
-    expect(Result.isFailure(invalid)).toBe(true);
+    const blank = Schema.decodeResult(ResearchOutputSchema)({
+      findings: [{ text: "", citations: [] }],
+      limitations: [],
+    });
+    expect(Result.isSuccess(cited)).toBe(true);
+    expect(Result.isSuccess(stray)).toBe(true);
+    expect(Result.isFailure(blank)).toBe(true);
   });
-  it("allows empty findings when direct citation evidence is unavailable", () => {
+  it("accepts an answer that holds only limitations", () => {
     const valid = Schema.decodeResult(ResearchOutputSchema)({
       findings: [],
       limitations: ["No retrieved direct source supported a citeable claim."],
-      noEvidenceAnswer: "I could not verify this from direct sources.",
     });
     expect(Result.isSuccess(valid)).toBe(true);
-  });
-  it("requires a generated no-evidence answer", () => {
-    const invalid = Schema.decodeUnknownResult(ResearchOutputSchema)({
-      findings: [],
-      limitations: ["No retrieved direct source supported a citeable claim."],
-    });
-    expect(Result.isFailure(invalid)).toBe(true);
   });
 });

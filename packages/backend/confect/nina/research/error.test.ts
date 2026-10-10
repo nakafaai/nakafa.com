@@ -16,14 +16,14 @@ describe("makeResearchGenerationError", () => {
     [{ status: 503 }, '{"status":503}'],
     [null, "null"],
     [undefined, undefined],
-  ])("retains evidence failure details for %j", (cause, expected) => {
-    const error = makeResearchGenerationError(cause, "evidence");
+  ])("retains search failure details for %j", (cause, expected) => {
+    const error = makeResearchGenerationError(cause, "search");
     expect(error).toBeInstanceOf(ResearchGenerationError);
     expect(error).toMatchObject({
       _tag: "ResearchGenerationError",
       cause: expected,
-      message: "Research evidence generation failed.",
-      phase: "evidence",
+      message: "Research search generation failed.",
+      phase: "search",
     });
   });
 
@@ -69,9 +69,9 @@ describe("makeResearchGenerationError", () => {
       phase: "synthesis",
       text: '{"unexpected":true}',
     });
-    expect(makeResearchGenerationError(failure, "evidence")).toMatchObject({
+    expect(makeResearchGenerationError(failure, "search")).toMatchObject({
       cause: "Output failed validation",
-      phase: "evidence",
+      phase: "search",
     });
   });
 });

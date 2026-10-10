@@ -1,6 +1,6 @@
 import { ResearchGenerationError } from "@repo/backend/confect/nina/research/schema";
 import { NoObjectGeneratedError } from "ai";
-import { Inspectable, Predicate } from "effect";
+import { Effect, Inspectable, Predicate } from "effect";
 
 /** Preserves provider failures as the research phase's typed error. */
 export function makeResearchGenerationError(
@@ -19,6 +19,18 @@ export function makeResearchGenerationError(
     cause: describeCause(error),
     message: `Research ${phase} generation failed.`,
     phase,
+  });
+}
+
+/**
+ * Records why a research phase failed. Nina and the learner only get the
+ * capability's text, so the log is the one place the cause survives.
+ */
+export function logResearchFailure(error: ResearchGenerationError) {
+  return Effect.logWarning("Nina research phase failed", {
+    cause: error.cause,
+    message: error.message,
+    phase: error.phase,
   });
 }
 

@@ -1,5 +1,6 @@
 import type {
   CapabilityArtifactSchema,
+  CapabilityOutcomeSchema,
   CapabilityOutputSchema,
 } from "@repo/backend/client/nina/capability";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
@@ -16,6 +17,8 @@ export type CapabilityArtifact = typeof CapabilityArtifactSchema.Type;
 
 export type CapabilityOutput = typeof CapabilityOutputSchema.Type;
 
+type CapabilityOutcome = typeof CapabilityOutcomeSchema.Type;
+
 export type CapabilityProgress = (
   artifact: CapabilityArtifact
 ) => Effect.Effect<void>;
@@ -26,12 +29,13 @@ export type CapabilityProgress = (
  * snapshots without losing cards or the final evidence. Closing the stream
  * interrupts the scoped capability, including its provider and tool requests.
  * Final model-facing text never exceeds the evidence budget; `continuation`
- * tells the model how to ask for what a truncation omitted.
+ * tells the model how to ask for what a truncation omitted. The stored outcome
+ * is decided here, from what `run` reports and the cards it gathered.
  */
 export function streamCapability<E, R>(
   run: (
     publish: CapabilityProgress
-  ) => Effect.Effect<Pick<CapabilityOutput, "text" | "failure">, E, R>,
+  ) => Effect.Effect<Pick<CapabilityOutput, "text" | "outcome">, E, R>,
   {
     continuation,
     signal,
@@ -59,13 +63,15 @@ export function streamCapability<E, R>(
         });
 
         yield* run(publish).pipe(
-          Effect.tap(({ text, failure }) =>
-            Queue.offer(queue, {
-              artifacts: Arr.fromIterable(MutableHashMap.values(artifacts)),
-              ...(failure ? { failure } : {}),
+          Effect.tap(({ text, outcome }) => {
+            const cards = Arr.fromIterable(MutableHashMap.values(artifacts));
+            const settled = settleOutcome(outcome, cards);
+            return Queue.offer(queue, {
+              artifacts: cards,
+              ...(settled ? { outcome: settled } : {}),
               text: boundText(text, NINA_BUDGET.evidence, continuation),
-            })
-          ),
+            });
+          }),
           Effect.onExit((exit) =>
             Exit.isFailure(exit)
               ? Queue.failCause(queue, exit.cause)
@@ -91,4 +97,27 @@ export function streamCapability<E, R>(
       })
     )
   );
+}
+
+/**
+ * Keeps the outcome from contradicting the cards beside it: a run that loaded
+ * evidence never ends as `failed`, and a run that lost a card beside a loaded
+ * one never ends as plainly done.
+ */
+function settleOutcome(
+  outcome: CapabilityOutcome | undefined,
+  artifacts: readonly CapabilityArtifact[]
+) {
+  const loaded = Arr.some(
+    artifacts,
+    (artifact) => artifact.data.status === "done"
+  );
+  const lost = Arr.some(
+    artifacts,
+    (artifact) => artifact.data.status === "error"
+  );
+  if (loaded && (outcome === "failed" || (!outcome && lost))) {
+    return "partial" as const;
+  }
+  return outcome;
 }

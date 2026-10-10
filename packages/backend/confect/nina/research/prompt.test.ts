@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { nakafaWebSearch } from "@repo/backend/confect/nina/research/descriptions";
 import {
-  researchEvidencePrompt,
   researchPrompt,
+  researchSearchPrompt,
 } from "@repo/backend/confect/nina/research/prompt";
 
 const context = {
@@ -14,32 +14,17 @@ const context = {
 };
 
 describe("research prompt", () => {
-  it("keeps evidence tool routing under tool usage guidelines", () => {
-    const prompt = researchEvidencePrompt({ context, locale: "id" });
+  it("asks the search step for one search and nothing else", () => {
+    const prompt = researchSearchPrompt({ context, locale: "id" });
 
-    const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
-    const evidenceIndex = prompt.indexOf("# Evidence Collection Contract");
-    const outputIndex = prompt.indexOf("# Evidence Output");
-
-    expect(toolIndex).toBeGreaterThanOrEqual(0);
-    expect(evidenceIndex).toBeGreaterThan(toolIndex);
-    expect(outputIndex).toBeGreaterThan(evidenceIndex);
-
-    const toolSection = prompt.slice(toolIndex, evidenceIndex);
-    const evidenceSection = prompt.slice(evidenceIndex, outputIndex);
-    const outputSection = prompt.slice(outputIndex);
-
-    expect(toolSection).toContain("Workflow:");
-    expect(toolSection).toContain("Search rules:");
-    expect(toolSection).toContain("webSearch");
-    expect(toolSection).toContain(
-      "Every webSearch call must set sourcePreference"
+    expect(prompt).toContain("# Tool Usage Guidelines");
+    expect(prompt).toContain(
+      "Call webSearch once with every query the task needs."
     );
-    expect(toolSection).not.toContain("Do not infer absence");
-    expect(evidenceSection).toContain("Do not infer absence");
-    expect(outputSection).toContain(
-      "Return concise internal evidence notes only."
-    );
+    expect(prompt).toContain("Search rules:");
+    expect(prompt).toContain("Every webSearch call must set sourcePreference");
+    expect(prompt).not.toContain("evidence notes");
+    expect(prompt).not.toContain("# Evidence Output");
   });
 
   it("keeps synthesis prompt free of tool-routing language", () => {
@@ -52,7 +37,7 @@ describe("research prompt", () => {
   });
 
   it("keeps official-source requests scoped to authoritative sources", () => {
-    const prompt = researchEvidencePrompt({ context, locale: "id" });
+    const prompt = researchSearchPrompt({ context, locale: "id" });
 
     expect(prompt).toContain("Preserve task-relevant user-provided strings");
     expect(prompt).toContain("Do not translate or paraphrase");
@@ -66,7 +51,7 @@ describe("research prompt", () => {
   });
 
   it("includes runtime context with unknown role fallback", () => {
-    const prompt = researchEvidencePrompt({
+    const prompt = researchSearchPrompt({
       context: { ...context, userRole: undefined, verified: true },
       locale: "en",
     });
@@ -126,8 +111,12 @@ describe("research prompt", () => {
     const prompt = researchPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
-      "Limitations and empty-findings answers are process statements about this retrieval attempt."
+      "Limitations are process statements about this retrieval attempt."
     );
+    expect(prompt).toContain(
+      "Empty or weak evidence is a process limitation only: return an empty findings array."
+    );
+    expect(prompt).not.toContain("noEvidenceAnswer");
     expect(prompt).toContain(
       "entity nonexistence for a person, school, organization, product, policy, or event."
     );
@@ -140,13 +129,5 @@ describe("research prompt", () => {
     expect(prompt).not.toContain(
       "This retrieval run was insufficient to verify the user's claim"
     );
-  });
-
-  it("keeps empty evidence searches from becoming absence evidence", () => {
-    const prompt = researchEvidencePrompt({ context, locale: "id" });
-
-    expect(prompt).toContain("zero usable direct sources");
-    expect(prompt).toContain("Do not infer absence");
-    expect(prompt).toContain("digital-footprint absence");
   });
 });

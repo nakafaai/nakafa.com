@@ -111,17 +111,17 @@ const WebSearchOutputSchema = Schema.Struct({
     }),
   });
 const ResearchCitationSchema = Schema.Struct({
-  title: Schema.NonEmptyString.annotate({
+  title: Schema.String.annotate({
     description: createPrompt({
       taskContext: `
         Concise citation label shown to the user.
       `,
     }),
   }),
-  url: urlInputSchema.annotate({
+  url: Schema.String.annotate({
     description: createPrompt({
       taskContext: `
-        Canonical source URL for the cited evidence.
+        Source URL copied exactly from the provided evidence.
       `,
     }),
   }),
@@ -140,7 +140,7 @@ const ResearchFindingSchema = Schema.Struct({
     }),
   }),
   citations: Schema.Array(ResearchCitationSchema)
-    .pipe(Schema.mutable, Schema.check(Schema.isMinLength(1)))
+    .pipe(Schema.mutable)
     .annotate({
       description: createPrompt({
         taskContext: `
@@ -149,6 +149,11 @@ const ResearchFindingSchema = Schema.Struct({
       }),
     }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+/**
+ * What synthesis returns. The schema asks only for shape: the citation filter
+ * decides which findings count, so a stray URL or an unsupported finding drops
+ * that finding instead of rejecting the whole answer.
+ */
 export const ResearchOutputSchema = Schema.Struct({
   findings: Schema.Array(ResearchFindingSchema)
     .pipe(Schema.mutable)
@@ -177,33 +182,6 @@ export const ResearchOutputSchema = Schema.Struct({
       `,
       }),
     }),
-  noEvidenceAnswer: Schema.NonEmptyString.annotate({
-    description: createPrompt({
-      taskContext: `
-      A brief user-facing process limitation in the user's locale.
-      Use it when no source-backed finding can be returned.
-
-      Generate a natural one-sentence answer in the user's locale.
-      Communicate only these ideas:
-      - the retrieval attempt did not establish verification from direct sources.
-      - a direct channel the user can check next.
-      - do not copy or translate this schema description verbatim.
-
-      Use first-person process wording.
-      Do not describe the world as lacking official information.
-      Prefer verification wording over search-result wording.
-      Do not say information was found or not found.
-      Do not say evidence, proof, or information is unavailable.
-      Do not mention a database, corpus, or search index.
-
-      Do not include unsupported:
-      - factual claims.
-      - absence claims.
-      - source names, URLs, or dates.
-      - rules or recommendations.
-    `,
-    }),
-  }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export const webSearchInputSchema = createEffectSchema(WebSearchInputSchema);
 export const researchOutputSchema = createEffectSchema(ResearchOutputSchema);
@@ -234,7 +212,7 @@ export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerati
   {
     cause: Schema.optional(Schema.String),
     message: Schema.String,
-    phase: Schema.Literals(["evidence", "synthesis"]),
+    phase: Schema.Literals(["search", "synthesis"]),
     text: Schema.optional(Schema.String),
   }
 ) {}

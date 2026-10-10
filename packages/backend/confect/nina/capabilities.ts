@@ -8,6 +8,7 @@ import type {
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
 import type { ModelId } from "@repo/backend/confect/gateway/model";
 import { streamCapability } from "@repo/backend/confect/nina/capability/progress";
+import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
@@ -68,11 +69,12 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   publish,
                   usageHandler,
                 }).pipe(
-                  Effect.catchTag("NakafaGenerationError", () =>
-                    Effect.succeed({
-                      failure: "failed" as const,
-                      text: "Nakafa retrieval failed. Use only evidence already available; do not invent content.",
-                    })
+                  Effect.catchTag("NakafaGenerationError", (error) =>
+                    failed(
+                      "nakafa",
+                      error,
+                      "Nakafa retrieval failed. Use only evidence already available; do not invent content."
+                    )
                   )
                 );
               }),
@@ -117,14 +119,15 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   usageHandler,
                 }).pipe(
                   Effect.catchTags({
-                    ResearchGenerationError: () =>
-                      Effect.succeed({
-                        failure: "failed" as const,
-                        text: "External research failed. State the limitation and use only retrieved evidence; do not invent sources.",
-                      }),
+                    ResearchGenerationError: (error) =>
+                      failed(
+                        "deepResearch",
+                        error,
+                        "External research failed. State the limitation and use only retrieved evidence; do not invent sources."
+                      ),
                     ResearchSourceLimitError: ({ maximum }) =>
                       Effect.succeed({
-                        failure: "sourceLimit" as const,
+                        outcome: "limit" as const,
                         text: `No sources were fetched. Ask the user to send at most ${maximum} source URLs per request. Do not silently omit their sources or start another research call for this request.`,
                       }),
                   })
@@ -168,11 +171,12 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   publish,
                   usageHandler,
                 }).pipe(
-                  Effect.catchTag("MathGenerationError", () =>
-                    Effect.succeed({
-                      failure: "failed" as const,
-                      text: "Deterministic math verification failed. State the limitation; do not claim an unverified calculation is correct.",
-                    })
+                  Effect.catchTag("MathGenerationError", (error) =>
+                    failed(
+                      "math",
+                      error,
+                      "Deterministic math verification failed. State the limitation; do not claim an unverified calculation is correct."
+                    )
                   )
                 );
               }),
@@ -187,3 +191,27 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
     }),
   };
 });
+
+/**
+ * Ends a capability that left nothing usable. Its cause goes to the log; Nina
+ * and the learner only get `text`.
+ */
+function failed(
+  capability: LearningCapabilityName,
+  error: {
+    readonly cause?: unknown;
+    readonly message: string;
+    readonly phase?: string;
+  },
+  text: string
+) {
+  return Effect.as(
+    Effect.logWarning("Nina capability failed", {
+      capability,
+      cause: error.cause,
+      message: error.message,
+      phase: error.phase,
+    }),
+    { outcome: "failed" as const, text }
+  );
+}

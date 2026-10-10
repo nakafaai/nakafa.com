@@ -712,6 +712,8 @@
       "unknown": "Informationen prüfen",
       "failures": "{count} fehlgeschlagen",
       "stopped": "Beendet",
+      "partial": "Teilweise fertig",
+      "empty": "Nichts gefunden",
       "denied": "Prüfung nicht erlaubt"
     },
     "nakafa-taxonomy": "Materialsammlung durchsuchen"

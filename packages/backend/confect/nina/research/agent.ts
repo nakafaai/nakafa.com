@@ -12,23 +12,29 @@ import {
   filterResearchOutputCitations,
 } from "@repo/backend/confect/nina/research/citations";
 import { nakafaWebSearch } from "@repo/backend/confect/nina/research/descriptions";
-import { makeResearchGenerationError } from "@repo/backend/confect/nina/research/error";
 import {
-  createResearchMessages,
+  logResearchFailure,
+  makeResearchGenerationError,
+} from "@repo/backend/confect/nina/research/error";
+import {
+  createResearchSearchMessages,
   createResearchSynthesisMessages,
 } from "@repo/backend/confect/nina/research/messages";
-import { formatResearchOutput } from "@repo/backend/confect/nina/research/output";
 import {
-  researchEvidencePrompt,
+  formatResearchOutput,
+  formatUnsynthesizedEvidence,
+} from "@repo/backend/confect/nina/research/output";
+import {
   researchPrompt,
+  researchSearchPrompt,
 } from "@repo/backend/confect/nina/research/prompt";
 import {
+  ResearchGenerationError,
   ResearchSourceLimitError,
   researchOutputSchema,
   webSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
 import { getSourceReferences } from "@repo/backend/confect/nina/research/source";
-import { prepareResearchEvidenceStep } from "@repo/backend/confect/nina/research/step";
 import {
   formatScrapeOutput,
   isSuccessfulScrapeOutput,
@@ -41,15 +47,18 @@ import {
   Output,
   wrapLanguageModel,
 } from "ai";
-import { Array as Arr, Effect, MutableHashSet } from "effect";
+import { Array as Arr, Effect, MutableHashSet, Result } from "effect";
 
 // Keep exact source fetching within the admitted count and provider concurrency.
 const exactSourceScrapeConcurrency = 3;
 const exactSourceContentMaxLength = 8000;
-const synthesisRetryAttempts = 3;
 
 /**
- * Runs source-backed research through Agent; its usage handler records provider calls.
+ * Runs source-backed research in two provider calls: one writes the web
+ * search, one turns the retrieved sources into cited findings. The learner's
+ * own links are read first. Once a source is retrieved, a later failure still
+ * hands that source to Nina, so the answer never contradicts the cards. The
+ * usage handler records each provider call.
  */
 export const runResearchAgent = Effect.fn("research.runResearchAgent")(
   function* ({
@@ -94,14 +103,16 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       toolCallId,
       publish,
     });
-    let collectedEvidence = Arr.map(sourceOutputs, (output) => output.text);
+    let evidence = Arr.map(sourceOutputs, (output) => output.text);
     const eligibleCitationUrls = MutableHashSet.empty<string>();
 
     for (const sourceOutput of sourceOutputs) {
       addEligibleSourceUrls(eligibleCitationUrls, sourceOutput.sources);
     }
 
-    const evidenceResult = yield* Effect.tryPromise({
+    // True once the search provider answered, with or without sources.
+    let searched = false;
+    const search = yield* Effect.tryPromise({
       try: (signal) =>
         agent.generateText(
           ctx,
@@ -109,8 +120,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           {
             abortSignal: signal,
             model,
-            instructions: researchEvidencePrompt({ locale, context }),
-            messages: createResearchMessages(task, collectedEvidence),
+            instructions: researchSearchPrompt({ locale, context }),
+            messages: createResearchSearchMessages(task, evidence),
             tools: {
               webSearch: createTool({
                 description: nakafaWebSearch,
@@ -131,14 +142,12 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                     }).pipe(
                       Effect.tap((output) =>
                         Effect.sync(() => {
-                          collectedEvidence = Arr.append(
-                            collectedEvidence,
-                            output.text
-                          );
+                          evidence = Arr.append(evidence, output.text);
                           addEligibleSourceUrls(
                             eligibleCitationUrls,
                             output.result.sources
                           );
+                          searched = output.result.error === undefined;
                         })
                       ),
                       Effect.map((output) => output.text)
@@ -147,30 +156,35 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                   ),
               }),
             },
-            /**
-             * Reference: AI SDK `prepareStep` supports per-step `toolChoice`,
-             * `activeTools`, and message overrides.
-             * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
-             */
-            prepareStep: ({ steps }) => {
-              const hasWebSearchToolCall = Arr.some(steps, (step) =>
-                Arr.some(
-                  step.toolCalls,
-                  (toolCall) => toolCall.toolName === "webSearch"
-                )
-              );
-              return prepareResearchEvidenceStep({ hasWebSearchToolCall });
-            },
-            stopWhen: isStepCount(2),
+            // The model only writes the queries. The search runs inside this
+            // one step, and no second step asks the model for notes.
+            toolChoice: { type: "tool", toolName: "webSearch" },
+            stopWhen: isStepCount(1),
             timeout,
           }
         ),
-      catch: (error) => makeResearchGenerationError(error, "evidence"),
-    });
+      catch: (error) => makeResearchGenerationError(error, "search"),
+    }).pipe(Effect.result);
 
-    const sourceEvidenceAvailable =
-      MutableHashSet.size(eligibleCitationUrls) > 0;
-    const output = yield* Effect.tryPromise({
+    if (MutableHashSet.size(eligibleCitationUrls) === 0) {
+      if (searched) {
+        return {
+          outcome: "empty" as const,
+          text: formatResearchOutput({ findings: [], limitations: [] }),
+        };
+      }
+      return yield* Result.isFailure(search)
+        ? search.failure
+        : new ResearchGenerationError({
+            message: "Research search returned no source.",
+            phase: "search",
+          });
+    }
+    if (Result.isFailure(search)) {
+      yield* logResearchFailure(search.failure);
+    }
+
+    const synthesis = yield* Effect.tryPromise({
       try: (signal) =>
         agent
           .generateText(
@@ -183,13 +197,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                 model,
               }),
               instructions: researchPrompt({ locale, context }),
-              messages: createResearchSynthesisMessages({
-                collectedEvidence: sourceEvidenceAvailable
-                  ? collectedEvidence
-                  : [],
-                evidence: sourceEvidenceAvailable ? evidenceResult.text : "",
-                task,
-              }),
+              messages: createResearchSynthesisMessages({ evidence, task }),
               output: Output.object({
                 description: createPrompt({
                   taskContext: `
@@ -204,12 +212,26 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           )
           .then((result) => result.output),
       catch: (error) => makeResearchGenerationError(error, "synthesis"),
-    }).pipe(Effect.retry({ times: synthesisRetryAttempts }));
-    const filteredOutput = filterResearchOutputCitations(
-      output,
+    }).pipe(Effect.result);
+    if (Result.isFailure(synthesis)) {
+      yield* logResearchFailure(synthesis.failure);
+      return {
+        outcome: "partial" as const,
+        text: formatUnsynthesizedEvidence(evidence),
+      };
+    }
+
+    const output = filterResearchOutputCitations(
+      synthesis.success,
       eligibleCitationUrls
     );
-    return { text: formatResearchOutput(filteredOutput) };
+    const text = formatResearchOutput(output);
+    if (!searched) {
+      return { outcome: "partial" as const, text };
+    }
+    return output.findings.length === 0
+      ? { outcome: "empty" as const, text }
+      : { text };
   }
 );
 

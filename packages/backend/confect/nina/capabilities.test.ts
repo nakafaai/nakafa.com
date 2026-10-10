@@ -112,7 +112,7 @@ describe("Nina capability execution policy", () => {
             state === "failed"
               ? Effect.fail(
                   new ResearchGenerationError({
-                    phase: "evidence",
+                    phase: "search",
                     message: "Private provider detail",
                   })
                 )
@@ -175,7 +175,7 @@ describe("Nina capability execution policy", () => {
         expect(encodeJsonText(result)).not.toContain("Private provider detail");
         if (state === "denied" || state === "missing") {
           expect(result[0]).toMatchObject({
-            failure: "denied",
+            outcome: "denied",
             text: expect.stringContaining("Status: denied"),
           });
           expect(runNakafaAgent).not.toHaveBeenCalled();
@@ -203,11 +203,11 @@ describe("Nina capability execution policy", () => {
             text: expect.stringContaining(expectedText),
           });
           if (state === "sourceLimit") {
-            expect(result[0]).toHaveProperty("failure", "sourceLimit");
+            expect(result[0]).toHaveProperty("outcome", "limit");
           } else if (state === "failed") {
-            expect(result[0]).toHaveProperty("failure", "failed");
+            expect(result[0]).toHaveProperty("outcome", "failed");
           } else {
-            expect(result[0]).not.toHaveProperty("failure");
+            expect(result[0]).not.toHaveProperty("outcome");
           }
         }
       }

@@ -5,7 +5,10 @@ import {
   filterResearchOutputCitations,
   normalizeResearchCitationUrl,
 } from "@repo/backend/confect/nina/research/citations";
-import { formatResearchOutput } from "@repo/backend/confect/nina/research/output";
+import {
+  formatResearchOutput,
+  formatUnsynthesizedEvidence,
+} from "@repo/backend/confect/nina/research/output";
 import { MutableHashSet } from "effect";
 
 describe("formatResearchOutput", () => {
@@ -28,7 +31,6 @@ describe("formatResearchOutput", () => {
           },
         ],
         limitations: [],
-        noEvidenceAnswer: "No direct evidence was available.",
       })
     ).toBe(
       "- Agent workflows are becoming central to AI SDK usage. [ByteByteGo](https://blog.bytebytego.com/p/whats-next-in-ai-five-trends-to-watch) [DevEssence](https://devessence.com/blog/ai-in-software-development-2026)"
@@ -54,7 +56,6 @@ describe("formatResearchOutput", () => {
           },
         ],
         limitations: [],
-        noEvidenceAnswer: "No direct evidence was available.",
       })
     ).toBe(
       "- The same source should appear once. [AI SDK](https://ai-sdk.dev/docs/ai-sdk-core/devtools)"
@@ -75,7 +76,6 @@ describe("formatResearchOutput", () => {
         },
       ],
       limitations: ["The retrieved source did not list every captured field."],
-      noEvidenceAnswer: "No direct evidence was available.",
     });
 
     expect(markdown).toContain(
@@ -87,16 +87,28 @@ describe("formatResearchOutput", () => {
     expect(markdown).not.toContain("Sources");
   });
 
-  it("keeps empty findings from becoming unsourced final claims", () => {
+  it("tells Nina what to say when no finding is source-backed, and keeps the limitations", () => {
     const output = formatResearchOutput({
       findings: [],
-      limitations: ["No source URLs were available."],
-      noEvidenceAnswer: "I could not verify this from direct sources.",
+      limitations: ["The requested page did not load."],
     });
 
-    expect(output).toBe("I could not verify this from direct sources.");
-    expect(output).not.toContain("No source URLs were available.");
-    expect(output).not.toContain("## Limitations");
+    expect(output).toBe(
+      "Research returned no source-backed finding. Tell the learner that this attempt could not verify the request from direct sources, and name a direct channel they can check next. Do not claim that anything is absent or does not exist.\n\n- The requested page did not load."
+    );
+  });
+
+  it("hands the collected sources over when synthesis is unavailable", () => {
+    const output = formatUnsynthesizedEvidence([
+      "# Scrape Result\n- URL: https://nakafa.com/source",
+      "# Web Search Results",
+    ]);
+
+    expect(output).toContain("Research synthesis was unavailable.");
+    expect(output).toContain("say that the research is incomplete");
+    expect(output).toContain(
+      "# Scrape Result\n- URL: https://nakafa.com/source\n\n# Web Search Results"
+    );
   });
 
   it("drops generated findings whose citations are not eligible source evidence", () => {
@@ -133,7 +145,6 @@ describe("formatResearchOutput", () => {
           },
         ],
         limitations: [],
-        noEvidenceAnswer: "I could not verify this from direct sources.",
       },
       eligibleUrls
     );
@@ -177,7 +188,6 @@ describe("formatResearchOutput", () => {
           },
         ],
         limitations: [],
-        noEvidenceAnswer: "I could not verify this from direct sources.",
       },
       eligibleUrls
     );
@@ -215,7 +225,6 @@ describe("formatResearchOutput", () => {
         },
       ],
       limitations: [],
-      noEvidenceAnswer: "No direct evidence was available.",
     };
 
     expect(filterResearchOutputCitations(output, eligibleUrls)).toBe(output);

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import type { DynamicToolUIPart, ToolUIPart } from "ai";
-import { readInvocation } from "@/components/ai/message/invocation";
+import { Array as Arr } from "effect";
+import { isProblem, readInvocation } from "@/components/ai/message/invocation";
 
 const input = {
   expression: "1 / 0",
@@ -42,12 +43,8 @@ describe("readInvocation", () => {
     expect(invocation).toEqual({
       artifacts: [failedArtifact, loadingArtifact],
       capability: "math",
-      denied: false,
-      failed: false,
       failures: 1,
-      running: false,
-      sourceLimit: undefined,
-      stopped: false,
+      state: "done",
     });
   });
 
@@ -67,27 +64,33 @@ describe("readInvocation", () => {
       type: "tool-math",
     };
 
-    expect(readInvocation(pending, false)).toMatchObject({
-      running: true,
-      stopped: false,
-    });
-    expect(readInvocation(pending, true)).toMatchObject({
-      running: false,
-      stopped: true,
-    });
+    expect(readInvocation(pending, false)).toMatchObject({ state: "running" });
+    expect(readInvocation(pending, true)).toMatchObject({ state: "stopped" });
     expect(
       readInvocation(
         { state: "input-streaming", toolCallId: "call-1", type: "tool-math" },
         false
       )
-    ).toMatchObject({ artifacts: [], running: true });
+    ).toMatchObject({ artifacts: [], state: "running" });
     expect(readInvocation(preliminary, true)).toMatchObject({
       artifacts: [loadingArtifact],
-      stopped: true,
+      state: "stopped",
     });
   });
 
-  it("fails on tool errors, typed failures and outputs that break the contract", () => {
+  it.each(["partial", "empty", "limit", "denied", "failed"] as const)(
+    "takes the stored %s outcome as the state, whatever evidence sits beside it",
+    (outcome) => {
+      expect(
+        readInvocation(
+          settled({ artifacts: [failedArtifact], outcome, text: "" }),
+          true
+        )
+      ).toMatchObject({ artifacts: [failedArtifact], state: outcome });
+    }
+  );
+
+  it("fails on tool errors and on outputs that break the contract", () => {
     const errored: ToolUIPart = {
       errorText: "Provider failed.",
       input: undefined,
@@ -96,23 +99,17 @@ describe("readInvocation", () => {
       type: "tool-math",
     };
 
-    expect(readInvocation(errored, true)).toMatchObject({ failed: true });
-    expect(
-      readInvocation(
-        settled({ artifacts: [], failure: "failed", text: "" }),
-        true
-      )
-    ).toMatchObject({ failed: true, sourceLimit: undefined });
-    expect(
-      readInvocation(
-        settled({ artifacts: [], failure: "sourceLimit", text: "" }),
-        true
-      )
-    ).toMatchObject({ failed: true, sourceLimit: 8 });
+    expect(readInvocation(errored, true)).toMatchObject({ state: "failed" });
     expect(readInvocation(settled({ text: 19 }), true)).toMatchObject({
       artifacts: [],
-      failed: true,
+      state: "failed",
     });
+    expect(
+      readInvocation(
+        settled({ artifacts: [], outcome: "later", text: "" }),
+        true
+      )
+    ).toMatchObject({ state: "failed" });
   });
 
   it("marks denials and names capabilities Nina does not own as unknown", () => {
@@ -127,14 +124,25 @@ describe("readInvocation", () => {
 
     expect(readInvocation(denied, true)).toMatchObject({
       capability: "unknown",
-      denied: true,
-      failed: false,
+      state: "denied",
     });
-    expect(
-      readInvocation(
-        settled({ artifacts: [], failure: "denied", text: "" }),
-        true
-      )
-    ).toMatchObject({ capability: "math", denied: true });
+  });
+
+  it("reads only denied, failed and limit as a problem", () => {
+    const states = [
+      "denied",
+      "done",
+      "empty",
+      "failed",
+      "limit",
+      "partial",
+      "running",
+      "stopped",
+    ] as const;
+    expect(Arr.filter(states, isProblem)).toEqual([
+      "denied",
+      "failed",
+      "limit",
+    ]);
   });
 });
