@@ -16,7 +16,7 @@ import {
 import { convertToDatabaseCustomer } from "@repo/backend/confect/customers/records";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
-import { convertToDatabaseSubscription } from "@repo/backend/confect/subscriptions/utils";
+import { convertToDatabaseSubscription } from "@repo/backend/confect/subscriptions/row";
 import { Effect, flow, Match, Schema } from "effect";
 
 type PolarWebhookEvent = webhooks.WebhookPayload;
