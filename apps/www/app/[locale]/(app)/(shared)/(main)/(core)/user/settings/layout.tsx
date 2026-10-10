@@ -21,12 +21,15 @@ export const metadata: Metadata = {
   twitter: null,
 };
 
-/** Renders the settings section header above the settings body. */
+/**
+ * Renders the settings section header above the settings body. On a wide
+ * screen it makes room on the end side while the Memory page's editor is open.
+ */
 export default function Layout({
   children,
 }: LayoutProps<"/[locale]/user/settings">) {
   return (
-    <LayoutMaterial>
+    <LayoutMaterial className="xl:has-data-[slot=memory-editor-open]:pe-112">
       <LayoutMaterialContent>
         <UserSettingsHeader />
         <LayoutContent className="flex flex-col gap-6 py-6">

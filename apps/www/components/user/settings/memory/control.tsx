@@ -10,6 +10,7 @@ import {
 import { Label } from "@repo/design-system/components/ui/label";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Switch } from "@repo/design-system/components/ui/switch";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
@@ -17,15 +18,16 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
+import { previewText } from "@/components/user/settings/memory/list";
 import { useMemory } from "@/components/user/settings/memory/provider";
 
-const PAUSE_ID = "user-settings-memory-pause";
+const REMEMBER_ID = "user-settings-memory-remember";
 
 /**
- * Introduces Memory: what it is, the switch that pauses it, and the action
- * that deletes everything Nina remembers. Pausing keeps every memory.
+ * The card that turns memory on and off and deletes all of it. Turning it off
+ * keeps every memory. Deleting asks first and shows what will go.
  */
-export function MemoryHeader() {
+export function MemoryControl() {
   const t = useTranslations("Memory");
   const auth = useTranslations("Auth");
   const common = useTranslations("Common");
@@ -43,33 +45,25 @@ export function MemoryHeader() {
         <CardDescription>{auth("memory-description")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <Label htmlFor={PAUSE_ID}>{t("pause")}</Label>
-            <p className="text-muted-foreground text-sm">
-              {t("pause-description")}
-            </p>
-          </div>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor={REMEMBER_ID}>{t("remember")}</Label>
           <Switch
-            aria-label={t("pause")}
-            checked={paused}
-            id={PAUSE_ID}
-            onCheckedChange={pause}
+            checked={!paused}
+            id={REMEMBER_ID}
+            onCheckedChange={(remembers) => pause(!remembers)}
           />
         </div>
       </CardContent>
-      <CardSectionFooter>
-        <div className="flex w-full items-center justify-between gap-4">
-          <p className="text-muted-foreground text-sm">{t("footer")}</p>
-          <Button
-            disabled={empty}
-            onClick={() => setConfirming(true)}
-            size="sm"
-            variant="destructive-outline"
-          >
-            {t("clear")}
-          </Button>
-        </div>
+      <CardSectionFooter className="justify-between gap-4">
+        <p className="text-muted-foreground text-sm">{t("footer")}</p>
+        <Button
+          disabled={empty}
+          onClick={() => setConfirming(true)}
+          size="sm"
+          variant="destructive"
+        >
+          {t("clear")}
+        </Button>
       </CardSectionFooter>
       <ResponsiveDialog
         description={t("clear-description")}
@@ -90,14 +84,31 @@ export function MemoryHeader() {
               type="button"
               variant="destructive"
             >
-              {t("clear-confirm")}
+              {t("clear")}
             </Button>
           </>
         }
         open={confirming}
         setOpen={setConfirming}
         title={t("clear-title")}
-      />
+      >
+        <MemoryTitles />
+      </ResponsiveDialog>
     </CardSection>
+  );
+}
+
+/** Shows what a delete of everything takes away: each memory on one line. */
+function MemoryTitles() {
+  const memories = useMemory((list) => list.memories);
+
+  return (
+    <ul className="max-h-48 divide-y overflow-y-auto rounded-md border text-sm">
+      {Arr.map(memories, (memory) => (
+        <li className="truncate px-3 py-2" key={memory.id}>
+          {previewText(memory.text)}
+        </li>
+      ))}
+    </ul>
   );
 }

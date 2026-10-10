@@ -1,6 +1,9 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import type { NinaMemoryList } from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, Option, Schema, String as Str, Struct } from "effect";
+import {
+  MEMORY_TEXT_LIMIT,
+  type NinaMemoryList,
+} from "@repo/backend/confect/nina/memory.spec";
+import { Array as Arr, Option, Schema, String as Str } from "effect";
 
 /** What the Memory page lists: every memory, newest first, and whether memory is paused. */
 export type MemoryList = typeof NinaMemoryList.Type;
@@ -9,7 +12,7 @@ export type MemoryList = typeof NinaMemoryList.Type;
 export type Memory = MemoryList["memories"][number];
 
 /** What the learner writes for one memory. */
-export type MemoryDraft = Pick<Memory, "kind" | "text">;
+export type MemoryDraft = Pick<Memory, "text">;
 
 /**
  * Starts the id of a memory the server has not stored yet. A stored id never
@@ -45,7 +48,6 @@ export function learnerMemory(
     createdAt: now,
     id,
     inUse: true,
-    kind: draft.kind,
     sources: 0,
     text: draft.text,
   };
@@ -57,9 +59,9 @@ export function addMemory(list: MemoryList, memory: Memory): MemoryList {
 }
 
 /**
- * Rewrites one memory the way the server does: the learner becomes its author,
- * its confirmation moves to `now`, which puts it first, and only a situation
- * keeps the day it ends. A memory the list does not hold leaves it unchanged.
+ * Rewrites one memory the way the server does: the learner becomes its author
+ * and its confirmation moves to `now`, which puts it first. A memory the list
+ * does not hold leaves it unchanged.
  */
 export function editMemory(
   list: MemoryList,
@@ -72,15 +74,10 @@ export function editMemory(
     return list;
   }
 
-  const kept =
-    edit.kind === "situation"
-      ? found.value
-      : Struct.omit(found.value, ["validUntil"]);
   const edited: Memory = {
-    ...kept,
+    ...found.value,
     author: "learner",
     confirmedAt: now,
-    kind: edit.kind,
     text: edit.text,
   };
 
@@ -111,32 +108,55 @@ export function pauseMemories(list: MemoryList, paused: boolean): MemoryList {
   return { ...list, paused };
 }
 
-/** How the learner narrows the list. */
-interface MemoryView {
-  /** The name the learner reads for a kind of memory. */
-  label: (kind: Memory["kind"]) => string;
-  /** The words the learner typed to search. */
-  query: string;
+/** A backslash that the Markdown writer put before a character it would otherwise read as formatting. */
+const ESCAPE = /\\(?=[!-/:-@[-`{-~])/gu;
+/** What starts a list item, a heading or a quote at the beginning of a line. */
+const LINE_MARK = /^\s*(?:[-*+]|\d+[.)]|#{1,6}|>)\s+/u;
+/** The marks around bold, italic, struck and code text. */
+const TEXT_MARK =
+  /\*\*|~~|`|(?<![\\\p{L}\p{N}])\*(?=\S)|(?<=\S)(?<!\\)\*(?![\p{L}\p{N}])/gu;
+const WHITESPACE = /\s+/gu;
+
+/**
+ * Reads a memory's Markdown as one line of plain words, for the list and for
+ * the search. Formatting marks leave and every line joins the one before it.
+ */
+export function previewText(markdown: string) {
+  return Str.trim(
+    Str.replaceAll(
+      WHITESPACE,
+      " "
+    )(
+      Arr.join(
+        Arr.map(Str.split(markdown, "\n"), (line) =>
+          Str.replaceAll(
+            ESCAPE,
+            ""
+          )(Str.replaceAll(TEXT_MARK, "")(Str.replace(LINE_MARK, "")(line)))
+        ),
+        " "
+      )
+    )
+  );
+}
+
+/** Whether words are fit to keep: something is written, and it fits. */
+export function canSave(text: string) {
+  const words = Str.trim(text);
+  return Str.isNonEmpty(words) && Str.length(words) <= MEMORY_TEXT_LIMIT;
 }
 
 /**
  * Returns the memories the page shows, in list order. The search ignores case
- * and looks at the text and at the name of the kind. While memory is paused
- * Nina reads none of them, so none shows as in use, which also covers the
- * moment between the press on the switch and the answer of the server.
+ * and looks at the words of each memory without their formatting.
  */
-export function shownMemories(list: MemoryList, view: MemoryView) {
-  const needle = Str.toLowerCase(Str.trim(view.query));
+export function shownMemories(list: MemoryList, query: string) {
+  const needle = Str.toLowerCase(Str.trim(query));
 
-  return Arr.map(
-    Arr.filter(
-      list.memories,
-      (memory) =>
-        Str.isEmpty(needle) ||
-        Arr.some([memory.text, view.label(memory.kind)], (words) =>
-          Str.includes(needle)(Str.toLowerCase(words))
-        )
-    ),
-    (memory) => (list.paused ? { ...memory, inUse: false } : memory)
+  return Arr.filter(
+    list.memories,
+    (memory) =>
+      Str.isEmpty(needle) ||
+      Str.includes(needle)(Str.toLowerCase(previewText(memory.text)))
   );
 }

@@ -1,150 +1,144 @@
 "use client";
 
-import {
-  MEMORY_TEXT_LIMIT,
-  NinaMemoryKind,
-} from "@repo/backend/confect/nina/memory.spec";
-import {
-  EditorFrame,
-  EditorStatic,
-} from "@repo/design-system/components/editor/frame";
-import {
-  canSaveText,
-  flattenText,
-} from "@repo/design-system/components/editor/text";
+import { MEMORY_TEXT_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
-import { Array as Arr, String as Str } from "effect";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@repo/design-system/components/ui/sheet";
+import { Array as Arr, Option, String as Str } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { createContext, use, useState } from "react";
+import { useState } from "react";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
-import type { Memory } from "@/components/user/settings/memory/list";
-import { useMemoryPage } from "@/components/user/settings/memory/provider";
+import { MemoryFacts } from "@/components/user/settings/memory/facts";
+import { canSave, type Memory } from "@/components/user/settings/memory/list";
+import {
+  useMemory,
+  useMemoryPage,
+} from "@/components/user/settings/memory/provider";
 
-/** The words the editor starts with, which its box shows while the editor loads. */
-const StartingText = createContext("");
-
-/**
- * Stands in for the editor until its code arrives. It draws the same box with
- * the same words, so the row keeps its height when the editor takes over.
- */
-function EditorLoading() {
-  return (
-    <EditorFrame>
-      <EditorStatic>{use(StartingText)}</EditorStatic>
-    </EditorFrame>
-  );
-}
-
-/** The editor loads when a learner opens it, never with the page. */
+/** The editor loads when a learner opens the panel, never with the page. */
 const Editor = dynamic(
   () =>
-    import("@repo/design-system/components/editor/plain").then(
-      (module) => module.PlainEditor
+    import("@repo/design-system/components/editor/rich").then(
+      (module) => module.RichEditor
     ),
-  { loading: EditorLoading, ssr: false }
+  { loading: () => null, ssr: false }
 );
 
 /**
- * Writes one memory in place: the words, and what kind of memory they are. It
- * edits `memory`, or writes a new one when there is none. Enter and Save keep
- * the words, and Escape and Cancel leave them. After a save that failed, the
- * editor opens again with the words the learner wrote.
+ * The panel beside the page where the learner writes a new memory or rewrites
+ * one. It does not cover the page, so the list stays in reach and a press on
+ * another memory moves the editor to it. On a small screen it takes the whole
+ * width. While it is open it leaves a mark that the settings layout reads to
+ * make room for it on a wide screen.
  */
-export function MemoryEditor({ memory }: { memory?: Memory }) {
+export function MemoryEditor() {
+  const { close, session, target, wanted } = useMemoryPage((state) => ({
+    close: state.close,
+    session: state.session,
+    target: state.target,
+    wanted: state.open,
+  }));
+  const memory = useMemory((list) =>
+    Option.getOrUndefined(
+      Arr.findFirst(list.memories, ({ id }) => id === target)
+    )
+  );
+  // A memory that was deleted meanwhile has no editor.
+  const gone = target !== null && memory === undefined;
+  const open = wanted && !gone;
+
+  return (
+    <>
+      {open ? <span data-slot="memory-editor-open" hidden /> : null}
+      <Sheet
+        disablePointerDismissal
+        modal={false}
+        onOpenChange={(next) => {
+          if (!next) {
+            close();
+          }
+        }}
+        open={open}
+      >
+        <SheetContent className="w-full max-w-none gap-0 sm:w-112 sm:max-w-none">
+          {gone ? null : <MemoryEditorForm key={session} memory={memory} />}
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+}
+
+/**
+ * The editor of one opening: a head that names the memory, the text, and the
+ * button that keeps it. Enter with Command or Control keeps it too. After a
+ * save that failed it opens again with the words the learner wrote.
+ */
+function MemoryEditorForm({ memory }: { memory: Memory | undefined }) {
   const t = useTranslations("Memory");
   const auth = useTranslations("Auth");
-  const common = useTranslations("Common");
   const close = useMemoryPage((state) => state.close);
   const restored = useMemoryPage((state) => state.draft);
   const { add, edit } = useMemoryActions();
-  const [kind, setKind] = useState(restored?.kind ?? memory?.kind ?? "style");
-  const [starting] = useState(() =>
-    flattenText(restored?.text ?? memory?.text ?? "")
-  );
+  const [starting] = useState(() => restored ?? memory?.text ?? "");
   const [text, setText] = useState(starting);
-  const canSave = canSaveText(text, MEMORY_TEXT_LIMIT);
-  const kinds = Arr.map(NinaMemoryKind.literals, (value) => ({
-    label: t(`kind-${value}`),
-    value,
-  }));
+  const ready = canSave(text);
 
   /** Sends the words to the server, unless they are not fit to keep or did not change. */
   function save() {
-    if (!canSave) {
+    if (!ready) {
       return;
     }
 
-    const draft = { kind, text: Str.trim(text) };
+    const words = Str.trim(text);
 
     close();
+
     if (memory === undefined) {
-      add(draft);
+      add({ text: words });
       return;
     }
-    if (draft.kind !== memory.kind || draft.text !== memory.text) {
-      edit({ ...draft, id: memory.id });
+
+    if (words !== memory.text) {
+      edit({ id: memory.id, text: words });
     }
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <StartingText value={starting}>
-        <Editor
-          defaultValue={starting}
-          label={t("text")}
-          limit={MEMORY_TEXT_LIMIT}
-          onCancel={close}
-          onChange={setText}
-          onSubmit={save}
-          placeholder={t("placeholder")}
-        />
-      </StartingText>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <Select
-            items={kinds}
-            onValueChange={(next) => {
-              if (next) {
-                setKind(next);
-              }
-            }}
-            value={kind}
-          >
-            <SelectTrigger aria-label={t("kind")} size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(kinds, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <span className="text-muted-foreground text-xs tabular-nums">
-            {Str.length(text)} / {MEMORY_TEXT_LIMIT}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={close} size="sm" variant="outline">
-            {common("cancel")}
-          </Button>
-          <Button disabled={!canSave} onClick={save} size="sm">
-            {auth("save")}
-          </Button>
-        </div>
-      </div>
-    </div>
+    <>
+      <SheetHeader className="border-b pe-12">
+        <SheetTitle>{memory ? t("edit") : t("new")}</SheetTitle>
+        {memory ? (
+          <SheetDescription className="truncate">
+            <MemoryFacts memory={memory} />
+          </SheetDescription>
+        ) : null}
+      </SheetHeader>
+      <Editor
+        defaultValue={starting}
+        labels={{
+          bold: t("bold"),
+          bullets: t("bullets"),
+          italic: t("italic"),
+          numbers: t("numbers"),
+          text: t("text"),
+        }}
+        limit={MEMORY_TEXT_LIMIT}
+        onChange={setText}
+        onSubmit={save}
+        placeholder={t("placeholder")}
+      />
+      <SheetFooter className="flex-row justify-end border-t">
+        <Button disabled={!ready} onClick={save}>
+          {auth("save")}
+        </Button>
+      </SheetFooter>
+    </>
   );
 }

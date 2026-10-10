@@ -110,7 +110,7 @@ export function useMemoryActions() {
         addDraft.withOptimisticUpdate((store) =>
           patch(store, (list) => addMemory(list, memory))
         )(draft),
-      () => reopen(null, draft)
+      () => reopen(null, draft.text)
     );
   }
 
@@ -123,7 +123,7 @@ export function useMemoryActions() {
         editDraft.withOptimisticUpdate((store, args) =>
           patch(store, (list) => editMemory(list, args, now))
         )(draft),
-      () => reopen(draft.id, { kind: draft.kind, text: draft.text })
+      () => reopen(draft.id, draft.text)
     );
   }
 
@@ -139,7 +139,7 @@ export function useMemoryActions() {
     toast(t("deleted"), {
       action: {
         label: t("undo"),
-        onClick: () => add({ kind: memory.kind, text: memory.text }),
+        onClick: () => add({ text: memory.text }),
       },
       duration: Duration.toMillis(UNDO),
     });
