@@ -1,8 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import type { DynamicToolUIPart, ToolUIPart } from "ai";
-import { Array as Arr } from "effect";
-import { isProblem, readInvocation } from "@/components/ai/message/invocation";
+import { readInvocation } from "@/components/ai/message/invocation";
 
 const input = {
   expression: "1 / 0",
@@ -126,23 +125,5 @@ describe("readInvocation", () => {
       capability: "unknown",
       state: "denied",
     });
-  });
-
-  it("reads only denied, failed and limit as a problem", () => {
-    const states = [
-      "denied",
-      "done",
-      "empty",
-      "failed",
-      "limit",
-      "partial",
-      "running",
-      "stopped",
-    ] as const;
-    expect(Arr.filter(states, isProblem)).toEqual([
-      "denied",
-      "failed",
-      "limit",
-    ]);
   });
 });

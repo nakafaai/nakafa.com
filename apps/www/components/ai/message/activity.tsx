@@ -19,7 +19,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use } from "react";
-import { type Invocation, isProblem } from "@/components/ai/message/invocation";
+import type { Invocation } from "@/components/ai/message/invocation";
 
 const ActivityContext = createContext<Invocation | null>(null);
 
@@ -30,6 +30,15 @@ export function useActivity<T>(selector: (invocation: Invocation) => T) {
     throw new Error("Activity components must be used within Activity");
   }
   return selector(value);
+}
+
+/**
+ * The states a learner should read as a problem. It lives here, not beside
+ * `readInvocation`, so a page that only renders activity rows never loads the
+ * capability schemas in the browser.
+ */
+export function isProblem(state: Invocation["state"]) {
+  return state === "denied" || state === "failed" || state === "limit";
 }
 
 /**

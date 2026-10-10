@@ -4,14 +4,13 @@ import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/p
 import { cn } from "cn";
 import { Array as Arr, Match } from "effect";
 import { useTranslations } from "next-intl";
-import { useActivity } from "@/components/ai/message/activity";
+import { isProblem, useActivity } from "@/components/ai/message/activity";
 import { getMathIcon } from "@/components/ai/message/evidence/math/icons";
 import { MathEvidence } from "@/components/ai/message/evidence/math/result";
 import { MathPart } from "@/components/ai/message/evidence/math/view";
 import { NakafaPart } from "@/components/ai/message/evidence/nakafa/view";
 import { ScrapeUrlPart } from "@/components/ai/message/evidence/scrape";
 import { WebSearchPart } from "@/components/ai/message/evidence/web";
-import { isProblem } from "@/components/ai/message/invocation";
 
 /** Renders every persisted artifact of the surrounding live activity. */
 export function EvidenceList() {

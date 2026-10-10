@@ -58,8 +58,3 @@ function readState(
   }
   return output.outcome ?? ("done" as const);
 }
-
-/** The states a learner should read as a problem. */
-export function isProblem(state: Invocation["state"]) {
-  return state === "denied" || state === "failed" || state === "limit";
-}
