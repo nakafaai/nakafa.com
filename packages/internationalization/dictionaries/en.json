@@ -712,6 +712,8 @@
       "unknown": "Checking information",
       "failures": "{count} failed",
       "stopped": "Stopped",
+      "partial": "Partly done",
+      "empty": "Nothing found",
       "denied": "Check not allowed"
     },
     "nakafa-taxonomy": "Browsing the content collection"

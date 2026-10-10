@@ -99,14 +99,110 @@ it.effect("emits pending evidence before the provider finishes", () =>
   })
 );
 
-it.effect("retains gathered steps with a typed specialist failure", () =>
+const done = {
+  ...loading,
+  data: { ...loading.data, status: "done" },
+} satisfies CapabilityArtifact;
+const lost = {
+  ...loading,
+  id: "search-2",
+  data: { ...loading.data, status: "error", error: "Unavailable" },
+} satisfies CapabilityArtifact;
+const sum = { expression: "2", latex: "2" };
+const request = {
+  expression: "1 + 1",
+  kind: "math",
+  operation: "evaluate",
+} as const;
+const verified = {
+  type: "data-math",
+  id: "math-1",
+  data: {
+    input: request,
+    kind: "evaluate",
+    result: {
+      conditions: [],
+      input: request,
+      items: [],
+      kind: "evaluate",
+      operation: "evaluate",
+      primary: { expression: "1 + 1", latex: "1 + 1" },
+      reason: "verified",
+      secondary: sum,
+      stepStatus: "complete",
+      steps: [],
+      status: "verified",
+    },
+    status: "verified",
+    summary: "verified",
+  },
+} satisfies CapabilityArtifact;
+
+it.effect.each([
+  [
+    "a failed run that loaded nothing stays failed",
+    [loading],
+    "failed",
+    "failed",
+  ],
+  [
+    "a failed run never contradicts loaded sources",
+    [done],
+    "failed",
+    "partial",
+  ],
+  [
+    "a failed run never contradicts a verified calculation",
+    [verified],
+    "failed",
+    "partial",
+  ],
+  [
+    "a run that lost a card beside a loaded one is partial",
+    [done, lost],
+    undefined,
+    "partial",
+  ],
+  [
+    "a run that lost a card beside a verified calculation is partial",
+    [verified, lost],
+    undefined,
+    "partial",
+  ],
+  [
+    "a run that only lost cards is failed, whatever prose it returned",
+    [lost],
+    undefined,
+    "failed",
+  ],
+  [
+    "a run with every card loaded reports no outcome",
+    [done, verified],
+    undefined,
+    undefined,
+  ],
+  [
+    "an empty run that lost a card beside a settled one is partial",
+    [done, lost],
+    "empty",
+    "partial",
+  ],
+  ["an empty run stays empty beside settled cards", [done], "empty", "empty"],
+  [
+    "a denied run stays denied whatever its cards",
+    [done, lost],
+    "denied",
+    "denied",
+  ],
+  ["a stated outcome survives lost evidence", [lost], "empty", "empty"],
+] as const)("settles the stored outcome: %s", ([, cards, reported, stored]) =>
   Effect.gen(function* () {
     const snapshots = yield* streamCapability(
       (publish) =>
-        publish(loading).pipe(
+        Effect.forEach(cards, publish).pipe(
           Effect.as({
-            text: "Research unavailable",
-            failure: "failed" as const,
+            text: "Research evidence",
+            ...(reported ? { outcome: reported } : {}),
           })
         ),
       options
@@ -115,9 +211,9 @@ it.effect("retains gathered steps with a typed specialist failure", () =>
       Option.getOrThrow(Arr.last(snapshots))
     );
     expect(final).toEqual({
-      artifacts: [loading],
-      failure: "failed",
-      text: "Research unavailable",
+      artifacts: cards,
+      ...(stored ? { outcome: stored } : {}),
+      text: "Research evidence",
     });
   })
 );

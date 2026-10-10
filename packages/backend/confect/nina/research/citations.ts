@@ -73,6 +73,5 @@ export function filterResearchOutputCitations(
   return {
     findings,
     limitations: output.limitations,
-    noEvidenceAnswer: output.noEvidenceAnswer,
   } satisfies ResearchOutput;
 }

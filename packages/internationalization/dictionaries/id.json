@@ -712,6 +712,8 @@
       "unknown": "Memeriksa informasi",
       "failures": "{count} gagal",
       "stopped": "Dihentikan",
+      "partial": "Sebagian selesai",
+      "empty": "Tidak ada hasil",
       "denied": "Pemeriksaan tidak diizinkan"
     },
     "nakafa-taxonomy": "Menelusuri koleksi materi"

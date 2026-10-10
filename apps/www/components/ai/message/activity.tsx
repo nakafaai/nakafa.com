@@ -8,6 +8,7 @@ import {
   Globe02Icon,
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
+import { researchMaxSources } from "@repo/backend/client/nina/research";
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,6 +20,7 @@ import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use } from "react";
 import type { Invocation } from "@/components/ai/message/invocation";
+import { isProblem } from "@/components/ai/message/state";
 
 const ActivityContext = createContext<Invocation | null>(null);
 
@@ -62,33 +64,42 @@ function ActivityTrigger() {
     (invocation) => invocation.artifacts.length
   );
   const capability = useActivity((invocation) => invocation.capability);
-  const denied = useActivity((invocation) => invocation.denied);
-  const failed = useActivity((invocation) => invocation.failed);
   const failures = useActivity((invocation) => invocation.failures);
-  const running = useActivity((invocation) => invocation.running);
-  const sourceLimit = useActivity((invocation) => invocation.sourceLimit);
-  const stopped = useActivity((invocation) => invocation.stopped);
+  const state = useActivity((invocation) => invocation.state);
+  const problem = isProblem(state);
   const icon = {
     math: Calculator01Icon,
     nakafa: BookOpen02Icon,
     deepResearch: Globe02Icon,
     unknown: BrainIcon,
   }[capability];
-  let label = t(`activity.${capability}`);
-  if (sourceLimit !== undefined) {
-    label = t("activity.source-limit", { count: sourceLimit });
-  } else if (failed) {
-    label = t(`tool-failures.${capability}`);
-  } else if (denied) {
-    label = t("activity.denied");
-  }
+  const label = {
+    denied: t("activity.denied"),
+    done: t(`activity.${capability}`),
+    empty: t(`activity.${capability}`),
+    failed: t(`tool-failures.${capability}`),
+    limit: t("activity.source-limit", { count: researchMaxSources }),
+    partial: t(`activity.${capability}`),
+    running: t(`activity.${capability}`),
+    stopped: t(`activity.${capability}`),
+  }[state];
+  const note = {
+    denied: undefined,
+    done: undefined,
+    empty: t("activity.empty"),
+    failed: undefined,
+    limit: undefined,
+    partial: t("activity.partial"),
+    running: undefined,
+    stopped: t("activity.stopped"),
+  }[state];
   return (
     <CollapsibleTrigger
       aria-atomic="true"
       aria-live="polite"
       className={cn(
         "group/activity flex min-h-6 w-fit max-w-full items-center gap-2 rounded-sm text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default",
-        failed || denied
+        problem
           ? "text-destructive"
           : "text-muted-foreground hover:text-foreground"
       )}
@@ -97,8 +108,8 @@ function ActivityTrigger() {
       <Spinner
         aria-hidden="true"
         className="size-4"
-        icon={failed || denied ? Sad02Icon : icon}
-        isLoading={running}
+        icon={problem ? Sad02Icon : icon}
+        isLoading={state === "running"}
       />
       <span className="min-w-0 truncate" title={label}>
         {label}
@@ -108,9 +119,7 @@ function ActivityTrigger() {
           {t("activity.failures", { count: failures })}
         </span>
       ) : null}
-      {stopped ? (
-        <span className="shrink-0 text-xs">{t("activity.stopped")}</span>
-      ) : null}
+      {note ? <span className="shrink-0 text-xs">{note}</span> : null}
       {artifactCount > 0 ? (
         <HugeIcons
           className="size-4 shrink-0 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"

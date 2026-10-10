@@ -84,10 +84,12 @@ tools with a warning.
   purposes send `"high"`. Each is a default set through
   `defaultSettingsMiddleware`, so a call may override it. Reasoning summaries
   need no extra flag.
-- **Research.** Google Search grounding is removed. The evidence phase forces one
-  Firecrawl `webSearch` step, then writes evidence notes with no tools.
-  `grounding.ts`, its tests, the prompt sentences that promised grounding, and
-  the `@ai-sdk/google` dependency go with it.
+- **Research.** Google Search grounding is removed. Research forces one
+  Firecrawl `webSearch` step and synthesizes from its results in a second
+  call. A step with no tools after a tool call does not make the model write
+  notes through the gateway (it emits another, invalid, tool call), so there is
+  no notes step. `grounding.ts`, its tests, the prompt sentences that promised
+  grounding, and the `@ai-sdk/google` dependency go with it.
 - **Attachments.** The documents of one turn, every attachment whose media type
   does not start with `image/`, may total at most 10 MiB (`NINA_DOCUMENT_SIZE`).
   Documents travel inside the request body, which the gateway accepts up to

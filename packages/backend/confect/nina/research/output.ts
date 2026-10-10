@@ -1,24 +1,46 @@
+import { formatUnreadSources } from "@repo/backend/confect/nina/research/messages";
 import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
 import { Array as Arr, pipe } from "effect";
 
-/** Renders structured research findings as markdown with inline citations. */
+/**
+ * What Nina reads when a research run ends without a source-backed finding.
+ * It tells her what to say; she writes it in the learner's language.
+ */
+const noFindings =
+  "Research returned no source-backed finding. Tell the learner that this attempt could not verify the request from direct sources, and name a direct channel they can check next. Do not claim that anything is absent or does not exist.";
+
+/**
+ * Renders structured research findings as markdown with inline citations.
+ * Limitations follow the findings, or the no-finding instruction.
+ */
 export function formatResearchOutput(output: ResearchOutput) {
   const findings = pipe(
     output.findings,
     Arr.map(formatFinding),
     Arr.join("\n\n")
   );
-  const limitations = formatLimitations(output.limitations);
+  return pipe(
+    [findings || noFindings, ...Arr.map(output.limitations, formatLimitation)],
+    Arr.join("\n\n")
+  );
+}
 
-  if (!findings) {
-    return output.noEvidenceAnswer;
-  }
-
-  if (!limitations) {
-    return findings;
-  }
-
-  return `${findings}\n\n${limitations}`;
+/**
+ * Hands Nina the collected sources when synthesis returned nothing usable, so
+ * the evidence the learner sees is also the evidence she answers from.
+ */
+export function formatUnsynthesizedEvidence(
+  evidence: readonly string[],
+  unread: readonly string[]
+) {
+  return pipe(
+    [
+      "Research synthesis was unavailable. The collected source evidence follows. Answer only from it, cite only its URLs, and say that the research is incomplete.",
+      ...evidence,
+      ...formatUnreadSources(unread),
+    ],
+    Arr.join("\n\n")
+  );
 }
 
 /** Renders one source-backed finding with citations beside the claim. */
@@ -37,15 +59,7 @@ function formatCitations(
   );
 }
 
-/** Renders caveats without pretending they are sourced claims. */
-function formatLimitations(limitations: ResearchOutput["limitations"]) {
-  if (limitations.length === 0) {
-    return "";
-  }
-
-  return pipe(
-    limitations,
-    Arr.map((limitation) => `- ${limitation}`),
-    Arr.join("\n")
-  );
+/** Renders one caveat without pretending it is a sourced claim. */
+function formatLimitation(limitation: string) {
+  return `- ${limitation}`;
 }

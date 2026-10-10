@@ -1,20 +1,22 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  createResearchMessages,
+  createResearchSearchMessages,
   createResearchSynthesisMessages,
 } from "@repo/backend/confect/nina/research/messages";
 import { Array as Arr } from "effect";
 
 describe("research agent messages", () => {
-  it("keeps search tools usable after source evidence is prefetched", () => {
-    const messages = createResearchMessages(
+  it("shows the search step what the learner's own sources already gave", () => {
+    const messages = createResearchSearchMessages(
       "Compare the source with updates.",
       ["# Scrape Result\n\nSource notes."]
     );
 
     expect(messages).toEqual([
       expect.objectContaining({
-        content: expect.stringContaining("Use the search tools"),
+        content: expect.stringContaining(
+          "Search for current, external, or corroborating evidence they do not cover."
+        ),
         role: "user",
       }),
     ]);
@@ -23,13 +25,13 @@ describe("research agent messages", () => {
   });
 
   it("uses the plain task when no source evidence was prefetched", () => {
-    expect(createResearchMessages("Find current docs.", [])).toEqual([
+    expect(createResearchSearchMessages("Find current docs.", [])).toEqual([
       { content: "Find current docs.", role: "user" },
     ]);
   });
 
   it("accepts structured markdown as the single research task", () => {
-    const messages = createResearchMessages(
+    const messages = createResearchSearchMessages(
       Arr.join(
         [
           "# User Request",
@@ -52,36 +54,42 @@ describe("research agent messages", () => {
     );
   });
 
-  it("passes collected evidence to structured synthesis", () => {
+  it("passes the task and every collected source to structured synthesis", () => {
     const messages = createResearchSynthesisMessages({
-      collectedEvidence: [
-        "# Web Search Results\n\n## Source 1: AI SDK\n- URL: https://ai-sdk.dev/docs\n- Inline citation: [AI SDK](https://ai-sdk.dev/docs)",
+      evidence: [
+        "# Scrape Result\n- URL: https://nakafa.com/source",
+        "# Web Search Results\n\n## Source 1: AI SDK\n- URL: https://ai-sdk.dev/docs",
       ],
-      evidence: "AI SDK DevTools captures generateText calls.",
       task: "Research AI SDK DevTools.",
+      unread: [],
     });
 
-    expect(messages[0]?.content).toContain("# Research Task");
-    expect(messages[0]?.content).toContain("# Research Notes");
-    expect(messages[0]?.content).toContain(
-      "AI SDK DevTools captures generateText calls."
-    );
-    expect(messages[0]?.content).toContain("https://ai-sdk.dev/docs");
-    expect(messages[0]?.content).toContain("# Source Evidence With URLs");
+    expect(messages).toEqual([
+      {
+        role: "user",
+        content: Arr.join(
+          [
+            "# Research Task",
+            "Research AI SDK DevTools.",
+            "# Source Evidence With URLs",
+            "# Scrape Result\n- URL: https://nakafa.com/source",
+            "# Web Search Results\n\n## Source 1: AI SDK\n- URL: https://ai-sdk.dev/docs",
+          ],
+          "\n\n"
+        ),
+      },
+    ]);
   });
 
-  it("keeps synthesis explicit when no source-backed evidence was collected", () => {
+  it("names the learner's unread sources apart from the evidence", () => {
     const messages = createResearchSynthesisMessages({
-      evidence: "",
-      task: "Research unavailable source.",
+      evidence: ["# Web Search Results"],
+      task: "Compare both pages.",
+      unread: ["https://example.org/a", "https://example.org/b"],
     });
 
     expect(messages[0]?.content).toContain(
-      "No source-backed direct evidence was collected."
+      "# Web Search Results\n\n# Sources That Could Not Be Read\n\nThese user-provided sources returned no content. Do not cite them or describe what they say.\n\n- https://example.org/a\n- https://example.org/b"
     );
-    expect(messages[0]?.content).toContain(
-      "Do not infer absence or nonexistence"
-    );
-    expect(messages[0]?.content).not.toContain("# Source Evidence With URLs");
   });
 });

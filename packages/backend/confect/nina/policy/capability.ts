@@ -72,8 +72,8 @@ export function deniedCapabilityResult({
     ],
     "\n"
   );
-  return { failure: "denied", text } satisfies Pick<
+  return { outcome: "denied", text } satisfies Pick<
     CapabilityOutput,
-    "text" | "failure"
+    "text" | "outcome"
   >;
 }

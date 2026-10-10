@@ -1,5 +1,4 @@
 import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
-import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { type DynamicToolUIPart, getToolName, type ToolUIPart } from "ai";
 import { Array as Arr, Result, Schema } from "effect";
@@ -21,30 +20,41 @@ export function readInvocation(
   const output =
     result && Result.isSuccess(result) ? result.success : undefined;
   const artifacts = output?.artifacts ?? [];
-  const unfinished =
-    part.state === "input-streaming" ||
-    part.state === "input-available" ||
-    (part.state === "output-available" && part.preliminary === true);
   return {
     artifacts,
     capability: Schema.is(LearningCapabilityNameSchema)(name)
       ? name
       : ("unknown" as const),
-    failed:
-      part.state === "output-error" ||
-      output?.failure === "failed" ||
-      output?.failure === "sourceLimit" ||
-      (result !== undefined && Result.isFailure(result)),
-    sourceLimit:
-      output?.failure === "sourceLimit" ? researchMaxSources : undefined,
-    denied: part.state === "output-denied" || output?.failure === "denied",
     failures: Arr.filter(
       artifacts,
       (artifact) => artifact.data.status === "error"
     ).length,
-    running: unfinished && !settled,
-    stopped: unfinished && settled,
+    state: readState(part, settled, output),
   };
 }
 
 export type Invocation = ReturnType<typeof readInvocation>;
+
+/**
+ * The one fact the activity header reads. A finished run takes the outcome the
+ * capability stored, so the label cannot disagree with the evidence under it.
+ */
+function readState(
+  part: ToolUIPart | DynamicToolUIPart,
+  settled: boolean,
+  output: typeof CapabilityOutputSchema.Type | undefined
+) {
+  if (part.state === "output-denied") {
+    return "denied" as const;
+  }
+  if (part.state === "output-error") {
+    return "failed" as const;
+  }
+  if (part.state !== "output-available" || part.preliminary === true) {
+    return settled ? ("stopped" as const) : ("running" as const);
+  }
+  if (!output) {
+    return "failed" as const;
+  }
+  return output.outcome ?? ("done" as const);
+}

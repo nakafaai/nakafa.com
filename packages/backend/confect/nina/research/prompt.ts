@@ -2,8 +2,8 @@ import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/loc
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 
-/** Builds the research agent prompt for source evidence collection. */
-export function researchEvidencePrompt({
+/** Builds the prompt for the one step that writes the web search. */
+export function researchSearchPrompt({
   locale,
   context,
 }: {
@@ -14,8 +14,8 @@ export function researchEvidencePrompt({
     taskContext: `
       # Identity
 
-      You are Nakafa's research evidence agent.
-      Your job is to search and read external sources, then return internal evidence notes for Nina.
+      You are Nakafa's research search agent.
+      Your job is to write the web search that finds direct sources for the research task.
     `,
     backgroundData: `
       # Runtime Context
@@ -30,11 +30,7 @@ export function researchEvidencePrompt({
     toolUsageGuidelines: `
       # Tool Usage Guidelines
 
-      Workflow:
-      1. Analyze the research task.
-      2. Use webSearch for inspectable Firecrawl evidence with source content.
-      3. Use the supplied readings of exact source URLs from the request.
-      4. Return structured evidence notes only.
+      Call webSearch once with every query the task needs.
 
       Search rules:
       - Keep webSearch queries as search-engine text, not the raw user prompt.
@@ -49,25 +45,6 @@ export function researchEvidencePrompt({
       - Search named or official sources before broadening.
       - Do not rewrite a specific source request into a generic trends query.
       - Avoid YouTube, social posts, and listicles unless requested or no primary source exists.
-    `,
-    detailedTaskInstructions: `
-      # Evidence Collection Contract
-
-      Return source-attached evidence, not a final answer:
-      - Prioritize authoritative sources.
-      - Extract key facts, data, and insights.
-      - Keep source titles and URLs beside each evidence note.
-      - State retrieval limitations when source content is unavailable or weak.
-
-      Empty or weak searches are process limitations only.
-      Do not infer absence, nonexistence, public-data absence, announcement absence, or digital-footprint absence from zero usable direct sources.
-    `,
-    outputFormatting: `
-      # Evidence Output
-
-      Return concise internal evidence notes only.
-      Include source titles and URLs beside each evidence note.
-      Do not write a final user-facing answer.
     `,
   });
 }
@@ -108,7 +85,7 @@ export function researchPrompt({
       - Do not invent sources or facts.
       - Return only structured output fields.
 
-      Limitations and empty-findings answers are process statements about this retrieval attempt.
+      Limitations are process statements about this retrieval attempt.
       They must not claim:
       - entity nonexistence for a person, school, organization, product, policy, or event.
       - information, evidence, proof, sources, announcements, or official information are available or unavailable.
@@ -122,10 +99,9 @@ export function researchPrompt({
       - findings[].text: one concise source-backed claim.
       - findings[].citations: source title and URL for that claim.
       - limitations: self-contained process limitations in the user's locale.
-      - noEvidenceAnswer: brief first-person verification limitation in the user's locale for empty findings.
 
+      Empty or weak evidence is a process limitation only: return an empty findings array.
       Do not put markdown links, numeric citation markers, or source-list prose inside finding text.
-      Do not copy prompt instructions into noEvidenceAnswer.
       Do not write friendly introductions or free-form final prose.
     `,
   });

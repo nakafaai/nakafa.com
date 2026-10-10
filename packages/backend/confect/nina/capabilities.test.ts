@@ -23,7 +23,7 @@ import {
 import { encodeJsonText } from "@repo/utilities/json";
 import { isStepCount } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Logger, MutableRef } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -112,8 +112,9 @@ describe("Nina capability execution policy", () => {
             state === "failed"
               ? Effect.fail(
                   new ResearchGenerationError({
-                    phase: "evidence",
+                    phase: "search",
                     message: "Private provider detail",
+                    rejected: false,
                   })
                 )
               : Effect.succeed({ text: "Verified source." })
@@ -122,6 +123,7 @@ describe("Nina capability execution policy", () => {
         const model = new MockLanguageModelV4({
           doGenerate: [toolCall(capability), request],
         });
+        const logged = MutableRef.make<readonly unknown[]>([]);
         const result = await runSpecialist((userId) =>
           Effect.gen(function* () {
             const session = yield* openNinaLearningSession({
@@ -169,13 +171,37 @@ describe("Nina capability execution policy", () => {
               )
             );
             return Arr.map(generated.toolResults, ({ output }) => output);
-          })
+          }).pipe(
+            Effect.provide(
+              Logger.layer([
+                Logger.formatStructured.pipe(
+                  Logger.map(({ message }) =>
+                    MutableRef.update(logged, Arr.append(message))
+                  )
+                ),
+              ])
+            )
+          )
+        );
+        // Only a failed run is logged, as routing facts without the provider's words.
+        expect(MutableRef.get(logged)).toEqual(
+          state === "failed"
+            ? [
+                [
+                  "Nina capability failed",
+                  expect.objectContaining({ capability }),
+                ],
+              ]
+            : []
+        );
+        expect(encodeJsonText(MutableRef.get(logged))).not.toContain(
+          "Private provider detail"
         );
         expect(result).toHaveLength(1);
         expect(encodeJsonText(result)).not.toContain("Private provider detail");
         if (state === "denied" || state === "missing") {
           expect(result[0]).toMatchObject({
-            failure: "denied",
+            outcome: "denied",
             text: expect.stringContaining("Status: denied"),
           });
           expect(runNakafaAgent).not.toHaveBeenCalled();
@@ -203,11 +229,11 @@ describe("Nina capability execution policy", () => {
             text: expect.stringContaining(expectedText),
           });
           if (state === "sourceLimit") {
-            expect(result[0]).toHaveProperty("failure", "sourceLimit");
+            expect(result[0]).toHaveProperty("outcome", "limit");
           } else if (state === "failed") {
-            expect(result[0]).toHaveProperty("failure", "failed");
+            expect(result[0]).toHaveProperty("outcome", "failed");
           } else {
-            expect(result[0]).not.toHaveProperty("failure");
+            expect(result[0]).not.toHaveProperty("outcome");
           }
         }
       }
