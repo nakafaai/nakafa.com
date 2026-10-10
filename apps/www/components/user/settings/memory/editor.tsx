@@ -29,8 +29,8 @@ import { useMemoryActions } from "@/components/user/settings/memory/actions.clie
 import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
-/** The words in the editor's box, which the box shows while the editor loads. */
-const DraftText = createContext("");
+/** The words the editor starts with, which its box shows while the editor loads. */
+const StartingText = createContext("");
 
 /**
  * Stands in for the editor until its code arrives. It draws the same box with
@@ -39,7 +39,7 @@ const DraftText = createContext("");
 function EditorLoading() {
   return (
     <EditorFrame>
-      <EditorStatic>{use(DraftText)}</EditorStatic>
+      <EditorStatic>{use(StartingText)}</EditorStatic>
     </EditorFrame>
   );
 }
@@ -56,16 +56,21 @@ const Editor = dynamic(
 /**
  * Writes one memory in place: the words, and what kind of memory they are. It
  * edits `memory`, or writes a new one when there is none. Enter and Save keep
- * the words, and Escape and Cancel leave them.
+ * the words, and Escape and Cancel leave them. After a save that failed, the
+ * editor opens again with the words the learner wrote.
  */
 export function MemoryEditor({ memory }: { memory?: Memory }) {
   const t = useTranslations("Memory");
   const auth = useTranslations("Auth");
   const common = useTranslations("Common");
   const close = useMemoryPage((state) => state.close);
+  const restored = useMemoryPage((state) => state.draft);
   const { add, edit } = useMemoryActions();
-  const [kind, setKind] = useState(memory?.kind ?? "style");
-  const [text, setText] = useState(() => flattenText(memory?.text ?? ""));
+  const [kind, setKind] = useState(restored?.kind ?? memory?.kind ?? "style");
+  const [starting] = useState(() =>
+    flattenText(restored?.text ?? memory?.text ?? "")
+  );
+  const [text, setText] = useState(starting);
   const canSave = canSaveText(text, MEMORY_TEXT_LIMIT);
   const kinds = Arr.map(NinaMemoryKind.literals, (value) => ({
     label: t(`kind-${value}`),
@@ -92,17 +97,17 @@ export function MemoryEditor({ memory }: { memory?: Memory }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <DraftText value={text}>
+      <StartingText value={starting}>
         <Editor
+          defaultValue={starting}
           label={t("text")}
           limit={MEMORY_TEXT_LIMIT}
           onCancel={close}
           onChange={setText}
           onSubmit={save}
           placeholder={t("placeholder")}
-          value={text}
         />
-      </DraftText>
+      </StartingText>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <Select

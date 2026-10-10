@@ -3,21 +3,12 @@
 import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import {
-  MEMORY_LIMIT,
-  NinaMemoryRejected,
-} from "@repo/backend/confect/nina/memory.spec";
+import { MEMORY_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { randomUuid } from "@repo/utilities/uuid";
-import {
-  DateTime,
-  Duration,
-  Effect,
-  Option,
-  type Result,
-  Schema,
-} from "effect";
+import { DateTime, Duration, Effect, Option, type Result } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
 import {
   addMemory,
   clearMemories,
@@ -31,39 +22,9 @@ import {
   removeMemory,
 } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
-import { reportClientException } from "@/lib/analytics/client";
 
 /** How long a removed memory can still be brought back. */
 const UNDO = Duration.seconds(5);
-
-/**
- * Tells the learner a change failed, in the words that fit: `limit` when they
- * already keep as many memories as the page allows, `missing` when the memory
- * was deleted somewhere else, and `other` for anything else. A refusal the
- * server explains is a normal answer; only a failure nobody expected goes to
- * analytics.
- */
-const fail = Effect.fn("memory.fail")(function* (
-  error: unknown,
-  messages: Record<"limit" | "missing" | "other", string>
-) {
-  if (Schema.is(NinaMemoryRejected)(error)) {
-    const message =
-      error.reason === "limit" ? messages.limit : messages.missing;
-
-    yield* Effect.sync(() => {
-      toast.error(message);
-    });
-    return;
-  }
-
-  yield* reportClientException(error, {
-    source: "components/user/settings/memory",
-  });
-  yield* Effect.sync(() => {
-    toast.error(messages.other);
-  });
-});
 
 /**
  * Applies one change to the page the browser holds, when it holds one. Convex
@@ -83,12 +44,14 @@ function patch(
 
 /**
  * The changes the learner makes on the Memory page. Each one shows at once,
- * and a failure shows a toast while the page rolls back.
+ * and a failure shows a toast while the page rolls back. A new or rewritten
+ * memory that fails comes back in its editor with the learner's words.
  */
 export function useMemoryActions() {
   const t = useTranslations("Memory");
   const other = useTranslations("Common")("action-error");
   const hide = useMemoryPage((state) => state.hide);
+  const reopen = useMemoryPage((state) => state.reopen);
   const restore = useMemoryPage((state) => state.restore);
   const addDraft = useMutation(nina.memory.add);
   const editDraft = useMutation(nina.memory.edit);
@@ -107,13 +70,26 @@ export function useMemoryActions() {
     other,
   };
 
-  /** Sends one change from an event, and tells the learner when it fails. */
-  function settle<A, E>(send: () => Promise<Result.Result<A, E>>) {
+  /**
+   * Sends one change from an event, and tells the learner when it fails. When
+   * the learner can still try again, `retry` gives them back what they wrote.
+   */
+  function settle<A, E>(
+    send: () => Promise<Result.Result<A, E>>,
+    retry?: () => void
+  ) {
     Effect.runFork(
       Effect.tryPromise(send).pipe(
         Effect.flatMap(Effect.fromResult),
         Effect.matchEffect({
-          onFailure: (error) => fail(error, messages),
+          onFailure: (error) =>
+            Effect.flatMap(reportMemoryFailure(error, messages), (again) =>
+              Effect.sync(() => {
+                if (again) {
+                  retry?.();
+                }
+              })
+            ),
           onSuccess: () => Effect.void,
         })
       )
@@ -129,10 +105,12 @@ export function useMemoryActions() {
       now
     );
 
-    settle(() =>
-      addDraft.withOptimisticUpdate((store) =>
-        patch(store, (list) => addMemory(list, memory))
-      )(draft)
+    settle(
+      () =>
+        addDraft.withOptimisticUpdate((store) =>
+          patch(store, (list) => addMemory(list, memory))
+        )(draft),
+      () => reopen(null, draft)
     );
   }
 
@@ -140,10 +118,12 @@ export function useMemoryActions() {
   function edit(draft: MemoryDraft & Pick<Memory, "id">) {
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
-    settle(() =>
-      editDraft.withOptimisticUpdate((store, args) =>
-        patch(store, (list) => editMemory(list, args, now))
-      )(draft)
+    settle(
+      () =>
+        editDraft.withOptimisticUpdate((store, args) =>
+          patch(store, (list) => editMemory(list, args, now))
+        )(draft),
+      () => reopen(draft.id, { kind: draft.kind, text: draft.text })
     );
   }
 

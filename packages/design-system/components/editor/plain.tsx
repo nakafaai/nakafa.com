@@ -17,12 +17,18 @@ import { Fragment, Slice } from "@tiptap/pm/model";
 import type { EditorProps } from "@tiptap/pm/view";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { String as Str } from "effect";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 /** The document holds exactly one paragraph, so the text can never grow a second line. */
 const SingleParagraph = Document.extend({ content: "paragraph" });
 
 interface PlainEditorProps {
+  /**
+   * The text the editor starts with. Once the editor exists it owns the text
+   * and reports every edit through `onChange`, so a later change of this
+   * prop does nothing. Mount a new editor to start from other text.
+   */
+  defaultValue: string;
   /** The accessible name of the editing surface. */
   label: string;
   /** The most characters the text may hold. */
@@ -35,31 +41,29 @@ interface PlainEditorProps {
   onSubmit: () => void;
   /** The hint shown while the text is empty. */
   placeholder: string;
-  /** The text the editor holds. */
-  value: string;
 }
 
 /**
  * Edits one line of plain text. Enter submits, Escape cancels, pasted text is
  * flattened to one line, and undo and redo work. Until the editor exists, the
- * text shows read-only in the same box, so loading moves nothing.
+ * starting text shows read-only in the same box, so loading moves nothing.
  *
  * Load it with `next/dynamic` and `ssr: false`: the editor needs the browser
  * and brings the editing library with it.
  */
 export function PlainEditor({
+  defaultValue,
   label,
   limit,
   onCancel,
   onChange,
   onSubmit,
   placeholder,
-  value,
 }: PlainEditorProps) {
   const cancel = useCallbackRef(onCancel);
   const change = useCallbackRef(onChange);
   const submit = useCallbackRef(onSubmit);
-  const [content] = useState(() => toDocument(value));
+  const [content] = useState(() => toDocument(defaultValue));
   const extensions = useMemo(
     () => [
       SingleParagraph,
@@ -110,19 +114,12 @@ export function PlainEditor({
     onUpdate: ({ editor: current }) => change(current.getText()),
   });
 
-  // The text can also change from outside, such as a reset after a failed save.
-  useEffect(() => {
-    if (editor && editor.getText() !== value) {
-      editor.commands.setContent(toDocument(value), { emitUpdate: false });
-    }
-  }, [editor, value]);
-
   return (
     <EditorFrame>
       {editor ? (
         <EditorContent editor={editor} />
       ) : (
-        <EditorStatic>{value}</EditorStatic>
+        <EditorStatic>{defaultValue}</EditorStatic>
       )}
     </EditorFrame>
   );
