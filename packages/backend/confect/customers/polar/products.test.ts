@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 
 async function loadProducts() {
   vi.resetModules();
-  return await import("@repo/backend/confect/utils/polar/products");
+  return await import("@repo/backend/confect/customers/polar/products");
 }
 
 const expectedMonthlyPrices = {
@@ -31,7 +31,7 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe("utils/polar/products", () => {
+describe("customers/polar/products", () => {
   it("uses sandbox product IDs outside production Polar mode", async () => {
     vi.stubEnv("NEXT_PUBLIC_POLAR_SERVER", "sandbox");
 

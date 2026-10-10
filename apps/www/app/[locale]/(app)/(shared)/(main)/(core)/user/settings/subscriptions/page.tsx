@@ -1,6 +1,6 @@
 import { HttpClient } from "@confect/js";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
-import { products } from "@repo/backend/confect/utils/polar/products";
+import { products } from "@repo/backend/confect/customers/polar/products";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
