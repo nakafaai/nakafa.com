@@ -224,6 +224,56 @@ through another module, and no syntax rule can see that. So the check does not
 judge the modules below such a configuration, and it judges none when a shared
 or root configuration turns the option on. There the typecheck decides.
 
+### Class strings kept in a constant
+
+The editor's Tailwind language server completes, sorts, and checks a class
+string only inside the JSX attributes and the calls that the editor settings list
+as `classAttributes` and `classFunctions`. A class string kept anywhere else, such
+as a `STREAMED` constant that two variants share, gets none of it. So the check
+reports a variable that keeps class strings and is read in a class position.
+
+A class position is the value of a listed attribute and every argument of a call
+to a listed function, with what is nested in it: a branch, `||`, `??`, `+`, the
+right side of `&&`, a template span, an array element, a spread, and an object
+key or value. So the base, `variants`, `compoundVariants`, and `defaultVariants`
+of `cva` are class positions. `scripts/check/editor.ts` owns the two lists, and
+its test fails when they differ from `.zed/settings.json`, or from the lists that
+`.vscode/settings.json` declares, so the check and the editor cannot drift.
+
+A name read in a class position, or the root of a member such as `STYLES.card`
+and `STYLES[size]`, is reported at its declaration, once, when the compiler
+resolves it in the same module to a `const`, `let`, or `var` whose value is a
+string, a template, a concatenation, a condition between strings, or an array or
+object that holds them. The check follows the names that such a value reads, so a
+constant built from other constants is reported down to its strings.
+
+The check never reports:
+
+- a literal written in the class position;
+- the result of a call, such as `const button = cva(...)` or `const classes = cn(...)`;
+- a parameter or a component prop;
+- a name imported from another module;
+- a string that never reaches a class position, such as an id or a label.
+
+The position decides, never the text: a string that does reach a class position
+is read as a class, and no pattern guesses which strings look like classes. Tests,
+framework configuration, and generated modules are not judged.
+
+The fix has an order. Write the classes inside `cva(...)`: a lookup object keyed
+by a variant becomes a `cva` variant that is called with the key, and classes
+that several variants share become one `compoundVariants` entry. Otherwise write
+them inside `cn(...)` or in the `className` itself. When several elements share
+the same classes, give them a small component that owns them.
+
+The check resolves a name inside its own module, with the in-memory project that
+every syntax rule shares. It does not follow an import, because that needs the
+types of the repository's projects, which only the typed array pass opens.
+Measured on main 63e4561e81, the judged modules read 406 names in class
+positions and 5 of them are imports: three `fonts`, which is a `cn(...)` result,
+the `className` of a font loader, and the `variable` of the Geist font. None is a
+string constant, so no violation hides behind an import today. The first run
+found 6 variables, 1 in `apps/www` and 5 in `packages/design-system`.
+
 ### Vercel deployment policy
 
 Each app's `vercel.ts` sets `git.deploymentEnabled` to exactly

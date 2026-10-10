@@ -200,7 +200,9 @@ function inspectionFailure(cause: unknown) {
 /**
  * Parses authored TypeScript modules in one native project, so the parsing
  * cost stays flat as the repository grows. While the scope stays open, `bind`
- * resolves identifiers from any parsed module in one batched request.
+ * classifies identifiers from any parsed module in one batched request, and
+ * `declare` returns the node that declares the value each one names, or
+ * `undefined` for an import and for a name with no value declaration.
  */
 export const parseSources = Effect.fn("RepositoryPolicy.parseSources")(
   function* (sources: readonly (typeof RepositorySource.Type)[]) {
@@ -266,6 +268,17 @@ export const parseSources = Effect.fn("RepositoryPolicy.parseSources")(
           catch: inspectionFailure,
         })
     );
-    return { bind, modules };
+    const declare = Effect.fn("RepositoryPolicy.declare")(
+      (identifiers: readonly Identifier[]) =>
+        Effect.try({
+          try: () =>
+            Arr.map(
+              project.checker.getSymbolAtLocation(identifiers),
+              (symbol) => symbol?.valueDeclaration?.resolve()
+            ),
+          catch: inspectionFailure,
+        })
+    );
+    return { bind, declare, modules };
   }
 );

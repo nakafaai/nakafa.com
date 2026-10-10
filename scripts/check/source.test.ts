@@ -1,6 +1,10 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
-import { isIdentifier, type SourceFile } from "typescript/unstable/ast";
+import {
+  isIdentifier,
+  type SourceFile,
+  SyntaxKind,
+} from "typescript/unstable/ast";
 import { API, Checker, Program, Snapshot } from "typescript/unstable/sync";
 import {
   descendants,
@@ -26,6 +30,22 @@ const bindLast = Effect.fn("SourcePolicyTest.bindLast")(function* (
 ) {
   const { bind, modules } = yield* parseSources(sources);
   return yield* bind(
+    Arr.flatMap(names, (name) =>
+      Arr.takeRight(
+        Arr.flatMap(modules, ({ sourceFile }) => named(sourceFile, name)),
+        1
+      )
+    )
+  );
+}, Effect.scoped);
+
+/** Parses sources and declares the last identifier of each name across all modules. */
+const declareLast = Effect.fn("SourcePolicyTest.declareLast")(function* (
+  sources: readonly (typeof RepositorySource.Type)[],
+  names: readonly string[]
+) {
+  const { declare, modules } = yield* parseSources(sources);
+  return yield* declare(
     Arr.flatMap(names, (name) =>
       Arr.takeRight(
         Arr.flatMap(modules, ({ sourceFile }) => named(sourceFile, name)),
@@ -83,6 +103,30 @@ describe("repository source batch", () => {
           "global",
         ]);
       })
+  );
+
+  it.effect("declares identifiers by the nodes that declare their values", () =>
+    Effect.gen(function* () {
+      const declarations = yield* declareLast(
+        [
+          {
+            file: FILE,
+            sourceText:
+              'import { Imported } from "./other";\nconst local = "flex";\nfunction run(param: string) {\n  return [local, param, Imported, missing];\n}\n',
+          },
+        ],
+        ["local", "param", "Imported", "missing"]
+      );
+      assert.deepStrictEqual(
+        Arr.map(declarations, (node) => node?.kind),
+        [
+          SyntaxKind.VariableDeclaration,
+          SyntaxKind.Parameter,
+          undefined,
+          undefined,
+        ]
+      );
+    })
   );
 
   it.effect("keeps the top-level names of a script out of other modules", () =>
@@ -210,6 +254,25 @@ describe("repository source batch failures", () => {
         }
       );
       const failure = yield* bindLast(
+        [{ file: FILE, sourceText: "Map;\n" }],
+        ["Map"]
+      ).pipe(Effect.flip);
+      assert.deepStrictEqual(
+        [failure._tag, failure.cause, failure.message],
+        ["TestCompilerError", cause, "Unable to inspect repository sources."]
+      );
+    })
+  );
+
+  it.effect("fails declaring with a typed error when the checker fails", () =>
+    Effect.gen(function* () {
+      const cause = new Error("native checker disconnected");
+      vi.spyOn(Checker.prototype, "getSymbolAtLocation").mockImplementationOnce(
+        () => {
+          throw cause;
+        }
+      );
+      const failure = yield* declareLast(
         [{ file: FILE, sourceText: "Map;\n" }],
         ["Map"]
       ).pipe(Effect.flip);

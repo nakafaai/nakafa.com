@@ -210,6 +210,13 @@ describe("test ownership policy", () => {
       files: { "apps/web/card.tsx": 'const card = "ring-[3px]";\n' },
     },
     {
+      category: "a class string kept in a constant",
+      files: {
+        "apps/web/card.tsx":
+          'const STYLE = "flex gap-2";\nconst Card = () => <div className={STYLE} />;\n',
+      },
+    },
+    {
       category: "a native Map",
       files: { "apps/web/store.ts": "const store = new Map();\n" },
     },
