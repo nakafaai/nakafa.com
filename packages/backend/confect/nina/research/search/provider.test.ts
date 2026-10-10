@@ -70,4 +70,51 @@ describe("searchFirecrawl", () => {
         expect(error.status).toBeUndefined();
       })
   );
+  it.effect(
+    "asks once more, a second later, when the plan's rate limit refuses a search",
+    () =>
+      Effect.gen(function* () {
+        const refused = Object.assign(new Error("Rate limit"), { status: 429 });
+        firecrawlApp.search.mockClear();
+        firecrawlApp.search
+          .mockRejectedValueOnce(refused)
+          .mockResolvedValueOnce({ web: [] });
+        const fiber = yield* Effect.forkChild(
+          searchFirecrawl("kurikulum merdeka")
+        );
+        yield* TestClock.adjust("999 millis");
+        expect(firecrawlApp.search).toHaveBeenCalledTimes(1);
+        yield* TestClock.adjust("1 millis");
+        expect(yield* Fiber.join(fiber)).toEqual({
+          query: "kurikulum merdeka",
+          response: { web: [] },
+        });
+        expect(firecrawlApp.search).toHaveBeenCalledTimes(2);
+      })
+  );
+
+  it.effect(
+    "fails after the second refusal, and never asks again for any other failure",
+    () =>
+      Effect.gen(function* () {
+        const refused = Object.assign(new Error("Rate limit"), { status: 429 });
+        firecrawlApp.search.mockClear();
+        firecrawlApp.search
+          .mockRejectedValueOnce(refused)
+          .mockRejectedValueOnce(refused);
+        const fiber = yield* Effect.forkChild(
+          Effect.flip(searchFirecrawl("kurikulum merdeka"))
+        );
+        yield* TestClock.adjust("1 second");
+        expect((yield* Fiber.join(fiber)).status).toBe(429);
+        expect(firecrawlApp.search).toHaveBeenCalledTimes(2);
+
+        firecrawlApp.search.mockClear();
+        firecrawlApp.search.mockRejectedValueOnce(
+          Object.assign(new Error("Unauthorized"), { status: 401 })
+        );
+        yield* Effect.flip(searchFirecrawl("kurikulum merdeka"));
+        expect(firecrawlApp.search).toHaveBeenCalledTimes(1);
+      })
+  );
 });
