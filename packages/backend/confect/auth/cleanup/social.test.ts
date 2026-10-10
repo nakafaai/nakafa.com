@@ -10,7 +10,8 @@ import { insertChat, insertMemory } from "@repo/backend/test/nina/memory";
 
 afterEach(() => vi.useRealTimers());
 
-async function createDeletedOwner(suffix: string) {
+/** Creates the account that will be deleted and one that stays, both still live. */
+async function createOwners(suffix: string) {
   vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
   const now = Date.UTC(2026, 8, 27);
   vi.setSystemTime(now);
@@ -24,17 +25,31 @@ async function createDeletedOwner(suffix: string) {
       now,
       suffix: `retained-${suffix}`,
     });
-    await ctx.db.patch(
-      owner.userId,
-      createDeletedUserTombstone(owner.userId, now)
-    );
     return { owner: owner.userId, retained: retained.userId };
   });
   return { t, now, ...users };
 }
 
+/** Marks the owner's account as deleted, the state every cleanup pass runs in. */
+function deleteOwner({
+  t,
+  now,
+  owner,
+}: Awaited<ReturnType<typeof createOwners>>) {
+  return t.mutation((ctx) =>
+    ctx.db.patch(owner, createDeletedUserTombstone(owner, now))
+  );
+}
+
+async function createDeletedOwner(suffix: string) {
+  const owners = await createOwners(suffix);
+  await deleteOwner(owners);
+  return owners;
+}
+
 it("deletes the learner's Nina memories with their sources, a batch at a time, and keeps another learner's", async () => {
-  const { t, owner, retained } = await createDeletedOwner("memory");
+  const owners = await createOwners("memory");
+  const { t, owner, retained } = owners;
   const left = 5;
   const ownChat = await t.mutation((ctx) => insertChat(ctx, owner));
   const keptChat = await t.mutation((ctx) => insertChat(ctx, retained));
@@ -49,6 +64,9 @@ it("deletes the learner's Nina memories with their sources, a batch at a time, a
     }
     await insertMemory(ctx, { chats: [keptChat], userId: retained });
   });
+  // The memories exist before the account is deleted: a deleted account gets
+  // no new key, so nothing can be sealed for it afterwards.
+  await deleteOwner(owners);
   const state = () =>
     t.query(async (ctx) => ({
       memories: await ctx.db.query("ninaMemories").collect(),
