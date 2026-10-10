@@ -49,7 +49,8 @@ export function Activity({
       <Collapsible className="not-prose min-w-0" defaultOpen={false}>
         <ActivityTrigger />
         <CollapsibleContent className="motion-reduce:transition-none">
-          <div className="flex min-w-0 flex-col gap-3 ps-6 pt-3">
+          {/* The line starts under the row's icon, so the evidence reads as its children. */}
+          <div className="ms-2 mt-3 flex min-w-0 flex-col gap-3 border-s ps-4">
             {children}
           </div>
         </CollapsibleContent>
@@ -64,7 +65,6 @@ function ActivityTrigger() {
     (invocation) => invocation.artifacts.length
   );
   const capability = useActivity((invocation) => invocation.capability);
-  const failures = useActivity((invocation) => invocation.failures);
   const state = useActivity((invocation) => invocation.state);
   const problem = isProblem(state);
   const icon = {
@@ -114,11 +114,6 @@ function ActivityTrigger() {
       <span className="min-w-0 truncate" title={label}>
         {label}
       </span>
-      {failures > 0 ? (
-        <span className="shrink-0 text-destructive text-xs tabular-nums">
-          {t("activity.failures", { count: failures })}
-        </span>
-      ) : null}
       {note ? <span className="shrink-0 text-xs">{note}</span> : null}
       {artifactCount > 0 ? (
         <HugeIcons

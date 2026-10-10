@@ -7,7 +7,6 @@ import {
   SourceContent,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr } from "effect";
@@ -46,7 +45,9 @@ export function WebSearchPart({ message }: Props) {
           <HugeIcons className="size-4 shrink-0" icon={Sad02Icon} />
           <span>{t("web-search-error")}</span>
         </div>
-        <WebSearchPartQueries queries={message.queries} />
+        <div className="ms-2 flex flex-col gap-3 border-s ps-4">
+          <WebSearchPartQueries queries={message.queries} />
+        </div>
       </div>
     );
   }
@@ -59,13 +60,15 @@ export function WebSearchPart({ message }: Props) {
           icon={Search01Icon}
         />
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
-        <Badge variant="muted">{results.length}</Badge>
       </div>
-      <WebSearchPartQueries queries={message.queries} />
-      <WebSearchPartPreview
-        emptyLabel={t("web-search-empty")}
-        results={results}
-      />
+      {/* The line starts under the row's icon, so the queries and sources read as its children. */}
+      <div className="ms-2 flex flex-col gap-3 border-s ps-4">
+        <WebSearchPartQueries queries={message.queries} />
+        <WebSearchPartPreview
+          emptyLabel={t("web-search-empty")}
+          results={results}
+        />
+      </div>
     </div>
   );
 }

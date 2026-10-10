@@ -2,7 +2,6 @@
 
 import { ArrowUpRight01Icon, Quran02Icon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
@@ -25,32 +24,29 @@ export function QuranPart({ message }: Props) {
         <span className="text-muted-foreground text-sm">
           {t("nakafa-quran")}
         </span>
-        <Badge variant="muted">
-          {t("nakafa-quran-verse-count", {
-            count: message.result.verse_count,
-          })}
-        </Badge>
       </div>
-      <Button
-        className="max-w-full self-start"
-        nativeButton={false}
-        render={
-          <a
-            className="min-w-0"
-            href={message.result.url}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <span className="truncate">
-              {message.result.name}: {message.result.from_verse}-
-              {message.result.to_verse}
-            </span>
-            <HugeIcons icon={ArrowUpRight01Icon} />
-          </a>
-        }
-        size="sm"
-        variant="outline"
-      />
+      <div className="ms-2 flex flex-col gap-3 border-s ps-4">
+        <Button
+          className="max-w-full self-start"
+          nativeButton={false}
+          render={
+            <a
+              className="min-w-0"
+              href={message.result.url}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <span className="truncate">
+                {message.result.name}: {message.result.from_verse}-
+                {message.result.to_verse}
+              </span>
+              <HugeIcons icon={ArrowUpRight01Icon} />
+            </a>
+          }
+          size="sm"
+          variant="outline"
+        />
+      </div>
     </div>
   );
 }
