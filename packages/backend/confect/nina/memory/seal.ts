@@ -25,6 +25,9 @@ export const openWith = Effect.fn("nina.memory.openWith")(function* (
   );
 });
 
+/** A stored memory with its text opened. */
+export type Opened = Effect.Success<ReturnType<typeof openWith>>[number];
+
 /**
  * Opens the text of a learner's stored memories. A learner with no memories
  * has no key to read, and a memory without its key is a defect.

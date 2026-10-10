@@ -121,12 +121,12 @@ describe("Nina instructions", () => {
       })
     );
     await f.seed({ kind: "struggle", text: "Sulit di peluang." });
-    await f.seed({ author: "learner", kind: "level", text: "Kelas 12 IPA." });
+    await f.seed({ author: "learner", text: "Kelas 12 IPA." });
     const result = await instructionsFor(f);
     for (const expected of [
       "# Learner",
       "- Focus: preparing for try-outs",
-      "<memories>\n- (level) Kelas 12 IPA.\n- (struggle) Sulit di peluang.\n</memories>",
+      "<memories>\n- Kelas 12 IPA.\n- (struggle) Sulit di peluang.\n</memories>",
     ]) {
       expect(result).toHaveProperty(
         "instructions",

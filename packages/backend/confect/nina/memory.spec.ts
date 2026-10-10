@@ -14,16 +14,17 @@ import { Schema, Struct } from "effect";
 /** Memories one learner keeps. Beyond it, the memory Nina wrote and confirmed longest ago leaves. */
 export const MEMORY_LIMIT = 100;
 /** Characters of one memory, its Markdown formatting included. */
-export const MEMORY_TEXT_LIMIT = 1000;
+export const MEMORY_TEXT_LIMIT = 2000;
 /** Memories Nina reads in one turn. The Memory page marks them as in use. */
 export const MEMORY_PROMPT_LIMIT = 20;
 /** Memories one capture call may propose from a single message. */
 export const MEMORY_CAPTURE_LIMIT = 3;
 
 /**
- * What a memory is about. `situation` is something with an end, such as an
- * exam date. Nina dates one with `validUntil`; one the learner writes has no
- * date, so it stays until the learner removes it or a later chat dates it.
+ * What a memory Nina wrote is about. `situation` is something with an end,
+ * such as an exam date, and Nina dates every one with `validUntil`. The learner
+ * writes pure text on the Memory page, so a memory the learner wrote has no
+ * kind until a later chat says it again.
  */
 export const NinaMemoryKind = Schema.Literals([
   "level",
@@ -39,17 +40,18 @@ export const NinaMemoryKind = Schema.Literals([
  */
 export const NinaMemoryAuthor = Schema.Literals(["nina", "learner"]);
 
-/** One memory as the learner reads and writes it. */
+/** One memory as the learner reads and writes it: words that may hold Markdown. */
 const NinaMemoryText = Schema.Trim.check(
   Schema.isMinLength(1),
   Schema.isMaxLength(MEMORY_TEXT_LIMIT)
 );
 
 /**
- * One stored memory. `text` is sealed for its learner. `confirmedAt` moves
- * when the memory is written, edited, or said again in a chat. `lesson` is the
- * content identity of the lesson the learner had open, the same in every
- * language.
+ * One stored memory. `text` is sealed for its learner. `kind` is what Nina says
+ * the memory is about, so a memory the learner wrote has none until a chat says
+ * it again. `confirmedAt` moves when the memory is written, edited, or said
+ * again in a chat. `lesson` is the content identity of the lesson the learner
+ * had open, the same in every language.
  */
 export const NinaMemory = Schema.Struct({
   author: NinaMemoryAuthor,
@@ -61,24 +63,13 @@ export const NinaMemory = Schema.Struct({
   validUntil: Schema.optionalKey(Schema.Finite),
 });
 
-/**
- * A chat in which the learner said a memory. A memory Nina wrote leaves when
- * its last source chat is deleted.
- */
-export const NinaMemorySource = Schema.Struct({
-  chatId: Id("chats"),
-  memoryId: Id("ninaMemories"),
-  userId: Id("users"),
-});
-
-/** One memory on the Memory page. `sources` counts the chats it came from. */
+/** One memory on the Memory page: its words, never its kind. */
 export const NinaMemoryView = Schema.Struct({
   ...NinaMemory.mapFields(Struct.pick(["author", "confirmedAt", "validUntil"]))
     .fields,
   createdAt: Schema.Finite,
   id: Id("ninaMemories"),
   inUse: Schema.Boolean,
-  sources: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
   text: NinaMemoryText,
 });
 
@@ -88,7 +79,7 @@ export const NinaMemoryList = Schema.Struct({
   paused: Schema.Boolean,
 });
 
-/** What the learner writes on the Memory page. */
+/** What the learner writes on the Memory page: the words alone, with no kind. */
 const NinaMemoryDraft = Schema.Struct({
   text: NinaMemoryText,
 });
@@ -106,7 +97,8 @@ export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()
  * One thing a capture call says the learner stated about themself. `quote`
  * holds the learner's exact words; the write is refused unless the message
  * contains them. `known` names a stored memory that this one confirms or
- * rewrites. `until` is the day a situation ends, as `YYYY-MM-DD`.
+ * rewrites, and a stored memory without a kind takes this one's kind. `until`
+ * is the day a situation ends, as `YYYY-MM-DD`.
  */
 export const NinaMemoryCandidate = Schema.Struct({
   kind: NinaMemoryKind,
@@ -149,7 +141,7 @@ export const NinaLearnerProfile = Schema.Struct({
   tryoutCountry: Schema.optionalKey(tryoutRouteKeyValidator),
 });
 
-/** One memory as Nina and the capture call read it. */
+/** One memory as Nina and the capture call read it, with a kind only when it has one. */
 const NinaMemoryNote = Schema.Struct({
   confirmedAt: Schema.Finite,
   id: Id("ninaMemories"),
@@ -280,13 +272,13 @@ export default GroupSpec.make()
   )
   // Writes what a capture call found. `seen` is what the call read before the
   // model read the message: the write changes nothing when the learner removed
-  // one of those memories meanwhile, and leaves the words of one that changed.
+  // one of those memories meanwhile, and leaves the words, the kind and the end
+  // date of one that changed.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "capture",
       args: () => ({
         candidates: NinaMemoryCapture.fields.memories,
-        chatId: Id("chats"),
         lesson: Schema.optionalKey(Schema.NonEmptyString),
         seen: Schema.mutable(Schema.Array(NinaMemorySeen)).check(
           Schema.isMaxLength(MEMORY_LIMIT)
@@ -297,8 +289,8 @@ export default GroupSpec.make()
       returns: () => Schema.Int,
     })
   )
-  // Deletes one page of the situations whose end date has passed, with their
-  // source rows, and returns how many it deleted. The daily cron runs it.
+  // Deletes one page of the situations whose end date has passed and returns
+  // how many it deleted. The daily cron runs it.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "expire",

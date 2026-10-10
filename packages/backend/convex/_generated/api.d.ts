@@ -3453,7 +3453,6 @@ export declare const api: {
             createdAt: number;
             id: Id<"ninaMemories">;
             inUse: boolean;
-            sources: number;
             text: string;
             validUntil?: number;
           }>;
@@ -9464,7 +9463,6 @@ export declare const internal: {
             text: string;
             until?: string;
           }>;
-          chatId: Id<"chats">;
           lesson?: string;
           seen: Array<{ confirmedAt: number; id: Id<"ninaMemories"> }>;
           turnId: Id<"ninaTurns">;

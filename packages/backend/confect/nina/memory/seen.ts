@@ -19,7 +19,8 @@ export function lostMemory(seen: readonly Seen[], stored: readonly Stored[]) {
 
 /**
  * The memories that were confirmed or edited after the capture call read them.
- * Their words are newer than the message, so the message does not rewrite them.
+ * What they hold is newer than the message, so the message does not rewrite
+ * their words, their kind or their end date.
  */
 export function changedSince(seen: readonly Seen[], stored: readonly Stored[]) {
   return HashSet.fromIterable(

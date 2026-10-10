@@ -6,7 +6,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { insertChat, insertMemory } from "@repo/backend/test/nina/memory";
+import { insertMemory } from "@repo/backend/test/nina/memory";
 
 afterEach(() => vi.useRealTimers());
 
@@ -47,52 +47,37 @@ async function createDeletedOwner(suffix: string) {
   return owners;
 }
 
-it("deletes the learner's Nina memories with their sources, a batch at a time, and keeps another learner's", async () => {
+it("deletes the learner's Nina memories a batch at a time, Nina's and the learner's own, and keeps another learner's", async () => {
   const owners = await createOwners("memory");
   const { t, owner, retained } = owners;
   const left = 5;
-  const ownChat = await t.mutation((ctx) => insertChat(ctx, owner));
-  const keptChat = await t.mutation((ctx) => insertChat(ctx, retained));
   await t.mutation(async (ctx) => {
     for (let index = 0; index < MEMORY_BATCH_SIZE + left; index += 1) {
       await insertMemory(ctx, {
         author: index % 2 === 0 ? "nina" : "learner",
-        chats: [ownChat],
         text: `Memory ${index}`,
         userId: owner,
       });
     }
-    await insertMemory(ctx, { chats: [keptChat], userId: retained });
+    await insertMemory(ctx, { userId: retained });
   });
   // The memories exist before the account is deleted: a deleted account gets
   // no new key, so nothing can be sealed for it afterwards.
   await deleteOwner(owners);
-  const state = () =>
-    t.query(async (ctx) => ({
-      memories: await ctx.db.query("ninaMemories").collect(),
-      sources: await ctx.db.query("ninaMemorySources").collect(),
-    }));
+  const memories = () =>
+    t.query((ctx) => ctx.db.query("ninaMemories").collect());
   const cleanup = () =>
     t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner });
   await expect(cleanup()).resolves.toBe(true);
-  const batch = await state();
-  expect(batch.memories).toHaveLength(left + 1);
-  expect(batch.sources).toHaveLength(left + 1);
+  expect(await memories()).toHaveLength(left + 1);
   await expect(cleanup()).resolves.toBe(true);
-  const emptied = await state();
-  expect(emptied.memories).toEqual([
-    expect.objectContaining({ userId: retained }),
-  ]);
-  expect(emptied.sources).toEqual([
-    expect.objectContaining({ chatId: keptChat, userId: retained }),
-  ]);
-  // The learner's chat goes next, with no source left for it to forget, and
-  // the learner's key goes after every row it sealed.
+  const emptied = await memories();
+  expect(emptied).toEqual([expect.objectContaining({ userId: retained })]);
+  // The learner's key goes after every row it sealed.
   while (await cleanup()) {
     await t.finishAllScheduledFunctions(vi.runAllTimers);
   }
-  expect(await state()).toEqual(emptied);
-  expect(await t.query((ctx) => ctx.db.get("chats", ownChat))).toBeNull();
+  expect(await memories()).toEqual(emptied);
   expect(await t.query((ctx) => ctx.db.query("vaultKeys").collect())).toEqual([
     expect.objectContaining({ userId: retained }),
   ]);

@@ -67,14 +67,16 @@ describe("Nina learner prompt", () => {
     const prompt = formatLearnerPrompt({
       memories: [
         { kind: "level", text: "Kelas 11." },
+        { text: "Mau ikut SNBT 2027." },
         { kind: "style", text: "Suka contoh soal." },
       ],
       profile: { region: "germany" },
     });
     expect(prompt).toContain("# Learner");
     expect(prompt).toContain("- Region: germany");
+    // A memory the learner wrote has no kind, so its line is its words alone.
     expect(prompt).toContain(
-      "<memories>\n- (level) Kelas 11.\n- (style) Suka contoh soal.\n</memories>"
+      "<memories>\n- (level) Kelas 11.\n- Mau ikut SNBT 2027.\n- (style) Suka contoh soal.\n</memories>"
     );
     expect(
       formatLearnerPrompt({
@@ -122,6 +124,7 @@ describe("Nina learner prompt", () => {
   });
 
   it("still closes the memory block, within the budget, when the longest memories the learner may keep do not fit", () => {
+    // One word for each allowed character is always enough to fill the limit.
     const memories = Arr.makeBy(MEMORY_PROMPT_LIMIT, (index) => ({
       kind: "struggle" as const,
       text: Str.slice(
@@ -129,12 +132,16 @@ describe("Nina learner prompt", () => {
         MEMORY_TEXT_LIMIT
       )(
         `Topik ${index}: ${Arr.join(
-          Arr.makeBy(40, (word) => `x${index}y${word}z`),
+          Arr.makeBy(MEMORY_TEXT_LIMIT, (word) => `x${index}y${word}z`),
           " "
         )}`
       ),
     }));
-    // The test means something only when the memories alone outgrow the budget.
+    // The test means something only when every memory is as long as the learner
+    // may write it, and the memories alone outgrow the budget.
+    expect(
+      Arr.every(memories, ({ text }) => Str.length(text) === MEMORY_TEXT_LIMIT)
+    ).toBe(true);
     expect(
       countTextTokens(Arr.join(Arr.map(memories, memoryLine), "\n"))
     ).toBeGreaterThan(NINA_BUDGET.learner);

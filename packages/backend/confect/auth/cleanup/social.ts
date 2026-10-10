@@ -12,7 +12,7 @@ import { Effect, flow, Option } from "effect";
 
 const COMMENT_VOTE_BATCH_SIZE = 50;
 const COMMENT_REFERENCE_BATCH_SIZE = 25;
-/** Memories one cleanup pass deletes, each with its source rows. */
+/** Memories one cleanup pass deletes. */
 export const MEMORY_BATCH_SIZE = 25;
 
 /** Deletes one bounded batch of a user's comments and votes. */
@@ -130,7 +130,7 @@ const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
 
-/** Deletes one bounded batch of the learner's Nina memories with their source rows. */
+/** Deletes one bounded batch of the learner's Nina memories. */
 const cleanupNinaMemory = Effect.fn("auth.cleanup.ninaMemory")(
   function* (userId: Id<"users">) {
     const memories = yield* readMemories(userId, MEMORY_BATCH_SIZE);

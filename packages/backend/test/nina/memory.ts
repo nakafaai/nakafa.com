@@ -1,6 +1,4 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { createThread } from "@convex-dev/agent";
-import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { MEMORY_FIELD } from "@repo/backend/confect/nina/memory/seal";
@@ -34,35 +32,23 @@ function run<A, E>(
   );
 }
 
-/** Inserts a chat for a learner, with a real component thread behind it. */
-export async function insertChat(ctx: MutationCtx, userId: UserId) {
-  return ctx.db.insert("chats", {
-    threadId: await createThread(ctx, components.nina, { userId }),
-    type: "study",
-    updatedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
-    userId,
-    visibility: "private",
-  });
-}
-
 /**
- * Inserts one memory for a learner, with a source row for each chat. Nina
- * wrote it unless the row says otherwise.
+ * Inserts one memory for a learner. Nina wrote it, with a kind, unless the row
+ * says otherwise. A memory the learner wrote has no kind unless the row names
+ * one.
  */
 export async function insertMemory(
   ctx: MutationCtx,
   {
     author = "nina",
-    chats = [],
     confirmedAt = 1,
-    kind = "goal",
+    kind = author === "nina" ? "goal" : undefined,
     lesson,
     text = "Mau ikut SNBT 2027.",
     userId,
     validUntil,
   }: {
     readonly author?: typeof NinaMemory.Type.author;
-    readonly chats?: readonly Docs["chats"]["_id"][];
     readonly confirmedAt?: number;
     readonly kind?: typeof NinaMemory.Type.kind;
     readonly lesson?: string;
@@ -77,26 +63,22 @@ export async function insertMemory(
       sealText(keys, MEMORY_FIELD, text)
     )
   );
-  const memoryId = await ctx.db.insert("ninaMemories", {
+  return ctx.db.insert("ninaMemories", {
     author,
     confirmedAt,
-    kind,
+    ...(kind === undefined ? {} : { kind }),
     ...(lesson === undefined ? {} : { lesson }),
     text: sealed,
     userId,
     ...(validUntil === undefined ? {} : { validUntil }),
   });
-  for (const chatId of chats) {
-    await ctx.db.insert("ninaMemorySources", { chatId, memoryId, userId });
-  }
-  return memoryId;
 }
 
 type Seed = Partial<Parameters<typeof insertMemory>[1]>;
 type NinaTest = Awaited<ReturnType<typeof createNinaTest>>;
 
 /**
- * Helpers for the memory tables of a Nina fixture. Memories seeded here are
+ * Helpers for the memory table of a Nina fixture. Memories seeded here are
  * sealed exactly as the product seals them, so they open through the public
  * functions.
  */
@@ -120,10 +102,6 @@ export function memoryTools(f: NinaTest) {
         });
       }
     });
-
-  /** Another chat of the same learner. */
-  const chat = (userId: UserId = f.identity.userId) =>
-    f.t.mutation((ctx) => insertChat(ctx, userId));
 
   /** A second learner with an identity of their own. */
   const stranger = async () => {
@@ -162,10 +140,6 @@ export function memoryTools(f: NinaTest) {
   const stored = () =>
     f.t.query((ctx) => ctx.db.query("ninaMemories").collect());
 
-  /** Every stored source row. */
-  const sources = () =>
-    f.t.query((ctx) => ctx.db.query("ninaMemorySources").collect());
-
   /** The opened text of every stored memory of a learner, in storage order. */
   const texts = (userId: UserId = f.identity.userId) =>
     f.t.mutation(async (ctx) => {
@@ -181,7 +155,7 @@ export function memoryTools(f: NinaTest) {
       );
     });
 
-  return { chat, fill, openLesson, seed, sources, stored, stranger, texts };
+  return { fill, openLesson, seed, stored, stranger, texts };
 }
 
 /** A Nina fixture together with its memory helpers. */

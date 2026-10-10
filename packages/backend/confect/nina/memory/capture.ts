@@ -20,7 +20,6 @@ import { lessonOf } from "@repo/backend/confect/nina/memory/lesson";
 import { knownLine } from "@repo/backend/confect/nina/memory/line";
 import {
   MEMORY_CAPTURE_LIMIT,
-  MEMORY_TEXT_LIMIT,
   type NinaLearner,
   NinaMemoryCapture,
   type NinaMemoryKind,
@@ -60,7 +59,7 @@ const INSTRUCTIONS = Arr.join(
     ),
     "Save only what the learner says about themself that still helps a month from now. Never save the question itself, scores, answers, one-off tasks, other people, health, religion, ethnicity, politics, money, contacts, or addresses.",
     "quote: copy the learner's words character for character from the message. If you cannot quote them, save nothing.",
-    `text: one short statement in the learner's language, at most ${MEMORY_TEXT_LIMIT} characters.`,
+    "text: one short sentence in the learner's language.",
     "known: the id of a known memory that this one repeats or changes. Leave it out for a new memory.",
     "until: only for a situation, the last day it matters, as YYYY-MM-DD.",
     "The account section lists what Nakafa already knows; do not save it again.",
@@ -155,10 +154,7 @@ const readMessage = Effect.fn("nina.memory.message")(function* (
  */
 export const captureMemory = Effect.fn("nina.memory.capture")(
   function* (
-    turn: Pick<
-      NinaTurnsDoc,
-      "_id" | "chatId" | "page" | "promptMessageId" | "userId"
-    >,
+    turn: Pick<NinaTurnsDoc, "_id" | "page" | "promptMessageId" | "userId">,
     usageHandler: UsageHandler
   ) {
     const message = yield* readMessage(turn);
@@ -214,7 +210,6 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
     yield* (yield* MutationRunner)
       .runMutation(refs.internal.nina.memory.capture, {
         candidates,
-        chatId: turn.chatId,
         ...(lesson === undefined ? {} : { lesson }),
         seen: Arr.map(learner.known, Struct.pick(["confirmedAt", "id"])),
         turnId: turn._id,

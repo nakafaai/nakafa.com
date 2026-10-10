@@ -182,7 +182,6 @@ describe("memory capture", () => {
     });
     await f.capture();
     expect(await f.texts()).toEqual(["Kelas 12.", "Ikut SNBT 2027."]);
-    expect(await f.sources()).toHaveLength(2);
     expect(await f.turn()).toMatchObject({
       remembered: 2,
       usage: [
@@ -243,18 +242,33 @@ describe("memory capture", () => {
     ]);
   });
 
-  it("keeps the words the learner edits while the model reads the message", async () => {
+  it("shows the model a memory the learner wrote as its words alone, and gives it the kind the model names", async () => {
     const f = await fixture();
-    const id = await f.seed({ kind: "level", text: "Kelas 11." });
-    answersAfter(
-      () => f.owner.mutation(edit, { id, kind: "level", text: "Kelas 12 SMA" }),
-      { ...level, known: id, text: "Kelas 12 IPA." }
+    const id = await f.seed({ author: "learner", text: "Kelas 11." });
+    const model = answers({ ...level, known: id, text: "Kelas 12 IPA." });
+    await f.capture();
+    expect(encodeJsonText(model.doGenerateCalls[0]?.prompt)).toContain(
+      `- [${id}] Kelas 11.`
     );
+    expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({ author: "nina", kind: "level" }),
+    ]);
+  });
+
+  it("keeps the words the learner edits while the model reads the message, and gives the memory no kind", async () => {
+    const f = await fixture();
+    const id = await f.seed({ author: "learner", text: "Kelas 11." });
+    answersAfter(() => f.owner.mutation(edit, { id, text: "Kelas 12 SMA" }), {
+      ...level,
+      known: id,
+      text: "Kelas 12 IPA.",
+    });
     await f.capture();
     expect(await f.texts()).toEqual(["Kelas 12 SMA"]);
-    expect(await f.stored()).toEqual([
-      expect.objectContaining({ author: "learner" }),
-    ]);
+    const [row] = await f.stored();
+    expect(row).toMatchObject({ author: "learner" });
+    expect(row).not.toHaveProperty("kind");
   });
 
   it("saves a situation with the end of its last day and links a memory to the open lesson", async () => {

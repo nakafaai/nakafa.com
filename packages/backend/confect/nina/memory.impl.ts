@@ -22,7 +22,6 @@ import {
   selectMemories,
 } from "@repo/backend/confect/nina/memory/select";
 import {
-  countSources,
   deleteMemory,
   EXPIRY_PAGE,
   expireMemories,
@@ -75,20 +74,17 @@ const list = FunctionImpl.make(
       )
     );
     return {
-      memories: yield* Effect.forEach(memories, (memory) =>
-        Effect.map(countSources(memory._id), (sources) => ({
-          author: memory.author,
-          confirmedAt: memory.confirmedAt,
-          createdAt: memory._creationTime,
-          id: memory._id,
-          inUse: HashSet.has(inUse, memory._id),
-          sources,
-          text: memory.text,
-          ...(memory.validUntil === undefined
-            ? {}
-            : { validUntil: memory.validUntil }),
-        }))
-      ),
+      memories: Arr.map(memories, (memory) => ({
+        author: memory.author,
+        confirmedAt: memory.confirmedAt,
+        createdAt: memory._creationTime,
+        id: memory._id,
+        inUse: HashSet.has(inUse, memory._id),
+        text: memory.text,
+        ...(memory.validUntil === undefined
+          ? {}
+          : { validUntil: memory.validUntil }),
+      })),
       paused,
     };
   })
@@ -118,8 +114,8 @@ const add = FunctionImpl.make(
 );
 
 /**
- * Rewrites a memory as the learner's own words. Its kind, lesson, sources and
- * end date stay as they are.
+ * Rewrites a memory as the learner's own words. Its kind, lesson and end date
+ * stay as they are.
  */
 const edit = FunctionImpl.make(
   schema,

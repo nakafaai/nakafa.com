@@ -1,14 +1,12 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { SOURCE_LIMIT } from "@repo/backend/confect/nina/memory/store";
 import {
   MEMORY_LIMIT,
   type NinaMemoryCandidate,
   type NinaMemorySeen,
 } from "@repo/backend/confect/nina/memory.spec";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
-import { Array as Arr } from "effect";
 
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
 const clear = Ref.getFunctionReference(refs.public.nina.memory.clear);
@@ -46,18 +44,12 @@ async function fixture() {
   const run = (
     candidates: (typeof NinaMemoryCandidate.Type)[],
     {
-      chatId = f.chatId,
       lesson,
       seen = [],
-    }: {
-      chatId?: typeof f.chatId;
-      lesson?: string;
-      seen?: (typeof NinaMemorySeen.Type)[];
-    } = {}
+    }: { lesson?: string; seen?: (typeof NinaMemorySeen.Type)[] } = {}
   ) =>
     f.t.mutation(capture, {
       candidates,
-      chatId,
       ...(lesson === undefined ? {} : { lesson }),
       seen,
       turnId: f.turnId,
@@ -69,7 +61,7 @@ async function fixture() {
 }
 
 describe("memory capture write", () => {
-  it("writes a new memory as Nina's own, sealed, with the lesson and the chat as its source", async () => {
+  it("writes a new memory as Nina's own, sealed, with the lesson", async () => {
     const f = await fixture();
     expect(await f.run([candidate()], { lesson: LESSON })).toBe(1);
     const [row] = await f.stored();
@@ -83,13 +75,6 @@ describe("memory capture write", () => {
     expect(row?.validUntil).toBeUndefined();
     expect(new TextDecoder("latin1").decode(row?.text)).not.toContain("Kelas");
     expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
-    expect(await f.sources()).toEqual([
-      expect.objectContaining({
-        chatId: f.chatId,
-        memoryId: row?._id,
-        userId: f.identity.userId,
-      }),
-    ]);
     expect(await f.remembered()).toBe(1);
   });
 
@@ -123,14 +108,17 @@ describe("memory capture write", () => {
       validUntil: Date.UTC(2026, 9, 12, 23, 59, 59, 999),
     });
     expect(
-      await f.run([
-        candidate({
-          kind: "situation",
-          known: id,
-          text: "Ulangan kimia diundur",
-          until: "2026-10-25",
-        }),
-      ])
+      await f.run(
+        [
+          candidate({
+            kind: "situation",
+            known: id,
+            text: "Ulangan kimia diundur",
+            until: "2026-10-25",
+          }),
+        ],
+        { seen: [{ confirmedAt: 1, id }] }
+      )
     ).toBe(1);
     expect(await f.stored()).toEqual([
       expect.objectContaining({
@@ -147,25 +135,21 @@ describe("memory capture write", () => {
     expect((await f.stored())[0]?.lesson).toBeUndefined();
   });
 
-  it("rewrites the known memory as Nina's words, keeps its lesson and its place, and counts a chat once", async () => {
+  it("rewrites the known memory as Nina's words and kind, and keeps its lesson and its place", async () => {
     const f = await fixture();
-    const second = await f.chat();
     const id = await f.seed({
       author: "learner",
       confirmedAt: 1,
-      kind: "level",
       lesson: "material:lesson:chemistry",
       text: "Kelas 11.",
     });
     expect(await f.run([candidate({ known: id })], { lesson: LESSON })).toBe(1);
-    expect(await f.run([candidate({ known: id })])).toBe(1);
-    expect(await f.sources()).toHaveLength(1);
-    expect(await f.run([candidate({ known: id })], { chatId: second })).toBe(1);
-    expect(await f.sources()).toHaveLength(2);
     expect(await f.stored()).toEqual([
       expect.objectContaining({
+        _id: id,
         author: "nina",
         confirmedAt: NOW,
+        kind: "level",
         lesson: "material:lesson:chemistry",
       }),
     ]);
@@ -190,76 +174,60 @@ describe("memory capture write", () => {
     expect(await f.texts()).toEqual(["Kelas 12 IPA"]);
   });
 
-  it("confirms the memory of its kind that says the same, and none that says something else", async () => {
+  it("gives a memory the learner wrote the kind of the candidate that names it, or that says the same", async () => {
     const f = await fixture();
-    const goal = await f.seed({
-      confirmedAt: 1,
-      kind: "goal",
-      text: "Mau ikut SNBT 2027",
-    });
-    await f.seed({ confirmedAt: 1, kind: "goal", text: "Mau kuliah di ITB" });
-    const wording = candidate({
-      kind: "goal",
-      quote: "mau ikut snbt 2027",
-      text: "mau ikut SNBT 2027!",
-    });
-    expect(await f.run([wording])).toBe(1);
-    expect(await f.stored()).toHaveLength(2);
-    expect(await f.stored()).toContainEqual(
-      expect.objectContaining({ _id: goal, confirmedAt: NOW })
-    );
-    expect(await f.texts()).toEqual([
-      "Mau ikut SNBT 2027",
-      "Mau kuliah di ITB",
+    const named = await f.seed({ author: "learner", text: "Kelas 11" });
+    await f.seed({ author: "learner", text: "Mau ikut SNBT 2027" });
+    expect(
+      await f.run([
+        candidate({ known: named }),
+        candidate({
+          kind: "goal",
+          quote: "mau ikut snbt 2027",
+          text: "mau ikut SNBT 2027!",
+        }),
+      ])
+    ).toBe(2);
+    // The words of the first are new, so Nina becomes their author; the second
+    // says the same words, so the learner stays the author of them.
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({
+        author: "nina",
+        confirmedAt: NOW,
+        kind: "level",
+      }),
+      expect.objectContaining({
+        author: "learner",
+        confirmedAt: NOW,
+        kind: "goal",
+      }),
     ]);
-    expect(await f.run([{ ...wording, text: "Mau ikut UTBK pada 2027" }])).toBe(
-      1
-    );
-    expect(await f.stored()).toHaveLength(3);
+    expect(await f.texts()).toEqual(["Kelas 12 IPA.", "Mau ikut SNBT 2027"]);
   });
 
-  it("writes a new memory when the same words are a different kind", async () => {
+  it("dates a memory the learner wrote when a chat says it is a situation", async () => {
     const f = await fixture();
-    const goal = await f.seed({
-      confirmedAt: 1,
-      kind: "goal",
-      text: "Ikut SNBT 2027",
-    });
+    const id = await f.seed({ author: "learner", text: "Ulangan kimia" });
     expect(
       await f.run([
         candidate({
-          kind: "level",
-          quote: "ikut snbt 2027",
-          text: "Ikut SNBT 2027",
+          kind: "situation",
+          known: id,
+          text: "Ulangan kimia.",
+          until: "2026-10-25",
         }),
       ])
     ).toBe(1);
     expect(await f.stored()).toEqual([
-      expect.objectContaining({ _id: goal, confirmedAt: 1, kind: "goal" }),
-      expect.objectContaining({ confirmedAt: NOW, kind: "level" }),
-    ]);
-    expect(await f.texts()).toEqual(["Ikut SNBT 2027", "Ikut SNBT 2027"]);
-  });
-
-  it("confirms a memory whose words share four fifths with the candidate's", async () => {
-    const f = await fixture();
-    await f.seed({
-      kind: "level",
-      text: "Saya kelas 12 IPA di SMA Negeri 1 Bandung",
-    });
-    expect(
-      await f.run([
-        candidate({
-          text: "Saya kelas 12 IPA di SMA Negeri 1 Bandung sekarang",
-        }),
-      ])
-    ).toBe(1);
-    expect(await f.texts()).toEqual([
-      "Saya kelas 12 IPA di SMA Negeri 1 Bandung sekarang",
+      expect.objectContaining({
+        author: "learner",
+        kind: "situation",
+        validUntil: Date.UTC(2026, 9, 25, 23, 59, 59, 999),
+      }),
     ]);
   });
 
-  it("writes a new memory when the known memory is of another kind or another learner's", async () => {
+  it("writes a new memory when the memory it names or repeats is of another kind, or the known memory is another learner's", async () => {
     const f = await fixture();
     const other = await f.stranger();
     const goal = await f.seed({ kind: "goal", text: "Ikut SNBT" });
@@ -269,14 +237,19 @@ describe("memory capture write", () => {
       userId: other.userId,
     });
     expect(await f.run([candidate({ known: goal })])).toBe(1);
+    expect(await f.run([candidate({ text: "Ikut SNBT" })])).toBe(1);
     expect(
       await f.run([candidate({ known: theirs, text: "Kelas 12 SMA." })])
     ).toBe(1);
     expect(await f.texts()).toEqual([
       "Ikut SNBT",
       "Kelas 12 IPA.",
+      "Ikut SNBT",
       "Kelas 12 SMA.",
     ]);
+    expect(await f.stored()).toContainEqual(
+      expect.objectContaining({ _id: goal, confirmedAt: 1, kind: "goal" })
+    );
     expect(await f.texts(other.userId)).toEqual(["Kelas 9"]);
   });
 
@@ -303,50 +276,6 @@ describe("memory capture write", () => {
     ).toBe(2);
     expect(await f.remembered()).toBe(2);
   });
-
-  it("keeps a source of a memory only up to the source limit", async () => {
-    const f = await fixture();
-    const id = await f.seed({
-      author: "learner",
-      kind: "level",
-      text: "Kelas 12 IPA.",
-    });
-    for (let index = 0; index < SOURCE_LIMIT + 2; index += 1) {
-      await f.run([candidate({ known: id })], { chatId: await f.chat() });
-    }
-    expect(await f.sources()).toHaveLength(SOURCE_LIMIT);
-  });
-
-  it("leaves the words of a memory alone when the chat cannot become one of its sources", async () => {
-    const f = await fixture();
-    const validUntil = Date.UTC(2026, 9, 12, 23, 59, 59, 999);
-    const id = await f.seed({
-      chats: await Promise.all(Arr.makeBy(SOURCE_LIMIT, () => f.chat())),
-      confirmedAt: 1,
-      kind: "situation",
-      text: "Ulangan kimia",
-      validUntil,
-    });
-    expect(
-      await f.run([
-        candidate({
-          kind: "situation",
-          known: id,
-          text: "Ulangan kimia diundur",
-          until: "2026-10-25",
-        }),
-      ])
-    ).toBe(1);
-    expect(await f.sources()).toHaveLength(SOURCE_LIMIT);
-    expect(await f.stored()).toEqual([
-      expect.objectContaining({
-        author: "nina",
-        confirmedAt: NOW,
-        validUntil,
-      }),
-    ]);
-    expect(await f.texts()).toEqual(["Ulangan kimia"]);
-  });
 });
 
 describe("memory capture write after the learner changed their memory", () => {
@@ -361,7 +290,6 @@ describe("memory capture write after the learner changed their memory", () => {
     await f.owner.mutation(remove, { id: gone });
     expect(await f.run([candidate()], { seen })).toBe(0);
     expect(await f.texts()).toEqual(["Stays"]);
-    expect(await f.sources()).toEqual([]);
     expect(await f.remembered()).toBeUndefined();
   });
 
@@ -391,32 +319,67 @@ describe("memory capture write after the learner changed their memory", () => {
     ]);
   });
 
-  it("keeps the words the learner edited after the call read the memory, and still counts the chat", async () => {
+  it("keeps the words the learner edited after the call read the memory, and gives it no kind", async () => {
     const f = await fixture();
     const id = await f.seed({
+      author: "learner",
       confirmedAt: 1,
-      kind: "level",
       text: "Kelas 11.",
     });
     const seen = [{ confirmedAt: 1, id }];
     vi.setSystemTime(NOW + 1000);
-    await f.owner.mutation(edit, { id, kind: "level", text: "Kelas 12 SMA" });
+    await f.owner.mutation(edit, { id, text: "Kelas 12 SMA" });
     vi.setSystemTime(NOW + 2000);
     expect(await f.run([candidate({ known: id })], { seen })).toBe(1);
     expect(await f.texts()).toEqual(["Kelas 12 SMA"]);
+    const [row] = await f.stored();
+    expect(row).toMatchObject({ author: "learner", confirmedAt: NOW + 2000 });
+    // A memory that changed since the call read it is not given the kind either.
+    expect(row).not.toHaveProperty("kind");
+  });
+
+  it("keeps the words, the kind and the end of a situation that the learner edited after the call read it", async () => {
+    const f = await fixture();
+    const validUntil = Date.UTC(2026, 9, 12, 23, 59, 59, 999);
+    const id = await f.seed({
+      confirmedAt: 1,
+      kind: "situation",
+      text: "Ulangan kimia",
+      validUntil,
+    });
+    const seen = [{ confirmedAt: 1, id }];
+    vi.setSystemTime(NOW + 1000);
+    await f.owner.mutation(edit, { id, text: "Ulangan kimia hari Senin" });
+    vi.setSystemTime(NOW + 2000);
+    expect(
+      await f.run(
+        [
+          candidate({
+            kind: "situation",
+            known: id,
+            text: "Ulangan kimia diundur",
+            until: "2026-10-25",
+          }),
+        ],
+        { seen }
+      )
+    ).toBe(1);
+    expect(await f.texts()).toEqual(["Ulangan kimia hari Senin"]);
     expect(await f.stored()).toEqual([
-      expect.objectContaining({ author: "learner", confirmedAt: NOW + 2000 }),
-    ]);
-    expect(await f.sources()).toEqual([
-      expect.objectContaining({ chatId: f.chatId, memoryId: id }),
+      expect.objectContaining({
+        author: "learner",
+        confirmedAt: NOW + 2000,
+        kind: "situation",
+        validUntil,
+      }),
     ]);
   });
 
-  it("rewrites a memory that is still as the call read it", async () => {
+  it("rewrites a memory that is still as the call read it, and gives it the kind", async () => {
     const f = await fixture();
     const id = await f.seed({
+      author: "learner",
       confirmedAt: 1,
-      kind: "level",
       text: "Kelas 11.",
     });
     expect(
@@ -425,22 +388,22 @@ describe("memory capture write after the learner changed their memory", () => {
       })
     ).toBe(1);
     expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({ author: "nina", kind: "level" }),
+    ]);
   });
 });
 
 describe("memory capture write at the limit", () => {
-  it("drops the Nina-written memory confirmed longest ago, with its sources", async () => {
+  it("drops the Nina-written memory confirmed longest ago", async () => {
     const f = await fixture();
-    await f.seed({ chats: [f.chatId], confirmedAt: 0, text: "Oldest" });
+    await f.seed({ confirmedAt: 0, text: "Oldest" });
     await f.fill(MEMORY_LIMIT - 1);
     expect(await f.run([candidate()])).toBe(1);
     const texts = await f.texts();
     expect(texts).toHaveLength(MEMORY_LIMIT);
     expect(texts).not.toContain("Oldest");
     expect(texts).toContain("Kelas 12 IPA.");
-    expect(await f.sources()).toEqual([
-      expect.objectContaining({ chatId: f.chatId }),
-    ]);
   });
 
   it("drops the new memory when the learner wrote every one", async () => {
@@ -462,14 +425,27 @@ describe("memory capture write that changes nothing", () => {
     expect(await f.remembered()).toBeUndefined();
   });
 
-  it("writes nothing for a chat or a turn deleted meanwhile", async () => {
+  it("writes nothing for a turn deleted meanwhile", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) => ctx.db.delete("chats", f.chatId));
-    expect(await f.run([candidate()])).toBe(0);
     await f.t.mutation((ctx) => ctx.db.delete("ninaTurns", f.turnId));
-    const other = await f.chat();
-    expect(await f.run([candidate()], { chatId: other })).toBe(0);
+    expect(await f.run([candidate()])).toBe(0);
     expect(await f.stored()).toEqual([]);
+  });
+
+  it("writes whether or not the chat of the turn still exists, because it reads no chat", async () => {
+    const f = await fixture();
+    expect(await f.run([candidate()])).toBe(1);
+    await f.t.mutation((ctx) => ctx.db.delete("chats", f.chatId));
+    expect(
+      await f.run([
+        candidate({
+          kind: "style",
+          quote: "contoh soal",
+          text: "Suka contoh soal.",
+        }),
+      ])
+    ).toBe(1);
+    expect(await f.texts()).toEqual(["Kelas 12 IPA.", "Suka contoh soal."]);
   });
 
   it("writes nothing for no candidates", async () => {

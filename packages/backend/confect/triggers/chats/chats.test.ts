@@ -10,7 +10,6 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { insertChat, insertMemory } from "@repo/backend/test/nina/memory";
 import { Array as Arr, DateTime, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
@@ -19,6 +18,8 @@ vi.mock("@repo/backend/confect/nina/context", () => ({
 const NOW = Date.UTC(2026, 8, 27, 12);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const save = Ref.getFunctionReference(refs.public.nina.uploads.save);
+const add = Ref.getFunctionReference(refs.public.nina.memory.add);
+const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
 const remove = Ref.getFunctionReference(refs.public.chats.mutations.deleteChat);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const cleanup = Ref.getFunctionReference(
@@ -103,62 +104,45 @@ describe("native Nina deletion lifecycle", () => {
       await t.query((ctx) => ctx.db.get("chats", receipt.chatId))
     ).toBeNull();
   });
-  it("forgets what only a deleted chat taught Nina, and keeps what the learner wrote or said elsewhere", async () => {
+  it("keeps every memory when a chat is deleted, the one Nina wrote from that chat and the one the learner wrote", async () => {
     const { t, owner, identity, receipt } = await fixture();
-    const userId = identity.userId;
-    const other = await t.mutation((ctx) => insertChat(ctx, userId));
-    const quiet = await t.mutation((ctx) => insertChat(ctx, userId));
-    const seed = (row: Omit<Parameters<typeof insertMemory>[1], "userId">) =>
-      t.mutation((ctx) => insertMemory(ctx, { ...row, userId }));
-    await seed({ chats: [receipt.chatId], text: "Only this chat" });
-    await seed({ chats: [receipt.chatId, other], text: "Said in two chats" });
-    await seed({
-      author: "learner",
-      chats: [receipt.chatId],
-      text: "Written by the learner",
-    });
-    await seed({ text: "From no chat" });
-    const state = async () => ({
-      memories: Arr.map(
-        await t.query((ctx) => ctx.db.query("ninaMemories").collect()),
-        (memory) => memory.author
-      ),
-      sources: await t.query((ctx) =>
-        ctx.db.query("ninaMemorySources").collect()
-      ),
-    });
-    expect((await state()).memories).toHaveLength(4);
-    await owner.mutation(remove, { chatId: receipt.chatId });
-    expect(await state()).toEqual({
-      memories: ["nina", "learner", "nina"],
-      sources: [expect.objectContaining({ chatId: other })],
-    });
-    await owner.mutation(remove, { chatId: quiet });
-    expect((await state()).memories).toHaveLength(3);
-    await owner.mutation(remove, { chatId: other });
-    expect(await state()).toEqual({
-      memories: ["learner", "nina"],
-      sources: [],
-    });
-    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
-  });
-  it("deletes a chat although a source row names a memory that is already gone", async () => {
-    const { t, owner, identity, receipt } = await fixture();
-    const id = await t.mutation((ctx) =>
-      insertMemory(ctx, {
-        chats: [receipt.chatId],
+    // A chat that has no active turn, which the trigger handles on its own path.
+    const idle = await t.mutation(async (ctx) =>
+      ctx.db.insert("chats", {
+        threadId: await createThread(ctx, components.nina, {
+          userId: identity.userId,
+        }),
+        type: "study",
+        updatedAt: NOW,
         userId: identity.userId,
+        visibility: "private",
       })
     );
-    await t.mutation((ctx) => ctx.db.delete("ninaMemories", id));
-    await owner.mutation(remove, { chatId: receipt.chatId });
     expect(
-      await t.query((ctx) => ctx.db.get("chats", receipt.chatId))
-    ).toBeNull();
-    expect(
-      await t.query((ctx) => ctx.db.query("ninaMemorySources").collect())
-    ).toEqual([]);
-    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+      await t.mutation(capture, {
+        candidates: [
+          { kind: "level", quote: "aku kelas 12", text: "Kelas 12 IPA." },
+        ],
+        seen: [],
+        turnId: receipt.turnId,
+        userId: identity.userId,
+      })
+    ).toBe(1);
+    await owner.mutation(add, { text: "Written by the learner" });
+    const memories = () =>
+      t.query((ctx) => ctx.db.query("ninaMemories").collect());
+    const before = await memories();
+    expect(Arr.map(before, (memory) => memory.author)).toEqual([
+      "nina",
+      "learner",
+    ]);
+    for (const chatId of [idle, receipt.chatId]) {
+      await owner.mutation(remove, { chatId });
+      expect(await t.query((ctx) => ctx.db.get("chats", chatId))).toBeNull();
+      await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+      // `toStrictEqual` compares the sealed bytes of the words too.
+      expect(await memories()).toStrictEqual(before);
+    }
   });
   it("cancels queued generation and removes the Agent journal before late writes can recreate it", async () => {
     const { t, owner, identity, receipt, fileId } = await fixture();
