@@ -104,7 +104,8 @@ export function streamCapability<E, R>(
  * once it settled without an error, whatever its own vocabulary calls that
  * (`done` for sources, `verified` for a calculation). A run that loaded a card
  * never ends as `failed`, and a run that lost a card never ends as plainly
- * done: it is `partial` beside a loaded card and `failed` without one.
+ * done or empty: it is `partial` beside a loaded card and `failed` without
+ * one. `limit` and `denied` are decisions, not results, and stay as stated.
  */
 function settleOutcome(
   outcome: CapabilityOutcome | undefined,
@@ -115,7 +116,8 @@ function settleOutcome(
     ({ data }) => data.status !== "loading" && data.status !== "error"
   );
   const lost = Arr.some(artifacts, ({ data }) => data.status === "error");
-  if (loaded && (outcome === "failed" || (!outcome && lost))) {
+  const unstated = !outcome || outcome === "empty";
+  if (loaded && (outcome === "failed" || (lost && unstated))) {
     return "partial" as const;
   }
   if (!(outcome || loaded) && lost) {

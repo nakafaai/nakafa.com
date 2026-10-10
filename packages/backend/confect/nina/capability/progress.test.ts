@@ -181,7 +181,19 @@ it.effect.each([
     undefined,
     undefined,
   ],
-  ["a stated outcome survives loaded evidence", [done, lost], "empty", "empty"],
+  [
+    "an empty run that lost a card beside a settled one is partial",
+    [done, lost],
+    "empty",
+    "partial",
+  ],
+  ["an empty run stays empty beside settled cards", [done], "empty", "empty"],
+  [
+    "a denied run stays denied whatever its cards",
+    [done, lost],
+    "denied",
+    "denied",
+  ],
   ["a stated outcome survives lost evidence", [lost], "empty", "empty"],
 ] as const)("settles the stored outcome: %s", ([, cards, reported, stored]) =>
   Effect.gen(function* () {

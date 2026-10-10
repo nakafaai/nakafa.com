@@ -61,6 +61,7 @@ describe("research agent messages", () => {
         "# Web Search Results\n\n## Source 1: AI SDK\n- URL: https://ai-sdk.dev/docs",
       ],
       task: "Research AI SDK DevTools.",
+      unread: [],
     });
 
     expect(messages).toEqual([
@@ -78,5 +79,17 @@ describe("research agent messages", () => {
         ),
       },
     ]);
+  });
+
+  it("names the learner's unread sources apart from the evidence", () => {
+    const messages = createResearchSynthesisMessages({
+      evidence: ["# Web Search Results"],
+      task: "Compare both pages.",
+      unread: ["https://example.org/a", "https://example.org/b"],
+    });
+
+    expect(messages[0]?.content).toContain(
+      "# Web Search Results\n\n# Sources That Could Not Be Read\n\nThese user-provided sources returned no content. Do not cite them or describe what they say.\n\n- https://example.org/a\n- https://example.org/b"
+    );
   });
 });

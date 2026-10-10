@@ -1,6 +1,19 @@
+import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
 import { ResearchSearchError } from "@repo/backend/confect/nina/research/schema";
-import { Effect, Option, Schema } from "effect";
+import { Duration, Effect, Option, Schema } from "effect";
+
+/**
+ * One query settles within the step budget of the specialist purpose that
+ * runs research: as sources or as an error, never as a card left loading.
+ */
+const SEARCH_DEADLINE = Duration.millis(purposes.specialist.timeout.stepMs);
+
+const searchFailure = (status?: { readonly status: number }) =>
+  new ResearchSearchError({
+    message: "Failed to search the web. Please try again.",
+    ...status,
+  });
 
 /** The provider's HTTP status. Its message may repeat the query and is never read. */
 const ProviderFailure = Schema.Struct({ status: Schema.Finite });
@@ -29,11 +42,16 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
         timeout: 10_000,
       }),
     catch: (cause) =>
-      new ResearchSearchError({
-        message: "Failed to search the web. Please try again.",
-        ...Option.getOrUndefined(
+      searchFailure(
+        Option.getOrUndefined(
           Schema.decodeUnknownOption(ProviderFailure)(cause)
-        ),
-      }),
-  }).pipe(Effect.map((response) => ({ query, response })));
+        )
+      ),
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: SEARCH_DEADLINE,
+      orElse: () => Effect.fail(searchFailure()),
+    }),
+    Effect.map((response) => ({ query, response }))
+  );
 });

@@ -99,16 +99,20 @@ describe("formatResearchOutput", () => {
   });
 
   it("hands the collected sources over when synthesis is unavailable", () => {
-    const output = formatUnsynthesizedEvidence([
-      "# Scrape Result\n- URL: https://nakafa.com/source",
-      "# Web Search Results",
-    ]);
+    const output = formatUnsynthesizedEvidence(
+      [
+        "# Scrape Result\n- URL: https://nakafa.com/source",
+        "# Web Search Results",
+      ],
+      ["https://example.org/unread"]
+    );
 
     expect(output).toContain("Research synthesis was unavailable.");
     expect(output).toContain("say that the research is incomplete");
     expect(output).toContain(
-      "# Scrape Result\n- URL: https://nakafa.com/source\n\n# Web Search Results"
+      "# Scrape Result\n- URL: https://nakafa.com/source\n\n# Web Search Results\n\n# Sources That Could Not Be Read"
     );
+    expect(output).toContain("- https://example.org/unread");
   });
 
   it("drops generated findings whose citations are not eligible source evidence", () => {

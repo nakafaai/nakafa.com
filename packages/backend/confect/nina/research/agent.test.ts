@@ -16,7 +16,14 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, MutableList, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Logger,
+  MutableList,
+  MutableRef,
+  Schema,
+} from "effect";
 
 vi.mock("@repo/backend/confect/nina/research/tools/search", () => ({
   searchWeb: vi.fn(),
@@ -75,6 +82,17 @@ const final = providerStep([
   { type: "text", text: encodeResearchOutput(output) },
 ]);
 const unusable = providerStep([{ type: "text", text: "Invalid JSON" }]);
+const noQuery = providerStep(
+  [
+    {
+      type: "tool-call",
+      toolCallId: "search",
+      toolName: "webSearch",
+      input: encodeJsonText({ queries: [], sourcePreference: "primary" }),
+    },
+  ],
+  "tool-calls"
+);
 const found = Effect.succeed({
   text: "Inspectable source evidence.",
   result: {
@@ -103,17 +121,18 @@ const read = Effect.succeed({
   error: undefined,
 });
 const unread = Effect.succeed({
-  data: { url, content: "" },
+  data: { url: "https://example.org/unread", content: "" },
   error: "Unavailable",
 });
 
-/** Runs research over one scripted model and reports its provider calls. */
+/** Runs research over one scripted model; reports its provider calls and its log. */
 async function research(
   steps: ConstructorParameters<typeof MockLanguageModelV4>[0],
   sourceReferences: (typeof source)[] = []
 ) {
   const model = new MockLanguageModelV4(steps);
   provider.languageModel.mockReturnValue(model);
+  const logged = MutableRef.make<readonly unknown[]>([]);
   const result = await runSpecialist((userId) =>
     runResearchAgent({
       ...specialistRequest,
@@ -124,11 +143,28 @@ async function research(
       usageHandler: vi.fn(),
     }).pipe(
       Effect.catchTag("ResearchGenerationError", (error) =>
-        Effect.succeed({ failed: error.phase, message: error.message })
+        Effect.succeed({
+          failed: error.phase,
+          message: error.message,
+          rejected: error.rejected,
+        })
+      ),
+      Effect.provide(
+        Logger.layer([
+          Logger.formatStructured.pipe(
+            Logger.map(({ message }) =>
+              MutableRef.update(logged, Arr.append(message))
+            )
+          ),
+        ])
       )
     )
   );
-  return { calls: model.doGenerateCalls, result };
+  return {
+    calls: model.doGenerateCalls,
+    logged: MutableRef.get(logged),
+    result,
+  };
 }
 
 describe("research Agent evidence boundary", () => {
@@ -163,6 +199,13 @@ describe("research Agent evidence boundary", () => {
     });
     expect(scrapeUrl).toHaveBeenCalledTimes(researchMaxSources);
     expect(searchWeb).toHaveBeenCalledTimes(1);
+    expect(searchWeb).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queries: ["official agents"],
+        sourcePreference: "primary",
+        toolCallId: "search",
+      })
+    );
     expect(usageHandler).toHaveBeenCalledTimes(2);
     expect(MutableList.toArray(artifacts)).toEqual([]);
     expect(model.doGenerateCalls).toHaveLength(2);
@@ -224,7 +267,7 @@ describe("research Agent evidence boundary", () => {
     expect(calls).toHaveLength(1);
   });
 
-  it("ends as empty when synthesis keeps no finding that cites a retrieved source", async () => {
+  it("is not empty when retrieved sources support no finding: Nina reads what to say", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
     const { calls, result } = await research({
       doGenerate: [
@@ -241,21 +284,14 @@ describe("research Agent evidence boundary", () => {
       ],
     });
     expect(result).toEqual({
-      outcome: "empty",
-      text: expect.stringContaining(
-        "- The official page did not state a date."
-      ),
+      text: "Research returned no source-backed finding. Tell the learner that this attempt could not verify the request from direct sources, and name a direct channel they can check next. Do not claim that anything is absent or does not exist.\n\n- The official page did not state a date.",
     });
-    expect(result).not.toHaveProperty(
-      "text",
-      expect.stringContaining("Invented finding.")
-    );
     expect(calls).toHaveLength(2);
   });
 
   it("hands the retrieved sources to Nina, without a retry, when synthesis is unusable", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
-    const { calls, result } = await research({
+    const { calls, logged, result } = await research({
       doGenerate: [searchCall, unusable],
     });
     expect(result).toEqual({
@@ -263,54 +299,95 @@ describe("research Agent evidence boundary", () => {
       text: expect.stringContaining("Inspectable source evidence."),
     });
     expect(calls).toHaveLength(2);
-  });
-
-  it("answers from the learner's own source as partial when the search step fails", async () => {
-    vi.mocked(scrapeUrl).mockReturnValue(read);
-    let call = 0;
-    const { calls, result } = await research(
-      {
-        doGenerate: () => {
-          call += 1;
-          return call === 1
-            ? Promise.reject(new Error("Provider failed"))
-            : Promise.resolve(final);
-        },
-      },
-      [source]
-    );
-    expect(result).toEqual({
-      outcome: "partial",
-      text: `- Verified finding. [Official source](${url})`,
-    });
-    expect(searchWeb).not.toHaveBeenCalled();
-    expect(calls).toHaveLength(2);
+    expect(logged).toEqual([
+      [
+        "Nina research phase failed",
+        expect.objectContaining({ phase: "synthesis", rejected: true }),
+      ],
+    ]);
+    expect(encodeJsonText(logged)).not.toContain("Invalid JSON");
   });
 
   it.each([
     [
       "the provider rejects the search step",
-      "Research search generation failed.",
+      () => Promise.reject(new Error("Private provider detail")),
+      { phase: "search", reason: "unknown", rejected: false },
     ],
     [
-      "the search provider is unavailable",
-      "Research search returned no source.",
+      "the model writes no usable query",
+      () => Promise.resolve(noQuery),
+      { phase: "search", rejected: true },
     ],
   ] as const)(
-    "fails in the search phase with nothing usable when %s",
-    async (reason, message) => {
-      vi.mocked(searchWeb).mockReturnValue(unavailable);
-      vi.mocked(scrapeUrl).mockReturnValue(unread);
-      const { calls, result } = await research(
+    "answers from the learner's own source as partial when %s",
+    async (_reason, first, fact) => {
+      vi.mocked(scrapeUrl).mockReturnValue(read);
+      let call = 0;
+      const { calls, logged, result } = await research(
         {
-          doGenerate: () =>
-            reason === "the provider rejects the search step"
-              ? Promise.reject(new Error("Provider failed"))
-              : Promise.resolve(searchCall),
+          doGenerate: () => {
+            call += 1;
+            return call === 1 ? first() : Promise.resolve(final);
+          },
         },
         [source]
       );
-      expect(result).toEqual({ failed: "search", message });
+      expect(result).toEqual({
+        outcome: "partial",
+        text: `- Verified finding. [Official source](${url})`,
+      });
+      expect(searchWeb).not.toHaveBeenCalled();
+      expect(calls).toHaveLength(2);
+      expect(logged).toEqual([
+        ["Nina research phase failed", expect.objectContaining(fact)],
+      ]);
+      expect(encodeJsonText(logged)).not.toContain("Private provider detail");
+    }
+  );
+
+  it("never shows the model a learner's source that could not be read as evidence", async () => {
+    vi.mocked(searchWeb).mockReturnValue(found);
+    vi.mocked(scrapeUrl).mockReturnValue(unread);
+    const { calls, result } = await research(
+      { doGenerate: [searchCall, final] },
+      [source]
+    );
+    expect(result).toEqual({
+      text: `- Verified finding. [Official source](${url})`,
+    });
+    expect(encodeJsonText(calls[0]?.prompt)).not.toContain(
+      "https://example.org/unread"
+    );
+    const synthesisPrompt = encodeJsonText(calls[1]?.prompt);
+    expect(synthesisPrompt).toContain("# Sources That Could Not Be Read");
+    expect(synthesisPrompt).toContain("- https://example.org/unread");
+    expect(synthesisPrompt).not.toContain("# Scrape Result");
+  });
+
+  it.each([
+    [
+      "the provider rejects the search step",
+      () => Promise.reject(new Error("Provider failed")),
+      { message: "Research search generation failed.", rejected: false },
+    ],
+    [
+      "the model writes no usable query",
+      () => Promise.resolve(noQuery),
+      { message: "Research search wrote no usable query.", rejected: true },
+    ],
+    [
+      "the search provider is unavailable",
+      () => Promise.resolve(searchCall),
+      { message: "Research search returned no source.", rejected: false },
+    ],
+  ] as const)(
+    "fails in the search phase with nothing usable when %s",
+    async (_reason, first, failure) => {
+      vi.mocked(searchWeb).mockReturnValue(unavailable);
+      vi.mocked(scrapeUrl).mockReturnValue(unread);
+      const { calls, result } = await research({ doGenerate: first }, [source]);
+      expect(result).toEqual({ failed: "search", ...failure });
       expect(calls).toHaveLength(1);
     }
   );

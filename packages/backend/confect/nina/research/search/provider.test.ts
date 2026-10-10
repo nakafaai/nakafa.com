@@ -1,7 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { searchFirecrawl } from "@repo/backend/confect/nina/research/search/provider";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect } from "effect";
+import { Effect, Fiber } from "effect";
+import { TestClock } from "effect/testing";
 
 const firecrawlApp = vi.hoisted(() => ({ search: vi.fn() }));
 
@@ -35,5 +36,25 @@ describe("searchFirecrawl", () => {
       const error = yield* Effect.flip(searchFirecrawl("kurikulum merdeka"));
       expect(error.status).toBeUndefined();
     })
+  );
+
+  it.effect(
+    "settles a query the provider never answers as a failed search",
+    () =>
+      Effect.gen(function* () {
+        firecrawlApp.search.mockReturnValueOnce(new Promise(() => undefined));
+        const fiber = yield* Effect.forkChild(
+          Effect.flip(searchFirecrawl("kurikulum merdeka"))
+        );
+        yield* TestClock.adjust("29999 millis");
+        expect(fiber.pollUnsafe()).toBeUndefined();
+        yield* TestClock.adjust("1 millis");
+        const error = yield* Fiber.join(fiber);
+        expect(error).toMatchObject({
+          _tag: "ResearchSearchError",
+          message: "Failed to search the web. Please try again.",
+        });
+        expect(error.status).toBeUndefined();
+      })
   );
 });

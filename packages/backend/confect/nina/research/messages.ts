@@ -39,14 +39,17 @@ export function createResearchSearchMessages(
 
 /**
  * Gives structured synthesis the collected evidence without exposing tools.
- * Synthesis only runs when at least one source was retrieved.
+ * Synthesis only runs when at least one source was retrieved. A learner's
+ * source that could not be read is named, so a limitation can say so.
  */
 export function createResearchSynthesisMessages({
   evidence,
   task,
+  unread,
 }: {
   evidence: readonly string[];
   task: string;
+  unread: readonly string[];
 }) {
   return [
     {
@@ -57,9 +60,25 @@ export function createResearchSynthesisMessages({
           task,
           "# Source Evidence With URLs",
           Arr.join(evidence, "\n\n"),
+          ...formatUnreadSources(unread),
         ],
         "\n\n"
       ),
     },
   ] satisfies ModelMessage[];
+}
+
+/** Names the learner's sources that could not be read; they are not evidence. */
+export function formatUnreadSources(unread: readonly string[]) {
+  if (unread.length === 0) {
+    return [];
+  }
+  return [
+    "# Sources That Could Not Be Read",
+    "These user-provided sources returned no content. Do not cite them or describe what they say.",
+    Arr.join(
+      Arr.map(unread, (url) => `- ${url}`),
+      "\n"
+    ),
+  ];
 }

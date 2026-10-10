@@ -90,9 +90,21 @@ describe("research schema", () => {
       findings: [{ text: "", citations: [] }],
       limitations: [],
     });
+    const spaced = Schema.decodeResult(ResearchOutputSchema)({
+      findings: [
+        {
+          text: "A link stays a link.",
+          citations: [{ title: " AI SDK ", url: "https://ai-sdk.dev/docs\n" }],
+        },
+      ],
+      limitations: [],
+    });
     expect(Result.isSuccess(cited)).toBe(true);
     expect(Result.isSuccess(stray)).toBe(true);
     expect(Result.isFailure(blank)).toBe(true);
+    expect(Result.getOrThrow(spaced).findings[0]?.citations).toEqual([
+      { title: "AI SDK", url: "https://ai-sdk.dev/docs" },
+    ]);
   });
   it("accepts an answer that holds only limitations", () => {
     const valid = Schema.decodeResult(ResearchOutputSchema)({

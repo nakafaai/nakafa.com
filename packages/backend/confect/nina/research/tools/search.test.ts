@@ -4,7 +4,7 @@ import type {
   CapabilityProgress,
 } from "@repo/backend/confect/nina/capability/progress";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
-import { Array as Arr, Effect, MutableRef, Option } from "effect";
+import { Array as Arr, Effect, Logger, MutableRef, Option } from "effect";
 
 const firecrawlApp = vi.hoisted(() => ({
   search: vi.fn(),
@@ -359,30 +359,51 @@ describe("research web search tool", () => {
       })
   );
 
-  it.effect("writes an error part when Firecrawl search fails", () =>
-    Effect.gen(function* () {
-      firecrawlApp.search.mockRejectedValue(new Error("offline"));
-      const { parts, publish } = createProgress();
-      const output = yield* searchWeb({
-        queries: ["latest solar energy research"],
-        sourcePreference: "any",
-        task: "latest solar energy research",
-        toolCallId: "web-search-2",
-        publish,
-      });
+  it.effect(
+    "writes an error part when Firecrawl search fails, and logs its status without its message",
+    () =>
+      Effect.gen(function* () {
+        firecrawlApp.search.mockRejectedValue(
+          Object.assign(new Error("Unauthorized: solar energy research"), {
+            status: 401,
+          })
+        );
+        const logged = MutableRef.make<readonly unknown[]>([]);
+        const { parts, publish } = createProgress();
+        const output = yield* searchWeb({
+          queries: ["latest solar energy research"],
+          sourcePreference: "any",
+          task: "latest solar energy research",
+          toolCallId: "web-search-2",
+          publish,
+        }).pipe(
+          Effect.provide(
+            Logger.layer([
+              Logger.formatStructured.pipe(
+                Logger.map(({ message }) =>
+                  MutableRef.update(logged, Arr.append(message))
+                )
+              ),
+            ])
+          )
+        );
 
-      expect(output.result.sources).toEqual([]);
-      expect(output.result.error).toContain("Failed to search");
-      expect(output.text).toContain("Failed to search");
-      expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
-        expect.objectContaining({
-          type: "data-web-search",
-          data: expect.objectContaining({
-            provider: "firecrawl",
-            status: "error",
-          }),
-        })
-      );
-    })
+        expect(MutableRef.get(logged)).toEqual([
+          ["Nina web search failed", { status: 401 }],
+        ]);
+
+        expect(output.result.sources).toEqual([]);
+        expect(output.result.error).toContain("Failed to search");
+        expect(output.text).toContain("Failed to search");
+        expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
+          expect.objectContaining({
+            type: "data-web-search",
+            data: expect.objectContaining({
+              provider: "firecrawl",
+              status: "error",
+            }),
+          })
+        );
+      })
   );
 });

@@ -112,14 +112,14 @@ const WebSearchOutputSchema = Schema.Struct({
     }),
   });
 const ResearchCitationSchema = Schema.Struct({
-  title: Schema.String.annotate({
+  title: Schema.Trim.annotate({
     description: createPrompt({
       taskContext: `
         Concise citation label shown to the user.
       `,
     }),
   }),
-  url: Schema.String.annotate({
+  url: Schema.Trim.annotate({
     description: createPrompt({
       taskContext: `
         Source URL copied exactly from the provided evidence.

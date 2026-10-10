@@ -47,7 +47,7 @@ import {
   Output,
   wrapLanguageModel,
 } from "ai";
-import { Array as Arr, Effect, MutableHashSet, Result } from "effect";
+import { Array as Arr, Effect, MutableHashSet, Option, Result } from "effect";
 
 // Keep exact source fetching within the admitted count and provider concurrency.
 const exactSourceScrapeConcurrency = 3;
@@ -56,17 +56,18 @@ const exactSourceContentMaxLength = 8000;
 /**
  * Runs source-backed research in two provider calls: one writes the web
  * search, one turns the retrieved sources into cited findings. The learner's
- * own links are read first. Once a source is retrieved, a later failure still
- * hands that source to Nina, so the answer never contradicts the cards. The
- * usage handler records each provider call.
+ * own links are read first, and the search itself runs here, under its own
+ * deadline, not inside the model step. Once a source is retrieved, a later
+ * failure still hands that source to Nina, so the answer never contradicts the
+ * cards. The usage handler records each provider call.
  */
 export const runResearchAgent = Effect.fn("research.runResearchAgent")(
   function* ({
     userId,
     task,
-    modelId,
     locale,
     context,
+    modelId,
     sourceReferences: messageSourceReferences,
     toolCallId,
     publish,
@@ -95,24 +96,21 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       languageModel: model,
       usageHandler,
     });
-    const services = yield* Effect.context<never>();
-    const runPromise = Effect.runPromiseWith(services);
-    const sourceOutputs = yield* scrapeSourceReferences({
+    const sources = yield* scrapeSourceReferences({
       task,
       sourceReferences,
       toolCallId,
       publish,
     });
-    let evidence = Arr.map(sourceOutputs, (output) => output.text);
-    const eligibleCitationUrls = MutableHashSet.empty<string>();
+    const read = Arr.filter(sources, (source) => source.read);
+    const unreadUrls = Arr.flatMap(sources, (source) =>
+      source.read ? [] : [source.url]
+    );
+    const readEvidence = Arr.map(read, (source) => source.text);
 
-    for (const sourceOutput of sourceOutputs) {
-      addEligibleSourceUrls(eligibleCitationUrls, sourceOutput.sources);
-    }
-
-    // True once the search provider answered, with or without sources.
-    let searched = false;
-    const search = yield* Effect.tryPromise({
+    // The model only writes the queries. The tool does nothing itself, so the
+    // one step ends with its call and the search below owns its own deadline.
+    const planned = yield* Effect.tryPromise({
       try: (signal) =>
         agent.generateText(
           ctx,
@@ -121,50 +119,72 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             abortSignal: signal,
             model,
             instructions: researchSearchPrompt({ locale, context }),
-            messages: createResearchSearchMessages(task, evidence),
+            messages: createResearchSearchMessages(task, readEvidence),
             tools: {
               webSearch: createTool({
                 description: nakafaWebSearch,
                 inputSchema: webSearchInputSchema,
                 outputSchema: textOutputSchema,
-                execute: (
-                  _context,
-                  { queries, sourcePreference },
-                  { toolCallId, abortSignal }
-                ) =>
-                  runPromise(
-                    searchWeb({
-                      queries,
-                      sourcePreference,
-                      task,
-                      toolCallId,
-                      publish,
-                    }).pipe(
-                      Effect.tap((output) =>
-                        Effect.sync(() => {
-                          evidence = Arr.append(evidence, output.text);
-                          addEligibleSourceUrls(
-                            eligibleCitationUrls,
-                            output.result.sources
-                          );
-                          searched = output.result.error === undefined;
-                        })
-                      ),
-                      Effect.map((output) => output.text)
-                    ),
-                    { signal: abortSignal }
-                  ),
+                execute: () => Promise.resolve("Search planned."),
               }),
             },
-            // The model only writes the queries. The search runs inside this
-            // one step, and no second step asks the model for notes.
             toolChoice: { type: "tool", toolName: "webSearch" },
             stopWhen: isStepCount(1),
             timeout,
           }
         ),
       catch: (error) => makeResearchGenerationError(error, "search"),
-    }).pipe(Effect.result);
+    }).pipe(
+      Effect.flatMap(({ toolCalls }) =>
+        Effect.fromOption(
+          Arr.findFirst(toolCalls, (call) =>
+            call.dynamic || call.invalid ? Option.none() : Option.some(call)
+          )
+        )
+      ),
+      Effect.catchTag("NoSuchElementError", () =>
+        Effect.fail(
+          new ResearchGenerationError({
+            message: "Research search wrote no usable query.",
+            phase: "search",
+            rejected: true,
+          })
+        )
+      ),
+      Effect.result
+    );
+    const search = Result.isSuccess(planned)
+      ? Option.some(
+          yield* searchWeb({
+            ...planned.success.input,
+            task,
+            toolCallId: planned.success.toolCallId,
+            publish,
+          })
+        )
+      : Option.none();
+    // True once the search provider answered, with or without sources.
+    const searched = Option.exists(
+      search,
+      ({ result }) => result.error === undefined
+    );
+    const found = Option.match(search, {
+      onNone: () => [],
+      onSome: ({ result }) => result.sources,
+    });
+    const evidence = Arr.appendAll(
+      readEvidence,
+      Option.match(
+        Option.filter(search, () => found.length > 0),
+        {
+          onNone: () => [],
+          onSome: ({ text }) => [text],
+        }
+      )
+    );
+    const eligibleCitationUrls = MutableHashSet.empty<string>();
+    addEligibleSourceUrls(eligibleCitationUrls, read);
+    addEligibleSourceUrls(eligibleCitationUrls, found);
 
     if (MutableHashSet.size(eligibleCitationUrls) === 0) {
       if (searched) {
@@ -173,16 +193,16 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           text: formatResearchOutput({ findings: [], limitations: [] }),
         };
       }
-      return yield* Result.isFailure(search)
-        ? search.failure
+      return yield* Result.isFailure(planned)
+        ? planned.failure
         : new ResearchGenerationError({
             message: "Research search returned no source.",
             phase: "search",
             rejected: false,
           });
     }
-    if (Result.isFailure(search)) {
-      yield* logResearchFailure(search.failure);
+    if (Result.isFailure(planned)) {
+      yield* logResearchFailure(planned.failure);
     }
 
     const synthesis = yield* Effect.tryPromise({
@@ -198,7 +218,11 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                 model,
               }),
               instructions: researchPrompt({ locale, context }),
-              messages: createResearchSynthesisMessages({ evidence, task }),
+              messages: createResearchSynthesisMessages({
+                evidence,
+                task,
+                unread: unreadUrls,
+              }),
               output: Output.object({
                 description: createPrompt({
                   taskContext: `
@@ -218,26 +242,23 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       yield* logResearchFailure(synthesis.failure);
       return {
         outcome: "partial" as const,
-        text: formatUnsynthesizedEvidence(evidence),
+        text: formatUnsynthesizedEvidence(evidence, unreadUrls),
       };
     }
 
-    const output = filterResearchOutputCitations(
-      synthesis.success,
-      eligibleCitationUrls
+    const text = formatResearchOutput(
+      filterResearchOutputCitations(synthesis.success, eligibleCitationUrls)
     );
-    const text = formatResearchOutput(output);
-    if (!searched) {
-      return { outcome: "partial" as const, text };
-    }
-    return output.findings.length === 0
-      ? { outcome: "empty" as const, text }
-      : { text };
+    // Sources that support no finding are still sources the learner sees, so
+    // such a run is not `empty`; Nina reads what to say in `text`.
+    return searched ? { text } : { outcome: "partial" as const, text };
   }
 );
 
 /**
  * Reads user-provided source references in parallel before broad research.
+ * A source that could not be read keeps its URL and no text: it is never
+ * shown to the model as evidence.
  */
 const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
   function* ({
@@ -259,10 +280,9 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
           publish,
         }).pipe(
           Effect.map((output) => ({
-            sources: isSuccessfulScrapeOutput(output)
-              ? [{ url: output.data.url }]
-              : [],
+            read: isSuccessfulScrapeOutput(output),
             text: formatScrapeOutput(output),
+            url: output.data.url,
           }))
         ),
       { concurrency: exactSourceScrapeConcurrency }

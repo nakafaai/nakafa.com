@@ -1,3 +1,4 @@
+import { formatUnreadSources } from "@repo/backend/confect/nina/research/messages";
 import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
 import { Array as Arr, pipe } from "effect";
 
@@ -28,11 +29,15 @@ export function formatResearchOutput(output: ResearchOutput) {
  * Hands Nina the collected sources when synthesis returned nothing usable, so
  * the evidence the learner sees is also the evidence she answers from.
  */
-export function formatUnsynthesizedEvidence(evidence: readonly string[]) {
+export function formatUnsynthesizedEvidence(
+  evidence: readonly string[],
+  unread: readonly string[]
+) {
   return pipe(
     [
       "Research synthesis was unavailable. The collected source evidence follows. Answer only from it, cite only its URLs, and say that the research is incomplete.",
       ...evidence,
+      ...formatUnreadSources(unread),
     ],
     Arr.join("\n\n")
   );

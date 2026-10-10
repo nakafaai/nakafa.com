@@ -23,7 +23,7 @@ import {
 import { encodeJsonText } from "@repo/utilities/json";
 import { isStepCount } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Logger, MutableRef } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -123,6 +123,7 @@ describe("Nina capability execution policy", () => {
         const model = new MockLanguageModelV4({
           doGenerate: [toolCall(capability), request],
         });
+        const logged = MutableRef.make<readonly unknown[]>([]);
         const result = await runSpecialist((userId) =>
           Effect.gen(function* () {
             const session = yield* openNinaLearningSession({
@@ -170,7 +171,31 @@ describe("Nina capability execution policy", () => {
               )
             );
             return Arr.map(generated.toolResults, ({ output }) => output);
-          })
+          }).pipe(
+            Effect.provide(
+              Logger.layer([
+                Logger.formatStructured.pipe(
+                  Logger.map(({ message }) =>
+                    MutableRef.update(logged, Arr.append(message))
+                  )
+                ),
+              ])
+            )
+          )
+        );
+        // Only a failed run is logged, as routing facts without the provider's words.
+        expect(MutableRef.get(logged)).toEqual(
+          state === "failed"
+            ? [
+                [
+                  "Nina capability failed",
+                  expect.objectContaining({ capability }),
+                ],
+              ]
+            : []
+        );
+        expect(encodeJsonText(MutableRef.get(logged))).not.toContain(
+          "Private provider detail"
         );
         expect(result).toHaveLength(1);
         expect(encodeJsonText(result)).not.toContain("Private provider detail");
