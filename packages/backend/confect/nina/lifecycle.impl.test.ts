@@ -106,7 +106,6 @@ describe("native Nina settlement", () => {
           event: "chat response failed",
           properties: encodeJsonText({
             chat_type: "study",
-            model_id: "nakafa-lite",
             error_code: "interrupted",
           }),
         }),
@@ -144,7 +143,7 @@ describe("native Nina settlement", () => {
     await f.t.mutation(recover, { turnId: f.turnId });
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
-    expect(state.user?.credits).toBe(8);
+    expect(state.user?.credits).toBe(5);
     expect(state.ledger).toHaveLength(1);
     expect(state.ledger[0]?.metadata).toMatchObject({
       phase: "complete",
@@ -183,8 +182,7 @@ describe("native Nina settlement", () => {
           event: "chat response completed",
           properties: encodeJsonText({
             chat_type: "study",
-            model_id: "nakafa-lite",
-            credits: 2,
+            credits: 5,
             input_tokens: 48,
             output_tokens: 16,
             total_tokens: 64,
@@ -256,7 +254,7 @@ describe("native Nina settlement", () => {
     await f.t.mutation(recover, { turnId: f.turnId });
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("failed");
-    expect(state.user?.credits).toBe(10);
+    expect(state.user?.credits).toBe(25);
     expect(Option.getOrThrow(Arr.last(state.ledger))).toMatchObject({
       type: "refund",
       amount: 0,
@@ -334,7 +332,7 @@ describe("native Nina settlement", () => {
     await expect(
       f.owner.mutation(cancel, { chatId: f.chatId })
     ).rejects.toMatchObject({ data: { code: "NINA_WRITE_FAILED" } });
-    expect((await f.inspect()).user?.credits).toBe(8);
+    expect((await f.inspect()).user?.credits).toBe(5);
     await f.owner.mutation(cancel, { chatId: f.chatId });
     await t.mutation((ctx) =>
       ctx.db.patch("chats", f.chatId, { activeTurnId: f.turnId })

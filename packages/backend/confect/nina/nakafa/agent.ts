@@ -51,7 +51,6 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   task,
   publish,
   usageHandler,
-  modelId,
   locale,
   context,
 }: TaskAgentData & {
@@ -59,10 +58,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   readonly usageHandler: UsageHandler;
 }) {
   const ctx = yield* ActionCtx;
-  const { model, timeout } = (yield* Gateway).language({
-    purpose: "specialist",
-    model: modelId,
-  });
+  const { model, timeout } = (yield* Gateway).language("specialist");
   const agent = new Agent(components.nina, {
     name: "nakafa",
     languageModel: model,

@@ -19,22 +19,21 @@ const readComposerGeometry = (form: HTMLFormElement) => {
     '[data-slot="input-group-addon"] button'
   );
   const preview = form.querySelector('[data-slot="attachment"]');
-  if (!(group && textarea) || buttons.length !== 3) {
+  if (!(group && textarea) || buttons.length !== 2) {
     return null;
   }
   const box = group.getBoundingClientRect();
   const input = textarea.getBoundingClientRect();
-  const [attach, model, send] = Array.from(buttons, (button) =>
+  const [attach, send] = Array.from(buttons, (button) =>
     button.getBoundingClientRect()
   );
   const attachment = preview?.getBoundingClientRect();
   return {
     attachInset: attach.left - box.left,
     bottomInset: box.bottom - send.bottom,
-    modelGap: send.left - model.right,
     previewAboveInput: attachment ? input.top - attachment.bottom : null,
     previewInset: attachment ? attachment.left - input.left : null,
-    rows: [attach.top, model.top, send.top].map((top) => top - box.top),
+    rows: [attach.top, send.top].map((top) => top - box.top),
     sendInset: box.right - send.right,
     widths: [attach.width, send.width],
   };
@@ -47,12 +46,11 @@ const verifyComposer = Effect.fn("NakafaE2E.verifyNinaComposer")(function* (
   const composer = input.locator("xpath=ancestor::form");
   const fieldset = composer.locator('[data-slot="input-group"]');
   const attach = composer.getByRole("button", { name: "Attach files" });
-  const model = composer.getByRole("button", { name: "Lite", exact: true });
   const send = composer.getByRole("button", { name: "Send message" });
 
   yield* Effect.promise(() => input.fill("A question with an attachment"));
   yield* Effect.promise(() => expect(input).toHaveCSS("font-size", "15px"));
-  for (const control of [attach, model, send]) {
+  for (const control of [attach, send]) {
     yield* Effect.promise(() => expect(control).toHaveCSS("height", "36px"));
   }
   const geometry = yield* Effect.promise(() =>
@@ -65,7 +63,6 @@ const verifyComposer = Effect.fn("NakafaE2E.verifyNinaComposer")(function* (
     }
     expect(geometry.widths).toEqual([36, 36]);
     expect(HashSet.size(HashSet.fromIterable(geometry.rows))).toBe(1);
-    expect(geometry.modelGap).toBeGreaterThan(0);
     expect(geometry.attachInset).toBeCloseTo(13, 1);
     expect(geometry.sendInset).toBeCloseTo(13, 1);
     expect(geometry.bottomInset).toBeCloseTo(13, 1);

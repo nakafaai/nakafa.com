@@ -11,7 +11,6 @@ import {
   MutationRunner,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
 import { assembleContext } from "@repo/backend/confect/nina/history";
@@ -36,10 +35,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
     const ctx = yield* ActionCtx;
     const { runMutation: mutate } = yield* MutationRunner;
     const gateway = yield* Gateway;
-    const suggestion = gateway.language({
-      purpose: "suggestion",
-      model: defaultModel,
-    });
+    const suggestion = gateway.language("suggestion");
     const suggestions = new Agent(components.nina, {
       name: "suggestions",
       languageModel: suggestion.model,
@@ -105,10 +101,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
     if (turn.order !== 0) {
       return;
     }
-    const naming = gateway.language({
-      purpose: "presentation",
-      model: defaultModel,
-    });
+    const naming = gateway.language("presentation");
     const title = new Agent(components.nina, {
       name: "title",
       languageModel: naming.model,

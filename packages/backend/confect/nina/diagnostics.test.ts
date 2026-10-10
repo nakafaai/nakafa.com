@@ -77,7 +77,7 @@ it.effect.each([
       const report = capture.mock.calls[0]?.[1];
       expect(report?.additionalProperties).toMatchObject({
         source: "nina-response",
-        gateway_model_id: "google/gemini-3.5-flash-lite",
+        gateway_model_id: "google/gemini-3.8-flash",
         ...facts,
       });
       expect(report?.error).toMatchObject({

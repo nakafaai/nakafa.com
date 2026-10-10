@@ -46,7 +46,6 @@ const start = FunctionImpl.make(
     const writer = yield* DatabaseWriter;
     const fingerprintText = yield* Schema.encodeEffect(JsonTextSchema)([
       args.chatId ?? null,
-      args.modelId,
       args.input,
     ]).pipe(Effect.mapError(writeFailure));
     const fingerprint = yield* sha256Hex(fingerprintText).pipe(
@@ -103,7 +102,7 @@ const start = FunctionImpl.make(
       });
     }
     const now = yield* Clock.currentTimeMillis;
-    const reservation = yield* reserveCredits(appUser, args.modelId);
+    const reservation = yield* reserveCredits(appUser);
     const prompt = yield* preparePrompt(
       appUser,
       chat,
@@ -177,7 +176,8 @@ const start = FunctionImpl.make(
         name: "chat message sent",
         properties: {
           chat_type: chat?.type ?? "study",
-          model_id: args.modelId,
+          // Only an old browser tab still sends the retired model key.
+          ...(args.modelId ? { model_id: args.modelId } : {}),
         },
       },
       timestamp: now,

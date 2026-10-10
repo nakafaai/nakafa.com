@@ -1,5 +1,4 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { ModelId } from "@repo/backend/confect/gateway/model";
 import {
   type AgentContext,
   AgentCurriculumPreferenceSchema,
@@ -71,6 +70,13 @@ export const NinaTurnState = Schema.Union([
 export const NinaRequestId = Schema.NonEmptyString.check(
   Schema.isMaxLength(128)
 );
+/**
+ * The model key learners chose before October 2026. Old turns still store
+ * it and old browser tabs still send it. Nothing reads it; the contract
+ * change unsets the stored values and deletes this schema.
+ */
+export const RetiredModelKey = Schema.Literals(["nakafa-lite", "nakafa-pro"]);
+
 /** Recorded response facts never invent an unknown model, charge or token count. */
 export const NinaTurnFacts = Schema.Struct({
   userId: Id("users"),
@@ -79,7 +85,7 @@ export const NinaTurnFacts = Schema.Struct({
   promptMessageId: Schema.String,
   promptedAt: Schema.optionalKey(Schema.Finite),
   order: Schema.Finite,
-  modelId: Schema.optionalKey(ModelId),
+  modelId: Schema.optionalKey(RetiredModelKey),
   credits: Schema.optionalKey(Schema.Finite),
   requestId: Schema.optionalKey(NinaRequestId),
   fingerprint: Schema.optionalKey(Schema.String),
@@ -106,7 +112,6 @@ export const NinaTurnSummary = Schema.Struct({
   Struct.pick([
     "order",
     "state",
-    "modelId",
     "credits",
     "usage",
     "tokens",

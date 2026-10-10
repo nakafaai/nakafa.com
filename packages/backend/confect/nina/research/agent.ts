@@ -67,7 +67,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     task,
     locale,
     context,
-    modelId,
     sourceReferences: messageSourceReferences,
     toolCallId,
     publish,
@@ -87,10 +86,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       });
     }
     const ctx = yield* ActionCtx;
-    const { model, timeout } = (yield* Gateway).language({
-      purpose: "specialist",
-      model: modelId,
-    });
+    const { model, timeout } = (yield* Gateway).language("specialist");
     const agent = new Agent(components.nina, {
       name: "research",
       languageModel: model,

@@ -19,7 +19,6 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMessage } from "@/components/ai/message/context";
-import { getAiModel } from "@/lib/data/models";
 
 export function AiChatMessageCredits() {
   const t = useTranslations("Ai");
@@ -30,7 +29,6 @@ export function AiChatMessageCredits() {
     role === "assistant" && turn?.state.status === "complete"
       ? (turn.credits ?? 0)
       : 0;
-  const modelId = turn?.modelId;
   const usage = turn?.usage ?? [];
   const input =
     turn?.tokens?.input ??
@@ -51,12 +49,6 @@ export function AiChatMessageCredits() {
     return null;
   }
 
-  if (!modelId) {
-    return null;
-  }
-
-  const model = getAiModel(modelId);
-
   return (
     <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger
@@ -68,15 +60,6 @@ export function AiChatMessageCredits() {
       <PopoverContent align="end">
         {/* Content */}
         <div className="space-y-3">
-          {/* Model */}
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <HugeIcons className="size-4" icon={model.icon} />
-              <span className="text-muted-foreground">{t("model")}</span>
-            </div>
-            <p className="flex items-center gap-2">{model.label}</p>
-          </div>
-
           {/* Credits */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
