@@ -11,28 +11,17 @@ import { SUMMARY_TEXT } from "@repo/backend/confect/nina/summaries/text";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import type { VaultField } from "@repo/backend/confect/vault/schema";
 import { sealText } from "@repo/backend/confect/vault/text";
-import {
-  Array as Arr,
-  Effect,
-  Layer,
-  Option,
-  Predicate,
-  Record,
-  Result,
-} from "effect";
+import { Array as Arr, Effect, Layer, Predicate, Record, Result } from "effect";
 
-/** Rows one call scans in each table: far below the transaction write limit. */
+/** Rows one call reads in its table: far below the transaction write limit. */
 const PAGE_SIZE = 100;
 
-/**
- * Where the next call starts, given the creation times a call scanned: after
- * the last one of a full page, and nowhere after a short page.
- */
-function nextAfter(scanned: readonly number[]) {
-  return Arr.last(scanned).pipe(
-    Option.filter(() => scanned.length === PAGE_SIZE),
-    Option.getOrNull
-  );
+/** Where the next call starts: the cursor of the page, none after the last one. */
+function nextCursor(page: {
+  readonly continueCursor: string;
+  readonly isDone: boolean;
+}) {
+  return page.isDone ? null : page.continueCursor;
 }
 
 /**
@@ -62,104 +51,96 @@ const sealRows = Effect.fn("nina.seal.rows")(function* <
 });
 
 /** Seals one page of chats whose title is still a string. */
-const sealChats = Effect.fn("nina.seal.chats")(function* (
-  after: number | null
-) {
-  if (after === null) {
-    return { next: null, sealed: 0 };
-  }
-  const writer = yield* DatabaseWriter;
-  const chats = yield* (yield* DatabaseReader)
-    .table("chats")
-    .index("by_creation_time", (q) => q.gt("_creationTime", after))
-    .take(PAGE_SIZE)
-    .pipe(Effect.orDie);
-  const sealed = yield* sealRows(
-    Arr.filterMap(chats, (chat) =>
-      Predicate.isString(chat.title)
-        ? Result.succeed({
-            id: chat._id,
-            text: chat.title,
-            userId: chat.userId,
-          })
-        : Result.failVoid
-    ),
-    CHAT_TITLE,
-    (chat, title) =>
-      writer.table("chats").patch(chat.id, { title }).pipe(Effect.orDie)
-  );
-  return {
-    next: nextAfter(Arr.map(chats, (chat) => chat._creationTime)),
-    sealed,
-  };
-});
+const sealChats = FunctionImpl.make(
+  schema,
+  spec,
+  "sealChats",
+  Effect.fn("nina.seal.sealChats")(function* ({ cursor }) {
+    const writer = yield* DatabaseWriter;
+    const page = yield* (yield* DatabaseReader)
+      .table("chats")
+      .index("by_creation_time")
+      .paginate({ cursor, numItems: PAGE_SIZE })
+      .pipe(Effect.orDie);
+    const sealed = yield* sealRows(
+      Arr.filterMap(page.page, (chat) =>
+        Predicate.isString(chat.title)
+          ? Result.succeed({
+              id: chat._id,
+              text: chat.title,
+              userId: chat.userId,
+            })
+          : Result.failVoid
+      ),
+      CHAT_TITLE,
+      (chat, title) =>
+        writer.table("chats").patch(chat.id, { title }).pipe(Effect.orDie)
+    );
+    return { next: nextCursor(page), sealed };
+  })
+);
 
-/** Seals one page of summaries whose text is still a string. */
-const sealSummaries = Effect.fn("nina.seal.summaries")(function* (
-  after: number | null
-) {
-  if (after === null) {
-    return { next: null, sealed: 0 };
-  }
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const summaries = yield* reader
-    .table("ninaSummaries")
-    .index("by_creation_time", (q) => q.gt("_creationTime", after))
-    .take(PAGE_SIZE)
-    .pipe(Effect.orDie);
-  // A summary belongs to the learner who owns its chat. One whose chat is gone
-  // stays as it is, because the chat cleanup deletes it.
-  const owned = yield* Effect.forEach(
-    Arr.filterMap(summaries, (summary) =>
-      Predicate.isString(summary.text)
-        ? Result.succeed({
-            chatId: summary.chatId,
-            id: summary._id,
-            text: summary.text,
-          })
-        : Result.failVoid
-    ),
-    (summary) =>
-      reader
-        .table("chats")
-        .get(summary.chatId)
-        .pipe(
-          Effect.map((chat) =>
-            Option.some({ ...summary, userId: chat.userId })
-          ),
-          Effect.catchTag("GetByIdFailure", () => Effect.succeedNone),
-          Effect.orDie
-        )
-  );
-  const sealed = yield* sealRows(
-    Arr.getSomes(owned),
-    SUMMARY_TEXT,
-    (summary, text) =>
+/**
+ * Seals one page of summaries whose text is still a string. A summary belongs
+ * to the learner who owns its chat. One whose chat is gone has no key to seal
+ * it with and nothing can read it, so it is deleted, as the chat cleanup would
+ * have done.
+ */
+const sealSummaries = FunctionImpl.make(
+  schema,
+  spec,
+  "sealSummaries",
+  Effect.fn("nina.seal.sealSummaries")(function* ({ cursor }) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const page = yield* reader
+      .table("ninaSummaries")
+      .index("by_creation_time")
+      .paginate({ cursor, numItems: PAGE_SIZE })
+      .pipe(Effect.orDie);
+    const [owned, gone] = Arr.separate(
+      yield* Effect.forEach(
+        Arr.filterMap(page.page, (summary) =>
+          Predicate.isString(summary.text)
+            ? Result.succeed({
+                chatId: summary.chatId,
+                id: summary._id,
+                text: summary.text,
+              })
+            : Result.failVoid
+        ),
+        (summary) =>
+          reader
+            .table("chats")
+            .get(summary.chatId)
+            .pipe(
+              Effect.map((chat) =>
+                Result.succeed({ ...summary, userId: chat.userId })
+              ),
+              Effect.catchTag("GetByIdFailure", () =>
+                Effect.succeed(Result.fail(summary.id))
+              ),
+              Effect.orDie
+            )
+      )
+    );
+    const sealed = yield* sealRows(owned, SUMMARY_TEXT, (summary, text) =>
       writer
         .table("ninaSummaries")
         .patch(summary.id, { text })
         .pipe(Effect.orDie)
-  );
-  return {
-    next: nextAfter(Arr.map(summaries, (summary) => summary._creationTime)),
-    sealed,
-  };
-});
-
-const sealPlain = FunctionImpl.make(
-  schema,
-  spec,
-  "sealPlain",
-  Effect.fn("nina.seal.sealPlain")(function* (after) {
-    return {
-      chats: yield* sealChats(after.chats),
-      summaries: yield* sealSummaries(after.summaries),
-    };
+    );
+    yield* Effect.forEach(
+      gone,
+      (id) => writer.table("ninaSummaries").delete(id).pipe(Effect.orDie),
+      { discard: true }
+    );
+    return { next: nextCursor(page), removed: gone.length, sealed };
   })
 );
 
 export default GroupImpl.make(schema, spec).pipe(
-  Layer.provide(sealPlain),
+  Layer.provide(sealChats),
+  Layer.provide(sealSummaries),
   GroupImpl.finalize
 );
