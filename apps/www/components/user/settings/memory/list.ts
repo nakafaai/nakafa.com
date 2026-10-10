@@ -117,8 +117,6 @@ interface MemoryView {
   label: (kind: Memory["kind"]) => string;
   /** The words the learner typed to search. */
   query: string;
-  /** Memories that wait for an Undo and must not show. */
-  removed: readonly Memory["id"][];
 }
 
 /**
@@ -134,11 +132,10 @@ export function shownMemories(list: MemoryList, view: MemoryView) {
     Arr.filter(
       list.memories,
       (memory) =>
-        !Arr.contains(view.removed, memory.id) &&
-        (Str.isEmpty(needle) ||
-          Arr.some([memory.text, view.label(memory.kind)], (words) =>
-            Str.includes(needle)(Str.toLowerCase(words))
-          ))
+        Str.isEmpty(needle) ||
+        Arr.some([memory.text, view.label(memory.kind)], (words) =>
+          Str.includes(needle)(Str.toLowerCase(words))
+        )
     ),
     (memory) => (list.paused ? { ...memory, inUse: false } : memory)
   );

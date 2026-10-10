@@ -12,8 +12,8 @@ const EMPTY = "Nina has not remembered anything yet.";
 const WRITTEN = "Prefers worked examples before the formula";
 const REWRITTEN = "Prefers a short summary before the examples";
 const DISCARDED = "This text is never saved";
-/** The toast of a removed memory closes after five seconds, and the memory is deleted then. */
-const TOAST_MILLISECONDS = 15_000;
+/** How long a step waits for the server to answer a change. */
+const ANSWER_MILLISECONDS = 15_000;
 
 /** One memory on the page, found by its words. */
 const memoryRow = (page: Page, text: string) =>
@@ -53,7 +53,7 @@ const saved = (changes: Changes, sentBefore: number) =>
   expect
     .poll(
       () => changes.sent > sentBefore && changes.answered === changes.sent,
-      { timeout: TOAST_MILLISECONDS }
+      { timeout: ANSWER_MILLISECONDS }
     )
     .toBe(true);
 
@@ -154,21 +154,18 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
     const row = memoryRow(page, REWRITTEN);
     const remove = row.getByRole("button", { name: "Delete memory" });
 
-    // Undo brings the memory back.
+    // Undo writes the words back as the learner's own memory.
     await remove.click();
     await expect(row).toHaveCount(0);
     await page.getByRole("button", { name: "Undo" }).click();
     await expect(row).toBeVisible();
+    await expect(row.getByText("Written by you")).toBeVisible();
 
-    // Without Undo the memory is deleted when the toast closes. A pointer
-    // over the toasts keeps them open, so the pointer leaves first.
+    // The server deletes the memory at once: it is gone after a reload made
+    // while the toast still offers the Undo.
     const before = changes.sent;
     await remove.click();
     await expect(row).toHaveCount(0);
-    await page.mouse.move(0, 0);
-    await expect(page.locator("[data-sonner-toast]")).toHaveCount(0, {
-      timeout: TOAST_MILLISECONDS,
-    });
     await saved(changes, before);
     await reloadUntil(page, () =>
       expect(page.getByText(EMPTY)).toBeVisible({ timeout: 3000 })

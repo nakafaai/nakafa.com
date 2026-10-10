@@ -180,7 +180,7 @@ describe("memory list", () => {
       stored("b", { text: "Finds trigonometry hard", kind: "struggle" }),
       stored("c", { text: "Exam on Friday", kind: "situation" }),
     ]);
-    const view = { label, query: "", removed: [] };
+    const view = { label, query: "" };
 
     it("shows every memory for an empty or blank search", () => {
       expect(shownMemories(list, view)).toEqual(list.memories);
@@ -206,17 +206,6 @@ describe("memory list", () => {
 
     it("shows nothing when no memory matches", () => {
       expect(shownMemories(list, { ...view, query: "chemistry" })).toEqual([]);
-    });
-
-    it("hides the memories that wait for an Undo", () => {
-      expect(
-        ids(
-          shownMemories(list, {
-            ...view,
-            removed: [memoryId("a"), memoryId("c")],
-          })
-        )
-      ).toEqual([memoryId("b")]);
     });
 
     it("shows no memory in use while memory is paused", () => {

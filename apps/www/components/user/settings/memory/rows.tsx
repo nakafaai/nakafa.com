@@ -19,20 +19,15 @@ import { MemoryRow } from "@/components/user/settings/memory/row";
 export function MemoryRows() {
   const t = useTranslations("Memory");
   const list = useMemory((current) => current);
-  const { adding, query, removed } = useMemoryPage((state) => ({
+  const { adding, query } = useMemoryPage((state) => ({
     adding: state.adding,
     query: state.query,
-    removed: state.removed,
   }));
   const shown = shownMemories(list, {
     label: (kind) => t(`kind-${kind}`),
     query,
-    removed,
   });
-  const hasMemories = Arr.some(
-    list.memories,
-    (memory) => !Arr.contains(removed, memory.id)
-  );
+  const hasMemories = list.memories.length > 0;
 
   return (
     <CardContent className="border-t px-0">
