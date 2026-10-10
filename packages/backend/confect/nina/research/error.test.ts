@@ -1,48 +1,28 @@
 import { describe, expect, it } from "@effect/vitest";
 import { makeResearchGenerationError } from "@repo/backend/confect/nina/research/error";
 import { ResearchGenerationError } from "@repo/backend/confect/nina/research/schema";
+import { failures } from "@repo/backend/test/gateway";
+import { encodeJsonText } from "@repo/utilities/json";
 import { NoObjectGeneratedError } from "ai";
-import { DateTime, Schema } from "effect";
-
-const CyclicFailureSchema = Schema.Struct({
-  cause: Schema.mutableKey(Schema.optionalKey(Schema.Unknown)),
-  message: Schema.String,
-});
+import { DateTime } from "effect";
 
 describe("makeResearchGenerationError", () => {
-  it.each([
-    [new Error("Provider unavailable"), "Provider unavailable"],
-    ["Rate limited", "Rate limited"],
-    [{ status: 503 }, '{"status":503}'],
-    [null, "null"],
-    [undefined, undefined],
-  ])("retains search failure details for %j", (cause, expected) => {
-    const error = makeResearchGenerationError(cause, "search");
+  it("classifies a failed call through the gateway's vocabulary", () => {
+    const error = makeResearchGenerationError(failures["rate-limit"], "search");
     expect(error).toBeInstanceOf(ResearchGenerationError);
     expect(error).toMatchObject({
-      _tag: "ResearchGenerationError",
-      cause: expected,
+      gateway: { reason: "rate-limit" },
       message: "Research search generation failed.",
       phase: "search",
+      rejected: false,
     });
   });
 
-  it("keeps a cyclic provider failure in the typed error channel", () => {
-    const failure: typeof CyclicFailureSchema.Type = {
-      message: "Provider unavailable",
-    };
-    failure.cause = failure;
-    const error = makeResearchGenerationError(failure, "synthesis");
-    expect(error).toBeInstanceOf(ResearchGenerationError);
-    expect(error.phase).toBe("synthesis");
-    expect(error.cause).toContain("Provider unavailable");
-  });
-
-  it("preserves rejected structured output and its SDK cause", () => {
+  it("marks an answer that was not the asked object as rejected and keeps none of it", () => {
     const failure = new NoObjectGeneratedError({
       message: "Output failed validation",
-      cause: new Error("Missing findings"),
-      text: '{"unexpected":true}',
+      cause: new Error("Private validation detail"),
+      text: '{"private":"Model answer"}',
       response: {
         id: "research-fixture",
         modelId: "fixture",
@@ -63,15 +43,26 @@ describe("makeResearchGenerationError", () => {
       },
       finishReason: "stop",
     });
-    expect(makeResearchGenerationError(failure, "synthesis")).toMatchObject({
-      cause: "Missing findings",
-      message: "Research synthesis generation failed: Output failed validation",
+    const error = makeResearchGenerationError(failure, "synthesis");
+    expect(error).toMatchObject({
+      message: "Research synthesis returned no usable answer.",
       phase: "synthesis",
-      text: '{"unexpected":true}',
+      rejected: true,
     });
-    expect(makeResearchGenerationError(failure, "search")).toMatchObject({
-      cause: "Output failed validation",
-      phase: "search",
-    });
+    expect(error.gateway).toBeUndefined();
+    const stored = encodeJsonText({ ...error });
+    expect(stored).not.toContain("Model answer");
+    expect(stored).not.toContain("Private validation detail");
+  });
+
+  it("keeps a private provider message out of the typed error", () => {
+    const error = makeResearchGenerationError(
+      new Error("Private provider detail about the learner's question"),
+      "synthesis"
+    );
+    expect(error.gateway?.reason).toBe("unknown");
+    expect(
+      encodeJsonText({ ...error, gateway: { ...error.gateway } })
+    ).not.toContain("Private provider detail");
   });
 });

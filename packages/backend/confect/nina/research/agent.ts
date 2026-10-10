@@ -178,6 +178,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
         : new ResearchGenerationError({
             message: "Research search returned no source.",
             phase: "search",
+            rejected: false,
           });
     }
     if (Result.isFailure(search)) {

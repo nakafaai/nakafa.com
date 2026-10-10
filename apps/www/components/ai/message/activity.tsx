@@ -88,7 +88,7 @@ function ActivityTrigger() {
     empty: t("activity.empty"),
     failed: undefined,
     limit: undefined,
-    partial: failures > 0 ? undefined : t("activity.partial"),
+    partial: t("activity.partial"),
     running: undefined,
     stopped: t("activity.stopped"),
   }[state];

@@ -1,4 +1,5 @@
 import { researchMaxSources } from "@repo/backend/client/nina/research";
+import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
@@ -185,12 +186,16 @@ export const ResearchOutputSchema = Schema.Struct({
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export const webSearchInputSchema = createEffectSchema(WebSearchInputSchema);
 export const researchOutputSchema = createEffectSchema(ResearchOutputSchema);
-/** Search provider failed before returning usable source data. */
+/**
+ * Search provider failed before returning usable source data. It keeps the
+ * HTTP status the provider answered with and never its message, which may
+ * repeat the query.
+ */
 export class ResearchSearchError extends Schema.TaggedError<ResearchSearchError>()(
   "ResearchSearchError",
   {
-    cause: Schema.optional(Schema.String),
     message: Schema.String,
+    status: Schema.optional(Schema.Finite),
   }
 ) {}
 /** Scrape provider failed before returning usable page content. */
@@ -207,14 +212,19 @@ export class ResearchUnsafeUrlError extends Schema.TaggedError<ResearchUnsafeUrl
     message: Schema.String,
   }
 ) {}
-/** Language model generation failed during one research phase. */
+/**
+ * Language model generation failed during one research phase. It carries
+ * routing facts only: `rejected` says the model answered with something other
+ * than the asked object, and `gateway` classifies a failed call. Neither holds
+ * the task, the sources, or the answer.
+ */
 export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerationError>()(
   "ResearchGenerationError",
   {
-    cause: Schema.optional(Schema.String),
+    gateway: Schema.optional(GatewayFailure),
     message: Schema.String,
     phase: Schema.Literals(["search", "synthesis"]),
-    text: Schema.optional(Schema.String),
+    rejected: Schema.Boolean,
   }
 ) {}
 export type ScrapeOutput = typeof ScrapeOutputSchema.Type;

@@ -398,6 +398,8 @@ describe("Nina generation through the real Agent component", () => {
           type: "tool-nakafa",
           state: "output-available",
           output: {
+            // A run whose only card failed is stored as failed, whatever prose it returned.
+            outcome: "failed",
             text: "Fixture evidence unavailable",
             artifacts: [
               {

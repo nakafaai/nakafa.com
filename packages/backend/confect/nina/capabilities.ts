@@ -5,6 +5,10 @@ import type {
   ActionCtx,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import {
+  classify,
+  type GatewayFailure,
+} from "@repo/backend/confect/gateway/failure";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
 import type { ModelId } from "@repo/backend/confect/gateway/model";
 import { streamCapability } from "@repo/backend/confect/nina/capability/progress";
@@ -72,7 +76,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   Effect.catchTag("NakafaGenerationError", (error) =>
                     failed(
                       "nakafa",
-                      error,
+                      { gateway: classify(error.cause) },
                       "Nakafa retrieval failed. Use only evidence already available; do not invent content."
                     )
                   )
@@ -174,7 +178,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   Effect.catchTag("MathGenerationError", (error) =>
                     failed(
                       "math",
-                      error,
+                      { gateway: classify(error.cause) },
                       "Deterministic math verification failed. State the limitation; do not claim an unverified calculation is correct."
                     )
                   )
@@ -193,24 +197,27 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
 });
 
 /**
- * Ends a capability that left nothing usable. Its cause goes to the log; Nina
- * and the learner only get `text`.
+ * Ends a capability that left nothing usable. The log gets the routing facts
+ * of what failed, never a provider message or a prompt; Nina and the learner
+ * only get `text`.
  */
 function failed(
   capability: LearningCapabilityName,
-  error: {
-    readonly cause?: unknown;
-    readonly message: string;
+  facts: {
+    readonly gateway?: GatewayFailure | undefined;
     readonly phase?: string;
+    readonly rejected?: boolean;
   },
   text: string
 ) {
   return Effect.as(
     Effect.logWarning("Nina capability failed", {
       capability,
-      cause: error.cause,
-      message: error.message,
-      phase: error.phase,
+      phase: facts.phase,
+      reason: facts.gateway?.reason,
+      rejected: facts.rejected,
+      status: facts.gateway?.status,
+      type: facts.gateway?.type,
     }),
     { outcome: "failed" as const, text }
   );

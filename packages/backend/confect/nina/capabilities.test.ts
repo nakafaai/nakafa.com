@@ -114,6 +114,7 @@ describe("Nina capability execution policy", () => {
                   new ResearchGenerationError({
                     phase: "search",
                     message: "Private provider detail",
+                    rejected: false,
                   })
                 )
               : Effect.succeed({ text: "Verified source." })

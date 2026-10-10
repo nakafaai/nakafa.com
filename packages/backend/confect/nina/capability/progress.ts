@@ -100,9 +100,11 @@ export function streamCapability<E, R>(
 }
 
 /**
- * Keeps the outcome from contradicting the cards beside it: a run that loaded
- * evidence never ends as `failed`, and a run that lost a card beside a loaded
- * one never ends as plainly done.
+ * Keeps the outcome from contradicting the cards beside it. A card is loaded
+ * once it settled without an error, whatever its own vocabulary calls that
+ * (`done` for sources, `verified` for a calculation). A run that loaded a card
+ * never ends as `failed`, and a run that lost a card never ends as plainly
+ * done: it is `partial` beside a loaded card and `failed` without one.
  */
 function settleOutcome(
   outcome: CapabilityOutcome | undefined,
@@ -110,14 +112,14 @@ function settleOutcome(
 ) {
   const loaded = Arr.some(
     artifacts,
-    (artifact) => artifact.data.status === "done"
+    ({ data }) => data.status !== "loading" && data.status !== "error"
   );
-  const lost = Arr.some(
-    artifacts,
-    (artifact) => artifact.data.status === "error"
-  );
+  const lost = Arr.some(artifacts, ({ data }) => data.status === "error");
   if (loaded && (outcome === "failed" || (!outcome && lost))) {
     return "partial" as const;
+  }
+  if (!(outcome || loaded) && lost) {
+    return "failed" as const;
   }
   return outcome;
 }

@@ -84,10 +84,9 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
         ),
         Effect.catchTag("ResearchSearchError", (error) =>
           Effect.gen(function* () {
-            // The learner sees only the message; the log keeps the reason.
+            // The learner sees only the message; the log keeps the status.
             yield* Effect.logWarning("Nina web search failed", {
-              cause: error.cause,
-              message: error.message,
+              status: error.status,
             });
             yield* publish({
               id: getWebSearchPartId(toolCallId, index),

@@ -1,7 +1,9 @@
-import { describeCause } from "@repo/backend/confect/nina/research/error";
 import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
 import { ResearchSearchError } from "@repo/backend/confect/nina/research/schema";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
+
+/** The provider's HTTP status. Its message may repeat the query and is never read. */
+const ProviderFailure = Schema.Struct({ status: Schema.Finite });
 
 /** Calls Firecrawl search with one generated query. */
 export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
@@ -28,8 +30,10 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
       }),
     catch: (cause) =>
       new ResearchSearchError({
-        cause: describeCause(cause),
         message: "Failed to search the web. Please try again.",
+        ...Option.getOrUndefined(
+          Schema.decodeUnknownOption(ProviderFailure)(cause)
+        ),
       }),
   }).pipe(Effect.map((response) => ({ query, response })));
 });

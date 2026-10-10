@@ -108,6 +108,35 @@ const lost = {
   id: "search-2",
   data: { ...loading.data, status: "error", error: "Unavailable" },
 } satisfies CapabilityArtifact;
+const sum = { expression: "2", latex: "2" };
+const request = {
+  expression: "1 + 1",
+  kind: "math",
+  operation: "evaluate",
+} as const;
+const verified = {
+  type: "data-math",
+  id: "math-1",
+  data: {
+    input: request,
+    kind: "evaluate",
+    result: {
+      conditions: [],
+      input: request,
+      items: [],
+      kind: "evaluate",
+      operation: "evaluate",
+      primary: { expression: "1 + 1", latex: "1 + 1" },
+      reason: "verified",
+      secondary: sum,
+      stepStatus: "complete",
+      steps: [],
+      status: "verified",
+    },
+    status: "verified",
+    summary: "verified",
+  },
+} satisfies CapabilityArtifact;
 
 it.effect.each([
   [
@@ -117,8 +146,14 @@ it.effect.each([
     "failed",
   ],
   [
-    "a failed run never contradicts loaded evidence",
+    "a failed run never contradicts loaded sources",
     [done],
+    "failed",
+    "partial",
+  ],
+  [
+    "a failed run never contradicts a verified calculation",
+    [verified],
     "failed",
     "partial",
   ],
@@ -129,18 +164,25 @@ it.effect.each([
     "partial",
   ],
   [
-    "a run that only lost cards keeps what it reported",
+    "a run that lost a card beside a verified calculation is partial",
+    [verified, lost],
+    undefined,
+    "partial",
+  ],
+  [
+    "a run that only lost cards is failed, whatever prose it returned",
     [lost],
     undefined,
-    undefined,
+    "failed",
   ],
   [
     "a run with every card loaded reports no outcome",
-    [done],
+    [done, verified],
     undefined,
     undefined,
   ],
   ["a stated outcome survives loaded evidence", [done, lost], "empty", "empty"],
+  ["a stated outcome survives lost evidence", [lost], "empty", "empty"],
 ] as const)("settles the stored outcome: %s", ([, cards, reported, stored]) =>
   Effect.gen(function* () {
     const snapshots = yield* streamCapability(
