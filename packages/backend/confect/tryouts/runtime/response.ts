@@ -5,7 +5,7 @@ import {
   requireTryoutResponseSectionSnapshot,
   validateTryoutResponsePlacementInventory,
 } from "@repo/backend/confect/tryouts/response/integrity";
-import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
+import { responseIntegrity } from "@repo/backend/confect/tryouts/response/spec";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
 
@@ -189,14 +189,3 @@ const indexAttemptSections = Effect.fn("tryouts.response.indexAttemptSections")(
     return sectionsByIdentity;
   }
 );
-
-/** Creates one typed fail-closed response graph error. */
-function responseIntegrity(
-  code: TryoutResponseIntegrityError["code"],
-  message: string
-) {
-  return new TryoutResponseIntegrityError({
-    code,
-    message,
-  });
-}

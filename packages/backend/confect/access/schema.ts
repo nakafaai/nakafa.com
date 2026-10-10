@@ -37,7 +37,7 @@ export const RuleRole = BuiltinRole.pick([
 export const OwnerRole = BuiltinRole.pick(["owner", "admin"]);
 
 /** A write stops at a locked subject or a suspended tenant; a read does not. */
-export const Access = Schema.Literals(["read", "write"]);
+const Access = Schema.Literals(["read", "write"]);
 
 /**
  * How one action is granted. A `roles` rule allows its roles, every Owner,

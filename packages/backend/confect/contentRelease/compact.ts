@@ -14,7 +14,7 @@ import { Clock, Effect } from "effect";
 const RUN_PAGE_LIMIT = 64;
 type CompactionReceipt = typeof compactionReceiptValidator.Type;
 /** Returns the next durable phase after all rows in one table are exhausted. */
-export function nextPhase(
+function nextPhase(
   phase: CompactionCycle["phase"]
 ): CompactionCycle["phase"] | null {
   if (phase === "heads") {

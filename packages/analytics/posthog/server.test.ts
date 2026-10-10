@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "@effect/vitest";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
@@ -28,7 +28,18 @@ vi.mock("posthog-node", () => ({
 
 vi.mock("server-only", () => ({}));
 
+/** Time for one cold import of the module graph on a slow CI runner. */
+const COLD_IMPORT_TIMEOUT_MS = 60_000;
+
 describe("PostHog server reporting", () => {
+  // The first import transforms the whole module graph, which took 3.5 of a
+  // test's five seconds on CI. It happens once here; `vi.resetModules()` then
+  // gives every test a fresh module, so the import test still proves its claim.
+  beforeAll(
+    () => import("@repo/analytics/posthog/server"),
+    COLD_IMPORT_TIMEOUT_MS
+  );
+
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();

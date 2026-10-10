@@ -2,7 +2,6 @@ import {
   Array as Arr,
   Effect,
   FileSystem,
-  HashMap,
   HashSet,
   Option,
   Path,
@@ -26,6 +25,11 @@ import {
   SyntaxKind,
 } from "typescript/unstable/ast";
 import { RepositoryReadError } from "#scripts/check/files";
+import {
+  exportReader,
+  fileStems,
+  namespaceStems,
+} from "#scripts/check/readers";
 import { isGenerated, type RepositorySource } from "#scripts/check/source";
 
 /** Everything between two words. A word is a run of identifier characters. */
@@ -39,8 +43,15 @@ const FRAMEWORK_MODULE_PATTERNS = [
   /^apps\/[^/]+\/app\/(?:.+\/)?(?:apple-icon|default|error|forbidden|global-error|global-not-found|icon|layout|loading|manifest|not-found|opengraph-image|page|robots|route|sitemap|template|twitter-image|unauthorized)\.tsx?$/u,
   /^apps\/[^/]+\/(?:instrumentation|instrumentation-client|mdx-components|proxy|vercel)\.tsx?$/u,
 ];
-/** The shadcn component set, which keeps every part that its upstream ships. */
-const COMPONENT_SET_DIRECTORY = "packages/design-system/components/ui/";
+/**
+ * The component sets that a registry ships: shadcn and EvilCharts. Each keeps
+ * every part that its upstream ships, so a later update of a component applies
+ * to an unchanged file.
+ */
+const COMPONENT_SET_DIRECTORIES = [
+  "packages/design-system/components/ui/",
+  "packages/design-system/components/evilcharts/",
+];
 
 /** The manifest of one workspace, by repository-relative path. */
 const WORKSPACE_MANIFEST_PATTERN = /^(?:apps|packages)\/[^/]+\/package\.json$/u;
@@ -165,30 +176,34 @@ function exportedNames(statement: Statement): readonly string[] {
 }
 
 /**
- * Reports an exported name that no other module mentions. An export is the
+ * Reports an exported name that no other module reads. An export is the
  * interface of its module, so a name that nothing imports is not interface: it
  * loses `export`, and the formatter then reports the declaration when its own
  * module does not use it either.
  *
- * `texts` holds the text of every module that can name an export: authored,
- * generated, and declaration files alike. A name counts as mentioned when the
- * word appears in a second text, so the rule never reports a name that
- * something imports, and it misses an unused name that another module happens
- * to spell. `unjudged` lists the directories whose exports this check cannot
- * judge: the workspaces that are published as packages, and the modules that a
- * compiler configuration emits declarations for.
+ * An authored module reads a name of another module when it loads that module
+ * by a module specifier and holds the name in code, or when it forwards that
+ * module with `export *` (see `exportReader`). `others` holds the text of the
+ * modules that no rule parses (generated, declaration, and JavaScript files,
+ * the agent skill scripts, and the modules at the repository root), and a name
+ * counts as read there by its word alone. `unjudged` lists the directories
+ * whose exports this check cannot judge: the workspaces that are published as
+ * packages, and the modules that a compiler configuration emits declarations
+ * for.
  */
 export function inspectExports(
   modules: readonly {
     readonly file: string;
     readonly sourceFile: SourceFile;
   }[],
-  texts: readonly string[],
+  others: readonly string[],
   unjudged: readonly string[]
 ): readonly string[] {
   const declared = Arr.flatMap(modules, ({ file, sourceFile }) =>
     isGenerated(sourceFile) ||
-    Str.startsWith(COMPONENT_SET_DIRECTORY)(file) ||
+    Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
+      Str.startsWith(directory)(file)
+    ) ||
     Arr.some(FRAMEWORK_MODULE_PATTERNS, (pattern) => pattern.test(file)) ||
     Arr.some(unjudged, (directory) => Str.startsWith(directory)(file))
       ? []
@@ -204,27 +219,29 @@ export function inspectExports(
         )
   );
   const names = HashSet.fromIterable(Arr.map(declared, ({ name }) => name));
-  const mentions = Arr.reduce(
-    Arr.flatMap(texts, (text) =>
-      Arr.fromIterable(
-        HashSet.fromIterable(
-          Arr.filter(Str.split(text, WORD_BREAK_PATTERN), (word) =>
-            HashSet.has(names, word)
-          )
-        )
-      )
-    ),
-    HashMap.empty<string, number>(),
-    (counts, name) =>
-      HashMap.modifyAt(counts, name, (count) =>
-        Option.some(Option.getOrElse(count, () => 0) + 1)
-      )
+  const namespaces = HashSet.fromIterable(
+    Arr.flatMap(modules, ({ sourceFile }) => namespaceStems(sourceFile))
   );
-  return Arr.filterMap(declared, ({ file, line, name }) =>
-    Option.exists(HashMap.get(mentions, name), (count) => count > 1)
+  const readers = Arr.map(modules, ({ file, sourceFile }) => ({
+    file,
+    reads: exportReader(sourceFile, names, namespaces),
+  }));
+  const otherWords = HashSet.fromIterable(
+    Arr.filter(
+      Arr.flatMap(others, (text) => Str.split(text, WORD_BREAK_PATTERN)),
+      (word) => HashSet.has(names, word)
+    )
+  );
+  return Arr.filterMap(declared, ({ file, line, name }) => {
+    const stems = fileStems(file);
+    return HashSet.has(otherWords, name) ||
+      Arr.some(
+        readers,
+        (reader) => reader.file !== file && reader.reads(stems, name)
+      )
       ? Result.failVoid
       : Result.succeed(
           `${file}:${line}: no other module names ${name}: remove its \`export\`, or delete the declaration when this module does not use it either (unused-export)`
-        )
-  );
+        );
+  });
 }

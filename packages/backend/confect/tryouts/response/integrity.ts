@@ -4,7 +4,7 @@ import tryoutAttemptPlacementsTable from "@repo/backend/confect/_generated/table
 import { evaluate } from "@repo/backend/confect/response/evaluation";
 import { Outcome } from "@repo/backend/confect/response/model";
 import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
-import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
+import { responseIntegrity } from "@repo/backend/confect/tryouts/response/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Array as Arr,
@@ -256,14 +256,4 @@ const sameOutcome = Schema.toEquivalence(Outcome);
  */
 function confirms(evaluated: Outcome, stored: Outcome) {
   return evaluated.status === "pending" || sameOutcome(evaluated, stored);
-}
-/** Creates one typed fail-closed response graph error. */
-function responseIntegrity(
-  code: TryoutResponseIntegrityError["code"],
-  message: string
-) {
-  return new TryoutResponseIntegrityError({
-    code,
-    message,
-  });
 }

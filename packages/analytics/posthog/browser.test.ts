@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "@effect/vitest";
 import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Deferred, Effect, Fiber, Ref, Schema } from "effect";
@@ -63,7 +63,18 @@ const identifiedIdentity: BrowserAnalyticsIdentity = {
   userId: "user-1",
 };
 
+/** Time for one cold import of the module graph on a slow CI runner. */
+const COLD_IMPORT_TIMEOUT_MS = 60_000;
+
 describe("two-tier PostHog browser runtime", () => {
+  // The first import transforms the whole module graph. On a slow runner that
+  // alone passed the five seconds of a test, so it happens once here. Every
+  // test still loads a fresh module after `vi.resetModules()`.
+  beforeAll(
+    () => import("@repo/analytics/posthog/browser"),
+    COLD_IMPORT_TIMEOUT_MS
+  );
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();

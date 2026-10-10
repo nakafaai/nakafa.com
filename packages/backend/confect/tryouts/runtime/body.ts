@@ -1,3 +1,4 @@
+import { ProtectedContentDeliverySchema } from "@nakafa/aksara-contracts/delivery";
 import { Schema } from "effect";
 /** Original signed bytes returned to the Node artifact verification boundary. */
 export const tryoutBodyBatchValidator = Schema.Struct({
@@ -6,10 +7,7 @@ export const tryoutBodyBatchValidator = Schema.Struct({
     Schema.Array(
       Schema.Struct({
         artifactJson: Schema.String,
-        delivery: Schema.Union([
-          Schema.Literal("authenticated"),
-          Schema.Literal("entitled"),
-        ]),
+        delivery: ProtectedContentDeliverySchema,
         sourcePath: Schema.String,
       })
     )

@@ -20,3 +20,11 @@ options:
   thresholds:
     fail: 100000
     pass: 60000
+  # A page that is rendered for the first time after a deploy or a publication
+  # also carries the stream that Next.js embeds for Partial Prefetching, a
+  # second copy of its hydration payload. Measured on the longest surahs: 1.24
+  # MB on that first render, and 0.73 to 0.88 MB from the cache afterwards. The
+  # default pass line is 1 MB, and the fail line stays at its default.
+  transferThresholds:
+    fail: 10000000
+    pass: 1500000

@@ -6,8 +6,8 @@ import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/requests";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-export const countryHref = `${appRoutes.tryout}/indonesia`;
-export const examHref = `${countryHref}/snbt`;
+const countryHref = `${appRoutes.tryout}/indonesia`;
+const examHref = `${countryHref}/snbt`;
 export const trackHref = `${examHref}/2027`;
 export const setHref = `${trackHref}/set-1`;
 const SECTION_HREF_PATTERN =

@@ -21,7 +21,8 @@ import {
   type statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { Clock, Effect } from "effect";
-export type ReleaseStatus = typeof statusValidator.Type;
+
+type ReleaseStatus = typeof statusValidator.Type;
 
 /** Proves server-recomputed evidence matches every signed release count. */
 function matchesManifest(

@@ -1,4 +1,4 @@
-import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { identityCollision } from "@repo/backend/confect/contentRelease/error";
 import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
 import { buildContentSearchDocument } from "@repo/backend/confect/contents/search/documents";
@@ -58,10 +58,3 @@ const readTryoutReferenceRows = Effect.fn(
   }
   return yield* source.asset(snapshotId, input.appLocale, input.contentId, 2);
 });
-/** Rejects a semantic identity shared by multiple current catalog rows. */
-function identityCollision(family: string) {
-  return releaseFail(
-    "CONTENT_RELEASE_INTEGRITY",
-    `Current ${family} identity resolves multiple catalog rows.`
-  );
-}

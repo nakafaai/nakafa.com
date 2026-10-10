@@ -3,7 +3,7 @@ import { Array as Arr, Result, Schema } from "effect";
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
 const CARBON_ID = "carbon";
-export const NEON_ID = "neon";
+const NEON_ID = "neon";
 export const SODIUM_ID = "sodium";
 export const MAGNESIUM_ID = "magnesium";
 export const CHLORINE_ID = "chlorine";

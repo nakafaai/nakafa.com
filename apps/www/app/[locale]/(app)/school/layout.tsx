@@ -1,3 +1,4 @@
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -39,7 +40,7 @@ export async function generateMetadata({
     openGraph: {
       title: t("title"),
       description: t("description"),
-      url: `https://nakafa.com/${locale}/school`,
+      url: `${SITE_ORIGIN}/${locale}/school`,
       siteName: "Nakafa School",
       locale,
       type: "website",

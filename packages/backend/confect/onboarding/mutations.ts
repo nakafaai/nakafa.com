@@ -4,7 +4,8 @@ import { OnboardingRoleError } from "@repo/backend/confect/onboarding/mutations.
 import type { onboardingAnswerValidator } from "@repo/backend/confect/onboarding/schema";
 import { isSelfSelectableUserRole } from "@repo/backend/confect/users/roles";
 import { Effect } from "effect";
-export type OnboardingAnswer = typeof onboardingAnswerValidator.Type;
+
+type OnboardingAnswer = typeof onboardingAnswerValidator.Type;
 /** Restricts self-service answers to roles owned by learner onboarding. */
 export const requireSelfSelectableOnboardingUser = Effect.fn(
   "onboarding.requireSelfSelectableUser"

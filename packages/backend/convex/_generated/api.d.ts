@@ -8149,16 +8149,6 @@ export declare const internal: {
         >;
       };
     };
-    polar: {
-      version: {
-        setWebhookVersion: FunctionReference<
-          "action",
-          "internal",
-          {},
-          Array<{ after: string; before: string; id: string }>
-        >;
-      };
-    };
     queries: {
       internal: {
         customer: {
