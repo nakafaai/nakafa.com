@@ -17,6 +17,7 @@ export type ContentAnalyticsPartitionsDoc = Document.Document<typeof schemaDefin
 export type ContentArtifactFactsDoc = Document.Document<typeof schemaDefinition, "contentArtifactFacts">;
 export type ContentArtifactsDoc = Document.Document<typeof schemaDefinition, "contentArtifacts">;
 export type ContentBindingsDoc = Document.Document<typeof schemaDefinition, "contentBindings">;
+export type ContentCompactionDoc = Document.Document<typeof schemaDefinition, "contentCompaction">;
 export type ContentHeadsDoc = Document.Document<typeof schemaDefinition, "contentHeads">;
 export type ContentIndexDoc = Document.Document<typeof schemaDefinition, "contentIndex">;
 export type ContentItemsDoc = Document.Document<typeof schemaDefinition, "contentItems">;
@@ -106,6 +107,7 @@ export interface Docs {
   contentArtifactFacts: ContentArtifactFactsDoc;
   contentArtifacts: ContentArtifactsDoc;
   contentBindings: ContentBindingsDoc;
+  contentCompaction: ContentCompactionDoc;
   contentHeads: ContentHeadsDoc;
   contentIndex: ContentIndexDoc;
   contentItems: ContentItemsDoc;

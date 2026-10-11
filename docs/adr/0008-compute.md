@@ -100,18 +100,33 @@ counter calculation. There is no second trigger facade. The transaction rolls
 back both changes if either write fails. Read-only ranking consumers keep the
 same Aggregate contract.
 
+The pipeline maintains exactly the ranking the homepage reads: material
+lessons, in the global scope, over the last seven UTC days. A view of an article
+writes no popularity row, a lesson reached through a curriculum placement counts
+once like any other visit, and no other window or lifetime total is kept. The
+cost of keeping a counter that nothing reads was measured in Database I/O, which
+is why a new window or scope needs a reader first.
+
 Popularity retention follows two separate consumer horizons. Viewer keys only
 deduplicate the current server-assigned UTC day, so prior-day keys can expire.
 Queued work carries its own complete event payload. Applying that payload,
-updating daily signals, lifetime and finite counters, updating Aggregate, and
-removing the queue row commit in the same mutation. Account deletion removes
-pending personal queue rows and viewer keys without reversing processed totals.
+updating the daily signal and the counter, updating Aggregate, and removing the
+queue row commit in the same mutation. Account deletion removes pending personal
+queue rows and viewer keys without reversing processed totals.
 
-Daily aggregate signals remain until every finite-window maintenance cycle has
-completed the current UTC day. Only signals older than the 365-day window then
-expire. Late queue processing excludes those days from finite counters and
-daily signals while still updating lifetime. Lifetime counters and their ranking
-entries are never deleted by retention.
+Daily aggregate signals remain until the window's maintenance cycle has
+completed the current UTC day. Only signals older than the seven-day window then
+expire, because the daily pass reads the one signal leaving the window for each
+counter and the weekly pass reads the signals inside it, so an older signal has
+no reader. Late queue processing excludes a day outside the window from
+counters and signals altogether.
+
+The weekly pass recomputes each existing counter from its daily signals and
+removes one that no signal backs. It does not recreate a counter that is gone:
+the next view of that lesson creates it, holding only that view, and the next
+weekly pass restores its score from the signals. The pipeline writes a signal
+and its counter in one transaction, so a counter missing while its signals are
+live is not a state the pipeline produces.
 
 One hourly cron prunes bounded indexed pages and atomically schedules a next
 page when needed. Each page derives the current day again, so a chain crossing
@@ -119,17 +134,34 @@ midnight waits for the new day's maintenance before deleting daily inputs.
 Maintenance rows are read only when an expired daily input exists. Missing or
 incomplete cycles retain those inputs while viewer-key expiration continues.
 The remaining indexed rows are the resume position; there is no separate
-checkpoint table, migration endpoint or compatibility handler. Retrying or
-overlapping pages is safe under Convex transaction serialization.
+checkpoint table or migration endpoint. Retrying or overlapping pages is safe
+under Convex transaction serialization.
 
 This supersedes the earlier suspension, which incorrectly required complete
 historical forensic evidence before expiring operational inputs. Historical
-viewer keys are not a permanent event ledger and cannot reconstruct lifetime
-totals, including after account deletion. That limitation does not invalidate
-the authoritative counters or require retaining personal deduplication keys
+viewer keys are not a permanent event ledger and cannot reconstruct totals,
+including after account deletion. That limitation does not invalidate the
+authoritative counters or require retaining personal deduplication keys
 forever. Regression tests verify the transaction, window cutoff, delayed queue,
 restart and midnight behavior rather than treating cycle completion as a claim
 of historical data completeness.
+
+Two temporary contract steps remain from the change that narrowed the pipeline
+to one ranking. This ADR owns them, and they end together. Until they do, the
+same hourly pass retires the counters, ranking entries and maintenance
+watermarks of the windows and the scope that earlier versions kept (its index
+ranges are its resume position, so a pass with nothing left to retire reads no
+document), and `getTrendingSubjects` accepts and ignores the `windowKey`
+argument that an older web deployment still sends. The exit is met when dev and
+production report no retired counter and no retired watermark from the hourly
+pass, and the production deploy is 8 days old (the window plus the day its
+maintenance runs, the longest an older signal lives), with no older web
+deployment taking requests. The cleanup is one change: delete
+`contents/metrics/retire.ts` with its call and tests, drop `retiredCounters` and
+`retiredCycles` from the prune result, narrow the stored window and scope values
+of popularity rows, and the `applied` windows of daily signals, to the
+maintained ones, and delete the `windowKey` argument with its compatibility
+test.
 
 Mutations that write only tables without registered triggers use native Convex
 builders. Mutations that own message, subscription, score, or other registered

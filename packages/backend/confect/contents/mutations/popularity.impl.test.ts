@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   getPopularitySignalDay,
-  type LearningPopularityFiniteWindow,
   POPULARITY_DAY_MS,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
@@ -18,25 +17,6 @@ import { Array as Arr } from "effect";
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const ARTICLE_ROUTE = "articles/politics/dynastic-politics-asian-values";
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
-
-/** Models one late outgoing view without charging a window that excluded it. */
-function appliedAt(offset: number, viewCount: number) {
-  const count = (days: number) => {
-    if (offset < days) {
-      return viewCount;
-    }
-    return offset === days ? 1 : 0;
-  };
-  return {
-    d1: count(1),
-    d7: count(7),
-    d14: count(14),
-    d30: count(30),
-    d90: count(90),
-    d180: count(180),
-    d365: count(365),
-  };
-}
 
 /** Builds a Convex test instance with production popularity triggers enabled. */
 function createPopularityConvexTest() {
@@ -119,22 +99,10 @@ async function insertPopularityRefreshRows(ctx: MutationCtx) {
 
   await learningPopularityRankings.insert(ctx, subjectCounter);
   await learningPopularityRankings.insert(ctx, articleCounter);
-  for (const counter of [subjectCounter, articleCounter]) {
-    const { _id, _creationTime, ...value } = counter;
-    const id = await ctx.db.insert("learningPopularityCounters", {
-      ...value,
-      windowKey: "lifetime",
-    });
-    const lifetime = await ctx.db.get(id);
-    if (!lifetime) {
-      throw new Error("Expected the durable popularity identity fixture.");
-    }
-    await learningPopularityRankings.insert(ctx, lifetime);
-  }
 
   await ctx.db.insert("learningPopularitySignals", {
     ...subject,
-    applied: appliedAt(0, 2),
+    applied: { d7: 2 },
     contextKey: "placement:mathematics:addition",
     contextMaterialKey: "vector-addition",
     contextMode: "placement",
@@ -157,7 +125,7 @@ async function insertPopularityRefreshRows(ctx: MutationCtx) {
   });
   await ctx.db.insert("learningPopularitySignals", {
     ...article,
-    applied: appliedAt(8, 5),
+    applied: { d7: 0 },
     contextKey: "canonical",
     contextMode: "canonical",
     description: "Old article description",
@@ -203,7 +171,6 @@ async function runRefresh(
   target: ReturnType<typeof createPopularityConvexTest>,
   input: {
     readonly day?: number;
-    readonly windowKey?: LearningPopularityFiniteWindow;
   } = {}
 ) {
   return await target.mutation(async (ctx) => {
@@ -213,7 +180,7 @@ async function runRefresh(
       {
         day: input.day ?? getPopularitySignalDay(NOW),
         scopeMode: "global",
-        windowKey: input.windowKey ?? "7d",
+        windowKey: "7d",
       }
     );
     const metrics = await ctx.meta.getTransactionMetrics();
@@ -233,32 +200,32 @@ describe("contents/mutations/popularity", () => {
     vi.restoreAllMocks();
   });
 
-  it("schedules every finite window for both popularity scopes", async () => {
+  it("schedules the one maintained window", async () => {
     const t = createPopularityConvexTest();
     const day = getPopularitySignalDay(NOW);
 
-    const result = await t.mutation(
-      internal.contents.mutations.popularity
-        .scheduleLearningPopularityRefreshes,
-      {}
-    );
+    const result = await t.mutation(async (ctx) => ({
+      receipt: await ctx.runMutation(
+        internal.contents.mutations.popularity
+          .scheduleLearningPopularityRefreshes,
+        {}
+      ),
+      metrics: await ctx.meta.getTransactionMetrics(),
+    }));
     const jobs = await t.query(
       async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
     );
 
-    expect(result).toEqual({ scheduledWindows: 14 });
-    expect(Arr.map(jobs, (job) => job.args)).toEqual(
-      expect.arrayContaining([
-        [{ day, scopeMode: "global", windowKey: "1d" }],
-        [{ day, scopeMode: "global", windowKey: "365d" }],
-        [{ day, scopeMode: "placement", windowKey: "1d" }],
-        [{ day, scopeMode: "placement", windowKey: "365d" }],
-      ])
-    );
-    expect(jobs).toHaveLength(14);
+    // The weekly repair used to claim and schedule 14 pages: seven windows for
+    // each of two scopes.
+    expect(result.receipt).toEqual({ scheduledWindows: 1 });
+    expect(result.metrics.functionsScheduled.used).toBe(1);
+    expect(Arr.map(jobs, (job) => job.args)).toEqual([
+      [{ day, scopeMode: "global", windowKey: "7d" }],
+    ]);
   });
 
-  it("repairs finite windows from daily signals and removes expired counters", async () => {
+  it("recomputes the seven-day counters from daily signals and removes one no signal backs", async () => {
     const t = createPopularityConvexTest();
 
     await t.mutation(insertPopularityRefreshRows);

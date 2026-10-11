@@ -17,6 +17,7 @@ import {
   insertCeilingReferences,
   transactionBytes,
 } from "@repo/backend/test/content/budget";
+import { insertCompaction } from "@repo/backend/test/content/compact";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect } from "effect";
@@ -29,15 +30,17 @@ describe("contentRelease/compact/artifacts", () => {
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentState", {
         articleSlot: "blue",
-        compactFloor: 1,
-        compactFrom: 0,
-        compactPhase: "facts",
-        compactStartedAt: 0,
         key: "primary",
         materialSlot: "blue",
         nextSequence: 2,
         searchSlot: "blue",
         updatedAt: 0,
+      });
+      await insertCompaction(ctx, {
+        compactFloor: 1,
+        compactFrom: 0,
+        compactPhase: "facts",
+        compactStartedAt: 0,
       });
       for (const artifact of [
         {
@@ -111,15 +114,17 @@ describe("contentRelease/compact/artifacts", () => {
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentState", {
         articleSlot: "blue",
-        compactFloor: 1,
-        compactFrom: 0,
-        compactPhase: "facts",
-        compactStartedAt: 1,
         key: "primary",
         materialSlot: "blue",
         nextSequence: 2,
         searchSlot: "blue",
         updatedAt: 0,
+      });
+      await insertCompaction(ctx, {
+        compactFloor: 1,
+        compactFrom: 0,
+        compactPhase: "facts",
+        compactStartedAt: 1,
       });
       for (let index = 0; index < ARTIFACT_PAGE_COUNT + 1; index += 1) {
         await insertTestArtifact(ctx, {

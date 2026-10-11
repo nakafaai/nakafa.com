@@ -13,6 +13,9 @@ import {
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { readVerifiedProgramCatalog } from "@repo/backend/content/program/catalog";
 import { programLayer } from "@repo/backend/content/program/confect";
+import { loadProgramOwner } from "@repo/backend/content/program/owner";
+import { ProgramSource } from "@repo/backend/content/program/source";
+import { verifyProgram } from "@repo/backend/content/program/verify";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Clock, Effect, Option } from "effect";
 
@@ -43,16 +46,30 @@ const listSignedPrograms = Effect.fn("learningPreferences.listSignedPrograms")(
     return catalog.programs;
   }
 );
-/** Reads one signed program by its stable Aksara key. */
+/**
+ * Reads one signed program by its stable Aksara key with one indexed row read.
+ * Only that program's own row is authenticated. The catalog's root closure is
+ * proven by the readers that list programs, not by one learner's preference
+ * (ADR 0002).
+ */
 const readSignedProgram = Effect.fn("learningPreferences.readSignedProgram")(
   function* (locale: Locale, programKey: string) {
-    const programs = yield* listSignedPrograms(locale);
-    return (
-      Option.getOrUndefined(
-        Arr.findFirst(programs, (program) => program.key === programKey)
-      ) ?? null
-    );
-  }
+    const owner = yield* loadProgramOwner(locale);
+    if (!(owner.managed && owner.selected)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_MISSING",
+        "Active signed program catalog is unavailable."
+      );
+    }
+    const { snapshotId } = owner.selected;
+    const source = yield* ProgramSource;
+    const stored = yield* source.program(snapshotId, programKey);
+    if (Option.isNone(stored)) {
+      return null;
+    }
+    return yield* verifyProgram(stored.value, snapshotId);
+  },
+  Effect.provide(programLayer)
 );
 /** Converts one verified Aksara program into a localized selector option. */
 const toCurriculumProgramOption = Effect.fn(

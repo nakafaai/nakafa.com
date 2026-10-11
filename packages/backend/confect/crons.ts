@@ -129,7 +129,7 @@ export default CronJobs.make()
     )
   )
   .add(
-    /** Expires the one outgoing day from each finite popularity window. */ CronJob.make(
+    /** Expires the one outgoing day from the seven-day popularity window. */ CronJob.make(
       "expire learning popularity windows",
       Cron.make({
         minutes: [15],
@@ -143,7 +143,7 @@ export default CronJobs.make()
     )
   )
   .add(
-    /** Rebuilds every finite window weekly from audited daily signals. */ CronJob.make(
+    /** Recomputes each seven-day popularity counter weekly from its daily signals. */ CronJob.make(
       "repair learning popularity windows",
       Cron.make({
         minutes: [15],
@@ -158,7 +158,7 @@ export default CronJobs.make()
     )
   )
   .add(
-    /** Recovers bounded retention without keeping a separate checkpoint table. */ CronJob.make(
+    /** Prunes expired popularity inputs in bounded pages and, until none is left, retires the rows earlier versions kept. */ CronJob.make(
       "prune expired popularity inputs",
       Duration.hours(POPULARITY_RETENTION_INTERVAL_HOURS),
       internal.contents.mutations.popularity.pruneLearningPopularity,

@@ -13,6 +13,7 @@ import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import {
   activateLandingSource,
+  activateSnbtSource,
   makeLandingHierarchy,
   makeLandingPlacement,
 } from "@repo/backend/test/tryout/landing";
@@ -247,6 +248,73 @@ describe("tryouts/catalog/featured", () => {
         expect(featured.question).not.toHaveProperty("answerArtifactHash");
         expect(featured.question).not.toHaveProperty("artifactLocale");
       })
+  );
+
+  it.effect(
+    "proves every placement of the landing section before returning its question",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => activateSnbtSource(ctx))
+        );
+
+        const read = yield* Effect.promise(() =>
+          t.query(async (ctx) => ({
+            featured: await ctx.runQuery(
+              api.tryouts.queries.catalog.getFeaturedQuestion,
+              { appLocale: "id" }
+            ),
+            metrics: await ctx.meta.getTransactionMetrics(),
+          }))
+        );
+
+        expect(read.featured.question).toMatchObject({
+          contentKey: LANDING_FEATURED_TRYOUT.questionContentKey,
+          questionOrder: 1,
+        });
+        // The state, release and snapshot rows (3), the country, exam, track and
+        // set rows (4), the seven section rows that prove the set inventory, and
+        // all 20 placements of the landing section, which prove it complete and
+        // in order. One question is returned; the other 19 are the proof. A
+        // single-row read took 15 documents and also dropped that proof.
+        expect(read.metrics.documentsRead.used).toBe(34);
+      })
+  );
+
+  it.effect.each([
+    {
+      label: "a placement of the landing section is missing",
+      message: "lost its signed placements",
+      questionOrders: Arr.filter(Arr.range(1, 20), (order) => order !== 7),
+    },
+    {
+      label: "the placement orders of the landing section have a gap",
+      message: "changed its placement order",
+      questionOrders: [...Arr.range(1, 19), 21],
+    },
+  ] as const)("fails closed when $label", ({ message, questionOrders }) =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation((ctx) => activateSnbtSource(ctx, questionOrders))
+      );
+
+      const failure = yield* Effect.tryPromise(() =>
+        t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+          appLocale: "id",
+        })
+      ).pipe(Effect.flip);
+
+      // The first question is present and valid in both cases, yet the demo
+      // refuses to serve a section whose siblings cannot be proven.
+      expect(failure.cause).toMatchObject({
+        data: {
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: expect.stringContaining(message),
+        },
+      });
+    })
   );
 
   it.effect(
