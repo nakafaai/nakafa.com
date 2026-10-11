@@ -6144,24 +6144,6 @@ export declare const internal: {
         any
       >;
     };
-    tokens: {
-      encryptStoredTokens: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: null | string },
-        {
-          continueCursor: string;
-          encrypted: number;
-          isDone: boolean;
-          scanned: number;
-          unreadable: Array<{
-            account: string;
-            field: "accessToken" | "refreshToken";
-            reason: string;
-          }>;
-        }
-      >;
-    };
   };
   classes: {
     forums: {
