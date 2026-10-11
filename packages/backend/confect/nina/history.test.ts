@@ -3,7 +3,11 @@ import {
   countTextTokens,
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
-import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
+import {
+  assembleContext,
+  boundStep,
+  splitTurns,
+} from "@repo/backend/confect/nina/history";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { ModelMessage } from "ai";
 import { Array as Arr, Option } from "effect";
@@ -55,9 +59,7 @@ describe("Nina provider context", () => {
     const before = encodeJsonText(history);
     const result = assembleContext({
       current: [{ role: "user", content: "Next question" }],
-      currentOrder: 1,
-      recent: history,
-      throughOrder: null,
+      history: [history],
     });
     expect(encodeJsonText(history)).toBe(before);
     expect(result).toEqual([
@@ -207,38 +209,17 @@ describe("Nina provider context", () => {
     );
   });
 
-  it("omits turns the rolling summary already covers", () => {
-    const recent = [...turn("First"), ...turn("Second"), ...turn("Third")];
-    const result = assembleContext({
-      current: [{ role: "user", content: "Fourth" }],
-      currentOrder: 3,
-      recent,
-      throughOrder: 1,
-    });
-    expect(result[0]).toEqual({ role: "user", content: "Third" });
-    expect(encodeJsonText(result)).not.toContain("First");
-    expect(encodeJsonText(result)).not.toContain("Second");
-  });
-
-  it("keeps whole newest turns within the history budget and drops a cut turn", () => {
+  it("keeps whole newest turns within the history budget and drops a turn that does not fit", () => {
     const large = "Long evidence paragraph.\n\n".repeat(900);
-    const recent: ModelMessage[] = [
-      { role: "assistant", content: "Tail of an older turn" },
-      ...turn("Old", large),
-      ...turn("Middle", large),
-      ...turn("New", large),
-    ];
     const result = assembleContext({
       current: [{ role: "user", content: "Latest" }],
-      currentOrder: 10,
-      recent,
-      throughOrder: null,
+      history: [turn("Old", large), turn("Middle", large), turn("New", large)],
     });
     const history = Arr.dropRight(result, 1);
     expect(tokens(history)).toBeLessThanOrEqual(NINA_BUDGET.history + 200);
     expect(history[0]).toMatchObject({ role: "user" });
-    expect(encodeJsonText(result)).not.toContain("Tail of an older turn");
     expect(encodeJsonText(result)).not.toContain("Answer to Old");
+    expect(encodeJsonText(result)).toContain("Answer to Middle");
     expect(encodeJsonText(result)).toContain("Answer to New");
   });
 
@@ -252,9 +233,7 @@ describe("Nina provider context", () => {
     ];
     const result = assembleContext({
       current: [{ role: "user", content: "Follow up" }],
-      currentOrder: 1,
-      recent: oversized,
-      throughOrder: null,
+      history: [oversized],
     });
     expect(result[0]).toEqual({ role: "user", content: "Huge" });
     expect(encodeJsonText(result)).toContain(
@@ -263,28 +242,28 @@ describe("Nina provider context", () => {
     expect(tokens(result)).toBeLessThanOrEqual(NINA_BUDGET.history);
   });
 
-  it("counts attachments as flat file tokens, not their bytes", () => {
-    const recent: ModelMessage[] = [
+  it("counts an earlier image by the provider's tiles, so a few images fill the history budget", () => {
+    // Odd turns name the media type and even turns do not: both count the same.
+    const imageTurn = (number: number): ModelMessage[] => [
       {
         role: "user",
         content: [
-          { type: "text", text: "Read this photo" },
-          {
-            type: "file",
-            mediaType: "image/png",
-            data: "A".repeat(2_000_000),
-          },
+          { type: "text", text: `Photo ${number}` },
+          number % 2 === 0
+            ? { type: "image", image: "photo" }
+            : { type: "image", image: "photo", mediaType: "image/png" },
         ],
       },
-      { role: "assistant", content: "It shows a parabola." },
+      { role: "assistant", content: `Answer ${number}` },
     ];
     const result = assembleContext({
-      current: [{ role: "user", content: "Explain more" }],
-      currentOrder: 1,
-      recent,
-      throughOrder: null,
+      current: [{ role: "user", content: "Latest" }],
+      history: Arr.map(Arr.range(1, 9), imageTurn),
     });
-    expect(result).toHaveLength(3);
+    // An image costs 1,548 tokens, so seven turns fit in 12,000 and the two oldest do not.
+    expect(encodeJsonText(result)).not.toContain("Photo 2");
+    expect(encodeJsonText(result)).toContain("Photo 3");
+    expect(encodeJsonText(result)).toContain("Photo 9");
   });
 
   it("keeps earlier images but leaves earlier documents as a note", () => {
@@ -297,25 +276,25 @@ describe("Nina provider context", () => {
     };
     const result = assembleContext({
       current: [current],
-      currentOrder: 1,
-      recent: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Read these" },
-            { type: "file", mediaType: "image/png", data: "photo" },
-            {
-              type: "file",
-              mediaType: "application/pdf",
-              filename: "worksheet.pdf",
-              data: "A".repeat(2_000_000),
-            },
-            { type: "file", mediaType: "text/plain", data: "notes" },
-          ],
-        },
-        { role: "assistant", content: "Both cover limits." },
+      history: [
+        [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Read these" },
+              { type: "file", mediaType: "image/png", data: "photo" },
+              {
+                type: "file",
+                mediaType: "application/pdf",
+                filename: "worksheet.pdf",
+                data: "A".repeat(2_000_000),
+              },
+              { type: "file", mediaType: "text/plain", data: "notes" },
+            ],
+          },
+          { role: "assistant", content: "Both cover limits." },
+        ],
       ],
-      throughOrder: null,
     });
     expect(result[0]).toEqual({
       role: "user",
@@ -442,5 +421,62 @@ describe("Nina provider context", () => {
         expect.objectContaining({ output: { type: "text", value: evidence } }),
       ],
     });
+  });
+
+  it("does not count the learner's message or its attachments against the evidence budget", () => {
+    const evidence = "Small evidence paragraph.\n\n".repeat(400);
+    const toolRound = (id: string): ModelMessage[] => [
+      {
+        role: "assistant",
+        content: [
+          { type: "tool-call", toolCallId: id, toolName: "nakafa", input: {} },
+        ],
+      },
+      {
+        role: "tool",
+        content: [
+          {
+            type: "tool-result",
+            toolCallId: id,
+            toolName: "nakafa",
+            output: { type: "json", value: { text: evidence, artifacts: [] } },
+          },
+        ],
+      },
+    ];
+    // Twelve images alone cost 18,576 tokens, more than the whole evidence budget.
+    const prompt: ModelMessage = {
+      role: "user",
+      content: [
+        { type: "text", text: "A long question. ".repeat(3000) },
+        ...Arr.makeBy(12, () => ({ type: "image" as const, image: "photo" })),
+      ],
+    };
+    const messages = [prompt, ...toolRound("one"), ...toolRound("two")];
+    expect(boundStep(messages)).toEqual(
+      Arr.map(messages, (message) =>
+        message.role === "tool"
+          ? expect.objectContaining({
+              content: [
+                expect.objectContaining({
+                  output: { type: "text", value: evidence },
+                }),
+              ],
+            })
+          : message
+      )
+    );
+  });
+
+  it("splits a flat run of messages into whole turns and drops the tail of a cut turn", () => {
+    const cut: ModelMessage = {
+      role: "assistant",
+      content: "Tail of a turn the fetch window cut",
+    };
+    expect(splitTurns([cut, ...turn("First"), ...turn("Second")])).toEqual([
+      turn("First"),
+      turn("Second"),
+    ]);
+    expect(splitTurns([cut])).toEqual([]);
   });
 });

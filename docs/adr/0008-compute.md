@@ -13,11 +13,12 @@ busy-chat and model checks, before resolving learning context. Reservation,
 context resolution, the saved prompt, the turn, and its scheduled generation
 commit in one transaction, so a rejected admission leaves no hold to refund.
 
-Nina's provider context follows ADR 0001: the Agent fetch reads at most the
-newest 50 messages, and the context module keeps whole turns within its token
-budgets, so empty and non-text histories cannot trigger unbounded pagination.
-Whole turns preserve tool-call and tool-result parts together. The full
-transcript remains available for browsing.
+Nina's provider context follows ADR 0001: the thread read looks at the newest 16
+complete turns after the summary and takes at most four pages of 50 messages,
+and the context module keeps whole turns within its token budgets, so empty and
+non-text histories cannot trigger unbounded pagination. Whole turns preserve
+tool-call and tool-result parts together. The full transcript remains available
+for browsing.
 
 Successful persistence closes the hold and completes its existing ledger entry.
 Failure refunds it at most once. A refund can restore only the allowance from

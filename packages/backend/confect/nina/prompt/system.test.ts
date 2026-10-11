@@ -137,23 +137,9 @@ describe("formatNinaContextPackPrompt", () => {
 });
 
 describe("createNinaSystemPrompt", () => {
-  const input = {
-    page: {
-      locale: "en",
-      needsFetch: false,
-      nina: canonicalContext,
-      slug: "chat",
-      url: "https://nakafa.com/en/chat",
-      verified: false,
-    },
-    runtime: { currentDate: "2026-09-29T00:00:00.000Z" },
-    user: {},
-  } as const;
-
   it("adds a focused question and its teaching rules only when present", () => {
-    const plain = createNinaSystemPrompt(input);
+    const plain = createNinaSystemPrompt({});
     const focused = createNinaSystemPrompt({
-      ...input,
       focus: "# Focused Try-out Question\n\n## Question\n\nWhat is 2 + 2?",
     });
 
@@ -166,27 +152,29 @@ describe("createNinaSystemPrompt", () => {
     ).toBe(true);
   });
 
-  it("keeps stable instructions ahead of per-turn context for prompt caching", () => {
+  it("keeps stable instructions ahead of the page, the learner, the question and the summary, and leaves the facts of a turn out", () => {
     const prompt = createNinaSystemPrompt({
-      ...input,
       focus: "# Focused Try-out Question\n\n## Question\n\nWhat is 2 + 2?",
+      learner: "# Learner\n\n- Focus: preparing for try-outs",
       pageContent: "# Current Page\n\nThe learner is viewing a lesson.",
+      summary: "- The learner practiced limits.",
+      userRole: "student",
     });
     const order = Arr.map(
       [
         "# Task Instructions",
         "# Output Formatting Guidelines",
         "# Current Page",
+        "# Learner",
         "# Focused Try-out Question",
-        "# Runtime Context",
+        "# Conversation Summary",
       ],
       (heading) => prompt.indexOf(heading)
     );
 
     expect(Arr.every(order, (index) => index >= 0)).toBe(true);
     expect(order).toEqual(Arr.sort(order, Order.Number));
-    expect(prompt.slice(prompt.indexOf("# Runtime Context"))).toContain(
-      "- date: 2026-09-29T00:00:00.000Z"
-    );
+    expect(prompt).toContain("**User is a student.**");
+    expect(prompt).not.toContain("# Runtime Context");
   });
 });

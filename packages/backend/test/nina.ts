@@ -1,6 +1,7 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { createThread, saveMessage, saveMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
@@ -8,13 +9,215 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect, Schema } from "effect";
+
+/**
+ * The messages of one earlier turn: a question, tool steps, and an answer.
+ * A cancelled turn has one tool step and no answer.
+ */
+function earlierMessages(
+  order: number,
+  {
+    cancelled,
+    question,
+    steps,
+  }: { cancelled: boolean; question: string; steps: number }
+) {
+  const kind = cancelled ? "Cancelled" : "Earlier";
+  const exchange = (step: number) => [
+    {
+      role: "assistant" as const,
+      content: [
+        {
+          type: "tool-call" as const,
+          toolCallId: `${kind}-call-${order}-${step}`,
+          toolName: "nakafa",
+          input: {},
+        },
+      ],
+    },
+    {
+      role: "tool" as const,
+      content: [
+        {
+          type: "tool-result" as const,
+          toolCallId: `${kind}-call-${order}-${step}`,
+          toolName: "nakafa",
+          output: {
+            type: "text" as const,
+            value: `${kind} evidence ${order}.${step}`,
+          },
+        },
+      ],
+    },
+  ];
+  // makeBy always makes at least one step.
+  const count = cancelled ? 1 : steps;
+  return [
+    { role: "user" as const, content: question },
+    ...(count === 0
+      ? []
+      : Arr.flatMap(
+          Arr.makeBy(count, (step) => step),
+          exchange
+        )),
+    ...(cancelled
+      ? []
+      : [{ role: "assistant" as const, content: `Earlier answer ${order}` }]),
+  ];
+}
+
+/**
+ * Saves one earlier turn of a chat at `order`, with its settled turn row. A
+ * complete turn holds its question, `steps` tool steps and its answer. A
+ * cancelled turn left a tool step behind, saved before the cancellation, and
+ * its prompt is failed, as settlement leaves it. A retry asks the question of
+ * the turn it names again.
+ */
+async function seedEarlierTurn(
+  ctx: MutationCtx,
+  {
+    cancelled = false,
+    chatId,
+    now,
+    order,
+    retryOf,
+    steps = 0,
+    threadId,
+    userId,
+  }: {
+    cancelled?: boolean;
+    chatId: Docs["chats"]["_id"];
+    now: number;
+    order: number;
+    retryOf?: number;
+    steps?: number;
+    threadId: string;
+    userId: Docs["users"]["_id"];
+  }
+) {
+  const saved = await saveMessages(ctx, components.nina, {
+    threadId,
+    order,
+    messages: earlierMessages(order, {
+      cancelled,
+      question: cancelled
+        ? `Cancelled question ${order}`
+        : `Earlier question ${retryOf ?? order}`,
+      steps,
+    }),
+  });
+  const [prompt] = saved.messages;
+  if (!prompt) {
+    return Promise.reject(new Error("Fixture prompt missing"));
+  }
+  if (cancelled) {
+    await ctx.runMutation(components.nina.messages.updateMessage, {
+      messageId: prompt._id,
+      patch: { status: "failed", error: "cancelled" },
+    });
+  }
+  await ctx.db.insert("ninaTurns", {
+    phase: "settled",
+    chatId,
+    order,
+    promptMessageId: prompt._id,
+    state: cancelled
+      ? { status: "cancelled", finishedAt: now }
+      : { status: "complete", finishedAt: now },
+    threadId,
+    usage: [],
+    userId,
+    ...(retryOf === undefined ? {} : { retryOf }),
+  });
+}
+
+/** What a test says about one earlier turn: it was cancelled, asks again the turn `retryOf`, or took `steps` tool steps. */
+const EarlierTurn = Schema.Struct({
+  cancelled: Schema.optionalKey(Schema.Boolean),
+  retryOf: Schema.optionalKey(Schema.Int),
+  steps: Schema.optionalKey(Schema.Int),
+});
+
+/** `count` complete turns. makeBy always makes at least one, so none is its own case. */
+function plainTurns(count: number) {
+  return count === 0 ? [] : Arr.makeBy(count, () => ({}));
+}
+
+/** Reserves a turn's credits, saves its prompt and queues the turn as the chat's active one. */
+async function queueTurn(
+  ctx: MutationCtx,
+  {
+    chatId,
+    needsFetch = false,
+    now,
+    slug = "home",
+    text,
+    threadId,
+    userId,
+  }: {
+    chatId: Docs["chats"]["_id"];
+    needsFetch?: boolean;
+    now: number;
+    slug?: string;
+    text: string;
+    threadId: string;
+    userId: Docs["users"]["_id"];
+  }
+) {
+  const user = await ctx.db.get("users", userId);
+  if (!user) {
+    return Promise.reject(new Error("Fixture user missing"));
+  }
+  const reservation = await Effect.runPromise(
+    reserveCredits(user).pipe(
+      Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+    )
+  );
+  const prompt = await saveMessage(ctx, components.nina, {
+    threadId,
+    prompt: text,
+  });
+  const url = `https://nakafa.com/en/${slug}`;
+  const session = await Effect.runPromise(
+    openNinaLearningSession({
+      capturedAt: DateTime.formatIso(DateTime.makeUnsafe(now)),
+      learning: { locale: "en", slug, url, verified: false },
+      source: "current-page",
+    })
+  );
+  const turnId = await ctx.db.insert("ninaTurns", {
+    ...reservation,
+    phase: "active",
+    threadId,
+    chatId,
+    requestId: `request-${prompt.message.order}`,
+    fingerprint: `fingerprint-${prompt.message.order}`,
+    promptMessageId: prompt.messageId,
+    order: prompt.message.order,
+    usage: [],
+    user: {},
+    page: {
+      locale: "en",
+      slug,
+      url,
+      verified: false,
+      needsFetch,
+      nina: session.context,
+    },
+    state: { status: "queued" },
+  });
+  await ctx.db.patch("chats", chatId, { activeTurnId: turnId });
+  return { turnId, promptMessageId: prompt.messageId };
+}
 
 /**
  * A real component thread with a reserved turn and its authenticated owner.
- * `history` complete earlier turns precede the reserved prompt.
+ * Earlier turns, each with its settled turn row, precede the reserved prompt:
+ * `history` is a count of complete turns, or a list that names each one's kind.
  */
 export async function createNinaTest({
   history = 0,
@@ -22,7 +225,7 @@ export async function createNinaTest({
   prompt: text = "Explain a limit.",
   needsFetch = false,
 }: {
-  history?: number;
+  history?: number | readonly (typeof EarlierTurn.Type)[];
   now?: number;
   prompt?: string;
   needsFetch?: boolean;
@@ -32,31 +235,8 @@ export async function createNinaTest({
     seedAuthenticatedUser(ctx, { now, credits: 10 })
   );
   const saved = await t.mutation(async (ctx) => {
-    const user = await ctx.db.get("users", identity.userId);
-    if (!user) {
-      return Promise.reject(new Error("Fixture user missing"));
-    }
-    const reservation = await Effect.runPromise(
-      reserveCredits(user).pipe(
-        Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
-      )
-    );
     const threadId = await createThread(ctx, components.nina, {
       userId: identity.userId,
-    });
-    for (let order = 0; order < history; order += 1) {
-      await saveMessages(ctx, components.nina, {
-        threadId,
-        order,
-        messages: [
-          { role: "user", content: `Earlier question ${order}` },
-          { role: "assistant", content: `Earlier answer ${order}` },
-        ],
-      });
-    }
-    const prompt = await saveMessage(ctx, components.nina, {
-      threadId,
-      prompt: text,
     });
     const chatId = await ctx.db.insert("chats", {
       userId: identity.userId,
@@ -65,47 +245,55 @@ export async function createNinaTest({
       visibility: "private",
       updatedAt: now,
     });
-    const session = await Effect.runPromise(
-      openNinaLearningSession({
-        capturedAt: DateTime.formatIso(DateTime.makeUnsafe(now)),
-        learning: {
-          locale: "en",
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-        },
-        source: "current-page",
-      })
-    );
-    const turnId = await ctx.db.insert("ninaTurns", {
-      ...reservation,
-      phase: "active",
-      threadId,
+    const earlier = typeof history === "number" ? plainTurns(history) : history;
+    for (let order = 0; order < earlier.length; order += 1) {
+      await seedEarlierTurn(ctx, {
+        chatId,
+        now,
+        order,
+        threadId,
+        userId: identity.userId,
+        ...earlier[order],
+      });
+    }
+    const turn = await queueTurn(ctx, {
       chatId,
-      requestId: "one",
-      fingerprint: "fingerprint",
-      promptMessageId: prompt.messageId,
-      order: prompt.message.order,
-      usage: [],
-      user: {},
-      page: {
-        locale: "en",
-        slug: "home",
-        url: "https://nakafa.com/en/home",
-        verified: false,
-        needsFetch,
-        nina: session.context,
-      },
-      state: { status: "queued" },
+      needsFetch,
+      now,
+      text,
+      threadId,
+      userId: identity.userId,
     });
-    await ctx.db.patch("chats", chatId, { activeTurnId: turnId });
-    return { turnId, threadId, chatId, promptMessageId: prompt.messageId };
+    return { ...turn, threadId, chatId };
   });
   const owner = t.withIdentity({
     subject: identity.authUserId,
     sessionId: identity.sessionId,
   });
   return { ...saved, t, owner, identity };
+}
+
+/**
+ * Queues one more turn in the chat of a fixture, once the earlier one has
+ * settled, on the page `slug`. It reserves five more of the learner's credits.
+ */
+export function appendNinaTurn(
+  nina: Pick<
+    Awaited<ReturnType<typeof createNinaTest>>,
+    "chatId" | "identity" | "t" | "threadId"
+  >,
+  { prompt, slug }: { prompt: string; slug?: string }
+) {
+  return nina.t.mutation((ctx) =>
+    queueTurn(ctx, {
+      chatId: nina.chatId,
+      now: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+      text: prompt,
+      threadId: nina.threadId,
+      userId: nina.identity.userId,
+      ...(slug === undefined ? {} : { slug }),
+    })
+  );
 }
 
 type ModelStream = Awaited<
@@ -136,6 +324,44 @@ export const ninaToolInput = {
   deliverables: ["definition"],
 };
 
+/** The parts of one answer. A stream is used up once, so every call builds its own. */
+const ninaAnswer: StreamPart[] = [
+  { type: "stream-start", warnings: [] },
+  { type: "reasoning-start", id: "reason" },
+  {
+    type: "reasoning-delta",
+    id: "reason",
+    delta: "Check the evidence.",
+  },
+  { type: "reasoning-end", id: "reason" },
+  { type: "text-start", id: "answer" },
+  {
+    type: "text-delta",
+    id: "answer",
+    delta: "A limit describes the value approached.",
+  },
+  { type: "text-end", id: "answer" },
+  {
+    type: "source",
+    sourceType: "url",
+    id: "source-1",
+    url: "https://example.com/limits",
+    title: "Limits",
+  },
+  {
+    type: "finish",
+    usage: ninaUsage,
+    finishReason: { unified: "stop", raw: "stop" },
+  },
+];
+
+/** A model that answers `count` calls in a row, so a test may run several turns of one chat. */
+export function ninaModelFor(count: number) {
+  return new MockLanguageModelV4({
+    doStream: Arr.makeBy(count, () => ninaStream(ninaAnswer)),
+  });
+}
+
 export function ninaModel(
   withTool = false,
   failed = false,
@@ -144,35 +370,7 @@ export function ninaModel(
   const final = ninaStream(
     failed
       ? [{ type: "error", error: new Error("Provider unavailable") }]
-      : [
-          { type: "stream-start", warnings: [] },
-          { type: "reasoning-start", id: "reason" },
-          {
-            type: "reasoning-delta",
-            id: "reason",
-            delta: "Check the evidence.",
-          },
-          { type: "reasoning-end", id: "reason" },
-          { type: "text-start", id: "answer" },
-          {
-            type: "text-delta",
-            id: "answer",
-            delta: "A limit describes the value approached.",
-          },
-          { type: "text-end", id: "answer" },
-          {
-            type: "source",
-            sourceType: "url",
-            id: "source-1",
-            url: "https://example.com/limits",
-            title: "Limits",
-          },
-          {
-            type: "finish",
-            usage: ninaUsage,
-            finishReason: { unified: "stop", raw: "stop" },
-          },
-        ]
+      : ninaAnswer
   );
   return new MockLanguageModelV4({
     doStream: withTool

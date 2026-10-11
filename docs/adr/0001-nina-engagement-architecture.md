@@ -41,8 +41,12 @@ backend package.
 
 Nina's system prompt leads with stable instructions so provider prompt caching
 reuses them across turns. The current page, which learners share, the learner
-block, a question focus, the conversation summary, and per-turn runtime facts
-follow in that order. On a verified learning page, generation
+block, a question focus, and the conversation summary follow in that order. The
+facts of one turn, such as the date, the page URL, and the tool policy, travel
+in a block at the start of the newest learner message instead, so everything
+before that message repeats from step to step and from turn to turn. The page
+they name is the one the learner is on now, even when the chat began on another.
+On a verified learning page, generation
 reads the signed page once before the first model step and places it in that
 context within the page token budget. The model spends no forced tool step on
 it and asks Nakafa for other sections.
@@ -77,10 +81,17 @@ explanation is the source of truth for the answer.
 
 Provider input keeps whole recent turns that the conversation summary does not
 cover, newest first, within 12,000 tokens, and the current turn's evidence
-within 16,000 tokens. Older evidence shortens with a visible note before a turn
+within 16,000 tokens. The turns come from the chat's turn records, by turn
+order, not from the last messages of the thread: a cancelled or failed turn
+leaves no messages in it, and a question the learner asked again appears once,
+in its newest asking. Older evidence shortens with a visible note before a turn
 is dropped, and no budget fails a turn. Earlier turns keep their images, while
 their PDF and text attachments, whose cost grows with size, leave provider
-history as a note naming the file. After a completed turn, the follow-up action
+history as a note naming the file. An image counts by the provider's published
+estimate, 258 tokens a 768 pixel tile and 1,548 when its size is unknown, so a
+few images fill the history budget. The learner's own message and its
+attachments are not evidence and do not count against the evidence budget.
+After a completed turn, the follow-up action
 folds turns beyond the four newest into the chat's conversation summary with a
 fast model once four such turns accumulate, at most 16 turns per refresh, so a
 longer backlog advances one bounded batch per turn and reads back only from its

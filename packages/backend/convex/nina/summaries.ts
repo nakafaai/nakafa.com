@@ -3,3 +3,4 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/ni
 export const anchor = registeredFunctions.anchor;
 export const read = registeredFunctions.read;
 export const save = registeredFunctions.save;
+export const uncovered = registeredFunctions.uncovered;

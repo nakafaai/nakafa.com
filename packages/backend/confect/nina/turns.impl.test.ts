@@ -383,6 +383,32 @@ describe("native Nina admission", () => {
     expect(retried.prompt.text).toBe("An owned text-only prompt.");
   });
 
+  it("stores the order of the turn a retry answers again, and none for a new message", async () => {
+    const f = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, args)
+    );
+    await f.owner.mutation(cancel, { chatId: first.chatId });
+    const retried = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, {
+        ...args,
+        chatId: first.chatId,
+        requestId: "retry-order",
+        input: { kind: "retry", order: first.order },
+      })
+    );
+    const [original, retry] = await f.t.query((ctx) =>
+      Promise.all([
+        ctx.db.get("ninaTurns", first.turnId),
+        ctx.db.get("ninaTurns", retried.turnId),
+      ])
+    );
+    expect(original).not.toHaveProperty("retryOf");
+    expect(retry?.retryOf).toBe(first.order);
+  });
+
   it("retries a saved response without run context only after resolving the current page", async () => {
     const f = await fixture();
     const first = Ref.decodeReturnsSync(

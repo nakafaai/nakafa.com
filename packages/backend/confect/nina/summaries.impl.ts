@@ -6,7 +6,14 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/nina/summaries.spec";
-import { Clock, Effect, Layer } from "effect";
+import { Array as Arr, Clock, Effect, Layer } from "effect";
+
+/**
+ * Most turns one read looks at: the most one summary refresh folds. A chat
+ * with a longer backlog keeps its newest turns verbatim, and the oldest wait
+ * for the next refresh.
+ */
+const UNCOVERED_LIMIT = 16;
 
 /** Finds one chat's summary document, when the chat has one. */
 const findSummary = Effect.fn("nina.summaries.find")(function* (
@@ -50,6 +57,47 @@ const anchor = FunctionImpl.make(
         Effect.orDie
       );
     return turn?.promptMessageId ?? null;
+  })
+);
+
+/**
+ * Lists the complete turns of a chat after the summary's `through` order and
+ * before the order of the turn being answered, newest first. A failed or
+ * cancelled turn is not complete, so it never shows up, whatever messages it
+ * left in the thread.
+ */
+const uncovered = FunctionImpl.make(
+  schema,
+  spec,
+  "uncovered",
+  Effect.fn("nina.summaries.uncovered")(function* ({
+    before,
+    chatId,
+    through,
+  }) {
+    const turns = yield* (yield* DatabaseReader)
+      .table("ninaTurns")
+      .index(
+        "by_chatId_and_order",
+        (index) =>
+          index
+            .eq("chatId", chatId)
+            .gt("order", through ?? -1)
+            .lt("order", before),
+        "desc"
+      )
+      .take(UNCOVERED_LIMIT)
+      .pipe(Effect.orDie);
+    return Arr.flatMap(turns, (turn) =>
+      turn.phase === "settled" && turn.state.status === "complete"
+        ? [
+            {
+              order: turn.order,
+              ...(turn.retryOf === undefined ? {} : { retryOf: turn.retryOf }),
+            },
+          ]
+        : []
+    );
   })
 );
 
@@ -112,5 +160,6 @@ export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(anchor),
   Layer.provide(read),
   Layer.provide(save),
+  Layer.provide(uncovered),
   GroupImpl.finalize
 );

@@ -85,6 +85,12 @@ export const NinaTurnFacts = Schema.Struct({
   promptMessageId: Schema.String,
   promptedAt: Schema.optionalKey(Schema.Finite),
   order: Schema.Finite,
+  /**
+   * The order of the turn this one answers again. A retry saves its question
+   * once more, so history shows only the newest of the two once this turn is
+   * complete.
+   */
+  retryOf: Schema.optionalKey(Schema.Finite),
   modelId: Schema.optionalKey(RetiredModelKey),
   credits: Schema.optionalKey(Schema.Finite),
   requestId: Schema.optionalKey(NinaRequestId),

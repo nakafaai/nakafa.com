@@ -30,6 +30,12 @@ const NinaSummaryView = NinaSummary.mapFields((fields) => ({
   throughOrder: fields.throughOrder,
 }));
 
+/** A complete turn the summary does not cover, and the turn it answered again, if any. */
+export const NinaUncoveredTurn = Schema.Struct({
+  order: TurnOrder,
+  retryOf: Schema.optionalKey(TurnOrder),
+});
+
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalQuery({
@@ -43,6 +49,17 @@ export default GroupSpec.make()
       name: "anchor",
       args: () => ({ chatId: Id("chats"), order: TurnOrder }),
       returns: () => Schema.NullOr(Schema.String),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "uncovered",
+      args: () => ({
+        chatId: Id("chats"),
+        through: Schema.NullOr(TurnOrder),
+        before: TurnOrder,
+      }),
+      returns: () => Schema.Array(NinaUncoveredTurn),
     })
   )
   .addFunction(
