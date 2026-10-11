@@ -1,3 +1,4 @@
+import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
@@ -8,6 +9,7 @@ import {
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { provider } from "@repo/backend/test/gateway";
+import { neverAnswering, withTimeLeft } from "@repo/backend/test/nina/deadline";
 import {
   providerStep,
   recordProgress,
@@ -18,6 +20,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import {
   Array as Arr,
+  Duration,
   Effect,
   Logger,
   MutableList,
@@ -40,6 +43,7 @@ vi.mock(
 afterEach(() => {
   vi.restoreAllMocks();
   provider.languageModel.mockReset();
+  vi.useRealTimers();
 });
 const url = "https://ai-sdk.dev/docs/agents";
 const source = { href: url, hostname: "ai-sdk.dev", text: url };
@@ -130,10 +134,11 @@ const unread = Effect.succeed({
   error: "Unavailable",
 });
 
-/** Runs research over one scripted model; reports its provider calls and its log. */
+/** Runs research over one scripted model; reports its calls and its log. */
 async function research(
   steps: ConstructorParameters<typeof MockLanguageModelV4>[0],
-  sourceReferences: (typeof source)[] = []
+  sourceReferences: (typeof source)[] = [],
+  left: Duration.Input = Duration.infinity
 ) {
   const model = new MockLanguageModelV4(steps);
   provider.languageModel.mockReturnValue(model);
@@ -147,6 +152,7 @@ async function research(
       publish: () => Effect.void,
       usageHandler: vi.fn(),
     }).pipe(
+      withTimeLeft(left),
       Effect.catchTag("ResearchGenerationError", (error) =>
         Effect.succeed({
           failed: error.phase,
@@ -227,7 +233,29 @@ describe("research Agent evidence boundary", () => {
     expect(synthesisPrompt).toContain("Inspectable source evidence.");
   });
 
-  it("reads a full address in the task as a link, but not a site the task only names", async () => {
+  it("cuts both of its model calls to the time the capability has left", async () => {
+    vi.mocked(searchWeb).mockReturnValue(found);
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({ doGenerate: [searchCall, final] })
+    );
+    const generate = vi.spyOn(Agent.prototype, "generateText");
+    await runSpecialist((userId) =>
+      runResearchAgent({
+        ...specialistRequest,
+        userId,
+        sourceReferences: [],
+        toolCallId: "research",
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(withTimeLeft("7 seconds"))
+    );
+    expect(Arr.map(generate.mock.calls, ([, , call]) => call.timeout)).toEqual([
+      { stepMs: 7000, totalMs: 7000 },
+      { stepMs: 7000, totalMs: 7000 },
+    ]);
+  });
+
+  it("reads a full address in the task as a link, but not a site the task only names or a page of Nakafa's own site", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
     vi.mocked(scrapeUrl).mockReturnValue(read);
     provider.languageModel.mockReturnValue(
@@ -237,7 +265,7 @@ describe("research Agent evidence boundary", () => {
       runResearchAgent({
         ...specialistRequest,
         userId,
-        task: `Cari di kemdikbud.go.id dan baca ${url} tentang kurikulum.`,
+        task: `Cari di kemdikbud.go.id dan baca ${url} dan https://nakafa.com/en/articles/politics/example tentang kurikulum.`,
         sourceReferences: [],
         toolCallId: "research",
         publish: () => Effect.void,
@@ -359,6 +387,30 @@ describe("research Agent evidence boundary", () => {
       ],
     ]);
     expect(encodeJsonText(logged)).not.toContain("Invalid JSON");
+  });
+
+  it("hands Nina what it gathered, as partial, when the synthesis call never answers within the time left", async () => {
+    // Fake time drives the SDK's step timer, which ends a call that never answers.
+    vi.useFakeTimers();
+    vi.mocked(searchWeb).mockReturnValue(found);
+    const hung = neverAnswering();
+    // Only the search call forces a tool; the synthesis call never answers.
+    const running = research(
+      {
+        doGenerate: ({ abortSignal, toolChoice }) =>
+          toolChoice?.type === "tool"
+            ? Promise.resolve(searchCall)
+            : hung.answer(abortSignal),
+      },
+      [],
+      "10 seconds"
+    );
+    await hung.begun;
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect((await running).result).toEqual({
+      outcome: "partial",
+      text: expect.stringContaining("Inspectable source evidence."),
+    });
   });
 
   it.each([

@@ -1,5 +1,10 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { createThread, saveMessage, saveMessages } from "@convex-dev/agent";
+import {
+  createThread,
+  listUIMessages,
+  saveMessage,
+  saveMessages,
+} from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
@@ -218,6 +223,8 @@ async function queueTurn(
  * A real component thread with a reserved turn and its authenticated owner.
  * Earlier turns, each with its settled turn row, precede the reserved prompt:
  * `history` is a count of complete turns, or a list that names each one's kind.
+ * `inspect` reads back what the turn left in storage: its user, turn, chat,
+ * credit ledger, and messages.
  */
 export async function createNinaTest({
   history = 0,
@@ -270,7 +277,18 @@ export async function createNinaTest({
     subject: identity.authUserId,
     sessionId: identity.sessionId,
   });
-  return { ...saved, t, owner, identity };
+  const inspect = () =>
+    t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      turn: await ctx.db.get("ninaTurns", saved.turnId),
+      chat: await ctx.db.get("chats", saved.chatId),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+      messages: await listUIMessages(ctx, components.nina, {
+        threadId: saved.threadId,
+        paginationOpts: { cursor: null, numItems: 20 },
+      }),
+    }));
+  return { ...saved, t, owner, identity, inspect };
 }
 
 /**

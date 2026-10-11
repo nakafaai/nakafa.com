@@ -1,7 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
+import { CapabilityDeadline } from "@repo/backend/confect/nina/capability/deadline";
 import { searchFirecrawl } from "@repo/backend/confect/nina/research/search/provider";
+import { withTimeLeft } from "@repo/backend/test/nina/deadline";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Fiber } from "effect";
+import { Array as Arr, Duration, Effect, Fiber, Ref } from "effect";
 import { TestClock } from "effect/testing";
 
 const firecrawlApp = vi.hoisted(() => ({ search: vi.fn() }));
@@ -70,6 +72,61 @@ describe("searchFirecrawl", () => {
         expect(error.status).toBeUndefined();
       })
   );
+
+  it.effect(
+    "cuts the provider's limit and the backstop to the time the capability has left",
+    () =>
+      Effect.gen(function* () {
+        firecrawlApp.search.mockClear();
+        firecrawlApp.search.mockReturnValueOnce(new Promise(() => undefined));
+        const fiber = yield* Effect.forkChild(
+          Effect.flip(searchFirecrawl("kurikulum merdeka")).pipe(
+            withTimeLeft("3 seconds")
+          )
+        );
+        yield* TestClock.adjust("2999 millis");
+        expect(fiber.pollUnsafe()).toBeUndefined();
+        yield* TestClock.adjust("1 millis");
+        expect(yield* Fiber.join(fiber)).toMatchObject({
+          _tag: "ResearchSearchError",
+          message: "Failed to search the web. Please try again.",
+        });
+        expect(firecrawlApp.search).toHaveBeenLastCalledWith(
+          "kurikulum merdeka",
+          { limit: 5, sources: ["web", "news"], timeout: 3000 }
+        );
+      })
+  );
+
+  it.effect("gives a repeated search the time left at that moment", () =>
+    Effect.gen(function* () {
+      const asked = yield* Ref.make(0);
+      const left = Effect.gen(function* () {
+        const before = yield* Ref.getAndUpdate(asked, (count) => count + 1);
+        return Duration.seconds(before === 0 ? 8 : 4);
+      });
+      firecrawlApp.search.mockClear();
+      firecrawlApp.search
+        .mockRejectedValueOnce(
+          Object.assign(new Error("Rate limit"), { status: 429 })
+        )
+        .mockResolvedValueOnce({ web: [] });
+      const fiber = yield* Effect.forkChild(
+        searchFirecrawl("kurikulum merdeka").pipe(
+          Effect.provideService(CapabilityDeadline, { left })
+        )
+      );
+      yield* TestClock.adjust("1 second");
+      yield* Fiber.join(fiber);
+      expect(
+        Arr.map(
+          firecrawlApp.search.mock.calls,
+          ([, options]) => options.timeout
+        )
+      ).toEqual([8000, 4000]);
+    })
+  );
+
   it.effect(
     "asks once more, a second later, when the plan's rate limit refuses a search",
     () =>
