@@ -1,11 +1,20 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Array as Arr, Effect, String as Str } from "effect";
+import { Effect } from "effect";
+import {
+  LATE,
+  NEWEST,
+  OLDEST,
+  OLDEST_WORD,
+  writeLongList,
+} from "@/e2e/support/list";
 import {
   ANSWER_MILLISECONDS,
   type Changes,
   EMPTY,
   editorOf,
+  live,
   memoryRow,
+  NO_RESULT,
   opened,
   openMemoryPage,
   reloadUntil,
@@ -13,167 +22,103 @@ import {
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import {
+  hydratesInPlace,
+  hydratesInPlaceAtLargeText,
+  isHydrated,
+  reachesRows,
+} from "@/e2e/support/window";
 
-const NO_RESULT = "No memory found";
-/** How many memories the long list holds: more than the 30 that one page of the list loads. */
-const MANY = 33;
-/** The memory written first, so it is the last on the list and waits on the second page. */
-const OLDEST = "Astronomy club studies the Kuiper belt";
-/** A whole word of the oldest memory that no other memory holds. */
-const OLDEST_WORD = "kuiper";
 const OLDEST_REVISED = "Astronomy club moved to Mondays";
+const EXTENDED = " and the Oort cloud";
 
-/** The words of the nth memory after the oldest, numbered so that no two rows share a text. */
-const topic = (number: number) =>
-  `Revision topic ${Str.padStart(2, "0")(`${number}`)}`;
-/** The memory written last, so it is the first on the list. */
-const NEWEST = topic(MANY - 1);
-/** The words of the long list, in the order they are written. */
-const LONG_LIST = [
-  OLDEST,
-  ...Arr.makeBy(MANY - 1, (index) => topic(index + 1)),
-];
+/** The search box of the list. */
+const searchOf = (page: Page) =>
+  page.getByRole("searchbox", { name: "Search memories" });
+
+/** The first row of the list. */
+const firstRow = (page: Page) => page.locator("main ul > li").first();
 
 /**
- * Writes one memory the way a learner does: Add, the words, and Escape, which
- * closes the editor and stores the words at once.
+ * Reloads the page so that only its first page of the list is loaded, and
+ * waits until React has taken the page over, because words typed before that
+ * are lost.
  */
-const writeMemory = Effect.fn("NakafaE2E.writeMemory")(function* (
-  page: Page,
-  text: string
-) {
-  yield* Effect.promise(async () => {
-    const editor = editorOf(page);
-
-    await page.getByRole("button", { name: "Add memory" }).click();
-    await opened(page, "");
-    await page.keyboard.type(text);
-    await editor.press("Escape");
-    await expect(editor).toHaveCount(0);
+const reloadFresh = (page: Page, changes: Changes) =>
+  Effect.promise(async () => {
+    await page.reload();
+    await expect(memoryRow(page, NEWEST)).toBeVisible();
+    await expect(memoryRow(page, OLDEST)).toHaveCount(0);
+    await expect
+      .poll(() => isHydrated(page), { timeout: readinessTimeoutMilliseconds })
+      .toBe(true);
+    await live(changes);
   });
-});
 
 /**
- * Writes the long list one memory after another through the editor. Closing
- * the editor stores the words at once, so a memory never waits for the answer
- * to the one before it, and the step ends when the server has answered all of
- * them. The oldest is written first, so it ends up last on the list.
+ * The oldest memory is not on the page that loads first. Its word finds it all
+ * the same, because a search loads every page, and the rows that match appear
+ * as their pages arrive. Until every page is loaded, a search that finds
+ * nothing says nothing, and once they are loaded it says so.
  */
-const writeLongList = Effect.fn("NakafaE2E.writeLongList")(function* (
+const searchesEveryPage = Effect.fn("NakafaE2E.searchesEveryPage")(function* (
   page: Page,
   changes: Changes
 ) {
+  yield* reloadFresh(page, changes);
   yield* Effect.promise(async () => {
-    await expect(page.getByText(EMPTY)).toBeVisible({
-      timeout: readinessTimeoutMilliseconds,
-    });
-    await expect
-      .poll(() => changes.signedIn, { timeout: ANSWER_MILLISECONDS })
-      .toBe(true);
-  });
+    const search = searchOf(page);
 
-  const before = changes.sent;
-  yield* Effect.forEach(LONG_LIST, (text) => writeMemory(page, text));
-  yield* Effect.promise(async () => {
-    await expect
-      .poll(() => changes.sent - before, { timeout: ANSWER_MILLISECONDS })
-      .toBe(MANY);
-    await saved(changes, before);
-  });
-});
+    // The server's answers are held back, so no page after the first arrives.
+    changes.hold();
+    await search.fill(OLDEST_WORD);
+    await page.waitForTimeout(1500);
+    await expect(memoryRow(page, OLDEST)).toHaveCount(0);
+    await expect(page.getByText(NO_RESULT)).toBeHidden();
 
-/**
- * After a reload only the first page of the list is loaded, so the oldest
- * memory is not on the page. Its word still finds it, because the server
- * reaches the pages the browser has not loaded, and the learner can open it
- * from the search. A search nothing matches says so, and clearing the search
- * brings the list back.
- */
-const searchOldest = Effect.fn("NakafaE2E.searchOldest")(function* (
-  page: Page,
-  changes: Changes
-) {
-  yield* Effect.promise(async () => {
-    const oldest = memoryRow(page, OLDEST);
-    const newest = memoryRow(page, NEWEST);
-    const search = page.getByRole("searchbox", { name: "Search memories" });
-
-    await expect(newest).toBeVisible();
-    await expect(oldest).toHaveCount(0);
-
-    // The page shows the search box before its code runs, and words typed in
-    // that moment are lost, so the words are typed again until the server's
-    // answer shows the memory.
-    await expect
-      .poll(() => changes.signedIn, { timeout: ANSWER_MILLISECONDS })
-      .toBe(true);
-    await expect(async () => {
-      await search.fill(OLDEST_WORD);
-      await expect(oldest).toBeVisible({ timeout: 3000 });
-    }).toPass({ timeout: ANSWER_MILLISECONDS });
-    await expect(newest).toHaveCount(0);
-
-    // No loaded page holds the memory, and the editor still opens it.
-    await oldest.getByText(OLDEST).click();
-    await opened(page, OLDEST);
-    await editorOf(page).press("Escape");
-    await expect(editorOf(page)).toHaveCount(0);
-
-    await search.fill("zzzzqq");
-    await expect(page.getByText(NO_RESULT)).toBeVisible({
+    changes.release();
+    await expect(memoryRow(page, OLDEST)).toBeVisible({
       timeout: ANSWER_MILLISECONDS,
     });
+    await expect(memoryRow(page, NEWEST)).toHaveCount(0);
+
+    await search.fill("zzzzqq");
+    await expect(page.getByText(NO_RESULT)).toBeVisible();
     await search.fill("");
-    await expect(newest).toBeVisible();
-    await expect(oldest).toHaveCount(0);
+    await expect(memoryRow(page, NEWEST)).toBeVisible();
   });
 });
 
-/** The box the list scrolls in, found by the newest memory it holds. */
-const listBox = (page: Page) =>
-  page
-    .locator('main [data-slot="scroll-area-viewport"]')
-    .filter({ has: page.getByText(NEWEST) });
-
 /**
- * The list scrolls inside its own box, and the next page loads when the end of
- * the list comes into view there. Scrolling the box to the bottom brings the
- * oldest memory in as the last row.
+ * The page scrolls, and the next page loads when the end of the list comes
+ * into view: scrolling to the bottom brings the oldest memory in as the last
+ * row.
  */
-const scrollToOldest = Effect.fn("NakafaE2E.scrollToOldest")(function* (
-  page: Page
+const scrollsToOldest = Effect.fn("NakafaE2E.scrollsToOldest")(function* (
+  page: Page,
+  changes: Changes
 ) {
+  yield* reloadFresh(page, changes);
   yield* Effect.promise(async () => {
-    const box = listBox(page);
-    const oldest = memoryRow(page, OLDEST);
-
-    expect(
-      await box.evaluate(
-        (element) => element.scrollHeight > element.clientHeight
-      )
-    ).toBe(true);
-    await expect(oldest).toHaveCount(0);
-
     await expect(async () => {
-      await box.evaluate((element) =>
-        element.scrollTo({ top: element.scrollHeight })
+      await page.evaluate(() =>
+        window.scrollTo(0, document.documentElement.scrollHeight)
       );
-      await expect(oldest).toBeVisible({ timeout: 1000 });
+      await expect(memoryRow(page, OLDEST)).toBeVisible({ timeout: 1000 });
     }).toPass({ timeout: ANSWER_MILLISECONDS });
-    await expect(box.getByRole("listitem").last()).toContainText(OLDEST);
+    await expect(page.locator("main ul > li").last()).toContainText(OLDEST);
   });
 });
 
 /**
- * Rewriting the oldest memory, which sits on the second page, moves it to the
- * top of the list at once and for good: it is still first after a reload.
+ * Rewriting the oldest memory moves it to the top of the list at once and for
+ * good: it is still first after a reload.
  */
-const reviseOldest = Effect.fn("NakafaE2E.reviseOldest")(function* (
+const revisesOldest = Effect.fn("NakafaE2E.revisesOldest")(function* (
   page: Page,
   changes: Changes
 ) {
   yield* Effect.promise(async () => {
-    const first = listBox(page).getByRole("listitem").first();
     const before = changes.sent;
 
     await memoryRow(page, OLDEST).getByText(OLDEST).click();
@@ -182,31 +127,145 @@ const reviseOldest = Effect.fn("NakafaE2E.reviseOldest")(function* (
     await page.keyboard.type(OLDEST_REVISED);
     await editorOf(page).press("Escape");
     await expect(editorOf(page)).toHaveCount(0);
-    await expect(first).toContainText(OLDEST_REVISED);
+    // The list is scrolled to its end, and the memory moved to its top.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(firstRow(page)).toContainText(OLDEST_REVISED);
     await saved(changes, before);
     await reloadUntil(page, () =>
-      expect(first).toContainText(OLDEST_REVISED, { timeout: 3000 })
+      expect(firstRow(page)).toContainText(OLDEST_REVISED, { timeout: 3000 })
+    );
+  });
+});
+
+/**
+ * On a wide screen the editor is a panel beside the list, and the learner can
+ * change the search while it is open. The memory stays in the editor when the
+ * search no longer matches it, with the words, the caret and the undo history
+ * the editor held, and the editor never closes and opens again on the way.
+ */
+const keepsEditorWhileSearching = Effect.fn(
+  "NakafaE2E.keepsEditorWhileSearching"
+)(function* (page: Page) {
+  yield* Effect.promise(async () => {
+    const search = searchOf(page);
+    const editor = editorOf(page);
+    const closed = await page.evaluateHandle(() => {
+      const log = { removed: 0 };
+      new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.removedNodes) {
+            if (
+              node instanceof Element &&
+              (node.matches('[aria-label="Memory text"]') ||
+                node.querySelector('[aria-label="Memory text"]'))
+            ) {
+              log.removed += 1;
+            }
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+      return log;
+    });
+
+    await search.fill("mondays");
+    await memoryRow(page, OLDEST_REVISED).getByText(OLDEST_REVISED).click();
+    await opened(page, OLDEST_REVISED);
+    await page.keyboard.type(EXTENDED);
+    await expect(editor).toHaveText(`${OLDEST_REVISED}${EXTENDED}`);
+
+    // No memory matches this any more, and the editor is the same one.
+    await search.fill("zzzzqq");
+    await expect(page.getByText(NO_RESULT)).toBeVisible();
+    await expect(editor).toHaveText(`${OLDEST_REVISED}${EXTENDED}`);
+
+    // The caret is where it was, and the history holds both steps.
+    await editor.focus();
+    await page.waitForTimeout(600);
+    await page.keyboard.type("!");
+    await expect(editor).toHaveText(`${OLDEST_REVISED}${EXTENDED}!`);
+    await page.waitForTimeout(600);
+    await page.keyboard.press("ControlOrMeta+z");
+    await expect(editor).toHaveText(`${OLDEST_REVISED}${EXTENDED}`);
+    await page.keyboard.press("ControlOrMeta+z");
+    await expect(editor).toHaveText(OLDEST_REVISED);
+
+    await search.fill("");
+    await expect(editor).toHaveText(OLDEST_REVISED);
+    expect(await closed.evaluate((log) => log.removed)).toBe(0);
+    await page.getByRole("button", { exact: true, name: "Close" }).click();
+    await expect(editor).toHaveCount(0);
+  });
+});
+
+/**
+ * Delete all asks first and names no memory, because the page holds only some
+ * of them. Confirming empties the list at once, while the server's answer is
+ * still on its way, and the list stays empty after a reload.
+ */
+const clearsEverything = Effect.fn("NakafaE2E.clearsEverything")(function* (
+  page: Page,
+  changes: Changes
+) {
+  yield* Effect.promise(async () => {
+    const dialog = page.getByRole("dialog");
+    const before = changes.sent;
+
+    // The list is live once a memory that only the second page holds is found.
+    await searchOf(page).fill(LATE);
+    await expect(memoryRow(page, LATE)).toBeVisible({
+      timeout: ANSWER_MILLISECONDS,
+    });
+    await searchOf(page).fill("");
+    await page
+      .locator("main")
+      .getByRole("button", { exact: true, name: "Delete all" })
+      .click();
+    await expect(dialog.getByText("Delete all memories?")).toBeVisible();
+    await expect(dialog.getByRole("listitem")).toHaveCount(0);
+    await expect(dialog.getByText(NEWEST)).toHaveCount(0);
+
+    changes.hold();
+    await dialog
+      .getByRole("button", { exact: true, name: "Delete all" })
+      .click();
+    await expect(page.getByText(EMPTY)).toBeVisible();
+    await expect(memoryRow(page, NEWEST)).toHaveCount(0);
+
+    changes.release();
+    await saved(changes, before);
+    await reloadUntil(page, () =>
+      expect(page.getByText(EMPTY)).toBeVisible({ timeout: 3000 })
     );
   });
 });
 
 /**
  * Signs a synthetic learner in and walks a list of more memories than one
- * page: it writes them, reloads so that one page is loaded, finds the oldest
- * by a word of it, scrolls the list to its end for the next page, and rewrites
- * the oldest from there.
+ * page: it writes them, checks that the server's rows stand in the same places
+ * once React has taken them over, also at a larger text size, searches every
+ * page, scrolls to the end, walks the rows with the keyboard, rewrites the
+ * oldest, keeps an editor open through a change of the search, and deletes
+ * everything.
  */
 const verifyLongList = Effect.fn("NakafaE2E.verifyLongList")(function* (
   page: Page,
-  baseURL: string
+  baseURL: string,
+  wide: boolean
 ) {
   const changes = yield* openMemoryPage(page, baseURL);
 
   yield* writeLongList(page, changes);
-  yield* Effect.promise(() => page.reload());
-  yield* searchOldest(page, changes);
-  yield* scrollToOldest(page);
-  yield* reviseOldest(page, changes);
+  yield* hydratesInPlace(page);
+  yield* hydratesInPlaceAtLargeText(page);
+  yield* searchesEveryPage(page, changes);
+  yield* scrollsToOldest(page, changes);
+  yield* reachesRows(page);
+  yield* scrollsToOldest(page, changes);
+  yield* revisesOldest(page, changes);
+  if (wide) {
+    yield* keepsEditorWhileSearching(page);
+  }
+  yield* clearsEverything(page, changes);
 });
 
 for (const width of [390, 1440]) {
@@ -221,7 +280,9 @@ for (const width of [390, 1440]) {
         withObservedPageErrors(
           page,
           Effect.fromNullishOr(baseURL).pipe(
-            Effect.flatMap((origin) => verifyLongList(page, origin))
+            Effect.flatMap((origin) =>
+              verifyLongList(page, origin, width > 800)
+            )
           )
         )
       );

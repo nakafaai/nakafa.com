@@ -1,15 +1,35 @@
 import { expect, type Page } from "@playwright/test";
-import { Effect } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Match,
+  MutableHashSet,
+  MutableList,
+  Option,
+  Schema,
+} from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const MEMORY_PATH = "/en/user/settings/memory";
+/** The Memory page of the English site. */
+export const MEMORY_PATH = "/en/user/settings/memory";
 const MEMORY_TITLE = /Memory/;
+/** The realtime connection of the page to the backend. */
+const CONVEX_SOCKET = /\/api\/[^/]+\/sync/;
+/**
+ * The Convex name of `nina.memory.list`, the query that reads a page of the
+ * list: the page subscribes to one for each page it loads. The refs module
+ * cannot be imported here, because it pulls in packages that Node does not
+ * resolve outside the bundler.
+ */
+const LIST_QUERY = "nina/memory:list";
 
 /** What the Memory page says when the learner has no memory. */
 export const EMPTY = "No memories yet";
+/** What the Memory page says when every memory is loaded and none matches the search. */
+export const NO_RESULT = "No memory found";
 /** How long a step waits for the server to answer a change. */
 export const ANSWER_MILLISECONDS = 15_000;
 
@@ -34,47 +54,215 @@ export const opened = async (page: Page, text: string) => {
   await expect(editor).toBeFocused();
 };
 
+/** The frames the page sends that a step waits on. Any other frame decodes to none. */
+const SentSchema = Schema.Union([
+  Schema.Struct({
+    tokenType: Schema.Literal("User"),
+    type: Schema.Literal("Authenticate"),
+  }),
+  Schema.Struct({ type: Schema.Literal("Mutation") }),
+  Schema.Struct({
+    modifications: Schema.Array(
+      Schema.Struct({
+        queryId: Schema.Finite,
+        type: Schema.String,
+        udfPath: Schema.optionalKey(Schema.String),
+      })
+    ),
+    type: Schema.Literal("ModifyQuerySet"),
+  }),
+]);
+
 /**
- * Counts the changes the page sent and the ones the server answered, and
- * knows whether the page's connection has signed in. The page shows a change
- * before the server has it, and a reload closes the connection and drops a
- * change that is still on its way, so a step that reloads waits for the answer
- * first. A reload also opens a connection that signs in a moment after the
- * page shows, and a change pressed before that is refused.
+ * The frames the server sends that a step waits on. A `ts` is a moment of the
+ * database, which the protocol writes as eight bytes in Base64.
  */
-const trackChanges = (page: Page) => {
-  const changes = { answered: 0, sent: 0, signedIn: false };
+const GivenSchema = Schema.Union([
+  Schema.Struct({
+    ts: Schema.optionalKey(Schema.Uint8ArrayFromBase64),
+    type: Schema.Literal("MutationResponse"),
+  }),
+  Schema.Struct({
+    endVersion: Schema.Struct({ ts: Schema.Uint8ArrayFromBase64 }),
+    modifications: Schema.Array(
+      Schema.Struct({ queryId: Schema.Finite, type: Schema.String })
+    ),
+    type: Schema.Literal("Transition"),
+  }),
+]);
+
+const decodeSent = Schema.decodeOption(Schema.fromJsonString(SentSchema));
+const decodeGiven = Schema.decodeOption(Schema.fromJsonString(GivenSchema));
+
+/** The moment of the database that a `ts` names: eight bytes, the least significant first. */
+const momentOf = (bytes: Uint8Array) =>
+  Arr.reduceRight(
+    Arr.fromIterable(bytes),
+    0n,
+    (moment, byte) => moment * 256n + BigInt(byte)
+  );
+
+/** The later of two moments. */
+const later = (one: bigint, other: bigint) => (one > other ? one : other);
+
+/**
+ * Follows the page's realtime connection: the changes it sent and the ones the
+ * server answered, whether it has signed in, and whether the list has answered.
+ * The page shows a change before the server has it, and a reload closes the
+ * connection and drops a change that is still on its way, so a step that
+ * reloads waits for the answer first. A reload also opens a connection that
+ * signs in a moment after the page shows, and a change pressed before that is
+ * refused.
+ *
+ * A change is settled once the server answered it and the page was told of the
+ * database as it was when the change was stored, which is when the page drops
+ * the optimistic result for the stored one. `stored` is the latest moment a
+ * change was stored at, and `told` the latest the page was told of.
+ *
+ * Every frame passes through this route, so a step can also hold the server's
+ * answers back: after `hold` the page gets nothing from the server until
+ * `release`, and what it shows meanwhile is what it showed on its own. What
+ * the tracker knows is what the page was given, never what the server sent.
+ */
+const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
+  page: Page
+) {
+  const changes = {
+    answered: 0,
+    held: false,
+    listed: false,
+    sent: 0,
+    signedIn: false,
+    stored: 0n,
+    told: 0n,
+  };
+  const delayed = MutableList.make<() => void>();
+
   // A reload ends the connection that had signed in, before the next one opens.
   page.on("framenavigated", (frame) => {
     if (frame === page.mainFrame()) {
       changes.signedIn = false;
+      changes.listed = false;
     }
   });
-  page.on("websocket", (socket) => {
-    socket.on("framesent", ({ payload }) => {
-      if (String(payload).includes('"type":"Authenticate"')) {
-        changes.signedIn = true;
+  yield* Effect.promise(() =>
+    page.routeWebSocket(CONVEX_SOCKET, (socket) => {
+      const server = socket.connectToServer();
+      // The queries of this connection that read the list.
+      const lists = MutableHashSet.empty<number>();
+
+      const noticeSent = (frame: typeof SentSchema.Type) =>
+        Match.value(frame).pipe(
+          Match.discriminators("type")({
+            Authenticate: () => {
+              changes.signedIn = true;
+            },
+            ModifyQuerySet: ({ modifications }) => {
+              for (const query of modifications) {
+                if (query.udfPath === LIST_QUERY) {
+                  MutableHashSet.add(lists, query.queryId);
+                }
+              }
+            },
+            Mutation: () => {
+              changes.sent += 1;
+            },
+          }),
+          Match.exhaustive
+        );
+      const noticeGiven = (frame: typeof GivenSchema.Type) =>
+        Match.value(frame).pipe(
+          Match.discriminators("type")({
+            MutationResponse: ({ ts }) => {
+              changes.answered += 1;
+              if (ts) {
+                changes.stored = later(changes.stored, momentOf(ts));
+              }
+            },
+            Transition: ({ endVersion, modifications }) => {
+              changes.told = later(changes.told, momentOf(endVersion.ts));
+              changes.listed ||= Arr.some(
+                modifications,
+                (change) =>
+                  change.type === "QueryUpdated" &&
+                  MutableHashSet.has(lists, change.queryId)
+              );
+            },
+          }),
+          Match.exhaustive
+        );
+
+      socket.onMessage((message) => {
+        const frame = decodeSent(message.toString());
+
+        if (Option.isSome(frame)) {
+          noticeSent(frame.value);
+        }
+        server.send(message);
+      });
+      server.onMessage((message) => {
+        const frame = decodeGiven(message.toString());
+        const give = () => {
+          socket.send(message);
+          if (Option.isSome(frame)) {
+            noticeGiven(frame.value);
+          }
+        };
+
+        if (changes.held) {
+          MutableList.append(delayed, give);
+          return;
+        }
+        give();
+      });
+    })
+  );
+
+  return Object.assign(changes, {
+    /** Keeps what the server answers from the page until `release`. */
+    hold() {
+      changes.held = true;
+    },
+    /** Gives the page everything the server answered meanwhile, in order. */
+    release() {
+      changes.held = false;
+      for (
+        let send = MutableList.take(delayed);
+        send !== MutableList.Empty;
+        send = MutableList.take(delayed)
+      ) {
+        send();
       }
-      if (String(payload).includes('"type":"Mutation"')) {
-        changes.sent += 1;
-      }
-    });
-    socket.on("framereceived", ({ payload }) => {
-      if (String(payload).includes('"type":"MutationResponse"')) {
-        changes.answered += 1;
-      }
-    });
+    },
   });
-  return changes;
-};
+});
 
-export type Changes = ReturnType<typeof trackChanges>;
+export type Changes = Effect.Success<ReturnType<typeof trackChanges>>;
 
-/** Waits until the page sent a change after `sentBefore` and the server answered every change. */
+/**
+ * Waits until the page is signed in and the list has answered. A change made
+ * before that shows once the list answers, not before, because the page has no
+ * list of its own to change until then.
+ */
+export const live = (changes: Changes) =>
+  expect
+    .poll(() => changes.signedIn && changes.listed, {
+      timeout: ANSWER_MILLISECONDS,
+    })
+    .toBe(true);
+
+/**
+ * Waits until the page sent a change after `sentBefore`, and every change the
+ * page sent is settled: the server answered it, and the page was told of the
+ * database as it was once the change was stored.
+ */
 export const saved = (changes: Changes, sentBefore: number) =>
   expect
     .poll(
-      () => changes.sent > sentBefore && changes.answered === changes.sent,
+      () =>
+        changes.sent > sentBefore &&
+        changes.answered === changes.sent &&
+        changes.told >= changes.stored,
       { timeout: ANSWER_MILLISECONDS }
     )
     .toBe(true);
@@ -87,14 +275,14 @@ export const reloadUntil = (page: Page, check: () => Promise<void>) =>
   }).toPass({ timeout: 20_000 });
 
 /**
- * Signs a synthetic learner in and opens the Memory page. It returns the count
- * of the changes the page sends from then on.
+ * Signs a synthetic learner in and opens the Memory page. It returns the
+ * tracker of the changes the page sends from then on.
  */
 export const openMemoryPage = Effect.fn("NakafaE2E.openMemoryPage")(function* (
   page: Page,
   baseURL: string
 ) {
-  const changes = trackChanges(page);
+  const changes = yield* trackChanges(page);
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* Effect.promise(() => page.goto(MEMORY_PATH));
