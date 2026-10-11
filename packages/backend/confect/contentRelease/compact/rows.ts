@@ -15,6 +15,7 @@ import {
   COMPACTION_ITEM_COUNT,
   COMPACTION_PAGE_BYTES,
   COMPACTION_PAGE_COUNT,
+  type compactionPhaseValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { Array as Arr, Effect, flow, MutableHashSet, Schema } from "effect";
 
@@ -253,7 +254,7 @@ const compactReleases = Effect.fn("contentRelease.compactReleases")(function* (
 
 /** Runs one persisted bounded page for the current compaction phase. */
 export const compactRows = Effect.fn("contentRelease.compactRows")(function* (
-  phase: NonNullable<Docs["contentState"]["compactPhase"]>,
+  phase: typeof compactionPhaseValidator.Type,
   from: number,
   floor: number,
   cursor: null | string,

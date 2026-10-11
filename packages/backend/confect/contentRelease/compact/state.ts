@@ -4,7 +4,13 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import type contentReleasesTable from "@repo/backend/confect/_generated/tables/contentReleases";
-import contentStateTable from "@repo/backend/confect/_generated/tables/contentState";
+import {
+  type CompactionCycle,
+  ensureCompactionRow,
+  isCompactionIdle,
+  isSequence,
+  readCycle,
+} from "@repo/backend/confect/contentRelease/compact/cycle";
 import {
   type ReleaseError,
   releaseFail,
@@ -15,32 +21,15 @@ import {
 } from "@repo/backend/confect/contentRelease/model";
 import {
   COMPACTION_PAGE_BYTES,
-  compactionPhaseValidator,
   ROLLBACK_RETENTION_MS,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Array as Arr, Clock, Effect, Option, Predicate, Schema } from "effect";
+import { Array as Arr, Clock, Effect, Option, Predicate } from "effect";
 
 const RELEASE_SCAN_COUNT = 32;
 type SlotIdentity = Pick<
   typeof contentReleasesTable.Doc.Type,
   "manifestHash" | "releaseId" | "sequence"
 >;
-
-/** Checks one monotonic release-sequence value before index traversal. */
-function isSequence(value: number) {
-  return Number.isSafeInteger(value) && value >= 1;
-}
-
-const CompactionCycleSchema = Schema.Struct({
-  cursor: Schema.NullOr(Schema.String),
-  floor: Schema.Finite,
-  from: Schema.Finite,
-  phase: compactionPhaseValidator,
-  startedAt: Schema.Finite,
-  state: contentStateTable.Doc,
-});
-/** One durable compaction range whose phase cursor may resume after a crash. */
-export type CompactionCycle = typeof CompactionCycleSchema.Type;
 
 /** Decodes one optional singleton slot without accepting partial identity. */
 const slotIdentity = Effect.fn("contentRelease.compactionSlot")(function* (
@@ -242,58 +231,19 @@ const retainedFloor = Effect.fn("contentRelease.retainedFloor")(function* (
   });
 });
 
-/** Validates and returns a previously persisted compaction cycle. */
-const activeCycle = Effect.fn("contentRelease.activeCompaction")(function* (
-  state: Docs["contentState"],
-  compactedFloor: number
-) {
-  const required = [
-    state.compactFloor,
-    state.compactFrom,
-    state.compactPhase,
-    state.compactStartedAt,
-  ];
-  const present = Arr.filter(required, (value) => value !== undefined).length;
-  if (present === 0 && state.compactCursor === undefined) {
-    return null;
-  }
-  if (
-    present !== required.length ||
-    state.compactFloor === undefined ||
-    state.compactFrom === undefined ||
-    state.compactPhase === undefined ||
-    state.compactStartedAt === undefined ||
-    !Number.isSafeInteger(state.compactFloor) ||
-    !Number.isSafeInteger(state.compactFrom) ||
-    state.compactFrom !== compactedFloor ||
-    state.compactFrom < 0 ||
-    state.compactFloor <= state.compactFrom ||
-    state.compactFloor > state.nextSequence ||
-    !Number.isFinite(state.compactStartedAt) ||
-    state.compactStartedAt < 0 ||
-    (state.compactCursor !== undefined && state.compactCursor.length === 0)
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Content compaction lost its durable cycle identity."
-    );
-  }
-  return {
-    cursor: state.compactCursor ?? null,
-    floor: state.compactFloor,
-    from: state.compactFrom,
-    phase: state.compactPhase,
-    startedAt: state.compactStartedAt,
-    state,
-  } satisfies CompactionCycle;
-});
-
 /** Resumes an active cycle or starts one conservative bounded history range. */
 export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
   function* () {
     const writer = yield* DatabaseWriter;
+    const compaction = yield* ensureCompactionRow();
+    const { compactedFloor } = compaction;
+    if (yield* isCompactionIdle(compaction)) {
+      return {
+        complete: true,
+        floor: compactedFloor,
+      } as const;
+    }
     const state = yield* ensureState();
-    const compactedFloor = state.compactedFloor ?? 0;
     if (
       !(
         isSequence(state.nextSequence) && Number.isSafeInteger(compactedFloor)
@@ -306,7 +256,7 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
         "Content compaction has an invalid completed floor."
       );
     }
-    const existing = yield* activeCycle(state, compactedFloor);
+    const existing = yield* readCycle(compaction, state.nextSequence);
     if (existing) {
       return {
         complete: false,
@@ -323,28 +273,27 @@ export const ensureCompaction = Effect.fn("contentRelease.ensureCompaction")(
     }
     const now = yield* Clock.currentTimeMillis;
     yield* writer
-      .table("contentState")
-      .patch(state._id, {
+      .table("contentCompaction")
+      .patch(compaction._id, {
         compactCursor: undefined,
         compactFloor: floor,
         compactFrom: compactedFloor,
         compactPhase: "heads",
         compactStartedAt: now,
-        updatedAt: now,
       })
       .pipe(Effect.orDie);
     return {
       complete: false,
       cycle: {
+        compaction: {
+          ...compaction,
+          compactFloor: floor,
+        },
         cursor: null,
         floor,
         from: compactedFloor,
         phase: "heads",
         startedAt: now,
-        state: {
-          ...state,
-          compactFloor: floor,
-        },
       } satisfies CompactionCycle,
     } as const;
   }

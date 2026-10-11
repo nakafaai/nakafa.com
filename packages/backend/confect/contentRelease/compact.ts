@@ -3,13 +3,11 @@ import {
   DatabaseWriter,
   MutationRunner,
 } from "@repo/backend/confect/_generated/services";
+import type { CompactionCycle } from "@repo/backend/confect/contentRelease/compact/cycle";
 import { compactRows } from "@repo/backend/confect/contentRelease/compact/rows";
-import {
-  type CompactionCycle,
-  ensureCompaction,
-} from "@repo/backend/confect/contentRelease/compact/state";
+import { ensureCompaction } from "@repo/backend/confect/contentRelease/compact/state";
 import type { compactionReceiptValidator } from "@repo/backend/confect/contentRelease/spec";
-import { Clock, Effect } from "effect";
+import { Effect } from "effect";
 
 const RUN_PAGE_LIMIT = 64;
 type CompactionReceipt = typeof compactionReceiptValidator.Type;
@@ -44,26 +42,23 @@ const advancePhase = Effect.fn("contentRelease.advanceCompaction")(function* (
 ) {
   const writer = yield* DatabaseWriter;
   const phase = nextPhase(cycle.phase);
-  const now = yield* Clock.currentTimeMillis;
   if (phase) {
-    yield* writer.table("contentState").patch(cycle.state._id, {
+    yield* writer.table("contentCompaction").patch(cycle.compaction._id, {
       compactCursor: undefined,
       compactPhase: phase,
-      updatedAt: now,
     });
     return {
       complete: false,
       phase,
     };
   }
-  yield* writer.table("contentState").patch(cycle.state._id, {
+  yield* writer.table("contentCompaction").patch(cycle.compaction._id, {
     compactCursor: undefined,
     compactFloor: undefined,
     compactFrom: undefined,
     compactPhase: undefined,
     compactStartedAt: undefined,
     compactedFloor: cycle.floor,
-    updatedAt: now,
   });
   return {
     complete: true,
@@ -86,7 +81,7 @@ export const compactProgram = Effect.fn("contentRelease.compactPage")(
       };
     }
     const { cycle } = work;
-    if (cycle.state.compactPhase === undefined) {
+    if (cycle.compaction.compactPhase === undefined) {
       return {
         complete: false,
         deleted: 0,
@@ -103,10 +98,9 @@ export const compactProgram = Effect.fn("contentRelease.compactPage")(
     );
     if (!result.done) {
       yield* writer
-        .table("contentState")
-        .patch(cycle.state._id, {
+        .table("contentCompaction")
+        .patch(cycle.compaction._id, {
           compactCursor: result.cursor ?? undefined,
-          updatedAt: yield* Clock.currentTimeMillis,
         })
         .pipe(Effect.orDie);
       return {
