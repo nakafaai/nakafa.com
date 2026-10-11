@@ -34,17 +34,19 @@ export function AiChatPersistedError() {
   );
 }
 
-/** Admission failures and failed turns without an Agent assistant message. */
-export function AiChatError() {
+/**
+ * Admission failures and failed turns without an Agent assistant message.
+ * The transcript says whether the failed turn already shows its own error.
+ */
+export function AiChatError({ failed }: { failed: boolean }) {
   const t = useTranslations("Ai");
   const authNavigation = useCurrentAuthNavigation();
   const error = useChat((state) => state.error);
   const turn = useChat((state) => state.turn);
-  const hasTurnFailure = useChat((state) => state.hasTurnFailure);
   const retry = useChat((state) => state.retry);
   const canWrite = useChat((state) => state.canWrite);
   const busy = useChat((state) => state.busy);
-  if (!error && (turn?.state.status !== "failed" || hasTurnFailure)) {
+  if (!error && (turn?.state.status !== "failed" || failed)) {
     return null;
   }
   const feedback = error
@@ -60,7 +62,7 @@ export function AiChatError() {
         <HugeIcons icon={Alert02Icon} />
         <AlertDescription>
           <p>{t(`failures.${feedback.message}`)}</p>
-          {!error && canWrite && feedback.action === "retry" ? (
+          {canWrite && feedback.action === "retry" ? (
             <Button
               disabled={busy}
               onClick={() => retry()}

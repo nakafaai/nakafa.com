@@ -46,7 +46,6 @@ import { useUpdateChatTitleMutation } from "@/components/ai/chat/mutation.client
 import { ChatSharing } from "@/components/ai/chat/sharing";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { reportClientException } from "@/lib/analytics/client";
-import { useViewer } from "@/lib/identity/client";
 
 /** Render the current chat header or its stable empty placeholder. */
 export function AiChatHeader() {
@@ -67,8 +66,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const [isEditing, setIsEditing] = useState(false);
   const [chatTitle, setChatTitle] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const user = useViewer((s) => s.account);
-  const isOwner = user?.appUser._id === chat.userId;
+  const isOwner = useChat((state) => state.owner);
   const updateChatTitle = useUpdateChatTitleMutation();
   const [isPending, startTransition] = useTransition();
 

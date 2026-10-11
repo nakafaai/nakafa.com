@@ -53,7 +53,7 @@ export function NakafaPart({ message }: Props) {
       content: (data) => <ContentPart message={data} />,
       quran: (data) => <QuranPart message={data} />,
     }),
-    Match.orElse(() => null)
+    Match.exhaustive
   );
 }
 NakafaPart.displayName = "NakafaPart";
@@ -68,6 +68,6 @@ function getKindLabel(
     Match.when("content", () => t("nakafa-content")),
     Match.when("quran", () => t("nakafa-quran")),
     Match.when("taxonomy", () => t("nakafa-taxonomy")),
-    Match.orElse(() => t("nakafa"))
+    Match.exhaustive
   );
 }

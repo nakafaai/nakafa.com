@@ -4,45 +4,38 @@ import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { isToolUIPart } from "ai";
 import { Array as Arr } from "effect";
 
-import { useChat } from "@/components/ai/chat/context";
 import { useMessage } from "@/components/ai/message/context";
 
+/** Shows Nina typing in an answer that has begun but has nothing to show yet. */
 export function AiChatMessageLoading() {
-  const busy = useChat((state) => state.busy);
-  const lastMessageId = useChat((state) => state.lastMessageId);
-  const currentMessage = useMessage((state) => state.message);
+  const message = useMessage((state) => state.message);
+  const working = useMessage(
+    (state) =>
+      state.turn?.state.status === "queued" ||
+      state.turn?.state.status === "running"
+  );
 
-  // Only show loading for assistant messages
-  if (currentMessage.role !== "assistant") {
+  // Only an answer whose turn is still running can have more to say.
+  if (!working || message.role !== "assistant" || message.status === "failed") {
     return null;
   }
 
-  const isLastMessage = lastMessageId === currentMessage.id;
+  const hasContent = Arr.some(
+    message.parts,
+    (part) =>
+      isToolUIPart(part) ||
+      ((part.type === "text" || part.type === "reasoning") &&
+        part.text.trim().length > 0)
+  );
 
-  // Only show for the last assistant message
-  if (!isLastMessage) {
+  if (hasContent) {
     return null;
   }
 
-  // Show loading when streaming but no text content yet
-  if (busy && currentMessage.status !== "failed") {
-    const hasContent = Arr.some(
-      currentMessage.parts,
-      (p) =>
-        isToolUIPart(p) ||
-        ((p.type === "text" || p.type === "reasoning") &&
-          p.text.trim().length > 0)
-    );
-
-    if (!hasContent) {
-      return (
-        <div className="flex flex-col gap-6">
-          <TypingLoader />
-        </div>
-      );
-    }
-  }
-
-  return null;
+  return (
+    <div className="flex flex-col gap-6">
+      <TypingLoader />
+    </div>
+  );
 }
 AiChatMessageLoading.displayName = "AiChatMessageLoading";

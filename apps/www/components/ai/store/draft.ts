@@ -31,11 +31,11 @@ function removeAiDraft() {
   window.sessionStorage.removeItem(AI_DRAFT_STORAGE_KEY);
 }
 /** Saves or clears the current Nina draft without interrupting the input. */
-export function saveAiDraftText(
+export const saveAiDraftText = Effect.fn("ai.draft.save")(function* (
   text: string,
   ownerId: string | null | undefined
 ) {
-  return Effect.try({
+  yield* Effect.try({
     catch: (cause) => new AiDraftStorageError({ cause }),
     try: () => {
       if (typeof window === "undefined" || ownerId === undefined) {
@@ -51,7 +51,7 @@ export function saveAiDraftText(
       );
     },
   }).pipe(Effect.catchTag("AiDraftStorageError", () => Effect.void));
-}
+});
 /**
  * Reads a draft owned by the current account and claims anonymous auth handoffs.
  */
@@ -100,17 +100,16 @@ function readAiDraftText(ownerId: string | null) {
 /**
  * Keeps text entered during session resolution ahead of an older saved draft.
  */
-export function resolveAiDraftText({
+export const resolveAiDraftText = Effect.fn("ai.draft.resolve")(function* ({
   ownerId,
   pendingText,
   pendingTextChanged,
 }: AiDraftResolution) {
   if (pendingTextChanged) {
-    return saveAiDraftText(pendingText, ownerId).pipe(
-      Effect.as<string | null>(pendingText)
-    );
+    yield* saveAiDraftText(pendingText, ownerId);
+    return pendingText;
   }
-  return readAiDraftText(ownerId);
-}
+  return yield* readAiDraftText(ownerId);
+});
 /** Clears the current tab's Nina draft without interrupting sign-out. */
 export const clearAiDraftText = saveAiDraftText("", null);
