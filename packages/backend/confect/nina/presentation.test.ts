@@ -1,12 +1,14 @@
 import { Ref } from "@confect/core";
 import { saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
+import { showsText } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Order } from "effect";
 
@@ -25,6 +27,15 @@ const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const present = Ref.getFunctionReference(refs.internal.nina.response.present);
 const save = Ref.getFunctionReference(refs.internal.nina.presentation.save);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
+const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
+const rename = Ref.getFunctionReference(
+  refs.public.chats.mutations.updateChatTitle
+);
+
+/** The title the owner reads for the chat, opened the way every reader opens it. */
+async function readTitle(f: Awaited<ReturnType<typeof createNinaTest>>) {
+  return (await f.owner.query(getChat, { chatId: f.chatId })).title;
+}
 
 // This suite exercises presentation through response generation and its real component journal.
 describe("Nina presentation after an answer", () => {
@@ -162,7 +173,11 @@ describe("Nina presentation after an answer", () => {
     expect(state.turn?.suggestions).toEqual([
       "How does this relate to continuity?",
     ]);
-    expect(state.chat?.title).toBe("Understanding A Function Limit");
+    expect(state.chat?.title).toBeInstanceOf(ArrayBuffer);
+    expect(showsText(state.chat?.title, "Understanding A Function Limit")).toBe(
+      false
+    );
+    expect(await readTitle(f)).toBe("Understanding A Function Limit");
     expect(state.user?.credits).toBe(5);
     expect(state.ledger).toHaveLength(1);
   });
@@ -228,23 +243,42 @@ describe("Nina presentation after an answer", () => {
     expect(provider.languageModel).not.toHaveBeenCalled();
   });
 
-  it("never overwrites an edited title, and replaces only the default title", async () => {
+  it.each(["plain", "sealed"] as const)(
+    "never overwrites an edited title, and replaces only the %s default title",
+    async (form) => {
+      const f = await createNinaTest();
+      if (form === "plain") {
+        // A chat written before October 2026 holds its default title as text.
+        await f.t.mutation((ctx) =>
+          ctx.db.patch("chats", f.chatId, { title: DEFAULT_TITLE })
+        );
+      } else {
+        await f.owner.mutation(rename, {
+          chatId: f.chatId,
+          title: DEFAULT_TITLE,
+        });
+      }
+      await f.t.mutation(save, { turnId: f.turnId, title: "Generated title" });
+      await f.t.mutation(save, {
+        turnId: f.turnId,
+        title: "Another generated title",
+        suggestions: ["A relevant follow-up?"],
+      });
+      expect(await readTitle(f)).toBe("Generated title");
+      expect(
+        (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.title
+      ).toBeInstanceOf(ArrayBuffer);
+      expect(
+        await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
+      ).toMatchObject({ suggestions: ["A relevant follow-up?"] });
+    }
+  );
+
+  it("keeps a title the learner chose before the generated one arrives", async () => {
     const f = await createNinaTest();
-    await f.t.mutation((ctx) =>
-      ctx.db.patch("chats", f.chatId, { title: "New Chat" })
-    );
+    await f.owner.mutation(rename, { chatId: f.chatId, title: "My own title" });
     await f.t.mutation(save, { turnId: f.turnId, title: "Generated title" });
-    await f.t.mutation(save, {
-      turnId: f.turnId,
-      title: "Another generated title",
-      suggestions: ["A relevant follow-up?"],
-    });
-    expect(
-      await f.t.query((ctx) => ctx.db.get("chats", f.chatId))
-    ).toMatchObject({ title: "Generated title" });
-    expect(
-      await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
-    ).toMatchObject({ suggestions: ["A relevant follow-up?"] });
+    expect(await readTitle(f)).toBe("My own title");
   });
 
   it.each(["cancelled", "failed", "missing-turn", "missing-chat"] as const)(
