@@ -3,6 +3,7 @@ import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import type { ResearchAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
@@ -60,7 +61,9 @@ const exactSourceContentMaxLength = 8000;
  * own links are read first, and the search itself runs here, under its own
  * deadline, not inside the model step. Once a source is retrieved, a later
  * failure still hands that source to Nina, so the answer never contradicts the
- * cards. The usage handler records each provider call.
+ * cards. Every model and provider call is cut to the time the capability has
+ * left, so a call that runs out ends here, with what was gathered, before the
+ * run itself is cut. The usage handler records each provider call.
  */
 export const runResearchAgent = Effect.fn("research.runResearchAgent")(
   function* ({
@@ -112,6 +115,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 
     // The model only writes the queries. The tool does nothing itself, so the
     // one step ends with its call and the search below owns its own deadline.
+    const planning = yield* limitDeadline(timeout);
     const planned = yield* Effect.tryPromise({
       try: (signal) =>
         agent.generateText(
@@ -132,7 +136,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             },
             toolChoice: { type: "tool", toolName: "webSearch" },
             stopWhen: isStepCount(1),
-            timeout,
+            timeout: planning,
           }
         ),
       catch: (error) => makeResearchGenerationError(error, "search"),
@@ -207,6 +211,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       yield* logResearchFailure(planned.failure);
     }
 
+    const synthesizing = yield* limitDeadline(timeout);
     const synthesis = yield* Effect.tryPromise({
       try: (signal) =>
         agent
@@ -234,7 +239,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                 name: "research_findings",
                 schema: researchOutputSchema,
               }),
-              timeout,
+              timeout: synthesizing,
             }
           )
           .then((result) => result.output),

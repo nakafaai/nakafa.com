@@ -34,7 +34,7 @@ async function instructionsFor(
   });
   return nina.t.action((ctx) =>
     Effect.runPromise(
-      readInstructions(turn, url, runtime).pipe(
+      readInstructions(turn, url).pipe(
         Effect.map(({ instructions, summary }) => ({
           instructions,
           summary: summary?.throughOrder ?? null,
@@ -81,7 +81,7 @@ describe("Nina instructions", () => {
     );
   });
 
-  it("carries the learner's role and curriculum preference", async () => {
+  it("carries the learner's role, and leaves the facts of one turn to its message", async () => {
     const f = await createNinaTest();
     await f.t.mutation((ctx) =>
       ctx.db.patch("ninaTurns", f.turnId, {
@@ -97,10 +97,18 @@ describe("Nina instructions", () => {
       })
     );
     const result = await instructionsFor(f);
-    for (const expected of ["Cambridge Lower Secondary", "teacher"]) {
+    expect(result).toHaveProperty(
+      "instructions",
+      expect.stringContaining("**User is a teacher.**")
+    );
+    for (const turnFact of [
+      "Cambridge Lower Secondary",
+      "https://nakafa.com/en/home",
+      runtime.currentDate,
+    ]) {
       expect(result).toHaveProperty(
         "instructions",
-        expect.stringContaining(expected)
+        expect.not.stringContaining(turnFact)
       );
     }
   });

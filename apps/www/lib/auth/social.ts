@@ -1,4 +1,5 @@
 import { Effect, Schema } from "effect";
+import { expectSession } from "@/lib/auth/known";
 
 const socialSignInFailedCode = "SOCIAL_SIGN_IN_FAILED";
 
@@ -45,5 +46,7 @@ export const startGoogleSignIn = Effect.fn("www.auth.startGoogleSignIn")(
         code: socialSignInFailedCode,
       });
     }
+    // The browser now leaves for Google and comes back signed in.
+    yield* expectSession();
   }
 );

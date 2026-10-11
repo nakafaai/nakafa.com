@@ -6,6 +6,13 @@ import { formatRead } from "@repo/backend/confect/nina/nakafa/sections";
 import { Effect, Option, Result } from "effect";
 
 const notFoundMessage = "Nakafa content was not found.";
+/**
+ * What the model reads when a page could not be read. Reads run side by side,
+ * so the answer names the reference it looked up.
+ */
+function unreadAnswer(message: string, input: NinaReadOptions) {
+  return `${message} Reference: ${input.content_ref}`;
+}
 /** Reads one Nakafa content reference, from a heading section when given. */
 export const read = Effect.fn("nakafa.read")(function* ({
   input,
@@ -37,7 +44,7 @@ export const read = Effect.fn("nakafa.read")(function* ({
         error: result.failure.message,
       },
     });
-    return result.failure.message;
+    return unreadAnswer(result.failure.message, input);
   }
   const content = result.success;
   if (Option.isNone(content)) {
@@ -51,7 +58,7 @@ export const read = Effect.fn("nakafa.read")(function* ({
         error: notFoundMessage,
       },
     });
-    return notFoundMessage;
+    return unreadAnswer(notFoundMessage, input);
   }
   const value = content.value;
   yield* publish({

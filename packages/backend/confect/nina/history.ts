@@ -1,25 +1,22 @@
 import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import {
   boundText,
+  countFileTokens,
   countTextTokens,
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
+import type { NinaUncoveredTurn } from "@repo/backend/confect/nina/summaries.spec";
 import { encodeJsonText } from "@repo/utilities/json";
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
 import { Array as Arr, MutableHashSet, Option, Schema } from "effect";
 
-/**
- * Gemini's flat input cost for one image. Documents count the same, since only
- * the current turn keeps them.
- */
-const FILE_TOKENS = 300;
 /** Earlier evidence keeps this much text once its turn outgrows the budget. */
 const EXCERPT_TOKENS = 600;
 const EXCERPT_NOTE =
   "Earlier evidence in this conversation, shortened. Call the capability again when the full evidence matters.";
 
-/** Estimates provider tokens for one message without counting file bytes. */
+/** Estimates provider tokens for one message; a file counts what the provider bills for it, not its bytes. */
 function messageTokens(message: ModelMessage) {
   if (typeof message.content === "string") {
     return countTextTokens(message.content);
@@ -32,8 +29,12 @@ function messageTokens(message: ModelMessage) {
       total += countTextTokens(encodeJsonText(part.input));
     } else if (part.type === "tool-result") {
       total += countTextTokens(encodeJsonText(part.output));
+    } else if (part.type === "image") {
+      total += countFileTokens(part.mediaType ?? "image/*");
+    } else if (part.type === "file") {
+      total += countFileTokens(part.mediaType);
     } else {
-      total += FILE_TOKENS;
+      total += countTextTokens(encodeJsonText(part));
     }
   }
   return total;
@@ -160,8 +161,14 @@ function noteDocuments(message: ModelMessage): ModelMessage {
   };
 }
 
-/** Splits a conversation into whole turns; each turn opens with a user message. */
-function splitTurns(messages: readonly ModelMessage[]): ModelMessage[][] {
+/**
+ * Splits a flat run of messages into whole turns; each turn opens with a user
+ * message. Only a window the Agent fetched needs this: Nina's own history
+ * arrives as turns.
+ */
+export function splitTurns(
+  messages: readonly ModelMessage[]
+): ModelMessage[][] {
   // Messages before the first prompt belong to a turn cut by the fetch window.
   const fromFirstPrompt = Arr.dropWhile(
     messages,
@@ -176,10 +183,42 @@ function splitTurns(messages: readonly ModelMessage[]): ModelMessage[][] {
   });
 }
 
+type Asking = typeof NinaUncoveredTurn.Type;
+
+/** Names the question of a turn by the order of the turn that first asked it. */
+export function questionKey({ order, retryOf }: Asking) {
+  return retryOf ?? order;
+}
+
+/**
+ * Keeps the complete turns whose question no later turn asks again. A learner
+ * who retries an answer prefers the newest asking, so each question keeps only
+ * its newest complete asking, whichever of its askings was retried. `later`
+ * holds the turns that come after `turns`, such as the one being answered: a
+ * question one of them asks again leaves none of `turns`.
+ */
+export function newestAskings(
+  turns: readonly Asking[],
+  later: readonly Asking[]
+) {
+  const all = Arr.appendAll(turns, later);
+  return Arr.filter(
+    turns,
+    (turn) =>
+      !Arr.some(
+        all,
+        (other) =>
+          other.order > turn.order && questionKey(other) === questionKey(turn)
+      )
+  );
+}
+
 /**
  * Keeps the current turn's evidence within its budget while a tool loop runs.
- * The newest message stays intact; older tool results in the turn shorten to
- * excerpts until the turn fits. Earlier history passes through unchanged.
+ * The learner's message opens the turn and is not evidence, so neither it nor
+ * its attachments count. The newest message stays intact; older tool results
+ * in the turn shorten to excerpts until the evidence fits. Earlier history
+ * passes through unchanged.
  */
 export function boundStep(messages: readonly ModelMessage[]) {
   const projected = projectMessages(messages);
@@ -190,7 +229,8 @@ export function boundStep(messages: readonly ModelMessage[]) {
   let turn = Arr.drop(projected, start);
   for (
     let index = 0;
-    index < turn.length - 1 && turnTokens(turn) > NINA_BUDGET.turnEvidence;
+    index < turn.length - 1 &&
+    turnTokens(Arr.drop(turn, 1)) > NINA_BUDGET.turnEvidence;
     index += 1
   ) {
     turn = Arr.map(turn, (message, position) =>
@@ -201,27 +241,26 @@ export function boundStep(messages: readonly ModelMessage[]) {
 }
 
 /**
- * Assembles provider input for one Nina generation. History keeps whole turns
- * the rolling summary does not cover, newest first, within the history budget;
- * a single oversized turn keeps its messages with shortened evidence. The
- * current turn always follows. Turn orders count back from `currentOrder`,
- * because every turn opens with exactly one user prompt.
+ * Assembles provider input for one Nina generation. `history` holds the
+ * complete earlier turns the rolling summary does not cover, oldest first,
+ * each with its question and answer. They are kept newest first within the
+ * history budget and trimmed only at a turn boundary: a turn that does not fit
+ * is dropped whole, and a single oversized turn keeps its messages with
+ * shortened evidence. The current turn always follows. Once the turns fill the
+ * budget, each new turn pushes the oldest out, so the start of the history
+ * moves, as it does when the summary folds turns: these are the only times the
+ * history before the newest message does not repeat.
  */
 export function assembleContext({
   current,
-  currentOrder,
-  recent,
-  throughOrder,
+  history,
 }: {
   readonly current: readonly ModelMessage[];
-  readonly currentOrder: number;
-  readonly recent: readonly ModelMessage[];
-  readonly throughOrder: number | null;
+  readonly history: readonly (readonly ModelMessage[])[];
 }) {
   const newestFirst = Arr.reverse(
-    splitTurns(Arr.map(projectMessages(recent), noteDocuments))
+    Arr.map(history, (turn) => Arr.map(projectMessages(turn), noteDocuments))
   );
-  const covered = throughOrder ?? -1;
   const [, candidates] = Arr.mapAccum(
     newestFirst,
     0,
@@ -238,11 +277,12 @@ export function assembleContext({
   const selected = Arr.takeWhile(
     candidates,
     ({ cost, offset, usedBefore }) =>
-      currentOrder - 1 - offset > covered &&
-      (offset === 0 || usedBefore + cost <= NINA_BUDGET.history)
+      offset === 0 || usedBefore + cost <= NINA_BUDGET.history
   );
-  const history = Arr.flatten(
-    Arr.reverse(Arr.map(selected, (candidate) => candidate.kept))
-  );
-  return [...history, ...boundStep(current)];
+  return [
+    ...Arr.flatten(
+      Arr.reverse(Arr.map(selected, (candidate) => candidate.kept))
+    ),
+    ...boundStep(current),
+  ];
 }

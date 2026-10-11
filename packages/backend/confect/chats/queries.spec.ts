@@ -1,12 +1,12 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import chatsTable from "@repo/backend/confect/_generated/tables/chats";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
 } from "@repo/backend/confect/chats/schema";
+import { chatViewValidator } from "@repo/backend/confect/chats/view";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
 export default GroupSpec.make()
@@ -16,7 +16,7 @@ export default GroupSpec.make()
       args: () => ({
         chatId: IdSchema("chats"),
       }),
-      returns: () => chatsTable.Doc,
+      returns: () => chatViewValidator,
       error: () => Schema.Union([AuthFailure, ChatAccessError]),
     }).middleware(Session)
   )
@@ -29,7 +29,7 @@ export default GroupSpec.make()
         visibility: Schema.optionalKey(chatVisibilityValidator),
         type: Schema.optionalKey(chatTypeValidator),
       }),
-      item: () => chatsTable.Doc,
+      item: () => chatViewValidator,
     })
   )
   .addFunction(
@@ -40,7 +40,7 @@ export default GroupSpec.make()
         visibility: Schema.optionalKey(chatVisibilityValidator),
         type: Schema.optionalKey(chatTypeValidator),
       }),
-      item: () => chatsTable.Doc,
+      item: () => chatViewValidator,
       error: () => AuthFailure,
     }).middleware(Session)
   )

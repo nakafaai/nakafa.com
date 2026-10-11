@@ -71,7 +71,7 @@ export function recordProgress() {
 
 export function providerStep(
   content: Awaited<ReturnType<MockLanguageModelV4["doGenerate"]>>["content"],
-  finish: "stop" | "tool-calls" = "stop"
+  finish: "stop" | "tool-calls" | "length" = "stop"
 ) {
   return {
     content,

@@ -3,7 +3,9 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
+import { listChats } from "@repo/backend/confect/chats/list";
 import spec from "@repo/backend/confect/chats/queries.spec";
+import { openChat } from "@repo/backend/confect/chats/title";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
 
@@ -14,8 +16,7 @@ const getChat = FunctionImpl.make(
   Effect.fn("chats.queries.getChat")(function* (args) {
     const viewer = yield* getOptionalAppUserForRead();
     const viewerUserId = viewer?.appUser._id ?? null;
-    const chat = yield* readChat(args.chatId, viewerUserId);
-    return chat;
+    return yield* openChat(yield* readChat(args.chatId, viewerUserId));
   })
 );
 const getChats = FunctionImpl.make(
@@ -23,50 +24,14 @@ const getChats = FunctionImpl.make(
   spec,
   "getChats",
   Effect.fn("chats.queries.getChats")(function* (args) {
-    const database = yield* DatabaseReader;
-    const { userId, q: searchQuery, visibility, type, paginationOpts } = args;
-    if (visibility === "private") {
+    if (args.visibility === "private") {
       return {
         continueCursor: "",
         isDone: true,
         page: [],
       };
     }
-    if (searchQuery && searchQuery.trim().length > 0) {
-      return yield* database
-        .table("chats")
-        .search("search_title", (q) => {
-          let builder = q.search("title", searchQuery).eq("userId", userId);
-          builder = builder.eq("visibility", "public");
-          if (type) {
-            builder = builder.eq("type", type);
-          }
-          return builder;
-        })
-        .paginate(paginationOpts)
-        .pipe(Effect.orDie);
-    }
-    if (type) {
-      return yield* database
-        .table("chats")
-        .index(
-          "by_userId_and_visibility_and_type",
-          (q) =>
-            q.eq("userId", userId).eq("visibility", "public").eq("type", type),
-          "desc"
-        )
-        .paginate(paginationOpts)
-        .pipe(Effect.orDie);
-    }
-    return yield* database
-      .table("chats")
-      .index(
-        "by_userId_and_visibility",
-        (q) => q.eq("userId", userId).eq("visibility", "public"),
-        "desc"
-      )
-      .paginate(paginationOpts)
-      .pipe(Effect.orDie);
+    return yield* listChats({ ...args, visibility: "public" });
   })
 );
 const getOwnChats = FunctionImpl.make(
@@ -74,8 +39,6 @@ const getOwnChats = FunctionImpl.make(
   spec,
   "getOwnChats",
   Effect.fn("chats.queries.getOwnChats")(function* (args) {
-    const database = yield* DatabaseReader;
-    const { q: searchQuery, visibility, type, paginationOpts } = args;
     const viewer = yield* getOptionalAppUserForRead();
     if (!viewer) {
       return {
@@ -84,65 +47,7 @@ const getOwnChats = FunctionImpl.make(
         page: [],
       };
     }
-    const userId = viewer.appUser._id;
-    if (searchQuery && searchQuery.trim().length > 0) {
-      return yield* database
-        .table("chats")
-        .search("search_title", (q) => {
-          let builder = q.search("title", searchQuery).eq("userId", userId);
-          if (visibility) {
-            builder = builder.eq("visibility", visibility);
-          }
-          if (type) {
-            builder = builder.eq("type", type);
-          }
-          return builder;
-        })
-        .paginate(paginationOpts)
-        .pipe(Effect.orDie);
-    }
-    if (visibility && type) {
-      return yield* database
-        .table("chats")
-        .index(
-          "by_userId_and_visibility_and_type",
-          (q) =>
-            q
-              .eq("userId", userId)
-              .eq("visibility", visibility)
-              .eq("type", type),
-          "desc"
-        )
-        .paginate(paginationOpts)
-        .pipe(Effect.orDie);
-    }
-    if (type) {
-      return yield* database
-        .table("chats")
-        .index(
-          "by_userId_and_type",
-          (q) => q.eq("userId", userId).eq("type", type),
-          "desc"
-        )
-        .paginate(paginationOpts)
-        .pipe(Effect.orDie);
-    }
-    if (visibility) {
-      return yield* database
-        .table("chats")
-        .index(
-          "by_userId_and_visibility",
-          (q) => q.eq("userId", userId).eq("visibility", visibility),
-          "desc"
-        )
-        .paginate(paginationOpts)
-        .pipe(Effect.orDie);
-    }
-    return yield* database
-      .table("chats")
-      .index("by_userId", (q) => q.eq("userId", userId), "desc")
-      .paginate(paginationOpts)
-      .pipe(Effect.orDie);
+    return yield* listChats({ ...args, userId: viewer.appUser._id });
   })
 );
 const getChatTitle = FunctionImpl.make(
@@ -161,15 +66,13 @@ const getChatTitle = FunctionImpl.make(
     if (!chat) {
       return null;
     }
-    if (chat.visibility === "public") {
-      return chat.title ?? null;
+    if (chat.visibility === "private") {
+      const viewer = yield* getOptionalAppUserForRead();
+      if ((viewer?.appUser._id ?? null) !== chat.userId) {
+        return null;
+      }
     }
-    const viewer = yield* getOptionalAppUserForRead();
-    const viewerUserId = viewer?.appUser._id ?? null;
-    if (viewerUserId !== chat.userId) {
-      return null;
-    }
-    return chat.title ?? null;
+    return (yield* openChat(chat)).title ?? null;
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

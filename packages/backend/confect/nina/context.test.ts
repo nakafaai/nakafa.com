@@ -177,66 +177,76 @@ describe("Nina signed learning context", () => {
     );
   }
 
-  for (const savedPage of [false, true]) {
-    it.effect(
-      `pins prior context away from content and refreshes it on a signed page (${savedPage})`,
-      () =>
-        Effect.gen(function* () {
-          const t = yield* Confect.pipe(Effect.provide(confectLayer));
-          yield* t.run(
-            Effect.gen(function* () {
-              const user = yield* seedUser();
-              yield* activateMaterialCatalog([material]);
-              const original = yield* resolveNinaContext(
-                { locale: "en", slug: material.publicPath },
-                user,
-                capturedAt
-              );
-              const writer = yield* DatabaseWriter;
-              const chatId = yield* writer.table("chats").insert({
-                userId: user._id,
-                type: "study",
-                visibility: "private",
-                updatedAt: 1,
-                threadId: "thread",
-              });
-              yield* writer.table("ninaTurns").insert({
-                phase: "settled",
-                chatId,
-                userId: user._id,
-                threadId: "thread",
-                promptMessageId: "prompt",
-                order: 0,
-                usage: [],
-                state: { status: "complete", finishedAt: 1 },
-                ...(savedPage
-                  ? { page: original.page }
-                  : { snapshot: original.page.nina.snapshot }),
-              });
-              const pinned = yield* resolveNinaContext(
-                { locale: "id", slug: "chat" },
-                user,
-                capturedAt,
-                chatId
-              );
-              expect(pinned.page.locale).toBe("id");
-              expect(pinned.page.nina.learning).toEqual(
-                original.page.nina.learning
-              );
-              expect(pinned.page.nina.snapshot.source).toBe("pinned-chat");
-              expect(pinned.page.needsFetch).toBe(true);
-              const current = yield* resolveNinaContext(
-                { locale: "en", slug: material.publicPath },
-                user,
-                capturedAt,
-                chatId
-              );
-              expect(current.page.nina.snapshot.source).toBe("current-page");
-            })
-          );
-        })
-    );
-  }
+  it.effect(
+    "names the page of the current turn when a chat continues away from a signed page",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* t.run(
+          Effect.gen(function* () {
+            const user = yield* seedUser();
+            yield* activateMaterialCatalog([material]);
+            const original = yield* resolveNinaContext(
+              { locale: "en", slug: material.publicPath },
+              user,
+              capturedAt
+            );
+            const writer = yield* DatabaseWriter;
+            const chatId = yield* writer.table("chats").insert({
+              userId: user._id,
+              type: "study",
+              visibility: "private",
+              updatedAt: 1,
+              threadId: "thread",
+            });
+            yield* writer.table("ninaTurns").insert({
+              phase: "settled",
+              chatId,
+              userId: user._id,
+              threadId: "thread",
+              promptMessageId: "prompt",
+              order: 0,
+              usage: [],
+              state: { status: "complete", finishedAt: 1 },
+              page: original.page,
+            });
+            const continued = yield* resolveNinaContext(
+              { locale: "id", slug: "chat" },
+              user,
+              capturedAt,
+              chatId
+            );
+            expect(continued.page).toMatchObject({
+              locale: "id",
+              slug: "chat",
+              verified: false,
+              needsFetch: false,
+            });
+            // The learning asset, its tool policy and its source are the current page's.
+            expect(continued.page.nina.learning).toEqual({
+              locale: "id",
+              slug: "chat",
+              url: continued.page.url,
+              verified: false,
+            });
+            expect(continued.page.url).not.toBe(original.page.url);
+            expect(continued.page.nina.tools.allowPageFetch).toBe(false);
+            expect(continued.page.nina.snapshot.source).toBe("current-page");
+            expect(continued.page.nina.transition.reason).toBe("page-context");
+            const current = yield* resolveNinaContext(
+              { locale: "en", slug: material.publicPath },
+              user,
+              capturedAt,
+              chatId
+            );
+            expect(current.page.nina.learning).toEqual(
+              original.page.nina.learning
+            );
+            expect(current.page.nina.snapshot.source).toBe("current-page");
+          })
+        );
+      })
+  );
 
   it.effect(
     "returns a typed admission failure for a corrupt signed material",

@@ -1,9 +1,30 @@
 import { describe, expect, it } from "@effect/vitest";
-import { boundText, countTextTokens } from "@repo/backend/confect/nina/budget";
+import {
+  boundText,
+  countFileTokens,
+  countTextTokens,
+} from "@repo/backend/confect/nina/budget";
 import { Array as Arr } from "effect";
 
 const SHORTENED_NOTE =
   /\n\n\[Shortened to about 200 of \d+ tokens\. Read the next section\.\]$/;
+
+describe("Nina file tokens", () => {
+  it.each([
+    ["a png image, of any size", "image/png", 1120],
+    ["a jpeg image", "image/jpeg", 1120],
+    ["a webp image", "image/webp", 1120],
+    ["a gif image", "image/gif", 1120],
+    [
+      "a pdf as one page, since no stored page count exists",
+      "application/pdf",
+      560,
+    ],
+    ["a text file as one page, since no stored size exists", "text/plain", 560],
+  ] as const)("counts %s", (_name, mediaType, expected) => {
+    expect(countFileTokens(mediaType)).toBe(expected);
+  });
+});
 
 describe("Nina token budgets", () => {
   it("returns text that already fits unchanged", () => {

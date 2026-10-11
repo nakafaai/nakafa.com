@@ -11,6 +11,7 @@ import {
   type GatewayFailure,
 } from "@repo/backend/confect/gateway/failure";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
+import type { ChatStep } from "@repo/backend/confect/nina/capability/deadline";
 import { streamCapability } from "@repo/backend/confect/nina/capability/progress";
 import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
@@ -28,9 +29,12 @@ import {
   deniedCapabilityResult,
 } from "@repo/backend/confect/nina/policy/capability";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
-import { getSourceReferencesFromMessages } from "@repo/backend/confect/nina/research/source";
+import {
+  getNakafaReferencesFromMessages,
+  getSourceReferencesFromMessages,
+} from "@repo/backend/confect/nina/research/source";
 import type { Locale } from "@repo/contents/content";
-import { Effect, Stream } from "effect";
+import { Array as Arr, Effect, Stream } from "effect";
 
 const outputSchema = createEffectSchema(CapabilityOutputSchema);
 
@@ -42,7 +46,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
   usageHandler: UsageHandler
 ) {
   const services = yield* Effect.context<
-    ActionCtx | Gateway | QueryRunner | VectorSearch
+    ActionCtx | ChatStep | Gateway | QueryRunner | VectorSearch
   >();
   return {
     nakafa: createTool({
@@ -50,7 +54,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
         "Retrieve Nakafa educational evidence: lessons, articles, Quran, examples, practice, and other sections of the current page. Select educational content here before verifying its mathematics.",
       inputSchema: nakafaToolInputSchema,
       outputSchema,
-      execute: (_ctx, input, { abortSignal }) =>
+      execute: (_ctx, input, { messages, abortSignal }) =>
         Stream.toAsyncIterableWith(
           streamCapability(
             (publish) =>
@@ -70,6 +74,10 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   context,
                   locale,
                   task: formatSpecialistToolTask(input),
+                  addresses: Arr.map(
+                    getNakafaReferencesFromMessages(messages),
+                    (link) => link.href
+                  ),
                   publish,
                   usageHandler,
                 }).pipe(
@@ -83,6 +91,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                 );
               }),
             {
+              capability: "nakafa",
               continuation:
                 "Ask Nakafa for a named section or a narrower request to read the omitted part.",
               signal: abortSignal,
@@ -137,6 +146,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                 );
               }),
             {
+              capability: "deepResearch",
               continuation:
                 "Ask a narrower research question to gather the omitted sources.",
               signal: abortSignal,
@@ -183,6 +193,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                 );
               }),
             {
+              capability: "math",
               continuation:
                 "Verify fewer expressions per request to get the omitted results.",
               signal: abortSignal,

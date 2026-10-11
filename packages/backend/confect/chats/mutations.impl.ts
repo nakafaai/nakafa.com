@@ -4,6 +4,7 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
 import spec from "@repo/backend/confect/chats/mutations.spec";
+import { sealTitle } from "@repo/backend/confect/chats/title";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
@@ -23,7 +24,7 @@ const updateChatTitle = FunctionImpl.make(
     yield* database
       .table("chats")
       .patch(chat._id, {
-        title: args.title,
+        title: yield* sealTitle(chat.userId, args.title),
       })
       .pipe(Effect.orDie);
     return chat._id;

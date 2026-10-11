@@ -5,7 +5,7 @@ import type {
 } from "@repo/contents/agent/schema/search";
 import { NAKAFA_AGENT_MAX_QUERIES } from "@repo/contents/agent/search";
 import type { ModelMessage } from "ai";
-import { Array as Arr } from "effect";
+import { Array as Arr, Predicate } from "effect";
 
 /**
  * Detects search results that need a full content read before Nina answers.
@@ -37,6 +37,73 @@ export function readSearchFollowup(
 ) {
   return {
     shouldReadContent: shouldReadAfterSearch(input, result),
+  };
+}
+
+/**
+ * Builds the steps that read the links to Nakafa's own site that the learner
+ * sent, so the evidence comes from the pages the learner sent and not from a
+ * search for their topic. A step forces the read tool and lists the addresses
+ * no earlier step has asked for, so the model cannot move on, or answer, before
+ * it has asked for every one.
+ */
+export function prepareAddressStep<const ToolName extends string>(
+  addresses: readonly string[],
+  messages: ModelMessage[],
+  steps: readonly {
+    readonly toolCalls: readonly {
+      readonly input: unknown;
+      readonly toolName: ToolName;
+    }[];
+  }[]
+) {
+  const unread = Arr.filter(
+    addresses,
+    (address) =>
+      !Arr.some(steps, (step) =>
+        Arr.some(
+          step.toolCalls,
+          (toolCall) =>
+            toolCall.toolName === "read" &&
+            Predicate.hasProperty(toolCall.input, "content_ref") &&
+            toolCall.input.content_ref === address
+        )
+      )
+  );
+
+  if (unread.length === 0) {
+    return;
+  }
+
+  const message = {
+    role: "user",
+    content: createPrompt({
+      taskContext: `
+        # Required Next Step
+
+        Call the read tool now, once for each Nakafa address below, all in this step, with that address as content_ref.
+      `,
+      toolUsageGuidelines: `
+        # Tool Constraints
+
+        - Read every address before any search.
+        - Do not change an address.
+      `,
+      detailedTaskInstructions: `
+        # Nakafa Addresses To Read
+
+        ${Arr.join(
+          Arr.map(unread, (address) => `- ${address}`),
+          "\n"
+        )}
+      `,
+    }),
+  } satisfies ModelMessage;
+
+  return {
+    activeTools: ["read" as const],
+    messages: [...messages, message],
+    toolChoice: { toolName: "read", type: "tool" } as const,
   };
 }
 

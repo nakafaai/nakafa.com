@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema, Struct } from "effect";
 
 const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
@@ -15,7 +16,10 @@ const NinaSummaryCall = Schema.Struct({ input: Tokens, output: Tokens });
  */
 export const NinaSummary = Schema.Struct({
   chatId: Id("chats"),
-  text: Schema.String,
+  // A new summary is stored sealed. The string form is what rows written before
+  // October 2026 hold, and it leaves with the contract change that follows the
+  // sealing migration.
+  text: Schema.Union([Schema.String, Sealed]),
   throughOrder: TurnOrder,
   updatedAt: Schema.Finite,
   usage: Schema.Struct({
@@ -24,11 +28,26 @@ export const NinaSummary = Schema.Struct({
   }),
 });
 
-/** The summary facts generation and refresh read back. */
+/** The summary facts generation and refresh read back, with the text opened. */
 const NinaSummaryView = NinaSummary.mapFields((fields) => ({
-  text: fields.text,
+  text: Schema.String,
   throughOrder: fields.throughOrder,
 }));
+
+/**
+ * Most turns one summary refresh folds, and so the most turns the read of
+ * uncovered turns looks at: a fold never reaches past what that read shows.
+ */
+export const SUMMARY_FOLD_LIMIT = 16;
+
+/**
+ * A complete turn the summary does not cover. `retryOf` is the order of the
+ * turn that first asked its question, when this turn asks it again.
+ */
+export const NinaUncoveredTurn = Schema.Struct({
+  order: TurnOrder,
+  retryOf: Schema.optionalKey(TurnOrder),
+});
 
 export default GroupSpec.make()
   .addFunction(
@@ -46,12 +65,37 @@ export default GroupSpec.make()
     })
   )
   .addFunction(
+    FunctionSpec.internalQuery({
+      name: "uncovered",
+      args: () => ({
+        chatId: Id("chats"),
+        through: Schema.NullOr(TurnOrder),
+        before: TurnOrder,
+      }),
+      returns: () => Schema.Array(NinaUncoveredTurn),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "asked",
+      args: () => ({
+        chatId: Id("chats"),
+        questions: Schema.Array(TurnOrder).check(
+          Schema.isMaxLength(SUMMARY_FOLD_LIMIT)
+        ),
+        before: TurnOrder,
+      }),
+      returns: () => Schema.Array(NinaUncoveredTurn),
+    })
+  )
+  .addFunction(
     FunctionSpec.internalMutation({
       name: "save",
       args: () => ({
-        ...NinaSummary.mapFields(
-          Struct.pick(["chatId", "text", "throughOrder"])
-        ).fields,
+        ...NinaSummary.mapFields(Struct.pick(["chatId", "throughOrder"]))
+          .fields,
+        // The caller sends plain text and the mutation seals it.
+        text: Schema.String,
         usage: NinaSummaryCall,
       }),
       returns: () => Schema.Null,

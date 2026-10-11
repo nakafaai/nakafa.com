@@ -36,6 +36,13 @@ server sent.
   through a ref mirrored in a layout effect.
 - Convex authentication is read with `useConvexAuth` from
   `@/components/providers/convex` and its gates from `@/components/auth/gate`.
+- Better Auth answers for the session one request after a page loads. The
+  browser remembers the id of its last session (`@/lib/auth/known`, read with
+  `useSyncExternalStore`, whose server snapshot knows none), so Convex asks for
+  that session's token at once and holds every function call until it has an
+  answer. A change made in the first moment after a load is therefore sent
+  signed in, and a signed-in page authenticates one request sooner. Readers
+  still see the session as pending until Better Auth answers.
 - A lesson renderer that loads with `next/dynamic` goes through
   `withHydrationBoundary` from `@/lib/content/renderer/client/boundary`, whose
   visible `Activity` lets the lesson hydrate, and answer presses, before the
@@ -49,6 +56,8 @@ server sent.
   of `convex/react` and `@convex-dev/better-auth`.
 - `apps/www/e2e/content/hydration.browser.ts` proves cold lessons and
   articles keep their streamed content, signed out and signed in.
+- `apps/www/e2e/account/session.browser.ts` holds Better Auth's answer back
+  after a reload and proves a change made in that moment is saved signed in.
 
 ## Rejected Alternative
 

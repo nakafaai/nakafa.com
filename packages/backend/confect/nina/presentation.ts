@@ -13,7 +13,10 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
-import { assembleContext } from "@repo/backend/confect/nina/history";
+import {
+  assembleContext,
+  splitTurns,
+} from "@repo/backend/confect/nina/history";
 import { nakafaSuggestions } from "@repo/backend/confect/nina/prompt/suggestions";
 import { Output } from "ai";
 import { Effect, Schema } from "effect";
@@ -53,13 +56,11 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
                   "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
               },
             ],
-            currentOrder: turn.order + 1,
-            recent: [
+            history: splitTurns([
               ...fetched.recent,
               ...fetched.inputPrompt,
               ...fetched.existingResponses,
-            ],
-            throughOrder: null,
+            ]),
           })
         ),
     });

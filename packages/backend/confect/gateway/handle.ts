@@ -24,10 +24,10 @@ export class Gateway extends Context.Service<
   Gateway,
   {
     /**
-     * A language model ready for one purpose: zero retention and a cached
-     * prompt prefix on every call. Its reasoning defaults are its outermost
-     * middleware, so a call may override them; call sites pass `timeout`
-     * unchanged.
+     * A language model ready for one purpose: zero retention, a cached prompt
+     * prefix, and the purpose's output cap on every call. Its reasoning and
+     * output defaults are its outermost middleware, so a call may override
+     * them; call sites pass `timeout` unchanged.
      */
     readonly language: (purpose: Purpose) => {
       readonly model: ReturnType<typeof wrapLanguageModel>;
@@ -76,13 +76,14 @@ export function make(provider: {
 }): Gateway["Service"] {
   return Gateway.of({
     language: (purpose) => {
-      const { effort, timeout } = purposes[purpose];
+      const { effort, maxOutputTokens, timeout } = purposes[purpose];
       return {
         model: wrapLanguageModel({
           model: provider.languageModel(languageModelId),
           middleware: [
             defaultSettingsMiddleware({
               settings: {
+                maxOutputTokens,
                 providerOptions: {
                   convexGateway: {
                     provider: retention,

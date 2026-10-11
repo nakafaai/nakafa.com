@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { make } from "@repo/backend/confect/gateway/handle";
-import { Purpose } from "@repo/backend/confect/gateway/purpose";
+import { Purpose, purposes } from "@repo/backend/confect/gateway/purpose";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockEmbeddingModelV4, MockLanguageModelV4 } from "ai/test";
@@ -77,7 +77,7 @@ function serve(doEmbed?: MockEmbeddingModelV4["doEmbed"]) {
 
 describe("Gateway handles", () => {
   it.effect.each(Purpose.literals)(
-    "gives %s the gateway model, reasoning, and deadlines",
+    "gives %s the gateway model, reasoning, output cap, and deadlines",
     (purpose) =>
       Effect.gen(function* () {
         const { gateway, languageModel, model } = serve();
@@ -87,6 +87,9 @@ describe("Gateway handles", () => {
           "google/gemini-3.8-flash"
         );
         expect(handle.timeout).toEqual(deadlines[purpose]);
+        expect(model.doGenerateCalls[0]?.maxOutputTokens).toBe(
+          purposes[purpose].maxOutputTokens
+        );
         expect(model.doGenerateCalls[0]?.providerOptions).toEqual({
           convexGateway: {
             provider: { data_collection: "deny", zdr: true },
@@ -94,6 +97,32 @@ describe("Gateway handles", () => {
           },
         });
       })
+  );
+
+  it.effect.each(Purpose.literals)(
+    "caps a streamed %s answer at the same output limit",
+    (purpose) =>
+      Effect.gen(function* () {
+        const { gateway, model } = serve();
+        yield* Effect.promise(() =>
+          gateway.language(purpose).model.doStream({ prompt })
+        );
+        expect(model.doStreamCalls[0]?.maxOutputTokens).toBe(
+          purposes[purpose].maxOutputTokens
+        );
+      })
+  );
+
+  it.effect("lets a call set its own, lower output limit", () =>
+    Effect.gen(function* () {
+      const { gateway, model } = serve();
+      yield* Effect.promise(() =>
+        gateway
+          .language("chat")
+          .model.doGenerate({ prompt, maxOutputTokens: 64 })
+      );
+      expect(model.doGenerateCalls[0]?.maxOutputTokens).toBe(64);
+    })
   );
 
   it.effect(

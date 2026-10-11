@@ -7,6 +7,7 @@ import {
   String as Str,
 } from "effect";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
+import { classFindings } from "#scripts/check/classes";
 import {
   inspectCompilerConfigs,
   isCompilerConfig,
@@ -61,9 +62,9 @@ function lineReport(lines: readonly string[]) {
 }
 
 /**
- * Applies the Effect-native, array, gateway, React, state, and refs source
- * policies to authored modules. The array rules read each module's types from
- * its project on disk, and their findings join the Effect-native findings
+ * Applies the Effect-native, array, gateway, React, state, refs, and class
+ * source policies to authored modules. The array rules read each module's types
+ * from its project on disk, and their findings join the Effect-native findings
  * before the list is sorted. Every finding is a violation: no baseline or
  * allowlist holds one back.
  */
@@ -99,6 +100,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
       ])
     ),
     inspectExports(parsed.modules, otherModules, unjudged),
+    yield* classFindings(parsed),
   ]);
 }, Effect.scoped);
 
