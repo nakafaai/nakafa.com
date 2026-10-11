@@ -252,6 +252,7 @@ describe("class constant policy", () => {
     { declaration: "let ON: string;", assignment: '({ ON } = { ON: "a" });' },
     { declaration: "let ON: string;", assignment: '({ ON = "a" } = options);' },
     { declaration: "const ON = cn();", assignment: 'ON.card = "flex";' },
+    { declaration: "let ON, other;", assignment: 'ON = other = "flex";' },
   ])(
     "reports $declaration assigned class text by $assignment",
     ({ assignment, declaration }) =>

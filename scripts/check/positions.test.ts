@@ -63,6 +63,28 @@ describe("class positions", () => {
       read: ["custom", "ON"],
     },
     { name: "a concatenation", value: 'ON + " p-1"', read: ["ON"] },
+    { name: "the value of an assignment", value: "last = ON", read: ["ON"] },
+    {
+      name: "the value of a chained assignment",
+      value: "last = other = ON",
+      read: ["ON"],
+    },
+    { name: "the right side of &&=", value: "open &&= ON", read: ["ON"] },
+    {
+      name: "either side of ||=",
+      value: "custom ||= ON",
+      read: ["custom", "ON"],
+    },
+    {
+      name: "either side of ??=",
+      value: "custom ??= ON",
+      read: ["custom", "ON"],
+    },
+    {
+      name: "either side of +=",
+      value: "custom += ON",
+      read: ["custom", "ON"],
+    },
     {
       name: "a template span",
       value: template("", "ON", " p-1"),

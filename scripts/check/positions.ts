@@ -31,17 +31,30 @@ import { unwrapped } from "#scripts/check/wrapper";
 
 const ATTRIBUTES = HashSet.fromIterable(CLASS_ATTRIBUTES);
 const FUNCTIONS = HashSet.fromIterable(CLASS_FUNCTIONS);
-/** The operators whose two operands can both be classes. The right side of `&&` is one too. */
+/**
+ * The operators whose two operands can both be classes. An assignment is a
+ * value too, as in `classes = alias ||= "flex"`: one that joins what its name
+ * holds with its right side has both.
+ */
 const JOINING_OPERATORS = HashSet.make(
   SyntaxKind.BarBarToken,
   SyntaxKind.PlusToken,
-  SyntaxKind.QuestionQuestionToken
+  SyntaxKind.QuestionQuestionToken,
+  SyntaxKind.BarBarEqualsToken,
+  SyntaxKind.PlusEqualsToken,
+  SyntaxKind.QuestionQuestionEqualsToken
+);
+/** The operators whose value is a class only through their right side. */
+const RIGHT_OPERATORS = HashSet.make(
+  SyntaxKind.AmpersandAmpersandToken,
+  SyntaxKind.AmpersandAmpersandEqualsToken,
+  SyntaxKind.EqualsToken
 );
 
 /** Returns the operands of a binary expression that can be classes. */
 function classOperands(node: BinaryExpression) {
   const { kind } = node.operatorToken;
-  if (kind === SyntaxKind.AmpersandAmpersandToken) {
+  if (HashSet.has(RIGHT_OPERATORS, kind)) {
     return [node.right];
   }
   return HashSet.has(JOINING_OPERATORS, kind) ? [node.left, node.right] : [];
@@ -109,9 +122,10 @@ function memberParts(member: Node): readonly Node[] {
  * Returns the parts a class value is made of. An identifier is the name it
  * reads, and a member chain such as `STYLES.card` reads the names it starts
  * from. A string or a template is class text written there. A branch, `||`,
- * `??`, `+`, the right side of `&&`, a template span, an array element, a
- * spread, and an object key, value, or shorthand name hold more parts. A call
- * holds the names it reads and no text, and a function holds none.
+ * `??`, `+`, the right side of `&&`, the value of an assignment, a template
+ * span, an array element, a spread, and an object key, value, or shorthand name
+ * hold more parts. A call holds the names it reads and no text, and a function
+ * holds none.
  */
 export function classParts(node: Node): readonly Node[] {
   const value = unwrapped(node);
