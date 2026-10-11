@@ -153,6 +153,27 @@ describe("Nina memory removal", () => {
     expect(await keyedMemories(f)).toEqual([kept]);
   });
 
+  it("confirms a memory written after Delete all later than it even when the clock has not moved, so no reader hides it and no batch takes it", async () => {
+    const f = await createMemoryTest();
+    await f.fill(60);
+    expect(await f.owner.mutation(clear, {})).toBeNull();
+    // The clock still reads the moment of the deletion.
+    const kept = await f.owner.mutation(add, { text: "Written after memory" });
+    const after = ["Written after memory"];
+    expect(await f.stored()).toContainEqual(
+      expect.objectContaining({ _id: kept, confirmedAt: NOW + 1 })
+    );
+    expect(await readers(f)).toEqual({
+      capture: after,
+      found: after,
+      listed: after,
+      turn: after,
+    });
+    await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    expect(await f.texts()).toEqual(after);
+    expect(await keyedMemories(f)).toEqual([kept]);
+  });
+
   it("hides sixty memories from every reader the moment the learner asks, shows the memory written right after, and leaves only that one when the batches have run", async () => {
     const f = await createMemoryTest();
     await f.fill(60);

@@ -22,6 +22,7 @@ import {
 } from "@repo/backend/confect/nina/memory/seal";
 import {
   clearMemories,
+  confirmedAfterClear,
   deleteMemory,
   drainMemories,
   expireBatch,
@@ -67,7 +68,11 @@ const sealDraft = Effect.fn("nina.memory.sealDraft")(function* (
 
 /**
  * Writes a memory in the learner's own words, with the title they gave it, and
- * indexes it. A learner keeps as many memories as they write.
+ * indexes it. A learner keeps as many memories as they write. It reads the
+ * moment the learner last deleted every memory, as `edit` and the capture
+ * write do: the database runs this write again when a "Delete all" commits
+ * while it runs, and the memory is confirmed after that moment, so the batches
+ * of that deletion never take it.
  */
 const add = FunctionImpl.make(
   schema,
@@ -79,7 +84,11 @@ const add = FunctionImpl.make(
       return yield* new NinaMemoryRejected({ reason: "empty" });
     }
     const { keys, text, title } = yield* sealDraft(appUser._id, draft);
-    const confirmedAt = yield* Clock.currentTimeMillis;
+    const { clearedAt } = yield* readMemoryState(appUser._id);
+    const confirmedAt = confirmedAfterClear(
+      yield* Clock.currentTimeMillis,
+      clearedAt
+    );
     const id = yield* (yield* DatabaseWriter)
       .table("ninaMemories")
       .insert({

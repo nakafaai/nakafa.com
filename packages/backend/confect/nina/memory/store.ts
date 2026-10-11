@@ -55,6 +55,21 @@ export function isCleared(
 }
 
 /**
+ * The moment a memory the learner writes at `now` is confirmed: after the last
+ * "Delete all", never at or before it, so that deletion never takes a memory
+ * the learner wrote after asking for it. A clock that has not moved on from the
+ * deletion would stamp the memory as one the deletion took. Every reader would
+ * hide it, and the batches would delete it, or leave it stored and hidden if
+ * they had finished.
+ */
+export function confirmedAfterClear(
+  now: number,
+  clearedAt: number | undefined
+) {
+  return clearedAt === undefined ? now : Math.max(now, clearedAt + 1);
+}
+
+/**
  * Reads a learner's most recently confirmed memories that "Delete all" did not
  * take (see `readMemoryState`), the newest first, at most `limit`. The newest
  * come first, so what the learner deleted is the tail of the index and the
