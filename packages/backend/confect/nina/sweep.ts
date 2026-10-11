@@ -9,24 +9,37 @@ import type { NinaSweepResume } from "@repo/backend/confect/nina/lifecycle.spec"
 import { Array as Arr, Clock, Duration, Effect } from "effect";
 
 /**
- * How long a turn may stay queued or running: the chat call's total budget plus
- * one minute for the claim, the last save and the settlement around it. A turn
- * past it can no longer finish on its own.
+ * How long a queued turn may wait for its run to start. A run that starts
+ * later could still be in its chat call when the turn's deadline passes, so
+ * the claim refuses it instead.
+ */
+export const START_DEADLINE = Duration.seconds(30);
+
+/**
+ * How long a turn may stay open, counted from its admission: the wait for its
+ * run to start, the chat call's total budget, and half a minute for the last
+ * save and the settlement. A turn past it can no longer finish on its own.
  */
 export const TURN_DEADLINE = Duration.sum(
-  Duration.millis(purposes.chat.timeout.totalMs),
-  Duration.minutes(1)
+  Duration.sum(START_DEADLINE, Duration.millis(purposes.chat.timeout.totalMs)),
+  Duration.seconds(30)
 );
 
 /** How many open turns one sweep call reads before the next call continues. */
 const SWEEP_PAGE = 50;
 
-/** A running turn counts from the start of its run, a queued one from admission. */
-function openSince(turn: NinaTurnsDoc) {
-  return turn.state.status === "running"
-    ? turn.state.startedAt
-    : turn._creationTime;
-}
+/**
+ * True once a queued turn waited too long for its run to start. Every turn
+ * therefore has one clock, its admission: a run that starts in time ends
+ * before the turn's deadline, so the open-turn limit and the sweep never
+ * mistake a live run for a dead one.
+ */
+export const startsLate = Effect.fn("nina.sweep.late")(function* (
+  turn: NinaTurnsDoc
+) {
+  const waited = (yield* Clock.currentTimeMillis) - turn._creationTime;
+  return waited > Duration.toMillis(START_DEADLINE);
+});
 
 /**
  * Settles every turn that stayed open past its deadline, whatever stopped its
@@ -49,14 +62,13 @@ export const sweepTurns = Effect.fn("nina.sweep")(function* (
     )
     .paginate({ cursor: resume?.cursor ?? null, numItems: SWEEP_PAGE })
     .pipe(Effect.orDie);
-  const overdue = Arr.filter(page.page, (turn) => openSince(turn) < before);
-  if (Arr.isReadonlyArrayNonEmpty(overdue)) {
+  if (Arr.isReadonlyArrayNonEmpty(page.page)) {
     yield* Effect.logWarning("Nina turns stayed open past their deadline", {
-      count: overdue.length,
+      count: page.page.length,
     });
   }
   yield* Effect.forEach(
-    overdue,
+    page.page,
     (turn) =>
       scheduler.runAfter(Duration.zero, refs.internal.nina.lifecycle.recover, {
         turnId: turn._id,

@@ -12,7 +12,7 @@ import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/nina/lifecycle.spec";
 import { settleTurn, stopTurn } from "@repo/backend/confect/nina/settlement";
-import { sweepTurns } from "@repo/backend/confect/nina/sweep";
+import { startsLate, sweepTurns } from "@repo/backend/confect/nina/sweep";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { Clock, Effect, Layer } from "effect";
 
@@ -64,6 +64,10 @@ const claim = FunctionImpl.make(
       chat?.activeTurnId !== turn._id
     ) {
       yield* settleTurn(turn, "cancelled");
+      return null;
+    }
+    if (yield* startsLate(turn)) {
+      yield* settleTurn(turn, "failed", "response-timeout");
       return null;
     }
     const state = {

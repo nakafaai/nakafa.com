@@ -3,7 +3,10 @@ import { listMessages, saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { TURN_DEADLINE } from "@repo/backend/confect/nina/sweep";
+import {
+  START_DEADLINE,
+  TURN_DEADLINE,
+} from "@repo/backend/confect/nina/sweep";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -16,6 +19,7 @@ vi.mock("@convex-dev/agent", async (load) => {
 
 const NOW = Date.UTC(2026, 8, 27, 12);
 const DEADLINE = Duration.toMillis(TURN_DEADLINE);
+const START = Duration.toMillis(START_DEADLINE);
 const PAGE = 50;
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
@@ -139,15 +143,32 @@ describe("Nina turn sweep", () => {
     expect(await f.queued("nina/lifecycle:recover")).toHaveLength(1);
   });
 
-  it("measures a running turn from the moment its run started", async () => {
+  it("ends a turn whose run starts too late as timed out, with its credits back", async () => {
     const f = await fixture();
-    const startedAt = NOW + DEADLINE - 1000;
-    vi.setSystemTime(startedAt);
-    await f.t.mutation(claim, { turnId: f.turnId });
-    vi.setSystemTime(NOW + DEADLINE + 1);
+    const late = NOW + START + 1;
+    vi.setSystemTime(late);
+    expect(await f.t.mutation(claim, { turnId: f.turnId })).toBeNull();
+    const state = await f.inspect();
+    expect(state.turn?.state).toEqual({
+      status: "failed",
+      finishedAt: late,
+      reason: "response-timeout",
+    });
+    expect(state.user?.credits).toBe(10);
+    expect(state.chat?.activeTurnId).toBeUndefined();
+    expect(state.messages.page[0]).toMatchObject({ status: "failed" });
+  });
+
+  it("measures a run that started at the last moment from its turn's admission", async () => {
+    const f = await fixture();
+    vi.setSystemTime(NOW + START);
+    expect(await f.t.mutation(claim, { turnId: f.turnId })).toMatchObject({
+      state: { status: "running", startedAt: NOW + START },
+    });
+    vi.setSystemTime(NOW + DEADLINE);
     await f.t.mutation(sweep, {});
     expect(await f.queued("nina/lifecycle:recover")).toEqual([]);
-    vi.setSystemTime(startedAt + DEADLINE + 1);
+    vi.setSystemTime(NOW + DEADLINE + 1);
     await f.t.mutation(sweep, {});
     expect(await f.queued("nina/lifecycle:recover")).toHaveLength(1);
   });
