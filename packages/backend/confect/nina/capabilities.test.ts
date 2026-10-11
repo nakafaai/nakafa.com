@@ -69,6 +69,121 @@ function toolCall(
   );
 }
 
+/**
+ * Runs one capability through a scripted turn in one state and returns what
+ * the model's tool call produced and what the turn logged.
+ */
+async function runCapability(
+  capability: keyof typeof toolInputs,
+  state: "allowed" | "denied" | "failed" | "missing" | "sourceLimit"
+) {
+  vi.mocked(runNakafaAgent).mockReturnValue(
+    state === "failed"
+      ? Effect.fail(
+          new NakafaGenerationError({
+            cause: undefined,
+            message: "Private provider detail",
+          })
+        )
+      : Effect.succeed({ text: "Verified content." })
+  );
+  vi.mocked(runMathAgent).mockReturnValue(
+    state === "failed"
+      ? Effect.fail(
+          new MathGenerationError({
+            cause: undefined,
+            message: "Private provider detail",
+          })
+        )
+      : Effect.succeed({ text: "Verified calculation." })
+  );
+  if (state === "sourceLimit") {
+    vi.mocked(runResearchAgent).mockReturnValue(
+      Effect.fail(
+        new ResearchSourceLimitError({
+          maximum: researchMaxSources,
+          received: researchMaxSources + 1,
+        })
+      )
+    );
+  } else {
+    vi.mocked(runResearchAgent).mockReturnValue(
+      state === "failed"
+        ? Effect.fail(
+            new ResearchGenerationError({
+              phase: "search",
+              message: "Private provider detail",
+              rejected: false,
+            })
+          )
+        : Effect.succeed({ text: "Verified source." })
+    );
+  }
+  const model = new MockLanguageModelV4({
+    doGenerate: [toolCall(capability), request],
+  });
+  const logged = MutableRef.make<readonly unknown[]>([]);
+  const result = await runSpecialist((userId) =>
+    Effect.gen(function* () {
+      const session = yield* openNinaLearningSession({
+        capturedAt: "2026-09-27T12:00:00Z",
+        source: "current-page",
+        learning: {
+          locale: "en",
+          slug: "home",
+          url: "https://nakafa.com/en/home",
+          verified: false,
+        },
+      });
+      const tools = yield* createCapabilities(
+        userId,
+        {
+          ...specialistRequest.context,
+          nina:
+            state === "missing"
+              ? undefined
+              : {
+                  ...session.context,
+                  tools: {
+                    ...session.context.tools,
+                    allowNakafa: state !== "denied",
+                    allowMath: state !== "denied",
+                    allowDeepResearch: state !== "denied",
+                  },
+                },
+        },
+        "en",
+        vi.fn()
+      );
+      const ctx = yield* ActionCtx;
+      const generated = yield* Effect.promise(() =>
+        new Agent(components.nina, {
+          name: "test",
+          languageModel: model,
+          tools,
+          stopWhen: isStepCount(3),
+        }).generateText(
+          ctx,
+          { userId },
+          { prompt: "Use the requested capability." }
+        )
+      );
+      return Arr.map(generated.toolResults, ({ output }) => output);
+    }).pipe(
+      Effect.provide(
+        Logger.layer([
+          Logger.formatStructured.pipe(
+            Logger.map(({ message }) =>
+              MutableRef.update(logged, Arr.append(message))
+            )
+          ),
+        ])
+      )
+    )
+  );
+  return { logged, result };
+}
+
 describe("Nina capability execution policy", () => {
   for (const capability of ["nakafa", "math", "deepResearch"] as const) {
     const states =
@@ -78,110 +193,7 @@ describe("Nina capability execution policy", () => {
     it.each(states)(
       `${capability} keeps %s execution within the authenticated turn`,
       async (state) => {
-        vi.mocked(runNakafaAgent).mockReturnValue(
-          state === "failed"
-            ? Effect.fail(
-                new NakafaGenerationError({
-                  cause: undefined,
-                  message: "Private provider detail",
-                })
-              )
-            : Effect.succeed({ text: "Verified content." })
-        );
-        vi.mocked(runMathAgent).mockReturnValue(
-          state === "failed"
-            ? Effect.fail(
-                new MathGenerationError({
-                  cause: undefined,
-                  message: "Private provider detail",
-                })
-              )
-            : Effect.succeed({ text: "Verified calculation." })
-        );
-        if (state === "sourceLimit") {
-          vi.mocked(runResearchAgent).mockReturnValue(
-            Effect.fail(
-              new ResearchSourceLimitError({
-                maximum: researchMaxSources,
-                received: researchMaxSources + 1,
-              })
-            )
-          );
-        } else {
-          vi.mocked(runResearchAgent).mockReturnValue(
-            state === "failed"
-              ? Effect.fail(
-                  new ResearchGenerationError({
-                    phase: "search",
-                    message: "Private provider detail",
-                    rejected: false,
-                  })
-                )
-              : Effect.succeed({ text: "Verified source." })
-          );
-        }
-        const model = new MockLanguageModelV4({
-          doGenerate: [toolCall(capability), request],
-        });
-        const logged = MutableRef.make<readonly unknown[]>([]);
-        const result = await runSpecialist((userId) =>
-          Effect.gen(function* () {
-            const session = yield* openNinaLearningSession({
-              capturedAt: "2026-09-27T12:00:00Z",
-              source: "current-page",
-              learning: {
-                locale: "en",
-                slug: "home",
-                url: "https://nakafa.com/en/home",
-                verified: false,
-              },
-            });
-            const tools = yield* createCapabilities(
-              userId,
-              {
-                ...specialistRequest.context,
-                nina:
-                  state === "missing"
-                    ? undefined
-                    : {
-                        ...session.context,
-                        tools: {
-                          ...session.context.tools,
-                          allowNakafa: state !== "denied",
-                          allowMath: state !== "denied",
-                          allowDeepResearch: state !== "denied",
-                        },
-                      },
-              },
-              "en",
-              vi.fn()
-            );
-            const ctx = yield* ActionCtx;
-            const generated = yield* Effect.promise(() =>
-              new Agent(components.nina, {
-                name: "test",
-                languageModel: model,
-                tools,
-                stopWhen: isStepCount(3),
-              }).generateText(
-                ctx,
-                { userId },
-                { prompt: "Use the requested capability." }
-              )
-            );
-            return Arr.map(generated.toolResults, ({ output }) => output);
-          }).pipe(
-            Effect.provide(
-              Logger.layer([
-                Logger.formatStructured.pipe(
-                  Logger.map(({ message }) =>
-                    MutableRef.update(logged, Arr.append(message))
-                  )
-                ),
-              ])
-            )
-          )
-        );
+        const { logged, result } = await runCapability(capability, state);
         // Only a failed run is logged, as routing facts without the provider's words.
         expect(MutableRef.get(logged)).toEqual(
           state === "failed"
@@ -237,4 +249,20 @@ describe("Nina capability execution policy", () => {
       }
     );
   }
+
+  it("tells Nina what this attempt could not verify and to name a direct channel when external research fails, without an absence claim", async () => {
+    const { result } = await runCapability("deepResearch", "failed");
+
+    expect(result[0]).toMatchObject({
+      outcome: "failed",
+      text: expect.stringContaining(
+        "Tell the learner what this attempt could not verify, which is the request itself, and name a direct channel they can check next."
+      ),
+    });
+    expect(result[0]).toMatchObject({
+      text: expect.stringContaining(
+        "do not claim that anything is absent or does not exist"
+      ),
+    });
+  });
 });

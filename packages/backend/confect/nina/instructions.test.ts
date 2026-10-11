@@ -7,7 +7,7 @@ import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
 import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
-import { MEMORY_PROMPT_LIMIT } from "@repo/backend/confect/nina/memory.spec";
+import { MEMORY_START_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
@@ -147,20 +147,38 @@ describe("Nina instructions", () => {
     }
   });
 
-  it("puts the memories about the lesson the learner has open ahead of newer ones", async () => {
+  it("puts the memories about the page the learner has open ahead of newer ones, the lesson and the paths above it", async () => {
     const f = await createMemoryTest();
-    await f.fill(MEMORY_PROMPT_LIMIT);
-    await f.seed({ confirmedAt: 0, lesson: LESSON, text: "Bingung limit." });
+    await f.fill(MEMORY_START_LIMIT - 1);
+    await f.seed({
+      confirmedAt: 0,
+      text: "Bingung limit.",
+      topics: [`lesson:${LESSON}`],
+    });
+    await f.seed({
+      confirmedAt: 0,
+      text: "Suka matematika.",
+      topics: ["path:subjects/mathematics"],
+    });
     expect(await instructionsFor(f)).toHaveProperty(
       "instructions",
       expect.not.stringContaining("Bingung limit.")
     );
-    await f.openLesson(`asset:en:${LESSON}`);
-    const open = await instructionsFor(f);
-    expect(open).toHaveProperty(
-      "instructions",
-      expect.stringContaining("- (goal) Bingung limit.")
+    await f.openLesson(
+      `asset:en:${LESSON}`,
+      "subjects/mathematics/limits/idea"
     );
+    const open = await instructionsFor(f);
+    for (const expected of [
+      "- (goal) Bingung limit.\n- (goal) Suka matematika.\n",
+      "- (goal) Memory 6\n",
+    ]) {
+      expect(open).toHaveProperty(
+        "instructions",
+        expect.stringContaining(expected)
+      );
+    }
+    // Eight memories fit: the page's two, then the six most recently confirmed.
     expect(open).toHaveProperty(
       "instructions",
       expect.not.stringContaining("- (goal) Memory 0\n")

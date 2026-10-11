@@ -4,7 +4,7 @@ import {
   ConvexProvider as ConvexClientProvider,
   ConvexReactClient,
 } from "convex/react";
-import { Effect, Exit, Option, Scope } from "effect";
+import { Effect, Exit, Function as Fn, Option, Scope } from "effect";
 import {
   createContext,
   type ReactNode,
@@ -28,6 +28,7 @@ import {
   readConvexAuth,
   readConvexSessionId,
 } from "@/lib/auth/convex";
+import { loadKnownSession, saveKnownSession } from "@/lib/auth/known";
 
 let sharedConvexClient: ConvexReactClient | undefined;
 
@@ -70,11 +71,40 @@ const readConvexToken = Effect.tryPromise({
 
 const ConvexAuthContext = createContext<ConvexAuthStore | null>(null);
 
+/** What the browser knows about its session never changes under a mounted page, so nothing notifies. */
+function subscribeKnownSession() {
+  return Fn.constVoid;
+}
+
+/** The session the browser last had, as its storage holds it. */
+function readKnownSession() {
+  return Effect.runSync(loadKnownSession());
+}
+
+/** The server knows no earlier session, and neither does the render that hydrates its HTML. */
+function readNoSession() {
+  return null;
+}
+
 /**
- * Hands Convex the signed-in session's credentials. It renders before the
- * provider's children, so its effect runs before theirs and a known session
- * authenticates the client before any child subscribes to a query, as the
- * first child of `ConvexProviderWithAuth` does.
+ * The session Convex holds credentials for: the signed-in session, and until
+ * Better Auth has answered, the session the browser last had.
+ */
+function useConvexSessionId() {
+  const known = useSyncExternalStore(
+    subscribeKnownSession,
+    readKnownSession,
+    readNoSession
+  );
+  return useAuthSession((session) => readConvexSessionId(session, known));
+}
+
+/**
+ * Hands Convex the session's credentials. It renders before the provider's
+ * children, so its effect runs before theirs and a known session authenticates
+ * the client before any child subscribes to a query, as the first child of
+ * `ConvexProviderWithAuth` does. It also keeps what each settled session says
+ * for the next page load.
  */
 function ConvexSessionCredentials({
   client,
@@ -83,7 +113,12 @@ function ConvexSessionCredentials({
   client: ConvexReactClient;
   store: ConvexAuthStore;
 }) {
-  const sessionId = useAuthSession(readConvexSessionId);
+  const sessionId = useConvexSessionId();
+  const session = useAuthSession(Fn.identity);
+
+  useEffect(() => {
+    Effect.runSync(saveKnownSession(session));
+  }, [session]);
 
   useEffect(() => {
     if (sessionId === null) {
@@ -110,13 +145,13 @@ function ConvexSessionCredentials({
 }
 
 /**
- * Clears Convex's credentials when the signed-in session ends. Like the last
- * child of `ConvexProviderWithAuth`, it renders after the provider's children,
- * so its cleanup runs after theirs and readers that unmount with the session
- * release their queries before the credentials go.
+ * Clears Convex's credentials when the session ends. Like the last child of
+ * `ConvexProviderWithAuth`, it renders after the provider's children, so its
+ * cleanup runs after theirs and readers that unmount with the session release
+ * their queries before the credentials go.
  */
 function ConvexSessionRelease({ client }: { client: ConvexReactClient }) {
-  const sessionId = useAuthSession(readConvexSessionId);
+  const sessionId = useConvexSessionId();
 
   useEffect(() => {
     if (sessionId === null) {

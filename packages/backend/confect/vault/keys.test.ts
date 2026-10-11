@@ -9,7 +9,11 @@ import {
   readLearnerKeys,
   shredLearnerKeys,
 } from "@repo/backend/confect/vault/keys";
-import { openText, sealText } from "@repo/backend/confect/vault/text";
+import {
+  blindText,
+  openText,
+  sealText,
+} from "@repo/backend/confect/vault/text";
 import { ConfigProvider, Effect } from "effect";
 import { Base64 } from "effect/encoding";
 
@@ -17,6 +21,7 @@ const memory = { field: "text", table: "ninaMemories" };
 const summary = { field: "text", table: "ninaSummaries" };
 const title = { field: "title", table: "ninaMemories" };
 const fact = "Lebih suka contoh soal dulu, baru rumusnya.";
+const BLIND = /^[\w-]{22}$/u;
 
 /** Creates one account and returns its id. */
 const learner = Effect.fn("test.vault.learner")(function* (name: string) {
@@ -95,6 +100,43 @@ describe("vault learner keys", () => {
             expect(
               (yield* Effect.flip(openText(keys, field, sealed))).reason
             ).toBe("cipher");
+          }
+        })
+      )
+  );
+
+  it.effect(
+    "blinds a word for one learner and one field, the same way every time",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+          const other = yield* ensureLearnerKeys(yield* learner("other"));
+          const blinded = yield* blindText(owner, memory, "trigon");
+          expect(blinded).toMatch(BLIND);
+          expect(blinded).not.toContain("trigon");
+          expect(yield* blindText(owner, memory, "trigon")).toBe(blinded);
+          // The key that is read back later blinds the same word the same way.
+          expect(
+            yield* blindText(
+              yield* readLearnerKeys(owner.userId),
+              memory,
+              "trigon"
+            )
+          ).toBe(blinded);
+          // Another learner, another field and another word each give another value.
+          for (const value of [
+            yield* blindText(other, memory, "trigon"),
+            yield* blindText(owner, title, "trigon"),
+            yield* blindText(owner, memory, "trigono"),
+            yield* blindText(
+              { ...owner, userId: other.userId },
+              memory,
+              "trigon"
+            ),
+          ]) {
+            expect(value).toMatch(BLIND);
+            expect(value).not.toBe(blinded);
           }
         })
       )

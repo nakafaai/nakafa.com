@@ -1,8 +1,9 @@
-import { open, seal } from "@repo/backend/confect/vault/cipher";
+import { blindHash, open, seal } from "@repo/backend/confect/vault/cipher";
 import type { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import type { VaultField } from "@repo/backend/confect/vault/schema";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
+import { Base64Url } from "effect/encoding";
 
 type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
 
@@ -42,4 +43,21 @@ export const openText = Effect.fn("vault.openText")(function* (
 ) {
   const plain = yield* open(keys, fieldBinding(keys, field), sealed);
   return decoder.decode(plain);
+});
+
+/**
+ * Blinds a text for one stored field of the learner who owns `keys`: 22
+ * URL-safe characters that stand for the text. The database can match the same
+ * text again without being able to read it. Another learner, another field or
+ * another text gives another value. The value stays the same for ever, because
+ * rows that hold it are looked up by it.
+ */
+export const blindText = Effect.fn("vault.blindText")(function* (
+  keys: LearnerKeys,
+  field: typeof VaultField.Type,
+  text: string
+) {
+  return Base64Url.encode(
+    yield* blindHash(keys, fieldBinding(keys, field), encoder.encode(text))
+  );
 });

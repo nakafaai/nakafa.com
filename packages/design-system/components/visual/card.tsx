@@ -49,13 +49,6 @@ function useVisual<T>(selector: (state: VisualState) => T) {
 }
 
 /**
- * Screen-filling surface shared by both full screen presentations. The card's
- * own margins stay with its slot in the page.
- */
-const FULL_SCREEN =
-  "m-0 overflow-y-auto overscroll-contain rounded-none pt-[calc(var(--card-spacing)+env(safe-area-inset-top,0px))] pr-[env(safe-area-inset-right,0px)] pb-[calc(var(--card-spacing)+env(safe-area-inset-bottom,0px))] pl-[env(safe-area-inset-left,0px)] shadow-none ring-0";
-
-/**
  * Off-screen cards skip rendering, and both full screen presentations fill
  * the screen. The browser's top layer places and sizes a Fullscreen API
  * element. The immersive card covers the dynamic viewport itself: in the top
@@ -71,10 +64,19 @@ const FULL_SCREEN =
 const visualCardVariants = cva(
   "group/visual content-auto-card [overflow-anchor:none]",
   {
+    compoundVariants: [
+      // The screen-filling surface that both full screen presentations share.
+      // The card's own margins stay with its slot in the page.
+      {
+        className:
+          "m-0 overflow-y-auto overscroll-contain rounded-none pt-[calc(var(--card-spacing)+env(safe-area-inset-top,0px))] pr-[env(safe-area-inset-right,0px)] pb-[calc(var(--card-spacing)+env(safe-area-inset-bottom,0px))] pl-[env(safe-area-inset-left,0px)] shadow-none ring-0",
+        presentation: ["fullscreen", "immersive"],
+      },
+    ],
     variants: {
       presentation: {
-        fullscreen: FULL_SCREEN,
-        immersive: [FULL_SCREEN, "fixed inset-0 z-60 h-dvh w-auto border-0"],
+        fullscreen: "",
+        immersive: "fixed inset-0 z-60 h-dvh w-auto border-0",
         inline: "",
       },
     },

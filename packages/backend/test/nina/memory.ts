@@ -3,14 +3,18 @@ import { RegisteredConvexFunction } from "@confect/server";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { syncKeys, wordKey } from "@repo/backend/confect/nina/memory/keys";
 import {
   MEMORY_FIELD,
   TITLE_FIELD,
 } from "@repo/backend/confect/nina/memory/seal";
-import type {
-  NinaMemory,
-  NinaMemoryCandidate,
-  NinaMemorySeen,
+import { searchMemories } from "@repo/backend/confect/nina/memory/search";
+import {
+  MEMORY_KNOWN_LIMIT,
+  type NinaMemory,
+  type NinaMemoryCandidate,
+  type NinaMemorySeen,
 } from "@repo/backend/confect/nina/memory.spec";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import {
@@ -23,6 +27,9 @@ import { createNinaTest } from "@repo/backend/test/nina";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
 
 type UserId = Docs["users"]["_id"];
+
+/** What a visitor meets on a write: the typed failure of a missing session. */
+export const sessionRequired = { data: { _tag: "SessionRequired" } };
 
 /** Runs a database effect inside a test mutation. A failure fails the test. */
 function run<A, E>(
@@ -42,72 +49,74 @@ function run<A, E>(
 }
 
 /**
- * Inserts one memory for a learner. Nina wrote it, with a kind, unless the row
- * says otherwise. A memory the learner wrote has no kind unless the row names
- * one, and has no title unless the row gives one. The words and the title are
- * sealed in their own fields, as the product seals them.
+ * Inserts one memory for a learner and indexes it as the product does. Nina
+ * wrote it, with a kind, unless the row says otherwise. A memory the learner
+ * wrote has no kind unless the row names one, and has no title unless the row
+ * gives one. The words and the title are sealed in their own fields, as the
+ * product seals them.
  */
-export async function insertMemory(
+export function insertMemory(
   ctx: MutationCtx,
   {
     author = "nina",
     confirmedAt = 1,
     kind = author === "nina" ? "goal" : undefined,
-    lesson,
     text = "Mau ikut SNBT 2027.",
     title,
+    topics,
     userId,
     validUntil,
   }: {
     readonly author?: typeof NinaMemory.Type.author;
     readonly confirmedAt?: number;
     readonly kind?: typeof NinaMemory.Type.kind;
-    readonly lesson?: string;
     readonly text?: string;
     readonly title?: string;
+    readonly topics?: readonly string[];
     readonly userId: UserId;
     readonly validUntil?: number;
   }
 ) {
-  const sealed = await run(
+  return run(
     ctx,
     Effect.gen(function* () {
       const keys = yield* ensureLearnerKeys(userId);
-      return {
+      const id = yield* (yield* DatabaseWriter).table("ninaMemories").insert({
+        author,
+        confirmedAt,
+        ...(kind === undefined ? {} : { kind }),
         text: yield* sealText(keys, MEMORY_FIELD, text),
-        title:
-          title === undefined
-            ? undefined
-            : yield* sealText(keys, TITLE_FIELD, title),
-      };
+        ...(title === undefined
+          ? {}
+          : { title: yield* sealText(keys, TITLE_FIELD, title) }),
+        ...(topics === undefined ? {} : { topics: [...topics] }),
+        userId,
+        ...(validUntil === undefined ? {} : { validUntil }),
+      });
+      yield* syncKeys(keys, id, { confirmedAt, text, title, topics });
+      return id;
     })
   );
-  return ctx.db.insert("ninaMemories", {
-    author,
-    confirmedAt,
-    ...(kind === undefined ? {} : { kind }),
-    ...(lesson === undefined ? {} : { lesson }),
-    text: sealed.text,
-    ...(sealed.title === undefined ? {} : { title: sealed.title }),
-    userId,
-    ...(validUntil === undefined ? {} : { validUntil }),
-  });
 }
 
 type Seed = Partial<Parameters<typeof insertMemory>[1]>;
 type NinaTest = Awaited<ReturnType<typeof createNinaTest>>;
 
 /**
- * Helpers for the memory table of a Nina fixture. Memories seeded here are
- * sealed exactly as the product seals them, so they open through the public
- * functions.
+ * Helpers for the memory tables of a Nina fixture. Memories seeded here are
+ * sealed and indexed exactly as the product does it, so they open and are found
+ * through the public functions.
  */
 export function memoryTools(f: NinaTest) {
   /** Inserts one memory, Nina's own unless the seed says otherwise. */
   const seed = ({ userId = f.identity.userId, ...row }: Seed = {}) =>
     f.t.mutation((ctx) => insertMemory(ctx, { ...row, userId }));
 
-  /** Inserts `count` memories in one step, each confirmed after the one before. */
+  /**
+   * Inserts `count` memories in one step, each confirmed after the one before.
+   * They read `Memory 0`, `Memory 1` and so on, unless the seed gives them all
+   * one text.
+   */
   const fill = (
     count: number,
     { userId = f.identity.userId, ...row }: Seed = {}
@@ -115,9 +124,9 @@ export function memoryTools(f: NinaTest) {
     f.t.mutation(async (ctx) => {
       for (let index = 0; index < count; index += 1) {
         await insertMemory(ctx, {
+          text: `Memory ${index}`,
           ...row,
           confirmedAt: index + 1,
-          text: `Memory ${index}`,
           userId,
         });
       }
@@ -140,8 +149,8 @@ export function memoryTools(f: NinaTest) {
     };
   };
 
-  /** Puts the turn's learner on the lesson page that this asset id names. */
-  const openLesson = (assetId: string) =>
+  /** Puts the turn's learner on the page at `slug` that shows the lesson this asset id names. */
+  const openLesson = (assetId: string, slug = "home") =>
     f.t.mutation(async (ctx) => {
       const turn = await ctx.db.get("ninaTurns", f.turnId);
       const page = Option.getOrThrow(Option.fromNullishOr(turn?.page));
@@ -150,8 +159,9 @@ export function memoryTools(f: NinaTest) {
           ...page,
           nina: {
             ...page.nina,
-            learning: { ...page.nina.learning, assetId },
+            learning: { ...page.nina.learning, assetId, slug },
           },
+          slug,
         },
       });
     });
@@ -159,6 +169,10 @@ export function memoryTools(f: NinaTest) {
   /** Every stored memory row, as stored. */
   const stored = () =>
     f.t.query((ctx) => ctx.db.query("ninaMemories").collect());
+
+  /** Every stored key row of the index. */
+  const keys = () =>
+    f.t.query((ctx) => ctx.db.query("ninaMemoryKeys").collect());
 
   /** The opened text of every stored memory of a learner, in storage order. */
   const texts = (userId: UserId = f.identity.userId) =>
@@ -169,8 +183,10 @@ export function memoryTools(f: NinaTest) {
       );
       return run(
         ctx,
-        Effect.flatMap(readLearnerKeys(userId), (keys) =>
-          Effect.forEach(rows, (row) => openText(keys, MEMORY_FIELD, row.text))
+        Effect.flatMap(readLearnerKeys(userId), (learner) =>
+          Effect.forEach(rows, (row) =>
+            openText(learner, MEMORY_FIELD, row.text)
+          )
         )
       );
     });
@@ -188,17 +204,62 @@ export function memoryTools(f: NinaTest) {
       );
       return run(
         ctx,
-        Effect.flatMap(readLearnerKeys(userId), (keys) =>
+        Effect.flatMap(readLearnerKeys(userId), (learner) =>
           Effect.forEach(rows, ({ title }) =>
             title === undefined
               ? Effect.succeed(null)
-              : openText(keys, TITLE_FIELD, title)
+              : openText(learner, TITLE_FIELD, title)
           )
         )
       );
     });
 
-  return { fill, openLesson, seed, stored, stranger, texts, titles };
+  /** Runs a database effect in a mutation of the fixture's deployment. */
+  const execute = <A, E>(
+    effect: Effect.Effect<
+      A,
+      E,
+      RegisteredConvexFunction.MutationServices<typeof schema>
+    >
+  ) => f.t.mutation((ctx) => run(ctx, effect));
+
+  /**
+   * The words of the memories that the search finds for a learner, in the order
+   * it returns them.
+   */
+  const find = (
+    options: Omit<Parameters<typeof searchMemories>[0], "userId"> & {
+      readonly userId?: UserId;
+    }
+  ) =>
+    execute(
+      Effect.map(
+        searchMemories({ userId: f.identity.userId, ...options }),
+        Arr.map((memory) => memory.text)
+      )
+    );
+
+  /** The key a learner's index holds for one word, as the product makes it. */
+  const wordKeyOf = (word: string, userId: UserId = f.identity.userId) =>
+    execute(
+      Effect.flatMap(readLearnerKeys(userId), (learner) =>
+        wordKey(learner, word)
+      )
+    );
+
+  return {
+    execute,
+    fill,
+    find,
+    keys,
+    openLesson,
+    seed,
+    stored,
+    stranger,
+    texts,
+    titles,
+    wordKeyOf,
+  };
 }
 
 /** A Nina fixture together with its memory helpers. */
@@ -225,30 +286,34 @@ export function candidate(
 
 /**
  * A memory fixture that also runs one capture write for its turn. `seen` is
- * what the capture call read before the model read the message: every memory of
- * the learner when the run starts, unless a test names others.
+ * what the capture call read before the model read the message: the first
+ * twelve memories of the learner when the run starts, unless a test names
+ * others.
  */
 export async function createCaptureTest() {
   const f = await createMemoryTest();
   const readNow = async () =>
-    Arr.map(
-      Arr.filter(
-        await f.stored(),
-        ({ userId }) => userId === f.identity.userId
+    Arr.take(
+      Arr.map(
+        Arr.filter(
+          await f.stored(),
+          ({ userId }) => userId === f.identity.userId
+        ),
+        ({ _id, confirmedAt }) => ({ confirmedAt, id: _id })
       ),
-      ({ _id, confirmedAt }) => ({ confirmedAt, id: _id })
+      MEMORY_KNOWN_LIMIT
     );
   const run = async (
     candidates: (typeof NinaMemoryCandidate.Type)[],
     {
-      lesson,
       seen,
-    }: { lesson?: string; seen?: (typeof NinaMemorySeen.Type)[] } = {}
+      topics = [],
+    }: { seen?: (typeof NinaMemorySeen.Type)[]; topics?: string[] } = {}
   ) =>
     f.t.mutation(capture, {
       candidates,
-      ...(lesson === undefined ? {} : { lesson }),
       seen: seen ?? (await readNow()),
+      topics,
       turnId: f.turnId,
       userId: f.identity.userId,
     });

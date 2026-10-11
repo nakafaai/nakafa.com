@@ -4,51 +4,36 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { endOfDay } from "@repo/backend/confect/nina/memory/check";
+import { syncKeys } from "@repo/backend/confect/nina/memory/keys";
 import { findTarget, sameWords } from "@repo/backend/confect/nina/memory/match";
 import {
   MEMORY_FIELD,
   type Opened,
   openWith,
 } from "@repo/backend/confect/nina/memory/seal";
+import { searchMemories } from "@repo/backend/confect/nina/memory/search";
 import {
-  changedSince,
-  lostMemory,
+  isUnchanged,
+  lostSeen,
+  readNamed,
 } from "@repo/backend/confect/nina/memory/seen";
+import { readPaused } from "@repo/backend/confect/nina/memory/store";
 import {
-  deleteMemory,
-  readMemories,
-  readPaused,
-} from "@repo/backend/confect/nina/memory/store";
-import {
-  MEMORY_LIMIT,
+  MEMORY_TOPIC_LIMIT,
   type NinaMemoryCandidate,
   type NinaMemorySeen,
 } from "@repo/backend/confect/nina/memory.spec";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
-import { Array as Arr, Clock, Effect, HashSet, Option, Order } from "effect";
+import { Array as Arr, Clock, Effect, HashSet, Option } from "effect";
 
-type MemoryId = Docs["ninaMemories"]["_id"];
 type UserId = Docs["users"]["_id"];
 type Candidate = typeof NinaMemoryCandidate.Type;
 type Seen = typeof NinaMemorySeen.Type;
 type LearnerKeys = Effect.Success<ReturnType<typeof ensureLearnerKeys>>;
 
-/** The memory confirmed longest ago comes first. */
-const oldestFirst = Order.mapInput(
-  Order.Number,
-  (memory: Opened) => memory.confirmedAt
-);
-
-/** The memory Nina wrote and confirmed longest ago, which leaves first at the limit. */
-function oldestByNina(memories: readonly Opened[]) {
-  return Arr.head(
-    Arr.sort(
-      Arr.filter(memories, (memory) => memory.author === "nina"),
-      oldestFirst
-    )
-  );
-}
+/** Memories searched for the one a candidate says again, besides the one it names. */
+const TARGET_LIMIT = 8;
 
 /** The end of a situation's last day. Any other kind has none. */
 function endOf(candidate: Candidate) {
@@ -63,7 +48,10 @@ function endOf(candidate: Candidate) {
  * changed the memory since the call read it. Words the learner wrote are never
  * replaced. A memory that nobody changed since takes the candidate's kind,
  * which is how a memory the learner wrote gets one, and a situation takes a new
- * end date.
+ * end date. The memory is also linked to the topics of the open pages that it
+ * is not linked to yet, up to `MEMORY_TOPIC_LIMIT`. Its keys follow in every
+ * case: they take the new words and topics and the time of this confirmation,
+ * so a memory that is said again stays among the first a lookup meets.
  */
 const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
   candidate,
@@ -71,6 +59,7 @@ const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
   keys,
   memory,
   now,
+  topics,
   validUntil,
 }: {
   readonly candidate: Candidate;
@@ -78,6 +67,7 @@ const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
   readonly keys: LearnerKeys;
   readonly memory: Opened;
   readonly now: number;
+  readonly topics: readonly string[];
   readonly validUntil: Option.Option<number>;
 }) {
   const mayRewrite = !changed;
@@ -85,6 +75,11 @@ const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
     mayRewrite &&
     memory.author === "nina" &&
     !sameWords(memory.text, candidate.text);
+  const linked = Arr.take(
+    Arr.union(memory.topics ?? [], topics),
+    MEMORY_TOPIC_LIMIT
+  );
+  const gains = Arr.length(linked) > Arr.length(memory.topics ?? []);
   yield* (yield* DatabaseWriter)
     .table("ninaMemories")
     .patch(memory._id, {
@@ -98,99 +93,101 @@ const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
       ...(mayRewrite && Option.isSome(validUntil)
         ? { validUntil: validUntil.value }
         : {}),
+      ...(gains ? { topics: linked } : {}),
     })
     .pipe(Effect.orDie);
+  yield* syncKeys(keys, memory._id, {
+    confirmedAt: now,
+    text: rewrites ? candidate.text : memory.text,
+    title: memory.title,
+    topics: linked,
+  });
 });
 
-/**
- * Writes a new memory for Nina. At the limit the memory Nina confirmed longest
- * ago leaves for it; when the learner wrote them all, nothing is written.
- */
+/** Writes a new memory for Nina, linked to the topics of the open pages, and its keys. */
 const createMemory = Effect.fn("nina.memory.write.create")(function* ({
   candidate,
   keys,
-  lesson,
-  memories,
   now,
-  userId,
+  topics,
   validUntil,
 }: {
   readonly candidate: Candidate;
   readonly keys: LearnerKeys;
-  readonly lesson: string | undefined;
-  readonly memories: readonly Opened[];
   readonly now: number;
-  readonly userId: UserId;
+  readonly topics: readonly string[];
   readonly validUntil: Option.Option<number>;
 }) {
-  if (Arr.length(memories) >= MEMORY_LIMIT) {
-    const oldest = oldestByNina(memories);
-    if (Option.isNone(oldest)) {
-      return Option.none();
-    }
-    yield* deleteMemory(oldest.value._id);
-  }
   const id = yield* (yield* DatabaseWriter)
     .table("ninaMemories")
     .insert({
       author: "nina",
       confirmedAt: now,
       kind: candidate.kind,
-      ...(lesson === undefined ? {} : { lesson }),
       text: yield* sealText(keys, MEMORY_FIELD, candidate.text),
-      userId,
+      ...(Arr.isReadonlyArrayNonEmpty(topics) ? { topics: [...topics] } : {}),
+      userId: keys.userId,
       ...(Option.isSome(validUntil) ? { validUntil: validUntil.value } : {}),
     })
     .pipe(Effect.orDie);
-  return Option.some(id);
+  yield* syncKeys(keys, id, {
+    confirmedAt: now,
+    text: candidate.text,
+    topics,
+  });
+  return id;
 });
 
 /**
- * Writes one candidate against the memories as they stand, which include what
- * the call wrote before it. It returns the memory it wrote or confirmed, or
+ * Writes one candidate against the memories it can say again: the one it names,
+ * when the call read it, and the `TARGET_LIMIT` that match its words and the
+ * open pages best. Both are read as they stand, so they include what the call
+ * wrote before this candidate. It returns the memory it wrote or confirmed, or
  * nothing when it dropped the candidate.
  */
 const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   candidate,
-  changedIds,
   keys,
-  lesson,
   now,
-  userId,
+  seen,
+  topics,
 }: {
   readonly candidate: Candidate;
-  readonly changedIds: HashSet.HashSet<MemoryId>;
   readonly keys: LearnerKeys;
-  readonly lesson: string | undefined;
   readonly now: number;
-  readonly userId: UserId;
+  readonly seen: readonly Seen[];
+  readonly topics: readonly string[];
 }) {
   const validUntil = endOf(candidate);
   if (candidate.kind === "situation" && Option.isNone(validUntil)) {
     return Option.none();
   }
-  const memories = yield* openWith(keys, yield* readMemories(userId));
+  const named = yield* openWith(
+    keys,
+    Arr.fromOption(yield* readNamed(keys.userId, seen, candidate.known))
+  );
+  const matches = yield* searchMemories({
+    limit: TARGET_LIMIT,
+    text: candidate.text,
+    topics,
+    userId: keys.userId,
+  });
   // What the learner wrote is theirs: the target is such a memory only when the
   // candidate says the same. Otherwise the candidate confirms a memory that
   // says it, or becomes a memory of Nina's.
-  const target = findTarget(memories, candidate);
+  const target = findTarget(Arr.appendAll(named, matches), candidate);
   if (Option.isNone(target)) {
-    return yield* createMemory({
-      candidate,
-      keys,
-      lesson,
-      memories,
-      now,
-      userId,
-      validUntil,
-    });
+    return Option.some(
+      yield* createMemory({ candidate, keys, now, topics, validUntil })
+    );
   }
   yield* confirmMemory({
     candidate,
-    changed: HashSet.has(changedIds, target.value._id),
+    changed: !isUnchanged(seen, target.value),
     keys,
     memory: target.value,
     now,
+    topics,
     validUntil,
   });
   return Option.some(target.value._id);
@@ -199,20 +196,25 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
 /**
  * Writes what one capture call found the learner saying about themself, and
  * returns how many memories it wrote or confirmed, which it also stores in the
- * turn. A candidate that names a known memory, or says what a memory of its
- * kind (or a memory without a kind) already says, confirms that memory. A
+ * turn. A candidate that names a memory the call read, or says what a memory of
+ * its kind (or a memory without a kind) already says, confirms that memory. A
  * memory the learner wrote counts only when the candidate says the same as it,
  * so naming one that says something else confirms nothing by that name. Any
  * other candidate is a new memory. The model read the message some time ago, so
  * the write first checks what could have changed meanwhile: paused memory, a
  * deleted turn, or a memory the learner removed writes nothing, and a memory
- * changed or written since the call read the list keeps its words, its kind and
- * its end date.
+ * changed since the call read it, or one the call never read, keeps its words,
+ * its kind and its end date. It looks up the at most 12 memories the call read
+ * and searches for the others, so it touches a bounded number of documents
+ * whatever the learner keeps: a candidate reads at most 411 to find its target
+ * (the one it names and a search of 410) and touches at most 419 to write it
+ * (the memory and at most 416 key rows read, deleted, moved or inserted), so
+ * three candidates touch at most about 2,500.
  */
 export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   readonly candidates: readonly Candidate[];
-  readonly lesson?: string | undefined;
   readonly seen: readonly Seen[];
+  readonly topics: readonly string[];
   readonly turnId: Docs["ninaTurns"]["_id"];
   readonly userId: UserId;
 }) {
@@ -226,21 +228,18 @@ export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   if (!turn || (yield* readPaused(args.userId))) {
     return 0;
   }
-  const current = yield* readMemories(args.userId);
-  if (lostMemory(args.seen, current)) {
+  if (yield* lostSeen(args.userId, args.seen)) {
     return 0;
   }
-  const changedIds = changedSince(args.seen, current);
   const now = yield* Clock.currentTimeMillis;
   const keys = yield* ensureLearnerKeys(args.userId);
   const written = yield* Effect.forEach(args.candidates, (candidate) =>
     writeCandidate({
       candidate,
-      changedIds,
       keys,
-      lesson: args.lesson,
       now,
-      userId: args.userId,
+      seen: args.seen,
+      topics: args.topics,
     })
   );
   const remembered = HashSet.size(HashSet.fromIterable(Arr.getSomes(written)));

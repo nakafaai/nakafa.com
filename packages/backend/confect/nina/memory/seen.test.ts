@@ -3,11 +3,12 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  changedSince,
-  lostMemory,
+  isUnchanged,
+  lostSeen,
+  readNamed,
 } from "@repo/backend/confect/nina/memory/seen";
 import { candidate, createCaptureTest } from "@repo/backend/test/nina/memory";
-import { Array as Arr, Order, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const clear = Ref.getFunctionReference(refs.public.nina.memory.clear);
 const edit = Ref.getFunctionReference(refs.public.nina.memory.edit);
@@ -21,7 +22,6 @@ const SCHOOL_NOW = `${SCHOOL} sekarang`;
 const decode = Schema.decodeUnknownSync(Id("ninaMemories"));
 const first = decode("first");
 const second = decode("second");
-const third = decode("third");
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -29,60 +29,66 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-/** The memories a call found changed, in alphabetical order: a set keeps no order of its own. */
-function changed(...args: Parameters<typeof changedSince>) {
-  return Arr.sort(Arr.fromIterable(changedSince(...args)), Order.String);
-}
-
 describe("memory a capture call had read", () => {
-  it("finds a memory that is gone, and nothing when all are there or none was read", () => {
-    const stored = [{ _id: first, confirmedAt: 1 }];
-    expect(lostMemory([{ confirmedAt: 1, id: first }], stored)).toBe(false);
-    expect(lostMemory([], stored)).toBe(false);
-    expect(lostMemory([], [])).toBe(false);
+  it("finds a memory that is gone, and nothing when all are there or none was read", async () => {
+    const f = await createCaptureTest();
+    const stays = await f.seed({ text: "Stays" });
+    const gone = await f.seed({ text: "Goes" });
+    await f.owner.mutation(remove, { id: gone });
+    const lost = (seen: Parameters<typeof lostSeen>[1]) =>
+      f.execute(lostSeen(f.identity.userId, seen));
+    expect(await lost([{ confirmedAt: 1, id: stays }])).toBe(false);
+    expect(await lost([])).toBe(false);
     expect(
-      lostMemory(
-        [
-          { confirmedAt: 1, id: first },
-          { confirmedAt: 1, id: second },
-        ],
-        stored
+      await lost([
+        { confirmedAt: 1, id: stays },
+        { confirmedAt: 1, id: gone },
+      ])
+    ).toBe(true);
+  });
+
+  it("counts a memory of another learner as gone", async () => {
+    const f = await createCaptureTest();
+    const other = await f.stranger();
+    const theirs = await f.seed({ text: "Theirs", userId: other.userId });
+    expect(
+      await f.execute(
+        lostSeen(f.identity.userId, [{ confirmedAt: 1, id: theirs }])
       )
     ).toBe(true);
   });
 
-  it("finds the memories confirmed after the call read them, and those it never read", () => {
-    expect(
-      changed(
-        [
-          { confirmedAt: 1, id: first },
-          { confirmedAt: 1, id: second },
-        ],
-        [
-          { _id: first, confirmedAt: 5 },
-          { _id: second, confirmedAt: 1 },
-          { _id: third, confirmedAt: 9 },
-        ]
-      )
-    ).toEqual([first, third]);
+  it("reads the memory a candidate names as it stands, only when the call read it", async () => {
+    const f = await createCaptureTest();
+    const read = await f.seed({ text: "Read" });
+    const unread = await f.seed({ text: "Unread" });
+    const gone = await f.seed({ text: "Goes" });
+    const seen = [
+      { confirmedAt: 1, id: read },
+      { confirmedAt: 1, id: gone },
+    ];
+    await f.owner.mutation(remove, { id: gone });
+    const named = (known: string | undefined) =>
+      f.execute(
+        Effect.map(readNamed(f.identity.userId, seen, known), (found) =>
+          Option.getOrNull(Option.map(found, (row) => row._id))
+        )
+      );
+    expect(await named(read)).toBe(read);
+    // A memory the call did not read, one that is gone, one that is no id, and
+    // no name at all each name nothing.
+    expect(await named(unread)).toBeNull();
+    expect(await named(gone)).toBeNull();
+    expect(await named("not-an-id")).toBeNull();
+    expect(await named(undefined)).toBeNull();
   });
 
-  it("finds nothing when every stored memory is as the call read it, and every memory when it read none", () => {
-    const stored = [
-      { _id: first, confirmedAt: 1 },
-      { _id: second, confirmedAt: 2 },
-    ];
-    expect(
-      changed(
-        [
-          { confirmedAt: 2, id: second },
-          { confirmedAt: 1, id: first },
-        ],
-        stored
-      )
-    ).toEqual([]);
-    expect(changed([], stored)).toEqual([first, second]);
-    expect(changed([], [])).toEqual([]);
+  it("tells a memory as the call read it from one that was confirmed after, or that the call never read", () => {
+    const seen = [{ confirmedAt: 1, id: first }];
+    expect(isUnchanged(seen, { _id: first, confirmedAt: 1 })).toBe(true);
+    expect(isUnchanged(seen, { _id: first, confirmedAt: 5 })).toBe(false);
+    expect(isUnchanged(seen, { _id: second, confirmedAt: 1 })).toBe(false);
+    expect(isUnchanged([], { _id: first, confirmedAt: 1 })).toBe(false);
   });
 });
 

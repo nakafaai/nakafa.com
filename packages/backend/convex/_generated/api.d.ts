@@ -3445,20 +3445,31 @@ export declare const api: {
       list: FunctionReference<
         "query",
         "public",
-        {},
         {
-          memories: Array<{
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
             author: "nina" | "learner";
             confirmedAt: number;
             createdAt: number;
             id: Id<"ninaMemories">;
-            inUse: boolean;
             text: string;
             title?: string;
             validUntil?: number;
           }>;
-          paused: boolean;
-        } | null
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
       >;
       pause: FunctionReference<"mutation", "public", { paused: boolean }, null>;
       remove: FunctionReference<
@@ -3466,6 +3477,26 @@ export declare const api: {
         "public",
         { id: Id<"ninaMemories"> },
         null
+      >;
+      search: FunctionReference<
+        "query",
+        "public",
+        { query: string },
+        Array<{
+          author: "nina" | "learner";
+          confirmedAt: number;
+          createdAt: number;
+          id: Id<"ninaMemories">;
+          text: string;
+          title?: string;
+          validUntil?: number;
+        }>
+      >;
+      state: FunctionReference<
+        "query",
+        "public",
+        {},
+        { paused: boolean } | null
       >;
     };
     messages: {
@@ -6186,6 +6217,24 @@ export declare const internal: {
         any
       >;
     };
+    tokens: {
+      encryptStoredTokens: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: null | string },
+        {
+          continueCursor: string;
+          encrypted: number;
+          isDone: boolean;
+          scanned: number;
+          unreadable: Array<{
+            account: string;
+            field: "accessToken" | "refreshToken";
+            reason: string;
+          }>;
+        }
+      >;
+    };
   };
   classes: {
     forums: {
@@ -8439,6 +8488,7 @@ export declare const internal: {
         | {
             _creationTime: number;
             _id: Id<"ninaTurns">;
+            cancelRequestedAt?: number;
             chatId: Id<"chats">;
             credits: number;
             creditsResetAt: number;
@@ -8932,6 +8982,12 @@ export declare const internal: {
           }
         | null
       >;
+      halted: FunctionReference<
+        "query",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        boolean
+      >;
       presentation: FunctionReference<
         "query",
         "internal",
@@ -8939,6 +8995,7 @@ export declare const internal: {
         | {
             _creationTime: number;
             _id: Id<"ninaTurns">;
+            cancelRequestedAt?: number;
             chatId: Id<"chats">;
             credits: number;
             creditsResetAt: number;
@@ -9451,6 +9508,12 @@ export declare const internal: {
         },
         null
       >;
+      sweep: FunctionReference<
+        "mutation",
+        "internal",
+        { resume?: { before: number; cursor: string } },
+        null
+      >;
     };
     memory: {
       capture: FunctionReference<
@@ -9464,18 +9527,24 @@ export declare const internal: {
             text: string;
             until?: string;
           }>;
-          lesson?: string;
           seen: Array<{ confirmedAt: number; id: Id<"ninaMemories"> }>;
+          topics: Array<string>;
           turnId: Id<"ninaTurns">;
           userId: Id<"users">;
         },
         number
       >;
+      drain: FunctionReference<
+        "mutation",
+        "internal",
+        { through: number; userId: Id<"users"> },
+        number
+      >;
       expire: FunctionReference<"mutation", "internal", {}, number>;
-      read: FunctionReference<
+      known: FunctionReference<
         "query",
         "internal",
-        { lesson?: string; userId: Id<"users"> },
+        { message: string; topics: Array<string>; userId: Id<"users"> },
         {
           known: Array<{
             confirmedAt: number;
@@ -9484,6 +9553,35 @@ export declare const internal: {
             text: string;
             title?: string;
           }>;
+          paused: boolean;
+          profile: {
+            focus?: "learning" | "tryout";
+            region?:
+              | "indonesia"
+              | "singapore"
+              | "united-kingdom"
+              | "germany"
+              | "united-states"
+              | "international";
+            tryout?: {
+              correct: number;
+              exam: string;
+              finishedAt: number;
+              score: number;
+              sections: Array<{ correct: number; key: string; total: number }>;
+              set: string;
+              status: "provisional" | "official";
+              total: number;
+            };
+            tryoutCountry?: string;
+          };
+        }
+      >;
+      read: FunctionReference<
+        "query",
+        "internal",
+        { topics: Array<string>; userId: Id<"users"> },
+        {
           paused: boolean;
           profile: {
             focus?: "learning" | "tryout";

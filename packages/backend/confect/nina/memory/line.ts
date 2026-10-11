@@ -1,12 +1,12 @@
-import type { NinaLearner } from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryNote } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, pipe, String as Str } from "effect";
 
 /** One memory as Nina and the capture call read it. */
-export type Note = (typeof NinaLearner.Type)["known"][number];
+export type Note = typeof NinaMemoryNote.Type;
 
 /**
  * Characters of one memory in the list a capture call reads. The call only has
- * to tell the memories apart, and the learner can keep a hundred long ones.
+ * to tell the memories apart, and a memory may hold 2000 characters.
  */
 const KNOWN_LENGTH = 240;
 

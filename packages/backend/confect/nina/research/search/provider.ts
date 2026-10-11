@@ -1,6 +1,6 @@
 import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
 import { ResearchSearchError } from "@repo/backend/confect/nina/research/schema";
-import { Duration, Effect, Option, Schema } from "effect";
+import { Duration, Effect, Option, Schedule, Schema } from "effect";
 
 /**
  * A search returns results without reading their pages, so it answers in about
@@ -8,6 +8,11 @@ import { Duration, Effect, Option, Schema } from "effect";
  * a request that never answers, so a card is never left loading.
  */
 const SEARCH_DEADLINE = Duration.seconds(12);
+
+/** The status the provider answers with when the plan's rate limit refuses a request. */
+const RATE_LIMITED = 429;
+/** How long a refused search waits before it asks once more. */
+const RETRY_DELAY = Duration.seconds(1);
 
 const searchFailure = (status?: { readonly status: number }) =>
   new ResearchSearchError({
@@ -50,6 +55,13 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
     Effect.timeoutOrElse({
       duration: SEARCH_DEADLINE,
       orElse: () => Effect.fail(searchFailure()),
+    }),
+    // Every learner shares the plan's rate limit, so a refused search waits a
+    // moment and asks once more before it counts as failed.
+    Effect.retry({
+      schedule: Schedule.spaced(RETRY_DELAY),
+      times: 1,
+      while: (error) => error.status === RATE_LIMITED,
     }),
     Effect.map((response) => ({ query, response }))
   );

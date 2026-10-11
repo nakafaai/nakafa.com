@@ -32,6 +32,7 @@ import {
   ResearchGenerationError,
   ResearchSourceLimitError,
   researchOutputSchema,
+  researchProviderConcurrency,
   webSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
 import { getSourceReferences } from "@repo/backend/confect/nina/research/source";
@@ -51,8 +52,6 @@ import { Array as Arr, Effect, MutableHashSet, Option, Result } from "effect";
 
 /** A reference written as a full web address, not as a bare site name. */
 const FULL_ADDRESS = /^https?:\/\//iu;
-// Keep exact source fetching within the admitted count and provider concurrency.
-const exactSourceScrapeConcurrency = 3;
 const exactSourceContentMaxLength = 8000;
 
 /**
@@ -288,7 +287,7 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
             url: output.data.url,
           }))
         ),
-      { concurrency: exactSourceScrapeConcurrency }
+      { concurrency: researchProviderConcurrency }
     );
   }
 );

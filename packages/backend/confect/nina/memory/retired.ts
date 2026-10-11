@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/confect/auth/session";
 import { setNinaMemoryPaused } from "@repo/backend/confect/learningPreferences/impl";
 import {
-  deleteMemories,
+  drainMemories,
   readPaused,
 } from "@repo/backend/confect/nina/memory/store";
 import spec from "@repo/backend/confect/nina/memory.spec";
@@ -50,7 +50,8 @@ export const enable = FunctionImpl.make(
 
 /**
  * Turns memory off and deletes every memory: the old card names its button
- * "Turn off and forget" and says that everything Nina remembered goes.
+ * "Turn off and forget" and says that everything Nina remembered goes. The
+ * memories go in batches, as `clear` deletes them.
  */
 export const disable = FunctionImpl.make(
   schema,
@@ -58,12 +59,9 @@ export const disable = FunctionImpl.make(
   "disable",
   Effect.fn("nina.memory.disable")(function* () {
     const { appUser } = yield* requireAuth();
-    yield* setNinaMemoryPaused({
-      now: yield* Clock.currentTimeMillis,
-      paused: true,
-      userId: appUser._id,
-    });
-    yield* deleteMemories(appUser._id);
+    const now = yield* Clock.currentTimeMillis;
+    yield* setNinaMemoryPaused({ now, paused: true, userId: appUser._id });
+    yield* drainMemories(appUser._id, now);
     return null;
   })
 );

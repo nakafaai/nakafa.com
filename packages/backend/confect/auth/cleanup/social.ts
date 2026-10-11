@@ -3,17 +3,12 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
-import {
-  deleteMemory,
-  readMemories,
-} from "@repo/backend/confect/nina/memory/store";
+import { deleteBatch } from "@repo/backend/confect/nina/memory/store";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
 
 const COMMENT_VOTE_BATCH_SIZE = 50;
 const COMMENT_REFERENCE_BATCH_SIZE = 25;
-/** Memories one cleanup pass deletes. */
-export const MEMORY_BATCH_SIZE = 25;
 
 /** Deletes one bounded batch of a user's comments and votes. */
 const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
@@ -130,14 +125,10 @@ const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
 
-/** Deletes one bounded batch of the learner's Nina memories. */
+/** Deletes one bounded batch of the learner's Nina memories, with their key rows. */
 const cleanupNinaMemory = Effect.fn("auth.cleanup.ninaMemory")(
   function* (userId: Id<"users">) {
-    const memories = yield* readMemories(userId, MEMORY_BATCH_SIZE);
-    for (const memory of memories) {
-      yield* deleteMemory(memory._id);
-    }
-    return memories.length > 0;
+    return (yield* deleteBatch(userId)) > 0;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );

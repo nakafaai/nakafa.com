@@ -17,9 +17,14 @@ import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
 import { DateTime, Effect } from "effect";
 
-/** The scheduled Confect action owns generation; Agent owns its persistent stream. */
+/**
+ * The scheduled Confect action owns generation; Agent owns its persistent
+ * stream. Aborting `halt` ends the generation early and lets Agent clean up its
+ * stream before this returns.
+ */
 export const generateResponse = Effect.fn("nina.generate")(function* (
-  turn: Extract<NinaTurnsDoc, { phase: "active" }>
+  turn: Extract<NinaTurnsDoc, { phase: "active" }>,
+  halt: AbortSignal
 ) {
   const ctx = yield* ActionCtx;
   const services = yield* Effect.context<ActionCtx | Gateway>();
@@ -75,7 +80,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
         { threadId: turn.threadId, userId: turn.userId },
         {
           promptMessageId: turn.promptMessageId,
-          abortSignal: signal,
+          abortSignal: AbortSignal.any([signal, halt]),
           onError: ({ error }) => {
             streamFailure ??= generationFailure(error);
           },

@@ -7,6 +7,8 @@ const NONCE_BYTES = 12;
 const TAG_BYTES = 16;
 const HEADER_BYTES = 1 + NONCE_BYTES;
 const KEY_BITS = 256;
+/** The bytes of a blind hash that are kept: 128 bits, far too many to collide. */
+const BLIND_BYTES = 16;
 
 const encoder = new TextEncoder();
 const derivation = {
@@ -48,9 +50,25 @@ function lengthOf(bytes: Uint8Array) {
   return length;
 }
 
+/** Derives one HMAC-SHA-256 key from `base` under its own info label. It can only sign. */
+function deriveMac(base: CryptoKey, label: string) {
+  return run("runtime", () =>
+    crypto.subtle.deriveKey(
+      { ...derivation, info: encoder.encode(label) },
+      base,
+      { hash: "SHA-256", length: KEY_BITS, name: "HMAC" },
+      false,
+      ["sign"]
+    )
+  );
+}
+
 /**
- * Derives the two keys that seal with one 32-byte key: an AES-256-GCM key and
- * an HMAC key that makes each nonce. Neither can be exported again.
+ * Derives the three keys that one 32-byte key makes: an AES-256-GCM key that
+ * seals, an HMAC key that makes each nonce, and an HMAC key that blinds a word
+ * (`blindHash`). Each has its own info label, so none can stand for another.
+ * Neither can be exported again. A root key only wraps learner keys, so it
+ * uses the first two.
  */
 export const deriveKeys = Effect.fn("vault.cipher.deriveKeys")(function* (
   key: Uint8Array
@@ -67,16 +85,9 @@ export const deriveKeys = Effect.fn("vault.cipher.deriveKeys")(function* (
       ["encrypt", "decrypt"]
     )
   );
-  const nonce = yield* run("runtime", () =>
-    crypto.subtle.deriveKey(
-      { ...derivation, info: encoder.encode("nakafa/vault/nonce/v1") },
-      base,
-      { hash: "SHA-256", length: KEY_BITS, name: "HMAC" },
-      false,
-      ["sign"]
-    )
-  );
-  return { encrypt, nonce };
+  const nonce = yield* deriveMac(base, "nakafa/vault/nonce/v1");
+  const blind = yield* deriveMac(base, "nakafa/vault/blind/v1");
+  return { blind, encrypt, nonce };
 });
 
 type Keys = Effect.Success<ReturnType<typeof deriveKeys>>;
@@ -136,4 +147,27 @@ export const open = Effect.fn("vault.cipher.open")(function* (
     )
   );
   return new Uint8Array(plain);
+});
+
+/**
+ * Blinds bytes for one binding: the first 16 bytes of an HMAC-SHA-256 of the
+ * binding and the bytes under the blind key. The same key, binding and bytes
+ * always give the same hash, so a stored hash can be looked up. Without the key
+ * nobody can compute it, and nobody can turn it back into the bytes. What it
+ * shows is whether two values under one key and one binding are the same.
+ */
+export const blindHash = Effect.fn("vault.cipher.blindHash")(function* (
+  keys: Keys,
+  binding: string,
+  plain: Uint8Array
+) {
+  const bound = encoder.encode(binding);
+  const mac = yield* run("runtime", () =>
+    crypto.subtle.sign(
+      "HMAC",
+      keys.blind,
+      join([lengthOf(bound), bound, plain])
+    )
+  );
+  return new Uint8Array(mac).slice(0, BLIND_BYTES);
 });

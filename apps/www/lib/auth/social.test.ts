@@ -1,5 +1,6 @@
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
+import { loadKnownSession } from "@/lib/auth/known";
 import { SocialSignInFailed, startGoogleSignIn } from "@/lib/auth/social";
 
 const input = {
@@ -8,6 +9,10 @@ const input = {
 };
 
 describe("social sign-in", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it.effect("starts Google with both success and failure destinations", () =>
     Effect.gen(function* () {
       let calls: unknown[] = [];
@@ -20,6 +25,8 @@ describe("social sign-in", () => {
       });
 
       expect(calls).toEqual([{ ...input, provider: "google" }]);
+      // The page the learner returns to asks Convex for a token at once.
+      expect(yield* loadKnownSession()).not.toBeNull();
     })
   );
 
@@ -37,6 +44,7 @@ describe("social sign-in", () => {
       ).pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(SocialSignInFailed);
+      expect(yield* loadKnownSession()).toBeNull();
     })
   );
 

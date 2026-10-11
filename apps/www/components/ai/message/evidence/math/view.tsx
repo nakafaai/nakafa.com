@@ -55,7 +55,7 @@ export function MathPart({ children, icon, message }: Props) {
           icon={ArrowDown01Icon}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent className="max-w-full overflow-hidden text-muted-foreground text-sm outline-none">
+      <CollapsibleContent className="ms-2 max-w-full overflow-hidden border-s ps-4 text-muted-foreground text-sm outline-none">
         {children}
       </CollapsibleContent>
     </Collapsible>

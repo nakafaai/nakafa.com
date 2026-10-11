@@ -1,41 +1,55 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { readOwnMemory } from "@repo/backend/confect/nina/memory/store";
 import type { NinaMemorySeen } from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, HashSet } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type Seen = typeof NinaMemorySeen.Type;
-type Stored = Pick<Docs["ninaMemories"], "_id" | "confirmedAt">;
 
 /**
  * Whether a memory that the capture call read is gone now. The learner removed
- * or cleared it while the model read the message, so what the call knows is out
- * of date and writing from it could bring back what the learner deleted.
+ * or cleared it while the model read the message, or it ended and was deleted,
+ * so what the call knows is out of date and writing from it could bring back
+ * what the learner deleted. The call reads at most 12 memories, and each is
+ * looked up by its id.
  */
-export function lostMemory(seen: readonly Seen[], stored: readonly Stored[]) {
-  return Arr.some(
-    seen,
-    ({ id }) => !Arr.some(stored, (memory) => memory._id === id)
+export const lostSeen = Effect.fn("nina.memory.seen.lost")(function* (
+  userId: Docs["users"]["_id"],
+  seen: readonly Seen[]
+) {
+  const found = yield* Effect.forEach(seen, ({ id }) =>
+    readOwnMemory(userId, id)
   );
-}
+  return Arr.some(found, (memory) => memory === null);
+});
 
 /**
- * The memories that are not as the capture call read them: confirmed or edited
- * after it read them, or written after it read the list. What they hold is
- * newer than the message, so the message does not rewrite their words, their
- * kind or their end date.
+ * The memory that a candidate names, as it stands now, when the call read a
+ * memory under that id. The model may name any text, so an id that the call did
+ * not read names nothing, and nothing is looked up for it.
  */
-export function changedSince(seen: readonly Seen[], stored: readonly Stored[]) {
-  return HashSet.fromIterable(
-    Arr.map(
-      Arr.filter(
-        stored,
-        (memory) =>
-          !Arr.some(
-            seen,
-            (note) =>
-              note.id === memory._id && note.confirmedAt === memory.confirmedAt
-          )
-      ),
-      (memory) => memory._id
-    )
+export const readNamed = Effect.fn("nina.memory.seen.named")(function* (
+  userId: Docs["users"]["_id"],
+  seen: readonly Seen[],
+  known: string | undefined
+) {
+  const note = Arr.findFirst(seen, ({ id }) => id === known);
+  return Option.isSome(note)
+    ? Option.fromNullOr(yield* readOwnMemory(userId, note.value.id))
+    : Option.none();
+});
+
+/**
+ * Whether a memory is as the capture call read it. One that was confirmed or
+ * edited after the call read it, and one the call never read, is not: what it
+ * holds is newer than the message, so the message does not rewrite its words,
+ * its kind or its end date.
+ */
+export function isUnchanged(
+  seen: readonly Seen[],
+  memory: Pick<Docs["ninaMemories"], "_id" | "confirmedAt">
+) {
+  return Arr.some(
+    seen,
+    (note) => note.id === memory._id && note.confirmedAt === memory.confirmedAt
   );
 }

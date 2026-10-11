@@ -1,6 +1,7 @@
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import { planSearchQueries } from "@repo/backend/confect/nina/research/query";
 import {
+  researchProviderConcurrency,
   type WebSearchInput,
   type WebSearchOutput,
   webSearchMaxQueries,
@@ -84,7 +85,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
           )
         )
       ),
-    { concurrency: webSearchMaxQueries }
+    { concurrency: researchProviderConcurrency }
   );
   const pages = yield* readTopPages(
     Arr.map(searched, (found) => found.sources),
@@ -206,7 +207,7 @@ const readTopPages = Effect.fn("research.readTopPages")(function* (
             ] as const)
           : Option.none()
       ),
-    { concurrency: RESULT_PAGES }
+    { concurrency: researchProviderConcurrency }
   );
   return HashMap.fromIterable(Arr.getSomes(read));
 });
