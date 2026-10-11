@@ -70,6 +70,7 @@ describe("class positions", () => {
       read: ["ON"],
     },
     { name: "the right side of &&=", value: "open &&= ON", read: ["ON"] },
+    { name: "the right side of a comma", value: "(track(), ON)", read: ["ON"] },
     {
       name: "either side of ||=",
       value: "custom ||= ON",

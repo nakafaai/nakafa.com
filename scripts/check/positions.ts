@@ -44,10 +44,14 @@ const JOINING_OPERATORS = HashSet.make(
   SyntaxKind.PlusEqualsToken,
   SyntaxKind.QuestionQuestionEqualsToken
 );
-/** The operators whose value is a class only through their right side. */
+/**
+ * The operators whose value is a class only through their right side: `&&`, an
+ * assignment, and the comma, whose left side is run and thrown away.
+ */
 const RIGHT_OPERATORS = HashSet.make(
   SyntaxKind.AmpersandAmpersandToken,
   SyntaxKind.AmpersandAmpersandEqualsToken,
+  SyntaxKind.CommaToken,
   SyntaxKind.EqualsToken
 );
 
@@ -122,10 +126,10 @@ function memberParts(member: Node): readonly Node[] {
  * Returns the parts a class value is made of. An identifier is the name it
  * reads, and a member chain such as `STYLES.card` reads the names it starts
  * from. A string or a template is class text written there. A branch, `||`,
- * `??`, `+`, the right side of `&&`, the value of an assignment, a template
- * span, an array element, a spread, and an object key, value, or shorthand name
- * hold more parts. A call holds the names it reads and no text, and a function
- * holds none.
+ * `??`, `+`, the right side of `&&` and of a comma, the value of an
+ * assignment, a template span, an array element, a spread, and an object key,
+ * value, or shorthand name hold more parts. A call holds the names it reads
+ * and no text, and a function holds none.
  */
 export function classParts(node: Node): readonly Node[] {
   const value = unwrapped(node);
