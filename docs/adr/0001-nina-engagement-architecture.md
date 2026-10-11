@@ -88,7 +88,7 @@ last folded turn. The summary, at most 1,200
 tokens, sits in the system prompt context and is deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
 rather than in a turn's usage ledger, which clients read. The learner profile
-and opt-in learner memory follow [ADR 0010](./0010-memory.md). Old
+and learner memory follow [ADR 0022](./0022-memory.md). Old
 reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000

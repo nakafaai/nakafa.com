@@ -2,293 +2,468 @@ import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  MEMORY_FACTS,
-  type NinaMemoryChanges,
-  type NinaMemoryFact,
+  MEMORY_LIMIT,
+  MEMORY_PROMPT_LIMIT,
+  type NinaLearner,
+  type NinaMemoryList,
+  type NinaMemoryView,
 } from "@repo/backend/confect/nina/memory.spec";
-import { createNinaTest } from "@repo/backend/test/nina";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
-import { Array as Arr, Option } from "effect";
+import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import { Array as Arr } from "effect";
 
-const get = Ref.getFunctionReference(refs.public.nina.memory.get);
-const enable = Ref.getFunctionReference(refs.public.nina.memory.enable);
-const disable = Ref.getFunctionReference(refs.public.nina.memory.disable);
-const forget = Ref.getFunctionReference(refs.public.nina.memory.forget);
+const memory = refs.public.nina.memory;
+const list = Ref.getFunctionReference(memory.list);
+const add = Ref.getFunctionReference(memory.add);
+const edit = Ref.getFunctionReference(memory.edit);
+const remove = Ref.getFunctionReference(memory.remove);
 const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
-const apply = Ref.getFunctionReference(refs.internal.nina.memory.apply);
-const call = { input: 300, output: 20 };
-const none: typeof NinaMemoryChanges.Type = {
-  forget: [],
-  remember: [],
-  update: [],
+
+const NOW = Date.UTC(2026, 9, 10, 12);
+const LESSON = "material:lesson:mathematics:material-section:limits";
+const rejected = (reason: "empty" | "limit" | "missing") => ({
+  data: { _tag: "NinaMemoryRejected", reason },
+});
+/** The arguments refuse the title before the function runs, which is no `NinaMemoryRejected`. */
+const refusedTitle = {
+  _tag: "SchemaError",
+  message: expect.stringContaining('["title"]'),
 };
 
-beforeEach(() => vi.useFakeTimers());
-afterEach(() => vi.useRealTimers());
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(NOW);
+});
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.useRealTimers();
+});
 
-/**
- * A learner with a chat and a way to store one curation from it, against the
- * memory revision the curation read (the current one by default).
- */
-async function fixture() {
-  const f = await createNinaTest();
-  const userId = f.identity.userId;
-  const stored = () =>
-    f.t.query((ctx) => ctx.db.query("ninaMemories").collect());
-  const revision = async () => {
-    const [memory] = await stored();
-    if (!memory) {
-      throw new Error("Expected one memory document.");
-    }
-    return { id: memory._id, revision: memory.updatedAt };
-  };
-  const curate = async (
-    changes: Partial<typeof NinaMemoryChanges.Type>,
-    memory?: Awaited<ReturnType<typeof revision>>
-  ) =>
-    f.t.mutation(apply, {
-      changes: { ...none, ...changes },
-      chatId: f.chatId,
-      memory: memory ?? (await revision()),
-      usage: call,
-      userId,
-    });
-  return { ...f, curate, revision, stored, userId };
+/** The Memory page as a learner's browser decodes it. */
+async function pageOf(
+  learner: Awaited<ReturnType<typeof createMemoryTest>>["owner"]
+) {
+  return Ref.decodeReturnsSync(memory.list, await learner.query(list, {}));
 }
 
-describe("Nina learner memory", () => {
-  it("keeps nothing until the learner turns memory on and forgets it all when turned off", async () => {
-    const f = await fixture();
-    expect(await f.owner.query(get, {})).toBeNull();
-    expect(await f.owner.mutation(enable, {})).toEqual({ facts: [] });
-    const before = await f.revision();
-    await f.owner.mutation(disable, {});
-    await f.curate({ remember: ["Kelas 12."] }, before);
-    expect(await f.stored()).toEqual([]);
-    expect(await f.owner.mutation(enable, {})).toEqual({ facts: [] });
-    vi.setSystemTime(1000);
-    await f.curate({ remember: ["Kelas 12."] });
-    expect(await f.owner.mutation(enable, {})).toEqual({
-      facts: [{ key: 0, savedAt: 1000, text: "Kelas 12." }],
+/** The words of each memory on the Memory page, in the order it lists them. */
+function words(page: typeof NinaMemoryList.Type | null) {
+  return Arr.map(page?.memories ?? [], (item) => item.text);
+}
+
+/** One memory on the Memory page, as its words and whether Nina reads it. */
+function shown({ inUse, text }: typeof NinaMemoryView.Type) {
+  return [text, inUse];
+}
+
+/** The words of each memory Nina reads, in the order she reads them. */
+function prompted(learner: Pick<typeof NinaLearner.Type, "prompt">) {
+  return Arr.map(learner.prompt, (item) => item.text);
+}
+
+/** The words and the title of each memory that a turn tells about. */
+function titled(notes: (typeof NinaLearner.Type)["known"]) {
+  return Arr.map(notes, ({ text, title }) => [text, title]);
+}
+
+describe("Nina memory page", () => {
+  it("shows nothing to a visitor and an empty memory to a learner who has none", async () => {
+    const f = await createMemoryTest();
+    expect(await f.t.query(list, {})).toBeNull();
+    expect(await f.owner.query(list, {})).toEqual({
+      memories: [],
+      paused: false,
     });
-    expect(await f.stored()).toEqual([
-      expect.objectContaining({
-        next: 1,
-        usage: { calls: 1, input: 300, output: 20 },
-      }),
-    ]);
-    expect(await f.owner.mutation(disable, {})).toBeNull();
-    expect(await f.owner.mutation(disable, {})).toBeNull();
-    expect(await f.owner.query(get, {})).toBeNull();
-    expect(await f.stored()).toEqual([]);
   });
 
-  it("rewrites, forgets, and skips repeated facts, keeping the most recently saved", async () => {
-    const f = await fixture();
-    await f.owner.mutation(enable, {});
+  it("adds memories as the learner's pure text, sealed at rest, and lists them opened, the newest first", async () => {
+    const f = await createMemoryTest();
     vi.setSystemTime(1000);
-    await f.curate({ remember: ["Kelas 12.", "Suka contoh.", "Ikut SNBT."] });
+    const level = await f.owner.mutation(add, { text: "Kelas 12 IPA" });
     vi.setSystemTime(2000);
-    await f.curate({
-      forget: [1, 1],
-      remember: ["ikut snbt.", "Sulit di peluang.", "Sulit di peluang."],
-      update: [
-        { key: 0, text: "Kelas 11." },
-        { key: 1, text: "Dropped by forget." },
-      ],
-    });
-    expect(await f.owner.query(get, {})).toEqual({
-      facts: [
-        { key: 3, savedAt: 2000, text: "Sulit di peluang." },
-        { key: 0, savedAt: 2000, text: "Kelas 11." },
-        { key: 2, savedAt: 1000, text: "Ikut SNBT." },
-      ],
-    });
-    for (let batch = 0; batch < MEMORY_FACTS / 3; batch += 1) {
-      await f.curate({
-        remember: Arr.map([0, 1, 2], (item) => `Fakta ${batch}-${item}.`),
-      });
-    }
-    const view = await f.owner.query(get, {});
-    const facts: readonly Pick<typeof NinaMemoryFact.Type, "text">[] =
-      Option.getOrThrow(Option.fromNullishOr(view)).facts;
-    expect(facts).toHaveLength(MEMORY_FACTS);
-    expect(facts[0]?.text).toBe("Fakta 9-2.");
-    expect(Option.getOrThrow(Arr.last(facts)).text).toBe("Fakta 0-0.");
-  });
-
-  it("changes nothing from a curation that raced a newer write, but counts it", async () => {
-    const f = await fixture();
-    await f.owner.mutation(enable, {});
-    const read = await f.revision();
-    vi.setSystemTime(1000);
-    await f.curate({ remember: ["Kelas 12."] }, read);
-    vi.setSystemTime(2000);
-    await f.curate({ update: [{ key: 0, text: "Kelas 11." }] }, read);
-    expect(await f.owner.query(get, {})).toEqual({
-      facts: [{ key: 0, savedAt: 1000, text: "Kelas 12." }],
-    });
-    expect(await f.stored()).toEqual([
-      expect.objectContaining({ usage: { calls: 2, input: 600, output: 40 } }),
-    ]);
-  });
-
-  it("changes nothing from a curation read before memory was reset", async () => {
-    const f = await fixture();
-    await f.owner.mutation(enable, {});
-    const read = await f.revision();
-    await f.owner.mutation(disable, {});
-    await f.owner.mutation(enable, {});
-    await f.curate({ remember: ["Kelas 12."] }, read);
-    expect(await f.stored()).toEqual([
-      expect.objectContaining({
-        facts: [],
-        usage: { calls: 1, input: 300, output: 20 },
-      }),
-    ]);
-  });
-
-  it("forgets one fact by key and ignores unknown keys", async () => {
-    const f = await fixture();
-    expect(await f.owner.mutation(forget, { key: 0 })).toBeNull();
-    await f.owner.mutation(enable, {});
-    vi.setSystemTime(1000);
-    await f.curate({ remember: ["Kelas 12.", "Suka contoh."] });
-    expect(await f.owner.mutation(forget, { key: 7 })).toEqual({
-      facts: [
-        { key: 1, savedAt: 1000, text: "Suka contoh." },
-        { key: 0, savedAt: 1000, text: "Kelas 12." },
-      ],
-    });
-    expect(await f.owner.mutation(forget, { key: 0 })).toEqual({
-      facts: [{ key: 1, savedAt: 1000, text: "Suka contoh." }],
-    });
-    expect(await f.t.query(get, {})).toBeNull();
-  });
-
-  it("keeps no facts from a chat deleted before curation finished but counts the call", async () => {
-    const f = await fixture();
-    await f.owner.mutation(enable, {});
-    await f.t.mutation((ctx) => ctx.db.delete("chats", f.chatId));
-    await f.curate({ remember: ["Kelas 12."] });
-    expect(await f.stored()).toEqual([
-      expect.objectContaining({
-        facts: [],
-        next: 0,
-        usage: { calls: 1, input: 300, output: 20 },
-      }),
-    ]);
-  });
-
-  it("reads remembered facts only while memory is on", async () => {
-    const f = await fixture();
-    expect(await f.t.query(read, { userId: f.userId })).toEqual({
-      memory: null,
-      profile: {},
-    });
-    await f.owner.mutation(enable, {});
-    await f.curate({ remember: ["Kelas 12."] });
-    const [memory] = await f.stored();
-    expect(await f.t.query(read, { userId: f.userId })).toEqual({
-      memory: {
-        facts: [{ key: 0, text: "Kelas 12." }],
-        id: memory?._id,
-        revision: memory?.updatedAt,
-      },
-      profile: {},
-    });
-  });
-
-  it("reads the account profile with the latest finished try-out by section", async () => {
-    const f = await fixture();
-    const userId = await f.t.mutation(async (ctx) => {
-      const runtime = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "completed",
-        sectionStatus: "completed",
-        suffix: "memory-profile",
-      });
-      const { userId: owner } = runtime.identity;
-      await ctx.db.insert("onboardingProfiles", {
-        focus: "tryout",
-        region: "indonesia",
-        updatedAt: 1,
-        userId: owner,
-      });
-      await ctx.db.insert("learningPreferences", {
-        preferredTryoutCountryKey: "indonesia",
-        updatedAt: 1,
-        userId: owner,
-      });
-      const attempt = await ctx.db.get("tryoutAttempts", runtime.attemptId);
-      if (!attempt) {
-        return Promise.reject(new Error("Fixture attempt missing"));
-      }
-      await ctx.db.insert("tryoutScores", {
-        finalizedAt: Date.UTC(2026, 8, 12),
-        publishedScore: 612,
-        rawScore: 1,
-        scoreStatus: "provisional",
-        scoringStrategy: "raw",
-        setIdentity: attempt.setIdentity,
-        totalCorrect: 1,
-        totalQuestions: 1,
-        tryoutAttemptId: attempt._id,
-        tryoutSnapshotId: attempt.tryoutSnapshotId,
-        userId: owner,
-      });
-      return owner;
-    });
-    expect(await f.t.query(read, { userId })).toEqual({
-      memory: null,
-      profile: {
-        focus: "tryout",
-        region: "indonesia",
-        tryout: {
-          correct: 1,
-          exam: "snbt",
-          finishedAt: Date.UTC(2026, 8, 12),
-          score: 612,
-          sections: [{ correct: 0, key: "penalaran-matematika", total: 1 }],
-          set: "set-1",
-          status: "provisional",
-          total: 1,
+    await f.owner.mutation(add, { text: "Ikut SNBT 2027" });
+    const view = await f.owner.query(list, {});
+    expect(view).toEqual({
+      memories: [
+        {
+          author: "learner",
+          confirmedAt: 2000,
+          createdAt: expect.any(Number),
+          id: expect.any(String),
+          inUse: true,
+          text: "Ikut SNBT 2027",
         },
-        tryoutCountry: "indonesia",
-      },
+        {
+          author: "learner",
+          confirmedAt: 1000,
+          createdAt: expect.any(Number),
+          id: level,
+          inUse: true,
+          text: "Kelas 12 IPA",
+        },
+      ],
+      paused: false,
+    });
+    expect(await f.stored()).toHaveLength(2);
+    for (const row of await f.stored()) {
+      const bytes = new TextDecoder("latin1").decode(row.text);
+      expect(bytes).not.toContain("Kelas 12");
+      expect(bytes).not.toContain("SNBT");
+      // The learner writes pure text: the memory is theirs, with no kind, and
+      // words alone give it no title.
+      expect(row).toMatchObject({ author: "learner" });
+      expect(row).not.toHaveProperty("kind");
+      expect(row).not.toHaveProperty("title");
+    }
+    expect(view?.memories[0]).not.toHaveProperty("title");
+    expect(
+      await f.t.query((ctx) => ctx.db.query("vaultKeys").collect())
+    ).toHaveLength(1);
+  });
+
+  it("adds a memory with a title and words, seals both at rest, and lists both opened", async () => {
+    const f = await createMemoryTest();
+    const id = await f.owner.mutation(add, {
+      text: "Kelas 12 IPA",
+      title: "Sekolah",
+    });
+    expect(await pageOf(f.owner)).toMatchObject({
+      memories: [
+        { author: "learner", id, text: "Kelas 12 IPA", title: "Sekolah" },
+      ],
+    });
+    const [row] = await f.stored();
+    expect(row?.title).toBeInstanceOf(ArrayBuffer);
+    expect(new TextDecoder("latin1").decode(row?.text)).not.toContain("Kelas");
+    expect(new TextDecoder("latin1").decode(row?.title)).not.toContain(
+      "Sekolah"
+    );
+    expect(await f.titles()).toEqual(["Sekolah"]);
+  });
+
+  it("adds a memory that is only a title, and lists it with no words", async () => {
+    const f = await createMemoryTest();
+    vi.setSystemTime(1000);
+    await f.owner.mutation(add, { text: "", title: "Ujian akhir" });
+    vi.setSystemTime(2000);
+    await f.owner.mutation(add, { text: "Ikut SNBT 2027" });
+    const view = await pageOf(f.owner);
+    expect(
+      Arr.map(view?.memories ?? [], (item) => [item.text, item.title])
+    ).toEqual([
+      ["Ikut SNBT 2027", undefined],
+      ["", "Ujian akhir"],
+    ]);
+    expect(view?.memories[0]).not.toHaveProperty("title");
+    expect(await f.texts()).toEqual(["", "Ikut SNBT 2027"]);
+    expect(await f.titles()).toEqual(["Ujian akhir", null]);
+  });
+
+  it("shows a memory Nina wrote as its words alone, without its kind", async () => {
+    const f = await createMemoryTest();
+    await f.seed({
+      kind: "situation",
+      text: "Ulangan kimia",
+      validUntil: NOW + 1,
+    });
+    expect(await f.owner.query(list, {})).toEqual({
+      memories: [
+        {
+          author: "nina",
+          confirmedAt: 1,
+          createdAt: expect.any(Number),
+          id: expect.any(String),
+          inUse: true,
+          text: "Ulangan kimia",
+          validUntil: NOW + 1,
+        },
+      ],
+      paused: false,
     });
   });
 
-  it("reads no try-out when the scored attempt is gone", async () => {
-    const f = await fixture();
-    const userId = await f.t.mutation(async (ctx) => {
-      const runtime = await seedTryoutContentAccessState(ctx, {
-        attemptStatus: "completed",
-        sectionStatus: "completed",
-        suffix: "memory-orphan",
-      });
-      const attempt = await ctx.db.get("tryoutAttempts", runtime.attemptId);
-      if (!attempt) {
-        return Promise.reject(new Error("Fixture attempt missing"));
+  it("keeps each learner's memories apart", async () => {
+    const f = await createMemoryTest();
+    const other = await f.stranger();
+    const theirs = await other.owner.mutation(add, { text: "Rahasia mereka" });
+    await f.owner.mutation(add, { text: "Punyaku" });
+    expect(words(await pageOf(f.owner))).toEqual(["Punyaku"]);
+    expect(words(await pageOf(other.owner))).toEqual(["Rahasia mereka"]);
+    await expect(
+      f.owner.mutation(edit, { id: theirs, text: "Diubah" })
+    ).rejects.toMatchObject(rejected("missing"));
+    expect(await f.owner.mutation(remove, { id: theirs })).toBeNull();
+    expect(await f.texts(other.userId)).toEqual(["Rahasia mereka"]);
+  });
+
+  it("marks the memories Nina reads, and never a situation that ended", async () => {
+    const f = await createMemoryTest();
+    await f.fill(MEMORY_PROMPT_LIMIT + 2);
+    await f.seed({ confirmedAt: MEMORY_PROMPT_LIMIT + 3, text: "Newest" });
+    await f.seed({
+      confirmedAt: MEMORY_PROMPT_LIMIT + 4,
+      kind: "situation",
+      text: "Ended",
+      validUntil: NOW - 1,
+    });
+    const view = await pageOf(f.owner);
+    expect(view?.memories).toHaveLength(MEMORY_PROMPT_LIMIT + 4);
+    expect(Arr.take(words(view), 3)).toEqual(["Ended", "Newest", "Memory 21"]);
+    // Nina reads the newest twenty of the rest, and never a situation that ended.
+    expect(Arr.map(view?.memories ?? [], shown)).toEqual(
+      expect.arrayContaining([
+        ["Newest", true],
+        ["Ended", false],
+        ["Memory 21", true],
+        ["Memory 3", true],
+        ["Memory 2", false],
+        ["Memory 0", false],
+      ])
+    );
+    expect(Arr.filter(view?.memories ?? [], (item) => item.inUse)).toHaveLength(
+      MEMORY_PROMPT_LIMIT
+    );
+  });
+});
+
+describe("Nina memory writes", () => {
+  it("accepts words of 2000 characters and refuses 2001, when added and when edited", async () => {
+    const f = await createMemoryTest();
+    // The test names the numbers, not the constant, so a change of the limit fails it.
+    const id = await f.owner.mutation(add, { text: "x".repeat(2000) });
+    const text = "x".repeat(2001);
+    await expect(f.owner.mutation(add, { text })).rejects.toThrow();
+    await expect(f.owner.mutation(edit, { id, text })).rejects.toThrow();
+    expect(
+      await f.owner.mutation(edit, { id, text: "y".repeat(2000) })
+    ).toBeNull();
+    expect(await f.texts()).toEqual(["y".repeat(2000)]);
+  });
+
+  it("accepts a title of 80 characters and refuses 81, or one of only spaces, when added and when edited", async () => {
+    const f = await createMemoryTest();
+    // The test names the numbers, not the constant, so a change of the limit fails it.
+    const id = await f.owner.mutation(add, {
+      text: "Words",
+      title: "t".repeat(80),
+    });
+    for (const title of ["t".repeat(81), "   ", ""]) {
+      await expect(
+        f.owner.mutation(add, { text: "Words", title })
+      ).rejects.toMatchObject(refusedTitle);
+      await expect(
+        f.owner.mutation(edit, { id, text: "Words", title })
+      ).rejects.toMatchObject(refusedTitle);
+    }
+    // The title is trimmed before it is measured.
+    await f.owner.mutation(add, { text: "Words", title: `${"u".repeat(80)} ` });
+    expect(await f.titles()).toEqual(["t".repeat(80), "u".repeat(80)]);
+  });
+
+  it("refuses a write with neither a title nor words, before it looks at the limit or at the memory, and changes nothing", async () => {
+    const f = await createMemoryTest();
+    const id = await f.seed({
+      author: "learner",
+      text: "Kelas 11",
+      title: "Sekolah",
+    });
+    const gone = await f.seed();
+    await f.owner.mutation(remove, { id: gone });
+    await f.fill(MEMORY_LIMIT - 1);
+    const before = await f.stored();
+    vi.setSystemTime(NOW + 1000);
+    // The learner is at the limit, and one memory is gone: `empty` comes first.
+    for (const text of ["", "   ", "\n\t"]) {
+      for (const call of [
+        () => f.owner.mutation(add, { text }),
+        () => f.owner.mutation(edit, { id, text }),
+        () => f.owner.mutation(edit, { id: gone, text }),
+      ]) {
+        await expect(call()).rejects.toMatchObject(rejected("empty"));
       }
-      await ctx.db.insert("tryoutScores", {
-        finalizedAt: 1,
-        publishedScore: 500,
-        rawScore: 1,
-        scoreStatus: "official",
-        scoringStrategy: "raw",
-        setIdentity: attempt.setIdentity,
-        totalCorrect: 1,
-        totalQuestions: 1,
-        tryoutAttemptId: attempt._id,
-        tryoutSnapshotId: attempt.tryoutSnapshotId,
-        userId: runtime.identity.userId,
-      });
-      await ctx.db.delete("tryoutAttempts", attempt._id);
-      return runtime.identity.userId;
+    }
+    await expect(
+      f.owner.mutation(add, { text: "One too many" })
+    ).rejects.toMatchObject(rejected("limit"));
+    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
+    expect(await f.stored()).toStrictEqual(before);
+  });
+
+  it("keeps the Markdown of a memory as the learner wrote it, when added, edited and listed", async () => {
+    const f = await createMemoryTest();
+    const text = "## Tujuan\n\n- **SNBT** 2027\n- [ ] Latihan `peluang`";
+    const id = await f.owner.mutation(add, { text });
+    expect(await f.texts()).toEqual([text]);
+    expect(words(await pageOf(f.owner))).toEqual([text]);
+    const edited = `${text}\n\n> Catatan`;
+    await f.owner.mutation(edit, { id, text: edited });
+    expect(words(await pageOf(f.owner))).toEqual([edited]);
+  });
+
+  it("refuses a memory beyond the limit and accepts the last one that fits", async () => {
+    const f = await createMemoryTest();
+    await f.fill(MEMORY_LIMIT - 1);
+    await f.owner.mutation(add, { text: "The last one" });
+    await expect(
+      f.owner.mutation(add, { text: "One too many" })
+    ).rejects.toMatchObject(rejected("limit"));
+    expect(await f.stored()).toHaveLength(MEMORY_LIMIT);
+  });
+
+  it("writes nothing when the vault cannot seal", async () => {
+    const f = await createMemoryTest();
+    vi.stubEnv("VAULT_ROOT_KEYS", "");
+    await expect(
+      f.owner.mutation(add, { text: "Never stored" })
+    ).rejects.toThrow();
+    expect(await f.stored()).toEqual([]);
+  });
+
+  it("edits the words as the learner, keeping the kind, the lesson and a situation's end", async () => {
+    const f = await createMemoryTest();
+    const validUntil = Date.UTC(2026, 9, 20, 23, 59, 59, 999);
+    const id = await f.seed({
+      kind: "situation",
+      lesson: LESSON,
+      text: "Ulangan kimia",
+      validUntil,
     });
-    expect(await f.t.query(read, { userId })).toEqual({
-      memory: null,
-      profile: {},
+    vi.setSystemTime(5000);
+    expect(
+      await f.owner.mutation(edit, { id, text: "Ulangan kimia 20 Oktober" })
+    ).toBeNull();
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({
+        author: "learner",
+        confirmedAt: 5000,
+        kind: "situation",
+        lesson: LESSON,
+        validUntil,
+      }),
+    ]);
+    expect(await f.texts()).toEqual(["Ulangan kimia 20 Oktober"]);
+  });
+
+  it("gives a memory the learner wrote no kind when the learner edits it", async () => {
+    const f = await createMemoryTest();
+    const id = await f.seed({ author: "learner", text: "Kelas 11" });
+    await f.owner.mutation(edit, { id, text: "Kelas 12" });
+    const [row] = await f.stored();
+    expect(row).toMatchObject({ author: "learner" });
+    expect(row).not.toHaveProperty("kind");
+    expect(await f.texts()).toEqual(["Kelas 12"]);
+  });
+
+  it("gives a memory a title, replaces it, turns the memory into a title alone, and takes the title off when the write has none", async () => {
+    const f = await createMemoryTest();
+    const id = await f.seed({ kind: "goal", text: "Kelas 11" });
+    const edited = async (fields: { text: string; title?: string }) => {
+      await f.owner.mutation(edit, { id, ...fields });
+      return [await f.titles(), await f.texts()];
+    };
+    vi.setSystemTime(5000);
+    expect(await edited({ text: "Kelas 12", title: "Sekolah lama" })).toEqual([
+      ["Sekolah lama"],
+      ["Kelas 12"],
+    ]);
+    expect(await edited({ text: "", title: "Sekolah baru" })).toEqual([
+      ["Sekolah baru"],
+      [""],
+    ]);
+    const [renamed] = await f.stored();
+    expect(new TextDecoder("latin1").decode(renamed?.title)).not.toContain(
+      "Sekolah"
+    );
+    expect(await pageOf(f.owner)).toMatchObject({
+      memories: [{ text: "", title: "Sekolah baru" }],
     });
+    expect(await edited({ text: "Kelas 12 IPA" })).toEqual([
+      [null],
+      ["Kelas 12 IPA"],
+    ]);
+    const [bare] = await f.stored();
+    expect(bare).toMatchObject({
+      author: "learner",
+      confirmedAt: 5000,
+      kind: "goal",
+    });
+    expect(bare).not.toHaveProperty("title");
+    expect((await pageOf(f.owner))?.memories[0]).not.toHaveProperty("title");
+  });
+
+  it("refuses to edit a memory that is gone", async () => {
+    const f = await createMemoryTest();
+    const id = await f.seed();
+    await f.owner.mutation(remove, { id });
+    await expect(
+      f.owner.mutation(edit, { id, text: "Too late" })
+    ).rejects.toMatchObject(rejected("missing"));
+  });
+});
+
+describe("Nina memory for a turn", () => {
+  it("chooses what Nina reads for the open lesson and tells the capture call about every memory", async () => {
+    const f = await createMemoryTest();
+    const userId = f.identity.userId;
+    await f.fill(MEMORY_PROMPT_LIMIT);
+    await f.seed({ confirmedAt: 0, lesson: LESSON, text: "About the lesson" });
+    await f.seed({ author: "learner", confirmedAt: 0, text: "Mine" });
+    await f.seed({ kind: "situation", text: "Ended", validUntil: NOW - 1 });
+    const newest = (count: number) =>
+      Arr.makeBy(count, (index) => `Memory ${MEMORY_PROMPT_LIMIT - 1 - index}`);
+    const open = await f.t.query(read, { lesson: LESSON, userId });
+    expect(open.paused).toBe(false);
+    expect(prompted(open)).toEqual([
+      "Mine",
+      "About the lesson",
+      ...newest(MEMORY_PROMPT_LIMIT - 2),
+    ]);
+    expect(open.known).toHaveLength(MEMORY_PROMPT_LIMIT + 3);
+    expect(open.known).toContainEqual({
+      confirmedAt: 1,
+      id: expect.any(String),
+      kind: "situation",
+      text: "Ended",
+    });
+    // A memory the learner wrote has no kind to tell.
+    expect(open.known).toContainEqual({
+      confirmedAt: 0,
+      id: expect.any(String),
+      text: "Mine",
+    });
+    expect(open.prompt).toContainEqual({
+      confirmedAt: 0,
+      id: expect.any(String),
+      text: "Mine",
+    });
+    expect(prompted(await f.t.query(read, { userId }))).toEqual([
+      "Mine",
+      ...newest(MEMORY_PROMPT_LIMIT - 1),
+    ]);
+  });
+
+  it("tells Nina and the capture call the title of a memory that has one, and of no other", async () => {
+    const f = await createMemoryTest();
+    await f.seed({
+      author: "learner",
+      confirmedAt: 3,
+      text: "Kelas 12 IPA",
+      title: "Sekolah",
+    });
+    await f.seed({
+      author: "learner",
+      confirmedAt: 2,
+      text: "",
+      title: "Ujian akhir",
+    });
+    await f.seed({ confirmedAt: 1, text: "Ikut SNBT 2027" });
+    const learner = await f.t.query(read, { userId: f.identity.userId });
+    for (const side of [learner.known, learner.prompt]) {
+      expect(titled(side)).toEqual([
+        ["Kelas 12 IPA", "Sekolah"],
+        ["", "Ujian akhir"],
+        ["Ikut SNBT 2027", undefined],
+      ]);
+      expect(side[2]).not.toHaveProperty("title");
+    }
   });
 });

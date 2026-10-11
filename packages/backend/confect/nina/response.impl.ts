@@ -9,7 +9,7 @@ import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { reportFailure } from "@repo/backend/confect/nina/diagnostics";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
 import { generateResponse } from "@repo/backend/confect/nina/generation";
-import { curateMemory } from "@repo/backend/confect/nina/memory/curate";
+import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
 import { generatePresentation } from "@repo/backend/confect/nina/presentation";
 import spec from "@repo/backend/confect/nina/response.spec";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
@@ -68,13 +68,14 @@ const present = FunctionImpl.make(
       return null;
     }
     const usageHandler = yield* createUsageHandler(turn._id);
-    // Title, suggestions, the rolling summary and learner memory are optional,
-    // independent follow-up work.
+    // Title, suggestions, the rolling summary and memory capture are optional,
+    // independent follow-up work. Capture keeps every failure of its own, so
+    // it can never cancel the rest.
     yield* Effect.all(
       [
         generatePresentation(turn, usageHandler),
         refreshSummary(turn),
-        curateMemory(turn),
+        captureMemory(turn, usageHandler),
       ],
       { concurrency: "unbounded", discard: true }
     ).pipe(

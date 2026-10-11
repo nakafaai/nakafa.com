@@ -103,6 +103,8 @@ export const NinaTurnFacts = Schema.Struct({
   ),
   usage: Schema.Array(NinaUsageTotal).check(Schema.isMaxLength(32)),
   suggestions: Schema.optionalKey(NinaSuggestions),
+  /** Memories Nina saved or confirmed from this turn's message, when there are any. */
+  remembered: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
 });
 /** Public response facts exclude account, billing-period and private page context. */
 export const NinaTurnSummary = Schema.Struct({
@@ -118,6 +120,7 @@ export const NinaTurnSummary = Schema.Struct({
     "suggestions",
     "promptMessageId",
     "promptedAt",
+    "remembered",
   ])
 );
 export type NinaPage = typeof NinaPageSchema.Type;
