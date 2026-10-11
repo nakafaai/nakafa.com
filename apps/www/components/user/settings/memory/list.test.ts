@@ -1,23 +1,28 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Schema } from "effect";
+import { MEMORY_QUERY_LIMIT } from "@repo/backend/confect/nina/memory.spec";
+import { Array as Arr, Option, Schema, String as Str } from "effect";
 import {
-  addMemory,
-  clearMemories,
   draftArgs,
   draftOf,
-  editMemory,
+  editedMemory,
+  findMemory,
   isBlank,
   isPending,
   learnerMemory,
+  listedMemories,
   type Memory,
-  type MemoryList,
+  type MemoryPage,
   memoryName,
-  pauseMemories,
+  pageCleared,
+  pageWith,
+  pageWithout,
   pendingId,
   previewText,
   removeMemory,
+  replaceMemory,
   sameDraft,
+  searchText,
   shownMemories,
 } from "@/components/user/settings/memory/list";
 
@@ -30,14 +35,14 @@ function stored(name: string, change: Partial<Memory> = {}): Memory {
     confirmedAt: 1000,
     createdAt: 500,
     id: memoryId(name),
-    inUse: true,
     text: `Text of ${name}`,
     ...change,
   };
 }
 
-function listOf(memories: Memory[], paused = false): MemoryList {
-  return { memories, paused };
+/** One page of the list that has more after it. */
+function pageOf(memories: Memory[]): MemoryPage {
+  return { continueCursor: "next", isDone: false, page: memories };
 }
 
 const ids = (memories: readonly Memory[]) => Arr.map(memories, ({ id }) => id);
@@ -94,7 +99,6 @@ describe("memory list", () => {
       confirmedAt: 42,
       createdAt: 42,
       id: memoryId("new"),
-      inUse: true,
       text: "Kelas 12",
     });
     expect(
@@ -102,81 +106,98 @@ describe("memory list", () => {
     ).toMatchObject({ text: "", title: "School" });
   });
 
-  it("puts a new memory first", () => {
-    const list = addMemory(listOf([stored("a")]), stored("b"));
+  describe("rewriting a memory", () => {
+    it("makes it the learner's, confirms it now, and keeps what the draft does not say", () => {
+      const original = stored("b", { title: "Old", validUntil: 9000 });
 
-    expect(ids(list.memories)).toEqual([memoryId("b"), memoryId("a")]);
-  });
+      expect(
+        editedMemory(original, { text: "New words", title: "Plan" }, 77)
+      ).toEqual({
+        ...original,
+        author: "learner",
+        confirmedAt: 77,
+        text: "New words",
+        title: "Plan",
+      });
+    });
 
-  it("rewrites a memory as the learner's, confirms it now and moves it first", () => {
-    const list = listOf([
-      stored("a"),
-      stored("b", { validUntil: 9000 }),
-      stored("c"),
-    ]);
-    const edited = editMemory(
-      list,
-      memoryId("b"),
-      { text: "New words", title: "Plan" },
-      77
-    );
+    it("takes the title off a memory whose draft has none", () => {
+      const edited = editedMemory(
+        stored("a", { title: "School" }),
+        { text: "Kelas 12", title: "" },
+        77
+      );
 
-    expect(ids(edited.memories)).toEqual([
-      memoryId("b"),
-      memoryId("a"),
-      memoryId("c"),
-    ]);
-    expect(edited.memories[0]).toEqual({
-      ...stored("b", { validUntil: 9000 }),
-      author: "learner",
-      confirmedAt: 77,
-      text: "New words",
-      title: "Plan",
+      expect(edited).not.toHaveProperty("title");
+      expect(edited.text).toBe("Kelas 12");
+    });
+
+    it("finds, removes and replaces a memory by its id", () => {
+      const memories = [stored("a"), stored("b"), stored("c")];
+      const rewritten = stored("b", { text: "Rewritten" });
+
+      expect(findMemory(memories, memoryId("c"))).toEqual(
+        Option.some(memories[2])
+      );
+      expect(findMemory(memories, memoryId("gone"))).toEqual(Option.none());
+      expect(ids(removeMemory(memories, memoryId("b")))).toEqual([
+        memoryId("a"),
+        memoryId("c"),
+      ]);
+      expect(replaceMemory(memories, rewritten)).toEqual([
+        memories[0],
+        rewritten,
+        memories[2],
+      ]);
     });
   });
 
-  it("takes the title off a memory whose draft has none", () => {
-    const list = listOf([stored("a", { title: "School" })]);
-    const edited = editMemory(
-      list,
-      memoryId("a"),
-      { text: "Kelas 12", title: "" },
-      77
-    );
+  describe("a loaded page after a change", () => {
+    it("holds a memory first on the page that starts the list and drops its older copy", () => {
+      const edited = stored("b", { text: "Rewritten" });
+      const page = pageWith(
+        pageOf([stored("a"), stored("b"), stored("c")]),
+        true,
+        edited
+      );
 
-    expect(edited.memories[0]).toEqual({
-      ...stored("a"),
-      author: "learner",
-      confirmedAt: 77,
-      text: "Kelas 12",
+      expect(page.page).toEqual([edited, stored("a"), stored("c")]);
+      expect(page).toMatchObject({ continueCursor: "next", isDone: false });
     });
-  });
 
-  it("leaves the list as it is when the memory to rewrite is not in it", () => {
-    const list = listOf([stored("a")]);
+    it("puts a new memory first on the page that starts the list", () => {
+      const page = pageWith(pageOf([stored("a")]), true, stored("new"));
 
-    expect(
-      editMemory(list, memoryId("gone"), { text: "Words", title: "" }, 77)
-    ).toBe(list);
-  });
-
-  it("takes one memory out, or all of them, and keeps the pause", () => {
-    const list = listOf([stored("a"), stored("b")], true);
-
-    expect(ids(removeMemory(list, memoryId("a")).memories)).toEqual([
-      memoryId("b"),
-    ]);
-    expect(clearMemories(list)).toEqual({ memories: [], paused: true });
-  });
-
-  it("sets whether memory is paused and keeps the memories", () => {
-    const list = listOf([stored("a")]);
-
-    expect(pauseMemories(list, true)).toEqual({
-      memories: list.memories,
-      paused: true,
+      expect(ids(page.page)).toEqual([memoryId("new"), memoryId("a")]);
     });
-    expect(pauseMemories(listOf([], true), false).paused).toBe(false);
+
+    it("takes the memory off any other page that held it and leaves the other pages as they are", () => {
+      const holding = pageOf([stored("a"), stored("b")]);
+      const other = pageOf([stored("c")]);
+
+      expect(ids(pageWith(holding, false, stored("b")).page)).toEqual([
+        memoryId("a"),
+      ]);
+      expect(pageWith(other, false, stored("b"))).toBe(other);
+    });
+
+    it("takes a deleted memory off the page that held it and leaves the other pages as they are", () => {
+      const holding = pageOf([stored("a"), stored("b")]);
+      const other = pageOf([stored("c")]);
+
+      expect(ids(pageWithout(holding, memoryId("a")).page)).toEqual([
+        memoryId("b"),
+      ]);
+      expect(pageWithout(other, memoryId("a"))).toBe(other);
+    });
+
+    it("empties a page and ends the list there when every memory is deleted", () => {
+      expect(pageCleared(pageOf([stored("a"), stored("b")]))).toEqual({
+        continueCursor: "next",
+        isDone: true,
+        page: [],
+      });
+    });
   });
 
   describe("previewText", () => {
@@ -212,32 +233,66 @@ describe("memory list", () => {
     expect(memoryName(stored("a", { text: "Kelas **12**" }))).toBe("Kelas 12");
   });
 
-  describe("shownMemories", () => {
-    const list = listOf([
+  describe("the search", () => {
+    const memories = [
       stored("a", { text: "Prefers worked **Examples**" }),
       stored("b", { text: "Finds trigonometry hard" }),
       stored("c", { text: "- Exam on Friday", title: "Chemistry week" }),
-    ]);
+    ];
 
     it("shows every memory for an empty or blank search", () => {
-      expect(shownMemories(list, "")).toEqual(list.memories);
-      expect(shownMemories(list, "   ")).toEqual(list.memories);
+      expect(shownMemories(memories, "")).toEqual(memories);
+      expect(shownMemories(memories, "   ")).toEqual(memories);
     });
 
     it("finds words without regard to case or formatting", () => {
-      expect(ids(shownMemories(list, "worked EXAMPLES"))).toEqual([
+      expect(ids(shownMemories(memories, "worked EXAMPLES"))).toEqual([
         memoryId("a"),
       ]);
-      expect(ids(shownMemories(list, " trig "))).toEqual([memoryId("b")]);
+      expect(ids(shownMemories(memories, " trig "))).toEqual([memoryId("b")]);
     });
 
     it("finds a memory by its title", () => {
-      expect(ids(shownMemories(list, "chemistry"))).toEqual([memoryId("c")]);
-      expect(ids(shownMemories(list, "friday"))).toEqual([memoryId("c")]);
+      expect(ids(shownMemories(memories, "chemistry"))).toEqual([
+        memoryId("c"),
+      ]);
+      expect(ids(shownMemories(memories, "friday"))).toEqual([memoryId("c")]);
     });
 
     it("shows nothing when no memory matches", () => {
-      expect(shownMemories(list, "biology")).toEqual([]);
+      expect(shownMemories(memories, "biology")).toEqual([]);
+    });
+
+    it("lists what the browser holds first and then what only the server found", () => {
+      const unloaded = stored("z", { text: "Loves trigonometry puzzles" });
+      const other = stored("y", { text: "Reads about trigonometry daily" });
+
+      expect(
+        ids(listedMemories(memories, "trig", [unloaded, memories[1], other]))
+      ).toEqual([memoryId("b"), memoryId("z"), memoryId("y")]);
+    });
+
+    it("adds a memory the server found that the browser's filter missed", () => {
+      // The server matches whole words by their first six letters, so it finds
+      // "trigonometry" for "trigonometri", which the browser's filter cannot.
+      expect(
+        ids(listedMemories(memories, "trigonometri", [memories[1]]))
+      ).toEqual([memoryId("b")]);
+    });
+
+    it("lists the browser's matches alone when the server found none", () => {
+      expect(listedMemories(memories, "friday", [])).toEqual([memories[2]]);
+      expect(listedMemories(memories, "  ", [])).toEqual(memories);
+    });
+
+    it("cuts the text sent to the server to what its search takes", () => {
+      expect(searchText("  trigonometri  ")).toBe("trigonometri");
+      expect(Str.length(searchText("a".repeat(MEMORY_QUERY_LIMIT + 20)))).toBe(
+        MEMORY_QUERY_LIMIT
+      );
+      expect(
+        searchText(`${"a".repeat(MEMORY_QUERY_LIMIT - 1)} ${"b".repeat(5)}`)
+      ).toBe("a".repeat(MEMORY_QUERY_LIMIT - 1));
     });
   });
 });

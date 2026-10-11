@@ -1,53 +1,38 @@
 "use client";
 
 import { useMutation } from "@confect/react";
-import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import { MEMORY_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { randomUuid } from "@repo/utilities/uuid";
-import { DateTime, Duration, Effect, Option, type Result } from "effect";
+import { DateTime, Duration, Effect, type Result } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
 import {
-  addMemory,
-  clearMemories,
   draftArgs,
   draftOf,
-  editMemory,
   learnerMemory,
   type Memory,
   type MemoryDraft,
-  type MemoryList,
-  pauseMemories,
   pendingId,
-  removeMemory,
 } from "@/components/user/settings/memory/list";
+import {
+  addToList,
+  clearList,
+  editInList,
+  pauseState,
+  removeFromList,
+} from "@/components/user/settings/memory/optimistic";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
 /** How long the toast of a deleted memory offers an Undo. */
 const UNDO = Duration.seconds(5);
 
 /**
- * Applies one change to the page the browser holds, when it holds one. Convex
- * runs this again until the server answers, then drops it, so a change that
- * fails rolls back by itself.
- */
-function patch(
-  store: OptimisticLocalStore.OptimisticLocalStore,
-  change: (list: MemoryList) => MemoryList
-) {
-  const cached = store.getQuery(nina.memory.list, {});
-
-  if (Option.isSome(cached) && cached.value !== null) {
-    store.setQuery(nina.memory.list, {}, Option.some(change(cached.value)));
-  }
-}
-
-/**
- * The changes the learner makes on the Memory page. Each one shows at once,
- * and a failure shows a toast while the page rolls back. A new or rewritten
- * memory that fails comes back in its editor with what the learner wrote.
+ * The changes the learner makes on the Memory page. Each one shows at once on
+ * every page the browser holds, and a failure shows a toast while the page
+ * rolls back: Convex runs the optimistic change again until the server
+ * answers, then drops it. A new or rewritten memory that fails comes back in
+ * its editor with what the learner wrote.
  */
 export function useMemoryActions() {
   const t = useTranslations("Memory");
@@ -59,19 +44,15 @@ export function useMemoryActions() {
   const addDraft = useMutation(nina.memory.add);
   const editDraft = useMutation(nina.memory.edit);
   const removeById = useMutation(nina.memory.remove).withOptimisticUpdate(
-    (store, { id }) => patch(store, (list) => removeMemory(list, id))
+    (store, { id }) => removeFromList(store, id)
   );
   const pauseTo = useMutation(nina.memory.pause).withOptimisticUpdate(
-    (store, { paused }) => patch(store, (list) => pauseMemories(list, paused))
+    (store, { paused }) => pauseState(store, paused)
   );
   const clearAll = useMutation(nina.memory.clear).withOptimisticUpdate(
-    (store) => patch(store, clearMemories)
+    (store) => clearList(store)
   );
-  const messages = {
-    limit: t("limit", { count: MEMORY_LIMIT }),
-    missing: t("missing"),
-    other,
-  };
+  const messages = { missing: t("missing"), other };
 
   /**
    * Sends one change from an event. `done` gets what the server answered. When
@@ -121,9 +102,9 @@ export function useMemoryActions() {
 
     settle(
       () =>
-        addDraft.withOptimisticUpdate((store) =>
-          patch(store, (list) => addMemory(list, memory))
-        )(draftArgs(draft)),
+        addDraft.withOptimisticUpdate((store) => addToList(store, memory))(
+          draftArgs(draft)
+        ),
       {
         ...after,
         failed:
@@ -151,7 +132,7 @@ export function useMemoryActions() {
     settle(
       () =>
         editDraft.withOptimisticUpdate((store) =>
-          patch(store, (list) => editMemory(list, id, draft, now))
+          editInList(store, id, draft, now)
         )({ ...draftArgs(draft), id }),
       after
     );

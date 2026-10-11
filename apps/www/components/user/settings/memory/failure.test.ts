@@ -13,25 +13,11 @@ vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 afterEach(() => vi.clearAllMocks());
 
 const messages = {
-  limit: "You can keep up to 100 memories.",
   missing: "This memory no longer exists.",
   other: "We could not complete this action.",
 };
 
 describe("memory failure", () => {
-  it.effect("explains a full list without reporting it", () =>
-    Effect.gen(function* () {
-      const again = yield* reportMemoryFailure(
-        new NinaMemoryRejected({ reason: "limit" }),
-        messages
-      );
-
-      expect(toast.error).toHaveBeenCalledExactlyOnceWith(messages.limit);
-      expect(captureException).not.toHaveBeenCalled();
-      expect(again).toBe(true);
-    })
-  );
-
   it.effect("explains a deleted memory and cannot try the change again", () =>
     Effect.gen(function* () {
       const again = yield* reportMemoryFailure(

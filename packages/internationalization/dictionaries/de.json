@@ -535,7 +535,6 @@
     "ends": "Endet {date}",
     "text": "Text der Erinnerung",
     "placeholder": "Schreib, was Nina sich merken soll",
-    "limit": "Du kannst bis zu {count} Erinnerungen behalten",
     "missing": "Diese Erinnerung gibt es nicht mehr",
     "title": "Titel",
     "untitled": "Ohne Titel",

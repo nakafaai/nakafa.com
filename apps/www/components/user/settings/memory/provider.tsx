@@ -1,72 +1,90 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
-import nina from "@repo/backend/confect/_generated/refs/nina";
 import { createContext, type ReactNode, use, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
-import { useConvexAuth } from "@/components/providers/convex";
-import type { MemoryList } from "@/components/user/settings/memory/list";
+import type { MemoryPage } from "@/components/user/settings/memory/list";
+import {
+  type MemoryReading,
+  useMemoryReading,
+} from "@/components/user/settings/memory/reading.client";
 import {
   createMemoryStore,
   type MemoryStore,
   type MemoryStoreApi,
 } from "@/components/user/settings/memory/store";
 
-const InitialContext = createContext<MemoryList | null>(null);
 const NowContext = createContext<number | null>(null);
+const ReadingContext = createContext<MemoryReading | null>(null);
 const StoreContext = createContext<MemoryStoreApi | null>(null);
 
 /**
  * Gives the Memory page what the server read and what the learner is doing.
- * The page and the time the server read never change after hydration, so the
- * streamed content under this provider is never discarded. What the learner is
- * doing, such as the search and the open editor, lives in a store this
- * provider creates once, so the page never reads one learner's state for
- * another. The live memories come from `useMemory`.
+ * The time the server read never changes after hydration, and neither does
+ * the store this provider creates once for what the learner is doing, such as
+ * the search and the open editor, so the page never reads one learner's state
+ * for another. The memories themselves come from `MemoryReader`.
  */
 export function MemoryProvider({
   children,
-  initial,
+  first,
   now,
+  paused,
 }: {
   children: ReactNode;
-  initial: MemoryList;
+  first: MemoryPage;
   now: number;
+  paused: boolean;
 }) {
   const [store] = useState(createMemoryStore);
 
   return (
     <StoreContext value={store}>
-      <InitialContext value={initial}>
-        <NowContext value={now}>{children}</NowContext>
-      </InitialContext>
+      <NowContext value={now}>
+        <MemoryReader first={first} paused={paused}>
+          {children}
+        </MemoryReader>
+      </NowContext>
     </StoreContext>
   );
 }
 
 /**
- * Reads one selected slice of the memories on the page. Each reader derives
- * them from the live query, which Convex serves from one subscription. The
- * page the server read stands in until Convex answers with one, and when
- * Convex has none for the learner, as it has not for a signed-out one.
+ * Reads the memories once for the whole page and shares them through a
+ * context that changes as Convex answers. One reader serves every component,
+ * because the pages a learner has loaded belong to the hook that loaded them,
+ * and a second hook would load and subscribe to its own. This context may
+ * change after hydration, unlike the provider's, because no Suspense boundary
+ * sits below it: React cannot discard streamed HTML for a boundary that does
+ * not exist.
  */
-export function useMemory<T>(selector: (list: MemoryList) => T) {
-  const initial = use(InitialContext);
-  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
-  const query = useQuery(nina.memory.list, isAuthenticated ? {} : "skip");
+function MemoryReader({
+  children,
+  first,
+  paused,
+}: {
+  children: ReactNode;
+  first: MemoryPage;
+  paused: boolean;
+}) {
+  const query = useMemoryPage((state) => state.query);
+  const reading = useMemoryReading(first, paused, query);
 
-  if (!initial) {
+  return <ReadingContext value={reading}>{children}</ReadingContext>;
+}
+
+/**
+ * Reads one selected slice of what the page shows: the memories to list, one
+ * memory by id, whether memory is paused, and whether the next page can load.
+ */
+export function useMemory<T>(selector: (reading: MemoryReading) => T) {
+  const reading = use(ReadingContext);
+
+  if (!reading) {
     throw new Error("useMemory must be used within MemoryProvider");
   }
 
-  if (QueryResult.isFailure(query)) {
-    throw query.error;
-  }
-
-  const live = QueryResult.isSuccess(query) ? query.value : null;
-
-  return selector(live ?? initial);
+  return selector(reading);
 }
 
 /**

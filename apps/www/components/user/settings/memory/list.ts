@@ -1,12 +1,30 @@
+import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
-import type { NinaMemoryList } from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, Option, Schema, String as Str, Struct } from "effect";
+import type nina from "@repo/backend/confect/_generated/refs/nina";
+import {
+  MEMORY_QUERY_LIMIT,
+  type NinaMemoryView,
+} from "@repo/backend/confect/nina/memory.spec";
+import {
+  Array as Arr,
+  HashSet,
+  Option,
+  Schema,
+  String as Str,
+  Struct,
+} from "effect";
 
-/** What the Memory page lists: every memory, newest first, and whether memory is paused. */
-export type MemoryList = typeof NinaMemoryList.Type;
+/**
+ * How many memories one page of the list holds. The settings route reads the
+ * first page with it, and the page asks for each next page with it.
+ */
+export const MEMORY_PAGE = 30;
+
+/** One page of the list as the server answers it: its memories and whether it is the last. */
+export type MemoryPage = Ref.Returns<typeof nina.memory.list>;
 
 /** One memory on the Memory page. */
-export type Memory = MemoryList["memories"][number];
+export type Memory = typeof NinaMemoryView.Type;
 
 /**
  * What the editor holds of one memory: its title and its words, as the learner
@@ -67,8 +85,7 @@ export function draftArgs(draft: MemoryDraft) {
 
 /**
  * Builds the memory the page shows for what the learner just wrote, until the
- * server answers with the stored one. A memory the learner wrote leads the
- * next prompt, so it is in use.
+ * server answers with the stored one.
  */
 export function learnerMemory(
   draft: MemoryDraft,
@@ -80,65 +97,80 @@ export function learnerMemory(
     confirmedAt: now,
     createdAt: now,
     id,
-    inUse: true,
     ...draftArgs(draft),
   };
-}
-
-/** Puts a new memory first, where the newest one belongs. */
-export function addMemory(list: MemoryList, memory: Memory): MemoryList {
-  return { ...list, memories: Arr.prepend(list.memories, memory) };
 }
 
 /**
  * Rewrites one memory the way the server does: it takes the draft's title and
- * words, the learner becomes its author, and its confirmation moves to `now`,
- * which puts it first. A memory the list does not hold leaves it unchanged.
+ * words, the learner becomes its author, and its confirmation moves to `now`.
+ * A draft without a title takes the title off.
  */
-export function editMemory(
-  list: MemoryList,
-  id: Memory["id"],
+export function editedMemory(
+  memory: Memory,
   draft: MemoryDraft,
   now: number
-): MemoryList {
-  const found = Arr.findFirst(list.memories, (memory) => memory.id === id);
-
-  if (Option.isNone(found)) {
-    return list;
-  }
-
-  const edited: Memory = {
-    ...Struct.omit(found.value, ["title"]),
+): Memory {
+  return {
+    ...Struct.omit(memory, ["title"]),
     author: "learner",
     confirmedAt: now,
     ...draftArgs(draft),
   };
-
-  return {
-    ...list,
-    memories: Arr.prepend(
-      Arr.filter(list.memories, (memory) => memory.id !== id),
-      edited
-    ),
-  };
 }
 
-/** Takes one memory out of the list. */
-export function removeMemory(list: MemoryList, id: Memory["id"]): MemoryList {
-  return {
-    ...list,
-    memories: Arr.filter(list.memories, (memory) => memory.id !== id),
-  };
+/** Finds a memory by its id. */
+export function findMemory(memories: readonly Memory[], id: Memory["id"]) {
+  return Arr.findFirst(memories, (memory) => memory.id === id);
 }
 
-/** Takes every memory out of the list. Pausing stays as it was. */
-export function clearMemories(list: MemoryList): MemoryList {
-  return { ...list, memories: [] };
+/** Takes one memory out of a list of memories. */
+export function removeMemory(memories: readonly Memory[], id: Memory["id"]) {
+  return Arr.filter(memories, (memory) => memory.id !== id);
 }
 
-/** Sets whether memory is paused. */
-export function pauseMemories(list: MemoryList, paused: boolean): MemoryList {
-  return { ...list, paused };
+/**
+ * Swaps a memory for its rewritten self where it stands, so the answer of a
+ * search keeps its order.
+ */
+export function replaceMemory(memories: readonly Memory[], memory: Memory) {
+  return Arr.map(memories, (current) =>
+    current.id === memory.id ? memory : current
+  );
+}
+
+/**
+ * Returns one loaded page of the list after `memory` was confirmed just now,
+ * the way the server will show it: the page that starts the list holds the
+ * memory first, and no other page holds it. A page that has nothing to do with
+ * the memory is returned as it is.
+ */
+export function pageWith(
+  page: MemoryPage,
+  first: boolean,
+  memory: Memory
+): MemoryPage {
+  if (!first && Option.isNone(findMemory(page.page, memory.id))) {
+    return page;
+  }
+
+  const others = removeMemory(page.page, memory.id);
+
+  return { ...page, page: first ? Arr.prepend(others, memory) : others };
+}
+
+/** Returns one loaded page of the list without a memory, or as it is when it does not hold it. */
+export function pageWithout(page: MemoryPage, id: Memory["id"]): MemoryPage {
+  if (Option.isNone(findMemory(page.page, id))) {
+    return page;
+  }
+
+  return { ...page, page: removeMemory(page.page, id) };
+}
+
+/** Returns one loaded page of the list after every memory is deleted: empty, and the end of the list. */
+export function pageCleared(page: MemoryPage): MemoryPage {
+  return { ...page, isDone: true, page: [] };
 }
 
 /** A backslash that the Markdown writer put before a character it would otherwise read as formatting. */
@@ -190,19 +222,49 @@ export function memoryName(memory: Memory) {
 }
 
 /**
- * Returns the memories the page shows, in list order. The search ignores case
- * and looks at the title of each memory and at its words without their
- * formatting.
+ * Returns the memories the browser holds that match the search, in list order.
+ * The search ignores case and looks at the title of each memory and at its
+ * words without their formatting.
  */
-export function shownMemories(list: MemoryList, query: string) {
+export function shownMemories(memories: readonly Memory[], query: string) {
   const needle = Str.toLowerCase(Str.trim(query));
 
   return Arr.filter(
-    list.memories,
+    memories,
     (memory) =>
       Str.isEmpty(needle) ||
       Str.includes(needle)(
         Str.toLowerCase(`${memory.title ?? ""} ${previewText(memory.text)}`)
       )
   );
+}
+
+/**
+ * Lists what a search finds from two sources. The memories the browser holds
+ * that match come first, in list order, because they match any part of a word.
+ * The memories the server found follow, in its order, when they are not shown
+ * yet: the server reaches the pages the browser has not loaded, and it matches
+ * whole words only, so it adds to the browser's matches and never replaces
+ * them.
+ */
+export function listedMemories(
+  memories: readonly Memory[],
+  query: string,
+  found: readonly Memory[]
+) {
+  const matches = shownMemories(memories, query);
+  const listed = HashSet.fromIterable(Arr.map(matches, ({ id }) => id));
+
+  return Arr.appendAll(
+    matches,
+    Arr.filter(found, ({ id }) => !HashSet.has(listed, id))
+  );
+}
+
+/**
+ * Cuts what the learner typed to what the server's search takes: without the
+ * space around it, and at most `MEMORY_QUERY_LIMIT` characters.
+ */
+export function searchText(text: string) {
+  return Str.trim(Str.takeLeft(Str.trim(text), MEMORY_QUERY_LIMIT));
 }

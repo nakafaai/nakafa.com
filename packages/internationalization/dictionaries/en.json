@@ -535,7 +535,6 @@
     "ends": "Ends {date}",
     "text": "Memory text",
     "placeholder": "Write what Nina should remember",
-    "limit": "You can keep up to {count} memories",
     "missing": "This memory no longer exists",
     "title": "Title",
     "untitled": "Untitled",

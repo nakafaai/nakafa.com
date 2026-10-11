@@ -32,7 +32,7 @@ export const MEMORY_PAGE_LIMIT = 50;
 /** Memories one search of the Memory page shows. */
 export const MEMORY_SEARCH_LIMIT = 30;
 /** Characters of a search on the Memory page. */
-const MEMORY_QUERY_LIMIT = 80;
+export const MEMORY_QUERY_LIMIT = 80;
 
 /**
  * What a memory Nina wrote is about. `situation` is something with an end,

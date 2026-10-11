@@ -535,7 +535,6 @@
     "ends": "Berakhir {date}",
     "text": "Teks memori",
     "placeholder": "Tulis yang perlu Nina ingat",
-    "limit": "Kamu bisa menyimpan sampai {count} memori",
     "missing": "Memori ini sudah tidak ada",
     "title": "Judul",
     "untitled": "Tanpa judul",

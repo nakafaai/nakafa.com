@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
 import { UserSettingsMemory } from "@/components/user/settings/memory/view";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -35,9 +36,11 @@ export default function Page({
 }
 
 /**
- * Resolves the memories inside the settings route stream, with the moment the
- * server read them. The page counts every "confirmed" time from that moment in
- * the browser too, so the browser renders the words the server rendered.
+ * Resolves the first page of memories and whether memory is paused inside the
+ * settings route stream, with the moment the server read them. The browser
+ * shows them until its own live list answers. The page counts every
+ * "confirmed" time from that moment in the browser too, so the browser renders
+ * the words the server rendered.
  */
 async function AuthenticatedMemory({
   params,
@@ -45,16 +48,27 @@ async function AuthenticatedMemory({
   params: PageProps<"/[locale]/user/settings/memory">["params"];
 }) {
   const { token } = await admitUserSettingsRoute((await params).locale);
-  const { memory, now } = await Effect.runPromise(
-    Effect.all({
-      memory: HttpClient.HttpClient.pipe(
-        Effect.flatMap((client) => client.query(nina.memory.list, {}))
+  const { first, now, state } = await Effect.runPromise(
+    HttpClient.HttpClient.pipe(
+      Effect.flatMap((client) =>
+        Effect.all(
+          {
+            first: client.query(nina.memory.list, {
+              paginationOpts: { cursor: null, numItems: MEMORY_PAGE },
+            }),
+            state: client.query(nina.memory.state, {}),
+          },
+          { concurrency: "unbounded" }
+        )
       ),
-      now: Clock.currentTimeMillis,
-    }).pipe(Effect.provide(httpLayer(token ? { auth: token } : {})))
+      Effect.flatMap((read) =>
+        Effect.map(Clock.currentTimeMillis, (now) => ({ ...read, now }))
+      ),
+      Effect.provide(httpLayer(token ? { auth: token } : {}))
+    )
   );
-  if (!memory) {
+  if (!state) {
     notFound();
   }
-  return <UserSettingsMemory initialList={memory} now={now} />;
+  return <UserSettingsMemory first={first} now={now} paused={state.paused} />;
 }

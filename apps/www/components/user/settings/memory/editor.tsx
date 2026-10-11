@@ -8,7 +8,6 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
-import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
@@ -38,7 +37,8 @@ function readNoPanel() {
 }
 
 /**
- * What the editor is open with: a memory, or none for a new one. A memory
+ * What the editor is open with: a memory, or none for a new one. The memory
+ * can sit on a page the learner loaded or only in a search result. A memory
  * that was deleted meanwhile has no editor.
  */
 function useMemoryEditor() {
@@ -48,10 +48,8 @@ function useMemoryEditor() {
     target: state.target,
     wanted: state.open,
   }));
-  const memory = useMemory((list) =>
-    Option.getOrUndefined(
-      Arr.findFirst(list.memories, ({ id }) => id === target)
-    )
+  const memory = useMemory((reading) =>
+    target === null ? undefined : reading.find(target)
   );
   const gone = target !== null && memory === undefined;
 

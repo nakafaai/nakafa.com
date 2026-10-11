@@ -31,9 +31,9 @@ export function MemoryControl() {
   const t = useTranslations("Memory");
   const auth = useTranslations("Auth");
   const common = useTranslations("Common");
-  const { empty, paused } = useMemory((list) => ({
-    empty: list.memories.length === 0,
-    paused: list.paused,
+  const { empty, paused } = useMemory((reading) => ({
+    empty: reading.empty,
+    paused: reading.paused,
   }));
   const { clear, pause } = useMemoryActions();
   const [confirming, setConfirming] = useState(false);
@@ -98,9 +98,12 @@ export function MemoryControl() {
   );
 }
 
-/** Shows what a delete of everything takes away: each memory on one line. */
+/**
+ * Shows what a delete of everything takes away: each memory the page has
+ * loaded on one line. A learner with more memories loses those too.
+ */
 function MemoryTitles() {
-  const memories = useMemory((list) => list.memories);
+  const memories = useMemory((reading) => reading.loaded);
 
   return (
     <ul className="max-h-48 divide-y overflow-y-auto rounded-md border text-sm">
