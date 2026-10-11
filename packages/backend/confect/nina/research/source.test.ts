@@ -232,5 +232,21 @@ describe("lib/source", () => {
         ),
       ])
     ).toEqual([]);
+    // That page is a Nakafa address, and the learner did not send it either.
+    expect(getNakafaReferencesFromMessages([message])).toEqual([]);
+    expect(
+      Arr.map(
+        getNakafaReferencesFromMessages([
+          withTurnContext(
+            {
+              role: "user",
+              content: "Baca https://nakafa.com/id/materi/matematika",
+            },
+            "Current page:\n- url: https://nakafa.com/en/home"
+          ),
+        ]),
+        (link) => link.href
+      )
+    ).toEqual(["https://nakafa.com/id/materi/matematika"]);
   });
 });
