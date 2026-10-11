@@ -3127,15 +3127,7 @@ export declare const api: {
             limit?: number;
             locale: "en" | "id" | "de";
             minViews?: number;
-            windowKey?:
-              | "1d"
-              | "7d"
-              | "14d"
-              | "30d"
-              | "90d"
-              | "180d"
-              | "365d"
-              | "lifetime";
+            windowKey?: "7d";
           },
           Array<{
             alignmentId: string;
@@ -7721,8 +7713,8 @@ export declare const internal: {
           {
             cursor?: string;
             day: number;
-            scopeMode: "global" | "placement";
-            windowKey: "1d" | "7d" | "14d" | "30d" | "90d" | "180d" | "365d";
+            scopeMode: "global";
+            windowKey: "7d";
           },
           {
             continueCursor: string;
@@ -7739,6 +7731,8 @@ export declare const internal: {
           {},
           {
             hasMore: boolean;
+            retiredCounters: number;
+            retiredCycles: number;
             signalsDeleted: number;
             viewersDeleted: number;
             waitingForMaintenance: boolean;
@@ -7750,8 +7744,8 @@ export declare const internal: {
           {
             cursor?: string;
             day: number;
-            scopeMode: "global" | "placement";
-            windowKey: "1d" | "7d" | "14d" | "30d" | "90d" | "180d" | "365d";
+            scopeMode: "global";
+            windowKey: "7d";
           },
           {
             continueCursor: string;
@@ -9493,25 +9487,6 @@ export declare const internal: {
         "internal",
         { turnId: Id<"ninaTurns"> },
         null
-      >;
-    };
-    seal: {
-      sealChats: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null },
-        { next: string | null; sealed: number; skipped: number }
-      >;
-      sealSummaries: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null },
-        {
-          next: string | null;
-          removed: number;
-          sealed: number;
-          skipped: number;
-        }
       >;
     };
     summaries: {

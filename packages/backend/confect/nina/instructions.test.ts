@@ -7,6 +7,7 @@ import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
+import { sealedSummary } from "@repo/backend/test/seal";
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Effect, Schema } from "effect";
 
@@ -58,10 +59,14 @@ describe("Nina instructions", () => {
       })
     );
     const f = await createNinaTest({ needsFetch: true });
-    await f.t.mutation((ctx) =>
+    await f.t.mutation(async (ctx) =>
       ctx.db.insert("ninaSummaries", {
         chatId: f.chatId,
-        text: "- The learner practiced limits.",
+        text: await sealedSummary(
+          ctx,
+          f.identity.userId,
+          "- The learner practiced limits."
+        ),
         throughOrder: 3,
         updatedAt: NOW,
         usage: { calls: 1, input: 900, output: 120 },

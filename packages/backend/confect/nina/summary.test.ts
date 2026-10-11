@@ -17,6 +17,7 @@ import {
 import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import type { EarlierTurn } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
+import { sealedSummary } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Effect, Predicate } from "effect";
@@ -204,10 +205,14 @@ describe("Nina rolling summary", () => {
     const model = summaryModel("- Limits, then derivatives.");
     provider.languageModel.mockReturnValue(model);
     const f = await fixture(13);
-    await f.t.mutation((ctx) =>
+    await f.t.mutation(async (ctx) =>
       ctx.db.insert("ninaSummaries", {
         chatId: f.chatId,
-        text: "- The learner studied limits.",
+        text: await sealedSummary(
+          ctx,
+          f.userId,
+          "- The learner studied limits."
+        ),
         throughOrder: 4,
         updatedAt: NOW,
         usage: { calls: 1, input: 900, output: 120 },
@@ -335,10 +340,10 @@ describe("Nina rolling summary", () => {
     const model = summaryModel("- Later study.");
     provider.languageModel.mockReturnValue(model);
     const f = await fixture(62);
-    await f.t.mutation((ctx) =>
+    await f.t.mutation(async (ctx) =>
       ctx.db.insert("ninaSummaries", {
         chatId: f.chatId,
-        text: "- Earlier study.",
+        text: await sealedSummary(ctx, f.userId, "- Earlier study."),
         throughOrder: 40,
         updatedAt: NOW,
         usage: { calls: 1, input: 900, output: 120 },
