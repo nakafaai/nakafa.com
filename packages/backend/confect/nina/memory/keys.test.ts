@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   deleteKeys,
@@ -6,7 +6,11 @@ import {
   syncKeys,
 } from "@repo/backend/confect/nina/memory/keys";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
-import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import {
+  candidate,
+  createCaptureTest,
+  createMemoryTest,
+} from "@repo/backend/test/nina/memory";
 import { Array as Arr, Effect, String as Str } from "effect";
 
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
@@ -54,9 +58,11 @@ describe("memory keys", () => {
     for (const word of words) {
       expect(word).toMatch(BLINDED);
     }
+    // The hash is random for each learner, so the test names the shape and the
+    // keys of the words, not text that the hash might hold by chance.
     for (const word of ["sekola", "kelas", "12", "ipa"]) {
       expect(words).toContain(await f.wordKeyOf(word));
-      expect(Arr.join(keys, ",")).not.toContain(word);
+      expect(keys).not.toContain(`w:${word}`);
     }
   });
 
@@ -90,6 +96,7 @@ describe("memory keys", () => {
     });
     const before = await f.keys();
     await sync(f, id, {
+      confirmedAt: 1,
       text: "Kelas dua puluh",
       title: "Sekolah",
       topics: [LESSON],
@@ -110,12 +117,58 @@ describe("memory keys", () => {
     }
   });
 
-  it("writes nothing when the memory says what its keys already say", async () => {
+  it("writes nothing when the memory says what its keys already say, at the time they hold", async () => {
     const f = await createMemoryTest();
     const id = await f.seed({ text: "Kelas 12 IPA", topics: [PATH] });
     const before = await f.keys();
-    await sync(f, id, { text: "Kelas 12 IPA", topics: [PATH] });
+    await sync(f, id, { confirmedAt: 1, text: "Kelas 12 IPA", topics: [PATH] });
     expect(await f.keys()).toStrictEqual(before);
+  });
+
+  it("moves every row of a memory to the time it was confirmed, adds none and deletes none, and moves no row of another memory", async () => {
+    const f = await createMemoryTest();
+    const id = await f.seed({
+      confirmedAt: 1,
+      text: "Kelas 12 IPA",
+      topics: [PATH],
+    });
+    const other = await f.seed({
+      confirmedAt: 1,
+      text: "Kelas 12 IPA",
+      topics: [PATH],
+    });
+    const before = await f.keys();
+    await sync(f, id, { confirmedAt: 7, text: "Kelas 12 IPA", topics: [PATH] });
+    const after = await f.keys();
+    expect(after).toHaveLength(before.length);
+    for (const row of after) {
+      // A moved row is the same row: only its time changed.
+      expect(Arr.map(before, (old) => old._id)).toContain(row._id);
+      expect(row.confirmedAt).toBe(row.memoryId === id ? 7 : 1);
+    }
+    expect(Arr.filter(after, (row) => row.memoryId === other)).toStrictEqual(
+      Arr.filter(before, (row) => row.memoryId === other)
+    );
+  });
+
+  it("gives the keys it adds, and the keys it moves, the time of the confirmation", async () => {
+    const f = await createMemoryTest();
+    const id = await f.seed({
+      confirmedAt: 3,
+      text: "Kelas dua",
+      topics: [PATH],
+    });
+    await sync(f, id, {
+      confirmedAt: 9,
+      text: "Kelas tiga",
+      topics: [PATH, LESSON],
+    });
+    const rows = await f.keys();
+    // Kelas, tiga, the path and the lesson: the word that went is gone.
+    expect(rows).toHaveLength(4);
+    for (const row of rows) {
+      expect(row.confirmedAt).toBe(9);
+    }
   });
 
   it("deletes the keys of one memory and leaves the keys of every other", async () => {
@@ -130,16 +183,67 @@ describe("memory keys", () => {
     }
   });
 
-  it("reads the memories linked to a key, the most recently linked first, at most the limit", async () => {
+  it("reads the memories linked to a key with their times, the most recently confirmed first, at most the limit", async () => {
     const f = await createMemoryTest();
-    const first = await f.seed({ text: "Limit fungsi" });
-    const second = await f.seed({ text: "Limit trigonometri" });
-    const third = await f.seed({ text: "Limit barisan" });
-    await f.seed({ text: "Turunan" });
+    // Written in one order, confirmed in another.
+    const first = await f.seed({ confirmedAt: 30, text: "Limit fungsi" });
+    const second = await f.seed({ confirmedAt: 10, text: "Limit barisan" });
+    const third = await f.seed({ confirmedAt: 20, text: "Limit deret" });
+    await f.seed({ confirmedAt: 40, text: "Turunan" });
     const key = await f.wordKeyOf("limit");
     const linked = (limit: number) =>
       f.execute(readLinked(f.identity.userId, key, limit));
-    expect(await linked(10)).toEqual([third, second, first]);
-    expect(await linked(2)).toEqual([third, second]);
+    expect(await linked(10)).toEqual([
+      { confirmedAt: 30, memoryId: first },
+      { confirmedAt: 20, memoryId: third },
+      { confirmedAt: 10, memoryId: second },
+    ]);
+    expect(await linked(2)).toEqual([
+      { confirmedAt: 30, memoryId: first },
+      { confirmedAt: 20, memoryId: third },
+    ]);
+  });
+});
+
+describe("memory keys over time", () => {
+  const NOW = Date.UTC(2026, 9, 10, 12);
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("keeps a memory among the first a key reads while the learner says it again and again, however many memories that share its words and page are written after it", async () => {
+    const f = await createCaptureTest();
+    const id = await f.seed({
+      confirmedAt: 1,
+      kind: "level",
+      text: "Saya belajar matematika",
+      topics: [LESSON],
+    });
+    const again = candidate({
+      quote: "saya belajar matematika",
+      text: "Saya belajar matematika",
+    });
+    // Thirty memories share its words and its page, three between one saying
+    // and the next. A key reads 24 memories, so the memory would fall out of
+    // reach at the eighth saying if its keys kept the time it was written.
+    for (const round of Arr.range(0, 9)) {
+      const before = NOW + (round - 1) * 1000;
+      for (const index of Arr.range(0, 2)) {
+        await f.seed({
+          confirmedAt: before + 1 + index,
+          text: `Belajar matematika bab ${round}${index}`,
+          topics: [LESSON],
+        });
+      }
+      vi.setSystemTime(NOW + round * 1000);
+      expect(await f.run([again], { topics: [LESSON] })).toBe(1);
+    }
+    expect(await f.stored()).toHaveLength(31);
+    expect(await f.stored()).toContainEqual(
+      expect.objectContaining({ _id: id, confirmedAt: NOW + 9000 })
+    );
   });
 });

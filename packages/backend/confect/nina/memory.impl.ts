@@ -76,17 +76,18 @@ const add = FunctionImpl.make(
       return yield* new NinaMemoryRejected({ reason: "empty" });
     }
     const { keys, text, title } = yield* sealDraft(appUser._id, draft);
+    const confirmedAt = yield* Clock.currentTimeMillis;
     const id = yield* (yield* DatabaseWriter)
       .table("ninaMemories")
       .insert({
         author: "learner",
-        confirmedAt: yield* Clock.currentTimeMillis,
+        confirmedAt,
         text,
         ...(title === undefined ? {} : { title }),
         userId: appUser._id,
       })
       .pipe(Effect.orDie);
-    yield* syncKeys(keys, id, draft);
+    yield* syncKeys(keys, id, { ...draft, confirmedAt });
     return id;
   })
 );
@@ -110,16 +111,16 @@ const edit = FunctionImpl.make(
       return yield* new NinaMemoryRejected({ reason: "missing" });
     }
     const { keys, text, title } = yield* sealDraft(appUser._id, draft);
+    const confirmedAt = yield* Clock.currentTimeMillis;
     yield* (yield* DatabaseWriter)
       .table("ninaMemories")
-      .patch(id, {
-        author: "learner",
-        confirmedAt: yield* Clock.currentTimeMillis,
-        text,
-        title,
-      })
+      .patch(id, { author: "learner", confirmedAt, text, title })
       .pipe(Effect.orDie);
-    yield* syncKeys(keys, id, { ...draft, topics: memory.topics });
+    yield* syncKeys(keys, id, {
+      ...draft,
+      confirmedAt,
+      topics: memory.topics,
+    });
     return null;
   })
 );

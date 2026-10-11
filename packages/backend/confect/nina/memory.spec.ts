@@ -110,9 +110,12 @@ export const NinaMemory = Schema.Struct({
 /**
  * One key of the memory index: a link between one memory and one topic
  * (`t:<topic>`) or one blinded word of its title or words (`w:<hash>`). The
- * index is these rows. Two memories are linked when they share a key.
+ * index is these rows. Two memories are linked when they share a key. A row
+ * also holds the time its memory was confirmed, so that a lookup meets the
+ * memories confirmed last first, whenever they were linked.
  */
 export const NinaMemoryKey = Schema.Struct({
+  confirmedAt: Schema.Finite,
   key: Schema.NonEmptyString,
   memoryId: Id("ninaMemories"),
   userId: Id("users"),

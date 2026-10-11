@@ -1,7 +1,11 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import {
+  candidate,
+  createCaptureTest,
+  createMemoryTest,
+} from "@repo/backend/test/nina/memory";
 import { Array as Arr, Option } from "effect";
 
 const edit = Ref.getFunctionReference(refs.public.nina.memory.edit);
@@ -16,6 +20,17 @@ beforeEach(() => {
   vi.setSystemTime(NOW);
 });
 afterEach(() => vi.useRealTimers());
+
+/** Seeds one memory for each confirmation time, in the order given, each reading `<word> <time>`. */
+async function seedConfirmed(
+  f: Awaited<ReturnType<typeof createMemoryTest>>,
+  word: string,
+  confirmations: readonly number[]
+) {
+  for (const confirmedAt of confirmations) {
+    await f.seed({ confirmedAt, text: `${word} ${confirmedAt}` });
+  }
+}
 
 describe("memory search", () => {
   it("finds a memory by a word of its title and by a word of its text", async () => {
@@ -180,7 +195,7 @@ describe("memory search", () => {
 });
 
 describe("memory search bounds", () => {
-  it("reads the 24 memories most recently linked to a key, however many a learner keeps, and returns at most the limit", async () => {
+  it("reads the 24 memories most recently confirmed for a key, however many a learner keeps, and returns at most the limit", async () => {
     const f = await createMemoryTest();
     await f.fill(60);
     const found = await f.find({ limit: 50, text: "memory" });
@@ -195,33 +210,62 @@ describe("memory search bounds", () => {
     ]);
   });
 
-  it("loads three times the limit of the best memories, so an older memory with the newest confirmation comes only with a larger limit", async () => {
+  it("reads the memories most recently confirmed for a key, not the ones most recently written", async () => {
+    const f = await createMemoryTest();
+    // The newest confirmation is written first, so the order of writing is the
+    // reverse of the order of confirming.
+    await seedConfirmed(
+      f,
+      "memory",
+      Arr.makeBy(30, (index) => 30 - index)
+    );
+    const found = await f.find({ limit: 50, text: "memory" });
+    expect(found).toHaveLength(24);
+    expect(Arr.head(found)).toEqual(Option.some("memory 30"));
+    expect(Arr.last(found)).toEqual(Option.some("memory 7"));
+  });
+
+  it("gives the places to the newest confirmations among equal scores, though the memories were written first and the limit is small", async () => {
     const f = await createMemoryTest();
     await f.seed({ confirmedAt: 100, text: "limit lama" });
     await f.seed({ confirmedAt: 1, text: "limit satu" });
     await f.seed({ confirmedAt: 2, text: "limit dua" });
     await f.seed({ confirmedAt: 3, text: "limit tiga" });
     await f.seed({ confirmedAt: 4, text: "limit empat" });
-    // A limit of 1 loads the 3 memories linked last, which leave out the first.
-    expect(await f.find({ limit: 1, text: "limit" })).toEqual(["limit empat"]);
-    // A limit of 2 loads 6, which is every memory.
+    // A limit of 1 loads 3 memories: the 3 confirmed last, not the 3 written last.
+    expect(await f.find({ limit: 1, text: "limit" })).toEqual(["limit lama"]);
     expect(await f.find({ limit: 2, text: "limit" })).toEqual([
       "limit lama",
       "limit empat",
     ]);
   });
 
-  it("loads no more than 48 memories, so a memory ranked after them is never returned", async () => {
+  it("loads no more than 48 memories, however large the limit", async () => {
     const f = await createMemoryTest();
-    // Three words, 24 memories each. The last memory of the third word is the
-    // newest confirmation of all, but 48 others of equal score rank before it.
+    // Three words, 24 memories each: 72 matches of one point.
     for (const word of ["alfa", "beta", "gamma"]) {
       await f.fill(24, { text: word });
     }
-    await f.seed({ confirmedAt: 1000, text: "gamma" });
-    const found = await f.find({ limit: 30, text: "alfa beta gamma" });
-    expect(found).toHaveLength(30);
-    expect(Arr.contains(found, "gamma")).toBe(false);
+    expect(await f.find({ limit: 50, text: "alfa beta gamma" })).toHaveLength(
+      48
+    );
+  });
+
+  it("keeps the newest confirmations among equal scores whatever the order of the words", async () => {
+    const f = await createMemoryTest();
+    // Three words, six memories each, all of one point. A limit of 4 loads 12,
+    // and the newest confirmations hold the word that is written last.
+    await seedConfirmed(f, "alfa", [1, 2, 3, 4, 5, 6]);
+    await seedConfirmed(f, "beta", [11, 12, 13, 14, 15, 16]);
+    await seedConfirmed(f, "gamma", [101, 102, 103, 104, 105, 106]);
+    for (const text of ["alfa beta gamma", "gamma beta alfa"]) {
+      expect(await f.find({ limit: 4, text })).toEqual([
+        "gamma 106",
+        "gamma 105",
+        "gamma 104",
+        "gamma 103",
+      ]);
+    }
   });
 
   it("looks up at most sixteen keys, the topics before the words", async () => {
@@ -235,5 +279,19 @@ describe("memory search bounds", () => {
     expect(
       await f.find({ limit: 5, text: "alfa", topics: topics(16) })
     ).toEqual([]);
+  });
+});
+
+describe("memory search for the capture write", () => {
+  it("finds the memory that says the same among 300, so the write confirms it and adds no copy", async () => {
+    const f = await createCaptureTest();
+    await f.fill(299, { author: "learner" });
+    // The call read the first twelve memories, and not this one.
+    const id = await f.seed({ kind: "level", text: "Kelas 12 IPA." });
+    expect(await f.run([candidate()])).toBe(1);
+    expect(await f.stored()).toHaveLength(300);
+    expect(await f.stored()).toContainEqual(
+      expect.objectContaining({ _id: id, confirmedAt: NOW })
+    );
   });
 });

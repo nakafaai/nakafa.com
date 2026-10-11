@@ -49,7 +49,9 @@ function endOf(candidate: Candidate) {
  * replaced. A memory that nobody changed since takes the candidate's kind,
  * which is how a memory the learner wrote gets one, and a situation takes a new
  * end date. The memory is also linked to the topics of the open pages that it
- * is not linked to yet, up to `MEMORY_TOPIC_LIMIT`, and its keys follow.
+ * is not linked to yet, up to `MEMORY_TOPIC_LIMIT`. Its keys follow in every
+ * case: they take the new words and topics and the time of this confirmation,
+ * so a memory that is said again stays among the first a lookup meets.
  */
 const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
   candidate,
@@ -94,13 +96,12 @@ const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
       ...(gains ? { topics: linked } : {}),
     })
     .pipe(Effect.orDie);
-  if (rewrites || gains) {
-    yield* syncKeys(keys, memory._id, {
-      text: rewrites ? candidate.text : memory.text,
-      title: memory.title,
-      topics: linked,
-    });
-  }
+  yield* syncKeys(keys, memory._id, {
+    confirmedAt: now,
+    text: rewrites ? candidate.text : memory.text,
+    title: memory.title,
+    topics: linked,
+  });
 });
 
 /** Writes a new memory for Nina, linked to the topics of the open pages, and its keys. */
@@ -129,7 +130,11 @@ const createMemory = Effect.fn("nina.memory.write.create")(function* ({
       ...(Option.isSome(validUntil) ? { validUntil: validUntil.value } : {}),
     })
     .pipe(Effect.orDie);
-  yield* syncKeys(keys, id, { text: candidate.text, topics });
+  yield* syncKeys(keys, id, {
+    confirmedAt: now,
+    text: candidate.text,
+    topics,
+  });
   return id;
 });
 
@@ -200,8 +205,11 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
  * deleted turn, or a memory the learner removed writes nothing, and a memory
  * changed since the call read it, or one the call never read, keeps its words,
  * its kind and its end date. It looks up the at most 12 memories the call read
- * and searches for the others, so it reads a bounded number of documents
- * whatever the learner keeps: at most about 1,700 for three candidates.
+ * and searches for the others, so it touches a bounded number of documents
+ * whatever the learner keeps: a candidate reads at most 411 to find its target
+ * (the one it names and a search of 410) and touches at most 419 to write it
+ * (the memory and at most 416 key rows read, deleted, moved or inserted), so
+ * three candidates touch at most about 2,500.
  */
 export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   readonly candidates: readonly Candidate[];

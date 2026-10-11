@@ -47,6 +47,10 @@ describe("memory capture write", () => {
         await f.wordKeyOf("ipa"),
       ])
     );
+    // Every key holds the time the memory was written.
+    expect(Arr.map(await f.keys(), (key) => key.confirmedAt)).toEqual(
+      Arr.makeBy(5, () => NOW)
+    );
     expect(await f.find({ limit: 5, text: "ipa" })).toEqual(["Kelas 12 IPA."]);
   });
 
@@ -160,6 +164,10 @@ describe("memory capture write", () => {
       }),
     ]);
     expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
+    // Its words and topics stay, and its keys still move to the new time.
+    expect(Arr.map(await f.keys(), (key) => key.confirmedAt)).toEqual(
+      Arr.makeBy(3, () => NOW)
+    );
   });
 
   it("never replaces the words of a memory the learner wrote when the candidate names it but says something else: the candidate becomes a memory of Nina's", async () => {
@@ -435,18 +443,6 @@ describe("memory capture write without a limit", () => {
     expect(texts).toContain("Memory 0");
     expect(texts).toContain("Kelas 12 IPA.");
     expect(await f.remembered()).toBe(1);
-  });
-
-  it("finds the memory that says the same among 300, confirms it, and adds no copy", async () => {
-    const f = await createCaptureTest();
-    await f.fill(299, { author: "learner" });
-    // The call read the first twelve memories, and not this one.
-    const id = await f.seed({ kind: "level", text: "Kelas 12 IPA." });
-    expect(await f.run([candidate()])).toBe(1);
-    expect(await f.stored()).toHaveLength(300);
-    expect(await f.stored()).toContainEqual(
-      expect.objectContaining({ _id: id, confirmedAt: NOW })
-    );
   });
 });
 

@@ -23,12 +23,9 @@ import {
   String as Str,
 } from "effect";
 
-/** A stored memory with the score its matched keys earned. */
-type Scored = readonly [Docs["ninaMemories"], number];
-
 /** Keys one search looks up at most, the topics first. */
 const KEY_LIMIT = 16;
-/** Key rows read for each key: the memories most recently linked to it. */
+/** Memories read for each key: the ones confirmed last. */
 const LINKED_PER_KEY = 24;
 /** Memories loaded for each memory returned, because some are gone or have ended. */
 const LOAD_FACTOR = 3;
@@ -41,19 +38,10 @@ const LESSON_WORTH = 3;
 const PATH_WORTH = 2;
 const WORD_WORTH = 1;
 
-/** The highest score first, whatever the score belongs to. */
-const highestScore = Order.mapInput(
-  Order.flip(Order.Number),
-  ([, score]: readonly [unknown, number]) => score
-);
-
 /** The highest score first, then the memory confirmed last. */
-const bestFirst = Order.combineAll<Scored>([
-  highestScore,
-  Order.mapInput(
-    Order.flip(Order.Number),
-    ([memory]: Scored) => memory.confirmedAt
-  ),
+const bestFirst = Order.Tuple([
+  Order.flip(Order.Number),
+  Order.flip(Order.Number),
 ]);
 
 /**
@@ -64,18 +52,18 @@ const bestFirst = Order.combineAll<Scored>([
  * The text becomes words, in the one way the writer of the index does it
  * (`memory/words`), and a word is looked up by its blind hash, so the database
  * never reads it. At most 16 keys are looked up, the topics first, and a key
- * finds the 24 memories most recently linked to it. A memory scores what its
- * matched keys are worth: 3 for the lesson that is open, 2 for a path above
- * it, 1 for a word. The best `limit * 3` memories, 48 at most, are loaded;
- * those that are gone or are situations that ended are dropped; the rest go by
- * score, then by confirmation, the newest first, and the first `limit` are
- * opened. With no word and no topic it finds nothing.
+ * finds the 24 memories confirmed last that are linked to it. A memory scores
+ * what its matched keys are worth: 3 for the lesson that is open, 2 for a path
+ * above it, 1 for a word. The memories go by score, then by confirmation, the
+ * newest first. The best `limit * 3`, 48 at most, are loaded; those that are
+ * gone or are situations that ended drop out; and the first `limit` of the rest
+ * are opened. With no word and no topic it finds nothing.
  *
  * It reads a bounded number of documents whatever the learner keeps: one
  * memory to know there is one, the learner's key, at most 16 times 24 key rows
  * (384), and at most 48 memories. That is 434 documents of the 32,000 one
- * transaction may read. A common word finds the recent memories that hold it,
- * not every one.
+ * transaction may read. A common word finds the memories confirmed last that
+ * hold it, not every one.
  */
 export const searchMemories = Effect.fn("nina.memory.find")(function* ({
   limit,
@@ -114,41 +102,42 @@ export const searchMemories = Effect.fn("nina.memory.find")(function* ({
   );
   const hits = Arr.flatten(
     yield* Effect.forEach(lookups, ([key, worth]) =>
-      Effect.map(readLinked(userId, key, LINKED_PER_KEY), (memoryIds) =>
-        Arr.map(memoryIds, (memoryId) => [memoryId, worth] as const)
+      Effect.map(readLinked(userId, key, LINKED_PER_KEY), (linked) =>
+        Arr.map(linked, ({ confirmedAt, memoryId }) => ({
+          confirmedAt,
+          memoryId,
+          worth,
+        }))
       )
     )
   );
-  // Each memory once, in the order it was first met, the best score first.
-  const ranked = Arr.sort(
-    Arr.map(
-      Rec.values(Arr.groupBy(hits, ([memoryId]) => memoryId)),
-      (group) =>
-        [
-          Arr.headNonEmpty(group)[0],
-          Arr.reduce(group, 0, (total, [, worth]) => total + worth),
-        ] as const
-    ),
-    highestScore
+  // Each memory once, with what the keys that matched it are worth together.
+  const scored = Arr.map(
+    Rec.values(Arr.groupBy(hits, ({ memoryId }) => memoryId)),
+    (group) => ({
+      confirmedAt: Arr.headNonEmpty(group).confirmedAt,
+      memoryId: Arr.headNonEmpty(group).memoryId,
+      score: Arr.reduce(group, 0, (total, { worth }) => total + worth),
+    })
+  );
+  const ranked = Arr.sortWith(
+    scored,
+    ({ confirmedAt, score }) => [score, confirmedAt] as const,
+    bestFirst
   );
   const now = yield* Clock.currentTimeMillis;
-  const loaded = Arr.filter(
-    Arr.getSomes(
-      yield* Effect.forEach(
-        Arr.take(ranked, Math.min(limit * LOAD_FACTOR, LOAD_LIMIT)),
-        ([memoryId, score]) =>
-          Effect.map(readOwnMemory(userId, memoryId), (memory) =>
-            Option.map(
-              Option.fromNullOr(memory),
-              (found): Scored => [found, score]
-            )
-          )
-      )
-    ),
-    ([memory]) => !hasEnded(memory, now)
+  const loaded = Arr.getSomes(
+    yield* Effect.forEach(
+      Arr.take(ranked, Math.min(limit * LOAD_FACTOR, LOAD_LIMIT)),
+      ({ memoryId }) =>
+        Effect.map(readOwnMemory(userId, memoryId), Option.fromNullOr)
+    )
   );
   return yield* openWith(
     keys,
-    Arr.map(Arr.take(Arr.sort(loaded, bestFirst), limit), ([memory]) => memory)
+    Arr.take(
+      Arr.filter(loaded, (memory) => !hasEnded(memory, now)),
+      limit
+    )
   );
 }, Effect.orDie);

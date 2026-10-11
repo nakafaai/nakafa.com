@@ -175,30 +175,36 @@ The index uses no embeddings. A vector index holds its vectors in plain form,
 and an embedding can be turned back into the text it stands for, so it would
 give away the text that the vault seals.
 
-Every writer of a memory keeps its keys in step with it in the same
-transaction: `add`, `edit`, and the capture write (a new memory, a confirmed
-memory that gains topics, and a rewrite). Every path that deletes a memory
-deletes its keys: `remove`, `clear`, the daily expiry, account deletion, and the
-retired `disable`.
+Every key row also holds the time its memory was confirmed, and the index
+orders the rows of one key by it. A key therefore leads to the memories
+confirmed last, whenever they were written: a memory that the learner says
+again and again stays among the first that a lookup meets, however many
+memories were written after it. Every writer of a memory keeps its keys in step
+with it in the same transaction, the time included: `add`, `edit`, and the
+capture write (a new memory, and a confirmed memory, which gives its keys the
+time of the confirmation and its new words and topics). Every path that deletes
+a memory deletes its keys: `remove`, `clear`, the daily expiry, account
+deletion, and the retired `disable`.
 
 One function searches: `searchMemories` takes the learner, the text, the
 topics and a limit. It looks up at most 16 keys, the topics first, and reads the
-24 key rows most recently linked to each. A memory scores 3 for the lesson that
-is open, 2 for a path above it, and 1 for each word. The best memories, three
-times the limit and at most 48, are loaded. Those that are gone or are
-situations that ended drop out, and the rest go by score and then by the time
-they were last confirmed. It reads at most 434 documents of the 32,000 that one
-transaction may read, whatever the learner keeps: a word that many memories
-hold finds the recent ones that hold it, not every one. The Memory page search
-asks for 30 memories, the capture call for 12, the write for 8 for each
-candidate, and a turn start searches by the topics of the page alone.
+24 memories confirmed last for each. A memory scores 3 for the lesson that is
+open, 2 for a path above it, and 1 for each word. The memories go by score and
+then by the time they were last confirmed, the newest first, and the best three
+times the limit, at most 48, are loaded. Those that are gone or are situations
+that ended drop out, and the first of the rest, as many as the limit, are the
+result. It reads at most 434 documents of the 32,000 that one transaction may
+read, whatever the learner keeps: a word that many memories hold finds the ones
+confirmed last that hold it, not every one. The Memory page search asks for 30
+memories, the capture call for 12, the write for 8 for each candidate, and a
+turn start searches by the topics of the page alone.
 
 ## Implementation Contract
 
 - `ninaMemories` (index by user and confirmation time, index by end time)
   replaces the document with a `facts` array, and `ninaMemoryKeys` (index by
-  user and key, index by memory) is its index. No table ties a memory to a
-  chat, and the chats trigger touches no memory.
+  user, key and confirmation time, index by memory) is its index. No table ties
+  a memory to a chat, and the chats trigger touches no memory.
 - `nina/memory:list`, `state`, `search`, `add`, `edit`, `remove`, `pause` and
   `clear` are public, pass the session middleware, and act only on the signed-in
   learner. `list` is paginated, the most recently confirmed memory first, and

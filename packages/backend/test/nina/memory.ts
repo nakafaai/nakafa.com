@@ -90,7 +90,7 @@ export function insertMemory(
         userId,
         ...(validUntil === undefined ? {} : { validUntil }),
       });
-      yield* syncKeys(keys, id, { text, title, topics });
+      yield* syncKeys(keys, id, { confirmedAt, text, title, topics });
       return id;
     })
   );

@@ -8,7 +8,7 @@ import { MEMORY_TOPIC_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import type { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import type { VaultField } from "@repo/backend/confect/vault/schema";
 import { blindText } from "@repo/backend/confect/vault/text";
-import { Array as Arr, Effect, HashSet } from "effect";
+import { Array as Arr, Effect, HashSet, Struct } from "effect";
 
 type UserId = Docs["users"]["_id"];
 type MemoryId = Docs["ninaMemories"]["_id"];
@@ -68,17 +68,43 @@ const dropKeys = Effect.fn("nina.memory.keys.drop")(function* (
 });
 
 /**
+ * Moves key rows to the time their memory was confirmed, and leaves the rows
+ * that hold that time as they are. A row is written back whole with `replace`,
+ * which saves the read that a `patch` makes first.
+ */
+const moveKeys = Effect.fn("nina.memory.keys.move")(function* (
+  rows: readonly Docs["ninaMemoryKeys"][],
+  confirmedAt: number
+) {
+  const writer = yield* DatabaseWriter;
+  for (const row of rows) {
+    if (row.confirmedAt !== confirmedAt) {
+      yield* writer
+        .table("ninaMemoryKeys")
+        .replace(row._id, {
+          ...Struct.omit(row, ["_creationTime", "_id"]),
+          confirmedAt,
+        })
+        .pipe(Effect.orDie);
+    }
+  }
+});
+
+/**
  * Keeps the key rows of a memory in step with what the memory says. The memory
  * should have a key for each of its topics and for each of its first 96 words,
- * the words of its title ahead of its text's. The function inserts the keys it
- * has not got and deletes the rows it should not have. Every writer of a memory
- * calls it in the same transaction, so a memory and its keys never differ. It
- * reads at most 104 rows and writes at most as many.
+ * the words of its title ahead of its text's, and each key should hold the
+ * time the memory was confirmed. The function deletes the rows it should not
+ * have, moves the rows it keeps to that time, and inserts the keys it has not
+ * got. Every writer of a memory calls it in the same transaction, so a memory
+ * and its keys never differ. It reads at most 104 rows and writes at most 208:
+ * a write for each row it deletes or moves and for each key it inserts.
  */
 export const syncKeys = Effect.fn("nina.memory.keys.sync")(function* (
   keys: LearnerKeys,
   memoryId: MemoryId,
   content: {
+    readonly confirmedAt: number;
     readonly text: string;
     readonly title?: string | undefined;
     readonly topics?: readonly string[] | undefined;
@@ -97,14 +123,21 @@ export const syncKeys = Effect.fn("nina.memory.keys.sync")(function* (
     )
   );
   const stored = yield* storedKeys(memoryId);
-  const kept = HashSet.fromIterable(Arr.map(stored, (row) => row.key));
+  const current = Arr.filter(stored, (row) => HashSet.has(wanted, row.key));
   yield* dropKeys(Arr.filter(stored, (row) => !HashSet.has(wanted, row.key)));
+  yield* moveKeys(current, content.confirmedAt);
+  const kept = HashSet.fromIterable(Arr.map(current, (row) => row.key));
   const writer = yield* DatabaseWriter;
   for (const key of wanted) {
     if (!HashSet.has(kept, key)) {
       yield* writer
         .table("ninaMemoryKeys")
-        .insert({ key, memoryId, userId: keys.userId })
+        .insert({
+          confirmedAt: content.confirmedAt,
+          key,
+          memoryId,
+          userId: keys.userId,
+        })
         .pipe(Effect.orDie);
     }
   }
@@ -118,8 +151,8 @@ export const deleteKeys = Effect.fn("nina.memory.keys.delete")(function* (
 });
 
 /**
- * The memories a learner has linked to one key, the most recently linked
- * first, at most `limit`.
+ * The memories a learner has linked to one key, the most recently confirmed
+ * first, at most `limit`, each with the time it was confirmed.
  */
 export const readLinked = Effect.fn("nina.memory.keys.linked")(function* (
   userId: UserId,
@@ -129,11 +162,11 @@ export const readLinked = Effect.fn("nina.memory.keys.linked")(function* (
   const rows = yield* (yield* DatabaseReader)
     .table("ninaMemoryKeys")
     .index(
-      "by_userId_and_key",
+      "by_userId_and_key_and_confirmedAt",
       (query) => query.eq("userId", userId).eq("key", key),
       "desc"
     )
     .take(limit)
     .pipe(Effect.orDie);
-  return Arr.map(rows, (row) => row.memoryId);
+  return Arr.map(rows, Struct.pick(["confirmedAt", "memoryId"]));
 });

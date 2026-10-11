@@ -145,8 +145,13 @@ describe("Nina memory writes", () => {
       }),
     ]);
     expect(await f.texts()).toEqual(["Ulangan kimia 20 Oktober"]);
-    // The memory stays linked to its topic, and its keys follow its new words.
-    expect(Arr.map(await f.keys(), (row) => row.key)).toContain(`t:${LESSON}`);
+    // The memory stays linked to its topic, and its keys follow its new words
+    // and the time it was edited.
+    const rows = await f.keys();
+    expect(Arr.map(rows, (row) => row.key)).toContain(`t:${LESSON}`);
+    expect(Arr.map(rows, (row) => row.confirmedAt)).toEqual(
+      Arr.makeBy(Arr.length(rows), () => 5000)
+    );
     expect(
       await f.find({ limit: 5, text: "oktober", topics: [LESSON] })
     ).toEqual(["Ulangan kimia 20 Oktober"]);
@@ -215,12 +220,17 @@ describe("Nina memory writes", () => {
     expect(await f.texts(other.userId)).toEqual(["Rahasia mereka"]);
   });
 
-  it("indexes a memory the learner adds, so a search finds it", async () => {
+  it("indexes a memory the learner adds at the time it was added, so a search finds it", async () => {
     const f = await createMemoryTest();
     await f.owner.mutation(add, {
       text: "Belajar trigonometri",
       title: "Mapel",
     });
+    expect(Arr.map(await f.keys(), (row) => row.confirmedAt)).toEqual([
+      NOW,
+      NOW,
+      NOW,
+    ]);
     for (const query of ["mapel", "trigonometry"]) {
       expect(
         Ref.decodeReturnsSync(
