@@ -25,8 +25,7 @@ import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 import { useConvexAuth } from "@/components/providers/convex";
 import { useViewer } from "@/lib/identity/client";
 
-// Declared outside the provider: a type query naming `cancel` inside it
-// stops the React Compiler from memoizing the provider's `cancel` action.
+/** The failures a stop can end with, besides a lost connection. */
 type CancelError = Ref.Error<typeof nina.lifecycle.cancel>;
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -80,7 +79,8 @@ function useChatState(chatId: Id<"chats">) {
   const owner = viewerId !== undefined && chat?.userId === viewerId;
   const canWrite = owner || (viewerId !== undefined && loading && opening);
 
-  const render = {
+  // The actions below read this when they run, so they never go stale.
+  const snapshot = {
     busy,
     cancelChat,
     chat,
@@ -94,9 +94,9 @@ function useChatState(chatId: Id<"chats">) {
     submission,
     turn,
   };
-  const latest = useRef(render);
+  const latest = useRef(snapshot);
   useLayoutEffect(() => {
-    latest.current = render;
+    latest.current = snapshot;
   });
 
   const [actions] = useState(() => ({
