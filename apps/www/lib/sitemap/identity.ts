@@ -59,7 +59,7 @@ const TryoutSitemapPageSchema = Schema.Struct({
   page: Schema.Finite,
 });
 
-export const SitemapPageSchema = Schema.Union([
+const SitemapPageSchema = Schema.Union([
   SitemapBasePageSchema,
   SitemapFamilyPageSchema,
   PageSitemapPageSchema,

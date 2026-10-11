@@ -12,8 +12,18 @@ import {
   readPublishedTryoutSitemap,
   readPublishedTryoutSitemapCount,
 } from "@/lib/content/tryout/sitemap";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -36,7 +46,31 @@ vi.mock("@confect/js", async (importOriginal) => {
 describe("published try-out sitemap", () => {
   beforeEach(() => {
     runtimeQueryMock.mockReset();
+    resetTestRuntimeCache();
+    activateTestRelease("release-tryout");
   });
+  it.effect("asks Convex once for the count and each page of a release", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockImplementation((reference) =>
+        Effect.succeed(
+          reference.convexFunctionName.endsWith("sitemapCount")
+            ? { pageCount: 1, routeCount: 1 }
+            : { paths: ["try-out/indonesia"] }
+        )
+      );
+
+      for (const _ of [1, 2, 3]) {
+        yield* readPublishedTryoutSitemapCount("en");
+        yield* readPublishedTryoutSitemap("en", 0);
+      }
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+
+      activateTestRelease("release-tryout-next");
+      yield* readPublishedTryoutSitemapCount("en");
+      yield* readPublishedTryoutSitemap("en", 0);
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(4);
+    })
+  );
   it.effect.each(APP_LOCALE_CODES)(
     "reads the complete authenticated %s route inventory",
     (locale) =>

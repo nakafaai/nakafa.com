@@ -6,7 +6,6 @@ import {
   getCachedSitemapDescriptors,
   readSitemapPageDescriptors,
 } from "@/lib/sitemap/catalog";
-import { resetTestRuntimeCache } from "@/test/store";
 
 class MissingSignedMaterialInventory extends Schema.TaggedError<MissingSignedMaterialInventory>()(
   "MissingSignedMaterialInventory",
@@ -14,6 +13,7 @@ class MissingSignedMaterialInventory extends Schema.TaggedError<MissingSignedMat
 ) {}
 
 const activeMocks = vi.hoisted(() => ({
+  expireActiveContentIdentity: vi.fn(),
   loadActiveContentIdentity: vi.fn(),
   readActiveContentIdentity: vi.fn(),
 }));
@@ -55,16 +55,7 @@ vi.mock("@/lib/content/program/sitemap", () => ({
 vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
 
-vi.mock("@/lib/content/published/active", () => ({
-  expireActiveContentIdentity: vi.fn(),
-  loadActiveContentIdentity: activeMocks.loadActiveContentIdentity,
-  readActiveContentIdentity: activeMocks.readActiveContentIdentity,
-}));
-
-vi.mock("@vercel/functions", async () => {
-  const { testRuntimeCache: cache } = await import("@/test/store");
-  return { getCache: () => cache };
-});
+vi.mock("@/lib/content/published/active", () => activeMocks);
 
 vi.mock("next/cache", () => ({
   /** Records sitemap origin-cache usage without touching Next internals. */
@@ -88,7 +79,9 @@ vi.mock("@repo/internationalization/src/routing", async () => {
 beforeEach(() => {
   nextCacheMocks.cacheLife.mockClear();
   nextCacheMocks.cacheTag.mockClear();
-  resetTestRuntimeCache();
+  activeMocks.expireActiveContentIdentity
+    .mockReset()
+    .mockReturnValue(Effect.void);
   activeMocks.readActiveContentIdentity.mockReset();
   activeMocks.readActiveContentIdentity.mockReturnValue(
     Effect.succeed({ releaseId: "release-material" })
@@ -299,6 +292,7 @@ describe("sitemap page catalog", () => {
         actualReleaseId: "release-next",
         expectedReleaseId: "release-material",
       });
+      expect(activeMocks.expireActiveContentIdentity).toHaveBeenCalledOnce();
     })
   );
 
@@ -376,51 +370,27 @@ describe("sitemap page catalog", () => {
     expect(nextCacheMocks.cacheLife).toHaveBeenCalledWith("max");
   });
 
-  it("builds the index from Convex once for each release", async () => {
-    const first = await getCachedSitemapDescriptors();
-    const second = await getCachedSitemapDescriptors();
-
-    expect(second).toEqual(first);
-    expect(pageMocks.readPublishedPageCatalog).toHaveBeenCalledTimes(1);
-    expect(quranMocks.readPublishedQuranCatalog).toHaveBeenCalledTimes(1);
-    expect(tryoutMocks.readPublishedTryoutSitemapCount).toHaveBeenCalledTimes(
-      3
-    );
-
-    activeMocks.readActiveContentIdentity.mockReturnValue(
-      Effect.succeed({ releaseId: "release-next" })
-    );
+  it("checks the release with Convex on every fill and never caches a stale index", async () => {
+    // The stored pointer still names the previous release while Convex names
+    // the next one, so a hit for the previous index must not be possible: the
+    // fill rebuilds the index and its final check fails.
     activeMocks.loadActiveContentIdentity.mockReturnValue(
       Effect.succeed({ releaseId: "release-next" })
     );
-    pageMocks.readPublishedPageCatalog.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: "release-next",
-        projections: [{ appLocale: "en" }],
-      })
-    );
-    quranMocks.readPublishedQuranCatalog.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: "release-next",
-        surahs: [{ number: 1 }],
-      })
-    );
-    materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: "release-next",
-        buckets: [],
-        materialCount: 0,
-      })
-    );
-    articleMocks.readPublishedArticleBuckets.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: "release-next",
-        articleCount: 0,
-        buckets: [],
-      })
-    );
+
+    await expect(getCachedSitemapDescriptors()).rejects.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      actualReleaseId: "release-next",
+      expectedReleaseId: "release-material",
+    });
+    expect(activeMocks.expireActiveContentIdentity).toHaveBeenCalledOnce();
+  });
+
+  it("derives the index from the stored answers on every fill", async () => {
+    await getCachedSitemapDescriptors();
     await getCachedSitemapDescriptors();
 
     expect(pageMocks.readPublishedPageCatalog).toHaveBeenCalledTimes(2);
+    expect(activeMocks.loadActiveContentIdentity).toHaveBeenCalledTimes(2);
   });
 });

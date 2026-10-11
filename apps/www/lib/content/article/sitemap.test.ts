@@ -9,10 +9,20 @@ import {
   readPublishedArticleBuckets,
   readPublishedArticleSitemap,
 } from "@/lib/content/article/sitemap";
+import { activateTestRelease } from "@/test/active";
 import { makeArticleRuntimeSource } from "@/test/content/article";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -67,7 +77,40 @@ describe("published article sitemap", () => {
   );
   beforeEach(() => {
     runtimeQueryMock.mockReset();
+    resetTestRuntimeCache();
+    activateTestRelease(activeReleaseId);
   });
+  it.effect(
+    "asks Convex once for the buckets and each partition of a release",
+    () =>
+      Effect.gen(function* () {
+        const nextReleaseId = ReleaseIdSchema.make("release-article-next");
+        runtimeQueryMock.mockImplementation((reference) =>
+          Effect.succeed(
+            reference.convexFunctionName.endsWith("sitemapBuckets")
+              ? {
+                  activeReleaseId,
+                  articleCount: 1,
+                  buckets: ["abc"],
+                  managed: true,
+                }
+              : { routes: [{ publicPath: "articles/politics/article" }] }
+          )
+        );
+
+        for (const _ of [1, 2, 3]) {
+          yield* readPublishedArticleBuckets("en");
+          yield* readPublishedArticleSitemap("en", "abc");
+        }
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+
+        activateTestRelease(nextReleaseId);
+        yield* readPublishedArticleBuckets("en");
+        yield* readPublishedArticleSitemap("en", "abc");
+        yield* readPublishedArticleSitemap("en", "def");
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(5);
+      })
+  );
   it.effect("reads bucket discovery and one exact route partition", () =>
     Effect.gen(function* () {
       runtimeQueryMock

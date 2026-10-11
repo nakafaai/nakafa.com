@@ -5,7 +5,6 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { cache } from "react";
-import { readContentStore } from "@/lib/content/store/read";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 import { applySitemapCache } from "@/lib/sitemap/cache";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
@@ -112,9 +111,12 @@ function getSitemapEntryLocales(pageId: string) {
  * partition. The `use cache` boundary stays so that the route still prerenders
  * and the sitemap tag still expires it, and entries keep the long built-in
  * profile on purpose because only a release purges them through that tag.
- * Behind the boundary the content store answers for the release, so the page
- * is built from Convex only once for each release. The outcome is built
- * through `SitemapPageRead`, so only plain, serializable data is cached. */
+ * Every Convex read behind the boundary goes through the content store, so a
+ * page is built from Convex only once for each release. The page itself, with
+ * its URLs, is derived on every fill, so a deploy that changes the routing or
+ * the origin takes effect at once, and the release check at the end of the
+ * route read runs on every fill. The outcome is built through
+ * `SitemapPageRead`, so only plain, serializable data is cached. */
 async function readCachedSitemapEntries(
   options: SitemapPageEntryOptions
 ): Promise<typeof SitemapPageRead.Type> {
@@ -122,17 +124,12 @@ async function readCachedSitemapEntries(
 
   applySitemapCache();
   return await Effect.runPromise(
-    readContentStore({
-      kind: "sitemap.page",
-      load: getSitemapEntries(options).pipe(
-        Effect.flatMap((entries) => SitemapPageFound.makeEffect({ entries })),
-        Effect.catchTag("SitemapPageNotFoundError", () =>
-          Effect.succeed(SitemapPageMissing.make({}))
-        )
-      ),
-      parts: [options.pageId],
-      schema: SitemapPageRead,
-    })
+    getSitemapEntries(options).pipe(
+      Effect.flatMap((entries) => SitemapPageFound.makeEffect({ entries })),
+      Effect.catchTag("SitemapPageNotFoundError", () =>
+        Effect.succeed(SitemapPageMissing.make({}))
+      )
+    )
   );
 }
 

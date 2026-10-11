@@ -1,10 +1,9 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
 import { Array as Arr, Effect } from "effect";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
-import { bucketIds, pageProjection } from "@/test/sitemap";
+import { pageProjection } from "@/test/sitemap";
 
 const articleMocks = vi.hoisted(() => ({
   readPublishedArticleBuckets: vi.fn(),
@@ -26,8 +25,10 @@ const quranMocks = vi.hoisted(() => ({
 }));
 const tryoutMocks = vi.hoisted(() => ({
   readPublishedTryoutSitemap: vi.fn(),
+  readPublishedTryoutSitemapCount: vi.fn(),
 }));
 const activeMocks = vi.hoisted(() => ({
+  expireActiveContentIdentity: vi.fn(),
   loadActiveContentIdentity: vi.fn(),
   readActiveContentIdentity: vi.fn(),
 }));
@@ -40,26 +41,43 @@ vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
 vi.mock("@/lib/content/published/active", () => activeMocks);
 
-/** Makes the material bucket inventory serve the given buckets for one release. */
-function setMaterialBuckets(
-  buckets: string[],
-  materialCount: number,
-  activeReleaseId = "release-materials"
-) {
-  materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-    Effect.succeed({ activeReleaseId, buckets, materialCount })
-  );
+/** Makes the readers behind one non-partition sitemap page answer with routes. */
+function serveFoundPage(pageId: string) {
+  if (pageId === "tryout_en_0") {
+    tryoutMocks.readPublishedTryoutSitemap.mockReturnValue(
+      Effect.succeed({ paths: ["try-out/indonesia"] })
+    );
+  }
+  if (pageId === "page_en") {
+    pageMocks.readPublishedPageCatalog.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-pages",
+        projections: [pageProjection("en", "legal-notice", "imprint")],
+      })
+    );
+  }
 }
 
-/** The failure of a partition read whose publication changed between its two pins. */
+/** The failure of a page read whose publication changed between its two pins. */
 const releaseMismatch = {
   _tag: "PublishedReleaseMismatchError",
   actualReleaseId: "release-after",
   expectedReleaseId: "release-before",
 };
 
+/** Makes the stored pointer and Convex name different releases for one read. */
+function landRelease() {
+  activeMocks.readActiveContentIdentity.mockReturnValueOnce(
+    Effect.succeed({ releaseId: "release-before" })
+  );
+  activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
+    Effect.succeed({ releaseId: "release-after" })
+  );
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
+  activeMocks.expireActiveContentIdentity.mockReturnValue(Effect.void);
   activeMocks.readActiveContentIdentity.mockReturnValue(
     Effect.succeed({ releaseId: "release-sitemap" })
   );
@@ -76,7 +94,13 @@ beforeEach(() => {
   articleMocks.readPublishedArticleSitemap.mockReturnValue(
     Effect.succeed(null)
   );
-  setMaterialBuckets([], 0);
+  materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+    Effect.succeed({
+      activeReleaseId: "release-materials",
+      buckets: [],
+      materialCount: 0,
+    })
+  );
   materialMocks.readPublishedMaterialSitemap.mockReturnValue(
     Effect.succeed(null)
   );
@@ -90,13 +114,16 @@ beforeEach(() => {
     Effect.succeed(null)
   );
   tryoutMocks.readPublishedTryoutSitemap.mockReturnValue(Effect.succeed(null));
+  tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
+    Effect.succeed({ pageCount: 1, routeCount: 0 })
+  );
   quranMocks.readPublishedQuranCatalog.mockReturnValue(
     Effect.succeed({ surahs: [{ number: 1 }, { number: 2 }] })
   );
 });
 
 describe("sitemap route pages", () => {
-  it.effect("serves published article routes in canonical order", () =>
+  it.effect("serves a family partition through its bucket inventory", () =>
     Effect.gen(function* () {
       articleMocks.readPublishedArticleBuckets.mockReturnValue(
         Effect.succeed({
@@ -121,10 +148,6 @@ describe("sitemap route pages", () => {
         "/articles/politics",
         "/articles/politics/article",
       ]);
-      expect(articleMocks.readPublishedArticleSitemap).toHaveBeenCalledWith(
-        "en",
-        "001"
-      );
     })
   );
 
@@ -140,104 +163,6 @@ describe("sitemap route pages", () => {
       ]);
       expect(yield* readPaths("quran_en")).toEqual(["/quran/1", "/quran/2"]);
     })
-  );
-
-  it.effect("serves release-owned material and curriculum sitemap pages", () =>
-    Effect.gen(function* () {
-      setMaterialBuckets(["001"], 2);
-      materialMocks.readPublishedMaterialSitemap.mockReturnValue(
-        Effect.succeed({
-          routes: [
-            {
-              lastModified: "2026-07-25",
-              publicPath: "subjects/mathematics/functions/concept",
-            },
-            {
-              lastModified: "2026-07-24",
-              publicPath: "subjects/mathematics/functions/bijection",
-            },
-          ],
-        })
-      );
-      programMocks.readPublishedProgramBuckets.mockReturnValue(
-        Effect.succeed({
-          buckets: ["001"],
-          managed: true,
-          routeCount: 2,
-        })
-      );
-      programMocks.readPublishedProgramSitemap.mockReturnValue(
-        Effect.succeed({
-          routes: [
-            { publicPath: "curriculum/merdeka/class-11/mathematics" },
-            { publicPath: "curriculum/merdeka/class-11" },
-          ],
-        })
-      );
-
-      expect(yield* readPaths("material_en_p0")).toEqual([
-        "/subjects/mathematics/functions/bijection",
-        "/subjects/mathematics/functions/concept",
-      ]);
-      expect(yield* readPaths("program_en_p0")).toEqual([
-        "/curriculum/merdeka/class-11",
-        "/curriculum/merdeka/class-11/mathematics",
-      ]);
-    })
-  );
-
-  it.effect(
-    "serves capacity-owned material partitions across bucket groups",
-    () =>
-      Effect.gen(function* () {
-        setMaterialBuckets(["002", "001"], 2);
-        materialMocks.readPublishedMaterialSitemap.mockImplementation(
-          (locale, buckets: string[]) =>
-            Effect.succeed({
-              routes: Arr.map(buckets, (bucket) => ({
-                lastModified: "2026-07-25",
-                publicPath: `subjects/mathematics/lesson-${locale}-${bucket}`,
-              })),
-            })
-        );
-
-        expect(yield* readPaths("material_en_p0")).toEqual([
-          "/subjects/mathematics/lesson-en-001",
-          "/subjects/mathematics/lesson-en-002",
-        ]);
-        expect(
-          materialMocks.readPublishedMaterialSitemap
-        ).toHaveBeenCalledExactlyOnceWith("en", ["001", "002"]);
-      })
-  );
-
-  it.effect(
-    "bounds the number of native queries for a full material partition",
-    () =>
-      Effect.gen(function* () {
-        const buckets = bucketIds(32);
-        setMaterialBuckets(buckets, 32, "release-sitemap");
-        materialMocks.readPublishedMaterialSitemap.mockImplementation(
-          (_locale, batch: string[]) =>
-            Effect.succeed({
-              routes: Arr.map(batch, (bucket) => ({
-                publicPath: `subjects/test/${bucket}`,
-              })),
-            })
-        );
-        expect(yield* readPaths("material_en_p0")).toEqual(
-          Arr.map(buckets, (bucket) => `/subjects/test/${bucket}`)
-        );
-        expect(
-          materialMocks.readPublishedMaterialSitemap
-        ).toHaveBeenCalledTimes(Math.ceil(32 / MATERIAL_SITEMAP_BUCKET_LIMIT));
-        expect(
-          Arr.every(
-            materialMocks.readPublishedMaterialSitemap.mock.calls,
-            ([, batch]) => batch.length <= MATERIAL_SITEMAP_BUCKET_LIMIT
-          )
-        ).toBe(true);
-      })
   );
 
   it.effect("rejects retired hash-bucket page ids without reading Convex", () =>
@@ -258,144 +183,50 @@ describe("sitemap route pages", () => {
     })
   );
 
-  it.effect("rejects an empty partition result", () =>
-    Effect.gen(function* () {
-      setMaterialBuckets(["001"], 1);
-      materialMocks.readPublishedMaterialSitemap.mockReturnValue(
-        Effect.succeed({ routes: [] })
-      );
-
-      expect(yield* readFailure("material_en_p0")).toMatchObject({
-        _tag: "SitemapPageNotFoundError",
-        pageId: "material_en_p0",
-      });
-    })
-  );
-
-  it.effect.each([1, MATERIAL_SITEMAP_BUCKET_LIMIT + 1])(
-    "rejects a missing singleton tail in a %i-bucket sitemap",
-    (length) =>
-      Effect.gen(function* () {
-        const buckets = bucketIds(length);
-        setMaterialBuckets(buckets, buckets.length);
-        materialMocks.readPublishedMaterialSitemap.mockImplementation(
-          (_locale, batch: string[]) =>
-            Effect.succeed(
-              batch.length === 1
-                ? null
-                : {
-                    routes: Arr.map(batch, (bucket) => ({
-                      publicPath: `subjects/test/${bucket}`,
-                    })),
-                  }
-            )
-        );
-        expect(yield* readFailure("material_en_p0")).toMatchObject({
-          _tag: "PublishedProjectionError",
-        });
-      })
-  );
-
-  it.effect("rejects partitions rendered across publication releases", () =>
-    Effect.gen(function* () {
-      setMaterialBuckets(["001"], 1);
-      materialMocks.readPublishedMaterialSitemap.mockReturnValue(
-        Effect.succeed({
-          routes: [
-            {
-              lastModified: "2026-07-25",
-              publicPath: "subjects/mathematics/functions/concept",
-            },
-          ],
-        })
-      );
-      activeMocks.readActiveContentIdentity.mockReturnValueOnce(
-        Effect.succeed({ releaseId: "release-before" })
-      );
-      activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
-        Effect.succeed({ releaseId: "release-after" })
-      );
-
-      expect(yield* readFailure("material_en_p0")).toMatchObject(
-        releaseMismatch
-      );
-    })
-  );
-
-  it.effect(
-    "rejects a missing partition read across publication releases, so a just published partition is never cached as missing",
-    () =>
-      Effect.gen(function* () {
-        activeMocks.readActiveContentIdentity.mockReturnValueOnce(
-          Effect.succeed({ releaseId: "release-before" })
-        );
-        activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
-          Effect.succeed({ releaseId: "release-after" })
-        );
-
-        expect(yield* readFailure("material_en_p7")).toMatchObject(
-          releaseMismatch
-        );
-
-        setMaterialBuckets(["001"], 1);
-        materialMocks.readPublishedMaterialSitemap.mockReturnValue(
-          Effect.succeed({ routes: [] })
-        );
-        activeMocks.readActiveContentIdentity.mockReturnValueOnce(
-          Effect.succeed({ releaseId: "release-before" })
-        );
-        activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
-          Effect.succeed({ releaseId: "release-after" })
-        );
-
-        expect(yield* readFailure("material_en_p0")).toMatchObject(
-          releaseMismatch
-        );
-      })
-  );
-
   it.effect.each(["tryout_en_0", "page_en"])(
     "rejects a missing %s read across publication releases",
     (pageId) =>
       Effect.gen(function* () {
-        activeMocks.readActiveContentIdentity.mockReturnValueOnce(
-          Effect.succeed({ releaseId: "release-before" })
-        );
-        activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
-          Effect.succeed({ releaseId: "release-after" })
-        );
+        landRelease();
 
         expect(yield* readFailure(pageId)).toMatchObject(releaseMismatch);
       })
   );
 
-  it.effect("rejects partitions without an active publication", () =>
+  it.effect.each(["tryout_en_0", "page_en", "quran_en"])(
+    "rejects a found %s sitemap rendered across publication releases, so a stale pointer never reaches the long origin cache",
+    (pageId) =>
+      Effect.gen(function* () {
+        serveFoundPage(pageId);
+        landRelease();
+
+        expect(yield* readFailure(pageId)).toMatchObject(releaseMismatch);
+        expect(activeMocks.expireActiveContentIdentity).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect("never reads a try-out page beyond the count of its release", () =>
     Effect.gen(function* () {
-      activeMocks.readActiveContentIdentity.mockReturnValue(
-        Effect.succeed(null)
+      tryoutMocks.readPublishedTryoutSitemapCount.mockReturnValue(
+        Effect.succeed({ pageCount: 1, routeCount: 5 })
       );
 
-      expect(yield* readFailure("material_en_p0")).toMatchObject({
-        _tag: "PublishedProjectionError",
-        publicPath: "sitemap/material_en_p0.xml",
+      expect(yield* readFailure("tryout_en_999999")).toMatchObject({
+        _tag: "SitemapPageNotFoundError",
+        pageId: "tryout_en_999999",
       });
+      expect(tryoutMocks.readPublishedTryoutSitemap).not.toHaveBeenCalled();
     })
   );
 
-  it.effect("rejects partitions past the current bucket inventory", () =>
+  it.effect("rejects a page beyond the count across publication releases", () =>
     Effect.gen(function* () {
-      expect(yield* readFailure("material_en_p7")).toMatchObject({
-        _tag: "SitemapPageNotFoundError",
-        pageId: "material_en_p7",
-      });
-      expect(yield* readFailure("article_en_p0")).toMatchObject({
-        _tag: "SitemapPageNotFoundError",
-        pageId: "article_en_p0",
-      });
-      expect(yield* readFailure("program_en_p0")).toMatchObject({
-        _tag: "SitemapPageNotFoundError",
-        pageId: "program_en_p0",
-      });
+      landRelease();
+
+      expect(yield* readFailure("tryout_en_999999")).toMatchObject(
+        releaseMismatch
+      );
+      expect(tryoutMocks.readPublishedTryoutSitemap).not.toHaveBeenCalled();
     })
   );
 

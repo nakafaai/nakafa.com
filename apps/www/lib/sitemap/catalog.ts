@@ -1,6 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
-import { Array as Arr, Effect, MutableList, Schema } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { cache } from "react";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
@@ -13,7 +13,6 @@ import {
   verifyContentReleasePin,
 } from "@/lib/content/published/release";
 import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
-import { readContentStore } from "@/lib/content/store/read";
 import { readPublishedTryoutSitemapCount } from "@/lib/content/tryout/sitemap";
 import { applySitemapCache } from "@/lib/sitemap/cache";
 import {
@@ -22,7 +21,6 @@ import {
   formatTryoutPage,
   SITEMAP_BASE_ID,
   type SitemapPage,
-  SitemapPageSchema,
 } from "@/lib/sitemap/identity";
 import { describeSitemapPartitions } from "@/lib/sitemap/partition";
 
@@ -112,21 +110,17 @@ export const readSitemapPageDescriptors = Effect.fn(
  * sitemap tag still expires it. Descriptors keep the long built-in profile on
  * purpose: every release hard-expires them through the shared sitemap tag, so
  * the index never needs the hourly content revalidation the shared profile
- * carries. Behind the boundary the content store answers for the release, so
- * an instance that starts empty or an expiry rebuilds the index from Convex
- * only once for each release. */
+ * carries. Every Convex read behind the boundary goes through the content
+ * store, so an instance that starts empty or an expiry rebuilds the index from
+ * stored answers and not from Convex. The index itself is derived on every
+ * fill, so a deploy that changes the locales or the partition size takes effect
+ * at once, and the final release check runs on every fill, so a stale release
+ * pointer can never put a previous index behind the long lifetime. */
 async function readCachedSitemapDescriptors(): Promise<readonly SitemapPage[]> {
   "use cache";
 
   applySitemapCache();
-  return await Effect.runPromise(
-    readContentStore({
-      kind: "sitemap.index",
-      load: readSitemapPageDescriptors(),
-      parts: [],
-      schema: Schema.Array(SitemapPageSchema),
-    })
-  );
+  return await Effect.runPromise(readSitemapPageDescriptors());
 }
 
 /** Shares one cached sitemap index between the route and indexing scripts
