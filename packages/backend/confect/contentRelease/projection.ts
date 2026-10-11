@@ -32,7 +32,7 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { encodeProjectionJson } from "@repo/backend/confect/contentRelease/wire";
 import { getConvexSize } from "convex/values";
-import { Array as Arr, Clock, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Effect, Schema, Struct } from "effect";
 
 /** Decodes one bounded projection batch through the shared wire contract. */
 const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
@@ -111,19 +111,19 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
       `Projection ${projection.contentKey}/${artifactLocale} does not match its staged upsert.`
     );
   }
-  const itemPatch = {
+  const projected = {
+    ...item,
     projectionBatchHash: batchHash,
     projectionBatchIndex: batchIndex,
     projectionJson,
     projectionReady: true,
   };
-  yield* ensureDocumentSize(`Projected release item ${item.index}`, {
-    ...item,
-    ...itemPatch,
-  });
+  yield* ensureDocumentSize(`Projected release item ${item.index}`, projected);
+  // Confect patch re-reads the whole row before replacing it, so replace the
+  // row loaded above instead of reading it again per staged projection.
   yield* writer
     .table("contentItems")
-    .patch(item._id, itemPatch)
+    .replace(item._id, Struct.omit(projected, ["_id", "_creationTime"]))
     .pipe(Effect.orDie);
 });
 /** Stages one content projection batch with exact retry identity. */

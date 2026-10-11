@@ -20,7 +20,9 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest, type TestConvex } from "convex-test";
+import { Array as Arr } from "effect";
 
+const BATCH_SIZE = 4;
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageProjections = internal.contentRelease.items.stageProjectionBatch;
 
@@ -62,6 +64,18 @@ function stage(
   });
 }
 
+/** Stages one projection batch and returns what its transaction read. */
+function stageMeasured(t: TestConvex<typeof schema>, projectionJson: string[]) {
+  return t.mutation(async (ctx) => ({
+    receipt: await ctx.runMutation(stageProjections, {
+      batchIndex: 0,
+      projectionJson,
+      releaseId: TEST_RELEASE_ID,
+    }),
+    metrics: await ctx.meta.getTransactionMetrics(),
+  }));
+}
+
 /** Inserts a staged delete item that may never receive a projection. */
 function insertDeleteItem(ctx: MutationCtx) {
   return ctx.db.insert("contentItems", {
@@ -100,6 +114,37 @@ describe("contentRelease/projection", () => {
       projectionReady: true,
     });
     expect(state.release?.stagedProjections).toBe(1);
+  });
+
+  it("reads each staged item once before replacing it", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      insertTestRelease(ctx, { itemCount: BATCH_SIZE })
+    );
+    await t.mutation(stageItems, {
+      batchIndex: 0,
+      itemJson: Arr.makeBy(BATCH_SIZE, (index) =>
+        testUpsertJson({ contentKey: `test:head-${index}`, index })
+      ),
+      releaseId: TEST_RELEASE_ID,
+    });
+
+    const { metrics, receipt } = await stageMeasured(
+      t,
+      Arr.makeBy(BATCH_SIZE, (index) =>
+        testProjectionJson({ contentKey: `test:head-${index}`, index })
+      )
+    );
+    const items = await t.run((ctx) => ctx.db.query("contentItems").collect());
+
+    expect(receipt).toMatchObject({ created: BATCH_SIZE, unchanged: 0 });
+    expect(Arr.every(items, (item) => item.projectionReady)).toBe(true);
+    // Each item costs its identity read and Convex's own read of the row it
+    // replaces. Before this change a patch read it a third time (16 documents
+    // for four items). The batch adds the state and release rows, and the
+    // release patch reads that row twice more.
+    expect(metrics.documentsRead.used).toBe(BATCH_SIZE * 2 + 4);
+    expect(metrics.documentsWritten.used).toBe(BATCH_SIZE + 1);
   });
 
   it("allows the projection to own its canonical route path", async () => {
