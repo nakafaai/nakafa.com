@@ -22,6 +22,9 @@ export const GatewayLive = Layer.effect(
           message: "The AI gateway is not available on this deployment.",
         }),
     }),
-    make({ languageModel: convexGateway })
+    make({
+      embeddingModel: convexGateway.embeddingModel,
+      languageModel: convexGateway,
+    })
   )
 );
