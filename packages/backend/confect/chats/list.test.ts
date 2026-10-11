@@ -135,6 +135,25 @@ describe("chat lists with sealed titles", () => {
     expect(titles(result.page)).toEqual([LEGACY, BOOLEAN, ALGEBRA]);
   });
 
+  it("looks for the first eight words of a query and leaves the rest out", async () => {
+    const f = await fixture();
+    const search = async (q: string) =>
+      titles(
+        (
+          await f.asOwner.query(api.chats.queries.getOwnChats, {
+            paginationOpts,
+            q,
+          })
+        ).page
+      );
+    const seven = "aljabar aljabar aljabar aljabar aljabar aljabar aljabar";
+    expect(await search(`${seven} boolean`)).toEqual([BOOLEAN]);
+    expect(await search(`${seven} aljabar boolean`)).toEqual([
+      BOOLEAN,
+      ALGEBRA,
+    ]);
+  });
+
   it("reads a bounded window per search page and reaches older chats through the cursor", async () => {
     const f = await fixture();
     await f.t.mutation(async (ctx) => {

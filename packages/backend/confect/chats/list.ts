@@ -14,6 +14,13 @@ import { Array as Arr, Effect, String as Str } from "effect";
  */
 export const CHAT_SEARCH_WINDOW = 500;
 
+/**
+ * Words of a search query that count. The query is a public argument of any
+ * length, and every word is looked for in every title of a window, so the
+ * words after these are left out.
+ */
+const CHAT_SEARCH_WORDS = 8;
+
 /** What separates the words of a search query. */
 const SPACES = /\s+/u;
 
@@ -51,11 +58,14 @@ const chatsOf = Effect.fn("chats.list.chatsOf")(function* (
   return chats.index("by_userId", (q) => q.eq("userId", userId), "desc");
 });
 
-/** The lower-case words of a search query, none when the query is blank. */
+/** The first lower-case words of a search query, none when the query is blank. */
 function searchWords(searchQuery: string | undefined) {
-  return Arr.filter(
-    Str.split(Str.toLowerCase(Str.trim(searchQuery ?? "")), SPACES),
-    Str.isNonEmpty
+  return Arr.take(
+    Arr.filter(
+      Str.split(Str.toLowerCase(Str.trim(searchQuery ?? "")), SPACES),
+      Str.isNonEmpty
+    ),
+    CHAT_SEARCH_WORDS
   );
 }
 
