@@ -6,8 +6,10 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
+  Deferred,
   Duration,
   Effect,
+  Fiber,
   MutableHashMap,
   Record as Rec,
   Schema,
@@ -66,6 +68,23 @@ const input = (load: ReturnType<typeof makeLoader>) => ({
   load: Effect.suspend(load),
   parts: ["en"],
   schema: TextSchema,
+});
+
+/**
+ * Lets the reads of a test go on until the store has been asked the given
+ * number of times and they have reached the load or the wait that follows. A
+ * read that starts a load asks twice, once before and once after it claims the
+ * key, and a read that waits for a load asks once before it waits.
+ */
+const settle = Effect.fn("www.content.store.test.settle")(function* (
+  storeReads: number
+) {
+  yield* Effect.promise(() =>
+    vi.waitFor(() =>
+      expect(testRuntimeCache.get).toHaveBeenCalledTimes(storeReads)
+    )
+  );
+  yield* Effect.sleep("20 millis");
 });
 
 beforeEach(() => {
@@ -270,17 +289,104 @@ describe("content store", () => {
     })
   );
 
-  it.effect("stores nothing when the load fails", () =>
-    Effect.gen(function* () {
-      const failure = yield* readContentStore({
-        ...input(makeLoader()),
-        load: Effect.fail("source down"),
-      }).pipe(Effect.flip);
+  it.effect(
+    "keeps the error of a load that fails under the active release",
+    () =>
+      Effect.gen(function* () {
+        const failure = yield* readContentStore({
+          ...input(makeLoader()),
+          load: Effect.fail("source down"),
+        }).pipe(Effect.flip);
 
-      expect(failure).toBe("source down");
-      expect(MutableHashMap.size(testRuntimeCache.entries)).toBe(0);
-      expect(activeMocks.load).not.toHaveBeenCalled();
-    })
+        expect(failure).toBe("source down");
+        expect(MutableHashMap.size(testRuntimeCache.entries)).toBe(0);
+        expect(activeMocks.load).toHaveBeenCalledTimes(1);
+        expect(activeMocks.expire).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "drops the pointer and keeps the error of a load that fails after the release moved",
+    () =>
+      Effect.gen(function* () {
+        // The pointer names release-a while Convex names release-b, so a read
+        // that Convex refuses for the release it was asked about fails.
+        activeMocks.load.mockReturnValue(
+          Effect.succeed(identityOf("release-b"))
+        );
+        const load = vi.fn(() => Effect.fail("release moved"));
+
+        const failure = yield* readContentStore({
+          ...input(makeLoader()),
+          load: Effect.suspend(load),
+        }).pipe(Effect.flip);
+
+        expect(failure).toBe("release moved");
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(activeMocks.expire).toHaveBeenCalledTimes(1);
+        expect(MutableHashMap.size(testRuntimeCache.entries)).toBe(0);
+      })
+  );
+
+  it.effect(
+    "reads under the active release once a failed load dropped the pointer",
+    () =>
+      Effect.gen(function* () {
+        let pointer = "release-a";
+        activeMocks.read.mockImplementation(() =>
+          Effect.succeed(identityOf(pointer))
+        );
+        activeMocks.expire.mockImplementation(() =>
+          Effect.sync(() => {
+            pointer = "release-b";
+          })
+        );
+        activeMocks.load.mockReturnValue(
+          Effect.succeed(identityOf("release-b"))
+        );
+
+        yield* readContentStore({
+          ...input(makeLoader()),
+          load: Effect.fail("release moved"),
+        }).pipe(Effect.flip);
+
+        expect(yield* readContentStore(input(makeLoader()))).toBe("loaded 1");
+        expect(testRuntimeCache.set).toHaveBeenCalledExactlyOnceWith(
+          expect.any(String),
+          { value: "loaded 1" },
+          expect.objectContaining({ tags: ["content-release:release-b"] })
+        );
+      })
+  );
+
+  it.effect(
+    "returns the loaded value without storing it when the release cannot be checked",
+    () =>
+      Effect.gen(function* () {
+        activeMocks.load.mockReturnValue(Effect.fail("convex offline"));
+        const load = makeLoader();
+
+        expect(yield* readContentStore(input(load))).toBe("loaded 1");
+        expect(yield* readContentStore(input(load))).toBe("loaded 2");
+
+        expect(MutableHashMap.size(testRuntimeCache.entries)).toBe(0);
+        expect(activeMocks.expire).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "keeps the error of a failed load when the release cannot be checked either",
+    () =>
+      Effect.gen(function* () {
+        activeMocks.load.mockReturnValue(Effect.fail("convex offline"));
+
+        const failure = yield* readContentStore({
+          ...input(makeLoader()),
+          load: Effect.fail("source down"),
+        }).pipe(Effect.flip);
+
+        expect(failure).toBe("source down");
+      })
   );
 
   it.effect("still answers when the store itself is down", () =>
@@ -296,5 +402,88 @@ describe("content store", () => {
       expect(yield* readContentStore(input(load))).toBe("loaded 1");
       expect(yield* readContentStore(input(load))).toBe("loaded 2");
     })
+  );
+
+  it.live("shares one load among misses of one key that overlap", () =>
+    Effect.gen(function* () {
+      const gate = yield* Deferred.make<void>();
+      const load = vi.fn(() => Deferred.await(gate).pipe(Effect.as("loaded")));
+
+      const first = yield* Effect.forkChild(readContentStore(input(load)));
+      yield* settle(2);
+      const second = yield* Effect.forkChild(readContentStore(input(load)));
+      yield* settle(3);
+      yield* Deferred.succeed(gate, undefined);
+
+      expect(yield* Fiber.join(first)).toBe("loaded");
+      expect(yield* Fiber.join(second)).toBe("loaded");
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(activeMocks.load).toHaveBeenCalledTimes(1);
+      expect(testRuntimeCache.set).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it.live(
+    "lets a waiting read load on its own when the load it waited for failed",
+    () =>
+      Effect.gen(function* () {
+        const gate = yield* Deferred.make<void>();
+        const failing = vi.fn(() =>
+          Deferred.await(gate).pipe(Effect.andThen(Effect.fail("source down")))
+        );
+        const own = makeLoader();
+
+        const first = yield* Effect.forkChild(
+          readContentStore({
+            ...input(makeLoader()),
+            load: Effect.suspend(failing),
+          }).pipe(Effect.flip)
+        );
+        yield* settle(2);
+        const second = yield* Effect.forkChild(readContentStore(input(own)));
+        yield* settle(3);
+        yield* Deferred.succeed(gate, undefined);
+
+        expect(yield* Fiber.join(first)).toBe("source down");
+        expect(yield* Fiber.join(second)).toBe("loaded 1");
+        expect(failing).toHaveBeenCalledTimes(1);
+        expect(own).toHaveBeenCalledTimes(1);
+      })
+  );
+
+  it.live(
+    "does not leave a waiting read hanging when the load it waited for is interrupted",
+    () =>
+      Effect.gen(function* () {
+        const own = makeLoader();
+
+        const first = yield* Effect.forkChild(
+          readContentStore({
+            ...input(makeLoader()),
+            load: Effect.never,
+          })
+        );
+        yield* settle(2);
+        const second = yield* Effect.forkChild(readContentStore(input(own)));
+        yield* settle(3);
+        yield* Fiber.interrupt(first);
+
+        expect(yield* Fiber.join(second)).toBe("loaded 1");
+      })
+  );
+
+  it.effect(
+    "does not load again when a load stored the value after the first read missed",
+    () =>
+      Effect.gen(function* () {
+        yield* readContentStore(input(makeLoader()));
+        // The read below asked the store while the first load was still
+        // writing, so its first answer is a miss although the value is there.
+        testRuntimeCache.get.mockResolvedValueOnce(null);
+        const own = makeLoader();
+
+        expect(yield* readContentStore(input(own))).toBe("loaded 1");
+        expect(own).not.toHaveBeenCalled();
+      })
   );
 });

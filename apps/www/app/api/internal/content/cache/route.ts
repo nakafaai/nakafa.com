@@ -13,6 +13,7 @@ import { invalidateContentCache } from "@/lib/content/cache";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
 import {
   type ActiveContentReleaseId,
+  confirmActiveContentIdentity,
   expireActiveContentIdentity,
   loadActiveContentIdentity,
 } from "@/lib/content/published/active";
@@ -77,16 +78,24 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
   );
 });
 /**
- * Expires the stored release pointer, then revalidates one Next content tag,
- * then purges the shared sitemap response once for the release. The pointer
- * goes first: a page that refills after the revalidation must read the release
- * that this call activates and not the one it replaces.
+ * Expires the stored release pointer and proves the expiry, then revalidates
+ * one Next content tag, then purges the shared sitemap response once for the
+ * release, then expires the pointer again. The pointer goes first: a page that
+ * refills after the revalidation must read the release that this call
+ * activates and not the one it replaces. The Runtime Cache client resolves even
+ * when an expiry failed, so the call reads the pointer back and stops before it
+ * revalidates anything when the pointer still names the previous release. The
+ * last expiry drops a pointer that a read which began before the activation
+ * wrote after the first one, so a sitemap that regenerates after the purge
+ * asks Convex. The publisher repeats a call that answers 503.
  */
 const invalidateContentRuntime = Effect.fn("NakafaContent.invalidateRuntime")(
   function* (scope: ContentCacheScope, releaseId: ActiveContentReleaseId) {
     yield* expireActiveContentIdentity();
+    yield* confirmActiveContentIdentity(releaseId);
     yield* invalidateContentCache(scope);
     yield* invalidateSitemapCache(releaseId);
+    yield* expireActiveContentIdentity();
   }
 );
 

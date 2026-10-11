@@ -6,6 +6,7 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Duration, Effect, Option, Schema } from "effect";
+import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import {
   expireStoreTag,
   readStoreEntry,
@@ -30,15 +31,17 @@ export type ActiveContentReleaseId =
 const ACTIVE_POINTER_TAG = "content-active";
 const ACTIVE_POINTER_PARTS = ["active"];
 /**
- * How long a region trusts its stored pointer when nothing expires it.
+ * How long a region trusts its stored pointer when nothing drops it.
  *
- * The activation route expires the pointer the moment a release goes live, so
- * this lifetime only covers an expiry that did not arrive: the Runtime Cache
- * client logs a failed expiry and resolves. A minute bounds how long a region
- * keeps showing the previous release, and it bounds the Convex reads of the
- * pointer to one a minute per region, below the 115 thousand a month that the
- * unstored read made. A longer lifetime would save little more and would delay
- * a release longer after a missed expiry.
+ * The activation route expires the pointer the moment a release goes live and
+ * reads it back to prove the expiry, because the Runtime Cache client logs a
+ * failed expiry and resolves. Every read that finds Convex naming another
+ * release than the pointer drops it too. This lifetime covers what is left: a
+ * read that began before the activation and writes the previous pointer after
+ * the expiry. A minute bounds how long a region keeps showing the previous
+ * release, and it bounds the Convex reads of the pointer to one a minute per
+ * region, below the 115 thousand a month that the unstored read made. A longer
+ * lifetime would save little more and would delay a release longer.
  */
 const ACTIVE_POINTER_LIFETIME = Duration.seconds(60);
 
@@ -88,4 +91,27 @@ export const expireActiveContentIdentity = Effect.fn(
   "NakafaContent.expireActiveContentIdentity"
 )(function* () {
   yield* expireStoreTag(ACTIVE_POINTER_TAG);
+});
+
+/**
+ * Proves that the stored pointer names the release that was just activated.
+ *
+ * The Runtime Cache client logs an expiry that failed or timed out and
+ * resolves, so a call to `expireActiveContentIdentity` cannot tell the caller
+ * that it did nothing. Reading the pointer back can: it must now name
+ * `releaseId`, and the read stores the fresh pointer for the next reader. A
+ * pointer that still names the previous release fails with the mismatch, so
+ * the activation route can answer 503 before it revalidates anything, and the
+ * publisher repeats the call.
+ */
+export const confirmActiveContentIdentity = Effect.fn(
+  "NakafaContent.confirmActiveContentIdentity"
+)(function* (releaseId: ActiveContentReleaseId) {
+  const stored = yield* readActiveContentIdentity();
+  if (stored?.releaseId !== releaseId) {
+    return yield* new PublishedReleaseMismatchError({
+      actualReleaseId: stored?.releaseId ?? null,
+      expectedReleaseId: releaseId,
+    });
+  }
 });

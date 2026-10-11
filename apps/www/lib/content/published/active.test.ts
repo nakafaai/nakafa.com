@@ -12,10 +12,12 @@ import {
 } from "@repo/backend/test/content/publication";
 import { Effect, Layer, MutableHashMap } from "effect";
 import {
+  confirmActiveContentIdentity,
   expireActiveContentIdentity,
   loadActiveContentIdentity,
   readActiveContentIdentity,
 } from "@/lib/content/published/active";
+import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import {
   resetTestRuntimeCache,
   STORE_KEY_PATTERN,
@@ -140,6 +142,68 @@ describe("stored active identity pointer", () => {
       );
       expect(yield* readActiveContentIdentity()).toEqual(next);
       expect(fetchQueryMock).toHaveBeenCalledTimes(2);
+    })
+  );
+});
+describe("confirming the pointer after an activation", () => {
+  const next = { ...identity, releaseId: ReleaseIdSchema.make("next") };
+
+  it.effect("accepts a pointer that names the activated release", () =>
+    Effect.gen(function* () {
+      fetchQueryMock
+        .mockReturnValueOnce(Effect.succeed(identity))
+        .mockReturnValueOnce(Effect.succeed(next));
+      yield* readActiveContentIdentity();
+
+      yield* expireActiveContentIdentity();
+      yield* confirmActiveContentIdentity(next.releaseId);
+
+      // The read back stored the fresh pointer for the next reader.
+      expect(yield* readActiveContentIdentity()).toEqual(next);
+      expect(fetchQueryMock).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect(
+    "fails when an expiry that the client lost left the previous release",
+    () =>
+      Effect.gen(function* () {
+        fetchQueryMock.mockReturnValue(Effect.succeed(identity));
+        yield* readActiveContentIdentity();
+        // The real client logs a failed or timed out expiry and resolves, so the
+        // call looks like a success and removes nothing.
+        testRuntimeCache.expireTag.mockImplementationOnce(() =>
+          Promise.resolve()
+        );
+
+        yield* expireActiveContentIdentity();
+        const failure = yield* confirmActiveContentIdentity(
+          next.releaseId
+        ).pipe(Effect.flip);
+
+        expect(failure).toEqual(
+          new PublishedReleaseMismatchError({
+            actualReleaseId: identity.releaseId,
+            expectedReleaseId: next.releaseId,
+          })
+        );
+      })
+  );
+
+  it.effect("fails when no release is active", () =>
+    Effect.gen(function* () {
+      fetchQueryMock.mockReturnValue(Effect.succeed(null));
+
+      const failure = yield* confirmActiveContentIdentity(next.releaseId).pipe(
+        Effect.flip
+      );
+
+      expect(failure).toEqual(
+        new PublishedReleaseMismatchError({
+          actualReleaseId: null,
+          expectedReleaseId: next.releaseId,
+        })
+      );
     })
   );
 });

@@ -12,7 +12,7 @@ import {
   getMaterialModel,
   getMaterialPublication,
 } from "@/lib/content/material/publication";
-import { activateTestRelease } from "@/test/active";
+import { activateTestRelease, advanceTestRelease } from "@/test/active";
 import {
   previewWireArtifact as artifact,
   previewDeProjection as deProjection,
@@ -141,10 +141,11 @@ describe("coherent material publication", () => {
         })
       )
       // Native HTTP failures remain tagged across the content-read boundary.
-      // The next release goes live while the navigation read fails, so the
-      // stored pointer names it when the lesson is read again.
+      // The next release goes live in Convex while the navigation read fails.
+      // The stored pointer still names the old release until the failed read
+      // drops it, so the lesson read that follows must start from Convex.
       .mockImplementationOnce(() => {
-        activateTestRelease(nextRelease);
+        advanceTestRelease(nextRelease);
         return Effect.fail(
           new HttpClient.HttpClientError({
             cause: new Error("Cached navigation read failed"),
@@ -212,7 +213,7 @@ describe("coherent material publication", () => {
         .mockReturnValueOnce(Effect.succeed(lesson))
         .mockImplementationOnce(() => {
           // The next release goes live while the navigation read fails.
-          activateTestRelease("release-next");
+          advanceTestRelease("release-next");
           return Effect.fail(cause);
         });
       if (stage === "navigation") {

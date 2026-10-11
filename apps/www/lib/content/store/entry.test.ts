@@ -1,8 +1,6 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { sha256Hex } from "@repo/utilities/digest";
-import { encodeJsonText } from "@repo/utilities/json";
 import { Duration, Effect, MutableHashMap, Option, Schema } from "effect";
 import {
   ContentStoreUnavailableError,
@@ -35,10 +33,6 @@ vi.mock("@repo/utilities/digest", async (importOriginal) => {
 const cacheOptions = getCacheMock.mock.calls[0]?.[0];
 const NullableTextSchema = Schema.NullOr(Schema.String);
 
-/** Digests a key the way the store does, to find an entry in the stand-in. */
-const keyOf = (parts: readonly string[]) =>
-  sha256Hex(encodeJsonText(["1", ...parts]));
-
 beforeEach(() => {
   resetTestRuntimeCache();
   digestMock.mockClear();
@@ -52,7 +46,7 @@ describe("content store entries", () => {
     );
   });
 
-  it.effect("stores a value under a digest of its version and parts", () =>
+  it.effect("stores a value under an opaque digest of its parts", () =>
     Effect.gen(function* () {
       yield* writeStoreEntry({
         name: "content.test",
@@ -63,10 +57,8 @@ describe("content store entries", () => {
         value: "stored text",
       });
 
-      const key = yield* keyOf(["release-a", "page.catalog"]);
-      expect(key).toMatch(STORE_KEY_PATTERN);
       expect(testRuntimeCache.set).toHaveBeenCalledExactlyOnceWith(
-        key,
+        expect.stringMatching(STORE_KEY_PATTERN),
         { value: "stored text" },
         {
           name: "content.test",
@@ -74,12 +66,15 @@ describe("content store entries", () => {
           ttl: 2_592_000,
         }
       );
+      const key = testRuntimeCache.set.mock.calls[0]?.[0];
+      expect(key).not.toContain("release-a");
       expect(
         yield* readStoreEntry({
           parts: ["release-a", "page.catalog"],
           schema: Schema.String,
         })
       ).toEqual(Option.some("stored text"));
+      expect(testRuntimeCache.get).toHaveBeenCalledExactlyOnceWith(key);
     })
   );
 

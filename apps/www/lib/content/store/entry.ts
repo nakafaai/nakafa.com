@@ -15,10 +15,13 @@ export class ContentStoreUnavailableError extends Schema.TaggedError<ContentStor
 ) {}
 
 /**
- * Version of every stored shape. Bump it whenever a stored schema, or the code
- * that derives a stored value, changes, so new code never reads an entry that
- * old code wrote. It is a constant and never the build id: the build id changes
- * with every deploy, and the store exists to survive deploys.
+ * Version of every stored shape. Bump it whenever a stored schema changes in a
+ * way that an entry of the old shape would still decode, so new code never
+ * reads an entry that old code wrote. The store holds only what Convex
+ * answered, never a value that code derives from an answer, so a change in a
+ * derivation needs no bump: it takes effect with the deploy. The version is a
+ * constant and never the build id: the build id changes with every deploy, and
+ * the store exists to survive deploys.
  */
 const CONTENT_STORE_VERSION = "1";
 

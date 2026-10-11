@@ -34,3 +34,18 @@ export function activateTestRelease(releaseId: string) {
   testActive.load.mockReset().mockReturnValue(identity);
   testActive.read.mockReset().mockReturnValue(identity);
 }
+
+/**
+ * Lands a release in Convex while the stored pointer still names the previous
+ * one, as in production, where nothing updates the pointer for the activation
+ * but its expiry. The pointer follows Convex once a read drops it.
+ */
+export function advanceTestRelease(releaseId: string) {
+  const identity = Effect.succeed(makeTestActiveIdentity(releaseId));
+  testActive.load.mockReturnValue(identity);
+  testActive.expire.mockImplementation(() =>
+    Effect.sync(() => {
+      testActive.read.mockReturnValue(identity);
+    })
+  );
+}

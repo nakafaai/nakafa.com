@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { GET } from "@/app/rss.xml/route";
 
-const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
+const mockExpireActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockLoadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestArticles = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestMaterials = vi.hoisted(() => vi.fn());
@@ -18,8 +18,8 @@ vi.mock("@/lib/content/material/discovery", () => ({
   readPublishedLatestMaterials: mockReadPublishedLatestMaterials,
 }));
 vi.mock("@/lib/content/published/active", () => ({
+  expireActiveContentIdentity: mockExpireActiveContentIdentity,
   loadActiveContentIdentity: mockLoadActiveContentIdentity,
-  readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
 vi.mock("next-intl/server", () => ({
   getTranslations: ({ namespace }: { namespace: string }) =>
@@ -31,9 +31,7 @@ const activeReleaseId = "release-material";
 afterEach(() => vi.useRealTimers());
 
 beforeEach(() => {
-  mockReadActiveContentIdentity
-    .mockReset()
-    .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
+  mockExpireActiveContentIdentity.mockReset().mockReturnValue(Effect.void);
   mockLoadActiveContentIdentity
     .mockReset()
     .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
@@ -183,15 +181,23 @@ describe("rss route", () => {
     );
   });
 
+  it("pins the feed to the release Convex holds, at its start and at its end", async () => {
+    await GET();
+
+    expect(mockLoadActiveContentIdentity).toHaveBeenCalledTimes(2);
+  });
+
   it("rejects the feed when no active publication exists", async () => {
-    mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
+    mockLoadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
 
     await expect(GET()).rejects.toThrow();
     expect(mockReadPublishedLatestMaterials).not.toHaveBeenCalled();
   });
 
   it("rejects the feed when the active publication disappears", async () => {
-    mockLoadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
+    mockLoadActiveContentIdentity
+      .mockReturnValueOnce(Effect.succeed({ releaseId: activeReleaseId }))
+      .mockReturnValueOnce(Effect.succeed(null));
 
     await expect(GET()).rejects.toMatchObject({
       _tag: "PublishedReleaseMismatchError",
@@ -204,17 +210,15 @@ describe("rss route", () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({ activeReleaseId: "release-a", materials: [] })
     );
-    mockReadActiveContentIdentity.mockReturnValue(
-      Effect.succeed({ releaseId: "release-a" })
-    );
-    mockLoadActiveContentIdentity.mockReturnValue(
-      Effect.succeed({ releaseId: "release-b" })
-    );
+    mockLoadActiveContentIdentity
+      .mockReturnValueOnce(Effect.succeed({ releaseId: "release-a" }))
+      .mockReturnValueOnce(Effect.succeed({ releaseId: "release-b" }));
 
     await expect(GET()).rejects.toMatchObject({
       _tag: "PublishedReleaseMismatchError",
       actualReleaseId: "release-b",
       expectedReleaseId: "release-a",
     });
+    expect(mockExpireActiveContentIdentity).toHaveBeenCalled();
   });
 });

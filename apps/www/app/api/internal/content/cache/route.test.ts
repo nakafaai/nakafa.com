@@ -16,6 +16,7 @@ import {
   ContentCacheInvalidationError,
   type invalidateContentCache,
 } from "@/lib/content/cache";
+import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { ContentStoreUnavailableError } from "@/lib/content/store/entry";
 import {
   type invalidateSitemapCache,
@@ -35,6 +36,7 @@ const encodeCacheRequest = Schema.encodeSync(
 
 const loadActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const expireActiveContentIdentityMock = vi.hoisted(() => vi.fn());
+const confirmActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const invalidateContentCacheMock = vi.hoisted(() =>
   vi.fn<typeof invalidateContentCache>()
 );
@@ -60,6 +62,8 @@ vi.mock("@/lib/sitemap/cache", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/content/published/active", () => ({
+  /** Answers whether the stored release pointer names the activated release. */
+  confirmActiveContentIdentity: confirmActiveContentIdentityMock,
   /** Records the expiry of the stored release pointer. */
   expireActiveContentIdentity: expireActiveContentIdentityMock,
   /** Answers the release that Convex holds right now. */
@@ -75,6 +79,7 @@ beforeEach(() => {
     })
   );
   expireActiveContentIdentityMock.mockReset().mockReturnValue(Effect.void);
+  confirmActiveContentIdentityMock.mockReset().mockReturnValue(Effect.void);
   invalidateContentCacheMock
     .mockReset()
     .mockImplementation((tags) => Effect.succeed(tags));
@@ -222,20 +227,86 @@ describe("content runtime cache revalidation route", () => {
     expect(invalidateContentCacheMock).toHaveBeenCalledWith("material");
   });
 
-  it("expires the stored release pointer before it revalidates anything", async () => {
+  it("expires the stored release pointer and proves it before it revalidates anything", async () => {
     const { POST } = await import("@/app/api/internal/content/cache/route");
     const response = await POST(
       createBodyRequest(encodeCacheRequest(exactRequest))
     );
 
     expect(response.status).toBe(200);
-    expect(expireActiveContentIdentityMock).toHaveBeenCalledOnce();
+    expect(confirmActiveContentIdentityMock).toHaveBeenCalledExactlyOnceWith(
+      releaseId
+    );
+    const [firstExpiry] =
+      expireActiveContentIdentityMock.mock.invocationCallOrder;
+    expect(firstExpiry).toBeLessThan(
+      confirmActiveContentIdentityMock.mock.invocationCallOrder[0] ?? 0
+    );
     expect(
-      expireActiveContentIdentityMock.mock.invocationCallOrder[0]
+      confirmActiveContentIdentityMock.mock.invocationCallOrder[0]
     ).toBeLessThan(invalidateContentCacheMock.mock.invocationCallOrder[0] ?? 0);
     expect(
-      expireActiveContentIdentityMock.mock.invocationCallOrder[0]
+      confirmActiveContentIdentityMock.mock.invocationCallOrder[0]
     ).toBeLessThan(invalidateSitemapCacheMock.mock.invocationCallOrder[0] ?? 0);
+  });
+
+  it("expires the pointer again after the sitemap purge, for a read that began before the activation", async () => {
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(200);
+    expect(expireActiveContentIdentityMock).toHaveBeenCalledTimes(2);
+    expect(invalidateSitemapCacheMock.mock.invocationCallOrder[0]).toBeLessThan(
+      expireActiveContentIdentityMock.mock.invocationCallOrder[1] ?? 0
+    );
+  });
+
+  it("reports a last expiry that failed without a false receipt", async () => {
+    expireActiveContentIdentityMock
+      .mockReturnValueOnce(Effect.void)
+      .mockReturnValueOnce(
+        Effect.fail(
+          new ContentStoreUnavailableError({
+            cause: "offline",
+            operation: "expire",
+          })
+        )
+      );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      error: "Content cache invalidation failed.",
+    });
+  });
+
+  it("answers 503 and revalidates nothing when the expiry did not reach the pointer", async () => {
+    // The Runtime Cache client resolves an expiry that failed, so the pointer
+    // still names the previous release and only the read back can tell.
+    confirmActiveContentIdentityMock.mockReturnValueOnce(
+      Effect.fail(
+        new PublishedReleaseMismatchError({
+          actualReleaseId: ReleaseIdSchema.make("release-previous"),
+          expectedReleaseId: releaseId,
+        })
+      )
+    );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      error: "Content cache invalidation failed.",
+    });
+    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
+    expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
   });
 
   it("reports a pointer that could not be expired without a false receipt", async () => {

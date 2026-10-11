@@ -2,6 +2,7 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Result, Schema } from "effect";
 import {
   type ActiveContentReleaseId,
+  expireActiveContentIdentity,
   loadActiveContentIdentity,
 } from "@/lib/content/published/active";
 import {
@@ -36,7 +37,14 @@ function decodeReleasePin(
   }
   return Result.succeed(decoded.success);
 }
-/** Decodes and verifies the active release returned by one signed read. */
+/**
+ * Decodes and verifies the active release returned by one signed read.
+ *
+ * A pin usually comes from the stored release pointer, so a read that names
+ * another release shows that the pointer is out of date or that a release has
+ * just landed. Either way the pointer is dropped, and the next read asks Convex
+ * instead of failing every pinned read until the pointer expires on its own.
+ */
 export const decodeContentReleasePin = Effect.fn(
   "NakafaContent.decodeReleasePin"
 )(function* (
@@ -46,6 +54,9 @@ export const decodeContentReleasePin = Effect.fn(
 ) {
   const decoded = decodeReleasePin(actual, expected, identity);
   if (Result.isFailure(decoded)) {
+    if (decoded.failure._tag === "PublishedReleaseMismatchError") {
+      yield* expireActiveContentIdentity().pipe(Effect.ignore({ log: "Warn" }));
+    }
     return yield* decoded.failure;
   }
   return decoded.success;
