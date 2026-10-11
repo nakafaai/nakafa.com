@@ -28,6 +28,9 @@ import { Array as Arr, DateTime, Effect, Option } from "effect";
 
 type UserId = Docs["users"]["_id"];
 
+/** What a visitor meets on a write: the typed failure of a missing session. */
+export const sessionRequired = { data: { _tag: "SessionRequired" } };
+
 /** Runs a database effect inside a test mutation. A failure fails the test. */
 function run<A, E>(
   ctx: MutationCtx,

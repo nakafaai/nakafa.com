@@ -2,7 +2,10 @@ import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MEMORY_BATCH } from "@repo/backend/confect/nina/memory/store";
-import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import {
+  createMemoryTest,
+  sessionRequired,
+} from "@repo/backend/test/nina/memory";
 
 const memory = refs.public.nina.memory;
 const get = Ref.getFunctionReference(memory.get);
@@ -72,10 +75,21 @@ describe("the settings card of a browser tab opened before October 2026", () => 
     expect(await f.stored()).toStrictEqual(before);
   });
 
-  it("refuses a visitor who presses its buttons", async () => {
+  it("refuses a visitor who presses its buttons with the typed failure, and changes nothing", async () => {
     const f = await createMemoryTest();
-    await expect(f.t.mutation(enable, {})).rejects.toThrow();
-    await expect(f.t.mutation(disable, {})).rejects.toThrow();
-    await expect(f.t.mutation(forget, { key: 0 })).rejects.toThrow();
+    await f.seed({ text: "Stays as it is" });
+    const stored = await f.stored();
+    const keys = await f.keys();
+    for (const press of [
+      () => f.t.mutation(enable, {}),
+      () => f.t.mutation(disable, {}),
+      () => f.t.mutation(forget, { key: 0 }),
+    ]) {
+      await expect(press()).rejects.toMatchObject(sessionRequired);
+    }
+    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
+    expect(await f.stored()).toStrictEqual(stored);
+    expect(await f.keys()).toStrictEqual(keys);
+    expect(await f.owner.query(state, {})).toEqual({ paused: false });
   });
 });

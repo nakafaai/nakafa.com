@@ -2,13 +2,19 @@ import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { NinaMemoryDraft } from "@repo/backend/confect/nina/memory.spec";
-import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import {
+  createMemoryTest,
+  sessionRequired,
+} from "@repo/backend/test/nina/memory";
 import { Array as Arr } from "effect";
 
 const memory = refs.public.nina.memory;
 const add = Ref.getFunctionReference(memory.add);
 const edit = Ref.getFunctionReference(memory.edit);
 const remove = Ref.getFunctionReference(memory.remove);
+const pause = Ref.getFunctionReference(memory.pause);
+const clear = Ref.getFunctionReference(memory.clear);
+const state = Ref.getFunctionReference(memory.state);
 const search = Ref.getFunctionReference(memory.search);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
@@ -32,6 +38,30 @@ afterEach(() => {
 });
 
 describe("Nina memory writes", () => {
+  it("refuses a visitor on every write with the typed failure of a missing session, and changes nothing", async () => {
+    const f = await createMemoryTest();
+    const id = await f.seed({
+      author: "learner",
+      text: "Kelas 11",
+      title: "Sekolah",
+    });
+    const stored = await f.stored();
+    const keys = await f.keys();
+    for (const write of [
+      () => f.t.mutation(add, { text: "A visitor's words" }),
+      () => f.t.mutation(edit, { id, text: "A visitor's words" }),
+      () => f.t.mutation(remove, { id }),
+      () => f.t.mutation(pause, { paused: true }),
+      () => f.t.mutation(clear, {}),
+    ]) {
+      await expect(write()).rejects.toMatchObject(sessionRequired);
+    }
+    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
+    expect(await f.stored()).toStrictEqual(stored);
+    expect(await f.keys()).toStrictEqual(keys);
+    expect(await f.owner.query(state, {})).toEqual({ paused: false });
+  });
+
   it("accepts words of 2000 characters and refuses 2001, when added and when edited", async () => {
     const f = await createMemoryTest();
     // The test names the numbers, not the constant, so a change of the limit fails it.
