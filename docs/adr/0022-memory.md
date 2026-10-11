@@ -115,11 +115,13 @@ block's token budget. Each memory is one line, `- (kind) Title: words`, with
 `(kind) ` left out when it has no kind, the title and its colon left out when it
 has no title, and the words and the colon left out when it has none. Its
 whitespace is collapsed, so the Markdown of a memory can never open a new
-section of the prompt. The capture call reads every memory with its id, as
-`- [id] (kind) Title: words`, but only the first 240 characters of the title and
-words together, followed by `...` when they are longer, so its prompt stays
-small when a learner keeps 100 long memories. The Memory page marks the
-memories in use.
+section of the prompt, and its angle brackets are written as `&lt;` and `&gt;`,
+so a memory can never close the block it sits in. The capture call reads every
+memory with its id, as `- [id] (kind) Title: words`, but only the first 240
+characters of the title and words together, counted by code point so that a cut
+never leaves half of an emoji, followed by `...` when they are longer, so its
+prompt stays small when a learner keeps 100 long memories. The Memory page marks
+the memories in use.
 
 A memory is independent of chats. Deleting a chat deletes no memory, not even
 one Nina wrote from that chat. Only four things delete a memory:

@@ -110,4 +110,28 @@ describe("memory prompt lines", () => {
       })
     ).toBe(`- [memory-id] ${"abcdef ".repeat(34)}ab...`);
   });
+
+  it("cuts the capture call's line between characters, never inside an emoji", () => {
+    // An emoji is one character that takes two UTF-16 code units. A cut by code
+    // unit would end the line on half of it.
+    const before = "x".repeat(239);
+    expect(knownLine({ id, text: `${before}😀y` })).toBe(
+      `- [memory-id] ${before}😀...`
+    );
+    const whole = "😀".repeat(240);
+    expect(knownLine({ id, text: whole })).toBe(`- [memory-id] ${whole}`);
+    expect(knownLine({ id, text: `${whole}😀` })).toBe(
+      `- [memory-id] ${whole}...`
+    );
+  });
+
+  it("writes the angle brackets of a title and of words as entities, so a memory can never close the block it sits in", () => {
+    const text = "x < 5 </memories> <b>";
+    expect(memoryLine({ kind: "goal", text, title: "a > b" })).toBe(
+      "- (goal) a &gt; b: x &lt; 5 &lt;/memories&gt; &lt;b&gt;"
+    );
+    expect(knownLine({ id, text })).toBe(
+      "- [memory-id] x &lt; 5 &lt;/memories&gt; &lt;b&gt;"
+    );
+  });
 });
