@@ -1,6 +1,6 @@
 "use client";
 
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import { usePaginatedQuery } from "@confect/react";
 import {
   ChatSearch01Icon,
   Globe02Icon,
@@ -22,6 +22,10 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import {
+  CHAT_LIST_PAGE_SIZE,
+  useChatList,
+} from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
 import { Authenticated } from "@/components/auth/gate";
 
@@ -56,14 +60,11 @@ function SheetHistoryContent() {
       type: "study",
     },
     {
-      initialNumItems: 50,
+      initialNumItems: CHAT_LIST_PAGE_SIZE,
     }
   );
-  const { results } = pagination;
-  if (
-    PaginatedQueryResult.isLoadingFirstPage(pagination) ||
-    results.length === 0
-  ) {
+  const { loadMore, loadingMore, results } = useChatList(pagination);
+  if (results.length === 0) {
     return null;
   }
   return (
@@ -94,6 +95,15 @@ function SheetHistoryContent() {
             </DropdownMenuItem>
           );
         })}
+        {loadMore || loadingMore ? (
+          <DropdownMenuItem
+            closeOnClick={false}
+            disabled={loadingMore}
+            onClick={loadMore}
+          >
+            <span className="text-muted-foreground">{t("show-more")}</span>
+          </DropdownMenuItem>
+        ) : null}
       </DropdownMenuGroup>
     </DropdownMenuContent>
   );

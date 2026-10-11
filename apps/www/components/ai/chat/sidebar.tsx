@@ -1,6 +1,6 @@
 "use client";
 
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import { usePaginatedQuery } from "@confect/react";
 import {
   Globe02Icon,
   Search02Icon,
@@ -16,7 +16,6 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarContent,
@@ -35,12 +34,14 @@ import { Array as Arr } from "effect";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
+import {
+  CHAT_LIST_PAGE_SIZE,
+  useChatList,
+} from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
-/** Chats the sidebar asks for at a time. */
-const CHAT_PAGE = 50;
 export function AiChatSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Ai");
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
@@ -125,47 +126,51 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
         type,
       };
   const pagination = usePaginatedQuery(chats.queries.getOwnChats, queryArgs, {
-    initialNumItems: CHAT_PAGE,
+    initialNumItems: CHAT_LIST_PAGE_SIZE,
   });
-  const { results } = pagination;
+  const { loadMore, loadingMore, results } = useChatList(pagination);
   return (
-    <>
-      <SidebarMenu>
-        {!searchQuery &&
-          Arr.map(drafts, (key) => (
-            <SidebarMenuItem key={key}>
-              <SidebarMenuButton disabled isActive={!id}>
-                <HugeIcons icon={SquareLock01Icon} />
-                <span className="truncate">{t("new-chat")}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        {Arr.map(results, (chat) => {
-          const isPrivate = chat.visibility === "private";
-          return (
-            <SidebarMenuItem key={chat._id}>
-              <SidebarMenuButton
-                isActive={id === chat._id}
-                render={
-                  <NavigationLink
-                    href={`/chat/${chat._id}`}
-                    onNavigate={() => setOpenMobile(false)}
-                    title={chat.title}
-                  />
-                }
-              >
-                <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
-                <span className="truncate">{chat.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          );
-        })}
-      </SidebarMenu>
-      {/* A search page may hold no match while older chats remain, so the list
-          keeps asking until the end of the list is out of view or none is left. */}
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(CHAT_PAGE)} />
+    <SidebarMenu>
+      {!searchQuery &&
+        Arr.map(drafts, (key) => (
+          <SidebarMenuItem key={key}>
+            <SidebarMenuButton disabled isActive={!id}>
+              <HugeIcons icon={SquareLock01Icon} />
+              <span className="truncate">{t("new-chat")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      {Arr.map(results, (chat) => {
+        const isPrivate = chat.visibility === "private";
+        return (
+          <SidebarMenuItem key={chat._id}>
+            <SidebarMenuButton
+              isActive={id === chat._id}
+              render={
+                <NavigationLink
+                  href={`/chat/${chat._id}`}
+                  onNavigate={() => setOpenMobile(false)}
+                  title={chat.title}
+                />
+              }
+            >
+              <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
+              <span className="truncate">{chat.title}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
+      {loadMore || loadingMore ? (
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            className="text-sidebar-foreground/70"
+            disabled={loadingMore}
+            onClick={loadMore}
+          >
+            <span className="truncate">{t("show-more")}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       ) : null}
-    </>
+    </SidebarMenu>
   );
 }

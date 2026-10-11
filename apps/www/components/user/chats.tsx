@@ -27,6 +27,10 @@ import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import {
+  CHAT_LIST_PAGE_SIZE,
+  useChatList,
+} from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import { getLocale } from "@/lib/i18n/date";
@@ -72,10 +76,10 @@ function OwnChatsList() {
       type: "study",
     },
     {
-      initialNumItems: 50,
+      initialNumItems: CHAT_LIST_PAGE_SIZE,
     }
   );
-  const { results } = pagination;
+  const { loadMore, loadingMore, results } = useChatList(pagination);
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
   }
@@ -83,6 +87,8 @@ function OwnChatsList() {
     <ChatList
       canDelete={true}
       isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
+      loadingMore={loadingMore}
+      loadMore={loadMore}
       results={results}
     />
   );
@@ -108,13 +114,15 @@ function PublicChatsList({
         userId,
       };
   const pagination = usePaginatedQuery(chats.queries.getChats, queryArgs, {
-    initialNumItems: 50,
+    initialNumItems: CHAT_LIST_PAGE_SIZE,
   });
-  const { results } = pagination;
+  const { loadMore, loadingMore, results } = useChatList(pagination);
   return (
     <ChatList
       canDelete={false}
       isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
+      loadingMore={loadingMore}
+      loadMore={loadMore}
       results={results}
     />
   );
@@ -123,14 +131,19 @@ function PublicChatsList({
 /** Render a resolved chat page with optional owner controls. */
 function ChatList({
   canDelete,
+  loadingMore,
+  loadMore,
   results,
   isLoading,
 }: {
   canDelete: boolean;
+  loadingMore: boolean;
+  loadMore: (() => void) | undefined;
   results: readonly ChatView[];
   isLoading: boolean;
 }) {
   const t = useTranslations("Common");
+  const tAi = useTranslations("Ai");
   const locale = useLocale();
   if (isLoading) {
     return <Skeleton className="h-12 w-full rounded-xl border shadow-sm" />;
@@ -143,43 +156,56 @@ function ChatList({
     );
   }
   return (
-    <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-      {Arr.map(results, (chat) => {
-        const isPrivate = chat.visibility === "private";
-        return (
-          <div
-            className="group relative flex flex-col justify-between gap-2 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground sm:flex-row sm:items-center"
-            key={chat._id}
-          >
-            <NavigationLink
-              className="absolute inset-0 z-1"
-              href={`/chat/${chat._id}`}
-            />
-            <div className="flex flex-1 items-center gap-2">
-              <HugeIcons
-                className="size-4 shrink-0"
-                icon={isPrivate ? SquareLock01Icon : Globe02Icon}
+    <>
+      <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+        {Arr.map(results, (chat) => {
+          const isPrivate = chat.visibility === "private";
+          return (
+            <div
+              className="group relative flex flex-col justify-between gap-2 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground sm:flex-row sm:items-center"
+              key={chat._id}
+            >
+              <NavigationLink
+                className="absolute inset-0 z-1"
+                href={`/chat/${chat._id}`}
               />
-              <span className="truncate text-sm">{chat.title}</span>
-              <HugeIcons
-                className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100"
-                icon={ArrowDown02Icon}
-              />
-            </div>
+              <div className="flex flex-1 items-center gap-2">
+                <HugeIcons
+                  className="size-4 shrink-0"
+                  icon={isPrivate ? SquareLock01Icon : Globe02Icon}
+                />
+                <span className="truncate text-sm">{chat.title}</span>
+                <HugeIcons
+                  className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100"
+                  icon={ArrowDown02Icon}
+                />
+              </div>
 
-            <div className="flex shrink-0 items-center justify-between gap-2">
-              <time className="truncate text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground">
-                {formatDistanceToNow(chat.updatedAt, {
-                  locale: getLocale(locale),
-                  addSuffix: true,
-                })}
-              </time>
-              {canDelete ? <UserChatsListActions chat={chat} /> : null}
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <time className="truncate text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground">
+                  {formatDistanceToNow(chat.updatedAt, {
+                    locale: getLocale(locale),
+                    addSuffix: true,
+                  })}
+                </time>
+                {canDelete ? <UserChatsListActions chat={chat} /> : null}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+      {loadMore || loadingMore ? (
+        <Button
+          className="self-center text-muted-foreground"
+          disabled={loadingMore}
+          onClick={loadMore}
+          size="sm"
+          variant="ghost"
+        >
+          {tAi("show-more")}
+        </Button>
+      ) : null}
+    </>
   );
 }
 
