@@ -253,7 +253,11 @@ alone. The Memory page does not use it: its search runs in the browser.
   every memory a learner has, however many: the settings route reads the first
   page of 30 memories and whether memory is paused for the first paint, and one
   reader in the browser then loads the next page when the end of the list comes
-  into view. The list is windowed: only the rows in view are in the page.
+  into view. The list is windowed: only the rows in view and a few around them
+  are in the page, except that the rows the server rendered stay until the
+  learner first scrolls, so hydration moves none of them. Every row has the same
+  fixed height, in pixels, so the window knows where each stands before it has
+  measured any.
 - The Memory page searches in the browser alone, in any part of a word of the
   title and the words of the memories it holds. While the search box holds text,
   the reader loads the pages that are not loaded yet, 50 at a time (the most a
@@ -267,9 +271,14 @@ alone. The Memory page does not use it: its search runs in the browser.
 - The editor holds the memory it opened: opening it stores the memory in the
   page's state, and the editor never looks it up in the list again, so changing
   the search or the pages that are loaded never closes it. The learner closing
-  it, the learner deleting that memory, and a save answered with `missing` are
-  the only things that close it. Every change shows at once on every loaded page
-  and rolls back when it fails.
+  it, the learner deleting that memory (from its row, from the editor, or with
+  Delete all), and a save answered with `missing` are the only things that
+  close it. It is one editor in the panel beside the page and in the sheet, so
+  a window that crosses the width where the two swap loses nothing the learner
+  wrote.
+- Every change shows at once on every loaded page and rolls back when it fails.
+  A change made before the live list has answered shows when it answers,
+  because the browser has no page of its own to change until then.
 - `read` gives a turn the account profile and the at most 8 memories it starts
   with, for the topics of the open page. `known` gives the capture call the
   account profile and the at most 12 memories that match the message and the

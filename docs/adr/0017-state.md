@@ -24,7 +24,11 @@ when `null` is a value the provider shares.
 A provider that wraps streamed content keeps its context value unchanged after
 hydration. React client-renders a Suspense boundary that is still streaming
 when an ancestor context changes, in any lane, and discards the HTML the
-server sent.
+server sent. A provider wraps no streamed content when no Suspense boundary
+below it can still be streaming from the server, so its context may change as a
+Confect hook answers, as the reader of the Memory page does: the only boundary
+below it is the editor's, which mounts in the browser after the learner opens
+it.
 
 - State that resolves in the browser after hydration, such as the Better Auth
   session (read from its session atom, not its hook), Convex authentication,
