@@ -22,7 +22,7 @@ import { Clock, Duration, Effect, flow, Struct } from "effect";
 
 /** Generated internal mutation reference accepted by Convex refresh scheduling. */
 
-/** Schedules bounded repair work for the maintained popularity ranking. */
+/** Schedules the weekly recomputation of the maintained popularity counters. */
 export const scheduleLearningPopularityRefreshes = Effect.fn(
   "contents.metrics.scheduleLearningPopularityRefreshes"
 )(function* () {
@@ -62,7 +62,12 @@ export const scheduleLearningPopularityRefreshes = Effect.fn(
   };
 });
 
-/** Repairs the maintained counters from their audited daily signals. */
+/**
+ * Recomputes each existing counter of the maintained ranking from its daily
+ * signals, one bounded page at a time, and removes a counter no signal backs.
+ * A counter that is gone is not recreated here: the next view of its lesson
+ * creates it and the next run restores its score.
+ */
 export const refreshLearningPopularityWindowPage = Effect.fn(
   "contents.metrics.refreshLearningPopularityWindowPage"
 )(

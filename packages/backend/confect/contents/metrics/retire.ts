@@ -84,6 +84,12 @@ const loadObsoleteCycles = Effect.fn("contents.metrics.loadObsoleteCycles")(
  * of the retired windows and scope with their ranking entries, and the
  * maintenance watermarks of those windows. The index ranges are the resume
  * position, so an empty probe costs no document read.
+ *
+ * Temporary migration (ADR 0008). Exit: the hourly prune reports no retired
+ * counter and no retired watermark on dev and on production. Cleanup: delete
+ * this file, its call in `retention.ts`, the `retiredCounters` and
+ * `retiredCycles` result fields and the retirement tests, then narrow the
+ * stored window and scope values of popularity rows to the maintained ones.
  */
 export const retireObsoletePopularity = Effect.fn(
   "contents.metrics.retireObsoletePopularity"

@@ -43,7 +43,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **NinaContextPack**: The immutable learning context snapshot built during authenticated admission and stored with the Nina turn for replay.
 - **Continue Learning**: A signed-in user read model ranked from recent learning interactions. It must not be inferred for anonymous users.
 - **Popularity**: Aggregate learning interest derived from view events and a windowed counter. The one ranking kept is the homepage's: material lessons, global scope, the last seven UTC days. Product reads use bounded read models, not raw event scans.
-- **Popularity retention**: Daily viewer keys prevent duplicate contributions only within their UTC day. Daily aggregate signals are kept for the seven-day window and read once, on the day they leave it. Expiration removes these inputs after their consumers finish; queued events remain authoritative for pending work.
+- **Popularity retention**: Daily viewer keys prevent duplicate contributions only within their UTC day. Daily aggregate signals are kept for the seven-day window: the daily pass reads the one leaving it and the weekly pass reads those inside it. Expiration removes these inputs after their consumers finish; queued events remain authoritative for pending work.
 
 ## Nina
 

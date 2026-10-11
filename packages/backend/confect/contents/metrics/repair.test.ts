@@ -273,6 +273,40 @@ describe("contents/metrics/repair", () => {
     ]);
   });
 
+  it("does not create the counter of a lesson that has none", async () => {
+    const target = createTarget();
+    await target.mutation(async (ctx) => {
+      await insertCycle(ctx);
+      await insertSignal(ctx, { contextKey: "lost-counter", viewCount: 3 });
+    });
+
+    const result = await target.mutation(
+      internal.contents.mutations.popularity
+        .refreshLearningPopularityWindowPage,
+      { day: DAY, scopeMode: "global", windowKey: "7d" }
+    );
+    const state = await target.query(async (ctx) => ({
+      counters: await ctx.db.query("learningPopularityCounters").collect(),
+      ranking: await learningPopularityRankings.paginate(ctx, {
+        namespace: ["material", "en", "global", "7d"],
+        order: "asc",
+        pageSize: 10,
+      }),
+    }));
+
+    // The repair walks the counters that exist. The next view of the lesson
+    // creates its counter (apply.test.ts), and the next repair restores the
+    // score from the signals, as the repair above does.
+    expect(result).toMatchObject({
+      isDone: true,
+      refreshedCounters: 0,
+      removedCounters: 0,
+      skipped: false,
+    });
+    expect(state.counters).toEqual([]);
+    expect(state.ranking.page).toEqual([]);
+  });
+
   it("reports a storage failure as the typed IO failure", async () => {
     const target = createTarget();
     await expect(

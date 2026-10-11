@@ -225,7 +225,7 @@ describe("contents/mutations/popularity", () => {
     ]);
   });
 
-  it("repairs finite windows from daily signals and removes expired counters", async () => {
+  it("recomputes the seven-day counters from daily signals and removes one no signal backs", async () => {
     const t = createPopularityConvexTest();
 
     await t.mutation(insertPopularityRefreshRows);

@@ -190,7 +190,6 @@ describe("contents/queries/trending", () => {
       locale: "en",
       limit: 2,
       minViews: 5,
-      windowKey: POPULARITY_WINDOW,
     });
     expect(results).toEqual([
       expect.objectContaining({
@@ -249,7 +248,6 @@ describe("contents/queries/trending", () => {
       locale: "en",
       limit: 1,
       minViews: 5,
-      windowKey: POPULARITY_WINDOW,
     });
     expect(results).toEqual([
       expect.objectContaining({
@@ -265,11 +263,10 @@ describe("contents/queries/trending", () => {
       target.query(getTrendingSubjects, {
         locale: "en",
         limit: 0,
-        windowKey: POPULARITY_WINDOW,
       })
     ).resolves.toEqual([]);
   });
-  it("ranks a lesson from the views the pipeline recorded, with or without the window argument", async () => {
+  it("ranks a lesson from the views the pipeline recorded", async () => {
     vi.useFakeTimers({ now: CONTENT_VIEW_NOW });
     try {
       const target = createConvexTestWithBetterAuth();
@@ -282,26 +279,44 @@ describe("contents/queries/trending", () => {
       }
       await target.finishAllScheduledFunctions(vi.runAllTimers);
 
-      const ranked = await target.query(getTrendingSubjects, {
-        locale: "en",
-        minViews: 1,
-      });
-
-      expect(ranked).toEqual([
+      await expect(
+        target.query(getTrendingSubjects, { locale: "en", minViews: 1 })
+      ).resolves.toEqual([
         expect.objectContaining({
           assetId: material.contentId,
           viewCount: 3,
         }),
       ]);
-      await expect(
-        target.query(getTrendingSubjects, {
-          locale: "en",
-          minViews: 1,
-          windowKey: POPULARITY_WINDOW,
-        })
-      ).resolves.toEqual(ranked);
     } finally {
       vi.useRealTimers();
     }
+  });
+  // Temporary compatibility with an older web deployment. Delete this test
+  // with the `windowKey` argument (see the validator in trending/spec.ts).
+  it("still accepts the retired window argument an older web deployment sends", async () => {
+    const target = createTrendingConvexTest();
+    const projection = makeMaterialProjection("en", 1, 30);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([projection]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
+    await target.mutation((ctx) =>
+      insertMaterialCounter(ctx, projection, "en", 10)
+    );
+
+    const named = await target.query(getTrendingSubjects, {
+      locale: "en",
+      windowKey: POPULARITY_WINDOW,
+    });
+
+    expect(named).toHaveLength(1);
+    expect(named).toEqual(
+      await target.query(getTrendingSubjects, { locale: "en" })
+    );
   });
 });

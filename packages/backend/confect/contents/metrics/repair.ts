@@ -111,8 +111,10 @@ function projectPopularityRefresh(
 }
 
 /**
- * Rebuilds one finite counter from authoritative daily signals, or removes it
- * when no signal of its window backs it any more.
+ * Recomputes one existing seven-day counter from its daily signals, or removes
+ * it when no signal of its window backs it any more. It never creates a
+ * counter: the next view of a lesson that has none creates it with that view,
+ * and the next repair restores its score from the signals.
  */
 export const repairPopularityCounter = Effect.fn(
   "contents.metrics.repairPopularityCounter"

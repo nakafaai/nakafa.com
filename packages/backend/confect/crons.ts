@@ -143,7 +143,7 @@ export default CronJobs.make()
     )
   )
   .add(
-    /** Rebuilds the seven-day window weekly from audited daily signals. */ CronJob.make(
+    /** Recomputes each seven-day popularity counter weekly from its daily signals. */ CronJob.make(
       "repair learning popularity windows",
       Cron.make({
         minutes: [15],
@@ -158,7 +158,7 @@ export default CronJobs.make()
     )
   )
   .add(
-    /** Recovers bounded retention and retires retired popularity rows without a separate checkpoint table. */ CronJob.make(
+    /** Prunes expired popularity inputs in bounded pages and, until none is left, retires the rows earlier versions kept. */ CronJob.make(
       "prune expired popularity inputs",
       Duration.hours(POPULARITY_RETENTION_INTERVAL_HOURS),
       internal.contents.mutations.popularity.pruneLearningPopularity,

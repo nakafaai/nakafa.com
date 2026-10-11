@@ -35,9 +35,9 @@ const hasCompletedWindow = Effect.fn("contents.metrics.hasCompletedWindow")(
  * Expires deduplication keys and window inputs in bounded transactions. Queue
  * payloads own pending work. A daily signal is kept only while the window can
  * still expire it, so the window start is the retention cutoff once the
- * window's own maintenance has completed the day. The same hourly pass deletes
- * what the pipeline no longer maintains. The earliest indexed rows are the
- * cursor, so retries need no checkpoint.
+ * window's own maintenance has completed the day. Until nothing is left, the
+ * same hourly pass also retires what earlier versions kept (`retire.ts`). The
+ * earliest indexed rows are the cursor, so retries need no checkpoint.
  */
 export const pruneLearningPopularity = Effect.fn(
   "contents.metrics.pruneLearningPopularity"
