@@ -161,7 +161,11 @@ describe("Nina memory pause", () => {
     ]);
     expect(await f.owner.query(state, {})).toEqual({ paused: true });
     expect(
-      await f.t.query(read, { topics: [], userId: f.identity.userId })
+      await f.t.query(read, {
+        now: NOW,
+        topics: [],
+        userId: f.identity.userId,
+      })
     ).toMatchObject({ paused: true, prompt: [] });
     expect(await f.stored()).toHaveLength(1);
     await f.owner.mutation(pause, { paused: false });
@@ -170,7 +174,11 @@ describe("Nina memory pause", () => {
     expect(resumed?.updatedAt).toBe(2000);
     expect(await f.owner.query(state, {})).toEqual({ paused: false });
     expect(
-      await f.t.query(read, { topics: [], userId: f.identity.userId })
+      await f.t.query(read, {
+        now: NOW,
+        topics: [],
+        userId: f.identity.userId,
+      })
     ).toMatchObject({
       paused: false,
       prompt: [expect.objectContaining({ text: "Kept" })],

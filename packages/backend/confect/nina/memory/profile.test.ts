@@ -5,6 +5,8 @@ import { createNinaTest } from "@repo/backend/test/nina";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 
 const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
+/** The time the turn reads at. These learners keep no memory, so it changes nothing. */
+const NOW = Date.UTC(2026, 9, 10, 12);
 
 describe("learner profile", () => {
   it("reads the account profile with the latest finished try-out by section", async () => {
@@ -46,7 +48,7 @@ describe("learner profile", () => {
       });
       return owner;
     });
-    expect(await f.t.query(read, { topics: [], userId })).toEqual({
+    expect(await f.t.query(read, { now: NOW, topics: [], userId })).toEqual({
       paused: false,
       profile: {
         focus: "tryout",
@@ -95,7 +97,7 @@ describe("learner profile", () => {
       await ctx.db.delete("tryoutAttempts", attempt._id);
       return runtime.identity.userId;
     });
-    expect(await f.t.query(read, { topics: [], userId })).toEqual({
+    expect(await f.t.query(read, { now: NOW, topics: [], userId })).toEqual({
       paused: false,
       profile: {},
       prompt: [],

@@ -8,7 +8,7 @@ import { readPageContext } from "@repo/backend/confect/nina/page";
 import { formatFocusPrompt } from "@repo/backend/confect/nina/prompt/focus";
 import { formatLearnerPrompt } from "@repo/backend/confect/nina/prompt/learner";
 import { createNinaSystemPrompt } from "@repo/backend/confect/nina/prompt/system";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 
 /** A focused turn never answers without its rechecked, signed question. */
 const readFocus = Effect.fn("nina.instructions.focus")(
@@ -46,6 +46,7 @@ export const readInstructions = Effect.fn("nina.instructions")(function* (
     {
       focus: turn.page.nina.focus ? readFocus(turn._id) : Effect.undefined,
       learner: query(refs.internal.nina.memory.read, {
+        now: yield* Clock.currentTimeMillis,
         topics: topicsOf(turn.page),
         userId: turn.userId,
       }).pipe(

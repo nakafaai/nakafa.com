@@ -185,6 +185,7 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
     const learner = yield* (yield* QueryRunner)
       .runQuery(refs.internal.nina.memory.known, {
         message,
+        now: yield* Clock.currentTimeMillis,
         topics,
         userId: turn.userId,
       })

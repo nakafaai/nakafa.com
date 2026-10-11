@@ -370,21 +370,29 @@ export default GroupSpec.make()
     }).middleware(Session)
   )
   // What a turn starts with: the account facts and the memories for the pages
-  // the learner has open.
+  // the learner has open. `now` is the caller's time, which leaves out the
+  // situations that ended: a query never reads the clock, because it is not run
+  // again when time passes.
   .addFunction(
     FunctionSpec.internalQuery({
       name: "read",
-      args: () => ({ topics: NinaMemoryTopics, userId: Id("users") }),
+      args: () => ({
+        now: Schema.Finite,
+        topics: NinaMemoryTopics,
+        userId: Id("users"),
+      }),
       returns: () => NinaLearner,
     })
   )
   // What the capture call reads: the account facts and the memories that match
-  // the learner's message and the open pages.
+  // the learner's message and the open pages, as they are at the caller's time
+  // `now`.
   .addFunction(
     FunctionSpec.internalQuery({
       name: "known",
       args: () => ({
         message: Schema.String,
+        now: Schema.Finite,
         topics: NinaMemoryTopics,
         userId: Id("users"),
       }),

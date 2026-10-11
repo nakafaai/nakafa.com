@@ -40,7 +40,7 @@ describe("Nina memory for a turn", () => {
       text: "About the lesson",
       topics: [LESSON],
     });
-    const open = await f.t.query(read, { topics: [LESSON], userId });
+    const open = await f.t.query(read, { now: NOW, topics: [LESSON], userId });
     expect(open.paused).toBe(false);
     expect(open.profile).toEqual({});
     expect(words(open.prompt)).toEqual([
@@ -54,7 +54,7 @@ describe("Nina memory for a turn", () => {
       text: "About the lesson",
     });
     expect(
-      words((await f.t.query(read, { topics: [], userId })).prompt)
+      words((await f.t.query(read, { now: NOW, topics: [], userId })).prompt)
     ).toEqual(Arr.makeBy(8, (index) => `Memory ${9 - index}`));
   });
 
@@ -74,8 +74,9 @@ describe("Nina memory for a turn", () => {
     });
     await f.seed({ confirmedAt: 1, text: "Ikut SNBT 2027" });
     const userId = f.identity.userId;
-    const learner = await f.t.query(read, { topics: [], userId });
+    const learner = await f.t.query(read, { now: NOW, topics: [], userId });
     const capture = await f.t.query(known, {
+      now: NOW,
       message: "Aku kelas 12 IPA di sekolah, ujian akhir, ikut SNBT",
       topics: [],
       userId,
@@ -100,6 +101,7 @@ describe("Nina memory for a turn", () => {
     await f.seed({ confirmedAt: 0, text: "Tentang halaman", topics: [LESSON] });
     await f.seed({ confirmedAt: 99, text: "Tidak ada hubungannya" });
     const capture = await f.t.query(known, {
+      now: NOW,
       message: "Aku mau belajar limit",
       topics: [LESSON],
       userId,
@@ -126,17 +128,24 @@ describe("Nina memory for a turn", () => {
     );
     await f.seed({ text: "Kept", topics: [LESSON] });
     await f.owner.mutation(pause, { paused: true });
-    expect(await f.t.query(read, { topics: [LESSON], userId })).toEqual({
+    expect(
+      await f.t.query(read, { now: NOW, topics: [LESSON], userId })
+    ).toEqual({
       paused: true,
       profile: { focus: "tryout" },
       prompt: [],
     });
     expect(
-      await f.t.query(known, { message: "kept", topics: [LESSON], userId })
+      await f.t.query(known, {
+        message: "kept",
+        now: NOW,
+        topics: [LESSON],
+        userId,
+      })
     ).toEqual({ known: [], paused: true, profile: { focus: "tryout" } });
     await f.owner.mutation(pause, { paused: false });
     expect(
-      words((await f.t.query(read, { topics: [], userId })).prompt)
+      words((await f.t.query(read, { now: NOW, topics: [], userId })).prompt)
     ).toEqual(["Kept"]);
   });
 
@@ -147,9 +156,12 @@ describe("Nina memory for a turn", () => {
     const newest = (count: number) =>
       Arr.makeBy(count, (index) => `Memory ${299 - index}`);
     expect(
-      words((await f.t.query(read, { topics: [LESSON], userId })).prompt)
+      words(
+        (await f.t.query(read, { now: NOW, topics: [LESSON], userId })).prompt
+      )
     ).toEqual(newest(8));
     const capture = await f.t.query(known, {
+      now: NOW,
       message: "memory",
       topics: [],
       userId,
