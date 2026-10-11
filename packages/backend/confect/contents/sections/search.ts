@@ -22,8 +22,9 @@ import { Array as Arr, Duration, Effect } from "effect";
  * into one ranking and given in the language of the learner. The question is
  * embedded once; the nearest sections of the learner's language are found by
  * vector search, which only an action can run, and the rest is finished in one
- * query. The search ends with a timeout failure if it takes longer than its
- * deadline, so a caller can fall back to another search.
+ * query. The answer is `empty` while the index is not complete for the active
+ * release, and the search ends with a timeout failure if it takes longer than
+ * its deadline, so a caller can fall back to another search.
  */
 export const searchSections = Effect.fn("contents.sections.search")(
   function* (input: typeof searchInputValidator.Type) {

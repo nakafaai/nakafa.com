@@ -15,6 +15,26 @@ export const LESSON_PAGE_BYTES = 1024 * 1024;
 /** Texts sent to the embedder in one request. */
 export const EMBED_BATCH_SIZE = 64;
 
+/**
+ * Times a build step asks for vectors again after a failure that may pass. A
+ * model that refuses a text is not asked again.
+ */
+export const EMBED_RETRIES = 4;
+
+/**
+ * The wait before the first new try. Each wait is twice the one before, so the
+ * four new tries wait 75 seconds in all, which outlasts a gateway that is down
+ * for a minute without ending the build.
+ */
+export const EMBED_RETRY_DELAY_MS = 5000;
+
+/**
+ * Sections one stored check reads. A stored section is a vector of 6 KB and up
+ * to 12,000 characters of text, so a check stays far below the 16 MiB read
+ * limit however many sections a step finds in its lessons.
+ */
+export const SECTIONS_PER_CHECK = 64;
+
 /** Sections one store mutation writes, with their vectors. */
 export const SECTIONS_PER_MUTATION = 24;
 
@@ -38,8 +58,9 @@ export const SECTION_TEXT_CHARS = 12_000;
 
 /**
  * Characters of a section sent to the embedder: the lesson title, the heading
- * path, and the start of the body. Four thousand characters stay below the
- * token limit of every candidate model, the smallest being 2,048 tokens.
+ * path, and the start of the body. The limit of a model is in tokens, which
+ * this cut does not count, so a section that a model still refuses is left out
+ * of the index with a warning and counted as missing.
  */
 export const EMBED_TEXT_CHARS = 4000;
 

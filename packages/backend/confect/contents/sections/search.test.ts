@@ -127,6 +127,26 @@ describe("section search", () => {
     ).toEqual({ kind: "empty" });
   });
 
+  it("says the index is empty while the build of the active release has not finished", async () => {
+    embedWithKnowledge();
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(seedKnowledge);
+    // One step stores the German and English lessons, but the build ends with
+    // the steps that follow.
+    await knowledgeBuild(t).run();
+    expect(
+      await t.query((ctx) =>
+        ctx.db
+          .query("contentSections")
+          .filter((q) => q.eq(q.field("appLocale"), "de"))
+          .first()
+      )
+    ).not.toBeNull();
+    expect(
+      await setup(t).search({ locale: "de", query: "Determinante" })
+    ).toEqual({ kind: "empty" });
+  });
+
   it("fails with the failure of the embedder", async () => {
     const { t } = await indexed();
     provider.embeddingModel.mockReturnValue(

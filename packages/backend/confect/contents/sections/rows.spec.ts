@@ -1,6 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
+  finishInputValidator,
+  finishResultValidator,
   knownInputValidator,
   lessonsInputValidator,
   lessonsResultValidator,
@@ -18,8 +20,9 @@ import { Schema } from "effect";
 /**
  * What a section build reads from the active release and writes to the index.
  * The reads return the source of the sections; the writes keep the index equal
- * to the active release, a bounded batch at a time. One more read gives back
- * the stored sections of a language for the model test.
+ * to the active release, a bounded batch at a time, and the last one records
+ * that the index is complete. One more read gives back the stored sections of
+ * a language for the model test.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -58,6 +61,13 @@ export default GroupSpec.make()
       args: () => pruneInputValidator.fields,
       returns: () => pruneResultValidator,
       error: () => ReleaseError,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "finish",
+      args: () => finishInputValidator.fields,
+      returns: () => finishResultValidator,
     })
   )
   .addFunction(

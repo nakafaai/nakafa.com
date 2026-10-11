@@ -26,7 +26,7 @@ import {
 } from "@repo/backend/test/quran/snapshot";
 import { APICallError } from "ai";
 import { MockEmbeddingModelV4 } from "ai/test";
-import { Array as Arr, Number as Num, Order } from "effect";
+import { Array as Arr, Number as Num, Order, String as Str } from "effect";
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => provider.embeddingModel.mockReset());
@@ -117,13 +117,13 @@ describe("section build", () => {
           anchor: "bentuk-matriks",
           headingPath: ["Bentuk Matriks"],
           ordinal: 1,
-          scope: ["id", "material"],
+          scope: "id:material",
         },
         {
           anchor: "matriks-persegi",
           headingPath: ["Bentuk Matriks", "Matriks Persegi"],
           ordinal: 2,
-          scope: ["id", "material"],
+          scope: "id:material",
         },
       ])
     );
@@ -226,16 +226,52 @@ describe("section build", () => {
     ).toBe(false);
   });
 
-  it("skips a lesson whose source cannot be split and indexes the others", async () => {
+  it("fails at a lesson whose source cannot be split, names it, and stores nothing of its page", async () => {
     embedWithKnowledge();
-    const { build, rows, t } = setup();
+    const { failure, rows, run, t } = setup();
     await t.mutation(async (ctx) => {
       await seedKnowledge(ctx);
       await editKnowledgeLesson(ctx, 1, "id", "<Broken");
     });
-    const steps = await build();
-    expect(embeddedBy(steps)).toBe(23);
-    expect(await rows()).toHaveLength(23);
+    // The Indonesian lessons come on the second page, after German and English.
+    const first = await run();
+    assert.ok(first.next, "Expected a second page of lessons.");
+    const stored = await rows();
+    const failed = await failure(first.next);
+    expect(failed._tag).toBe("ReleaseError");
+    expect(Str.startsWith("Lesson material/lesson/")(failed.message)).toBe(
+      true
+    );
+    expect(failed.message).toContain(
+      "section-1/id cannot be split into sections"
+    );
+    expect(await rows()).toEqual(stored);
+    expect(
+      await t.run((ctx) =>
+        ctx.db.system.query("_scheduled_functions").collect()
+      )
+    ).toHaveLength(1);
+  });
+
+  it("records the finished build only when its last step ends", async () => {
+    embedWithKnowledge();
+    const { run, t } = setup();
+    await t.mutation(seedKnowledge);
+    const recorded = () =>
+      t.query((ctx) => ctx.db.query("contentSectionState").collect());
+    let input: Input | null = {};
+    while (input !== null) {
+      const step = await run(input);
+      expect(await recorded()).toHaveLength(step.next === null ? 1 : 0);
+      input = step.next;
+    }
+    expect(await recorded()).toMatchObject([
+      {
+        key: "primary",
+        model: "google/gemini-embedding-2",
+        releaseId: KNOWLEDGE_RELEASE.releaseId,
+      },
+    ]);
   });
 
   it("stops without a trace when the release changed under the build", async () => {
@@ -314,7 +350,7 @@ describe("section build", () => {
           ),
       })
     );
-    expect(await failure()).toEqual({ _tag: "GatewayFailure" });
+    expect(await failure()).toMatchObject({ _tag: "GatewayFailure" });
     expect(await rows()).toEqual([]);
   });
 
@@ -337,7 +373,7 @@ describe("section build", () => {
           ordinal,
           publicPath: "materi/removed",
           releaseId: "release-earlier",
-          scope: ["id", "material"],
+          scope: "id:material",
           section: "material",
           text: "Bagian",
         });

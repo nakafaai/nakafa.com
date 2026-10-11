@@ -3,6 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { readLessons } from "@repo/backend/confect/contents/sections/lessons";
 import { readSurah } from "@repo/backend/confect/contents/sections/quran";
 import spec from "@repo/backend/confect/contents/sections/rows.spec";
+import { finishBuild } from "@repo/backend/confect/contents/sections/state";
 import {
   knownSections,
   pageTexts,
@@ -51,6 +52,14 @@ const prune = FunctionImpl.make(
     return yield* pruneSections(args);
   })
 );
+const finish = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "finish",
+  Effect.fn("contents.sections.rows.finish")(function* (args) {
+    return yield* finishBuild(args);
+  })
+);
 const page = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -65,6 +74,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(stored),
   Layer.provide(save),
   Layer.provide(prune),
+  Layer.provide(finish),
   Layer.provide(page),
   GroupImpl.finalize
 );

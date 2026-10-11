@@ -1,8 +1,16 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { resolveHits } from "@repo/backend/confect/contents/sections/hits";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { provider } from "@repo/backend/test/gateway";
 import {
   embedWithKnowledge,
@@ -15,6 +23,13 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => provider.embeddingModel.mockReset());
 
 type Input = Parameters<typeof resolveHits>[0];
+
+/** Deletes the record of the finished build, as a deployment that has not finished one lacks it. */
+async function deleteRecords(ctx: MutationCtx) {
+  for (const record of await ctx.db.query("contentSectionState").collect()) {
+    await ctx.db.delete("contentSectionState", record._id);
+  }
+}
 
 /** A deployment whose active release is indexed. */
 async function indexed() {
@@ -168,6 +183,61 @@ describe("section hits", () => {
     expect(await places({ ids, limit: 5, locale: "id", query: "?!" })).toEqual([
       "id:determinan",
     ]);
+  });
+
+  it("returns a place once when the words find it in several languages", async () => {
+    const { idOf, places } = await indexed();
+    const unrelated = await idOf("id", "top", "section-2");
+    // The Indonesian and the German article both hold the word.
+    expect(
+      await places({
+        ids: [unrelated],
+        limit: 5,
+        locale: "id",
+        query: "politik",
+      })
+    ).toEqual(["id:top", "id:gambaran"]);
+  });
+
+  describe("an index that cannot answer", () => {
+    const query = { limit: 5, locale: "id", query: "determinan" } as const;
+
+    it("answers with its sections once the build of the active release has finished", async () => {
+      const { idOf, places } = await indexed();
+      const ids = [await idOf("id", "determinan", "section-1")];
+      expect(await places({ ...query, ids })).toContain("id:determinan");
+    });
+
+    it.each([
+      ["no build has finished", (ctx: MutationCtx) => deleteRecords(ctx)],
+      [
+        "a release that was built is no longer the active one",
+        async (ctx: MutationCtx) => {
+          const state = await ctx.db.query("contentState").unique();
+          assert.ok(state, "Expected one active content state.");
+          await ctx.db.patch("contentState", state._id, {
+            activeReleaseId: "release-later",
+          });
+        },
+      ],
+      [
+        "the model that embeds the questions is not the one that embedded the sections",
+        async (ctx: MutationCtx) => {
+          for (const record of await ctx.db
+            .query("contentSectionState")
+            .collect()) {
+            await ctx.db.patch("contentSectionState", record._id, {
+              model: "qwen/qwen3-embedding-8b",
+            });
+          }
+        },
+      ],
+    ])("says it is empty while %s", async (_reason, change) => {
+      const { idOf, resolve, t } = await indexed();
+      const ids = [await idOf("id", "determinan", "section-1")];
+      await t.mutation(change);
+      expect(await resolve({ ...query, ids })).toEqual({ kind: "empty" });
+    });
   });
 
   it("says the index is empty when the vector search found no stored section", async () => {

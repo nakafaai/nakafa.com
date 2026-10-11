@@ -24,6 +24,7 @@ import contentKeys from "./tables/contentKeys";
 import contentModelBuilds from "./tables/contentModelBuilds";
 import contentPaths from "./tables/contentPaths";
 import contentReleases from "./tables/contentReleases";
+import contentSectionState from "./tables/contentSectionState";
 import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
@@ -114,6 +115,7 @@ export default $defineSchema({
   contentModelBuilds: $Table.tableDefinition(contentModelBuilds),
   contentPaths: $Table.tableDefinition(contentPaths),
   contentReleases: $Table.tableDefinition(contentReleases),
+  contentSectionState: $Table.tableDefinition(contentSectionState),
   contentSections: $Table.tableDefinition(contentSections),
   contentSnapshots: $Table.tableDefinition(contentSnapshots),
   contentState: $Table.tableDefinition(contentState),

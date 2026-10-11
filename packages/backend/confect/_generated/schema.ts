@@ -23,6 +23,7 @@ import contentKeys from "./tables/contentKeys";
 import contentModelBuilds from "./tables/contentModelBuilds";
 import contentPaths from "./tables/contentPaths";
 import contentReleases from "./tables/contentReleases";
+import contentSectionState from "./tables/contentSectionState";
 import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
@@ -113,6 +114,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly contentModelBuilds: typeof contentModelBuilds;
   readonly contentPaths: typeof contentPaths;
   readonly contentReleases: typeof contentReleases;
+  readonly contentSectionState: typeof contentSectionState;
   readonly contentSections: typeof contentSections;
   readonly contentSnapshots: typeof contentSnapshots;
   readonly contentState: typeof contentState;
@@ -202,6 +204,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   contentModelBuilds,
   contentPaths,
   contentReleases,
+  contentSectionState,
   contentSections,
   contentSnapshots,
   contentState,

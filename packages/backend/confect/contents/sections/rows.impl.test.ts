@@ -13,6 +13,7 @@ const surah = Ref.getFunctionReference(rows.surah);
 const stored = Ref.getFunctionReference(rows.stored);
 const save = Ref.getFunctionReference(rows.save);
 const prune = Ref.getFunctionReference(rows.prune);
+const finish = Ref.getFunctionReference(rows.finish);
 const page = Ref.getFunctionReference(rows.page);
 
 const section = {
@@ -91,6 +92,26 @@ describe("section rows", () => {
       await t.mutation(prune, { releaseId: KNOWLEDGE_RELEASE.releaseId })
     ).toEqual({ deleted: 1, done: true });
     expect(await t.query(stored, { model, sections: [key] })).toEqual([false]);
+  });
+
+  it("records a finished build for the active release only", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(seedKnowledge);
+    const model = "google/gemini-embedding-2";
+    expect(
+      await t.mutation(finish, { model, releaseId: "release-earlier" })
+    ).toEqual({ recorded: false });
+    expect(
+      await t.mutation(finish, {
+        model,
+        releaseId: KNOWLEDGE_RELEASE.releaseId,
+      })
+    ).toEqual({ recorded: true });
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toMatchObject([
+      { key: "primary", model, releaseId: KNOWLEDGE_RELEASE.releaseId },
+    ]);
   });
 
   it("reads the stored sections of a language back, a page at a time", async () => {

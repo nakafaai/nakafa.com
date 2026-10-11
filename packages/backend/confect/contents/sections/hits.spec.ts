@@ -33,7 +33,7 @@ export const hitsInputValidator = Schema.Struct({
   section: Schema.optionalKey(nakafaSectionValidator),
 });
 
-/** The ranked sections, or `empty` when the index holds no section for the vector search to find. */
+/** The ranked sections, or `empty` when the index cannot answer: it is not complete for the active release, or holds nothing near the question. */
 export const hitsResultValidator = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("empty") }),
   Schema.Struct({

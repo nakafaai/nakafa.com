@@ -9,7 +9,9 @@ import {
   CANDIDATES_PER_LEG,
   SEARCH_VERIFY_SLACK,
 } from "@repo/backend/confect/contents/sections/limits";
+import { isReady } from "@repo/backend/confect/contents/sections/state";
 import { textQuery } from "@repo/backend/confect/contents/sections/terms";
+import { embeddingModelId } from "@repo/backend/confect/gateway/model";
 import type { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import { articleLayer } from "@repo/backend/content/article/confect";
 import { materialLayer } from "@repo/backend/content/material/confect";
@@ -88,11 +90,16 @@ const toHit = Effect.fn("contents.sections.toHit")(function* (
  * of the learner. A section found by words may come from any language, and
  * the same place of the document in the learner's language is returned for it
  * when there is one. Only sections of documents that are still published are
- * returned. The answer is `empty` when the vector search found nothing, which
- * means the index holds no section for it.
+ * returned. The answer is `empty` when the index cannot answer: its last
+ * finished build is not for the active release and the model that embeds the
+ * questions, so that it may lack sections or hold those of a release that is
+ * gone, or the vector search found nothing in it.
  */
 export const resolveHits = Effect.fn("contents.sections.resolveHits")(
   function* (input: typeof hitsInputValidator.Type) {
+    if (!(yield* isReady(embeddingModelId))) {
+      return { kind: "empty" as const };
+    }
     const reader = yield* DatabaseReader;
     const table = reader.table("contentSections");
     const byMeaning = Arr.getSomes(

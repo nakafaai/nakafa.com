@@ -236,8 +236,8 @@ type KnowledgeInput = Parameters<typeof runStep>[0];
 /**
  * Runs the steps of the section build against a test deployment, one at a time
  * as the scheduler would: `run` runs one, `failure` runs one that is expected
- * to fail and returns the tag of its failure, and `build` runs the steps from
- * the first until none follows and returns them all.
+ * to fail and returns the tag and the message of its failure, and `build` runs
+ * the steps from the first until none follows and returns them all.
  */
 export function knowledgeBuild(
   t: ReturnType<typeof createConvexTestWithBetterAuth>
@@ -256,7 +256,7 @@ export function knowledgeBuild(
       Effect.runPromise(
         Effect.flip(runStep(input)).pipe(
           // An action returns Convex values, which an error is not.
-          Effect.map(({ _tag }) => ({ _tag })),
+          Effect.map(({ _tag, message }) => ({ _tag, message })),
           Effect.provide(layer(ctx))
         )
       )

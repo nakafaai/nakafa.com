@@ -191,7 +191,7 @@ describe("model comparison", () => {
           ordinal,
           publicPath: "materi/many",
           releaseId: "release-1",
-          scope: ["id", "material"],
+          scope: "id:material",
           section: "material",
           text: `Matriks ${ordinal}`,
         });

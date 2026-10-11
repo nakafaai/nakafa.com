@@ -2,7 +2,6 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { loadState } from "@repo/backend/confect/contentRelease/model";
 import {
   COMPARE_PAGE_BYTES,
   COMPARE_PAGE_ROWS,
@@ -16,15 +15,8 @@ import {
   sectionScope,
   type storeInputValidator,
 } from "@repo/backend/confect/contents/sections/schema";
+import { isActive } from "@repo/backend/confect/contents/sections/state";
 import { Array as Arr, Effect } from "effect";
-
-/** Whether `releaseId` is the release that is active now. */
-const isActive = Effect.fn("contents.sections.isActive")(function* (
-  releaseId: string
-) {
-  const state = yield* loadState();
-  return state?.activeReleaseId === releaseId;
-});
 
 /** Finds the stored row of a section by its language, its document, and its place in it. */
 const findSection = Effect.fn("contents.sections.findSection")(function* (

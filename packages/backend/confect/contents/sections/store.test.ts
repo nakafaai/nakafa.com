@@ -88,7 +88,7 @@ async function setup() {
         headingPath: Arr.fromIterable(section.headingPath),
         model: MODEL,
         releaseId,
-        scope: ["id", "material"],
+        scope: "id:material",
       })
     );
   return { activate, leave, rows, store, t };
@@ -109,7 +109,7 @@ describe("section store", () => {
         model: MODEL,
         ordinal: 0,
         releaseId: ACTIVE,
-        scope: ["id", "material"],
+        scope: "id:material",
       },
     ]);
   });

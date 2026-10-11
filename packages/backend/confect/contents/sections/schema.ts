@@ -38,21 +38,16 @@ const sectionDraftValidator = Schema.Struct({
 export type SectionDraft = typeof sectionDraftValidator.Type;
 
 /**
- * The language and the kind of a section as one value. Convex vector filters
- * cannot require two fields at once, so a search that wants one language and
- * one kind filters on this pair.
+ * Builds the scope of a section: its language and its kind as one string, such
+ * as `id:material`. A Convex vector filter tests one field for equality and
+ * cannot require two fields at once, and the documentation shows only string
+ * values, so a search that wants one language and one kind filters on this key.
  */
-const sectionScopeValidator = Schema.Tuple([
-  localeValidator,
-  nakafaSectionValidator,
-]);
-
-/** Builds the scope of a section from its language and kind. */
 export function sectionScope(
   appLocale: SectionDraft["appLocale"],
   section: SectionDraft["section"]
-): [SectionDraft["appLocale"], SectionDraft["section"]] {
-  return [appLocale, section];
+) {
+  return `${appLocale}:${section}`;
 }
 
 /** A stored section: its draft, the vector of its text, and the release it was built from. */
@@ -61,7 +56,17 @@ export const sectionRowValidator = Schema.Struct({
   embedding: Schema.Array(Schema.Finite),
   model: Schema.String,
   releaseId: Schema.String,
-  scope: sectionScopeValidator,
+  scope: Schema.String,
+});
+
+/**
+ * The record of the last build that finished: the release whose sections the
+ * index holds in full, and the model that embedded them. There is one.
+ */
+export const sectionStateValidator = Schema.Struct({
+  key: Schema.Literal("primary"),
+  model: Schema.String,
+  releaseId: Schema.String,
 });
 
 /** One lesson or article of the active release, with the authored source its sections come from. */
@@ -155,6 +160,17 @@ export const pruneInputValidator = Schema.Struct({ releaseId: Schema.String });
 export const pruneResultValidator = Schema.Struct({
   deleted: Schema.Finite,
   done: Schema.Boolean,
+});
+
+/** Names the release a finished build indexed and the model that embedded it. */
+export const finishInputValidator = Schema.Struct({
+  model: Schema.String,
+  releaseId: Schema.String,
+});
+
+/** Whether the build was recorded: it is not when its release is no longer the active one. */
+export const finishResultValidator = Schema.Struct({
+  recorded: Schema.Boolean,
 });
 
 /** Which stored sections to read back: those of one language, after a cursor. */
