@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
@@ -77,7 +78,7 @@ function OwnChatsList() {
       initialNumItems: CHAT_LIST_PAGE_SIZE,
     }
   );
-  const { loadMore, loadingMore, results } = useChatList(pagination);
+  const { loadMore, results } = useChatList(pagination);
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
   }
@@ -85,7 +86,6 @@ function OwnChatsList() {
     <ChatList
       canDelete={true}
       isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
-      loadingMore={loadingMore}
       loadMore={loadMore}
       results={results}
     />
@@ -114,12 +114,11 @@ function PublicChatsList({
   const pagination = usePaginatedQuery(chats.queries.getChats, queryArgs, {
     initialNumItems: CHAT_LIST_PAGE_SIZE,
   });
-  const { loadMore, loadingMore, results } = useChatList(pagination);
+  const { loadMore, results } = useChatList(pagination);
   return (
     <ChatList
       canDelete={false}
       isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
-      loadingMore={loadingMore}
       loadMore={loadMore}
       results={results}
     />
@@ -129,19 +128,16 @@ function PublicChatsList({
 /** Render a resolved chat page with optional owner controls. */
 function ChatList({
   canDelete,
-  loadingMore,
   loadMore,
   results,
   isLoading,
 }: {
   canDelete: boolean;
-  loadingMore: boolean;
   loadMore: (() => void) | undefined;
   results: readonly ChatView[];
   isLoading: boolean;
 }) {
   const t = useTranslations("Common");
-  const tAi = useTranslations("Ai");
   const locale = useLocale();
   if (isLoading) {
     return <Skeleton className="h-12 w-full rounded-xl border shadow-sm" />;
@@ -192,17 +188,7 @@ function ChatList({
           );
         })}
       </div>
-      {loadMore || loadingMore ? (
-        <Button
-          className="self-center text-muted-foreground"
-          disabled={loadingMore}
-          onClick={loadMore}
-          size="sm"
-          variant="ghost"
-        >
-          {tAi("show-more")}
-        </Button>
-      ) : null}
+      {loadMore ? <Intersection onIntersect={loadMore} /> : null}
     </>
   );
 }

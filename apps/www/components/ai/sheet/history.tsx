@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
@@ -61,7 +62,7 @@ function SheetHistoryContent() {
       initialNumItems: CHAT_LIST_PAGE_SIZE,
     }
   );
-  const { loadMore, loadingMore, results } = useChatList(pagination);
+  const { loadMore, results } = useChatList(pagination);
   if (results.length === 0) {
     return null;
   }
@@ -93,15 +94,7 @@ function SheetHistoryContent() {
             </DropdownMenuItem>
           );
         })}
-        {loadMore || loadingMore ? (
-          <DropdownMenuItem
-            closeOnClick={false}
-            disabled={loadingMore}
-            onClick={loadMore}
-          >
-            <span className="text-muted-foreground">{t("show-more")}</span>
-          </DropdownMenuItem>
-        ) : null}
+        {loadMore ? <Intersection onIntersect={loadMore} /> : null}
       </DropdownMenuGroup>
     </DropdownMenuContent>
   );

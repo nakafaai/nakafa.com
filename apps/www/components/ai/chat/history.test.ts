@@ -16,7 +16,6 @@ describe("chat/history", () => {
 
     expect(list.results).toBe(settled);
     expect(list.loadMore).toBeUndefined();
-    expect(list.loadingMore).toBe(false);
   });
 
   it("shows the rows of a page that loaded, in place of the settled ones", () => {
@@ -39,17 +38,15 @@ describe("chat/history", () => {
     list.loadMore?.();
 
     expect(loadMore).toHaveBeenCalledExactlyOnceWith(CHAT_LIST_PAGE_SIZE);
-    expect(list.loadingMore).toBe(false);
   });
 
-  it("holds the place of the button while the next page loads, with the rows loaded so far", () => {
+  it("offers no second page while the next one loads, and shows the rows loaded so far", () => {
     const loaded = [...settled, "Integrals"];
     const list = readChatList(
       settled,
       PaginatedQueryResult.loadingMore({ results: loaded })
     );
 
-    expect(list.loadingMore).toBe(true);
     expect(list.loadMore).toBeUndefined();
     expect(list.results).toBe(loaded);
   });
@@ -61,6 +58,5 @@ describe("chat/history", () => {
     );
 
     expect(list.loadMore).toBeUndefined();
-    expect(list.loadingMore).toBe(false);
   });
 });
