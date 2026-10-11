@@ -11,7 +11,8 @@ import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/nina/lifecycle.spec";
-import { settleTurn } from "@repo/backend/confect/nina/settlement";
+import { settleTurn, stopTurn } from "@repo/backend/confect/nina/settlement";
+import { startsLate, sweepTurns } from "@repo/backend/confect/nina/sweep";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { Clock, Effect, Layer } from "effect";
 
@@ -65,6 +66,10 @@ const claim = FunctionImpl.make(
       yield* settleTurn(turn, "cancelled");
       return null;
     }
+    if (yield* startsLate(turn)) {
+      yield* settleTurn(turn, "failed", "response-timeout");
+      return null;
+    }
     const state = {
       status: "running" as const,
       startedAt: yield* Clock.currentTimeMillis,
@@ -108,24 +113,59 @@ const presentation = FunctionImpl.make(
   })
 );
 
-/** Reconcile committed Agent output before releasing an interrupted turn's credits. */
+/**
+ * Settles a turn whose run has ended, or that stayed open past its deadline:
+ * the run's own exit, the settlement that a stop schedules, and the recovery
+ * sweep all come here. Reconciles committed Agent output before releasing an
+ * interrupted turn's credits. A turn the learner stopped ends as cancelled,
+ * whatever ended its run.
+ */
 const recover = FunctionImpl.make(
   schema,
   spec,
   "recover",
   Effect.fn("nina.lifecycle.recover")(function* (args) {
     const turn = yield* readTurn(args.turnId);
-    if (
-      !turn ||
-      (turn.state.status !== "running" && turn.state.status !== "queued")
-    ) {
+    if (turn?.phase !== "active") {
       return null;
     }
-    yield* settleTurn(turn, "failed", args.failure);
+    yield* settleTurn(
+      turn,
+      turn.cancelRequestedAt === undefined ? "failed" : "cancelled",
+      args.failure
+    );
     return null;
   }, Effect.catchDefect(lifecycleFailure))
 );
 
+/** True once a run has no reason to go on: its turn was stopped, settled or removed. */
+const halted = FunctionImpl.make(
+  schema,
+  spec,
+  "halted",
+  Effect.fn("nina.lifecycle.halted")(function* (args) {
+    const turn = yield* readTurn(args.turnId);
+    return turn?.phase !== "active" || turn.cancelRequestedAt !== undefined;
+  })
+);
+
+/** The cron entry: settles every turn that stayed open past its deadline. */
+const sweep = FunctionImpl.make(
+  schema,
+  spec,
+  "sweep",
+  Effect.fn("nina.lifecycle.sweep")(function* (args) {
+    yield* sweepTurns(args.resume);
+    return null;
+  })
+);
+
+/**
+ * A queued turn has no run, so it settles at once. A running turn is asked to
+ * stop and is shown as cancelled at once. It settles when its run has exited,
+ * after the stop grace for a run that is gone, or when the learner sends the
+ * next prompt, whichever comes first, and always after its stream was cut off.
+ */
 const cancel = FunctionImpl.make(
   schema,
   spec,
@@ -137,12 +177,14 @@ const cancel = FunctionImpl.make(
       return null;
     }
     const turn = yield* readTurn(chat.activeTurnId);
-    if (
-      turn &&
-      (turn.state.status === "queued" || turn.state.status === "running")
-    ) {
-      yield* settleTurn(turn, "cancelled");
+    if (turn?.phase !== "active") {
+      return null;
     }
+    if (turn.state.status === "queued") {
+      yield* settleTurn(turn, "cancelled");
+      return null;
+    }
+    yield* stopTurn(turn);
     return null;
   }, Effect.catchDefect(lifecycleFailure))
 );
@@ -151,6 +193,8 @@ export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(claim),
   Layer.provide(presentation),
   Layer.provide(recover),
+  Layer.provide(halted),
+  Layer.provide(sweep),
   Layer.provide(cancel),
   Layer.provide(atomic),
   Layer.provide(session),

@@ -16,6 +16,8 @@ vi.mock("@repo/backend/confect/nina/context", () => ({
 const NOW = Date.UTC(2026, 8, 27, 12);
 const get = Ref.getFunctionReference(refs.public.nina.conversation.get);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
+const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const messages = Ref.getFunctionReference(refs.public.nina.messages.list);
 const input = {
@@ -134,6 +136,56 @@ describe("Nina conversation visibility", () => {
       state: { status: "queued" },
     });
     expect(next.order).toBeGreaterThan(f.order);
+  });
+
+  it("shows a queued or running turn as it is until the learner stops it", async () => {
+    const f = await fixture();
+    const read = async () =>
+      Ref.decodeReturnsSync(
+        refs.public.nina.conversation.get,
+        await f.owner.query(get, { chatId: f.chatId })
+      ).turn?.state;
+    expect(await read()).toEqual({ status: "queued" });
+    await f.t.mutation(claim, { turnId: f.turnId });
+    expect(await read()).toEqual({ status: "running", startedAt: NOW });
+  });
+
+  it("shows a turn as cancelled from the moment the learner stopped it, before its run has exited", async () => {
+    const f = await fixture();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    vi.setSystemTime(NOW + 5000);
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    vi.setSystemTime(NOW + 9000);
+    const read = async () =>
+      Ref.decodeReturnsSync(
+        refs.public.nina.conversation.get,
+        await f.owner.query(get, { chatId: f.chatId })
+      );
+
+    // The turn itself stays open until its run exits, but the page already
+    // shows it cancelled, at the time of the stop.
+    expect(
+      await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
+    ).toMatchObject({ phase: "active", state: { status: "running" } });
+    expect((await read()).turn).toEqual({
+      order: f.order,
+      promptMessageId: f.promptMessageId,
+      promptedAt: NOW,
+      state: { status: "cancelled", finishedAt: NOW + 5000 },
+      credits: 5,
+      usage: [],
+    });
+
+    // Settling the turn keeps the time of the stop, so the state the page shows
+    // does not move.
+    await f.t.mutation(recover, { turnId: f.turnId });
+    expect(
+      await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
+    ).toMatchObject({ phase: "settled" });
+    expect((await read()).turn?.state).toEqual({
+      status: "cancelled",
+      finishedAt: NOW + 5000,
+    });
   });
 
   it("reads an empty owned chat without inventing turn metadata", async () => {
