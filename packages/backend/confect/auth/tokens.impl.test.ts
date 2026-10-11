@@ -4,7 +4,12 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { TOKEN_PAGE_SIZE } from "@repo/backend/confect/auth/tokens.impl";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { cookieHeader, signInWithGoogle } from "@repo/backend/test/auth";
+import {
+  cookieHeader,
+  createGoogleIdToken,
+  GOOGLE_KEY,
+  signInWithGoogle,
+} from "@repo/backend/test/auth";
 import { encodeJsonText } from "@repo/utilities/json";
 import {
   formatEnvelope,
@@ -20,6 +25,8 @@ const ROTATED = "synthetic-rotated-secret-for-the-token-tests";
 const LEGACY_ACCESS = "ya29.legacy-access-token";
 const LEGACY_REFRESH = "1//legacy-refresh-token";
 const NOT_BLANK = /\S/;
+/** Better Auth asks Google for its signing keys through `fetch` to check an ID token. */
+const keyLookup = vi.fn<typeof fetch>();
 const encrypt = refs.internal.auth.tokens.encryptStoredTokens;
 const StoredAccount = Schema.Struct({
   _id: Schema.String,
@@ -218,6 +225,46 @@ describe("auth/tokens", () => {
         expect(yield* pass(test)).toMatchObject([
           { encrypted: 0, isDone: true, scanned: 1, unreadable: [] },
         ]);
+      })
+  );
+
+  it.effect(
+    "refuses a Google ID token on the link route, so no token that comes with it is stored",
+    () =>
+      Effect.gen(function* () {
+        const test = createConvexTestWithBetterAuth();
+        const signedIn = yield* Effect.promise(() =>
+          signInWithGoogle(test, "linking", NOW)
+        );
+        const stored = yield* accounts(test);
+        vi.stubGlobal("fetch", keyLookup);
+
+        const response = yield* Effect.promise(() =>
+          test.fetch("/api/auth/link-social", {
+            body: encodeJsonText({
+              idToken: {
+                accessToken: "ya29.arrives-plain",
+                refreshToken: "1//arrives-plain",
+                token: createGoogleIdToken("linking", NOW, GOOGLE_KEY),
+              },
+              provider: "google",
+            }),
+            headers: {
+              "content-type": "application/json",
+              cookie: cookieHeader(signedIn),
+              origin: "http://localhost:3000",
+            },
+            method: "POST",
+          })
+        );
+
+        expect(response.status).toBe(401);
+        expect(yield* Effect.promise(() => response.json())).toMatchObject({
+          code: "INVALID_TOKEN",
+        });
+        // Checking a token starts with a request for Google's signing keys.
+        expect(keyLookup).not.toHaveBeenCalled();
+        expect(yield* accounts(test)).toEqual(stored);
       })
   );
 

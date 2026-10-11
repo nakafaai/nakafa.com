@@ -30,10 +30,11 @@ current in the same transaction as the Better Auth write.
 
 Better Auth seals the provider access and refresh tokens in `account`
 (`account.encryptOAuthTokens`) and the private half of each signing key in
-`jwks`, also in the static `JWKS` value, with the Better Auth secret. The
-provider ID token and the session token are stored as issued, and neither can
-sign anyone in: Google ID token sign-in is off (`disableIdTokenSignIn`), and a
-session token counts only inside a cookie signed with the secret. Rotating the
+`jwks`, also in the static `JWKS` value, with the Better Auth secret. It stores
+the Google ID token and the session token as issued. The ID token signs no one
+in, because Google ID token sign-in is off (`disableIdTokenSignIn`). The session
+token does: the bearer hook that the Convex plugin installs accepts it in an
+`Authorization` header, and Better Auth has no option to seal it. Rotating the
 secret signs every learner out. List the new secret first in
 `BETTER_AUTH_SECRETS`, keep `BETTER_AUTH_SECRET` at its old value, and keep each
 older version listed while anything is still sealed with it. Keep
@@ -59,3 +60,5 @@ discards on sign-out.
   the ID token branches that `disableIdTokenSignIn` closes.
 - `better-auth` `context/create-context` and `cookies`: the secret list, and
   the cookie signature that a rotation invalidates.
+- `better-auth` `plugins/bearer` and `@convex-dev/better-auth` `plugins/convex`:
+  the hook that accepts a session token in an `Authorization` header.

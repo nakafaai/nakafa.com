@@ -66,6 +66,13 @@ function encodeGoogleTokenPart(value: object) {
     .replace(BASE64_PADDING_PATTERN, "");
 }
 
+/** The header of an ID token that names a Google signing key. */
+export const GOOGLE_KEY = {
+  alg: "RS256",
+  kid: "stored-id-token-key",
+  typ: "JWT",
+};
+
 /**
  * The unsigned ID token that the stubbed Google token endpoint issues. A
  * `header` that names an algorithm and a key id makes Better Auth look the key

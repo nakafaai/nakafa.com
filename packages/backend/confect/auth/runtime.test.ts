@@ -26,6 +26,7 @@ import {
   accountDeletionRequest,
   betterAuthUser,
   createGoogleIdToken,
+  GOOGLE_KEY,
   withPostHogErasureConfig,
 } from "@repo/backend/test/auth";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -43,8 +44,6 @@ vi.mock("@convex-dev/better-auth/plugins", async (importOriginal) => {
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const SITE_URL = new URL("http://localhost:3000");
-/** The header of an ID token that names a Google signing key. */
-const GOOGLE_KEY = { alg: "RS256", kid: "stored-id-token-key", typ: "JWT" };
 /** The rejection that a deletion gets while its preparation is temporarily unavailable. */
 const deletionUnavailable = {
   body: {
