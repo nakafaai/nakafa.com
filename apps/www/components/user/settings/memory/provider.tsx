@@ -54,9 +54,10 @@ export function MemoryProvider({
  * context that changes as Convex answers. One reader serves every component,
  * because the pages a learner has loaded belong to the hook that loaded them,
  * and a second hook would load and subscribe to its own. This context may
- * change after hydration, unlike the provider's, because no Suspense boundary
- * sits below it: React cannot discard streamed HTML for a boundary that does
- * not exist.
+ * change after hydration, unlike the provider's, because nothing below it
+ * streams: every component under the Memory page is a client component, and
+ * the editor's lazy code renders in the browser only, after the learner opens
+ * it. React has no streamed HTML to discard when the value changes.
  */
 function MemoryReader({
   children,

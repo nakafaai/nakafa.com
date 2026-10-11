@@ -232,7 +232,17 @@ turn start searches by the topics of the page alone.
   learner removes one. A chat rewrites only words that Nina wrote, so the Memory
   page never shows Nina's wording as the learner's own, and the learner's words
   are never replaced by a chat.
-- The Memory page lists the title and the words and never a kind.
+- The Memory page lists the title and the words and never a kind. It shows
+  every memory a learner has, however many: the settings route reads the first
+  page of 30 memories and whether memory is paused for the first paint, and one
+  reader in the browser then loads the next page when the end of the list comes
+  into view. A search lists the loaded memories that match any part of a word
+  first, then, 300 ms after the last key, the memories `search` finds on pages
+  that are not loaded. The server is not asked while the text is blank or when
+  every memory is loaded, and no page loads while the learner searches. The
+  editor opens a memory from a loaded page or from a search result. Every
+  change shows at once on every loaded page and every cached search result, and
+  rolls back when it fails.
 - `read` gives a turn the account profile and the at most 8 memories it starts
   with, for the topics of the open page. `known` gives the capture call the
   account profile and the at most 12 memories that match the message and the
