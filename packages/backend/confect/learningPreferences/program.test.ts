@@ -140,6 +140,89 @@ describe("learningPreferences/program", () => {
     })
   );
   it.effect(
+    "keeps a verified saved program readable while another program's root is broken",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const test = createConvexTestWithBetterAuth();
+        const data = yield* makeProgramSnapshotData();
+        yield* Effect.promise(() =>
+          test.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
+        const userId = yield* Effect.promise(() =>
+          test.mutation(async (ctx) => {
+            const user = await seedAuthenticatedUser(ctx, { now: 1 });
+            await Effect.runPromiseWith(runtimeServices)(
+              setPreferredCurriculumProgram({
+                now: 1,
+                programKey: "technical-program-1",
+                userId: user.userId,
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            );
+            const root = await ctx.db
+              .query("curriculumRoutes")
+              .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
+                index
+                  .eq("snapshotId", data.snapshotId)
+                  .eq("appLocale", "en")
+                  .eq("path", "curriculum/technical-program-2")
+              )
+              .unique();
+            if (!root) {
+              expect.fail("Expected the second program's English root.");
+            }
+            await ctx.db.delete(root._id);
+            return user.userId;
+          })
+        );
+
+        const current = yield* Effect.promise(() =>
+          test.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readCurrentCurriculumProgram("en", userId).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
+            )
+          )
+        );
+
+        // Only the saved program's own signed row is authenticated. The
+        // catalog's root closure belongs to the list that offers programs,
+        // which still refuses the same release (ADR 0002).
+        expect(current).toMatchObject({
+          preferredCurriculumProgramKey: "technical-program-1",
+          program: { key: "technical-program-1" },
+        });
+        yield* Effect.promise(() =>
+          expect(
+            test.query((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                listCurriculumPrograms("en").pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
+              )
+            )
+          ).rejects.toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" })
+        );
+      })
+  );
+  it.effect(
     "maps preference read and write failures to the curriculum error contract",
     () =>
       Effect.gen(function* () {

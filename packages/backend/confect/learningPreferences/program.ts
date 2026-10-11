@@ -48,7 +48,9 @@ const listSignedPrograms = Effect.fn("learningPreferences.listSignedPrograms")(
 );
 /**
  * Reads one signed program by its stable Aksara key with one indexed row read.
- * Only the learner's saved program is authenticated, never the whole catalog.
+ * Only that program's own row is authenticated. The catalog's root closure is
+ * proven by the readers that list programs, not by one learner's preference
+ * (ADR 0002).
  */
 const readSignedProgram = Effect.fn("learningPreferences.readSignedProgram")(
   function* (locale: Locale, programKey: string) {
