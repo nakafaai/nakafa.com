@@ -221,64 +221,54 @@ describe("class constant policy", () => {
     })
   );
 
-  it.effect("follows a destructured name to the value it is taken from", () =>
-    Effect.gen(function* () {
-      const violations = yield* inspect(
-        lines(
-          'const SIZES = { sm: "h-4", card: { title: "flex" } };',
-          'const LIST = ["p-1"];',
-          "const { sm } = SIZES;",
-          "const { sm: small } = SIZES;",
-          "const { card: { title } } = SIZES;",
-          "const [first] = LIST;",
-          "const view = <div className={cn(sm, small, title, first)} />;"
-        )
-      );
-      assert.deepStrictEqual(violations, [
-        violation("SIZES", 1),
-        violation("LIST", 2),
-      ]);
-    })
-  );
-
   it.effect("reports each destructured name that is given class text", () =>
     Effect.gen(function* () {
       const violations = yield* inspect(
         lines(
           'const { sm, lg } = { sm: "h-4", lg: "h-8" };',
-          "const view = <div className={cn(sm, lg)} />;"
+          'const { item = "flex", gap } = options;',
+          'const SIZES = { card: "p-1" };',
+          "const { card } = SIZES;",
+          "const view = <div className={cn(sm, lg, item, gap, card)} />;"
         )
       );
       assert.deepStrictEqual(violations, [
         violation("sm", 1),
         violation("lg", 1),
+        violation("item", 2),
+        violation("SIZES", 3),
       ]);
     })
   );
 
-  it.effect("reports a destructured name whose default is class text", () =>
-    Effect.gen(function* () {
-      const violations = yield* inspect(
-        lines(
-          'const { item = "flex", gap } = options;',
-          'const { card: { title = "font-medium" } = {} } = options;',
-          "const view = <div className={cn(item, gap, title)} />;"
-        )
-      );
-      assert.deepStrictEqual(violations, [
-        violation("item", 1),
-        violation("title", 2),
-      ]);
-    })
+  it.effect.each([
+    { declaration: "let ON: string;", assignment: 'ON = "flex";' },
+    { declaration: 'let ON = cn("a");', assignment: 'ON = "bg-primary";' },
+    { declaration: 'let ON = cn("h-4");', assignment: 'ON += " p-2";' },
+    { declaration: 'let ON = cn("a");', assignment: 'ON ||= "flex";' },
+    { declaration: 'let ON = cn("a");', assignment: 'ON ??= "flex";' },
+    { declaration: 'let ON = cn("a");', assignment: 'ON &&= "flex";' },
+  ])(
+    "reports $declaration assigned class text by $assignment",
+    ({ assignment, declaration }) =>
+      Effect.gen(function* () {
+        const violations = yield* inspect(
+          lines(declaration, assignment, "const view = <div className={ON} />;")
+        );
+        assert.deepStrictEqual(violations, [violation("ON", 1)]);
+      })
   );
 
   it.effect("accepts the names that a function takes as parameters", () =>
     Effect.gen(function* () {
       const violations = yield* inspect(
         lines(
-          'function Item({ tone = "sm", ...props }, [first]) {',
+          'function Item({ tone = "sm", ...props }, [first], last) {',
+          '  tone = "lg";',
+          '  first = "p-1";',
+          '  last = "flex";',
           "  const { gap } = props;",
-          "  return <a className={cn(tone, gap, first)} />;",
+          "  return <a className={cn(tone, gap, first, last)} />;",
           "}"
         )
       );
@@ -294,13 +284,17 @@ describe("class constant policy", () => {
           `const LARGE = ${template("", "SMALL", " m-1")};`,
           "const SIZES = { sm: SMALL, lg: LARGE };",
           "const ALIAS = SIZES;",
-          "const first = <div className={ALIAS.sm} />;",
+          'const WIDE = "w-4";',
+          'let wide = cn("w-2");',
+          "wide = WIDE;",
+          "const first = <div className={cn(ALIAS.sm, wide)} />;",
           "const second = <div className={cn(LARGE, SIZES.lg)} />;"
         )
       );
       assert.deepStrictEqual(violations, [
         violation("SMALL", 1),
         violation("LARGE", 2),
+        violation("WIDE", 5),
       ]);
     })
   );
@@ -374,9 +368,12 @@ describe("class constant policy", () => {
           'const ID = "title";',
           'const LABEL = "Close";',
           'const STATE = { open: "open" };',
+          "let LEVEL: string;",
+          'LEVEL = "title";',
           "const view = (",
           "  <label htmlFor={ID} aria-label={LABEL} data-state={STATE.open}>",
           "    {ID}",
+          "    <i data-level={LEVEL} />",
           "  </label>",
           ");"
         )
@@ -438,11 +435,12 @@ describe("class constant policy", () => {
           "}",
           "function Block() {",
           '  const ON = cva("p-1");',
+          '  ON = "p-2";',
           "  return <div className={cn(ON)} />;",
           "}"
         )
       );
-      assert.deepStrictEqual(violations, []);
+      assert.deepStrictEqual(violations, [violation("ON", 6)]);
     })
   );
 

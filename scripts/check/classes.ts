@@ -1,10 +1,7 @@
 import { Array as Arr, Effect, Order, Result } from "effect";
 import {
-  type Expression,
   type Identifier,
-  isBindingElement,
   isIdentifier,
-  isVariableDeclaration,
   type Node,
 } from "typescript/unstable/ast";
 import { isConfiguration, TEST_PATTERN } from "#scripts/check/kinds";
@@ -14,6 +11,7 @@ import {
   type parseSources,
   type TestCompilerError,
 } from "#scripts/check/source";
+import { isVariable, variableValues } from "#scripts/check/variables";
 
 const FINDING_ORDER = Order.Struct({ file: Order.String, line: Order.Number });
 const RULE =
@@ -23,29 +21,10 @@ type Parsed = Effect.Success<ReturnType<typeof parseSources>>;
 type Module = Parsed["modules"][number];
 
 /**
- * Returns the values a declared name can be given: the initializer of its
- * variable, and for a name that a pattern takes out of a variable, also the
- * default the pattern writes for it, as `"flex"` in
- * `const { item = "flex" } = options`. A parameter, a function, and a class
- * give none, and so does a pattern that takes its names out of a parameter.
- */
-function declaredValues(node: Node): readonly Expression[] {
-  if (isVariableDeclaration(node)) {
-    return Arr.fromNullishOr(node.initializer);
-  }
-  if (!isBindingElement(node)) {
-    return [];
-  }
-  const taken = declaredValues(node.parent.parent);
-  return Arr.isReadonlyArrayEmpty(taken)
-    ? []
-    : Arr.appendAll(taken, Arr.fromNullishOr(node.initializer));
-}
-
-/**
  * Follows names from class values to the variables that declare them, and on
  * through the names those variables read, so a chain of constants is followed
- * to its end. Returns each variable once, with the parts of its value.
+ * to its end. Returns each variable once, with the parts of every value its
+ * module gives it.
  */
 const follow = Effect.fnUntraced(function* (
   declare: Parsed["declare"],
@@ -69,40 +48,39 @@ const follow = Effect.fnUntraced(function* (
   const nodes = yield* declare(Arr.map(pending, ({ reference }) => reference));
   const declared = Arr.filterMap(
     Arr.zip(pending, nodes),
-    ([{ module, reference }, node]) => {
-      if (node === undefined) {
-        return Result.failVoid;
-      }
-      const values = declaredValues(node);
-      return Arr.isReadonlyArrayEmpty(values)
-        ? Result.failVoid
-        : Result.succeed({
+    ([{ module, reference }, node]) =>
+      node !== undefined && isVariable(node)
+        ? Result.succeed({
             key: `${module.file}:${node.pos}`,
             module,
             name: reference.text,
             node,
-            parts: Arr.flatMap(values, classParts),
-          });
-    }
+          })
+        : Result.failVoid
   );
   const fresh = Arr.filter(
     Arr.dedupeWith(declared, (left, right) => left.key === right.key),
     ({ key }) => !Arr.contains(seen, key)
   );
-  const next = Arr.flatMap(fresh, ({ module, parts }) =>
+  const given = yield* variableValues(declare, fresh);
+  const found = Arr.zipWith(fresh, given, (variable, values) => ({
+    ...variable,
+    parts: Arr.flatMap(values, classParts),
+  }));
+  const next = Arr.flatMap(found, ({ module, parts }) =>
     Arr.map(Arr.filter(parts, isIdentifier), (reference) => ({
       module,
       reference,
     }))
   );
   return Arr.appendAll(
-    fresh,
+    found,
     yield* follow(
       declare,
       next,
       Arr.appendAll(
         seen,
-        Arr.map(fresh, ({ key }) => key)
+        Arr.map(found, ({ key }) => key)
       )
     )
   );
@@ -115,9 +93,11 @@ const follow = Effect.fnUntraced(function* (
  * text is reported once, at the declaration: a string, a template, a
  * concatenation, a condition between strings, or an array or object that holds
  * them. A name destructured out of a variable is judged by the value it comes
- * from and by the default its pattern writes for it. A literal written in the class position, a `cn(...)` or `cva(...)`
- * result, a parameter, and an imported name are not reported, because the check
- * does not follow an import into the module that declares it.
+ * from and by the default its pattern writes for it, and any variable is judged
+ * by each later assignment to it. A literal written in the class position, a
+ * `cn(...)` or `cva(...)` result, a parameter, and an imported name are not
+ * reported, because the check does not follow an import into the module that
+ * declares it.
  */
 export const classFindings = Effect.fn("RepositoryPolicy.classFindings")(
   function* ({ declare, modules }: Parsed) {

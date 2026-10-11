@@ -258,8 +258,12 @@ strings, or an array or object that holds them. A shorthand member such as
 `{ root }` names the variable `root`, and a name that a pattern takes out of a
 variable, such as `sm` in `const { sm } = SIZES`, is judged by the value of that
 variable and by the default the pattern writes for it, such as `"flex"` in
-`const { item = "flex" } = options`. The check follows the names that such a value reads, so a constant
-built from other constants is reported down to its strings.
+`const { item = "flex" } = options`. A later assignment to a variable, with `=`,
+`+=`, `||=`, `??=`, or `&&=`, is one more value of it, as `"bg-primary"` in
+`let tone = cn("a"); tone = "bg-primary";`, and it counts only when the compiler
+resolves its left side to that variable, so a variable of the same name in
+another scope does not take it. The check follows the names that such a value
+reads, so a constant built from other constants is reported down to its strings.
 
 The check never reports:
 
