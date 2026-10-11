@@ -1,17 +1,34 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
+import type { Memory } from "@/components/user/settings/memory/list";
 import { createMemoryStore } from "@/components/user/settings/memory/store";
 
 const memoryId = Schema.decodeUnknownSync(Id("ninaMemories"));
 const grade = { text: "Kelas 12", title: "Sekolah" };
 const plan = { text: "A new memory", title: "" };
 
+/** A stored memory written by Nina, with the fields a test changes spelled out. */
+function stored(name: string, change: Partial<Memory> = {}): Memory {
+  return {
+    author: "nina",
+    confirmedAt: 1000,
+    createdAt: 500,
+    id: memoryId(name),
+    text: `Text of ${name}`,
+    ...change,
+  };
+}
+
+const first = stored("a");
+const second = stored("b");
+
 describe("memory page store", () => {
-  it("starts with the editor closed and no search", () => {
+  it("starts with the editor closed, no search and no memory deleted", () => {
     const { getState } = createMemoryStore();
 
     expect(getState()).toMatchObject({
+      deleted: null,
       draft: null,
       open: false,
       query: "",
@@ -28,28 +45,28 @@ describe("memory page store", () => {
     expect(store.getState().query).toBe("trigonometry");
   });
 
-  it("opens the editor with one memory, then with another", () => {
+  it("opens the editor with the memory itself, then with another", () => {
     const store = createMemoryStore();
 
-    store.getState().openEdit(memoryId("a"));
+    store.getState().openEdit(first);
     expect(store.getState()).toMatchObject({
       open: true,
       session: 1,
-      target: memoryId("a"),
+      target: first,
     });
 
-    store.getState().openEdit(memoryId("b"));
+    store.getState().openEdit(second);
     expect(store.getState()).toMatchObject({
       open: true,
       session: 2,
-      target: memoryId("b"),
+      target: second,
     });
   });
 
   it("opens the editor for a new memory and starts each opening fresh", () => {
     const store = createMemoryStore();
 
-    store.getState().openEdit(memoryId("a"));
+    store.getState().openEdit(first);
     store.getState().openNew();
     expect(store.getState()).toMatchObject({
       open: true,
@@ -64,30 +81,27 @@ describe("memory page store", () => {
   it("keeps the memory in the editor while the panel closes", () => {
     const store = createMemoryStore();
 
-    store.getState().openEdit(memoryId("a"));
+    store.getState().openEdit(first);
     store.getState().close();
 
-    expect(store.getState()).toMatchObject({
-      open: false,
-      target: memoryId("a"),
-    });
+    expect(store.getState()).toMatchObject({ open: false, target: first });
   });
 
-  it("opens again with the words of a save that failed, and forgets them on close", () => {
+  it("opens again with the words of a save that failed, on its memory or on a new one, and forgets them on close", () => {
     const store = createMemoryStore();
 
-    store.getState().reopen(0, memoryId("a"), grade);
+    store.getState().reopen(0, grade, first);
     expect(store.getState()).toMatchObject({
       draft: grade,
       open: true,
       session: 1,
-      target: memoryId("a"),
+      target: first,
     });
 
     store.getState().close();
     expect(store.getState().draft).toBeNull();
 
-    store.getState().reopen(1, null, plan);
+    store.getState().reopen(1, plan, null);
     expect(store.getState()).toMatchObject({
       draft: plan,
       open: true,
@@ -98,73 +112,135 @@ describe("memory page store", () => {
   it("leaves an editor the learner opened since the failed save", () => {
     const store = createMemoryStore();
 
-    store.getState().openEdit(memoryId("b"));
-    store.getState().reopen(0, memoryId("a"), grade);
+    store.getState().openEdit(second);
+    store.getState().reopen(0, grade, first);
 
     expect(store.getState()).toMatchObject({
       draft: null,
       open: true,
       session: 1,
-      target: memoryId("b"),
+      target: second,
     });
   });
 
   it("gives nothing back when the learner opened and closed another editor since the failed save", () => {
     const store = createMemoryStore();
 
-    store.getState().openEdit(memoryId("b"));
+    store.getState().openEdit(second);
     store.getState().close();
-    store.getState().reopen(0, memoryId("a"), grade);
+    store.getState().reopen(0, grade, first);
 
     expect(store.getState()).toMatchObject({
       draft: null,
       open: false,
       session: 1,
-      target: memoryId("b"),
+      target: second,
     });
   });
 
   it("drops given-back words when the learner opens another editor", () => {
     const store = createMemoryStore();
 
-    store.getState().reopen(0, memoryId("a"), grade);
+    store.getState().reopen(0, grade, first);
     store.getState().close();
-    store.getState().reopen(1, null, plan);
+    store.getState().reopen(1, plan, null);
     store.getState().close();
     store.getState().openNew();
 
     expect(store.getState().draft).toBeNull();
   });
 
-  it("points a new memory's editor at the memory the server stored for it", () => {
+  it("points a new memory's editor at the memory the server stored for it, also after the editor closed", () => {
     const store = createMemoryStore();
 
     store.getState().openNew();
-    store.getState().adopt(1, memoryId("a"));
-
+    store.getState().adopt(1, first);
     expect(store.getState()).toMatchObject({
       open: true,
       session: 1,
-      target: memoryId("a"),
+      target: first,
     });
-  });
 
-  it("leaves an editor that is closed, newer, or already on a memory", () => {
     const closed = createMemoryStore();
     closed.getState().openNew();
     closed.getState().close();
-    closed.getState().adopt(1, memoryId("a"));
-    expect(closed.getState().target).toBeNull();
+    closed.getState().adopt(1, first);
+    expect(closed.getState().target).toBe(first);
+  });
 
+  it("leaves an editor the learner opened since, or one that is already on a memory", () => {
     const newer = createMemoryStore();
     newer.getState().openNew();
     newer.getState().openNew();
-    newer.getState().adopt(1, memoryId("a"));
+    newer.getState().adopt(1, first);
     expect(newer.getState().target).toBeNull();
 
     const taken = createMemoryStore();
-    taken.getState().openEdit(memoryId("b"));
-    taken.getState().adopt(1, memoryId("a"));
-    expect(taken.getState().target).toBe(memoryId("b"));
+    taken.getState().openEdit(second);
+    taken.getState().adopt(1, first);
+    expect(taken.getState().target).toBe(second);
+  });
+
+  it("shows the memory the editor holds as the learner rewrote it, and leaves any other", () => {
+    const store = createMemoryStore();
+
+    store.getState().openEdit(first);
+    store.getState().rewrite(second.id, plan, 2000);
+    expect(store.getState().target).toBe(first);
+
+    store.getState().rewrite(first.id, grade, 2000);
+    expect(store.getState().target).toEqual({
+      ...first,
+      author: "learner",
+      confirmedAt: 2000,
+      text: "Kelas 12",
+      title: "Sekolah",
+    });
+
+    const fresh = createMemoryStore();
+    fresh.getState().openNew();
+    fresh.getState().rewrite(first.id, grade, 2000);
+    expect(fresh.getState().target).toBeNull();
+  });
+
+  it("closes the editor on a memory the learner deleted and notes the memory, and only notes any other", () => {
+    const store = createMemoryStore();
+
+    store.getState().reopen(0, grade, first);
+    store.getState().forget(first.id);
+    expect(store.getState()).toMatchObject({
+      deleted: first.id,
+      draft: null,
+      open: false,
+      target: first,
+    });
+
+    const other = createMemoryStore();
+    other.getState().openEdit(first);
+    other.getState().forget(second.id);
+    expect(other.getState()).toMatchObject({
+      deleted: second.id,
+      open: true,
+      target: first,
+    });
+
+    const fresh = createMemoryStore();
+    fresh.getState().openNew();
+    fresh.getState().forget(first.id);
+    expect(fresh.getState()).toMatchObject({ deleted: first.id, open: true });
+  });
+
+  it("closes the editor of a memory the server no longer has, and leaves an editor opened since", () => {
+    const store = createMemoryStore();
+
+    store.getState().reopen(0, grade, first);
+    store.getState().leave(1);
+    expect(store.getState()).toMatchObject({ draft: null, open: false });
+
+    const newer = createMemoryStore();
+    newer.getState().openEdit(first);
+    newer.getState().openEdit(second);
+    newer.getState().leave(1);
+    expect(newer.getState()).toMatchObject({ open: true, target: second });
   });
 });

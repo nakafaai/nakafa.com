@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, MutableList } from "effect";
 import { createAutosave } from "@/components/user/settings/memory/autosave";
 import {
+  draftOf,
   learnerMemory,
   type Memory,
   type MemoryDraft,
@@ -11,6 +12,7 @@ import {
 const blank = { text: "", title: "" };
 const first = { text: "Grade 12", title: "" };
 const second = { text: "Grade 12, science track", title: "School" };
+const third = { text: "Grade 12, science track, Bandung", title: "School" };
 const stored = learnerMemory(first, pendingId("stored"), 1);
 const NEW_ID = pendingId("new");
 
@@ -43,19 +45,19 @@ function page() {
       add(
         draft: MemoryDraft,
         after: {
-          done?: (id: Memory["id"]) => void;
+          done?: (memory: Memory) => void;
           failed?: (again: boolean) => void;
         } = {}
       ) {
         note(`add ${words(draft)}`);
         MutableList.append(answers, {
-          done: () => after.done?.(NEW_ID),
+          done: () => after.done?.(learnerMemory(draft, NEW_ID, 1)),
           failed: () => after.failed?.(true),
           refused: () => after.failed?.(false),
         });
       },
-      adopt(id: Memory["id"]) {
-        note(`adopt ${id}`);
+      adopt(memory: Memory) {
+        note(`adopt ${memory.id} ${words(draftOf(memory))}`);
       },
       drop(id: Memory["id"]) {
         note(`drop ${id}`);
@@ -72,11 +74,14 @@ function page() {
           refused: () => after.failed?.(false),
         });
       },
-      remove(memory: Memory) {
-        note(`remove ${memory.id}`);
+      leave() {
+        note("leave");
       },
-      reopen(id: Memory["id"] | null, draft: MemoryDraft) {
-        note(`reopen ${id} ${words(draft)}`);
+      remove(memory: Memory, restore?: MemoryDraft) {
+        note(`remove ${memory.id} ${restore ? words(restore) : "-"}`);
+      },
+      reopen(draft: MemoryDraft) {
+        note(`reopen ${words(draft)}`);
       },
     },
     /** Every change sent so far, oldest first. */
@@ -87,7 +92,7 @@ function page() {
 describe("the saving of an open editor", () => {
   it("writes nothing for a new memory that says nothing", () => {
     const { send, sent } = page();
-    const saving = createAutosave(undefined, blank);
+    const saving = createAutosave(null, blank);
 
     saving.write(send);
     saving.change({ text: " ", title: " " });
@@ -98,7 +103,7 @@ describe("the saving of an open editor", () => {
 
   it("stores a new memory once, points the editor at it, and rewrites it from then on", () => {
     const { answer, send, sent } = page();
-    const saving = createAutosave(undefined, blank);
+    const saving = createAutosave(null, blank);
 
     saving.change(first);
     saving.write(send);
@@ -110,7 +115,7 @@ describe("the saving of an open editor", () => {
     answer("done");
     expect(sent()).toEqual([
       "add |Grade 12",
-      `adopt ${NEW_ID}`,
+      `adopt ${NEW_ID} |Grade 12`,
       `edit ${NEW_ID} School|Grade 12, science track`,
     ]);
 
@@ -149,7 +154,7 @@ describe("the saving of an open editor", () => {
 
   it("gives the words of a failed write back, and sends them again with the next write", () => {
     const { answer, send, sent } = page();
-    const saving = createAutosave(undefined, first);
+    const saving = createAutosave(null, first);
 
     saving.write(send);
     answer("failed");
@@ -162,13 +167,45 @@ describe("the saving of an open editor", () => {
 
     expect(sent()).toEqual([
       "add |Grade 12",
-      "reopen null |Grade 12",
+      "reopen |Grade 12",
       "add |Grade 12",
-      `adopt ${NEW_ID}`,
+      `adopt ${NEW_ID} |Grade 12`,
       `edit ${NEW_ID} School|Grade 12, science track`,
-      `reopen ${NEW_ID} School|Grade 12, science track`,
+      "reopen School|Grade 12, science track",
       `edit ${NEW_ID} School|Grade 12, science track`,
     ]);
+  });
+
+  it("gives back the latest words, not the words of the write that failed, when the learner wrote on and closed the editor while the first save was on its way", () => {
+    const { answer, send, sent } = page();
+    const saving = createAutosave(null, blank);
+
+    saving.change(first);
+    saving.write(send);
+    // The learner writes on, and the editor closes: the first save is alone
+    // on its way, so these words are not sent.
+    saving.change(second);
+    saving.write(send);
+    expect(sent()).toEqual(["add |Grade 12"]);
+
+    answer("failed");
+    expect(sent()).toEqual([
+      "add |Grade 12",
+      "reopen School|Grade 12, science track",
+    ]);
+  });
+
+  it("gives back nothing for a failed first save when the learner emptied the editor", () => {
+    const { answer, send, sent } = page();
+    const saving = createAutosave(null, blank);
+
+    saving.change(first);
+    saving.write(send);
+    saving.change(blank);
+    saving.write(send);
+    answer("failed");
+
+    expect(sent()).toEqual(["add |Grade 12"]);
   });
 
   it("sends a later write while an earlier one is on its way, so closing the editor never waits for an answer", () => {
@@ -205,67 +242,126 @@ describe("the saving of an open editor", () => {
     expect(sent()).toEqual([
       `edit ${stored.id} |Grade 12, science`,
       `edit ${stored.id} School|Grade 12, science track`,
-      `reopen ${stored.id} School|Grade 12, science track`,
+      "reopen School|Grade 12, science track",
       `edit ${stored.id} School|Grade 12, science track`,
     ]);
   });
 
-  it("gives nothing back for a write the learner cannot try again, or after they deleted the memory", () => {
-    const refused = page();
-    const gone = createAutosave(stored, first);
-
-    gone.change(second);
-    gone.write(refused.send);
-    refused.answer("refused");
-    expect(refused.sent()).toEqual([
-      `edit ${stored.id} School|Grade 12, science track`,
-    ]);
-
-    const deleted = page();
+  it("gives back the words the editor holds when the newest write fails, though the learner wrote on after it went out", () => {
+    const { answer, send, sent } = page();
     const saving = createAutosave(stored, first);
 
     saving.change(second);
-    saving.write(deleted.send);
-    saving.discard(deleted.send, stored);
-    deleted.answer("failed");
-    expect(deleted.sent()).toEqual([
+    saving.write(send);
+    saving.change(third);
+    answer("failed");
+
+    expect(sent()).toEqual([
       `edit ${stored.id} School|Grade 12, science track`,
-      `remove ${stored.id}`,
+      "reopen School|Grade 12, science track, Bandung",
     ]);
   });
 
-  it("deletes the memory the editor shows, with its Undo, and writes nothing after", () => {
+  it("closes the editor when the server has no such memory any more, and gives nothing back", () => {
+    const { answer, send, sent } = page();
+    const saving = createAutosave(stored, first);
+
+    saving.change(second);
+    saving.write(send);
+    answer("refused");
+
+    expect(sent()).toEqual([
+      `edit ${stored.id} School|Grade 12, science track`,
+      "leave",
+    ]);
+  });
+
+  it("closes the editor for a memory that is gone also when an older write is the one that finds out", () => {
+    const { answer, send, sent } = page();
+    const saving = createAutosave(stored, first);
+
+    saving.change({ text: "Grade 12, science", title: "" });
+    saving.write(send);
+    saving.change(second);
+    saving.write(send);
+    answer("refused");
+
+    expect(sent()).toEqual([
+      `edit ${stored.id} |Grade 12, science`,
+      `edit ${stored.id} School|Grade 12, science track`,
+      "leave",
+    ]);
+  });
+
+  it("gives nothing back and closes nothing after the learner deleted the memory", () => {
+    const failed = page();
+    const gone = createAutosave(stored, first);
+
+    gone.change(second);
+    gone.write(failed.send);
+    gone.discard(failed.send, stored);
+    failed.answer("failed");
+    expect(failed.sent()).toEqual([
+      `edit ${stored.id} School|Grade 12, science track`,
+      `remove ${stored.id} School|Grade 12, science track`,
+    ]);
+
+    const missing = page();
+    const deleted = createAutosave(stored, first);
+
+    deleted.change(second);
+    deleted.write(missing.send);
+    deleted.discard(missing.send, stored);
+    missing.answer("refused");
+    expect(missing.sent()).not.toContain("leave");
+  });
+
+  it("deletes the memory the editor shows, with an Undo for the words the editor held, and writes nothing after", () => {
     const { send, sent } = page();
     const saving = createAutosave(stored, first);
 
+    // The learner wrote the second draft and pressed Delete before the editor
+    // saved it, so the stored words are not what the Undo brings back.
     saving.change(second);
     saving.discard(send, stored);
     saving.write(send);
 
-    expect(sent()).toEqual([`remove ${stored.id}`]);
+    expect(sent()).toEqual([
+      `remove ${stored.id} School|Grade 12, science track`,
+    ]);
+  });
+
+  it("brings back the words of the memory with the Undo when the editor held none", () => {
+    const { send, sent } = page();
+    const saving = createAutosave(stored, first);
+
+    saving.change(blank);
+    saving.discard(send, stored);
+
+    expect(sent()).toEqual([`remove ${stored.id} |Grade 12`]);
   });
 
   it("deletes a memory stored a moment ago without a word", () => {
     const { answer, send, sent } = page();
-    const saving = createAutosave(undefined, first);
+    const saving = createAutosave(null, first);
 
     saving.write(send);
     answer("done");
-    saving.discard(send, undefined);
+    saving.discard(send, null);
 
     expect(sent()).toEqual([
       "add |Grade 12",
-      `adopt ${NEW_ID}`,
+      `adopt ${NEW_ID} |Grade 12`,
       `drop ${NEW_ID}`,
     ]);
   });
 
   it("drops a memory the server stored after the learner deleted it", () => {
     const { answer, send, sent } = page();
-    const saving = createAutosave(undefined, first);
+    const saving = createAutosave(null, first);
 
     saving.write(send);
-    saving.discard(send, undefined);
+    saving.discard(send, null);
     expect(sent()).toEqual(["add |Grade 12"]);
 
     answer("done");
@@ -274,9 +370,9 @@ describe("the saving of an open editor", () => {
 
   it("deletes nothing for a new memory that was never stored", () => {
     const { send, sent } = page();
-    const saving = createAutosave(undefined, blank);
+    const saving = createAutosave(null, blank);
 
-    saving.discard(send, undefined);
+    saving.discard(send, null);
 
     expect(sent()).toEqual([]);
   });

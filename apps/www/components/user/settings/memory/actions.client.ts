@@ -22,7 +22,10 @@ import {
   pauseState,
   removeFromList,
 } from "@/components/user/settings/memory/optimistic";
-import { useMemoryPage } from "@/components/user/settings/memory/provider";
+import {
+  useMemoryLatest,
+  useMemoryPage,
+} from "@/components/user/settings/memory/provider";
 
 /** How long the toast of a deleted memory offers an Undo. */
 const UNDO = Duration.seconds(5);
@@ -33,13 +36,19 @@ const UNDO = Duration.seconds(5);
  * rolls back: Convex runs the optimistic change again until the server
  * answers, then drops it. A new or rewritten memory that fails comes back in
  * its editor with what the learner wrote.
+ *
+ * An action reads what the learner is doing when it runs and subscribes to
+ * none of it, so a component that only acts, such as a row, renders again for
+ * none of it.
  */
 export function useMemoryActions() {
   const t = useTranslations("Memory");
   const other = useTranslations("Common")("action-error");
 
+  const latest = useMemoryLatest();
+  const forget = useMemoryPage((state) => state.forget);
   const reopen = useMemoryPage((state) => state.reopen);
-  const session = useMemoryPage((state) => state.session);
+  const rewrite = useMemoryPage((state) => state.rewrite);
 
   const addDraft = useMutation(nina.memory.add);
   const editDraft = useMutation(nina.memory.edit);
@@ -81,18 +90,19 @@ export function useMemoryActions() {
   }
 
   /**
-   * Writes a new memory in the learner's own words. `done` gets the id the
-   * server gave it. `failed` runs when the server did not take it, with
-   * whether the learner can try again. A caller that passes none gets the
-   * words back in the editor.
+   * Writes a new memory in the learner's own words. `done` gets the memory as
+   * the learner has it, with the id the server gave it. `failed` runs when the
+   * server did not take it, with whether the learner can try again. A caller
+   * that passes none gets the words back in a new editor.
    */
   function add(
     draft: MemoryDraft,
     after: {
-      done?: (id: Memory["id"]) => void;
+      done?: (memory: Memory) => void;
       failed?: (again: boolean) => void;
     } = {}
   ) {
+    const { session } = latest();
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
     const memory = learnerMemory(
       draft,
@@ -106,12 +116,12 @@ export function useMemoryActions() {
           draftArgs(draft)
         ),
       {
-        ...after,
+        done: (id) => after.done?.({ ...memory, id }),
         failed:
           after.failed ??
           ((again) => {
             if (again) {
-              reopen(session, null, draft);
+              reopen(session, draft, null);
             }
           }),
       }
@@ -120,15 +130,21 @@ export function useMemoryActions() {
 
   /**
    * Rewrites one memory in the learner's own words. `failed` runs when the
-   * server did not take them, with whether the learner can try again.
+   * server did not take them, with whether the learner can try again. Nothing
+   * is sent for a memory the learner deleted since.
    */
   function edit(
     id: Memory["id"],
     draft: MemoryDraft,
     after: { failed?: (again: boolean) => void } = {}
   ) {
+    if (latest().deleted === id) {
+      return;
+    }
+
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
+    rewrite(id, draft, now);
     settle(
       () =>
         editDraft.withOptimisticUpdate((store) =>
@@ -138,24 +154,28 @@ export function useMemoryActions() {
     );
   }
 
-  /** Deletes a memory without a word, for one the learner never saw stored. */
+  /**
+   * Deletes a memory without a word, for one the learner never saw stored. The
+   * editor on it closes, and nothing it still had to save is saved.
+   */
   function drop(id: Memory["id"]) {
+    forget(id);
     settle(() => removeById({ id }));
   }
 
   /**
    * Deletes a memory at once, on the page and on the server, so that closing
    * the page can never leave it stored. The toast offers an Undo, which writes
-   * the title and the words back as the learner's own memory: the end date of
-   * a situation does not come back.
+   * `restore` back as the learner's own memory, the words of the memory unless
+   * the caller names others: the end date of a situation does not come back.
    */
-  function remove(memory: Memory) {
+  function remove(memory: Memory, restore: MemoryDraft = draftOf(memory)) {
     drop(memory.id);
 
     toast(t("deleted"), {
       action: {
         label: t("undo"),
-        onClick: () => add(draftOf(memory)),
+        onClick: () => add(restore),
       },
       duration: Duration.toMillis(UNDO),
     });
@@ -166,8 +186,17 @@ export function useMemoryActions() {
     settle(() => pauseTo({ paused }));
   }
 
-  /** Deletes every memory. */
+  /**
+   * Deletes every memory. The editor on one of them closes with it. The server
+   * hides them from every reader the moment it answers, and deletes them in
+   * batches after that.
+   */
   function clear() {
+    const { target } = latest();
+
+    if (target) {
+      forget(target.id);
+    }
     settle(() => clearAll());
   }
 

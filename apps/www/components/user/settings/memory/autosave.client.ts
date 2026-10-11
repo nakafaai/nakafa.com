@@ -9,7 +9,10 @@ import type {
   Memory,
   MemoryDraft,
 } from "@/components/user/settings/memory/list";
-import { useMemoryPage } from "@/components/user/settings/memory/provider";
+import {
+  useMemoryLatest,
+  useMemoryPage,
+} from "@/components/user/settings/memory/provider";
 
 /** How long the editor waits after the last keystroke before it saves. */
 const PAUSE = Duration.millis(600);
@@ -20,25 +23,29 @@ const LONGEST = Duration.seconds(3);
  * Saves what the learner writes in one opening of the editor, with no button:
  * a moment after they stop writing, and at once when the editor closes. A save
  * that fails tells the learner and is tried again with the next change. When
- * the editor is closed by then, it opens again with what they wrote.
+ * the editor is closed by then, it opens again with what they wrote. A save
+ * that finds the memory gone closes the editor.
  *
  * `change` takes what the editor holds now. `discard` stops the saving and
  * deletes the memory, with an Undo when the learner had seen it stored.
  */
-export function useAutosave(memory: Memory | undefined, starting: MemoryDraft) {
+export function useAutosave(memory: Memory | null, starting: MemoryDraft) {
   const { add, drop, edit, remove } = useMemoryActions();
   const adopt = useMemoryPage((state) => state.adopt);
+  const leave = useMemoryPage((state) => state.leave);
   const reopen = useMemoryPage((state) => state.reopen);
   const session = useMemoryPage((state) => state.session);
+  const latest = useMemoryLatest();
   const [saving] = useState(() => createAutosave(memory, starting));
   const send = {
     add,
-    adopt: (id: Memory["id"]) => adopt(session, id),
+    adopt: (stored: Memory) => adopt(session, stored),
     drop,
     edit,
+    leave: () => leave(session),
     remove,
-    reopen: (id: Memory["id"] | null, draft: MemoryDraft) =>
-      reopen(session, id, draft),
+    // The editor holds the memory it opened, which follows what it saved.
+    reopen: (draft: MemoryDraft) => reopen(session, draft, latest().target),
   };
   const write = useCallbackRef(() => saving.write(send));
   const later = useDebouncedCallback(write, {

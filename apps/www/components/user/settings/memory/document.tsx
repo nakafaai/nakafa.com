@@ -36,7 +36,7 @@ const Editor = dynamic(
  * itself. After a save that failed, the editor opens again with what they
  * wrote.
  */
-export function MemoryDocument({ memory }: { memory: Memory | undefined }) {
+export function MemoryDocument({ memory }: { memory: Memory | null }) {
   const t = useTranslations("Memory");
   const labels = useTranslations("Editor");
   const common = useTranslations("Common");

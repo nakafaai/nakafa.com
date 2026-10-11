@@ -1,13 +1,21 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { NinaMemoryView } from "@repo/backend/confect/nina/memory.spec";
 import { Schema } from "effect";
 import { createStore } from "zustand";
-import type {
-  Memory,
-  MemoryDraft,
+import {
+  editedMemory,
+  type Memory,
+  type MemoryDraft,
 } from "@/components/user/settings/memory/list";
 
 /** What the learner is doing on the Memory page. */
 const MemoryStateSchema = Schema.Struct({
+  /**
+   * The memory the learner deleted last, from the list or from the editor. The
+   * editor never saves a memory the learner deleted, so a save that was still
+   * waiting for its moment cannot bring the memory back or fail as missing.
+   */
+  deleted: Schema.NullOr(Id("ninaMemories")),
   /** The title and words of a save that failed, which the editor shows when it opens again. */
   draft: Schema.NullOr(
     Schema.Struct({ text: Schema.String, title: Schema.String })
@@ -19,10 +27,13 @@ const MemoryStateSchema = Schema.Struct({
   /** Counts the openings of the editor, so each one starts with fresh words. */
   session: Schema.Int,
   /**
-   * The memory in the editor, or none for a new memory. It stays while the
+   * The memory the editor opened with, or none for a new memory: its id, title
+   * and words, and what its facts line shows. The editor holds it and never
+   * looks it up in the list, because a memory that is not in the list is not a
+   * deleted memory. It follows what the editor saves, and it stays while the
    * panel closes, so the panel does not empty before it is gone.
    */
-  target: Schema.NullOr(Id("ninaMemories")),
+  target: Schema.NullOr(NinaMemoryView),
 });
 
 type MemoryState = typeof MemoryStateSchema.Type;
@@ -33,25 +44,32 @@ interface MemoryActions {
    * list marks it and its facts show. It leaves an editor the learner opened
    * since `session`, because that one writes another memory.
    */
-  adopt: (session: number, id: Memory["id"]) => void;
+  adopt: (session: number, memory: Memory) => void;
   /** Closes the editor and forgets any words it was given back. */
   close: () => void;
+  /**
+   * Notes that the learner deleted the memory `id`. The editor on it closes,
+   * and nothing it still had to save is saved.
+   */
+  forget: (id: Memory["id"]) => void;
+  /**
+   * Closes the editor of the opening `session`, because the server answered
+   * that its memory is missing. It leaves an editor the learner opened since.
+   */
+  leave: (session: number) => void;
   /** Opens the editor with one memory. */
-  openEdit: (id: Memory["id"]) => void;
+  openEdit: (memory: Memory) => void;
   /** Opens the editor for a new memory. */
   openNew: () => void;
   /**
-   * Opens the editor again with the draft of a save that failed: with the
-   * memory `id`, or with a new memory when `id` is null. `session` is the
-   * opening the draft comes from. Nothing opens when the learner opened an
-   * editor since, open or closed again by now, because what they wrote there
-   * is newer than the draft.
+   * Opens the editor again with the draft of a save that failed, on `memory`,
+   * or on a new memory when it is null. `session` is the opening the draft
+   * comes from. Nothing opens when the learner opened an editor since, open or
+   * closed again by now, because what they wrote there is newer than the draft.
    */
-  reopen: (
-    session: number,
-    id: Memory["id"] | null,
-    draft: MemoryDraft
-  ) => void;
+  reopen: (session: number, draft: MemoryDraft, memory: Memory | null) => void;
+  /** Shows the memory the editor holds as the learner just rewrote it. */
+  rewrite: (id: Memory["id"], draft: MemoryDraft, now: number) => void;
   /** Sets the words the learner searches for. */
   search: (query: string) => void;
 }
@@ -61,21 +79,31 @@ export type MemoryStore = MemoryState & MemoryActions;
 /** Creates the store of one Memory page, so two pages never share their state. */
 export function createMemoryStore() {
   return createStore<MemoryStore>()((set) => ({
-    adopt: (session, id) =>
+    adopt: (session, memory) =>
       set((state) =>
-        state.open && state.session === session && state.target === null
-          ? { target: id }
+        state.session === session && state.target === null
+          ? { target: memory }
           : state
       ),
     close: () => set({ draft: null, open: false }),
+    deleted: null,
     draft: null,
+    forget: (id) =>
+      set((state) => ({
+        deleted: id,
+        ...(state.target?.id === id ? { draft: null, open: false } : {}),
+      })),
+    leave: (session) =>
+      set((state) =>
+        state.session === session ? { draft: null, open: false } : state
+      ),
     open: false,
-    openEdit: (id) =>
+    openEdit: (memory) =>
       set((state) => ({
         draft: null,
         open: true,
         session: state.session + 1,
-        target: id,
+        target: memory,
       })),
     openNew: () =>
       set((state) => ({
@@ -85,11 +113,22 @@ export function createMemoryStore() {
         target: null,
       })),
     query: "",
-    reopen: (session, id, draft) =>
+    reopen: (session, draft, memory) =>
       set((state) =>
         state.open || state.session !== session
           ? state
-          : { draft, open: true, session: state.session + 1, target: id }
+          : {
+              draft,
+              open: true,
+              session: state.session + 1,
+              target: memory,
+            }
+      ),
+    rewrite: (id, draft, now) =>
+      set((state) =>
+        state.target?.id === id
+          ? { target: editedMemory(state.target, draft, now) }
+          : state
       ),
     search: (query) => set({ query }),
     session: 0,
