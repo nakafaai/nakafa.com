@@ -58,6 +58,7 @@ export function NinaTranscript() {
             {Arr.map(messages, (message, index) => (
               <TranscriptRow
                 key={message.key}
+                last={index === messages.length - 1}
                 loadMore={index === 0 && canLoadMore ? loadMore : undefined}
                 message={message}
               />
@@ -77,9 +78,11 @@ export function NinaTranscript() {
  * comes near the reader, while more are there to load.
  */
 function TranscriptRow({
+  last,
   loadMore,
   message,
 }: {
+  last: boolean;
   loadMore: (() => void) | undefined;
   message: NinaMessage;
 }) {
@@ -90,7 +93,7 @@ function TranscriptRow({
     >
       {loadMore ? <Intersection onIntersect={loadMore} /> : null}
       <Message align={message.role === "user" ? "end" : "start"}>
-        <AiChatMessage message={message} />
+        <AiChatMessage last={last} message={message} />
       </Message>
     </MessageScrollerItem>
   );
