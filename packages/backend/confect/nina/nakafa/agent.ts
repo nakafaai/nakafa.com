@@ -3,6 +3,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import {
   ActionCtx,
   type QueryRunner,
+  type VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
@@ -64,7 +65,9 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
     languageModel: model,
     usageHandler,
   });
-  const services = yield* Effect.context<QueryRunner>();
+  const services = yield* Effect.context<
+    Gateway | QueryRunner | VectorSearch
+  >();
   const runPromise = Effect.runPromiseWith(services);
   let hasPendingContentRead = false;
   const result = yield* Effect.tryPromise({

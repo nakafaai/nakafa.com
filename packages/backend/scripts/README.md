@@ -1,8 +1,8 @@
 # Backend scripts
 
-These scripts verify signed content releases and durable customer state.
-Package scripts in `packages/backend/package.json` are the command source of
-truth.
+These scripts verify signed content releases and durable customer state, and
+test the embedding model of knowledge search. Package scripts in
+`packages/backend/package.json` are the command source of truth.
 
 ## Signed content ownership
 
@@ -55,3 +55,26 @@ changing content ownership.
 
 `customers/verify.ts` is a read-only operational integrity check. It does not
 change customer, subscription, or content state.
+
+## Knowledge search model test
+
+```sh
+pnpm --filter @repo/backend knowledge:compare
+pnpm --filter @repo/backend knowledge:compare --model=qwen/qwen3-embedding-8b --locale=id
+```
+
+The test decides which embedding model knowledge search uses. It runs against
+the deployment that `packages/backend/.env.local` names, which must run the
+current functions and hold the section index of its active release (the build
+is `contents/sections/build:run`, started by hand with no arguments).
+
+For every embedding model of the gateway and every language, the deployment
+embeds the stored sections of that language and each question of
+`knowledge/questions/`, and the test prints how many questions had their right
+section within the top five, how many were left out because their label no
+longer fits the index, and how long a question took to embed. The questions are
+labeled with the Aksara corpus; a lesson that was edited since leaves its
+questions out, with the reason. `--model` and `--locale` narrow the test to one
+model or one language. Each run is one request that the runtime of Node ends
+after five minutes. The test changes no stored section: the vectors of a
+candidate model are made for the run and kept nowhere.

@@ -59,7 +59,8 @@ export const insertMaterialProjection = Effect.fn(
   "TestMaterial.insertProjection"
 )(function* (
   projection: MaterialLessonProjection,
-  identity: TestIdentity = MATERIAL_IDENTITY
+  identity: TestIdentity = MATERIAL_IDENTITY,
+  rawMdx?: string
 ) {
   const ctx = yield* MutationCtx;
   const projectionJson = canonicalizeMaterialProjection(projection);
@@ -74,6 +75,7 @@ export const insertMaterialProjection = Effect.fn(
       headSequence: identity.sequence,
       projectionJson,
       publicPath: projection.publicPath,
+      ...(rawMdx === undefined ? {} : { rawMdx }),
       rendererDomain: "mathematics",
       sourcePath,
     })
@@ -100,7 +102,9 @@ export const activateMaterialCatalog = Effect.fn(
   "TestMaterial.activateCatalog"
 )(function* (
   projections: readonly MaterialLessonProjection[] = defaultMaterialProjections,
-  activeAppLocales: readonly ActiveAppLocaleCode[] = ACTIVE_APP_LOCALE_CODES
+  activeAppLocales: readonly ActiveAppLocaleCode[] = ACTIVE_APP_LOCALE_CODES,
+  rawMdx: (projection: MaterialLessonProjection) => string | undefined = () =>
+    undefined
 ) {
   const ctx = yield* MutationCtx;
   yield* Effect.promise(() =>
@@ -120,7 +124,11 @@ export const activateMaterialCatalog = Effect.fn(
     })
   );
   for (const projection of projections) {
-    yield* insertMaterialProjection(projection);
+    yield* insertMaterialProjection(
+      projection,
+      MATERIAL_IDENTITY,
+      rawMdx(projection)
+    );
   }
 });
 

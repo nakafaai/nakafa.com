@@ -467,7 +467,7 @@ describe("content release lifecycle ingress", () => {
         yield* Effect.promise(() =>
           t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect())
         )
-      ).toEqual([]);
+      ).toMatchObject([{ name: "contents/sections/build:run" }]);
       const recovered = yield* runLifecycle(t, (_ctx) =>
         advancePublication({
           operation: "activateRecovery",
@@ -494,7 +494,7 @@ describe("content release lifecycle ingress", () => {
         yield* Effect.promise(() =>
           t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect())
         )
-      ).toEqual([]);
+      ).toMatchObject([{}, { args: [{ releaseId: recoveryReleaseId }] }]);
     })
   );
 });

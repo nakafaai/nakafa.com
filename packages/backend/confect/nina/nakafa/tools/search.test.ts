@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { searchNakafaContent } from "@repo/backend/agent/search";
+import { findContent } from "@repo/backend/confect/nina/nakafa/find";
 import { search } from "@repo/backend/confect/nina/nakafa/tools/search";
 import {
   recordProgress,
@@ -9,7 +9,9 @@ import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Array as Arr, Effect, MutableList, Option } from "effect";
 
-vi.mock("@repo/backend/agent/search", () => ({ searchNakafaContent: vi.fn() }));
+vi.mock("@repo/backend/confect/nina/nakafa/find", () => ({
+  findContent: vi.fn(),
+}));
 afterEach(() => vi.restoreAllMocks());
 
 describe("Nina content search", () => {
@@ -33,7 +35,9 @@ describe("Nina content search", () => {
         offset: 20,
         has_more: true,
       };
-      vi.mocked(searchNakafaContent).mockReturnValue(Effect.succeed(expected));
+      vi.mocked(findContent).mockReturnValue(
+        Effect.succeed({ result: expected, text: `Found ${item.title}.` })
+      );
       const input = {
         locale: "en" as const,
         limit: 10,
@@ -46,10 +50,7 @@ describe("Nina content search", () => {
       const output = await runSpecialist(() =>
         search({ input, locale: "id", publish, toolCallId: "search" })
       );
-      expect(searchNakafaContent).toHaveBeenCalledWith({
-        ...input,
-        locale: "id",
-      });
+      expect(findContent).toHaveBeenCalledWith({ ...input, locale: "id" });
       expect(output.result).toEqual(expected);
       expect(output.text).toContain(item.title);
       expect(MutableList.toArray(artifacts)).toMatchObject([
@@ -62,7 +63,7 @@ describe("Nina content search", () => {
     }
   );
   it("keeps failed retrieval distinct from an empty search", async () => {
-    vi.mocked(searchNakafaContent).mockReturnValue(
+    vi.mocked(findContent).mockReturnValue(
       Effect.fail(
         new NakafaAgentDataReadError({ message: "Search verification failed." })
       )

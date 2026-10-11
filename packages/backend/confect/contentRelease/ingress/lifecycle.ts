@@ -24,6 +24,7 @@ import {
   decodeRendererJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
+import { startSectionBuild } from "@repo/backend/confect/contents/sections/start";
 import { Effect } from "effect";
 
 type LifecycleRequest =
@@ -174,6 +175,9 @@ export const advancePublication = Effect.fn(
         rendererJson,
       }
     ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    if (result.kind === "activated") {
+      yield* startSectionBuild(releaseId);
+    }
     return {
       ok: true,
       operation: request.operation,
@@ -201,6 +205,9 @@ export const advancePublication = Effect.fn(
       rendererJson,
     }
   ).pipe(Effect.catchTag("SchemaError", Effect.die));
+  if (result.kind === "activated") {
+    yield* startSectionBuild(releaseId);
+  }
   return {
     ok: true,
     operation: request.operation,

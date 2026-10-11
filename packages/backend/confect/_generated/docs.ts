@@ -24,6 +24,7 @@ export type ContentKeysDoc = Document.Document<typeof schemaDefinition, "content
 export type ContentModelBuildsDoc = Document.Document<typeof schemaDefinition, "contentModelBuilds">;
 export type ContentPathsDoc = Document.Document<typeof schemaDefinition, "contentPaths">;
 export type ContentReleasesDoc = Document.Document<typeof schemaDefinition, "contentReleases">;
+export type ContentSectionsDoc = Document.Document<typeof schemaDefinition, "contentSections">;
 export type ContentSnapshotsDoc = Document.Document<typeof schemaDefinition, "contentSnapshots">;
 export type ContentStateDoc = Document.Document<typeof schemaDefinition, "contentState">;
 export type CreditResetPeriodsDoc = Document.Document<typeof schemaDefinition, "creditResetPeriods">;
@@ -113,6 +114,7 @@ export interface Docs {
   contentModelBuilds: ContentModelBuildsDoc;
   contentPaths: ContentPathsDoc;
   contentReleases: ContentReleasesDoc;
+  contentSections: ContentSectionsDoc;
   contentSnapshots: ContentSnapshotsDoc;
   contentState: ContentStateDoc;
   creditResetPeriods: CreditResetPeriodsDoc;

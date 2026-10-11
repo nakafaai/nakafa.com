@@ -4,6 +4,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type {
   ActionCtx,
   QueryRunner,
+  VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import {
   classify,
@@ -40,7 +41,9 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
   locale: Locale,
   usageHandler: UsageHandler
 ) {
-  const services = yield* Effect.context<ActionCtx | Gateway | QueryRunner>();
+  const services = yield* Effect.context<
+    ActionCtx | Gateway | QueryRunner | VectorSearch
+  >();
   return {
     nakafa: createTool({
       description:
