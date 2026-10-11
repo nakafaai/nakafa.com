@@ -1,21 +1,13 @@
-import { Ref } from "@confect/core";
-import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
+import type { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaPageInput } from "@repo/backend/confect/nina/turns.spec";
-import { encodeJsonText } from "@repo/utilities/json";
 import type { FileUIPart } from "ai";
-import {
-  Array as Arr,
-  HashMap,
-  MutableHashMap,
-  MutableList,
-  Option,
-  Schema,
-} from "effect";
-import { optimisticCancel, optimisticPrompt } from "@/components/ai/optimistic";
+import { Array as Arr, HashMap, Option, Schema } from "effect";
+import { optimisticPrompt } from "@/components/ai/optimistic";
+import { createLocalStore } from "@/test/optimistic";
 
 type SavedMessage = Ref.Returns<typeof nina.messages.list>["page"][number];
 
@@ -107,84 +99,6 @@ function listPage(
     isDone: true,
     page: Arr.reverse(messages),
     streams: { kind: "list", messages: [] },
-  };
-}
-
-/**
- * A local store that behaves like Convex's: it hands out the saved query
- * results, an update writes new ones with `setQuery`, and each write is
- * recorded. Values pass through the real Confect codecs, so a value an update
- * writes must satisfy the query's own schema.
- */
-function createLocalStore() {
-  const rows = MutableHashMap.empty<
-    string,
-    readonly [name: string, args: unknown, value: unknown]
-  >();
-  const written = MutableList.make<string>();
-  const keyOf = (ref: Ref.Any, encodedArgs: unknown) =>
-    `${Ref.getConvexFunctionName(ref)}:${encodeJsonText(encodedArgs)}`;
-
-  const store: OptimisticLocalStore.OptimisticLocalStore = {
-    getAllQueries: (ref) =>
-      Arr.flatMap(
-        Arr.fromIterable(MutableHashMap.values(rows)),
-        ([name, args, value]) =>
-          name === Ref.getConvexFunctionName(ref)
-            ? [
-                {
-                  args: Ref.decodeArgsSync(ref, args),
-                  value:
-                    value === undefined
-                      ? Option.none()
-                      : Option.some(Ref.decodeReturnsSync(ref, value)),
-                },
-              ]
-            : []
-      ),
-    getQuery: (ref, ...rest) => {
-      const args = rest[0];
-      if (args === undefined) {
-        return Option.none();
-      }
-      return Option.flatMap(
-        MutableHashMap.get(rows, keyOf(ref, Ref.encodeArgsSync(ref, args))),
-        ([, , value]) =>
-          value === undefined
-            ? Option.none()
-            : Option.some(Ref.decodeReturnsSync(ref, value))
-      );
-    },
-    setQuery: (ref, args, value) => {
-      const encodedArgs = Ref.encodeArgsSync(ref, args);
-      const key = keyOf(ref, encodedArgs);
-      MutableList.append(written, key);
-      if (Option.isSome(value)) {
-        MutableHashMap.set(rows, key, [
-          Ref.getConvexFunctionName(ref),
-          encodedArgs,
-          Ref.encodeReturnsSync(ref, value.value),
-        ]);
-      }
-    },
-  };
-
-  return {
-    /** Saves a query result as the server sent it; `undefined` is a query still loading. */
-    seed: <Query extends Ref.AnyPublicQuery>(
-      ref: Query,
-      args: Ref.Args<Query>,
-      value: Ref.Returns<Query> | undefined
-    ) => {
-      const encodedArgs = Ref.encodeArgsSync(ref, args);
-      MutableHashMap.set(rows, keyOf(ref, encodedArgs), [
-        Ref.getConvexFunctionName(ref),
-        encodedArgs,
-        value === undefined ? undefined : Ref.encodeReturnsSync(ref, value),
-      ]);
-    },
-    store,
-    written: () => MutableList.toArray(written),
   };
 }
 
@@ -362,62 +276,5 @@ describe("ai/optimistic prompt", () => {
     optimisticPrompt(previews, NOW)(replay.store, sendArgs);
 
     expect(readPage(replay, listArgs())).toEqual(readPage(first, listArgs()));
-  });
-});
-
-describe("ai/optimistic cancel", () => {
-  const turn = { order: 0, promptMessageId: "message_0_user", usage: [] };
-
-  it("marks a running turn cancelled at the time of the press", () => {
-    const local = createLocalStore();
-    local.seed(
-      nina.conversation.get,
-      { chatId },
-      { chat, turn: { ...turn, state: { startedAt: 1, status: "running" } } }
-    );
-
-    optimisticCancel(NOW)(local.store, { chatId });
-
-    expect(
-      Option.getOrUndefined(
-        local.store.getQuery(nina.conversation.get, { chatId })
-      )
-    ).toEqual({
-      chat,
-      turn: { ...turn, state: { finishedAt: NOW, status: "cancelled" } },
-    });
-  });
-
-  it("marks a queued turn cancelled", () => {
-    const local = createLocalStore();
-    local.seed(
-      nina.conversation.get,
-      { chatId },
-      { chat, turn: { ...turn, state: { status: "queued" } } }
-    );
-
-    optimisticCancel(NOW)(local.store, { chatId });
-
-    expect(local.written()).toHaveLength(1);
-  });
-
-  it("leaves a settled turn, a chat without a turn and an unloaded chat alone", () => {
-    const settled = createLocalStore();
-    settled.seed(
-      nina.conversation.get,
-      { chatId },
-      { chat, turn: { ...turn, state: { finishedAt: 5, status: "complete" } } }
-    );
-    const empty = createLocalStore();
-    empty.seed(nina.conversation.get, { chatId }, { chat, turn: null });
-    const unloaded = createLocalStore();
-
-    optimisticCancel(NOW)(settled.store, { chatId });
-    optimisticCancel(NOW)(empty.store, { chatId });
-    optimisticCancel(NOW)(unloaded.store, { chatId });
-
-    expect(settled.written()).toEqual([]);
-    expect(empty.written()).toEqual([]);
-    expect(unloaded.written()).toEqual([]);
   });
 });

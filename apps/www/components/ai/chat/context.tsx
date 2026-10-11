@@ -5,7 +5,7 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { DateTime, Effect, Result } from "effect";
+import { DateTime, Effect, Fiber } from "effect";
 import {
   createContext,
   type PropsWithChildren,
@@ -16,11 +16,12 @@ import {
   useState,
   useTransition,
 } from "react";
+import { readChatAccess } from "@/components/ai/chat/access";
 import { isChatBusy } from "@/components/ai/chat/busy";
+import { optimisticCancel } from "@/components/ai/chat/cancel";
 import { draftMessage } from "@/components/ai/chat/messages";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
-import { optimisticCancel } from "@/components/ai/optimistic";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 import { useConvexAuth } from "@/components/providers/convex";
 import { useViewer } from "@/lib/identity/client";
@@ -76,8 +77,12 @@ function useChatState(chatId: Id<"chats">) {
     pending: isPending,
     status: turn?.state.status,
   });
-  const owner = viewerId !== undefined && chat?.userId === viewerId;
-  const canWrite = owner || (viewerId !== undefined && loading && opening);
+  const { canWrite, owner } = readChatAccess({
+    chatUserId: chat?.userId,
+    loading,
+    opening,
+    viewerId,
+  });
 
   // The actions below read this when they run, so they never go stale.
   const snapshot = {
@@ -109,9 +114,9 @@ function useChatState(chatId: Id<"chats">) {
       const cancelTurn = now.cancelChat.withOptimisticUpdate(
         optimisticCancel(DateTime.toEpochMillis(DateTime.nowUnsafe()))
       );
-      now.startTransition(async () => {
+      now.startTransition(() => {
         now.optimisticallyCancel(true);
-        const cancelled = await Effect.runPromise(
+        return Effect.runPromise(
           Effect.tryPromise({
             try: () => cancelTurn({ chatId: now.chatId }),
             catch: () =>
@@ -119,11 +124,15 @@ function useChatState(chatId: Id<"chats">) {
                 code: "NINA_CONNECTION_FAILED",
                 message: "Nina cancellation could not be confirmed.",
               }),
-          }).pipe(Effect.flatMap(Effect.fromResult), Effect.result)
+          }).pipe(
+            Effect.flatMap(Effect.fromResult),
+            Effect.matchEffect({
+              onFailure: (failure) =>
+                Effect.sync(() => now.setCancelError(failure)),
+              onSuccess: () => Effect.void,
+            })
+          )
         );
-        if (Result.isFailure(cancelled)) {
-          now.setCancelError(cancelled.failure);
-        }
       });
     },
     /** Sends the same prompt again, or the latest one when no turn is named. */
@@ -133,22 +142,47 @@ function useChatState(chatId: Id<"chats">) {
       if (target === undefined || !now.chat || now.busy || now.isPending) {
         return;
       }
-      now.startTransition(async () => {
-        await now.submission.retry(target, now.chatId);
-      });
+      now.startTransition(() =>
+        Effect.runPromise(
+          Effect.asVoid(
+            Effect.promise(() => now.submission.retry(target, now.chatId))
+          )
+        )
+      );
     },
+    /**
+     * Sends a prompt. The send starts at once and its one outcome has two
+     * readers: the transition that holds the optimistic prompt, and the
+     * composer, which keeps the learner's text and files until it knows the
+     * prompt was admitted. A prompt that was not admitted returns to the
+     * composer, unless the learner has typed something else since. The text
+     * is one draft for every chat, so a prompt that fails after the learner
+     * opened another chat returns to the composer open then, and its files
+     * stay with the composer they were added in.
+     */
     send(prompt: NinaDraft) {
       const now = latest.current;
       const chat = now.chat;
       if (!chat || now.busy || now.isPending) {
-        return Promise.resolve(false);
+        return false;
       }
       now.setCancelError(null);
       now.setText((previous) =>
         previous.trim() === prompt.text.trim() ? "" : previous
       );
-      const admission = now.submission.send(prompt, now.chatId);
-      now.startTransition(async () => {
+      const admission = Effect.runFork(
+        Effect.promise(() => now.submission.send(prompt, now.chatId)).pipe(
+          Effect.map((receipt) => receipt !== undefined),
+          Effect.tap((admitted) =>
+            admitted
+              ? Effect.void
+              : Effect.sync(() =>
+                  now.setText((previous) => previous || prompt.text)
+                )
+          )
+        )
+      );
+      now.startTransition(() => {
         now.showDraft(
           draftMessage({
             chatId: now.chatId,
@@ -158,12 +192,9 @@ function useChatState(chatId: Id<"chats">) {
             turnOrder: now.turn?.order,
           })
         );
-        const receipt = await admission;
-        if (!receipt) {
-          now.setText((previous) => previous || prompt.text);
-        }
+        return Effect.runPromise(Effect.asVoid(Fiber.join(admission)));
       });
-      return admission.then((receipt) => receipt !== undefined);
+      return Effect.runPromise(Fiber.join(admission));
     },
   }));
 
@@ -191,8 +222,26 @@ function useChatState(chatId: Id<"chats">) {
  */
 type ChatContextValue = ReturnType<typeof useChatState>;
 
-/** One reactive conversation shared by the route, sheet and message controls. */
+/**
+ * One reactive conversation shared by the route, sheet and message controls.
+ * Each chat gets its own state and its own subtree, so choosing another chat
+ * starts with none of the previous chat's error, stop, send or pending prompt,
+ * whichever surface renders the provider. The text the learner is typing is
+ * not part of it: that draft is one for every chat.
+ */
 export function ChatProvider({
+  chatId,
+  children,
+}: PropsWithChildren<{ chatId: Id<"chats"> }>) {
+  return (
+    <ChatConversation chatId={chatId} key={chatId}>
+      {children}
+    </ChatConversation>
+  );
+}
+
+/** The state of one chat, which lives and ends with its key. */
+function ChatConversation({
   chatId,
   children,
 }: PropsWithChildren<{ chatId: Id<"chats"> }>) {

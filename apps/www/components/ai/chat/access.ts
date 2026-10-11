@@ -1,0 +1,25 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+
+/**
+ * What the viewer may do in a conversation, the same on every surface. Only the
+ * owner continues it, retries an answer or takes its follow-up suggestions. A
+ * chat the learner just started has no owner on record until it loads, so the
+ * learner who started it can already write to it.
+ */
+export function readChatAccess({
+  chatUserId,
+  loading,
+  opening,
+  viewerId,
+}: {
+  chatUserId: Id<"users"> | undefined;
+  loading: boolean;
+  opening: boolean;
+  viewerId: Id<"users"> | undefined;
+}) {
+  const owner = viewerId !== undefined && chatUserId === viewerId;
+  return {
+    canWrite: owner || (viewerId !== undefined && loading && opening),
+    owner,
+  };
+}

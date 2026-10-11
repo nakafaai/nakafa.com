@@ -63,6 +63,10 @@ export function useChatAdmission({
   const activation = useRef(0);
   const viewerId = gate.viewerId;
 
+  // Leaving, hiding or changing viewer ends this activation, so a prompt that
+  // is still being admitted opens no chat over the one the learner picked
+  // meanwhile. A hidden Activity runs this cleanup, as the sheet's new-chat
+  // body is hidden once a chat is open.
   useEffect(() => {
     if (!viewerId) {
       return;

@@ -6,14 +6,13 @@ import { ChatProvider } from "@/components/ai/chat/context";
 import { NinaTranscript } from "@/components/ai/transcript";
 
 /**
- * Renders one chat's messages and its input inside Nina's sheet. Each chat
- * gets its own provider, so choosing another chat in the history starts with
- * none of the previous chat's error, stop, send or pending prompt. The text
- * the learner is typing stays, as it does between pages.
+ * Renders one chat's messages and its input inside Nina's sheet. The provider
+ * gives each chat its own state, so choosing another chat in the history
+ * shows none of the previous chat's error or pending prompt.
  */
 export function SheetConversation({ chatId }: { chatId: Id<"chats"> }) {
   return (
-    <ChatProvider chatId={chatId} key={chatId}>
+    <ChatProvider chatId={chatId}>
       <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
         <NinaTranscript />
 

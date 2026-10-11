@@ -5,34 +5,6 @@ import type { FileUIPart } from "ai";
 import { Array as Arr, HashMap, Option } from "effect";
 
 /**
- * Marks the chat's queued or running turn as cancelled, so the stop press
- * answers at once. The server's own answer replaces it, or Confect drops it
- * and the turn is as it was.
- */
-export function optimisticCancel(
-  finishedAt: number
-): OptimisticUpdate<typeof nina.lifecycle.cancel> {
-  return (store, args) => {
-    const current = store.getQuery(nina.conversation.get, args);
-    if (Option.isNone(current) || !current.value.turn) {
-      return;
-    }
-    const turn = current.value.turn;
-    if (turn.state.status !== "running" && turn.state.status !== "queued") {
-      return;
-    }
-    store.setQuery(
-      nina.conversation.get,
-      args,
-      Option.some({
-        ...current.value,
-        turn: { ...turn, state: { status: "cancelled", finishedAt } },
-      })
-    );
-  };
-}
-
-/**
  * Adds the sent prompt to the first page of the chat's loaded messages, so it
  * shows at once. Confect replays this callback on every change of the loaded
  * data until the authoritative message arrives, so it only reads the store and

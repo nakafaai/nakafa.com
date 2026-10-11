@@ -30,10 +30,10 @@ export type NinaFailure =
 const ResponseActionSchema = Schema.Literals(["retry", "edit", "wait"]);
 
 /**
- * The recovery a failed send offers. A failed send leaves its message and
- * attachments in the composer, so `edit` is the way on: send it again, or
- * change it first. There is no Retry button for a send, because it would send
- * the attachments a second time.
+ * The recovery a failed send offers. While the learner stays in the chat, a
+ * failed send leaves its message and attachments in the composer, so `edit`
+ * is the way on: send it again, or change it first. There is no Retry button
+ * for a send, because it would send the attachments a second time.
  */
 const AdmissionActionSchema = Schema.Literals([
   "edit",
