@@ -27,6 +27,19 @@ contextual visit cannot first record a canonical view and then a placement view.
 - Content-addressed rendered artifacts use native `cacheLife("max")` and their
   artifact tags. Mutable publication selectors retain scope invalidation and
   the existing bounded freshness profile.
+- A read that depends only on the active release goes through the content
+  store (`apps/www/lib/content/store`), which keeps its answer in the Vercel
+  Runtime Cache. That cache is shared by every instance and survives a deploy,
+  while `use cache` keys include the build, so a deploy and every new instance
+  used to read Convex again. A store key holds a version constant, the release
+  id, the read and its arguments, so a new release has new keys and an entry is
+  never stale; entries live 30 days under the tag of their release. The active
+  release pointer is the one read that is not release-keyed: each region keeps
+  it for a minute, and the activation route expires it, so a release shows at
+  once and a missed expiry heals within that minute, or at the first store
+  miss, which finds Convex naming another release and starts over under it.
+  The `use cache` boundaries stay above the store because prerendering and the
+  scope tags that expire ISR pages need them.
 - RSS caches the completed XML. Its update timestamp comes from authored
   publication dates, so another request does not manufacture changed output.
 - Flight requests bypass the Proxy's duplicate publication ownership reads.
@@ -81,5 +94,6 @@ step without reconciling the operator's current spending constraint.
 - [Next.js cache lifetimes](https://nextjs.org/docs/app/api-reference/functions/cacheLife)
 - [Next.js not-found status codes](https://nextjs.org/docs/app/api-reference/file-conventions/not-found)
 - [Vercel ISR units, unchanged output, and regions](https://vercel.com/docs/incremental-static-regeneration/limits-and-pricing)
+- [Vercel Runtime Cache](https://vercel.com/docs/caching/runtime-cache)
 - [Vercel function regions](https://vercel.com/docs/functions/configuring-functions/region)
 - [Vercel spend management](https://vercel.com/docs/spend-management)
