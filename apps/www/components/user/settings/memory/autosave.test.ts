@@ -20,7 +20,11 @@ const NEW_ID = pendingId("new");
  */
 function page() {
   const sent = MutableList.make<string>();
-  const answers = MutableList.make<{ done: () => void; failed: () => void }>();
+  const answers = MutableList.make<{
+    done: () => void;
+    failed: () => void;
+    refused: () => void;
+  }>();
   const note = (line: string) => {
     MutableList.append(sent, line);
   };
@@ -28,7 +32,7 @@ function page() {
 
   return {
     /** Answers the oldest write that is still on its way. */
-    answer(how: "done" | "failed") {
+    answer(how: "done" | "failed" | "refused") {
       const write = MutableList.take(answers);
 
       if (write !== MutableList.Empty) {
@@ -38,12 +42,16 @@ function page() {
     send: {
       add(
         draft: MemoryDraft,
-        after: { done?: (id: Memory["id"]) => void; failed?: () => void } = {}
+        after: {
+          done?: (id: Memory["id"]) => void;
+          failed?: (again: boolean) => void;
+        } = {}
       ) {
         note(`add ${words(draft)}`);
         MutableList.append(answers, {
           done: () => after.done?.(NEW_ID),
-          failed: () => after.failed?.(),
+          failed: () => after.failed?.(true),
+          refused: () => after.failed?.(false),
         });
       },
       adopt(id: Memory["id"]) {
@@ -55,16 +63,20 @@ function page() {
       edit(
         id: Memory["id"],
         draft: MemoryDraft,
-        after: { done?: () => void; failed?: () => void } = {}
+        after: { failed?: (again: boolean) => void } = {}
       ) {
         note(`edit ${id} ${words(draft)}`);
         MutableList.append(answers, {
-          done: () => after.done?.(),
-          failed: () => after.failed?.(),
+          done: () => undefined,
+          failed: () => after.failed?.(true),
+          refused: () => after.failed?.(false),
         });
       },
       remove(memory: Memory) {
         note(`remove ${memory.id}`);
+      },
+      reopen(id: Memory["id"] | null, draft: MemoryDraft) {
+        note(`reopen ${id} ${words(draft)}`);
       },
     },
     /** Every change sent so far, oldest first. */
@@ -135,7 +147,7 @@ describe("the saving of an open editor", () => {
     ]);
   });
 
-  it("tries a failed write again with the next one", () => {
+  it("gives the words of a failed write back, and sends them again with the next write", () => {
     const { answer, send, sent } = page();
     const saving = createAutosave(undefined, first);
 
@@ -150,9 +162,11 @@ describe("the saving of an open editor", () => {
 
     expect(sent()).toEqual([
       "add |Grade 12",
+      "reopen null |Grade 12",
       "add |Grade 12",
       `adopt ${NEW_ID}`,
       `edit ${NEW_ID} School|Grade 12, science track`,
+      `reopen ${NEW_ID} School|Grade 12, science track`,
       `edit ${NEW_ID} School|Grade 12, science track`,
     ]);
   });
@@ -172,7 +186,7 @@ describe("the saving of an open editor", () => {
     ]);
   });
 
-  it("keeps the newer write when an older one fails late, and sends the newest again when it fails itself", () => {
+  it("keeps the newer write when an older one fails late, and gives back and sends again the newest when it fails itself", () => {
     const { answer, send, sent } = page();
     const saving = createAutosave(stored, first);
 
@@ -180,7 +194,8 @@ describe("the saving of an open editor", () => {
     saving.write(send);
     saving.change(second);
     saving.write(send);
-    // The older write fails after the newer one went out: the server has the newer one.
+    // The older write fails after the newer one went out: the server has the
+    // newer one, so nothing is given back and nothing is sent again.
     answer("failed");
     saving.write(send);
     expect(sent()).toHaveLength(2);
@@ -190,7 +205,32 @@ describe("the saving of an open editor", () => {
     expect(sent()).toEqual([
       `edit ${stored.id} |Grade 12, science`,
       `edit ${stored.id} School|Grade 12, science track`,
+      `reopen ${stored.id} School|Grade 12, science track`,
       `edit ${stored.id} School|Grade 12, science track`,
+    ]);
+  });
+
+  it("gives nothing back for a write the learner cannot try again, or after they deleted the memory", () => {
+    const refused = page();
+    const gone = createAutosave(stored, first);
+
+    gone.change(second);
+    gone.write(refused.send);
+    refused.answer("refused");
+    expect(refused.sent()).toEqual([
+      `edit ${stored.id} School|Grade 12, science track`,
+    ]);
+
+    const deleted = page();
+    const saving = createAutosave(stored, first);
+
+    saving.change(second);
+    saving.write(deleted.send);
+    saving.discard(deleted.send, stored);
+    deleted.answer("failed");
+    expect(deleted.sent()).toEqual([
+      `edit ${stored.id} School|Grade 12, science track`,
+      `remove ${stored.id}`,
     ]);
   });
 

@@ -18,7 +18,7 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
-import { previewText } from "@/components/user/settings/memory/list";
+import { memoryName } from "@/components/user/settings/memory/list";
 import { useMemory } from "@/components/user/settings/memory/provider";
 
 const REMEMBER_ID = "user-settings-memory-remember";
@@ -106,7 +106,7 @@ function MemoryTitles() {
     <ul className="max-h-48 divide-y overflow-y-auto rounded-md border text-sm">
       {Arr.map(memories, (memory) => (
         <li className="truncate px-3 py-2" key={memory.id}>
-          {previewText(memory.text)}
+          {memoryName(memory)}
         </li>
       ))}
     </ul>

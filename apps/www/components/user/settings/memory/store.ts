@@ -42,10 +42,16 @@ interface MemoryActions {
   openNew: () => void;
   /**
    * Opens the editor again with the draft of a save that failed: with the
-   * memory `id`, or with a new memory when `id` is null. It leaves an editor
-   * the learner opened since, because that editor holds newer words.
+   * memory `id`, or with a new memory when `id` is null. `session` is the
+   * opening the draft comes from. Nothing opens when the learner opened an
+   * editor since, open or closed again by now, because what they wrote there
+   * is newer than the draft.
    */
-  reopen: (id: Memory["id"] | null, draft: MemoryDraft) => void;
+  reopen: (
+    session: number,
+    id: Memory["id"] | null,
+    draft: MemoryDraft
+  ) => void;
   /** Sets the words the learner searches for. */
   search: (query: string) => void;
 }
@@ -79,9 +85,9 @@ export function createMemoryStore() {
         target: null,
       })),
     query: "",
-    reopen: (id, draft) =>
+    reopen: (session, id, draft) =>
       set((state) =>
-        state.open
+        state.open || state.session !== session
           ? state
           : { draft, open: true, session: state.session + 1, target: id }
       ),

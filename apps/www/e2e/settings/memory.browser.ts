@@ -41,15 +41,26 @@ const titleOf = (page: Page) =>
   page.getByRole("textbox", { exact: true, name: "Title" });
 
 /**
- * Counts the changes the page sent and the ones the server answered. The page
- * shows a change before the server has it, and a reload closes the connection
- * and drops a change that is still on its way, so a step that reloads waits
- * for the answer first.
+ * Counts the changes the page sent and the ones the server answered, and
+ * knows whether the page's connection has signed in. The page shows a change
+ * before the server has it, and a reload closes the connection and drops a
+ * change that is still on its way, so a step that reloads waits for the answer
+ * first. A reload also opens a connection that signs in a moment after the
+ * page shows, and a change pressed before that is refused.
  */
 const trackChanges = (page: Page) => {
-  const changes = { answered: 0, sent: 0 };
+  const changes = { answered: 0, sent: 0, signedIn: false };
+  // A reload ends the connection that had signed in, before the next one opens.
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) {
+      changes.signedIn = false;
+    }
+  });
   page.on("websocket", (socket) => {
     socket.on("framesent", ({ payload }) => {
+      if (String(payload).includes('"type":"Authenticate"')) {
+        changes.signedIn = true;
+      }
       if (String(payload).includes('"type":"Mutation"')) {
         changes.sent += 1;
       }
@@ -75,16 +86,26 @@ const saved = (changes: Changes, sentBefore: number) =>
     .toBe(true);
 
 /**
- * Presses a switch until it shows `checked`. Right after a reload the page
- * shows the switch before its code runs, and a press in that moment is lost.
+ * Presses a switch after a reload until it shows `checked`. It waits for the
+ * page's connection to sign in first, because a change pressed before that is
+ * refused. The page also shows the switch before its code runs, and a press in
+ * that moment is lost, so the press is repeated until the switch moves.
  */
-const switchUntil = (control: Locator, checked: boolean) =>
-  expect(async () => {
+const switchUntil = async (
+  changes: Changes,
+  control: Locator,
+  checked: boolean
+) => {
+  await expect
+    .poll(() => changes.signedIn, { timeout: ANSWER_MILLISECONDS })
+    .toBe(true);
+  await expect(async () => {
     if ((await control.isChecked()) !== checked) {
       await control.click();
     }
     await expect(control).toBeChecked({ checked, timeout: 1000 });
   }).toPass({ timeout: ANSWER_MILLISECONDS });
+};
 
 /** Repeats a reload until the server shows what the learner changed. */
 const reloadUntil = (page: Page, check: () => Promise<void>) =>
@@ -190,7 +211,7 @@ const pauseMemory = Effect.fn("NakafaE2E.pauseMemory")(function* (
       expect(remember).not.toBeChecked({ timeout: 3000 })
     );
     await expect(row).toBeVisible();
-    await switchUntil(remember, true);
+    await switchUntil(changes, remember, true);
   });
 });
 

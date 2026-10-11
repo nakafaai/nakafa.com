@@ -19,7 +19,8 @@ const LONGEST = Duration.seconds(3);
 /**
  * Saves what the learner writes in one opening of the editor, with no button:
  * a moment after they stop writing, and at once when the editor closes. A save
- * that fails tells the learner and is tried again with the next change.
+ * that fails tells the learner and is tried again with the next change. When
+ * the editor is closed by then, it opens again with what they wrote.
  *
  * `change` takes what the editor holds now. `discard` stops the saving and
  * deletes the memory, with an Undo when the learner had seen it stored.
@@ -27,6 +28,7 @@ const LONGEST = Duration.seconds(3);
 export function useAutosave(memory: Memory | undefined, starting: MemoryDraft) {
   const { add, drop, edit, remove } = useMemoryActions();
   const adopt = useMemoryPage((state) => state.adopt);
+  const reopen = useMemoryPage((state) => state.reopen);
   const session = useMemoryPage((state) => state.session);
   const [saving] = useState(() => createAutosave(memory, starting));
   const send = {
@@ -35,6 +37,8 @@ export function useAutosave(memory: Memory | undefined, starting: MemoryDraft) {
     drop,
     edit,
     remove,
+    reopen: (id: Memory["id"] | null, draft: MemoryDraft) =>
+      reopen(session, id, draft),
   };
   const write = useCallbackRef(() => saving.write(send));
   const later = useDebouncedCallback(write, {

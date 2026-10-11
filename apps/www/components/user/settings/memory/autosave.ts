@@ -9,13 +9,18 @@ import {
 } from "@/components/user/settings/memory/list";
 
 /**
- * What the saving does on the Memory page: the page's own changes, and `adopt`,
- * which points the open editor at a memory the first save stored.
+ * What the saving does on the Memory page: the page's own changes, `adopt`,
+ * which points the open editor at a memory the first save stored, and
+ * `reopen`, which gives the words of a failed save back in the editor when the
+ * learner closed it meanwhile.
  */
 type Send = Pick<
   ReturnType<typeof useMemoryActions>,
   "add" | "drop" | "edit" | "remove"
-> & { adopt: (id: Memory["id"]) => void };
+> & {
+  adopt: (id: Memory["id"]) => void;
+  reopen: (id: Memory["id"] | null, draft: MemoryDraft) => void;
+};
 
 /**
  * The saving of one opening of the editor: with `memory`, or with none for a
@@ -27,7 +32,9 @@ type Send = Pick<
  * new memory is alone on its way, because every later write names the memory
  * it stored. Nothing is written for a draft that says nothing, for one the
  * server was already handed, or after the learner deleted the memory. A write
- * that failed is sent again with the next one.
+ * that failed is sent again with the next one, and gives its words back in the
+ * editor when it was the newest: after an older one fails, the server still
+ * holds a newer draft.
  */
 export function createAutosave(
   memory: Memory | undefined,
@@ -46,13 +53,25 @@ export function createAutosave(
     wanted: starting,
   });
 
-  /** Forgets that `draft` was handed over, unless a newer one went out since. */
-  function failed(draft: MemoryDraft) {
+  /**
+   * Takes the failure of the write that handed `draft` over. When no newer
+   * write went out since, the server lacks these words: the next write sends
+   * them again, and they come back in the editor when the learner can try
+   * again.
+   */
+  function failed(send: Send, draft: MemoryDraft, again: boolean) {
+    const { id, sent, stopped } = MutableRef.get(state);
+    const newest = Option.exists(sent, (handed) => handed === draft);
+
     MutableRef.update(state, (current) => ({
       ...current,
       adding: false,
-      sent: Option.filter(current.sent, (sent) => sent !== draft),
+      sent: newest ? Option.none() : current.sent,
     }));
+
+    if (newest && again && !stopped) {
+      send.reopen(id, draft);
+    }
   }
 
   /** Sends what the server was not handed yet. */
@@ -71,7 +90,9 @@ export function createAutosave(
     }));
 
     if (id !== null) {
-      send.edit(id, wanted, { failed: () => failed(wanted) });
+      send.edit(id, wanted, {
+        failed: (again) => failed(send, wanted, again),
+      });
       return;
     }
 
@@ -93,7 +114,7 @@ export function createAutosave(
         // What the learner wrote while the server was storing the memory.
         write(send);
       },
-      failed: () => failed(wanted),
+      failed: (again) => failed(send, wanted, again),
     });
   }
 

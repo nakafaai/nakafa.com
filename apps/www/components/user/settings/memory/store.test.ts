@@ -76,7 +76,7 @@ describe("memory page store", () => {
   it("opens again with the words of a save that failed, and forgets them on close", () => {
     const store = createMemoryStore();
 
-    store.getState().reopen(memoryId("a"), grade);
+    store.getState().reopen(0, memoryId("a"), grade);
     expect(store.getState()).toMatchObject({
       draft: grade,
       open: true,
@@ -87,7 +87,7 @@ describe("memory page store", () => {
     store.getState().close();
     expect(store.getState().draft).toBeNull();
 
-    store.getState().reopen(null, plan);
+    store.getState().reopen(1, null, plan);
     expect(store.getState()).toMatchObject({
       draft: plan,
       open: true,
@@ -99,7 +99,7 @@ describe("memory page store", () => {
     const store = createMemoryStore();
 
     store.getState().openEdit(memoryId("b"));
-    store.getState().reopen(memoryId("a"), grade);
+    store.getState().reopen(0, memoryId("a"), grade);
 
     expect(store.getState()).toMatchObject({
       draft: null,
@@ -109,12 +109,27 @@ describe("memory page store", () => {
     });
   });
 
+  it("gives nothing back when the learner opened and closed another editor since the failed save", () => {
+    const store = createMemoryStore();
+
+    store.getState().openEdit(memoryId("b"));
+    store.getState().close();
+    store.getState().reopen(0, memoryId("a"), grade);
+
+    expect(store.getState()).toMatchObject({
+      draft: null,
+      open: false,
+      session: 1,
+      target: memoryId("b"),
+    });
+  });
+
   it("drops given-back words when the learner opens another editor", () => {
     const store = createMemoryStore();
 
-    store.getState().reopen(memoryId("a"), grade);
+    store.getState().reopen(0, memoryId("a"), grade);
     store.getState().close();
-    store.getState().reopen(null, plan);
+    store.getState().reopen(1, null, plan);
     store.getState().close();
     store.getState().openNew();
 

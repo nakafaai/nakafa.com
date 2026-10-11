@@ -54,6 +54,7 @@ export function useMemoryActions() {
   const other = useTranslations("Common")("action-error");
 
   const reopen = useMemoryPage((state) => state.reopen);
+  const session = useMemoryPage((state) => state.session);
 
   const addDraft = useMutation(nina.memory.add);
   const editDraft = useMutation(nina.memory.edit);
@@ -74,15 +75,14 @@ export function useMemoryActions() {
 
   /**
    * Sends one change from an event. `done` gets what the server answered. When
-   * the change fails, the learner is told, `failed` runs, and `retry` gives
-   * them back what they wrote while they can still try again.
+   * the change fails, the learner is told and `failed` runs with whether they
+   * can try the change again.
    */
   function settle<A, E>(
     send: () => Promise<Result.Result<A, E>>,
     after: {
       done?: (answer: A) => void;
-      failed?: () => void;
-      retry?: () => void;
+      failed?: (again: boolean) => void;
     } = {}
   ) {
     Effect.runFork(
@@ -91,12 +91,7 @@ export function useMemoryActions() {
         Effect.matchEffect({
           onFailure: (error) =>
             Effect.flatMap(reportMemoryFailure(error, messages), (again) =>
-              Effect.sync(() => {
-                after.failed?.();
-                if (again) {
-                  after.retry?.();
-                }
-              })
+              Effect.sync(() => after.failed?.(again))
             ),
           onSuccess: (answer) => Effect.sync(() => after.done?.(answer)),
         })
@@ -106,11 +101,16 @@ export function useMemoryActions() {
 
   /**
    * Writes a new memory in the learner's own words. `done` gets the id the
-   * server gave it, and `failed` runs when the server did not take it.
+   * server gave it. `failed` runs when the server did not take it, with
+   * whether the learner can try again. A caller that passes none gets the
+   * words back in the editor.
    */
   function add(
     draft: MemoryDraft,
-    after: { done?: (id: Memory["id"]) => void; failed?: () => void } = {}
+    after: {
+      done?: (id: Memory["id"]) => void;
+      failed?: (again: boolean) => void;
+    } = {}
   ) {
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
     const memory = learnerMemory(
@@ -124,18 +124,27 @@ export function useMemoryActions() {
         addDraft.withOptimisticUpdate((store) =>
           patch(store, (list) => addMemory(list, memory))
         )(draftArgs(draft)),
-      { ...after, retry: () => reopen(null, draft) }
+      {
+        ...after,
+        failed:
+          after.failed ??
+          ((again) => {
+            if (again) {
+              reopen(session, null, draft);
+            }
+          }),
+      }
     );
   }
 
   /**
-   * Rewrites one memory in the learner's own words. `done` runs when the
-   * server took them, and `failed` when it did not.
+   * Rewrites one memory in the learner's own words. `failed` runs when the
+   * server did not take them, with whether the learner can try again.
    */
   function edit(
     id: Memory["id"],
     draft: MemoryDraft,
-    after: { done?: () => void; failed?: () => void } = {}
+    after: { failed?: (again: boolean) => void } = {}
   ) {
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
@@ -144,7 +153,7 @@ export function useMemoryActions() {
         editDraft.withOptimisticUpdate((store) =>
           patch(store, (list) => editMemory(list, id, draft, now))
         )({ ...draftArgs(draft), id }),
-      { ...after, retry: () => reopen(id, draft) }
+      after
     );
   }
 
