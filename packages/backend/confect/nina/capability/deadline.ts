@@ -23,6 +23,16 @@ export const CAPABILITY_BUDGET = Duration.subtract(
 );
 
 /**
+ * How long after its start a turn's last capability must have ended: the whole
+ * turn less the same margin. The turn's own timer cuts everything when it
+ * fires, like a step's, so a capability late in a long turn ends before it.
+ */
+export const TURN_BUDGET = Duration.subtract(
+  Duration.millis(purposes.chat.timeout.totalMs),
+  STEP_MARGIN
+);
+
+/**
  * The chat step that holds the running capability. The step's timer started
  * with the step, and Nina's own model call, which wrote the tool call, has run
  * inside it since, so a capability counts its time from the start of its step
@@ -30,7 +40,11 @@ export const CAPABILITY_BUDGET = Duration.subtract(
  */
 export class ChatStep extends Context.Service<
   ChatStep,
-  { readonly startedAt: Effect.Effect<number> }
+  {
+    readonly startedAt: Effect.Effect<number>;
+    /** When the turn's own timer started, in clock milliseconds. */
+    readonly turnStartedAt: number;
+  }
 >()("@repo/backend/confect/nina/capability/deadline/ChatStep") {}
 
 /**
@@ -40,12 +54,14 @@ export class ChatStep extends Context.Service<
  * step replaces the mark.
  */
 export const makeChatStep = Effect.fn("nina.capability.chatStep")(function* () {
-  const began = yield* Ref.make(yield* Clock.currentTimeMillis);
+  const turnStartedAt = yield* Clock.currentTimeMillis;
+  const began = yield* Ref.make(turnStartedAt);
   return {
     begin: Effect.flatMap(Clock.currentTimeMillis, (now) =>
       Ref.set(began, now)
     ),
     startedAt: Ref.get(began),
+    turnStartedAt,
   };
 });
 
@@ -78,11 +94,12 @@ export const limitDeadline = Effect.fn("nina.capability.limitDeadline")(
 
 /**
  * Runs a capability under its deadline: the end of its chat step less
- * `STEP_MARGIN`, counted from the start of that step. Its own calls see the time
- * left through `CapabilityDeadline`, which ends `REPORT_MARGIN` before the run
- * does. A run still going at its deadline is interrupted, which aborts the model
- * calls it has in flight, and `timedOut` takes its place. A run whose step has
- * no time left never starts.
+ * `STEP_MARGIN`, counted from the start of that step, or the end of the turn
+ * less the same margin when that comes first. Its own calls see the time left
+ * through `CapabilityDeadline`, which ends `REPORT_MARGIN` before the run does.
+ * A run still going at its deadline is interrupted, which aborts the model
+ * calls it has in flight, and `timedOut` takes its place. A run whose step or
+ * turn has no time left never starts.
  */
 export const boundCapability = Effect.fn("nina.capability.bound")(function* <
   A,
@@ -93,7 +110,10 @@ export const boundCapability = Effect.fn("nina.capability.bound")(function* <
   R2,
 >(run: Effect.Effect<A, E, R>, timedOut: Effect.Effect<B, E2, R2>) {
   const step = yield* ChatStep;
-  const endsAt = (yield* step.startedAt) + Duration.toMillis(CAPABILITY_BUDGET);
+  const endsAt = Math.min(
+    (yield* step.startedAt) + Duration.toMillis(CAPABILITY_BUDGET),
+    step.turnStartedAt + Duration.toMillis(TURN_BUDGET)
+  );
   const now = yield* Clock.currentTimeMillis;
   if (now >= endsAt) {
     return yield* timedOut;

@@ -196,7 +196,10 @@ function createSourceReference(text: string, url: URL) {
  */
 function toNakafaAddress(link: ReturnType<typeof createSourceReference>) {
   const { hash, pathname, search } = new URL(link.href);
-  const address = new URL(`${SITE_ORIGIN}${pathname}${search}${hash}`);
+  const address = new URL(SITE_ORIGIN);
+  address.pathname = pathname;
+  address.search = search;
+  address.hash = hash;
   return { ...link, hostname: address.hostname, href: address.toString() };
 }
 /**

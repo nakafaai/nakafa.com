@@ -6,6 +6,7 @@ import {
   ChatStep,
   limitDeadline,
   makeChatStep,
+  TURN_BUDGET,
   timeLeft,
 } from "@repo/backend/confect/nina/capability/deadline";
 import { inNewChatStep, withTimeLeft } from "@repo/backend/test/nina/deadline";
@@ -82,6 +83,40 @@ describe("a capability run's deadline", () => {
       yield* TestClock.adjust("1 millis");
       expect(fiber.pollUnsafe()).toBeDefined();
       expect(yield* Fiber.join(fiber)).toBe("timed out");
+    })
+  );
+
+  it.effect(
+    "ends a capability late in a long turn before the turn's own timer fires",
+    () =>
+      Effect.gen(function* () {
+        const step = yield* makeChatStep();
+        // Earlier steps used the turn up to half a minute before its budget.
+        yield* TestClock.adjust(
+          Duration.subtract(TURN_BUDGET, Duration.seconds(30))
+        );
+        yield* step.begin;
+        const fiber = yield* startNeverEnding(step);
+        // The step alone would allow far longer than the turn has left.
+        yield* TestClock.adjust("29999 millis");
+        expect(fiber.pollUnsafe()).toBeUndefined();
+        yield* TestClock.adjust("1 millis");
+        expect(yield* Fiber.join(fiber)).toBe("timed out");
+      })
+  );
+
+  it.effect("starts no capability once the turn has no time left", () =>
+    Effect.gen(function* () {
+      const step = yield* makeChatStep();
+      yield* TestClock.adjust(TURN_BUDGET);
+      yield* step.begin;
+      const started = yield* Ref.make(false);
+      const outcome = yield* boundCapability(
+        Ref.set(started, true),
+        Effect.succeed("timed out")
+      ).pipe(Effect.provideService(ChatStep, step));
+      expect(outcome).toBe("timed out");
+      expect(yield* Ref.get(started)).toBe(false);
     })
   );
 

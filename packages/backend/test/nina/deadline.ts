@@ -31,8 +31,12 @@ export function neverAnswering() {
 
 /**
  * Runs an effect inside a chat step that begins the moment the effect reads it,
- * so a capability in it has its whole step.
+ * in a turn that begins now, so a capability in it has its whole step.
  */
-export const inNewChatStep = Effect.provideService(ChatStep, {
-  startedAt: Clock.currentTimeMillis,
-});
+export const inNewChatStep = Effect.provideServiceEffect(
+  ChatStep,
+  Effect.map(Clock.currentTimeMillis, (turnStartedAt) => ({
+    startedAt: Clock.currentTimeMillis,
+    turnStartedAt,
+  }))
+);
