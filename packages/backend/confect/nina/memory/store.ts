@@ -5,7 +5,10 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { readLearningPreferenceByUserId } from "@repo/backend/confect/learningPreferences/impl";
+import {
+  readLearningPreferenceByUserId,
+  setNinaMemoryCleared,
+} from "@repo/backend/confect/learningPreferences/impl";
 import { deleteKeys } from "@repo/backend/confect/nina/memory/keys";
 import { Array as Arr, Duration, Effect } from "effect";
 
@@ -20,29 +23,56 @@ type MemoryId = Docs["ninaMemories"]["_id"];
  */
 export const MEMORY_BATCH = 25;
 
-/** Whether the learner paused memory. Memory is on until the learner says otherwise. */
-export const readPaused = Effect.fn("nina.memory.store.paused")(function* (
+/**
+ * What the learner decided about their memories. `paused` is whether memory is
+ * paused, and memory is on until the learner says otherwise. `clearedAt` is the
+ * moment they last asked to delete every memory, or nothing when they never
+ * did: the memories confirmed at or before it are gone for every reader, though
+ * the batches that delete them may still run.
+ */
+export const readMemoryState = Effect.fn("nina.memory.store.state")(function* (
   userId: UserId
 ) {
   const preference = yield* readLearningPreferenceByUserId(userId).pipe(
     Effect.orDie
   );
-  return preference?.ninaMemoryPaused === true;
+  return {
+    clearedAt: preference?.ninaMemoryClearedAt,
+    paused: preference?.ninaMemoryPaused === true,
+  };
 });
 
 /**
- * Reads a learner's most recently confirmed memories, the newest first, at
- * most `limit`. No function reads all the memories of a learner.
+ * Whether the learner deleted a memory with "Delete all": it was confirmed at
+ * or before `clearedAt`. A memory written after the learner asked is confirmed
+ * later and stays.
+ */
+export function isCleared(
+  memory: Pick<Docs["ninaMemories"], "confirmedAt">,
+  clearedAt: number | undefined
+) {
+  return clearedAt !== undefined && memory.confirmedAt <= clearedAt;
+}
+
+/**
+ * Reads a learner's most recently confirmed memories that "Delete all" did not
+ * take (see `readMemoryState`), the newest first, at most `limit`. The newest
+ * come first, so what the learner deleted is the tail of the index and the
+ * range stops before it. No function reads all the memories of a learner.
  */
 export const readNewest = Effect.fn("nina.memory.store.newest")(function* (
   userId: UserId,
-  limit: number
+  limit: number,
+  clearedAt: number | undefined
 ) {
   return yield* (yield* DatabaseReader)
     .table("ninaMemories")
     .index(
       "by_userId_and_confirmedAt",
-      (query) => query.eq("userId", userId),
+      (query) => {
+        const own = query.eq("userId", userId);
+        return clearedAt === undefined ? own : own.gt("confirmedAt", clearedAt);
+      },
       "desc"
     )
     .take(limit)
@@ -62,6 +92,20 @@ export const readOwnMemory = Effect.fn("nina.memory.store.own")(function* (
       Effect.orDie
     );
   return memory?.userId === userId ? memory : null;
+});
+
+/**
+ * Reads one memory as the learner has it: nothing when it is gone, belongs to
+ * another learner, or was taken by "Delete all" (see `readMemoryState`), though
+ * the batches that delete it may still run.
+ */
+export const readKeptMemory = Effect.fn("nina.memory.store.kept")(function* (
+  userId: UserId,
+  memoryId: MemoryId,
+  clearedAt: number | undefined
+) {
+  const memory = yield* readOwnMemory(userId, memoryId);
+  return memory === null || isCleared(memory, clearedAt) ? null : memory;
 });
 
 /** Whether a situation's end date has passed. Other memories never end. */
@@ -131,6 +175,21 @@ export const drainMemories = Effect.fn("nina.memory.store.drain")(function* (
     );
   }
   return deleted;
+});
+
+/**
+ * Deletes every memory the learner has at `now`, which is what "Delete all"
+ * asks. The batches of `drainMemories` run one after another, so the learner's
+ * memory state first keeps the moment (`readMemoryState`). From that
+ * transaction on, every reader drops those memories, on every device and for
+ * Nina's next turn, until the batches have deleted them.
+ */
+export const clearMemories = Effect.fn("nina.memory.store.clear")(function* (
+  userId: UserId,
+  now: number
+) {
+  yield* setNinaMemoryCleared({ now, userId });
+  return yield* drainMemories(userId, now);
 });
 
 /** Deletes one batch of the memories whose end date is before `now`, and returns how many. */

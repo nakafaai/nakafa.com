@@ -15,7 +15,6 @@ const remove = Ref.getFunctionReference(memory.remove);
 const pause = Ref.getFunctionReference(memory.pause);
 const clear = Ref.getFunctionReference(memory.clear);
 const state = Ref.getFunctionReference(memory.state);
-const search = Ref.getFunctionReference(memory.search);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
@@ -261,13 +260,28 @@ describe("Nina memory writes", () => {
       NOW,
       NOW,
     ]);
-    for (const query of ["mapel", "trigonometry"]) {
-      expect(
-        Ref.decodeReturnsSync(
-          memory.search,
-          await f.owner.query(search, { query })
-        )
-      ).toEqual([expect.objectContaining({ text: "Belajar trigonometri" })]);
+    for (const text of ["mapel", "trigonometry"]) {
+      expect(await f.find({ limit: 5, text })).toEqual([
+        "Belajar trigonometri",
+      ]);
     }
+  });
+
+  it("refuses to edit a memory that Delete all took, though a batch still holds it, and leaves it as it is", async () => {
+    const f = await createMemoryTest();
+    const taken = await f.seed({ confirmedAt: 5, text: "Taken" });
+    const kept = await f.seed({ confirmedAt: 6, text: "Kept" });
+    await f.markCleared(5);
+    await expect(
+      f.owner.mutation(edit, { id: taken, text: "Too late" })
+    ).rejects.toMatchObject(rejected("missing"));
+    expect(
+      await f.owner.mutation(edit, { id: kept, text: "Edited" })
+    ).toBeNull();
+    expect(await f.texts()).toEqual(["Taken", "Edited"]);
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({ confirmedAt: 5 }),
+      expect.objectContaining({ confirmedAt: NOW }),
+    ]);
   });
 });

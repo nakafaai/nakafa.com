@@ -8,9 +8,9 @@ import { Array as Arr } from "effect";
 const memory = refs.public.nina.memory;
 const list = Ref.getFunctionReference(memory.list);
 const state = Ref.getFunctionReference(memory.state);
-const search = Ref.getFunctionReference(memory.search);
 const add = Ref.getFunctionReference(memory.add);
 const pause = Ref.getFunctionReference(memory.pause);
+const clear = Ref.getFunctionReference(memory.clear);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
 
@@ -46,15 +46,9 @@ async function pagesOf(learner: Learner, numItems: number) {
   return pages;
 }
 
-/** The words of each memory found, in the order the search returns them. */
-async function found(learner: Learner, query: string) {
-  return Arr.map(
-    Ref.decodeReturnsSync(
-      memory.search,
-      await learner.query(search, { query })
-    ),
-    (item) => item.text
-  );
+/** The words of each memory on the pages of a learner's list, newest first. */
+async function listed(learner: Learner, numItems: number) {
+  return Arr.map(Arr.flatten(await pagesOf(learner, numItems)), (m) => m.text);
 }
 
 describe("Nina memory page", () => {
@@ -65,14 +59,12 @@ describe("Nina memory page", () => {
       await f.t.query(list, { paginationOpts: { cursor: null, numItems: 10 } })
     ).toEqual({ continueCursor: "", isDone: true, page: [] });
     expect(await f.t.query(state, {})).toBeNull();
-    expect(await f.t.query(search, { query: "limit" })).toEqual([]);
   });
 
   it("shows a learner who has no memory an empty page that is done, and memory that is on", async () => {
     const f = await createMemoryTest();
     expect(await pageOf(f.owner, 10)).toMatchObject({ isDone: true, page: [] });
     expect(await f.owner.query(state, {})).toEqual({ paused: false });
-    expect(await found(f.owner, "limit")).toEqual([]);
   });
 
   it("adds memories as the learner's pure text, sealed at rest, and lists them opened, the newest first", async () => {
@@ -167,8 +159,6 @@ describe("Nina memory page", () => {
     expect(
       Arr.map((await pageOf(other.owner, 10)).page, (m) => m.text)
     ).toEqual(["Rahasia mereka limit"]);
-    expect(await found(f.owner, "limit")).toEqual(["Punyaku limit"]);
-    expect(await found(other.owner, "limit")).toEqual(["Rahasia mereka limit"]);
   });
 
   it("pages through 300 memories in order, newest confirmation first, and never more than 50 to a page", async () => {
@@ -193,59 +183,67 @@ describe("Nina memory page", () => {
     expect(Arr.map((await pageOf(f.owner, 10)).page, (m) => m.text)).toEqual([
       "Kept",
     ]);
-    expect(await found(f.owner, "kept")).toEqual(["Kept"]);
     await f.owner.mutation(pause, { paused: false });
     expect(await f.owner.query(state, {})).toEqual({ paused: false });
   });
 });
 
-describe("Nina memory page search", () => {
-  it("finds a memory by what the learner types, trimmed, and nothing by an empty search", async () => {
+describe("Nina memory page after Delete all", () => {
+  it("lists none of the memories that Delete all took, though a batch still holds them, and ends the list where they begin", async () => {
     const f = await createMemoryTest();
-    await f.seed({ text: "Kelas 12 IPA", title: "Sekolah" });
-    await f.seed({ text: "Ikut SNBT 2027" });
-    expect(await found(f.owner, "  sekolah  ")).toEqual(["Kelas 12 IPA"]);
-    expect(await found(f.owner, "snbt")).toEqual(["Ikut SNBT 2027"]);
-    expect(await found(f.owner, "")).toEqual([]);
-    expect(await found(f.owner, "   ")).toEqual([]);
+    await f.fill(8);
+    await f.markCleared(4);
+    // Memory 0 to 3 are confirmed at or before 4: only Memory 4 to 7 are left.
+    const first = await pageOf(f.owner, 3);
+    expect(Arr.map(first.page, (m) => m.text)).toEqual([
+      "Memory 7",
+      "Memory 6",
+      "Memory 5",
+    ]);
+    expect(first.isDone).toBe(false);
+    const second = await pageOf(f.owner, 3, first.continueCursor);
+    expect(Arr.map(second.page, (m) => m.text)).toEqual(["Memory 4"]);
+    expect(second.isDone).toBe(true);
+    expect(await listed(f.owner, 3)).toEqual([
+      "Memory 7",
+      "Memory 6",
+      "Memory 5",
+      "Memory 4",
+    ]);
   });
 
-  it("shows a found memory as the Memory page shows it", async () => {
+  it("lists an empty page that is done when every memory the learner has was taken", async () => {
     const f = await createMemoryTest();
-    const id = await f.seed({
-      author: "learner",
-      confirmedAt: 7,
-      text: "Kelas 12 IPA",
-      title: "Sekolah",
-    });
-    const [item, ...others] = Ref.decodeReturnsSync(
-      memory.search,
-      await f.owner.query(search, { query: "ipa" })
-    );
-    expect(others).toEqual([]);
-    expect(item).toEqual({
-      author: "learner",
-      confirmedAt: 7,
-      createdAt: expect.any(Number),
-      id,
-      text: "Kelas 12 IPA",
-      title: "Sekolah",
-    });
+    await f.fill(8);
+    await f.markCleared(8);
+    expect(await pageOf(f.owner, 3)).toMatchObject({ isDone: true, page: [] });
+    expect(await f.owner.query(state, {})).toEqual({ paused: false });
   });
 
-  it("accepts a search of 80 characters and refuses 81", async () => {
+  it("ends the list at the first page that meets the memories Delete all took, and lists the memory written right after", async () => {
     const f = await createMemoryTest();
-    // The test names the numbers, not the constant, so a change of the limit fails it.
-    expect(await found(f.owner, "x".repeat(80))).toEqual([]);
-    await expect(
-      f.owner.query(search, { query: "x".repeat(81) })
-    ).rejects.toThrow();
+    await f.fill(60);
+    await f.owner.mutation(clear, {});
+    // The first batch deleted 25 and 35 wait for the batches: a page of ten
+    // meets them at once, so the list ends there with nothing on it.
+    expect(await f.stored()).toHaveLength(35);
+    expect(await pageOf(f.owner, 10)).toMatchObject({ isDone: true, page: [] });
+    vi.setSystemTime(NOW + 1);
+    await f.owner.mutation(add, { text: "Written after" });
+    expect(await listed(f.owner, 10)).toEqual(["Written after"]);
   });
 
-  it("returns at most 30 memories", async () => {
+  it("keeps the memories of another learner whole", async () => {
     const f = await createMemoryTest();
-    await f.fill(24, { text: "alfa" });
-    await f.fill(24, { text: "beta" });
-    expect(Arr.length(await found(f.owner, "alfa beta"))).toBe(30);
+    const other = await f.stranger();
+    await f.fill(3);
+    await f.fill(3, { userId: other.userId });
+    await f.markCleared(3);
+    expect(await listed(f.owner, 10)).toEqual([]);
+    expect(await listed(other.owner, 10)).toEqual([
+      "Memory 2",
+      "Memory 1",
+      "Memory 0",
+    ]);
   });
 });

@@ -2,16 +2,19 @@ import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MEMORY_BATCH } from "@repo/backend/confect/nina/memory/store";
+import type { NinaLearner } from "@repo/backend/confect/nina/memory.spec";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { Array as Arr, Order } from "effect";
 
 const memory = refs.public.nina.memory;
 const state = Ref.getFunctionReference(memory.state);
+const list = Ref.getFunctionReference(memory.list);
 const remove = Ref.getFunctionReference(memory.remove);
 const pause = Ref.getFunctionReference(memory.pause);
 const clear = Ref.getFunctionReference(memory.clear);
 const add = Ref.getFunctionReference(memory.add);
 const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
+const known = Ref.getFunctionReference(refs.internal.nina.memory.known);
 const drain = Ref.getFunctionReference(refs.internal.nina.memory.drain);
 const expire = Ref.getFunctionReference(refs.internal.nina.memory.expire);
 
@@ -42,6 +45,39 @@ async function storedIds(f: Awaited<ReturnType<typeof createMemoryTest>>) {
     Arr.map(await f.stored(), (row) => row._id),
     Order.String
   );
+}
+
+/** The words of each memory a turn tells about, in the order they are told. */
+function words(notes: (typeof NinaLearner.Type)["prompt"]) {
+  return Arr.map(notes, (note) => note.text);
+}
+
+/**
+ * What every reader of a learner's memories returns, as the words of the
+ * memories: the Memory page's list, the memories a turn starts with, the ones
+ * the capture call reads, and the search they use.
+ */
+async function readers(f: Awaited<ReturnType<typeof createMemoryTest>>) {
+  const userId = f.identity.userId;
+  const page = Ref.decodeReturnsSync(
+    memory.list,
+    await f.owner.query(list, {
+      paginationOpts: { cursor: null, numItems: 50 },
+    })
+  );
+  const turn = await f.t.query(read, { now: NOW, topics: [], userId });
+  const capture = await f.t.query(known, {
+    message: "memory",
+    now: NOW,
+    topics: [],
+    userId,
+  });
+  return {
+    capture: words(capture.known),
+    found: await f.find({ limit: 30, text: "memory" }),
+    listed: Arr.map(page.page, (item) => item.text),
+    turn: words(turn.prompt),
+  };
 }
 
 describe("Nina memory removal", () => {
@@ -115,6 +151,93 @@ describe("Nina memory removal", () => {
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     expect(await f.texts()).toEqual(["Written after"]);
     expect(await keyedMemories(f)).toEqual([kept]);
+  });
+
+  it("hides sixty memories from every reader the moment the learner asks, shows the memory written right after, and leaves only that one when the batches have run", async () => {
+    const f = await createMemoryTest();
+    await f.fill(60);
+    expect(await f.owner.mutation(clear, {})).toBeNull();
+    // The first batch deleted 25 memories and 35 wait for the batches, yet no
+    // reader returns one of them.
+    expect(await f.stored()).toHaveLength(35);
+    expect(await readers(f)).toEqual({
+      capture: [],
+      found: [],
+      listed: [],
+      turn: [],
+    });
+    vi.setSystemTime(NOW + 1);
+    const kept = await f.owner.mutation(add, { text: "Written after memory" });
+    const after = ["Written after memory"];
+    expect(await readers(f)).toEqual({
+      capture: after,
+      found: after,
+      listed: after,
+      turn: after,
+    });
+    await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    expect(await f.texts()).toEqual(after);
+    expect(await keyedMemories(f)).toEqual([kept]);
+    expect(await readers(f)).toEqual({
+      capture: after,
+      found: after,
+      listed: after,
+      turn: after,
+    });
+  });
+
+  it("keeps the moment of the newest request, so an older one never shows what a newer one hid", async () => {
+    const f = await createMemoryTest();
+    const preferences = () =>
+      f.t.query((ctx) => ctx.db.query("learningPreferences").collect());
+    expect(await preferences()).toEqual([]);
+    await f.owner.mutation(clear, {});
+    expect(await preferences()).toEqual([
+      expect.objectContaining({ ninaMemoryClearedAt: NOW, updatedAt: NOW }),
+    ]);
+    vi.setSystemTime(NOW + 1000);
+    await f.owner.mutation(clear, {});
+    expect(await preferences()).toEqual([
+      expect.objectContaining({
+        ninaMemoryClearedAt: NOW + 1000,
+        updatedAt: NOW + 1000,
+      }),
+    ]);
+    // A request that carries an earlier time moves nothing back.
+    vi.setSystemTime(NOW - 1000);
+    await f.owner.mutation(clear, {});
+    expect(await preferences()).toEqual([
+      expect.objectContaining({ ninaMemoryClearedAt: NOW + 1000 }),
+    ]);
+  });
+
+  it("marks the request on the preference row the learner already has, and keeps what that row says", async () => {
+    const f = await createMemoryTest();
+    await f.t.mutation((ctx) =>
+      ctx.db.insert("learningPreferences", {
+        preferredTryoutCountryKey: "indonesia",
+        updatedAt: 1,
+        userId: f.identity.userId,
+      })
+    );
+    await f.owner.mutation(pause, { paused: true });
+    await f.owner.mutation(clear, {});
+    expect(
+      await f.t.query((ctx) => ctx.db.query("learningPreferences").collect())
+    ).toEqual([
+      expect.objectContaining({
+        ninaMemoryClearedAt: NOW,
+        ninaMemoryPaused: true,
+        preferredTryoutCountryKey: "indonesia",
+      }),
+    ]);
+    // Resuming memory keeps the request's time.
+    await f.owner.mutation(pause, { paused: false });
+    const [row] = await f.t.query((ctx) =>
+      ctx.db.query("learningPreferences").collect()
+    );
+    expect(row).toMatchObject({ ninaMemoryClearedAt: NOW });
+    expect(row?.ninaMemoryPaused).toBeUndefined();
   });
 
   it("stops after a batch that was exactly full, when none is left", async () => {

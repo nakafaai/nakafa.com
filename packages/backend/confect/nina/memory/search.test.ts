@@ -136,7 +136,7 @@ describe("memory search", () => {
       "Ulangan harian",
       "Ulangan baru",
     ]);
-    // The Memory page gives no time: it shows what is stored, as its list does.
+    // Without a time, nothing is left out for having ended.
     expect(await f.find({ limit: 5, text: "ulangan" })).toEqual([
       "Ulangan harian",
       "Ulangan baru",
@@ -181,6 +181,22 @@ describe("memory search", () => {
     const rows = await f.keys();
     expect(Arr.map(rows, (row) => row.memoryId)).not.toContain(gone);
     expect(rows).toHaveLength(2);
+  });
+
+  it("never finds a memory that Delete all took, though a batch still holds it, and finds one confirmed after", async () => {
+    const f = await createMemoryTest();
+    await f.seed({ confirmedAt: 1, text: "Limit lama", topics: [PATH] });
+    await f.seed({ confirmedAt: 5, text: "Limit tengah" });
+    await f.markCleared(5);
+    await f.seed({ confirmedAt: 6, text: "Limit baru" });
+    expect(await f.find({ limit: 5, text: "limit", topics: [PATH] })).toEqual([
+      "Limit baru",
+    ]);
+    // When the learner has nothing left, the search does not look for keys.
+    await f.markCleared(6);
+    expect(await f.find({ limit: 5, text: "limit", topics: [PATH] })).toEqual(
+      []
+    );
   });
 
   it("follows an edit: a word that went finds nothing, and a word that came is found", async () => {
@@ -299,5 +315,17 @@ describe("memory search for the capture write", () => {
     expect(await f.stored()).toContainEqual(
       expect.objectContaining({ _id: id, confirmedAt: NOW })
     );
+  });
+
+  it("writes a new memory instead of confirming one that Delete all took, which a confirmation would bring back", async () => {
+    const f = await createCaptureTest();
+    await f.seed({ confirmedAt: 1, kind: "level", text: "Kelas 12 IPA." });
+    await f.markCleared(NOW - 1);
+    expect(await f.run([candidate()], { seen: [] })).toBe(1);
+    const rows = await f.stored();
+    expect(rows).toHaveLength(2);
+    // The memory the learner deleted keeps its time, so the batches still reach it.
+    expect(rows[0]).toMatchObject({ confirmedAt: 1 });
+    expect(rows[1]).toMatchObject({ author: "nina", confirmedAt: NOW });
   });
 });

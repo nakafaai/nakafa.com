@@ -4,12 +4,14 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { setNinaMemoryCleared } from "@repo/backend/confect/learningPreferences/impl";
 import { syncKeys, wordKey } from "@repo/backend/confect/nina/memory/keys";
 import {
   MEMORY_FIELD,
   TITLE_FIELD,
 } from "@repo/backend/confect/nina/memory/seal";
 import { searchMemories } from "@repo/backend/confect/nina/memory/search";
+import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
 import {
   MEMORY_KNOWN_LIMIT,
   type NinaMemory,
@@ -224,19 +226,33 @@ export function memoryTools(f: NinaTest) {
   ) => f.t.mutation((ctx) => run(ctx, effect));
 
   /**
+   * Records that the learner asked to delete every memory at `now`, as `clear`
+   * does before its batches run, and deletes nothing. The memories the learner
+   * had stay stored, as they do until the batches have run.
+   */
+  const markCleared = (now: number, userId: UserId = f.identity.userId) =>
+    execute(setNinaMemoryCleared({ now, userId }));
+
+  /**
    * The words of the memories that the search finds for a learner, in the order
-   * it returns them.
+   * it returns them. Like every caller of the search, it first reads what the
+   * learner deleted with "Delete all".
    */
   const find = (
-    options: Omit<Parameters<typeof searchMemories>[0], "userId"> & {
+    options: Omit<
+      Parameters<typeof searchMemories>[0],
+      "clearedAt" | "userId"
+    > & {
       readonly userId?: UserId;
     }
   ) =>
     execute(
-      Effect.map(
-        searchMemories({ userId: f.identity.userId, ...options }),
-        Arr.map((memory) => memory.text)
-      )
+      Effect.gen(function* () {
+        const userId = options.userId ?? f.identity.userId;
+        const { clearedAt } = yield* readMemoryState(userId);
+        const found = yield* searchMemories({ ...options, clearedAt, userId });
+        return Arr.map(found, (memory) => memory.text);
+      })
     );
 
   /** The key a learner's index holds for one word, as the product makes it. */
@@ -252,6 +268,7 @@ export function memoryTools(f: NinaTest) {
     fill,
     find,
     keys,
+    markCleared,
     openLesson,
     seed,
     stored,

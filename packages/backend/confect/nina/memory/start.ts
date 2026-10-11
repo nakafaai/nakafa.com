@@ -21,14 +21,18 @@ const FILL_WINDOW = MEMORY_START_LIMIT * 8;
  * are not there yet and have not ended. The learner may have many more. The
  * search reads at most 218 documents, the fill looks at the newest 64 and opens
  * only the memories it takes, and the learner's key is read once, so this reads
- * at most 283 documents.
+ * at most 283 documents. `clearedAt` is the moment the learner last asked to
+ * delete every memory, or nothing: neither the search nor the fill meets the
+ * memories that request took.
  */
 export const startMemories = Effect.fn("nina.memory.start")(function* (
   userId: Docs["users"]["_id"],
   topics: readonly string[],
-  now: number
+  now: number,
+  clearedAt: number | undefined
 ) {
   const found = yield* searchMemories({
+    clearedAt,
     limit: MEMORY_START_LIMIT,
     now,
     topics,
@@ -41,7 +45,7 @@ export const startMemories = Effect.fn("nina.memory.start")(function* (
   const taken = HashSet.fromIterable(Arr.map(found, (memory) => memory._id));
   const recent = Arr.take(
     Arr.filter(
-      yield* readNewest(userId, FILL_WINDOW),
+      yield* readNewest(userId, FILL_WINDOW, clearedAt),
       (memory) => !(hasEnded(memory, now) || HashSet.has(taken, memory._id))
     ),
     places

@@ -221,3 +221,26 @@ export const setNinaMemoryPaused = Effect.fn(
     updatedAt: now,
   });
 }, Effect.orDie);
+
+/**
+ * Marks that the current user asked to delete every Nina memory at `now`. The
+ * mark only moves forward, so an older request never shows what a newer one
+ * hid. The row is created when the learner has none. The caller declares no
+ * persistence error, so a failed read or write dies.
+ */
+export const setNinaMemoryCleared = Effect.fn(
+  "learningPreferences.setNinaMemoryCleared"
+)(function* ({ now, userId }: { now: number; userId: Id<"users"> }) {
+  const writer = yield* DatabaseWriter;
+  const current = yield* readLearningPreferenceByUserId(userId);
+  if (!current) {
+    yield* writer
+      .table("learningPreferences")
+      .insert({ ninaMemoryClearedAt: now, updatedAt: now, userId });
+    return;
+  }
+  yield* writer.table("learningPreferences").patch(current._id, {
+    ninaMemoryClearedAt: Math.max(current.ninaMemoryClearedAt ?? now, now),
+    updatedAt: now,
+  });
+}, Effect.orDie);

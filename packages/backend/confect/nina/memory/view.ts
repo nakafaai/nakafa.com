@@ -6,11 +6,12 @@ import {
   type Opened,
   openMemories,
 } from "@repo/backend/confect/nina/memory/seal";
-import { searchMemories } from "@repo/backend/confect/nina/memory/search";
-import { readPaused } from "@repo/backend/confect/nina/memory/store";
+import {
+  isCleared,
+  readMemoryState,
+} from "@repo/backend/confect/nina/memory/store";
 import spec, {
   MEMORY_PAGE_LIMIT,
-  MEMORY_SEARCH_LIMIT,
 } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Effect } from "effect";
 
@@ -34,6 +35,13 @@ function toView(memory: Opened) {
  * confirmed first, with their titles and words opened. A page holds at most
  * `MEMORY_PAGE_LIMIT` memories, however many the browser asks for. A visitor
  * gets an empty page.
+ *
+ * The memories that "Delete all" took (see `readMemoryState`) are the tail of
+ * the list, because it is ordered by confirmation. A page that reaches them
+ * stops before them and ends the list there, so the list shows none of them
+ * while the batches that delete them still run. The index range stays the same
+ * whether or not the learner ever asked, because the cursors of the pages a
+ * browser holds belong to that range.
  */
 export const list = FunctionImpl.make(
   schema,
@@ -45,6 +53,7 @@ export const list = FunctionImpl.make(
       return { continueCursor: "", isDone: true, page: [] };
     }
     const userId = user.appUser._id;
+    const { clearedAt } = yield* readMemoryState(userId);
     const result = yield* (yield* DatabaseReader)
       .table("ninaMemories")
       .index(
@@ -57,9 +66,14 @@ export const list = FunctionImpl.make(
         numItems: Math.min(paginationOpts.numItems, MEMORY_PAGE_LIMIT),
       })
       .pipe(Effect.orDie);
+    const kept = Arr.takeWhile(
+      result.page,
+      (memory) => !isCleared(memory, clearedAt)
+    );
     return {
       ...result,
-      page: Arr.map(yield* openMemories(userId, result.page), toView),
+      isDone: result.isDone || Arr.length(kept) < Arr.length(result.page),
+      page: Arr.map(yield* openMemories(userId, kept), toView),
     };
   })
 );
@@ -71,32 +85,8 @@ export const state = FunctionImpl.make(
   "state",
   Effect.fn("nina.memory.state")(function* () {
     const user = yield* getOptionalAppUserForRead();
-    return user ? { paused: yield* readPaused(user.appUser._id) } : null;
-  })
-);
-
-/**
- * The memories that match what the learner typed on the Memory page, the best
- * first, at most `MEMORY_SEARCH_LIMIT`. An empty search and a visitor get none.
- * A search finds memories while memory is paused, because the learner manages
- * them there.
- */
-export const search = FunctionImpl.make(
-  schema,
-  spec,
-  "search",
-  Effect.fn("nina.memory.search")(function* ({ query }) {
-    const user = yield* getOptionalAppUserForRead();
-    if (!user) {
-      return [];
-    }
-    return Arr.map(
-      yield* searchMemories({
-        limit: MEMORY_SEARCH_LIMIT,
-        text: query,
-        userId: user.appUser._id,
-      }),
-      toView
-    );
+    return user
+      ? { paused: (yield* readMemoryState(user.appUser._id)).paused }
+      : null;
   })
 );

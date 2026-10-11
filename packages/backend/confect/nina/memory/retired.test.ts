@@ -13,6 +13,7 @@ const enable = Ref.getFunctionReference(memory.enable);
 const disable = Ref.getFunctionReference(memory.disable);
 const forget = Ref.getFunctionReference(memory.forget);
 const state = Ref.getFunctionReference(memory.state);
+const list = Ref.getFunctionReference(memory.list);
 const pause = Ref.getFunctionReference(memory.pause);
 
 beforeEach(() => {
@@ -47,12 +48,18 @@ describe("the settings card of a browser tab opened before October 2026", () => 
     expect(await other.owner.query(get, {})).toEqual({ facts: [] });
   });
 
-  it("deletes the memories in batches, as the clear of the Memory page does", async () => {
+  it("deletes the memories in batches, as the clear of the Memory page does, and hides them at once", async () => {
     const f = await createMemoryTest();
     await f.fill(MEMORY_BATCH + 10);
     expect(await f.owner.mutation(disable, {})).toBeNull();
     // One batch at once, and the rest by itself.
     expect(await f.stored()).toHaveLength(10);
+    // The ten that wait for the batches are listed nowhere.
+    expect(
+      await f.owner.query(list, {
+        paginationOpts: { cursor: null, numItems: 50 },
+      })
+    ).toMatchObject({ isDone: true, page: [] });
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     expect(await f.stored()).toEqual([]);
     expect(await f.keys()).toEqual([]);

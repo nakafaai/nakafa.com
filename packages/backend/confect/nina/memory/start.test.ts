@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { startMemories } from "@repo/backend/confect/nina/memory/start";
+import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { Array as Arr, Effect } from "effect";
 
@@ -13,16 +14,26 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-/** The words of the memories a turn starts with for these topics, in order. */
+/**
+ * The words of the memories a turn starts with for these topics, in order. A
+ * turn first reads what the learner deleted with "Delete all", and so does
+ * this.
+ */
 function started(
   f: Awaited<ReturnType<typeof createMemoryTest>>,
   topics: readonly string[]
 ) {
   return f.execute(
-    Effect.map(
-      startMemories(f.identity.userId, topics, NOW),
-      Arr.map((memory) => memory.text)
-    )
+    Effect.gen(function* () {
+      const { clearedAt } = yield* readMemoryState(f.identity.userId);
+      const memories = yield* startMemories(
+        f.identity.userId,
+        topics,
+        NOW,
+        clearedAt
+      );
+      return Arr.map(memories, (memory) => memory.text);
+    })
   );
 }
 
@@ -99,8 +110,28 @@ describe("memories a turn starts with", () => {
     const f = await createMemoryTest();
     const other = await f.stranger();
     await f.seed({ text: "Not theirs", topics: [LESSON] });
-    expect(await f.execute(startMemories(other.userId, [LESSON], NOW))).toEqual(
-      []
-    );
+    expect(
+      await f.execute(startMemories(other.userId, [LESSON], NOW, undefined))
+    ).toEqual([]);
+  });
+
+  it("starts with neither the page's memories nor the newest that the learner deleted with Delete all", async () => {
+    const f = await createMemoryTest();
+    await f.seed({
+      confirmedAt: 1,
+      text: "About the lesson",
+      topics: [LESSON],
+    });
+    await f.fill(10);
+    // The learner asked at 6, and no batch has run yet.
+    await f.markCleared(6);
+    // Memories 0 to 5 are confirmed at or before 6, and the lesson's memory is
+    // older still: the learner deleted them. The turn starts with what is left.
+    expect(await started(f, [LESSON])).toEqual([
+      "Memory 9",
+      "Memory 8",
+      "Memory 7",
+      "Memory 6",
+    ]);
   });
 });
