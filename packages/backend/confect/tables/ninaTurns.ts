@@ -5,12 +5,19 @@ import { NinaTurn } from "@repo/backend/confect/nina/turns.spec";
  * A turn's `phase` is "active" exactly while it is queued or running. The
  * `by_phase` range therefore finds every open turn for the recovery sweep, and
  * `by_userId_and_phase` finds one learner's open turns at admission, to settle
- * the ones they stopped and to count the rest. `by_chatId_and_retryOf` finds
- * the turns that asked one question again, however far apart they are.
+ * the ones they stopped and to count the rest.
+ * `by_chatId_and_retryOf_and_state_status_and_order` finds the newest complete
+ * turn that asked one question again in one read, however far apart the
+ * askings are and however many of them failed or were stopped.
  */
 export default Table.make(() => NinaTurn)
   .index("by_userId_and_requestId", ["userId", "requestId"])
   .index("by_chatId_and_order", ["chatId", "order"])
   .index("by_phase", ["phase"])
   .index("by_userId_and_phase", ["userId", "phase"])
-  .index("by_chatId_and_retryOf", ["chatId", "retryOf"]);
+  .index("by_chatId_and_retryOf_and_state_status_and_order", [
+    "chatId",
+    "retryOf",
+    "state.status",
+    "order",
+  ]);

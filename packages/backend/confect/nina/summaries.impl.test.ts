@@ -103,7 +103,7 @@ describe("Nina turns after the summary", () => {
     );
   });
 
-  it("lists the complete turns that asked a question again, and no other", async () => {
+  it("lists the newest complete turn that asked each question again, and no other", async () => {
     const { t, chatId } = await createNinaTest({
       history: [
         {},
@@ -121,11 +121,9 @@ describe("Nina turns after the summary", () => {
       { order: 2, retryOf: 0 },
       { order: 4, retryOf: 1 },
     ]);
+    // One question, one turn: the newest complete asking stands for the rest.
     expect(await t.query(asked, { before: 6, chatId, questions: [0] })).toEqual(
-      [
-        { order: 5, retryOf: 0 },
-        { order: 2, retryOf: 0 },
-      ]
+      [{ order: 5, retryOf: 0 }]
     );
     // A question nobody asked again, and no question at all.
     expect(await t.query(asked, { before: 6, chatId, questions: [4] })).toEqual(
@@ -134,6 +132,19 @@ describe("Nina turns after the summary", () => {
     expect(await t.query(asked, { before: 6, chatId, questions: [] })).toEqual(
       []
     );
+  });
+
+  it("finds a complete retry behind any number of stopped ones", async () => {
+    const { t, chatId } = await createNinaTest({
+      history: [
+        {},
+        { retryOf: 0 },
+        ...Arr.makeBy(20, () => ({ cancelled: true, retryOf: 0 })),
+      ],
+    });
+    expect(
+      await t.query(asked, { before: 22, chatId, questions: [0] })
+    ).toEqual([{ order: 1, retryOf: 0 }]);
   });
 
   it("skips a turn that is still running", async () => {

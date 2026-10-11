@@ -8,7 +8,7 @@ import {
 import spec, {
   SUMMARY_FOLD_LIMIT,
 } from "@repo/backend/confect/nina/summaries.spec";
-import { Array as Arr, Clock, Effect, Layer } from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option } from "effect";
 
 /** Finds one chat's summary document, when the chat has one. */
 const findSummary = Effect.fn("nina.summaries.find")(function* (
@@ -98,11 +98,13 @@ const uncovered = FunctionImpl.make(
 );
 
 /**
- * Lists the complete turns before the order `before` that asked one of
- * `questions` again, wherever they are in the chat. A fold asks this for the
- * questions of the turns it is about to fold, so an answer that a much later
- * retry replaced never reaches the summary. Each question reads its newest
- * retries, at most `SUMMARY_FOLD_LIMIT`.
+ * Lists, for each of `questions`, the newest complete turn before the order
+ * `before` that asked it again, wherever it is in the chat. A fold asks this
+ * for the questions of the turns it is about to fold, so an answer that a much
+ * later retry replaced never reaches the summary. The index holds the status
+ * and the order, so each question costs one document, however often the
+ * learner asked it again and however many of those turns failed or were
+ * stopped.
  */
 const asked = FunctionImpl.make(
   schema,
@@ -110,29 +112,28 @@ const asked = FunctionImpl.make(
   "asked",
   Effect.fn("nina.summaries.asked")(function* ({ before, chatId, questions }) {
     const reader = yield* DatabaseReader;
-    const retries = yield* Effect.forEach(questions, (question) =>
+    const newest = yield* Effect.forEach(questions, (question) =>
       reader
         .table("ninaTurns")
         .index(
-          "by_chatId_and_retryOf",
-          (index) => index.eq("chatId", chatId).eq("retryOf", question),
+          "by_chatId_and_retryOf_and_state_status_and_order",
+          (index) =>
+            index
+              .eq("chatId", chatId)
+              .eq("retryOf", question)
+              .eq("state.status", "complete")
+              .lt("order", before),
           "desc"
         )
-        .take(SUMMARY_FOLD_LIMIT)
+        .first()
         .pipe(
           Effect.orDie,
           Effect.map(
-            Arr.flatMap((turn) =>
-              turn.phase === "settled" &&
-              turn.state.status === "complete" &&
-              turn.order < before
-                ? [{ order: turn.order, retryOf: question }]
-                : []
-            )
+            Option.map((turn) => ({ order: turn.order, retryOf: question }))
           )
         )
     );
-    return Arr.flatten(retries);
+    return Arr.getSomes(newest);
   })
 );
 
