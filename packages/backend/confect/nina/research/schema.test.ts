@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   ResearchOutputSchema,
+  researchOutputSchema,
   ScrapeInputSchema,
   WebSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Result, Schema } from "effect";
 
 describe("research schema", () => {
@@ -112,5 +114,57 @@ describe("research schema", () => {
       limitations: ["No retrieved direct source supported a citeable claim."],
     });
     expect(Result.isSuccess(valid)).toBe(true);
+  });
+  it("tells the synthesis model to return the closest thing, scoped, and to always name what the sources do not cover", async () => {
+    const jsonSchema = await researchOutputSchema.jsonSchema;
+    expect(jsonSchema).toMatchObject({
+      properties: {
+        findings: {
+          description: expect.stringContaining(
+            "what the sources state about the closest thing to the task"
+          ),
+          items: {
+            properties: {
+              text: {
+                description: expect.stringContaining(
+                  "say exactly what it covers, such as its year or version"
+                ),
+              },
+            },
+          },
+        },
+        limitations: {
+          description: expect.stringContaining(
+            "When a finding covers only the closest thing to the task, always include one limitation that names the part of the task the collected sources do not cover."
+          ),
+        },
+      },
+    });
+  });
+  it("makes saying what the collected sources cover and do not state the one exception to the found and absence bans, stated after them", async () => {
+    const json = encodeJsonText(await researchOutputSchema.jsonSchema);
+    expect(json).toContain("Do not use found or not-found wording.");
+    expect(json).toContain("Do not make absence claims.");
+    expect(json).toContain(
+      "Saying what the collected sources cover and do not state is the one exception to both: it describes only these sources."
+    );
+    expect(json).toContain("Never widen it into a claim about the world.");
+    expect(json.indexOf("is the one exception to both")).toBeGreaterThan(
+      json.indexOf("Do not make absence claims.")
+    );
+  });
+  it("does not limit a limitation to what could not be established, so a statement of coverage is not forbidden", async () => {
+    const json = encodeJsonText(await researchOutputSchema.jsonSchema);
+    expect(json).toContain(
+      "Describe what this retrieval attempt could not establish."
+    );
+    expect(json).not.toContain("Describe only what");
+  });
+  it("lets the synthesis model return an empty findings array only when no source states the task or its closest thing", async () => {
+    const json = encodeJsonText(await researchOutputSchema.jsonSchema);
+    expect(json).toContain(
+      "Use an empty array only when no collected source states anything about the task or the closest thing to it."
+    );
+    expect(json).not.toContain("direct citation evidence is unavailable");
   });
 });
