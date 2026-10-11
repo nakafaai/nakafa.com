@@ -115,10 +115,11 @@ describe("native Nina stop and resend", () => {
       expect(admitted.chats).toHaveLength(1);
       expect(admitted.chats[0]?.activeTurnId).toBe(next.turnId);
       expect(admitted.turns).toHaveLength(2);
+      // The turn finished when the learner stopped it, however late it settles.
       expect(admitted.turns[0]).toMatchObject({
         _id: f.turnId,
         phase: "settled",
-        state: { status: "cancelled", finishedAt: NOW + 1000 },
+        state: { status: "cancelled", finishedAt: NOW },
       });
       expect(admitted.turns[0]).not.toHaveProperty("cancelRequestedAt");
       expect(admitted.turns[1]).toMatchObject({
@@ -193,34 +194,105 @@ describe("native Nina stop and resend", () => {
     expect(state.user?.credits).toBe(20);
   });
 
-  it("settles a stopped turn before it counts the open turns, so the limit still holds around it", async () => {
+  it("settles a stopped turn when the next prompt starts a new chat, so the credits it held are free for that prompt", async () => {
     const f = await fixture();
-    await f.setCredits(30);
+    await f.setCredits(0);
     await f.t.mutation(claim, { turnId: f.turnId });
     await f.owner.mutation(cancel, { chatId: f.chatId });
-    await f.owner.mutation(start, { ...args, requestId: "other-chat" });
 
-    // The stopped turn and the other chat's turn are the two open turns. The
-    // next prompt in the stopped turn's chat settles the first one, so it fits.
-    await f.owner.mutation(start, {
-      ...args,
-      requestId: "same-chat",
-      chatId: f.chatId,
-    });
+    // The stopped turn holds the only credits the learner has, and the next
+    // prompt goes to a chat of its own.
+    vi.setSystemTime(NOW + 1000);
+    const next = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, args)
+    );
+    const state = await f.inspect();
+    expect(next.chatId).not.toBe(f.chatId);
+    expect(state.turns).toMatchObject([
+      {
+        _id: f.turnId,
+        phase: "settled",
+        state: { status: "cancelled", finishedAt: NOW },
+      },
+      { _id: next.turnId, phase: "active", state: { status: "queued" } },
+    ]);
+    expect(state.chats[0]?.activeTurnId).toBeUndefined();
+    expect(state.chats[1]?.activeTurnId).toBe(next.turnId);
+    expect(state.user?.credits).toBe(0);
+    expect(Arr.map(state.ledger, (row) => row.type)).toEqual([
+      "usage",
+      "refund",
+      "usage",
+    ]);
+  });
+
+  it("settles every turn the learner stopped, in whichever chat it ran, and pays each hold back once", async () => {
+    const f = await fixture();
+    await f.setCredits(10);
+    const other = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, { ...args, requestId: "other-chat" })
+    );
+    await f.t.mutation(claim, { turnId: f.turnId });
+    await f.t.mutation(claim, { turnId: other.turnId });
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    await f.owner.mutation(cancel, { chatId: other.chatId });
+
+    // Both stopped turns are the learner's two open turns, and each holds five
+    // credits. The next prompt settles both before it counts or holds.
+    await f.owner.mutation(start, { ...args, requestId: "next" });
     const state = await f.inspect();
     expect(
       Arr.map(state.turns, (turn) => [turn.phase, turn.state.status])
     ).toEqual([
       ["settled", "cancelled"],
-      ["active", "queued"],
+      ["settled", "cancelled"],
       ["active", "queued"],
     ]);
-
-    // Two turns are open again, so one more is refused as before.
-    await expect(
-      f.owner.mutation(start, { ...args, requestId: "third" })
-    ).rejects.toMatchObject({ data: { code: "RATE_LIMITED" } });
+    expect(state.user?.credits).toBe(10);
+    expect(
+      Arr.map(
+        Arr.filter(state.ledger, (row) => row.type === "refund"),
+        (row) => row.balanceAfter
+      )
+    ).toEqual([10, 15]);
   });
+
+  it.each([
+    ["in the stopped turn's chat", true],
+    ["in a new chat", false],
+  ])(
+    "settles a stopped turn before it counts the open turns for a prompt %s, so the limit still holds around it",
+    async (_where, sameChat) => {
+      const f = await fixture();
+      await f.setCredits(30);
+      await f.t.mutation(claim, { turnId: f.turnId });
+      await f.owner.mutation(cancel, { chatId: f.chatId });
+      await f.owner.mutation(start, { ...args, requestId: "other-chat" });
+
+      // The stopped turn and the other chat's turn are the two open turns. The
+      // next prompt settles the stopped one first, so it fits.
+      await f.owner.mutation(start, {
+        ...args,
+        requestId: "next",
+        ...(sameChat ? { chatId: f.chatId } : {}),
+      });
+      const state = await f.inspect();
+      expect(
+        Arr.map(state.turns, (turn) => [turn.phase, turn.state.status])
+      ).toEqual([
+        ["settled", "cancelled"],
+        ["active", "queued"],
+        ["active", "queued"],
+      ]);
+
+      // Two turns are open again, so one more is refused as before.
+      await expect(
+        f.owner.mutation(start, { ...args, requestId: "third" })
+      ).rejects.toMatchObject({ data: { code: "RATE_LIMITED" } });
+    }
+  );
 
   it("keeps a chat busy while its running turn was not stopped, and holds no credit for the refused prompt", async () => {
     const f = await fixture();

@@ -252,9 +252,10 @@ describe("Nina turn sweep", () => {
     await f.settle();
 
     const state = await f.inspect();
+    // The turn finished when the learner stopped it, not when the sweep found it.
     expect(state.turn?.state).toEqual({
       status: "cancelled",
-      finishedAt: overdue,
+      finishedAt: NOW,
     });
     expect(state.user?.credits).toBe(10);
     expect(state.chat?.activeTurnId).toBeUndefined();

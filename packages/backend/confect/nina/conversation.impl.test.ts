@@ -176,12 +176,16 @@ describe("Nina conversation visibility", () => {
       usage: [],
     });
 
-    // Settling the turn does not change what the page shows.
+    // Settling the turn keeps the time of the stop, so the state the page shows
+    // does not move.
     await f.t.mutation(recover, { turnId: f.turnId });
     expect(
       await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
     ).toMatchObject({ phase: "settled" });
-    expect((await read()).turn?.state.status).toBe("cancelled");
+    expect((await read()).turn?.state).toEqual({
+      status: "cancelled",
+      finishedAt: NOW + 5000,
+    });
   });
 
   it("reads an empty owned chat without inventing turn metadata", async () => {

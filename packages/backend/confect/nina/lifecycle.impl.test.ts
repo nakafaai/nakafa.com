@@ -334,9 +334,10 @@ describe("native Nina settlement", () => {
 
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     const state = await f.inspect();
+    // The turn finished when the learner stopped it, not when the grace settled it.
     expect(state.turn?.state).toEqual({
       status: "cancelled",
-      finishedAt: NOW + grace,
+      finishedAt: NOW,
     });
     expect(state.user?.credits).toBe(10);
     expect(state.chat?.activeTurnId).toBeUndefined();

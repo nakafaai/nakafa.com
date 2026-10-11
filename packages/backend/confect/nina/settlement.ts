@@ -1,6 +1,6 @@
 import { abortStream, listMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
-import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
+import type { Docs, NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -9,6 +9,7 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
+import { activeTurns } from "@repo/backend/confect/nina/capacity";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { refundCredits } from "@repo/backend/confect/nina/credits/ledger";
 import {
@@ -125,7 +126,11 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
       .patch(chat._id, { activeTurnId: undefined })
       .pipe(Effect.orDie);
   }
-  const finishedAt = yield* Clock.currentTimeMillis;
+  const settledAt = yield* Clock.currentTimeMillis;
+  // A turn the learner stopped finished when they stopped it, however late it
+  // settles, so the time the page already shows does not move.
+  const finishedAt =
+    status === "cancelled" ? (turn.cancelRequestedAt ?? settledAt) : settledAt;
   const input = Arr.reduce(
     turn.usage,
     0,
@@ -197,8 +202,10 @@ export const STOP_GRACE = Duration.seconds(30);
  * is stored, and the learner sees the turn as cancelled at once. The turn
  * itself settles, which pays its credits back and unlocks its chat, at the
  * first of three moments: its run exits, `STOP_GRACE` passes for a run that is
- * gone, or the learner sends the next prompt (`settleStopped`). An answer that
- * is already saved wins the race and settles at once, with no refund.
+ * gone, or the learner sends their next prompt in any chat (`settleStopped`).
+ * Whichever comes first, it settles as cancelled at the time of the stop. An
+ * answer that is already saved wins the race and settles at once, with no
+ * refund.
  */
 export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>
@@ -222,25 +229,32 @@ export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
 });
 
 /**
- * Settles the turn a learner stopped, so their next prompt in the chat does not
- * wait for its run to exit. `stopTurn` already cut the stream off, so no late
- * output can be saved and the refund is the one the run's exit would give a
- * moment later. Returns whether the turn was settled: a turn that was not
- * stopped, or that is gone, is left as it is.
+ * Settles every turn the learner stopped, in any chat, so their next prompt
+ * does not wait for runs the page shows as finished. Until a stopped turn
+ * settles it would keep its chat busy, count toward the open-turn limit and
+ * hold its credits. `stopTurn` already cut its stream off, so no late output
+ * can be saved and the refund is the one the run's exit would give a moment
+ * later. A turn that was not stopped is left as it is.
+ *
+ * The refund changes the balance, so a hold taken from the copy the caller
+ * started with would overwrite it. Returns the learner as the settlements left
+ * them, and the caller carries on with that copy.
  */
 export const settleStopped = Effect.fn("nina.settlement.stopped")(function* (
-  turnId: NinaTurnsDoc["_id"]
+  learner: Docs["users"]
 ) {
-  const turn = yield* (yield* DatabaseReader)
-    .table("ninaTurns")
-    .get(turnId)
-    .pipe(
-      Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-      Effect.orDie
-    );
-  if (turn?.phase !== "active" || turn.cancelRequestedAt === undefined) {
-    return false;
+  const stopped = Arr.filter(
+    yield* activeTurns(learner._id),
+    (turn) => turn.phase === "active" && turn.cancelRequestedAt !== undefined
+  );
+  if (!Arr.isReadonlyArrayNonEmpty(stopped)) {
+    return learner;
   }
-  yield* settleTurn(turn, "cancelled");
-  return true;
+  yield* Effect.forEach(stopped, (turn) => settleTurn(turn, "cancelled"), {
+    discard: true,
+  });
+  return yield* (yield* DatabaseReader)
+    .table("users")
+    .get(learner._id)
+    .pipe(Effect.orDie);
 });

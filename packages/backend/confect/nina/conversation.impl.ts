@@ -12,7 +12,8 @@ import { Effect, Layer, Option, Schema } from "effect";
 /**
  * The turn as the page shows it. A turn the learner stopped is cancelled for
  * them at once, from the moment of the stop, although it settles only when its
- * run exits, after the stop grace, or when they send the next prompt.
+ * run exits, after the stop grace, or when they send the next prompt. The
+ * settlement keeps that time, so the state the page shows does not move.
  */
 function shownTurn(turn: NinaTurnsDoc) {
   if (turn.phase !== "active" || turn.cancelRequestedAt === undefined) {

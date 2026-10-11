@@ -226,9 +226,9 @@ describe("native Nina deletion lifecycle", () => {
     await t.mutation(claim, { turnId: receipt.turnId });
     await owner.mutation(remove, { chatId: receipt.chatId });
 
-    // The chat and its journal go in this transaction, so nothing a run that is
-    // still alive writes can survive: the hold comes back without waiting for
-    // the run to exit, and the run's next check finds its turn settled.
+    // The turn settles in the deleting transaction: the hold comes back without
+    // waiting for the run to exit, and the run's next check finds its turn
+    // settled.
     const read = () =>
       t.query(async (ctx) => ({
         turn: await ctx.db.get("ninaTurns", receipt.turnId),

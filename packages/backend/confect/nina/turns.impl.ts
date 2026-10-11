@@ -94,17 +94,16 @@ const start = FunctionImpl.make(
         order: existing.order,
       };
     }
+    // A turn the learner stopped is cancelled for them at once. It settles when
+    // its run exits, after the stop grace, or here on their next prompt, in any
+    // chat, whichever comes first. Settling it before the busy check, the
+    // open-turn count and the credit hold keeps a turn the page shows as
+    // cancelled from blocking the chat, counting as open or holding credits.
+    const learner = yield* settleStopped(appUser);
     const chat = args.chatId
       ? yield* requireChatOwner(args.chatId, appUser._id)
       : null;
-    // An open turn keeps its chat busy, except one the learner stopped: it is
-    // cancelled for them already and only waits for its run to exit. Their next
-    // prompt settles it here, before the open-turn count and the credit hold,
-    // and goes on in the same transaction.
-    const stopped = chat?.activeTurnId
-      ? yield* settleStopped(chat.activeTurnId)
-      : false;
-    if (chat?.activeTurnId && !stopped) {
+    if (chat?.activeTurnId) {
       return yield* new NinaTurnError({
         code: "NINA_BUSY",
         message: "A Nina response is already running in this chat.",
@@ -112,12 +111,6 @@ const start = FunctionImpl.make(
     }
     yield* requireOpenCapacity(appUser._id);
     const now = yield* Clock.currentTimeMillis;
-    // The settlement paid the stopped turn's hold back into the balance. Read
-    // the learner again for the new hold: the copy this request started with
-    // would overwrite that refund.
-    const learner = stopped
-      ? yield* reader.table("users").get(appUser._id).pipe(Effect.orDie)
-      : appUser;
     const reservation = yield* reserveCredits(learner);
     const prompt = yield* preparePrompt(
       learner,
