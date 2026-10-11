@@ -111,9 +111,10 @@ const presentation = FunctionImpl.make(
 
 /**
  * Settles a turn whose run has ended, or that stayed open past its deadline:
- * the run's own exit and the recovery sweep both come here. Reconciles
- * committed Agent output before releasing an interrupted turn's credits. A turn
- * the learner stopped ends as cancelled, whatever ended its run.
+ * the run's own exit, the settlement that a stop schedules, and the recovery
+ * sweep all come here. Reconciles committed Agent output before releasing an
+ * interrupted turn's credits. A turn the learner stopped ends as cancelled,
+ * whatever ended its run.
  */
 const recover = FunctionImpl.make(
   schema,
@@ -157,7 +158,8 @@ const sweep = FunctionImpl.make(
 
 /**
  * A queued turn has no run, so it settles at once. A running turn is asked to
- * stop and settles when its run has exited, never before the stream stops.
+ * stop and settles when its run has exited, never before the stream stops. A
+ * run that is gone never exits, so the stop also schedules a settlement.
  */
 const cancel = FunctionImpl.make(
   schema,

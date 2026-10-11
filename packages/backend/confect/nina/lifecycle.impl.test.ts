@@ -3,11 +3,11 @@ import { listMessages, listStreams, saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { settleTurn } from "@repo/backend/confect/nina/settlement";
+import { STOP_GRACE, settleTurn } from "@repo/backend/confect/nina/settlement";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Option, pipe } from "effect";
+import { Array as Arr, Duration, Effect, Option, pipe } from "effect";
 
 vi.mock("@repo/backend/confect/nina/settlement", async (load) => {
   const actual =
@@ -299,6 +299,50 @@ describe("native Nina settlement", () => {
     expect(
       Arr.filter(events, (job) => job.name.includes("deliverProductEvent"))
     ).toEqual([]);
+
+    // The settlement scheduled for the grace finds the turn settled and
+    // changes nothing.
+    await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    const later = await f.inspect();
+    expect(later.turn?.state).toEqual({ status: "cancelled", finishedAt: NOW });
+    expect(later.user?.credits).toBe(10);
+    expect(
+      Arr.filter(later.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
+  });
+
+  it("settles a stopped turn once the grace has passed when its run never exits", async () => {
+    const f = await fixture();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    const grace = Duration.toMillis(STOP_GRACE);
+    const jobs = await f.t.query((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(
+      Arr.filter(jobs, (job) => job.name === "nina/lifecycle:recover")
+    ).toEqual([
+      expect.objectContaining({
+        args: [{ turnId: f.turnId }],
+        scheduledTime: NOW + grace,
+      }),
+    ]);
+    // The run is gone, so until then the turn stays open with its credits held.
+    const waiting = await f.inspect();
+    expect(waiting.chat?.activeTurnId).toBe(f.turnId);
+    expect(waiting.user?.credits).toBe(5);
+
+    await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    const state = await f.inspect();
+    expect(state.turn?.state).toEqual({
+      status: "cancelled",
+      finishedAt: NOW + grace,
+    });
+    expect(state.user?.credits).toBe(10);
+    expect(state.chat?.activeTurnId).toBeUndefined();
+    expect(
+      Arr.filter(state.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
   });
 
   it("keeps the first request when a running turn is stopped twice", async () => {

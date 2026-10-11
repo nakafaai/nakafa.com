@@ -185,11 +185,21 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
 });
 
 /**
- * Asks the run of a running turn to stop, and nothing more. The stream is cut
- * off and the request is stored, but the turn stays open: its credits stay held
- * and its chat stays locked until the run has exited and `settleTurn` runs, so
- * a stream that may still be running is never paid back. An answer that is
- * already saved wins the race and settles at once, with no refund.
+ * How long a stopped turn waits for its run to exit before it settles anyway.
+ * A live run checks its turn every second and ends its generation when it finds
+ * the turn stopped, so a turn that is still open long after the stop has no run
+ * left to wait for.
+ */
+export const STOP_GRACE = Duration.seconds(30);
+
+/**
+ * Asks the run of a running turn to stop. The stream is cut off and the request
+ * is stored, but the turn stays open: its credits stay held and its chat stays
+ * locked until the run has exited and `settleTurn` runs, so a stream that is
+ * still running is never paid back. A run that is gone never exits, so the
+ * settlement scheduled here ends the turn after `STOP_GRACE` and stopping
+ * always frees the chat. An answer that is already saved wins the race and
+ * settles at once, with no refund.
  */
 export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>
@@ -205,4 +215,9 @@ export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
     .table("ninaTurns")
     .patch(turn._id, { cancelRequestedAt: yield* Clock.currentTimeMillis })
     .pipe(Effect.orDie);
+  yield* (yield* Scheduler).runAfter(
+    STOP_GRACE,
+    refs.internal.nina.lifecycle.recover,
+    { turnId: turn._id }
+  );
 });
