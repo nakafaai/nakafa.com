@@ -12,8 +12,13 @@ import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { decryptOAuthToken, setTokenUtil } from "better-auth/oauth2";
 import { Array as Arr, Config, Effect, Layer, Option, Schema } from "effect";
 
-/** Account rows one call reads: far below the transaction limits. */
-export const TOKEN_PAGE_SIZE = 100;
+/**
+ * Account rows one call reads. Each row costs up to four token operations and
+ * one write through the Better Auth component, and a mutation may spend only a
+ * short time in such system operations: production refused a page of 100 rows
+ * with "Your request timed out performing too many system operations".
+ */
+export const TOKEN_PAGE_SIZE = 10;
 
 /**
  * The variables that Better Auth reads its secret from. With none of them set
