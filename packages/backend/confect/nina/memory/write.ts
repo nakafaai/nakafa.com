@@ -168,6 +168,7 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   );
   const matches = yield* searchMemories({
     limit: TARGET_LIMIT,
+    now,
     text: candidate.text,
     topics,
     userId: keys.userId,

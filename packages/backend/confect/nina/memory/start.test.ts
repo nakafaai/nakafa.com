@@ -20,7 +20,7 @@ function started(
 ) {
   return f.execute(
     Effect.map(
-      startMemories(f.identity.userId, topics),
+      startMemories(f.identity.userId, topics, NOW),
       Arr.map((memory) => memory.text)
     )
   );
@@ -99,6 +99,8 @@ describe("memories a turn starts with", () => {
     const f = await createMemoryTest();
     const other = await f.stranger();
     await f.seed({ text: "Not theirs", topics: [LESSON] });
-    expect(await f.execute(startMemories(other.userId, [LESSON]))).toEqual([]);
+    expect(await f.execute(startMemories(other.userId, [LESSON], NOW))).toEqual(
+      []
+    );
   });
 });

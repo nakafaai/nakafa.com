@@ -15,7 +15,6 @@ import { wordsOf } from "@repo/backend/confect/nina/memory/words";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import {
   Array as Arr,
-  Clock,
   Effect,
   Option,
   Order,
@@ -56,8 +55,14 @@ const bestFirst = Order.Tuple([
  * what its matched keys are worth: 3 for the lesson that is open, 2 for a path
  * above it, 1 for a word. The memories go by score, then by confirmation, the
  * newest first. The best `limit * 3`, 48 at most, are loaded; those that are
- * gone or are situations that ended drop out; and the first `limit` of the rest
- * are opened. With no word and no topic it finds nothing.
+ * gone drop out, and with `now` so do the situations that ended before it; and
+ * the first `limit` of the rest are opened. With no word and no topic it finds
+ * nothing.
+ *
+ * It never reads the clock, because it runs inside queries and a query is not
+ * run again when time passes: a caller that must not see ended situations says
+ * what time it is. The Memory page gives no time and sees every stored memory,
+ * as its list does.
  *
  * It reads a bounded number of documents whatever the learner keeps: one
  * memory to know there is one, the learner's key, at most 16 times 24 key rows
@@ -67,11 +72,13 @@ const bestFirst = Order.Tuple([
  */
 export const searchMemories = Effect.fn("nina.memory.find")(function* ({
   limit,
+  now,
   text = "",
   topics = [],
   userId,
 }: {
   readonly limit: number;
+  readonly now?: number;
   readonly text?: string;
   readonly topics?: readonly string[];
   readonly userId: Docs["users"]["_id"];
@@ -125,7 +132,6 @@ export const searchMemories = Effect.fn("nina.memory.find")(function* ({
     ({ confirmedAt, score }) => [score, confirmedAt] as const,
     bestFirst
   );
-  const now = yield* Clock.currentTimeMillis;
   const loaded = Arr.getSomes(
     yield* Effect.forEach(
       Arr.take(ranked, Math.min(limit * LOAD_FACTOR, LOAD_LIMIT)),
@@ -133,11 +139,9 @@ export const searchMemories = Effect.fn("nina.memory.find")(function* ({
         Effect.map(readOwnMemory(userId, memoryId), Option.fromNullOr)
     )
   );
-  return yield* openWith(
-    keys,
-    Arr.take(
-      Arr.filter(loaded, (memory) => !hasEnded(memory, now)),
-      limit
-    )
-  );
+  const lasting =
+    now === undefined
+      ? loaded
+      : Arr.filter(loaded, (memory) => !hasEnded(memory, now));
+  return yield* openWith(keys, Arr.take(lasting, limit));
 }, Effect.orDie);

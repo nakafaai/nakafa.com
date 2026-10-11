@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Schema } from "effect";
 import {
   patchChatPage,
@@ -32,7 +32,7 @@ const page = [
     userId,
     visibility: "public",
   },
-] satisfies Docs["chats"][];
+] satisfies ChatView[];
 
 describe("chat query state", () => {
   it("patches only the matching chat", () => {

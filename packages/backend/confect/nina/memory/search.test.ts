@@ -119,7 +119,7 @@ describe("memory search", () => {
     ]);
   });
 
-  it("never returns a situation that has ended, and returns one that still goes on", async () => {
+  it("leaves out a situation that ended before the caller's time, and without a time returns every stored memory", async () => {
     const f = await createMemoryTest();
     await f.seed({
       kind: "situation",
@@ -132,9 +132,15 @@ describe("memory search", () => {
       validUntil: NOW + 1,
     });
     await f.seed({ author: "learner", text: "Ulangan harian" });
+    expect(await f.find({ limit: 5, now: NOW, text: "ulangan" })).toEqual([
+      "Ulangan harian",
+      "Ulangan baru",
+    ]);
+    // The Memory page gives no time: it shows what is stored, as its list does.
     expect(await f.find({ limit: 5, text: "ulangan" })).toEqual([
       "Ulangan harian",
       "Ulangan baru",
+      "Ulangan lama",
     ]);
   });
 

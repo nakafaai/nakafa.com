@@ -32,7 +32,7 @@ export const read = FunctionImpl.make(
   schema,
   spec,
   "read",
-  Effect.fn("nina.memory.read")(function* ({ topics, userId }) {
+  Effect.fn("nina.memory.read")(function* ({ now, topics, userId }) {
     const profile = yield* readLearnerProfile(userId);
     if (yield* readPaused(userId)) {
       return { paused: true, profile, prompt: [] };
@@ -40,7 +40,7 @@ export const read = FunctionImpl.make(
     return {
       paused: false,
       profile,
-      prompt: Arr.map(yield* startMemories(userId, topics), toNote),
+      prompt: Arr.map(yield* startMemories(userId, topics, now), toNote),
     };
   })
 );
@@ -54,7 +54,7 @@ export const known = FunctionImpl.make(
   schema,
   spec,
   "known",
-  Effect.fn("nina.memory.known")(function* ({ message, topics, userId }) {
+  Effect.fn("nina.memory.known")(function* ({ message, now, topics, userId }) {
     const profile = yield* readLearnerProfile(userId);
     if (yield* readPaused(userId)) {
       return { known: [], paused: true, profile };
@@ -63,6 +63,7 @@ export const known = FunctionImpl.make(
       known: Arr.map(
         yield* searchMemories({
           limit: MEMORY_KNOWN_LIMIT,
+          now,
           text: message,
           topics,
           userId,

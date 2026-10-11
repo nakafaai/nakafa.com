@@ -9544,7 +9544,12 @@ export declare const internal: {
       known: FunctionReference<
         "query",
         "internal",
-        { message: string; topics: Array<string>; userId: Id<"users"> },
+        {
+          message: string;
+          now: number;
+          topics: Array<string>;
+          userId: Id<"users">;
+        },
         {
           known: Array<{
             confirmedAt: number;
@@ -9580,7 +9585,7 @@ export declare const internal: {
       read: FunctionReference<
         "query",
         "internal",
-        { topics: Array<string>; userId: Id<"users"> },
+        { now: number; topics: Array<string>; userId: Id<"users"> },
         {
           paused: boolean;
           profile: {
@@ -9638,6 +9643,25 @@ export declare const internal: {
         "internal",
         { turnId: Id<"ninaTurns"> },
         null
+      >;
+    };
+    seal: {
+      sealChats: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null },
+        { next: string | null; sealed: number; skipped: number }
+      >;
+      sealSummaries: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null },
+        {
+          next: string | null;
+          removed: number;
+          sealed: number;
+          skipped: number;
+        }
       >;
     };
     summaries: {

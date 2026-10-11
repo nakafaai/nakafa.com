@@ -3,7 +3,7 @@ import { openMemories } from "@repo/backend/confect/nina/memory/seal";
 import { searchMemories } from "@repo/backend/confect/nina/memory/search";
 import { hasEnded, readNewest } from "@repo/backend/confect/nina/memory/store";
 import { MEMORY_START_LIMIT } from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, Clock, Effect, HashSet } from "effect";
+import { Array as Arr, Effect, HashSet } from "effect";
 
 /**
  * Memories the fill looks at, the most recently confirmed first: eight times
@@ -25,10 +25,12 @@ const FILL_WINDOW = MEMORY_START_LIMIT * 8;
  */
 export const startMemories = Effect.fn("nina.memory.start")(function* (
   userId: Docs["users"]["_id"],
-  topics: readonly string[]
+  topics: readonly string[],
+  now: number
 ) {
   const found = yield* searchMemories({
     limit: MEMORY_START_LIMIT,
+    now,
     topics,
     userId,
   });
@@ -36,7 +38,6 @@ export const startMemories = Effect.fn("nina.memory.start")(function* (
   if (places <= 0) {
     return found;
   }
-  const now = yield* Clock.currentTimeMillis;
   const taken = HashSet.fromIterable(Arr.map(found, (memory) => memory._id));
   const recent = Arr.take(
     Arr.filter(

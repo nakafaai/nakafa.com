@@ -4,6 +4,7 @@ import schema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
+import { openChat } from "@repo/backend/confect/chats/title";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import spec from "@repo/backend/confect/nina/conversation.spec";
@@ -41,7 +42,7 @@ const get = FunctionImpl.make(
       .first()
       .pipe(Effect.orDie);
     return {
-      chat,
+      chat: yield* openChat(chat),
       turn: Option.isSome(turn)
         ? yield* Schema.decodeEffect(NinaTurnSummary)(
             shownTurn(turn.value)
