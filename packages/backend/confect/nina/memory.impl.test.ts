@@ -5,6 +5,7 @@ import {
   MEMORY_LIMIT,
   MEMORY_PROMPT_LIMIT,
   type NinaLearner,
+  type NinaMemoryDraft,
   type NinaMemoryList,
   type NinaMemoryView,
 } from "@repo/backend/confect/nina/memory.spec";
@@ -356,7 +357,7 @@ describe("Nina memory writes", () => {
   it("gives a memory a title, replaces it, turns the memory into a title alone, and takes the title off when the write has none", async () => {
     const f = await createMemoryTest();
     const id = await f.seed({ kind: "goal", text: "Kelas 11" });
-    const edited = async (fields: { text: string; title?: string }) => {
+    const edited = async (fields: typeof NinaMemoryDraft.Type) => {
       await f.owner.mutation(edit, { id, ...fields });
       return [await f.titles(), await f.texts()];
     };

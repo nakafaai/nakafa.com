@@ -40,6 +40,7 @@ import {
 import { writeMemories } from "@repo/backend/confect/nina/memory/write";
 import spec, {
   MEMORY_LIMIT,
+  type NinaMemoryDraft,
   NinaMemoryRejected,
 } from "@repo/backend/confect/nina/memory.spec";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
@@ -108,7 +109,7 @@ const list = FunctionImpl.make(
 );
 
 /** Whether a draft says nothing: it has no title and no words. */
-function isEmpty(draft: { readonly text: string; readonly title?: string }) {
+function isEmpty(draft: typeof NinaMemoryDraft.Type) {
   return draft.title === undefined && Str.isEmpty(draft.text);
 }
 
@@ -118,7 +119,7 @@ function isEmpty(draft: { readonly text: string; readonly title?: string }) {
  */
 const sealDraft = Effect.fn("nina.memory.sealDraft")(function* (
   userId: Docs["users"]["_id"],
-  draft: { readonly text: string; readonly title?: string }
+  draft: typeof NinaMemoryDraft.Type
 ) {
   const keys = yield* ensureLearnerKeys(userId);
   return {

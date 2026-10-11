@@ -103,7 +103,7 @@ export const NinaMemoryList = Schema.Struct({
  * What the learner writes on the Memory page: words, a title, or both, with no
  * kind. A write without a title takes the title off the memory.
  */
-const NinaMemoryDraft = Schema.Struct({
+export const NinaMemoryDraft = Schema.Struct({
   text: NinaMemoryText,
   title: Schema.optionalKey(NinaMemoryTitle),
 });
