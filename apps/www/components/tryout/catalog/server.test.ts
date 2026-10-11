@@ -49,6 +49,7 @@ import {
   readTryoutSetPage,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/server";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const transportMock = vi.hoisted(() => vi.fn<typeof fetch>());
@@ -73,6 +74,10 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
   Link: vi.fn(),
@@ -124,12 +129,52 @@ const TRACK = `${EXAM}/matematika-wajib`;
 const SET = `${TRACK}/set-1`;
 const SECTION = `${SET}/matematika-wajib`;
 beforeEach(() => {
+  resetTestRuntimeCache();
   fetchQueryMock.mockReset();
   transportMock.mockReset();
   vi.stubGlobal("fetch", transportMock);
 });
 
 describe("immutable try-out application catalog", () => {
+  it.effect(
+    "reaches Convex once for the hub, track and metadata of each release",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeTryoutRuntimeSource();
+        const context = yield* createTestPublication(fixture.source);
+        fetchQueryMock.mockImplementation(context.query);
+        const metadataArgs = {
+          appLocale: AppLocaleSchema.make("en"),
+          kind: "track",
+          publicPath: TRACK,
+        } as const;
+        const readAll = () =>
+          Effect.promise(() =>
+            Promise.all([
+              readTryoutHubPage("en"),
+              readTryoutTrackPage("en", TRACK),
+              readTryoutMetadata(metadataArgs),
+            ])
+          );
+
+        const first = yield* readAll();
+        const second = yield* readAll();
+
+        expect(second).toEqual(first);
+        for (const ref of [
+          refs.public.tryouts.queries.catalog.getHubPage,
+          refs.public.tryouts.queries.catalog.getTrackPage,
+          refs.public.tryouts.queries.catalog.getMetadata,
+        ]) {
+          expect(
+            Arr.filter(
+              fetchQueryMock.mock.calls,
+              ([called]) => called.convexFunctionName === ref.convexFunctionName
+            )
+          ).toHaveLength(1);
+        }
+      })
+  );
   it.effect.each(APP_LOCALE_CODES)(
     "serves the complete signed %s hierarchy and route metadata",
     (locale) =>

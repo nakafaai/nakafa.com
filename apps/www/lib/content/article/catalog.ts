@@ -65,10 +65,6 @@ export type PublishedArticleSummary = typeof PublishedArticleSummarySchema.Type;
 export type PublishedArticlePage = Effect.Success<
   ReturnType<typeof readPublishedArticlePage>
 >;
-/** One bounded active category page with immutable provenance. */
-export type PublishedCategoryPage = Effect.Success<
-  ReturnType<typeof readPublishedCategories>
->;
 /** Maps one malformed catalog field to the public projection failure contract. */
 function projectionError(locale: Locale, publicPath = "articles") {
   return new PublishedProjectionError({

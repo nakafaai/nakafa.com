@@ -9,6 +9,7 @@ import type { Locale } from "next-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { applyContentCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
+import { queryContentStore } from "@/lib/content/store/query";
 import {
   readPublishedTryoutExamPage,
   readPublishedTryoutSectionPage,
@@ -53,31 +54,36 @@ export async function readFeaturedTryout(locale: Locale) {
   );
 }
 
-/** Reads exact signed route metadata from the tagged content cache. */
+/**
+ * Reads exact signed route metadata from the tagged content cache. The `use
+ * cache` boundary stays so that the try-out pages prerender and the try-out tag
+ * still expires them; behind it the content store answers for the release.
+ */
 export async function readTryoutMetadata(args: TryoutMetadataArgs) {
   "use cache";
 
   applyContentCache("tryout");
   return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(tryouts.queries.catalog.getMetadata, args)
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
+    queryContentStore(tryouts.queries.catalog.getMetadata, args).pipe(
+      Effect.withTracerTiming(false)
+    )
   );
 }
 
-/** Reads the public country-first try-out catalog from the tagged content cache. */
+/**
+ * Reads the public country-first try-out catalog from the tagged content cache.
+ * The `use cache` boundary stays for prerendering and the try-out tag; behind it
+ * the content store answers for the release.
+ */
 export async function readTryoutHubPage(locale: Locale) {
   "use cache";
 
   applyContentCache("tryout");
   const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(tryouts.queries.catalog.getHubPage, {
-        appLocale,
-      })
-    ).pipe(
-      Effect.provide(httpLayer()),
+    queryContentStore(tryouts.queries.catalog.getHubPage, {
+      appLocale,
+    }).pipe(
       Effect.withTracerTiming(false),
       Effect.mapError(
         (cause) =>
@@ -155,18 +161,20 @@ export async function readTryoutExamPage(locale: Locale, publicPath: string) {
   );
 }
 
-/** Reads one public track shell from the tagged content cache. */
+/**
+ * Reads one public track shell from the tagged content cache. The `use cache`
+ * boundary stays for prerendering and the try-out tag; behind it the content
+ * store answers for the release.
+ */
 export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
   "use cache";
 
   applyContentCache("tryout");
   return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(tryouts.queries.catalog.getTrackPage, {
-        appLocale: AppLocaleSchema.make(locale),
-        publicPath,
-      })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
+    queryContentStore(tryouts.queries.catalog.getTrackPage, {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    }).pipe(Effect.withTracerTiming(false))
   );
 }
 

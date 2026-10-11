@@ -12,6 +12,7 @@ import {
   readPublishedProgramPrerenderRoute,
   readPublishedProgramSubjects,
 } from "@/lib/content/program/catalog";
+import { activateTestRelease } from "@/test/active";
 import {
   testCurriculumRowJson,
   testProgramClass,
@@ -19,6 +20,7 @@ import {
   testProgramRowJson,
   testProgramSubject,
 } from "@/test/content-program";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
@@ -66,11 +68,48 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 describe("published program catalog", () => {
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease("program-release");
     cacheMock.mockReset();
     runtimeQueryMock.mockReset();
   });
+  it.effect(
+    "reaches Convex once for the catalog and the subjects of each release and locale",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockReturnValue(Effect.succeed(catalogResponse()));
+        yield* readPublishedProgramCatalog("en");
+        yield* Effect.tryPromise(() => getPublishedProgramCatalog("en"));
+        yield* readPublishedProgramPrerenderRoute("en");
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
+
+        // The English response does not describe the Indonesian catalog, so
+        // that read fails its checks; it still has to reach Convex.
+        yield* readPublishedProgramCatalog("id").pipe(Effect.ignore);
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+
+        runtimeQueryMock.mockReturnValue(
+          Effect.succeed({ managed: true, routeJson: [] })
+        );
+        yield* readPublishedProgramSubjects("en");
+        yield* Effect.tryPromise(() => getPublishedProgramSubjects("en"));
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(3);
+
+        activateTestRelease("program-release-next");
+        yield* readPublishedProgramSubjects("en");
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(4);
+      })
+  );
   it.effect(
     "selects one renderable root without enumerating descendant routes",
     () =>

@@ -1,7 +1,6 @@
 import { HttpClient } from "@confect/js";
 // @vitest-environment node
 import { beforeEach, describe, expect, it, layer } from "@effect/vitest";
-import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import {
@@ -24,6 +23,13 @@ import {
   readPublishedQuranIdentity,
   readPublishedQuranMarkdown,
 } from "@/lib/content/quran/publication";
+import { activateTestRelease } from "@/test/active";
+import {
+  finalViewResult,
+  quranSource as source,
+  viewResult,
+} from "@/test/quran";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -33,6 +39,14 @@ vi.mock("@/lib/content/cache", () => ({
 vi.mock("next/cache", () => ({
   cacheTag: vi.fn(),
 }));
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -52,18 +66,9 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
-const source = {
-  activeManifestHash: `sha256:${"a".repeat(64)}`,
-  activeReleaseId: "quran-release",
-  managed: true,
-  snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
-  sourceOrigin: {
-    kind: "git" as const,
-    sha: "c".repeat(40),
-  },
-  sourceRevision: "c".repeat(40),
-};
 beforeEach(() => {
+  resetTestRuntimeCache();
+  activateTestRelease("quran-release");
   cacheMock.mockReset();
   runtimeQueryMock.mockReset();
 });
@@ -278,6 +283,29 @@ describe("immutable Quran application reads", () => {
   >()("www/lib/content/quran/publication.test/QuranFixture") {}
   layer(Layer.effect(QuranFixture, prepareQuran))((test) => {
     test.effect(
+      "reaches Convex once for the catalog and for each view of a release",
+      () =>
+        Effect.gen(function* () {
+          const quran = yield* QuranFixture;
+          runtimeQueryMock.mockImplementation(quran.context.query);
+
+          yield* readPublishedQuranCatalog();
+          yield* Effect.promise(getPublishedQuranCatalog);
+          expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
+
+          yield* Effect.promise(() => getPublishedQuranView("id", 1));
+          yield* Effect.promise(() => getPublishedQuranView("id", 1));
+          expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+
+          yield* Effect.promise(() => getPublishedQuranView("en", 1));
+          expect(runtimeQueryMock).toHaveBeenCalledTimes(3);
+
+          activateTestRelease("quran-release-next");
+          yield* Effect.promise(() => getPublishedQuranView("id", 1));
+          expect(runtimeQueryMock).toHaveBeenCalledTimes(4);
+        })
+    );
+    test.effect(
       "returns the authenticated identity and complete cached metadata catalog",
       () =>
         Effect.gen(function* () {
@@ -370,89 +398,6 @@ function catalogResult(snapshotId = source.snapshotId) {
   };
 }
 
-/** Builds one narrow locale-specific Quran web response. */
-function viewResult() {
-  return {
-    ...source,
-    appLocale: "id",
-    nextSurah: {
-      name: {
-        sourceMeaning: makeQuranMeaning(2),
-        transliteration: "Technical Surah 2",
-      },
-      number: 2,
-      numberOfVerses: 1,
-    },
-    previousSurah: null,
-    surah: {
-      name: {
-        sourceMeaning: makeQuranMeaning(1),
-        transliteration: "Technical Surah 1",
-      },
-      number: 1,
-      numberOfVerses: 1,
-    },
-    sources: makeQuranLocaleSources("id"),
-    tafsirAccess: makeQuranTafsirProjection("id"),
-    verses: [
-      {
-        arabic: "آية 1",
-        number: {
-          inQuran: 1,
-          inSurah: 1,
-        },
-        translation: {
-          notes: [
-            {
-              number: 4,
-              referenceOffset: 20,
-              text: "Catatan terjemahan Indonesia.",
-            },
-          ],
-          segments: [
-            {
-              kind: "text",
-              offset: 0,
-              value: "Terjemahan teknis 1.",
-            },
-            {
-              kind: "note",
-              number: 4,
-              offset: 20,
-            },
-          ],
-        },
-      },
-    ],
-  };
-}
-
-/** Builds the final Quran web response with no next neighbor. */
-function finalViewResult() {
-  const result = viewResult();
-  const previousSurah = makeQuranSurah(113);
-  const surah = makeQuranSurah(114);
-  return {
-    ...result,
-    nextSurah: null,
-    previousSurah: {
-      ...previousSurah,
-      name: {
-        sourceMeaning: previousSurah.name.meaning,
-        transliteration: previousSurah.name.transliteration,
-      },
-      numberOfVerses: 1,
-    },
-    surah: {
-      ...surah,
-      name: {
-        sourceMeaning: surah.name.meaning,
-        transliteration: surah.name.transliteration,
-      },
-      numberOfVerses: 1,
-    },
-  };
-}
 /** Builds one locale-specific signed Quran markdown response. */
 function markdownResult() {
   return {

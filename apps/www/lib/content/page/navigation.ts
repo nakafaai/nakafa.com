@@ -113,7 +113,11 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
   }
 );
 
-/** Caches complete Page navigation under the exact signed family owner. */
+/**
+ * Caches complete Page navigation under the exact signed family owner. The
+ * `use cache` boundary stays so that the shells still prerender and the page
+ * tag still expires them; behind it the catalog comes from the content store.
+ */
 async function getPageNavigation(locale: Locale) {
   "use cache";
 

@@ -1,4 +1,3 @@
-import { HttpClient } from "@confect/js";
 import "server-only";
 import {
   GitCommitShaSchema,
@@ -19,7 +18,7 @@ import {
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 
 /** Decodes one array of immutable curriculum rows from the runtime query. */
 const decodeRoutes = Effect.fn("NakafaProgram.decodeRoutes")(function* (
@@ -31,17 +30,18 @@ const decodeRoutes = Effect.fn("NakafaProgram.decodeRoutes")(function* (
     decodeCurriculumJson(source, locale, publicPath)
   );
 });
-/** Reads and validates one complete published curriculum route model. */
+/**
+ * Reads and validates one complete published curriculum route model. The
+ * content store holds the query result once for each release.
+ */
 export const readPublishedProgramRoute = Effect.fn(
   "NakafaProgram.readPublishedRoute"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.program.route, {
-      appLocale,
-      publicPath,
-    })
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(contentRelease.program.route, {
+    appLocale,
+    publicPath,
+  });
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
     publicPath,
@@ -155,7 +155,11 @@ const PublishedProgramRouteSchema = Schema.Struct({
 /** Complete immutable data needed by one curriculum route page. */
 type PublishedProgramRoute = typeof PublishedProgramRouteSchema.Type;
 
-/** Caches one complete curriculum route under program publication invalidation. */
+/**
+ * Caches one complete curriculum route under program publication invalidation.
+ * The `use cache` boundary stays so that the curriculum pages prerender and the
+ * program and material tags still expire them.
+ */
 export async function getPublishedProgramRoute(
   locale: Locale,
   publicPath: string
