@@ -79,6 +79,22 @@ describe("memories a turn starts with", () => {
     expect(await started(f, [LESSON])).toEqual(["About the lesson", "Newest"]);
   });
 
+  it("fills every place from older memories when most of the newest have ended and the daily job has not deleted them", async () => {
+    const f = await createMemoryTest();
+    await f.fill(10);
+    // Nine situations that ended, confirmed after the ten: they fill all but
+    // seven of the newest sixteen memories.
+    for (const index of Arr.range(0, 8)) {
+      await f.seed({
+        confirmedAt: 100 + index,
+        kind: "situation",
+        text: `Ended ${index}`,
+        validUntil: NOW - 1,
+      });
+    }
+    expect(await started(f, [])).toEqual(newest(8));
+  });
+
   it("starts with nothing for a learner who has no memory", async () => {
     const f = await createMemoryTest();
     const other = await f.stranger();

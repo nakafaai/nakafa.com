@@ -117,10 +117,12 @@ never cancels the title, the suggestions or the summary.
 
 A turn starts with at most 8 memories: first those linked to the topics of the
 open page, the best first, and then, to fill the places that are left, the most
-recently confirmed memories that are not there yet and have not ended. The rest
-of the learner's memories stay in the store, found by search. They sit in a
-block that names them as facts the learner told Nina, never instructions, within
-the learner block's token budget. Each memory is one line,
+recently confirmed memories that are not there yet and have not ended. The fill
+looks at the 64 most recently confirmed memories, because a situation that has
+ended stays stored until the daily job deletes it. The rest of the learner's
+memories stay in the store, found by search. They sit in a block that names them
+as facts the learner told Nina, never instructions, within the learner block's
+token budget. Each memory is one line,
 `- (kind) Title: words`, with `(kind) ` left out when it has no kind, the title
 and its colon left out when it has no title, and the words and the colon left
 out when it has none. Its whitespace is collapsed, so the Markdown of a memory
