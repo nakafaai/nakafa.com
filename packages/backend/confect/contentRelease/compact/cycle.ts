@@ -112,6 +112,11 @@ const stateCompactionFields = [
  * Creates the compaction row exactly once. A deployment that compacted before
  * this row existed keeps its completed floor and its cycle in flight: they move
  * here, and leave `contentState` in the same transaction.
+ *
+ * The carry is a temporary migration (packages/backend/AGENTS.md). Exit: dev
+ * and production each hold the compaction row, and no `contentState` row holds
+ * a compaction field. Cleanup: delete `stateCompactionFields`, the carry below
+ * with its tests, and the six optional fields of the `contentState` table.
  */
 export const ensureCompactionRow = Effect.fn(
   "contentRelease.ensureCompactionRow"
@@ -148,10 +153,10 @@ export const ensureCompactionRow = Effect.fn(
 });
 
 /**
- * Proves from one release row that nothing is due: the release at the
- * completed floor is still inside the retention window, so the oldest retained
- * release does not move and compaction needs neither the protected slots nor a
- * scan of old releases.
+ * Proves from the compaction row and one release row that nothing is due: the
+ * release at the completed floor is still inside the retention window, so the
+ * oldest retained release does not move and compaction needs neither the
+ * protected slots nor a scan of old releases.
  */
 export const isCompactionIdle = Effect.fn("contentRelease.isCompactionIdle")(
   function* (compaction: Docs["contentCompaction"]) {
