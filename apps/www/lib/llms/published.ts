@@ -22,6 +22,7 @@ import {
   decodePublishedPage,
 } from "@/lib/content/published/projection";
 import { getRawAksaraUrl } from "@/lib/content/repository";
+import { readContentStore } from "@/lib/content/store/read";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader, getMdxDescription } from "@/lib/llms/format";
 
@@ -106,22 +107,42 @@ const readPublishedTextData = Effect.fn("www.llms.published.data")(function* (
   };
 });
 
-/** Caches one verified Aksara body under its exact shared content tags. */
+/** Reads one verified body and projects it into agent-facing markdown text. */
+const readPublishedText = Effect.fn("www.llms.published.read")(function* (
+  input: PublishedMarkdownInput
+) {
+  const data = yield* readPublishedTextData(input);
+  return yield* buildPublishedText({
+    description: data.description,
+    appLocale: input.appLocale,
+    publicPath: data.publicPath,
+    rawMdx: data.rawMdx,
+    sourcePath: data.sourcePath,
+    sourceRevision: data.sourceRevision,
+    title: data.title,
+  });
+});
+
+/**
+ * Caches one verified Aksara body under its exact shared content tags. The `use
+ * cache` boundary stays so that the route handler still carries the scope tag
+ * that expires it. Behind the boundary the content store keeps the text for the
+ * release that the caller proved, so the signed body is read and projected once
+ * for each release.
+ */
 export async function getCachedPublishedText(input: PublishedMarkdownInput) {
   "use cache";
 
-  const data = await Effect.runPromise(readPublishedTextData(input));
-  applyContentCache(input.family);
-
-  return await Effect.runPromise(
-    buildPublishedText({
-      description: data.description,
-      appLocale: input.appLocale,
-      publicPath: data.publicPath,
-      rawMdx: data.rawMdx,
-      sourcePath: data.sourcePath,
-      sourceRevision: data.sourceRevision,
-      title: data.title,
+  const text = await Effect.runPromise(
+    readContentStore({
+      kind: "markdown.text",
+      load: readPublishedText(input),
+      parts: [input.appLocale, input.family, input.publicPath],
+      release: input.activeReleaseId,
+      schema: Schema.String,
     })
   );
+  applyContentCache(input.family);
+
+  return text;
 }

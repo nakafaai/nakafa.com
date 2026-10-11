@@ -13,6 +13,7 @@ import {
   getCachedPublishedText,
   type PublishedMarkdownInput,
 } from "@/lib/llms/published";
+import { activateTestRelease } from "@/test/active";
 import {
   testArticleArtifact,
   testArticleProjection,
@@ -25,6 +26,7 @@ import {
   previewSourcePath,
   previewWireArtifact,
 } from "@/test/content-preview";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
@@ -100,7 +102,16 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/content/published/exchange", () => ({
   readPublishedContent: readContentMock,
 }));
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 beforeEach(() => {
+  resetTestRuntimeCache();
   cacheLifeMock.mockReset();
   cacheTagMock.mockReset();
   readContentMock.mockReset();
@@ -112,6 +123,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { materialData } = yield* preparePublishedFixtures();
+        activateTestRelease(materialData.activeReleaseId);
         const text = yield* Effect.tryPromise(() =>
           getCachedPublishedText({
             activeReleaseId: materialData.activeReleaseId,
@@ -145,6 +157,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { articleData } = yield* preparePublishedFixtures();
+        activateTestRelease(articleData.activeReleaseId);
         const text = yield* Effect.tryPromise(() =>
           getCachedPublishedText({
             activeReleaseId: articleData.activeReleaseId,
@@ -173,6 +186,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { pageData } = yield* preparePublishedFixtures();
+        activateTestRelease(pageData.activeReleaseId);
         const text = yield* Effect.tryPromise(() =>
           getCachedPublishedText({
             activeReleaseId: pageData.activeReleaseId,
@@ -201,6 +215,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { materialData } = yield* preparePublishedFixtures();
+        activateTestRelease(materialData.activeReleaseId);
         readContentMock.mockReturnValueOnce(
           Effect.succeed({ ...materialData, sourceRevision: null })
         );
@@ -222,6 +237,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { materialData } = yield* preparePublishedFixtures();
+        activateTestRelease(materialData.activeReleaseId);
         const incompleteMdx = `${rawMdx}\n{`;
         readContentMock.mockReturnValueOnce(
           Effect.succeed({
@@ -256,9 +272,40 @@ describe("published llms markdown", () => {
   );
 });
 
+it.effect("reads and projects one body once for each release", () =>
+  Effect.gen(function* () {
+    const { materialData } = yield* preparePublishedFixtures();
+    activateTestRelease(materialData.activeReleaseId);
+    const input = {
+      activeReleaseId: materialData.activeReleaseId,
+      appLocale: previewProjection.appLocale,
+      family: "material",
+      publicPath: previewProjection.publicPath,
+    } as const;
+
+    const first = yield* Effect.tryPromise(() => getCachedPublishedText(input));
+    const second = yield* Effect.tryPromise(() =>
+      getCachedPublishedText(input)
+    );
+
+    expect(second).toBe(first);
+    expect(readContentMock).toHaveBeenCalledTimes(1);
+
+    // The next release names itself, and the text is read and projected again.
+    const nextInput = {
+      ...input,
+      activeReleaseId: ReleaseIdSchema.make("release-function-concept-next"),
+    };
+    activateTestRelease(nextInput.activeReleaseId);
+    yield* Effect.tryPromise(() => getCachedPublishedText(nextInput));
+    expect(readContentMock).toHaveBeenCalledTimes(2);
+  })
+);
+
 it.effect("rejects a signed projection from a different family", () =>
   Effect.gen(function* () {
     const { materialData } = yield* preparePublishedFixtures();
+    activateTestRelease(materialData.activeReleaseId);
     readContentMock.mockReturnValueOnce(Effect.succeed(materialData));
     const failure = yield* Effect.tryPromise({
       catch: (cause) => new TestPublishedTextError({ cause }),

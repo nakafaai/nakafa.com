@@ -113,6 +113,10 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock("@/lib/content/store/read", () => ({
+  /** The routing decisions under test do not depend on stored answers. */
+  readContentStore: (input: { readonly load: unknown }) => input.load,
+}));
 vi.mock("@/lib/llms/content/markdown", () => ({
   hasLlmsMarkdownSource: (input: Parameters<typeof hasLlmsMarkdownSource>[0]) =>
     Effect.succeed(input.cleanSlug === "terms-of-service"),

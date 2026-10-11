@@ -4,6 +4,8 @@ import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { Effect, Layer } from "effect";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const mockReadRuntimeContentReference = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
@@ -32,6 +34,14 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: mockReadActiveContentRoute,
 }));
@@ -48,6 +58,8 @@ function readRejection(pathname: string, hasAttemptCapability = false) {
 }
 describe("projected public html route rejection", () => {
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease(activeReleaseId);
     mockReadRuntimeContentReference.mockReset();
     mockReadRuntimeContentReference.mockReturnValue(Effect.succeed(null));
     mockReadActiveContentRoute.mockReset();
@@ -134,6 +146,8 @@ describe("projected public html route rejection", () => {
           .mockReturnValueOnce(Effect.succeed(null));
         const owned = yield* readRejection(pathname);
         expect(owned).toBeNull();
+        // A release never changes its answer, so a tombstone needs a release.
+        activateTestRelease("release-withdrawn");
         const tombstone = yield* readRejection(pathname);
         expect(tombstone).toBe("en");
         expect(mockReadRuntimeContentReference).toHaveBeenCalledWith(
@@ -148,25 +162,45 @@ describe("projected public html route rejection", () => {
         );
       })
   );
+  it.effect(
+    "asks Convex once for the reference of a route in each release",
+    () =>
+      Effect.gen(function* () {
+        const pathname = "/en/try-out/indonesia/snbt/2027";
+
+        expect(yield* readRejection(pathname)).toBe("en");
+        expect(yield* readRejection(pathname)).toBe("en");
+        expect(mockReadRuntimeContentReference).toHaveBeenCalledTimes(1);
+
+        activateTestRelease("release-next");
+        expect(yield* readRejection(pathname)).toBe("en");
+        expect(mockReadRuntimeContentReference).toHaveBeenCalledTimes(2);
+      })
+  );
   it.effect("requires signed ownership for public set and section routes", () =>
     Effect.gen(function* () {
       const paths = [
         "/en/try-out/indonesia/snbt/2027/set-1",
         "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
       ];
-      for (const pathname of paths) {
-        mockReadRuntimeContentReference
-          .mockReturnValueOnce(
-            Effect.succeed({
-              content_id: "tryout:test",
-            })
-          )
-          .mockReturnValueOnce(Effect.succeed(null));
-        const owned = yield* readRejection(pathname);
-        expect(owned).toBeNull();
-        const tombstone = yield* readRejection(pathname);
-        expect(tombstone).toBe("en");
-      }
+      yield* Effect.forEach(paths, (pathname, index) =>
+        Effect.gen(function* () {
+          mockReadRuntimeContentReference
+            .mockReturnValueOnce(
+              Effect.succeed({
+                content_id: "tryout:test",
+              })
+            )
+            .mockReturnValueOnce(Effect.succeed(null));
+          activateTestRelease(`release-owned-${index}`);
+          const owned = yield* readRejection(pathname);
+          expect(owned).toBeNull();
+          // A release never changes its answer, so a tombstone needs a release.
+          activateTestRelease(`release-withdrawn-${index}`);
+          const tombstone = yield* readRejection(pathname);
+          expect(tombstone).toBe("en");
+        })
+      );
       expect(mockReadRuntimeContentReference).toHaveBeenCalledTimes(4);
     })
   );

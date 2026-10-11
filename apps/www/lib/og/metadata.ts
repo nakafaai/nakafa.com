@@ -1,4 +1,3 @@
-import { HttpClient } from "@confect/js";
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
@@ -7,7 +6,7 @@ import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { applyContentCache } from "@/lib/content/cache";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 
 /** Expected failure raised when route metadata translations cannot be loaded. */
 class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
@@ -29,7 +28,10 @@ const SystemMetadataSchema = Schema.Struct({
 });
 type SystemMetadata = typeof SystemMetadataSchema.Type;
 
-/** Gets SEO metadata from the Convex route catalog with translation defaults. */
+/**
+ * Gets SEO metadata from the Convex route catalog with translation defaults.
+ * The content store holds the reference of each route once for each release.
+ */
 export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
   function* (locale: Locale, slug: string[]) {
     const [tCommon, tMetadata] = yield* Effect.all(
@@ -75,15 +77,13 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
       ],
       date: "",
     };
-    const reference = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(contentRelease.reference.read, {
-        input: {
-          appLocale: locale,
-          kind: "route",
-          publicPath: Arr.join(slug, "/"),
-        },
-      })
-    ).pipe(Effect.provide(httpLayer()));
+    const reference = yield* queryContentStore(contentRelease.reference.read, {
+      input: {
+        appLocale: locale,
+        kind: "route",
+        publicPath: Arr.join(slug, "/"),
+      },
+    });
     if (!reference) {
       return defaultMetadata;
     }
@@ -95,7 +95,10 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
   }
 );
 
-/** Resolves metadata inside a Cache Components-safe helper for OG routes. */
+/**
+ * Resolves metadata inside a Cache Components-safe helper for OG routes. The
+ * `use cache` boundary stays so that the family tag still expires the copy.
+ */
 export async function getCachedMetadataFromSlug(
   locale: Locale,
   slug: string[]
