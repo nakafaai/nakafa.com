@@ -410,12 +410,13 @@ export default GroupSpec.make()
       returns: () => Schema.Int,
     })
   )
-  // Deletes one batch of a learner's memories and returns how many it deleted.
+  // Deletes one batch of the memories a learner had confirmed up to `through`,
+  // the moment they asked to delete them all, and returns how many it deleted.
   // It runs again by itself while a batch is full. `clear` starts it.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "drain",
-      args: () => ({ userId: Id("users") }),
+      args: () => ({ through: Schema.Finite, userId: Id("users") }),
       returns: () => Schema.Int,
     })
   )

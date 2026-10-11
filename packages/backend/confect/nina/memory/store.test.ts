@@ -10,6 +10,7 @@ const state = Ref.getFunctionReference(memory.state);
 const remove = Ref.getFunctionReference(memory.remove);
 const pause = Ref.getFunctionReference(memory.pause);
 const clear = Ref.getFunctionReference(memory.clear);
+const add = Ref.getFunctionReference(memory.add);
 const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
 const drain = Ref.getFunctionReference(refs.internal.nina.memory.drain);
 const expire = Ref.getFunctionReference(refs.internal.nina.memory.expire);
@@ -92,14 +93,28 @@ describe("Nina memory removal", () => {
     const f = await createMemoryTest();
     await f.fill(MEMORY_BATCH + 5);
     const userId = f.identity.userId;
-    expect(await f.t.mutation(drain, { userId })).toBe(MEMORY_BATCH);
+    const through = NOW;
+    expect(await f.t.mutation(drain, { through, userId })).toBe(MEMORY_BATCH);
     expect(await f.stored()).toHaveLength(5);
-    expect(await f.t.mutation(drain, { userId })).toBe(5);
-    expect(await f.t.mutation(drain, { userId })).toBe(0);
+    expect(await f.t.mutation(drain, { through, userId })).toBe(5);
+    expect(await f.t.mutation(drain, { through, userId })).toBe(0);
     expect(await f.stored()).toEqual([]);
     expect(await f.keys()).toEqual([]);
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     expect(await f.stored()).toEqual([]);
+  });
+
+  it("keeps a memory the learner writes while the batches of a clear still run", async () => {
+    const f = await createMemoryTest();
+    await f.fill(60);
+    expect(await f.owner.mutation(clear, {})).toBeNull();
+    expect(await f.stored()).toHaveLength(35);
+    // The learner writes again a moment after asking to delete everything.
+    vi.setSystemTime(NOW + 1);
+    const kept = await f.owner.mutation(add, { text: "Written after" });
+    await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    expect(await f.texts()).toEqual(["Written after"]);
+    expect(await keyedMemories(f)).toEqual([kept]);
   });
 
   it("stops after a batch that was exactly full, when none is left", async () => {

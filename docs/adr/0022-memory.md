@@ -221,7 +221,9 @@ turn start searches by the topics of the page alone.
 - `clear` deletes a batch of 25 memories with their keys, and `drain` deletes
   the next batch, again and again, until none is left, so one transaction
   never deletes more than 25 memories and 2,625 documents. `clear` returns at
-  once. The daily expiry deletes a batch of 25 ended situations the same way.
+  once. The batches delete the memories confirmed up to the moment the learner
+  asked, so a memory the learner or Nina writes while they still run stays. The
+  daily expiry deletes a batch of 25 ended situations the same way.
 - `add` and `edit` take the words and an optional title, never a kind, so the
   learner never picks or changes a kind. `add` stores a memory with no kind and
   the learner as author. Editing a memory changes its words and its title, makes

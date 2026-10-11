@@ -59,12 +59,9 @@ export const disable = FunctionImpl.make(
   "disable",
   Effect.fn("nina.memory.disable")(function* () {
     const { appUser } = yield* requireAuth();
-    yield* setNinaMemoryPaused({
-      now: yield* Clock.currentTimeMillis,
-      paused: true,
-      userId: appUser._id,
-    });
-    yield* drainMemories(appUser._id);
+    const now = yield* Clock.currentTimeMillis;
+    yield* setNinaMemoryPaused({ now, paused: true, userId: appUser._id });
+    yield* drainMemories(appUser._id, now);
     return null;
   })
 );

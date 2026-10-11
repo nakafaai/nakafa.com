@@ -87,12 +87,21 @@ export const deleteMemory = Effect.fn("nina.memory.store.delete")(function* (
     .pipe(Effect.orDie);
 });
 
-/** Deletes one batch of a learner's memories and returns how many it deleted. */
+/**
+ * Deletes one batch of a learner's memories and returns how many it deleted.
+ * With `through` it deletes only the memories confirmed up to that moment, so a
+ * deletion that goes on in batches never reaches a memory written after the
+ * learner asked for it. Without it, as when the account is deleted, every
+ * memory goes.
+ */
 export const deleteBatch = Effect.fn("nina.memory.store.deleteBatch")(
-  function* (userId: UserId) {
+  function* (userId: UserId, through?: number) {
     const memories = yield* (yield* DatabaseReader)
       .table("ninaMemories")
-      .index("by_userId_and_confirmedAt", (query) => query.eq("userId", userId))
+      .index("by_userId_and_confirmedAt", (query) => {
+        const own = query.eq("userId", userId);
+        return through === undefined ? own : own.lte("confirmedAt", through);
+      })
       .take(MEMORY_BATCH)
       .pipe(Effect.orDie);
     for (const memory of memories) {
@@ -103,19 +112,22 @@ export const deleteBatch = Effect.fn("nina.memory.store.deleteBatch")(
 );
 
 /**
- * Deletes one batch of a learner's memories, and runs `drain` again for the
- * next while the batch was full, so no transaction deletes them all. It
- * returns how many it deleted.
+ * Deletes one batch of the memories a learner had at `through`, the moment
+ * they asked to delete them all, and runs `drain` again for the next while the
+ * batch was full, so no transaction deletes them all. A memory the learner or
+ * Nina writes while the batches run was confirmed later and stays. It returns
+ * how many it deleted.
  */
 export const drainMemories = Effect.fn("nina.memory.store.drain")(function* (
-  userId: UserId
+  userId: UserId,
+  through: number
 ) {
-  const deleted = yield* deleteBatch(userId);
+  const deleted = yield* deleteBatch(userId, through);
   if (deleted === MEMORY_BATCH) {
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
       refs.internal.nina.memory.drain,
-      { userId }
+      { through, userId }
     );
   }
   return deleted;

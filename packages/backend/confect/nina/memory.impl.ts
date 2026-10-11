@@ -156,9 +156,9 @@ const pause = FunctionImpl.make(
 );
 
 /**
- * Deletes the learner's memories. It deletes one batch and goes on with the
- * next by itself (`drain`), so a learner with many memories never meets one
- * huge transaction.
+ * Deletes the memories the learner has now. It deletes one batch and goes on
+ * with the next by itself (`drain`), so a learner with many memories never
+ * meets one huge transaction. A memory written after this moment stays.
  */
 const clear = FunctionImpl.make(
   schema,
@@ -166,7 +166,7 @@ const clear = FunctionImpl.make(
   "clear",
   Effect.fn("nina.memory.clear")(function* () {
     const { appUser } = yield* requireAuth();
-    yield* drainMemories(appUser._id);
+    yield* drainMemories(appUser._id, yield* Clock.currentTimeMillis);
     return null;
   })
 );
@@ -186,8 +186,8 @@ const drain = FunctionImpl.make(
   schema,
   spec,
   "drain",
-  Effect.fn("nina.memory.drain")(function* ({ userId }) {
-    return yield* drainMemories(userId);
+  Effect.fn("nina.memory.drain")(function* ({ through, userId }) {
+    return yield* drainMemories(userId, through);
   })
 );
 
