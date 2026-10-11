@@ -123,7 +123,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                       failed(
                         "deepResearch",
                         error,
-                        "External research failed. State the limitation and use only retrieved evidence; do not invent sources."
+                        "External research failed. Tell the learner what this attempt could not verify, which is the request itself, and name a direct channel they can check next. Use only retrieved evidence, do not invent sources, and do not claim that anything is absent or does not exist."
                       ),
                     ResearchSourceLimitError: ({ maximum }) =>
                       Effect.succeed({
