@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useChat } from "@/components/ai/chat/context";
 import { ninaResponseFeedback } from "@/components/ai/feedback";
 import { useMessage } from "@/components/ai/message/context";
+import { AiChatMessageRemembered } from "@/components/ai/message/remembered";
 import { useViewer } from "@/lib/identity/client";
 
 export function AiChatMessageActions() {
@@ -53,27 +54,30 @@ export function AiChatMessageActions() {
   }
 
   return (
-    <Actions>
-      {canRetry ? (
-        <Action
-          disabled={disabled}
-          label={t("retry-message")}
-          onClick={() => retry(order)}
-          tooltip={t("retry-message")}
-        >
-          <HugeIcons icon={Refresh03Icon} />
-        </Action>
-      ) : null}
-      {hasText ? (
-        <Action
-          label={t("copy-message")}
-          onClick={() => clipboard.copy(text)}
-          tooltip={t("copy-message")}
-        >
-          <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
-        </Action>
-      ) : null}
-    </Actions>
+    <div className="flex min-w-0 items-center gap-3">
+      <Actions>
+        {canRetry ? (
+          <Action
+            disabled={disabled}
+            label={t("retry-message")}
+            onClick={() => retry(order)}
+            tooltip={t("retry-message")}
+          >
+            <HugeIcons icon={Refresh03Icon} />
+          </Action>
+        ) : null}
+        {hasText ? (
+          <Action
+            label={t("copy-message")}
+            onClick={() => clipboard.copy(text)}
+            tooltip={t("copy-message")}
+          >
+            <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
+          </Action>
+        ) : null}
+      </Actions>
+      <AiChatMessageRemembered />
+    </div>
   );
 }
 AiChatMessageActions.displayName = "AiChatMessageActions";

@@ -3,6 +3,7 @@ import { LayoutContent } from "@/components/shared/content/layout";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { UserSettingsHeader } from "@/components/user/settings/header";
+import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";
 
 /** Keeps private account settings out of search and social discovery. */
 export const metadata: Metadata = {
@@ -21,7 +22,10 @@ export const metadata: Metadata = {
   twitter: null,
 };
 
-/** Renders the settings section header above the settings body. */
+/**
+ * Renders the settings section header above the settings body, and beside
+ * them the place where a settings page can put a panel on a wide screen.
+ */
 export default function Layout({
   children,
 }: LayoutProps<"/[locale]/user/settings">) {
@@ -33,6 +37,7 @@ export default function Layout({
           {children}
         </LayoutContent>
       </LayoutMaterialContent>
+      <div className="contents" id={SETTINGS_PANEL_ID} />
     </LayoutMaterial>
   );
 }

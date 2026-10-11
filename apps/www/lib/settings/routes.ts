@@ -1,43 +1,72 @@
-import { HeartAddIcon, UserIcon } from "@hugeicons/core-free-icons";
 import { Array as Arr, Option, Schema } from "effect";
 
 const UserSettingsSectionSchema = Schema.Struct({
   href: Schema.String,
-  /** The Hugeicons SVG tree that `HugeIcons` renders for the section. */
-  icon: Schema.Array(
-    Schema.Tuple([
-      Schema.String,
-      Schema.Record(
-        Schema.String,
-        Schema.Union([Schema.String, Schema.Finite])
-      ),
-    ])
-  ),
   /** Message key owned by the `Auth` dictionary. */
-  labelKey: Schema.Literals(["account", "billing"]),
+  labelKey: Schema.Literals(["account", "billing", "memory"]),
 });
-/** One addressable section of the private user settings surface. */
-type UserSettingsSection = typeof UserSettingsSectionSchema.Type;
+
+/** The message key of one settings section. */
+export type UserSettingsLabelKey =
+  (typeof UserSettingsSectionSchema.Type)["labelKey"];
+
+/** One labelled group of addressable sections of the private settings surface. */
+const UserSettingsGroupSchema = Schema.Struct({
+  /** Message key owned by the `Auth` dictionary, which labels the group. */
+  key: Schema.Literals(["personal", "ai"]),
+  sections: Schema.NonEmptyArray(UserSettingsSectionSchema),
+});
+/** Every group of the settings surface, in sidebar order. */
+const UserSettingsGroupsSchema = Schema.NonEmptyArray(UserSettingsGroupSchema);
 
 /** Root route of the private settings surface. */
 const userSettingsRootHref = "/user/settings";
 
 /**
- * Ordered settings sections consumed by the sidebar, the breadcrumb header, and
- * the section metadata, so a new section has exactly one declaration.
+ * The one table of the settings surface: every group, in sidebar order, with
+ * the sections it holds. The sidebar, the breadcrumb header, and the section
+ * metadata all derive from it, so a new section has exactly one declaration.
  */
-export const userSettingsSections = [
+export const userSettingsGroups: typeof UserSettingsGroupsSchema.Type = [
   {
-    href: userSettingsRootHref,
-    icon: UserIcon,
-    labelKey: "account",
+    key: "personal",
+    sections: [
+      {
+        href: userSettingsRootHref,
+        labelKey: "account",
+      },
+      {
+        href: `${userSettingsRootHref}/subscriptions`,
+        labelKey: "billing",
+      },
+    ],
   },
   {
-    href: `${userSettingsRootHref}/subscriptions`,
-    icon: HeartAddIcon,
-    labelKey: "billing",
+    key: "ai",
+    sections: [
+      {
+        href: `${userSettingsRootHref}/memory`,
+        labelKey: "memory",
+      },
+    ],
   },
-] as const satisfies readonly UserSettingsSection[];
+];
+
+/**
+ * Every section in sidebar order, each with the group that holds it. A group
+ * links to its first section, which is where its breadcrumb leads.
+ */
+export const userSettingsSections = Arr.flatMap(userSettingsGroups, (group) => {
+  const parent = {
+    href: Arr.headNonEmpty(group.sections).href,
+    key: group.key,
+  };
+
+  return Arr.map(group.sections, (section) => ({
+    ...section,
+    group: parent,
+  }));
+});
 
 /** Returns whether one app pathname belongs to the private settings surface. */
 export function isUserSettingsPath(pathname: string) {
@@ -53,9 +82,9 @@ export function isUserSettingsPath(pathname: string) {
  * The settings root owns every path this table does not declare, which keeps
  * the shell label truthful instead of blank while a section is being added.
  */
-export function getUserSettingsSection(pathname: string): UserSettingsSection {
+export function getUserSettingsSection(pathname: string) {
   return Option.getOrElse(
     Arr.findFirst(userSettingsSections, (section) => section.href === pathname),
-    () => userSettingsSections[0]
+    () => Arr.headNonEmpty(userSettingsSections)
   );
 }
