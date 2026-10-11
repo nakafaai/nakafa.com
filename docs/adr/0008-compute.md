@@ -100,33 +100,43 @@ counter calculation. There is no second trigger facade. The transaction rolls
 back both changes if either write fails. Read-only ranking consumers keep the
 same Aggregate contract.
 
+The pipeline maintains exactly the ranking the homepage reads: material
+lessons, in the global scope, over the last seven UTC days. A view of an article
+writes no popularity row, a lesson reached through a curriculum placement counts
+once like any other visit, and no other window or lifetime total is kept. The
+cost of keeping a counter that nothing reads was measured in Database I/O, which
+is why a new window or scope needs a reader first.
+
 Popularity retention follows two separate consumer horizons. Viewer keys only
 deduplicate the current server-assigned UTC day, so prior-day keys can expire.
 Queued work carries its own complete event payload. Applying that payload,
-updating daily signals, lifetime and finite counters, updating Aggregate, and
-removing the queue row commit in the same mutation. Account deletion removes
-pending personal queue rows and viewer keys without reversing processed totals.
+updating the daily signal and the counter, updating Aggregate, and removing the
+queue row commit in the same mutation. Account deletion removes pending personal
+queue rows and viewer keys without reversing processed totals.
 
-Daily aggregate signals remain until every finite-window maintenance cycle has
-completed the current UTC day. Only signals older than the 365-day window then
-expire. Late queue processing excludes those days from finite counters and
-daily signals while still updating lifetime. Lifetime counters and their ranking
-entries are never deleted by retention.
+Daily aggregate signals remain until the window's maintenance cycle has
+completed the current UTC day. Only signals older than the seven-day window then
+expire, because a signal is read once, on the day it leaves the window. Late
+queue processing excludes a day outside the window from counters and signals
+altogether.
 
 One hourly cron prunes bounded indexed pages and atomically schedules a next
 page when needed. Each page derives the current day again, so a chain crossing
 midnight waits for the new day's maintenance before deleting daily inputs.
 Maintenance rows are read only when an expired daily input exists. Missing or
 incomplete cycles retain those inputs while viewer-key expiration continues.
+The same pass retires counters, ranking entries and maintenance watermarks of
+the windows and the scope that earlier versions kept; its index ranges are its
+resume position, so a pass with nothing left to retire reads no document.
 The remaining indexed rows are the resume position; there is no separate
 checkpoint table, migration endpoint or compatibility handler. Retrying or
 overlapping pages is safe under Convex transaction serialization.
 
 This supersedes the earlier suspension, which incorrectly required complete
 historical forensic evidence before expiring operational inputs. Historical
-viewer keys are not a permanent event ledger and cannot reconstruct lifetime
-totals, including after account deletion. That limitation does not invalidate
-the authoritative counters or require retaining personal deduplication keys
+viewer keys are not a permanent event ledger and cannot reconstruct totals,
+including after account deletion. That limitation does not invalidate the
+authoritative counters or require retaining personal deduplication keys
 forever. Regression tests verify the transaction, window cutoff, delayed queue,
 restart and midnight behavior rather than treating cycle completion as a claim
 of historical data completeness.

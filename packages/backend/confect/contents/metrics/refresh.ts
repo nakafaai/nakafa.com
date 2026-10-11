@@ -14,59 +14,55 @@ import {
 } from "@repo/backend/confect/contents/metrics/cycle";
 import { repairPopularityCounter } from "@repo/backend/confect/contents/metrics/repair";
 import {
-  getFinitePopularityWindows,
   getPopularitySignalDay,
-  learningPopularityScopeValues,
+  POPULARITY_SCOPE,
+  POPULARITY_WINDOW,
 } from "@repo/backend/confect/contents/popularity";
 import { Clock, Duration, Effect, flow, Struct } from "effect";
 
 /** Generated internal mutation reference accepted by Convex refresh scheduling. */
 
-/** Schedules bounded repair work for every finite popularity namespace. */
+/** Schedules bounded repair work for the maintained popularity ranking. */
 export const scheduleLearningPopularityRefreshes = Effect.fn(
   "contents.metrics.scheduleLearningPopularityRefreshes"
 )(function* () {
   const scheduler = yield* Scheduler;
   const timestamp = yield* Clock.currentTimeMillis;
   const day = getPopularitySignalDay(timestamp);
-  let scheduledWindows = 0;
-  for (const scopeMode of learningPopularityScopeValues) {
-    for (const windowKey of getFinitePopularityWindows()) {
-      const cycle = yield* beginPopularityCycle({
-        day,
-        forceRepair: true,
-        scopeMode,
-        windowKey,
-      });
-      if (cycle.mode === "skipped") {
-        continue;
-      }
-      yield* scheduler
-        .runAfter(
-          Duration.millis(0),
-          refs.internal.contents.mutations.popularity
-            .refreshLearningPopularityWindowPage,
-          {
-            ...(cycle.cursor === undefined
-              ? {}
-              : {
-                  cursor: cycle.cursor,
-                }),
-            day,
-            scopeMode,
-            windowKey,
-          }
-        )
-        .pipe(Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail)));
-      scheduledWindows += 1;
-    }
+  const cycle = yield* beginPopularityCycle({
+    day,
+    forceRepair: true,
+    scopeMode: POPULARITY_SCOPE,
+    windowKey: POPULARITY_WINDOW,
+  });
+  if (cycle.mode === "skipped") {
+    return {
+      scheduledWindows: 0,
+    };
   }
+  yield* scheduler
+    .runAfter(
+      Duration.millis(0),
+      refs.internal.contents.mutations.popularity
+        .refreshLearningPopularityWindowPage,
+      {
+        ...(cycle.cursor === undefined
+          ? {}
+          : {
+              cursor: cycle.cursor,
+            }),
+        day,
+        scopeMode: POPULARITY_SCOPE,
+        windowKey: POPULARITY_WINDOW,
+      }
+    )
+    .pipe(Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail)));
   return {
-    scheduledWindows,
+    scheduledWindows: 1,
   };
 });
 
-/** Repairs finite counters from their durable lifetime identity registry. */
+/** Repairs the maintained counters from their audited daily signals. */
 export const refreshLearningPopularityWindowPage = Effect.fn(
   "contents.metrics.refreshLearningPopularityWindowPage"
 )(
@@ -93,7 +89,7 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
     const page = yield* database
       .table("learningPopularityCounters")
       .index("by_windowKey_and_scopeMode_and_content_id_and_contextKey", (q) =>
-        q.eq("windowKey", "lifetime").eq("scopeMode", args.scopeMode)
+        q.eq("windowKey", args.windowKey).eq("scopeMode", args.scopeMode)
       )
       .paginate({
         cursor: args.cursor ?? null,

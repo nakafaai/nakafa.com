@@ -1,13 +1,13 @@
-import { learningPopularityWindowValues } from "@repo/backend/confect/contents/popularity";
+import { POPULARITY_WINDOW } from "@repo/backend/confect/contents/popularity";
 import { publicFailure } from "@repo/backend/confect/failure";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import { trendingSubjectValidator } from "@repo/backend/confect/lib/validators/trending";
 import { Schema } from "effect";
 export const trendingSubjectIoFailedCode = "TRENDING_SUBJECT_IO_FAILED";
 export const maxTrendingSubjectsLimit = 24;
-const learningPopularityWindowValidator = Schema.Literals([
-  ...learningPopularityWindowValues,
-]);
+// The ranking keeps one window. A caller that still names it is accepted until
+// the web app stops sending it; no other window is maintained.
+const learningPopularityWindowValidator = Schema.Literal(POPULARITY_WINDOW);
 export const getTrendingSubjectsArgs = {
   locale: localeValidator,
   limit: Schema.optionalKey(Schema.Finite),

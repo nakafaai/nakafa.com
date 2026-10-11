@@ -96,7 +96,7 @@ describe("contents/metrics/counter", () => {
     const target = convexTest(schema, convexModules);
     registerLearningPopularityAggregate(target);
     const id = await target.mutation(async (ctx) => {
-      const counterId = await insertCounter(ctx, "replace", "lifetime");
+      const counterId = await insertCounter(ctx, "replace", "7d");
       const current = await ctx.db.get(counterId);
       assert(current);
       await learningPopularityRankings.insert(ctx, current);
@@ -107,19 +107,14 @@ describe("contents/metrics/counter", () => {
       });
       const queueItem = await ctx.db.get(queueId);
       assert(queueItem);
-      const counter = Option.getOrUndefined(
-        Arr.findFirst(
-          [
-            ...MutableHashMap.values(
-              buildMetricsBatch({
-                queueItems: [queueItem],
-                updatedAt: NOW,
-              }).counters
-            ),
-          ],
-          ({ windowKey }) => windowKey === "lifetime"
-        )
-      );
+      const counter = Arr.head([
+        ...MutableHashMap.values(
+          buildMetricsBatch({
+            queueItems: [queueItem],
+            updatedAt: NOW,
+          }).counters
+        ),
+      ]).pipe(Option.getOrUndefined);
       assert(counter);
       const read = vi.spyOn(ctx.db, "get");
       await Effect.runPromise(
@@ -138,7 +133,7 @@ describe("contents/metrics/counter", () => {
     const state = await target.query(async (ctx) => ({
       counter: await ctx.db.get(id),
       ranking: await learningPopularityRankings.paginate(ctx, {
-        namespace: ["material", "en", "global", "lifetime"],
+        namespace: ["material", "en", "global", "7d"],
         pageSize: 10,
       }),
     }));
@@ -197,26 +192,21 @@ describe("contents/metrics/counter", () => {
   it("maps a duplicate indexed counter read into the typed IO failure", async () => {
     const target = convexTest(schema, convexModules);
     const failure = await target.mutation(async (ctx) => {
-      await insertCounter(ctx, "duplicate", "lifetime");
-      await insertCounter(ctx, "duplicate", "lifetime");
+      await insertCounter(ctx, "duplicate", "7d");
+      await insertCounter(ctx, "duplicate", "7d");
       const queueId = await insertQueue(ctx, "duplicate", "duplicate");
       const queueItem = await ctx.db.get(queueId);
       if (!queueItem) {
         throw new Error("Expected the duplicate-counter queue fixture.");
       }
-      const counter = Option.getOrUndefined(
-        Arr.findFirst(
-          [
-            ...MutableHashMap.values(
-              buildMetricsBatch({
-                queueItems: [queueItem],
-                updatedAt: NOW,
-              }).counters
-            ),
-          ],
-          ({ windowKey }) => windowKey === "lifetime"
-        )
-      );
+      const counter = Arr.head([
+        ...MutableHashMap.values(
+          buildMetricsBatch({
+            queueItems: [queueItem],
+            updatedAt: NOW,
+          }).counters
+        ),
+      ]).pipe(Option.getOrUndefined);
       if (!counter) {
         throw new Error("Expected the duplicate counter delta fixture.");
       }

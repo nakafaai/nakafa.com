@@ -148,9 +148,9 @@ separately from deterministic tests.
 ## Learning engagement
 
 Continue Learning and popularity use durable read models with bounded reads.
-Daily viewer keys expire after their UTC day. Daily signals remain through their
-finite consumer windows, while lifetime counters remain durable. Retention
-follows ADR 0008 and does not reconstruct lifetime totals from expired inputs.
+Daily viewer keys expire after their UTC day. Daily signals remain through the
+seven-day window the homepage ranks by, and no total outlives it. Retention
+follows ADR 0008.
 
 ## References
 

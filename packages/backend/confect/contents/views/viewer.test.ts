@@ -7,11 +7,11 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   getContentViewDistinctId as getScheduledDistinctId,
-  insertContentViewArticle as insertArticle,
-  makeArticleViewArgs,
+  insertContentViewMaterial as insertMaterial,
+  makeMaterialViewArgs,
   CONTENT_VIEW_NOW as NOW,
   readContentViewState as readViewState,
-  seedArticleViewer,
+  seedMaterialViewer,
 } from "@repo/backend/test/content/view";
 import { Array as Arr, Option, Order } from "effect";
 
@@ -27,11 +27,11 @@ describe("contents/views/viewer", () => {
   it("links an anonymous view to a user without duplicate popularity analytics", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedArticleViewer(ctx, "viewer")
+      seedMaterialViewer(ctx, "viewer")
     );
     await t.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-1")
+      makeMaterialViewArgs("device-1")
     );
 
     vi.setSystemTime(NOW + 1000);
@@ -43,7 +43,7 @@ describe("contents/views/viewer", () => {
       })
       .mutation(
         api.contents.mutations.views.recordContentView,
-        makeArticleViewArgs(identity.contentId, "device-1")
+        makeMaterialViewArgs("device-1")
       );
 
     const state = await readViewState(t);
@@ -74,7 +74,7 @@ describe("contents/views/viewer", () => {
   it("keeps view ownership separate for different signed-in users on one device", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
-      const article = await insertArticle(ctx);
+      const material = await insertMaterial(ctx);
       const firstUser = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "shared-device-first",
@@ -92,7 +92,7 @@ describe("contents/views/viewer", () => {
         userId: secondUser.userId,
       });
 
-      return { contentId: article.contentId, firstUser, secondUser };
+      return { contentId: material.contentId, firstUser, secondUser };
     });
     const firstSignedIn = t.withIdentity({
       sessionId: identity.firstUser.sessionId,
@@ -105,20 +105,20 @@ describe("contents/views/viewer", () => {
 
     await firstSignedIn.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "shared-device")
+      makeMaterialViewArgs("shared-device")
     );
 
     await expect(
       firstSignedIn.mutation(
         api.contents.mutations.views.recordContentView,
-        makeArticleViewArgs(identity.contentId, "shared-device")
+        makeMaterialViewArgs("shared-device")
       )
     ).resolves.toMatchObject({ alreadyViewed: true, isNewView: false });
     vi.setSystemTime(NOW + 1000);
 
     const result = await secondSignedIn.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "shared-device")
+      makeMaterialViewArgs("shared-device")
     );
 
     const state = await readViewState(t);
@@ -169,7 +169,7 @@ describe("contents/views/viewer", () => {
   it("records signed-in user views per device while deduplicating popularity", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedArticleViewer(ctx, "cross-device-viewer")
+      seedMaterialViewer(ctx, "cross-device-viewer")
     );
     const signedIn = t.withIdentity({
       sessionId: identity.sessionId,
@@ -178,14 +178,14 @@ describe("contents/views/viewer", () => {
 
     await signedIn.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-1")
+      makeMaterialViewArgs("device-1")
     );
 
     vi.setSystemTime(NOW + 1000);
 
     const result = await signedIn.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-2")
+      makeMaterialViewArgs("device-2")
     );
 
     const state = await readViewState(t);
@@ -225,7 +225,7 @@ describe("contents/views/viewer", () => {
   it("treats a signed-out same-device repeat as deduped without mutating ownership", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedArticleViewer(ctx, "signed-out-repeat")
+      seedMaterialViewer(ctx, "signed-out-repeat")
     );
     const signedIn = t.withIdentity({
       sessionId: identity.sessionId,
@@ -234,14 +234,14 @@ describe("contents/views/viewer", () => {
 
     await signedIn.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-1")
+      makeMaterialViewArgs("device-1")
     );
 
     vi.setSystemTime(NOW + 1000);
 
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-1")
+      makeMaterialViewArgs("device-1")
     );
 
     const state = await readViewState(t);
@@ -265,7 +265,7 @@ describe("contents/views/viewer", () => {
   it("does not add another same-day popularity signal after cross-device sign-out", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedArticleViewer(ctx, "cross-device-sign-out")
+      seedMaterialViewer(ctx, "cross-device-sign-out")
     );
     const signedIn = t.withIdentity({
       sessionId: identity.sessionId,
@@ -274,21 +274,21 @@ describe("contents/views/viewer", () => {
 
     await signedIn.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-1")
+      makeMaterialViewArgs("device-1")
     );
 
     vi.setSystemTime(NOW + 1000);
 
     await signedIn.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-2")
+      makeMaterialViewArgs("device-2")
     );
 
     vi.setSystemTime(NOW + 2000);
 
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-2")
+      makeMaterialViewArgs("device-2")
     );
 
     const state = await readViewState(t);
@@ -330,7 +330,7 @@ describe("contents/views/viewer", () => {
   it("keeps an account view without a device apart from anonymous device rows", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedArticleViewer(ctx, "account-only")
+      seedMaterialViewer(ctx, "account-only")
     );
     const signedIn = t.withIdentity({
       sessionId: identity.sessionId,
@@ -338,14 +338,14 @@ describe("contents/views/viewer", () => {
     });
     await t.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-1")
+      makeMaterialViewArgs("device-1")
     );
 
     vi.setSystemTime(NOW + 1000);
     await expect(
       signedIn.mutation(
         api.contents.mutations.views.recordContentView,
-        makeArticleViewArgs(identity.contentId)
+        makeMaterialViewArgs()
       )
     ).resolves.toEqual({
       alreadyViewed: false,
@@ -357,7 +357,7 @@ describe("contents/views/viewer", () => {
     await expect(
       signedIn.mutation(
         api.contents.mutations.views.recordContentView,
-        makeArticleViewArgs(identity.contentId)
+        makeMaterialViewArgs()
       )
     ).resolves.toEqual({
       alreadyViewed: true,
@@ -393,7 +393,7 @@ describe("contents/views/viewer", () => {
   it("adds a consented device row without a second same-day account signal", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
-      seedArticleViewer(ctx, "later-consent")
+      seedMaterialViewer(ctx, "later-consent")
     );
     const signedIn = t.withIdentity({
       sessionId: identity.sessionId,
@@ -401,13 +401,13 @@ describe("contents/views/viewer", () => {
     });
     await signedIn.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId)
+      makeMaterialViewArgs()
     );
 
     vi.setSystemTime(NOW + 1000);
     const result = await signedIn.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(identity.contentId, "device-1")
+      makeMaterialViewArgs("device-1")
     );
 
     const state = await readViewState(t);

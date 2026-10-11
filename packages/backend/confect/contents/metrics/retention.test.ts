@@ -5,7 +5,10 @@ import { pruneLearningPopularity } from "@repo/backend/confect/contents/metrics/
 import {
   learningPopularityFiniteWindowValues,
   learningPopularityScopeValues,
+  learningPopularityWindowValues,
   POPULARITY_DAY_MS,
+  POPULARITY_SCOPE,
+  POPULARITY_WINDOW,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
@@ -18,7 +21,8 @@ import { convexTest } from "convex-test";
 import { Array as Arr, Effect } from "effect";
 
 const DAY = Date.parse("2026-09-23T00:00:00Z");
-const EXPIRED = DAY - 365 * POPULARITY_DAY_MS;
+// The first day outside the seven-day window, consumed by today's expiry.
+const EXPIRED = DAY - 7 * POPULARITY_DAY_MS;
 const prune = internal.contents.mutations.popularity.pruneLearningPopularity;
 const graph = testMaterialGraph("vector", "addition", "en", "mathematics");
 const identity = {
@@ -31,19 +35,15 @@ const identity = {
   section: "material" as const,
 };
 
-/** Seeds the maintenance state that owns finite-window expiration. */
-async function completeWindows(ctx: MutationCtx, completedDay = DAY) {
-  for (const scopeMode of learningPopularityScopeValues) {
-    for (const windowKey of learningPopularityFiniteWindowValues) {
-      await ctx.db.insert("learningPopularityCycles", {
-        completedDay,
-        mode: "expiry",
-        scopeMode,
-        startedDay: completedDay,
-        windowKey,
-      });
-    }
-  }
+/** Seeds the maintenance state that owns the window's expiration. */
+function completeWindow(ctx: MutationCtx, completedDay = DAY) {
+  return ctx.db.insert("learningPopularityCycles", {
+    completedDay,
+    mode: "expiry",
+    scopeMode: POPULARITY_SCOPE,
+    startedDay: completedDay,
+    windowKey: POPULARITY_WINDOW,
+  });
 }
 
 /** Seeds one private daily deduplication key. */
@@ -60,19 +60,11 @@ function insertViewer(
   });
 }
 
-/** Seeds one daily contribution consumed by finite-window maintenance. */
+/** Seeds one daily contribution consumed by the window's maintenance. */
 function insertSignal(ctx: MutationCtx, signalDay: number) {
   return ctx.db.insert("learningPopularitySignals", {
     ...identity,
-    applied: {
-      d1: 1,
-      d7: 1,
-      d14: 1,
-      d30: 1,
-      d90: 1,
-      d180: 1,
-      d365: 1,
-    },
+    applied: { d7: 1 },
     route: "material/vector",
     signalDay,
     sourcePath: "material/vector",
@@ -81,6 +73,33 @@ function insertSignal(ctx: MutationCtx, signalDay: number) {
     viewCount: 1,
   });
 }
+
+/** Seeds one ranked counter, optionally leaving its ranking entry out. */
+async function insertCounter(
+  ctx: MutationCtx,
+  input: {
+    readonly ranked?: boolean;
+    readonly scopeMode: "global" | "placement";
+    readonly windowKey: (typeof learningPopularityWindowValues)[number];
+  }
+) {
+  const counterId = await ctx.db.insert("learningPopularityCounters", {
+    ...identity,
+    latestDay: DAY,
+    route: "material/vector",
+    score: 3,
+    scopeMode: input.scopeMode,
+    sourcePath: "material/vector",
+    title: "Vector",
+    updatedAt: DAY,
+    windowKey: input.windowKey,
+  });
+  const counter = await ctx.db.get(counterId);
+  if (counter && input.ranked !== false) {
+    await learningPopularityRankings.insert(ctx, counter);
+  }
+}
+
 describe("contents/metrics/retention", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -90,11 +109,11 @@ describe("contents/metrics/retention", () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
-  it("expires only consumed inputs and preserves delayed lifetime work", async () => {
+  it("expires only consumed inputs and still drops a delayed old view", async () => {
     const target = convexTest(schema, convexModules);
     registerLearningPopularityAggregate(target);
     const queueId = await target.mutation(async (ctx) => {
-      await completeWindows(ctx);
+      await completeWindow(ctx);
       await insertViewer(ctx, DAY - POPULARITY_DAY_MS);
       await insertViewer(ctx, DAY);
       await insertViewer(ctx, DAY + POPULARITY_DAY_MS);
@@ -105,21 +124,6 @@ describe("contents/metrics/retention", () => {
         leaseVersion: 1,
         leaseExpiresAt: DAY + POPULARITY_DAY_MS,
       });
-      const counterId = await ctx.db.insert("learningPopularityCounters", {
-        ...identity,
-        latestDay: EXPIRED,
-        route: "material/vector",
-        score: 41,
-        sourcePath: "material/vector",
-        title: "Vector",
-        updatedAt: EXPIRED,
-        windowKey: "lifetime",
-      });
-      const counter = await ctx.db.get(counterId);
-      expect(counter).not.toBeNull();
-      if (counter) {
-        await learningPopularityRankings.insert(ctx, counter);
-      }
       return await ctx.db.insert("learningEngagementQueue", {
         ...identity,
         insertedAt: EXPIRED,
@@ -133,6 +137,8 @@ describe("contents/metrics/retention", () => {
     });
     expect(await target.mutation(prune, {})).toEqual({
       hasMore: false,
+      retiredCounters: 0,
+      retiredCycles: 0,
       signalsDeleted: 1,
       viewersDeleted: 1,
       waitingForMaintenance: false,
@@ -153,22 +159,10 @@ describe("contents/metrics/retention", () => {
     expect(await target.query((ctx) => ctx.db.get(queueId))).toBeNull();
     const state = await target.query(async (ctx) => ({
       counters: await ctx.db.query("learningPopularityCounters").take(10),
-      ranking: await learningPopularityRankings.paginate(ctx, {
-        namespace: ["material", "en", "global", "lifetime"],
-        pageSize: 10,
-      }),
       signals: await ctx.db.query("learningPopularitySignals").take(10),
       viewers: await ctx.db.query("learningPopularityViewerSignals").take(10),
     }));
-    expect(state.counters).toMatchObject([
-      {
-        score: 42,
-        windowKey: "lifetime",
-      },
-    ]);
-    expect(Arr.map(state.ranking.page, ({ key }) => key)).toEqual([
-      [-42, graph.assetId],
-    ]);
+    expect(state.counters).toEqual([]);
     expect(Arr.map(state.signals, ({ signalDay }) => signalDay)).toEqual([
       EXPIRED + POPULARITY_DAY_MS,
     ]);
@@ -187,23 +181,22 @@ describe("contents/metrics/retention", () => {
     async (state) => {
       const target = convexTest(schema, convexModules);
       await target.mutation(async (ctx) => {
-        await completeWindows(ctx);
-        const cycle = await ctx.db.query("learningPopularityCycles").first();
-        if (cycle) {
-          if (state === "missing") {
-            await ctx.db.delete(cycle._id);
-          } else {
-            await ctx.db.patch(cycle._id, {
-              completedDay:
-                state === "incomplete" ? undefined : DAY - POPULARITY_DAY_MS,
-            });
-          }
+        const cycleId = await completeWindow(ctx);
+        if (state === "missing") {
+          await ctx.db.delete(cycleId);
+        } else {
+          await ctx.db.patch(cycleId, {
+            completedDay:
+              state === "incomplete" ? undefined : DAY - POPULARITY_DAY_MS,
+          });
         }
         await insertSignal(ctx, EXPIRED);
         await insertViewer(ctx, DAY - POPULARITY_DAY_MS);
       });
       expect(await target.mutation(prune, {})).toEqual({
         hasMore: false,
+        retiredCounters: 0,
+        retiredCycles: 0,
         signalsDeleted: 0,
         viewersDeleted: 1,
         waitingForMaintenance: true,
@@ -220,7 +213,7 @@ describe("contents/metrics/retention", () => {
     async (kind) => {
       const target = convexTest(schema, convexModules);
       await target.mutation(async (ctx) => {
-        await completeWindows(ctx);
+        await completeWindow(ctx);
         for (let index = 0; index < 150; index += 1) {
           if (kind === "viewers") {
             await insertViewer(ctx, EXPIRED, `viewer-${index}`);
@@ -249,7 +242,7 @@ describe("contents/metrics/retention", () => {
   it("rechecks maintenance when a continuation crosses midnight", async () => {
     const target = convexTest(schema, convexModules);
     await target.mutation(async (ctx) => {
-      await completeWindows(ctx);
+      await completeWindow(ctx);
       for (let index = 0; index < 150; index += 1) {
         await insertSignal(ctx, EXPIRED - index * POPULARITY_DAY_MS);
       }
@@ -262,6 +255,120 @@ describe("contents/metrics/retention", () => {
         ctx.db.query("learningPopularitySignals").take(150)
       )
     ).toHaveLength(22);
+  });
+  it("retires every counter and watermark outside the maintained ranking in bounded pages", async () => {
+    const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
+    await target.mutation(async (ctx) => {
+      for (const scopeMode of learningPopularityScopeValues) {
+        for (const windowKey of learningPopularityWindowValues) {
+          await insertCounter(ctx, { scopeMode, windowKey });
+        }
+        for (const windowKey of learningPopularityFiniteWindowValues) {
+          await ctx.db.insert("learningPopularityCycles", {
+            completedDay: DAY,
+            mode: "expiry",
+            scopeMode,
+            startedDay: DAY,
+            windowKey,
+          });
+        }
+      }
+    });
+
+    const first = await target.mutation(prune, {});
+
+    expect(first).toMatchObject({
+      hasMore: true,
+      retiredCounters: 10,
+      retiredCycles: 13,
+    });
+    await target.finishAllScheduledFunctions(vi.runAllTimers);
+    const state = await target.query(async (ctx) => ({
+      counters: await ctx.db.query("learningPopularityCounters").collect(),
+      cycles: await ctx.db.query("learningPopularityCycles").collect(),
+      rankings: await Promise.all(
+        Arr.map(learningPopularityWindowValues, async (windowKey) => {
+          const page = await learningPopularityRankings.paginate(ctx, {
+            namespace: ["material", "en", "global", windowKey],
+            pageSize: 10,
+          });
+          return { keys: page.page.length, windowKey };
+        })
+      ),
+    }));
+    expect(
+      Arr.map(state.counters, ({ scopeMode, windowKey }) => ({
+        scopeMode,
+        windowKey,
+      }))
+    ).toEqual([{ scopeMode: POPULARITY_SCOPE, windowKey: POPULARITY_WINDOW }]);
+    expect(
+      Arr.map(state.cycles, ({ scopeMode, windowKey }) => ({
+        scopeMode,
+        windowKey,
+      }))
+    ).toEqual([{ scopeMode: POPULARITY_SCOPE, windowKey: POPULARITY_WINDOW }]);
+    expect(
+      Arr.map(
+        Arr.filter(state.rankings, ({ keys }) => keys > 0),
+        ({ windowKey }) => windowKey
+      )
+    ).toEqual([POPULARITY_WINDOW]);
+    expect(await target.mutation(prune, {})).toMatchObject({
+      hasMore: false,
+      retiredCounters: 0,
+      retiredCycles: 0,
+    });
+  });
+  it("reads no document on an hourly pass with nothing left to prune", async () => {
+    const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
+    await target.mutation(async (ctx) => {
+      await completeWindow(ctx);
+      await insertCounter(ctx, {
+        scopeMode: POPULARITY_SCOPE,
+        windowKey: POPULARITY_WINDOW,
+      });
+      await insertViewer(ctx, DAY);
+      await insertSignal(ctx, DAY - POPULARITY_DAY_MS);
+    });
+
+    const idle = await target.mutation(async (ctx) => ({
+      receipt: await ctx.runMutation(prune, {}),
+      metrics: await ctx.meta.getTransactionMetrics(),
+    }));
+
+    expect(idle.receipt).toEqual({
+      hasMore: false,
+      retiredCounters: 0,
+      retiredCycles: 0,
+      signalsDeleted: 0,
+      viewersDeleted: 0,
+      waitingForMaintenance: false,
+    });
+    expect(idle.metrics.documentsRead.used).toBe(0);
+    expect(idle.metrics.documentsWritten.used).toBe(0);
+  });
+  it("retires a counter whose ranking entry is already gone", async () => {
+    const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
+    await target.mutation((ctx) =>
+      insertCounter(ctx, {
+        ranked: false,
+        scopeMode: "global",
+        windowKey: "lifetime",
+      })
+    );
+
+    expect(await target.mutation(prune, {})).toMatchObject({
+      retiredCounters: 1,
+    });
+    expect(
+      await target.query((ctx) =>
+        ctx.db.query("learningPopularityCounters").take(1)
+      )
+    ).toEqual([]);
   });
   it("rolls back deletions if continuation scheduling fails", async () => {
     const target = convexTest(schema, convexModules);

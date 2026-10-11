@@ -1,4 +1,7 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { refreshLearningPopularityWindowPage } from "@repo/backend/confect/contents/metrics/refresh";
 import { POPULARITY_DAY_MS } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
@@ -8,7 +11,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const DAY = Date.parse("2026-01-08T00:00:00.000Z");
 const ROUTE = "material/lesson/mathematics/vector/addition";
@@ -50,16 +53,6 @@ async function insertCounter(ctx: MutationCtx, contextKey: string) {
     throw new Error("Expected the popularity counter fixture.");
   }
   await learningPopularityRankings.insert(ctx, counter);
-  const { _id, _creationTime, ...value } = counter;
-  const lifetimeId = await ctx.db.insert("learningPopularityCounters", {
-    ...value,
-    windowKey: "lifetime",
-  });
-  const lifetime = await ctx.db.get(lifetimeId);
-  if (!lifetime) {
-    throw new Error("Expected the durable popularity identity fixture.");
-  }
-  await learningPopularityRankings.insert(ctx, lifetime);
   return counter;
 }
 
@@ -75,15 +68,7 @@ async function insertSignal(
 ) {
   await ctx.db.insert("learningPopularitySignals", {
     ...graph(),
-    applied: {
-      d1: input.viewCount,
-      d7: input.viewCount,
-      d14: input.viewCount,
-      d30: input.viewCount,
-      d90: input.viewCount,
-      d180: input.viewCount,
-      d365: input.viewCount,
-    },
+    applied: { d7: input.viewCount },
     contextKey: input.contextKey,
     contextMode: "canonical",
     ...(input.sparse ? {} : { description: "Signal description" }),
@@ -166,7 +151,7 @@ describe("contents/metrics/repair", () => {
       async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
     );
 
-    expect(recovery).toEqual({ scheduledWindows: 14 });
+    expect(recovery).toEqual({ scheduledWindows: 1 });
     expect(Arr.map(recoveryJobs, ({ args }) => args[0])).toContainEqual({
       cursor: first.continueCursor,
       day: DAY,
@@ -262,69 +247,57 @@ describe("contents/metrics/repair", () => {
     });
   });
 
-  it("recreates a missing finite counter and ranking from its lifetime identity", async () => {
+  it("keeps the ranking in step with a repaired counter", async () => {
     const target = createTarget();
     await target.mutation(async (ctx) => {
       await insertCycle(ctx);
-      const counter = await insertCounter(ctx, "missing-finite");
-      await learningPopularityRankings.delete(ctx, counter);
-      await ctx.db.delete(counter._id);
-      await insertSignal(ctx, { contextKey: "missing-finite", viewCount: 3 });
+      await insertCounter(ctx, "ranked-repair");
+      await insertSignal(ctx, { contextKey: "ranked-repair", viewCount: 3 });
     });
-    const lifetimeBefore = await target.query(
-      async (ctx) => await ctx.db.query("learningPopularityCounters").unique()
-    );
 
-    const result = await target.mutation(
+    await target.mutation(
       internal.contents.mutations.popularity
         .refreshLearningPopularityWindowPage,
       { day: DAY, scopeMode: "global", windowKey: "7d" }
     );
-    const state = await target.query(async (ctx) => ({
-      counters: await ctx.db.query("learningPopularityCounters").collect(),
-      ranking: await learningPopularityRankings.paginate(ctx, {
+    const ranking = await target.query((ctx) =>
+      learningPopularityRankings.paginate(ctx, {
         namespace: ["material", "en", "global", "7d"],
         order: "asc",
         pageSize: 10,
-      }),
-    }));
-    expect(result).toMatchObject({ refreshedCounters: 1, removedCounters: 0 });
-    expect(
-      Option.getOrUndefined(
-        Arr.findFirst(
-          state.counters,
-          ({ windowKey }) => windowKey === "lifetime"
-        )
-      )
-    ).toEqual(lifetimeBefore);
-    expect(
-      Option.getOrUndefined(
-        Arr.findFirst(state.counters, ({ windowKey }) => windowKey === "7d")
-      )
-    ).toMatchObject({
-      latestDay: DAY,
-      score: 3,
-      title: "Signal title",
-    });
-    expect(Arr.map(state.ranking.page, ({ key }) => key)).toEqual([
+      })
+    );
+
+    expect(Arr.map(ranking.page, ({ key }) => key)).toEqual([
       [-3, graph().content_id],
     ]);
   });
 
-  it("reports a duplicate finite identity as a typed IO failure", async () => {
+  it("reports a storage failure as the typed IO failure", async () => {
     const target = createTarget();
-    await target.mutation(async (ctx) => {
-      await insertCycle(ctx);
-      const counter = await insertCounter(ctx, "duplicate-finite");
-      const { _id, _creationTime, ...value } = counter;
-      await ctx.db.insert("learningPopularityCounters", value);
-    });
     await expect(
-      target.mutation(
-        internal.contents.mutations.popularity
-          .refreshLearningPopularityWindowPage,
-        { day: DAY, scopeMode: "global", windowKey: "7d" }
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_ANALYTICS_IO_FAILED" } });
+      target.mutation(async (ctx) => {
+        await insertCycle(ctx);
+        await insertCounter(ctx, "storage-failure");
+        await insertSignal(ctx, {
+          contextKey: "storage-failure",
+          viewCount: 3,
+        });
+        vi.spyOn(ctx.db, "replace").mockRejectedValueOnce(
+          new Error("Unavailable")
+        );
+        await Effect.runPromise(
+          refreshLearningPopularityWindowPage({
+            day: DAY,
+            scopeMode: "global",
+            windowKey: "7d",
+          }).pipe(
+            Effect.provide(
+              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            )
+          )
+        );
+      })
+    ).rejects.toMatchObject({ code: "CONTENT_ANALYTICS_IO_FAILED" });
   });
 });

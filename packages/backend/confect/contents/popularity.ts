@@ -1,5 +1,7 @@
 import type { ContentViewer } from "@repo/backend/confect/contents/views/viewer";
 
+// Stored vocabulary: every window and scope a row may still hold. Only the
+// maintained ranking below is written; the rest is deleted and then narrowed.
 export const learningPopularityFiniteWindowValues = [
   "1d",
   "7d",
@@ -15,11 +17,8 @@ export const learningPopularityWindowValues = [
   ...learningPopularityFiniteWindowValues,
   "lifetime",
 ] as const;
-export type LearningPopularityWindow =
-  (typeof learningPopularityWindowValues)[number];
 export const learningPopularityScopeValues = ["global", "placement"] as const;
-export type LearningPopularityScope =
-  (typeof learningPopularityScopeValues)[number];
+type LearningPopularityScope = (typeof learningPopularityScopeValues)[number];
 const popularityWindowDayCounts: {
   readonly [windowKey in LearningPopularityFiniteWindow]: number;
 } = {
@@ -48,24 +47,25 @@ export function createPopularityViewerKey(viewer: ContentViewer) {
   return `device:${viewer.deviceId}`;
 }
 
-/** Returns the default popularity window used by homepage ranked reads. */
-export function getDefaultPopularityWindow(): LearningPopularityWindow {
-  return "7d";
-}
-
 /**
- * Narrows popularity windows to the finite windows that must expire old daily
- * signals through scheduled read-model refreshes.
+ * The one window, scope and section the pipeline maintains: the homepage
+ * trending list reads exactly this ranking and nothing else. The wider
+ * vocabularies above are only what older rows may still store.
  */
-export function isFinitePopularityWindow(
-  windowKey: LearningPopularityWindow
-): windowKey is LearningPopularityFiniteWindow {
-  return windowKey !== "lifetime";
-}
+export const POPULARITY_WINDOW =
+  "7d" as const satisfies LearningPopularityFiniteWindow;
+export const POPULARITY_SCOPE =
+  "global" as const satisfies LearningPopularityScope;
+export const POPULARITY_SECTION = "material" as const;
 
-/** Returns the finite popularity windows maintained from daily signal rows. */
-export function getFinitePopularityWindows() {
-  return learningPopularityFiniteWindowValues;
+/** Whether one view counts toward the ranking the homepage reads. */
+export function isRankedPopularityView(view: {
+  readonly scopeMode: LearningPopularityScope;
+  readonly section: string;
+}) {
+  return (
+    view.scopeMode === POPULARITY_SCOPE && view.section === POPULARITY_SECTION
+  );
 }
 
 /** Returns how many UTC signal days belong to one finite popularity window. */

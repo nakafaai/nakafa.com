@@ -1,88 +1,16 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
 import type { PopularitySignalDelta } from "@repo/backend/confect/contents/metrics/batch";
-import {
-  isPopularitySignalInWindow,
-  type LearningPopularityFiniteWindow,
-} from "@repo/backend/confect/contents/popularity";
 import { Effect } from "effect";
 
-type PopularitySignal = Docs["learningPopularitySignals"];
-type Applied = PopularitySignal["applied"];
-const appliedField = {
-  "1d": "d1",
-  "7d": "d7",
-  "14d": "d14",
-  "30d": "d30",
-  "90d": "d90",
-  "180d": "d180",
-  "365d": "d365",
-} as const satisfies Record<LearningPopularityFiniteWindow, keyof Applied>;
-
-/** Reads the contribution actually applied to one finite counter window. */
-export function getAppliedCount(
-  applied: Applied,
-  windowKey: LearningPopularityFiniteWindow
-) {
-  return applied[appliedField[windowKey]];
-}
-
-/** Returns the batch count actually added to one finite-window counter. */
-function getAppliedDelta(
-  delta: PopularitySignalDelta & {
-    readonly updatedAt: number;
-  },
-  windowKey: LearningPopularityFiniteWindow
-) {
-  return isPopularitySignalInWindow({
-    signalDay: delta.signalDay,
-    timestamp: delta.updatedAt,
-    windowKey,
-  })
-    ? delta.viewCount
-    : 0;
-}
-
-/** Projects exact per-window contributions for a newly created daily signal. */
-function createApplied(
-  delta: PopularitySignalDelta & {
-    readonly updatedAt: number;
-  }
-): Applied {
-  return {
-    d1: getAppliedDelta(delta, "1d"),
-    d7: getAppliedDelta(delta, "7d"),
-    d14: getAppliedDelta(delta, "14d"),
-    d30: getAppliedDelta(delta, "30d"),
-    d90: getAppliedDelta(delta, "90d"),
-    d180: getAppliedDelta(delta, "180d"),
-    d365: getAppliedDelta(delta, "365d"),
-  };
-}
-
-/** Adds only the batch contribution that the event path applied. */
-function mergeApplied(
-  current: PopularitySignal,
-  delta: PopularitySignalDelta & {
-    readonly updatedAt: number;
-  }
-): Applied {
-  return {
-    d1: current.applied.d1 + getAppliedDelta(delta, "1d"),
-    d7: current.applied.d7 + getAppliedDelta(delta, "7d"),
-    d14: current.applied.d14 + getAppliedDelta(delta, "14d"),
-    d30: current.applied.d30 + getAppliedDelta(delta, "30d"),
-    d90: current.applied.d90 + getAppliedDelta(delta, "90d"),
-    d180: current.applied.d180 + getAppliedDelta(delta, "180d"),
-    d365: current.applied.d365 + getAppliedDelta(delta, "365d"),
-  };
-}
-
-/** Applies one verified daily popularity signal delta. */
+/**
+ * Applies one verified daily popularity signal delta. The batch only holds
+ * days inside the window, so every view in it is added to the counter and
+ * `applied.d7` is exactly what the day will subtract when it expires.
+ */
 export const applyPopularitySignal = Effect.fn(
   "contents.metrics.applyPopularitySignal"
 )(function* (
@@ -106,7 +34,7 @@ export const applyPopularitySignal = Effect.fn(
     yield* writer.table("learningPopularitySignals").insert({
       ...delta.ref,
       ...delta.context,
-      applied: createApplied(delta),
+      applied: { d7: delta.viewCount },
       ...(delta.description === undefined
         ? {}
         : {
@@ -138,7 +66,8 @@ export const applyPopularitySignal = Effect.fn(
     contextProgramKey: delta.context.contextProgramKey,
     contextPublicPath: delta.context.contextPublicPath,
     contextSourcePath: delta.context.contextSourcePath,
-    applied: mergeApplied(currentRow, delta),
+    // Rewriting `applied` also drops the windows older rows still carry.
+    applied: { d7: currentRow.applied.d7 + delta.viewCount },
     description: delta.description,
     locale: delta.locale,
     materialDomain: delta.materialDomain,

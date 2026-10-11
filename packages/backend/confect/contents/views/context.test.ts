@@ -417,79 +417,82 @@ describe("contents/views/context", () => {
     })
   );
 });
-it.effect("records canonical and verified placement popularity scopes", () =>
-  Effect.gen(function* () {
-    const runtimeServices = yield* Effect.context<never>();
-    const target = convexTest(schema, convexModules);
-    const data = yield* makeProgramSnapshotData();
-    yield* Effect.promise(() =>
-      target.mutation((ctx) =>
-        Effect.runPromiseWith(runtimeServices)(
-          activateProgramSnapshot(data).pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
+it.effect(
+  "records a verified placement view in the global popularity scope only",
+  () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const target = convexTest(schema, convexModules);
+      const data = yield* makeProgramSnapshotData();
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateProgramSnapshot(data).pipe(
+              Effect.provide(mutationLayer(confectSchema, ctx))
+            )
           )
         )
-      )
-    );
-    yield* stagePlacement(
-      target,
-      data.snapshotId,
-      FUNCTION_MATERIAL.publicPath
-    );
-    yield* Effect.promise(() =>
-      target.mutation((ctx) =>
-        Effect.runPromiseWith(runtimeServices)(
-          insertMaterialProjection(FUNCTION_MATERIAL).pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
+      );
+      yield* stagePlacement(
+        target,
+        data.snapshotId,
+        FUNCTION_MATERIAL.publicPath
+      );
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            insertMaterialProjection(FUNCTION_MATERIAL).pipe(
+              Effect.provide(mutationLayer(confectSchema, ctx))
+            )
           )
         )
-      )
-    );
-    const context = yield* readContext(target, FUNCTION_MATERIAL, PLACEMENT);
-    expect(context).toMatchObject({
-      contextMode: "placement",
-      contextNodeKey: GROUP_KEY,
-    });
-    expect(context).toHaveProperty("contextParentPath", SUBJECT_PATH);
-    expect(context).toHaveProperty("contextPublicPath", GROUP_PATH);
-    expect(
-      readMaterialContextHint(
-        new URLSearchParams(toLearningContextQuery(context)).get("ctx")
-      )
-    ).toEqual({
-      nodeKey: GROUP_KEY,
-      programKey: PROGRAM_KEY,
-    });
-    expect(
-      toLearningContextQuery({
-        ...context,
-        contextProgramKey: "",
-      })
-    ).toBe("");
-    expect(
-      toLearningContextQuery({
-        ...context,
-        contextNodeKey: "",
-      })
-    ).toBe("");
-    yield* Effect.promise(() =>
-      target.mutation(api.contents.mutations.views.recordContentView, {
-        contentId: FUNCTION_MATERIAL.graph.assetId,
-        publicPath: FUNCTION_MATERIAL.publicPath,
-        locale: "en",
-        section: "material",
-        deviceId: "placement",
-        context: PLACEMENT,
-      })
-    );
-    const scopes = yield* Effect.promise(() =>
-      target.query(async (ctx) =>
-        Arr.map(
-          await ctx.db.query("learningEngagementQueue").collect(),
-          (row) => row.scopeMode
+      );
+      const context = yield* readContext(target, FUNCTION_MATERIAL, PLACEMENT);
+      expect(context).toMatchObject({
+        contextMode: "placement",
+        contextNodeKey: GROUP_KEY,
+      });
+      expect(context).toHaveProperty("contextParentPath", SUBJECT_PATH);
+      expect(context).toHaveProperty("contextPublicPath", GROUP_PATH);
+      expect(
+        readMaterialContextHint(
+          new URLSearchParams(toLearningContextQuery(context)).get("ctx")
         )
-      )
-    );
-    expect(Arr.sort(scopes, Order.String)).toEqual(["global", "placement"]);
-  })
+      ).toEqual({
+        nodeKey: GROUP_KEY,
+        programKey: PROGRAM_KEY,
+      });
+      expect(
+        toLearningContextQuery({
+          ...context,
+          contextProgramKey: "",
+        })
+      ).toBe("");
+      expect(
+        toLearningContextQuery({
+          ...context,
+          contextNodeKey: "",
+        })
+      ).toBe("");
+      yield* Effect.promise(() =>
+        target.mutation(api.contents.mutations.views.recordContentView, {
+          contentId: FUNCTION_MATERIAL.graph.assetId,
+          publicPath: FUNCTION_MATERIAL.publicPath,
+          locale: "en",
+          section: "material",
+          deviceId: "placement",
+          context: PLACEMENT,
+        })
+      );
+      const scopes = yield* Effect.promise(() =>
+        target.query(async (ctx) =>
+          Arr.map(
+            await ctx.db.query("learningEngagementQueue").collect(),
+            (row) => row.scopeMode
+          )
+        )
+      );
+      // The homepage ranks every lesson once, whatever page it was reached from.
+      expect(Arr.sort(scopes, Order.String)).toEqual(["global"]);
+    })
 );
