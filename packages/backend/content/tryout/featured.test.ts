@@ -13,10 +13,9 @@ import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import {
   activateLandingSource,
+  activateSnbtSource,
   makeLandingHierarchy,
   makeLandingPlacement,
-  makeLandingSectionPlacements,
-  makeSnbtHierarchy,
 } from "@repo/backend/test/tryout/landing";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import { TRYOUT_START_CONTENT_HASH } from "@repo/backend/test/tryout/source";
@@ -252,21 +251,12 @@ describe("tryouts/catalog/featured", () => {
   );
 
   it.effect(
-    "reads the pinned placement instead of the whole landing section",
+    "proves every placement of the landing section before returning its question",
     () =>
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const snapshotId = await activateTryoutSnapshot(ctx, {
-              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, makeSnbtHierarchy),
-              placements: Arr.flatMap(
-                ACTIVE_APP_LOCALE_CODES,
-                makeLandingSectionPlacements
-              ),
-            });
-            await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-          })
+          t.mutation((ctx) => activateSnbtSource(ctx))
         );
 
         const read = yield* Effect.promise(() =>
@@ -280,30 +270,34 @@ describe("tryouts/catalog/featured", () => {
         );
 
         expect(read.featured.question).toMatchObject({
-          contentKey: makeLandingPlacement("id").questionContentKey,
+          contentKey: LANDING_FEATURED_TRYOUT.questionContentKey,
           questionOrder: 1,
         });
-        // The state, release and snapshot rows, the four hierarchy rows, the
-        // seven section rows that prove the set inventory, and one placement.
-        // Reading the whole landing section took 34 documents (60975 bytes):
-        // it also loaded all 20 of its placements to keep one.
-        expect(read.metrics.documentsRead.used).toBe(15);
+        // The state, release and snapshot rows (3), the country, exam, track and
+        // set rows (4), the seven section rows that prove the set inventory, and
+        // all 20 placements of the landing section, which prove it complete and
+        // in order. One question is returned; the other 19 are the proof. A
+        // single-row read took 15 documents and also dropped that proof.
+        expect(read.metrics.documentsRead.used).toBe(34);
       })
   );
 
-  it.effect("rejects a publication missing its featured question", () =>
+  it.effect.each([
+    {
+      label: "a placement of the landing section is missing",
+      message: "lost its signed placements",
+      questionOrders: Arr.filter(Arr.range(1, 20), (order) => order !== 7),
+    },
+    {
+      label: "the placement orders of the landing section have a gap",
+      message: "changed its placement order",
+      questionOrders: [...Arr.range(1, 19), 21],
+    },
+  ] as const)("fails closed when $label", ({ message, questionOrders }) =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const snapshotId = await activateTryoutSnapshot(ctx, {
-            catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-              makeLandingHierarchy(locale, "visible")
-            ),
-            placements: [],
-          });
-          await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-        })
+        t.mutation((ctx) => activateSnbtSource(ctx, questionOrders))
       );
 
       const failure = yield* Effect.tryPromise(() =>
@@ -311,10 +305,13 @@ describe("tryouts/catalog/featured", () => {
           appLocale: "id",
         })
       ).pipe(Effect.flip);
+
+      // The first question is present and valid in both cases, yet the demo
+      // refuses to serve a section whose siblings cannot be proven.
       expect(failure.cause).toMatchObject({
         data: {
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: "The active try-out publication has no featured question.",
+          message: expect.stringContaining(message),
         },
       });
     })
@@ -368,7 +365,7 @@ describe("tryouts/catalog/featured", () => {
         );
 
         expect(featured.question.contentKey).toBe(
-          makeLandingPlacement("id").questionContentKey
+          LANDING_FEATURED_TRYOUT.questionContentKey
         );
       })
   );

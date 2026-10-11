@@ -46,11 +46,6 @@ export class TryoutSource extends Context.Service<
       section: SectionIdentity,
       limit: number
     ) => Rows<PlacementRow>;
-    readonly placement: (
-      snapshotId: string,
-      section: SectionIdentity,
-      questionOrder: number
-    ) => OptionalRow<PlacementRow>;
     readonly body: (
       snapshotId: string,
       selector: ProtectedContentRuntimeSelector

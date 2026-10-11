@@ -1,3 +1,4 @@
+import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
   type AppLocale,
   type AppLocaleCode,
@@ -11,15 +12,15 @@ import {
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import {
-  verifyTryoutCatalog,
-  verifyTryoutPlacement,
-} from "@repo/backend/confect/contentRelease/tryout/verify";
+import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
 import { freeze } from "@repo/backend/confect/response/projection";
 import type { TryoutQuestionSelector } from "@repo/backend/confect/tryouts/runtime/spec";
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
-import { readTryoutSectionRow } from "@repo/backend/content/tryout/section";
+import {
+  readTryoutSectionRow,
+  readTryoutSectionRows,
+} from "@repo/backend/content/tryout/section";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
@@ -31,19 +32,15 @@ type FeaturedTryoutTarget = Pick<
   TryoutSection,
   "countryKey" | "examKey" | "sectionKey" | "setKey" | "trackKey"
 > &
-  Pick<TryoutPlacement, "questionOrder">;
+  Pick<TryoutPlacement, "questionContentKey">;
 
-/**
- * Stable authored question demonstrated by the landing page learning loop:
- * question 1 of the quantitative knowledge section. The signed placement
- * contract derives the question's content key from its section, set and order,
- * so these keys name exactly one placement row and the read never loads the
- * other questions of the section.
- */
+/** Stable authored question demonstrated by the landing page learning loop. */
 export const LANDING_FEATURED_TRYOUT = {
   countryKey: "indonesia",
   examKey: "snbt",
-  questionOrder: 1,
+  questionContentKey: ContentKeySchema.make(
+    "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question"
+  ),
   sectionKey: "quantitative-knowledge",
   setKey: "set-1",
   trackKey: "2027",
@@ -68,18 +65,16 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       setIdentity,
       set
     );
-    const stored = Option.getOrNull(
-      yield* (yield* TryoutSource).placement(
-        snapshotId,
-        section,
-        target.questionOrder
-      )
+    const resolved = yield* readTryoutSectionRows(snapshotId, section);
+    const placementEntry = Arr.findFirst(
+      resolved.placements,
+      ({ row }) => row.questionContentKey === target.questionContentKey
     );
     const bundleHash = owner.active.release.tryoutRuntimeBundleHash ?? null;
-    if (!(stored && bundleHash)) {
+    if (!(Option.isSome(placementEntry) && bundleHash)) {
       return yield* missingFeaturedTryout("question");
     }
-    const placement = yield* verifyTryoutPlacement(stored, snapshotId);
+    const placement = placementEntry.value.row;
     const question: TryoutQuestionSelector = {
       appLocale: locale,
       artifactHash: placement.questionArtifactHash,
@@ -171,21 +166,30 @@ const readLandingFeaturedSection = Effect.fn(
     setIdentity,
     set.sectionCount + 1
   );
-  const sections = Arr.map(
-    yield* Effect.forEach(storedSections, (stored) =>
-      readTryoutSectionRow(snapshotId, stored)
-    ),
-    ({ row }) => row
+  const sections = yield* Effect.forEach(storedSections, (stored) =>
+    readTryoutSectionRow(snapshotId, stored).pipe(
+      Effect.map((verified) => ({
+        ...verified,
+        stored,
+      }))
+    )
   );
   const section = Arr.findFirst(
     sections,
-    (row) =>
+    ({ row }) =>
       row.sectionKey === target.sectionKey && row.visibility === "visible"
   );
-  if (!(provesSetInventory(set, sections) && Option.isSome(section))) {
+  if (
+    !(
+      provesSetInventory(
+        set,
+        Arr.map(sections, ({ row }) => row)
+      ) && Option.isSome(section)
+    )
+  ) {
     return yield* missingFeaturedTryout("section");
   }
-  return section.value;
+  return section.value.stored;
 });
 type FeaturedMissingKind =
   | "country"
