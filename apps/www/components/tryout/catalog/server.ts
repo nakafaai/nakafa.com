@@ -31,17 +31,20 @@ class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>(
   }
 ) {}
 
-/** Reads and renders the signed question selected for the marketing page. */
+/**
+ * Reads and renders the signed question selected for the marketing page. The
+ * selection is the same for every request of one release, so the content store
+ * holds it once for each release and locale; the `use cache` boundary stays so
+ * that the landing page prerenders and the try-out tag still expires it.
+ */
 export async function readFeaturedTryout(locale: Locale) {
   "use cache";
 
   applyContentCache("tryout");
   const featured = await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(tryouts.queries.catalog.getFeaturedQuestion, {
-        appLocale: AppLocaleSchema.make(locale),
-      })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
+    queryContentStore(tryouts.queries.catalog.getFeaturedQuestion, {
+      appLocale: AppLocaleSchema.make(locale),
+    }).pipe(Effect.withTracerTiming(false))
   );
   return await Effect.runPromise(
     Effect.gen(function* () {
