@@ -6144,6 +6144,24 @@ export declare const internal: {
         any
       >;
     };
+    tokens: {
+      encryptStoredTokens: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: null | string },
+        {
+          continueCursor: string;
+          encrypted: number;
+          isDone: boolean;
+          scanned: number;
+          unreadable: Array<{
+            account: string;
+            field: "accessToken" | "refreshToken";
+            reason: string;
+          }>;
+        }
+      >;
+    };
   };
   classes: {
     forums: {
@@ -8397,6 +8415,7 @@ export declare const internal: {
         | {
             _creationTime: number;
             _id: Id<"ninaTurns">;
+            cancelRequestedAt?: number;
             chatId: Id<"chats">;
             credits: number;
             creditsResetAt: number;
@@ -8884,6 +8903,12 @@ export declare const internal: {
           }
         | null
       >;
+      halted: FunctionReference<
+        "query",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        boolean
+      >;
       presentation: FunctionReference<
         "query",
         "internal",
@@ -8891,6 +8916,7 @@ export declare const internal: {
         | {
             _creationTime: number;
             _id: Id<"ninaTurns">;
+            cancelRequestedAt?: number;
             chatId: Id<"chats">;
             credits: number;
             creditsResetAt: number;
@@ -9395,6 +9421,12 @@ export declare const internal: {
             | "unknown";
           turnId: Id<"ninaTurns">;
         },
+        null
+      >;
+      sweep: FunctionReference<
+        "mutation",
+        "internal",
+        { resume?: { before: number; cursor: string } },
         null
       >;
     };

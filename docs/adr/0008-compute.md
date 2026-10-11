@@ -23,20 +23,64 @@ Successful persistence closes the hold and completes its existing ledger entry.
 Failure refunds it at most once. A refund can restore only the allowance from
 which the hold was taken: both the reset timestamp and the plan grant identity
 must still match. Upgrades, downgrades, account deletion, and calendar resets
-cannot turn an old hold into extra credits. A turn still queued or running
-fifteen minutes after admission settles as failed and refunds, beyond the
-generation action's seven-minute stream deadline. The native scheduled recovery
-is intentionally retained even when it becomes an idempotent no-op.
+cannot turn an old hold into extra credits.
+
+A recovery sweep settles a turn that cannot finish on its own. A turn still
+queued or running past its deadline settles as failed with `response-timeout`
+and refunds. The deadline is the chat call's total budget in
+`confect/gateway/purpose.ts` plus one minute, counted from the start of the
+run, or from admission for a turn that never started. A cron every five minutes
+finds these turns through the `by_phase` index and settles each one in its own
+scheduled mutation, through the settlement a failed run uses. One turn that
+cannot settle never blocks the others, and the next sweep tries it again.
+Admission schedules no per-turn check. Only an active turn settles, so a late
+result, a second sweep, or a cancel that races a completion changes nothing and
+never refunds twice.
+
+A learner may have two turns queued or running at once. A third is refused with
+`RATE_LIMITED` before any credit is held. A turn holds its place from admission
+until its deadline passes. After that it can no longer run and waits only for
+the sweep, so a settlement that keeps failing cannot lock the learner out of
+Nina. A turn the learner stopped holds no place either, because their next
+prompt settles it first.
 
 The scheduled generation action owns one stream deadline with time left for
-settlement within Convex's action limit. Cancellation settles the turn and
-aborts its Agent stream, which propagates through the main AI SDK stream,
-specialist agents, tool repair, and abortable HTTP clients. Titles, follow-up
-suggestions, the rolling summary, and learner memory curation run later,
-concurrently, in a separate action with their own deadlines, so optional work
-never discards a completed answer. External
-services remain responsible for stopping work after cancellation; each remote
-calculation also has its own execution limit.
+settlement within Convex's action limit. Cancelling a queued turn settles it at
+once, since no run exists. Cancelling a running turn cuts off its Agent stream,
+marks its prompt failed, and records the request. The page shows the turn as
+cancelled from the moment of the stop, so the composer is free at once. The turn
+itself settles, which pays the refund back and unlocks the chat, at the first of
+three moments: its run has exited, a short grace has passed (`STOP_GRACE` in
+`confect/nina/settlement.ts`, for a run that is gone and never exits), or the
+learner sends their next prompt. That prompt settles every turn the learner
+stopped, in any chat, in the same transaction that admits it, before the busy
+check, the open-turn count and the credit hold. The cut-off stream can no longer
+save output, so that refund is the one the run's exit would give a moment later,
+and a prompt in a chat whose turn was not stopped is still refused as busy. The
+run checks its turn every second and aborts its generation when the turn was
+stopped or settled elsewhere, which also stops a silent provider call.
+Whichever settlement comes first, the turn ends as cancelled at the time of the
+stop, and the later ones find it settled and change nothing. A saved answer wins
+a race with a cancel and settles as complete.
+
+Deleting a chat settles its open turn in the deleting transaction, whether or
+not the learner stopped it, and no new turn can start on a chat that is gone.
+The hold is paid back without waiting for the run, whose next check finds its
+turn settled and stops its provider call. Agent deletes the journal page by
+page, the first page in that transaction and the rest in the mutations it
+schedules. Keeping the turn until its run exits would need its row to outlive
+the chat cleanup and its prompt message to outlive the thread deletion.
+
+A generation that ends because its turn was stopped or settled elsewhere is no
+failure to report. The settlement that follows every run is reported whenever it
+fails, and the grace settlement of a stopped turn or the sweep tries it again.
+
+The abort propagates through the main AI SDK stream, specialist agents, tool
+repair, and abortable HTTP clients. Titles, follow-up suggestions, the rolling
+summary, and learner memory curation run later, concurrently, in a separate
+action with their own deadlines, so optional work never discards a completed
+answer. External services remain responsible for stopping work after
+cancellation; each remote calculation also has its own execution limit.
 
 CAS runs each calculation in the owned Python worker process. A twenty-second
 deadline kills and reaps that worker. Two local slots reject excess work instead

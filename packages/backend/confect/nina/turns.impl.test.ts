@@ -6,6 +6,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/sweep";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import {
   createConvexTestWithBetterAuth,
@@ -14,7 +15,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { showsText } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -168,6 +169,13 @@ describe("native Nina admission", () => {
     expect(
       Arr.filter(state.schedules, (row) => row.name === "nina/response:run")
     ).toHaveLength(1);
+    // The recovery sweep covers a stuck turn, so admission schedules no check.
+    expect(
+      Arr.filter(
+        state.schedules,
+        (row) => row.name === "nina/lifecycle:recover"
+      )
+    ).toEqual([]);
     expect(state.messages.page).toHaveLength(1);
   });
 
@@ -204,6 +212,75 @@ describe("native Nina admission", () => {
         chatId: first.chatId,
       })
     ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
+  });
+
+  it("refuses a third open turn before any credit is held, and frees a place when one settles", async () => {
+    const { t, owner, identity } = await fixture(20);
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, { ...args, requestId: "one" })
+    );
+    await owner.mutation(start, { ...args, requestId: "two" });
+    await expect(
+      owner.mutation(start, { ...args, requestId: "three" })
+    ).rejects.toMatchObject({ data: { code: "RATE_LIMITED" } });
+    const refused = await t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      chats: await ctx.db.query("chats").collect(),
+      turns: await ctx.db.query("ninaTurns").collect(),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+    }));
+    expect(refused.user?.credits).toBe(10);
+    expect(refused.chats).toHaveLength(2);
+    expect(refused.turns).toHaveLength(2);
+    expect(refused.ledger).toHaveLength(2);
+    expect(
+      Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await owner.mutation(start, { ...args, requestId: "one" })
+      )
+    ).toEqual(first);
+
+    await owner.mutation(cancel, { chatId: first.chatId });
+    await owner.mutation(start, { ...args, requestId: "three" });
+    expect(
+      (await t.query((ctx) => ctx.db.query("ninaTurns").collect())).length
+    ).toBe(3);
+  });
+
+  it("holds no place for an open turn past its deadline, so a settlement that keeps failing cannot lock the learner out", async () => {
+    const { t, owner } = await fixture(20);
+    await owner.mutation(start, { ...args, requestId: "one" });
+    await owner.mutation(start, { ...args, requestId: "two" });
+    const deadline = Duration.toMillis(TURN_DEADLINE);
+
+    // Until its deadline passes, a turn can still run and holds its place.
+    vi.setSystemTime(NOW + deadline);
+    await expect(
+      owner.mutation(start, { ...args, requestId: "three" })
+    ).rejects.toMatchObject({ data: { code: "RATE_LIMITED" } });
+
+    // Past it, the turn can no longer run and waits only for the sweep.
+    vi.setSystemTime(NOW + deadline + 1);
+    await owner.mutation(start, { ...args, requestId: "three" });
+    expect(
+      (await t.query((ctx) => ctx.db.query("ninaTurns").collect())).length
+    ).toBe(3);
+  });
+
+  it("counts only the learner's own open turns", async () => {
+    const { t, owner } = await fixture(20);
+    await owner.mutation(start, { ...args, requestId: "one" });
+    await owner.mutation(start, { ...args, requestId: "two" });
+    const other = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, credits: 10, suffix: "other" })
+    );
+    await t
+      .withIdentity({ subject: other.authUserId, sessionId: other.sessionId })
+      .mutation(start, { ...args, requestId: "other" });
+    expect(
+      (await t.query((ctx) => ctx.db.query("ninaTurns").collect())).length
+    ).toBe(3);
   });
 
   it("rejects insufficient credits before signed context work and rolls back a context failure", async () => {

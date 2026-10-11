@@ -68,13 +68,24 @@ function readBinding(client: ReturnType<typeof makeClient>) {
 
 describe("Convex authentication", () => {
   it.each([
-    [pending, null],
-    [signedIn("session-1"), "session-1"],
-    [previewAuthSession, null],
+    [pending, null, null],
+    [signedIn("session-1"), null, "session-1"],
+    [previewAuthSession, null, null],
   ])(
-    "holds credentials only for a settled signed-in session",
-    (session, id) => {
-      expect(readConvexSessionId(session)).toBe(id);
+    "holds credentials only for a settled signed-in session when the browser knows none",
+    (session, known, id) => {
+      expect(readConvexSessionId(session, known)).toBe(id);
+    }
+  );
+
+  it.each([
+    [pending, "session-1", "session-1"],
+    [signedIn("session-2"), "session-1", "session-2"],
+    [previewAuthSession, "session-1", null],
+  ])(
+    "holds the session the browser last had only until Better Auth answers",
+    (session, known, id) => {
+      expect(readConvexSessionId(session, known)).toBe(id);
     }
   );
 

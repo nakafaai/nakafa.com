@@ -191,6 +191,10 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         enabled: true,
         allowDifferentEmails: false,
       },
+      // Better Auth seals the provider access and refresh tokens with the auth
+      // secret before it stores them. It stores the ID token as issued, which
+      // is why Google sign-in below refuses an ID token as a credential.
+      encryptOAuthTokens: true,
     },
     disabledPaths: [...disabledCredentialPaths],
     emailAndPassword: {
@@ -245,6 +249,12 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
           clientId: google.clientId,
           clientSecret: Redacted.value(google.clientSecret),
           accessType: "offline",
+          // Only the redirect flow signs a learner in. With ID token sign-in
+          // on, Better Auth would accept any Google ID token that was issued
+          // to Nakafa in the last hour as a login credential, and its link
+          // route would store the access and refresh tokens that came with it
+          // unsealed.
+          disableIdTokenSignIn: true,
           prompt: "select_account consent",
         },
       },
