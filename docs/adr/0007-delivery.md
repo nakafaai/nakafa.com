@@ -33,13 +33,34 @@ contextual visit cannot first record a canonical view and then a placement view.
   while `use cache` keys include the build, so a deploy and every new instance
   used to read Convex again. A store key holds a version constant, the release
   id, the read and its arguments, so a new release has new keys and an entry is
-  never stale; entries live 30 days under the tag of their release. The active
-  release pointer is the one read that is not release-keyed: each region keeps
-  it for a minute, and the activation route expires it, so a release shows at
-  once and a missed expiry heals within that minute, or at the first store
-  miss, which finds Convex naming another release and starts over under it.
-  The `use cache` boundaries stay above the store because prerendering and the
-  scope tags that expire ISR pages need them.
+  never stale; entries live 30 days under the tag of their release. The store
+  holds only what Convex answered. What code derives from an answer, such as
+  URLs, Markdown and sitemap descriptors, is derived after the read inside the
+  `use cache` boundary, so a deploy that changes a derivation takes effect with
+  that deploy and needs no version bump. The `use cache` boundaries stay above
+  the store because prerendering and the scope tags that expire ISR pages need
+  them. Misses of one key that overlap in an instance share one load.
+- The active release pointer is the one read that is not release-keyed: each
+  region keeps it for a minute. The activation route expires it and reads it
+  back, because the Runtime Cache client resolves an expiry that failed, and it
+  answers 503 before it revalidates anything while the pointer still names the
+  previous release, so the publisher repeats the call. It expires the pointer
+  once more after the sitemap purge, for a read that began before the
+  activation and wrote the previous release after the first expiry. A pointer
+  that is wrong anyway is dropped by the first read that proves it: a store miss
+  that finds Convex naming another release, whether its load succeeded or
+  failed, or a pinned read that names another release than its pin. That check
+  is one pointer read per miss and none per hit; it is kept for every read
+  because only some answers name their own release.
+- The sitemap index and pages end in a long lifetime, a day at the CDN, so they
+  never trust the stored pointer alone. Both are derived on every fill from the
+  stored answers of Convex, each fill ends with a check of the release against
+  Convex, and a fill that finds another release fails and drops the pointer
+  instead of keeping a previous release or a page cached as missing. The page
+  route checks the id against the index of the release before it reads
+  anything, and a try-out page below the count of its release is the only one
+  that is read, so a request can never create a stored or cached entry for an
+  id that the release does not list.
 - RSS caches the completed XML. Its update timestamp comes from authored
   publication dates, so another request does not manufacture changed output.
 - Flight requests bypass the Proxy's duplicate publication ownership reads.
