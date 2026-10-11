@@ -7779,6 +7779,255 @@ export declare const internal: {
         >;
       };
     };
+    sections: {
+      build: {
+        run: FunctionReference<
+          "action",
+          "internal",
+          {
+            position?:
+              | { cursor: string | null; phase: "lessons" }
+              | { phase: "quran"; surah: number }
+              | { phase: "prune" };
+            releaseId?: string;
+          },
+          {
+            embedded: number;
+            kept: number;
+            missing: number;
+            next: {
+              position:
+                | { cursor: string | null; phase: "lessons" }
+                | { phase: "quran"; surah: number }
+                | { phase: "prune" };
+              releaseId: string;
+            } | null;
+            position:
+              | { cursor: string | null; phase: "lessons" }
+              | { phase: "quran"; surah: number }
+              | { phase: "prune" };
+            stale: boolean;
+            written: number;
+          }
+        >;
+      };
+      compare: {
+        rank: FunctionReference<
+          "action",
+          "internal",
+          {
+            locale: "en" | "id" | "de";
+            model:
+              | "google/gemini-embedding-001"
+              | "google/gemini-embedding-2"
+              | "openai/text-embedding-3-large"
+              | "openai/text-embedding-3-small"
+              | "qwen/qwen3-embedding-4b"
+              | "qwen/qwen3-embedding-8b";
+            questions: Array<{
+              contentKey: string;
+              ordinal: number;
+              question: string;
+            }>;
+          },
+          | { kind: "empty" }
+          | {
+              kind: "ranked";
+              pool: number;
+              verdicts: Array<{
+                milliseconds: number;
+                section: { heading: string; rank: number } | null;
+              }>;
+            }
+        >;
+      };
+      hits: {
+        resolve: FunctionReference<
+          "query",
+          "internal",
+          {
+            ids: Array<Id<"contentSections">>;
+            limit: number;
+            locale: "en" | "id" | "de";
+            query: string;
+            section?: "articles" | "material" | "tryout" | "quran";
+          },
+          | { kind: "empty" }
+          | {
+              hits: Array<{
+                anchor: string;
+                appLocale: "en" | "id" | "de";
+                contentKey: string;
+                excerpt: string;
+                headingPath: Array<string>;
+                ordinal: number;
+                reference: {
+                  alignmentId: string;
+                  assetId: string;
+                  conceptId: string;
+                  content_id: string;
+                  description: string;
+                  learningObjectId: string;
+                  lensId: string;
+                  locale: "en" | "id" | "de";
+                  markdown_url?: string;
+                  route: string;
+                  section: "articles" | "material" | "tryout" | "quran";
+                  title: string;
+                  url: string;
+                };
+              }>;
+              kind: "hits";
+            }
+        >;
+      };
+      rows: {
+        finish: FunctionReference<
+          "mutation",
+          "internal",
+          { model: string; releaseId: string },
+          { recorded: boolean }
+        >;
+        lessons: FunctionReference<
+          "query",
+          "internal",
+          { cursor: string | null; releaseId?: string },
+          | { kind: "stale" }
+          | {
+              kind: "page";
+              lessons: Array<{
+                appLocale: "en" | "id" | "de";
+                contentKey: string;
+                publicPath: string;
+                rawMdx: string;
+                section: "articles" | "material" | "tryout" | "quran";
+                title: string;
+              }>;
+              next: string | null;
+              releaseId: string;
+            }
+        >;
+        page: FunctionReference<
+          "query",
+          "internal",
+          { appLocale: "en" | "id" | "de"; cursor: string | null },
+          {
+            next: string | null;
+            sections: Array<{
+              contentKey: string;
+              headingPath: Array<string>;
+              ordinal: number;
+              text: string;
+            }>;
+          }
+        >;
+        prune: FunctionReference<
+          "mutation",
+          "internal",
+          { releaseId: string },
+          { deleted: number; done: boolean }
+        >;
+        save: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            model: string;
+            releaseId: string;
+            sections: Array<{
+              anchor: string;
+              appLocale: "en" | "id" | "de";
+              contentKey: string;
+              count: number;
+              embedding?: Array<number>;
+              excerpt: string;
+              hash: string;
+              headingPath: Array<string>;
+              ordinal: number;
+              publicPath: string;
+              section: "articles" | "material" | "tryout" | "quran";
+              text: string;
+            }>;
+          },
+          { kept: number; missing: number; stale: boolean; written: number }
+        >;
+        stored: FunctionReference<
+          "query",
+          "internal",
+          {
+            model: string;
+            sections: Array<{
+              appLocale: "en" | "id" | "de";
+              contentKey: string;
+              hash: string;
+              ordinal: number;
+            }>;
+          },
+          Array<boolean>
+        >;
+        surah: FunctionReference<
+          "query",
+          "internal",
+          { releaseId?: string; surah: number },
+          | { kind: "stale" }
+          | { kind: "none"; releaseId: string }
+          | {
+              kind: "surah";
+              releaseId: string;
+              sections: Array<{
+                anchor: string;
+                appLocale: "en" | "id" | "de";
+                contentKey: string;
+                count: number;
+                excerpt: string;
+                headingPath: Array<string>;
+                ordinal: number;
+                publicPath: string;
+                section: "articles" | "material" | "tryout" | "quran";
+                text: string;
+              }>;
+            }
+        >;
+      };
+      search: {
+        search: FunctionReference<
+          "action",
+          "internal",
+          {
+            limit?: number;
+            locale: "en" | "id" | "de";
+            query: string;
+            section?: "articles" | "material" | "tryout" | "quran";
+          },
+          | { kind: "empty" }
+          | {
+              hits: Array<{
+                anchor: string;
+                appLocale: "en" | "id" | "de";
+                contentKey: string;
+                excerpt: string;
+                headingPath: Array<string>;
+                ordinal: number;
+                reference: {
+                  alignmentId: string;
+                  assetId: string;
+                  conceptId: string;
+                  content_id: string;
+                  description: string;
+                  learningObjectId: string;
+                  lensId: string;
+                  locale: "en" | "id" | "de";
+                  markdown_url?: string;
+                  route: string;
+                  section: "articles" | "material" | "tryout" | "quran";
+                  title: string;
+                  url: string;
+                };
+              }>;
+              kind: "hits";
+            }
+        >;
+      };
+    };
   };
   credits: {
     mutations: {
