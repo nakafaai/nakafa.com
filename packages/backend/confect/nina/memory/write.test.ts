@@ -127,6 +127,26 @@ describe("memory capture write", () => {
     expect(await f.texts()).toEqual([SCHOOL_NOW]);
   });
 
+  it("keeps Nina's wording of a memory when the candidate only restates it in another case, punctuation or spacing", async () => {
+    const f = await createCaptureTest();
+    const id = await f.seed({
+      confirmedAt: 1,
+      kind: "level",
+      text: "Kelas 12 IPA.",
+    });
+    expect(await f.run([candidate({ text: "kelas   12,  ipa" })])).toBe(1);
+    // The memory is confirmed now, and its words are the ones Nina wrote first.
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({
+        _id: id,
+        author: "nina",
+        confirmedAt: NOW,
+        kind: "level",
+      }),
+    ]);
+    expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
+  });
+
   it("never replaces the words of a memory the learner wrote when the candidate names it but says something else: the candidate becomes a memory of Nina's", async () => {
     const f = await createCaptureTest();
     const id = await f.seed({
@@ -153,6 +173,46 @@ describe("memory capture write", () => {
     expect(await f.texts()).toEqual(["Kelas 11.", "Kelas 12 IPA."]);
     expect(await f.titles()).toEqual(["Sekolah", null]);
     expect(await f.remembered()).toBe(1);
+  });
+
+  it("confirms the memory of Nina's that says the same, and adds no copy of it, when the candidate names a memory the learner wrote that says something else", async () => {
+    const f = await createCaptureTest();
+    const id = await f.seed({
+      author: "learner",
+      confirmedAt: 1,
+      text: "Kelas 11.",
+    });
+    const ninas = await f.seed({
+      confirmedAt: 1,
+      kind: "level",
+      text: "Kelas 12 IPA.",
+    });
+    const [before] = await f.stored();
+    expect(await f.run([candidate({ known: id })])).toBe(1);
+    const [learners, confirmed, ...others] = await f.stored();
+    expect(others).toEqual([]);
+    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
+    expect(learners).toStrictEqual(before);
+    expect(confirmed).toMatchObject({
+      _id: ninas,
+      author: "nina",
+      confirmedAt: NOW,
+      kind: "level",
+    });
+    expect(await f.texts()).toEqual(["Kelas 11.", "Kelas 12 IPA."]);
+    expect(await f.remembered()).toBe(1);
+  });
+
+  it("leaves a memory that is only a title as it is, though a candidate that says nothing either seems to repeat its empty words", async () => {
+    const f = await createCaptureTest();
+    await f.seed({ author: "learner", text: "", title: "Ujian UTBK" });
+    const [before] = await f.stored();
+    await f.run([
+      candidate({ kind: "situation", text: "?", until: "2026-10-20" }),
+    ]);
+    const [learners] = await f.stored();
+    // The memory is a title alone, so it gets no kind and no end day to expire by.
+    expect(learners).toStrictEqual(before);
   });
 
   it.each([

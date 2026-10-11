@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
   findTarget,
+  hasWords,
   sameWords,
   saysSame,
 } from "@repo/backend/confect/nina/memory/match";
@@ -16,17 +17,25 @@ const decode = Schema.decodeUnknownSync(Id("ninaMemories"));
 /** A goal Nina wrote. */
 const goal = {
   _id: decode("goal"),
+  author: "nina",
   kind: "goal",
   text: "Mau ikut SNBT 2027",
 } as const;
 /** A level Nina wrote. */
 const level = {
   _id: decode("level"),
+  author: "nina",
   kind: "level",
   text: "Kelas 12 IPA",
 } as const;
 /** A memory the learner wrote: it has no kind. */
-const written = { _id: decode("written"), text: "Kelas 12 IPA" } as const;
+const written = {
+  _id: decode("written"),
+  author: "learner",
+  text: "Kelas 12 IPA",
+} as const;
+/** A memory the learner gave only a title: its words are empty. */
+const titled = { _id: decode("titled"), author: "learner", text: "" } as const;
 
 /** A candidate that states a level in the words of `level`, with any field replaced. */
 function candidate(
@@ -44,6 +53,22 @@ function targetOf(
     Option.map(findTarget(memories, candidate(fields)), (memory) => memory._id)
   );
 }
+
+describe("memory words", () => {
+  it.each(["Kelas 12", "12", "SNBT", "...kelas!", "الرياضيات", "数学"])(
+    "finds a word in %j",
+    (text) => {
+      expect(hasWords(text)).toBe(true);
+    }
+  );
+
+  it.each(["", "   ", "?", "...", "🙂", " - ! "])(
+    "finds no word in %j",
+    (text) => {
+      expect(hasWords(text)).toBe(false);
+    }
+  );
+});
 
 describe("memory same words", () => {
   it.each([
@@ -106,6 +131,18 @@ describe("memory text match", () => {
   ])("says %j and %j are different", (first, second) => {
     expect(saysSame(first, second)).toBe(false);
   });
+
+  it.each([
+    ["", ""],
+    ["", "?"],
+    ["...", "!"],
+    ["🙂", "   "],
+  ])(
+    "does not say %j and %j are the same, because neither says anything",
+    (first, second) => {
+      expect(saysSame(first, second)).toBe(false);
+    }
+  );
 });
 
 describe("memory a candidate confirms", () => {
@@ -135,12 +172,14 @@ describe("memory a candidate confirms", () => {
   });
 
   it.each(NinaMemoryKind.literals)(
-    "is a memory without a kind for a candidate of the %s kind, by name or by saying the same",
+    "is a memory without a kind for a candidate of the %s kind that says the same, by name or by its words",
     (kind) => {
-      expect(
-        targetOf([written], { kind, known: written._id, text: "Kelas 11" })
-      ).toBe(written._id);
+      const earlier = { ...written, _id: decode("earlier") };
       expect(targetOf([written], { kind })).toBe(written._id);
+      // Naming it wins over an earlier memory that says the same too.
+      expect(targetOf([earlier, written], { kind, known: written._id })).toBe(
+        written._id
+      );
     }
   );
 
@@ -148,5 +187,28 @@ describe("memory a candidate confirms", () => {
     const other = { ...goal, text: level.text };
     expect(targetOf([other, written, level])).toBe(written._id);
     expect(targetOf([level, written])).toBe(level._id);
+  });
+
+  it("is a memory the learner wrote only when the candidate says the same as it, though it names it", () => {
+    const other = { ...written, _id: decode("other"), text: "Kelas 11" };
+    expect(targetOf([written, level], { known: written._id })).toBe(
+      written._id
+    );
+    // The named memory says something else, so the candidate is matched by its
+    // words: it finds the memory that says the same, and else none.
+    expect(targetOf([other, level], { known: other._id })).toBe(level._id);
+    expect(targetOf([other], { known: other._id })).toBeUndefined();
+    // Words that Nina wrote are the target whatever they say.
+    expect(targetOf([level], { known: level._id, text: "Kelas 11" })).toBe(
+      level._id
+    );
+  });
+
+  it("is never a memory that is only a title, though the candidate says nothing either", () => {
+    expect(targetOf([titled], { text: "?" })).toBeUndefined();
+    expect(
+      targetOf([titled], { known: titled._id, text: "?" })
+    ).toBeUndefined();
+    expect(targetOf([titled], { known: titled._id })).toBeUndefined();
   });
 });

@@ -122,11 +122,13 @@ export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()
  * One thing a capture call says the learner stated about themself. `text` is
  * one short sentence: never empty, and at most `MEMORY_SENTENCE_LIMIT`
  * characters. `quote` holds the learner's exact words; the write is refused
- * unless the message contains them. `known` names a stored memory that this
- * one confirms, and a stored memory without a kind takes this one's kind. The
- * words of the stored memory change only when Nina wrote them: when the
- * learner wrote them and this one says something else, this one becomes a new
- * memory and the learner's stays as it is. `until` is the day a situation
+ * unless the message contains them, and unless the sentence has a letter or a
+ * digit. `known` names a stored memory that this one confirms, and a stored
+ * memory without a kind takes this one's kind. The words of the stored memory
+ * change only when Nina wrote them: when the learner wrote them and this one
+ * says something else, the learner's memory stays as it is and this one is
+ * matched by its words like one that names no memory, so it confirms a memory
+ * that says the same or becomes a new memory. `until` is the day a situation
  * ends, as `YYYY-MM-DD`.
  */
 export const NinaMemoryCandidate = Schema.Struct({

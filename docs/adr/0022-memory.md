@@ -66,10 +66,10 @@ edit and delete every one. After a complete turn:
    one of them still confirms it by saying the same words. Its usage is
    recorded as agent `memory` in the turn's ledger.
 3. The check keeps a candidate only when its quote is in the message once
-   lower-cased and with whitespace collapsed, neither its text nor its quote
-   holds an email address, a link or eight digits in a row, and a situation has
-   an end day of today or later. A dash, a dot or a space ends a run of digits,
-   so a date such as 20-10-2026 stays.
+   lower-cased and with whitespace collapsed, its text has a letter or a digit,
+   neither its text nor its quote holds an email address, a link or eight digits
+   in a row, and a situation has an end day of today or later. A dash, a dot or
+   a space ends a run of digits, so a date such as 20-10-2026 stays.
 4. The write first checks what could have changed while the model read the
    message. Paused memory, a deleted turn, and a memory that the call read and
    that is gone now (the learner removed it, or it ended) each stop it. It reads
@@ -87,17 +87,20 @@ edit and delete every one. After a complete turn:
    chat says it again, and keeps having none when it was changed since the call
    read it. A repeat is the same normalized text or a word overlap of at least
    0.8 with the words of a memory the candidate can confirm; the title of a
-   memory is never compared. At 100 memories the Nina-written one confirmed
-   longest ago leaves, whichever was created first; when the learner wrote them
-   all, the new one is dropped.
+   memory is never compared, and a text with no words, such as the empty words
+   of a memory that is only a title, repeats nothing. At 100 memories the
+   Nina-written one confirmed longest ago leaves, whichever was created first;
+   when the learner wrote them all, the new one is dropped.
 
 Nina never replaces words the learner wrote. A candidate that names a memory the
-learner wrote and says something else than that memory does not confirm it. It
-becomes a new memory of Nina's, and the learner's memory stays exactly as it
-is, with its words, title, kind and confirmation time. A candidate that says the
-same as a memory the learner wrote confirms it as step 4 says, and leaves its
-words and its author. Only the words of a memory Nina wrote are replaced, by a
-candidate that says something new rather than the same words in another case,
+learner wrote and says something else than that memory does not confirm it, and
+the name counts for nothing: the candidate is matched by its words like one that
+names no memory. It confirms a memory of Nina's that already says the same, and
+otherwise becomes a new memory of Nina's. The learner's memory stays exactly as
+it is, with its words, title, kind and confirmation time. A candidate that says
+the same as a memory the learner wrote confirms it as step 4 says, and leaves
+its words and its author. Only the words of a memory Nina wrote are replaced, by
+a candidate that says something new rather than the same words in another case,
 punctuation or spacing, and only when nobody changed the memory since the call
 read it.
 

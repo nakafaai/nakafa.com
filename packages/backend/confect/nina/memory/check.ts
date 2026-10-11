@@ -1,3 +1,4 @@
+import { hasWords } from "@repo/backend/confect/nina/memory/match";
 import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
 import {
   Array as Arr,
@@ -55,6 +56,7 @@ function isSupported(candidate: Candidate, said: string, now: number) {
   const quote = collapse(candidate.quote);
   return (
     quote !== "" &&
+    hasWords(candidate.text) &&
     Str.includes(quote)(said) &&
     !hasPrivateData(candidate.text) &&
     !hasPrivateData(candidate.quote) &&
@@ -64,9 +66,10 @@ function isSupported(candidate: Candidate, said: string, now: number) {
 
 /**
  * Keeps the candidates the learner's own words support. A candidate stays only
- * when its quote is in the message, neither its text nor its quote holds an
- * email address, a link or a long number, and a situation ends today or later.
- * Only a situation keeps its end date.
+ * when its quote is in the message, its text says something (it has a letter or
+ * a digit), neither its text nor its quote holds an email address, a link or a
+ * long number, and a situation ends today or later. Only a situation keeps its
+ * end date.
  */
 export function checkCandidates(
   message: string,

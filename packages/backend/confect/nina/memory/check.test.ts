@@ -78,6 +78,18 @@ describe("memory candidate check", () => {
     ).toEqual([]);
   });
 
+  it("drops a candidate whose text says nothing, because it has no letter and no digit", () => {
+    expect(
+      kept([
+        candidate({ text: "?" }),
+        candidate({ text: "..." }),
+        candidate({ text: "🙂" }),
+        candidate({ text: "12" }),
+        candidate({ text: "Ya." }),
+      ])
+    ).toEqual(["12", "Ya."]);
+  });
+
   it.each([
     ["an email address", "nama@contoh.com"],
     ["a link", "https://contoh.com/saya"],

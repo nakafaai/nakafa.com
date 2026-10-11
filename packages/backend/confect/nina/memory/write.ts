@@ -4,11 +4,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { endOfDay } from "@repo/backend/confect/nina/memory/check";
-import {
-  findTarget,
-  sameWords,
-  saysSame,
-} from "@repo/backend/confect/nina/memory/match";
+import { findTarget, sameWords } from "@repo/backend/confect/nina/memory/match";
 import {
   MEMORY_FIELD,
   type Opened,
@@ -94,10 +90,7 @@ const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
     .patch(memory._id, {
       confirmedAt: now,
       ...(rewrites
-        ? {
-            author: "nina" as const,
-            text: yield* sealText(keys, MEMORY_FIELD, candidate.text),
-          }
+        ? { text: yield* sealText(keys, MEMORY_FIELD, candidate.text) }
         : {}),
       // A memory the learner wrote has no kind until a chat says it again. One
       // that has a kind is only ever confirmed by that kind.
@@ -177,13 +170,10 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
     return Option.none();
   }
   const memories = yield* openWith(keys, yield* readMemories(userId));
-  // What the learner wrote is theirs. A candidate that says something else
-  // about it leaves it as it is and becomes a memory of Nina's.
-  const target = Option.filter(
-    findTarget(memories, candidate),
-    (memory) =>
-      memory.author === "nina" || saysSame(memory.text, candidate.text)
-  );
+  // What the learner wrote is theirs: the target is such a memory only when the
+  // candidate says the same. Otherwise the candidate confirms a memory that
+  // says it, or becomes a memory of Nina's.
+  const target = findTarget(memories, candidate);
   if (Option.isNone(target)) {
     return yield* createMemory({
       candidate,
@@ -210,8 +200,9 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
  * Writes what one capture call found the learner saying about themself, and
  * returns how many memories it wrote or confirmed, which it also stores in the
  * turn. A candidate that names a known memory, or says what a memory of its
- * kind (or a memory without a kind) already says, confirms that memory, unless
- * the learner wrote the memory and the candidate says something else. Any
+ * kind (or a memory without a kind) already says, confirms that memory. A
+ * memory the learner wrote counts only when the candidate says the same as it,
+ * so naming one that says something else confirms nothing by that name. Any
  * other candidate is a new memory. The model read the message some time ago, so
  * the write first checks what could have changed meanwhile: paused memory, a
  * deleted turn, or a memory the learner removed writes nothing, and a memory
