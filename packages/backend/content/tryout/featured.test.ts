@@ -15,6 +15,8 @@ import {
   activateLandingSource,
   makeLandingHierarchy,
   makeLandingPlacement,
+  makeLandingSectionPlacements,
+  makeSnbtHierarchy,
 } from "@repo/backend/test/tryout/landing";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import { TRYOUT_START_CONTENT_HASH } from "@repo/backend/test/tryout/source";
@@ -250,6 +252,75 @@ describe("tryouts/catalog/featured", () => {
   );
 
   it.effect(
+    "reads the pinned placement instead of the whole landing section",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const snapshotId = await activateTryoutSnapshot(ctx, {
+              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, makeSnbtHierarchy),
+              placements: Arr.flatMap(
+                ACTIVE_APP_LOCALE_CODES,
+                makeLandingSectionPlacements
+              ),
+            });
+            await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+          })
+        );
+
+        const read = yield* Effect.promise(() =>
+          t.query(async (ctx) => ({
+            featured: await ctx.runQuery(
+              api.tryouts.queries.catalog.getFeaturedQuestion,
+              { appLocale: "id" }
+            ),
+            metrics: await ctx.meta.getTransactionMetrics(),
+          }))
+        );
+
+        expect(read.featured.question).toMatchObject({
+          contentKey: makeLandingPlacement("id").questionContentKey,
+          questionOrder: 1,
+        });
+        // The state, release and snapshot rows, the four hierarchy rows, the
+        // seven section rows that prove the set inventory, and one placement.
+        // Reading the whole landing section took 34 documents (60975 bytes):
+        // it also loaded all 20 of its placements to keep one.
+        expect(read.metrics.documentsRead.used).toBe(15);
+      })
+  );
+
+  it.effect("rejects a publication missing its featured question", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const snapshotId = await activateTryoutSnapshot(ctx, {
+            catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+              makeLandingHierarchy(locale, "visible")
+            ),
+            placements: [],
+          });
+          await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+        })
+      );
+
+      const failure = yield* Effect.tryPromise(() =>
+        t.query(api.tryouts.queries.catalog.getFeaturedQuestion, {
+          appLocale: "id",
+        })
+      ).pipe(Effect.flip);
+      expect(failure.cause).toMatchObject({
+        data: {
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "The active try-out publication has no featured question.",
+        },
+      });
+    })
+  );
+
+  it.effect(
     "does not expose an internal-entry section on the public landing",
     () =>
       Effect.gen(function* () {
@@ -297,7 +368,7 @@ describe("tryouts/catalog/featured", () => {
         );
 
         expect(featured.question.contentKey).toBe(
-          LANDING_FEATURED_TRYOUT.questionContentKey
+          makeLandingPlacement("id").questionContentKey
         );
       })
   );

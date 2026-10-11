@@ -106,6 +106,30 @@ export const tryoutLayer = Layer.merge(
               .pipe(Effect.orDie);
           }
         ),
+        placement: Effect.fn("tryout.database.placement")(
+          function* (snapshotId, section, questionOrder) {
+            return yield* database
+              .table("tryoutPlacements")
+              .get(
+                "by_snapshotId_and_appLocale_and_section_and_questionOrder",
+                snapshotId,
+                section.appLocale,
+                section.countryKey,
+                section.examKey,
+                section.trackKey,
+                section.setKey,
+                section.sectionKey,
+                questionOrder
+              )
+              .pipe(
+                Effect.catchTag("GetByIndexFailure", () =>
+                  Effect.succeed(null)
+                ),
+                Effect.orDie,
+                Effect.map(Option.fromNullishOr)
+              );
+          }
+        ),
         body: Effect.fn("tryout.database.body")(
           function* (snapshotId, selector) {
             const placements = database.table("tryoutPlacements");

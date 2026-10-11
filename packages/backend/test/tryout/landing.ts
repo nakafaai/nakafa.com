@@ -17,8 +17,20 @@ import { Array as Arr, Match, Schema } from "effect";
 const LANDING_SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 const LANDING_SOURCE_ROOT =
   "packages/corpus/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1";
-const LANDING_QUESTION_ROOT =
-  "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1";
+const LANDING_QUESTION_BANK_ROOT =
+  "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1";
+const LANDING_QUESTION_ROOT = `${LANDING_QUESTION_BANK_ROOT}/question-1`;
+/** Questions in the landing section of the real SNBT set 1. */
+const LANDING_QUESTION_COUNT = 20;
+/** Sections of the real SNBT set 1 besides the landing one, with their sizes. */
+const OTHER_SNBT_SECTIONS = [
+  { questionCount: 30, sectionKey: "general-reasoning" },
+  { questionCount: 30, sectionKey: "literacy-in-indonesian" },
+  { questionCount: 20, sectionKey: "literacy-in-english" },
+  { questionCount: 20, sectionKey: "mathematical-reasoning" },
+  { questionCount: 20, sectionKey: "reading-comprehension-and-writing" },
+  { questionCount: 20, sectionKey: "general-knowledge-and-understanding" },
+] as const;
 const LANDING_QUESTION_SOURCE_ROOT = `${LANDING_SOURCE_ROOT}/question-1`;
 
 /** Activates the stable landing hierarchy with its immutable bundle. */
@@ -97,11 +109,67 @@ export function makeLandingPlacement(locale: ActiveAppLocaleCode) {
     ...makeTryoutStartPlacement(locale),
     answerContentKey: `${LANDING_QUESTION_ROOT}/answer`,
     examKey: LANDING_FEATURED_TRYOUT.examKey,
-    questionContentKey: LANDING_FEATURED_TRYOUT.questionContentKey,
+    questionContentKey: `${LANDING_QUESTION_ROOT}/question`,
+    questionOrder: LANDING_FEATURED_TRYOUT.questionOrder,
     questionSourcePath: LANDING_QUESTION_SOURCE_ROOT,
     rendererDomain: "snbt-quant",
     sectionKey: LANDING_FEATURED_TRYOUT.sectionKey,
     trackKey: LANDING_FEATURED_TRYOUT.trackKey,
+  });
+}
+
+/** Reshapes the landing hierarchy into the seven sections of real SNBT set 1. */
+export function makeSnbtHierarchy(locale: ActiveAppLocaleCode) {
+  const sectionCount = OTHER_SNBT_SECTIONS.length + 1;
+  const questionCount = Arr.reduce(
+    OTHER_SNBT_SECTIONS,
+    LANDING_QUESTION_COUNT,
+    (total, section) => total + section.questionCount
+  );
+
+  const hierarchy = makeLandingHierarchy(locale, "visible");
+
+  return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
+    ...Arr.map(hierarchy, (row) => {
+      if (row.kind === "track" || row.kind === "set") {
+        return {
+          ...row,
+          questionCount,
+          sectionCount,
+          visibleSectionCount: sectionCount,
+        };
+      }
+      if (row.kind === "section") {
+        return { ...row, questionCount: LANDING_QUESTION_COUNT };
+      }
+      return row;
+    }),
+    ...Arr.flatMap(hierarchy, (row) =>
+      row.kind === "section"
+        ? Arr.map(OTHER_SNBT_SECTIONS, (section, index) => ({
+            ...row,
+            order: index + 2,
+            publicPath: `${LANDING_SET_PATH}/${section.sectionKey}`,
+            questionCount: section.questionCount,
+            sectionKey: section.sectionKey,
+            title: section.sectionKey,
+          }))
+        : []
+    ),
+  ]);
+}
+
+/** Makes every placement of the landing section, in authored order. */
+export function makeLandingSectionPlacements(locale: ActiveAppLocaleCode) {
+  return Arr.makeBy(LANDING_QUESTION_COUNT, (index) => {
+    const questionRoot = `${LANDING_QUESTION_BANK_ROOT}/question-${index + 1}`;
+    return Schema.decodeSync(TryoutPlacementSchema)({
+      ...makeLandingPlacement(locale),
+      answerContentKey: `${questionRoot}/answer`,
+      questionContentKey: `${questionRoot}/question`,
+      questionOrder: index + 1,
+      questionSourcePath: `packages/corpus/${questionRoot}`,
+    });
   });
 }
 
