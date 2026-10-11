@@ -136,6 +136,35 @@ as a normal-traffic projection.
   entitlements, scoring, and IRT state. It deletes only rebuildable local
   projections.
 
+### 2026-10-11 reads nobody needed
+
+The 2026-09-12 to 2026-10-12 usage showed 92.9 GB of Database I/O. Five backend
+reads had no reader or no reason. Each row is one call measured in a Convex
+test, which counts documents and bytes exactly as the backend does; production
+row sizes and counts were not measured, so these are ratios to carry into the
+next invoice, not invoice figures.
+
+| Read | Fixture | Before | After |
+| --- | --- | ---: | ---: |
+| Staging four projections | four staged items | 16 documents, 21,347 bytes | 12 documents, 17,739 bytes |
+| Saved curriculum program (`getCurrent`) | six programs | 16 documents, 17,371 bytes | 5 documents, 5,988 bytes |
+| Featured try-out question | real SNBT set 1: seven sections, twenty landing questions | 34 documents, 60,975 bytes | 15 documents, 20,268 bytes |
+| Idle compaction tick | 40 retained releases | 40 documents, 185,588 bytes | 2 documents, 4,655 bytes |
+| One more view of a known lesson | ten lessons, five days of signals | 101 documents, 115,371 bytes, 27 writes | 17 documents, 18,169 bytes, 6 writes |
+| Daily popularity expiry | the same ten lessons | 14 pages, 112 documents, 76,104 bytes | 1 page, 12 documents, 8,820 bytes |
+| Weekly popularity repair | the same ten lessons | 14 pages, 714 documents, 621,839 bytes | 1 page, 62 documents, 52,020 bytes |
+
+The popularity pipeline cost 3.27 GB in that invoice, of which the view drain
+was 1.66 GB, the daily expiry 1.04 GB and the weekly repair 0.57 GB. Applying
+the measured ratios gives about 0.28 GB, 0.11 GB and 0.05 GB, so roughly 2.8 GB
+a month fewer once the retired rows are gone. Retiring them costs about 11.6 KB
+per counter once (a ten counter page read 95 documents and 116,105 bytes in the
+fixture).
+
+Compaction no longer writes `contentState`, the row every content query reads,
+so a compaction page stops making Convex run those queries again. That saving
+is in function executions, not in Database I/O.
+
 ### Recovery evidence
 
 Pre-migration logical backups exist for both deployments and were opened as ZIP
