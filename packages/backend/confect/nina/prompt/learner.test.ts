@@ -53,6 +53,41 @@ describe("Nina learner prompt", () => {
     );
   });
 
+  it("keeps the account facts within their share, so a try-out with many sections leaves the memories their room", () => {
+    const crowded: typeof NinaLearnerProfile.Type = {
+      focus: "tryout",
+      tryout: {
+        correct: 45,
+        exam: "snbt",
+        finishedAt: Date.UTC(2026, 8, 12),
+        score: 612,
+        sections: Arr.makeBy(400, (section) => ({
+          correct: section,
+          key: `penalaran-umum-bagian-${section}`,
+          total: 400,
+        })),
+        set: "set-1",
+        status: "provisional",
+        total: 120,
+      },
+    };
+    const account = Option.getOrThrow(
+      Option.fromNullishOr(formatLearnerProfile(crowded))
+    );
+    expect(countTextTokens(account)).toBeLessThanOrEqual(500);
+    expect(account).toContain("Account facts shortened.");
+    const prompt = Option.getOrThrow(
+      Option.fromNullishOr(
+        formatLearnerPrompt({
+          memories: [{ text: "Kelas 12 IPA" }],
+          profile: crowded,
+        })
+      )
+    );
+    expect(countTextTokens(prompt)).toBeLessThanOrEqual(NINA_BUDGET.learner);
+    expect(prompt).toContain("- Kelas 12 IPA\n</memories>");
+  });
+
   it("gives the account alone, with no memory block, when Nina has no memories", () => {
     const prompt = formatLearnerPrompt({
       memories: [],

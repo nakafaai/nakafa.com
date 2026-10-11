@@ -12,7 +12,17 @@ const FOCUS_LABELS = {
   tryout: "preparing for try-outs",
 } as const;
 
-/** Formats the account facts Nina reads for a turn, when there are any. */
+/**
+ * The share of the learner budget the account facts may take. A try-out stores
+ * as many sections as its set has, so the facts are bounded here and can never
+ * crowd the memories out of `NINA_BUDGET.learner`.
+ */
+const ACCOUNT_TOKENS = 500;
+
+/**
+ * Formats the account facts Nina reads for a turn, when there are any, within
+ * `ACCOUNT_TOKENS`.
+ */
 export function formatLearnerProfile(profile: typeof NinaLearnerProfile.Type) {
   let lines = Arr.filter(
     [
@@ -37,7 +47,13 @@ export function formatLearnerProfile(profile: typeof NinaLearnerProfile.Type) {
       ),
     ]);
   }
-  return lines.length > 0 ? Arr.join(["Account:", ...lines], "\n") : undefined;
+  return lines.length > 0
+    ? boundText(
+        Arr.join(["Account:", ...lines], "\n"),
+        ACCOUNT_TOKENS,
+        "Account facts shortened."
+      )
+    : undefined;
 }
 
 /** Wraps the memory lines in the block that names them as data, not instructions. */
