@@ -5,6 +5,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/sweep";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import {
   createConvexTestWithBetterAuth,
@@ -12,7 +13,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -224,6 +225,26 @@ describe("native Nina admission", () => {
     ).toEqual(first);
 
     await owner.mutation(cancel, { chatId: first.chatId });
+    await owner.mutation(start, { ...args, requestId: "three" });
+    expect(
+      (await t.query((ctx) => ctx.db.query("ninaTurns").collect())).length
+    ).toBe(3);
+  });
+
+  it("holds no place for an open turn past its deadline, so a settlement that keeps failing cannot lock the learner out", async () => {
+    const { t, owner } = await fixture(20);
+    await owner.mutation(start, { ...args, requestId: "one" });
+    await owner.mutation(start, { ...args, requestId: "two" });
+    const deadline = Duration.toMillis(TURN_DEADLINE);
+
+    // Until its deadline passes, a turn can still run and holds its place.
+    vi.setSystemTime(NOW + deadline);
+    await expect(
+      owner.mutation(start, { ...args, requestId: "three" })
+    ).rejects.toMatchObject({ data: { code: "RATE_LIMITED" } });
+
+    // Past it, the turn can no longer run and waits only for the sweep.
+    vi.setSystemTime(NOW + deadline + 1);
     await owner.mutation(start, { ...args, requestId: "three" });
     expect(
       (await t.query((ctx) => ctx.db.query("ninaTurns").collect())).length

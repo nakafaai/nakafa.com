@@ -1,7 +1,8 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
-import { Effect } from "effect";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/sweep";
+import { Clock, Duration, Effect } from "effect";
 
 /** The most turns one learner may have queued or running at once. */
 const OPEN_TURN_LIMIT = 2;
@@ -9,14 +10,18 @@ const OPEN_TURN_LIMIT = 2;
 /**
  * Refuses a learner who already has the most open turns, with the rejection
  * admission already uses for its limits. Admission runs it before it holds any
- * credit, so a refusal leaves nothing to refund.
+ * credit, so a refusal leaves nothing to refund. A turn counts from admission
+ * until its deadline: past it the turn can no longer run and waits only for the
+ * sweep, so a settlement that keeps failing never locks the learner out.
  */
 export const requireOpenCapacity = Effect.fn("nina.capacity.require")(
   function* (userId: Docs["users"]["_id"]) {
+    const since =
+      (yield* Clock.currentTimeMillis) - Duration.toMillis(TURN_DEADLINE);
     const open = yield* (yield* DatabaseReader)
       .table("ninaTurns")
       .index("by_userId_and_phase", (q) =>
-        q.eq("userId", userId).eq("phase", "active")
+        q.eq("userId", userId).eq("phase", "active").gte("_creationTime", since)
       )
       .take(OPEN_TURN_LIMIT)
       .pipe(Effect.orDie);
