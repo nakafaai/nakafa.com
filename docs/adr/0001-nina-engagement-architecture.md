@@ -31,7 +31,7 @@ change its suggestions. Optional generation never reserves or refunds credits.
 The completion event records answer-time usage; the durable turn's usage and
 token totals continue to include later presentation calls. The title and the
 summary text are stored sealed for the learner who owns the chat; the migration
-that sealed the rows written before October 2026 ran on 11 October 2026, on dev
+that sealed every row still holding plain text ran on 11 October 2026, on dev
 and production, and was then deleted.
 
 The Agent component owns threads, messages, tool results, and stream deltas.
