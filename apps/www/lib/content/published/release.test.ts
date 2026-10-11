@@ -10,7 +10,7 @@ import {
   verifyContentReleasePin,
 } from "@/lib/content/published/release";
 
-const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
+const loadActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-active");
 const nextReleaseId = ReleaseIdSchema.make("release-next");
 const identity = {
@@ -20,11 +20,11 @@ const identity = {
 } satisfies PublishedProjectionIdentity;
 
 vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: readActiveContentIdentityMock,
+  loadActiveContentIdentity: loadActiveContentIdentityMock,
 }));
 
 beforeEach(() => {
-  readActiveContentIdentityMock.mockReset();
+  loadActiveContentIdentityMock.mockReset();
 });
 
 describe("content release pin", () => {
@@ -68,7 +68,7 @@ describe("content release pin", () => {
 
   it.effect("rechecks the latest active release identity", () =>
     Effect.gen(function* () {
-      readActiveContentIdentityMock.mockReturnValueOnce(
+      loadActiveContentIdentityMock.mockReturnValueOnce(
         Effect.succeed({
           manifestHash: `sha256:${"a".repeat(64)}`,
           releaseId: activeReleaseId,
@@ -79,13 +79,13 @@ describe("content release pin", () => {
       expect(yield* verifyContentReleasePin(activeReleaseId, identity)).toBe(
         activeReleaseId
       );
-      expect(readActiveContentIdentityMock).toHaveBeenCalledOnce();
+      expect(loadActiveContentIdentityMock).toHaveBeenCalledOnce();
     })
   );
 
   it.effect("preserves an absent active release identity", () =>
     Effect.gen(function* () {
-      readActiveContentIdentityMock.mockReturnValueOnce(Effect.succeed(null));
+      loadActiveContentIdentityMock.mockReturnValueOnce(Effect.succeed(null));
 
       expect(yield* verifyContentReleasePin(null, identity)).toBeNull();
     })

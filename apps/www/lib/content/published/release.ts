@@ -2,7 +2,7 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Result, Schema } from "effect";
 import {
   type ActiveContentReleaseId,
-  readActiveContentIdentity,
+  loadActiveContentIdentity,
 } from "@/lib/content/published/active";
 import {
   PublishedProjectionError,
@@ -50,14 +50,18 @@ export const decodeContentReleasePin = Effect.fn(
   }
   return decoded.success;
 });
-/** Rechecks one multi-read operation against the active publication identity. */
+/**
+ * Rechecks one multi-read operation against the active publication identity as
+ * Convex holds it now. A stored pointer would repeat the answer that the
+ * operation started from and could not notice a release that landed since.
+ */
 export const verifyContentReleasePin = Effect.fn(
   "NakafaContent.verifyReleasePin"
 )(function* (
   expected: ContentReleasePin,
   identity: PublishedProjectionIdentity
 ) {
-  const active = yield* readActiveContentIdentity();
+  const active = yield* loadActiveContentIdentity();
   return yield* decodeContentReleasePin(
     active?.releaseId ?? null,
     expected,

@@ -5,6 +5,7 @@ import { Effect } from "effect";
 import { GET } from "@/app/rss.xml/route";
 
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
+const mockLoadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestArticles = vi.hoisted(() => vi.fn());
 const mockReadPublishedLatestMaterials = vi.hoisted(() => vi.fn());
 
@@ -17,6 +18,7 @@ vi.mock("@/lib/content/material/discovery", () => ({
   readPublishedLatestMaterials: mockReadPublishedLatestMaterials,
 }));
 vi.mock("@/lib/content/published/active", () => ({
+  loadActiveContentIdentity: mockLoadActiveContentIdentity,
   readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
 vi.mock("next-intl/server", () => ({
@@ -30,6 +32,9 @@ afterEach(() => vi.useRealTimers());
 
 beforeEach(() => {
   mockReadActiveContentIdentity
+    .mockReset()
+    .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
+  mockLoadActiveContentIdentity
     .mockReset()
     .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
   mockReadPublishedLatestArticles.mockReset().mockReturnValue(
@@ -186,9 +191,7 @@ describe("rss route", () => {
   });
 
   it("rejects the feed when the active publication disappears", async () => {
-    mockReadActiveContentIdentity
-      .mockReturnValueOnce(Effect.succeed({ releaseId: activeReleaseId }))
-      .mockReturnValueOnce(Effect.succeed(null));
+    mockLoadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
 
     await expect(GET()).rejects.toMatchObject({
       _tag: "PublishedReleaseMismatchError",
@@ -201,10 +204,12 @@ describe("rss route", () => {
     mockReadPublishedLatestMaterials.mockReturnValue(
       Effect.succeed({ activeReleaseId: "release-a", materials: [] })
     );
-    mockReadActiveContentIdentity
-      .mockReturnValue(Effect.succeed({ releaseId: "release-a" }))
-      .mockReturnValueOnce(Effect.succeed({ releaseId: "release-a" }))
-      .mockReturnValueOnce(Effect.succeed({ releaseId: "release-b" }));
+    mockReadActiveContentIdentity.mockReturnValue(
+      Effect.succeed({ releaseId: "release-a" })
+    );
+    mockLoadActiveContentIdentity.mockReturnValue(
+      Effect.succeed({ releaseId: "release-b" })
+    );
 
     await expect(GET()).rejects.toMatchObject({
       _tag: "PublishedReleaseMismatchError",

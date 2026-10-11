@@ -8,7 +8,10 @@ import { getTranslations } from "next-intl/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { applyContentCache } from "@/lib/content/cache";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
-import { readActiveContentIdentity } from "@/lib/content/published/active";
+import {
+  loadActiveContentIdentity,
+  readActiveContentIdentity,
+} from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
   type ContentReleasePin,
@@ -108,7 +111,9 @@ function getFeedContentRoutes() {
           ]),
         { concurrency: routing.locales.length }
       );
-      const latest = yield* readActiveContentIdentity();
+      // The closing check asks Convex: the stored pointer is what the feed
+      // started from, so it could not notice a release that landed since.
+      const latest = yield* loadActiveContentIdentity();
       yield* decodeContentReleasePin(
         latest?.releaseId ?? null,
         activeReleaseId,
