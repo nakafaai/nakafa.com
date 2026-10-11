@@ -94,10 +94,11 @@ const follow = Effect.fnUntraced(function* (
  * concatenation, a condition between strings, or an array or object that holds
  * them. A name destructured out of a variable is judged by the value it comes
  * from and by the default its pattern writes for it, and any variable is judged
- * by each later assignment to it. A literal written in the class position, a
- * `cn(...)` or `cva(...)` result, a parameter, and an imported name are not
- * reported, because the check does not follow an import into the module that
- * declares it.
+ * by each later assignment that writes it, as a name, in a destructuring
+ * pattern, or at the start of a member, while a loop head assigns nothing. A
+ * literal written in the class position, a `cn(...)` or `cva(...)` result, a
+ * parameter, and an imported name are not reported, because the check does not
+ * follow an import into the module that declares it.
  */
 export const classFindings = Effect.fn("RepositoryPolicy.classFindings")(
   function* ({ declare, modules }: Parsed) {

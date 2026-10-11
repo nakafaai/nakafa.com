@@ -158,17 +158,6 @@ describe("values given to a variable", () => {
     })
   );
 
-  it.effect.each(
-    Arr.map(["=", "+=", "||=", "??=", "&&="], (operator) => ({ operator }))
-  )("adds the value of an assignment with $operator", ({ operator }) =>
-    Effect.gen(function* () {
-      const values = yield* given(
-        lines('let ON = cn("p-1");', Arr.join(["ON", operator, '"flex";'], " "))
-      );
-      assert.deepStrictEqual(values, [['cn("p-1")', '"flex"']]);
-    })
-  );
-
   it.effect.each([
     {
       form: "a variable that has no initializer",
@@ -191,45 +180,43 @@ describe("values given to a variable", () => {
       values: [['"a"']],
     },
     {
-      form: "a variable that is assigned through parentheses or a type assertion",
+      form: "a name that an array pattern writes",
+      sourceText: lines("let ON: string;", "[ON] = LIST;"),
+      values: [["LIST"]],
+    },
+    {
+      form: "a name that an object pattern writes",
+      sourceText: lines("let ON: string;", "({ ON } = SOURCE);"),
+      values: [["SOURCE"]],
+    },
+    {
+      form: "a renamed name that an object pattern writes",
+      sourceText: lines("let ON: string;", "({ card: ON } = SOURCE);"),
+      values: [["SOURCE"]],
+    },
+    {
+      form: "a name that a pattern writes with a default",
+      sourceText: lines("let ON: string;", '({ ON = "flex" } = SOURCE);'),
+      values: [["SOURCE", '"flex"']],
+    },
+    {
+      form: "a variable that a member write starts from",
+      sourceText: lines("const ON = {};", 'ON.card = "flex";'),
+      values: [["{}", '"flex"']],
+    },
+    {
+      form: "a variable that a loop head writes",
       sourceText: lines(
-        "let ON = 1;",
-        'ON! = "a";',
-        '(ON) = "b";',
-        '(ON as string) = "c";'
+        "let ON: string;",
+        "for (ON of ITEMS) {}",
+        "for (ON in ITEMS) {}",
+        "for ([ON] of ITEMS) {}"
       ),
-      values: [["1", '"a"', '"b"', '"c"']],
+      values: [[]],
     },
   ])("lists the values given to $form", ({ sourceText, values }) =>
     Effect.gen(function* () {
       assert.deepStrictEqual(yield* given(sourceText), values);
-    })
-  );
-
-  it.effect.each([
-    {
-      form: "an operator that cannot give a class",
-      sourceText: lines("let ON = 1;", "ON -= 1;", "ON *= 2;", "ON |= 4;"),
-    },
-    {
-      form: "a comparison, a sum, and an increment",
-      sourceText: lines("let ON = 1;", "use(ON === 2, ON + 1, ON++);"),
-    },
-    {
-      form: "a write to another name",
-      sourceText: lines("let ON = 1;", "let other = 1;", 'other = "flex";'),
-    },
-    {
-      form: "a write to a member",
-      sourceText: lines(
-        "let ON = 1;",
-        'ON.card = "flex";',
-        'ON["card"] = "flex";'
-      ),
-    },
-  ])("does not count $form as an assignment", ({ sourceText }) =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(yield* given(sourceText), [["1"]]);
     })
   );
 });
@@ -264,6 +251,37 @@ describe("assignments to a name that another scope declares", () => {
         )
       );
       assert.deepStrictEqual(values, [['cn("p-1")'], ['cn("m-1")', '"flex"']]);
+    })
+  );
+
+  it.effect.each([
+    {
+      form: "the outer variable",
+      sourceText: lines(
+        'let ON = cn("p-1");',
+        "({ ON } = SOURCE);",
+        "function inner() {",
+        '  let ON = cn("m-1");',
+        "  return ON;",
+        "}"
+      ),
+      values: [['cn("p-1")', "SOURCE"], ['cn("m-1")']],
+    },
+    {
+      form: "the inner variable",
+      sourceText: lines(
+        'let ON = cn("p-1");',
+        "function inner() {",
+        '  let ON = cn("m-1");',
+        "  ({ ON } = SOURCE);",
+        "  return ON;",
+        "}"
+      ),
+      values: [['cn("p-1")'], ['cn("m-1")', "SOURCE"]],
+    },
+  ])("gives $form what a pattern writes to it", ({ sourceText, values }) =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(yield* given(sourceText), values);
     })
   );
 

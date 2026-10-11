@@ -260,10 +260,15 @@ variable, such as `sm` in `const { sm } = SIZES`, is judged by the value of that
 variable and by the default the pattern writes for it, such as `"flex"` in
 `const { item = "flex" } = options`. A later assignment to a variable, with `=`,
 `+=`, `||=`, `??=`, or `&&=`, is one more value of it, as `"bg-primary"` in
-`let tone = cn("a"); tone = "bg-primary";`, and it counts only when the compiler
-resolves its left side to that variable, so a variable of the same name in
-another scope does not take it. The check follows the names that such a value
-reads, so a constant built from other constants is reported down to its strings.
+`let tone = cn("a"); tone = "bg-primary";`. The variable can be the whole left
+side, a name in a destructuring pattern, which takes the whole value on the
+right, or the name a member starts from, as `STYLES` in `STYLES.card = "flex"`,
+because a read of `STYLES.card` reads `STYLES`. An assignment counts only when
+the compiler resolves its name to that variable, so a variable of the same name
+in another scope does not take it. A loop head is no assignment: `row` in
+`for (const row of ROWS)` takes nothing from `ROWS`. The check follows the names
+that such a value reads, so a constant built from other constants is reported
+down to its strings.
 
 The check never reports:
 

@@ -1,32 +1,19 @@
-import { Array as Arr, Effect, HashSet, Result } from "effect";
+import { Array as Arr, Effect, Result } from "effect";
 import {
-  type BinaryExpression,
   type BindingElement,
   type Expression,
-  isBinaryExpression,
   isBindingElement,
-  isIdentifier,
   isVariableDeclaration,
   type Node,
   type SourceFile,
-  SyntaxKind,
   type VariableDeclaration,
 } from "typescript/unstable/ast";
-import { descendants, type parseSources } from "#scripts/check/source";
-import { unwrapped } from "#scripts/check/wrapper";
+import { assignmentsTo } from "#scripts/check/assignments";
+import type { parseSources } from "#scripts/check/source";
 
 type Declare = Effect.Success<ReturnType<typeof parseSources>>["declare"];
 /** A `const`, `let`, or `var`, or a name that a pattern takes out of one. */
 type Variable = BindingElement | VariableDeclaration;
-
-/** The operators that give a variable a new value that can be class text. */
-const ASSIGNING_OPERATORS = HashSet.make(
-  SyntaxKind.EqualsToken,
-  SyntaxKind.PlusEqualsToken,
-  SyntaxKind.BarBarEqualsToken,
-  SyntaxKind.QuestionQuestionEqualsToken,
-  SyntaxKind.AmpersandAmpersandEqualsToken
-);
 
 /**
  * Whether a declaration is a variable: a `const`, `let`, or `var`, or a name that
@@ -54,38 +41,13 @@ function declaredValues(variable: Variable): readonly Expression[] {
   );
 }
 
-/** Whether a node assigns with one of the operators that can give a class. */
-function isAssignment(node: Node): node is BinaryExpression {
-  return (
-    isBinaryExpression(node) &&
-    HashSet.has(ASSIGNING_OPERATORS, node.operatorToken.kind)
-  );
-}
-
-/**
- * Returns the assignments in one module that write a name: the identifier that
- * is written, and the value it is given. Parentheses and a type assertion around
- * the identifier do not hide it. Which variable the identifier names is for the
- * compiler to say.
- */
-function assignmentsTo(sourceFile: SourceFile, name: string) {
-  return Arr.filterMap(
-    Arr.filter(descendants(sourceFile), isAssignment),
-    ({ left, right }) => {
-      const target = unwrapped(left);
-      return isIdentifier(target) && target.text === name
-        ? Result.succeed({ target, value: right })
-        : Result.failVoid;
-    }
-  );
-}
-
 /**
  * Returns, for each variable, every value its module gives it: the values it is
- * declared with, and the value of each later assignment, `=`, `+=`, `||=`, `??=`,
- * or `&&=`. The module is searched for assignments by the name of the variable
- * alone, and the compiler then resolves each one, so an assignment counts only
- * when it writes this variable, and not one of the same name in another scope.
+ * declared with, and the value of each later assignment that writes it, as a
+ * name, as a name in a destructuring pattern, or as the start of a member. The
+ * module is searched for assignments by the name of the variable alone, and the
+ * compiler then resolves each one, so an assignment counts only when it writes
+ * this variable, and not one of the same name in another scope.
  */
 export const variableValues = Effect.fn("RepositoryPolicy.variableValues")(
   function* (
