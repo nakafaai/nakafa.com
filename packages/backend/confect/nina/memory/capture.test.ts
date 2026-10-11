@@ -27,6 +27,7 @@ const NOW = Date.UTC(2026, 9, 10, 12);
 const LESSON = "material:lesson:mathematics:material-section:limits";
 const SLUG = "subjects/mathematics/limits/concept";
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
+const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 
@@ -450,12 +451,13 @@ describe("memory capture among the follow-up work of a turn", () => {
       suggestions: ["How does this relate to continuity?"],
     });
     expect(await f.texts()).toEqual(["Kelas 12."]);
-    expect(
-      (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.title
-    ).toBe("Understanding A Function Limit");
+    // The title is stored sealed, so it is read the way every reader opens it.
+    expect((await f.owner.query(getChat, { chatId: f.chatId })).title).toBe(
+      "Understanding A Function Limit"
+    );
   });
 
-  it("never costs the turn its suggestions or its title when the memory write dies", async () => {
+  it("never costs the turn its answer or its suggestions when the vault is down, and stores neither a memory nor a title in plain text", async () => {
     const f = await createCapturingTest();
     const generate = turnModel();
     vi.stubEnv("VAULT_ROOT_KEYS", "");
@@ -466,9 +468,11 @@ describe("memory capture among the follow-up work of a turn", () => {
       state: { status: "complete" },
       suggestions: ["How does this relate to continuity?"],
     });
+    // A memory and a title are both sealed. Without the vault neither can be
+    // sealed, and neither is written as readable text in its place.
     expect(
       (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.title
-    ).toBe("Understanding A Function Limit");
+    ).toBeUndefined();
     expect(await f.stored()).toEqual([]);
   });
 });
