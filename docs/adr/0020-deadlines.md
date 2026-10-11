@@ -75,20 +75,37 @@ of its own, and every model call has a cap on its output.
   They end a little before the run does, so a capability can still report what
   it gathered. A call outside a capability run has only its own budget.
 - Each purpose in `gateway/purpose.ts` sets the most one call may write, sent
-  to the provider as `maxOutputTokens`: chat 8,192 tokens, specialist 4,096,
-  background 1,024, suggestion 512, presentation 512. A call that ends at its
+  to the provider as `maxOutputTokens`: chat 16,384 tokens, specialist 6,144,
+  background 2,048, suggestion 512, presentation 512. A call that ends at its
   cap finishes with `length`, which a chat turn already reads as
   `response-limit`. A specialist whose last step ends at its cap reports its
   result as `partial` and tells Nina that the answer was cut short
   (`specialistResult`), so a cut answer never reads as a whole one.
 - The cap is shared with the model's reasoning. Google's thinking guide counts
   thinking tokens in the output limit, and a call that reaches the limit while
-  it still thinks stops with a cut or an empty answer. The numbers above were
-  chosen, not measured. The gateway probes of 8 October 2026 found 189
-  reasoning tokens at `low` and 357 at `high` on Gemini 3.7 Flash
-  ([ADR 0019](./0019-gateway.md)), and Gemini 3.8 Flash has not been probed
-  through the gateway. Before a cap is relied on or lowered, measure 3.8 at
-  each effort and change the one table.
+  it still thinks stops with a cut or an empty answer. So each cap stands well
+  above what a real call wrote, measured on Gemini 3.8 Flash through the
+  gateway on the dev deployment on 11 October 2026, with a short system prompt
+  and no cap:
+
+  | Call | Effort | Output tokens | Of them reasoning |
+  | --- | --- | --- | --- |
+  | Chat: a history the learner asked to be very long | high | 9,593 | 2,055 |
+  | Chat: a functional equation with a full proof | high | 5,842 | 4,366 |
+  | Chat: two proofs and an integral | high | 3,384 | 1,369 |
+  | Chat: a counting problem | high | 3,017 | 1,578 |
+  | Chat: a lesson with three worked examples | high | 2,765 | 1,296 |
+  | Background: a summary of sixteen turns | low | 1,042 | 0 |
+  | Background: memory capture | low | 113 | 0 |
+  | Suggestion: five follow-up questions | low | 85 | 0 |
+  | Specialist: three checked calculations | low | 904 | 0 |
+
+  The first draft of the caps (chat 8,192, background 1,024) would have cut
+  the first chat answer and the summary. A summary may hold 1,200 tokens
+  (`NINA_BUDGET.summary`), and Nina reads at most 6,000 tokens of a
+  specialist's answer (`NINA_BUDGET.evidence`), which is where the background
+  and specialist caps come from. Measure again before a cap is lowered or the
+  model changes.
 - A link to Nakafa's own site goes to the Nakafa capability and never to web
   research. The capability forces the read tool, step after step, until the
   model has asked for every address the learner sent. A message with more

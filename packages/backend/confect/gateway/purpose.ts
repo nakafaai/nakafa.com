@@ -43,21 +43,28 @@ const Budget = Schema.Struct({
  * Specialists, titles, repairs, summaries, memory, and follow-up suggestions
  * are bounded so a slow provider or a runaway answer cannot hold the chat open
  * or spend without limit.
+ *
+ * The caps stand well above what a real call wrote when they were measured on
+ * Gemini 3.8 Flash through the gateway (11 October 2026, ADR 0020). A chat
+ * answer the learner asked to be very long wrote 9,593 tokens, 2,055 of them
+ * reasoning, and a proof reasoned for 4,366. A summary wrote 1,042 and may
+ * hold 1,200. A specialist's answer is read up to 6,000 tokens, so its cap
+ * sits just above that.
  */
 export const purposes = {
   chat: {
     effort: "interactive",
-    maxOutputTokens: 8192,
+    maxOutputTokens: 16_384,
     timeout: { chunkMs: 45_000, stepMs: 90_000, totalMs: 420_000 },
   },
   specialist: {
     effort: "fast",
-    maxOutputTokens: 4096,
+    maxOutputTokens: 6144,
     timeout: { stepMs: 30_000, totalMs: 120_000 },
   },
   background: {
     effort: "fast",
-    maxOutputTokens: 1024,
+    maxOutputTokens: 2048,
     timeout: { stepMs: 15_000, totalMs: 45_000 },
   },
   suggestion: {
