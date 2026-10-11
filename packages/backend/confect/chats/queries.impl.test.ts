@@ -342,3 +342,60 @@ it("protects titles when chats are private, missing, or untitled", async () => {
     t.query(api.chats.queries.getChat, { chatId: fixture.missingId })
   ).rejects.toThrow("CHAT_NOT_FOUND");
 });
+
+it("opens a sealed title with its owner's key for the readers the access rules allow", async () => {
+  const t = createConvexTestWithBetterAuth();
+  const [owner, stranger] = await t.mutation((ctx) =>
+    Promise.all([
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "sealed-owner" }),
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "sealed-stranger" }),
+    ])
+  );
+  const asOwner = t.withIdentity({
+    sessionId: owner.sessionId,
+    subject: owner.authUserId,
+  });
+  const asStranger = t.withIdentity({
+    sessionId: stranger.sessionId,
+    subject: stranger.authUserId,
+  });
+  const insertChat = (visibility: "private" | "public") =>
+    t.mutation((ctx) =>
+      ctx.db.insert("chats", {
+        threadId: "fixture-thread",
+        type: "study",
+        updatedAt: NOW,
+        userId: owner.userId,
+        visibility,
+      })
+    );
+  const privateId = await insertChat("private");
+  const publicId = await insertChat("public");
+  await asOwner.mutation(api.chats.mutations.updateChatTitle, {
+    chatId: privateId,
+    title: "Rahasia keluarga",
+  });
+  await asOwner.mutation(api.chats.mutations.updateChatTitle, {
+    chatId: publicId,
+    title: "Belajar bersama",
+  });
+  // A signed-out viewer reads the shared chat, opened with the owner's key.
+  expect(
+    await t.query(api.chats.queries.getChat, { chatId: publicId })
+  ).toMatchObject({ title: "Belajar bersama" });
+  expect(
+    await t.query(api.chats.queries.getChatTitle, { chatId: publicId })
+  ).toBe("Belajar bersama");
+  // A private title opens for its owner only.
+  expect(
+    await asOwner.query(api.chats.queries.getChatTitle, { chatId: privateId })
+  ).toBe("Rahasia keluarga");
+  for (const viewer of [t, asStranger]) {
+    expect(
+      await viewer.query(api.chats.queries.getChatTitle, { chatId: privateId })
+    ).toBeNull();
+    await expect(
+      viewer.query(api.chats.queries.getChat, { chatId: privateId })
+    ).rejects.toThrow("FORBIDDEN");
+  }
+});

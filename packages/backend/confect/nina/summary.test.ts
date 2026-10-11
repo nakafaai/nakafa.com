@@ -1,7 +1,9 @@
+import { Ref } from "@confect/core";
 import { RegisteredFunction } from "@confect/server";
 import { createThread, saveMessages } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
+import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
   nextSummaryTarget,
@@ -19,6 +21,7 @@ import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Effect, Predicate } from "effect";
 
 const NOW = Date.UTC(2026, 8, 27, 12);
+const read = Ref.getFunctionReference(refs.internal.nina.summaries.read);
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -79,7 +82,10 @@ async function fixture(turns: number) {
     );
   const summary = () =>
     t.query((ctx) => ctx.db.query("ninaSummaries").collect());
-  return { ...setup, refresh, summary, t };
+  // The stored text is sealed, so the tests read it the way generation does.
+  const text = async () =>
+    (await t.query(read, { chatId: setup.chatId }))?.text;
+  return { ...setup, refresh, summary, t, text };
 }
 
 function summaryModel(text: string) {
@@ -106,12 +112,13 @@ describe("Nina rolling summary", () => {
     expect(await f.summary()).toEqual([
       expect.objectContaining({
         chatId: f.chatId,
-        text: "- The learner studied limits.",
+        text: expect.any(ArrayBuffer),
         throughOrder: 4,
         // The fold's provider usage counts toward the chat's summary upkeep.
         usage: { calls: 1, input: 12, output: 4 },
       }),
     ]);
+    expect(await f.text()).toBe("- The learner studied limits.");
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     expect(prompt).toContain("None yet.");
     expect(prompt).toContain("Learner: Question 0");
@@ -135,11 +142,12 @@ describe("Nina rolling summary", () => {
     await f.refresh(12);
     expect(await f.summary()).toEqual([
       expect.objectContaining({
-        text: "- Limits, then derivatives.",
+        text: expect.any(ArrayBuffer),
         throughOrder: 8,
         usage: { calls: 2, input: 912, output: 124 },
       }),
     ]);
+    expect(await f.text()).toBe("- Limits, then derivatives.");
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     expect(prompt).toContain("- The learner studied limits.");
     expect(prompt).toContain("Question 5");
@@ -196,10 +204,11 @@ describe("Nina rolling summary", () => {
     await f.refresh(8);
     expect(await f.summary()).toEqual([
       expect.objectContaining({
-        text: "- A counted fold.",
+        text: expect.any(ArrayBuffer),
         usage: { calls: 1, input: 0, output: 0 },
       }),
     ]);
+    expect(await f.text()).toBe("- A counted fold.");
   });
 
   it("makes no model call before a fold is due", async () => {

@@ -28,6 +28,7 @@ vi.mock("@repo/backend/confect/gateway/live", async () => ({
 const NOW = Date.UTC(2026, 9, 10, 12);
 const MESSAGE = "Aku kelas 12 dan mau ikut SNBT 2027.";
 const LESSON = "material:lesson:mathematics:material-section:limits";
+const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
@@ -440,16 +441,16 @@ describe("memory capture that fails", () => {
 });
 
 describe("memory capture among the follow-up work of a turn", () => {
-  /**
-   * A model for a whole turn: it answers the capture call with `level` and
-   * answers the suggestions and the title as `ninaModel` does.
-   */
-  function turnModel() {
+  /** A model for a whole turn: it answers the suggestions and the title, and answers the capture call with `level` or fails it. */
+  function turnModel(capture: "answers" | "fails" = "answers") {
     const model = ninaModel();
     const generate = vi.fn<MockLanguageModelV4["doGenerate"]>(
       ({ prompt, responseFormat }) => {
         let text = "Understanding A Function Limit";
         if (encodeJsonText(prompt).includes("# Learner Message")) {
+          if (capture === "fails") {
+            return Promise.reject(new Error("Private provider diagnostic"));
+          }
           text = encodeJsonText({ memories: [level] });
         } else if (responseFormat?.type === "json") {
           text = encodeJsonText({
@@ -463,6 +464,9 @@ describe("memory capture among the follow-up work of a turn", () => {
     provider.languageModel.mockReturnValue(model);
     return generate;
   }
+  /** The chat title the owner reads, opened the way every reader opens it. */
+  const titleOf = async (f: Awaited<ReturnType<typeof fixture>>) =>
+    (await f.owner.query(getChat, { chatId: f.chatId })).title;
 
   it("saves the memory beside the suggestions and the title", async () => {
     const f = await fixture();
@@ -476,15 +480,12 @@ describe("memory capture among the follow-up work of a turn", () => {
       suggestions: ["How does this relate to continuity?"],
     });
     expect(await f.texts()).toEqual(["Kelas 12."]);
-    expect(
-      (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.title
-    ).toBe("Understanding A Function Limit");
+    expect(await titleOf(f)).toBe("Understanding A Function Limit");
   });
 
-  it("never costs the turn its suggestions or its title when the memory write dies", async () => {
+  it("never costs the turn its suggestions or its title when the memory capture fails", async () => {
     const f = await fixture();
-    const generate = turnModel();
-    vi.stubEnv("VAULT_ROOT_KEYS", "");
+    const generate = turnModel("fails");
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
     expect(generate).toHaveBeenCalledTimes(3);
@@ -492,9 +493,7 @@ describe("memory capture among the follow-up work of a turn", () => {
       state: { status: "complete" },
       suggestions: ["How does this relate to continuity?"],
     });
-    expect(
-      (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.title
-    ).toBe("Understanding A Function Limit");
+    expect(await titleOf(f)).toBe("Understanding A Function Limit");
     expect(await f.stored()).toEqual([]);
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { Delete02Icon } from "@hugeicons/core-free-icons";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -22,7 +22,7 @@ export function ChatDeletion({
   open,
   onOpenChange,
 }: {
-  chat: Docs["chats"];
+  chat: ChatView;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
