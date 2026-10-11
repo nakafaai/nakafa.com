@@ -18,6 +18,7 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { requireOpenCapacity } from "@repo/backend/confect/nina/capacity";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
+import { settleStopped } from "@repo/backend/confect/nina/settlement";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { sha256Hex } from "@repo/utilities/digest";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -96,7 +97,14 @@ const start = FunctionImpl.make(
     const chat = args.chatId
       ? yield* requireChatOwner(args.chatId, appUser._id)
       : null;
-    if (chat?.activeTurnId) {
+    // An open turn keeps its chat busy, except one the learner stopped: it is
+    // cancelled for them already and only waits for its run to exit. Their next
+    // prompt settles it here, before the open-turn count and the credit hold,
+    // and goes on in the same transaction.
+    const stopped = chat?.activeTurnId
+      ? yield* settleStopped(chat.activeTurnId)
+      : false;
+    if (chat?.activeTurnId && !stopped) {
       return yield* new NinaTurnError({
         code: "NINA_BUSY",
         message: "A Nina response is already running in this chat.",
@@ -104,9 +112,15 @@ const start = FunctionImpl.make(
     }
     yield* requireOpenCapacity(appUser._id);
     const now = yield* Clock.currentTimeMillis;
-    const reservation = yield* reserveCredits(appUser);
+    // The settlement paid the stopped turn's hold back into the balance. Read
+    // the learner again for the new hold: the copy this request started with
+    // would overwrite that refund.
+    const learner = stopped
+      ? yield* reader.table("users").get(appUser._id).pipe(Effect.orDie)
+      : appUser;
+    const reservation = yield* reserveCredits(learner);
     const prompt = yield* preparePrompt(
-      appUser,
+      learner,
       chat,
       args.input,
       DateTime.formatIso(DateTime.makeUnsafe(now))

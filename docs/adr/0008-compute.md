@@ -46,15 +46,19 @@ Nina.
 The scheduled generation action owns one stream deadline with time left for
 settlement within Convex's action limit. Cancelling a queued turn settles it at
 once, since no run exists. Cancelling a running turn cuts off its Agent stream,
-marks its prompt failed, and records the request. The refund, the state change,
-and the chat unlock wait until the run has exited, so a stream that is still
-running is never paid back. The run checks its turn every second and aborts its
-generation when the turn was stopped or settled elsewhere, which also stops a
-silent provider call. A run that is gone never exits, so the stop also schedules
-a settlement after a short grace, `STOP_GRACE` in `confect/nina/settlement.ts`,
-and stopping always frees the chat. The web shows the turn as running until it
-settles: the composer stays locked until the run's next check, or for a run that
-is gone until the grace has passed. A saved answer wins a race with a cancel and
+marks its prompt failed, and records the request. The page shows the turn as
+cancelled from the moment of the stop, so the composer is free at once. The turn
+itself settles, which pays the refund back and unlocks the chat, at the first of
+three moments: its run has exited, a short grace has passed (`STOP_GRACE` in
+`confect/nina/settlement.ts`, for a run that is gone and never exits), or the
+learner sends the next prompt in the chat. The next prompt settles the stopped
+turn in the same transaction that admits it, before the open-turn count and the
+credit hold. The cut-off stream can no longer save output, so that refund is the
+one the run's exit would give a moment later, and a prompt in a chat whose turn
+was not stopped is still refused as busy. The run checks its turn every second
+and aborts its generation when the turn was stopped or settled elsewhere, which
+also stops a silent provider call. Whichever settlement comes later finds the
+turn settled and changes nothing. A saved answer wins a race with a cancel and
 settles as complete.
 
 Deleting a chat is the one route that settles a running turn at once. The chat

@@ -158,8 +158,9 @@ const sweep = FunctionImpl.make(
 
 /**
  * A queued turn has no run, so it settles at once. A running turn is asked to
- * stop and settles when its run has exited, never before the stream stops. A
- * run that is gone never exits, so the stop also schedules a settlement.
+ * stop and is shown as cancelled at once. It settles when its run has exited,
+ * after the stop grace for a run that is gone, or when the learner sends the
+ * next prompt, whichever comes first, and always after its stream was cut off.
  */
 const cancel = FunctionImpl.make(
   schema,

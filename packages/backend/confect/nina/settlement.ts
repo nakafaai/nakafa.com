@@ -194,12 +194,11 @@ export const STOP_GRACE = Duration.seconds(30);
 
 /**
  * Asks the run of a running turn to stop. The stream is cut off and the request
- * is stored, but the turn stays open: its credits stay held and its chat stays
- * locked until the run has exited and `settleTurn` runs, so a stream that is
- * still running is never paid back. A run that is gone never exits, so the
- * settlement scheduled here ends the turn after `STOP_GRACE` and stopping
- * always frees the chat. An answer that is already saved wins the race and
- * settles at once, with no refund.
+ * is stored, and the learner sees the turn as cancelled at once. The turn
+ * itself settles, which pays its credits back and unlocks its chat, at the
+ * first of three moments: its run exits, `STOP_GRACE` passes for a run that is
+ * gone, or the learner sends the next prompt (`settleStopped`). An answer that
+ * is already saved wins the race and settles at once, with no refund.
  */
 export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>
@@ -220,4 +219,28 @@ export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
     refs.internal.nina.lifecycle.recover,
     { turnId: turn._id }
   );
+});
+
+/**
+ * Settles the turn a learner stopped, so their next prompt in the chat does not
+ * wait for its run to exit. `stopTurn` already cut the stream off, so no late
+ * output can be saved and the refund is the one the run's exit would give a
+ * moment later. Returns whether the turn was settled: a turn that was not
+ * stopped, or that is gone, is left as it is.
+ */
+export const settleStopped = Effect.fn("nina.settlement.stopped")(function* (
+  turnId: NinaTurnsDoc["_id"]
+) {
+  const turn = yield* (yield* DatabaseReader)
+    .table("ninaTurns")
+    .get(turnId)
+    .pipe(
+      Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+      Effect.orDie
+    );
+  if (turn?.phase !== "active" || turn.cancelRequestedAt === undefined) {
+    return false;
+  }
+  yield* settleTurn(turn, "cancelled");
+  return true;
 });

@@ -1,0 +1,253 @@
+import { Ref } from "@confect/core";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
+import { resolveNinaContext } from "@repo/backend/confect/nina/context";
+import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
+import { STOP_GRACE } from "@repo/backend/confect/nina/settlement";
+import { createNinaTest } from "@repo/backend/test/nina";
+import { Array as Arr, DateTime, Duration, Effect } from "effect";
+
+vi.mock("@repo/backend/confect/nina/context", () => ({
+  resolveNinaContext: vi.fn(),
+}));
+
+const NOW = Date.UTC(2026, 8, 27, 12);
+const start = Ref.getFunctionReference(refs.public.nina.turns.start);
+const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
+const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
+const args = {
+  requestId: "next",
+  input: {
+    kind: "message",
+    prompt: { text: "Explain a limit." },
+    page: { locale: "en", slug: "home" },
+  },
+};
+
+/** A chat whose first turn holds five of the learner's ten credits. */
+async function fixture() {
+  const seeded = await createNinaTest({ now: NOW });
+  const { t, identity } = seeded;
+  const inspect = () =>
+    t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      chats: await ctx.db.query("chats").collect(),
+      turns: await ctx.db.query("ninaTurns").collect(),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+    }));
+  /** Sets the balance left after the first turn's hold. */
+  const setCredits = (credits: number) =>
+    t.mutation((ctx) => ctx.db.patch("users", identity.userId, { credits }));
+  return { ...seeded, inspect, setCredits };
+}
+
+describe("native Nina stop and resend", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    vi.mocked(resolveNinaContext).mockReturnValue(
+      openNinaLearningSession({
+        capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
+        source: "current-page",
+        learning: {
+          locale: "en",
+          slug: "home",
+          url: "https://nakafa.com/en/home",
+          verified: false,
+        },
+      }).pipe(
+        Effect.orDie,
+        Effect.map((session) => ({
+          page: {
+            locale: "en" as const,
+            slug: "home",
+            url: "https://nakafa.com/en/home",
+            verified: false,
+            needsFetch: false,
+            nina: session.context,
+          },
+          user: {},
+        }))
+      )
+    );
+  });
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
+  });
+
+  it.each([
+    ["exactly one response's credits", 5],
+    ["credits to spare", 10],
+  ])(
+    "settles the turn a learner stopped when they send the next prompt, with %s, so a stop and resend never meets a busy chat",
+    async (_balance, credits) => {
+      // With exactly one response's credits the next prompt can only be paid for
+      // by the stopped turn's hold coming back first. With more, the new hold
+      // must start from the refunded balance and not undo the refund.
+      const f = await fixture();
+      await f.setCredits(credits - 5);
+      await f.t.mutation(claim, { turnId: f.turnId });
+      await f.owner.mutation(cancel, { chatId: f.chatId });
+
+      // The stop leaves the turn open, its hold taken, until something settles it.
+      const stopped = await f.inspect();
+      expect(stopped.turns).toEqual([
+        expect.objectContaining({
+          _id: f.turnId,
+          phase: "active",
+          state: expect.objectContaining({ status: "running" }),
+          cancelRequestedAt: NOW,
+        }),
+      ]);
+      expect(stopped.user?.credits).toBe(credits - 5);
+      expect(stopped.chats[0]?.activeTurnId).toBe(f.turnId);
+
+      vi.setSystemTime(NOW + 1000);
+      const next = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await f.owner.mutation(start, { ...args, chatId: f.chatId })
+      );
+      const admitted = await f.inspect();
+      expect(next.chatId).toBe(f.chatId);
+      expect(admitted.chats).toHaveLength(1);
+      expect(admitted.chats[0]?.activeTurnId).toBe(next.turnId);
+      expect(admitted.turns).toHaveLength(2);
+      expect(admitted.turns[0]).toMatchObject({
+        _id: f.turnId,
+        phase: "settled",
+        state: { status: "cancelled", finishedAt: NOW + 1000 },
+      });
+      expect(admitted.turns[0]).not.toHaveProperty("cancelRequestedAt");
+      expect(admitted.turns[1]).toMatchObject({
+        _id: next.turnId,
+        phase: "active",
+        state: { status: "queued" },
+        order: next.order,
+      });
+      expect(next.order).toBeGreaterThan(0);
+      // The old hold came back once and the new prompt took a hold of its own.
+      expect(admitted.user?.credits).toBe(credits - 5);
+      expect(admitted.ledger).toEqual([
+        expect.objectContaining({
+          type: "usage",
+          amount: -5,
+          metadata: expect.objectContaining({
+            phase: "cancelled",
+            turnId: f.turnId,
+          }),
+        }),
+        expect.objectContaining({
+          type: "refund",
+          amount: 5,
+          balanceAfter: credits,
+        }),
+        expect.objectContaining({
+          type: "usage",
+          amount: -5,
+          balanceAfter: credits - 5,
+          metadata: { phase: "reserved" },
+        }),
+      ]);
+
+      // The old run exits and the settlement scheduled at the stop fires. Both
+      // find the turn settled, so nothing changes and nothing is paid back twice.
+      const grace = Duration.toMillis(STOP_GRACE);
+      expect(
+        Arr.filter(
+          admitted.jobs,
+          (job) => job.name === "nina/lifecycle:recover"
+        )
+      ).toEqual([
+        expect.objectContaining({
+          args: [{ turnId: f.turnId }],
+          scheduledTime: NOW + grace,
+        }),
+      ]);
+      await f.t.mutation(recover, { turnId: f.turnId });
+      vi.setSystemTime(NOW + grace);
+      await f.t.mutation(recover, { turnId: f.turnId });
+      expect(await f.inspect()).toEqual(admitted);
+    }
+  );
+
+  it("pays nothing back for a hold from an earlier credit period, and grants the new period once", async () => {
+    const f = await fixture();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+
+    // A day later the daily credits have reset. The settlement grants the new
+    // period, and the new hold must see that grant instead of making it again.
+    vi.setSystemTime(NOW + 86_400_000);
+    await f.owner.mutation(start, { ...args, chatId: f.chatId });
+    const state = await f.inspect();
+    expect(Arr.map(state.ledger, (row) => row.type)).toEqual([
+      "usage",
+      "daily-grant",
+      "refund",
+      "usage",
+    ]);
+    expect(state.ledger[2]).toMatchObject({ type: "refund", amount: 0 });
+    expect(state.user?.credits).toBe(20);
+  });
+
+  it("settles a stopped turn before it counts the open turns, so the limit still holds around it", async () => {
+    const f = await fixture();
+    await f.setCredits(30);
+    await f.t.mutation(claim, { turnId: f.turnId });
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    await f.owner.mutation(start, { ...args, requestId: "other-chat" });
+
+    // The stopped turn and the other chat's turn are the two open turns. The
+    // next prompt in the stopped turn's chat settles the first one, so it fits.
+    await f.owner.mutation(start, {
+      ...args,
+      requestId: "same-chat",
+      chatId: f.chatId,
+    });
+    const state = await f.inspect();
+    expect(
+      Arr.map(state.turns, (turn) => [turn.phase, turn.state.status])
+    ).toEqual([
+      ["settled", "cancelled"],
+      ["active", "queued"],
+      ["active", "queued"],
+    ]);
+
+    // Two turns are open again, so one more is refused as before.
+    await expect(
+      f.owner.mutation(start, { ...args, requestId: "third" })
+    ).rejects.toMatchObject({ data: { code: "RATE_LIMITED" } });
+  });
+
+  it("keeps a chat busy while its running turn was not stopped, and holds no credit for the refused prompt", async () => {
+    const f = await fixture();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    await expect(
+      f.owner.mutation(start, { ...args, chatId: f.chatId })
+    ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
+    const state = await f.inspect();
+    expect(state.user?.credits).toBe(5);
+    expect(state.ledger).toHaveLength(1);
+    expect(state.turns).toHaveLength(1);
+    expect(state.turns[0]).toMatchObject({
+      phase: "active",
+      state: { status: "running" },
+    });
+    expect(state.turns[0]).not.toHaveProperty("cancelRequestedAt");
+    expect(state.chats[0]?.activeTurnId).toBe(f.turnId);
+  });
+
+  it("keeps a chat busy when the turn it points at is gone, and holds no credit", async () => {
+    const f = await fixture();
+    await f.t.mutation((ctx) => ctx.db.delete("ninaTurns", f.turnId));
+    await expect(
+      f.owner.mutation(start, { ...args, chatId: f.chatId })
+    ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
+    const state = await f.inspect();
+    expect(state.user?.credits).toBe(5);
+    expect(state.ledger).toHaveLength(1);
+  });
+});

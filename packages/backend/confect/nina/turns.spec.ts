@@ -56,8 +56,10 @@ export const NinaInput = Schema.Union([
 
 /**
  * Only active generation owns a refundable reservation and verified run
- * context. `cancelRequestedAt` is set when the learner stops a running turn:
- * the turn stays open until its run has exited, and then settles as cancelled.
+ * context. `cancelRequestedAt` is set when the learner stops a running turn.
+ * The page shows the turn as cancelled from then on, and the turn settles when
+ * its run has exited, after the stop grace, or when the learner sends the next
+ * prompt, whichever comes first.
  */
 const NinaActiveTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
