@@ -6,7 +6,7 @@ import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { getCustomerConvexConfig } from "@repo/backend/scripts/customers/convex";
 import { FetchClient } from "@repo/utilities/http/client";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Duration, Effect, Schema } from "effect";
+import { Duration, Effect, Schema, String as Str } from "effect";
 import {
   HttpClient,
   type HttpClientError,
@@ -28,6 +28,15 @@ const RANK_DEADLINE_MINUTES = 5;
  * holds this path to the name that the references give the function.
  */
 const RANK_PATH = "contents/sections/compare:rank";
+
+/**
+ * The function is internal. The typed endpoints of Convex's HTTP API, such as
+ * `/api/action`, are for public functions; `/api/run/{functionIdentifier}`
+ * calls a function of any type, which is how the Convex command line runs an
+ * internal function with an admin credential. Its identifier is the name with
+ * a `/` in place of the `:`.
+ */
+const RANK_RUN_PATH = `/api/run/${Str.replace(":", "/")(RANK_PATH)}`;
 
 /** Why a call to the deployment did not give an answer, in the words of its cause. */
 class KnowledgeConvexError extends Schema.TaggedError<KnowledgeConvexError>()(
@@ -57,7 +66,8 @@ const unreadable = (error: HttpClientError.HttpClientError) =>
 /**
  * Runs the model comparison of a deployment for one model and one language,
  * through Convex's admin HTTP API, and gives back its answer as the function
- * declares it. The function is internal, so only an admin credential reaches it.
+ * declares it. The function is internal, so only an admin credential reaches
+ * it.
  */
 export const rankModel = Effect.fn("knowledge.rankModel")(
   function* (
@@ -69,17 +79,13 @@ export const rankModel = Effect.fn("knowledge.rankModel")(
       Effect.orDie
     );
     const response = yield* HttpClientRequest.post(
-      `${config.url}/api/action`
+      `${config.url}${RANK_RUN_PATH}`
     ).pipe(
       HttpClientRequest.setHeader(
         "Authorization",
         `Convex ${config.accessToken}`
       ),
-      HttpClientRequest.bodyJsonUnsafe({
-        args,
-        format: "json",
-        path: RANK_PATH,
-      }),
+      HttpClientRequest.bodyJsonUnsafe({ args, format: "json" }),
       client.execute,
       Effect.mapError(unreadable)
     );

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { searchNakafaContent } from "@repo/backend/agent/search";
 import type { Hit } from "@repo/backend/confect/contents/sections/hits.spec";
 import { searchSections } from "@repo/backend/confect/contents/sections/search";
@@ -51,6 +51,29 @@ const wordResult = {
   limit: 10,
   offset: 0,
 };
+const tryoutQuery = {
+  limit: 10,
+  locale: "id",
+  offset: 0,
+  queries: ["matriks"],
+  section: "tryout",
+};
+
+/** A try-out that the word search found: a catalog entry, with no section to read. */
+function tryout(route: string) {
+  return {
+    ...readNakafaContentRefFixture("id", route, "tryout"),
+    description: `Deskripsi ${route}`,
+    excerpt: `Simulasi ${route}.`,
+    title: `Judul ${route}`,
+  };
+}
+
+// A search over all kinds of content also looks for try-outs, which only the
+// word search finds. Most tests find none.
+beforeEach(() => {
+  vi.mocked(searchNakafaContent).mockReturnValue(Effect.succeed(wordResult));
+});
 
 /** Runs the search and collects the log lines it writes, with the failure a line names. */
 async function find(facts: Parameters<typeof findContent>[0]) {
@@ -126,8 +149,67 @@ describe("Nakafa content search", () => {
         "\n"
       )
     );
-    expect(searchNakafaContent).not.toHaveBeenCalled();
+    expect(searchNakafaContent).toHaveBeenCalledExactlyOnceWith(tryoutQuery);
     expect(logged).toEqual([]);
+  });
+
+  it("adds the try-outs that the words find to the sections, ranked among them", async () => {
+    vi.mocked(searchSections).mockReturnValue(
+      Effect.succeed({
+        hits: [
+          hit("materi/matriks", "bentuk-matriks", ["Bentuk Matriks"]),
+          hit("materi/vektor", "top", [], 0),
+        ],
+        kind: "hits",
+      })
+    );
+    vi.mocked(searchNakafaContent).mockReturnValue(
+      Effect.succeed({
+        ...wordResult,
+        count: 2,
+        items: [tryout("tryout/utbk-matriks"), tryout("tryout/snbt-vektor")],
+      })
+    );
+    const { found } = await find(input);
+    expect(Arr.map(found.result.items, ({ title }) => title)).toEqual([
+      "Judul materi/matriks",
+      "Judul tryout/utbk-matriks",
+      "Judul materi/vektor",
+      "Judul tryout/snbt-vektor",
+    ]);
+    expect(found.result.items[1]).toMatchObject({
+      excerpt: "Simulasi tryout/utbk-matriks.",
+      section: "tryout",
+    });
+    expect(found.text).toContain(
+      Arr.join(
+        [
+          "# Matching Sections",
+          "- Result 1: Bentuk Matriks (read section: bentuk-matriks)",
+          "- Result 2: the start of the document",
+          "- Result 3: the start of the document",
+          "- Result 4: the start of the document",
+        ],
+        "\n"
+      )
+    );
+  });
+
+  it("shows a try-out that the words find when no section answers", async () => {
+    vi.mocked(searchSections).mockReturnValue(
+      Effect.succeed({ hits: [], kind: "hits" })
+    );
+    vi.mocked(searchNakafaContent).mockReturnValue(
+      Effect.succeed({
+        ...wordResult,
+        count: 1,
+        items: [tryout("tryout/utbk-matriks")],
+      })
+    );
+    const { found } = await find(input);
+    expect(Arr.map(found.result.items, ({ title }) => title)).toEqual([
+      "Judul tryout/utbk-matriks",
+    ]);
   });
 
   it("searches each question and keeps the best section of each document once", async () => {
@@ -155,6 +237,8 @@ describe("Nakafa content search", () => {
     expect(searchSections).toHaveBeenCalledWith(
       expect.objectContaining({ query: "determinan", section: "material" })
     );
+    // Asking for lessons does not look for try-outs.
+    expect(searchNakafaContent).not.toHaveBeenCalled();
     expect(Arr.map(found.result.items, ({ title }) => title)).toEqual([
       "Judul materi/matriks",
       "Judul materi/vektor",
@@ -202,16 +286,32 @@ describe("Nakafa content search", () => {
     expect(found.result.items).toHaveLength(1);
   });
 
-  it("searches by words when the index holds no section, and says so", async () => {
+  it("searches by words when the index gives no answer, and says so", async () => {
     vi.mocked(searchSections).mockReturnValue(
       Effect.succeed({ kind: "empty" })
     );
-    vi.mocked(searchNakafaContent).mockReturnValue(Effect.succeed(wordResult));
     const { found, logged } = await find(input);
     expect(found.result).toEqual(wordResult);
     expect(found.text).toContain('- Query: "matriks"');
     expect(logged).toEqual([
-      "INFO: The section index is empty; using the word search.",
+      "INFO: The section index gave no answer; using the word search.",
+    ]);
+  });
+
+  it("searches by words when the search for try-outs fails, and says so", async () => {
+    vi.mocked(searchSections).mockReturnValue(
+      Effect.succeed({
+        hits: [hit("materi/matriks", "top", [], 0)],
+        kind: "hits",
+      })
+    );
+    vi.mocked(searchNakafaContent).mockReturnValueOnce(
+      Effect.fail(new NakafaAgentDataReadError({ message: "Search failed." }))
+    );
+    const { found, logged } = await find(input);
+    expect(found.result).toEqual(wordResult);
+    expect(logged).toEqual([
+      "WARN: The section search failed; using the word search. (NakafaAgentDataReadError)",
     ]);
   });
 

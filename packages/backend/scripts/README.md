@@ -66,7 +66,10 @@ pnpm --filter @repo/backend knowledge:compare --model=qwen/qwen3-embedding-8b --
 The test decides which embedding model knowledge search uses. It runs against
 the deployment that `packages/backend/.env.local` names, which must run the
 current functions and hold the section index of its active release (the build
-is `contents/sections/build:run`, started by hand with no arguments).
+is `contents/sections/build:run`, started by hand with no arguments). The test
+calls the internal function `contents/sections/compare:rank` through the
+any-type endpoint `/api/run` of Convex's HTTP API, with the admin credential
+that the checkout holds.
 
 For every embedding model of the gateway and every language, the deployment
 embeds the stored sections of that language and each question of

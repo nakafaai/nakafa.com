@@ -8,6 +8,7 @@ export const nakafaSearch = createPrompt({
     Use this when you need to discover stable content references before reading details.
     Lessons, articles, and the Quran are found by meaning and by words, in Indonesian,
     English, and German, and each result names the section that answers the question.
+    Try-outs are found by words in their titles and descriptions.
   `,
 
   toolUsageGuidelines: `

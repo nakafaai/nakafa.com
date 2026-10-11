@@ -37,9 +37,11 @@ export class Gateway extends Context.Service<
      * One vector per text, in order, each of `embeddingDimensions` numbers,
      * from the embedding model of knowledge search or from the candidate the
      * model test names. The request carries no retention flags, because the AI
-     * SDK sends an embedding request only the model, the texts, and the vector
-     * length. Callers embed published lessons and Quran text, and the short
-     * search phrase a model wrote, never a stored learner message.
+     * SDK builds an embedding request from fixed fields, the model, the texts,
+     * and the vector length among them, that leave no place for them, so it
+     * relies on the gateway's own zero retention. Callers embed published
+     * lessons and Quran text, and the short search phrase that the specialist
+     * writes from a question, never a stored learner message.
      */
     readonly embed: (
       texts: readonly string[],
@@ -49,9 +51,12 @@ export class Gateway extends Context.Service<
 >()("@repo/backend/confect/gateway/handle/Gateway") {}
 
 /**
- * Sent with every call: route only to an endpoint that keeps no prompt and no
- * answer, and refuse one that collects them. The gateway states zero data
- * retention itself; these flags make each request ask for it.
+ * Sent with every language model call: route only to an endpoint that keeps no
+ * prompt and no answer, and refuse one that collects them. The gateway states
+ * zero data retention itself; these flags make each request ask for it. An
+ * embedding request cannot carry them, because the AI SDK builds it from fixed
+ * fields that leave no place for them, so it relies on the gateway's own
+ * statement.
  */
 const retention = { data_collection: "deny", zdr: true };
 

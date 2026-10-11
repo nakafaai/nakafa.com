@@ -5,19 +5,24 @@ import { Array as Arr, Option, Order } from "effect";
  * Merges ranked lists into one by reciprocal rank fusion. An item scores
  * `1 / (k + rank)` in each list that holds it, ranks counted from one, and its
  * scores add up, so an item that two lists both rank well beats an item that
- * only one list ranks first. `identify` tells which items are the same; the
- * first item seen for an identity is the one returned, and an identity counts
- * once per list, at its best rank. Items with equal scores keep the order in
+ * only one list ranks first. `identify` tells which items are the same. A list
+ * ranks identities, not items: an identity that a list holds more than once,
+ * such as the same place in three languages, takes the rank of its first item
+ * and leaves the later identities their own ranks. The first item seen for an
+ * identity is the one returned, and items with equal scores keep the order in
  * which they first appeared.
  */
 export function fuseRanks<Item>(
   lists: readonly (readonly Item[])[],
   identify: (item: Item) => string
 ) {
-  /** What an identity earns from one list: nothing when the list lacks it. */
-  const earned = (list: readonly Item[], identity: string) =>
+  const rankings = Arr.map(lists, (list) =>
+    Arr.dedupe(Arr.map(list, identify))
+  );
+  /** What an identity earns from one ranking: nothing when the ranking lacks it. */
+  const earned = (ranking: readonly string[], identity: string) =>
     Option.match(
-      Arr.findFirstIndex(list, (item) => identify(item) === identity),
+      Arr.findFirstIndex(ranking, (ranked) => ranked === identity),
       {
         onNone: () => 0,
         onSome: (index) => 1 / (FUSION_RANK_CONSTANT + index + 1),
@@ -31,9 +36,9 @@ export function fuseRanks<Item>(
     ),
     (item: Item) =>
       Arr.reduce(
-        lists,
+        rankings,
         0,
-        (total, list) => total + earned(list, identify(item))
+        (total, ranking) => total + earned(ranking, identify(item))
       ),
     Order.flip(Order.Number)
   );

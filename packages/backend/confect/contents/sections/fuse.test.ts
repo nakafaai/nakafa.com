@@ -44,6 +44,23 @@ describe("reciprocal rank fusion", () => {
     expect(fuseRanks([["a", "a", "b"], ["b"]], identify)).toEqual(["b", "a"]);
   });
 
+  it("ranks identities, so that a repeated identity does not push the ones after it down", () => {
+    // The first letter is the identity: X1 and X2 are one place in two
+    // languages. Y1 is the second place of its list, and earns 1 / 62 as Q1
+    // does, so Q1 does not outrank it. Counted by position, Y1 would earn
+    // 1 / 63 and fall behind Q1.
+    const byPlace = (item: string) => item.slice(0, 1);
+    expect(
+      fuseRanks(
+        [
+          ["X1", "X2", "Y1"],
+          ["P1", "Q1"],
+        ],
+        byPlace
+      )
+    ).toEqual(["X1", "P1", "Y1", "Q1"]);
+  });
+
   it("returns the first item seen for an identity", () => {
     const items = fuseRanks(
       [

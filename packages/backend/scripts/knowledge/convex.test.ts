@@ -48,33 +48,33 @@ describe("model test deployment boundary", () => {
     ).toBe("contents/sections/compare:rank");
   });
 
-  it.effect("sends one authenticated action call and decodes its answer", () =>
-    Effect.gen(function* () {
-      fetcher.mockResolvedValue(
-        Response.json({ status: "success", value: ranked })
-      );
-      expect(yield* call()).toEqual(ranked);
-      expect(fetcher).toHaveBeenCalledExactlyOnceWith(
-        new URL("https://test.convex.cloud/api/action"),
-        expect.objectContaining({
-          headers: {
-            authorization: "Convex test-token",
-            "content-type": "application/json",
-          },
-          method: "POST",
-        })
-      );
-      expect(
-        yield* Effect.promise(
-          (): Promise<unknown> =>
-            new Response(fetcher.mock.calls[0]?.[1]?.body).json()
-        )
-      ).toEqual({
-        args: input,
-        format: "json",
-        path: "contents/sections/compare:rank",
-      });
-    })
+  it.effect(
+    "sends one authenticated call to the any-type endpoint, which serves internal functions, and decodes its answer",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValue(
+          Response.json({ status: "success", value: ranked })
+        );
+        expect(yield* call()).toEqual(ranked);
+        expect(fetcher).toHaveBeenCalledExactlyOnceWith(
+          new URL(
+            "https://test.convex.cloud/api/run/contents/sections/compare/rank"
+          ),
+          expect.objectContaining({
+            headers: {
+              authorization: "Convex test-token",
+              "content-type": "application/json",
+            },
+            method: "POST",
+          })
+        );
+        expect(
+          yield* Effect.promise(
+            (): Promise<unknown> =>
+              new Response(fetcher.mock.calls[0]?.[1]?.body).json()
+          )
+        ).toEqual({ args: input, format: "json" });
+      })
   );
 
   it.effect("decodes the answer that the index holds no section", () =>
