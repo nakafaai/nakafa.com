@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
@@ -220,22 +221,29 @@ type LinkItemProps =
       prefetch?: never;
     };
 
+/** The text treatment that every footer destination shares. */
+const linkItemVariants = cva(
+  "text-sm transition-colors ease-out hover:text-primary"
+);
+
 /**
  * Renders one locale-aware footer destination with the shared text treatment.
  */
 function LinkItem({ href, label, nativeAnchor, prefetch }: LinkItemProps) {
-  const className = "text-sm transition-colors ease-out hover:text-primary";
-
   if (nativeAnchor) {
     return (
-      <a className={className} href={href}>
+      <a className={linkItemVariants()} href={href}>
         {label}
       </a>
     );
   }
 
   return (
-    <NavigationLink className={className} href={href} prefetch={prefetch}>
+    <NavigationLink
+      className={linkItemVariants()}
+      href={href}
+      prefetch={prefetch}
+    >
       {label}
     </NavigationLink>
   );

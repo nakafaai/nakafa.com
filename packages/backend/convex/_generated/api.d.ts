@@ -6144,6 +6144,24 @@ export declare const internal: {
         any
       >;
     };
+    tokens: {
+      encryptStoredTokens: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: null | string },
+        {
+          continueCursor: string;
+          encrypted: number;
+          isDone: boolean;
+          scanned: number;
+          unreadable: Array<{
+            account: string;
+            field: "accessToken" | "refreshToken";
+            reason: string;
+          }>;
+        }
+      >;
+    };
   };
   classes: {
     forums: {
@@ -9493,6 +9511,25 @@ export declare const internal: {
         "internal",
         { turnId: Id<"ninaTurns"> },
         null
+      >;
+    };
+    seal: {
+      sealChats: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null },
+        { next: string | null; sealed: number; skipped: number }
+      >;
+      sealSummaries: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null },
+        {
+          next: string | null;
+          removed: number;
+          sealed: number;
+          skipped: number;
+        }
       >;
     };
     summaries: {

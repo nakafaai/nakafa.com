@@ -5,6 +5,10 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import {
+  openSummary,
+  sealSummary,
+} from "@repo/backend/confect/nina/summaries/text";
 import spec, {
   SUMMARY_FOLD_LIMIT,
 } from "@repo/backend/confect/nina/summaries.spec";
@@ -23,15 +27,40 @@ const findSummary = Effect.fn("nina.summaries.find")(function* (
     );
 });
 
+/** Finds one chat, when it still exists. Its owner holds the key of the summary. */
+const findChat = Effect.fn("nina.summaries.chat")(function* (
+  chatId: Docs["chats"]["_id"]
+) {
+  return yield* (yield* DatabaseReader)
+    .table("chats")
+    .get(chatId)
+    .pipe(
+      Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+      Effect.orDie
+    );
+});
+
+/**
+ * Reads a chat's summary with its text opened. A summary whose chat is gone
+ * reads as none, because only the chat owner's key opens it.
+ */
 const read = FunctionImpl.make(
   schema,
   spec,
   "read",
   Effect.fn("nina.summaries.read")(function* ({ chatId }) {
     const summary = yield* findSummary(chatId);
-    return summary
-      ? { text: summary.text, throughOrder: summary.throughOrder }
-      : null;
+    if (!summary) {
+      return null;
+    }
+    const chat = yield* findChat(chatId);
+    if (!chat) {
+      return null;
+    }
+    return {
+      text: yield* openSummary(chat.userId, summary.text),
+      throughOrder: summary.throughOrder,
+    };
   })
 );
 
@@ -56,11 +85,13 @@ const anchor = FunctionImpl.make(
 );
 
 /**
- * Lists the complete turns among the newest turns of a chat after the
- * summary's `through` order and before the order `before`, newest first. A
- * turn that failed, was cancelled or still runs is not complete, so it never
- * shows up, whatever messages it left in the thread. A chat with a longer
- * backlog lists its newest turns, and the oldest wait for the next refresh.
+ * Lists the newest complete turns of a chat after the summary's `through`
+ * order and before the order `before`, newest first, at most
+ * `SUMMARY_FOLD_LIMIT`. A turn that failed, was cancelled or still runs is not
+ * complete, so it never shows up, whatever messages it left in the thread. The
+ * index holds the status, so no number of such turns can push a complete one
+ * out of the list. A chat with a longer backlog lists its newest complete
+ * turns, and the oldest wait for the next refresh.
  */
 const uncovered = FunctionImpl.make(
   schema,
@@ -74,26 +105,21 @@ const uncovered = FunctionImpl.make(
     const turns = yield* (yield* DatabaseReader)
       .table("ninaTurns")
       .index(
-        "by_chatId_and_order",
+        "by_chatId_and_state_status_and_order",
         (index) =>
           index
             .eq("chatId", chatId)
+            .eq("state.status", "complete")
             .gt("order", through ?? -1)
             .lt("order", before),
         "desc"
       )
       .take(SUMMARY_FOLD_LIMIT)
       .pipe(Effect.orDie);
-    return Arr.flatMap(turns, (turn) =>
-      turn.phase === "settled" && turn.state.status === "complete"
-        ? [
-            {
-              order: turn.order,
-              ...(turn.retryOf === undefined ? {} : { retryOf: turn.retryOf }),
-            },
-          ]
-        : []
-    );
+    return Arr.map(turns, (turn) => ({
+      order: turn.order,
+      ...(turn.retryOf === undefined ? {} : { retryOf: turn.retryOf }),
+    }));
   })
 );
 
@@ -138,9 +164,9 @@ const asked = FunctionImpl.make(
 );
 
 /**
- * Stores a refreshed summary. Coverage only moves forward, so a slower refresh
- * never replaces a newer one, but its provider usage still counts; a chat
- * deleted meanwhile gets no orphan.
+ * Stores a refreshed summary, sealed for the chat owner. Coverage only moves
+ * forward, so a slower refresh never replaces a newer one, but its provider
+ * usage still counts; a chat deleted meanwhile gets no orphan.
  */
 const save = FunctionImpl.make(
   schema,
@@ -152,13 +178,7 @@ const save = FunctionImpl.make(
     throughOrder,
     usage: call,
   }) {
-    const chat = yield* (yield* DatabaseReader)
-      .table("chats")
-      .get(chatId)
-      .pipe(
-        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
+    const chat = yield* findChat(chatId);
     if (!chat) {
       return null;
     }
@@ -176,17 +196,18 @@ const save = FunctionImpl.make(
         .pipe(Effect.orDie);
       return null;
     }
+    const sealed = yield* sealSummary(chat.userId, text);
     const updatedAt = yield* Clock.currentTimeMillis;
     if (existing) {
       yield* writer
         .table("ninaSummaries")
-        .patch(existing._id, { text, throughOrder, updatedAt, usage })
+        .patch(existing._id, { text: sealed, throughOrder, updatedAt, usage })
         .pipe(Effect.orDie);
       return null;
     }
     yield* writer
       .table("ninaSummaries")
-      .insert({ chatId, text, throughOrder, updatedAt, usage })
+      .insert({ chatId, text: sealed, throughOrder, updatedAt, usage })
       .pipe(Effect.orDie);
     return null;
   })

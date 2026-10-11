@@ -15,6 +15,7 @@ import {
   isImportDeclaration,
   isImportTypeNode,
   isLiteralTypeNode,
+  isShorthandPropertyAssignment,
   isTypeNode,
   type Node,
   type SourceFile,
@@ -200,7 +201,10 @@ function inspectionFailure(cause: unknown) {
 /**
  * Parses authored TypeScript modules in one native project, so the parsing
  * cost stays flat as the repository grows. While the scope stays open, `bind`
- * resolves identifiers from any parsed module in one batched request.
+ * classifies identifiers from any parsed module in one batched request, and
+ * `declare` returns the node that declares the value each one names, or
+ * `undefined` for an import and for a name with no value declaration. The name
+ * in a shorthand member such as `{ local }` names the variable it reads.
  */
 export const parseSources = Effect.fn("RepositoryPolicy.parseSources")(
   function* (sources: readonly (typeof RepositorySource.Type)[]) {
@@ -266,6 +270,27 @@ export const parseSources = Effect.fn("RepositoryPolicy.parseSources")(
           catch: inspectionFailure,
         })
     );
-    return { bind, modules };
+    const declare = Effect.fn("RepositoryPolicy.declare")(
+      (identifiers: readonly Identifier[]) =>
+        Effect.try({
+          try: () =>
+            Arr.map(
+              project.checker.getSymbolAtLocation(identifiers),
+              (symbol) => {
+                const declaration = symbol?.valueDeclaration?.resolve();
+                // The name in `{ local }` names the property first, and the
+                // variable it reads second.
+                return declaration !== undefined &&
+                  isShorthandPropertyAssignment(declaration)
+                  ? project.checker
+                      .getShorthandAssignmentValueSymbol(declaration)
+                      ?.valueDeclaration?.resolve()
+                  : declaration;
+              }
+            ),
+          catch: inspectionFailure,
+        })
+    );
+    return { bind, declare, modules };
   }
 );

@@ -2,6 +2,7 @@ import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createNinaTest } from "@repo/backend/test/nina";
+import { showsText } from "@repo/backend/test/seal";
 import { Array as Arr } from "effect";
 
 const read = Ref.getFunctionReference(refs.internal.nina.summaries.read);
@@ -69,6 +70,51 @@ describe("Nina summary storage", () => {
         usage: { calls: 2, input: 1800, output: 240 },
       }),
     ]);
+  });
+
+  it("stores the text sealed and reads a plain and a sealed row back as text", async () => {
+    const { t, chatId } = await createNinaTest();
+    const stored = () =>
+      t.query((ctx) => ctx.db.query("ninaSummaries").collect());
+    // A summary written before October 2026 holds its text as a string.
+    await t.mutation((ctx) =>
+      ctx.db.insert("ninaSummaries", {
+        chatId,
+        text: "- Plain row.",
+        throughOrder: 3,
+        updatedAt: Date.UTC(2026, 8, 1),
+        usage: { calls: 1, ...call },
+      })
+    );
+    expect(await t.query(read, { chatId })).toEqual({
+      text: "- Plain row.",
+      throughOrder: 3,
+    });
+    await t.mutation(save, {
+      chatId,
+      text: "- Sealed row about limits.",
+      throughOrder: 7,
+      usage: call,
+    });
+    const [row] = await stored();
+    expect(row?.text).toBeInstanceOf(ArrayBuffer);
+    expect(showsText(row?.text, "- Sealed row about limits.")).toBe(false);
+    expect(await t.query(read, { chatId })).toEqual({
+      text: "- Sealed row about limits.",
+      throughOrder: 7,
+    });
+  });
+
+  it("reads as none when the chat of a summary is gone", async () => {
+    const { t, chatId } = await createNinaTest();
+    await t.mutation(save, {
+      chatId,
+      text: "- Soon orphaned.",
+      throughOrder: 3,
+      usage: call,
+    });
+    await t.mutation((ctx) => ctx.db.delete("chats", chatId));
+    expect(await t.query(read, { chatId })).toBeNull();
   });
 
   it("stores nothing for a chat deleted before the refresh finished", async () => {
@@ -145,6 +191,15 @@ describe("Nina turns after the summary", () => {
     expect(
       await t.query(asked, { before: 22, chatId, questions: [0] })
     ).toEqual([{ order: 1, retryOf: 0 }]);
+  });
+
+  it("lists a complete turn behind any number of stopped ones", async () => {
+    const { t, chatId } = await createNinaTest({
+      history: [{}, ...Arr.makeBy(20, () => ({ cancelled: true }))],
+    });
+    expect(
+      await t.query(uncovered, { chatId, through: null, before: 21 })
+    ).toEqual([{ order: 0 }]);
   });
 
   it("skips a turn that is still running", async () => {

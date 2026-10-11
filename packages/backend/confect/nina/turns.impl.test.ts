@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { saveMessage, toUIMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -18,6 +19,7 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
+import { showsText } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, DateTime, Duration, Effect } from "effect";
 
@@ -32,6 +34,8 @@ vi.mock("@convex-dev/agent", async (load) => {
     toUIMessages: vi.fn(actual.toUIMessages),
   };
 });
+
+const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
 
 describe("native Nina admission", () => {
   beforeEach(() => {
@@ -132,6 +136,20 @@ describe("native Nina admission", () => {
       )
     ).toEqual([]);
     expect(state.messages.page).toHaveLength(1);
+  });
+
+  it("begins a chat with its default title sealed for the learner", async () => {
+    const { t, owner } = await fixture();
+    const receipt = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    const stored = await t.query((ctx) => ctx.db.get("chats", receipt.chatId));
+    expect(stored?.title).toBeInstanceOf(ArrayBuffer);
+    expect(showsText(stored?.title, DEFAULT_TITLE)).toBe(false);
+    expect(
+      await owner.query(getChat, { chatId: receipt.chatId })
+    ).toMatchObject({ title: DEFAULT_TITLE });
   });
 
   it("rejects changed payloads sharing a request key and a concurrent turn on the same chat", async () => {
