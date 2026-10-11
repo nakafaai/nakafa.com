@@ -70,7 +70,9 @@ describe("chat lists with sealed titles", () => {
     const f = await fixture();
     const stored = await f.t.query((ctx) => ctx.db.query("chats").collect());
     expect(stored).toHaveLength(5);
-    for (const chat of Arr.filter(stored, (row) => row.title !== undefined)) {
+    const titled = Arr.filter(stored, (row) => row.title !== undefined);
+    expect(titled).toHaveLength(4);
+    for (const chat of titled) {
       expect(chat.title).toBeInstanceOf(ArrayBuffer);
       for (const text of [ALGEBRA, PHYSICS, BOOLEAN, STRANGER]) {
         expect(showsText(chat.title, text)).toBe(false);
