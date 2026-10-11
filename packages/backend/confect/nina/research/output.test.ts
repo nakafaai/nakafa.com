@@ -11,6 +11,10 @@ import {
 } from "@repo/backend/confect/nina/research/output";
 import { MutableHashSet } from "effect";
 
+/** How the instruction Nina reads when research returns no source-backed finding begins. */
+const noFindingStart =
+  "Research returned no source-backed finding. Tell the learner what this attempt could not verify.";
+
 describe("formatResearchOutput", () => {
   it("renders citations inline from structured research output", () => {
     expect(
@@ -87,14 +91,64 @@ describe("formatResearchOutput", () => {
     expect(markdown).not.toContain("Sources");
   });
 
-  it("tells Nina what to say when no finding is source-backed, and keeps the limitations", () => {
+  it("renders a scoped finding with its link, then the limitation as a bullet without one", () => {
+    expect(
+      formatResearchOutput({
+        findings: [
+          {
+            text: "In 2029 the fee is 20.",
+            citations: [
+              { title: "Fee schedule", url: "https://example.org/fees" },
+            ],
+          },
+        ],
+        limitations: [
+          "The collected sources state the 2029 fee and do not state the 2030 fee.",
+        ],
+      })
+    ).toBe(
+      "- In 2029 the fee is 20. [Fee schedule](https://example.org/fees)\n\n- The collected sources state the 2029 fee and do not state the 2030 fee."
+    );
+  });
+
+  it("tells Nina to say what this attempt could not verify and to name a direct channel when no finding is source-backed", () => {
     const output = formatResearchOutput({
       findings: [],
       limitations: ["The requested page did not load."],
     });
 
-    expect(output).toBe(
-      "Research returned no source-backed finding. Tell the learner that this attempt could not verify the request from direct sources, and name a direct channel they can check next. Do not claim that anything is absent or does not exist.\n\n- The requested page did not load."
+    expect(output.startsWith(noFindingStart)).toBe(true);
+    expect(output).toContain(
+      "The limitations that follow say it; when none follow, it is the request itself."
+    );
+    expect(output).toContain("Name a direct channel they can check next.");
+  });
+
+  it("keeps every limitation after the no-finding instruction", () => {
+    const [instruction, ...limitations] = formatResearchOutput({
+      findings: [],
+      limitations: ["The requested page did not load.", "The page was empty."],
+    }).split("\n\n");
+
+    expect(instruction?.startsWith(noFindingStart)).toBe(true);
+    expect(limitations).toEqual([
+      "- The requested page did not load.",
+      "- The page was empty.",
+    ]);
+  });
+
+  it("gives the no-finding instruction alone when no limitation follows", () => {
+    const output = formatResearchOutput({ findings: [], limitations: [] });
+
+    expect(output.startsWith(noFindingStart)).toBe(true);
+    expect(output).not.toContain("\n");
+  });
+
+  it("never lets the no-finding instruction claim that anything is absent", () => {
+    const output = formatResearchOutput({ findings: [], limitations: [] });
+
+    expect(output).toContain(
+      "Do not claim that anything is absent or does not exist."
     );
   });
 

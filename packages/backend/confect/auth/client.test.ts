@@ -5,13 +5,11 @@ import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/confect/auth/d
 import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { encodeJsonText } from "@repo/utilities/json";
+import { signInWithGoogle } from "@repo/backend/test/auth";
 import { getFunctionName, makeFunctionReference } from "convex/server";
-import { Array as Arr, pipe } from "effect";
+import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
-const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
-const BASE64_PADDING_PATTERN = /[=]+$/;
 const finalizeDeletedUserCleanupReference = makeFunctionReference<
   "mutation",
   {
@@ -19,94 +17,6 @@ const finalizeDeletedUserCleanupReference = makeFunctionReference<
   },
   null
 >("customers/deletion/workflow:finalizeDeletedUserCleanup");
-function encodeGoogleTokenPart(value: object) {
-  return btoa(encodeJsonText(value))
-    .replaceAll("+", "-")
-    .replaceAll("/", "_")
-    .replace(BASE64_PADDING_PATTERN, "");
-}
-function createGoogleIdToken(suffix: string) {
-  const issuedAt = Math.floor(NOW / 1000);
-  return Arr.join(
-    [
-      encodeGoogleTokenPart({
-        alg: "none",
-        typ: "JWT",
-      }),
-      encodeGoogleTokenPart({
-        aud: "test-google-client",
-        email: `${suffix}@example.com`,
-        email_verified: true,
-        exp: issuedAt + 3600,
-        iat: issuedAt,
-        iss: "https://accounts.google.com",
-        name: `Synthetic ${suffix}`,
-        picture: `https://example.com/${suffix}.png`,
-        sub: `google-${suffix}`,
-      }),
-      "test-signature",
-    ],
-    "."
-  );
-}
-async function signUpGoogleLearner(
-  test: ReturnType<typeof createConvexTestWithBetterAuth>,
-  suffix: string
-) {
-  const tokenExchange = vi.fn<typeof fetch>((input, init) => {
-    expect(String(input)).toBe(GOOGLE_TOKEN_ENDPOINT);
-    expect(init?.method).toBe("POST");
-    expect(String(init?.body)).toContain("code=synthetic-authorization-code");
-    return Promise.resolve(
-      Response.json({
-        access_token: `access-${suffix}`,
-        expires_in: 3600,
-        id_token: createGoogleIdToken(suffix),
-        refresh_token: `refresh-${suffix}`,
-        scope: "openid email profile",
-        token_type: "Bearer",
-      })
-    );
-  });
-  vi.stubGlobal("fetch", tokenExchange);
-  const signInResponse = await test.fetch("/api/auth/sign-in/social", {
-    body: encodeJsonText({
-      callbackURL: "/en",
-      provider: "google",
-    }),
-    headers: {
-      "content-type": "application/json",
-      origin: "http://localhost:3000",
-    },
-    method: "POST",
-  });
-  const authorizationLocation = signInResponse.headers.get("location");
-  if (!authorizationLocation) {
-    throw new Error("Expected Google authorization redirect.");
-  }
-  const state = new URL(authorizationLocation).searchParams.get("state");
-  if (!state) {
-    throw new Error("Expected Google authorization state.");
-  }
-  const cookie = pipe(
-    signInResponse.headers.getSetCookie(),
-    Arr.map((value) => value.split(";", 1)[0]),
-    Arr.join("; ")
-  );
-  const response = await test.fetch(
-    `/api/auth/callback/google?${new URLSearchParams({
-      code: "synthetic-authorization-code",
-      state,
-    })}`,
-    {
-      headers: {
-        cookie,
-      },
-    }
-  );
-  expect(tokenExchange).toHaveBeenCalledOnce();
-  return response;
-}
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
@@ -125,7 +35,7 @@ afterEach(() => {
 describe("auth/client", () => {
   it("creates one awaiting intent through the Better Auth user lifecycle", async () => {
     const test = createConvexTestWithBetterAuth();
-    const response = await signUpGoogleLearner(test, "learner");
+    const response = await signInWithGoogle(test, "learner", NOW);
     const stored = await test.query(async (ctx) => ({
       intents: await ctx.db.query("welcomeEmailIntents").take(2),
       jobs: await ctx.db.system.query("_scheduled_functions").take(8),
@@ -151,9 +61,11 @@ describe("auth/client", () => {
   });
   it("projects each Better Auth profile field without scheduling unchanged writes", async () => {
     const test = createConvexTestWithBetterAuth();
-    await expect(signUpGoogleLearner(test, "profile")).resolves.toMatchObject({
-      status: 302,
-    });
+    await expect(signInWithGoogle(test, "profile", NOW)).resolves.toMatchObject(
+      {
+        status: 302,
+      }
+    );
     const original = await test.query((ctx) => ctx.db.query("users").unique());
     if (!original) {
       throw new Error(
@@ -248,7 +160,7 @@ describe("auth/client", () => {
   });
   it("ignores profile propagation after deletion preparation begins", async () => {
     const test = createConvexTestWithBetterAuth();
-    await signUpGoogleLearner(test, "deleting");
+    await signInWithGoogle(test, "deleting", NOW);
     const original = await test.query((ctx) => ctx.db.query("users").unique());
     if (!original) {
       throw new Error(
@@ -341,7 +253,7 @@ describe("auth/client", () => {
   });
   it("schedules both immediate and recovery cleanup after auth deletion", async () => {
     const test = createConvexTestWithBetterAuth();
-    await signUpGoogleLearner(test, "deleted");
+    await signInWithGoogle(test, "deleted", NOW);
     const original = await test.query((ctx) => ctx.db.query("users").unique());
     if (!original) {
       throw new Error(

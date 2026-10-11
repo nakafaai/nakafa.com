@@ -209,11 +209,18 @@ export const ReasoningTrigger = memo(
 
 type ReasoningContentProps = ComponentProps<typeof CollapsibleContent>;
 
-/** Frames rendered reasoning; streamed and static callers choose the renderer. */
+/**
+ * Frames rendered reasoning; streamed and static callers choose the renderer.
+ * The line on its start side begins under the trigger's icon, so the text
+ * reads as a child of its row.
+ */
 export const ReasoningContent = memo(
   ({ className, ...props }: ReasoningContentProps) => (
     <CollapsibleContent
-      className={cn("text-sm", "text-muted-foreground outline-none", className)}
+      className={cn(
+        "ms-2 border-s ps-4 text-muted-foreground text-sm outline-none",
+        className
+      )}
       {...props}
     />
   )

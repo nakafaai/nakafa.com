@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
@@ -7,6 +8,25 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import spec from "@repo/backend/confect/nina/conversation.spec";
 import { Effect, Layer, Option, Schema } from "effect";
+
+/**
+ * The turn as the page shows it. A turn the learner stopped is cancelled for
+ * them at once, from the moment of the stop, although it settles only when its
+ * run exits, after the stop grace, or when they send the next prompt. The
+ * settlement keeps that time, so the state the page shows does not move.
+ */
+function shownTurn(turn: NinaTurnsDoc) {
+  if (turn.phase !== "active" || turn.cancelRequestedAt === undefined) {
+    return turn;
+  }
+  return {
+    ...turn,
+    state: {
+      status: "cancelled" as const,
+      finishedAt: turn.cancelRequestedAt,
+    },
+  };
+}
 
 const get = FunctionImpl.make(
   schema,
@@ -23,9 +43,9 @@ const get = FunctionImpl.make(
     return {
       chat,
       turn: Option.isSome(turn)
-        ? yield* Schema.decodeEffect(NinaTurnSummary)(turn.value).pipe(
-            Effect.orDie
-          )
+        ? yield* Schema.decodeEffect(NinaTurnSummary)(
+            shownTurn(turn.value)
+          ).pipe(Effect.orDie)
         : null,
     };
   })

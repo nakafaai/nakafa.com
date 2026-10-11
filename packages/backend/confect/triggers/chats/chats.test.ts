@@ -22,6 +22,7 @@ const add = Ref.getFunctionReference(refs.public.nina.memory.add);
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
 const remove = Ref.getFunctionReference(refs.public.chats.mutations.deleteChat);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
 const cleanup = Ref.getFunctionReference(
   refs.internal.auth.cleanup.cleanupDeletedUser
 );
@@ -217,6 +218,35 @@ describe("native Nina deletion lifecycle", () => {
         })
       )
     ).rejects.toThrow();
+  });
+
+  it("settles a running turn at once when its chat is deleted, and tells its run to halt", async () => {
+    const { t, owner, identity, receipt } = await fixture();
+    await t.mutation(claim, { turnId: receipt.turnId });
+    await owner.mutation(remove, { chatId: receipt.chatId });
+
+    // The turn settles in the deleting transaction: the hold comes back without
+    // waiting for the run to exit, and the run's next check finds its turn
+    // settled.
+    const read = () =>
+      t.query(async (ctx) => ({
+        turn: await ctx.db.get("ninaTurns", receipt.turnId),
+        user: await ctx.db.get("users", identity.userId),
+        ledger: await ctx.db.query("creditTransactions").collect(),
+      }));
+    const settled = await read();
+    expect(settled.turn?.state.status).toBe("cancelled");
+    expect(settled.user?.credits).toBe(10);
+    expect(
+      Arr.filter(settled.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
+    expect(await t.query(halted, { turnId: receipt.turnId })).toBe(true);
+
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    const cleaned = await read();
+    expect(cleaned.turn).toBeNull();
+    expect(cleaned.user?.credits).toBe(10);
+    expect(await t.query(halted, { turnId: receipt.turnId })).toBe(true);
   });
 
   it("account cleanup removes owned pending grants and Agent threads while preserving another owner's journal", async () => {

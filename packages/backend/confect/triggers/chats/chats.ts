@@ -11,7 +11,11 @@ import type { Change } from "convex-helpers/server/triggers";
 import { Duration, Effect } from "effect";
 
 /**
- * Cancels active generation and cascades journal deletion through Agent. A
+ * Settles the chat's open turn and cascades journal deletion through Agent. The
+ * turn settles in this transaction, so its hold is paid back without waiting
+ * for its run to exit: the stream is cut off, and the run's next check finds
+ * the turn settled and stops its provider call. Agent deletes the journal page
+ * by page, the first page here and the rest in the mutations it schedules. A
  * memory is the learner's own and stays when a chat is deleted.
  */
 export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(

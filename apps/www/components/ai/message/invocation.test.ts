@@ -33,7 +33,7 @@ const settled = (output: unknown): ToolUIPart => ({
 });
 
 describe("readInvocation", () => {
-  it("reads a settled capability result and counts failed evidence", () => {
+  it("reads a settled capability result with its evidence", () => {
     const invocation = readInvocation(
       settled({ artifacts: [failedArtifact, loadingArtifact], text: "∞" }),
       true
@@ -42,7 +42,6 @@ describe("readInvocation", () => {
     expect(invocation).toEqual({
       artifacts: [failedArtifact, loadingArtifact],
       capability: "math",
-      failures: 1,
       state: "done",
     });
   });

@@ -163,9 +163,6 @@ describe("createNinaPrompt", () => {
     );
     expect(prompt).toContain("Math evidence for calculations");
     expect(prompt).toContain(
-      "If evidence still cannot be gathered, answer with the limitation instead of guessing."
-    );
-    expect(prompt).toContain(
       "Decide from the user's request and gathered evidence"
     );
     expect(prompt).toContain(
@@ -205,9 +202,124 @@ describe("createNinaPrompt", () => {
     expect(prompt).toContain(
       "Keep it as a process limitation, not a claim that sources, announcements, public information, or confirmations do not exist."
     );
-    expect(prompt).toContain(
-      "Do not add greetings, advice, encouragement, unrelated Nakafa content, or extra bullets around a limitation-only answer."
+  });
+
+  it("answers with the findings and their citations when research returns findings", () => {
+    const prompt = createNinaPrompt(base);
+    const taskSection = prompt.slice(
+      prompt.indexOf("# Task Instructions"),
+      prompt.indexOf("# Specialist Input Examples")
     );
+
+    expect(taskSection).toContain(
+      "If research returns findings (bullets with a source link):"
+    );
+    expect(taskSection).toContain(
+      "Answer with the findings and their citations."
+    );
+  });
+
+  it("says what findings that cover less than asked do cover, and where to check the rest, even when research returns no limitation", () => {
+    const prompt = createNinaPrompt(base);
+    const taskSection = prompt.slice(
+      prompt.indexOf("# Task Instructions"),
+      prompt.indexOf("# Specialist Input Examples")
+    );
+
+    expect(taskSection).toContain(
+      "If the findings cover less than the learner asked, such as another year or version:"
+    );
+    expect(taskSection).toContain(
+      "Say plainly what they cover and what could not be verified, in the words of the limitations (bullets without a source link) when there are any, and never as a claim that anything does not exist or was not announced."
+    );
+    expect(taskSection).toContain(
+      "Name where the learner can check the rest, such as the official site the findings come from."
+    );
+    expect(taskSection).not.toContain("If research returns findings and");
+  });
+
+  it("tells the learner what could not be verified and to name a direct channel when research returns no finding", () => {
+    const prompt = createNinaPrompt(base);
+    const taskSection = prompt.slice(
+      prompt.indexOf("# Task Instructions"),
+      prompt.indexOf("# Specialist Input Examples")
+    );
+
+    expect(taskSection).toContain(
+      "If research returns no source-backed finding:"
+    );
+    expect(taskSection).toContain(
+      "Tell the learner what could not be verified, in the words of the research limitations when there are any, and name a direct channel they can check next."
+    );
+  });
+
+  it("bars greetings, advice, filler and extra bullets around a no-finding answer, except the direct channel it requires", () => {
+    const prompt = createNinaPrompt(base);
+    const taskSection = prompt.slice(
+      prompt.indexOf("# Task Instructions"),
+      prompt.indexOf("# Specialist Input Examples")
+    );
+
+    expect(taskSection).toContain(
+      "Apart from the direct channel, do not add greetings, advice, encouragement, unrelated Nakafa content, or extra bullets."
+    );
+    expect(taskSection).not.toContain("- Do not add greetings, advice");
+    expect(taskSection).not.toContain("limitation-only");
+  });
+
+  it("writes a research limitation in the words of the limitation, with one or two natural sentences as enough rather than required, and no found or not-found wording", () => {
+    const prompt = createNinaPrompt(base);
+    const outputSection = prompt.slice(
+      prompt.indexOf("## Research limitations"),
+      prompt.indexOf("## Mathematical format")
+    );
+
+    expect(outputSection).toContain(
+      "Write a research limitation in the user's language, in the words of the limitation."
+    );
+    expect(outputSection).toContain("One or two natural sentences are enough.");
+    expect(outputSection).toContain(
+      "Do not say information, evidence, proof, announcements, or sources were found or not found."
+    );
+    expect(outputSection).not.toContain("as one or two natural sentences");
+  });
+
+  it("makes saying what the sources cover and do not state the one exception to the found and not-found ban, stated after it", () => {
+    const prompt = createNinaPrompt(base);
+    const outputSection = prompt.slice(
+      prompt.indexOf("## Research limitations"),
+      prompt.indexOf("## Mathematical format")
+    );
+
+    expect(outputSection).toContain(
+      "Saying what the sources cover and do not state is the one exception to that: it describes only those sources. Never widen it into a claim about the world."
+    );
+    expect(
+      outputSection.indexOf("is the one exception to that")
+    ).toBeGreaterThan(outputSection.indexOf("were found or not found."));
+  });
+
+  it("says what could not be verified, never to answer with the limitation, when evidence cannot be gathered or a specialist errors", () => {
+    const prompt = createNinaPrompt(base);
+
+    expect(prompt).toContain(
+      "If evidence still cannot be gathered, say what could not be verified instead of guessing."
+    );
+    expect(prompt).toContain(
+      "- Otherwise say plainly what could not be verified."
+    );
+    expect(prompt).not.toContain("answer with the limitation");
+    expect(prompt).not.toContain("answer with a clear limitation");
+  });
+
+  it("has no rule that makes a lone limitation sentence the whole answer", () => {
+    const prompt = createNinaPrompt(base);
+
+    expect(prompt).not.toContain("single limitation sentence");
+    expect(prompt).not.toContain("Limitation-only research answers");
+    expect(prompt).not.toContain("as the full answer");
+    expect(prompt).not.toContain("Do not paraphrase");
+    expect(prompt).not.toContain("Use the research limitation as the answer");
   });
 
   it("keeps final answer formatting explicit but compact", () => {

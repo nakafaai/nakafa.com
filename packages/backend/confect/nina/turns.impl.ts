@@ -15,8 +15,10 @@ import { requireAuth } from "@repo/backend/confect/auth/session";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { requireOpenCapacity } from "@repo/backend/confect/nina/capacity";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
+import { settleStopped } from "@repo/backend/confect/nina/settlement";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { sha256Hex } from "@repo/utilities/digest";
 import { JsonTextSchema } from "@repo/utilities/json";
@@ -92,6 +94,12 @@ const start = FunctionImpl.make(
         order: existing.order,
       };
     }
+    // A turn the learner stopped is cancelled for them at once. It settles when
+    // its run exits, after the stop grace, or here on their next prompt, in any
+    // chat, whichever comes first. Settling it before the busy check, the
+    // open-turn count and the credit hold keeps a turn the page shows as
+    // cancelled from blocking the chat, counting as open or holding credits.
+    const learner = yield* settleStopped(appUser);
     const chat = args.chatId
       ? yield* requireChatOwner(args.chatId, appUser._id)
       : null;
@@ -101,10 +109,11 @@ const start = FunctionImpl.make(
         message: "A Nina response is already running in this chat.",
       });
     }
+    yield* requireOpenCapacity(appUser._id);
     const now = yield* Clock.currentTimeMillis;
-    const reservation = yield* reserveCredits(appUser);
+    const reservation = yield* reserveCredits(learner);
     const prompt = yield* preparePrompt(
-      appUser,
+      learner,
       chat,
       args.input,
       DateTime.formatIso(DateTime.makeUnsafe(now))
@@ -162,14 +171,11 @@ const start = FunctionImpl.make(
       .patch(chatId, { threadId, activeTurnId: turnId, updatedAt: now })
       .pipe(Effect.orDie);
     const scheduler = yield* Scheduler;
+    // No per-turn check follows the run: the recovery sweep settles a turn that
+    // stays open past its deadline.
     yield* scheduler.runAfter(Duration.zero, refs.internal.nina.response.run, {
       turnId,
     });
-    yield* scheduler.runAfter(
-      Duration.minutes(15),
-      refs.internal.nina.lifecycle.recover,
-      { turnId }
-    );
     yield* captureProductEvent({
       distinctId: appUser._id,
       event: {

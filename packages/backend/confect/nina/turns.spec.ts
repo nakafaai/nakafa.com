@@ -54,7 +54,13 @@ export const NinaInput = Schema.Union([
   }),
 ]);
 
-/** Only active generation owns a refundable reservation and verified run context. */
+/**
+ * Only active generation owns a refundable reservation and verified run
+ * context. `cancelRequestedAt` is set when the learner stops a running turn.
+ * The page shows the turn as cancelled from then on, and the turn settles when
+ * its run has exited, after the stop grace, or when the learner sends the next
+ * prompt, whichever comes first.
+ */
 const NinaActiveTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
   ...NinaCreditHold.fields,
@@ -64,6 +70,7 @@ const NinaActiveTurn = Schema.Struct({
   page: NinaPageSchema,
   user: NinaUserSchema,
   state: Schema.Union([NinaTurnState.members[0], NinaTurnState.members[1]]),
+  cancelRequestedAt: Schema.optionalKey(Schema.Finite),
 });
 
 export const NinaSettledTurn = Schema.Struct({

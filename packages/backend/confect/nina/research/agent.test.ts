@@ -78,9 +78,14 @@ const searchCall = providerStep(
   ],
   "tool-calls"
 );
-const final = providerStep([
-  { type: "text", text: encodeResearchOutput(output) },
-]);
+/** One scripted synthesis answer, as the model would return it. */
+const synthesis = (answer: typeof ResearchOutputSchema.Type) =>
+  providerStep([{ type: "text", text: encodeResearchOutput(answer) }]);
+const final = synthesis(output);
+const noDate = "The official page did not state a date.";
+/** How the instruction Nina reads when research returns no source-backed finding begins. */
+const noFindingStart =
+  /^Research returned no source-backed finding\. Tell the learner what this attempt could not verify\./u;
 const unusable = providerStep([{ type: "text", text: "Invalid JSON" }]);
 const noQuery = providerStep(
   [
@@ -289,27 +294,53 @@ describe("research Agent evidence boundary", () => {
     expect(calls).toHaveLength(1);
   });
 
-  it("is not empty when retrieved sources support no finding: Nina reads what to say", async () => {
+  it("hands Nina the closest thing the sources state, with its citation and the limitation, and is not empty", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
     const { calls, result } = await research({
       doGenerate: [
         searchCall,
-        providerStep([
-          {
-            type: "text",
-            text: encodeResearchOutput({
-              findings: [output.findings[1]],
-              limitations: ["The official page did not state a date."],
-            }),
-          },
-        ]),
+        synthesis({
+          findings: [
+            {
+              text: "Version 5 of the guide lets an agent stop after a fixed number of steps.",
+              citations: [{ title: "Official source", url }],
+            },
+          ],
+          limitations: [
+            "The collected sources describe version 5 and do not state version 6.",
+          ],
+        }),
       ],
     });
     expect(result).toEqual({
-      text: "Research returned no source-backed finding. Tell the learner that this attempt could not verify the request from direct sources, and name a direct channel they can check next. Do not claim that anything is absent or does not exist.\n\n- The official page did not state a date.",
+      text: `- Version 5 of the guide lets an agent stop after a fixed number of steps. [Official source](${url})\n\n- The collected sources describe version 5 and do not state version 6.`,
     });
+    expect(result).not.toHaveProperty("outcome", "empty");
     expect(calls).toHaveLength(2);
+    expect(encodeJsonText(calls[1]?.prompt)).toContain("closest thing");
   });
+
+  it.each([
+    ["returns no finding", { findings: [], limitations: [noDate] }],
+    [
+      "returns only a finding that cites a source it was not given",
+      { findings: [output.findings[1]], limitations: [noDate] },
+    ],
+  ])(
+    "is not empty when synthesis %s: Nina reads what this attempt could not verify",
+    async (_case, answer) => {
+      vi.mocked(searchWeb).mockReturnValue(found);
+      const { calls, result } = await research({
+        doGenerate: [searchCall, synthesis(answer)],
+      });
+      expect(result).toEqual({ text: expect.stringMatching(noFindingStart) });
+      expect(result).toEqual({
+        text: expect.stringContaining(`\n\n- ${noDate}`),
+      });
+      expect(result).not.toHaveProperty("outcome", "empty");
+      expect(calls).toHaveLength(2);
+    }
+  );
 
   it("hands the retrieved sources to Nina, without a retry, when synthesis is unusable", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
