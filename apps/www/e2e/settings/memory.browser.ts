@@ -17,6 +17,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const WRITTEN = "Prefers worked examples before the formula";
 const REWRITTEN = "Prefers a short summary before the examples";
 const NAMED = "Study habits";
+const LINKED = "https://nakafa.com/en";
 
 /** The title of a memory in its editor. */
 const titleOf = (page: Page) =>
@@ -213,3 +214,79 @@ for (const width of [390, 1440]) {
     });
   });
 }
+
+/**
+ * Writes a memory where the marks have no room in the editor's row and sit
+ * behind More. The groups stay open while the learner writes the address of a
+ * link, and close once a control has acted on the text.
+ */
+const formatBehindMore = Effect.fn("NakafaE2E.formatBehindMore")(function* (
+  page: Page,
+  baseURL: string
+) {
+  const changes = yield* openMemoryPage(page, baseURL);
+
+  yield* Effect.promise(async () => {
+    const editor = editorOf(page);
+    const more = page
+      .getByRole("toolbar")
+      .getByRole("button", { exact: true, name: "More" });
+    const bold = page.getByRole("button", { exact: true, name: "Bold" });
+    const link = page.getByRole("button", { exact: true, name: "Link" });
+    const address = page.getByRole("textbox", { exact: true, name: "Link" });
+
+    await expect(page.getByText(EMPTY)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await page.getByRole("button", { name: "Add memory" }).click();
+    await opened(page, "");
+    await page.keyboard.type(WRITTEN);
+    await page.keyboard.press("ControlOrMeta+a");
+
+    // The link control opens its own field, and a press in that field keeps
+    // the groups it came from open.
+    await more.click();
+    await link.click();
+    await expect(address).toBeFocused();
+    await address.click();
+    await address.fill(LINKED);
+    await expect(link).toBeVisible();
+
+    // Applying the link closes the field and the groups.
+    const before = changes.sent;
+    await address.press("Enter");
+    await expect(address).toHaveCount(0);
+    await expect(link).toHaveCount(0);
+    await expect(editor.getByRole("link", { name: WRITTEN })).toHaveAttribute(
+      "href",
+      LINKED
+    );
+    await saved(changes, before);
+
+    // A control that acts at once closes the groups, and the caret is back in
+    // the text.
+    await more.click();
+    await bold.click();
+    await expect(bold).toHaveCount(0);
+    await expect(editor).toBeFocused();
+    await expect(editor.locator("strong")).toHaveText(WRITTEN);
+  });
+});
+
+test.describe("Memory editor at 320px", () => {
+  test.use({ viewport: { height: 900, width: 320 } });
+
+  test("keeps the controls behind More open for a link and closes them after it", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.fromNullishOr(baseURL).pipe(
+          Effect.flatMap((origin) => formatBehindMore(page, origin))
+        )
+      )
+    );
+  });
+});

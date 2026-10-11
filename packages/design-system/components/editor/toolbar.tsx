@@ -18,7 +18,13 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { useCurrentEditor } from "@tiptap/react";
 import { Array as Arr } from "effect";
-import { type ComponentProps, useLayoutEffect, useRef, useState } from "react";
+import {
+  type ComponentProps,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 interface RichEditorToolbarProps {
   /** The names a reader hears and sees for each control. */
@@ -74,14 +80,33 @@ function RichEditorGroup(props: Omit<ComponentProps<"div">, "className">) {
  * The formatting controls of the editor it sits in, on one line: history, the
  * style of the paragraph, marks, lists, and blocks. The groups that do not fit
  * the width move behind a last control that opens them, so the line never
- * wraps and never scrolls. A pick there closes them and the caret is back in
- * the text. Until the editor exists, every control waits.
+ * wraps and never scrolls. They close when a control there has acted and the
+ * caret is back in the text. A control that opens its own choices, such as the
+ * link field, keeps them open until the writer has chosen. Until the editor
+ * exists, every control waits.
  */
 export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
   const { editor } = useCurrentEditor();
   const row = useRef<HTMLDivElement>(null);
   const [wrapped, setWrapped] = useState<readonly string[]>([]);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!(open && editor)) {
+      return;
+    }
+
+    /** Every control gives the caret back to the text when it acts. */
+    function close() {
+      setOpen(false);
+    }
+
+    editor.on("focus", close);
+
+    return () => {
+      editor.off("focus", close);
+    };
+  }, [editor, open]);
 
   useLayoutEffect(() => {
     const element = row.current;
@@ -146,13 +171,11 @@ export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
             <PopoverContent
               align="end"
               className="flex w-auto flex-col gap-1 p-1.5"
-              // A press on a control closes the groups, and the caret goes back
-              // to the text. A close from the keyboard returns to the control
-              // that opened them.
+              // After a press the caret stays in the text. A close from the
+              // keyboard returns to the control that opened the groups.
               finalFocus={(closed) =>
                 closed === "keyboard" ? true : (editor?.view.dom ?? true)
               }
-              onClick={() => setOpen(false)}
             >
               {Arr.map(
                 Arr.filter(GROUPS, ({ name }) => Arr.contains(wrapped, name)),
