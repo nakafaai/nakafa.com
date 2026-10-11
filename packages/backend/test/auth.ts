@@ -105,7 +105,7 @@ export function createGoogleIdToken(
 }
 
 /** The Cookie header that carries every cookie a response set. */
-export function cookieHeader(response: Response) {
+function cookieHeader(response: Response) {
   return pipe(
     response.headers.getSetCookie(),
     Arr.map((value) => value.split(";", 1)[0]),
