@@ -15,6 +15,7 @@ import {
   ninaToolInput,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { sealedSummary } from "@repo/backend/test/seal";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
@@ -410,10 +411,14 @@ describe("Nina generation through the real Agent component", () => {
     const languageModel = ninaModel();
     provider.languageModel.mockReturnValue(languageModel);
     const f = await createNinaTest({ history: 6 });
-    await f.t.mutation((ctx) =>
+    await f.t.mutation(async (ctx) =>
       ctx.db.insert("ninaSummaries", {
         chatId: f.chatId,
-        text: "- The learner practiced limits.",
+        text: await sealedSummary(
+          ctx,
+          f.identity.userId,
+          "- The learner practiced limits."
+        ),
         throughOrder: 3,
         updatedAt: SUMMARY_UPDATED_AT,
         usage: { calls: 1, input: 900, output: 120 },

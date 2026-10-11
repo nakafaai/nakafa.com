@@ -243,36 +243,23 @@ describe("Nina presentation after an answer", () => {
     expect(provider.languageModel).not.toHaveBeenCalled();
   });
 
-  it.each(["plain", "sealed"] as const)(
-    "never overwrites an edited title, and replaces only the %s default title",
-    async (form) => {
-      const f = await createNinaTest();
-      if (form === "plain") {
-        // A chat written before October 2026 holds its default title as text.
-        await f.t.mutation((ctx) =>
-          ctx.db.patch("chats", f.chatId, { title: DEFAULT_TITLE })
-        );
-      } else {
-        await f.owner.mutation(rename, {
-          chatId: f.chatId,
-          title: DEFAULT_TITLE,
-        });
-      }
-      await f.t.mutation(save, { turnId: f.turnId, title: "Generated title" });
-      await f.t.mutation(save, {
-        turnId: f.turnId,
-        title: "Another generated title",
-        suggestions: ["A relevant follow-up?"],
-      });
-      expect(await readTitle(f)).toBe("Generated title");
-      expect(
-        (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.title
-      ).toBeInstanceOf(ArrayBuffer);
-      expect(
-        await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
-      ).toMatchObject({ suggestions: ["A relevant follow-up?"] });
-    }
-  );
+  it("never overwrites an edited title, and replaces only the default title", async () => {
+    const f = await createNinaTest();
+    await f.owner.mutation(rename, { chatId: f.chatId, title: DEFAULT_TITLE });
+    await f.t.mutation(save, { turnId: f.turnId, title: "Generated title" });
+    await f.t.mutation(save, {
+      turnId: f.turnId,
+      title: "Another generated title",
+      suggestions: ["A relevant follow-up?"],
+    });
+    expect(await readTitle(f)).toBe("Generated title");
+    expect(
+      (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.title
+    ).toBeInstanceOf(ArrayBuffer);
+    expect(
+      await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
+    ).toMatchObject({ suggestions: ["A relevant follow-up?"] });
+  });
 
   it("keeps a title the learner chose before the generated one arrives", async () => {
     const f = await createNinaTest();
