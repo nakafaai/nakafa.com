@@ -129,6 +129,25 @@ describe("repository source batch", () => {
     })
   );
 
+  it.effect("declares a shorthand member by the variable it names", () =>
+    Effect.gen(function* () {
+      const declarations = yield* declareLast(
+        [
+          {
+            file: FILE,
+            sourceText:
+              'import { Imported } from "./other";\nconst local = "flex";\nconst styles = { local, Imported, missing };\n',
+          },
+        ],
+        ["local", "Imported", "missing"]
+      );
+      assert.deepStrictEqual(
+        Arr.map(declarations, (node) => node?.kind),
+        [SyntaxKind.VariableDeclaration, undefined, undefined]
+      );
+    })
+  );
+
   it.effect("keeps the top-level names of a script out of other modules", () =>
     Effect.gen(function* () {
       const bindings = yield* bindLast(

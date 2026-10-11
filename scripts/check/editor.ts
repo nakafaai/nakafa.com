@@ -2,8 +2,10 @@
  * What the editor's Tailwind language server reads as classes. It completes,
  * sorts, and checks a class string only inside these JSX attributes and calls,
  * so the class policy treats them as the class positions. `editor.test.ts`
- * keeps both lists equal to the `classAttributes` and `classFunctions` of the
- * editor settings in `.zed/settings.json` and `.vscode/settings.json`.
+ * keeps both lists equal to the `classAttributes` and `classFunctions` of
+ * `.zed/settings.json`, which is the only editor setting that declares them.
+ * `.vscode/settings.json` declares no Tailwind list, so an editor that gains
+ * one belongs in that test too.
  */
 
 /** The JSX attributes whose value the language server reads as classes. */

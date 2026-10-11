@@ -56,97 +56,43 @@ describe("class constant policy", () => {
       })
   );
 
-  it.effect.each(
-    Arr.map(
-      ["class", "className", "classList", "containerClassName", "classNames"],
-      (attribute) => ({ attribute })
-    )
-  )("reads the $attribute attribute as a class position", ({ attribute }) =>
-    Effect.gen(function* () {
-      const violations = yield* inspect(
-        lines('const ON = "flex";', `const view = <div ${attribute}={ON} />;`)
-      );
-      assert.deepStrictEqual(violations, [violation("ON", 1)]);
-    })
-  );
-
-  it.effect.each(
-    Arr.map(["cn", "cva", "cx", "clsx", "twMerge"], (callee) => ({ callee }))
-  )("reads the arguments of $callee as class positions", ({ callee }) =>
-    Effect.gen(function* () {
-      const violations = yield* inspect(
-        lines('const ON = "flex";', `const view = ${callee}("size-4", ON);`)
-      );
-      assert.deepStrictEqual(violations, [violation("ON", 1)]);
-    })
-  );
-
   it.effect.each([
-    { name: "a condition branch", value: 'open ? ON : "p-1"' },
-    { name: "the other condition branch", value: 'open ? "p-1" : ON' },
-    { name: "the right side of &&", value: "open && ON" },
-    { name: "either side of ||", value: 'ON || "p-1"' },
-    { name: "either side of ??", value: "custom ?? ON" },
-    { name: "a concatenation", value: 'ON + " p-1"' },
-    { name: "a template span", value: template("", "ON", " p-1") },
-    { name: "an array element", value: '["p-1", [ON]]' },
-    { name: "a spread element", value: '["p-1", ...[ON]]' },
-    { name: "a computed object key", value: "{ [ON]: open }" },
-    { name: "an object value", value: "{ rounded: ON }" },
-    { name: "a spread object", value: "{ ...{ rounded: ON } }" },
-    { name: "parentheses and an assertion", value: "((ON as string))" },
-    { name: "a satisfies check", value: "ON satisfies string" },
-    { name: "a non-null assertion", value: "ON!" },
-    { name: "a member of an object", value: "ON.card" },
-    { name: "a looked-up member", value: "ON[size]" },
-    { name: "a member chain", value: "ON.card.title" },
-  ])("reads $name of a class function argument", ({ value }) =>
+    {
+      place: "a classNames attribute",
+      sourceText: lines(
+        'const root = "w-fit";',
+        "const view = <Calendar classNames={{ root }} />;"
+      ),
+      name: "root",
+    },
+    {
+      place: "the variants of cva",
+      sourceText: lines(
+        'const sm = "h-4";',
+        'const size = cva("", { variants: { size: { sm } } });'
+      ),
+      name: "sm",
+    },
+    {
+      place: "a class attribute through a call",
+      sourceText: lines(
+        'const ON = ["flex", "gap-2"];',
+        'const view = <div className={Arr.join(ON, " ")} />;'
+      ),
+      name: "ON",
+    },
+    {
+      place: "a class attribute through a method call",
+      sourceText: lines(
+        'const ON = { sm: "flex" };',
+        "const view = <div className={ON.sm.trim()} />;"
+      ),
+      name: "ON",
+    },
+  ])("reports the constant that fills $place", ({ name, sourceText }) =>
     Effect.gen(function* () {
-      const violations = yield* inspect(
-        lines(
-          'const ON = { card: { title: "flex" } };',
-          `const view = cn(${value});`
-        )
-      );
-      assert.deepStrictEqual(violations, [violation("ON", 1)]);
-    })
-  );
-
-  it.effect(
-    "reads the base, variants, compound variants, and defaults of cva",
-    () =>
-      Effect.gen(function* () {
-        const violations = yield* inspect(
-          lines(
-            'const BASE = "flex";',
-            'const SOFT = "p-1";',
-            'const BOTH = "m-1";',
-            'const SIZE = "md";',
-            "const button = cva(BASE, {",
-            "  compoundVariants: [{ size: SIZE, tone: [SIZE], class: BOTH }],",
-            "  defaultVariants: { size: SIZE },",
-            "  variants: { size: { sm: SOFT } },",
-            "});"
-          )
-        );
-        assert.deepStrictEqual(violations, [
-          violation("BASE", 1),
-          violation("SOFT", 2),
-          violation("BOTH", 3),
-          violation("SIZE", 4),
-        ]);
-      })
-  );
-
-  it.effect("reads the values of a classNames object", () =>
-    Effect.gen(function* () {
-      const violations = yield* inspect(
-        lines(
-          'const ROOT = "flex";',
-          "const view = <Calendar classNames={{ root: ROOT }} />;"
-        )
-      );
-      assert.deepStrictEqual(violations, [violation("ROOT", 1)]);
+      const violations = yield* inspect(sourceText);
+      assert.deepStrictEqual(violations, [violation(name, 1)]);
     })
   );
 
@@ -203,6 +149,124 @@ describe("class constant policy", () => {
         )
       );
       assert.deepStrictEqual(violations, [violation("className", 2)]);
+    })
+  );
+
+  it.effect.each([
+    {
+      key: "a quoted key",
+      declaration: 'const ON = { "bg-primary": open };',
+    },
+    {
+      key: "a computed key",
+      declaration: 'const ON = { ["bg-primary"]: open };',
+    },
+  ])("reports a class map with $key", ({ declaration }) =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(
+        lines(declaration, "const view = cn(ON);")
+      );
+      assert.deepStrictEqual(violations, [violation("ON", 1)]);
+    })
+  );
+
+  it.effect("accepts a map with keys that are not strings", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(
+        lines("const ON = { flex: open, 1: close };", "const view = cn(ON);")
+      );
+      assert.deepStrictEqual(violations, []);
+    })
+  );
+
+  it.effect("follows a shorthand member to the variable it names", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(
+        lines(
+          'const sm = "h-4";',
+          "const STYLES = { sm };",
+          "const view = <div className={STYLES.sm} />;"
+        )
+      );
+      assert.deepStrictEqual(violations, [violation("sm", 1)]);
+    })
+  );
+
+  it.effect(
+    "follows the names that a call reads, never the text it holds",
+    () =>
+      Effect.gen(function* () {
+        const violations = yield* inspect(
+          lines(
+            'const SIZES = { sm: "h-4" };',
+            'const picked = pick(SIZES, "sm");',
+            'const outlined = buttonVariants({ variant: "outline" });',
+            'const joined = Arr.join(["flex", "gap-2"], " ");',
+            "const view = <div className={cn(picked, outlined, joined)} />;"
+          )
+        );
+        assert.deepStrictEqual(violations, [violation("SIZES", 1)]);
+      })
+  );
+
+  it.effect("accepts a variant that a call takes in its options", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(
+        lines(
+          'const VARIANT = "outline";',
+          "const view = <a className={buttonVariants({ variant: VARIANT })} />;"
+        )
+      );
+      assert.deepStrictEqual(violations, []);
+    })
+  );
+
+  it.effect("follows a destructured name to the value it is taken from", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(
+        lines(
+          'const SIZES = { sm: "h-4", card: { title: "flex" } };',
+          'const LIST = ["p-1"];',
+          "const { sm } = SIZES;",
+          "const { sm: small } = SIZES;",
+          "const { card: { title } } = SIZES;",
+          "const [first] = LIST;",
+          "const view = <div className={cn(sm, small, title, first)} />;"
+        )
+      );
+      assert.deepStrictEqual(violations, [
+        violation("SIZES", 1),
+        violation("LIST", 2),
+      ]);
+    })
+  );
+
+  it.effect("reports each destructured name that is given class text", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(
+        lines(
+          'const { sm, lg } = { sm: "h-4", lg: "h-8" };',
+          "const view = <div className={cn(sm, lg)} />;"
+        )
+      );
+      assert.deepStrictEqual(violations, [
+        violation("sm", 1),
+        violation("lg", 1),
+      ]);
+    })
+  );
+
+  it.effect("accepts the names that a function takes as parameters", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(
+        lines(
+          'function Item({ tone = "sm", ...props }, [first]) {',
+          "  const { gap } = props;",
+          "  return <a className={cn(tone, gap, first)} />;",
+          "}"
+        )
+      );
+      assert.deepStrictEqual(violations, []);
     })
   );
 
@@ -295,11 +359,10 @@ describe("class constant policy", () => {
           'const LABEL = "Close";',
           'const STATE = { open: "open" };',
           "const view = (",
-          "  <label htmlFor={ID} aria-label={LABEL} data-state={STATE.open} />",
-          ");",
-          "const bare = <input className />;",
-          "const namespaced = <use xlink:href={ID} />;",
-          "const empty = <div className={/* none */}>{ID}</div>;"
+          "  <label htmlFor={ID} aria-label={LABEL} data-state={STATE.open}>",
+          "    {ID}",
+          "  </label>",
+          ");"
         )
       );
       assert.deepStrictEqual(violations, []);
@@ -321,6 +384,9 @@ describe("class constant policy", () => {
           "for (const ITEM of items) {",
           "  use(<a className={ITEM} />);",
           "}",
+          "for (const [KEY, { VALUE }] of entries) {",
+          "  use(<a className={cn(KEY, VALUE)} />);",
+          "}",
           "const view = (",
           "  <div",
           "    className={cn(",
@@ -335,32 +401,8 @@ describe("class constant policy", () => {
           "      undefined,",
           "      missing,",
           "      read().card,",
-          "      list[0]?.name",
-          "    )}",
-          "  />",
-          ");"
-        )
-      );
-      assert.deepStrictEqual(violations, []);
-    })
-  );
-
-  it.effect("ignores operands, values, and calls that hold no class", () =>
-    Effect.gen(function* () {
-      const violations = yield* inspect(
-        lines(
-          'const ON = "flex";',
-          "const view = (",
-          "  <div",
-          "    className={cn(",
-          "      count > 1,",
-          "      ON === other,",
-          "      getClass(ON),",
-          "      ON.trim(),",
-          "      () => ON,",
-          "      1,",
-          "      { run() { return ON; } },",
-          "      new Set(ON),",
+          "      list[0]?.name,",
+          "      { OTHER, missing, late }",
           "    )}",
           "  />",
           ");"

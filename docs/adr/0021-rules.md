@@ -235,28 +235,50 @@ reports a variable that keeps class strings and is read in a class position.
 A class position is the value of a listed attribute and every argument of a call
 to a listed function, with what is nested in it: a branch, `||`, `??`, `+`, the
 right side of `&&`, a template span, an array element, a spread, and an object
-key or value. So the base, `variants`, `compoundVariants`, and `defaultVariants`
-of `cva` are class positions. `scripts/check/editor.ts` owns the two lists, and
-its test fails when they differ from `.zed/settings.json`, or from the lists that
-`.vscode/settings.json` declares, so the check and the editor cannot drift.
+key, value, or shorthand name. A key counts when it is computed or written as a
+string, because the language server reads a quoted class of a `clsx` map in
+place and cannot read it behind a name; a bare key is no string, and the
+language server does not read it in place either. So the base, `variants`,
+`compoundVariants`, and `defaultVariants` of `cva` are class positions.
 
-A name read in a class position, or the root of a member such as `STYLES.card`
-and `STYLES[size]`, is reported at its declaration, once, when the compiler
-resolves it in the same module to a `const`, `let`, or `var` whose value is a
-string, a template, a concatenation, a condition between strings, or an array or
-object that holds them. The check follows the names that such a value reads, so a
-constant built from other constants is reported down to its strings.
+A call that is not a listed function, such as `Record.get(STYLES, size)` or
+`CLASSES.join(" ")`, holds the names it reads: its receiver and its arguments. An
+object passed to such a call is its options, as in `buttonVariants({ variant })`,
+so only a listed function reads an object as a map. `scripts/check/editor.ts`
+owns the two lists, and its test fails when they differ from the lists in
+`.zed/settings.json`, so the check and the editor cannot drift.
+`.vscode/settings.json` declares no Tailwind list, and an editor that gains one
+belongs in that test.
+
+A name read in a class position, or each name that a member such as
+`STYLES.card` and `STYLES[size]` starts from, is reported at its declaration,
+once, when the compiler resolves it in the same module to a `const`, `let`, or
+`var` whose value is a string, a template, a concatenation, a condition between
+strings, or an array or object that holds them. A shorthand member such as
+`{ root }` names the variable `root`, and a name that a pattern takes out of a
+variable, such as `sm` in `const { sm } = SIZES`, is judged by the value of that
+variable. The check follows the names that such a value reads, so a constant
+built from other constants is reported down to its strings.
 
 The check never reports:
 
 - a literal written in the class position;
-- the result of a call, such as `const button = cva(...)` or `const classes = cn(...)`;
-- a parameter or a component prop;
+- the result of a call, such as `const button = cva(...)`, `const classes = cn(...)`, or `const className = buttonVariants({ variant: "outline" })`;
+- a parameter or a component prop, destructured or not;
 - a name imported from another module;
 - a string that never reaches a class position, such as an id or a label.
 
 The position decides, never the text: a string that does reach a class position
-is read as a class, and no pattern guesses which strings look like classes. Tests,
+is read as a class, and no pattern guesses which strings look like classes. A call
+is judged by the names it reads and never by the text it holds, because only the
+callee knows whether a string argument is a class, a variant, or a key, and
+`buttonVariants({ variant: "outline" })` and `Arr.join(["flex", "gap-2"], " ")`
+look alike to syntax. So a constant that a call builds from class text, such as
+`const ROW = Arr.join(["flex", "gap-2"], " ")`, is not seen, while an array
+constant that a call joins in the class position, as in
+`className={Arr.join(ROW, " ")}`, is. A name that a call takes in a class
+position and that holds a string which is no class, such as `getSize(SIZE)` with
+`const SIZE = "sm"`, is reported as well: write that string in the call. Tests,
 framework configuration, and generated modules are not judged.
 
 The fix has an order. Write the classes inside `cva(...)`: a lookup object keyed
@@ -272,7 +294,9 @@ Measured on main 63e4561e81, the judged modules read 406 names in class
 positions and 5 of them are imports: three `fonts`, which is a `cn(...)` result,
 the `className` of a font loader, and the `variable` of the Geist font. None is a
 string constant, so no violation hides behind an import today. The first run
-found 6 variables, 1 in `apps/www` and 5 in `packages/design-system`.
+found 6 variables, 1 in `apps/www` and 5 in `packages/design-system`. Reading
+calls, shorthand members, string keys, and destructured names raised neither
+count and found no further variable.
 
 ### Vercel deployment policy
 
