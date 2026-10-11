@@ -23,15 +23,23 @@ type Parsed = Effect.Success<ReturnType<typeof parseSources>>;
 type Module = Parsed["modules"][number];
 
 /**
- * Returns the value a declared name is given: the initializer of its variable,
- * also when a pattern takes the name out of it. A parameter, a function, and a
- * class give none.
+ * Returns the values a declared name can be given: the initializer of its
+ * variable, and for a name that a pattern takes out of a variable, also the
+ * default the pattern writes for it, as `"flex"` in
+ * `const { item = "flex" } = options`. A parameter, a function, and a class
+ * give none, and so does a pattern that takes its names out of a parameter.
  */
-function declaredValue(node: Node): Expression | undefined {
+function declaredValues(node: Node): readonly Expression[] {
   if (isVariableDeclaration(node)) {
-    return node.initializer;
+    return Arr.fromNullishOr(node.initializer);
   }
-  return isBindingElement(node) ? declaredValue(node.parent.parent) : undefined;
+  if (!isBindingElement(node)) {
+    return [];
+  }
+  const taken = declaredValues(node.parent.parent);
+  return Arr.isReadonlyArrayEmpty(taken)
+    ? []
+    : Arr.appendAll(taken, Arr.fromNullishOr(node.initializer));
 }
 
 /**
@@ -65,15 +73,15 @@ const follow = Effect.fnUntraced(function* (
       if (node === undefined) {
         return Result.failVoid;
       }
-      const value = declaredValue(node);
-      return value === undefined
+      const values = declaredValues(node);
+      return Arr.isReadonlyArrayEmpty(values)
         ? Result.failVoid
         : Result.succeed({
             key: `${module.file}:${node.pos}`,
             module,
             name: reference.text,
             node,
-            parts: classParts(value),
+            parts: Arr.flatMap(values, classParts),
           });
     }
   );
@@ -107,7 +115,7 @@ const follow = Effect.fnUntraced(function* (
  * text is reported once, at the declaration: a string, a template, a
  * concatenation, a condition between strings, or an array or object that holds
  * them. A name destructured out of a variable is judged by the value it comes
- * from. A literal written in the class position, a `cn(...)` or `cva(...)`
+ * from and by the default its pattern writes for it. A literal written in the class position, a `cn(...)` or `cva(...)`
  * result, a parameter, and an imported name are not reported, because the check
  * does not follow an import into the module that declares it.
  */

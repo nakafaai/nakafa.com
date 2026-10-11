@@ -257,7 +257,8 @@ once, when the compiler resolves it in the same module to a `const`, `let`, or
 strings, or an array or object that holds them. A shorthand member such as
 `{ root }` names the variable `root`, and a name that a pattern takes out of a
 variable, such as `sm` in `const { sm } = SIZES`, is judged by the value of that
-variable. The check follows the names that such a value reads, so a constant
+variable and by the default the pattern writes for it, such as `"flex"` in
+`const { item = "flex" } = options`. The check follows the names that such a value reads, so a constant
 built from other constants is reported down to its strings.
 
 The check never reports:

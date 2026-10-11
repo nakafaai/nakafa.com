@@ -256,6 +256,22 @@ describe("class constant policy", () => {
     })
   );
 
+  it.effect("reports a destructured name whose default is class text", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(
+        lines(
+          'const { item = "flex", gap } = options;',
+          'const { card: { title = "font-medium" } = {} } = options;',
+          "const view = <div className={cn(item, gap, title)} />;"
+        )
+      );
+      assert.deepStrictEqual(violations, [
+        violation("item", 1),
+        violation("title", 2),
+      ]);
+    })
+  );
+
   it.effect("accepts the names that a function takes as parameters", () =>
     Effect.gen(function* () {
       const violations = yield* inspect(
