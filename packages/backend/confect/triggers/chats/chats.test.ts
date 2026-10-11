@@ -10,6 +10,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { sealedSummary } from "@repo/backend/test/seal";
 import { Array as Arr, DateTime, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
@@ -164,7 +165,11 @@ describe("native Nina deletion lifecycle", () => {
       }
       await ctx.db.insert("ninaSummaries", {
         chatId: receipt.chatId,
-        text: "- The learner asked about limits.",
+        text: await sealedSummary(
+          ctx,
+          identity.userId,
+          "- The learner asked about limits."
+        ),
         throughOrder: 20,
         updatedAt: NOW,
         usage: { calls: 1, input: 900, output: 120 },
