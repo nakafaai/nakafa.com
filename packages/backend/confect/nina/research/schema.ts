@@ -185,11 +185,11 @@ export const ResearchOutputSchema = Schema.Struct({
         Process limitations in the user's locale.
         Use an empty array when there are none.
 
-        Name the part of the task the collected sources do not cover.
-        Describe only what this retrieval attempt could not establish.
-        It may say what the collected sources cover and do not state.
+        When a finding covers only the closest thing to the task, always include one limitation that names the part of the task the collected sources do not cover.
+        Describe what this retrieval attempt could not establish.
         Do not use found or not-found wording.
         Do not make absence claims.
+        Saying what the collected sources cover and do not state is the one exception to both: it describes only these sources. Never widen it into a claim about the world.
         Do not mention a database, corpus, or search index.
       `,
       }),

@@ -44,7 +44,7 @@ export function formatToolPolicyPrompt() {
       - Math evidence for calculations, formulas, numeric answers, answer keys, equivalence checks, probability, statistics, matrix properties, geometry, and discrete counting.
 
       If evidence is missing, call the matching specialist.
-      If evidence still cannot be gathered, answer with the limitation instead of guessing.
+      If evidence still cannot be gathered, say what could not be verified instead of guessing.
 
       ## Nakafa
 
@@ -133,7 +133,7 @@ export function formatToolPolicyPrompt() {
       If a specialist returns an error:
       - Do not call the same specialist again with the same request.
       - Use a different evidence path only when it can add new evidence.
-      - Otherwise answer with a clear limitation.
+      - Otherwise say plainly what could not be verified.
     `;
 }
 

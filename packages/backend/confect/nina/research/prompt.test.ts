@@ -107,7 +107,7 @@ describe("research prompt", () => {
     );
   });
 
-  it("returns the closest thing the evidence states, scoped and cited, instead of nothing", () => {
+  it("returns the closest thing the evidence states, scoped and cited, with one limitation, instead of nothing", () => {
     const prompt = researchPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
@@ -121,7 +121,7 @@ describe("research prompt", () => {
       "Each finding says exactly what it covers, such as its year or version, so it cannot be read as the answer to the task."
     );
     expect(prompt).toContain(
-      "Add one limitation that names the part of the task the evidence does not cover."
+      "Always add one limitation that names the part of the task the evidence does not cover."
     );
   });
 
@@ -143,15 +143,13 @@ describe("research prompt", () => {
     expect(prompt).not.toContain("Empty or weak evidence");
   });
 
-  it("lets a limitation say what the sources cover and not state, and still bars absence claims", () => {
+  it("still bars absence claims in a limitation", () => {
     const prompt = researchPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
       "Limitations are process statements about this retrieval attempt."
     );
-    expect(prompt).toContain(
-      "A limitation may say what the collected sources cover and what they do not state."
-    );
+    expect(prompt).toContain("A limitation must not claim:");
     expect(prompt).toContain(
       "entity nonexistence for a person, school, organization, product, policy, or event."
     );
@@ -167,6 +165,29 @@ describe("research prompt", () => {
     expect(prompt).not.toContain("noEvidenceAnswer");
     expect(prompt).not.toContain(
       "This retrieval run was insufficient to verify the user's claim"
+    );
+  });
+
+  it("makes saying what the collected sources cover and do not state the one exception to the bans, stated after them", () => {
+    const prompt = researchPrompt({ context, locale: "id" });
+
+    expect(prompt).toContain(
+      "A limitation may still say what the collected sources cover and what they do not state."
+    );
+    expect(prompt).toContain(
+      "That is the one exception to the claims above: it describes only these sources."
+    );
+    expect(prompt).toContain(
+      "Never widen it into a claim about the world, such as that something was not announced."
+    );
+    expect(
+      prompt.indexOf(
+        "A limitation may still say what the collected sources cover"
+      )
+    ).toBeGreaterThan(
+      prompt.indexOf(
+        "a database, corpus, search index, or exhaustive search proves anything."
+      )
     );
   });
 });

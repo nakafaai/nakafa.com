@@ -89,16 +89,17 @@ export function researchPrompt({
       - The closest thing is the same event in another year, an earlier version of a rule, or the general requirement without the specific date.
       - Return it as findings, each with its citation.
       - Each finding says exactly what it covers, such as its year or version, so it cannot be read as the answer to the task.
-      - Add one limitation that names the part of the task the evidence does not cover.
+      - Always add one limitation that names the part of the task the evidence does not cover.
       - Example: the task asks for a fee in 2030 and the only source states the fee for 2029. The finding names 2029 and gives that fee. The limitation says the collected sources state the 2029 fee and do not state the 2030 fee.
 
       Limitations are process statements about this retrieval attempt.
-      A limitation may say what the collected sources cover and what they do not state.
       A limitation must not claim:
       - entity nonexistence for a person, school, organization, product, policy, or event.
       - information, evidence, proof, sources, announcements, or official information are available or unavailable beyond the collected sources.
       - found/not-found status, public-data absence, announcement absence, or digital-footprint absence.
       - a database, corpus, search index, or exhaustive search proves anything.
+
+      A limitation may still say what the collected sources cover and what they do not state. That is the one exception to the claims above: it describes only these sources. Never widen it into a claim about the world, such as that something was not announced.
     `,
     outputFormatting: `
       # Structured Output Contract

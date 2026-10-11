@@ -8,9 +8,11 @@ export function formatAnswerPrompt() {
 
       ## Research limitations
 
-      Write a research limitation in the user's language as one or two natural sentences, in the words of the limitation.
+      Write a research limitation in the user's language, in the words of the limitation.
+      One or two natural sentences are enough.
       Do not decorate it or turn it into a search-result summary.
       Do not say information, evidence, proof, announcements, or sources were found or not found.
+      Saying what the sources cover and do not state is the one exception to that: it describes only those sources. Never widen it into a claim about the world.
 
       ## Mathematical format
 
