@@ -126,7 +126,7 @@ export async function FeaturesNina() {
                   <ReasoningContent>
                     <MarkdownContent
                       id="features-nina-reasoning"
-                      variant="chat"
+                      variant="note"
                     >
                       {reasoning}
                     </MarkdownContent>
