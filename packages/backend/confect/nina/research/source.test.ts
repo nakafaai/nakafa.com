@@ -1,6 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { withTurnContext } from "@repo/backend/confect/nina/prompt/user";
 import {
+  getNakafaReferences,
+  getNakafaReferencesFromMessages,
   getSourceReferences,
   getSourceReferencesFromMessages,
 } from "@repo/backend/confect/nina/research/source";
@@ -60,7 +62,46 @@ const staleSourceMessages = [
   },
 ] satisfies ModelMessage[];
 
+const nakafaLesson =
+  "https://nakafa.com/en/subject/high-school/10/mathematics/exponential/basic-concept";
+const nakafaQuran = "https://www.nakafa.com/id/quran/1";
+const nakafaMessages = [
+  { content: `Jelaskan ${nakafaLesson} dan ${nakafaQuran}.`, role: "user" },
+] satisfies ModelMessage[];
+const staleNakafaMessages = [
+  { content: `Jelaskan ${nakafaLesson}.`, role: "user" },
+  { content: "Sudah.", role: "assistant" },
+  { content: "Sekarang hitung 2 + 2.", role: "user" },
+] satisfies ModelMessage[];
+
+/** The addresses of references, in the order found. */
+const hrefs = (references: ReturnType<typeof getSourceReferences>) =>
+  Arr.map(references, (reference) => reference.href);
+
 describe("lib/source", () => {
+  it("keeps links to Nakafa's own site out of the outside sources, and finds them apart", () => {
+    const text = `Bandingkan ${nakafaLesson}, ${nakafaQuran}, ai-sdk.dev/docs dan api.nakafa.com/docs.`;
+
+    expect(hrefs(getSourceReferences(text))).toEqual([
+      "https://ai-sdk.dev/docs",
+      "https://api.nakafa.com/docs",
+    ]);
+    expect(hrefs(getNakafaReferences(text))).toEqual([
+      nakafaLesson,
+      nakafaQuran,
+    ]);
+  });
+
+  it("reads the Nakafa links of the latest user request only", () => {
+    expect(hrefs(getNakafaReferencesFromMessages(nakafaMessages))).toEqual([
+      nakafaLesson,
+      nakafaQuran,
+    ]);
+    expect(getSourceReferencesFromMessages(nakafaMessages)).toEqual([]);
+    expect(getNakafaReferencesFromMessages(assistantOnlyMessages)).toEqual([]);
+    expect(getNakafaReferencesFromMessages(staleNakafaMessages)).toEqual([]);
+  });
+
   it("extracts full URLs, bare domains, and markdown-wrapped URLs", () => {
     expect(
       Arr.map(

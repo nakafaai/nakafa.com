@@ -1,4 +1,5 @@
 import { purposes } from "@repo/backend/confect/gateway/purpose";
+import { timeLeft } from "@repo/backend/confect/nina/capability/deadline";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
 import {
@@ -16,7 +17,8 @@ import { Duration, Effect, Result, Schema } from "effect";
  * How long one page read may take, in milliseconds. `timeoutMs` is the
  * provider's own limit. With `autoResume: false` the Firecrawl SDK surfaces
  * that limit at once, and it retries a 502 up to two more times, so
- * `deadlineMs` is the backstop for the whole read.
+ * `deadlineMs` is the backstop for the whole read. Both are cut to the time the
+ * running capability has left.
  */
 const PageLimits = Schema.Struct({
   deadlineMs: Schema.Finite,
@@ -53,10 +55,16 @@ export const readPage = Effect.fn("research.readPage")(function* (
     return { error: safeUrl.failure.message, metadata: {}, url };
   }
   const publicUrl = safeUrl.success.publicUrl;
+  const left = yield* timeLeft;
   const { nativeMarkdown, scrapeResult } = yield* Effect.all(
     {
       nativeMarkdown: safeUrl.success.nativeFetchUrl
-        ? fetchSourceMarkdown(safeUrl.success.nativeFetchUrl)
+        ? fetchSourceMarkdown(safeUrl.success.nativeFetchUrl).pipe(
+            Effect.timeoutOrElse({
+              duration: left,
+              orElse: () => Effect.as(Effect.void, undefined),
+            })
+          )
         : Effect.as(Effect.void, undefined),
       scrapeResult: readFirecrawlApp().pipe(
         Effect.flatMap((client) =>
@@ -65,12 +73,12 @@ export const readPage = Effect.fn("research.readPage")(function* (
               client.scrape(publicUrl, {
                 autoResume: false,
                 formats: ["markdown"],
-                timeout: limits.timeoutMs,
+                timeout: Math.min(limits.timeoutMs, Duration.toMillis(left)),
               }),
             catch: scrapeFailure,
           }).pipe(
             Effect.timeoutOrElse({
-              duration: Duration.millis(limits.deadlineMs),
+              duration: Duration.min(Duration.millis(limits.deadlineMs), left),
               orElse: () => Effect.fail(scrapeFailure()),
             })
           )

@@ -15,6 +15,16 @@ import { Array as Arr, Option, Schema } from "effect";
 
 const CONTENT_RESOURCE_PREFIX = "nakafa://content/";
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
+/** The host of Nakafa's production site, from the one origin every package builds URLs from. */
+const SITE_HOSTNAME = new URL(SITE_ORIGIN).hostname;
+
+/**
+ * Whether a URL hostname is Nakafa's own site: its production domain or the
+ * `www` alias of it. A host such as `api.` belongs to another Nakafa app.
+ */
+export function isNakafaHostname(hostname: string) {
+  return hostname === SITE_HOSTNAME || hostname === `www.${SITE_HOSTNAME}`;
+}
 
 /** Runtime schema for persisted graph projection fields accepted by agent refs. */
 const NakafaContentGraphProjectionSchema =
@@ -178,7 +188,7 @@ export function normalizeNakafaContentInput(input: string) {
   }
 
   const url = new URL(trimmed);
-  if (url.hostname === "nakafa.com" || url.hostname === "www.nakafa.com") {
+  if (isNakafaHostname(url.hostname)) {
     return url.pathname;
   }
 

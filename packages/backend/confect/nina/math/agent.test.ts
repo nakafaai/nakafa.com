@@ -1,8 +1,10 @@
+import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
 import { compute } from "@repo/backend/confect/nina/math/tools/compute";
 import { provider } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
+import { withTimeLeft } from "@repo/backend/test/nina/deadline";
 import {
   runSpecialist,
   specialistRequest,
@@ -19,7 +21,7 @@ import { MathSeriesInputSchema } from "@repo/math/schema/tool/series";
 import { MathStatisticsInputSchema } from "@repo/math/schema/tool/statistics";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { ConfigProvider, Effect, Schema } from "effect";
+import { Array as Arr, ConfigProvider, Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/tools/compute", () => ({
   compute: vi.fn(),
@@ -87,6 +89,58 @@ const cases = [
     values: ["1", "2", "3"],
   }),
 ];
+
+const repairedInput: typeof MathAlgebraInputSchema.Type = {
+  operation: "simplify",
+  expression: "x + x",
+};
+const casConfig = ConfigProvider.fromUnknown({
+  NEXT_PUBLIC_CAS_URL: "https://math.example.invalid",
+  MATH_CAS_API_KEY: "test",
+});
+
+/**
+ * A model that first calls `algebra` without its expression, then writes the
+ * repaired arguments `input` when asked to repair them, then answers.
+ */
+function repairScript(input: typeof MathAlgebraInputSchema.Type) {
+  return new MockLanguageModelV4({
+    doGenerate: [
+      {
+        content: [
+          {
+            type: "tool-call",
+            toolCallId: "repair",
+            toolName: "algebra",
+            input: '{"operation":"simplify"}',
+          },
+        ],
+        finishReason: { unified: "tool-calls", raw: "tool-calls" },
+        usage: ninaUsage,
+        warnings: [],
+      },
+      {
+        content: [
+          {
+            type: "text",
+            text: Schema.encodeSync(
+              Schema.fromJsonString(MathAlgebraInputSchema)
+            )(input),
+          },
+        ],
+        finishReason: { unified: "stop", raw: "stop" },
+        usage: ninaUsage,
+        warnings: [],
+      },
+      {
+        content: [{ type: "text", text: "The checked result is 2x." }],
+        finishReason: { unified: "stop", raw: "stop" },
+        usage: ninaUsage,
+        warnings: [],
+      },
+    ],
+  });
+}
 
 describe("math Agent execution", () => {
   it("rejects missing CAS configuration before spending tokens on unexecutable tools", async () => {
@@ -196,48 +250,8 @@ describe("math Agent execution", () => {
   });
 
   it("repairs missing arguments through Agent before executing the requested calculation", async () => {
-    const input: typeof MathAlgebraInputSchema.Type = {
-      operation: "simplify",
-      expression: "x + x",
-    };
     const usageHandler = vi.fn();
-    const model = new MockLanguageModelV4({
-      doGenerate: [
-        {
-          content: [
-            {
-              type: "tool-call",
-              toolCallId: "repair",
-              toolName: "algebra",
-              input: '{"operation":"simplify"}',
-            },
-          ],
-          finishReason: { unified: "tool-calls", raw: "tool-calls" },
-          usage: ninaUsage,
-          warnings: [],
-        },
-        {
-          content: [
-            {
-              type: "text",
-              text: Schema.encodeSync(
-                Schema.fromJsonString(MathAlgebraInputSchema)
-              )(input),
-            },
-          ],
-          finishReason: { unified: "stop", raw: "stop" },
-          usage: ninaUsage,
-          warnings: [],
-        },
-        {
-          content: [{ type: "text", text: "The checked result is 2x." }],
-          finishReason: { unified: "stop", raw: "stop" },
-          usage: ninaUsage,
-          warnings: [],
-        },
-      ],
-    });
-    provider.languageModel.mockReturnValue(model);
+    provider.languageModel.mockReturnValue(repairScript(repairedInput));
     vi.mocked(compute).mockReturnValue(Effect.succeed("2x"));
     const result = await runSpecialist((userId) =>
       runMathAgent({
@@ -246,19 +260,11 @@ describe("math Agent execution", () => {
         task: "Simplify x + x",
         publish: () => Effect.void,
         usageHandler,
-      }).pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromUnknown({
-            NEXT_PUBLIC_CAS_URL: "https://math.example.invalid",
-            MATH_CAS_API_KEY: "test",
-          })
-        )
-      )
+      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, casConfig))
     );
     expect(result.text).toBe("The checked result is 2x.");
     expect(compute).toHaveBeenCalledWith(
-      expect.objectContaining({ input, toolCallId: "repair" })
+      expect.objectContaining({ input: repairedInput, toolCallId: "repair" })
     );
     expect(usageHandler).toHaveBeenCalledTimes(3);
     expect(usageHandler).toHaveBeenCalledWith(
@@ -268,5 +274,28 @@ describe("math Agent execution", () => {
         userId: expect.any(String),
       })
     );
+  });
+
+  it("cuts its model call and its repair call to the time the capability has left", async () => {
+    provider.languageModel.mockReturnValue(repairScript(repairedInput));
+    vi.mocked(compute).mockReturnValue(Effect.succeed("2x"));
+    const generate = vi.spyOn(Agent.prototype, "generateText");
+    await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        task: "Simplify x + x",
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, casConfig),
+        withTimeLeft("7 seconds")
+      )
+    );
+    // The first call is the specialist loop; the second is its repair.
+    expect(Arr.map(generate.mock.calls, ([, , call]) => call.timeout)).toEqual([
+      { stepMs: 7000, totalMs: 7000 },
+      { stepMs: 7000, totalMs: 7000 },
+    ]);
   });
 });

@@ -54,6 +54,32 @@ Convex React hook calls get no client deadline.
   `useConvexConnectionState` and the rule `isConvexOffline`, as the try-out
   catalog does.
 
+A Nina capability runs inside one step of the chat model, so it has a deadline
+of its own, and every model call has a cap on its output.
+
+- `streamCapability` in `packages/backend/confect/nina/capability/progress.ts`
+  gives a capability run the length of the chat step
+  (`purposes.chat.timeout.stepMs`) less a fixed margin
+  (`capability/deadline.ts`). A tool cannot see when its step began, and Nina's
+  own call, which wrote the tool call, ran first in that step, so the margin
+  stands for that call.
+- A run still going at that deadline is interrupted, which aborts the model
+  calls it has in flight. It settles through the rule every run uses: cards
+  that loaded stay, cards still loading end as errors, and the outcome is
+  `partial` beside loaded evidence and `failed` without any.
+- Inside the run, `CapabilityDeadline` tells each model call and provider call
+  how much time is left, and each uses the shorter of that and its own budget.
+  They end a little before the run does, so a capability can still report what
+  it gathered. A call outside a capability run has only its own budget.
+- Each purpose in `gateway/purpose.ts` sets the most one call may write, sent
+  to the provider as `maxOutputTokens`: chat 8,192 tokens, specialist 4,096,
+  background 1,024, suggestion 512, presentation 512. A call that ends at its
+  cap finishes with `length`, which a chat turn already reads as
+  `response-limit`.
+- No capability repeats a model call after the SDK rejects its answer. The
+  math repair call sends the validation error back, so it is not the same
+  prompt.
+
 ## Consequences
 
 - A reviewer who finds a hook mutation without a deadline leaves it so, and
@@ -62,6 +88,8 @@ Convex React hook calls get no client deadline.
   a defect to fix, not an exception.
 - A new transient read calls `retryNetworkAttempt` and passes its own deadline
   failure. It does not copy the wiring.
+- A new capability runs through `streamCapability`, and a new model or provider
+  call inside one cuts its limit with `limitDeadline` or `limitDuration`.
 - `packages/backend/client/content/transport.ts` keeps its own pipeline: one
   absolute clock over the send and the body, and it cancels the responses it
   discards, which the shared helper does not model.

@@ -4,6 +4,8 @@ import type {
   CapabilityOutputSchema,
 } from "@repo/backend/client/nina/capability";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
+import { boundCapability } from "@repo/backend/confect/nina/capability/deadline";
+import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
 import {
   Array as Arr,
   Effect,
@@ -23,6 +25,16 @@ export type CapabilityProgress = (
   artifact: CapabilityArtifact
 ) => Effect.Effect<void>;
 
+/** What Nina reads when a run was cut at its deadline. */
+const TIMED_OUT =
+  "This ran out of time before it finished. Use only the evidence already available, tell the learner what this attempt could not verify, and do not invent content or claim that anything is absent or does not exist.";
+
+/** What a card that never finished shows instead: failed, and why. */
+const ABANDONED = {
+  error: "It took too long to finish.",
+  status: "error",
+} as const;
+
 /**
  * Each Agent tool yield replaces its previous output, so every yield includes
  * all cards gathered by this invocation. Slow consumers coalesce intermediate
@@ -31,15 +43,23 @@ export type CapabilityProgress = (
  * Final model-facing text never exceeds the evidence budget; `continuation`
  * tells the model how to ask for what a truncation omitted. The stored outcome
  * is decided here, from what `run` reports and the cards it gathered.
+ *
+ * A run has the time its chat step can spare, and its calls see the time left
+ * through `CapabilityDeadline`. A run still going at that deadline is
+ * interrupted and reported as failed. Its loaded cards stay, its unfinished
+ * cards end as errors so none stays loading, and the stored outcome is decided
+ * like any other, so it is `partial` beside loaded evidence.
  */
 export function streamCapability<E, R>(
   run: (
     publish: CapabilityProgress
   ) => Effect.Effect<Pick<CapabilityOutput, "text" | "outcome">, E, R>,
   {
+    capability,
     continuation,
     signal,
   }: {
+    readonly capability: LearningCapabilityName;
     readonly continuation: string;
     readonly signal?: AbortSignal | undefined;
   }
@@ -51,18 +71,23 @@ export function streamCapability<E, R>(
         const publish = Effect.fn("nina.capability.progress")(function* (
           artifact: CapabilityArtifact
         ) {
-          MutableHashMap.set(
-            artifacts,
-            `${artifact.type}:${artifact.id}`,
-            artifact
-          );
+          MutableHashMap.set(artifacts, keyOf(artifact), artifact);
           yield* Queue.offer(queue, {
             artifacts: Arr.fromIterable(MutableHashMap.values(artifacts)),
             text: "",
           });
         });
+        const timedOut = Effect.gen(function* () {
+          yield* Effect.logWarning("Nina capability ran out of time", {
+            capability,
+          });
+          Arr.forEach(Arr.fromIterable(artifacts), ([key, artifact]) =>
+            MutableHashMap.set(artifacts, key, abandon(artifact))
+          );
+          return { outcome: "failed" as const, text: TIMED_OUT };
+        });
 
-        yield* run(publish).pipe(
+        yield* boundCapability(run(publish), timedOut).pipe(
           Effect.tap(({ text, outcome }) => {
             const cards = Arr.fromIterable(MutableHashMap.values(artifacts));
             const settled = settleOutcome(outcome, cards);
@@ -97,6 +122,36 @@ export function streamCapability<E, R>(
       })
     )
   );
+}
+
+/** The identity of a card across its progressive updates. */
+function keyOf(artifact: CapabilityArtifact) {
+  return `${artifact.type}:${artifact.id}`;
+}
+
+/**
+ * Ends a card that was still loading when its run was cut: it shows as failed,
+ * and every card that already settled stays as it is.
+ */
+function abandon(artifact: CapabilityArtifact): CapabilityArtifact {
+  if (artifact.type === "data-math") {
+    return artifact.data.status === "loading"
+      ? { ...artifact, data: { ...artifact.data, ...ABANDONED } }
+      : artifact;
+  }
+  if (artifact.type === "data-nakafa") {
+    return artifact.data.status === "loading"
+      ? { ...artifact, data: { ...artifact.data, ...ABANDONED } }
+      : artifact;
+  }
+  if (artifact.type === "data-scrape-url") {
+    return artifact.data.status === "loading"
+      ? { ...artifact, data: { ...artifact.data, ...ABANDONED } }
+      : artifact;
+  }
+  return artifact.data.status === "loading"
+    ? { ...artifact, data: { ...artifact.data, ...ABANDONED } }
+    : artifact;
 }
 
 /**

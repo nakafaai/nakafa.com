@@ -2,6 +2,7 @@ import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import type { TaskAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
@@ -41,7 +42,8 @@ import { Effect } from "effect";
 
 const MAX_MATH_STEPS = mathOperations.length;
 /**
- * Runs deterministic math tools through Agent; its usage handler records provider calls.
+ * Runs deterministic math tools through Agent, within the time the capability
+ * has left; its usage handler records provider calls.
  *
  * References:
  * - AI SDK `prepareStep`: https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
@@ -70,6 +72,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   });
   const services = yield* Effect.context<ActionCtx | Gateway>();
   const runPromise = Effect.runPromiseWith(services);
+  const limit = yield* limitDeadline(timeout);
   const result = yield* Effect.tryPromise({
     try: (signal) =>
       agent.generateText(
@@ -92,7 +95,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           prepareStep: prepareMathStep,
           stopWhen: isStepCount(MAX_MATH_STEPS),
           temperature: 0,
-          timeout,
+          timeout: limit,
           tools: {
             algebra: createTool({
               description: mathAlgebra,

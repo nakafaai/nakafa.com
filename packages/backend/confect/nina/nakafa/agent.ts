@@ -5,6 +5,7 @@ import {
   type QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import type { TaskAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { NinaReadOptionsSchema } from "@repo/backend/confect/nina/contract/data";
@@ -45,7 +46,10 @@ const nakafaTaxonomyInputSchema = createEffectSchema(
   NakafaAgentTaxonomyOptionsSchema
 );
 
-/** Runs the Nakafa agent through MCP-equivalent content tools. */
+/**
+ * Runs the Nakafa agent through MCP-equivalent content tools, within the time
+ * the capability has left.
+ */
 export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   userId,
   task,
@@ -66,6 +70,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   });
   const services = yield* Effect.context<QueryRunner>();
   const runPromise = Effect.runPromiseWith(services);
+  const limit = yield* limitDeadline(timeout);
   let hasPendingContentRead = false;
   const result = yield* Effect.tryPromise({
     /** Runs the AI SDK Nakafa specialist loop with MCP-equivalent tools. */
@@ -177,7 +182,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             return prepareAnswerFromNakafaEvidenceStep(messages, steps);
           },
           stopWhen: isStepCount(10),
-          timeout,
+          timeout: limit,
         }
       ),
     catch: makeNakafaGenerationError,

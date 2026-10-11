@@ -1,3 +1,4 @@
+import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { quran } from "@repo/backend/confect/nina/nakafa/tools/quran";
@@ -5,6 +6,7 @@ import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
 import { search } from "@repo/backend/confect/nina/nakafa/tools/search";
 import { taxonomy } from "@repo/backend/confect/nina/nakafa/tools/taxonomy";
 import { provider } from "@repo/backend/test/gateway";
+import { withTimeLeft } from "@repo/backend/test/nina/deadline";
 import {
   providerStep,
   runSpecialist,
@@ -13,7 +15,7 @@ import {
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/nakafa/tools/read", () => ({
   read: vi.fn(),
@@ -147,6 +149,24 @@ describe("Nakafa Agent execution", () => {
       }
     }
   );
+
+  it("cuts its model call to the time the capability has left", async () => {
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({ doGenerate: final })
+    );
+    const generate = vi.spyOn(Agent.prototype, "generateText");
+    await runSpecialist((userId) =>
+      runNakafaAgent({
+        ...specialistRequest,
+        userId,
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(withTimeLeft("7 seconds"))
+    );
+    expect(Arr.map(generate.mock.calls, ([, , call]) => call.timeout)).toEqual([
+      { stepMs: 7000, totalMs: 7000 },
+    ]);
+  });
 
   it("returns the model answer when no tool ran", async () => {
     provider.languageModel.mockReturnValue(

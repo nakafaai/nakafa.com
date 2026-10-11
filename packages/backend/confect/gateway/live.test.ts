@@ -101,11 +101,11 @@ describe("The production gateway", () => {
   );
 
   it.effect.each([
-    ["specialist", "low"],
-    ["chat", "high"],
+    ["specialist", "low", 4096],
+    ["chat", "high", 8192],
   ] as const)(
-    "sends a %s call to the Convex AI gateway with reasoning effort %s",
-    ([purpose, effort]) => {
+    "sends a %s call to the Convex AI gateway with reasoning effort %s and at most %s output tokens",
+    ([purpose, effort, cap]) => {
       // The layer reads the service token when it is built, before the body runs.
       serviceToken.mockResolvedValue("service-token");
       fetch.mockResolvedValue(Response.json(completion));
@@ -125,6 +125,7 @@ describe("The production gateway", () => {
           init?.body
         );
         expect(body).toMatchObject({
+          max_tokens: cap,
           model: "google/gemini-3.8-flash",
           reasoning_effort: effort,
         });

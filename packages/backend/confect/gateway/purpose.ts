@@ -25,25 +25,49 @@ export const Deadline = Schema.Struct({
 });
 export type Deadline = typeof Deadline.Type;
 
-/** How hard a purpose reasons and how long it may take. */
-const Budget = Schema.Struct({ effort: Effort, timeout: Deadline });
+/**
+ * How hard a purpose reasons, how long it may take, and the most one call may
+ * write. `maxOutputTokens` is the AI SDK's setting for a maximum output. A call
+ * that ends at the cap finishes with `length`, which a chat turn reads as
+ * `response-limit`.
+ */
+const Budget = Schema.Struct({
+  effort: Effort,
+  maxOutputTokens: Schema.Int,
+  timeout: Deadline,
+});
 
 /**
- * Each purpose's reasoning effort and deadlines. The chat window allows
- * slower Pro reasoning and web-search steps within its request deadline.
+ * Each purpose's reasoning effort, output cap, and deadlines. The chat window
+ * allows slower reasoning and web-search steps within its request deadline.
  * Specialists, titles, repairs, summaries, memory, and follow-up suggestions
- * are bounded so a slow provider cannot hold the chat open.
+ * are bounded so a slow provider or a runaway answer cannot hold the chat open
+ * or spend without limit.
  */
 export const purposes = {
   chat: {
     effort: "interactive",
+    maxOutputTokens: 8192,
     timeout: { chunkMs: 45_000, stepMs: 90_000, totalMs: 420_000 },
   },
-  specialist: { effort: "fast", timeout: { stepMs: 30_000, totalMs: 120_000 } },
-  background: { effort: "fast", timeout: { stepMs: 15_000, totalMs: 45_000 } },
-  suggestion: { effort: "fast", timeout: { stepMs: 30_000, totalMs: 90_000 } },
+  specialist: {
+    effort: "fast",
+    maxOutputTokens: 4096,
+    timeout: { stepMs: 30_000, totalMs: 120_000 },
+  },
+  background: {
+    effort: "fast",
+    maxOutputTokens: 1024,
+    timeout: { stepMs: 15_000, totalMs: 45_000 },
+  },
+  suggestion: {
+    effort: "fast",
+    maxOutputTokens: 512,
+    timeout: { stepMs: 30_000, totalMs: 90_000 },
+  },
   presentation: {
     effort: "fast",
+    maxOutputTokens: 512,
     timeout: { stepMs: 15_000, totalMs: 45_000 },
   },
 } satisfies Record<Purpose, typeof Budget.Type>;

@@ -1,3 +1,4 @@
+import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
@@ -8,6 +9,7 @@ import {
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { provider } from "@repo/backend/test/gateway";
+import { withTimeLeft } from "@repo/backend/test/nina/deadline";
 import {
   providerStep,
   recordProgress,
@@ -227,7 +229,29 @@ describe("research Agent evidence boundary", () => {
     expect(synthesisPrompt).toContain("Inspectable source evidence.");
   });
 
-  it("reads a full address in the task as a link, but not a site the task only names", async () => {
+  it("cuts both of its model calls to the time the capability has left", async () => {
+    vi.mocked(searchWeb).mockReturnValue(found);
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({ doGenerate: [searchCall, final] })
+    );
+    const generate = vi.spyOn(Agent.prototype, "generateText");
+    await runSpecialist((userId) =>
+      runResearchAgent({
+        ...specialistRequest,
+        userId,
+        sourceReferences: [],
+        toolCallId: "research",
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(withTimeLeft("7 seconds"))
+    );
+    expect(Arr.map(generate.mock.calls, ([, , call]) => call.timeout)).toEqual([
+      { stepMs: 7000, totalMs: 7000 },
+      { stepMs: 7000, totalMs: 7000 },
+    ]);
+  });
+
+  it("reads a full address in the task as a link, but not a site the task only names or a page of Nakafa's own site", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
     vi.mocked(scrapeUrl).mockReturnValue(read);
     provider.languageModel.mockReturnValue(
@@ -237,7 +261,7 @@ describe("research Agent evidence boundary", () => {
       runResearchAgent({
         ...specialistRequest,
         userId,
-        task: `Cari di kemdikbud.go.id dan baca ${url} tentang kurikulum.`,
+        task: `Cari di kemdikbud.go.id dan baca ${url} dan https://nakafa.com/en/articles/politics/example tentang kurikulum.`,
         sourceReferences: [],
         toolCallId: "research",
         publish: () => Effect.void,

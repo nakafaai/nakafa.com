@@ -13,6 +13,18 @@ const externalUrlMessages = [
   },
 ] satisfies ModelMessage[];
 
+const nakafaLessonUrl =
+  "https://nakafa.com/en/subject/high-school/10/mathematics/exponential/basic-concept";
+const nakafaUrlMessages = [
+  { content: `Jelaskan halaman ${nakafaLessonUrl} dong.`, role: "user" },
+] satisfies ModelMessage[];
+const mixedUrlMessages = [
+  {
+    content: `Bandingkan ${nakafaLessonUrl} dengan https://ai-sdk.dev/docs/ai-sdk-core/devtools.`,
+    role: "user",
+  },
+] satisfies ModelMessage[];
+
 const instructions = "Base system prompt";
 
 /**
@@ -67,6 +79,28 @@ describe("nina/runtime/step", () => {
     expect(step).not.toHaveProperty("activeTools");
   });
 
+  it("starts with Nakafa, not research, when the first prompt links to Nakafa's own site", () => {
+    const step = readPreparedStep({
+      messages: nakafaUrlMessages,
+      stepNumber: 0,
+    });
+
+    expect(step).toEqual({
+      messages: nakafaUrlMessages,
+      toolChoice: { type: "tool", toolName: "nakafa" },
+    });
+    expect(step).not.toHaveProperty("activeTools");
+  });
+
+  it("starts with research when the first prompt links to Nakafa and to an outside site", () => {
+    expect(
+      readPreparedStep({ messages: mixedUrlMessages, stepNumber: 0 })
+    ).toEqual({
+      messages: mixedUrlMessages,
+      toolChoice: { type: "tool", toolName: "deepResearch" },
+    });
+  });
+
   it("changes neither the instructions nor the tools after the first step, so the cached prefix holds", () => {
     const step = readPreparedStep({
       messages: externalUrlMessages,
@@ -74,5 +108,8 @@ describe("nina/runtime/step", () => {
     });
 
     expect(step).toEqual({ messages: externalUrlMessages });
+    expect(
+      readPreparedStep({ messages: nakafaUrlMessages, stepNumber: 1 })
+    ).toEqual({ messages: nakafaUrlMessages });
   });
 });

@@ -138,9 +138,13 @@ type MathToolInput = typeof MathToolInputSchema.Type;
 type SpecialistToolInput = MathToolInput | NakafaToolInput | ResearchToolInput;
 /**
  * Builds the internal Markdown task after the public tool input has separated
- * routing concerns from answer wording.
+ * routing concerns from answer wording. `addresses` are links to Nakafa's own
+ * site that the learner sent, which the Nakafa specialist must read.
  */
-export function formatSpecialistToolTask(input: SpecialistToolInput) {
+export function formatSpecialistToolTask(
+  input: SpecialistToolInput,
+  addresses: readonly string[] = []
+) {
   const sections = Arr.filter(
     [
       formatTextSection("Request", input.request),
@@ -155,6 +159,7 @@ export function formatSpecialistToolTask(input: SpecialistToolInput) {
         "deliverables" in input ? input.deliverables : []
       ),
       formatListSection("Given", "given" in input ? input.given : []),
+      formatListSection("Nakafa Addresses To Read", addresses),
     ],
     Boolean
   );

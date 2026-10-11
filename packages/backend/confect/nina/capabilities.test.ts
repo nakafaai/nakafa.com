@@ -75,7 +75,8 @@ function toolCall(
  */
 async function runCapability(
   capability: keyof typeof toolInputs,
-  state: "allowed" | "denied" | "failed" | "missing" | "sourceLimit"
+  state: "allowed" | "denied" | "failed" | "missing" | "sourceLimit",
+  prompt = "Use the requested capability."
 ) {
   vi.mocked(runNakafaAgent).mockReturnValue(
     state === "failed"
@@ -162,11 +163,7 @@ async function runCapability(
           languageModel: model,
           tools,
           stopWhen: isStepCount(3),
-        }).generateText(
-          ctx,
-          { userId },
-          { prompt: "Use the requested capability." }
-        )
+        }).generateText(ctx, { userId }, { prompt })
       );
       return Arr.map(generated.toolResults, ({ output }) => output);
     }).pipe(
@@ -249,6 +246,62 @@ describe("Nina capability execution policy", () => {
       }
     );
   }
+
+  describe("a learner's links", () => {
+    const lesson =
+      "https://nakafa.com/en/subject/high-school/10/mathematics/exponential/basic-concept";
+    const outside = "https://ai-sdk.dev/docs/ai-sdk-core/devtools";
+
+    it("hands a link to Nakafa's own site to the Nakafa capability, as the address to read", async () => {
+      await runCapability("nakafa", "allowed", `Explain ${lesson}.`);
+
+      expect(runNakafaAgent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          task: expect.stringContaining(
+            `# Nakafa Addresses To Read\n\n- ${lesson}`
+          ),
+        })
+      );
+    });
+
+    it("never hands a link to Nakafa's own site to web research to scrape", async () => {
+      await runCapability("deepResearch", "allowed", `Explain ${lesson}.`);
+
+      expect(runResearchAgent).toHaveBeenCalledWith(
+        expect.objectContaining({ sourceReferences: [] })
+      );
+    });
+
+    it("splits a message that holds both: the outside link to research, the Nakafa link to Nakafa", async () => {
+      const both = `Compare ${lesson} with ${outside}.`;
+      await runCapability("deepResearch", "allowed", both);
+      await runCapability("nakafa", "allowed", both);
+
+      expect(runResearchAgent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceReferences: [expect.objectContaining({ href: outside })],
+        })
+      );
+      expect(runNakafaAgent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          task: expect.stringContaining(`- ${lesson}`),
+        })
+      );
+      expect(runNakafaAgent).not.toHaveBeenCalledWith(
+        expect.objectContaining({ task: expect.stringContaining(outside) })
+      );
+    });
+
+    it("adds no address section when the learner sent no Nakafa link", async () => {
+      await runCapability("nakafa", "allowed");
+
+      expect(runNakafaAgent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          task: expect.not.stringContaining("Addresses To Read"),
+        })
+      );
+    });
+  });
 
   it("tells Nina what this attempt could not verify and to name a direct channel when external research fails, without an absence claim", async () => {
     const { result } = await runCapability("deepResearch", "failed");

@@ -4,22 +4,28 @@ import {
   countTextTokens,
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
+import { CAPABILITY_BUDGET } from "@repo/backend/confect/nina/capability/deadline";
 import {
   type CapabilityArtifact,
   streamCapability,
 } from "@repo/backend/confect/nina/capability/progress";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import {
   Array as Arr,
   Deferred,
+  Duration,
   Effect,
   Exit,
   Fiber,
+  Logger,
+  MutableRef,
   Option,
   Ref,
   Result,
   Schema,
   Stream,
 } from "effect";
+import { TestClock } from "effect/testing";
 
 const loading = {
   type: "data-web-search",
@@ -31,7 +37,10 @@ const loading = {
     status: "loading",
   },
 } satisfies CapabilityArtifact;
-const options = { continuation: "Ask a narrower question." };
+const options = {
+  capability: "deepResearch",
+  continuation: "Ask a narrower question.",
+} as const;
 
 it.effect(
   "keeps stable cards in the final output while coalescing progressive snapshots",
@@ -296,4 +305,153 @@ it.effect(
         Option.some({ text: "Completed", artifacts: [] })
       );
     })
+);
+
+const content = {
+  content_ref: NakafaAgentContentRefInputSchema.make(
+    "https://nakafa.com/en/home"
+  ),
+};
+/** One card of every kind that is still loading, and one that already settled. */
+const unfinished = [
+  { ...loading, id: "search-loading" },
+  {
+    type: "data-scrape-url",
+    id: "scrape-loading",
+    data: { content: "", status: "loading", url: "https://example.com/a" },
+  },
+  {
+    type: "data-nakafa",
+    id: "nakafa-loading",
+    data: { input: content, kind: "content", status: "loading" },
+  },
+  {
+    type: "data-math",
+    id: "math-loading",
+    data: { input: request, kind: "evaluate", status: "loading" },
+  },
+] satisfies CapabilityArtifact[];
+const settled = [
+  done,
+  {
+    type: "data-scrape-url",
+    id: "scrape-done",
+    data: { content: "Text", status: "done", url: "https://example.com/b" },
+  },
+  {
+    type: "data-nakafa",
+    id: "nakafa-lost",
+    data: {
+      error: "Not found.",
+      input: content,
+      kind: "content",
+      status: "error",
+    },
+  },
+  verified,
+] satisfies CapabilityArtifact[];
+
+/**
+ * Runs a capability that publishes `cards` and then never answers, up to its
+ * deadline. The test clock moves only once the run is waiting.
+ */
+const cutAtDeadline = (cards: readonly CapabilityArtifact[]) =>
+  Effect.gen(function* () {
+    const logged = MutableRef.make<readonly unknown[]>([]);
+    const waiting = yield* Deferred.make<void>();
+    const fiber = yield* Effect.forkChild(
+      streamCapability(
+        (publish) =>
+          Effect.forEach(cards, publish).pipe(
+            Effect.andThen(Deferred.succeed(waiting, undefined)),
+            Effect.andThen(Effect.never)
+          ),
+        options
+      ).pipe(
+        Stream.runCollect,
+        Effect.provide(
+          Logger.layer([
+            Logger.formatStructured.pipe(
+              Logger.map(({ message }) =>
+                MutableRef.update(logged, Arr.append(message))
+              )
+            ),
+          ])
+        )
+      )
+    );
+    yield* Deferred.await(waiting);
+    yield* TestClock.adjust(
+      Duration.subtract(CAPABILITY_BUDGET, Duration.millis(1))
+    );
+    expect(fiber.pollUnsafe()).toBeUndefined();
+    yield* TestClock.adjust("1 millis");
+    const snapshots = yield* Fiber.join(fiber);
+    const final = yield* Schema.decodeEffect(CapabilityOutputSchema)(
+      Option.getOrThrow(Arr.last(snapshots))
+    );
+    return { final, logged: MutableRef.get(logged) };
+  });
+
+it.effect.each([
+  ["a run that loaded evidence is partial", [done], "partial"],
+  ["a run that loaded a calculation is partial", [verified], "partial"],
+  ["a run that only has unfinished cards failed", [loading], "failed"],
+  ["a run that published nothing failed", [], "failed"],
+] as const)("cuts a run at its deadline: %s", ([, cards, outcome]) =>
+  Effect.gen(function* () {
+    const { final, logged } = yield* cutAtDeadline(cards);
+    expect(final.outcome).toBe(outcome);
+    expect(final.text).toContain("ran out of time");
+    expect(logged).toEqual([
+      ["Nina capability ran out of time", { capability: "deepResearch" }],
+    ]);
+  })
+);
+
+it.effect(
+  "leaves no card loading when a run is cut, and keeps every card that settled",
+  () =>
+    Effect.gen(function* () {
+      const { final } = yield* cutAtDeadline([...unfinished, ...settled]);
+      expect(final.outcome).toBe("partial");
+      expect(
+        Arr.map(final.artifacts, ({ data, id }) => [id, data.status])
+      ).toEqual([
+        ["search-loading", "error"],
+        ["scrape-loading", "error"],
+        ["nakafa-loading", "error"],
+        ["math-loading", "error"],
+        ["search-1", "done"],
+        ["scrape-done", "done"],
+        ["nakafa-lost", "error"],
+        ["math-1", "verified"],
+      ]);
+      expect(Arr.drop(final.artifacts, unfinished.length)).toEqual(settled);
+      Arr.forEach(Arr.take(final.artifacts, unfinished.length), (card) =>
+        expect(card.data).toMatchObject({ error: expect.any(String) })
+      );
+    })
+);
+
+it.effect("does not cut a run that ends within its deadline", () =>
+  Effect.gen(function* () {
+    const waiting = yield* Deferred.make<void>();
+    const fiber = yield* Effect.forkChild(
+      streamCapability(
+        (publish) =>
+          publish(done).pipe(
+            Effect.andThen(Deferred.succeed(waiting, undefined)),
+            Effect.andThen(Effect.sleep("30 seconds")),
+            Effect.as({ text: "Finished in time" })
+          ),
+        options
+      ).pipe(Stream.runCollect)
+    );
+    yield* Deferred.await(waiting);
+    yield* TestClock.adjust("30 seconds");
+    expect(Arr.last(yield* Fiber.join(fiber))).toEqual(
+      Option.some({ artifacts: [done], text: "Finished in time" })
+    );
+  })
 );
