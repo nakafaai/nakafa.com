@@ -34,10 +34,8 @@ import { Array as Arr } from "effect";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
-import {
-  CHAT_LIST_PAGE_SIZE,
-  useChatList,
-} from "@/components/ai/chat/history.client";
+import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
+import { useChatList } from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 

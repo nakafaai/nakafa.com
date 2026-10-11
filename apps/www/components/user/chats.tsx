@@ -27,10 +27,8 @@ import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import {
-  CHAT_LIST_PAGE_SIZE,
-  useChatList,
-} from "@/components/ai/chat/history.client";
+import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
+import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import { getLocale } from "@/lib/i18n/date";
