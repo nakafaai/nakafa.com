@@ -26,6 +26,20 @@ current in the same transaction as the Better Auth write.
 - Account state that must take effect immediately for reads, such as deletion,
   lives on the app user row, which every query reads.
 
+## Stored Secrets
+
+Better Auth seals the provider access and refresh tokens in `account`
+(`account.encryptOAuthTokens`) and the private half of each signing key in
+`jwks`, also in the static `JWKS` value, with the Better Auth secret. The
+provider ID token and the session token are stored as issued, and neither can
+sign anyone in: Google ID token sign-in is off (`disableIdTokenSignIn`), and a
+session token counts only inside a cookie signed with the secret. Rotating the
+secret signs every learner out. List the new secret first in
+`BETTER_AUTH_SECRETS`, keep `BETTER_AUTH_SECRET` at its old value, and keep each
+older version listed while anything is still sealed with it. Keep
+`encryptOAuthTokens` on, because with it off Better Auth hands out the cipher
+text.
+
 ## Rejected Alternative
 
 Validating the session inside every query closes the read window after
@@ -38,3 +52,10 @@ discards on sign-out.
 - https://docs.convex.dev/auth/functions-auth
 - `@convex-dev/better-auth` `plugins/convex`: the default token lifetime of
   15 minutes (`jwtExpirationSeconds`), which Nakafa does not override.
+- `better-auth` `oauth2/utils` (`setTokenUtil`, `decryptOAuthToken`) and
+  `plugins/jwt/utils` (`createJwk`): the encryption of stored provider tokens
+  and signing keys.
+- `better-auth` `api/routes/sign-in` and `api/routes/account` (`link-social`):
+  the ID token branches that `disableIdTokenSignIn` closes.
+- `better-auth` `context/create-context` and `cookies`: the secret list, and
+  the cookie signature that a rotation invalidates.

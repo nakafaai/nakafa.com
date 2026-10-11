@@ -1,6 +1,18 @@
+import { assert, expect } from "@effect/vitest";
 import { ACCOUNT_DELETION_ATTEMPT_HEADER } from "@repo/backend/confect/auth/deletion/constants";
+import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { encodeJsonText } from "@repo/utilities/json";
 import type { User } from "better-auth";
-import { DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect, pipe } from "effect";
+
+const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
+const BASE64_PADDING_PATTERN = /[=]+$/;
+
+/**
+ * The one stand-in for Google's token endpoint in a test file. Each sign-in
+ * resets it and sets what it issues, and the test file unstubs the global.
+ */
+const tokenExchange = vi.fn<typeof fetch>();
 
 /** The Better Auth user that an account deletion hook receives. */
 export function betterAuthUser(id: string, now: number): User {
@@ -45,3 +57,108 @@ export const withPostHogErasureConfig = Effect.sync(() => {
   vi.stubEnv("POSTHOG_HOST", "https://eu.i.posthog.com");
   vi.stubEnv("POSTHOG_PROJECT_ID", "1");
 });
+
+/** Encodes one part of an unsigned test token the way a JWT does. */
+function encodeGoogleTokenPart(value: object) {
+  return btoa(encodeJsonText(value))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(BASE64_PADDING_PATTERN, "");
+}
+
+/**
+ * The unsigned ID token that the stubbed Google token endpoint issues. A
+ * `header` that names an algorithm and a key id makes Better Auth look the key
+ * up, which a token from the endpoint never needs.
+ */
+export function createGoogleIdToken(
+  suffix: string,
+  now: number,
+  header: object = { alg: "none", typ: "JWT" }
+) {
+  const issuedAt = Math.floor(now / 1000);
+  return Arr.join(
+    [
+      encodeGoogleTokenPart(header),
+      encodeGoogleTokenPart({
+        aud: "test-google-client",
+        email: `${suffix}@example.com`,
+        email_verified: true,
+        exp: issuedAt + 3600,
+        iat: issuedAt,
+        iss: "https://accounts.google.com",
+        name: `Synthetic ${suffix}`,
+        picture: `https://example.com/${suffix}.png`,
+        sub: `google-${suffix}`,
+      }),
+      "test-signature",
+    ],
+    "."
+  );
+}
+
+/** The Cookie header that carries every cookie a response set. */
+export function cookieHeader(response: Response) {
+  return pipe(
+    response.headers.getSetCookie(),
+    Arr.map((value) => value.split(";", 1)[0]),
+    Arr.join("; ")
+  );
+}
+
+/**
+ * Signs one synthetic learner in through Better Auth's Google callback, with
+ * the token endpoint stubbed. The provider issues `access-<suffix>` and
+ * `refresh-<suffix>`. The caller sets the fake clock to `now`, and unstubs the
+ * global `fetch` afterwards.
+ */
+export async function signInWithGoogle(
+  test: ReturnType<typeof createConvexTestWithBetterAuth>,
+  suffix: string,
+  now: number
+) {
+  tokenExchange.mockReset().mockImplementation((input, init) => {
+    expect(String(input)).toBe(GOOGLE_TOKEN_ENDPOINT);
+    expect(init?.method).toBe("POST");
+    expect(String(init?.body)).toContain("code=synthetic-authorization-code");
+    return Promise.resolve(
+      Response.json({
+        access_token: `access-${suffix}`,
+        expires_in: 3600,
+        id_token: createGoogleIdToken(suffix, now),
+        refresh_token: `refresh-${suffix}`,
+        scope: "openid email profile",
+        token_type: "Bearer",
+      })
+    );
+  });
+  vi.stubGlobal("fetch", tokenExchange);
+  const signInResponse = await test.fetch("/api/auth/sign-in/social", {
+    body: encodeJsonText({
+      callbackURL: "/en",
+      provider: "google",
+    }),
+    headers: {
+      "content-type": "application/json",
+      origin: "http://localhost:3000",
+    },
+    method: "POST",
+  });
+  const authorizationLocation = signInResponse.headers.get("location");
+  assert(authorizationLocation, "Expected Google authorization redirect.");
+  const state = new URL(authorizationLocation).searchParams.get("state");
+  assert(state, "Expected Google authorization state.");
+  const response = await test.fetch(
+    `/api/auth/callback/google?${new URLSearchParams({
+      code: "synthetic-authorization-code",
+      state,
+    })}`,
+    {
+      headers: {
+        cookie: cookieHeader(signInResponse),
+      },
+    }
+  );
+  expect(tokenExchange).toHaveBeenCalledOnce();
+  return response;
+}
