@@ -38,24 +38,43 @@ result, a second sweep, or a cancel that races a completion changes nothing and
 never refunds twice.
 
 A learner may have two turns queued or running at once. A third is refused with
-`RATE_LIMITED` before any credit is held.
+`RATE_LIMITED` before any credit is held. A turn holds its place from admission
+until its deadline passes. After that it can no longer run and waits only for
+the sweep, so a settlement that keeps failing cannot lock the learner out of
+Nina.
 
 The scheduled generation action owns one stream deadline with time left for
 settlement within Convex's action limit. Cancelling a queued turn settles it at
 once, since no run exists. Cancelling a running turn cuts off its Agent stream,
 marks its prompt failed, and records the request. The refund, the state change,
-and the chat unlock wait until the run has exited, so a stream that may still be
+and the chat unlock wait until the run has exited, so a stream that is still
 running is never paid back. The run checks its turn every second and aborts its
 generation when the turn was stopped or settled elsewhere, which also stops a
-silent provider call. A run that is already gone settles nothing, so the sweep
-settles its stopped turn as cancelled once the deadline passes. A saved answer
-wins a race with a cancel and settles as complete. The abort propagates through the main AI SDK stream, specialist
-agents, tool repair, and abortable HTTP clients. Titles, follow-up
-suggestions, the rolling summary, and learner memory curation run later,
-concurrently, in a separate action with their own deadlines, so optional work
-never discards a completed answer. External
-services remain responsible for stopping work after cancellation; each remote
-calculation also has its own execution limit.
+silent provider call. A run that is gone never exits, so the stop also schedules
+a settlement after a short grace, `STOP_GRACE` in `confect/nina/settlement.ts`,
+and stopping always frees the chat. The web shows the turn as running until it
+settles: the composer stays locked until the run's next check, or for a run that
+is gone until the grace has passed. A saved answer wins a race with a cancel and
+settles as complete.
+
+Deleting a chat is the one route that settles a running turn at once. The chat
+and its Agent journal go in the same transaction, so nothing a run that is still
+alive writes can survive and no new turn can start on the chat. The hold is paid
+back without waiting for the run, whose next check finds its turn settled and
+stops its provider call. Keeping the turn until its run exits would need its row
+to outlive the chat cleanup and its prompt message to outlive the thread
+deletion.
+
+A generation that ends because its turn was stopped or settled elsewhere is no
+failure to report. The settlement that follows every run is reported whenever it
+fails, and the grace settlement of a stopped turn or the sweep tries it again.
+
+The abort propagates through the main AI SDK stream, specialist agents, tool
+repair, and abortable HTTP clients. Titles, follow-up suggestions, the rolling
+summary, and learner memory curation run later, concurrently, in a separate
+action with their own deadlines, so optional work never discards a completed
+answer. External services remain responsible for stopping work after
+cancellation; each remote calculation also has its own execution limit.
 
 CAS runs each calculation in the owned Python worker process. A twenty-second
 deadline kills and reaps that worker. Two local slots reject excess work instead

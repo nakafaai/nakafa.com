@@ -12,8 +12,11 @@ import type { Change } from "convex-helpers/server/triggers";
 import { Duration, Effect } from "effect";
 
 /**
- * Cancels active generation, forgets the facts remembered from the chat, and
- * cascades journal deletion through Agent.
+ * Settles the chat's open turn, forgets the facts remembered from the chat, and
+ * cascades journal deletion through Agent. The chat and its journal go in this
+ * transaction, so nothing a run that is still alive writes can survive: the
+ * hold is paid back without waiting for the run to exit, and the run's next
+ * check finds its turn settled and stops its provider call.
  */
 export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
   function* (change: Change<DataModel, "chats">) {
