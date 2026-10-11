@@ -5,13 +5,13 @@ import {
   readLearnerKeys,
 } from "@repo/backend/confect/vault/keys";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
-import { Effect, Predicate } from "effect";
+import { Effect } from "effect";
 
 type Chat = Docs["chats"];
 type ReadKeys = ReturnType<typeof readLearnerKeys>;
 
 /** The stored field a chat title is sealed for, besides its owner. */
-export const CHAT_TITLE = { field: "title", table: "chats" } as const;
+const CHAT_TITLE = { field: "title", table: "chats" } as const;
 
 /**
  * Seals a chat title for the learner who owns the chat. The first seal of a
@@ -26,21 +26,10 @@ export const sealTitle = Effect.fn("chats.title.seal")(function* (
 }, Effect.orDie);
 
 /**
- * Opens one stored title. A plain title, written before October 2026, comes
- * back as it is and needs no key. A sealed title opens with the owner's keys,
- * which `readKeys` reads on the first sealed title only.
+ * Opens the title of one chat with the owner's keys, which `readKeys` reads
+ * for the first chat that has a title, and leaves a chat without a title as
+ * it is.
  */
-const openTitle = Effect.fn("chats.title.openTitle")(function* (
-  readKeys: ReadKeys,
-  stored: NonNullable<Chat["title"]>
-) {
-  if (Predicate.isString(stored)) {
-    return stored;
-  }
-  return yield* openText(yield* readKeys, CHAT_TITLE, stored);
-});
-
-/** Opens the title of one chat and leaves a chat without a title as it is. */
 const openRow = Effect.fn("chats.title.openRow")(function* (
   readKeys: ReadKeys,
   chat: Chat
@@ -49,7 +38,7 @@ const openRow = Effect.fn("chats.title.openRow")(function* (
   const opened: ChatView =
     title === undefined
       ? rest
-      : { ...rest, title: yield* openTitle(readKeys, title) };
+      : { ...rest, title: yield* openText(yield* readKeys, CHAT_TITLE, title) };
   return opened;
 }, Effect.orDie);
 

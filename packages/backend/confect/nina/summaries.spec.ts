@@ -16,10 +16,8 @@ const NinaSummaryCall = Schema.Struct({ input: Tokens, output: Tokens });
  */
 export const NinaSummary = Schema.Struct({
   chatId: Id("chats"),
-  // A new summary is stored sealed. The string form is what rows written before
-  // October 2026 hold, and it leaves with the contract change that follows the
-  // sealing migration.
-  text: Schema.Union([Schema.String, Sealed]),
+  // Sealed for the learner who owns the chat (`nina/summaries/text`).
+  text: Sealed,
   throughOrder: TurnOrder,
   updatedAt: Schema.Finite,
   usage: Schema.Struct({
