@@ -31,20 +31,32 @@ import {
 const HALT_POLL = Duration.seconds(1);
 
 /**
+ * Whether the turn was stopped, settled elsewhere or removed, so that its run
+ * has no reason to go on.
+ */
+const turnHalted = Effect.fn("nina.response.halted")(function* (
+  turnId: Docs["ninaTurns"]["_id"]
+) {
+  const { runQuery } = yield* QueryRunner;
+  return yield* runQuery(refs.internal.nina.lifecycle.halted, { turnId }).pipe(
+    Effect.orDie
+  );
+});
+
+/**
  * Watches the turn while its generation runs, and aborts the returned signal
  * once the learner stopped it or another path already settled it. That stops
  * the provider call even while it is silent, and lets Agent clean up before the
  * run exits and settles. The watch is a child of the run and ends with it; a
- * failed check leaves the generation running, and the sweep stays the backstop.
+ * failed check leaves the generation running, and the settlement that a stop
+ * schedules and the sweep stay the backstop.
  */
 const watchHalt = Effect.fn("nina.response.watch")(function* (
   turnId: Docs["ninaTurns"]["_id"]
 ) {
-  const { runQuery } = yield* QueryRunner;
   const haltScope = yield* Scope.make();
   const halt = yield* Effect.abortSignal.pipe(Scope.provide(haltScope));
-  yield* runQuery(refs.internal.nina.lifecycle.halted, { turnId }).pipe(
-    Effect.orDie,
+  yield* turnHalted(turnId).pipe(
     Effect.repeat({
       schedule: Schedule.spaced(HALT_POLL),
       until: (halted) => halted,
@@ -75,6 +87,14 @@ const run = FunctionImpl.make(
           new NinaGenerationError({ reason: "service-configuration" })
         )
       ),
+      // A generation that ends because its turn was stopped or settled elsewhere
+      // has nothing left to report, whichever of the watch or Agent noticed
+      // first. Its settlement below always does.
+      Effect.catchCause((cause) =>
+        Effect.flatMap(turnHalted(turn._id), (halted) =>
+          halted ? Effect.void : Effect.failCause(cause)
+        )
+      ),
       Effect.onExit((exit) => {
         const failure = Exit.isFailure(exit)
           ? Cause.findErrorOption(exit.cause).pipe(
@@ -90,10 +110,7 @@ const run = FunctionImpl.make(
       }),
       // The scheduled action boundary preserves diagnostics while the durable
       // lifecycle reconciles completed output or refunds the failed response.
-      // A stop the learner asked for is no failure to report.
-      Effect.catchCause((cause) =>
-        halt.aborted ? Effect.void : reportFailure(turn, cause)
-      )
+      Effect.catchCause((cause) => reportFailure(turn, cause))
     );
     return null;
   })
