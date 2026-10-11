@@ -1,33 +1,31 @@
 import { Ref } from "@confect/core";
-import { RegisteredFunction } from "@confect/server";
 import { saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import schema from "@repo/backend/confect/_generated/schema";
-import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
-import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
+import { provider } from "@repo/backend/test/gateway";
+import { ninaModel } from "@repo/backend/test/nina";
 import {
-  MEMORY_LIMIT,
-  type NinaMemoryCandidate,
-} from "@repo/backend/confect/nina/memory.spec";
-import { createUsageHandler } from "@repo/backend/confect/nina/usage";
-import { GatewayTest, provider } from "@repo/backend/test/gateway";
-import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
-import { memoryTools } from "@repo/backend/test/nina/memory";
+  answers,
+  answersAfter,
+  createCapturingTest,
+  fails,
+  level,
+  MESSAGE,
+} from "@repo/backend/test/nina/capture";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Logger, MutableRef, Schema } from "effect";
+import { Array as Arr, MutableRef, String as Str } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 
 const NOW = Date.UTC(2026, 9, 10, 12);
-const MESSAGE = "Aku kelas 12 dan mau ikut SNBT 2027.";
 const LESSON = "material:lesson:mathematics:material-section:limits";
+const SLUG = "subjects/mathematics/limits/concept";
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
@@ -43,98 +41,21 @@ afterEach(() => {
   provider.languageModel.mockReset();
 });
 
-/** A model that answers every capture call with these candidates. */
-function answers(...memories: (typeof NinaMemoryCandidate.Type)[]) {
-  const model = new MockLanguageModelV4({
-    doGenerate: providerStep([
-      { type: "text", text: encodeJsonText({ memories }) },
-    ]),
-  });
-  provider.languageModel.mockReturnValue(model);
-  return model;
-}
-
-/**
- * A model that answers like `answers`, but only after `meanwhile` ran: the
- * learner doing something while the model reads the message.
- */
-function answersAfter(
-  meanwhile: () => Promise<unknown>,
-  ...memories: (typeof NinaMemoryCandidate.Type)[]
-) {
-  const model = new MockLanguageModelV4({
-    doGenerate: async () => {
-      await meanwhile();
-      return providerStep([
-        { type: "text", text: encodeJsonText({ memories }) },
-      ]);
-    },
-  });
-  provider.languageModel.mockReturnValue(model);
-  return model;
-}
-
-/** A model whose capture call fails with this. */
-function fails(error: () => Promise<never>) {
-  const model = new MockLanguageModelV4({ doGenerate: error });
-  provider.languageModel.mockReturnValue(model);
-  return model;
-}
-
-/** What the learner states: their level, quoted from `MESSAGE`. */
-const level: typeof NinaMemoryCandidate.Type = {
-  kind: "level",
-  quote: "Aku kelas 12",
-  text: "Kelas 12.",
-};
-
-/** A learner who sent `prompt`, and a way to run one capture for that turn. */
-async function fixture(prompt = MESSAGE) {
-  const nina = await createNinaTest({ prompt });
-  const f = { ...nina, ...memoryTools(nina) };
-  const logged = MutableRef.make<readonly unknown[]>([]);
-  const readTurn = async () =>
-    Schema.decodeUnknownSync(ninaTurns.Doc)(
-      await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
-    );
-  const capture = async (promptMessageId?: string) => {
-    const turn = await readTurn();
-    return f.t.action((ctx) =>
-      Effect.runPromise(
-        Effect.gen(function* () {
-          const usageHandler = yield* createUsageHandler(turn._id);
-          yield* captureMemory(
-            promptMessageId === undefined ? turn : { ...turn, promptMessageId },
-            usageHandler
-          );
-        }).pipe(
-          Effect.provide([
-            GatewayTest,
-            RegisteredFunction.actionLayer(schema, ctx),
-            Logger.layer([
-              Logger.formatStructured.pipe(
-                Logger.map(({ message }) =>
-                  MutableRef.update(logged, Arr.append(message))
-                )
-              ),
-            ]),
-          ])
-        )
-      )
-    );
-  };
-  const turn = () => f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId));
-  return { ...f, capture, logged, turn };
-}
-
 /** The log entry of a capture that saved nothing. */
 const unavailable = (fact: object) => [
   ["Nina memory unavailable", expect.objectContaining(fact)],
 ];
 
+/** How many known memories a prompt lists, one line each. */
+function listed(prompt: string) {
+  return Arr.length(
+    Arr.filter(Str.split(prompt, "\\n"), Str.startsWith("- ["))
+  );
+}
+
 describe("memory capture", () => {
   it("asks no model about a message that says nothing about the learner", async () => {
-    const f = await fixture("Explain a limit.");
+    const f = await createCapturingTest("Explain a limit.");
     const model = answers(level);
     await f.capture();
     expect(model.doGenerateCalls).toHaveLength(0);
@@ -143,7 +64,7 @@ describe("memory capture", () => {
   });
 
   it("asks no model about a prompt that holds no words of the learner", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     const model = answers(level);
     // Nina's own reply says the words that pass the gate, which are not the learner's.
     const answer = await f.t.mutation((ctx) =>
@@ -169,7 +90,7 @@ describe("memory capture", () => {
   });
 
   it("asks no model while memory is paused", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     const model = answers(level);
     await f.owner.mutation(pause, { paused: true });
     await f.capture();
@@ -178,7 +99,7 @@ describe("memory capture", () => {
   });
 
   it("saves what the learner said about themself, at most three memories, and records the call under the memory agent", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     const model = answers(
       level,
       { kind: "goal", quote: "mau ikut SNBT 2027", text: "Ikut SNBT 2027." },
@@ -212,7 +133,7 @@ describe("memory capture", () => {
   });
 
   it("shows the model the memories it knows and lets it rewrite one by its id", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     answers(level);
     await f.capture();
     const [stored] = await f.stored();
@@ -229,27 +150,57 @@ describe("memory capture", () => {
     expect(await f.stored()).toHaveLength(1);
   });
 
-  it("shows the model the newest known memories that fit its budget, and says that older ones are left out", async () => {
-    const f = await fixture();
-    // A hundred long notes are more than the model reads, though each is cut short.
-    const note = "Catatan belajar saya tentang limit dan turunan.";
-    for (let index = 0; index < MEMORY_LIMIT; index += 1) {
-      await f.seed({
-        author: "learner",
-        confirmedAt: index + 1,
-        text: `Note ${index}. ${Arr.join(Arr.replicate(note, 8), " ")}`,
-      });
-    }
+  it("shows the model the twelve memories that match the message best, not every memory", async () => {
+    const f = await createCapturingTest();
+    await f.fill(30, {
+      author: "learner",
+      text: "Aku belajar kelas dua belas",
+    });
+    await f.seed({ confirmedAt: 99, text: "Hobi saya main gitar" });
+    const [hobby, ...newest] = Arr.reverse(await f.stored());
     const model = answers(level);
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    expect(prompt).toContain(`Note ${MEMORY_LIMIT - 1}.`);
-    expect(prompt).not.toContain("Note 0.");
-    expect(prompt).toContain("Older memories are not listed.");
+    // The newest twelve of the thirty that hold a word of the message.
+    expect(listed(prompt)).toBe(12);
+    for (const row of Arr.take(newest, 12)) {
+      expect(prompt).toContain(`- [${row._id}]`);
+    }
+    expect(prompt).not.toContain(`- [${newest[12]?._id}]`);
+    expect(prompt).not.toContain(`- [${hobby?._id}]`);
+  });
+
+  it("shows the model the memory linked to the open page, though its words match nothing", async () => {
+    const f = await createCapturingTest();
+    await f.openLesson(`asset:en:${LESSON}`, SLUG);
+    const id = await f.seed({
+      text: "Hobi saya main gitar",
+      topics: [`lesson:${LESSON}`],
+    });
+    const model = answers(level);
+    await f.capture();
+    expect(encodeJsonText(model.doGenerateCalls[0]?.prompt)).toContain(
+      `- [${id}] (goal) Hobi saya main gitar`
+    );
+  });
+
+  it("cuts the list of known memories at its token budget and says that others are left out", async () => {
+    const f = await createCapturingTest();
+    // Twelve memories of 236 rare characters each are more than the model reads.
+    const rare = Arr.join(
+      Arr.makeBy(230, (index) => String.fromCodePoint(0x4e_00 + index * 7)),
+      ""
+    );
+    await f.fill(12, { author: "learner", text: `kelas ${rare}` });
+    const model = answers(level);
+    await f.capture();
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain("Other memories are not listed.");
+    expect(listed(prompt)).toBeLessThan(12);
   });
 
   it("saves nothing when the learner removes a memory while the model reads the message", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     const id = await f.seed({ kind: "level", text: "Kelas 11." });
     answersAfter(() => f.owner.mutation(remove, { id }), {
       ...level,
@@ -263,8 +214,25 @@ describe("memory capture", () => {
     ]);
   });
 
+  it("saves while the learner removes a memory that was not shown to the model, because the call read only the twelve it showed", async () => {
+    const f = await createCapturingTest();
+    await f.fill(14, {
+      author: "learner",
+      text: "Aku belajar kelas dua belas",
+    });
+    // The two oldest of fourteen are not among the twelve shown.
+    const [oldest] = await f.stored();
+    answersAfter(
+      () => f.owner.mutation(remove, { id: oldest?._id ?? "missing" }),
+      level
+    );
+    await f.capture();
+    expect((await f.turn())?.remembered).toBe(1);
+    expect(await f.stored()).toHaveLength(14);
+  });
+
   it("shows the model a memory with its title and its first 240 characters, and keeps what the learner wrote when the model names it and says something else", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     const id = await f.seed({
       author: "learner",
       text: `Kelas 11.${"x".repeat(1991)}`,
@@ -285,9 +253,11 @@ describe("memory capture", () => {
     expect(written).toMatchObject({ author: "nina", kind: "level" });
   });
 
-  it("saves a situation with the end of its last day and links a memory to the open lesson", async () => {
-    const f = await fixture("Ujian kimiaku tanggal 20 Oktober 2026.");
-    await f.openLesson(`asset:en:${LESSON}`);
+  it("saves a situation with the end of its last day and links a memory to the lesson and the paths of the open page", async () => {
+    const f = await createCapturingTest(
+      "Ujian kimiaku tanggal 20 Oktober 2026."
+    );
+    await f.openLesson(`asset:en:${LESSON}`, SLUG);
     answers({
       kind: "situation",
       quote: "ujian kimiaku",
@@ -298,7 +268,11 @@ describe("memory capture", () => {
     expect(await f.stored()).toEqual([
       expect.objectContaining({
         kind: "situation",
-        lesson: LESSON,
+        topics: [
+          `lesson:${LESSON}`,
+          "path:subjects/mathematics/limits",
+          "path:subjects/mathematics",
+        ],
         validUntil: Date.UTC(2026, 9, 20, 23, 59, 59, 999),
       }),
     ]);
@@ -312,7 +286,7 @@ describe("memory capture", () => {
   ])("checks a sentence that %s", async (_, text, fits) => {
     // The test names the numbers, not the constant. A sentence that does not fit
     // refuses the whole answer.
-    const f = await fixture();
+    const f = await createCapturingTest();
     await f.seed({ author: "learner", text: "Sudah ada" });
     answers(level, { kind: "goal", quote: "mau ikut SNBT 2027", text });
     await f.capture();
@@ -325,7 +299,7 @@ describe("memory capture", () => {
   });
 
   it("saves nothing the learner's words do not support, but still counts the call", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     answers(
       { ...level, quote: "Aku kelas 11" },
       { ...level, text: "Kontak: nama@contoh.com" },
@@ -348,7 +322,7 @@ describe("memory capture", () => {
 
 describe("memory capture that fails", () => {
   it("logs the provider's routing facts, never its words, and saves nothing", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     fails(() =>
       Promise.reject(
         new APICallError({
@@ -377,7 +351,7 @@ describe("memory capture that fails", () => {
   });
 
   it("logs an answer with more than three memories as rejected, and saves none of them", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     answers(level, level, level, level);
     await f.capture();
     expect(MutableRef.get(f.logged)).toEqual(
@@ -387,7 +361,7 @@ describe("memory capture that fails", () => {
   });
 
   it("logs an answer that is not the asked object as rejected", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     provider.languageModel.mockReturnValue(
       new MockLanguageModelV4({
         doGenerate: providerStep([{ type: "text", text: "not an object" }]),
@@ -401,7 +375,7 @@ describe("memory capture that fails", () => {
   });
 
   it("logs a prompt it cannot read", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     const model = answers(level);
     await f.capture("not-a-message-id");
     expect(model.doGenerateCalls).toHaveLength(0);
@@ -411,7 +385,7 @@ describe("memory capture that fails", () => {
   });
 
   it("logs a write that dies and saves nothing", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     answers(level);
     vi.stubEnv("VAULT_ROOT_KEYS", "");
     await f.capture();
@@ -422,7 +396,7 @@ describe("memory capture that fails", () => {
   });
 
   it("logs a memory it cannot open and changes nothing", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     const model = answers(level);
     await f.seed({ author: "learner" });
     await f.t.mutation(async (ctx) => {
@@ -465,7 +439,7 @@ describe("memory capture among the follow-up work of a turn", () => {
   }
 
   it("saves the memory beside the suggestions and the title", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     const generate = turnModel();
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
@@ -482,7 +456,7 @@ describe("memory capture among the follow-up work of a turn", () => {
   });
 
   it("never costs the turn its suggestions or its title when the memory write dies", async () => {
-    const f = await fixture();
+    const f = await createCapturingTest();
     const generate = turnModel();
     vi.stubEnv("VAULT_ROOT_KEYS", "");
     await f.t.action(run, { turnId: f.turnId });

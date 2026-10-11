@@ -1,14 +1,15 @@
 import { Ref } from "@confect/core";
 import { afterEach, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MEMORY_BATCH_SIZE } from "@repo/backend/confect/auth/cleanup/social";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
+import { MEMORY_BATCH } from "@repo/backend/confect/nina/memory/store";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createMemoryTest, insertMemory } from "@repo/backend/test/nina/memory";
+import { Array as Arr } from "effect";
 
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
 
@@ -51,15 +52,16 @@ async function createDeletedOwner(suffix: string) {
   return owners;
 }
 
-it("deletes the learner's Nina memories a batch at a time, Nina's and the learner's own, and keeps another learner's", async () => {
+it("deletes the learner's Nina memories and their keys a batch at a time, Nina's and the learner's own, and keeps another learner's", async () => {
   const owners = await createOwners("memory");
   const { t, owner, retained } = owners;
   const left = 5;
   await t.mutation(async (ctx) => {
-    for (let index = 0; index < MEMORY_BATCH_SIZE + left; index += 1) {
+    for (let index = 0; index < MEMORY_BATCH + left; index += 1) {
       await insertMemory(ctx, {
         author: index % 2 === 0 ? "nina" : "learner",
         text: `Memory ${index}`,
+        topics: ["path:materials/mathematics"],
         userId: owner,
       });
     }
@@ -70,6 +72,7 @@ it("deletes the learner's Nina memories a batch at a time, Nina's and the learne
   await deleteOwner(owners);
   const memories = () =>
     t.query((ctx) => ctx.db.query("ninaMemories").collect());
+  const keys = () => t.query((ctx) => ctx.db.query("ninaMemoryKeys").collect());
   const cleanup = () =>
     t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner });
   await expect(cleanup()).resolves.toBe(true);
@@ -77,11 +80,17 @@ it("deletes the learner's Nina memories a batch at a time, Nina's and the learne
   await expect(cleanup()).resolves.toBe(true);
   const emptied = await memories();
   expect(emptied).toEqual([expect.objectContaining({ userId: retained })]);
+  const retainedKeys = await keys();
+  // The other learner's one memory has a key for each of its words, and the
+  // learner's keys went with the memories.
+  expect(retainedKeys).not.toEqual([]);
+  expect(Arr.every(retainedKeys, (key) => key.userId === retained)).toBe(true);
   // The learner's key goes after every row it sealed.
   while (await cleanup()) {
     await t.finishAllScheduledFunctions(vi.runAllTimers);
   }
   expect(await memories()).toEqual(emptied);
+  expect(await keys()).toEqual(retainedKeys);
   expect(await t.query((ctx) => ctx.db.query("vaultKeys").collect())).toEqual([
     expect.objectContaining({ userId: retained }),
   ]);
@@ -99,6 +108,7 @@ it("leaves no memory behind when a capture lands during the deletion, and writes
         { kind: "level", quote: "aku kelas 12", text: "Kelas 12 IPA." },
       ],
       seen: [],
+      topics: [],
       turnId: f.turnId,
       userId,
     });
@@ -111,21 +121,25 @@ it("leaves no memory behind when a capture lands during the deletion, and writes
   );
   await expect(cleanup()).resolves.toBe(true);
   expect(await f.stored()).toEqual([]);
+  expect(await f.keys()).toEqual([]);
   // A capture that was still running lands between two passes, while the key
-  // exists. The next pass deletes what it wrote, because every pass looks for
-  // memories before the key goes.
+  // exists. The next pass deletes what it wrote, with its index keys, because
+  // every pass looks for memories before the key goes.
   await expect(write()).resolves.toBe(1);
+  expect(await f.keys()).not.toEqual([]);
   let passes = 0;
   while (await cleanup()) {
     passes += 1;
   }
   expect(passes).toBeGreaterThan(0);
   expect(await f.stored()).toEqual([]);
+  expect(await f.keys()).toEqual([]);
   expect(await keys()).toEqual([]);
   // The turn is still there, but the key is gone and a deleted account gets no
   // new one, so a capture that lands now cannot seal anything.
   await expect(write()).rejects.toThrow();
   expect(await f.stored()).toEqual([]);
+  expect(await f.keys()).toEqual([]);
   expect(await keys()).toEqual([]);
   await f.t.finishAllScheduledFunctions(vi.runAllTimers);
 });

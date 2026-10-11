@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import { memoryLine } from "@repo/backend/confect/nina/memory/line";
 import {
-  MEMORY_PROMPT_LIMIT,
+  MEMORY_START_LIMIT,
   MEMORY_TEXT_LIMIT,
   MEMORY_TITLE_LIMIT,
   type NinaLearnerProfile,
@@ -192,7 +192,7 @@ describe("Nina learner prompt", () => {
 
   it("still closes the memory block, within the budget, when the longest memories the learner may keep do not fit", () => {
     // One word for each allowed character is always enough to fill the limit.
-    const memories = Arr.makeBy(MEMORY_PROMPT_LIMIT, (index) => ({
+    const memories = Arr.makeBy(MEMORY_START_LIMIT, (index) => ({
       kind: "struggle" as const,
       text: Str.slice(
         0,
@@ -230,7 +230,7 @@ describe("Nina learner prompt", () => {
       Option.fromUndefinedOr(formatLearnerPrompt({ memories, profile }))
     );
     expect(prompt).toContain("- (struggle) Judul 0: ");
-    expect(prompt).not.toContain(`Judul ${MEMORY_PROMPT_LIMIT - 1}: `);
+    expect(prompt).not.toContain(`Judul ${MEMORY_START_LIMIT - 1}: `);
     expect(countTextTokens(prompt)).toBeLessThanOrEqual(NINA_BUDGET.learner);
     // The note about the cut sits inside the data block, which still ends the section.
     expect(prompt).toContain("Learner facts shortened.]\n</memories>");

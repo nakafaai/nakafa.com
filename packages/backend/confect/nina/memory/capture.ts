@@ -16,11 +16,11 @@ import { boundText } from "@repo/backend/confect/nina/budget";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { checkCandidates } from "@repo/backend/confect/nina/memory/check";
 import { passesGate } from "@repo/backend/confect/nina/memory/gate";
-import { lessonOf } from "@repo/backend/confect/nina/memory/lesson";
 import { knownLine } from "@repo/backend/confect/nina/memory/line";
+import { topicsOf } from "@repo/backend/confect/nina/memory/topics";
 import {
   MEMORY_CAPTURE_LIMIT,
-  type NinaLearner,
+  type NinaKnown,
   NinaMemoryCapture,
   type NinaMemoryKind,
 } from "@repo/backend/confect/nina/memory.spec";
@@ -40,11 +40,11 @@ import {
 const MESSAGE_TOKENS = 1000;
 
 /**
- * The whole list of known memories one capture call reads. Each memory shows
- * only its first characters there, and a learner may still keep `MEMORY_LIMIT`
- * long ones. The list is newest first, and one that does not fit loses its
- * oldest memories: a candidate that repeats one of them still confirms it by
- * saying the same words.
+ * The whole list of known memories one capture call reads. It holds at most
+ * `MEMORY_KNOWN_LIMIT` memories, and each shows only its first characters, so
+ * this is a second bound. The list is best match first, and one that does not
+ * fit loses its last memories: a candidate that repeats one of them still
+ * confirms it by saying the same words.
  */
 const KNOWN_TOKENS = 4000;
 
@@ -120,12 +120,12 @@ function logFailure(error: NinaMemoryError) {
 }
 
 /** The memories the model can name, each cut short, within `KNOWN_TOKENS`. */
-function formatKnown(known: (typeof NinaLearner.Type)["known"]) {
+function formatKnown(known: (typeof NinaKnown.Type)["known"]) {
   return Arr.isReadonlyArrayNonEmpty(known)
     ? boundText(
         Arr.join(Arr.map(known, knownLine), "\n"),
         KNOWN_TOKENS,
-        "Older memories are not listed."
+        "Other memories are not listed."
       )
     : "None";
 }
@@ -136,7 +136,7 @@ function formatPrompt({
   message,
   today,
 }: {
-  readonly learner: typeof NinaLearner.Type;
+  readonly learner: typeof NinaKnown.Type;
   readonly message: string;
   readonly today: DateTime.DateTime;
 }) {
@@ -181,10 +181,11 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
     if (message === undefined || !passesGate(message)) {
       return;
     }
-    const lesson = lessonOf(turn.page);
+    const topics = topicsOf(turn.page);
     const learner = yield* (yield* QueryRunner)
-      .runQuery(refs.internal.nina.memory.read, {
-        ...(lesson === undefined ? {} : { lesson }),
+      .runQuery(refs.internal.nina.memory.known, {
+        message,
+        topics,
         userId: turn.userId,
       })
       .pipe(Effect.orDie);
@@ -230,8 +231,8 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
     yield* (yield* MutationRunner)
       .runMutation(refs.internal.nina.memory.capture, {
         candidates,
-        ...(lesson === undefined ? {} : { lesson }),
         seen: Arr.map(learner.known, Struct.pick(["confirmedAt", "id"])),
+        topics,
         turnId: turn._id,
         userId: turn.userId,
       })

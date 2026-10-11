@@ -46,8 +46,7 @@ describe("learner profile", () => {
       });
       return owner;
     });
-    expect(await f.t.query(read, { userId })).toEqual({
-      known: [],
+    expect(await f.t.query(read, { topics: [], userId })).toEqual({
       paused: false,
       profile: {
         focus: "tryout",
@@ -96,8 +95,7 @@ describe("learner profile", () => {
       await ctx.db.delete("tryoutAttempts", attempt._id);
       return runtime.identity.userId;
     });
-    expect(await f.t.query(read, { userId })).toEqual({
-      known: [],
+    expect(await f.t.query(read, { topics: [], userId })).toEqual({
       paused: false,
       profile: {},
       prompt: [],

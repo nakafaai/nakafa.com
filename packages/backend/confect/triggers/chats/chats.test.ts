@@ -124,6 +124,7 @@ describe("native Nina deletion lifecycle", () => {
           { kind: "level", quote: "aku kelas 12", text: "Kelas 12 IPA." },
         ],
         seen: [],
+        topics: [],
         turnId: receipt.turnId,
         userId: identity.userId,
       })

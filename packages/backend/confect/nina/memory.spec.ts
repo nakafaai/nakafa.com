@@ -11,18 +11,28 @@ import { tryoutScoreStatusValidator } from "@repo/backend/confect/tryouts/score"
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema, Struct } from "effect";
 
-/** Memories one learner keeps. Beyond it, the memory Nina wrote and confirmed longest ago leaves. */
-export const MEMORY_LIMIT = 100;
 /** Characters of one memory's words, their Markdown formatting included. */
 export const MEMORY_TEXT_LIMIT = 2000;
 /** Characters of the title a learner gives a memory. */
 export const MEMORY_TITLE_LIMIT = 80;
 /** Characters of one memory Nina writes: one short sentence. */
 const MEMORY_SENTENCE_LIMIT = 280;
-/** Memories Nina reads in one turn. The Memory page marks them as in use. */
-export const MEMORY_PROMPT_LIMIT = 20;
+/** Memories a turn starts with: those for the open page first, then the most recent. */
+export const MEMORY_START_LIMIT = 8;
 /** Memories one capture call may propose from a single message. */
 export const MEMORY_CAPTURE_LIMIT = 3;
+/** Memories the capture call reads and may name: the best matches for the message. */
+export const MEMORY_KNOWN_LIMIT = 12;
+/** Topics one memory is linked to, and topics one page has. */
+export const MEMORY_TOPIC_LIMIT = 8;
+/** Characters of one topic. A longer path is no page of Nakafa and names no topic. */
+export const MEMORY_TOPIC_LENGTH = 256;
+/** Memories one page of the Memory page holds, however many the browser asks for. */
+export const MEMORY_PAGE_LIMIT = 50;
+/** Memories one search of the Memory page shows. */
+export const MEMORY_SEARCH_LIMIT = 30;
+/** Characters of a search on the Memory page. */
+const MEMORY_QUERY_LIMIT = 80;
 
 /**
  * What a memory Nina wrote is about. `situation` is something with an end,
@@ -43,7 +53,7 @@ export const NinaMemoryKind = Schema.Literals([
  * Memory page. A chat rewrites only words that Nina wrote. Words the learner
  * wrote stay theirs, and a memory the learner edits becomes theirs.
  */
-export const NinaMemoryAuthor = Schema.Literals(["nina", "learner"]);
+const NinaMemoryAuthor = Schema.Literals(["nina", "learner"]);
 
 /**
  * The words of a memory as the learner reads and writes them. They may hold
@@ -64,22 +74,48 @@ const NinaMemorySentence = Schema.Trim.check(
 );
 
 /**
+ * A place a memory is said at: the lesson a page shows or a path above that
+ * page, tagged by `memory/topics`. The search finds a memory by it.
+ */
+const NinaMemoryTopic = Schema.NonEmptyString.check(
+  Schema.isMaxLength(MEMORY_TOPIC_LENGTH)
+);
+
+/** The topics of one page, or the topics one memory is linked to. */
+const NinaMemoryTopics = Schema.mutable(Schema.Array(NinaMemoryTopic)).check(
+  Schema.isMaxLength(MEMORY_TOPIC_LIMIT)
+);
+
+/**
  * One stored memory. `text` and `title` are sealed for its learner. Only the
  * learner gives a memory a title, and a memory holds a title, words, or both.
  * `kind` is what Nina says the memory is about, so a memory the learner wrote
  * has none until a chat says it again. `confirmedAt` moves when the memory is
- * written, edited, or said again in a chat. `lesson` is the content identity
- * of the lesson the learner had open, the same in every language.
+ * written, edited, or said again in a chat. `topics` are the places it was said
+ * at: the lessons and paths of the pages that were open, the same in every
+ * language for a lesson. A memory the learner wrote on the Memory page has none
+ * until a chat says it again.
  */
 export const NinaMemory = Schema.Struct({
   author: NinaMemoryAuthor,
   confirmedAt: Schema.Finite,
   kind: Schema.optionalKey(NinaMemoryKind),
-  lesson: Schema.optionalKey(Schema.NonEmptyString),
   text: Sealed,
   title: Schema.optionalKey(Sealed),
+  topics: Schema.optionalKey(NinaMemoryTopics),
   userId: Id("users"),
   validUntil: Schema.optionalKey(Schema.Finite),
+});
+
+/**
+ * One key of the memory index: a link between one memory and one topic
+ * (`t:<topic>`) or one blinded word of its title or words (`w:<hash>`). The
+ * index is these rows. Two memories are linked when they share a key.
+ */
+export const NinaMemoryKey = Schema.Struct({
+  key: Schema.NonEmptyString,
+  memoryId: Id("ninaMemories"),
+  userId: Id("users"),
 });
 
 /** One memory on the Memory page: its title and its words, never its kind. */
@@ -88,16 +124,12 @@ export const NinaMemoryView = Schema.Struct({
     .fields,
   createdAt: Schema.Finite,
   id: Id("ninaMemories"),
-  inUse: Schema.Boolean,
   text: NinaMemoryText,
   title: Schema.optionalKey(NinaMemoryTitle),
 });
 
-/** The Memory page: every memory, newest first, and whether memory is paused. */
-export const NinaMemoryList = Schema.Struct({
-  memories: Schema.mutable(Schema.Array(NinaMemoryView)),
-  paused: Schema.Boolean,
-});
+/** What the Memory page knows about the learner besides the memories. */
+const NinaMemoryState = Schema.Struct({ paused: Schema.Boolean });
 
 /**
  * What the learner writes on the Memory page: words, a title, or both, with no
@@ -110,12 +142,11 @@ export const NinaMemoryDraft = Schema.Struct({
 
 /**
  * Why a memory could not be written. `empty`: it holds neither a title nor
- * words. `limit`: the learner already keeps `MEMORY_LIMIT` memories.
- * `missing`: the memory was deleted meanwhile.
+ * words. `missing`: the memory was deleted meanwhile.
  */
 export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()(
   "NinaMemoryRejected",
-  { reason: Schema.Literals(["empty", "limit", "missing"]) }
+  { reason: Schema.Literals(["empty", "missing"]) }
 ) {}
 
 /**
@@ -176,7 +207,7 @@ export const NinaLearnerProfile = Schema.Struct({
  * One memory as Nina and the capture call read it, with a kind and a title
  * only when it has one.
  */
-const NinaMemoryNote = Schema.Struct({
+export const NinaMemoryNote = Schema.Struct({
   confirmedAt: Schema.Finite,
   id: Id("ninaMemories"),
   kind: Schema.optionalKey(NinaMemoryKind),
@@ -193,15 +224,29 @@ export const NinaMemorySeen = NinaMemoryNote.mapFields(
 );
 
 /**
- * What a turn knows about one learner. `prompt` holds the memories Nina reads
- * this turn, at most `MEMORY_PROMPT_LIMIT`; `known` holds every memory, for
- * the capture call. Both are empty while memory is paused.
+ * What a turn knows about one learner. `prompt` holds the memories the turn
+ * starts with, at most `MEMORY_START_LIMIT`. It is empty while memory is
+ * paused.
  */
 export const NinaLearner = Schema.Struct({
-  known: Schema.mutable(Schema.Array(NinaMemoryNote)),
   paused: Schema.Boolean,
   profile: NinaLearnerProfile,
-  prompt: Schema.mutable(Schema.Array(NinaMemoryNote)),
+  prompt: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
+    Schema.isMaxLength(MEMORY_START_LIMIT)
+  ),
+});
+
+/**
+ * What the capture call knows about one learner: `known` holds the memories
+ * that match the message best, at most `MEMORY_KNOWN_LIMIT`. It is empty while
+ * memory is paused.
+ */
+export const NinaKnown = Schema.Struct({
+  known: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
+    Schema.isMaxLength(MEMORY_KNOWN_LIMIT)
+  ),
+  paused: Schema.Boolean,
+  profile: NinaLearnerProfile,
 });
 
 /** The settings card of browser tabs opened before October 2026. */
@@ -218,10 +263,32 @@ const RetiredMemoryView = Schema.Struct({
 });
 
 export default GroupSpec.make()
+  // One page of the learner's memories, the most recently confirmed first, with
+  // their titles and words opened. A visitor gets an empty page.
+  .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "list",
+      item: () => NinaMemoryView,
+    }).middleware(Session)
+  )
   .addFunction(
     FunctionSpec.publicQuery({
-      name: "list",
-      returns: () => Schema.NullOr(NinaMemoryList),
+      name: "state",
+      returns: () => Schema.NullOr(NinaMemoryState),
+    }).middleware(Session)
+  )
+  // The memories that match a search of the Memory page, the best first. A
+  // visitor and an empty search get none.
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "search",
+      args: () => ({
+        query: Schema.Trim.check(Schema.isMaxLength(MEMORY_QUERY_LIMIT)),
+      }),
+      returns: () =>
+        Schema.mutable(Schema.Array(NinaMemoryView)).check(
+          Schema.isMaxLength(MEMORY_SEARCH_LIMIT)
+        ),
     }).middleware(Session)
   )
   .addFunction(
@@ -256,6 +323,9 @@ export default GroupSpec.make()
       error: () => AuthFailure,
     }).middleware(Session)
   )
+  // Deletes a batch of the learner's memories and goes on with `drain` until
+  // none is left, so a learner with many memories never meets one huge
+  // transaction.
   .addFunction(
     FunctionSpec.publicMutation({
       name: "clear",
@@ -296,36 +366,57 @@ export default GroupSpec.make()
       error: () => AuthFailure,
     }).middleware(Session)
   )
+  // What a turn starts with: the account facts and the memories for the pages
+  // the learner has open.
   .addFunction(
     FunctionSpec.internalQuery({
       name: "read",
+      args: () => ({ topics: NinaMemoryTopics, userId: Id("users") }),
+      returns: () => NinaLearner,
+    })
+  )
+  // What the capture call reads: the account facts and the memories that match
+  // the learner's message and the open pages.
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "known",
       args: () => ({
-        lesson: Schema.optionalKey(Schema.NonEmptyString),
+        message: Schema.String,
+        topics: NinaMemoryTopics,
         userId: Id("users"),
       }),
-      returns: () => NinaLearner,
+      returns: () => NinaKnown,
     })
   )
   // Writes what a capture call found. `seen` is what the call read before the
   // model read the message: the write changes nothing when the learner removed
   // one of those memories meanwhile, and leaves the words, the kind and the end
-  // date of one that changed or that was written after the call read the list.
+  // date of one that changed or that the call never read.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "capture",
       args: () => ({
         candidates: NinaMemoryCapture.fields.memories,
-        lesson: Schema.optionalKey(Schema.NonEmptyString),
         seen: Schema.mutable(Schema.Array(NinaMemorySeen)).check(
-          Schema.isMaxLength(MEMORY_LIMIT)
+          Schema.isMaxLength(MEMORY_KNOWN_LIMIT)
         ),
+        topics: NinaMemoryTopics,
         turnId: Id("ninaTurns"),
         userId: Id("users"),
       }),
       returns: () => Schema.Int,
     })
   )
-  // Deletes one page of the situations whose end date has passed and returns
+  // Deletes one batch of a learner's memories and returns how many it deleted.
+  // It runs again by itself while a batch is full. `clear` starts it.
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "drain",
+      args: () => ({ userId: Id("users") }),
+      returns: () => Schema.Int,
+    })
+  )
+  // Deletes one batch of the situations whose end date has passed and returns
   // how many it deleted. The daily cron runs it.
   .addFunction(
     FunctionSpec.internalMutation({
