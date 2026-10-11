@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { MEMORY_QUERY_LIMIT } from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, Option, Schema, String as Str } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   draftArgs,
   draftOf,
@@ -9,8 +8,8 @@ import {
   findMemory,
   isBlank,
   isPending,
+  isSearching,
   learnerMemory,
-  listedMemories,
   type Memory,
   type MemoryPage,
   memoryName,
@@ -20,9 +19,7 @@ import {
   pendingId,
   previewText,
   removeMemory,
-  replaceMemory,
   sameDraft,
-  searchText,
   shownMemories,
 } from "@/components/user/settings/memory/list";
 
@@ -54,7 +51,7 @@ describe("memory list", () => {
   });
 
   it("reads the title and the words of a memory, or none for a new one", () => {
-    expect(draftOf(undefined)).toEqual({ text: "", title: "" });
+    expect(draftOf(null)).toEqual({ text: "", title: "" });
     expect(draftOf(stored("a"))).toEqual({ text: "Text of a", title: "" });
     expect(draftOf(stored("a", { title: "School" }))).toEqual({
       text: "Text of a",
@@ -132,9 +129,8 @@ describe("memory list", () => {
       expect(edited.text).toBe("Kelas 12");
     });
 
-    it("finds, removes and replaces a memory by its id", () => {
+    it("finds and removes a memory by its id", () => {
       const memories = [stored("a"), stored("b"), stored("c")];
-      const rewritten = stored("b", { text: "Rewritten" });
 
       expect(findMemory(memories, memoryId("c"))).toEqual(
         Option.some(memories[2])
@@ -143,11 +139,6 @@ describe("memory list", () => {
       expect(ids(removeMemory(memories, memoryId("b")))).toEqual([
         memoryId("a"),
         memoryId("c"),
-      ]);
-      expect(replaceMemory(memories, rewritten)).toEqual([
-        memories[0],
-        rewritten,
-        memories[2],
       ]);
     });
   });
@@ -191,12 +182,18 @@ describe("memory list", () => {
       expect(pageWithout(other, memoryId("a"))).toBe(other);
     });
 
-    it("empties a page and ends the list there when every memory is deleted", () => {
+    it("empties a page and ends the list there when every memory is deleted, and leaves a page that is already empty", () => {
       expect(pageCleared(pageOf([stored("a"), stored("b")]))).toEqual({
         continueCursor: "next",
         isDone: true,
         page: [],
       });
+
+      const empty = { continueCursor: "", isDone: true, page: [] };
+
+      expect(pageCleared(empty)).toBe(empty);
+      // An empty page that is not the end of the list still ends it.
+      expect(pageCleared(pageOf([]))).toMatchObject({ isDone: true, page: [] });
     });
   });
 
@@ -263,36 +260,25 @@ describe("memory list", () => {
       expect(shownMemories(memories, "biology")).toEqual([]);
     });
 
-    it("lists what the browser holds first and then what only the server found", () => {
-      const unloaded = stored("z", { text: "Loves trigonometry puzzles" });
-      const other = stored("y", { text: "Reads about trigonometry daily" });
-
-      expect(
-        ids(listedMemories(memories, "trig", [unloaded, memories[1], other]))
-      ).toEqual([memoryId("b"), memoryId("z"), memoryId("y")]);
+    it("finds any part of a word, which a search of whole words cannot", () => {
+      // "trigonometri" is a part of the word "trigonometry" in the other
+      // language, and "ometr" is a part from the middle of a word.
+      expect(ids(shownMemories(memories, "ometr"))).toEqual([memoryId("b")]);
+      expect(ids(shownMemories(memories, "exam"))).toEqual([
+        memoryId("a"),
+        memoryId("c"),
+      ]);
     });
 
-    it("adds a memory the server found that the browser's filter missed", () => {
-      // The server matches whole words by their first six letters, so it finds
-      // "trigonometry" for "trigonometri", which the browser's filter cannot.
-      expect(
-        ids(listedMemories(memories, "trigonometri", [memories[1]]))
-      ).toEqual([memoryId("b")]);
+    it("keeps the order of the list and returns the very list it was given for a blank search", () => {
+      expect(shownMemories(memories, "")).toBe(memories);
+      expect(ids(shownMemories(memories, "e"))).toEqual(ids(memories));
     });
 
-    it("lists the browser's matches alone when the server found none", () => {
-      expect(listedMemories(memories, "friday", [])).toEqual([memories[2]]);
-      expect(listedMemories(memories, "  ", [])).toEqual(memories);
-    });
-
-    it("cuts the text sent to the server to what its search takes", () => {
-      expect(searchText("  trigonometri  ")).toBe("trigonometri");
-      expect(Str.length(searchText("a".repeat(MEMORY_QUERY_LIMIT + 20)))).toBe(
-        MEMORY_QUERY_LIMIT
-      );
-      expect(
-        searchText(`${"a".repeat(MEMORY_QUERY_LIMIT - 1)} ${"b".repeat(5)}`)
-      ).toBe("a".repeat(MEMORY_QUERY_LIMIT - 1));
+    it("tells a blank text from a search", () => {
+      expect(isSearching("")).toBe(false);
+      expect(isSearching("  \n ")).toBe(false);
+      expect(isSearching(" kuiper ")).toBe(true);
     });
   });
 });

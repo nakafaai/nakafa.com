@@ -2,23 +2,24 @@ import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import {
-  MEMORY_QUERY_LIMIT,
+  MEMORY_PAGE_LIMIT,
   type NinaMemoryView,
 } from "@repo/backend/confect/nina/memory.spec";
-import {
-  Array as Arr,
-  HashSet,
-  Option,
-  Schema,
-  String as Str,
-  Struct,
-} from "effect";
+import { Array as Arr, Option, Schema, String as Str, Struct } from "effect";
 
 /**
  * How many memories one page of the list holds. The settings route reads the
  * first page with it, and the page asks for each next page with it.
  */
 export const MEMORY_PAGE = 30;
+
+/**
+ * How many memories the page asks for at a time while the learner searches.
+ * The server caps a page at `MEMORY_PAGE_LIMIT`, so this is the most that one
+ * request brings. A search waits until every memory is loaded, so the fewer the
+ * requests, the sooner it is complete.
+ */
+export const MEMORY_FILL = MEMORY_PAGE_LIMIT;
 
 /** One page of the list as the server answers it: its memories and whether it is the last. */
 export type MemoryPage = Ref.Returns<typeof nina.memory.list>;
@@ -51,7 +52,7 @@ export function isPending(memory: Memory) {
 }
 
 /** The title and the words of a memory, or none of either for a new one. */
-export function draftOf(memory: Memory | undefined): MemoryDraft {
+export function draftOf(memory: Memory | null): MemoryDraft {
   return { text: memory?.text ?? "", title: memory?.title ?? "" };
 }
 
@@ -130,16 +131,6 @@ export function removeMemory(memories: readonly Memory[], id: Memory["id"]) {
 }
 
 /**
- * Swaps a memory for its rewritten self where it stands, so the answer of a
- * search keeps its order.
- */
-export function replaceMemory(memories: readonly Memory[], memory: Memory) {
-  return Arr.map(memories, (current) =>
-    current.id === memory.id ? memory : current
-  );
-}
-
-/**
  * Returns one loaded page of the list after `memory` was confirmed just now,
  * the way the server will show it: the page that starts the list holds the
  * memory first, and no other page holds it. A page that has nothing to do with
@@ -168,8 +159,16 @@ export function pageWithout(page: MemoryPage, id: Memory["id"]): MemoryPage {
   return { ...page, page: removeMemory(page.page, id) };
 }
 
-/** Returns one loaded page of the list after every memory is deleted: empty, and the end of the list. */
+/**
+ * Returns one loaded page of the list after every memory is deleted: empty, and
+ * the end of the list. The server answers the same once the learner asked to
+ * delete everything, so the pages keep what the learner sees.
+ */
 export function pageCleared(page: MemoryPage): MemoryPage {
+  if (page.isDone && Arr.isReadonlyArrayEmpty(page.page)) {
+    return page;
+  }
+
   return { ...page, isDone: true, page: [] };
 }
 
@@ -222,49 +221,48 @@ export function memoryName(memory: Memory) {
 }
 
 /**
+ * What the search reads of each memory: its title and its words without their
+ * formatting, in lower case. Reading the formatting out of thousands of words
+ * on every key would take longer than the key, so it is done once for each
+ * memory object the page holds, and a changed memory is a new object.
+ */
+const HAYSTACKS = new WeakMap<Memory, string>();
+
+function haystackOf(memory: Memory) {
+  const known = HAYSTACKS.get(memory);
+
+  if (known !== undefined) {
+    return known;
+  }
+
+  const haystack = Str.toLowerCase(
+    `${memory.title ?? ""} ${previewText(memory.text)}`
+  );
+
+  HAYSTACKS.set(memory, haystack);
+
+  return haystack;
+}
+
+/** Whether the learner typed something to search for, and not only space. */
+export function isSearching(query: string) {
+  return !Str.isEmpty(Str.trim(query));
+}
+
+/**
  * Returns the memories the browser holds that match the search, in list order.
  * The search ignores case and looks at the title of each memory and at its
- * words without their formatting.
+ * words without their formatting, in any part of a word. A blank search matches
+ * every memory.
  */
 export function shownMemories(memories: readonly Memory[], query: string) {
+  if (!isSearching(query)) {
+    return memories;
+  }
+
   const needle = Str.toLowerCase(Str.trim(query));
 
-  return Arr.filter(
-    memories,
-    (memory) =>
-      Str.isEmpty(needle) ||
-      Str.includes(needle)(
-        Str.toLowerCase(`${memory.title ?? ""} ${previewText(memory.text)}`)
-      )
+  return Arr.filter(memories, (memory) =>
+    Str.includes(needle)(haystackOf(memory))
   );
-}
-
-/**
- * Lists what a search finds from two sources. The memories the browser holds
- * that match come first, in list order, because they match any part of a word.
- * The memories the server found follow, in its order, when they are not shown
- * yet: the server reaches the pages the browser has not loaded, and it matches
- * whole words only, so it adds to the browser's matches and never replaces
- * them.
- */
-export function listedMemories(
-  memories: readonly Memory[],
-  query: string,
-  found: readonly Memory[]
-) {
-  const matches = shownMemories(memories, query);
-  const listed = HashSet.fromIterable(Arr.map(matches, ({ id }) => id));
-
-  return Arr.appendAll(
-    matches,
-    Arr.filter(found, ({ id }) => !HashSet.has(listed, id))
-  );
-}
-
-/**
- * Cuts what the learner typed to what the server's search takes: without the
- * space around it, and at most `MEMORY_QUERY_LIMIT` characters.
- */
-export function searchText(text: string) {
-  return Str.trim(Str.takeLeft(Str.trim(text), MEMORY_QUERY_LIMIT));
 }

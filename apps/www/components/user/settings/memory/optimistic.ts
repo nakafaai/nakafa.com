@@ -10,8 +10,6 @@ import {
   pageCleared,
   pageWith,
   pageWithout,
-  removeMemory,
-  replaceMemory,
 } from "@/components/user/settings/memory/list";
 
 type Store = OptimisticLocalStore.OptimisticLocalStore;
@@ -20,7 +18,12 @@ type Store = OptimisticLocalStore.OptimisticLocalStore;
  * Changes the pages of the list that the browser holds, one query for each
  * loaded page. `change` gets a page and whether it starts the list. A page it
  * hands back as it is gets no write, because a write encodes the whole page
- * and wakes everything that reads the list.
+ * and wakes everything that reads the list. A page that is still loading has
+ * no value to change.
+ *
+ * Convex applies the change to the queries it has subscribed, so a change made
+ * before the live list is subscribed and has answered shows when it answers,
+ * not before.
  */
 function changePages(
   store: Store,
@@ -37,31 +40,10 @@ function changePages(
   }
 }
 
-/** Changes every answer of the search that the browser holds. */
-function changeAnswers(
-  store: Store,
-  change: (answer: readonly Memory[]) => Memory[]
-) {
-  for (const { args, value } of store.getAllQueries(nina.memory.search)) {
-    if (Option.isSome(value)) {
-      store.setQuery(
-        nina.memory.search,
-        args,
-        Option.some(change(value.value))
-      );
-    }
-  }
-}
-
-/** Every memory in the pages and in the search answers that the browser holds, the pages first. */
+/** Every memory in the pages that the browser holds. */
 function heldMemories(store: Store) {
-  return Arr.appendAll(
-    Arr.flatMap(store.getAllQueries(nina.memory.list), ({ value }) =>
-      Option.isSome(value) ? value.value.page : []
-    ),
-    Arr.flatMap(store.getAllQueries(nina.memory.search), ({ value }) =>
-      Option.isSome(value) ? value.value : []
-    )
+  return Arr.flatMap(store.getAllQueries(nina.memory.list), ({ value }) =>
+    Option.isSome(value) ? value.value.page : []
   );
 }
 
@@ -72,9 +54,8 @@ export function addToList(store: Store, memory: Memory) {
 
 /**
  * Shows a rewritten memory the way the server will: it leaves the page it is
- * on and goes first on the first page, and a search answer that holds it gets
- * the new title and words where it stands. A memory the browser does not hold
- * is left to the server.
+ * on and goes first on the first page. A memory on no page the browser holds is
+ * left to the server.
  */
 export function editInList(
   store: Store,
@@ -91,19 +72,19 @@ export function editInList(
   const edited = editedMemory(found.value, draft, now);
 
   changePages(store, (page, first) => pageWith(page, first, edited));
-  changeAnswers(store, (answer) => replaceMemory(answer, edited));
 }
 
-/** Takes a memory out of every page and every search answer that holds it. */
+/** Takes a memory out of every page that holds it. */
 export function removeFromList(store: Store, id: Memory["id"]) {
   changePages(store, (page) => pageWithout(page, id));
-  changeAnswers(store, (answer) => removeMemory(answer, id));
 }
 
-/** Empties every page and every search answer. The server deletes in batches and the live pages follow. */
+/**
+ * Empties every page and ends the list. The server answers the same from the
+ * moment the learner asks, and deletes the memories in batches after that.
+ */
 export function clearList(store: Store) {
   changePages(store, pageCleared);
-  changeAnswers(store, () => []);
 }
 
 /** Sets whether memory is paused, when the browser holds the state. */

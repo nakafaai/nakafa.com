@@ -10,7 +10,6 @@ import {
 import { Label } from "@repo/design-system/components/ui/label";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Switch } from "@repo/design-system/components/ui/switch";
-import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
@@ -18,14 +17,15 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
-import { memoryName } from "@/components/user/settings/memory/list";
 import { useMemory } from "@/components/user/settings/memory/provider";
 
 const REMEMBER_ID = "user-settings-memory-remember";
 
 /**
  * The card that turns memory on and off and deletes all of it. Turning it off
- * keeps every memory. Deleting asks first and shows what will go.
+ * keeps every memory. Deleting asks first, and names no memory: the page holds
+ * only the memories it has loaded, which is a part of them once there are more
+ * than a page.
  */
 export function MemoryControl() {
   const t = useTranslations("Memory");
@@ -91,27 +91,7 @@ export function MemoryControl() {
         open={confirming}
         setOpen={setConfirming}
         title={t("clear-title")}
-      >
-        <MemoryTitles />
-      </ResponsiveDialog>
+      />
     </CardSection>
-  );
-}
-
-/**
- * Shows what a delete of everything takes away: each memory the page has
- * loaded on one line. A learner with more memories loses those too.
- */
-function MemoryTitles() {
-  const memories = useMemory((reading) => reading.loaded);
-
-  return (
-    <ul className="max-h-48 divide-y overflow-y-auto rounded-md border text-sm">
-      {Arr.map(memories, (memory) => (
-        <li className="truncate px-3 py-2" key={memory.id}>
-          {memoryName(memory)}
-        </li>
-      ))}
-    </ul>
   );
 }

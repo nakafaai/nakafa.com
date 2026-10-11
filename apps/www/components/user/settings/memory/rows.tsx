@@ -11,72 +11,98 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { useMemory } from "@/components/user/settings/memory/provider";
-import { MemoryRow } from "@/components/user/settings/memory/row";
+import { useEffect, useEffectEvent } from "react";
+import {
+  isSearching,
+  MEMORY_FILL,
+  MEMORY_PAGE,
+  shownMemories,
+} from "@/components/user/settings/memory/list";
+import {
+  useMemory,
+  useMemoryPage,
+} from "@/components/user/settings/memory/provider";
+import { MemoryWindow } from "@/components/user/settings/memory/window";
 
 /**
- * The body of the list: the memories that match the search, newest first, in
- * a box that scrolls once they are many. With nothing to list it shows why.
+ * The body of the list: the loaded memories that match the search, newest
+ * first. The browser's own filter is the whole search, so it can only find
+ * what is loaded. While the search box holds text, the rest loads, and a row
+ * that matches appears as its page arrives. With nothing to list, the body says
+ * why once it can: the learner has no memory, or every memory is loaded and
+ * none matches.
  */
 export function MemoryRows() {
-  const listed = useMemory(
-    ({ more, shown }) => shown.length > 0 || more !== null
-  );
+  const query = useMemoryPage((state) => state.query);
+  const { empty, loaded, more, whole } = useMemory((reading) => reading);
+  const shown = shownMemories(loaded, query);
 
   return (
     <CardContent className="border-t px-0">
-      {listed ? <MemoryList /> : <MemoryEmpty />}
+      {Arr.isReadonlyArrayNonEmpty(shown) ? (
+        <MemoryWindow memories={shown} />
+      ) : (
+        <MemoryEmpty empty={empty} whole={whole} />
+      )}
+      {more ? (
+        <MemoryMore
+          count={Arr.length(loaded)}
+          more={more}
+          searching={isSearching(query)}
+        />
+      ) : null}
     </CardContent>
   );
 }
 
 /**
- * The rows in their box. The box is a column, so the list inside it can never
- * grow past it. The end of the list sits inside the box, because the box is
- * what scrolls.
+ * Asks for the next page when more can load. Without a search it waits for the
+ * end of the list to come into view. With one it asks at once, and again each
+ * time a page has arrived, until every memory is loaded, because a memory that
+ * is not loaded cannot match.
  */
-function MemoryList() {
-  const shown = useMemory((reading) => reading.shown);
-
-  return (
-    <ScrollArea className="flex h-auto max-h-96 flex-col" scrollFade>
-      <ul className="divide-y">
-        {Arr.map(shown, (memory) => (
-          <MemoryRow key={memory.id} memory={memory} />
-        ))}
-      </ul>
-      <MemoryEnd />
-    </ScrollArea>
+function MemoryMore({
+  count,
+  more,
+  searching,
+}: {
+  count: number;
+  more: (count: number) => void;
+  searching: boolean;
+}) {
+  return searching ? (
+    <MemoryFill key={count} more={more} />
+  ) : (
+    <Intersection onIntersect={() => more(MEMORY_PAGE)} />
   );
 }
 
-/** The end of the list: when it comes into view, the next page loads. */
-function MemoryEnd() {
-  const more = useMemory((reading) => reading.more);
+/** Loads the next page as soon as it mounts. It mounts again for each page that arrives. */
+function MemoryFill({ more }: { more: (count: number) => void }) {
+  const load = useEffectEvent(more);
 
-  return more ? <Intersection onIntersect={more} /> : null;
+  useEffect(() => {
+    load(MEMORY_FILL);
+  }, []);
+
+  return null;
 }
 
 /**
  * Says that there is nothing to list: no memory yet, or none that matches the
- * search. While a search waits for the server's answer it says nothing yet.
+ * search. While pages are still loading for a search it says nothing yet, but
+ * keeps the room the message takes, so the card does not shrink and grow.
  */
-function MemoryEmpty() {
+function MemoryEmpty({ empty, whole }: { empty: boolean; whole: boolean }) {
   const t = useTranslations("Memory");
-  const { empty, nothing } = useMemory((reading) => ({
-    empty: reading.empty,
-    nothing: reading.nothing,
-  }));
-
-  if (!(empty || nothing)) {
-    return null;
-  }
 
   return (
-    <Empty className="md:p-8">
+    <Empty
+      className="data-waiting:invisible md:p-8"
+      data-waiting={whole ? undefined : ""}
+    >
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <HugeIcons icon={AiBrain01Icon} />

@@ -3,8 +3,9 @@
 import { Delete02Icon, Edit02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Equal } from "effect";
 import { useTranslations } from "next-intl";
-import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
+import { memo, useLayoutEffect, useRef } from "react";
 import { MemoryFacts } from "@/components/user/settings/memory/facts";
 import {
   isPending,
@@ -14,57 +15,90 @@ import {
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
 /**
- * One memory in the list: its title, or its words when it has none, and its
- * facts, each on one line. A press opens it in the editor, where the whole
- * text is. The actions show while the pointer or the focus is on the row, and
- * always on a touch screen.
+ * The content of one memory in the list: its title, or its words when it has
+ * none, and its facts, each on one line. A press opens it in the editor, where
+ * the whole text is. The actions show while the pointer or the focus is on the
+ * row, and always on a touch screen. The row fills the item the window gives
+ * it, which has a fixed height, so every row is as tall as the window expects.
+ *
+ * The list can hold thousands of memories, so a row renders again only when
+ * its own memory or whether it is the one in the editor changes: it reads
+ * neither the search nor the opening of the editor. Every answer of the server
+ * hands the page new objects for memories that did not change, so rows compare
+ * memories by what they say, not by the object that holds it.
+ *
+ * The window takes a row out of the page when it scrolls far enough, and a
+ * row that holds the focus when that happens would drop it on the page. It
+ * hands the focus to the list instead, where the next Tab goes on to a row in
+ * view.
  */
-export function MemoryRow({ memory }: { memory: Memory }) {
-  const t = useTranslations("Memory");
-  const openEdit = useMemoryPage((state) => state.openEdit);
-  const selected = useMemoryPage(
-    (state) => state.open && state.target === memory.id
-  );
-  const { remove } = useMemoryActions();
-  // A memory the server has not stored yet has no id to change.
-  const waiting = isPending(memory);
+export const MemoryRow = memo(
+  function MemoryRow({
+    memory,
+    remove,
+  }: {
+    memory: Memory;
+    remove: (memory: Memory) => void;
+  }) {
+    const t = useTranslations("Memory");
+    const openEdit = useMemoryPage((state) => state.openEdit);
+    const selected = useMemoryPage(
+      (state) => state.open && state.target?.id === memory.id
+    );
+    const row = useRef<HTMLDivElement>(null);
+    // A memory the server has not stored yet has no id to change.
+    const waiting = isPending(memory);
 
-  return (
-    <li
-      className="group/row flex items-center gap-1 pe-4 transition-colors ease-out focus-within:bg-muted/50 hover:bg-muted/50 data-selected:bg-muted/50"
-      data-selected={selected ? "" : undefined}
-    >
-      <button
-        className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 py-4 ps-(--card-spacing) text-start outline-none disabled:cursor-default"
-        disabled={waiting}
-        onClick={() => openEdit(memory.id)}
-        type="button"
+    // The cleanup runs before the row leaves the page, while the focus is in it.
+    useLayoutEffect(
+      () => () => {
+        if (row.current?.contains(document.activeElement)) {
+          row.current.closest("ul")?.focus({ preventScroll: true });
+        }
+      },
+      []
+    );
+
+    return (
+      <div
+        className="group/row flex h-full items-center gap-1 pe-4 transition-colors ease-out focus-within:bg-muted/50 hover:bg-muted/50 data-selected:bg-muted/50"
+        data-selected={selected ? "" : undefined}
+        ref={row}
       >
-        <span className="truncate text-sm">{memoryName(memory)}</span>
-        <span className="truncate text-muted-foreground text-xs">
-          <MemoryFacts memory={memory} />
-        </span>
-      </button>
-      <div className="flex shrink-0 items-center opacity-0 pointer-coarse:opacity-100 transition-opacity ease-out group-focus-within/row:opacity-100 group-hover/row:opacity-100">
-        <Button
+        <button
+          className="flex h-full min-w-0 flex-1 cursor-pointer flex-col justify-center gap-1 ps-(--card-spacing) text-start outline-none disabled:cursor-default"
           disabled={waiting}
-          onClick={() => openEdit(memory.id)}
-          size="icon-sm"
-          variant="ghost"
+          onClick={() => openEdit(memory)}
+          type="button"
         >
-          <HugeIcons icon={Edit02Icon} />
-          <span className="sr-only">{t("edit")}</span>
-        </Button>
-        <Button
-          disabled={waiting}
-          onClick={() => remove(memory)}
-          size="icon-sm"
-          variant="ghost"
-        >
-          <HugeIcons icon={Delete02Icon} />
-          <span className="sr-only">{t("delete")}</span>
-        </Button>
+          <span className="truncate text-sm">{memoryName(memory)}</span>
+          <span className="truncate text-muted-foreground text-xs">
+            <MemoryFacts memory={memory} />
+          </span>
+        </button>
+        <div className="flex shrink-0 items-center opacity-0 pointer-coarse:opacity-100 transition-opacity ease-out group-focus-within/row:opacity-100 group-hover/row:opacity-100">
+          <Button
+            disabled={waiting}
+            onClick={() => openEdit(memory)}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <HugeIcons icon={Edit02Icon} />
+            <span className="sr-only">{t("edit")}</span>
+          </Button>
+          <Button
+            disabled={waiting}
+            onClick={() => remove(memory)}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <HugeIcons icon={Delete02Icon} />
+            <span className="sr-only">{t("delete")}</span>
+          </Button>
+        </div>
       </div>
-    </li>
-  );
-}
+    );
+  },
+  (before, after) =>
+    before.remove === after.remove && Equal.equals(before.memory, after.memory)
+);

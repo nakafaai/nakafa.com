@@ -50,14 +50,12 @@ export function MemoryProvider({
 }
 
 /**
- * Reads the memories once for the whole page and shares them through a
- * context that changes as Convex answers. One reader serves every component,
- * because the pages a learner has loaded belong to the hook that loaded them,
- * and a second hook would load and subscribe to its own. This context may
- * change after hydration, unlike the provider's, because nothing below it
- * streams: every component under the Memory page is a client component, and
- * the editor's lazy code renders in the browser only, after the learner opens
- * it. React has no streamed HTML to discard when the value changes.
+ * Reads the memories once for the page and shares them in a context that
+ * changes as Convex answers, which is where ADR 0017 puts the result of a
+ * Confect hook. A second hook would load and subscribe to its own pages, so one
+ * reader serves every component. The change is safe after hydration because no
+ * Suspense boundary below this reader can still be streaming: the editor's
+ * mounts in the browser when the learner opens it.
  */
 function MemoryReader({
   children,
@@ -68,15 +66,15 @@ function MemoryReader({
   first: MemoryPage;
   paused: boolean;
 }) {
-  const query = useMemoryPage((state) => state.query);
-  const reading = useMemoryReading(first, paused, query);
+  const reading = useMemoryReading(first, paused);
 
   return <ReadingContext value={reading}>{children}</ReadingContext>;
 }
 
 /**
- * Reads one selected slice of what the page shows: the memories to list, one
- * memory by id, whether memory is paused, and whether the next page can load.
+ * Reads one selected slice of what the page loaded: the memories, whether all
+ * of them are loaded, how to load more, whether the learner has none, and
+ * whether memory is paused.
  */
 export function useMemory<T>(selector: (reading: MemoryReading) => T) {
   const reading = use(ReadingContext);
@@ -111,4 +109,19 @@ export function useMemoryPage<T>(selector: (state: MemoryStore) => T) {
   }
 
   return useStore(store, useShallow(selector));
+}
+
+/**
+ * Reads what the learner is doing at the moment an action runs, without
+ * subscribing to it, so a component that only acts renders again for none of
+ * it.
+ */
+export function useMemoryLatest() {
+  const store = use(StoreContext);
+
+  if (!store) {
+    throw new Error("useMemoryLatest must be used within MemoryProvider");
+  }
+
+  return store.getState;
 }
