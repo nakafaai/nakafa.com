@@ -116,7 +116,7 @@ describe("contentRelease/projection", () => {
     expect(state.release?.stagedProjections).toBe(1);
   });
 
-  it("reads each staged item once before replacing it", async () => {
+  it("reads each staged item twice when its projection replaces it, not three times", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       insertTestRelease(ctx, { itemCount: BATCH_SIZE })

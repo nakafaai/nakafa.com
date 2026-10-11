@@ -277,8 +277,8 @@ describe("contents/metrics/apply", () => {
     });
 
     // One signal and one counter, each replaced in place together with its
-    // ranking entry. The same update used to touch the signal and eight
-    // counters: 101 documents read, 27 written and 31257 bytes read.
+    // ranking entry. On one lesson the same update used to touch the signal and
+    // eight counters: 101 documents read and 27 written.
     expect(update.documentsRead.used).toBe(16);
     expect(update.documentsWritten.used).toBe(5);
     expect(update.bytesRead.used).toBeLessThan(10_000);
