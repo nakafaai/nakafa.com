@@ -1,4 +1,5 @@
 import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
+import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { components } from "@repo/backend/confect/_generated/components";
 import {
   ActionCtx,
@@ -6,8 +7,11 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
-import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
-import type { TaskAgentData } from "@repo/backend/confect/nina/contract/agent";
+import {
+  type CapabilityProgress,
+  specialistResult,
+} from "@repo/backend/confect/nina/capability/progress";
+import type { NakafaAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { NinaReadOptionsSchema } from "@repo/backend/confect/nina/contract/data";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
@@ -20,6 +24,7 @@ import {
 import { makeNakafaGenerationError } from "@repo/backend/confect/nina/nakafa/error";
 import { nakafaAgentPrompt } from "@repo/backend/confect/nina/nakafa/prompt";
 import {
+  prepareAddressStep,
   prepareAnswerFromNakafaEvidenceStep,
   prepareReadStep,
   prepareTaxonomyAnswerStep,
@@ -47,20 +52,38 @@ const nakafaTaxonomyInputSchema = createEffectSchema(
 );
 
 /**
+ * Links to Nakafa's own site that one request may ask to read: as many as the
+ * outside sources that research may read, so the limit the learner is told
+ * holds for both. A page is read in full, so the number bounds the evidence
+ * the specialist holds.
+ */
+const MAX_ADDRESSES = researchMaxSources;
+
+/**
  * Runs the Nakafa agent through MCP-equivalent content tools, within the time
- * the capability has left.
+ * the capability has left. It reads the links to Nakafa's own site that the
+ * learner sent before anything else, so the answer rests on those pages, and
+ * it reads none of them when the learner sent more than it may read. Nothing
+ * is omitted silently.
  */
 export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   userId,
   task,
+  addresses,
   publish,
   usageHandler,
   locale,
   context,
-}: TaskAgentData & {
+}: NakafaAgentData & {
   readonly publish: CapabilityProgress;
   readonly usageHandler: UsageHandler;
 }) {
+  if (addresses.length > MAX_ADDRESSES) {
+    return {
+      outcome: "limit" as const,
+      text: `No pages were read. Ask the learner to send at most ${MAX_ADDRESSES} links to Nakafa pages per request. Do not silently omit their links or start another Nakafa call for this request.`,
+    };
+  }
   const ctx = yield* ActionCtx;
   const { model, timeout } = (yield* Gateway).language("specialist");
   const agent = new Agent(components.nina, {
@@ -149,6 +172,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
            * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
            */
           prepareStep: ({ messages, steps }) => {
+            const addressStep = prepareAddressStep(addresses, messages, steps);
+
+            if (addressStep) {
+              return addressStep;
+            }
+
             const hasReadToolCall = Arr.some(steps, (step) =>
               Arr.some(
                 step.toolCalls,
@@ -188,14 +217,14 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
     catch: makeNakafaGenerationError,
   });
 
-  return {
-    text:
-      pipe(
-        result.steps,
-        Arr.flatMap((step) =>
-          Arr.map(step.toolResults, (toolResult) => String(toolResult.output))
-        ),
-        Arr.join("\n\n")
-      ) || result.text,
-  };
+  return specialistResult(
+    pipe(
+      result.steps,
+      Arr.flatMap((step) =>
+        Arr.map(step.toolResults, (toolResult) => String(toolResult.output))
+      ),
+      Arr.join("\n\n")
+    ) || result.text,
+    result.finishReason
+  );
 });

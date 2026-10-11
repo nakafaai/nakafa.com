@@ -3,7 +3,10 @@ import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
-import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
+import {
+  type CapabilityProgress,
+  specialistResult,
+} from "@repo/backend/confect/nina/capability/progress";
 import type { TaskAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
 import {
@@ -43,7 +46,8 @@ import { Effect } from "effect";
 const MAX_MATH_STEPS = mathOperations.length;
 /**
  * Runs deterministic math tools through Agent, within the time the capability
- * has left; its usage handler records provider calls.
+ * has left; its usage handler records provider calls. An answer that ended at
+ * the output cap is reported as cut short.
  *
  * References:
  * - AI SDK `prepareStep`: https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
@@ -242,7 +246,5 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
       ),
     catch: makeMathGenerationError,
   });
-  return {
-    text: result.text,
-  };
+  return specialistResult(result.text, result.finishReason);
 });

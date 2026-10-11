@@ -1,9 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
+import { makeChatStep } from "@repo/backend/confect/nina/capability/deadline";
 import {
   type NinaPrepareStep,
   prepareNinaStep,
+  startNinaStep,
 } from "@repo/backend/confect/nina/step";
 import type { ModelMessage } from "ai";
+import { Clock, Effect } from "effect";
+import { TestClock } from "effect/testing";
 
 const externalUrlMessages = [
   {
@@ -34,14 +38,14 @@ const instructions = "Base system prompt";
  * stays aligned with `ToolLoopAgentSettings["prepareStep"]` instead of a local
  * imitation of the callback input.
  */
-function readPreparedStep({
+function stepInput({
   messages,
   stepNumber,
 }: {
   readonly messages: ModelMessage[];
   readonly stepNumber: number;
 }) {
-  return prepareNinaStep({
+  return {
     initialInstructions: instructions,
     initialMessages: messages,
     instructions,
@@ -52,7 +56,11 @@ function readPreparedStep({
     stepNumber,
     steps: [],
     toolsContext: {},
-  } satisfies Parameters<NinaPrepareStep>[0]);
+  } satisfies Parameters<NinaPrepareStep>[0];
+}
+
+function readPreparedStep(options: Parameters<typeof stepInput>[0]) {
+  return prepareNinaStep(stepInput(options));
 }
 
 describe("nina/runtime/step", () => {
@@ -112,4 +120,21 @@ describe("nina/runtime/step", () => {
       readPreparedStep({ messages: nakafaUrlMessages, stepNumber: 1 })
     ).toEqual({ messages: nakafaUrlMessages });
   });
+
+  it.effect(
+    "marks when every step began, before it prepares the step, so the tools it runs count from there",
+    () =>
+      Effect.gen(function* () {
+        const chatStep = yield* makeChatStep();
+        yield* TestClock.adjust("40 seconds");
+        const prepared = yield* startNinaStep(
+          chatStep.begin,
+          stepInput({ messages: externalUrlMessages, stepNumber: 0 })
+        );
+        expect(yield* chatStep.startedAt).toBe(yield* Clock.currentTimeMillis);
+        expect(prepared).toEqual(
+          readPreparedStep({ messages: externalUrlMessages, stepNumber: 0 })
+        );
+      })
+  );
 });

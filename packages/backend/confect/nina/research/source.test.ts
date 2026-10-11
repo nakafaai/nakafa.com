@@ -65,6 +65,8 @@ const staleSourceMessages = [
 const nakafaLesson =
   "https://nakafa.com/en/subject/high-school/10/mathematics/exponential/basic-concept";
 const nakafaQuran = "https://www.nakafa.com/id/quran/1";
+/** The address Nakafa reads for `nakafaQuran`: the production origin. */
+const nakafaQuranAddress = "https://nakafa.com/id/quran/1";
 const nakafaMessages = [
   { content: `Jelaskan ${nakafaLesson} dan ${nakafaQuran}.`, role: "user" },
 ] satisfies ModelMessage[];
@@ -88,14 +90,28 @@ describe("lib/source", () => {
     ]);
     expect(hrefs(getNakafaReferences(text))).toEqual([
       nakafaLesson,
-      nakafaQuran,
+      nakafaQuranAddress,
+    ]);
+  });
+
+  it("reads every spelling of a link to Nakafa's own site as one address on the production origin", () => {
+    expect(
+      hrefs(
+        getNakafaReferences(
+          "http://nakafa.com/en/articles/a https://www.nakafa.com/en/articles/a?x=1#top HTTP://NAKAFA.COM:8080/en/articles/a nakafa.com/en/articles/a https://nakafa.com//evil.com/path"
+        )
+      )
+    ).toEqual([
+      "https://nakafa.com/en/articles/a",
+      "https://nakafa.com/en/articles/a?x=1#top",
+      "https://nakafa.com//evil.com/path",
     ]);
   });
 
   it("reads the Nakafa links of the latest user request only", () => {
     expect(hrefs(getNakafaReferencesFromMessages(nakafaMessages))).toEqual([
       nakafaLesson,
-      nakafaQuran,
+      nakafaQuranAddress,
     ]);
     expect(getSourceReferencesFromMessages(nakafaMessages)).toEqual([]);
     expect(getNakafaReferencesFromMessages(assistantOnlyMessages)).toEqual([]);

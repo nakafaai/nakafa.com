@@ -57,12 +57,15 @@ Convex React hook calls get no client deadline.
 A Nina capability runs inside one step of the chat model, so it has a deadline
 of its own, and every model call has a cap on its output.
 
-- `streamCapability` in `packages/backend/confect/nina/capability/progress.ts`
-  gives a capability run the length of the chat step
-  (`purposes.chat.timeout.stepMs`) less a fixed margin
-  (`capability/deadline.ts`). A tool cannot see when its step began, and Nina's
-  own call, which wrote the tool call, ran first in that step, so the margin
-  stands for that call.
+- The chat step's timer starts with the step, and Nina's own call, which wrote
+  the tool call, runs inside it before the tool starts. When that timer fires
+  it aborts the tool without letting it settle. So a capability counts its time
+  from the start of its step, not from its own. `generateResponse` marks the
+  start of every step in `ChatStep`, and `streamCapability` gives a run the
+  time until the end of that step (`purposes.chat.timeout.stepMs`) less a fixed
+  margin for the tool result and the save of the step. Both live in
+  `packages/backend/confect/nina/capability/`. A capability that starts when
+  its step has no time left does not start.
 - A run still going at that deadline is interrupted, which aborts the model
   calls it has in flight. It settles through the rule every run uses: cards
   that loaded stay, cards still loading end as errors, and the outcome is
@@ -75,7 +78,25 @@ of its own, and every model call has a cap on its output.
   to the provider as `maxOutputTokens`: chat 8,192 tokens, specialist 4,096,
   background 1,024, suggestion 512, presentation 512. A call that ends at its
   cap finishes with `length`, which a chat turn already reads as
-  `response-limit`.
+  `response-limit`. A specialist whose last step ends at its cap reports its
+  result as `partial` and tells Nina that the answer was cut short
+  (`specialistResult`), so a cut answer never reads as a whole one.
+- The cap is shared with the model's reasoning. Google's thinking guide counts
+  thinking tokens in the output limit, and a call that reaches the limit while
+  it still thinks stops with a cut or an empty answer. The numbers above were
+  chosen, not measured. The gateway probes of 8 October 2026 found 189
+  reasoning tokens at `low` and 357 at `high` on Gemini 3.7 Flash
+  ([ADR 0019](./0019-gateway.md)), and Gemini 3.8 Flash has not been probed
+  through the gateway. Before a cap is relied on or lowered, measure 3.8 at
+  each effort and change the one table.
+- A link to Nakafa's own site goes to the Nakafa capability and never to web
+  research. The capability forces the read tool, step after step, until the
+  model has asked for every address the learner sent. A message with more
+  addresses than research may read outside sources (8) gets the `limit`
+  outcome and nothing is read, so the learner is told one limit for both. A
+  page that signed content does not hold is reported as not found, Nina tells
+  the learner that the page could not be read, and nothing falls back to a web
+  fetch of Nakafa's own site.
 - No capability repeats a model call after the SDK rejects its answer. The
   math repair call sends the validation error back, so it is not the same
   prompt.
@@ -88,8 +109,10 @@ of its own, and every model call has a cap on its output.
   a defect to fix, not an exception.
 - A new transient read calls `retryNetworkAttempt` and passes its own deadline
   failure. It does not copy the wiring.
-- A new capability runs through `streamCapability`, and a new model or provider
-  call inside one cuts its limit with `limitDeadline` or `limitDuration`.
+- A new capability runs through `streamCapability`. A new model call inside one
+  cuts its deadline with `limitDeadline`, a new provider call cuts its limit to
+  `timeLeft`, and a specialist that reports a written answer does so through
+  `specialistResult`.
 - `packages/backend/client/content/transport.ts` keeps its own pipeline: one
   absolute clock over the send and the body, and it cancels the responses it
   discards, which the shared helper does not model.

@@ -129,31 +129,6 @@ describe("LearningCapability tool schemas", () => {
     `);
   });
 
-  it("lists the Nakafa addresses the learner sent after the other sections, and only then", () => {
-    const input = {
-      deliverables: ["lesson explanation"],
-      objective: "Read the lesson the learner sent.",
-      request: "Jelaskan halaman ini",
-    };
-
-    expect(
-      formatSpecialistToolTask(input, [
-        "https://nakafa.com/en/articles/politics/example",
-        "https://nakafa.com/id/quran/1",
-      ])
-    ).toContain(dedent`
-      # Deliverables
-
-      - lesson explanation
-
-      # Nakafa Addresses To Read
-
-      - https://nakafa.com/en/articles/politics/example
-      - https://nakafa.com/id/quran/1
-    `);
-    expect(formatSpecialistToolTask(input)).not.toContain("Addresses");
-  });
-
   it("renders only populated specialist sections", () => {
     const task = formatSpecialistToolTask({
       deliverables: ["try-out evidence", "answer key"],

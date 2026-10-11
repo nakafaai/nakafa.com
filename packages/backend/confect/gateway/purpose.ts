@@ -27,9 +27,9 @@ export type Deadline = typeof Deadline.Type;
 
 /**
  * How hard a purpose reasons, how long it may take, and the most one call may
- * write. `maxOutputTokens` is the AI SDK's setting for a maximum output. A call
- * that ends at the cap finishes with `length`, which a chat turn reads as
- * `response-limit`.
+ * write. `maxOutputTokens` is the AI SDK's setting for a maximum output, and
+ * the model's reasoning tokens count toward it. A call that ends at the cap
+ * finishes with `length`, which a chat turn reads as `response-limit`.
  */
 const Budget = Schema.Struct({
   effort: Effort,

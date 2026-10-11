@@ -15,6 +15,7 @@ import {
   ResearchSourceLimitError,
 } from "@repo/backend/confect/nina/research/schema";
 import { ninaToolInput } from "@repo/backend/test/nina";
+import { inNewChatStep } from "@repo/backend/test/nina/deadline";
 import {
   providerStep,
   runSpecialist,
@@ -167,6 +168,7 @@ async function runCapability(
       );
       return Arr.map(generated.toolResults, ({ output }) => output);
     }).pipe(
+      inNewChatStep,
       Effect.provide(
         Logger.layer([
           Logger.formatStructured.pipe(
@@ -256,17 +258,38 @@ describe("Nina capability execution policy", () => {
       await runCapability("nakafa", "allowed", `Explain ${lesson}.`);
 
       expect(runNakafaAgent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          task: expect.stringContaining(
-            `# Nakafa Addresses To Read\n\n- ${lesson}`
-          ),
-        })
+        expect.objectContaining({ addresses: [lesson] })
+      );
+    });
+
+    it("hands it as the address on the production origin, whatever scheme or alias the learner wrote", async () => {
+      await runCapability(
+        "nakafa",
+        "allowed",
+        `Explain ${lesson.replace("https://", "http://www.")}.`
+      );
+
+      expect(runNakafaAgent).toHaveBeenCalledWith(
+        expect.objectContaining({ addresses: [lesson] })
       );
     });
 
     it("never hands a link to Nakafa's own site to web research to scrape", async () => {
       await runCapability("deepResearch", "allowed", `Explain ${lesson}.`);
 
+      expect(runResearchAgent).toHaveBeenCalledWith(
+        expect.objectContaining({ sourceReferences: [] })
+      );
+    });
+
+    it("hands a page of Nakafa's own site that signed content does not hold to Nakafa as well, and never to research", async () => {
+      const page = "https://nakafa.com/en/try-out/snbt/2026/set-1";
+      await runCapability("nakafa", "allowed", `What is ${page}?`);
+      await runCapability("deepResearch", "allowed", `What is ${page}?`);
+
+      expect(runNakafaAgent).toHaveBeenCalledWith(
+        expect.objectContaining({ addresses: [page] })
+      );
       expect(runResearchAgent).toHaveBeenCalledWith(
         expect.objectContaining({ sourceReferences: [] })
       );
@@ -283,22 +306,20 @@ describe("Nina capability execution policy", () => {
         })
       );
       expect(runNakafaAgent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          task: expect.stringContaining(`- ${lesson}`),
-        })
+        expect.objectContaining({ addresses: [lesson] })
       );
       expect(runNakafaAgent).not.toHaveBeenCalledWith(
-        expect.objectContaining({ task: expect.stringContaining(outside) })
+        expect.objectContaining({
+          addresses: expect.arrayContaining([outside]),
+        })
       );
     });
 
-    it("adds no address section when the learner sent no Nakafa link", async () => {
+    it("hands no address when the learner sent no Nakafa link", async () => {
       await runCapability("nakafa", "allowed");
 
       expect(runNakafaAgent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          task: expect.not.stringContaining("Addresses To Read"),
-        })
+        expect.objectContaining({ addresses: [] })
       );
     });
   });

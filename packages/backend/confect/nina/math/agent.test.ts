@@ -6,6 +6,7 @@ import { provider } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
 import { withTimeLeft } from "@repo/backend/test/nina/deadline";
 import {
+  providerStep,
   runSpecialist,
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
@@ -94,6 +95,8 @@ const repairedInput: typeof MathAlgebraInputSchema.Type = {
   operation: "simplify",
   expression: "x + x",
 };
+/** The cut answer, then the note that tells Nina it was cut short. */
+const cutResult = /^The checked result is 2\n\n.*cut short/su;
 const casConfig = ConfigProvider.fromUnknown({
   NEXT_PUBLIC_CAS_URL: "https://math.example.invalid",
   MATH_CAS_API_KEY: "test",
@@ -225,6 +228,45 @@ describe("math Agent execution", () => {
       );
     }
   );
+
+  it("hands Nina a cut answer as partial, and says it was cut short, when its last step ended at the output cap", async () => {
+    vi.mocked(compute).mockReturnValue(Effect.succeed("2x"));
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doGenerate: [
+          providerStep(
+            [
+              {
+                type: "tool-call",
+                toolCallId: "calculation",
+                toolName: "algebra",
+                input: Schema.encodeSync(
+                  Schema.fromJsonString(MathAlgebraInputSchema)
+                )(repairedInput),
+              },
+            ],
+            "tool-calls"
+          ),
+          providerStep(
+            [{ type: "text", text: "The checked result is 2" }],
+            "length"
+          ),
+        ],
+      })
+    );
+    const result = await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, casConfig))
+    );
+    expect(result).toEqual({
+      outcome: "partial",
+      text: expect.stringMatching(cutResult),
+    });
+  });
 
   it("keeps provider failure typed at the specialist boundary", async () => {
     provider.languageModel.mockReturnValue(

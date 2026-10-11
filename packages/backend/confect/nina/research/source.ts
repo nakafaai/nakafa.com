@@ -1,5 +1,6 @@
 import { getLatestUserText } from "@repo/backend/confect/nina/prompt/user";
 import { isNakafaHostname } from "@repo/contents/agent/refs";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import type { ModelMessage } from "ai";
 import { Array as Arr, HashMap, HashSet, MutableHashSet, Option } from "effect";
 import { ParseResultType, parseDomain } from "parse-domain";
@@ -39,10 +40,16 @@ export function getSourceReferences(text: string) {
   return Arr.filter(getLinks(text), (link) => !isNakafaHostname(link.hostname));
 }
 /**
- * Extracts every unique link to Nakafa's own site from plain user text.
+ * Extracts every unique link to Nakafa's own site from plain user text. Each is
+ * the address Nakafa reads: the same page on the production origin over https,
+ * whichever scheme or `www` alias the learner wrote.
  */
 export function getNakafaReferences(text: string) {
-  return Arr.filter(getLinks(text), (link) => isNakafaHostname(link.hostname));
+  const addresses = Arr.map(
+    Arr.filter(getLinks(text), (link) => isNakafaHostname(link.hostname)),
+    toNakafaAddress
+  );
+  return Arr.dedupeWith(addresses, (left, right) => left.href === right.href);
 }
 /**
  * Extracts outside source references from the latest AI SDK user message.
@@ -182,6 +189,15 @@ function createSourceReference(text: string, url: URL) {
     hostname: url.hostname,
     text,
   };
+}
+/**
+ * Moves a link to Nakafa's own site onto the production origin, keeping its
+ * path, query, and fragment as written.
+ */
+function toNakafaAddress(link: ReturnType<typeof createSourceReference>) {
+  const { hash, pathname, search } = new URL(link.href);
+  const address = new URL(`${SITE_ORIGIN}${pathname}${search}${hash}`);
+  return { ...link, hostname: address.hostname, href: address.toString() };
 }
 /**
  * Removes punctuation that users commonly place around URLs or domains.

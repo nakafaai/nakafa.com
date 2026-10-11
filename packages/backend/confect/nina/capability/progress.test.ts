@@ -4,11 +4,17 @@ import {
   countTextTokens,
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
-import { CAPABILITY_BUDGET } from "@repo/backend/confect/nina/capability/deadline";
+import {
+  CAPABILITY_BUDGET,
+  ChatStep,
+  makeChatStep,
+} from "@repo/backend/confect/nina/capability/deadline";
 import {
   type CapabilityArtifact,
+  specialistResult,
   streamCapability,
 } from "@repo/backend/confect/nina/capability/progress";
+import { inNewChatStep } from "@repo/backend/test/nina/deadline";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import {
   Array as Arr,
@@ -41,6 +47,17 @@ const options = {
   capability: "deepResearch",
   continuation: "Ask a narrower question.",
 } as const;
+const cutFirstHalf = /^The first half\n\n.*cut short/su;
+
+it("reports a specialist's answer as partial, and tells Nina it was cut short, only when it ended at the output cap", () => {
+  expect(specialistResult("A whole answer.", "stop")).toEqual({
+    text: "A whole answer.",
+  });
+  expect(specialistResult("The first half", "length")).toEqual({
+    outcome: "partial",
+    text: expect.stringMatching(cutFirstHalf),
+  });
+});
 
 it.effect(
   "keeps stable cards in the final output while coalescing progressive snapshots",
@@ -58,7 +75,7 @@ it.effect(
             return { text: "Verified evidence" };
           }),
         options
-      ).pipe(Stream.runCollect);
+      ).pipe(Stream.runCollect, inNewChatStep);
       expect(Arr.last(snapshots)).toEqual(
         Option.some({
           text: "Verified evidence",
@@ -79,7 +96,7 @@ it.effect("bounds oversized evidence and tells the model how to continue", () =>
           text: "A long lesson paragraph about limits.\n\n".repeat(2000),
         }),
       options
-    ).pipe(Stream.runCollect);
+    ).pipe(Stream.runCollect, inNewChatStep);
     const text = Option.getOrThrow(Arr.last(snapshots)).text;
     expect(countTextTokens(text)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
     expect(text).toContain("Ask a narrower question.");
@@ -99,7 +116,8 @@ it.effect("emits pending evidence before the provider finishes", () =>
       options
     ).pipe(
       Stream.tap(() => Deferred.succeed(observed, undefined)),
-      Stream.runCollect
+      Stream.runCollect,
+      inNewChatStep
     );
     expect(snapshots).toEqual([
       { text: "", artifacts: [loading] },
@@ -215,7 +233,7 @@ it.effect.each([
           })
         ),
       options
-    ).pipe(Stream.runCollect);
+    ).pipe(Stream.runCollect, inNewChatStep);
     const final = yield* Schema.decodeEffect(CapabilityOutputSchema)(
       Option.getOrThrow(Arr.last(snapshots))
     );
@@ -241,7 +259,7 @@ it.effect("preserves a typed capability failure after progress", () =>
           return yield* new EvidenceUnavailable();
         }),
       options
-    ).pipe(Stream.runCollect, Effect.result);
+    ).pipe(Stream.runCollect, inNewChatStep, Effect.result);
     expect(Result.isFailure(result) && result.failure._tag).toBe(
       "EvidenceUnavailable"
     );
@@ -260,7 +278,7 @@ it.effect(
             Effect.ensuring(Ref.set(interrupted, true))
           ),
         options
-      ).pipe(Stream.take(1), Stream.runDrain);
+      ).pipe(Stream.take(1), Stream.runDrain, inNewChatStep);
       expect(yield* Ref.get(interrupted)).toBe(true);
     })
 );
@@ -279,7 +297,7 @@ it.effect(
             Effect.ensuring(Ref.set(stopped, true))
           ),
         { ...options, signal: controller.signal }
-      ).pipe(Stream.runDrain, Effect.forkScoped);
+      ).pipe(Stream.runDrain, inNewChatStep, Effect.forkScoped);
       yield* Deferred.await(started);
       controller.abort();
       expect(Exit.isFailure(yield* Fiber.await(fiber))).toBe(true);
@@ -295,12 +313,12 @@ it.effect(
       const aborted = yield* streamCapability(() => Effect.never, {
         ...options,
         signal: AbortSignal.abort(),
-      }).pipe(Stream.runDrain, Effect.exit);
+      }).pipe(Stream.runDrain, inNewChatStep, Effect.exit);
       expect(Exit.isFailure(aborted)).toBe(true);
       const result = yield* streamCapability(
         () => Effect.succeed({ text: "Completed" }),
         { ...options, signal: yield* Effect.abortSignal }
-      ).pipe(Stream.runCollect);
+      ).pipe(Stream.runCollect, inNewChatStep);
       expect(Arr.last(result)).toEqual(
         Option.some({ text: "Completed", artifacts: [] })
       );
@@ -353,10 +371,17 @@ const settled = [
 
 /**
  * Runs a capability that publishes `cards` and then never answers, up to its
- * deadline. The test clock moves only once the run is waiting.
+ * deadline. Its chat step began `used` before the capability did, as when
+ * Nina's own call took that long, and the run is cut with its step. The test
+ * clock moves only once the run is waiting.
  */
-const cutAtDeadline = (cards: readonly CapabilityArtifact[]) =>
+const cutAtDeadline = (
+  cards: readonly CapabilityArtifact[],
+  used: Duration.Input = Duration.zero
+) =>
   Effect.gen(function* () {
+    const step = yield* makeChatStep();
+    yield* TestClock.adjust(used);
     const logged = MutableRef.make<readonly unknown[]>([]);
     const waiting = yield* Deferred.make<void>();
     const fiber = yield* Effect.forkChild(
@@ -369,6 +394,7 @@ const cutAtDeadline = (cards: readonly CapabilityArtifact[]) =>
         options
       ).pipe(
         Stream.runCollect,
+        Effect.provideService(ChatStep, step),
         Effect.provide(
           Logger.layer([
             Logger.formatStructured.pipe(
@@ -381,9 +407,11 @@ const cutAtDeadline = (cards: readonly CapabilityArtifact[]) =>
       )
     );
     yield* Deferred.await(waiting);
-    yield* TestClock.adjust(
-      Duration.subtract(CAPABILITY_BUDGET, Duration.millis(1))
+    const left = Duration.subtract(
+      CAPABILITY_BUDGET,
+      Duration.fromInputUnsafe(used)
     );
+    yield* TestClock.adjust(Duration.subtract(left, Duration.millis(1)));
     expect(fiber.pollUnsafe()).toBeUndefined();
     yield* TestClock.adjust("1 millis");
     const snapshots = yield* Fiber.join(fiber);
@@ -407,6 +435,17 @@ it.effect.each([
       ["Nina capability ran out of time", { capability: "deepResearch" }],
     ]);
   })
+);
+
+it.effect(
+  "cuts a run with its chat step, which Nina's own call has already used, not a whole budget after the run began",
+  () =>
+    Effect.gen(function* () {
+      const { final } = yield* cutAtDeadline([done], "25 seconds");
+      expect(final.outcome).toBe("partial");
+      expect(final.text).toContain("ran out of time");
+      expect(final.artifacts).toEqual([done]);
+    })
 );
 
 it.effect(
@@ -446,7 +485,7 @@ it.effect("does not cut a run that ends within its deadline", () =>
             Effect.as({ text: "Finished in time" })
           ),
         options
-      ).pipe(Stream.runCollect)
+      ).pipe(Stream.runCollect, inNewChatStep)
     );
     yield* Deferred.await(waiting);
     yield* TestClock.adjust("30 seconds");

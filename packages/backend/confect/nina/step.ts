@@ -8,6 +8,7 @@ import {
   getSourceReferencesFromMessages,
 } from "@repo/backend/confect/nina/research/source";
 import type { ModelMessage, Tool, ToolLoopAgentSettings } from "ai";
+import { Effect } from "effect";
 
 const firstStepNumber = 0;
 
@@ -45,6 +46,20 @@ export function prepareNinaStep({
 
   return { messages, toolChoice: { toolName: capability, type: "tool" } };
 }
+
+/**
+ * Nina's AI SDK step callback as the SDK calls it, when the step's own timer
+ * has just started. It marks the start of the step through `begin`, so a
+ * capability that the step runs counts its time from there, and then prepares
+ * the step.
+ */
+export const startNinaStep = Effect.fn("nina.step.start")(function* (
+  begin: Effect.Effect<void>,
+  input: NinaPrepareStepInput
+) {
+  yield* begin;
+  return prepareNinaStep(input);
+});
 
 /** The capability a prompt's links start with, if it holds any link. */
 function firstCapability(messages: ModelMessage[]) {

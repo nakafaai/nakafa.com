@@ -1,13 +1,21 @@
 import { Ref } from "@confect/core";
-import { listMessages, listStreams } from "@convex-dev/agent";
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { Agent, listMessages, listStreams } from "@convex-dev/agent";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { PostHog } from "@posthog/convex";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { provider } from "@repo/backend/test/gateway";
-import { createNinaTest, ninaStream, ninaUsage } from "@repo/backend/test/nina";
+import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
+import { deployment, failures, provider } from "@repo/backend/test/gateway";
+import {
+  createNinaTest,
+  ninaModel,
+  ninaStream,
+  ninaUsage,
+} from "@repo/backend/test/nina";
+import { encodeJsonText } from "@repo/utilities/json";
+import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -190,4 +198,119 @@ describe("Nina response run", () => {
       f.release();
     }
   }, 15_000);
+});
+
+/** A turn whose run fails before it answers. */
+const failing = () => createNinaTest({ prompt: "Explain a function limit." });
+const PRIVATE_DIAGNOSTIC = /private provider diagnostic/;
+
+describe("The Nina response run when generation fails", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    deployment.mockReset();
+    provider.languageModel.mockReset();
+    vi.useRealTimers();
+  });
+
+  it.effect.each([
+    ["rate-limit", failures["rate-limit"], "provider-busy"],
+    ["quota", failures.quota, "service-configuration"],
+    ["auth", failures.auth, "service-configuration"],
+    ["configuration", failures.configuration, "service-configuration"],
+    ["invalid", failures.invalid, "request-rejected"],
+    ["too-large", failures["too-large"], "input-too-large"],
+    ["timeout", failures.timeout, "response-timeout"],
+    ["unavailable", failures.unavailable, "provider-unavailable"],
+    ["network", failures.network, "provider-unavailable"],
+    ["interrupted", failures.interrupted, "interrupted"],
+    ["unknown", failures.unknown, "unknown"],
+    [
+      "raw provider HTTP 429",
+      new APICallError({
+        message: "private provider diagnostic",
+        url: "https://provider.example.invalid",
+        requestBodyValues: {},
+        statusCode: 429,
+      }),
+      "provider-busy",
+    ],
+  ] as const)(
+    "persists a safe reason for a %s stream failure",
+    ([, error, reason]) =>
+      Effect.gen(function* () {
+        provider.languageModel.mockReturnValue(
+          new MockLanguageModelV4({
+            doStream: ninaStream([{ type: "error", error }]),
+          })
+        );
+        const f = yield* Effect.promise(() => failing());
+        yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+        const state = yield* Effect.promise(f.inspect);
+        expect(state.turn?.state).toMatchObject({ status: "failed", reason });
+        expect(state.user?.credits).toBe(10);
+        const page = yield* Effect.promise(() =>
+          f.owner.query(
+            Ref.getFunctionReference(refs.public.nina.messages.list),
+            {
+              chatId: f.chatId,
+              threadId: f.threadId,
+              paginationOpts: { cursor: null, numItems: 20 },
+            }
+          )
+        ).pipe(
+          Effect.flatMap((value) =>
+            Ref.decodeReturns(refs.public.nina.messages.list, value)
+          )
+        );
+        expect(
+          Arr.some(
+            page.page,
+            (message) =>
+              message.metadata?.state.status === "failed" &&
+              message.metadata.state.reason === reason
+          )
+        ).toBe(true);
+        expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
+      })
+  );
+
+  it("identifies missing Gateway configuration before a provider request", async () => {
+    deployment.mockReturnValue(
+      Effect.fail(
+        new GatewayConfigurationError({
+          message: "AI Gateway is not configured.",
+        })
+      )
+    );
+    const f = await failing();
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.inspect();
+    expect(state.turn?.state).toMatchObject({
+      status: "failed",
+      reason: "service-configuration",
+    });
+    expect(state.user?.credits).toBe(10);
+    expect(provider.languageModel).not.toHaveBeenCalled();
+  });
+
+  it.effect("refunds a failure before the Agent stream starts", () =>
+    Effect.gen(function* () {
+      provider.languageModel.mockReturnValue(ninaModel());
+      vi.spyOn(Agent.prototype, "streamText").mockRejectedValueOnce(
+        failures["rate-limit"]
+      );
+      const f = yield* Effect.promise(() => failing());
+      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+      const state = yield* Effect.promise(f.inspect);
+      expect(state.turn?.state).toMatchObject({
+        status: "failed",
+        reason: "provider-busy",
+      });
+      expect(state.user?.credits).toBe(10);
+      expect(
+        Arr.filter(state.ledger, (row) => row.type === "refund")
+      ).toHaveLength(1);
+    })
+  );
 });

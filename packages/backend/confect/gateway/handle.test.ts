@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { make } from "@repo/backend/confect/gateway/handle";
-import { Purpose } from "@repo/backend/confect/gateway/purpose";
+import { Purpose, purposes } from "@repo/backend/confect/gateway/purpose";
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect } from "effect";
 
@@ -23,14 +23,6 @@ const reasoning = {
   background: "low",
   suggestion: "low",
   presentation: "low",
-};
-/** The most one call may write, for every purpose. */
-const outputCaps = {
-  chat: 8192,
-  specialist: 4096,
-  background: 1024,
-  suggestion: 512,
-  presentation: 512,
 };
 /** Today's deadlines for every purpose. */
 const deadlines = {
@@ -66,7 +58,7 @@ describe("Gateway handles", () => {
         );
         expect(handle.timeout).toEqual(deadlines[purpose]);
         expect(model.doGenerateCalls[0]?.maxOutputTokens).toBe(
-          outputCaps[purpose]
+          purposes[purpose].maxOutputTokens
         );
         expect(model.doGenerateCalls[0]?.providerOptions).toEqual({
           convexGateway: {
@@ -86,7 +78,7 @@ describe("Gateway handles", () => {
           gateway.language(purpose).model.doStream({ prompt })
         );
         expect(model.doStreamCalls[0]?.maxOutputTokens).toBe(
-          outputCaps[purpose]
+          purposes[purpose].maxOutputTokens
         );
       })
   );

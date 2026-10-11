@@ -4,8 +4,12 @@ import type {
   CapabilityOutputSchema,
 } from "@repo/backend/client/nina/capability";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import { boundCapability } from "@repo/backend/confect/nina/capability/deadline";
+import {
+  boundCapability,
+  type ChatStep,
+} from "@repo/backend/confect/nina/capability/deadline";
 import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
+import type { FinishReason } from "ai";
 import {
   Array as Arr,
   Effect,
@@ -29,11 +33,28 @@ export type CapabilityProgress = (
 const TIMED_OUT =
   "This ran out of time before it finished. Use only the evidence already available, tell the learner what this attempt could not verify, and do not invent content or claim that anything is absent or does not exist.";
 
+/** What Nina reads when a specialist's answer ended at its output cap. */
+const CUT_SHORT =
+  "This answer reached its length limit and was cut short. Use only what it states, tell the learner what it could not cover, and do not invent the rest.";
+
 /** What a card that never finished shows instead: failed, and why. */
 const ABANDONED = {
   error: "It took too long to finish.",
   status: "error",
 } as const;
+
+/**
+ * What a specialist reports once its model has written its answer. A last step
+ * that ended at the output cap left the answer cut short, so the report is
+ * `partial` and says so to Nina, as for a run cut at its deadline. Any other
+ * ending is a plain answer.
+ */
+export function specialistResult(text: string, finishReason: FinishReason) {
+  if (finishReason === "length") {
+    return { outcome: "partial" as const, text: `${text}\n\n${CUT_SHORT}` };
+  }
+  return { text };
+}
 
 /**
  * Each Agent tool yield replaces its previous output, so every yield includes
@@ -44,11 +65,12 @@ const ABANDONED = {
  * tells the model how to ask for what a truncation omitted. The stored outcome
  * is decided here, from what `run` reports and the cards it gathered.
  *
- * A run has the time its chat step can spare, and its calls see the time left
- * through `CapabilityDeadline`. A run still going at that deadline is
- * interrupted and reported as failed. Its loaded cards stay, its unfinished
- * cards end as errors so none stays loading, and the stored outcome is decided
- * like any other, so it is `partial` beside loaded evidence.
+ * A run has the time its chat step can spare, counted from the start of that
+ * step, and its calls see the time left through `CapabilityDeadline`. A run
+ * still going at that deadline is interrupted and reported as failed. Its
+ * loaded cards stay, its unfinished cards end as errors so none stays loading,
+ * and the stored outcome is decided like any other, so it is `partial` beside
+ * loaded evidence.
  */
 export function streamCapability<E, R>(
   run: (
@@ -63,8 +85,8 @@ export function streamCapability<E, R>(
     readonly continuation: string;
     readonly signal?: AbortSignal | undefined;
   }
-): Stream.Stream<CapabilityOutput, E, R> {
-  return Stream.callback<CapabilityOutput, E, R>(
+): Stream.Stream<CapabilityOutput, E, R | ChatStep> {
+  return Stream.callback<CapabilityOutput, E, R | ChatStep>(
     (queue) =>
       Effect.gen(function* () {
         const artifacts = MutableHashMap.empty<string, CapabilityArtifact>();
