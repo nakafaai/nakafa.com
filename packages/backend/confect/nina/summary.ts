@@ -10,7 +10,7 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
-import { newestAskings } from "@repo/backend/confect/nina/history";
+import { newestAskings, questionKey } from "@repo/backend/confect/nina/history";
 import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
 import { Array as Arr, Effect, HashSet, Schema } from "effect";
 
@@ -57,7 +57,9 @@ export function nextSummaryTarget(order: number, throughOrder: number | null) {
  * asks again, up to the turn that just settled. The summary then holds the same
  * turns the verbatim history would show: a cancelled or failed turn, or an
  * answer that a retry replaced, never reaches it. A fold spans at most
- * `SUMMARY_FOLD_LIMIT` turns, and one read lists that many.
+ * `SUMMARY_FOLD_LIMIT` turns. The later askings are found by their question,
+ * not by scanning the turns after the fold, so a retry far ahead of a long
+ * backlog counts like one next to it.
  */
 const readOrders = Effect.fn("nina.summary.orders")(function* (
   turn: Pick<NinaTurnsDoc, "chatId" | "order">,
@@ -65,20 +67,18 @@ const readOrders = Effect.fn("nina.summary.orders")(function* (
   target: number
 ) {
   const { runQuery: query } = yield* QueryRunner;
-  const [folded, later] = yield* Effect.all([
-    query(refs.internal.nina.summaries.uncovered, {
-      before: target + 1,
-      chatId: turn.chatId,
-      through: covered,
-    }),
-    query(refs.internal.nina.summaries.uncovered, {
-      before: turn.order + 1,
-      chatId: turn.chatId,
-      through: target,
-    }),
-  ]).pipe(Effect.orDie);
+  const folded = yield* query(refs.internal.nina.summaries.uncovered, {
+    before: target + 1,
+    chatId: turn.chatId,
+    through: covered,
+  }).pipe(Effect.orDie);
+  const again = yield* query(refs.internal.nina.summaries.asked, {
+    before: turn.order + 1,
+    chatId: turn.chatId,
+    questions: Arr.dedupe(Arr.map(folded, questionKey)),
+  }).pipe(Effect.orDie);
   return HashSet.fromIterable(
-    Arr.map(newestAskings(folded, later), ({ order }) => order)
+    Arr.map(newestAskings(folded, again), ({ order }) => order)
   );
 });
 

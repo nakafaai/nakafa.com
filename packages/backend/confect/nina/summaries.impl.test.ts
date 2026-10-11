@@ -9,6 +9,7 @@ const save = Ref.getFunctionReference(refs.internal.nina.summaries.save);
 const uncovered = Ref.getFunctionReference(
   refs.internal.nina.summaries.uncovered
 );
+const asked = Ref.getFunctionReference(refs.internal.nina.summaries.asked);
 const call = { input: 900, output: 120 };
 
 beforeEach(() => vi.useFakeTimers());
@@ -99,6 +100,39 @@ describe("Nina turns after the summary", () => {
     );
     expect(await t.query(uncovered, { chatId, through: 0, before: 3 })).toEqual(
       [{ order: 2, retryOf: 0 }]
+    );
+  });
+
+  it("lists the complete turns that asked a question again, and no other", async () => {
+    const { t, chatId } = await createNinaTest({
+      history: [
+        {},
+        {},
+        { retryOf: 0 },
+        { cancelled: true, retryOf: 0 },
+        { retryOf: 1 },
+        { retryOf: 0 },
+      ],
+    });
+    // The cancelled retry is no answer, and order 5 is not before 5.
+    expect(
+      await t.query(asked, { before: 5, chatId, questions: [0, 1] })
+    ).toEqual([
+      { order: 2, retryOf: 0 },
+      { order: 4, retryOf: 1 },
+    ]);
+    expect(await t.query(asked, { before: 6, chatId, questions: [0] })).toEqual(
+      [
+        { order: 5, retryOf: 0 },
+        { order: 2, retryOf: 0 },
+      ]
+    );
+    // A question nobody asked again, and no question at all.
+    expect(await t.query(asked, { before: 6, chatId, questions: [4] })).toEqual(
+      []
+    );
+    expect(await t.query(asked, { before: 6, chatId, questions: [] })).toEqual(
+      []
     );
   });
 

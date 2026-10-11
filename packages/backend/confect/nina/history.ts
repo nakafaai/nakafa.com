@@ -186,7 +186,7 @@ export function splitTurns(
 type Asking = typeof NinaUncoveredTurn.Type;
 
 /** Names the question of a turn by the order of the turn that first asked it. */
-function questionKey({ order, retryOf }: Asking) {
+export function questionKey({ order, retryOf }: Asking) {
   return retryOf ?? order;
 }
 

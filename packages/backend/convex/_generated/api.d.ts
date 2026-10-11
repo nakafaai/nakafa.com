@@ -9502,6 +9502,12 @@ export declare const internal: {
         { chatId: Id<"chats">; order: number },
         string | null
       >;
+      asked: FunctionReference<
+        "query",
+        "internal",
+        { before: number; chatId: Id<"chats">; questions: Array<number> },
+        Array<{ order: number; retryOf?: number }>
+      >;
       read: FunctionReference<
         "query",
         "internal",

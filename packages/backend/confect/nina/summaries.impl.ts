@@ -98,6 +98,45 @@ const uncovered = FunctionImpl.make(
 );
 
 /**
+ * Lists the complete turns before the order `before` that asked one of
+ * `questions` again, wherever they are in the chat. A fold asks this for the
+ * questions of the turns it is about to fold, so an answer that a much later
+ * retry replaced never reaches the summary. Each question reads its newest
+ * retries, at most `SUMMARY_FOLD_LIMIT`.
+ */
+const asked = FunctionImpl.make(
+  schema,
+  spec,
+  "asked",
+  Effect.fn("nina.summaries.asked")(function* ({ before, chatId, questions }) {
+    const reader = yield* DatabaseReader;
+    const retries = yield* Effect.forEach(questions, (question) =>
+      reader
+        .table("ninaTurns")
+        .index(
+          "by_chatId_and_retryOf",
+          (index) => index.eq("chatId", chatId).eq("retryOf", question),
+          "desc"
+        )
+        .take(SUMMARY_FOLD_LIMIT)
+        .pipe(
+          Effect.orDie,
+          Effect.map(
+            Arr.flatMap((turn) =>
+              turn.phase === "settled" &&
+              turn.state.status === "complete" &&
+              turn.order < before
+                ? [{ order: turn.order, retryOf: question }]
+                : []
+            )
+          )
+        )
+    );
+    return Arr.flatten(retries);
+  })
+);
+
+/**
  * Stores a refreshed summary. Coverage only moves forward, so a slower refresh
  * never replaces a newer one, but its provider usage still counts; a chat
  * deleted meanwhile gets no orphan.
@@ -157,5 +196,6 @@ export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(read),
   Layer.provide(save),
   Layer.provide(uncovered),
+  Layer.provide(asked),
   GroupImpl.finalize
 );

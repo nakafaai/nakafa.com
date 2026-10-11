@@ -173,6 +173,26 @@ describe("Nina rolling summary", () => {
     ]);
   });
 
+  it("leaves out an answer that a retry far ahead of a long backlog replaced", async () => {
+    const model = summaryModel("- The first batch of a long chat.");
+    provider.languageModel.mockReturnValue(model);
+    // A chat of 56 turns that has no summary yet folds orders 0 to 15 first.
+    // Order 20 asks the question of order 5 again, 35 turns before the newest.
+    const f = await fixture(56, (order) =>
+      order === 20 ? { retryOf: 5 } : {}
+    );
+    await f.refresh(55);
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain("Nina: Answer 4");
+    expect(prompt).toContain("Nina: Answer 15");
+    // No other folded turn holds these words: orders 50 to 55 are not folded.
+    expect(prompt).not.toContain("Answer 5");
+    expect(prompt).not.toContain("Question 5");
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: 15 }),
+    ]);
+  });
+
   it("extends an existing summary with the next folded turns", async () => {
     const model = summaryModel("- Limits, then derivatives.");
     provider.languageModel.mockReturnValue(model);

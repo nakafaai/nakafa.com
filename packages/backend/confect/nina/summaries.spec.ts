@@ -72,6 +72,19 @@ export default GroupSpec.make()
     })
   )
   .addFunction(
+    FunctionSpec.internalQuery({
+      name: "asked",
+      args: () => ({
+        chatId: Id("chats"),
+        questions: Schema.Array(TurnOrder).check(
+          Schema.isMaxLength(SUMMARY_FOLD_LIMIT)
+        ),
+        before: TurnOrder,
+      }),
+      returns: () => Schema.Array(NinaUncoveredTurn),
+    })
+  )
+  .addFunction(
     FunctionSpec.internalMutation({
       name: "save",
       args: () => ({
