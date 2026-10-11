@@ -10,10 +10,13 @@ import {
   requireStoredDocumentLimit,
 } from "@repo/backend/confect/nina/attachments";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
+import type { NinaPage } from "@repo/backend/confect/nina/contract/turn";
 import {
   type NinaInput,
+  type NinaPageInput,
   NinaTurnError,
 } from "@repo/backend/confect/nina/turns.spec";
+import { cleanSlug } from "@repo/utilities/slug";
 import type { ModelMessage } from "ai";
 import { Effect } from "effect";
 
@@ -23,7 +26,19 @@ const retryUnavailable = () =>
     message: "This message is no longer available to retry.",
   });
 
-/** Browser input never owns stored file URLs or the prompt reused by a retry. */
+/** Whether a retry comes from the page its turn was asked on. */
+function isAskedPage(page: NinaPage, input: typeof NinaPageInput.Type) {
+  return page.locale === input.locale && page.slug === cleanSlug(input.slug);
+}
+
+/**
+ * Browser input never owns stored file URLs or the prompt reused by a retry.
+ * A retry names the page the learner retries from, like a new message. One
+ * from the page its turn was asked on, or from a browser tab that sends no
+ * page, keeps that turn's own context, with its placement and question focus.
+ * `retryOf` names the turn that first asked the retried question, so every
+ * asking of one question carries one key.
+ */
 export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   user: Docs["users"],
   chat: Docs["chats"] | null,
@@ -51,6 +66,7 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
           ...attachments.parts,
         ],
       } satisfies ModelMessage,
+      retryOf: undefined,
     };
   }
   if (!chat) {
@@ -93,20 +109,21 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   });
   const fileIds = stored.fileIds ?? [];
   yield* requireStoredDocumentLimit(fileIds);
-  if (!(original.page && original.user)) {
-    if (!input.page) {
-      return yield* retryUnavailable();
-    }
-    return {
-      message,
-      fileIds,
-      ...(yield* resolveNinaContext(input.page, user, capturedAt, chat._id)),
-    };
+  const retryOf = original.retryOf ?? original.order;
+  const asked =
+    original.page && original.user
+      ? { page: original.page, user: original.user }
+      : undefined;
+  if (asked && (!input.page || isAskedPage(asked.page, input.page))) {
+    return { ...asked, fileIds, message, retryOf };
+  }
+  if (!input.page) {
+    return yield* retryUnavailable();
   }
   return {
-    message,
+    ...(yield* resolveNinaContext(input.page, user, capturedAt, chat._id)),
     fileIds,
-    page: original.page,
-    user: original.user,
+    message,
+    retryOf,
   };
 });

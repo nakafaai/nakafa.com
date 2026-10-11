@@ -11,43 +11,24 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
-import { assembleContext } from "@repo/backend/confect/nina/history";
+import {
+  assembleContext,
+  newestAskings,
+} from "@repo/backend/confect/nina/history";
 import { withTurnContext } from "@repo/backend/confect/nina/prompt/user";
-import type { NinaUncoveredTurn } from "@repo/backend/confect/nina/summaries.spec";
-import { Array as Arr, Effect, HashSet, Option, Order, pipe } from "effect";
+import { Array as Arr, Effect, Option, Order, pipe } from "effect";
 
 /** Messages one query reads from the thread. */
 const PAGE = 50;
-/**
- * Queries one generation makes. Four pages hold the four newest turns the
- * summary always leaves verbatim, even at the 20 steps a turn may take.
- */
-const PAGES = 4;
 
 const unreadable = () => new NinaGenerationError({ reason: "unknown" });
 
 /**
- * The orders of the turns the model may see: the complete turns the summary
- * does not cover, except one that a later complete turn answered again, or
- * that the current turn answers again.
+ * Reads the newest messages of the thread up to the turn, a page at a time,
+ * until a page reaches a message older than `oldest`. Nothing else ends the
+ * read early: the turns to read are the ones the summary read lists, so the
+ * read stops at the oldest of them, and a turn of many tool steps is never cut.
  */
-function visibleOrders(
-  turns: readonly (typeof NinaUncoveredTurn.Type)[],
-  retrying: number | undefined
-) {
-  const replaced = HashSet.fromIterable([
-    ...Arr.flatMap(turns, ({ retryOf }) =>
-      retryOf === undefined ? [] : [retryOf]
-    ),
-    ...(retrying === undefined ? [] : [retrying]),
-  ]);
-  return Arr.filter(
-    Arr.map(turns, ({ order }) => order),
-    (order) => !HashSet.has(replaced, order)
-  );
-}
-
-/** Reads the newest messages of the thread up to the turn, until one is older than `oldest`. */
 const readDocs = Effect.fn("nina.input.docs")(function* (
   turn: Pick<NinaTurnsDoc, "promptMessageId" | "threadId">,
   oldest: number
@@ -55,7 +36,8 @@ const readDocs = Effect.fn("nina.input.docs")(function* (
   const ctx = yield* ActionCtx;
   let docs: MessageDoc[] = [];
   let cursor: string | null = null;
-  for (let read = 0; read < PAGES; read += 1) {
+  let done = false;
+  while (!done) {
     const page = yield* Effect.tryPromise({
       try: () =>
         ctx.runQuery(components.nina.messages.listMessagesByThreadId, {
@@ -69,9 +51,7 @@ const readDocs = Effect.fn("nina.input.docs")(function* (
       catch: unreadable,
     });
     docs = Arr.appendAll(docs, page.page);
-    if (page.isDone || Arr.some(page.page, (doc) => doc.order < oldest)) {
-      break;
-    }
+    done = page.isDone || Arr.some(page.page, (doc) => doc.order < oldest);
     cursor = page.continueCursor;
   }
   return docs;
@@ -103,8 +83,9 @@ function toMessages(stored: MessageDoc[]) {
  * Reads the model input of one turn by turn order, not as the last messages of
  * the thread. The history is the complete turns after the summary, each whole
  * with its question and answer: a cancelled or failed turn leaves no messages
- * behind, and a turn the learner asked again shows only its newest asking. The
- * learner's message carries the turn's runtime facts, which are not stored.
+ * behind, and a question the learner asked again shows only its newest
+ * asking, whichever of its askings the learner retried. The learner's message
+ * carries the turn's runtime facts, which are not stored.
  */
 export const readInput = Effect.fn("nina.input.read")(function* (
   turn: Pick<
@@ -123,7 +104,11 @@ export const readInput = Effect.fn("nina.input.read")(function* (
       through,
     })
     .pipe(Effect.mapError(unreadable));
-  const orders = Arr.sort(visibleOrders(uncovered, turn.retryOf), Order.Number);
+  const orders = pipe(
+    newestAskings(uncovered, [turn]),
+    Arr.map(({ order }) => order),
+    Arr.sort(Order.Number)
+  );
   const docs = yield* readDocs(
     turn,
     Option.getOrElse(Arr.head(orders), () => turn.order)

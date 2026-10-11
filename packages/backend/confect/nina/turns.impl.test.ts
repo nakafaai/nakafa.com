@@ -51,35 +51,34 @@ async function fixture(credits = 10) {
   return { t, identity, owner };
 }
 
+/** What the mocked resolver freezes for the page `slug`, as admission stores it. */
+function contextFor(slug: string) {
+  const url = `https://nakafa.com/en/${slug}`;
+  return openNinaLearningSession({
+    capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
+    source: "current-page",
+    learning: { locale: "en", slug, url, verified: false },
+  }).pipe(
+    Effect.orDie,
+    Effect.map((session) => ({
+      page: {
+        locale: "en" as const,
+        slug,
+        url,
+        verified: false,
+        needsFetch: false,
+        nina: session.context,
+      },
+      user: {},
+    }))
+  );
+}
+
 describe("native Nina admission", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
-    vi.mocked(resolveNinaContext).mockReturnValue(
-      openNinaLearningSession({
-        capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-        source: "current-page",
-        learning: {
-          locale: "en",
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-        },
-      }).pipe(
-        Effect.orDie,
-        Effect.map((session) => ({
-          page: {
-            locale: "en" as const,
-            slug: "home",
-            url: "https://nakafa.com/en/home",
-            verified: false,
-            needsFetch: false,
-            nina: session.context,
-          },
-          user: {},
-        }))
-      )
-    );
+    vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
   });
   afterEach(() => {
     vi.clearAllMocks();
@@ -383,21 +382,68 @@ describe("native Nina admission", () => {
     expect(retried.prompt.text).toBe("An owned text-only prompt.");
   });
 
-  it("stores the order of the turn a retry answers again, and none for a new message", async () => {
+  it("stores the turn that first asked the question on a retry, even a retry of a retry, and none for a new message", async () => {
     const f = await fixture();
     const first = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await f.owner.mutation(start, args)
     );
     await f.owner.mutation(cancel, { chatId: first.chatId });
+    const retry = async (requestId: string, order: number) => {
+      const receipt = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await f.owner.mutation(start, {
+          ...args,
+          chatId: first.chatId,
+          requestId,
+          input: { kind: "retry", order },
+        })
+      );
+      await f.owner.mutation(cancel, { chatId: first.chatId });
+      return receipt;
+    };
+    const second = await retry("retry-order", first.order);
+    const third = await retry("retry-of-retry", second.order);
+    const [original, ...retries] = await f.t.query((ctx) =>
+      Promise.all(
+        Arr.map([first, second, third], ({ turnId }) =>
+          ctx.db.get("ninaTurns", turnId)
+        )
+      )
+    );
+    expect(original).not.toHaveProperty("retryOf");
+    // A retry of a retry names the first asking, not the retry it came from.
+    expect(Arr.map(retries, (turn) => turn?.retryOf)).toEqual([
+      first.order,
+      first.order,
+    ]);
+  });
+
+  it("names the page a retry comes from when it is not the page the turn was asked on", async () => {
+    const f = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, args)
+    );
+    await f.owner.mutation(cancel, { chatId: first.chatId });
+    vi.mocked(resolveNinaContext).mockClear();
+    vi.mocked(resolveNinaContext).mockReturnValueOnce(contextFor("chat"));
+    const page = { locale: "en", slug: "chat" };
     const retried = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await f.owner.mutation(start, {
         ...args,
         chatId: first.chatId,
-        requestId: "retry-order",
-        input: { kind: "retry", order: first.order },
+        requestId: "retry-elsewhere",
+        input: { kind: "retry", order: first.order, page },
       })
+    );
+    expect(vi.mocked(resolveNinaContext)).toHaveBeenCalledOnce();
+    expect(vi.mocked(resolveNinaContext)).toHaveBeenLastCalledWith(
+      page,
+      expect.objectContaining({ _id: f.identity.userId }),
+      DateTime.formatIso(DateTime.makeUnsafe(NOW)),
+      first.chatId
     );
     const [original, retry] = await f.t.query((ctx) =>
       Promise.all([
@@ -405,9 +451,47 @@ describe("native Nina admission", () => {
         ctx.db.get("ninaTurns", retried.turnId),
       ])
     );
-    expect(original).not.toHaveProperty("retryOf");
-    expect(retry?.retryOf).toBe(first.order);
+    expect(original?.page?.url).toBe("https://nakafa.com/en/home");
+    expect(retry?.page?.url).toBe("https://nakafa.com/en/chat");
   });
+
+  it.each([
+    ["the page the turn was asked on", { locale: "en", slug: "/home/" }],
+    ["no page", undefined],
+  ] as const)(
+    "keeps the context the turn was asked with when a retry comes from %s",
+    async (_case, page) => {
+      const f = await fixture();
+      const first = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await f.owner.mutation(start, args)
+      );
+      await f.owner.mutation(cancel, { chatId: first.chatId });
+      vi.mocked(resolveNinaContext).mockClear();
+      const retried = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await f.owner.mutation(start, {
+          ...args,
+          chatId: first.chatId,
+          requestId: "retry-here",
+          input: {
+            kind: "retry",
+            order: first.order,
+            ...(page ? { page } : {}),
+          },
+        })
+      );
+      expect(resolveNinaContext).not.toHaveBeenCalled();
+      const [original, retry] = await f.t.query((ctx) =>
+        Promise.all([
+          ctx.db.get("ninaTurns", first.turnId),
+          ctx.db.get("ninaTurns", retried.turnId),
+        ])
+      );
+      expect(retry?.page).toEqual(original?.page);
+      expect(retry?.user).toEqual(original?.user);
+    }
+  );
 
   it("retries a saved response without run context only after resolving the current page", async () => {
     const f = await fixture();

@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr } from "effect";
 import { countTokens, decode, encode } from "gpt-tokenizer";
 
 /**
@@ -29,77 +29,26 @@ export function countTextTokens(text: string) {
   return countTokens(text);
 }
 
-/** What the provider bills for one image tile (768 by 768 pixels) or one PDF page. */
-const TILE_TOKENS = 258;
-/** An image no wider and no taller than this many pixels is billed as one tile. */
-const SMALL_IMAGE_SIDE = 384;
-/** Tiles of an image whose size is unknown: the provider's own example, 960 by 540 pixels. */
-const UNKNOWN_IMAGE_TILES = 6;
-/** Bytes of a PDF page when only the bytes are known: the ratio of the provider's limits, 50 MB or 1,000 pages. */
-const PDF_BYTES_PER_PAGE = 50_000;
-/** The provider's page limit for one PDF. */
-const PDF_MAX_PAGES = 1000;
-/** Gemini counts about 4 characters to a token. */
-const TEXT_BYTES_PER_TOKEN = 4;
+/**
+ * What Gemini 3 bills at its default media resolution, which Nina leaves
+ * unset: 1,120 tokens for an image of any size and 560 for a page of a
+ * document. Earlier Gemini models billed an image by 768 pixel tiles instead.
+ *
+ * @see https://ai.google.dev/gemini-api/docs/media-resolution
+ */
+const IMAGE_TOKENS = 1120;
+const DOCUMENT_PAGE_TOKENS = 560;
 
 /**
- * What is known about one attachment. Uploads record none of the optional
- * facts yet, so today a caller knows the media type and nothing else.
+ * Tokens the model bills for one attachment, from its media type alone: this
+ * is the one rule for what a file costs, so a file's bytes never reach the
+ * tokenizer. A stored message keeps no size, page count, or dimensions of its
+ * files, so a document counts one page. History only ever counts images: an
+ * earlier document is replaced by a note before anything is counted, and the
+ * learner's own message is not evidence.
  */
-const FileFacts = Schema.Struct({
-  bytes: Schema.optionalKey(Schema.Int),
-  height: Schema.optionalKey(Schema.Int),
-  mediaType: Schema.String,
-  pages: Schema.optionalKey(Schema.Int),
-  width: Schema.optionalKey(Schema.Int),
-});
-
-/**
- * Tokens of an image by the provider's published estimate: one tile up to 384
- * pixels on both sides, otherwise 258 per tile, where the tile count divides
- * each side by a crop unit of two thirds of the shorter side. The estimate is
- * rough by the provider's own account, and Gemini 3 can lower it with
- * `media_resolution`, which Nina does not set.
- */
-function imageTokens({ height, width }: typeof FileFacts.Type) {
-  if (width === undefined || height === undefined) {
-    return UNKNOWN_IMAGE_TILES * TILE_TOKENS;
-  }
-  if (width <= SMALL_IMAGE_SIDE && height <= SMALL_IMAGE_SIDE) {
-    return TILE_TOKENS;
-  }
-  const crop = Math.max(1, Math.floor(Math.min(width, height) / 1.5));
-  return Math.ceil(width / crop) * Math.ceil(height / crop) * TILE_TOKENS;
-}
-
-/** Tokens of a PDF: 258 per page, with the pages taken from its size when only that is known. */
-function pdfTokens({ bytes, pages }: typeof FileFacts.Type) {
-  if (pages !== undefined) {
-    return pages * TILE_TOKENS;
-  }
-  if (bytes === undefined) {
-    return TILE_TOKENS;
-  }
-  const estimated = Math.ceil(bytes / PDF_BYTES_PER_PAGE);
-  return Math.min(PDF_MAX_PAGES, Math.max(1, estimated)) * TILE_TOKENS;
-}
-
-/**
- * Tokens the provider bills for one attachment. This is the one rule for what
- * a file costs, so a file's bytes never reach the tokenizer. Any file that is
- * not an image or a PDF is read as text, and a document of unknown size counts
- * one page.
- */
-export function countFileTokens(file: typeof FileFacts.Type) {
-  if (file.mediaType.startsWith("image/")) {
-    return imageTokens(file);
-  }
-  if (file.mediaType === "application/pdf") {
-    return pdfTokens(file);
-  }
-  return file.bytes === undefined
-    ? TILE_TOKENS
-    : Math.ceil(file.bytes / TEXT_BYTES_PER_TOKEN);
+export function countFileTokens(mediaType: string) {
+  return mediaType.startsWith("image/") ? IMAGE_TOKENS : DOCUMENT_PAGE_TOKENS;
 }
 
 /**

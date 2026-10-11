@@ -84,18 +84,27 @@ cover, newest first, within 12,000 tokens, and the current turn's evidence
 within 16,000 tokens. The turns come from the chat's turn records, by turn
 order, not from the last messages of the thread: a cancelled or failed turn
 leaves no messages in it, and a question the learner asked again appears once,
-in its newest asking. Older evidence shortens with a visible note before a turn
-is dropped, and no budget fails a turn. Earlier turns keep their images, while
+in its newest asking, whichever of its askings the learner retried. A retry
+stores the order of the turn that first asked its question, so every asking of
+one question carries one key. A retry names the page the learner retries from,
+like a new message. One from the page its turn was asked on, or from a browser
+tab that sends no page, keeps that turn's own context, with its placement and
+question focus. Older evidence shortens with a visible note before a turn is
+dropped, and no budget fails a turn. Earlier turns keep their images, while
 their PDF and text attachments, whose cost grows with size, leave provider
-history as a note naming the file. An image counts by the provider's published
-estimate, 258 tokens a 768 pixel tile and 1,548 when its size is unknown, so a
-few images fill the history budget. The learner's own message and its
-attachments are not evidence and do not count against the evidence budget.
+history as a note naming the file. An image counts 1,120 tokens whatever its
+size, what Gemini 3 bills at its default media resolution, which Nina leaves
+unset, so a few images fill the history budget. A stored message keeps neither
+the size nor the page count of a file, so the rule reads the media type alone.
+The learner's own message and its attachments are not evidence and do not count
+against the evidence budget.
 After a completed turn, the follow-up action
-folds turns beyond the four newest into the chat's conversation summary with a
-fast model once four such turns accumulate, at most 16 turns per refresh, so a
-longer backlog advances one bounded batch per turn and reads back only from its
-last folded turn. The summary, at most 1,200
+folds the complete turns beyond the four newest into the chat's conversation
+summary with a fast model once four such turns accumulate, at most 16 turns per
+refresh, so a longer backlog advances one bounded batch per turn and reads back
+only from its last folded turn. The fold leaves out what the history would: a
+cancelled or failed turn, and an answer that a later retry replaced. The
+summary, at most 1,200
 tokens, sits in the system prompt context and is deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
 rather than in a turn's usage ledger, which clients read. The learner profile

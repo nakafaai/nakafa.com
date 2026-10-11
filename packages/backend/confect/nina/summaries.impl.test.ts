@@ -86,7 +86,7 @@ describe("Nina summary storage", () => {
 });
 
 describe("Nina turns after the summary", () => {
-  it("lists the complete ones, newest first, with the turn a retry answered again", async () => {
+  it("lists the complete ones, newest first, with the turn that first asked the question of a retry", async () => {
     // Order 1 was cancelled, and order 2 asks the question of order 0 again.
     const { t, chatId } = await createNinaTest({
       history: [{}, { cancelled: true }, { retryOf: 0 }, {}],

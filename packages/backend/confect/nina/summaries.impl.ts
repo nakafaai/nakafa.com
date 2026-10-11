@@ -5,15 +5,10 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import spec from "@repo/backend/confect/nina/summaries.spec";
+import spec, {
+  SUMMARY_FOLD_LIMIT,
+} from "@repo/backend/confect/nina/summaries.spec";
 import { Array as Arr, Clock, Effect, Layer } from "effect";
-
-/**
- * Most turns one read looks at: the most one summary refresh folds. A chat
- * with a longer backlog keeps its newest turns verbatim, and the oldest wait
- * for the next refresh.
- */
-const UNCOVERED_LIMIT = 16;
 
 /** Finds one chat's summary document, when the chat has one. */
 const findSummary = Effect.fn("nina.summaries.find")(function* (
@@ -61,10 +56,11 @@ const anchor = FunctionImpl.make(
 );
 
 /**
- * Lists the complete turns of a chat after the summary's `through` order and
- * before the order of the turn being answered, newest first. A failed or
- * cancelled turn is not complete, so it never shows up, whatever messages it
- * left in the thread.
+ * Lists the complete turns among the newest turns of a chat after the
+ * summary's `through` order and before the order `before`, newest first. A
+ * turn that failed, was cancelled or still runs is not complete, so it never
+ * shows up, whatever messages it left in the thread. A chat with a longer
+ * backlog lists its newest turns, and the oldest wait for the next refresh.
  */
 const uncovered = FunctionImpl.make(
   schema,
@@ -86,7 +82,7 @@ const uncovered = FunctionImpl.make(
             .lt("order", before),
         "desc"
       )
-      .take(UNCOVERED_LIMIT)
+      .take(SUMMARY_FOLD_LIMIT)
       .pipe(Effect.orDie);
     return Arr.flatMap(turns, (turn) =>
       turn.phase === "settled" && turn.state.status === "complete"

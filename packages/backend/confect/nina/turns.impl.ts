@@ -160,7 +160,7 @@ const start = FunctionImpl.make(
         promptMessageId: saved.messageId,
         promptedAt: now,
         order: saved.message.order,
-        ...(args.input.kind === "retry" ? { retryOf: args.input.order } : {}),
+        ...(prompt.retryOf === undefined ? {} : { retryOf: prompt.retryOf }),
         page: prompt.page,
         user: prompt.user,
         usage: [],

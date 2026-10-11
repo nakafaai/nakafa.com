@@ -6,6 +6,7 @@ import {
 import {
   assembleContext,
   boundStep,
+  newestAskings,
   splitTurns,
 } from "@repo/backend/confect/nina/history";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -242,7 +243,7 @@ describe("Nina provider context", () => {
     expect(tokens(result)).toBeLessThanOrEqual(NINA_BUDGET.history);
   });
 
-  it("counts an earlier image by the provider's tiles, so a few images fill the history budget", () => {
+  it("counts an earlier image at what the model bills, so a few images fill the history budget", () => {
     // Odd turns name the media type and even turns do not: both count the same.
     const imageTurn = (number: number): ModelMessage[] => [
       {
@@ -258,12 +259,12 @@ describe("Nina provider context", () => {
     ];
     const result = assembleContext({
       current: [{ role: "user", content: "Latest" }],
-      history: Arr.map(Arr.range(1, 9), imageTurn),
+      history: Arr.map(Arr.range(1, 12), imageTurn),
     });
-    // An image costs 1,548 tokens, so seven turns fit in 12,000 and the two oldest do not.
+    // An image costs 1,120 tokens, so ten turns fit in 12,000 and the two oldest do not.
     expect(encodeJsonText(result)).not.toContain("Photo 2");
     expect(encodeJsonText(result)).toContain("Photo 3");
-    expect(encodeJsonText(result)).toContain("Photo 9");
+    expect(encodeJsonText(result)).toContain("Photo 12");
   });
 
   it("keeps earlier images but leaves earlier documents as a note", () => {
@@ -444,12 +445,12 @@ describe("Nina provider context", () => {
         ],
       },
     ];
-    // Twelve images alone cost 18,576 tokens, more than the whole evidence budget.
+    // Fifteen images alone cost 16,800 tokens, more than the whole evidence budget.
     const prompt: ModelMessage = {
       role: "user",
       content: [
         { type: "text", text: "A long question. ".repeat(3000) },
-        ...Arr.makeBy(12, () => ({ type: "image" as const, image: "photo" })),
+        ...Arr.makeBy(15, () => ({ type: "image" as const, image: "photo" })),
       ],
     };
     const messages = [prompt, ...toolRound("one"), ...toolRound("two")];
@@ -478,5 +479,22 @@ describe("Nina provider context", () => {
       turn("Second"),
     ]);
     expect(splitTurns([cut])).toEqual([]);
+  });
+});
+
+describe("Nina newest askings", () => {
+  const ask = (order: number, retryOf?: number) =>
+    retryOf === undefined ? { order } : { order, retryOf };
+
+  it("keeps the newest asking of each question, whichever asking a retry named", () => {
+    // Orders 1 and 3 ask the question of order 0 again, and order 2 asks another.
+    expect(newestAskings([ask(0), ask(1, 0), ask(2), ask(3, 0)], [])).toEqual([
+      ask(2),
+      ask(3, 0),
+    ]);
+  });
+
+  it("lets a later turn take its question from the turns before it", () => {
+    expect(newestAskings([ask(0), ask(1)], [ask(2, 0)])).toEqual([ask(1)]);
   });
 });

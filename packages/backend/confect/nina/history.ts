@@ -6,6 +6,7 @@ import {
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
+import type { NinaUncoveredTurn } from "@repo/backend/confect/nina/summaries.spec";
 import { encodeJsonText } from "@repo/utilities/json";
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
 import { Array as Arr, MutableHashSet, Option, Schema } from "effect";
@@ -29,9 +30,9 @@ function messageTokens(message: ModelMessage) {
     } else if (part.type === "tool-result") {
       total += countTextTokens(encodeJsonText(part.output));
     } else if (part.type === "image") {
-      total += countFileTokens({ mediaType: part.mediaType ?? "image/*" });
+      total += countFileTokens(part.mediaType ?? "image/*");
     } else if (part.type === "file") {
-      total += countFileTokens({ mediaType: part.mediaType });
+      total += countFileTokens(part.mediaType);
     } else {
       total += countTextTokens(encodeJsonText(part));
     }
@@ -182,6 +183,36 @@ export function splitTurns(
   });
 }
 
+type Asking = typeof NinaUncoveredTurn.Type;
+
+/** Names the question of a turn by the order of the turn that first asked it. */
+function questionKey({ order, retryOf }: Asking) {
+  return retryOf ?? order;
+}
+
+/**
+ * Keeps the complete turns whose question no later turn asks again. A learner
+ * who retries an answer prefers the newest asking, so each question keeps only
+ * its newest complete asking, whichever of its askings was retried. `later`
+ * holds the turns that come after `turns`, such as the one being answered: a
+ * question one of them asks again leaves none of `turns`.
+ */
+export function newestAskings(
+  turns: readonly Asking[],
+  later: readonly Asking[]
+) {
+  const all = Arr.appendAll(turns, later);
+  return Arr.filter(
+    turns,
+    (turn) =>
+      !Arr.some(
+        all,
+        (other) =>
+          other.order > turn.order && questionKey(other) === questionKey(turn)
+      )
+  );
+}
+
 /**
  * Keeps the current turn's evidence within its budget while a tool loop runs.
  * The learner's message opens the turn and is not evidence, so neither it nor
@@ -215,7 +246,10 @@ export function boundStep(messages: readonly ModelMessage[]) {
  * each with its question and answer. They are kept newest first within the
  * history budget and trimmed only at a turn boundary: a turn that does not fit
  * is dropped whole, and a single oversized turn keeps its messages with
- * shortened evidence. The current turn always follows.
+ * shortened evidence. The current turn always follows. Once the turns fill the
+ * budget, each new turn pushes the oldest out, so the start of the history
+ * moves, as it does when the summary folds turns: these are the only times the
+ * history before the newest message does not repeat.
  */
 export function assembleContext({
   current,

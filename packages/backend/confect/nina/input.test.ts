@@ -3,11 +3,13 @@ import { RegisteredFunction } from "@confect/server";
 import { createThread, saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
+import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -19,6 +21,7 @@ import {
   ninaModel,
   ninaModelFor,
 } from "@repo/backend/test/nina";
+import { createFocusTest } from "@repo/backend/test/nina/focus";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
@@ -145,20 +148,33 @@ describe("Nina model input by turn order", () => {
     expect(input[2]).toBe("user: Earlier question 1");
   });
 
-  it("holds four turns of twenty steps, and drops a fifth that its pages cannot hold whole", async () => {
+  it("reads every turn the summary has not folded, however many steps they took", async () => {
+    // Five turns of 42 messages are more than the four pages of fifty the read once took.
     const f = await createNinaTest({
       history: Arr.makeBy(5, () => ({ steps: 20 })),
     });
     const input = outline(await inputFor(f));
-    expect(input).toHaveLength(4 * 42 + 1);
-    expect(input[0]).toBe("user: Earlier question 1");
+    expect(input).toHaveLength(5 * 42 + 1);
+    expect(input[0]).toBe("user: Earlier question 0");
   });
 
-  it("shows a question the learner asked again once, in its newest asking", async () => {
-    const f = await createNinaTest({ history: [{}, { retryOf: 0 }] });
+  it.each([
+    ["a question asked again, in its newest asking", [{}, { retryOf: 0 }], 1],
+    [
+      "a question retried twice, in its newest asking",
+      [{}, { retryOf: 0 }, { retryOf: 0 }],
+      2,
+    ],
+    [
+      "a question whose retry never completed, in its one complete asking",
+      [{}, { cancelled: true, retryOf: 0 }],
+      0,
+    ],
+  ] as const)("shows %s once", async (_case, history, answer) => {
+    const f = await createNinaTest({ history });
     expect(outline(await inputFor(f))).toEqual([
       "user: Earlier question 0",
-      "assistant: Earlier answer 1",
+      `assistant: Earlier answer ${answer}`,
       `user: ${CONTEXT} | Explain a limit.`,
     ]);
   });
@@ -178,24 +194,40 @@ describe("Nina model input by turn order", () => {
     ]);
   });
 
-  it("follows a chain of retries to the newest asking", async () => {
-    const f = await createNinaTest({
-      history: [{}, { retryOf: 0 }, { retryOf: 1 }],
-    });
+  it.each([
+    ["an asking that was retried before", [{}, { retryOf: 0 }]],
+    ["a retry that never completed", [{}, { cancelled: true, retryOf: 0 }]],
+  ] as const)(
+    "shows the question once when the current turn retries %s",
+    async (_case, history) => {
+      const f = await createNinaTest({ history, prompt: "Earlier question 0" });
+      await f.t.mutation((ctx) =>
+        ctx.db.patch("ninaTurns", f.turnId, { retryOf: 0 })
+      );
+      expect(outline(await inputFor(f))).toEqual([
+        `user: ${CONTEXT} | Earlier question 0`,
+      ]);
+    }
+  );
+
+  it("leaves out an earlier turn that lost its question, rather than show an answer with none", async () => {
+    const f = await createNinaTest({ history: 2 });
+    const [first] = await f.t.query((ctx) =>
+      ctx.db
+        .query("ninaTurns")
+        .withIndex("by_chatId_and_order", (q) =>
+          q.eq("chatId", f.chatId).eq("order", 0)
+        )
+        .collect()
+    );
+    await f.t.mutation((ctx) =>
+      ctx.runMutation(components.nina.messages.deleteByIds, {
+        messageIds: [first?.promptMessageId ?? ""],
+      })
+    );
     expect(outline(await inputFor(f))).toEqual([
       "user: Earlier question 1",
-      "assistant: Earlier answer 2",
-      `user: ${CONTEXT} | Explain a limit.`,
-    ]);
-  });
-
-  it("keeps the earlier turn when its retry never completed", async () => {
-    const f = await createNinaTest({
-      history: [{}, { cancelled: true, retryOf: 0 }],
-    });
-    expect(outline(await inputFor(f))).toEqual([
-      "user: Earlier question 0",
-      "assistant: Earlier answer 0",
+      "assistant: Earlier answer 1",
       `user: ${CONTEXT} | Explain a limit.`,
     ]);
   });
@@ -343,48 +375,118 @@ describe("The cached prefix of the model input", () => {
     expect(newest).toContain("- url: https://nakafa.com/en/chat");
     expect(newest).not.toContain("https://nakafa.com/en/home");
   });
-});
 
-describe("Nina model input after a retry", () => {
-  it("holds the question once, through admission and generation", async () => {
+  it("keeps the system prompt, with its question focus, from one turn of a focused chat to the next", async () => {
     const model = ninaModelFor(2);
     provider.languageModel.mockReturnValue(model);
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: Date.UTC(2026, 9, 11), credits: 20 })
+    const f = await createFocusTest();
+    await f.focusTurn();
+    await f.t.action(run, { turnId: f.turnId });
+    const next = await appendNinaTurn(f, { prompt: "And the other choices?" });
+    // Admission keeps a conversation's focus for its follow-up turns.
+    await f.focusTurn(next.turnId);
+    await f.t.action(run, { turnId: next.turnId });
+    const [one, two] = model.doStreamCalls;
+    expect(encodeJsonText(one?.prompt[0])).toContain(
+      "# Focused Try-out Question"
     );
-    const owner = t.withIdentity({
-      subject: identity.authUserId,
-      sessionId: identity.sessionId,
-    });
-    const first = Ref.decodeReturnsSync(
+    expect(unmarked(two?.prompt[0])).toBe(unmarked(one?.prompt[0]));
+  });
+});
+
+const QUESTION = "Explain a distinctive limit.";
+const ANSWER = "A limit describes the value approached.";
+const ASK = {
+  kind: "message",
+  prompt: { text: QUESTION },
+  page: { locale: "en", slug: "home" },
+} as const;
+
+/** A learner who asks and retries through admission, with each admitted turn generated. */
+async function learner() {
+  const t = createConvexTestWithBetterAuth();
+  const identity = await t.mutation((ctx) =>
+    seedAuthenticatedUser(ctx, { now: Date.UTC(2026, 9, 11), credits: 40 })
+  );
+  const owner = t.withIdentity({
+    subject: identity.authUserId,
+    sessionId: identity.sessionId,
+  });
+  let requests = 0;
+  /** Admits one turn as the browser does, generates its answer, and returns its receipt. */
+  async function converse(
+    input: typeof NinaInput.Encoded,
+    chatId?: Docs["chats"]["_id"]
+  ) {
+    requests += 1;
+    const receipt = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await owner.mutation(start, {
-        requestId: "one",
-        input: {
-          kind: "message",
-          prompt: { text: "Explain a distinctive limit." },
-          page: { locale: "en", slug: "home" },
-        },
+        requestId: `request-${requests}`,
+        ...(chatId === undefined ? {} : { chatId }),
+        input,
       })
     );
-    await t.action(run, { turnId: first.turnId });
-    const retried = Ref.decodeReturnsSync(
-      refs.public.nina.turns.start,
-      await owner.mutation(start, {
-        requestId: "two",
-        chatId: first.chatId,
-        input: { kind: "retry", order: first.order },
-      })
+    await t.action(run, { turnId: receipt.turnId });
+    return receipt;
+  }
+  return { converse, t };
+}
+
+describe("Nina model input after a retry", () => {
+  it("holds the question once, through admission and generation, however often it is retried and from whichever asking", async () => {
+    const model = ninaModelFor(4);
+    provider.languageModel.mockReturnValue(model);
+    const { converse, t } = await learner();
+    const first = await converse(ASK);
+    const second = await converse(
+      { kind: "retry", order: first.order },
+      first.chatId
     );
-    await t.action(run, { turnId: retried.turnId });
-    expect(model.doStreamCalls).toHaveLength(2);
-    const retry = encodeJsonText(model.doStreamCalls[1]?.prompt);
-    // Once for the question, and the answer it replaces is gone.
-    expect(retry.split("Explain a distinctive limit.")).toHaveLength(2);
-    expect(retry).not.toContain("A limit describes the value approached.");
+    // The learner retries the retry, then the first asking again.
+    await converse({ kind: "retry", order: second.order }, first.chatId);
+    await converse({ kind: "retry", order: first.order }, first.chatId);
+    expect(model.doStreamCalls).toHaveLength(4);
+    // Each retry holds the question once, and the answers it replaces are gone.
+    for (const call of Arr.drop(model.doStreamCalls, 1)) {
+      const input = encodeJsonText(call.prompt);
+      expect(input.split(QUESTION)).toHaveLength(2);
+      expect(input).not.toContain(ANSWER);
+    }
     expect(
-      (await t.query((ctx) => ctx.db.get("ninaTurns", retried.turnId)))?.retryOf
+      (await t.query((ctx) => ctx.db.get("ninaTurns", second.turnId)))?.retryOf
     ).toBe(first.order);
+  });
+
+  it("names the page the learner retries from, not the page the question was asked on", async () => {
+    const model = ninaModelFor(3);
+    provider.languageModel.mockReturnValue(model);
+    const { converse } = await learner();
+    const first = await converse(ASK);
+    // The question was asked on the home page. The learner retries it on the
+    // chat page, then back on the home page.
+    await converse(
+      {
+        kind: "retry",
+        order: first.order,
+        page: { locale: "en", slug: "chat" },
+      },
+      first.chatId
+    );
+    await converse(
+      {
+        kind: "retry",
+        order: first.order,
+        page: { locale: "en", slug: "home" },
+      },
+      first.chatId
+    );
+    const [, elsewhere, back] = model.doStreamCalls;
+    const away = encodeJsonText(newestOf(elsewhere?.prompt ?? []));
+    expect(away).toContain("- url: https://nakafa.com/en/chat");
+    expect(away).not.toContain("https://nakafa.com/en/home");
+    expect(encodeJsonText(newestOf(back?.prompt ?? []))).toContain(
+      "- url: https://nakafa.com/en/home"
+    );
   });
 });

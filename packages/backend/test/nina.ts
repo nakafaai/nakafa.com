@@ -74,8 +74,8 @@ function earlierMessages(
  * Saves one earlier turn of a chat at `order`, with its settled turn row. A
  * complete turn holds its question, `steps` tool steps and its answer. A
  * cancelled turn left a tool step behind, saved before the cancellation, and
- * its prompt is failed, as settlement leaves it. A retry asks the question of
- * the turn it names again.
+ * its prompt is failed, as settlement leaves it. A retry asks again the
+ * question of the turn that first asked it, which `retryOf` names.
  */
 async function seedEarlierTurn(
   ctx: MutationCtx,
@@ -135,8 +135,8 @@ async function seedEarlierTurn(
   });
 }
 
-/** What a test says about one earlier turn: it was cancelled, asks again the turn `retryOf`, or took `steps` tool steps. */
-const EarlierTurn = Schema.Struct({
+/** What a test says about one earlier turn: it was cancelled, asks again the question that the turn `retryOf` first asked, or took `steps` tool steps. */
+export const EarlierTurn = Schema.Struct({
   cancelled: Schema.optionalKey(Schema.Boolean),
   retryOf: Schema.optionalKey(Schema.Int),
   steps: Schema.optionalKey(Schema.Int),

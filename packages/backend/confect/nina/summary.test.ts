@@ -13,6 +13,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { GatewayTest, provider } from "@repo/backend/test/gateway";
+import type { EarlierTurn } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
@@ -26,10 +27,14 @@ afterEach(() => {
 });
 
 /**
- * A chat whose Agent thread holds `turns` complete learner and Nina turns,
- * each with the turn row admission stores.
+ * A chat whose Agent thread holds `turns` learner and Nina turns, each with
+ * the settled turn row Nina stores. A cancelled turn keeps the answer text it
+ * wrote before it stopped, and its prompt is failed, as settlement leaves it.
  */
-async function fixture(turns: number) {
+async function fixture(
+  turns: number,
+  shape: (order: number) => typeof EarlierTurn.Type = () => ({})
+) {
   const t = createConvexTestWithBetterAuth();
   const setup = await t.mutation(async (ctx) => {
     const { userId } = await seedAuthenticatedUser(ctx, { now: NOW });
@@ -43,25 +48,35 @@ async function fixture(turns: number) {
     });
     let prompts: string[] = [];
     for (let order = 0; order < turns; order += 1) {
+      const { cancelled = false, retryOf } = shape(order);
       const { messages } = await saveMessages(ctx, components.nina, {
         threadId,
         order,
         messages: [
-          { role: "user", content: `Question ${order}` },
+          { role: "user", content: `Question ${retryOf ?? order}` },
           { role: "assistant", content: `Answer ${order}` },
         ],
       });
       const promptMessageId = messages[0]?._id ?? "";
       prompts = Arr.append(prompts, promptMessageId);
+      if (cancelled) {
+        await ctx.runMutation(components.nina.messages.updateMessage, {
+          messageId: promptMessageId,
+          patch: { status: "failed", error: "cancelled" },
+        });
+      }
       await ctx.db.insert("ninaTurns", {
         chatId,
         order,
-        phase: "unanswered",
+        phase: "settled",
         promptMessageId,
-        state: { status: "unanswered" },
+        state: cancelled
+          ? { status: "cancelled", finishedAt: NOW }
+          : { status: "complete", finishedAt: NOW },
         threadId,
         usage: [],
         userId,
+        ...(retryOf === undefined ? {} : { retryOf }),
       });
     }
     return { chatId, prompts, threadId, userId };
@@ -117,6 +132,45 @@ describe("Nina rolling summary", () => {
     expect(prompt).toContain("Learner: Question 0");
     expect(prompt).toContain("Nina: Answer 4");
     expect(prompt).not.toContain("Question 5");
+  });
+
+  it("folds a question the learner asked again once, in its newest asking, and leaves out a cancelled turn", async () => {
+    const model = summaryModel("- A tidy fold.");
+    provider.languageModel.mockReturnValue(model);
+    // Order 2 was cancelled after it wrote some text, and order 3 asks the question of order 1 again.
+    const f = await fixture(9, (order) => {
+      if (order === 2) {
+        return { cancelled: true };
+      }
+      return order === 3 ? { retryOf: 1 } : {};
+    });
+    await f.refresh(8);
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain("Learner: Question 0");
+    expect(prompt).toContain("Nina: Answer 4");
+    expect(prompt.split("Learner: Question 1")).toHaveLength(2);
+    expect(prompt).toContain("Nina: Answer 3");
+    expect(prompt).not.toContain("Nina: Answer 1");
+    expect(prompt).not.toContain("Answer 2");
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: 4 }),
+    ]);
+  });
+
+  it("leaves a turn out of the fold when a later turn asks its question again", async () => {
+    const model = summaryModel("- A tidy fold.");
+    provider.languageModel.mockReturnValue(model);
+    // Order 6 sits in the verbatim window and asks the question of order 2 again.
+    const f = await fixture(9, (order) => (order === 6 ? { retryOf: 2 } : {}));
+    await f.refresh(8);
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain("Learner: Question 1");
+    expect(prompt).toContain("Nina: Answer 4");
+    expect(prompt).not.toContain("Question 2");
+    expect(prompt).not.toContain("Answer 2");
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: 4 }),
+    ]);
   });
 
   it("extends an existing summary with the next folded turns", async () => {

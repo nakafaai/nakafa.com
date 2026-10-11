@@ -10,17 +10,14 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
-import { Array as Arr, Effect, Schema } from "effect";
+import { newestAskings } from "@repo/backend/confect/nina/history";
+import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
+import { Array as Arr, Effect, HashSet, Schema } from "effect";
 
 /** Complete turns kept verbatim after the summary. */
 export const RECENT_TURNS = 4;
 /** Turns that must wait beyond the verbatim window before a refresh runs. */
 const FOLD_TURNS = 4;
-/**
- * Most turns one refresh folds. A chat with a longer backlog, such as one that
- * predates summaries, advances one bounded batch per completed turn.
- */
-const FOLD_LIMIT = 16;
 /** Text one message contributes to a refresh transcript. */
 const MESSAGE_TOKENS = 1500;
 const MESSAGE_PAGE = 100;
@@ -45,23 +42,55 @@ class NinaSummaryError extends Schema.TaggedError<NinaSummaryError>()(
  * Returns the order a refresh should summarize through once `order` settles.
  * A refresh waits until enough turns sit between the summary and the verbatim
  * window, so one fast-model call folds several turns, and never folds more
- * than one bounded batch.
+ * than one bounded batch. A chat with a longer backlog, such as one that
+ * predates summaries, advances one bounded batch per completed turn.
  */
 export function nextSummaryTarget(order: number, throughOrder: number | null) {
   const covered = throughOrder ?? -1;
-  const target = Math.min(order - RECENT_TURNS, covered + FOLD_LIMIT);
+  const target = Math.min(order - RECENT_TURNS, covered + SUMMARY_FOLD_LIMIT);
   return target - covered >= FOLD_TURNS ? target : null;
 }
 
 /**
- * Reads learner and Nina text for the turns after `from` through `through`.
- * Pages run newest first from `anchor`, the prompt of turn `through`, and stop
+ * Lists the orders of the turns a fold covers: the complete turns after
+ * `covered` through `target`, except one whose question a later complete turn
+ * asks again, up to the turn that just settled. The summary then holds the same
+ * turns the verbatim history would show: a cancelled or failed turn, or an
+ * answer that a retry replaced, never reaches it. A fold spans at most
+ * `SUMMARY_FOLD_LIMIT` turns, and one read lists that many.
+ */
+const readOrders = Effect.fn("nina.summary.orders")(function* (
+  turn: Pick<NinaTurnsDoc, "chatId" | "order">,
+  covered: number | null,
+  target: number
+) {
+  const { runQuery: query } = yield* QueryRunner;
+  const [folded, later] = yield* Effect.all([
+    query(refs.internal.nina.summaries.uncovered, {
+      before: target + 1,
+      chatId: turn.chatId,
+      through: covered,
+    }),
+    query(refs.internal.nina.summaries.uncovered, {
+      before: turn.order + 1,
+      chatId: turn.chatId,
+      through: target,
+    }),
+  ]).pipe(Effect.orDie);
+  return HashSet.fromIterable(
+    Arr.map(newestAskings(folded, later), ({ order }) => order)
+  );
+});
+
+/**
+ * Reads learner and Nina text for the turns at `orders`. Pages run newest
+ * first from `anchor`, the prompt of the last turn the fold covers, and stop
  * at turns the summary already covers, so a refresh reads only its batch.
  */
 const readTranscript = Effect.fn("nina.summary.transcript")(function* (
   threadId: string,
   from: number,
-  through: number,
+  orders: HashSet.HashSet<number>,
   anchor: string
 ) {
   const ctx = yield* ActionCtx;
@@ -82,7 +111,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
       catch: () => new NinaSummaryError({ operation: "read" }),
     });
     for (const message of page.page) {
-      if (message.order > from && message.order <= through && message.text) {
+      if (HashSet.has(orders, message.order) && message.text) {
         const speaker = message.message?.role === "user" ? "Learner" : "Nina";
         lines = Arr.append(
           lines,
@@ -109,7 +138,8 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     const current = yield* query(refs.internal.nina.summaries.read, {
       chatId: turn.chatId,
     }).pipe(Effect.orDie);
-    const target = nextSummaryTarget(turn.order, current?.throughOrder ?? null);
+    const covered = current?.throughOrder ?? null;
+    const target = nextSummaryTarget(turn.order, covered);
     if (target === null) {
       return;
     }
@@ -120,10 +150,11 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     if (!anchor) {
       return yield* new NinaSummaryError({ operation: "read" });
     }
+    const orders = yield* readOrders(turn, covered, target);
     const transcript = yield* readTranscript(
       turn.threadId,
-      current?.throughOrder ?? -1,
-      target,
+      covered ?? -1,
+      orders,
       anchor
     );
     const ctx = yield* ActionCtx;

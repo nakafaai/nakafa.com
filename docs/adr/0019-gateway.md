@@ -95,7 +95,11 @@ tools with a warning.
   complete turns after the summary. The facts that change from turn to turn, the
   date, the page URL, and the tool policy, travel in a block at the start of the
   newest learner message, which is never stored in the thread. Because the
-  marker sits before that message, the block never makes the prefix change.
+  marker sits before that message, the block never makes the prefix change. The
+  prefix does change when something in it does: the learner moves to a page
+  with other content, a remembered fact or the summary changes, or the history,
+  kept to 12,000 tokens, is full and each new turn pushes the oldest out.
+  Between those events a turn adds only its question and answer to the prefix.
 - **Spend.** No tenant or person identifier goes to the gateway, so the `space`
   argument leaves `Gateway.language`. Nakafa records cost itself: each usage row
   keeps the `providerMetadata.convexGateway.cost` its calls report, summed per
