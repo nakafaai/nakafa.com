@@ -8504,6 +8504,7 @@ export declare const internal: {
             promptMessageId: string;
             promptedAt?: number;
             requestId: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -8661,6 +8662,7 @@ export declare const internal: {
             promptMessageId: string;
             promptedAt?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -8834,6 +8836,7 @@ export declare const internal: {
             promptMessageId: string;
             promptedAt?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9005,6 +9008,7 @@ export declare const internal: {
             promptMessageId: string;
             promptedAt?: number;
             requestId: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9162,6 +9166,7 @@ export declare const internal: {
             promptMessageId: string;
             promptedAt?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9335,6 +9340,7 @@ export declare const internal: {
             promptMessageId: string;
             promptedAt?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9533,6 +9539,12 @@ export declare const internal: {
         { chatId: Id<"chats">; order: number },
         string | null
       >;
+      asked: FunctionReference<
+        "query",
+        "internal",
+        { before: number; chatId: Id<"chats">; questions: Array<number> },
+        Array<{ order: number; retryOf?: number }>
+      >;
       read: FunctionReference<
         "query",
         "internal",
@@ -9549,6 +9561,12 @@ export declare const internal: {
           usage: { input: number; output: number };
         },
         null
+      >;
+      uncovered: FunctionReference<
+        "query",
+        "internal",
+        { before: number; chatId: Id<"chats">; through: number | null },
+        Array<{ order: number; retryOf?: number }>
       >;
     };
     uploads: {

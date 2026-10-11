@@ -88,7 +88,18 @@ tools with a warning.
   the prefix the first step wrote. The provider keeps a prefix for about five
   minutes, in memory, and ignores one below about 4,000 tokens. Nina keeps her
   instructions and her tool list the same in every step of a turn, and usage
-  rows record cached and reasoning tokens.
+  rows record cached and reasoning tokens. Everything before the newest learner
+  message repeats byte for byte, except what the learner or Nina added: the
+  system prompt holds the static instructions, the page, the learner, the
+  question focus, and the summary, in that order, and the history holds the
+  complete turns after the summary. The facts that change from turn to turn, the
+  date, the page URL, and the tool policy, travel in a block at the start of the
+  newest learner message, which is never stored in the thread. Because the
+  marker sits before that message, the block never makes the prefix change. The
+  prefix does change when something in it does: the learner moves to a page
+  with other content, a remembered fact or the summary changes, or the history,
+  kept to 12,000 tokens, is full and each new turn pushes the oldest out.
+  Between those events a turn adds only its question and answer to the prefix.
 - **Spend.** No tenant or person identifier goes to the gateway, so the `space`
   argument leaves `Gateway.language`. Nakafa records cost itself: each usage row
   keeps the `providerMetadata.convexGateway.cost` its calls report, summed per

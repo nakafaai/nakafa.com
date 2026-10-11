@@ -9,8 +9,10 @@ import {
   generationFailure,
   NinaGenerationError,
 } from "@repo/backend/confect/nina/failure";
-import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
+import { boundStep } from "@repo/backend/confect/nina/history";
+import { readInput } from "@repo/backend/confect/nina/input";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
+import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { prepareNinaStep } from "@repo/backend/confect/nina/step";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
@@ -39,11 +41,12 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     user: turn.user,
     runtime,
   });
-  const { instructions, summary } = yield* readInstructions(
-    turn,
-    context.url,
-    runtime
-  );
+  const { instructions, summary } = yield* readInstructions(turn, context.url);
+  // Nina reads its own turns, so the Agent fetches no history and sends this as is.
+  const input = yield* readInput(turn, {
+    context: formatTurnContext({ page: turn.page, runtime, user: turn.user }),
+    through: summary?.throughOrder ?? null,
+  });
   const tools = yield* createCapabilities(
     turn.userId,
     context,
@@ -57,20 +60,8 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     instructions,
     tools,
     usageHandler,
-    contextOptions: { recentMessages: 50, excludeToolMessages: false },
-    contextHandler: (_ctx, fetched) =>
-      Promise.resolve(
-        assembleContext({
-          current: [
-            ...fetched.inputMessages,
-            ...fetched.inputPrompt,
-            ...fetched.existingResponses,
-          ],
-          currentOrder: turn.order,
-          recent: fetched.recent,
-          throughOrder: summary?.throughOrder ?? null,
-        })
-      ),
+    contextOptions: { recentMessages: 0 },
+    contextHandler: () => Promise.resolve(input),
   });
   let streamFailure: NinaGenerationError | undefined;
   const result = yield* Effect.tryPromise({

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { withTurnContext } from "@repo/backend/confect/nina/prompt/user";
 import {
   getSourceReferences,
   getSourceReferencesFromMessages,
@@ -153,5 +154,26 @@ describe("lib/source", () => {
     expect(getSourceReferencesFromMessages(sourcePartMessages)).toHaveLength(1);
     expect(getSourceReferencesFromMessages(assistantOnlyMessages)).toEqual([]);
     expect(getSourceReferencesFromMessages(staleSourceMessages)).toEqual([]);
+  });
+
+  it("does not take the page of the runtime facts for a source the learner named", () => {
+    const message = withTurnContext(
+      { role: "user", content: "Baca https://ai-sdk.dev/docs" },
+      "# Runtime Context\n\nCurrent page:\n- url: https://nakafa.com/en/home"
+    );
+    expect(
+      Arr.map(
+        getSourceReferencesFromMessages([message]),
+        (source) => source.href
+      )
+    ).toEqual(["https://ai-sdk.dev/docs"]);
+    expect(
+      getSourceReferencesFromMessages([
+        withTurnContext(
+          { role: "user", content: "Jelaskan limit" },
+          "Current page:\n- url: https://nakafa.com/en/home"
+        ),
+      ])
+    ).toEqual([]);
   });
 });

@@ -32,12 +32,12 @@ export async function createFocusTest() {
     questionOrder: seed.fixture.placement.questionOrder,
     sectionKey: seed.fixture.placement.sectionKey,
   };
-  /** Stores the focus on the fixture turn, as admission does for a real ask. */
-  const focusTurn = () =>
+  /** Stores the focus on the fixture turn, or on a later turn of its chat, as admission does for a real ask. */
+  const focusTurn = (turnId = nina.turnId) =>
     nina.t.mutation(async (ctx) => {
-      const turn = await ctx.db.get("ninaTurns", nina.turnId);
+      const turn = await ctx.db.get("ninaTurns", turnId);
       assert.ok(turn?.page, "Expected one active Nina turn.");
-      await ctx.db.patch("ninaTurns", nina.turnId, {
+      await ctx.db.patch("ninaTurns", turnId, {
         page: { ...turn.page, nina: { ...turn.page.nina, focus: frozen } },
       });
     });

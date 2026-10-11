@@ -34,6 +34,21 @@ const NinaSummaryView = NinaSummary.mapFields((fields) => ({
   throughOrder: fields.throughOrder,
 }));
 
+/**
+ * Most turns one summary refresh folds, and so the most turns the read of
+ * uncovered turns looks at: a fold never reaches past what that read shows.
+ */
+export const SUMMARY_FOLD_LIMIT = 16;
+
+/**
+ * A complete turn the summary does not cover. `retryOf` is the order of the
+ * turn that first asked its question, when this turn asks it again.
+ */
+export const NinaUncoveredTurn = Schema.Struct({
+  order: TurnOrder,
+  retryOf: Schema.optionalKey(TurnOrder),
+});
+
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalQuery({
@@ -47,6 +62,30 @@ export default GroupSpec.make()
       name: "anchor",
       args: () => ({ chatId: Id("chats"), order: TurnOrder }),
       returns: () => Schema.NullOr(Schema.String),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "uncovered",
+      args: () => ({
+        chatId: Id("chats"),
+        through: Schema.NullOr(TurnOrder),
+        before: TurnOrder,
+      }),
+      returns: () => Schema.Array(NinaUncoveredTurn),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "asked",
+      args: () => ({
+        chatId: Id("chats"),
+        questions: Schema.Array(TurnOrder).check(
+          Schema.isMaxLength(SUMMARY_FOLD_LIMIT)
+        ),
+        before: TurnOrder,
+      }),
+      returns: () => Schema.Array(NinaUncoveredTurn),
     })
   )
   .addFunction(

@@ -5,14 +5,20 @@ import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import { TURN_DEADLINE } from "@repo/backend/confect/nina/sweep";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import {
-  createConvexTestWithBetterAuth,
   seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import {
+  args,
+  cancel,
+  contextFor,
+  fixture,
+  NOW,
+  start,
+} from "@repo/backend/test/nina/admission";
 import { showsText } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, DateTime, Duration, Effect } from "effect";
@@ -29,60 +35,13 @@ vi.mock("@convex-dev/agent", async (load) => {
   };
 });
 
-const NOW = Date.UTC(2026, 8, 27, 12);
-const start = Ref.getFunctionReference(refs.public.nina.turns.start);
-const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
-const args = {
-  requestId: "request-1",
-  input: {
-    kind: "message",
-    prompt: { text: "Explain a limit." },
-    page: { locale: "en", slug: "home" },
-  },
-};
-
-async function fixture(credits = 10) {
-  const t = createConvexTestWithBetterAuth();
-  const identity = await t.mutation((ctx) =>
-    seedAuthenticatedUser(ctx, { now: NOW, credits })
-  );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
-  return { t, identity, owner };
-}
 
 describe("native Nina admission", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
-    vi.mocked(resolveNinaContext).mockReturnValue(
-      openNinaLearningSession({
-        capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-        source: "current-page",
-        learning: {
-          locale: "en",
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-        },
-      }).pipe(
-        Effect.orDie,
-        Effect.map((session) => ({
-          page: {
-            locale: "en" as const,
-            slug: "home",
-            url: "https://nakafa.com/en/home",
-            verified: false,
-            needsFetch: false,
-            nina: session.context,
-          },
-          user: {},
-        }))
-      )
-    );
+    vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
   });
   afterEach(() => {
     vi.clearAllMocks();
@@ -361,83 +320,6 @@ describe("native Nina admission", () => {
       owner.mutation(start, { ...args, requestId: "sixth" })
     ).rejects.toMatchObject({ data: { code: "RATE_LIMITED" } });
   });
-  it("rejects retry without a stored conversation before committing a credit hold", async () => {
-    const f = await fixture();
-    await expect(
-      f.owner.mutation(start, { ...args, input: { kind: "retry", order: 0 } })
-    ).rejects.toMatchObject({ data: { code: "NINA_RETRY_UNAVAILABLE" } });
-    expect(
-      await f.t.query((ctx) => ctx.db.query("creditTransactions").collect())
-    ).toEqual([]);
-  });
-
-  it("retries an owned Agent text prompt without optional file metadata", async () => {
-    const f = await fixture();
-    const first = Ref.decodeReturnsSync(
-      refs.public.nina.turns.start,
-      await f.owner.mutation(start, args)
-    );
-    await f.owner.mutation(cancel, { chatId: first.chatId });
-    await f.t.mutation(async (ctx) => {
-      const saved = await saveMessage(ctx, components.nina, {
-        threadId: first.threadId,
-        userId: f.identity.userId,
-        prompt: "An owned text-only prompt.",
-      });
-      await ctx.db.patch("ninaTurns", first.turnId, {
-        promptMessageId: saved.messageId,
-      });
-    });
-    const retried = Ref.decodeReturnsSync(
-      refs.public.nina.turns.start,
-      await f.owner.mutation(start, {
-        ...args,
-        chatId: first.chatId,
-        requestId: "retry-text",
-        input: { kind: "retry", order: first.order },
-      })
-    );
-    expect(retried.prompt.text).toBe("An owned text-only prompt.");
-  });
-
-  it("retries a saved response without run context only after resolving the current page", async () => {
-    const f = await fixture();
-    const first = Ref.decodeReturnsSync(
-      refs.public.nina.turns.start,
-      await f.owner.mutation(start, args)
-    );
-    await f.owner.mutation(cancel, { chatId: first.chatId });
-    await f.t.mutation((ctx) =>
-      ctx.db.patch("ninaTurns", first.turnId, {
-        page: undefined,
-        user: undefined,
-      })
-    );
-    const retry = {
-      ...args,
-      chatId: first.chatId,
-      requestId: "saved-prompt-retry",
-      input: { kind: "retry", order: first.order },
-    };
-    await expect(f.owner.mutation(start, retry)).rejects.toMatchObject({
-      data: { code: "NINA_RETRY_UNAVAILABLE" },
-    });
-    const retried = Ref.decodeReturnsSync(
-      refs.public.nina.turns.start,
-      await f.owner.mutation(start, {
-        ...retry,
-        input: { ...retry.input, page: args.input.page },
-      })
-    );
-    expect(retried.prompt.text).toBe(args.input.prompt.text);
-    expect(vi.mocked(resolveNinaContext)).toHaveBeenLastCalledWith(
-      args.input.page,
-      expect.objectContaining({ _id: f.identity.userId }),
-      DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-      first.chatId
-    );
-  });
-
   it.each(["new", "existing"] as const)(
     "refuses an unreadable %s component receipt without charging twice",
     async (state) => {
