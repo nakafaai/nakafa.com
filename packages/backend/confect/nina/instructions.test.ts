@@ -11,6 +11,7 @@ import { MEMORY_START_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import { sealedSummary } from "@repo/backend/test/seal";
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Effect, Schema } from "effect";
 
@@ -40,7 +41,7 @@ async function instructionsFor(
   });
   return nina.t.action((ctx) =>
     Effect.runPromise(
-      readInstructions(turn, url, runtime).pipe(
+      readInstructions(turn, url).pipe(
         Effect.map(({ instructions, summary }) => ({
           instructions,
           summary: summary?.throughOrder ?? null,
@@ -64,10 +65,14 @@ describe("Nina instructions", () => {
       })
     );
     const f = await createNinaTest({ needsFetch: true });
-    await f.t.mutation((ctx) =>
+    await f.t.mutation(async (ctx) =>
       ctx.db.insert("ninaSummaries", {
         chatId: f.chatId,
-        text: "- The learner practiced limits.",
+        text: await sealedSummary(
+          ctx,
+          f.identity.userId,
+          "- The learner practiced limits."
+        ),
         throughOrder: 3,
         updatedAt: NOW,
         usage: { calls: 1, input: 900, output: 120 },
@@ -87,7 +92,7 @@ describe("Nina instructions", () => {
     );
   });
 
-  it("carries the learner's role and curriculum preference", async () => {
+  it("carries the learner's role, and leaves the facts of one turn to its message", async () => {
     const f = await createNinaTest();
     await f.t.mutation((ctx) =>
       ctx.db.patch("ninaTurns", f.turnId, {
@@ -103,10 +108,18 @@ describe("Nina instructions", () => {
       })
     );
     const result = await instructionsFor(f);
-    for (const expected of ["Cambridge Lower Secondary", "teacher"]) {
+    expect(result).toHaveProperty(
+      "instructions",
+      expect.stringContaining("**User is a teacher.**")
+    );
+    for (const turnFact of [
+      "Cambridge Lower Secondary",
+      "https://nakafa.com/en/home",
+      runtime.currentDate,
+    ]) {
       expect(result).toHaveProperty(
         "instructions",
-        expect.stringContaining(expected)
+        expect.not.stringContaining(turnFact)
       );
     }
   });

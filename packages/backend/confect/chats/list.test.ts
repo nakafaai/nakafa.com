@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { showsText } from "@repo/backend/test/seal";
+import { sealedTitle, showsText } from "@repo/backend/test/seal";
 import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 9, 10, 12);
@@ -16,7 +16,6 @@ const ALGEBRA = "Latihan aljabar linear";
 const PHYSICS = "Fisika gerak lurus";
 const BOOLEAN = "Aljabar boolean";
 const STRANGER = "Aljabar dasar";
-const LEGACY = "Aljabar lama";
 
 /**
  * One learner with four chats and a stranger with one. Every title is set
@@ -71,7 +70,9 @@ describe("chat lists with sealed titles", () => {
     const f = await fixture();
     const stored = await f.t.query((ctx) => ctx.db.query("chats").collect());
     expect(stored).toHaveLength(5);
-    for (const chat of Arr.filter(stored, (row) => row.title !== undefined)) {
+    const titled = Arr.filter(stored, (row) => row.title !== undefined);
+    expect(titled).toHaveLength(4);
+    for (const chat of titled) {
       expect(chat.title).toBeInstanceOf(ArrayBuffer);
       for (const text of [ALGEBRA, PHYSICS, BOOLEAN, STRANGER]) {
         expect(showsText(chat.title, text)).toBe(false);
@@ -116,25 +117,6 @@ describe("chat lists with sealed titles", () => {
     expect(titles(result.page)).toEqual(expected);
   });
 
-  it("searches a plain title written before October 2026 like a sealed one", async () => {
-    const f = await fixture();
-    await f.t.mutation((ctx) =>
-      ctx.db.insert("chats", {
-        threadId: "fixture-thread",
-        title: LEGACY,
-        type: "study",
-        updatedAt: NOW,
-        userId: f.owner.userId,
-        visibility: "private",
-      })
-    );
-    const result = await f.asOwner.query(api.chats.queries.getOwnChats, {
-      paginationOpts,
-      q: "aljabar",
-    });
-    expect(titles(result.page)).toEqual([LEGACY, BOOLEAN, ALGEBRA]);
-  });
-
   it("looks for the first eight words of a query and leaves the rest out", async () => {
     const f = await fixture();
     const search = async (q: string) =>
@@ -160,7 +142,7 @@ describe("chat lists with sealed titles", () => {
       for (let index = 0; index < CHAT_SEARCH_WINDOW; index += 1) {
         await ctx.db.insert("chats", {
           threadId: "fixture-thread",
-          title: `Obrolan ${index}`,
+          title: await sealedTitle(ctx, f.owner.userId, `Obrolan ${index}`),
           type: "study",
           updatedAt: NOW,
           userId: f.owner.userId,

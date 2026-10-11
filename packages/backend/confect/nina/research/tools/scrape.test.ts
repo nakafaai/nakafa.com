@@ -9,6 +9,7 @@ import {
   readPage,
   scrapeUrl,
 } from "@repo/backend/confect/nina/research/tools/scrape";
+import { withTimeLeft } from "@repo/backend/test/nina/deadline";
 import { Array as Arr, Effect, Fiber, MutableRef, Option } from "effect";
 import { TestClock } from "effect/testing";
 
@@ -169,6 +170,32 @@ describe("research scrape tool", () => {
           { autoResume: false, formats: ["markdown"], timeout: 8000 }
         );
       })
+  );
+
+  it.effect("cuts a page read to the time the capability has left", () =>
+    Effect.gen(function* () {
+      // Both ways of reading hang, so only the time left can end the read.
+      const url = "https://93.184.216.34/docs/current";
+      fetcher.mockImplementation(() => new Promise(() => undefined));
+      firecrawlApp.scrape.mockReturnValue(new Promise(() => undefined));
+      const fiber = yield* Effect.forkChild(
+        readPage(url, { deadlineMs: 30_000, timeoutMs: 15_000 }).pipe(
+          withTimeLeft("4 seconds")
+        )
+      );
+      yield* TestClock.adjust("3999 millis");
+      expect(fiber.pollUnsafe()).toBeUndefined();
+      yield* TestClock.adjust("1 millis");
+      expect(yield* Fiber.join(fiber)).toEqual({
+        error: "The page could not be retrieved. Please try again.",
+        metadata: {},
+        url,
+      });
+      expect(firecrawlApp.scrape).toHaveBeenLastCalledWith(
+        url,
+        expect.objectContaining({ timeout: 4000 })
+      );
+    })
   );
 
   it.effect("rejects private scrape targets before fetching or crawling", () =>

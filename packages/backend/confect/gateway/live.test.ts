@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
+import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Result, Schema, Stream } from "effect";
 
@@ -104,7 +105,7 @@ describe("The production gateway", () => {
     ["specialist", "low"],
     ["chat", "high"],
   ] as const)(
-    "sends a %s call to the Convex AI gateway with reasoning effort %s",
+    "sends a %s call to the Convex AI gateway with reasoning effort %s and the purpose's output cap as max_tokens",
     ([purpose, effort]) => {
       // The layer reads the service token when it is built, before the body runs.
       serviceToken.mockResolvedValue("service-token");
@@ -125,6 +126,7 @@ describe("The production gateway", () => {
           init?.body
         );
         expect(body).toMatchObject({
+          max_tokens: purposes[purpose].maxOutputTokens,
           model: "google/gemini-3.8-flash",
           reasoning_effort: effort,
         });

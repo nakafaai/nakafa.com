@@ -1,7 +1,6 @@
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
-import type { NinaRuntime } from "@repo/backend/confect/nina/contract/turn";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
 import { topicsOf } from "@repo/backend/confect/nina/memory/topics";
 import { readPageContext } from "@repo/backend/confect/nina/page";
@@ -38,8 +37,7 @@ export const readInstructions = Effect.fn("nina.instructions")(function* (
     Extract<NinaTurnsDoc, { phase: "active" }>,
     "_id" | "chatId" | "page" | "user" | "userId"
   >,
-  url: string,
-  runtime: NinaRuntime
+  url: string
 ) {
   const { runQuery: query } = yield* QueryRunner;
   const { focus, learner, pageContent, summary } = yield* Effect.all(
@@ -70,9 +68,7 @@ export const readInstructions = Effect.fn("nina.instructions")(function* (
       ...(learner === undefined ? {} : { learner }),
       ...(pageContent === undefined ? {} : { pageContent }),
       ...(summary ? { summary: summary.text } : {}),
-      page: turn.page,
-      user: turn.user,
-      runtime,
+      userRole: turn.user.role,
     }),
     summary,
   };
