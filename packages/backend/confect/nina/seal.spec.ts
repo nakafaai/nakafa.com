@@ -4,10 +4,14 @@ import { Schema } from "effect";
 /** Where a call starts: no cursor for the first page, then the `next` of the call before. */
 const Cursor = Schema.NullOr(Schema.String);
 
-/** What one call did to one table: rows sealed, and where the next call starts. */
+/**
+ * What one call did to one table: rows sealed, rows left plain because their
+ * owner is deleted or gone, and where the next call starts.
+ */
 const SealPage = Schema.Struct({
   next: Cursor,
   sealed: Schema.Finite,
+  skipped: Schema.Finite,
 });
 
 /**
@@ -26,9 +30,14 @@ const SealPage = Schema.Struct({
  * leaving it plain would keep conversation text readable in an export; the chat
  * cleanup would have deleted it already, had it run. `removed` counts them.
  *
- * It runs on dev and on production until a whole pass from `null` seals and
- * removes nothing in both tables, and it is deleted together with the string
- * form of both fields in the contract change.
+ * A row whose owner is deleted or gone is left as it is and counted in
+ * `skipped`. A deleted learner must not get a new key, and the account cleanup
+ * deletes the row with the rest of the account, so one such row never stops a
+ * page.
+ *
+ * It runs on dev and on production until a whole pass from `null` seals,
+ * removes and skips nothing in both tables, and it is deleted together with
+ * the string form of both fields in the contract change.
  */
 export default GroupSpec.make()
   .addFunction(

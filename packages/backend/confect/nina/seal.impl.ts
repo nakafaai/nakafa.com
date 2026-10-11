@@ -25,9 +25,29 @@ function nextCursor(page: {
 }
 
 /**
+ * Whether a learner can still be given a key: their account exists and is not
+ * deleted. The vault refuses a key to anyone else, because nothing would ever
+ * shred it again.
+ */
+const isLive = Effect.fn("nina.seal.live")(function* (
+  userId: Docs["users"]["_id"]
+) {
+  return yield* (yield* DatabaseReader)
+    .table("users")
+    .get(userId)
+    .pipe(
+      Effect.map((user) => user.deletedAt === undefined),
+      Effect.catchTag("GetByIdFailure", () => Effect.succeed(false)),
+      Effect.orDie
+    );
+});
+
+/**
  * Seals the plain text of rows and stores it. Rows are grouped by learner, so
- * each learner's key is read once for all of their rows. It returns how many
- * rows it sealed.
+ * each learner's key is read once for all of their rows. The rows of a learner
+ * who is deleted or gone are left as they are: the account cleanup deletes
+ * them with the rest of the account, and until it has, one such row must not
+ * stop the page. It returns how many rows it sealed and how many it skipped.
  */
 const sealRows = Effect.fn("nina.seal.rows")(function* <
   Row extends { readonly text: string; readonly userId: Docs["users"]["_id"] },
@@ -36,18 +56,31 @@ const sealRows = Effect.fn("nina.seal.rows")(function* <
   field: typeof VaultField.Type,
   store: (row: Row, sealed: ArrayBuffer) => Effect.Effect<void>
 ) {
-  for (const owned of Record.values(Arr.groupBy(rows, (row) => row.userId))) {
-    const keys = yield* ensureLearnerKeys(Arr.headNonEmpty(owned).userId).pipe(
-      Effect.orDie
-    );
-    for (const row of owned) {
-      yield* store(
-        row,
-        yield* sealText(keys, field, row.text).pipe(Effect.orDie)
-      );
-    }
-  }
-  return rows.length;
+  const counts = yield* Effect.forEach(
+    Record.values(Arr.groupBy(rows, (row) => row.userId)),
+    (owned) =>
+      Effect.gen(function* () {
+        const { userId } = Arr.headNonEmpty(owned);
+        if (!(yield* isLive(userId))) {
+          return { sealed: 0, skipped: owned.length };
+        }
+        const keys = yield* ensureLearnerKeys(userId).pipe(Effect.orDie);
+        yield* Effect.forEach(
+          owned,
+          (row) =>
+            sealText(keys, field, row.text).pipe(
+              Effect.orDie,
+              Effect.flatMap((sealed) => store(row, sealed))
+            ),
+          { discard: true }
+        );
+        return { sealed: owned.length, skipped: 0 };
+      })
+  );
+  return {
+    sealed: Arr.reduce(counts, 0, (total, count) => total + count.sealed),
+    skipped: Arr.reduce(counts, 0, (total, count) => total + count.skipped),
+  };
 });
 
 /** Seals one page of chats whose title is still a string. */
@@ -76,7 +109,7 @@ const sealChats = FunctionImpl.make(
       (chat, title) =>
         writer.table("chats").patch(chat.id, { title }).pipe(Effect.orDie)
     );
-    return { next: nextCursor(page), sealed };
+    return { next: nextCursor(page), ...sealed };
   })
 );
 
@@ -135,7 +168,7 @@ const sealSummaries = FunctionImpl.make(
       (id) => writer.table("ninaSummaries").delete(id).pipe(Effect.orDie),
       { discard: true }
     );
-    return { next: nextCursor(page), removed: gone.length, sealed };
+    return { next: nextCursor(page), removed: gone.length, ...sealed };
   })
 );
 

@@ -9480,13 +9480,18 @@ export declare const internal: {
         "mutation",
         "internal",
         { cursor: string | null },
-        { next: string | null; sealed: number }
+        { next: string | null; sealed: number; skipped: number }
       >;
       sealSummaries: FunctionReference<
         "mutation",
         "internal",
         { cursor: string | null },
-        { next: string | null; removed: number; sealed: number }
+        {
+          next: string | null;
+          removed: number;
+          sealed: number;
+          skipped: number;
+        }
       >;
     };
     summaries: {

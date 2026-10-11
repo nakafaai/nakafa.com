@@ -118,6 +118,7 @@ describe("nina/seal", () => {
     expect(await f.t.mutation(sealChats, FIRST_PAGE)).toEqual({
       next: null,
       sealed: 2,
+      skipped: 0,
     });
 
     for (const [chatId, text] of [
@@ -147,6 +148,7 @@ describe("nina/seal", () => {
       next: null,
       removed: 1,
       sealed: 2,
+      skipped: 0,
     });
 
     const { keys, summaries } = await f.snapshot();
@@ -209,13 +211,55 @@ describe("nina/seal", () => {
     expect(await f.t.mutation(sealChats, FIRST_PAGE)).toEqual({
       next: null,
       sealed: 0,
+      skipped: 0,
     });
     expect(await f.t.mutation(sealSummaries, FIRST_PAGE)).toEqual({
       next: null,
       removed: 0,
       sealed: 0,
+      skipped: 0,
     });
     expect(await f.snapshot()).toEqual(sealed);
+  });
+
+  it("leaves the rows of a deleted or missing owner plain, gives them no key, and seals the rest of the page", async () => {
+    const f = await fixture();
+    const deleted = await f.addChat(f.first, ALGEBRA);
+    await f.addSummary(deleted, ALGEBRA_SUMMARY);
+    const live = await f.addChat(f.second, CHEMISTRY);
+    await f.addSummary(live, CHEMISTRY_SUMMARY);
+    const orphan = await f.addChat(f.second, PHYSICS);
+    // Account deletion marked the first learner, and its cleanup has not
+    // reached their chats yet. The third chat lost its owner altogether.
+    const missing = await f.t.mutation(async (ctx) => {
+      await ctx.db.patch("users", f.first.userId, { deletedAt: NOW });
+      const other = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "seal-missing",
+      });
+      await ctx.db.patch("chats", orphan, { userId: other.userId });
+      await ctx.db.delete("users", other.userId);
+      return other.userId;
+    });
+
+    expect(await f.t.mutation(sealChats, FIRST_PAGE)).toEqual({
+      next: null,
+      sealed: 1,
+      skipped: 2,
+    });
+    expect(await f.t.mutation(sealSummaries, FIRST_PAGE)).toEqual({
+      next: null,
+      removed: 0,
+      sealed: 1,
+      skipped: 1,
+    });
+
+    expect((await f.chatOf(deleted))?.title).toBe(ALGEBRA);
+    expect((await f.chatOf(orphan))?.title).toBe(PHYSICS);
+    expect((await f.chatOf(live))?.title).toBeInstanceOf(ArrayBuffer);
+    const after = await f.snapshot();
+    expect(Arr.map(after.keys, (key) => key.userId)).toEqual([f.second.userId]);
+    expect(Arr.map(after.keys, (key) => key.userId)).not.toContain(missing);
   });
 
   it("reads one page of each table and resumes from the cursor it returns", async () => {
@@ -260,10 +304,11 @@ describe("nina/seal", () => {
     expect(await f.t.mutation(sealChats, { cursor: chats.next })).toEqual({
       next: null,
       sealed: 1,
+      skipped: 0,
     });
     expect(
       await f.t.mutation(sealSummaries, { cursor: summaries.next })
-    ).toEqual({ next: null, removed: 0, sealed: 1 });
+    ).toEqual({ next: null, removed: 0, sealed: 1, skipped: 0 });
     const done = await f.snapshot();
     expect(
       Arr.filter(done.chats, (chat) => Predicate.isString(chat.title))
