@@ -5,6 +5,7 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { cache } from "react";
+import { readContentStore } from "@/lib/content/store/read";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 import { applySitemapCache } from "@/lib/sitemap/cache";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
@@ -108,10 +109,12 @@ function getSitemapEntryLocales(pageId: string) {
 /** Reads one bounded sitemap page inside the sitemap origin cache.
  *
  * The cache key is the page id, which already encodes family, locale, and
- * partition. Entries keep the long built-in profile on purpose because only
- * publication purges them through the shared sitemap tag. The outcome is
- * built through `SitemapPageRead`, so only plain, serializable data is
- * cached. */
+ * partition. The `use cache` boundary stays so that the route still prerenders
+ * and the sitemap tag still expires it, and entries keep the long built-in
+ * profile on purpose because only a release purges them through that tag.
+ * Behind the boundary the content store answers for the release, so the page
+ * is built from Convex only once for each release. The outcome is built
+ * through `SitemapPageRead`, so only plain, serializable data is cached. */
 async function readCachedSitemapEntries(
   options: SitemapPageEntryOptions
 ): Promise<typeof SitemapPageRead.Type> {
@@ -119,12 +122,17 @@ async function readCachedSitemapEntries(
 
   applySitemapCache();
   return await Effect.runPromise(
-    getSitemapEntries(options).pipe(
-      Effect.flatMap((entries) => SitemapPageFound.makeEffect({ entries })),
-      Effect.catchTag("SitemapPageNotFoundError", () =>
-        Effect.succeed(SitemapPageMissing.make({}))
-      )
-    )
+    readContentStore({
+      kind: "sitemap.page",
+      load: getSitemapEntries(options).pipe(
+        Effect.flatMap((entries) => SitemapPageFound.makeEffect({ entries })),
+        Effect.catchTag("SitemapPageNotFoundError", () =>
+          Effect.succeed(SitemapPageMissing.make({}))
+        )
+      ),
+      parts: [options.pageId],
+      schema: SitemapPageRead,
+    })
   );
 }
 

@@ -28,6 +28,7 @@ const tryoutMocks = vi.hoisted(() => ({
   readPublishedTryoutSitemap: vi.fn(),
 }));
 const activeMocks = vi.hoisted(() => ({
+  loadActiveContentIdentity: vi.fn(),
   readActiveContentIdentity: vi.fn(),
 }));
 
@@ -60,6 +61,9 @@ const releaseMismatch = {
 beforeEach(() => {
   vi.resetAllMocks();
   activeMocks.readActiveContentIdentity.mockReturnValue(
+    Effect.succeed({ releaseId: "release-sitemap" })
+  );
+  activeMocks.loadActiveContentIdentity.mockReturnValue(
     Effect.succeed({ releaseId: "release-sitemap" })
   );
   articleMocks.readPublishedArticleBuckets.mockReturnValue(
@@ -305,9 +309,12 @@ describe("sitemap route pages", () => {
           ],
         })
       );
-      activeMocks.readActiveContentIdentity
-        .mockReturnValueOnce(Effect.succeed({ releaseId: "release-before" }))
-        .mockReturnValueOnce(Effect.succeed({ releaseId: "release-after" }));
+      activeMocks.readActiveContentIdentity.mockReturnValueOnce(
+        Effect.succeed({ releaseId: "release-before" })
+      );
+      activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
+        Effect.succeed({ releaseId: "release-after" })
+      );
 
       expect(yield* readFailure("material_en_p0")).toMatchObject(
         releaseMismatch
@@ -319,9 +326,12 @@ describe("sitemap route pages", () => {
     "rejects a missing partition read across publication releases, so a just published partition is never cached as missing",
     () =>
       Effect.gen(function* () {
-        activeMocks.readActiveContentIdentity
-          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-before" }))
-          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-after" }));
+        activeMocks.readActiveContentIdentity.mockReturnValueOnce(
+          Effect.succeed({ releaseId: "release-before" })
+        );
+        activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
+          Effect.succeed({ releaseId: "release-after" })
+        );
 
         expect(yield* readFailure("material_en_p7")).toMatchObject(
           releaseMismatch
@@ -331,9 +341,12 @@ describe("sitemap route pages", () => {
         materialMocks.readPublishedMaterialSitemap.mockReturnValue(
           Effect.succeed({ routes: [] })
         );
-        activeMocks.readActiveContentIdentity
-          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-before" }))
-          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-after" }));
+        activeMocks.readActiveContentIdentity.mockReturnValueOnce(
+          Effect.succeed({ releaseId: "release-before" })
+        );
+        activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
+          Effect.succeed({ releaseId: "release-after" })
+        );
 
         expect(yield* readFailure("material_en_p0")).toMatchObject(
           releaseMismatch
@@ -345,9 +358,12 @@ describe("sitemap route pages", () => {
     "rejects a missing %s read across publication releases",
     (pageId) =>
       Effect.gen(function* () {
-        activeMocks.readActiveContentIdentity
-          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-before" }))
-          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-after" }));
+        activeMocks.readActiveContentIdentity.mockReturnValueOnce(
+          Effect.succeed({ releaseId: "release-before" })
+        );
+        activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
+          Effect.succeed({ releaseId: "release-after" })
+        );
 
         expect(yield* readFailure(pageId)).toMatchObject(releaseMismatch);
       })

@@ -7,6 +7,7 @@ import {
   getSitemapEntries,
 } from "@/lib/sitemap/entries";
 import { SitemapPageNotFoundError } from "@/lib/sitemap/identity";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const mockReadSitemapRoutePage = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
@@ -54,8 +55,29 @@ vi.mock(import("@/lib/sitemap/identity"), async (importOriginal) => ({
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
 }));
 
+const activeIdentity = {
+  manifestHash: `sha256:${"a".repeat(64)}`,
+  releaseId: "release-sitemap",
+  sequence: 1,
+};
+
 const mockCacheLife = vi.hoisted(() => vi.fn());
 const mockCacheTag = vi.hoisted(() => vi.fn());
+const activeMocks = vi.hoisted(() => ({
+  load: vi.fn(),
+  read: vi.fn(),
+}));
+
+vi.mock("@/lib/content/published/active", () => ({
+  expireActiveContentIdentity: vi.fn(),
+  loadActiveContentIdentity: activeMocks.load,
+  readActiveContentIdentity: activeMocks.read,
+}));
+
+vi.mock("@vercel/functions", async () => {
+  const { testRuntimeCache: cache } = await import("@/test/store");
+  return { getCache: () => cache };
+});
 
 vi.mock("next/cache", () => ({
   /** Records sitemap origin-cache usage without touching Next internals. */
@@ -67,6 +89,9 @@ vi.mock("next/cache", () => ({
 }));
 
 beforeEach(() => {
+  resetTestRuntimeCache();
+  activeMocks.read.mockReset().mockReturnValue(Effect.succeed(activeIdentity));
+  activeMocks.load.mockReset().mockReturnValue(Effect.succeed(activeIdentity));
   mockReadSitemapRoutePage.mockReset();
   mockGetSitemapPageDescriptor.mockReset();
   mockGetPathname.mockClear();
@@ -377,5 +402,34 @@ describe("sitemap entries", () => {
     const page = await getCachedSitemapEntries({ pageId: "material_en_p7" });
 
     expect(page).toEqual({ _tag: "Missing" });
+  });
+
+  it("builds each page from Convex once for each release", async () => {
+    const first = await getCachedSitemapEntries({ pageId: "base" });
+    const second = await getCachedSitemapEntries({ pageId: "base" });
+    await getCachedSitemapEntries({ pageId: "page_en" });
+
+    expect(second).toEqual(first);
+    expect(mockReadSitemapRoutePage).toHaveBeenCalledTimes(2);
+
+    const next = { ...activeIdentity, releaseId: "release-next" };
+    activeMocks.read.mockReturnValue(Effect.succeed(next));
+    activeMocks.load.mockReturnValue(Effect.succeed(next));
+    await getCachedSitemapEntries({ pageId: "base" });
+    await getCachedSitemapEntries({ pageId: "base" });
+
+    expect(mockReadSitemapRoutePage).toHaveBeenCalledTimes(3);
+  });
+
+  it("keeps a missing page for the release that reported it", async () => {
+    mockReadSitemapRoutePage.mockReturnValue(
+      Effect.fail(new SitemapPageNotFoundError({ pageId: "material_en_p7" }))
+    );
+
+    await getCachedSitemapEntries({ pageId: "material_en_p7" });
+    const page = await getCachedSitemapEntries({ pageId: "material_en_p7" });
+
+    expect(page).toEqual({ _tag: "Missing" });
+    expect(mockReadSitemapRoutePage).toHaveBeenCalledTimes(1);
   });
 });
