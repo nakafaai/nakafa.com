@@ -712,10 +712,10 @@ nobody tries them again without a new reason.
   as a divider or a table, are called Untitled. The server and the browser give
   the same name, and the search reads the same words. A situation that had
   ended when the server read the page is not listed, by the rule that search
-  and a turn's start apply (`hasEnded`), judged at that moment, so no clock
-  reaches a query and nothing changes while the learner looks. Each name takes
-  the direction of its own words, and a name too long for its row keeps its
-  whole text in its title.
+  and the recall of a turn apply (`hasEnded`), judged at that moment, so no
+  clock reaches a query and nothing changes while the learner looks. Each name
+  takes the direction of its own words, and a name too long for its row keeps
+  its whole text in its title.
 - The Memory page searches in the browser alone, in any part of a word of the
   title and the words of the memories it holds. While the search box holds text,
   the reader loads the pages that are not loaded yet, 50 at a time (the most a

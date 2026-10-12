@@ -257,7 +257,8 @@ const factsOf = (page: Page, words: string) =>
  * The backend holds a situation that ends in a week and one that ended two
  * days ago, which the daily job has not deleted. The page lists the first with
  * the end said first in its facts line, and leaves the second out, as search and
- * a turn's start do. Opened, the first says all its facts on lines that wrap.
+ * the recall of a turn do. Opened, the first says all its facts on lines that
+ * wrap.
  */
 const verifySituations = Effect.fn("NakafaE2E.verifySituations")(function* (
   page: Page,
