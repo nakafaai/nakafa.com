@@ -153,24 +153,21 @@ restart and midnight behavior rather than treating cycle completion as a claim
 of historical data completeness.
 
 The change that narrowed the pipeline to one ranking left temporary contract
-steps. The first is done: on 12 October 2026 the prune found no counter and no
+steps, and most are done. On 12 October 2026 the prune found no counter and no
 maintenance watermark of another window or scope on dev or production, so the
 step that retired them is deleted, and counters and watermarks are stored under
-the seven-day window alone.
+the seven-day window alone. `getTrendingSubjects` takes only the locale: a web
+deployment older than the narrowing still sends the deleted `windowKey`
+argument and meets a validation error from the query until it is replaced.
 
-Two steps remain, which this ADR owns, and they end together. A web deployment
-older than the narrowing still sends the `windowKey` argument to
-`getTrendingSubjects`, which accepts and ignores it, because Convex refuses an
-argument its validator does not name and the call would fail with a validation
-error. And a daily signal, a viewer key or a queued view written before the
-narrowing may still carry the placement scope, and a daily signal written before
-it carries the other windows in `applied`. The longest an older signal lives is
-8 days, the window plus the day its maintenance runs. The exit is met once the
-narrowing has been in production for 8 days, which is 20 October 2026, and no
-older web deployment still takes requests. The cleanup is one change: delete the
-`windowKey` argument with its compatibility test, narrow the stored scope values
-and the `applied` windows to the maintained ones, and drop the placement check
-of `isRankedPopularityView`.
+One step remains, which this ADR owns. A daily signal, a viewer key or a queued
+view written before the narrowing may still carry the placement scope, and a
+daily signal written before it carries the other windows in `applied`. The
+longest an older signal lives is 8 days, the window plus the day its
+maintenance runs. Once the narrowing has been in production for 8 days, which is
+20 October 2026, one change narrows the stored scope values and the `applied`
+windows to the maintained ones, together with the placement check of
+`isRankedPopularityView`.
 
 Mutations that write only tables without registered triggers use native Convex
 builders. Mutations that own message, subscription, score, or other registered
