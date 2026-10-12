@@ -265,6 +265,22 @@ alone. The Memory page does not use it: its search runs in the browser.
   window shows only the rows it started with until the learner scrolls and
   would start again, with every row, each time the count changed: its rows are
   all in the page and stay in place while memories come and go.
+- A memory is named by its title, or by its words as the editor shows them. The
+  page reads the stored Markdown with the lexer the editor lexes with, in
+  `@repo/design-system/components/editor/plain`, and no pattern decides what a
+  learner wrote: `C++`, `a == b` and `Q&A` are the words, not marks or entities.
+  That lexer is the `marked` that `@tiptap/markdown` depends on, declared as
+  `marked-tiptap` and held with it in the dependency policy, because the
+  `marked` of the chat renderer is a later major that reads some text
+  differently. The test `plain.test.ts` writes worst-case texts through the
+  editor and reads them back both ways. Words that show nothing, such as a
+  divider alone, are called Untitled. The server and the browser give the same
+  name, and the search reads the same words. A situation that had ended when
+  the server read the page is not listed, by the rule that search and a turn's
+  start apply (`hasEnded`), judged at that moment, so no clock reaches a query
+  and nothing changes while the learner looks. Each name takes the direction of
+  its own words, and a name too long for its row keeps its whole text in its
+  title.
 - The Memory page searches in the browser alone, in any part of a word of the
   title and the words of the memories it holds. While the search box holds text,
   the reader loads the pages that are not loaded yet, 50 at a time (the most a
@@ -288,7 +304,23 @@ alone. The Memory page does not use it: its search runs in the browser.
   one editor in the panel beside the page and in the sheet, so a window that
   crosses the width where the two swap loses nothing the learner wrote. After a
   save that failed the editor opens again with the words the server never took,
-  and the next close writes them, whatever the memory on the page shows.
+  and the next close writes them, whatever the memory on the page shows. When
+  the learner removes the title and every word of a stored memory and closes
+  the editor, the memory is deleted as the Delete button deletes it, with the
+  same Undo, because nothing written would leave the last words on the server
+  and in the list. A new memory that was never given a word creates nothing. A
+  paste that would take the Markdown past 2,000 characters is refused as a
+  whole, and the page says so. The panel beside the page never takes the room
+  the list needs: the list keeps a card of 20rem between its padding, whatever
+  width the learner dragged the panel to and whatever the window is, and its
+  resizer says the width the panel has and the widths it can have. A drag of
+  its edge measures from where the page ends and not from the window, so a
+  scrollbar never leaves the edge beside the pointer. Below 65rem the editor is
+  the sheet it is on a phone: the sidebar, the smallest panel and the room of
+  the list need 63rem, and where scrollbars are classic the stable gutter of
+  the page on both edges takes 22px of the window. The head of the list shows
+  the word on its add button and the icon of its search by its own width,
+  because the card beside the panel is as narrow as the card on a phone.
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
   because the browser has no page of its own to change until then.
