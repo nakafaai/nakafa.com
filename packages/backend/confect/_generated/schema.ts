@@ -9,6 +9,7 @@ import accountDeletionSchoolTransfers from "./tables/accountDeletionSchoolTransf
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
@@ -100,6 +101,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleBuckets: typeof articleBuckets;
   readonly articleCatalog: typeof articleCatalog;
   readonly articleCategories: typeof articleCategories;
+  readonly chatShares: typeof chatShares;
   readonly chats: typeof chats;
   readonly commentVotes: typeof commentVotes;
   readonly comments: typeof comments;
@@ -190,6 +192,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleBuckets,
   articleCatalog,
   articleCategories,
+  chatShares,
   chats,
   commentVotes,
   comments,

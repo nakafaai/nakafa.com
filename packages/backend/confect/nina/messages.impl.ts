@@ -77,7 +77,11 @@ const list = FunctionImpl.make(
   "list",
   Effect.fn("nina.messages.list")(function* (args) {
     const viewer = yield* getOptionalAppUserForRead();
-    const chat = yield* readChat(args.chatId, viewer?.appUser._id ?? null);
+    const chat = yield* readChat(
+      args.chatId,
+      viewer?.appUser._id ?? null,
+      args.shareToken
+    );
     if (chat.threadId !== args.threadId) {
       return yield* new ChatAccessError({
         code: "FORBIDDEN",

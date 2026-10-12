@@ -33,9 +33,13 @@ const get = FunctionImpl.make(
   schema,
   spec,
   "get",
-  Effect.fn("nina.conversation.get")(function* ({ chatId }) {
+  Effect.fn("nina.conversation.get")(function* ({ chatId, shareToken }) {
     const viewer = yield* getOptionalAppUserForRead();
-    const chat = yield* readChat(chatId, viewer?.appUser._id ?? null);
+    const chat = yield* readChat(
+      chatId,
+      viewer?.appUser._id ?? null,
+      shareToken
+    );
     const turn = yield* (yield* DatabaseReader)
       .table("ninaTurns")
       .index("by_chatId_and_order", (q) => q.eq("chatId", chatId), "desc")

@@ -1,5 +1,12 @@
 import { Ref } from "@confect/core";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -21,6 +28,10 @@ const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const messages = Ref.getFunctionReference(refs.public.nina.messages.list);
+const share = Ref.getFunctionReference(
+  refs.public.chats.mutations.updateChatVisibility
+);
+const token = Ref.getFunctionReference(refs.public.chats.queries.getShareToken);
 const input = {
   requestId: "one",
   input: {
@@ -83,12 +94,21 @@ describe("Nina conversation visibility", () => {
 
   it("projects only public turn facts for anonymous readers of a shared chat", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      ctx.db.patch("chats", f.chatId, { visibility: "public" })
-    );
+    await f.owner.mutation(share, {
+      chatId: f.chatId,
+      visibility: "public",
+    });
+    const shareToken = await f.owner.query(token, { chatId: f.chatId });
+    assert(shareToken !== null);
+    // The chat id alone opens nothing, and neither does the wrong token.
+    for (const refused of [{}, { shareToken: "A".repeat(43) }]) {
+      await expect(
+        f.t.query(get, { chatId: f.chatId, ...refused })
+      ).rejects.toMatchObject({ data: { code: "CHAT_NOT_FOUND" } });
+    }
     const conversation = Ref.decodeReturnsSync(
       refs.public.nina.conversation.get,
-      await f.t.query(get, { chatId: f.chatId })
+      await f.t.query(get, { chatId: f.chatId, shareToken })
     );
     // The title was sealed for its owner when the chat began; the shared page
     // opens it with the owner's key.
@@ -101,13 +121,17 @@ describe("Nina conversation visibility", () => {
       credits: 5,
       usage: [],
     });
+    const listed = {
+      chatId: f.chatId,
+      threadId: f.threadId,
+      paginationOpts: { cursor: null, numItems: 20 },
+    };
+    await expect(f.t.query(messages, listed)).rejects.toMatchObject({
+      data: { code: "CHAT_NOT_FOUND" },
+    });
     const page = Ref.decodeReturnsSync(
       refs.public.nina.messages.list,
-      await f.t.query(messages, {
-        chatId: f.chatId,
-        threadId: f.threadId,
-        paginationOpts: { cursor: null, numItems: 20 },
-      })
+      await f.t.query(messages, { ...listed, shareToken })
     );
     expect(page.page).toHaveLength(1);
     expect(page.page[0]?.metadata).toEqual(conversation.turn);
@@ -119,7 +143,7 @@ describe("Nina conversation visibility", () => {
   it("denies anonymous readers of a private chat and follows the newest turn by order", async () => {
     const f = await fixture();
     await expect(f.t.query(get, { chatId: f.chatId })).rejects.toMatchObject({
-      data: { code: "FORBIDDEN" },
+      data: { code: "CHAT_NOT_FOUND" },
     });
     await f.owner.mutation(cancel, { chatId: f.chatId });
     const next = Ref.decodeReturnsSync(

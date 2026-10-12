@@ -42,6 +42,20 @@ React uses Confect hooks for application functions and the official Agent
 optimistic update contract. There is no Next.js AI transport route or separate AI
 backend package.
 
+A public chat is shared by link, and the link holds a share token, not only the
+chat id. Turning sharing on draws 32 random bytes and stores their SHA-256 hash,
+which readers check without any key, and the token sealed for the owner, so the
+owner can copy the link again. The link carries the token in its fragment, which
+a browser never sends, so no server, log or analytics event keeps it. A learner
+who is not the owner reads the chat, its conversation and its messages only with
+that token, and every other read answers as if the chat did not exist, whether
+the chat is private, shared or gone. Turning sharing off, or deleting the chat,
+deletes the token, so every link stops at once, and turning sharing on again
+draws a new one. No list of another learner's chats exists. A chat that was
+public before share tokens had only its id for a link: that link stops working
+when share tokens go live, the chat goes back to private, and its owner shares
+it again to get a link.
+
 Nina's system prompt leads with stable instructions so provider prompt caching
 reuses them across turns. The current page, which learners share, the learner
 block, a question focus, and the conversation summary follow in that order. The

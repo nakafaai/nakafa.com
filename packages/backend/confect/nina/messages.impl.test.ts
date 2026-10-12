@@ -7,7 +7,7 @@ import {
   saveMessages,
   syncStreams,
 } from "@convex-dev/agent";
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -27,10 +27,14 @@ vi.mock("@convex-dev/agent", async (importOriginal) => {
 });
 
 const query = Ref.getFunctionReference(refs.public.nina.messages.list);
+const share = Ref.getFunctionReference(
+  refs.public.chats.mutations.updateChatVisibility
+);
+const token = Ref.getFunctionReference(refs.public.chats.queries.getShareToken);
 const paginationOpts = { cursor: null, numItems: 20 };
 const NOW = Date.UTC(2026, 8, 27, 12);
 
-async function fixture(visibility: "private" | "public" = "private") {
+async function fixture() {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation(async (ctx) => {
     const user = await seedAuthenticatedUser(ctx, { now: NOW });
@@ -42,7 +46,7 @@ async function fixture(visibility: "private" | "public" = "private") {
       type: "study",
       userId: user.userId,
       updatedAt: NOW,
-      visibility,
+      visibility: "private",
     });
     const prompt = await saveMessage(ctx, components.nina, {
       threadId,
@@ -145,17 +149,33 @@ describe("Nina message boundary", () => {
     ).toBe(true);
   });
 
-  it("allows an anonymous public reader and denies a private reader before touching the component", async () => {
-    const publicChat = await fixture("public");
+  it("allows an anonymous reader with the share token and denies every other reader before touching the component", async () => {
+    const shared = await fixture();
+    await shared.owner.mutation(share, {
+      chatId: shared.args.chatId,
+      visibility: "public",
+    });
+    const shareToken = await shared.owner.query(token, {
+      chatId: shared.args.chatId,
+    });
+    assert(shareToken !== null);
     await expect(
-      publicChat.t.query(query, publicChat.args)
+      shared.t.query(query, { ...shared.args, shareToken })
     ).resolves.toHaveProperty("page");
     vi.clearAllMocks();
+    // The chat id alone and the wrong token read like a chat that is not there.
+    for (const refused of [{}, { shareToken: "A".repeat(43) }]) {
+      await expect(
+        shared.t.query(query, { ...shared.args, ...refused })
+      ).rejects.toMatchObject({
+        data: { _tag: "ChatAccessError", code: "CHAT_NOT_FOUND" },
+      });
+    }
     const privateChat = await fixture();
     await expect(
       privateChat.t.query(query, privateChat.args)
     ).rejects.toMatchObject({
-      data: { _tag: "ChatAccessError", code: "FORBIDDEN" },
+      data: { _tag: "ChatAccessError", code: "CHAT_NOT_FOUND" },
     });
     expect(listUIMessages).not.toHaveBeenCalled();
   });

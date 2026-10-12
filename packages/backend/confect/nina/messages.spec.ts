@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec, PaginationOptions } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
+import { shareTokenValidator } from "@repo/backend/confect/chats/schema";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import {
   MessagePage,
@@ -19,6 +20,7 @@ export default GroupSpec.make().addFunction(
     name: "list",
     args: () => ({
       chatId: Id("chats"),
+      shareToken: Schema.optionalKey(shareTokenValidator),
       threadId: Schema.String,
       paginationOpts: PaginationOptions.PaginationOptions,
       streamArgs: Schema.optionalKey(StreamRequest),

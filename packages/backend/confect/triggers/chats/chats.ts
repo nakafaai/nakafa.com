@@ -5,6 +5,7 @@ import {
   MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { stopSharing } from "@repo/backend/confect/chats/share";
 import { settleTurn } from "@repo/backend/confect/nina/settlement";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
@@ -15,7 +16,8 @@ import { Duration, Effect } from "effect";
  * turn settles in this transaction, so its hold is paid back without waiting
  * for its run to exit: the stream is cut off, and the run's next check finds
  * the turn settled and stops its provider call. Agent deletes the journal page
- * by page, the first page here and the rest in the mutations it schedules. A
+ * by page, the first page here and the rest in the mutations it schedules. The
+ * share token goes in the same transaction, so no link outlives its chat. A
  * memory is the learner's own and stays when a chat is deleted.
  */
 export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
@@ -24,6 +26,7 @@ export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
     if (change.operation !== "delete") {
       return;
     }
+    yield* stopSharing(change.id);
     if (change.oldDoc.activeTurnId) {
       const turn = yield* (yield* DatabaseReader)
         .table("ninaTurns")
