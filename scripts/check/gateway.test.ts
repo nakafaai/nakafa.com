@@ -56,15 +56,27 @@ import * as AI from "ai";
 import SDK from "ai";
 export { gateway as client } from "ai";
 export { createGateway } from "ai";
-export * from "ai";
-export * as sdk from "ai";
 const lite = AI.gateway("google/gemini-3.5-flash-lite");
 const pro = SDK.createGateway({}).languageModel("google/gemini-3.7-flash");`);
       assert.deepStrictEqual(
         violations,
-        Arr.replicate(`${NINA}: ${CLIENT}.`, 8)
+        Arr.replicate(`${NINA}: ${CLIENT}.`, 6)
       );
     })
+  );
+
+  it.effect.each(['export * from "ai";', 'export * as sdk from "ai";'])(
+    "rejects %s as a way to reach the AI SDK's gateway client and its decide, and allows its decide inside the gateway module",
+    (source) =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(yield* inspect(source), [
+          `${NINA}: ${CLIENT}.`,
+          `${NINA}: ${DECISION}.`,
+        ]);
+        assert.deepStrictEqual(yield* inspect(source, GATEWAY), [
+          `${GATEWAY}: ${CLIENT}.`,
+        ]);
+      })
   );
 
   it.effect(

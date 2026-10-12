@@ -67,18 +67,17 @@ function names(
 
 /**
  * Whether an import or re-export of the AI SDK reaches one of some of its
- * exports. A re-export of everything reaches them all when `forwarded` says so.
+ * exports. A re-export of everything, `export * from "ai"` or `export * as x
+ * from "ai"`, reaches them all.
  */
-function reaches(
-  exports: HashSet.HashSet<string>,
-  declaration: Node,
-  forwarded: boolean
-) {
+function reaches(exports: HashSet.HashSet<string>, declaration: Node) {
   if (isExportDeclaration(declaration)) {
     const clause = declaration.exportClause;
-    return clause === undefined || !isNamedExports(clause)
-      ? forwarded
-      : names(exports, clause.elements);
+    return (
+      clause === undefined ||
+      !isNamedExports(clause) ||
+      names(exports, clause.elements)
+    );
   }
   const bindings = isImportDeclaration(declaration)
     ? declaration.importClause?.namedBindings
@@ -196,8 +195,8 @@ function brokenRules(
         gatewayModule ? [] : [PROVIDER_RULE]
       ),
       Match.when(SDK_MODULE, () => [
-        ...(reaches(CLIENT_EXPORTS, node.parent, true) ? [CLIENT_RULE] : []),
-        ...(!gatewayModule && reaches(DECISION_EXPORTS, node.parent, false)
+        ...(reaches(CLIENT_EXPORTS, node.parent) ? [CLIENT_RULE] : []),
+        ...(!gatewayModule && reaches(DECISION_EXPORTS, node.parent)
           ? [DECISION_RULE]
           : []),
       ]),

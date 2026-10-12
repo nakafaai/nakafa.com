@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { decideWith } from "@repo/backend/confect/gateway/decide";
 import { APICallError } from "ai";
 import { Experimental_DecisionMockModelV4 as DecisionMockModel } from "ai/test";
@@ -39,6 +39,9 @@ const transient = new APICallError({
 function modelOf(doDecide: DoDecide) {
   return new DecisionMockModel({ doDecide });
 }
+
+// Two tests fake the timers to advance the SDK's backoff; every test ends with real timers.
+afterEach(() => vi.useRealTimers());
 
 describe("A decision", () => {
   it.effect(
