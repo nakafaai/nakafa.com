@@ -14,7 +14,10 @@ import {
   ownerBlock,
   sharedPackageName,
 } from "#scripts/check/compiler";
-import { inspectDeploySource } from "#scripts/check/deploy";
+import {
+  inspectDeploySource,
+  inspectIgnoreSource,
+} from "#scripts/check/deploy";
 import {
   effectFindings,
   effectTestViolations,
@@ -97,6 +100,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectRefsSource(file, sourceFile),
         inspectModuleSize(file, sourceFile),
         inspectDeploySource(file, sourceFile),
+        inspectIgnoreSource(file, sourceFile),
       ])
     ),
     inspectExports(parsed.modules, otherModules, unjudged),

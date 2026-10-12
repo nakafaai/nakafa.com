@@ -5,6 +5,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "imports": {
+    "#scripts/vercel/ignore": "./scripts/vercel/ignore.mjs",
     "#scripts/*": "./scripts/*.ts"
   },
   "workspaces": [

@@ -77,6 +77,17 @@ contextual visit cannot first record a canonical view and then a placement view.
   oldest day once a night, so its snapshot uses the `hours` profile. The
   `minutes` profile refreshed it every minute and regenerated the page that
   shows it each time.
+- A merge to main creates a new deployment of every project, and every
+  deployment starts with empty caches, so a project skips the build of a commit
+  that nothing it is built from changed. Each `vercel.ts` names
+  `scripts/vercel/ignore.mjs` as its Ignored Build Step, and
+  `scripts/check/deploy.ts` keeps the four files equal. A project is built from
+  its own workspace, every workspace it depends on, the lockfile and the root
+  configuration, so `www`, whose build deploys the Convex functions, builds
+  whenever `packages/backend` changes. Documentation and tests build nothing. A
+  missing earlier commit, a missing earlier deployment, an empty change and any
+  failure build. Vercel runs the step before it installs a dependency, so the
+  script is plain JavaScript with Node.js built-ins only.
 - RSS caches the completed XML. Its update timestamp comes from authored
   publication dates, so another request does not manufacture changed output.
 - Flight requests bypass the Proxy's duplicate publication ownership reads.
