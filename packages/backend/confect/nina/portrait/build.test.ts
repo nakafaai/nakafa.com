@@ -140,6 +140,24 @@ describe("a portrait build", () => {
     expect(prompt).not.toContain(long.slice(0, 401));
   });
 
+  it("moves past the memories beyond the forty it reads, so no later build reads them", async () => {
+    const f = await requested();
+    await f.fill(45);
+    writes("Panjang.");
+    await f.build();
+    expect(await f.rows()).toEqual([expect.objectContaining({ through: 45 })]);
+    await f.seed({ confirmedAt: 46, text: "Memory 45" });
+    await f.seed({ confirmedAt: 47, text: "Baru" });
+    f.quiet();
+    const later = writes("Panjang dan baru.");
+    await f.build();
+    // The prompt's own part, then the two new memories, the newest first.
+    const memories = promptOf(later).split("\\n- ");
+    expect(memories).toHaveLength(3);
+    expect(memories[1]).toContain("Baru");
+    expect(memories[2]).toContain("Memory 45");
+  });
+
   it("asks no model when no memory is newer than the portrait, and writes nothing", async () => {
     const f = await requested({ text: "Siap SNBT 2027.", through: 3 });
     await f.seed({ confirmedAt: 3, text: "Already read" });

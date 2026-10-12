@@ -272,9 +272,16 @@ by more than a day, and the memory stays reachable by recall and the capability
 meanwhile.
 
 The build reads the portrait as it stands and the memories confirmed after what
-it has read, at most 40, each as its title and words cut to 400 characters, and writes
-the whole new text, keeping what the old one says unless a newer memory
-contradicts it. A situation is never handed to it, because it has an end date.
+it has read, at most 40, each as its title and words cut to 400 characters, and
+writes the whole new text, keeping what the old one says unless a newer memory
+contradicts it. When more than 40 are new, it reads the newest 40 and moves past
+the rest, and no later build reads them: what the portrait has read is one
+moment, and a build reads on from it. They stay stored and recallable, and only
+the portrait leaves them out. A build from scratch reads the 40 newest memories
+the learner has, so a learner with more keeps a portrait of their latest. Reading
+every memory, oldest first, would cost a model call for every 40 a learner
+keeps, on every delete or rewrite. A situation is never handed to it, because it
+has an end date.
 It writes only if the portrait is still the one it read and every memory it fed
 to the model is as it read it, so a build that was running when the learner
 deleted or rewrote a memory, or deleted them all, or paused memory, stores

@@ -35,9 +35,17 @@ import { Array as Arr, Clock, Duration, Effect, Option } from "effect";
  * confirmed after what the portrait has read and after the moment the learner
  * last deleted them all, in one range of one index. A situation has an end date
  * and a portrait keeps what lasts, so a situation is read but never handed on:
- * `reached` counts it, and the next build does not read it again. It reads at
- * most 44 documents: the portrait, the learner's memory state, the account, the
- * memories, and the learner's key, and it writes the portrait row.
+ * `reached` counts it, and the next build does not read it again.
+ *
+ * When more memories than the limit are new, the build reads the newest and
+ * `reached` moves past the rest, so no later build reads them: what the portrait
+ * has read is one moment, and a build reads on from it. They stay stored and
+ * recallable, and only the portrait leaves them out. A build from scratch has
+ * the same bound, so reading them all would cost a model call for every forty
+ * memories a learner keeps, on every delete or rewrite.
+ *
+ * It reads at most 44 documents: the portrait, the learner's memory state, the
+ * account, the memories, and the learner's key, and it writes the portrait row.
  */
 export const claimPortrait = Effect.fn("nina.portrait.claim")(function* (
   userId: Docs["users"]["_id"]
