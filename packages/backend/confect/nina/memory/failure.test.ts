@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { provider } from "@repo/backend/test/gateway";
+import { noteText } from "@repo/backend/confect/nina/judgment/note";
+import { provider, textOf } from "@repo/backend/test/gateway";
 import {
   answers,
   createCapturingTest,
@@ -15,7 +16,7 @@ import {
   Experimental_DecisionMockModelV4 as DecisionMockModel,
   MockLanguageModelV4,
 } from "ai/test";
-import { MutableRef } from "effect";
+import { MutableRef, Record as Rec } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -100,18 +101,29 @@ describe("memory capture that fails", () => {
     expect((await f.turn())?.usage).toEqual([]);
   });
 
-  it("saves nothing, and logs the same facts, when the decision about the candidates cannot be made", async () => {
+  it("saves nothing, and logs the same facts, when the decision about one of the candidates cannot be made, though the other candidate was judged", async () => {
     const f = await createCapturingTest();
-    answers(level);
+    const goal = {
+      kind: "goal",
+      quote: "mau ikut SNBT 2027",
+      text: "Ikut SNBT 2027.",
+    } as const;
+    answers(level, goal);
+    // The message is judged lasting, the note of `level` is judged the
+    // learner's own and holding nothing private, and the request about the
+    // note of `goal` is refused.
     provider.decisionModel.mockReturnValue(
       new DecisionMockModel({
-        doDecide: vi
-          .fn<DecisionMockModel["doDecide"]>()
-          .mockResolvedValueOnce({
-            answers: { "lasting.0": { probability: 0.99, type: "boolean" } },
-            warnings: [],
-          })
-          .mockRejectedValueOnce(unavailableError),
+        doDecide: (request) =>
+          textOf(request) === noteText(goal)
+            ? Promise.reject(unavailableError)
+            : Promise.resolve({
+                answers: Rec.map(request.questions, (_, judgment) => ({
+                  probability: judgment === "private" ? 0.01 : 0.99,
+                  type: "boolean" as const,
+                })),
+                warnings: [],
+              }),
       })
     );
     await f.capture();

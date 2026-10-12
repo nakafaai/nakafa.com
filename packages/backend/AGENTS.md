@@ -143,9 +143,11 @@ The root guide's Effect V4 Standard applies in full. In `confect/`:
   `await`, and `new Promise`.
 - In `confect/nina`, keep provider calls, tool execution, search, scraping,
   repair, and orchestration explicit in Effect. Keep provider configuration in
-  config boundaries, make source scoping language-neutral, reflect actual
-  provider calls in UI data, and back final output with retrieved evidence,
-  deterministic math, or a stated limitation.
+  config boundaries, never decide what a learner meant from letter case, word
+  shape, or word length (the model writes the search queries, and no result is
+  filtered by its words), reflect actual provider calls in UI data, and back
+  final output with retrieved evidence, deterministic math, or a stated
+  limitation.
 
 ## Type And Convex Source Of Truth
 

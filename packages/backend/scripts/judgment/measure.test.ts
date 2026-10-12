@@ -1,167 +1,83 @@
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { noteText } from "@repo/backend/confect/nina/judgment/ask";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
+import { describe, expect, it } from "@effect/vitest";
 import { judgments } from "@repo/backend/confect/nina/judgment/catalog";
-import { measureSet, togetherOf } from "@repo/backend/scripts/judgment/measure";
+import { noteText } from "@repo/backend/confect/nina/judgment/note";
+import { MEASURE_TEXT_LIMIT } from "@repo/backend/confect/nina/judgment.spec";
+import { ConvexCli } from "@repo/backend/scripts/development/cli";
+import { measureSet } from "@repo/backend/scripts/judgment/measure";
+import {
+  type Call,
+  loggedCalls,
+  prepare,
+} from "@repo/backend/test/judgment/cli";
 import { messages } from "@repo/backend/test/judgment/message";
 import { notes } from "@repo/backend/test/judgment/note";
-import {
-  Array as Arr,
-  ConfigProvider,
-  Effect,
-  FileSystem,
-  Layer,
-  Option,
-  Path,
-  Record as Rec,
-  Schema,
-} from "effect";
-import { FetchHttpClient } from "effect/http";
+import { Array as Arr, Effect, Record as Rec } from "effect";
 
-const configured = ConfigProvider.fromEnvRecord({
-  CONVEX_DEPLOY_KEY: "test-key",
-  CONVEX_PROD_URL: "https://prod.example",
-  CONVEX_URL: "https://dev.example",
-});
+/** The number of texts in each of some calls. */
+const sizesOf = (calls: readonly (typeof Call.Type)[]) =>
+  Arr.map(calls, ({ texts }) => Arr.length(texts));
 
-/** The fetch that Effect's client calls in place of the global one. */
-const fetcher = vi.fn<typeof fetch>();
+/** The texts of some calls, one after another. */
+const textsOf = (calls: readonly (typeof Call.Type)[]) =>
+  Arr.flatMap(calls, ({ texts }) => texts);
 
-/**
- * The real path service beside a file system that holds no file. The key in the
- * configuration is the credential, so a read of the local Convex login fails
- * the test.
- */
-const noFiles = Layer.merge(Path.layer, FileSystem.layerNoop({}));
-
-/** The texts of one call, as the action received them. */
-const Posted = Schema.Struct({
-  args: Schema.Struct({
-    names: Schema.Array(Schema.String),
-    texts: Schema.Array(Schema.String),
-    together: Schema.Int,
-  }),
-});
-
-/**
- * The label a judgment should give a text the command posted, and the text's
- * number among the messages or the notes: `lasting` is asked about messages,
- * and the other judgments about notes in the form `noteText` writes.
- */
-function labelled(name: string, text: string) {
-  return name === "lasting"
-    ? Option.map(
-        Arr.findFirstIndex(messages, (message) => message.text === text),
-        (index) => ({ label: messages[index].lasting, number: index + 1 })
-      )
-    : Option.map(
-        Arr.findFirstIndex(notes, (note) => noteText(note) === text),
-        (index) => ({
-          label:
-            name === "ownNote" ? notes[index].ownNote : notes[index].private,
-          number: index + 1,
-        })
-      );
-}
-
-/**
- * What the action answers for a call: for every posted text, a probability near
- * the label of each judgment asked, except for the texts a test names by number
- * for a judgment. `omitted` is a judgment the deployment reports no threshold
- * for.
- */
-function actionAnswers({
-  flipped = {},
-  omitted,
-}: {
-  readonly flipped?: Partial<Record<string, readonly number[]>>;
-  readonly omitted?: string;
-} = {}) {
-  fetcher.mockImplementation(async (_, init) => {
-    const { args } = Schema.decodeUnknownSync(Posted)(
-      await new Response(init?.body).json()
-    );
-    return Response.json({
-      status: "success",
-      value: {
-        rows: Arr.map(args.texts, (text) => ({
-          probabilities: Rec.fromEntries(
-            Arr.map(args.names, (name) => {
-              const { label, number } = Option.getOrThrow(labelled(name, text));
-              const wrong = Arr.contains(flipped[name] ?? [], number);
-              return [name, label === !wrong ? 0.9 : 0.1] as const;
-            })
-          ),
-        })),
-        thresholds: Rec.fromEntries(
-          Arr.map(
-            Arr.filter(args.names, (name) => name !== omitted),
-            (name) => [name, 0.5] as const
-          )
-        ),
-      },
-    });
-  });
-}
-
-/** Runs the set through the controlled deployment and fetch. */
-function run(prod: boolean, together: number) {
-  return measureSet(prod, together).pipe(
-    Effect.provideService(ConfigProvider.ConfigProvider, configured),
-    Effect.provideService(FetchHttpClient.Fetch, fetcher),
-    Effect.provide(noFiles)
-  );
-}
-
-/** What the command posted in each call, in the order of the calls. */
-function posted() {
-  return Effect.forEach(fetcher.mock.calls, ([, init]) =>
-    Effect.promise(() => new Response(init?.body).json()).pipe(
-      Effect.flatMap(Schema.decodeUnknownEffect(Posted)),
-      Effect.map(({ args }) => args)
-    )
-  );
-}
-
-beforeEach(() => {
-  fetcher.mockReset();
-});
-afterEach(() => {
-  vi.restoreAllMocks();
-});
+/** Whether some calls are full, except for the last, and none holds more than a call may. */
+const fillsCalls = (calls: readonly (typeof Call.Type)[]) =>
+  Arr.every(
+    Arr.dropRight(sizesOf(calls), 1),
+    (size) => size === MEASURE_TEXT_LIMIT
+  ) && Arr.every(sizesOf(calls), (size) => size <= MEASURE_TEXT_LIMIT);
 
 describe("measuring the labelled set", () => {
   it.effect(
-    "measures each judgment on the form production asks it, messages alone and notes in groups, and reports one table for each judgment of the catalog",
+    "sends each text of the set once, in the order of the set and in the form production asks it, in calls of at most the limit, and reports one table for each judgment of the catalog at the threshold the deployment holds",
     () =>
       Effect.gen(function* () {
-        actionAnswers({ flipped: { lasting: [1, 53], ownNote: [3] } });
-        const { failed, report } = yield* run(false, 1);
-        expect(failed).toBe(0);
-        // 124 messages go in five calls of 30, and the notes in three.
-        expect(fetcher).toHaveBeenCalledTimes(8);
-        expect(fetcher.mock.calls[0]?.[0]).toEqual(
-          new URL("https://dev.example/api/action")
+        const { cli, log } = yield* prepare({
+          flipped: { lasting: [1, 53], ownNote: [3] },
+          thresholds: { lasting: 0.3, ownNote: 0.6 },
+        });
+
+        const { failed, report } = yield* measureSet().pipe(
+          Effect.provideService(ConvexCli, cli)
         );
-        const calls = yield* posted();
+
+        expect(failed).toBe(0);
+        const calls = yield* loggedCalls(log);
+        const messageCalls = Arr.filter(calls, ({ names }) =>
+          Arr.contains(names, "lasting")
+        );
+        const noteCalls = Arr.drop(calls, Arr.length(messageCalls));
+        // A message is judged `lasting` as it is, and a note, as its sentence
+        // with its quote, `ownNote` and `private`.
         expect(Arr.map(calls, ({ names }) => names)).toEqual([
-          ...Arr.makeBy(5, () => ["lasting"]),
-          ...Arr.makeBy(3, () => ["ownNote", "private"]),
+          ...Arr.map(messageCalls, () => ["lasting"]),
+          ...Arr.map(noteCalls, () => ["ownNote", "private"]),
         ]);
-        // A message is judged `lasting` as it is, and a note as its sentence with its quote.
-        expect(calls[0]?.texts[0]).toBe(messages[0].text);
-        expect(calls[5]?.texts[0]).toBe(noteText(notes[0]));
+        expect(textsOf(messageCalls)).toEqual(
+          Arr.map(messages, ({ text }) => text)
+        );
+        expect(textsOf(noteCalls)).toEqual(Arr.map(notes, noteText));
+        expect(fillsCalls(messageCalls)).toBe(true);
+        expect(fillsCalls(noteCalls)).toBe(true);
         expect(report).toContain(
-          `${Arr.length(messages)} messages, one to a request, and ${Arr.length(notes)} notes, 1 to a request, measured on the development deployment.`
+          `${Arr.length(messages)} messages and ${Arr.length(notes)} notes, one text to a request, measured on the development deployment.`
         );
         for (const name of Rec.keys(judgments)) {
           expect(report).toContain(`judgment ${name}:`);
         }
-        // The texts the deployment got wrong, by number, language and no text.
+        // The counts are at the threshold the deployment reports for each
+        // judgment, and the texts it got wrong are named by number and
+        // language, never quoted.
+        expect(report).toContain("at the threshold of the deployment, 0.30:");
+        expect(report).toContain("at the threshold of the deployment, 0.60:");
+        expect(report).toContain("at the threshold of the deployment, 0.50:");
         expect(report).toContain(
-          "judged wrongly at 0.50 (message, label, probability, language, form):"
+          "judged wrongly at 0.30 (message, label, probability, language, form):"
         );
         expect(report).toContain(
-          "judged wrongly at 0.50 (note, label, probability, language, form):"
+          "judged wrongly at 0.60 (note, label, probability, language, form):"
         );
         expect(report).toContain("    1  yes  0.10  id");
         expect(report).toContain("    3  yes  0.10  id");
@@ -169,127 +85,96 @@ describe("measuring the labelled set", () => {
         expect(report).not.toContain(notes[0].text);
         expect(report).not.toContain(notes[0].quote);
         expect(report).not.toContain("texts failed");
-      })
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect(
-    "sends the notes of a turn together to production only when the caller names it, and keeps a group in one call",
+    "counts the texts the deployment could not measure, and reports their routing facts and tables that hold no text",
     () =>
       Effect.gen(function* () {
-        actionAnswers();
-        const { report } = yield* run(true, 3);
-        expect(fetcher.mock.calls[0]?.[0]).toEqual(
-          new URL("https://prod.example/api/action")
-        );
-        expect(report).toContain(
-          `${Arr.length(messages)} messages, one to a request, and ${Arr.length(notes)} notes, 3 to a request, measured on production.`
-        );
-        const calls = yield* posted();
-        const noteCalls = Arr.drop(calls, 5);
-        expect(Arr.map(noteCalls, ({ together }) => together)).toEqual([
-          3, 3, 3,
-        ]);
-        // Calls of 30 notes, ten groups of three, and the rest in the last call.
-        expect(Arr.map(noteCalls, ({ texts }) => Arr.length(texts))).toEqual([
-          30,
-          30,
-          Arr.length(notes) - 60,
-        ]);
-        // Messages are asked alone whatever the caller names.
-        expect(Arr.map(Arr.take(calls, 5), ({ together }) => together)).toEqual(
-          [1, 1, 1, 1, 1]
-        );
-      })
-  );
-
-  it.effect(
-    "counts the texts the deployment could not measure, and reports their routing facts and no table row",
-    () =>
-      Effect.gen(function* () {
-        fetcher.mockImplementation(async (_, init) => {
-          const { args } = Schema.decodeUnknownSync(Posted)(
-            await new Response(init?.body).json()
-          );
-          return Response.json({
-            status: "success",
-            value: {
-              rows: Arr.map(args.texts, () => ({
-                failure: { reason: "invalid", status: 400 },
-              })),
-              thresholds: Rec.fromEntries(
-                Arr.map(args.names, (name) => [name, 0.5] as const)
-              ),
-            },
-          });
-        });
+        const { cli } = yield* prepare({ broken: true });
         const texts = Arr.length(messages) + Arr.length(notes);
-        const { failed, report } = yield* run(false, 1);
+
+        const { failed, report } = yield* measureSet().pipe(
+          Effect.provideService(ConvexCli, cli)
+        );
+
         expect(failed).toBe(texts);
         expect(report).toContain(
           `${texts} texts failed: invalid 400 (${texts})`
         );
-        expect(report).toContain("at the threshold of the deployment, 0.50:");
-      })
+        expect(report).toContain(
+          "judgment lasting: 0 messages labelled yes, 0 labelled no"
+        );
+        expect(report).toContain(
+          "judgment ownNote: 0 notes labelled yes, 0 labelled no"
+        );
+        expect(report).toContain(
+          "judgment private: 0 notes labelled yes, 0 labelled no"
+        );
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect.each(Rec.keys(judgments))(
-    "fails with an error that names %s when the deployment reports no threshold for it, and prints no table",
+    "fails with an error that names %s when the deployment reports no threshold for it",
     (omitted) =>
       Effect.gen(function* () {
-        actionAnswers({ omitted });
-        expect(yield* Effect.flip(run(false, 1))).toMatchObject({
+        const { cli } = yield* prepare({ omitted });
+
+        const error = yield* Effect.flip(
+          measureSet().pipe(Effect.provideService(ConvexCli, cli))
+        );
+
+        expect(error).toMatchObject({
           _tag: "JudgmentCallError",
           message: `The deployment reports no threshold for the judgment ${omitted}.`,
         });
-      })
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
+  );
+
+  it.effect.each([
+    ["lasting", "threshold"],
+    ["lasting", "instructions"],
+    ["ownNote", "threshold"],
+    ["private", "instructions"],
+  ] as const)(
+    "fails with an error that names %s when a later call answers with other %s than the first call, because the deployment changed while the command ran",
+    ([judgment, field]) =>
+      Effect.gen(function* () {
+        const { cli } = yield* prepare({ changed: { field, judgment } });
+
+        const error = yield* Effect.flip(
+          measureSet().pipe(Effect.provideService(ConvexCli, cli))
+        );
+
+        expect(error).toMatchObject({
+          _tag: "JudgmentCallError",
+          message: `The deployment answered with a different ${judgment} in two calls of one run, so it changed while the command ran. Run the command again.`,
+        });
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect(
-    "fails when the deployment answers fewer rows than the texts it was given, and prints nothing",
+    "stops at the first call when the deployment cannot reach the gateway, so that no other call is spent, and fails with the reason",
     () =>
       Effect.gen(function* () {
-        fetcher.mockResolvedValue(
-          Response.json({
-            status: "success",
-            value: {
-              rows: [{ probabilities: { lasting: 0.9 } }],
-              thresholds: { lasting: 0.5 },
-            },
-          })
+        const { cli, log } = yield* prepare({ unreachable: true });
+
+        const error = yield* Effect.flip(
+          measureSet().pipe(Effect.provideService(ConvexCli, cli))
         );
-        expect(yield* Effect.flip(run(false, 1))).toMatchObject({
+
+        expect(error).toMatchObject({
           _tag: "JudgmentCallError",
           message:
-            "nina/judgment:measure: the deployment measured 1 of 30 texts",
+            "Judgment measure failed: The AI gateway is not available on this deployment.",
         });
-      })
-  );
-});
-
-describe("notes that share a request", () => {
-  it.effect.each([
-    [[], 1],
-    [["--prod"], 1],
-    [["--prod", "--together=3"], 3],
-    [["--together=2"], 2],
-  ] as const)("reads %j as %s notes to a request", ([args, together]) =>
-    Effect.gen(function* () {
-      expect(yield* togetherOf(args)).toBe(together);
-    })
-  );
-
-  it.effect.each([
-    "--together=0",
-    "--together=4",
-    "--together=2.5",
-    "--together=x",
-    "--together=",
-  ])("refuses %s", (flag) =>
-    Effect.gen(function* () {
-      expect(yield* Effect.flip(togetherOf([flag]))).toMatchObject({
-        _tag: "JudgmentCallError",
-        message: "--together=N takes a whole number from 1 to 3.",
-      });
-    })
+        expect(yield* loggedCalls(log)).toHaveLength(1);
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 });

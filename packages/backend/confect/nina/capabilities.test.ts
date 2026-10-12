@@ -1,13 +1,9 @@
 import { Ref } from "@confect/core";
 import { RegisteredFunction } from "@confect/server";
-import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
-import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
-import { ActionCtx } from "@repo/backend/confect/_generated/services";
-import { createCapabilities } from "@repo/backend/confect/nina/capabilities";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
 import { MathGenerationError } from "@repo/backend/confect/nina/math/error";
 import { runMemory } from "@repo/backend/confect/nina/memory/tool";
@@ -21,7 +17,7 @@ import {
 } from "@repo/backend/confect/nina/research/schema";
 import { GatewayTest } from "@repo/backend/test/gateway";
 import { type createNinaTest, ninaToolInput } from "@repo/backend/test/nina";
-import { inNewChatStep } from "@repo/backend/test/nina/deadline";
+import { playTurn, toolCall } from "@repo/backend/test/nina/capability";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import {
   openHomeSession,
@@ -30,16 +26,8 @@ import {
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
-import { isStepCount } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import {
-  Array as Arr,
-  Effect,
-  Logger,
-  MutableHashMap,
-  MutableRef,
-  Option,
-} from "effect";
+import { Effect, MutableHashMap, MutableRef, Option } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -73,74 +61,6 @@ const toolInputs = {
     sourceRequirements: ["primary sources"],
   },
 };
-function toolCall(toolName: string, input: object, toolCallId = "capability") {
-  return providerStep(
-    [
-      {
-        type: "tool-call",
-        toolName,
-        toolCallId,
-        input: encodeJsonText(input),
-      },
-    ],
-    "tool-calls"
-  );
-}
-
-/**
- * Plays a scripted model through the real Agent, with the capability tools of
- * one learner, and returns what its tool calls produced and what the turn
- * logged. The memory tool leaves the words it finds in `found`, as in a turn.
- */
-function playTurn({
-  context,
-  found = MutableHashMap.empty<string, string>(),
-  model,
-  prompt,
-  userId,
-}: {
-  readonly context: Parameters<typeof createCapabilities>[1];
-  readonly found?: Parameters<typeof createCapabilities>[4];
-  readonly model: MockLanguageModelV4;
-  readonly prompt: string;
-  readonly userId: Parameters<typeof createCapabilities>[0];
-}) {
-  const logged = MutableRef.make<readonly unknown[]>([]);
-  return Effect.gen(function* () {
-    const tools = yield* createCapabilities(
-      userId,
-      context,
-      "en",
-      vi.fn(),
-      found
-    );
-    const ctx = yield* ActionCtx;
-    const generated = yield* Effect.promise(() =>
-      new Agent(components.nina, {
-        name: "test",
-        languageModel: model,
-        tools,
-        stopWhen: isStepCount(3),
-      }).generateText(ctx, { userId }, { prompt })
-    );
-    return {
-      logged,
-      result: Arr.map(generated.toolResults, ({ output }) => output),
-    };
-  }).pipe(
-    inNewChatStep,
-    Effect.provide(
-      Logger.layer([
-        Logger.formatStructured.pipe(
-          Logger.map(({ message }) =>
-            MutableRef.update(logged, Arr.append(message))
-          )
-        ),
-      ])
-    )
-  );
-}
-
 /**
  * Runs one capability through a scripted turn in one state and returns what
  * the model's tool call produced and what the turn logged.
@@ -361,6 +281,17 @@ describe("Nina capability execution policy", () => {
         expect.objectContaining({ addresses: [] })
       );
     });
+  });
+
+  it("hands web research the words of the tool call with no heading, beside the task its model reads", async () => {
+    await runCapability("deepResearch", "allowed");
+
+    expect(runResearchAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: expect.stringContaining("# Request"),
+        words: "Read the page\nGather evidence\nprimary sources",
+      })
+    );
   });
 
   it("tells Nina what this attempt could not verify and to name a direct channel when external research fails, without an absence claim", async () => {

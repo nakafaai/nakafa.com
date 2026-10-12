@@ -4,9 +4,17 @@ import stripAnsi from "strip-ansi";
 const MAX_COMMAND_ERROR_LENGTH = 2000;
 const WHITESPACE = /\s+/u;
 
+/**
+ * The output of a failed command on one line, without color codes and without
+ * any of the sensitive values, cut to the length that a message can carry. A
+ * tool that logs its progress says why it stopped at the end, so the end is
+ * kept unless the caller asks for the start, as for the Convex CLI, which names
+ * what failed first and may then list every function of the deployment.
+ */
 export const sanitizeAcceptanceCommandError = (
   text: string,
-  sensitiveValues: readonly string[]
+  sensitiveValues: readonly string[],
+  keep: "end" | "start" = "end"
 ) => {
   let sanitized = stripAnsi(text);
 
@@ -16,9 +24,10 @@ export const sanitizeAcceptanceCommandError = (
     }
   }
 
-  return Arr.join(sanitized.trim().split(WHITESPACE), " ").slice(
-    -MAX_COMMAND_ERROR_LENGTH
-  );
+  const line = Arr.join(sanitized.trim().split(WHITESPACE), " ");
+  return keep === "end"
+    ? line.slice(-MAX_COMMAND_ERROR_LENGTH)
+    : line.slice(0, MAX_COMMAND_ERROR_LENGTH);
 };
 
 /** Expected failure during isolated fixture preparation or local lifecycle control. */

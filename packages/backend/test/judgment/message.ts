@@ -54,8 +54,9 @@ function both(
 /**
  * The messages `lasting` is measured against (`judgment:measure`): 124 whole
  * messages in 17 languages and 8 scripts, asked one at a time as the capture
- * asks. The number of a message is its position in this list, counted from 1,
- * and it is the only thing the command prints about a message.
+ * asks. The number of a message is its position in this list, counted from 1.
+ * The command names a message by that number and describes it by its language
+ * and its form, and never prints the message.
  */
 export const messages: Arr.NonEmptyReadonlyArray<Row> = [
   // Something lasting: a grade or level, a goal, how they like to learn, something hard, a dated situation.

@@ -111,10 +111,11 @@ languages and on texts that sit near it, so the thresholds in
 `nina/judgment/catalog.ts` are not set from this table.
 `pnpm --filter @repo/backend judgment:measure` runs a labelled set of 124
 messages and 85 notes in 17 languages and 8 scripts through the deployment,
-each judgment on the form of text and the grouping that production asks it (ADR
-0022), and prints the probabilities by label, the counts at the threshold the
-deployment reports and the threshold that separates best. The thresholds start
-at 0.5 and are set from what that command prints.
+each judgment on the form of text that production asks it, one text to a
+request (ADR 0022), and prints the probabilities by label, the counts at the
+threshold the deployment reports and the threshold that separates best. The
+thresholds in the catalog were set from what that command printed on 12 October
+2026, and ADR 0022 holds the tables.
 
 ## Decision
 
@@ -130,10 +131,22 @@ at 0.5 and are set from what that command prints.
   costs 5 credits. The model keys learners chose before October 2026 are
   gone: no function takes one and no stored row holds one.
 - **Routing and retention.** No routing choice is sent: Convex rejects
-  `provider.only` and the other routing fields. Every language call does send
-  `provider: { zdr: true, data_collection: "deny" }`, which the gateway accepts
-  (measured 10 October 2026), so each request asks for the zero data retention
-  that Convex states for the gateway as a whole. `gateway/route.ts` is deleted.
+  `provider.only` and the other routing fields. Every language model call does
+  send `provider: { zdr: true, data_collection: "deny" }`, which the gateway
+  accepts (measured 10 October 2026), so each such request asks for the zero
+  data retention that Convex states for the gateway as a whole. An embedding
+  request cannot ask: `@ai-sdk/openai-compatible` 3.0.14 builds its body from
+  the model, the texts, the encoding format, `dimensions`, and `user` alone, and
+  `convexGateway.embeddingModel` offers no way to add a field. Embedding
+  requests therefore rely on the gateway's own statement. They carry published
+  lesson and Quran text and the short search phrase that the specialist writes
+  from a learner's question, never a stored learner message.
+  `gateway/route.ts` is deleted.
+- **Embeddings.** `Gateway.embed(texts, model)` returns one vector of
+  `embeddingDimensions` numbers per text, from `embeddingModelId` in
+  `gateway/model.ts` or from the candidate that the model test of knowledge
+  search names. It fails with `GatewayFailure` when the reply does not match
+  the request, and ends a call after `embeddingTimeoutMs`.
 - **Prompt cache.** The gateway caches nothing on its own: a repeated prefix of
   53,624 tokens read zero cached tokens. `gateway/cache.ts` marks the last
   message before the newest user message with
@@ -150,9 +163,12 @@ at 0.5 and are set from what that command prints.
   newest learner message, which is never stored in the thread. Because the
   marker sits before that message, the block never makes the prefix change. The
   prefix does change when something in it does: the learner moves to a page
-  with other content, a remembered fact or the summary changes, or the history,
-  kept to 12,000 tokens, is full and each new turn pushes the oldest out.
-  Between those events a turn adds only its question and answer to the prefix.
+  with other content, a remembered fact changes, the learner retries an
+  answer, which takes the replaced asking out of the history, or the summary
+  folds the oldest turns of the history. The history, kept to 32,000 tokens,
+  otherwise only grows at its end between folds, and a fold brings it down to
+  16,000, so folds are about half a budget of turns apart. Between those events
+  a turn adds only its question and answer to the prefix.
 - **Spend.** No tenant or person identifier goes to the gateway, so the `space`
   argument leaves `Gateway.language`. Nakafa records cost itself: each usage row
   keeps the `providerMetadata.convexGateway.cost` its calls report, summed per

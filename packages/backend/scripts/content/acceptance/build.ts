@@ -38,10 +38,14 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
  * between the local backend and the app. The build runs below the backend's
  * CPU priority so prerender workers cannot starve queries past Convex's
  * one-second limit, while the served app keeps normal priority for browsers.
+ *
+ * The build calls Turborepo directly. The root build script runs the policy
+ * checks first, which prove nothing about the built app, and every CI leg
+ * would repeat what the Quality job already runs on the same commit.
  * @see https://man7.org/linux/man-pages/man1/nice.1.html
  */
 const applicationCommands = {
-  build: ["nice", "-n", "10", "pnpm", "run", "build"],
+  build: ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"],
   start: ["pnpm", "run", "start"],
 } as const;
 
