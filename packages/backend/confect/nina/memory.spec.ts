@@ -181,7 +181,7 @@ const NinaMemoryStatement = {
  * and the capture call has never sent one). A claim that fits no candidate is
  * dropped by the check, so one claim cannot refuse the others.
  */
-const NinaMemoryClaim = Schema.Struct({
+export const NinaMemoryClaim = Schema.Struct({
   kind: NinaMemoryKind,
   ...NinaMemoryStatement,
   until: Schema.optionalKey(Schema.String),

@@ -4,7 +4,7 @@ import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
 import { noteText } from "@repo/backend/confect/nina/judgment/note";
 import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
-import type { NinaMemoryCapture } from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryClaim } from "@repo/backend/confect/nina/memory.spec";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { decides, GatewayTest, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, type EarlierTurn } from "@repo/backend/test/nina";
@@ -22,7 +22,7 @@ import {
 } from "effect";
 
 /** One thing the capture model says the learner stated, as the model writes it. */
-type Claim = (typeof NinaMemoryCapture.Type)["memories"][number];
+type Claim = typeof NinaMemoryClaim.Type;
 
 /** What the learner says in a capture test, unless the test says something else. */
 export const MESSAGE = "Aku kelas 12 dan mau ikut SNBT 2027.";

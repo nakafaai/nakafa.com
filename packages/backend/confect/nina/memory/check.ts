@@ -1,11 +1,11 @@
 import { hasWords } from "@repo/backend/confect/nina/memory/match";
 import {
   NinaMemoryCandidate,
-  type NinaMemoryCapture,
+  type NinaMemoryClaim,
 } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
 
-type Claim = (typeof NinaMemoryCapture.Type)["memories"][number];
+type Claim = typeof NinaMemoryClaim.Type;
 type Candidate = typeof NinaMemoryCandidate.Type;
 
 const toCandidate = Schema.decodeUnknownOption(NinaMemoryCandidate);

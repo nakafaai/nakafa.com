@@ -3,10 +3,10 @@ import {
   checkCandidates,
   endOfDay,
 } from "@repo/backend/confect/nina/memory/check";
-import type { NinaMemoryCapture } from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryClaim } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Option } from "effect";
 
-type Claim = (typeof NinaMemoryCapture.Type)["memories"][number];
+type Claim = typeof NinaMemoryClaim.Type;
 
 const NOW = Date.UTC(2026, 9, 10, 15);
 const message =
