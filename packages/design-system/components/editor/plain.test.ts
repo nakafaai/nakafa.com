@@ -1,15 +1,16 @@
-// @vitest-environment node
+// @vitest-environment jsdom
 
-import { describe, expect, it } from "@effect/vitest";
+import { afterAll, describe, expect, it } from "@effect/vitest";
 import { richOptions } from "@repo/design-system/components/editor/extensions";
 import { plainText } from "@repo/design-system/components/editor/plain";
-import { decodeHtmlEntities, Editor, type JSONContent } from "@tiptap/core";
-import { Array as Arr, Function as Fn, String as Str } from "effect";
+import { Editor, type JSONContent } from "@tiptap/core";
+import { Array as Arr, Function as Fn, Result, String as Str } from "effect";
 
 /**
- * The editor of a memory with no page behind it: it reads and writes Markdown
- * exactly as the editor of the Memory page does, and shows its words as
- * `getText` gives them. These tests set that editor against `plainText`.
+ * The editor of a memory with a document to parse HTML in, as a browser has: it
+ * reads and writes Markdown exactly as the editor of the Memory page does, and
+ * shows its words as `getText` gives them. These tests set that editor against
+ * `plainText`.
  */
 function openEditor(content: JSONContent | string) {
   return new Editor({
@@ -22,6 +23,15 @@ function openEditor(content: JSONContent | string) {
   });
 }
 
+/**
+ * One editor serves the hundreds of texts these tests set against the reader:
+ * each text replaces the one before it, and an editor made for each text takes
+ * longer than a test may.
+ */
+const editor = openEditor("");
+
+afterAll(() => editor.destroy());
+
 /** Every run of space as one space, and none at either end. */
 function collapse(words: string) {
   return Str.trim(Str.replaceAll(/\s+/g, " ")(words));
@@ -29,20 +39,39 @@ function collapse(words: string) {
 
 /** The words the editor shows when it opens the stored Markdown. */
 function shownBy(markdown: string) {
-  const editor = openEditor(markdown);
-  const words = collapse(editor.getText({ blockSeparator: " " }));
+  editor.commands.setContent(markdown, { contentType: "markdown" });
+  return collapse(editor.getText({ blockSeparator: " " }));
+}
 
-  editor.destroy();
+/**
+ * The words an editor shows when the page opens it on the stored Markdown: with
+ * the Markdown as its first content, which is not the same as setting it later
+ * when the Markdown holds no block the editor can hold.
+ */
+function openedWith(markdown: string) {
+  const opened = openEditor(markdown);
+  const words = collapse(opened.getText({ blockSeparator: " " }));
+
+  opened.destroy();
   return words;
 }
 
-/** The Markdown the editor stores for a document. */
+/** The Markdown the page stores for a document: what the editor writes, without the space around it. */
 function writtenBy(doc: JSONContent) {
-  const editor = openEditor(doc);
-  const markdown = editor.getMarkdown();
+  editor.commands.setContent(doc);
+  return Str.trim(editor.getMarkdown());
+}
 
-  editor.destroy();
-  return markdown;
+/** The texts, among these, whose words the reader and the editor say differently. */
+function disagreeing(markdowns: readonly string[]) {
+  return Arr.filterMap(markdowns, (markdown) => {
+    const reader = plainText(markdown);
+    const shown = shownBy(markdown);
+
+    return reader === shown
+      ? Result.failVoid
+      : Result.succeed({ editor: shown, markdown, reader });
+  });
 }
 
 type Marks = NonNullable<JSONContent["marks"]>;
@@ -69,10 +98,30 @@ const item = (words: JSONContent, ...after: JSONContent[]): JSONContent => ({
   type: "listItem",
 });
 
+const bullets = (...items: JSONContent[]): JSONContent => ({
+  content: items,
+  type: "bulletList",
+});
+
+const numbers = (start: number, ...items: JSONContent[]): JSONContent => ({
+  attrs: { start },
+  content: items,
+  type: "orderedList",
+});
+
+const task = (checked: boolean, words: JSONContent): JSONContent => ({
+  attrs: { checked },
+  content: [paragraph(words)],
+  type: "taskItem",
+});
+
 /** What the learner may type that a Markdown writer must treat with care. */
 const WORST = [
   "I study C++ at university",
+  "I use C++ and C++20",
   "a == b",
+  "if a == b and c == d",
+  "a ++ b ++ c",
   "Q&A",
   "a < b > c",
   "https://example.com/a?x=1&y=2",
@@ -89,11 +138,20 @@ const WORST = [
   "🦊 Fox",
   " leading and trailing  ",
   "two  spaces   inside",
+  // Words that start like the items of a list: a title, an abbreviation, a
+  // number written out, a letter or a roman numeral with its dot.
+  "Dr. Budi sakit",
+  "ok. saya",
+  "mild. calm",
+  "Jl. Merdeka 5",
+  "No. 5 is mine",
+  "a) first",
+  "I. Roman",
+  "x. y",
 ];
 
 /** The marks the writer wraps around words, and a link whose address holds an ampersand. */
 const MARKS: readonly Marks[] = [
-  [],
   [{ type: "bold" }],
   [{ type: "code" }],
   [{ attrs: { href: "https://example.com/x?a=1&b=2" }, type: "link" }],
@@ -125,61 +183,50 @@ const BLOCKS: readonly {
     name: "heading",
   },
   {
-    build: (words) => [
-      {
-        content: [item(words), item(text("two"))],
-        type: "bulletList",
-      },
-    ],
+    build: (words) => [bullets(item(words), item(text("two")))],
     name: "bullets",
   },
   {
-    build: (words) => [
-      {
-        attrs: { start: 1 },
-        content: [item(words), item(text("two"))],
-        type: "orderedList",
-      },
-    ],
+    build: (words) => [numbers(1, item(words), item(text("two")))],
     name: "numbers",
   },
   {
     build: (words) => [
+      numbers(7, item(text("first"), numbers(1, item(words))), item(text("2"))),
+    ],
+    name: "numbers from seven with a list inside an item",
+  },
+  {
+    build: (words) => [
       {
-        content: [
-          {
-            attrs: { checked: false },
-            content: [paragraph(words)],
-            type: "taskItem",
-          },
-          {
-            attrs: { checked: true },
-            content: [paragraph(text("done"))],
-            type: "taskItem",
-          },
-        ],
+        content: [task(false, words), task(true, text("done"))],
         type: "taskList",
       },
     ],
     name: "tasks",
   },
   {
-    build: (words) => [
-      {
-        content: [
-          item(text("top"), {
-            content: [item(words)],
-            type: "bulletList",
-          }),
-        ],
-        type: "bulletList",
-      },
-    ],
+    build: (words) => [bullets(item(text("top"), bullets(item(words))))],
     name: "a list in a list",
   },
   {
-    build: (words) => [{ content: [paragraph(words)], type: "blockquote" }],
-    name: "quote",
+    build: (words) => [bullets(item(text("top"), numbers(1, item(words))))],
+    name: "numbers in a bullet",
+  },
+  {
+    build: (words) => [
+      {
+        content: [paragraph(words), paragraph(text("second"))],
+        type: "blockquote",
+      },
+    ],
+    name: "quote of two paragraphs",
+  },
+  {
+    build: (words) => [
+      { attrs: { language: "ts" }, content: [words], type: "codeBlock" },
+    ],
+    name: "code block",
   },
   {
     build: (words) => [paragraph(words), { type: "horizontalRule" }],
@@ -195,7 +242,7 @@ const BLOCKS: readonly {
 
 describe("plainText", () => {
   describe("against the editor", () => {
-    it("says what the editor shows for each text a learner may type", () => {
+    it("says what the editor shows for each text a learner may type, and loses no word of it", () => {
       for (const words of WORST) {
         const stored = writtenBy(doc(paragraph(text(words))));
 
@@ -205,45 +252,32 @@ describe("plainText", () => {
       }
     });
 
-    it("says what the editor shows for every block the writer can write, with or without a mark", () => {
+    it("says what the editor shows for every block the writer can write", () => {
       const differing = Arr.flatMap(BLOCKS, ({ build, name }) =>
-        Arr.flatMap(WORST, (words) =>
-          Arr.flatMap(MARKS, (marks) => {
-            const stored = writtenBy(doc(...build(text(words, marks))));
+        Arr.flatMap(WORST, (words) => {
+          const stored = writtenBy(doc(...build(text(words))));
 
-            return plainText(stored) === shownBy(stored)
-              ? []
-              : [`${name} of "${words}" stored as "${stored}"`];
-          })
-        )
+          return plainText(stored) === shownBy(stored)
+            ? []
+            : [`${name} of "${words}" stored as "${stored}"`];
+        })
       );
 
       expect(differing).toEqual([]);
     });
 
-    it("says what the editor shows for a heading, a code block and a quote of several paragraphs", () => {
-      const stored = writtenBy(
-        doc(
-          { attrs: { level: 1 }, content: [text("Plan")], type: "heading" },
-          {
-            attrs: { language: "ts" },
-            content: [text("const a = 1 < 2 && 3 > 2 // ** __ ``")],
-            type: "codeBlock",
-          },
-          {
-            content: [paragraph(text("first")), paragraph(text("second"))],
-            type: "blockquote",
-          }
-        )
+    it("says what the editor shows for every mark the writer can write", () => {
+      const differing = Arr.flatMap(MARKS, (marks) =>
+        Arr.flatMap(WORST, (words) => {
+          const stored = writtenBy(doc(paragraph(text(words, marks))));
+
+          return plainText(stored) === shownBy(stored)
+            ? []
+            : [`${marks[0]?.type} of "${words}" stored as "${stored}"`];
+        })
       );
 
-      expect(stored).toBe(
-        "# Plan\n\n```ts\nconst a = 1 < 2 && 3 > 2 // ** __ ``\n```\n\n> first\n>\n> second"
-      );
-      expect(plainText(stored)).toBe(shownBy(stored));
-      expect(plainText(stored)).toBe(
-        "Plan const a = 1 < 2 && 3 > 2 // ** __ `` first second"
-      );
+      expect(differing).toEqual([]);
     });
 
     it("says what the editor shows for Markdown the editor never wrote, as Nina or another client may", () => {
@@ -262,57 +296,83 @@ describe("plainText", () => {
         "- one\n\n- two\n\n  paragraph in two",
         "* star\n* list\n\n+ plus\n+ list",
         "1) one\n2) two",
+        "3. three\n4. four\n   1. inside",
         "a\n\n\n&nbsp;\n\nb",
-        " ",
+        " ",
         "**",
         "[]()",
         "&;",
         "&#38;amp; stays as typed",
         "I like ==highlight== and ++under++ here",
-        "if a == b and c == d",
-        "I use C++ and C++20",
+        "==highlight== and ++under++",
+        "Dr. Budi sakit\nMr. Lee mengajar",
+        "a. letter list\nb. second",
+        "i. roman\nii. two",
+        "1. one\nDr. Budi sakit\n2. two",
+        "1. # not a heading\n2. two",
+        "1. - not a bullet\n2. - nor this",
+        "1. **bold** and ++under++\n2. [link](https://example.com)",
+        "1. [ ] **buy** milk\n2. [x] ++done++",
+        "- 1. a number inside a bullet\n- 2. and another",
+        "[ref]: https://example.com\n\ntext",
+        "a\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\nb",
+        "| a | b |\n|---|---|\n| 1 | 2 |\n\nafter the table",
+        "0. zero\n1. one",
+        "10. ten\n11. eleven",
       ];
-      const differing = Arr.filter(
-        markdowns,
-        (markdown) => plainText(markdown) !== shownBy(markdown)
+
+      expect(disagreeing(markdowns)).toEqual([]);
+    });
+
+    it("says what the editor shows for each way a line can start and what can follow it", () => {
+      const starts = [
+        "",
+        "# ",
+        "## ",
+        "> ",
+        "- ",
+        "* ",
+        "+ ",
+        "1. ",
+        "1) ",
+        "10. ",
+        "a. ",
+        "b) ",
+        "ii. ",
+        "Dr. ",
+        "- [ ] ",
+        "- [x] ",
+        "1. [ ] ",
+        "- 1. ",
+        "1. - ",
+        "1. # ",
+        "> - ",
+        "> 1. ",
+        "    ",
+        "  - ",
+        "   1. ",
+        "```\n",
+        "---\n",
+        "***\n",
+        "![",
+        "\\",
+      ];
+      const follows = [
+        "",
+        "\nline",
+        "\n\nline",
+        "\n  line",
+        "\n- line",
+        "\n1. line",
+        "\na. line",
+        "\n# line",
+        "\n> line",
+      ];
+      const markdowns = Arr.flatMap(starts, (start) =>
+        Arr.map(follows, (follow) => `${start}word two${follow}`)
       );
 
-      expect(differing).toEqual([]);
-    });
-
-    it("says what the editor shows even where the editor changes what was typed", () => {
-      // The writer escapes neither a plus sign nor an equals sign, so the
-      // editor reads a second pair of them in the text as a mark. The words it
-      // shows are the words the list must show.
-      expect(plainText("I use C++ and C++20")).toBe("I use Cand C20");
-      expect(shownBy("I use C++ and C++20")).toBe("I use Cand C20");
-      expect(plainText("if a == b and c == d")).toBe("if a b and c d");
-      expect(shownBy("if a == b and c == d")).toBe("if a b and c d");
-    });
-
-    it("reads the references the writer puts in text as the editor does, and no others", () => {
-      const references = [
-        "&amp;",
-        "&lt;b&gt;",
-        "&quot;",
-        "&#38;",
-        "&#x26;",
-        "&#X26;",
-        "&#128; &#150; &#159;",
-        "&#0; &#xD800; &#1114112; &#xFFFFFF;",
-        "&#12345678; &#xFFFFFFF;",
-        "&copy; &nbsp;x &Amp; &AMP;",
-        "&amp;lt; and &#38;amp;",
-        "a & b; &",
-      ];
-
-      expect(
-        Arr.filter(
-          references,
-          (reference) =>
-            plainText(reference) !== collapse(decodeHtmlEntities(reference))
-        )
-      ).toEqual([]);
+      expect(disagreeing(markdowns)).toEqual([]);
     });
   });
 
@@ -333,34 +393,38 @@ describe("plainText", () => {
       );
     });
 
-    it("keeps a plus sign, an equals sign, an ampersand and an angle bracket that are only words", () => {
+    it("keeps a plus sign, an equals sign, an ampersand and an angle bracket that are only words, and reads a mark only as a pair around words", () => {
       expect(plainText("I study C++ at university")).toBe(
         "I study C++ at university"
       );
-      expect(plainText("a == b")).toBe("a == b");
       expect(plainText("Q&amp;A")).toBe("Q&A");
       expect(plainText("a &lt; b &gt; c")).toBe("a < b > c");
-      expect(plainText("==")).toBe("==");
-      expect(plainText("++")).toBe("++");
-    });
-
-    it("reads a mark only as a pair around words", () => {
+      expect(plainText("== and ++")).toBe("== and ++");
       expect(plainText("a ==b== c ++d++ e")).toBe("a b c d e");
-      expect(plainText("a == b == c")).toBe("a b c");
-      expect(plainText("a ++ b")).toBe("a ++ b");
-      expect(plainText("a =b= c")).toBe("a =b= c");
+      expect(plainText("a == b == c")).toBe("a == b == c");
+      expect(plainText("I use C++ and C++20")).toBe("I use C++ and C++20");
     });
 
-    it("drops the writer's escapes and reads a code span as it is", () => {
+    it("keeps the first word of a line that starts like the item of a list", () => {
+      expect(
+        plainText("Dr. Budi sakit\nok. saya\na. letter list\nb. second")
+      ).toBe("Dr. Budi sakit ok. saya a. letter list b. second");
+    });
+
+    it("keeps the number of a numbered list inside a bullet, as the editor does", () => {
+      expect(plainText("- 1. word")).toBe("1. word");
+      expect(plainText("- 1. a ++mark++ here\n- 2. and **more**")).toBe(
+        "1. a mark here 2. and more"
+      );
+    });
+
+    it("drops the writer's escapes, reads a code span as it is, and keeps a link's words without its address", () => {
       expect(
         plainText("Nilai 9\\.5 dan 2 \\* 3 and \\*\\*not bold\\*\\*")
       ).toBe("Nilai 9.5 dan 2 * 3 and **not bold**");
       expect(plainText("`code &amp; more` and \\` alone")).toBe(
         "code &amp; more and ` alone"
       );
-    });
-
-    it("keeps a link's words and drops its address", () => {
       expect(
         plainText(
           "[https://example.com/a?x=1&amp;y=2](https://example.com/a?x=1&y=2)"
@@ -368,50 +432,60 @@ describe("plainText", () => {
       ).toBe("https://example.com/a?x=1&y=2");
     });
 
-    it("reads a line break and a blank line as a space", () => {
+    it("reads a line break and a blank line as a space, and a stray non-breaking space as it is", () => {
       expect(plainText("one  \ntwo\nthree\n\nfour")).toBe("one two three four");
-    });
-
-    it("reads nothing for a divider, a table, a reference and a paragraph that holds only the empty marker", () => {
-      expect(plainText("---")).toBe("");
-      expect(plainText("a\n\n&nbsp;\n\nb")).toBe("a b");
-      expect(plainText(" ")).toBe("");
-      expect(plainText("[ref]: https://example.com\n\ntext")).toBe("text");
-      expect(plainText("")).toBe("");
-    });
-
-    it("shows a stray non-breaking space and an entity beside words as they are", () => {
       expect(plainText("a &nbsp; b")).toBe("a &nbsp; b");
       expect(plainText("a b")).toBe("a b");
     });
 
-    it("keeps raw HTML as text, which is how the editor reads it where no browser can parse it", () => {
-      expect(plainText("a <b>c</b> d")).toBe("a <b>c</b> d");
-      expect(shownBy("a <b>c</b> d")).toBe("a <b>c</b> d");
+    it("reads nothing for a divider, a table, a reference or a paragraph that holds only the empty marker, so such a memory is called Untitled", () => {
+      expect(plainText("---")).toBe("");
+      expect(plainText("a\n\n&nbsp;\n\nb")).toBe("a b");
+      expect(plainText(" ")).toBe("");
+      expect(plainText("[ref]: https://example.com\n\ntext")).toBe("text");
+      expect(plainText("")).toBe("");
+      expect(plainText("a\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\nb")).toBe(
+        "a b"
+      );
     });
   });
 
-  describe("where it still differs from the editor", () => {
-    // Each test names a text the editor reads another way than its lexer does.
-    // The editor lexes an ordered list with its own tokenizer, which takes a
-    // letter or a roman numeral as a marker and keeps a block marker after a
-    // number as words. `plainText` lexes with the lexer alone.
-    it("shows a letter or a roman numeral with its dot, where the editor shows a list", () => {
-      expect(plainText("a. letter list\nb. second")).toBe(
-        "a. letter list b. second"
-      );
-      expect(shownBy("a. letter list\nb. second")).toBe("letter list second");
-      expect(plainText("i. roman\nii. two")).toBe("i. roman ii. two");
-      expect(shownBy("i. roman\nii. two")).toBe("roman two");
+  // The editor never writes raw HTML or a table: it escapes `<` and `>` in what
+  // a learner types, and it has no table. Another writer, such as a chat, may.
+  // The shapes are ones Tiptap bends to its schema or to its own task list.
+  describe("where the editor reads Markdown another way", () => {
+    it("reads the tags of raw HTML as text, where the editor drops the tags it has a mark for", () => {
+      // The editor parses HTML with the document of the page, which the reader
+      // has none of, and the tags it knows are a list of the schema.
+      expect(plainText("a <b>c</b> d")).toBe("a <b>c</b> d");
+      expect(openedWith("a <b>c</b> d")).toBe("a c d");
     });
 
-    it("drops a block marker after a number, where the editor keeps it as words", () => {
-      expect(plainText("1. # not a heading\n2. two")).toBe("not a heading two");
-      expect(shownBy("1. # not a heading\n2. two")).toBe("# not a heading two");
+    it("reads the shapes that Tiptap bends to its schema or to its own task list as Markdown reads them", () => {
+      const shapes = [
+        ["- [ ] a\n- [ ] \n- [ ] c", "a [ ] c", "a c"],
+        ["- [ ] a\n  ---\n- [ ] b", "[ ] a b", "a b"],
+        ["- # head\n\n  text", "head text", "headtext"],
+        ["-\n\n  ```ts\n  code\n  ```", "code", ""],
+        ["text\n\n   ```\n   code\n   ```", "text code", "text"],
+        ["`- [ ] x`", "- [ ] x", "` x`"],
+      ] as const;
+
+      expect(
+        Arr.map(shapes, ([markdown]) => [
+          plainText(markdown),
+          shownBy(markdown),
+        ])
+      ).toEqual(Arr.map(shapes, ([, reader, editor]) => [reader, editor]));
     });
 
-    it("reads nothing for a table, where the editor shows the table as one line of words when nothing else is written", () => {
-      expect(plainText("| a | b |\n|---|---|\n| 1 | 2 |")).toBe("");
+    it("reads nothing for a table alone, where the editor shows the Markdown as it was written", () => {
+      // When the lexer finds no block the editor can hold, Tiptap keeps the
+      // Markdown as the text of the editor and parses it as HTML.
+      const table = "| a | b |\n|---|---|\n| 1 | 2 |";
+
+      expect(plainText(table)).toBe("");
+      expect(openedWith(table)).toBe("| a | b | |---|---| | 1 | 2 |");
     });
   });
 });

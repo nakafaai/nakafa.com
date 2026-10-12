@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, MutableRef, Option, Schema } from "effect";
 import {
   draftArgs,
   draftOf,
@@ -231,11 +231,25 @@ describe("memory list", () => {
       expect(memoryName(stored("a", { text: "---" }))).toBe("");
     });
 
-    it("reads the words of one memory object once", () => {
-      const memory = stored("a", { text: "Kelas **12**" });
+    it("reads the Markdown of one memory object once, however often a row asks for its name", () => {
+      const reads = MutableRef.make(0);
+      const memory = Object.defineProperty(stored("a"), "text", {
+        get() {
+          MutableRef.update(reads, (count) => count + 1);
+          return "Kelas **12**";
+        },
+      });
 
       expect(memoryName(memory)).toBe("Kelas 12");
       expect(memoryName(memory)).toBe("Kelas 12");
+      expect(MutableRef.get(reads)).toBe(1);
+    });
+
+    it("reads a changed memory again, because it is a new object", () => {
+      const memory = stored("a", { text: "Kelas **12**" });
+
+      expect(memoryName(memory)).toBe("Kelas 12");
+      expect(memoryName({ ...memory, text: "Kelas **11**" })).toBe("Kelas 11");
     });
   });
 
@@ -296,6 +310,22 @@ describe("memory list", () => {
         memoryId("a"),
         memoryId("c"),
       ]);
+    });
+
+    it("builds what it reads of one memory object once, however often the learner types", () => {
+      const reads = MutableRef.make(0);
+      const memory = Object.defineProperty(stored("a"), "title", {
+        enumerable: true,
+        get() {
+          MutableRef.update(reads, (count) => count + 1);
+          return "Plan";
+        },
+      });
+
+      expect(ids(shownMemories([memory], "p"))).toEqual([memoryId("a")]);
+      expect(ids(shownMemories([memory], "pl"))).toEqual([memoryId("a")]);
+      expect(ids(shownMemories([memory], "plan"))).toEqual([memoryId("a")]);
+      expect(MutableRef.get(reads)).toBe(1);
     });
 
     it("keeps the order of the list and returns the very list it was given for a blank search", () => {

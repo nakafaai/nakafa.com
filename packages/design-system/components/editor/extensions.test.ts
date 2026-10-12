@@ -1,12 +1,12 @@
-// @vitest-environment node
+// @vitest-environment jsdom
 
 import { describe, expect, it } from "@effect/vitest";
 import { richOptions } from "@repo/design-system/components/editor/extensions";
 import { Editor, type JSONContent } from "@tiptap/core";
 import { EditorState, type Transaction } from "@tiptap/pm/state";
-import { Array as Arr, MutableList } from "effect";
+import { Array as Arr } from "effect";
 
-/** The editor of a memory with no page behind it, with the limit and the refusal a test names. */
+/** The editor of a memory with a document to render in, with the limit and the refusal a test names. */
 function openEditor(
   content: JSONContent | string,
   { limit = 100_000, onRefuse = vi.fn<() => void>() } = {}
@@ -43,6 +43,11 @@ const DOC: JSONContent = {
         },
       ],
       type: "bulletList",
+    },
+    {
+      attrs: { start: 3 },
+      content: [{ content: [paragraph("نور الهدى")], type: "listItem" }],
+      type: "orderedList",
     },
     {
       content: [
@@ -142,35 +147,22 @@ describe("richOptions", () => {
   });
 
   describe("the direction", () => {
-    it("gives every block the direction of its own words", () => {
+    it("puts the attribute that takes the direction of the words on every kind of block", () => {
       const editor = openEditor(DOC);
-      const blocks = MutableList.make<string>();
+      const page = new DOMParser().parseFromString(
+        editor.getHTML(),
+        "text/html"
+      );
+      // Sixteen blocks: six paragraphs, a heading, a bullet list, a numbered
+      // list and a task list with an item each, a quote, a code block and a
+      // divider. A browser, not this test, decides the direction from the words
+      // (`words.browser.ts`).
+      const blocks = Arr.fromIterable(
+        page.body.querySelectorAll("p, h2, ul, ol, li, blockquote, pre, hr")
+      );
 
-      editor.state.doc.descendants((node) => {
-        if (node.isBlock) {
-          MutableList.append(blocks, `${node.type.name}:${node.attrs.dir}`);
-        }
-      });
-
-      expect(MutableList.toArray(blocks)).toEqual(
-        Arr.map(
-          [
-            "paragraph",
-            "heading",
-            "bulletList",
-            "listItem",
-            "paragraph",
-            "paragraph",
-            "taskList",
-            "taskItem",
-            "paragraph",
-            "blockquote",
-            "paragraph",
-            "codeBlock",
-            "horizontalRule",
-          ],
-          (name) => `${name}:auto`
-        )
+      expect(Arr.map(blocks, (block) => block.getAttribute("dir"))).toEqual(
+        Arr.makeBy(16, () => "auto")
       );
       editor.destroy();
     });
@@ -195,6 +187,115 @@ describe("richOptions", () => {
       withDirection.destroy();
       without.destroy();
       reopened.destroy();
+    });
+  });
+
+  describe("the Markdown it reads", () => {
+    /** The types of the blocks of a document, from its first to its last. */
+    const typesOf = (editor: Editor) =>
+      Arr.map(editor.getJSON().content ?? [], (node) => node.type);
+
+    /** The marks in a node and the nodes under it, in the order of the text. */
+    const marksOf = (node: JSONContent): string[] =>
+      Arr.flatMap(node.content ?? [], (child) => [
+        ...Arr.map(child.marks ?? [], (mark) => mark.type),
+        ...marksOf(child),
+      ]);
+
+    it("keeps a line that starts like the item of a list as the words it is", () => {
+      // Tiptap's own tokenizer takes one or two letters, or a roman numeral,
+      // for the number of an item: these lines opened as one list, without
+      // `Dr.`, `ok.`, `mild.` and the rest of their first words.
+      const lines = [
+        "Dr. Budi sakit",
+        "ok. saya",
+        "mild. calm",
+        "Jl. Merdeka 5",
+        "No. 5 is mine",
+        "a) first",
+        "I. Roman",
+        "x. y",
+      ];
+      const stored = Arr.join(lines, "\n\n");
+      const editor = openEditor(stored);
+
+      expect(typesOf(editor)).toEqual(Arr.map(lines, () => "paragraph"));
+      expect(editor.getMarkdown()).toBe(stored);
+      editor.destroy();
+    });
+
+    it("reads a numbered list with its start, its marks and the lists inside it, and writes it as it was", () => {
+      const stored = Arr.join(
+        [
+          "3. **three** and ++under++ and ==high==",
+          "4. four",
+          "   1. inside",
+          "   2. and ==here==",
+          "   - a bullet",
+          "5. five",
+          "",
+          "- a bullet list",
+          "  1. with a numbered one",
+        ],
+        "\n"
+      );
+      const editor = openEditor(stored);
+      const [numbered] = editor.getJSON().content ?? [];
+
+      expect(typesOf(editor)).toEqual(["orderedList", "bulletList"]);
+      expect(numbered?.attrs?.start).toBe(3);
+      expect(marksOf(numbered ?? {})).toEqual([
+        "bold",
+        "underline",
+        "highlight",
+        "highlight",
+      ]);
+      expect(editor.getMarkdown()).toBe(stored);
+      editor.destroy();
+    });
+
+    it("reads a list of ten items and more, and one with another list under its last item", () => {
+      const stored = Arr.join(
+        [
+          ...Arr.makeBy(11, (index) => `${index + 1}. item ${index + 1}`),
+          "    - under eleven",
+        ],
+        "\n"
+      );
+      const editor = openEditor(stored);
+
+      expect(typesOf(editor)).toEqual(["orderedList"]);
+      expect(editor.getMarkdown()).toBe(stored);
+      editor.destroy();
+    });
+
+    it("writes the code in a numbered item as it was at every save", () => {
+      // Tiptap's own tokenizer moved the code one space to the right each time.
+      const stored = "1. one\n   ```ts\n   const a = 1\n   ```\n2. two";
+      const editor = openEditor(stored);
+
+      expect(editor.getMarkdown()).toBe(stored);
+      editor.destroy();
+    });
+
+    it("reads a numbered item with a check box as its words, with their marks", () => {
+      const editor = openEditor("1. [ ] **buy** milk\n2. [x] ++done++");
+
+      expect(typesOf(editor)).toEqual(["orderedList"]);
+      expect(marksOf(editor.getJSON())).toEqual(["bold", "underline"]);
+      expect(editor.getMarkdown()).toBe("1. **buy** milk\n2. ++done++");
+      editor.destroy();
+    });
+
+    it("reads a mark only as a pair around words", () => {
+      const marked = openEditor("x ++under++ y ==high== z");
+      const plain = openEditor("I use C++ and C++20, a == b == c");
+
+      expect(marksOf(marked.getJSON())).toEqual(["underline", "highlight"]);
+      expect(marksOf(plain.getJSON())).toEqual([]);
+      expect(plain.getMarkdown()).toBe("I use C++ and C++20, a == b == c");
+      marked.destroy();
+      plain.destroy();
     });
   });
 });

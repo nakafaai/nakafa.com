@@ -235,3 +235,69 @@ test.describe("Memory editor with words in two scripts", () => {
     );
   });
 });
+
+/**
+ * Words the editor once read as something else: a line that starts like the
+ * item of a list, and a text that holds two pairs of plus signs with a space
+ * inside each. A pair of equals signs cannot be typed here, because the editor
+ * turns typed `== b ==` into a highlight as it turns `**b**` into bold;
+ * `extensions.test.ts` covers the equals signs another writer stores.
+ */
+const LOOKALIKES = ["Dr. Budi sakit", "ok. saya", "I use C++ and C++20"];
+
+/**
+ * A learner writes the words, and opens each memory again. The editor shows
+ * the words they wrote, as words: not a list without its first word, and not
+ * an underline in the place of the signs.
+ */
+const verifyLookalikes = Effect.fn("NakafaE2E.verifyLookalikes")(function* (
+  page: Page,
+  baseURL: string
+) {
+  const changes = yield* openMemoryPage(page, baseURL);
+
+  yield* Effect.promise(() =>
+    expect(page.getByText(EMPTY)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+  yield* Effect.promise(() => live(changes));
+  yield* Effect.forEach(LOOKALIKES, (text) =>
+    writeWorst(page, changes, { text })
+  );
+  yield* Effect.promise(async () => {
+    const editor = editorOf(page);
+
+    for (const text of LOOKALIKES) {
+      await memoryRow(page, text).getByText(text).click();
+      await opened(page, text);
+      await expect(editor.locator("ol, ul, u, mark")).toHaveCount(0);
+      await expect(editor.locator("p")).toHaveCount(1);
+      await editor.press("Escape");
+      await expect(editor).toHaveCount(0);
+    }
+  });
+  // Opening a memory and closing it again writes nothing, so the server's rows
+  // are still the words the learner wrote.
+  expect(yield* Effect.promise(() => namesOf(page))).toEqual(
+    Arr.reverse(LOOKALIKES)
+  );
+});
+
+test.describe("Memory editor with words that look like something else", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("shows the words as the learner wrote them", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.fromNullishOr(baseURL).pipe(
+          Effect.flatMap((origin) => verifyLookalikes(page, origin))
+        )
+      )
+    );
+  });
+});
