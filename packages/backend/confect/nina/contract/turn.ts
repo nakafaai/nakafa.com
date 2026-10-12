@@ -45,25 +45,43 @@ export const NinaFailureReason = Schema.Literals([
   "interrupted",
   "unknown",
 ]);
+/** A turn that was admitted and waits for a run. */
+export const NinaQueuedState = Schema.Struct({
+  status: Schema.Literal("queued"),
+});
+/** A turn that a run took. */
+export const NinaRunningState = Schema.Struct({
+  status: Schema.Literal("running"),
+  startedAt: Schema.Finite,
+});
+/** A turn that ended with an answer. */
+export const NinaCompleteState = Schema.Struct({
+  status: Schema.Literal("complete"),
+  finishedAt: Schema.Finite,
+});
+/** A turn that ended without one, with the reason when it is known. */
+export const NinaFailedState = Schema.Struct({
+  status: Schema.Literal("failed"),
+  finishedAt: Schema.Finite,
+  reason: Schema.optionalKey(NinaFailureReason),
+});
+/** A turn that the learner stopped. */
+export const NinaCancelledState = Schema.Struct({
+  status: Schema.Literal("cancelled"),
+  finishedAt: Schema.Finite,
+});
+/**
+ * Every state a turn can be in. The order of the members is the order the
+ * stored validator lists them in. A phase picks its states by these names, so a
+ * new state cannot slip into one by its position. The web app reads the type of
+ * its `status`.
+ */
 export const NinaTurnState = Schema.Union([
-  Schema.Struct({ status: Schema.Literal("queued") }),
-  Schema.Struct({
-    status: Schema.Literal("running"),
-    startedAt: Schema.Finite,
-  }),
-  Schema.Struct({
-    status: Schema.Literal("complete"),
-    finishedAt: Schema.Finite,
-  }),
-  Schema.Struct({
-    status: Schema.Literal("failed"),
-    finishedAt: Schema.Finite,
-    reason: Schema.optionalKey(NinaFailureReason),
-  }),
-  Schema.Struct({
-    status: Schema.Literal("cancelled"),
-    finishedAt: Schema.Finite,
-  }),
+  NinaQueuedState,
+  NinaRunningState,
+  NinaCompleteState,
+  NinaFailedState,
+  NinaCancelledState,
 ]);
 /**
  * Milliseconds counted from the admission of a turn, never below zero. A

@@ -9784,6 +9784,32 @@ export declare const internal: {
         null
       >;
     };
+    waits: {
+      summary: FunctionReference<
+        "query",
+        "internal",
+        { count: number },
+        {
+          newest?: number;
+          oldest?: number;
+          read: number;
+          statuses: {
+            cancelled: number;
+            complete: number;
+            failed: number;
+            open: number;
+          };
+          waits: Array<{
+            max?: number;
+            median?: number;
+            min?: number;
+            p90?: number;
+            stage: "claimedMs" | "readyMs" | "progressMs" | "tokenMs";
+            turns: number;
+          }>;
+        }
+      >;
+    };
   };
   privacy: {
     recovery: {

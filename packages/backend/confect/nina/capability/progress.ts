@@ -1,6 +1,5 @@
 import type {
   CapabilityArtifactSchema,
-  CapabilityOutcomeSchema,
   CapabilityOutputSchema,
 } from "@repo/backend/client/nina/capability";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
@@ -8,7 +7,7 @@ import {
   boundCapability,
   type ChatStep,
 } from "@repo/backend/confect/nina/capability/deadline";
-import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
+import { settleOutcome } from "@repo/backend/confect/nina/capability/outcome";
 import type { FinishReason } from "ai";
 import {
   Array as Arr,
@@ -22,8 +21,6 @@ import {
 export type CapabilityArtifact = typeof CapabilityArtifactSchema.Type;
 
 export type CapabilityOutput = typeof CapabilityOutputSchema.Type;
-
-type CapabilityOutcome = typeof CapabilityOutcomeSchema.Type;
 
 export type CapabilityProgress = (
   artifact: CapabilityArtifact
@@ -73,7 +70,10 @@ export function specialistResult(text: string, finishReason: FinishReason) {
  * interrupts the scoped capability, including its provider and tool requests.
  * Final model-facing text never exceeds the evidence budget; `continuation`
  * tells the model how to ask for what a truncation omitted. The stored outcome
- * is decided here, from what `run` reports and the cards it gathered.
+ * is decided here, from what `run` reports and the cards it gathered. A run
+ * that ends with no card and states no outcome found nothing, so it is `empty`,
+ * unless the capability is `textOnly`: its answer is the text, and no card is
+ * the normal way for it to end.
  *
  * A run has the time its chat step can spare, counted from the start of that
  * step, and its calls see the time left through `CapabilityDeadline`. A run
@@ -90,10 +90,12 @@ export function streamCapability<E, R>(
     capability,
     continuation,
     signal,
+    textOnly,
   }: {
-    readonly capability: LearningCapabilityName;
+    readonly capability: string;
     readonly continuation: string;
     readonly signal?: AbortSignal | undefined;
+    readonly textOnly?: boolean | undefined;
   }
 ): Stream.Stream<CapabilityOutput, E, R | ChatStep> {
   return Stream.callback<CapabilityOutput, E, R | ChatStep>(
@@ -122,7 +124,7 @@ export function streamCapability<E, R>(
         yield* boundCapability(run(publish), timedOut).pipe(
           Effect.tap(({ text, outcome }) => {
             const cards = Arr.fromIterable(MutableHashMap.values(artifacts));
-            const settled = settleOutcome(outcome, cards);
+            const settled = settleOutcome(outcome, cards, textOnly === true);
             return Queue.offer(queue, {
               artifacts: cards,
               ...(settled ? { outcome: settled } : {}),
@@ -184,31 +186,4 @@ function abandon(artifact: CapabilityArtifact): CapabilityArtifact {
   return artifact.data.status === "loading"
     ? { ...artifact, data: { ...artifact.data, ...ABANDONED } }
     : artifact;
-}
-
-/**
- * Keeps the outcome from contradicting the cards beside it. A card is loaded
- * once it settled without an error, whatever its own vocabulary calls that
- * (`done` for sources, `verified` for a calculation). A run that loaded a card
- * never ends as `failed`, and a run that lost a card never ends as plainly
- * done or empty: it is `partial` beside a loaded card and `failed` without
- * one. `limit` and `denied` are decisions, not results, and stay as stated.
- */
-function settleOutcome(
-  outcome: CapabilityOutcome | undefined,
-  artifacts: readonly CapabilityArtifact[]
-) {
-  const loaded = Arr.some(
-    artifacts,
-    ({ data }) => data.status !== "loading" && data.status !== "error"
-  );
-  const lost = Arr.some(artifacts, ({ data }) => data.status === "error");
-  const unstated = !outcome || outcome === "empty";
-  if (loaded && (outcome === "failed" || (lost && unstated))) {
-    return "partial" as const;
-  }
-  if (!(outcome || loaded) && lost) {
-    return "failed" as const;
-  }
-  return outcome;
 }

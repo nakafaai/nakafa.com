@@ -33,6 +33,7 @@ const CACHE_MARKER =
   ',"providerOptions":{"openaiCompatible":{"cache_control":{"type":"ephemeral"}}}';
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
+const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const SUMMARY_UPDATED_AT = Date.UTC(2026, 8, 27, 12);
 
 beforeEach(() => vi.useFakeTimers());
@@ -460,4 +461,26 @@ describe("Nina generation with what the learner told her", () => {
     expect(two?.newest).toContain("- Suka main gitar. (1970-01-01)");
     expect(two?.newest).not.toContain("Bingung limit.");
   });
+
+  it.each([
+    ["on", false, ["nakafa", "deepResearch", "math", "memory"]],
+    ["paused", true, ["nakafa", "deepResearch", "math"]],
+  ] as const)(
+    "offers Nina the tools the registry and the policy allow while the learner's memory is %s",
+    async (_state, paused, names) => {
+      const languageModel = ninaModelFor(1);
+      provider.languageModel.mockReturnValue(languageModel);
+      const f = await createPortraitTest();
+      if (paused) {
+        await f.owner.mutation(pause, { paused: true });
+      }
+      await f.t.action(run, { turnId: f.turnId });
+      expect(
+        Arr.map(
+          languageModel.doStreamCalls[0]?.tools ?? [],
+          (tool) => tool.name
+        )
+      ).toEqual(names);
+    }
+  );
 });

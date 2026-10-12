@@ -4,6 +4,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
+import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import type { NinaToolSet } from "@repo/backend/confect/nina/step";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { NoSuchToolError, Output, type ToolCallRepairFunction } from "ai";
@@ -44,7 +45,7 @@ export const repairToolCall = Effect.fn("nina.repair")(
     const ctx = yield* ActionCtx;
     const handle = (yield* Gateway).language("background");
     const agent = new Agent(components.nina, {
-      name: "nina-repair",
+      name: "nina-repair" satisfies UsageAgent,
       languageModel: handle.model,
       usageHandler,
     });
