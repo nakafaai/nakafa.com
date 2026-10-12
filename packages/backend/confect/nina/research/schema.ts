@@ -6,6 +6,24 @@ import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
 /**
+ * The most characters one search query may have. The search provider documents
+ * its `query` with `maxLength: 500` (Firecrawl search endpoint,
+ * https://docs.firecrawl.dev/api-reference/endpoint/search, read on 12 October
+ * 2026). The tool input states the same limit, so the model is told it and no
+ * query is cut afterwards.
+ */
+const webSearchQueryMaxLength = 500;
+/**
+ * One search query. The limit is checked on the text the model writes, so the
+ * JSON schema it reads holds it, and it counts characters as that schema's
+ * `maxLength` does: by code point, so an emoji or a rare Han character is one
+ * character here as it is there. The query is then trimmed and must not be
+ * blank.
+ */
+const queryInputSchema = Schema.String.check(
+  Schema.isMaxCodePoints(webSearchQueryMaxLength)
+).pipe(Schema.decodeTo(Schema.Trim), Schema.check(Schema.isMinLength(1)));
+/**
  * Requests the search provider's plan serves at once, measured on 10 October
  * 2026. One past it waits in the provider's queue and can time out there, so
  * one research run never sends more than this many at a time.
@@ -51,7 +69,7 @@ const ScrapeOutputSchema = Schema.Struct({
   error: Schema.optional(Schema.String),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export const WebSearchInputSchema = Schema.Struct({
-  queries: Schema.Array(Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))))
+  queries: Schema.Array(queryInputSchema)
     .pipe(
       Schema.mutable,
       Schema.check(Schema.isMinLength(1)),
@@ -75,20 +93,6 @@ export const WebSearchInputSchema = Schema.Struct({
       `,
       }),
     }),
-  sourcePreference: Schema.Literals(["primary", "any"]).annotate({
-    description: createPrompt({
-      taskContext: `
-      Choose primary when the task requires direct evidence from:
-      - a source owner.
-      - a first-party publisher.
-      - a maintainer or vendor.
-      - a standards body.
-      - paper authors.
-
-      Choose any when broader credible sources are acceptable.
-    `,
-    }),
-  }),
 })
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   .annotate({
@@ -240,5 +244,4 @@ export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerati
 ) {}
 export type ScrapeOutput = typeof ScrapeOutputSchema.Type;
 export type ResearchOutput = typeof ResearchOutputSchema.Type;
-export type WebSearchInput = typeof WebSearchInputSchema.Type;
 export type WebSearchOutput = typeof WebSearchOutputSchema.Type;

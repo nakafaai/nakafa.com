@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   formatSpecialistToolTask,
+  getSpecialistToolWords,
   mathToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
@@ -205,5 +206,70 @@ describe("LearningCapability tool schemas", () => {
 
       - A = [[2, 1, 0], [0, 2, 1], [0, 0, 2]]
     `);
+  });
+
+  it.each([
+    {
+      tool: "Nakafa",
+      input: {
+        deliverables: ["try-out evidence", "answer key"],
+        objective: "Find a suitable Nakafa try-out section.",
+        request: "SNBT pola bilangan try out",
+        requirements: ["Use the current page."],
+      },
+      words:
+        "SNBT pola bilangan try out\nFind a suitable Nakafa try-out section.\nUse the current page.\ntry-out evidence\nanswer key",
+    },
+    {
+      tool: "research",
+      input: {
+        objective: "Verify the event from direct sources.",
+        request: "event at SMA Tirta Lazuardi on 28 Mei 2026",
+        requirements: ["Preserve the date."],
+        sourceRequirements: ["Use official school channels."],
+      },
+      words:
+        "event at SMA Tirta Lazuardi on 28 Mei 2026\nVerify the event from direct sources.\nPreserve the date.\nUse official school channels.",
+    },
+    {
+      tool: "math",
+      input: {
+        given: ["x^2 < 9", "x > 0"],
+        objective: "Solve the inequality with the domain restriction.",
+        request: "x^2 < 9 dan x > 0",
+      },
+      words:
+        "x^2 < 9 dan x > 0\nSolve the inequality with the domain restriction.\nx^2 < 9\nx > 0",
+    },
+  ])(
+    "gives the words of a $tool call, one per line, in the order of its task and with no heading",
+    ({ input, words }) => {
+      expect(getSpecialistToolWords(input)).toBe(words);
+    }
+  );
+
+  it("leaves out a list with no item", () => {
+    expect(
+      getSpecialistToolWords({
+        deliverables: [],
+        objective: "Find a suitable Nakafa try-out section.",
+        request: "SNBT pola bilangan try out",
+        requirements: [],
+      })
+    ).toBe(
+      "SNBT pola bilangan try out\nFind a suitable Nakafa try-out section."
+    );
+  });
+
+  it("keeps a line of the request that starts with #, as the learner wrote it", () => {
+    expect(
+      getSpecialistToolWords({
+        objective: "Find where the movement began.",
+        request: "# Gerakan\nSiapa yang memulai gerakan itu?\n#MeToo",
+        sourceRequirements: [],
+      })
+    ).toBe(
+      "# Gerakan\nSiapa yang memulai gerakan itu?\n#MeToo\nFind where the movement began."
+    );
   });
 });
