@@ -1,65 +1,86 @@
-import { Array as Arr, HashSet, pipe, String as Str } from "effect";
+import { Array as Arr, Order, pipe, String as Str } from "effect";
 
 /** Characters of a word that the index keeps. */
 const KEPT_LENGTH = 6;
-/** Characters a word needs to say anything. */
-const WORD_LENGTH = 3;
-/** Digits a number needs to say anything: 12 is a class, 5 is nothing. */
-const NUMBER_LENGTH = 2;
 
-const NOT_WORD = /[^\p{L}\p{N}]+/gu;
-const NUMBER = /^\p{N}+$/u;
+/**
+ * The most a word is worth to a memory that holds it: when no other memory of
+ * the learner holds the word. A word is never worth more.
+ */
+export const WORD_WORTH = 1;
 
-const INDONESIAN =
-  "yang dan atau dengan untuk dari pada adalah ini itu saya aku kamu kami akan sudah juga tidak bisa karena";
-const ENGLISH =
-  "the and for with that this from are was were have has not but you your can will would about into than then they";
-const GERMAN =
-  "der die das und oder ein eine einen ich mich mir mein ist sind hat nicht mit für von auf auch aber wie wenn";
-
-/** Words of Indonesian, English and German that say nothing about a memory. */
-const STOP_WORDS = HashSet.fromIterable(
-  Str.split(Arr.join([INDONESIAN, ENGLISH, GERMAN], " "), " ")
-);
+/**
+ * The words of a text, by the word boundaries of Unicode (UAX 29), which the
+ * platform knows for every script: its dictionaries split Japanese, Chinese and
+ * Thai, which put no space between words. The locale is named so that the
+ * words never depend on the locale a runtime defaults to.
+ */
+const segmenter = new Intl.Segmenter("en", { granularity: "word" });
 
 /** Characters of a run, counted by code point so that an emoji counts once. */
 function sizeOf(run: string) {
   return Arr.length(Arr.fromIterable(run));
 }
 
-/** Whether a run of letters and digits says something: a number, or a word that is no stop word. */
-function isWord(run: string) {
-  const size = sizeOf(run);
-  return NUMBER.test(run)
-    ? size >= NUMBER_LENGTH
-    : size >= WORD_LENGTH && !HashSet.has(STOP_WORDS, run);
-}
-
 /**
- * The first `KEPT_LENGTH` characters of a run. The crude cut also joins
+ * The first `KEPT_LENGTH` characters of a word. The crude cut also joins
  * cognates: trigonometri, trigonometry and Trigonometrie all become trigon.
  */
-function stem(run: string) {
-  return Arr.join(Arr.take(Arr.fromIterable(run), KEPT_LENGTH), "");
+function stem(word: string) {
+  return Arr.join(Arr.take(Arr.fromIterable(word), KEPT_LENGTH), "");
 }
 
 /**
  * The words a text is found by. Both sides use this one function, the writer
  * that indexes a memory and every search, so they agree on what a word is.
- * The text is normalized (Unicode NFKC, lower case) and split into runs of
- * letters or digits. A run stays when it is a number of two digits or more, or
- * a word of three characters or more that is no stop word. Each stays as its
- * first six characters, once, in the order it first appears.
+ * The text is normalized (Unicode NFKC, lower case) and split at the word
+ * boundaries of the platform; a segment that is a word or a number stays, and
+ * punctuation, spaces and emoji go. Each word stays as its first six
+ * characters, once, in the order it first appears. No list of words and no
+ * minimum length decides what a word is, because both would hold for some
+ * languages and not for others: how much a word says about a memory is the
+ * search's to weigh (`wordWorth`).
+ *
+ * What a word is changes when the platform's word boundaries do, and a stored
+ * key was made from the old word, so a change here is a new version of the
+ * index (`WORD_INDEX_VERSION` in `memory/keys`).
  */
 export function wordsOf(text: string) {
   return pipe(
     text,
     Str.normalize("NFKC"),
     Str.toLowerCase,
-    Str.replaceAll(NOT_WORD, " "),
-    Str.split(" "),
-    Arr.filter(isWord),
-    Arr.map(stem),
+    (normalized) => Arr.fromIterable(segmenter.segment(normalized)),
+    Arr.filter((part) => part.isWordLike === true),
+    Arr.map((part) => stem(part.segment)),
     Arr.dedupe
   );
+}
+
+/**
+ * The `limit` longest of some words, the longest first; words of one length
+ * stay in the order they came in. A search looks up only so many keys. A word
+ * that is frequent in a language is short in it (articles, particles,
+ * pronouns), so the long words say the most about a text, in every language.
+ */
+export function longest(words: readonly string[], limit: number) {
+  return pipe(
+    words,
+    Arr.sort(Order.flip(Order.mapInput(Order.Number, sizeOf))),
+    Arr.take(limit)
+  );
+}
+
+/**
+ * What a word is worth to a memory that holds it, by how many of the learner's
+ * memories the search read for the word's key: `WORD_WORTH / linked`. A word
+ * that one memory holds is worth 1, a word that two hold 1/2, and a word that
+ * most of the learner's memories hold, such as "the" or "yang", is worth little
+ * however many words it sits among. The search reads at most 24 memories for a
+ * key, so a word that 24 or more memories hold is worth 1/24, which is less
+ * than any word that fewer hold. `linked` is at least 1: it is the size of a
+ * read that found the memory.
+ */
+export function wordWorth(linked: number) {
+  return WORD_WORTH / linked;
 }

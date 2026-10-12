@@ -324,8 +324,8 @@ describe("Nina memory removal", () => {
     const f = await createMemoryTest();
     await f.fill(300, { topics: ["path:materials/math"] });
     expect(await f.stored()).toHaveLength(300);
-    // Each memory has a key for its topic and for its word, and for its number when it has one.
-    expect(await f.keys()).toHaveLength(890);
+    // Each memory has a key for its topic, for its word and for its number.
+    expect(await f.keys()).toHaveLength(900);
     expect(await f.owner.mutation(clear, {})).toBeNull();
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     expect(await f.stored()).toEqual([]);
@@ -406,8 +406,8 @@ describe("Nina memory expiry", () => {
     await f.seed({ kind: "goal", text: "A goal" });
     expect(await f.t.mutation(expire, {})).toBe(1);
     expect(await f.texts()).toEqual(["Today", "Open-ended", "A goal"]);
-    // Four keys: today, open, ended and goal. The ended situation left its key.
-    expect(await f.keys()).toHaveLength(4);
+    // Five keys: today, open, ended, a and goal. The ended situation left its key.
+    expect(await f.keys()).toHaveLength(5);
     expect(Arr.map(await f.keys(), (row) => row.key)).not.toContain(
       await f.wordKeyOf("usang")
     );
