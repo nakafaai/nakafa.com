@@ -71,8 +71,37 @@ export const MathExpressionSchema = Schema.Struct({
     description:
       "A math expression paired with LaTeX for deterministic evidence rendering.",
   });
+/**
+ * Every label a math item may carry, named where the CAS creates the item.
+ * `apps/cas/cas/schema.py` lists the same names, and `tests/schema_test.py`
+ * there fails when the two lists differ. The web app gives each label a
+ * translation key and fails its typecheck for a label that has none. A new
+ * label reaches learners in this order: the app that accepts it first, then the
+ * CAS that emits it, because an app built before it cannot read a result that
+ * holds it.
+ */
+const MathItemLabelSchema = Schema.Literals([
+  "algebraic_multiplicity",
+  "approximation",
+  "counterexample",
+  "diagonalizable",
+  "domain",
+  "eigenbasis",
+  "eigenvalue",
+  "eigenvector",
+  "factor",
+  "geometric_multiplicity",
+  "mode",
+  "q1",
+  "q2",
+  "q3",
+  "root",
+  "singularity",
+  "solution",
+  "status",
+]);
 export const MathItemSchema = Schema.Struct({
-  label: Schema.String.annotate({
+  label: MathItemLabelSchema.annotate({
     description: "Short student-facing label for the math item.",
   }),
   latex: Schema.optionalKey(
