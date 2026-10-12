@@ -158,10 +158,12 @@ const GERMAN_SUGGESTIONS = [
 ] as const;
 
 /**
- * How tall each suggestion is, whether its label takes one line, and whether
- * the label stays inside its button, read in the page once it has its fonts: a
- * font that swaps in late changes how wide a label is. A label that is not
- * shown has no box, so it is not read.
+ * How tall each suggestion is, whether its button is as tall as its label
+ * needs, whether the label takes one line, and whether it stays inside its
+ * button, read in the page once it has its fonts: a font that swaps in late
+ * changes how wide a label is. A button needs the height of its label plus the
+ * padding and the border around it, and never less than the least height of a
+ * button. A label that is not shown has no box, so it is not read.
  */
 const readSuggestions = async (
   popup: HTMLElement,
@@ -178,6 +180,17 @@ const readSuggestions = async (
     }
     const box = button.getBoundingClientRect();
     const words = label.getBoundingClientRect();
+    const style = getComputedStyle(button);
+    const around = [
+      style.paddingTop,
+      style.paddingBottom,
+      style.borderTopWidth,
+      style.borderBottomWidth,
+    ].reduce((sum, width) => sum + Number.parseFloat(width), 0);
+    const needed = Math.max(
+      Number.parseFloat(style.minHeight),
+      words.height + around
+    );
     return {
       height: box.height,
       inside:
@@ -189,6 +202,9 @@ const readSuggestions = async (
       oneLine:
         words.height <
         Number.parseFloat(getComputedStyle(label).lineHeight) * 1.5,
+      // Not taller than the label needs, which wastes room, and not shorter,
+      // which clips the label.
+      snug: Math.abs(box.height - needed) < 0.5,
     };
   });
 };
@@ -228,28 +244,34 @@ for (const size of TEXT_SIZES) {
           );
 
           yield* Effect.sync(() => {
-            // However many lines a label takes, it stays inside its button.
+            // However many lines a label takes, it stays inside its button,
+            // and the button is as tall as its label needs.
             expect(Arr.map(read, (suggestion) => suggestion?.inside)).toEqual([
               true,
               true,
               true,
             ]);
-            // At the ordinary size the short labels take one line, and every
-            // label of one line leaves its button at the ordinary height, as
-            // before. Whether the longest label fits on one line depends on the
-            // width of the letters the browser draws, so it is not pinned.
+            expect(Arr.map(read, (suggestion) => suggestion?.snug)).toEqual([
+              true,
+              true,
+              true,
+            ]);
+            // At the ordinary size the two short labels take one line, and
+            // their buttons keep the ordinary height, as before. The longest
+            // label sits close to the width of its slot, so whether it takes
+            // one line or two depends on the width of the letters the browser
+            // draws (a CI run drew it on two lines): the button grows with it
+            // by design, and it is held to what its label needs above.
             if (size === 100) {
-              const short = Arr.take(read, 2);
-              const oneLine = Arr.filter(
-                read,
-                (suggestion) => suggestion?.oneLine === true
-              );
               expect(
-                Arr.map(short, (suggestion) => suggestion?.oneLine)
-              ).toEqual([true, true]);
-              expect(
-                Arr.map(oneLine, (suggestion) => suggestion?.height)
-              ).toEqual(Arr.map(oneLine, () => 36));
+                Arr.map(Arr.take(read, 2), (suggestion) => ({
+                  height: suggestion?.height,
+                  oneLine: suggestion?.oneLine,
+                }))
+              ).toEqual([
+                { height: 36, oneLine: true },
+                { height: 36, oneLine: true },
+              ]);
             }
           });
         })
