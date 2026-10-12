@@ -43,21 +43,23 @@ function writePage(...paragraphs: readonly string[]) {
 }
 
 /**
- * Requests with a line that starts with `#`: a Markdown heading the learner
- * pasted, and a hashtag. The words of that line are the only ones that tell the
- * paragraph that answers from the others, as no other word of the request or
- * the objective appears on the page.
+ * Words with a line that starts with `#`, written out as the tool call of such
+ * a request gives them: a Markdown heading the learner pasted, and a hashtag,
+ * then the objective. The words of the `#` line are the only ones that tell the
+ * paragraph that answers from the others, as no other word appears on the page.
  */
-const requestsWithHashLine = [
+const wordsWithHashLine = [
   {
     case: "a Markdown heading the learner pasted",
     relevant: "Siklus Krebs berlangsung di matriks mitokondria. ".repeat(18),
-    request: "# Siklus Krebs\nJelaskan tahapan utamanya.",
+    words:
+      "# Siklus Krebs\nJelaskan tahapan utamanya.\nExplain the topic in simple terms.",
   },
   {
     case: "a hashtag",
     relevant: "Tagar MeToo menyebar di media sosial dunia. ".repeat(20),
-    request: "Siapa yang memulai gerakan itu?\n#MeToo",
+    words:
+      "Siapa yang memulai gerakan itu?\n#MeToo\nExplain the topic in simple terms.",
   },
 ];
 
@@ -125,7 +127,7 @@ describe("research result pages", () => {
   );
 
   it.effect(
-    "keeps the paragraphs of a long page that hold the words of the task",
+    "keeps the paragraphs of a long page that hold the words it is given",
     () =>
       Effect.gen(function* () {
         const relevant = "Kurikulum merdeka dipakai di sekolah. ".repeat(24);
@@ -149,21 +151,14 @@ describe("research result pages", () => {
       })
   );
 
-  it.effect.each(requestsWithHashLine)(
-    "keeps the paragraph that holds the words of a request line that starts with # ($case)",
-    ({ relevant, request }) =>
+  it.effect.each(wordsWithHashLine)(
+    "keeps the paragraph that holds the words of a line that starts with # ($case)",
+    ({ relevant, words }) =>
       Effect.gen(function* () {
         readPage.mockImplementation(
           readsPages({ "https://example.com/a": writePage(relevant) })
         );
-        const pages = yield* readTopPages(
-          [[result("a")]],
-          getSpecialistToolWords({
-            objective: "Explain the topic in simple terms.",
-            request,
-            sourceRequirements: [],
-          })
-        );
+        const pages = yield* readTopPages([[result("a")]], words);
 
         expect(HashMap.get(pages, "https://example.com/a")).toEqual(
           Option.some(relevant.trim())
@@ -172,7 +167,7 @@ describe("research result pages", () => {
   );
 
   it.effect(
-    "does not choose a paragraph for holding the headings of the task, only for the learner's words",
+    "chooses the paragraph that holds the words of a tool call, also those of its # line, and not the one that holds only the headings its task writes",
     () =>
       Effect.gen(function* () {
         const headings = "Request objective requirements source. ".repeat(26);
@@ -186,7 +181,7 @@ describe("research result pages", () => {
           [[result("a")]],
           getSpecialistToolWords({
             objective: "Cari rujukan resmi.",
-            request: "kurikulum merdeka",
+            request: "# Kurikulum merdeka",
             requirements: ["terbaru"],
             sourceRequirements: ["situs kementerian"],
           })
