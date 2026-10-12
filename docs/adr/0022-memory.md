@@ -130,7 +130,10 @@ punctuation or spacing, and only when nobody changed the memory since the call
 read it.
 
 A capture that fails logs one warning with routing facts and changes nothing. It
-never cancels the title, the suggestions or the summary.
+never cancels the title, the suggestions or the summary, and none of them
+cancels it: the capture, the summary and the title with the suggestions run side
+by side, each to its end, even when one dies, and the failures of all are raised
+together once all have ended.
 
 Nina reads memory in three ways, described under Three Ways To Read Memory
 below. A memory is one line wherever a prompt carries it. Its whitespace is

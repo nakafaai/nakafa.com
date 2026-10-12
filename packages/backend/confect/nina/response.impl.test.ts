@@ -5,6 +5,7 @@ import { PostHog } from "@posthog/convex";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
+import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
@@ -27,6 +28,12 @@ vi.mock("@repo/backend/confect/gateway/live", async () => ({
 vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
   return { ...actual, listMessages: vi.fn(actual.listMessages) };
+});
+
+vi.mock("@repo/backend/confect/nina/summary", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/summary")>();
+  return { ...actual, refreshSummary: vi.fn(actual.refreshSummary) };
 });
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
@@ -408,6 +415,33 @@ describe("The Nina response among its follow-up work", () => {
     expect((await f.owner.query(getChat, { chatId: f.chatId })).title).toBe(
       "Understanding A Function Limit"
     );
+  });
+
+  it("saves the memory, the suggestions and the title when the summary dies, and raises that failure once they are done", async () => {
+    const f = await createCapturingTest();
+    const generate = turnModel();
+    vi.mocked(refreshSummary).mockReturnValueOnce(
+      Effect.die(new Error("Private summary detail"))
+    );
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    expect(generate).toHaveBeenCalledTimes(3);
+    expect(await f.turn()).toMatchObject({
+      remembered: 1,
+      suggestions: ["How does this relate to continuity?"],
+    });
+    expect(await f.texts()).toEqual(["Kelas 12."]);
+    expect((await f.owner.query(getChat, { chatId: f.chatId })).title).toBe(
+      "Understanding A Function Limit"
+    );
+    // The follow-up action still fails with the summary's cause, so it is reported.
+    const failed = Arr.filter(
+      await f.t.query((ctx) =>
+        ctx.db.system.query("_scheduled_functions").collect()
+      ),
+      ({ state }) => state.kind === "failed"
+    );
+    expect(failed).toHaveLength(1);
   });
 
   it("never costs the turn its answer or its suggestions when the vault is down, and stores neither a memory nor a title in plain text", async () => {
