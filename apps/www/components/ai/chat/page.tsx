@@ -18,10 +18,16 @@ import { AiChat } from "@/components/ai/chat/view";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
 
-export function AiChatPage({ chatId }: { chatId: Id<"chats"> }) {
+export function AiChatPage({
+  chatId,
+  shareToken,
+}: {
+  chatId: Id<"chats">;
+  shareToken?: string | undefined;
+}) {
   return (
     <ErrorBoundary fallback={<AiChatPageError chatId={chatId} />}>
-      <ChatProvider chatId={chatId}>
+      <ChatProvider chatId={chatId} shareToken={shareToken}>
         <AiChatMain />
       </ChatProvider>
     </ErrorBoundary>

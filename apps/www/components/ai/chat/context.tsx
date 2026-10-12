@@ -39,7 +39,7 @@ import { useViewer } from "@/lib/identity/client";
 // Agent owns delta decoding, reconnection and pagination. Confect registers
 // and authorizes the query; the streaming hook uses the SDK reference boundary.
 type MessageFeed = UIMessagesQuery<
-  Pick<Ref.Args<typeof nina.messages.list>, "chatId">,
+  Pick<Ref.Args<typeof nina.messages.list>, "chatId" | "shareToken">,
   NinaMessage
 >;
 type MessagesQuery = FunctionReference<
@@ -165,18 +165,22 @@ function useMessages(
   return { messages, showDraft, opening, isLoading };
 }
 
-/** Combines authorized conversation facts with the official Agent stream. */
-function useConversation(chatId: Id<"chats">) {
+/**
+ * Combines authorized conversation facts with the official Agent stream. A
+ * reader who is not the owner proves access with the share token of the link.
+ */
+function useConversation(chatId: Id<"chats">, shareToken?: string) {
   const authenticating = useConvexAuth((auth) => auth.isLoading);
+  const access = shareToken === undefined ? { chatId } : { chatId, shareToken };
   const result = useQuery(
     nina.conversation.get,
-    authenticating ? "skip" : { chatId }
+    authenticating ? "skip" : access
   );
   const chat = QueryResult.isSuccess(result) ? result.value.chat : undefined;
   const turn = QueryResult.isSuccess(result) ? result.value.turn : null;
   const pagination = useUIMessages(
     messagesQuery,
-    chat?.threadId ? { chatId, threadId: chat.threadId } : "skip",
+    chat?.threadId ? { ...access, threadId: chat.threadId } : "skip",
     { initialNumItems: NINA_MESSAGES_PAGE_SIZE, stream: true }
   );
   if (QueryResult.isFailure(result)) {
@@ -186,8 +190,8 @@ function useConversation(chatId: Id<"chats">) {
 }
 
 /** Owns one conversation's reactive state and actions for ChatProvider. */
-function useChatState(chatId: Id<"chats">) {
-  const { chat, turn, pagination } = useConversation(chatId);
+function useChatState(chatId: Id<"chats">, shareToken?: string) {
+  const { chat, turn, pagination } = useConversation(chatId, shareToken);
   const submission = useNinaSubmission();
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
@@ -343,12 +347,20 @@ type ChatContextValue = ReturnType<typeof useChatState>["value"];
 /** The transcript itself, which changes with every streamed token. */
 type ChatMessagesValue = ReturnType<typeof useChatState>["feed"];
 
-/** One reactive conversation shared by the route, sheet and message controls. */
+/**
+ * One reactive conversation shared by the route, sheet and message controls.
+ * `shareToken` is the one a shared link carries, for a reader who is not the
+ * owner.
+ */
 export function ChatProvider({
   chatId,
+  shareToken,
   children,
-}: PropsWithChildren<{ chatId: Id<"chats"> }>) {
-  const { feed, value } = useChatState(chatId);
+}: PropsWithChildren<{
+  chatId: Id<"chats">;
+  shareToken?: string | undefined;
+}>) {
+  const { feed, value } = useChatState(chatId, shareToken);
   return (
     <ChatContext value={value}>
       <ChatMessagesContext value={feed}>{children}</ChatMessagesContext>

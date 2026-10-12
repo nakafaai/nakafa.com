@@ -1,0 +1,31 @@
+import { shareTokenValidator } from "@repo/backend/confect/chats/schema";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { getAppUrl } from "@repo/next-config/app";
+import { Option, Schema, String as Str } from "effect";
+
+/** The name of the fragment entry that carries a share token. */
+const SHARE_ENTRY = "share";
+
+/**
+ * The link a learner gives out for a shared chat. The token rides in the
+ * fragment, which a browser never sends: it reaches no server, no log and no
+ * analytics event that keeps the path, and the chat id alone opens nothing.
+ */
+export function shareLink(chatId: Id<"chats">, token: string) {
+  const link = new URL(`/chat/${chatId}`, getAppUrl());
+  link.hash = new URLSearchParams({ [SHARE_ENTRY]: token }).toString();
+  return link.href;
+}
+
+/**
+ * The share token that `hash`, the `location.hash` of a page, carries. It is
+ * none when the fragment carries no token or one that cannot be a token, so
+ * such a link is read by chat id, as its owner reads it.
+ */
+export function readShareToken(hash: string) {
+  return Option.getOrUndefined(
+    Schema.decodeUnknownOption(shareTokenValidator)(
+      new URLSearchParams(Str.slice(1)(hash)).get(SHARE_ENTRY) ?? undefined
+    )
+  );
+}

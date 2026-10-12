@@ -699,7 +699,7 @@
     "private": "Private",
     "private-description": "Only you can view the chat.",
     "public": "Public",
-    "public-description": "Everyone can view the chat.",
+    "public-description": "Anyone with the link can view the chat.",
     "create-link": "Create link",
     "copy-link": "Copy link",
     "link-copied": "Link copied!",

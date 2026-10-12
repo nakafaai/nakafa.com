@@ -699,7 +699,7 @@
     "private": "Pribadi",
     "private-description": "Obrolan hanya dapat dilihat oleh kamu.",
     "public": "Publik",
-    "public-description": "Obrolan dapat dilihat oleh siapa saja.",
+    "public-description": "Obrolan dapat dilihat oleh siapa saja yang punya link.",
     "create-link": "Buat link",
     "copy-link": "Salin link",
     "link-copied": "Link berhasil disalin!",

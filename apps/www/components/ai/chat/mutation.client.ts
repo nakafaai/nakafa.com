@@ -54,7 +54,7 @@ function patchChatDetail(
   }
 }
 
-/** Patch or remove a chat across every loaded visibility-aware list. */
+/** Patch or remove a chat across every loaded list of the learner's own chats. */
 function patchLoadedLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   chatId: Id<"chats">,
@@ -84,26 +84,9 @@ function patchLoadedLists(
       })
     );
   }
-  for (const query of localStore.getAllQueries(chats.queries.getChats)) {
-    if (Option.isNone(query.value)) {
-      continue;
-    }
-    const page =
-      patch.visibility === "private"
-        ? removeChatFromPage(query.value.value.page, chatId)
-        : patchChatPage(query.value.value.page, chatId, patch);
-    localStore.setQuery(
-      chats.queries.getChats,
-      query.args,
-      Option.some({
-        ...query.value.value,
-        page,
-      })
-    );
-  }
 }
 
-/** Remove one chat from every loaded owned and public list. */
+/** Remove one chat from every loaded list of the learner's own chats. */
 function removeFromLoadedLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   chatId: Id<"chats">
@@ -112,18 +95,6 @@ function removeFromLoadedLists(
     if (Option.isSome(query.value)) {
       localStore.setQuery(
         chats.queries.getOwnChats,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: removeChatFromPage(query.value.value.page, chatId),
-        })
-      );
-    }
-  }
-  for (const query of localStore.getAllQueries(chats.queries.getChats)) {
-    if (Option.isSome(query.value)) {
-      localStore.setQuery(
-        chats.queries.getChats,
         query.args,
         Option.some({
           ...query.value.value,
@@ -162,7 +133,12 @@ export function useUpdateChatTitleMutation() {
   );
 }
 
-/** Return a visibility mutation that updates eligible loaded chat projections. */
+/**
+ * Return a visibility mutation that updates eligible loaded chat projections.
+ * Unsharing deletes the share token, which is known at once, so a loaded token
+ * goes with it. Sharing draws a token on the server, so the token arrives with
+ * the answer.
+ */
 export function useUpdateChatVisibilityMutation() {
   return useMutation(chats.mutations.updateChatVisibility).withOptimisticUpdate(
     (localStore, { chatId, visibility }) => {
@@ -172,6 +148,18 @@ export function useUpdateChatVisibilityMutation() {
       patchLoadedLists(localStore, chatId, {
         visibility,
       });
+      if (
+        visibility === "private" &&
+        Option.isSome(
+          localStore.getQuery(chats.queries.getShareToken, { chatId })
+        )
+      ) {
+        localStore.setQuery(
+          chats.queries.getShareToken,
+          { chatId },
+          Option.some(null)
+        );
+      }
     }
   );
 }

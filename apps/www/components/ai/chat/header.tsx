@@ -226,11 +226,13 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
         </Activity>
       </ChatHeader>
 
-      <ChatSharing
-        chat={chat}
-        onOpenChange={setConfirmShare}
-        open={confirmShare}
-      />
+      {isOwner ? (
+        <ChatSharing
+          chat={chat}
+          onOpenChange={setConfirmShare}
+          open={confirmShare}
+        />
+      ) : null}
       <ChatDeletion
         chat={chat}
         onOpenChange={setConfirmDelete}
