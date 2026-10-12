@@ -763,7 +763,13 @@ nobody tries them again without a new reason.
   the list need 63rem, and where scrollbars are classic the stable gutter of
   the page on both edges takes 22px of the window. The head of the list shows
   the word on its add button and the icon of its search by its own width,
-  because the card beside the panel is as narrow as the card on a phone.
+  because the card beside the panel is as narrow as the card on a phone. Under
+  24rem the page keeps its scrollbar gutter on one edge and not on both
+  (`globals.css`). Where scrollbars take room, as they do in the browsers CI
+  runs and on a desktop zoomed to 400%, two gutters of 10px left a 320px page
+  cards of 252px: the German placeholder of the search needs 140px and the
+  field gave 138px, and a row could not keep the end date of a situation
+  whole. A phone has no gutter and was never short.
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
   because the browser has no page of its own to change until then.
