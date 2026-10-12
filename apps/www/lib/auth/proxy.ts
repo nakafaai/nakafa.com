@@ -160,11 +160,13 @@ const SESSION_PATH = "/api/auth/get-session";
  * Whether a request asks Better Auth for the session of a visitor who sent
  * nothing that could prove one: no session cookie and no bearer token.
  *
- * Better Auth answers such a request with `null` before it reads anything, so
- * Convex has nothing to add. Every page load and every return to the tab makes
- * this read, signed in or not, and most visitors are not. The browser cannot
- * skip the request itself, because the session cookie is HttpOnly and no script
- * can see that it is missing; only the server can.
+ * Better Auth answers such a request with `null` before it reads a table, so
+ * Convex has nothing to add. Without this answer each read is still one HTTP
+ * action on the Convex site, because `handler.GET` fetches it: a function call
+ * and its action compute, though no database I/O. Every page load and every
+ * return to the tab makes this read, signed in or not, and most visitors are
+ * not. The browser cannot skip the request itself, because the session cookie
+ * is HttpOnly and no script can see that it is missing; only the server can.
  */
 function isSignedOutSessionRead(request: Request) {
   return (

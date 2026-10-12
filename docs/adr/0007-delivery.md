@@ -80,8 +80,12 @@ contextual visit cannot first record a canonical view and then a placement view.
   changes only with a release, so the activation of a release purges the tag
   once, as it purges the sitemap. A purge that fails is logged and never fails
   the activation, because a stale image is cosmetic and its lifetime bounds it.
-  The image for a route the release does not know is kept for five minutes
-  only, because the next release may add the route.
+  A deployment has its own CDN cache key, so only a release needs the purge.
+  The brand image that answers a route inside a content namespace (articles,
+  material, the Quran or try-out) that the release does not list is kept for
+  five minutes only, because the next release may add the route. A page outside
+  those namespaces has no signed owner and shows the generic copy of the site,
+  so its image keeps the full lifetime.
 - The image optimizer keeps the default of `images.minimumCacheTTL`. Vercel
   keys an optimized local image by the hash of its content and keeps it for up
   to 31 days across deploys, so only a remote image, such as an avatar or a
@@ -123,8 +127,10 @@ contextual visit cannot first record a canonical view and then a placement view.
 - The browser reads its Better Auth session on every page load and every return
   to the tab, signed in or not. A read that carries no session cookie and no
   bearer token is answered by the route itself with the `null` that Better Auth
-  would give, and never reaches Convex. The browser cannot skip the request,
-  because the session cookie is HttpOnly and no script sees that it is missing.
+  would give, and never reaches Convex, where it would be one HTTP action: a
+  function call with its action compute, and no table read. The browser cannot
+  skip the request, because the session cookie is HttpOnly and no script sees
+  that it is missing.
 - The `www` function region is `iad1`, beside the production Convex deployment.
   CDN delivery remains global. The project default region must match the checked
   configuration so the durable ISR cache is created in the intended region.
