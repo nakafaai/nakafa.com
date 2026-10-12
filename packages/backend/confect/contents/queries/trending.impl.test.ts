@@ -319,4 +319,32 @@ describe("contents/queries/trending", () => {
       vi.useRealTimers();
     }
   });
+  // Temporary compatibility with an older web deployment. Delete this test
+  // with the `windowKey` argument (see the field in trending/spec.ts).
+  it("still accepts the retired window argument an older web deployment sends", async () => {
+    const target = createTrendingConvexTest();
+    const projection = makeMaterialProjection("en", 1, 30);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([projection]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
+    await target.mutation((ctx) =>
+      insertMaterialCounter(ctx, projection, "en", 10)
+    );
+
+    const named = await target.query(getTrendingSubjects, {
+      locale: "en",
+      windowKey: POPULARITY_WINDOW,
+    });
+
+    expect(named).toHaveLength(1);
+    expect(named).toEqual(
+      await target.query(getTrendingSubjects, { locale: "en" })
+    );
+  });
 });
