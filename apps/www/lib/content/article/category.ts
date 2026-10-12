@@ -24,7 +24,10 @@ import {
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
-import { applyContentCache } from "@/lib/content/cache";
+import {
+  applyContentCache,
+  applyReleaseContentCache,
+} from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { readContentStore } from "@/lib/content/store/read";
 
@@ -254,7 +257,9 @@ export async function getPublishedArticleCategory(
 /**
  * Caches reciprocal localized category routes under article release tags. The
  * `use cache` boundary stays for prerendering and the article tag; behind it
- * the category lists come from the store.
+ * the category lists come from the store. The key holds the category with the
+ * release it was read under, so a release that the category list reports is a
+ * new key and the entry needs no timer of its own.
  */
 export async function getPublishedCategoryAlternates(
   current: PublishedArticleCategoryModel
@@ -266,11 +271,16 @@ export async function getPublishedCategoryAlternates(
       Effect.withTracerTiming(false)
     )
   );
-  applyContentCache("article");
+  applyReleaseContentCache("article");
   return alternates;
 }
 
-/** Caches one route-bound category page under article release tags. */
+/**
+ * Caches one route-bound category page under article release tags. The key
+ * holds the category with the release it was read under, as above, so a new
+ * release is a new key and the page is read from Convex once for each key
+ * instead of once an hour.
+ */
 export async function getPublishedCategoryPage(
   current: PublishedArticleCategoryModel,
   cursor: ArticlePageCursor
@@ -282,6 +292,6 @@ export async function getPublishedCategoryPage(
       Effect.withTracerTiming(false)
     )
   );
-  applyContentCache("article");
+  applyReleaseContentCache("article");
   return page;
 }
