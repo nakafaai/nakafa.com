@@ -5,8 +5,12 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import { openChat } from "@repo/backend/confect/chats/title";
+import { readerChat } from "@repo/backend/confect/chats/view";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
+import {
+  NinaTurnSummary,
+  readerTurn,
+} from "@repo/backend/confect/nina/contract/turn";
 import spec from "@repo/backend/confect/nina/conversation.spec";
 import { Effect, Layer, Option, Schema } from "effect";
 
@@ -33,21 +37,27 @@ const get = FunctionImpl.make(
   schema,
   spec,
   "get",
-  Effect.fn("nina.conversation.get")(function* ({ chatId }) {
+  Effect.fn("nina.conversation.get")(function* ({ chatId, shareToken }) {
     const viewer = yield* getOptionalAppUserForRead();
-    const chat = yield* readChat(chatId, viewer?.appUser._id ?? null);
+    const viewerId = viewer?.appUser._id ?? null;
+    const chat = yield* readChat(chatId, viewerId, shareToken);
     const turn = yield* (yield* DatabaseReader)
       .table("ninaTurns")
       .index("by_chatId_and_order", (q) => q.eq("chatId", chatId), "desc")
       .first()
       .pipe(Effect.orDie);
+    const summary = Option.isSome(turn)
+      ? yield* Schema.decodeEffect(NinaTurnSummary)(shownTurn(turn.value)).pipe(
+          Effect.orDie
+        )
+      : null;
+    const owner = chat.userId === viewerId;
+    const view = yield* openChat(chat);
+    // A reader is told where the turn stands, not what it cost the owner, and
+    // the chat names neither the owner's account nor the turn that runs.
     return {
-      chat: yield* openChat(chat),
-      turn: Option.isSome(turn)
-        ? yield* Schema.decodeEffect(NinaTurnSummary)(
-            shownTurn(turn.value)
-          ).pipe(Effect.orDie)
-        : null,
+      chat: owner ? view : readerChat(view),
+      turn: summary && !owner ? readerTurn(summary) : summary,
     };
   })
 );

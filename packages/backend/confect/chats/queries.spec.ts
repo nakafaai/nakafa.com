@@ -5,6 +5,7 @@ import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
+  shareTokenValidator,
 } from "@repo/backend/confect/chats/schema";
 import { chatViewValidator } from "@repo/backend/confect/chats/view";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -15,6 +16,7 @@ export default GroupSpec.make()
       name: "getChat",
       args: () => ({
         chatId: IdSchema("chats"),
+        shareToken: Schema.optionalKey(shareTokenValidator),
       }),
       returns: () => chatViewValidator,
       error: () => Schema.Union([AuthFailure, ChatAccessError]),
@@ -51,6 +53,16 @@ export default GroupSpec.make()
         chatId: IdSchema("chats"),
       }),
       returns: () => Schema.NullOr(Schema.String),
+      error: () => AuthFailure,
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "getShareToken",
+      args: () => ({
+        chatId: IdSchema("chats"),
+      }),
+      returns: () => Schema.NullOr(shareTokenValidator),
       error: () => AuthFailure,
     }).middleware(Session)
   );
