@@ -71,7 +71,11 @@ its title and its visibility, and it takes a chat that names no owner as not its
 own, so `readChatAccess` gives a reader nothing to write. The owner is told every
 field the chat had, so an older page decodes the owner's chat as it always did,
 and an older page is never a reader of a link, because only a page that sends
-the token reads by one.
+the token reads by one. The conversation itself is not a fact of the account: a
+reader is sent every part of every message, the rows of what Nina looked up
+included. That includes the "Recalled memories" row of a search of the owner's
+memory, whose stored result is a note and never the words of a memory (ADR
+0022); `nina/memory/tool.test.ts` pins it.
 Turning sharing off, or deleting the chat, deletes the token, so every link
 stops at once, and turning sharing on again draws a new one. One thing outlives
 a link: the address of a file attached to a message. The link guards the chat,

@@ -1,6 +1,13 @@
 import { Ref } from "@confect/core";
 import { RegisteredFunction } from "@confect/server";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
@@ -37,6 +44,10 @@ const list = Ref.getFunctionReference(refs.public.nina.messages.list);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
+const share = Ref.getFunctionReference(
+  refs.public.chats.mutations.updateChatVisibility
+);
+const token = Ref.getFunctionReference(refs.public.chats.queries.getShareToken);
 
 const NOW = Date.UTC(2026, 9, 12, 12);
 
@@ -308,13 +319,15 @@ describe("a turn in which Nina searches what the learner told her", () => {
       })
     );
     expect(encodeJsonText(transcript)).not.toContain(words);
-    // A visitor who reads the public chat has no more than the learner sees.
-    await f.t.mutation((ctx) =>
-      ctx.db.patch("chats", f.chatId, { visibility: "public" })
-    );
+    // A visitor who reads the shared chat through its link has no more than
+    // the learner sees.
+    await f.owner.mutation(share, { chatId: f.chatId, visibility: "public" });
+    const shareToken = await f.owner.query(token, { chatId: f.chatId });
+    assert(shareToken !== null);
     const shared = await f.t.query(list, {
       chatId: f.chatId,
       paginationOpts: { cursor: null, numItems: 20 },
+      shareToken,
       threadId: f.threadId,
     });
     expect(encodeJsonText(shared)).toContain("recall-1");
