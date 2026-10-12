@@ -90,8 +90,8 @@ const anchor = FunctionImpl.make(
  * `SUMMARY_FOLD_LIMIT`. A turn that failed, was cancelled or still runs is not
  * complete, so it never shows up, whatever messages it left in the thread. The
  * index holds the status, so no number of such turns can push a complete one
- * out of the list. A chat with a longer backlog lists its newest complete
- * turns, and the oldest wait for the next refresh.
+ * out of the list. A reader that needs the turns beyond the sixteen asks again
+ * with `before` set to the oldest order it got.
  */
 const uncovered = FunctionImpl.make(
   schema,

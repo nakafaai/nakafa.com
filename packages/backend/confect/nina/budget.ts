@@ -11,14 +11,18 @@ export const NINA_BUDGET = {
   evidence: 6000,
   /** Evidence gathered by all tool calls in the current turn. */
   turnEvidence: 16_000,
-  /** Older complete turns kept verbatim after the conversation summary. */
-  history: 12_000,
+  /**
+   * Complete turns kept word for word after the conversation summary. When
+   * they cost more than this, the summary folds the oldest of them down to
+   * half of it.
+   */
+  history: 32_000,
   /** Account facts and the memories Nina reads about the learner. */
   learner: 1500,
   /** The signed current page placed in the stable prompt context. */
   page: 6000,
-  /** The rolling summary of turns older than the verbatim history. */
-  summary: 1200,
+  /** The rolling summary of the turns folded out of the history. */
+  summary: 2000,
 } as const;
 
 /** Tokens reserved for the truncation note appended to bounded text. */

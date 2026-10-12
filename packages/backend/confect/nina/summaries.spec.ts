@@ -33,8 +33,9 @@ const NinaSummaryView = NinaSummary.mapFields((fields) => ({
 }));
 
 /**
- * Most turns one summary refresh folds, and so the most turns the read of
- * uncovered turns looks at: a fold never reaches past what that read shows.
+ * Most turns one fold covers, and so the most turns one read of uncovered
+ * turns lists: a fold never reaches past what that read shows. A reader that
+ * needs more asks again for the turns before the oldest it got.
  */
 export const SUMMARY_FOLD_LIMIT = 16;
 

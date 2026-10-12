@@ -10,25 +10,28 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
+import { nextSummaryTarget } from "@repo/backend/confect/nina/fold";
 import { newestAskings, questionKey } from "@repo/backend/confect/nina/history";
-import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
-import { Array as Arr, Effect, HashSet, Schema } from "effect";
+import { readUncovered } from "@repo/backend/confect/nina/uncovered";
+import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
 
-/** Complete turns kept verbatim after the summary. */
-export const RECENT_TURNS = 4;
-/** Turns that must wait beyond the verbatim window before a refresh runs. */
-const FOLD_TURNS = 4;
 /** Text one message contributes to a refresh transcript. */
 const MESSAGE_TOKENS = 1500;
 const MESSAGE_PAGE = 100;
 
+/**
+ * What the summary writer is told. By the shared tokenizer on the app's own
+ * copy, 800 words are about 1,100 tokens in English and 1,400 in Indonesian and
+ * German. That leaves room under `NINA_BUDGET.summary` for a writer that runs
+ * long, and `boundText` stays the hard bound.
+ */
 const INSTRUCTIONS = Arr.join(
   [
     "You maintain the running summary of a tutoring conversation between a learner and Nina, Nakafa's AI tutor.",
     "Rewrite the previous summary so it also covers the new turns.",
     "Keep the learner's goals, level, and preferences; every question with the method and final answers Nina gave; open problems; and anything Nina promised to follow up.",
     "Drop greetings, filler, and tool or system mechanics. Never invent facts.",
-    "Write compact bullet points in the conversation's language, at most 250 words.",
+    "Write compact bullet points in the conversation's language, at most 800 words.",
   ],
   "\n"
 );
@@ -37,19 +40,6 @@ class NinaSummaryError extends Schema.TaggedError<NinaSummaryError>()(
   "NinaSummaryError",
   { operation: NinaFailureOperation }
 ) {}
-
-/**
- * Returns the order a refresh should summarize through once `order` settles.
- * A refresh waits until enough turns sit between the summary and the verbatim
- * window, so one fast-model call folds several turns, and never folds more
- * than one bounded batch. A chat with a longer backlog, such as one that
- * predates summaries, advances one bounded batch per completed turn.
- */
-export function nextSummaryTarget(order: number, throughOrder: number | null) {
-  const covered = throughOrder ?? -1;
-  const target = Math.min(order - RECENT_TURNS, covered + SUMMARY_FOLD_LIMIT);
-  return target - covered >= FOLD_TURNS ? target : null;
-}
 
 /**
  * Lists the orders of the turns a fold covers: the complete turns after
@@ -127,22 +117,34 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
 });
 
 /**
- * Folds settled turns into the chat's rolling summary once a fold is due. A
- * failure keeps the previous summary; generation still bounds its history.
+ * Folds settled turns into the chat's rolling summary once the turns it does
+ * not cover cost more than the history budget. A failure keeps the previous
+ * summary; generation still bounds its history.
  */
 export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (
-    turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId" | "userId">
+    turn: Pick<
+      NinaTurnsDoc,
+      "chatId" | "order" | "promptMessageId" | "threadId" | "userId"
+    >
   ) {
     const { runQuery: query } = yield* QueryRunner;
     const current = yield* query(refs.internal.nina.summaries.read, {
       chatId: turn.chatId,
     }).pipe(Effect.orDie);
     const covered = current?.throughOrder ?? null;
-    const target = nextSummaryTarget(turn.order, covered);
-    if (target === null) {
+    // The turn that just settled is the newest of the turns to count.
+    const { turns } = yield* readUncovered(
+      turn,
+      turn.order + 1,
+      covered,
+      []
+    ).pipe(Effect.mapError(() => new NinaSummaryError({ operation: "read" })));
+    const next = nextSummaryTarget(covered, turns, NINA_BUDGET.history);
+    if (Option.isNone(next)) {
       return;
     }
+    const target = next.value;
     const anchor = yield* query(refs.internal.nina.summaries.anchor, {
       chatId: turn.chatId,
       order: target,
