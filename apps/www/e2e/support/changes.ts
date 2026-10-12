@@ -15,6 +15,7 @@ import {
   encodeRefusal,
   type GivenSchema,
   isCall,
+  isMutation,
   later,
   momentOf,
   type SentSchema,
@@ -170,6 +171,7 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
       socket.onMessage((message) => {
         const frame = decodeSent(message.toString());
         const call = Option.filter(frame, isCall);
+        const mutation = Option.filter(frame, isMutation);
 
         if (Option.isSome(frame)) {
           noticeSent(frame.value);

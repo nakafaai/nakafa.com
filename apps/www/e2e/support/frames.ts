@@ -79,6 +79,8 @@ export const decodeGiven = Schema.decodeOption(
 export const encodeRefusal = Schema.encodeSync(
   Schema.fromJsonString(RefusalSchema)
 );
+/** A change the page sends, which the server answers with a `MutationResponse`. */
+export const isMutation = Schema.is(MutationSchema);
 /** A call the server answers: a change or an action. */
 export const isCall = Schema.is(Schema.Union([MutationSchema, ActionSchema]));
 
