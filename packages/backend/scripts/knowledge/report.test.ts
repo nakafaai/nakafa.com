@@ -21,6 +21,7 @@ describe("model test report", () => {
       summarize("google/gemini-embedding-2", "id", questions, {
         kind: "ranked",
         pool: 3189,
+        refused: 0,
         verdicts: [
           found("Alpha", 1, 100),
           found("Beta", 5, 200),
@@ -35,9 +36,34 @@ describe("model test report", () => {
       meanMs: 250,
       model: "google/gemini-embedding-2",
       pool: 3189,
+      refused: 0,
       skipped: [],
       top5: 2,
       top5Share: 0.5,
+    });
+  });
+
+  it("reports the sections that the model refused, and counts a question about one as missed", () => {
+    // A section that the model refused ranks after the 3188 that it embedded.
+    expect(
+      summarize("google/gemini-embedding-001", "id", questions, {
+        kind: "ranked",
+        pool: 3188,
+        refused: 1,
+        verdicts: [
+          found("Alpha", 1, 100),
+          found("Beta", 3189, 200),
+          found("Gamma", 2, 300),
+          found("Delta", 4, 400),
+        ],
+      })
+    ).toMatchObject({
+      counted: 4,
+      pool: 3188,
+      refused: 1,
+      skipped: [],
+      top5: 3,
+      top5Share: 0.75,
     });
   });
 
@@ -45,6 +71,7 @@ describe("model test report", () => {
     const report = summarize("qwen/qwen3-embedding-8b", "de", questions, {
       kind: "ranked",
       pool: 10,
+      refused: 0,
       verdicts: [
         { milliseconds: 10, section: null },
         found("Renamed", 1, 20),
@@ -64,6 +91,7 @@ describe("model test report", () => {
       summarize("openai/text-embedding-3-small", "en", questions, {
         kind: "ranked",
         pool: 0,
+        refused: 0,
         verdicts: [{ milliseconds: 12, section: null }],
       })
     ).toMatchObject({ counted: 0, meanMs: 12, top5: 0, top5Share: 0 });
@@ -71,6 +99,7 @@ describe("model test report", () => {
       summarize("openai/text-embedding-3-small", "en", [], {
         kind: "ranked",
         pool: 0,
+        refused: 0,
         verdicts: [],
       })
     ).toMatchObject({ counted: 0, maxMs: 0, meanMs: 0, top5Share: 0 });

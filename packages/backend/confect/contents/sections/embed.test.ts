@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { embedDrafts } from "@repo/backend/confect/contents/sections/embed";
+import {
+  embedBatch,
+  embedDrafts,
+} from "@repo/backend/confect/contents/sections/embed";
 import {
   EMBED_BATCH_SIZE,
   EMBED_RETRIES,
@@ -90,6 +93,24 @@ describe("section embedding", () => {
         Arr.map(model.doEmbedCalls, ({ values }) => values.length)
       ).toEqual([EMBED_BATCH_SIZE, 1]);
     })
+  );
+
+  it.live(
+    "embeds a batch with the model it is given, and the build with its own",
+    () =>
+      Effect.gen(function* () {
+        embedder(() => undefined);
+        yield* embedBatch([draft("abc")], "qwen/qwen3-embedding-8b").pipe(
+          Effect.provide(GatewayTest)
+        );
+        expect(provider.embeddingModel).toHaveBeenLastCalledWith(
+          "qwen/qwen3-embedding-8b"
+        );
+        yield* embed([draft("abc")]);
+        expect(provider.embeddingModel).toHaveBeenLastCalledWith(
+          "google/gemini-embedding-2"
+        );
+      })
   );
 
   it.live("asks again after a failure that may pass, with growing waits", () =>
@@ -192,12 +213,12 @@ describe("section embedding", () => {
               annotations: {
                 appLocale: "id",
                 contentKey: "material/lesson/matematika/matriks",
+                model: "google/gemini-embedding-2",
                 ordinal: 1,
                 reason: refusal.reason,
               },
               level: "WARN",
-              message:
-                "A section could not be embedded and is left out of the index.",
+              message: "A section could not be embedded and is left out.",
             },
           ]);
         })

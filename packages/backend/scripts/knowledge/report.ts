@@ -39,8 +39,11 @@ function judged(question: Question, verdict: Ranked["verdicts"][number]) {
 
 /**
  * What one candidate model found in one language: how many of the questions
- * that count had their section within the top five, and how long it took to
- * embed a question.
+ * that count had their section within the top five, how long it took to embed
+ * a question, and how many sections it embedded (`pool`) and refused
+ * (`refused`). A question about a section that the model refused counts, and
+ * counts as missed, because a build with that model would leave the section
+ * out of the index.
  */
 export function summarize(
   model: EmbeddingModelId,
@@ -60,6 +63,7 @@ export function summarize(
     meanMs: Num.round(quotient(Num.sumAll(times), Arr.length(times)), 0),
     model,
     pool: ranked.pool,
+    refused: ranked.refused,
     skipped,
     top5: top,
     top5Share: Num.round(quotient(top, Arr.length(ranks)), 3),

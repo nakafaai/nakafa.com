@@ -66,6 +66,7 @@ const originalArgv = process.argv;
 const allFirst = (locale: ActiveAppLocaleCode) => ({
   kind: "ranked" as const,
   pool: 4274,
+  refused: 0,
   verdicts: Arr.map(questionsFor(locale), ({ heading }) => ({
     milliseconds: 25,
     section: { heading, rank: 1 },

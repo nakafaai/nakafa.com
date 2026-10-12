@@ -12,6 +12,7 @@ import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import {
   embedWithKnowledge,
   knowledgeBuild,
+  refusal,
   seedKnowledge,
 } from "@repo/backend/test/knowledge";
 import { APICallError } from "ai";
@@ -26,6 +27,8 @@ type Input = Parameters<typeof rankQuestions>[0];
 const CANDIDATE = "qwen/qwen3-embedding-8b";
 /** The first lesson of the fixture, whose Indonesian sections are: top, form, square form, determinant. */
 const lesson = makeMaterialProjection("id", 1).contentKey;
+/** The second lesson of the fixture, whose Indonesian sections are: top, formula, discriminant. */
+const lessonTwo = makeMaterialProjection("id", 2).contentKey;
 
 /** The test gateway, with an embedding that takes 30 milliseconds. */
 const SlowGateway = Layer.effect(
@@ -121,6 +124,46 @@ describe("model comparison", () => {
         { section: null },
         { section: null },
         { section: { heading: "Bentuk Matriks" } },
+      ],
+    });
+  });
+
+  it("leaves out a section whose text the candidate refuses, counts it, and ranks the question that names it last", async () => {
+    const real = embedWithKnowledge();
+    const { rank } = await indexed();
+    // The candidate cannot take the text of one section, as a model with a
+    // short input limit cannot take a long one.
+    provider.embeddingModel.mockReturnValue(
+      new MockEmbeddingModelV4({
+        doEmbed: (options) =>
+          Arr.some(options.values, (text) => text.includes("Diskriminan"))
+            ? refusal()
+            : real.doEmbed(options),
+        maxEmbeddingsPerCall: 512,
+      })
+    );
+    const result = await rank({
+      locale: "id",
+      questions: [
+        {
+          contentKey: lessonTwo,
+          ordinal: 2,
+          question: "Apa itu diskriminan?",
+        },
+        {
+          contentKey: lesson,
+          ordinal: 3,
+          question: "Bagaimana menghitung determinan matriks?",
+        },
+      ],
+    });
+    expect(result).toMatchObject({
+      kind: "ranked",
+      pool: 8,
+      refused: 1,
+      verdicts: [
+        { section: { heading: "Diskriminan", rank: 9 } },
+        { section: { heading: "Determinan", rank: 1 } },
       ],
     });
   });

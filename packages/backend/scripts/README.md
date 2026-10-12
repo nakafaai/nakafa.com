@@ -75,7 +75,12 @@ For every embedding model of the gateway and every language, the deployment
 embeds the stored sections of that language and each question of
 `knowledge/questions/`, and the test prints how many questions had their right
 section within the top five, how many were left out because their label no
-longer fits the index, and how long a question took to embed. The questions are
+longer fits the index, how many sections the model refused (`refused`), and how
+long a question took to embed. The sections are embedded as the build embeds
+them: a section whose text a model refuses is left out of the ranking and
+counted, and a question about it counts as missed, because a build with that
+model would leave the section out of the index. A model that refuses every text
+of a batch is not scored, and its run fails with the refusal. The questions are
 labeled with the Aksara corpus; a lesson that was edited since leaves its
 questions out, with the reason. `--model` and `--locale` narrow the test to one
 model or one language. Each run is one request that the runtime of Node ends

@@ -1,7 +1,7 @@
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import type { compareInputValidator } from "@repo/backend/confect/contents/sections/compare.spec";
-import { embedInput } from "@repo/backend/confect/contents/sections/draft";
+import { embedBatch } from "@repo/backend/confect/contents/sections/embed";
 import {
   COMPARE_CONCURRENCY,
   EMBED_BATCH_SIZE,
@@ -18,7 +18,11 @@ import {
 } from "effect";
 
 type Input = typeof compareInputValidator.Type;
+type Question = Input["questions"][number];
 type Stored = (typeof pageResultValidator.Type)["sections"][number];
+
+/** A stored section that the model embedded, with its vector scaled to length one. */
+type Entry = readonly [Stored, readonly number[]];
 
 /** Reads every stored section of a language, a page at a time. */
 const storedSections = Effect.fn("contents.sections.storedSections")(function* (
@@ -53,43 +57,57 @@ function dot(left: readonly number[], right: readonly number[]) {
   return Num.sumAll(Arr.zipWith(left, right, (a, b) => a * b));
 }
 
+/** Whether a stored section is the one that a question names. */
+function isNamedBy(question: Question) {
+  return (section: Stored) =>
+    section.contentKey === question.contentKey &&
+    section.ordinal === question.ordinal;
+}
+
 /**
- * Where the section that a question names ranks among the stored sections by
+ * Where the section that a question names ranks among the embedded sections by
  * cosine similarity to the question, and its heading. A section ranks after as
- * many sections as are closer to the question than it is.
+ * many sections as are closer to the question than it is. A section that the
+ * model would not embed cannot be found with this model, as a build with it
+ * would leave that section out of the index, so it ranks after every section
+ * that was embedded.
  */
 function standing(
-  entries: readonly (readonly [Stored, readonly number[]])[],
+  sections: readonly Stored[],
+  entries: readonly Entry[],
   query: readonly number[],
-  question: Input["questions"][number]
+  question: Question
 ) {
   return Option.map(
-    Arr.findFirst(
-      entries,
-      ([section]) =>
-        section.contentKey === question.contentKey &&
-        section.ordinal === question.ordinal
-    ),
-    ([section, vector]) => {
-      const own = dot(query, vector);
-      return {
-        heading: Option.getOrElse(Arr.last(section.headingPath), () => ""),
-        rank:
-          1 +
-          Arr.length(
-            Arr.filter(entries, ([, other]) => dot(query, other) > own)
-          ),
-      };
-    }
+    Arr.findFirst(sections, isNamedBy(question)),
+    (section) => ({
+      heading: Option.getOrElse(Arr.last(section.headingPath), () => ""),
+      rank: Option.match(
+        Arr.findFirst(entries, ([entry]) => isNamedBy(question)(entry)),
+        {
+          onNone: () => entries.length + 1,
+          onSome: ([, vector]) => {
+            const own = dot(query, vector);
+            return (
+              1 +
+              Arr.length(
+                Arr.filter(entries, ([, other]) => dot(query, other) > own)
+              )
+            );
+          },
+        }
+      ),
+    })
   );
 }
 
 /**
  * Embeds every stored section of a language and then each question, one at a
  * time so that its latency is its own, with one candidate model, and tells
- * where the section each question names ranks among all of them. The sections
- * are embedded as the build embeds them. The answer is `empty` when no section
- * of the language is stored.
+ * where the section each question names ranks among them. The sections are
+ * embedded as the build embeds them, a section whose text the model refuses is
+ * left out and counted, and a model that refuses all of a batch fails the run.
+ * The answer is `empty` when no section of the language is stored.
  */
 export const rankQuestions = Effect.fn("contents.sections.rankQuestions")(
   function* (input: Input) {
@@ -102,17 +120,20 @@ export const rankQuestions = Effect.fn("contents.sections.rankQuestions")(
       yield* Effect.forEach(
         Arr.chunksOf(sections, EMBED_BATCH_SIZE),
         (batch) =>
-          gateway.embed(
-            Arr.map(batch, ({ text }) => embedInput(text)),
+          embedBatch(
+            Arr.map(batch, (section) => ({
+              ...section,
+              appLocale: input.locale,
+            })),
             input.model
           ),
         { concurrency: COMPARE_CONCURRENCY }
       )
     );
-    const entries = Arr.zipWith(
-      sections,
-      vectors,
-      (section, vector) => [section, unit(vector)] as const
+    const entries = Arr.getSomes(
+      Arr.zipWith(sections, vectors, (section, vector) =>
+        Option.map(vector, (found): Entry => [section, unit(found)])
+      )
     );
     const verdicts = Arr.flatten(
       yield* Effect.forEach(input.questions, (question) =>
@@ -122,12 +143,17 @@ export const rankQuestions = Effect.fn("contents.sections.rankQuestions")(
             Arr.map(embeddings, (embedding) => ({
               milliseconds: Duration.toMillis(duration),
               section: Option.getOrNull(
-                standing(entries, unit(embedding), question)
+                standing(sections, entries, unit(embedding), question)
               ),
             }))
         )
       )
     );
-    return { kind: "ranked" as const, pool: sections.length, verdicts };
+    return {
+      kind: "ranked" as const,
+      pool: entries.length,
+      refused: sections.length - entries.length,
+      verdicts,
+    };
   }
 );

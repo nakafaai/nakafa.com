@@ -21,6 +21,7 @@ const input = {
 const ranked = {
   kind: "ranked",
   pool: 3189,
+  refused: 0,
   verdicts: [
     { milliseconds: 41, section: { heading: "Matriks", rank: 2 } },
     { milliseconds: 38, section: null },
