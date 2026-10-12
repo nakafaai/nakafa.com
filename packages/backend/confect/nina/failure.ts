@@ -3,7 +3,7 @@ import {
   GatewayFailure,
 } from "@repo/backend/confect/gateway/failure";
 import { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
-import { Schema } from "effect";
+import { Cause, Option, Schema } from "effect";
 
 /** The Nina step that failed: reading stored state or generating a new result. */
 export const NinaFailureOperation = Schema.Literals(["read", "generate"]);
@@ -39,4 +39,27 @@ const reasons = {
 export function generationFailure(cause: unknown): NinaGenerationError {
   const gateway = classify(cause);
   return new NinaGenerationError({ reason: reasons[gateway.reason], gateway });
+}
+
+/** The reason a failed run stores: the one its generation named, or `unknown`. */
+export function causeReason(cause: Cause.Cause<unknown>) {
+  return Cause.findErrorOption(cause).pipe(
+    Option.filter(Schema.is(NinaGenerationError)),
+    Option.map((error) => error.reason),
+    Option.getOrElse(() => "unknown" as const)
+  );
+}
+
+/**
+ * The failure of a stream that was aborted. The AI SDK reports its own total,
+ * step and chunk deadlines through the abort, naming a `TimeoutError` as the
+ * reason, and never through the stream's error callback. A deadline reads as a
+ * response timeout. Any other abort, and an abort that names no reason, is an
+ * interruption.
+ */
+export function abortFailure(reason: unknown): NinaGenerationError {
+  const failure = generationFailure(reason);
+  return failure.reason === "response-timeout"
+    ? failure
+    : new NinaGenerationError({ reason: "interrupted" });
 }

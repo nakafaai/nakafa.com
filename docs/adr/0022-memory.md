@@ -329,8 +329,12 @@ build from scratch costs that for every memory the learner has: 25 calls for
 1,000 memories, at most 32 minutes if each takes its quiet and its whole 45
 seconds. No turn waits for or pays any of it. A series that stops, because the
 learner paused memory or the account is going, goes on from where it stopped at
-the first request after the day, and a delete or a rewrite starts it again. A
-situation is never handed to it, because it has an end date.
+the first request after the day, and a delete or a rewrite starts it again.
+The learner who lets Nina use memory again asks for a build too, by the rule of
+an added memory: nothing asked while memory was paused, and a build that came
+due during the pause built nothing, so the memories written before and during
+the pause would otherwise wait for the next one. A situation is never handed to
+it, because it has an end date.
 It writes only if the portrait is still the one it read and every memory it fed
 to the model is as it read it, so a build that was running when the learner
 deleted or rewrote a memory, or deleted them all, or paused memory, stores

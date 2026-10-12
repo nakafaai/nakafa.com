@@ -107,12 +107,11 @@ describe("a request for a portrait build", () => {
     });
     await ask(f, { reset: true });
     const [row] = await f.rows();
-    expect(row).toMatchObject({
-      builtAt: NOW - HOUR,
-      scheduledAt: NOW,
-      through: 0,
-    });
+    expect(row).toMatchObject({ scheduledAt: NOW, through: 0 });
     expect(row).not.toHaveProperty("text");
+    // The day of the last build goes with the text, so the request after a
+    // build that found memory paused asks again.
+    expect(row).not.toHaveProperty("builtAt");
     expect(await f.portrait()).toBeNull();
     expect(await f.scheduled()).toHaveLength(1);
     // Another save a moment later asks again, because only the last request
