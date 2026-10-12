@@ -21,7 +21,10 @@ vi.mock("@repo/backend/confect/nina/research/tools/scrape", () => ({
   readPage,
 }));
 
-vi.mock("@repo/backend/confect/nina/research/domain", () => ({
+vi.mock("@repo/backend/confect/nina/research/domain", async (original) => ({
+  ...(await original<
+    typeof import("@repo/backend/confect/nina/research/domain")
+  >()),
   extractDomain: (url: string) => {
     const hostname = new URL(url).hostname;
 

@@ -2,9 +2,9 @@ import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
-import { extractHostname } from "@repo/backend/confect/nina/research/domain";
+import { HostnameSchema } from "@repo/backend/confect/nina/research/domain";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
-import { Effect, Schema, SchemaGetter, SchemaIssue, Struct } from "effect";
+import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
 /**
  * The most sites one web search call may name. The search provider states no
@@ -13,7 +13,9 @@ export const webSearchMaxQueries = 4;
  * October 2026), so this bound is Nakafa's own, not a provider limit and not a
  * measurement. A task that limits a search names the site of an official
  * source, its sub-sites, or a few outlets, and five cover them. A search over
- * more sites is an open search.
+ * more sites is an open search, so the model leaves the field out. A call that
+ * names more is refused, as a call with more queries than
+ * `webSearchMaxQueries` is, and runs no search.
  */
 export const webSearchMaxSites = 5;
 /**
@@ -34,30 +36,6 @@ const webSearchQueryMaxLength = 500;
 const queryInputSchema = Schema.String.check(
   Schema.isMaxCodePoints(webSearchQueryMaxLength)
 ).pipe(Schema.decodeTo(Schema.Trim), Schema.check(Schema.isMinLength(1)));
-/**
- * One site: a hostname only, without a protocol or a path, as the search
- * provider documents `includeDomains`
- * (https://docs.firecrawl.dev/api-reference/endpoint/search, read on 12 October
- * 2026). An address the model writes is reduced to its hostname here, so that
- * slip costs no extra model step, and a text with no hostname fails the decode.
- */
-const siteInputSchema = Schema.Trim.pipe(
-  Schema.decodeTo(Schema.String, {
-    decode: SchemaGetter.transformEffect((text, options) =>
-      Effect.fromOption(extractHostname(text)).pipe(
-        Effect.mapError(
-          () =>
-            new SchemaIssue.InvalidValue(
-              { message: "Expected a hostname, such as bbc.com." },
-              text,
-              options
-            )
-        )
-      )
-    ),
-    encode: SchemaGetter.passthrough(),
-  })
-);
 /**
  * Requests the search provider's plan serves at once, measured on 10 October
  * 2026. One past it waits in the provider's queue and can time out there, so
@@ -118,7 +96,7 @@ export const WebSearchInputSchema = Schema.Struct({
         Preserve task-relevant user-provided strings for:
         - named entities, products, APIs, and libraries.
         - features, versions, institutions, and dates.
-        - URLs, source names, and document titles.
+        - source names, document titles, and the URL of a page the query is about.
 
         Omit answer-formatting instructions:
         - summary length.
@@ -129,7 +107,7 @@ export const WebSearchInputSchema = Schema.Struct({
       }),
     }),
   sites: Schema.optionalKey(
-    Schema.Array(siteInputSchema).pipe(
+    Schema.Array(HostnameSchema).pipe(
       Schema.mutable,
       Schema.check(Schema.isMaxLength(webSearchMaxSites))
     )
@@ -141,7 +119,8 @@ export const WebSearchInputSchema = Schema.Struct({
         Use it when the task asks for results of given sites only.
         Write each site as a hostname, without a protocol or a path.
         Every query of this call is then searched in those sites only.
-        A search over more than ${webSearchMaxSites} sites is an open search.
+        Name at most ${webSearchMaxSites} sites.
+        A call that names more sites, or a site that is not a hostname, is refused and runs no search.
         Leave this field out for an open search.
       `,
     }),

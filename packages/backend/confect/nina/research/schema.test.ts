@@ -102,7 +102,7 @@ describe("research schema", () => {
     expect(older).toEqual({ queries: ["AI SDK DevTools"] });
     expect(older).not.toHaveProperty("sites");
   });
-  it("keeps a site written as a hostname, reduces one written as an address to its hostname, and refuses a text with no hostname", () => {
+  it("decodes each site of the call as a hostname, which domain.test.ts pins in full, and refuses the whole input for one that is not", () => {
     const decode = (sites: string[]) =>
       Schema.decodeResult(WebSearchInputSchema)({
         queries: ["kurikulum merdeka"],
@@ -110,27 +110,14 @@ describe("research schema", () => {
       });
 
     expect(
-      Result.getOrThrow(decode(["bbc.com", "snpmb.bppp.kemdikbud.go.id"])).sites
-    ).toEqual(["bbc.com", "snpmb.bppp.kemdikbud.go.id"]);
-    expect(
-      Result.getOrThrow(
-        decode([
-          "https://www.bbc.com/news?page=2",
-          "kemdikbud.go.id/berita",
-          "  BBC.com\n",
-        ])
-      ).sites
-    ).toEqual(["www.bbc.com", "kemdikbud.go.id", "bbc.com"]);
+      Result.getOrThrow(decode(["bbc.com", "https://www.cnn.com/news"])).sites
+    ).toEqual(["bbc.com", "www.cnn.com"]);
     expect(Result.getOrThrow(decode([])).sites).toEqual([]);
-    for (const text of ["", "   ", "/news", "https://", "two words"]) {
-      const refused = decode(["bbc.com", text]);
-      expect(Result.isFailure(refused)).toBe(true);
-      if (Result.isFailure(refused)) {
-        expect(refused.failure.message).toContain(
-          "Expected a hostname, such as bbc.com."
-        );
-      }
-    }
+    const refused = Result.match(decode(["bbc.com", "BBC Indonesia"]), {
+      onFailure: (error) => error.message,
+      onSuccess: () => "decoded",
+    });
+    expect(refused).toContain("Expected a hostname, such as bbc.com.");
   });
   it("tells the model the most sites it may name and refuses more instead of dropping any", async () => {
     const decode = (count: number) =>
@@ -147,7 +134,7 @@ describe("research schema", () => {
       },
     });
   });
-  it("tells the model to name sites only when the task asks for results of given sites, and to leave the field out for an open search", async () => {
+  it("tells the model what the schema does: the bound, that a call over it or with a text that is no hostname is refused, and no open search for more sites", async () => {
     const json = encodeJsonText(await webSearchInputSchema.jsonSchema);
     expect(json).toContain(
       "Use it when the task asks for results of given sites only."
@@ -155,16 +142,32 @@ describe("research schema", () => {
     expect(json).toContain(
       "Every query of this call is then searched in those sites only."
     );
+    expect(json).toContain(`Name at most ${webSearchMaxSites} sites.`);
+    expect(json).toContain(
+      "A call that names more sites, or a site that is not a hostname, is refused and runs no search."
+    );
     expect(json).toContain("Leave this field out for an open search.");
+    // The schema refuses a call over the bound, so no text may say it is run.
+    expect(json).not.toContain("is an open search");
   });
-  it("does not ask the queries to carry a domain, which the sites field carries", async () => {
-    expect(await webSearchInputSchema.jsonSchema).toMatchObject({
+  it("does not ask the queries to carry a domain or a site's URL, which the sites field carries", async () => {
+    const jsonSchema = await webSearchInputSchema.jsonSchema;
+    expect(jsonSchema).toMatchObject({
       properties: {
         queries: {
-          description: expect.not.stringContaining("domains"),
+          description: expect.stringContaining(
+            "the URL of a page the query is about"
+          ),
         },
       },
     });
+    for (const word of ["domains", "URLs"]) {
+      expect(jsonSchema).toMatchObject({
+        properties: {
+          queries: { description: expect.not.stringContaining(word) },
+        },
+      });
+    }
   });
   it("asks research findings for their shape and leaves citations to the filter", () => {
     const cited = Schema.decodeResult(ResearchOutputSchema)({

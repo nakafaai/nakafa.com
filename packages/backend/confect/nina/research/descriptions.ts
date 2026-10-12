@@ -41,12 +41,12 @@ export const nakafaWebSearch = createPrompt({
       - Generate concise search-engine queries; do not pass the raw user prompt as a search query.
       - Keep task-relevant user-provided strings for:
         - named products, APIs, libraries, and features.
-        - versions and URLs.
-        - source names.
+        - versions and source names.
         - document titles.
-      - Preserve official-source, URL, and recency constraints from the user task.
+        - the URL of a page that the query is about.
+      - Preserve official-source and recency constraints from the user task.
       - Include the current date or year for time-sensitive queries.
-      - When the task asks for results of given sites only, put their hostnames in the sites field and not in the queries.
+      - When the task asks for results of given sites only, put the hostname of each site in the sites field, also when the task writes the site as a URL, and not in the queries.
       - Do not write a site: operator into a query: the search provider's news source did not honor it when measured on 12 October 2026.
       - When the task asks for an official, first-party, or primary source in any language, write queries that reach it: include the exact name of the source.
       - Do not broaden a specific documentation request into a generic industry trend search.

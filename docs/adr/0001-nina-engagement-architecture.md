@@ -184,8 +184,22 @@ web search tool input has an optional `sites` list of at most five hostnames,
 a bound of Nakafa's own because the provider states none, and every query of the
 call is sent with it as `includeDomains`. A missing or empty list sends no
 field. A site the model writes as an address is reduced to its hostname by the
-platform `URL`, and a text with no hostname refuses the call. No code reads a
-`site:` operator out of a query, and no second filter runs over the results.
+platform `URL`, and that hostname must belong to the public web by the public
+suffix list that `domain.ts` also reads for citations and for the links a
+learner writes. A text with a comma, an underscore, a wildcard or a space, an IP
+address, `localhost`, and a single word that is no listed suffix are none of
+them a site. No code reads a `site:` operator out of a query, and no second
+filter runs over the results.
+
+A list of more than five sites, or one text that is no site, refuses the whole
+call, as a call with no query is refused, and the tool description says so.
+Research then goes on with the learner's own links, or ends with the error
+`Research search wrote no usable query.` Nothing drops a site or widens the
+search quietly, because a search that names its sites and runs without them
+brings back the sources of other sites that this field exists to keep out. A
+task that names more than five sites is an open search, and the model leaves
+the field out.
+
 The provider documents `includeDomains` as restricting results to the given
 hostnames and says it adds `site:` operators to the query itself
 (https://docs.firecrawl.dev/api-reference/endpoint/search and
