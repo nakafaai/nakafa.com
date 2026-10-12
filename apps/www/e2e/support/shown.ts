@@ -8,8 +8,11 @@ const SHOWN = "nakafaShownTexts";
  * Starts recording, inside the page, which of `texts` the document shows from
  * now on. The page looks at every change of the document, so a text that shows
  * for a moment between two steps of a test is still caught, which a locator
- * assertion cannot do: it reads the page only when it runs. A page that moves
- * on by client navigation keeps the record, and a page that loads again
+ * assertion cannot do: it reads the page only when it runs. Only the text a
+ * learner could see counts: the rendered text, which leaves out scripts and
+ * hidden elements. The page's own scripts hold every text of its dictionary,
+ * so the text of the document would hold each of them all along. A page that
+ * moves on by client navigation keeps the record, and a page that loads again
  * starts without it.
  */
 export const watchTexts = (page: Page, texts: readonly string[]) =>
@@ -18,7 +21,7 @@ export const watchTexts = (page: Page, texts: readonly string[]) =>
       const shown: string[] = [];
       Reflect.set(window, key, shown);
       const look = () => {
-        const text = document.body.textContent ?? "";
+        const text = document.body.innerText;
         for (const needle of needles) {
           if (text.includes(needle) && !shown.includes(needle)) {
             shown.push(needle);
