@@ -54,7 +54,7 @@ export function MemoryControl() {
           />
         </div>
       </CardContent>
-      <CardSectionFooter className="justify-between gap-4">
+      <CardSectionFooter className="flex-wrap justify-between gap-4">
         <p className="text-muted-foreground text-sm">{t("footer")}</p>
         <Button
           disabled={empty}

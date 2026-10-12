@@ -1,6 +1,7 @@
 "use client";
 
 import { useMediaQuery } from "@mantine/hooks";
+import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -8,6 +9,7 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
+import { Function as Fn } from "effect";
 import { useTranslations } from "next-intl";
 import {
   useCallback,
@@ -22,14 +24,30 @@ import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";
 
-/** From this width on, the editor is a panel beside the page. Below it, a sheet. */
-const WIDE = "(min-width: 64rem)";
+/**
+ * From this width on, the editor is a panel beside the page. Below it, a
+ * sheet. The window must hold the sidebar (16rem), the smallest panel (24rem)
+ * and the room the list keeps (`LIST_ROOM`, 23rem): 63rem, or 1008px. Where the
+ * scrollbar is classic, the page loses its width on one edge, the stable
+ * gutter on both edges (`globals.css`) holds the same width on the other, and
+ * the media query counts neither. The thin scrollbar of this page is 11px in
+ * Chromium, so a window of 64rem leaves the page 1002px, 6px short, and a
+ * window of 65rem leaves it 1018px.
+ */
+const WIDE = "(min-width: 65rem)";
 /** How wide the panel starts and how far a drag of its edge takes it. */
 const PANEL_WIDTH = { initialWidth: 496, maxWidth: 768, minWidth: 384 };
+/**
+ * The room the list keeps beside the panel, in rem: a card of 20rem between the
+ * 1.5rem of padding the settings page puts around it. The panel never takes
+ * more of the row than what is left of it, whatever width it was dragged to and
+ * whatever width the window has, and its resizer says the width it has.
+ */
+const LIST_ROOM = 23;
 
 /** The place for a panel is part of the layout and never changes. */
 function subscribeToPanel() {
-  return () => undefined;
+  return Fn.constVoid;
 }
 
 function readPanel() {
@@ -38,6 +56,42 @@ function readPanel() {
 
 function readNoPanel() {
   return null;
+}
+
+/** The row of the settings layout that holds the page and the place for a panel. */
+function readRow() {
+  return document.getElementById(SETTINGS_PANEL_ID)?.parentElement;
+}
+
+/** Tells when the row changes its width. */
+function subscribeToRoom(notify: () => void) {
+  const row = readRow();
+
+  if (!row) {
+    return Fn.constVoid;
+  }
+
+  const observer = new ResizeObserver(notify);
+
+  observer.observe(row);
+
+  return () => observer.disconnect();
+}
+
+/** The widest the panel can be now: the row less the room the list keeps, in pixels. */
+function readRoom() {
+  const unit = Number.parseFloat(
+    getComputedStyle(document.documentElement).fontSize
+  );
+
+  return (
+    (readRow()?.clientWidth ?? Number.POSITIVE_INFINITY) - LIST_ROOM * unit
+  );
+}
+
+/** Before the browser can measure the row, the panel has all the room it asks for. */
+function readNoRoom() {
+  return Number.POSITIVE_INFINITY;
 }
 
 /**
@@ -214,7 +268,15 @@ function MemoryEditorPanel({
   const t = useTranslations("Memory");
   const ai = useTranslations("Ai");
   const panel = useSyncExternalStore(subscribeToPanel, readPanel, readNoPanel);
-  const { width, isResizing, resizerProps } = useResizable(PANEL_WIDTH);
+  const room = useSyncExternalStore(subscribeToRoom, readRoom, readNoRoom);
+  const { width, isResizing, resizerProps } = useResizable({
+    ...PANEL_WIDTH,
+    // Never narrower than the smallest panel, whatever the room says.
+    maxWidth: Math.max(
+      PANEL_WIDTH.minWidth,
+      Math.min(PANEL_WIDTH.maxWidth, room)
+    ),
+  });
 
   useLayoutEffect(() => remember, [remember]);
 
@@ -225,19 +287,28 @@ function MemoryEditorPanel({
   return createPortal(
     <aside
       aria-label={memory ? t("edit") : t("new")}
-      className="sticky top-0 flex h-dvh w-(--memory-editor-width) shrink-0 flex-col border-s bg-background starting:opacity-0 transition-opacity ease-out"
+      className="sticky top-0 flex h-dvh w-(--memory-editor-width) max-w-[calc(100%-var(--memory-list-room))] shrink-0 flex-col border-s bg-background starting:opacity-0 transition-opacity ease-out"
       ref={place}
-      style={{ "--memory-editor-width": `${width}px` }}
+      style={{
+        "--memory-editor-width": `${width}px`,
+        "--memory-list-room": `${LIST_ROOM}rem`,
+      }}
     >
-      <button
+      {/* The edge is a separator that takes the focus, as a window splitter
+          does, and it says the width the panel has and the widths it can have. */}
+      <Separator
         aria-label={ai("resize")}
+        aria-valuemax={resizerProps["aria-valuemax"]}
+        aria-valuemin={resizerProps["aria-valuemin"]}
+        aria-valuenow={resizerProps["aria-valuenow"]}
         className={cn(
-          "absolute inset-y-0 start-0 z-10 w-1 cursor-col-resize outline-none transition-colors hover:bg-ring focus-visible:bg-ring",
+          "absolute inset-y-0 start-0 z-10 cursor-col-resize bg-transparent outline-none transition-colors hover:bg-ring focus-visible:bg-ring data-[orientation=vertical]:w-1",
           !!isResizing && "bg-ring"
         )}
         onKeyDown={resizerProps.onKeyDown}
         onMouseDown={resizerProps.onMouseDown}
-        type="button"
+        orientation={resizerProps["aria-orientation"]}
+        tabIndex={0}
       />
     </aside>,
     panel
