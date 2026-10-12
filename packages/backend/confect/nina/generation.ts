@@ -8,7 +8,11 @@ import {
   ChatStep,
   makeChatStep,
 } from "@repo/backend/confect/nina/capability/deadline";
-import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
+import {
+  createNinaAgentContext,
+  readNinaLearningPage,
+} from "@repo/backend/confect/nina/contract/turn";
 import {
   generationFailure,
   NinaGenerationError,
@@ -16,12 +20,17 @@ import {
 import { boundStep } from "@repo/backend/confect/nina/history";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
+import {
+  type Found,
+  restoreFound,
+} from "@repo/backend/confect/nina/memory/tool";
+import { decideNinaCapability } from "@repo/backend/confect/nina/policy/capability";
 import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { startNinaStep } from "@repo/backend/confect/nina/step";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
-import { DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect, MutableHashMap } from "effect";
 
 /**
  * The scheduled Confect action owns generation; Agent owns its persistent
@@ -40,25 +49,40 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   const runtime = {
     currentDate: DateTime.formatIso(DateTime.makeUnsafe(turn._creationTime)),
   };
+  const { instructions, memories, paused, summary } = yield* readInstructions(
+    turn,
+    readNinaLearningPage(turn.page).url
+  );
+  // The turn reads once whether the learner paused memory: the prompt, the tools
+  // Nina is offered and the policy of each call all follow it.
   const context = createNinaAgentContext({
+    memory: !paused,
     page: turn.page,
     user: turn.user,
     runtime,
   });
-  const { instructions, summary } = yield* readInstructions(turn, context.url);
   // Nina reads its own turns, so the Agent fetches no history and sends this as is.
   const input = yield* readInput(turn, {
-    context: formatTurnContext({ page: turn.page, runtime, user: turn.user }),
+    context: formatTurnContext({
+      memories,
+      page: turn.page,
+      runtime,
+      user: turn.user,
+    }),
     through: summary?.throughOrder ?? null,
   });
   // The chat step's timer covers Nina's own call and the tools it starts, so
   // each step marks its start here and the tools count their time from it.
   const chatStep = yield* makeChatStep();
+  // The words the memory tool finds are read in the next step of this turn and
+  // never stored, so the thread, the transcript and later turns hold none.
+  const found: Found = MutableHashMap.empty();
   const tools = yield* createCapabilities(
     turn.userId,
     context,
     turn.page.locale,
-    usageHandler
+    usageHandler,
+    found
   ).pipe(Effect.provideService(ChatStep, chatStep));
   const handle = (yield* Gateway).language("chat");
   const agent = new Agent(components.nina, {
@@ -78,6 +102,14 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
         { threadId: turn.threadId, userId: turn.userId },
         {
           promptMessageId: turn.promptMessageId,
+          // Nina is offered the capabilities the policy allows this turn, in
+          // every step of it: not the memory tool while the learner's memory
+          // is paused.
+          activeTools: Arr.filter(
+            LearningCapabilityNameSchema.literals,
+            (capability) =>
+              decideNinaCapability({ capability, context }).state === "allowed"
+          ),
           abortSignal: AbortSignal.any([signal, halt]),
           onError: ({ error }) => {
             streamFailure ??= generationFailure(error);
@@ -91,7 +123,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
             runPromise(
               startNinaStep(chatStep.begin, {
                 ...step,
-                messages: boundStep(step.messages),
+                messages: boundStep(restoreFound(step.messages, found)),
               })
             ),
           repairToolCall: (options) =>

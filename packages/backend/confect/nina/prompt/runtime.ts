@@ -55,21 +55,25 @@ function formatRuntimePrompt({
 }
 
 /**
- * Formats the runtime facts of one turn from what admission froze. They change
- * between turns, so they travel with the newest learner message and never sit
- * in the system prompt, whose bytes the provider caches.
+ * Formats the runtime facts of one turn from what admission froze, and the
+ * memories the turn recalls (`memories`, already formatted by `formatRecalled`),
+ * which follow them. They change between turns, so they travel with the newest
+ * learner message and never sit in the system prompt, whose bytes the provider
+ * caches.
  */
 export function formatTurnContext({
+  memories,
   page,
   runtime,
   user,
 }: {
+  readonly memories?: string | undefined;
   readonly page: NinaPage;
   readonly runtime: NinaRuntime;
   readonly user: NinaUser;
 }) {
   const learningPage = readNinaLearningPage(page);
-  return dedent(
+  const facts = dedent(
     formatRuntimePrompt({
       currentDate: runtime.currentDate,
       currentPage: {
@@ -82,4 +86,5 @@ export function formatTurnContext({
       url: learningPage.url,
     })
   );
+  return memories === undefined ? facts : `${facts}\n\n${memories}`;
 }

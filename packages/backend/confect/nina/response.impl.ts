@@ -129,16 +129,18 @@ const present = FunctionImpl.make(
     }
     const usageHandler = yield* createUsageHandler(turn._id);
     // Title, suggestions, the rolling summary and memory capture are optional,
-    // independent follow-up work. Capture keeps every failure of its own, so
-    // it can never cancel the rest.
+    // independent follow-up work. Each runs to its end whatever the others do,
+    // because a step that dies would otherwise cancel the ones still running.
+    // Their failures are raised together once all have ended, so none is lost.
     yield* Effect.all(
       [
-        generatePresentation(turn, usageHandler),
-        refreshSummary(turn),
-        captureMemory(turn, usageHandler),
+        Effect.exit(generatePresentation(turn, usageHandler)),
+        Effect.exit(refreshSummary(turn)),
+        Effect.exit(captureMemory(turn, usageHandler)),
       ],
-      { concurrency: "unbounded", discard: true }
+      { concurrency: "unbounded" }
     ).pipe(
+      Effect.flatMap(Exit.asVoidAll),
       Effect.provide(GatewayLive),
       Effect.catchTag("GatewayConfigurationError", () =>
         Effect.logWarning("Nina presentation configuration unavailable", {

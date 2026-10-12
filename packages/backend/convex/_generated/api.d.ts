@@ -8442,6 +8442,24 @@ export declare const internal: {
         } | null
       >;
     };
+    judgment: {
+      measure: FunctionReference<
+        "action",
+        "internal",
+        {
+          names: Array<"lasting" | "ownNote" | "private">;
+          texts: Array<string>;
+          together: number;
+        },
+        {
+          rows: Array<
+            | { probabilities: Record<string, number> }
+            | { failure: { reason: string; status?: number; type?: string } }
+          >;
+          thresholds: Record<string, number>;
+        }
+      >;
+    };
     lifecycle: {
       claim: FunctionReference<
         "mutation",
@@ -9490,7 +9508,7 @@ export declare const internal: {
         {
           candidates: Array<{
             kind: "level" | "goal" | "style" | "struggle" | "situation";
-            known?: string;
+            known?: number;
             quote: string;
             text: string;
             until?: string;
@@ -9526,7 +9544,6 @@ export declare const internal: {
             text: string;
             title?: string;
           }>;
-          paused: boolean;
           profile: {
             focus?: "learning" | "tryout";
             region?:
@@ -9550,12 +9567,39 @@ export declare const internal: {
           };
         }
       >;
+      lookup: FunctionReference<
+        "query",
+        "internal",
+        { now: number; query: string; userId: Id<"users"> },
+        {
+          memories: Array<{
+            confirmedAt: number;
+            id: Id<"ninaMemories">;
+            kind?: "level" | "goal" | "style" | "struggle" | "situation";
+            text: string;
+            title?: string;
+          }>;
+          paused: boolean;
+        }
+      >;
+      paused: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        boolean
+      >;
       read: FunctionReference<
         "query",
         "internal",
-        { now: number; topics: Array<string>; userId: Id<"users"> },
+        {
+          now: number;
+          said: string;
+          topics: Array<string>;
+          userId: Id<"users">;
+        },
         {
           paused: boolean;
+          portrait?: string;
           profile: {
             focus?: "learning" | "tryout";
             region?:
@@ -9577,7 +9621,7 @@ export declare const internal: {
             };
             tryoutCountry?: string;
           };
-          prompt: Array<{
+          recalled: Array<{
             confirmedAt: number;
             id: Id<"ninaMemories">;
             kind?: "level" | "goal" | "style" | "struggle" | "situation";
@@ -9585,6 +9629,56 @@ export declare const internal: {
             title?: string;
           }>;
         }
+      >;
+      rekey: {
+        page: FunctionReference<
+          "mutation",
+          "internal",
+          { cursor?: string },
+          { checked: number; cursor: string; done: boolean; rekeyed: number }
+        >;
+      };
+    };
+    portrait: {
+      build: {
+        run: FunctionReference<
+          "action",
+          "internal",
+          { userId: Id<"users"> },
+          null
+        >;
+      };
+      claim: FunctionReference<
+        "mutation",
+        "internal",
+        { userId: Id<"users"> },
+        {
+          memories: Array<{
+            confirmedAt: number;
+            id: Id<"ninaMemories">;
+            kind?: "level" | "goal" | "style" | "struggle" | "situation";
+            text: string;
+            title?: string;
+          }>;
+          more: boolean;
+          portrait?: string;
+          reached: number;
+          through: number;
+        } | null
+      >;
+      save: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          expected: number;
+          memories: Array<{ confirmedAt: number; id: Id<"ninaMemories"> }>;
+          more: boolean;
+          reached: number;
+          text?: string;
+          usage?: { input: number; output: number };
+          userId: Id<"users">;
+        },
+        boolean
       >;
     };
     presentation: {

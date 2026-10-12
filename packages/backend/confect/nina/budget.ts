@@ -7,16 +7,26 @@ import { countTokens, decode, encode } from "gpt-tokenizer";
  * instead of failing the turn.
  */
 export const NINA_BUDGET = {
+  /**
+   * The account facts Nina reads about the learner. A try-out stores as many
+   * sections as its set has, so the facts are bounded here and never crowd the
+   * rest of the learner section out.
+   */
+  account: 500,
   /** One capability output returned to the main Agent. */
   evidence: 6000,
   /** Evidence gathered by all tool calls in the current turn. */
   turnEvidence: 16_000,
   /** Older complete turns kept verbatim after the conversation summary. */
   history: 12_000,
-  /** Account facts and the memories Nina reads about the learner. */
-  learner: 1500,
+  /** The memories the memory capability returns to Nina in one call. */
+  lookup: 1500,
   /** The signed current page placed in the stable prompt context. */
   page: 6000,
+  /** The learner's portrait in the stable system prompt. */
+  portrait: 300,
+  /** The memories a turn recalls, in front of the learner's message. */
+  recall: 700,
   /** The rolling summary of turns older than the verbatim history. */
   summary: 1200,
 } as const;

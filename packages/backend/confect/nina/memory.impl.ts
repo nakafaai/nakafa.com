@@ -31,7 +31,12 @@ import {
   readMemoryState,
   readOwnMemory,
 } from "@repo/backend/confect/nina/memory/store";
-import { known, paused, read } from "@repo/backend/confect/nina/memory/turn";
+import {
+  known,
+  lookup,
+  paused,
+  read,
+} from "@repo/backend/confect/nina/memory/turn";
 import { list, state } from "@repo/backend/confect/nina/memory/view";
 import { writeMemories } from "@repo/backend/confect/nina/memory/write";
 import spec, {
@@ -253,6 +258,7 @@ export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(disable),
   Layer.provide(forget),
   Layer.provide(read),
+  Layer.provide(lookup),
   Layer.provide(paused),
   Layer.provide(known),
   Layer.provide(capture),

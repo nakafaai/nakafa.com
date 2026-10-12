@@ -47,6 +47,33 @@ export function writes(portrait: string) {
 }
 
 /**
+ * A model that answers every portrait build with this text, but reports no
+ * token counters, as a provider may leave them out.
+ */
+export function writesUncounted(portrait: string) {
+  const model = new MockLanguageModelV4({
+    doGenerate: {
+      ...providerStep([{ type: "text", text: encodeJsonText({ portrait }) }]),
+      usage: {
+        inputTokens: {
+          cacheRead: undefined,
+          cacheWrite: undefined,
+          noCache: undefined,
+          total: undefined,
+        },
+        outputTokens: {
+          reasoning: undefined,
+          text: undefined,
+          total: undefined,
+        },
+      },
+    },
+  });
+  provider.languageModel.mockReturnValue(model);
+  return model;
+}
+
+/**
  * A model that answers every portrait build with this text, but only after
  * `meanwhile` ran: the learner doing something while the model writes.
  */
@@ -86,6 +113,22 @@ export async function scheduledBuilds(f: Pick<NinaTest, "t">) {
   );
 }
 
+/**
+ * A learner whose portrait row asks for a build and whose request has had its
+ * quiet, with the text and what the portrait has read when the test says so.
+ */
+export async function createRequestedTest(
+  portrait: { readonly text?: string; readonly through?: number } = {}
+) {
+  const f = await createPortraitTest();
+  await f.seedPortrait({
+    scheduledAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+    ...portrait,
+  });
+  f.quiet();
+  return f;
+}
+
 /** A memory fixture with the helpers to read and build a learner's portrait. */
 export async function createPortraitTest() {
   const f = await createMemoryTest();
@@ -99,14 +142,16 @@ export async function createPortraitTest() {
   /**
    * Inserts the portrait row of a learner, with its text sealed as the product
    * seals it when `text` is given. A request is waiting from the beginning of
-   * time unless the row says otherwise.
+   * time, and no build has gone to the model, unless the row says otherwise.
    */
   const seedPortrait = ({
+    builtAt,
     scheduledAt = 0,
     text,
     through = 0,
     userId = f.identity.userId,
   }: {
+    readonly builtAt?: number;
     readonly scheduledAt?: number;
     readonly text?: string;
     readonly through?: number;
@@ -116,6 +161,7 @@ export async function createPortraitTest() {
       Effect.gen(function* () {
         const keys = yield* ensureLearnerKeys(userId);
         yield* (yield* DatabaseWriter).table("ninaMemoryPortraits").insert({
+          ...(builtAt === undefined ? {} : { builtAt }),
           scheduledAt,
           through,
           userId,

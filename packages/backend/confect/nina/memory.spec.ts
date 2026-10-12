@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { NinaPortraitText } from "@repo/backend/confect/nina/portrait/schema";
 import {
   onboardingFocusValidator,
   onboardingRegionValidator,
@@ -17,8 +18,12 @@ export const MEMORY_TEXT_LIMIT = 2000;
 export const MEMORY_TITLE_LIMIT = 80;
 /** Characters of one memory Nina writes: one short sentence. */
 const MEMORY_SENTENCE_LIMIT = 280;
-/** Memories a turn starts with: those for the open page first, then the most recent. */
-export const MEMORY_START_LIMIT = 8;
+/** Memories a turn recalls at most: those that fit the learner's message and the open page. */
+export const MEMORY_RECALL_LIMIT = 8;
+/** Memories a turn recalls at least, when the learner has them: the most recently confirmed fill the list up to it. */
+export const MEMORY_RECALL_FLOOR = 3;
+/** Memories the memory capability returns in one call: the best matches for Nina's query. */
+export const MEMORY_LOOKUP_LIMIT = 6;
 /** Memories one capture call may propose from a single message. */
 export const MEMORY_CAPTURE_LIMIT = 3;
 /** Memories the capture call reads and may name: the best matches for the message. */
@@ -223,16 +228,30 @@ export const NinaMemorySeen = NinaMemoryNote.mapFields(
 );
 
 /**
- * What a turn knows about one learner. `prompt` holds the memories the turn
- * starts with, at most `MEMORY_START_LIMIT`. It is empty while memory is
- * paused.
+ * What a turn knows about one learner: the account `profile`, the `portrait`
+ * when the learner has one, and the memories the learner's message and the open
+ * page call up (`recalled`), at most `MEMORY_RECALL_LIMIT`. While memory is
+ * paused it holds neither the portrait nor a memory.
  */
 export const NinaLearner = Schema.Struct({
   paused: Schema.Boolean,
+  portrait: Schema.optionalKey(NinaPortraitText),
   profile: NinaLearnerProfile,
-  prompt: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
-    Schema.isMaxLength(MEMORY_START_LIMIT)
+  recalled: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
+    Schema.isMaxLength(MEMORY_RECALL_LIMIT)
   ),
+});
+
+/**
+ * What the memory capability finds for Nina's query: the memories that match it
+ * best, at most `MEMORY_LOOKUP_LIMIT`. It tells that memory is paused, because
+ * then it finds none and the capability refuses.
+ */
+const NinaLookup = Schema.Struct({
+  memories: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
+    Schema.isMaxLength(MEMORY_LOOKUP_LIMIT)
+  ),
+  paused: Schema.Boolean,
 });
 
 /**
@@ -352,19 +371,34 @@ export default GroupSpec.make()
       error: () => AuthFailure,
     }).middleware(Session)
   )
-  // What a turn starts with: the account facts and the memories for the pages
-  // the learner has open. `now` is the caller's time, which leaves out the
-  // situations that ended: a query never reads the clock, because it is not run
-  // again when time passes.
+  // What a turn knows about the learner: the account facts, the portrait, and
+  // the memories that the learner's words (`said`) and the pages they have open
+  // call up. `now` is the caller's time, which leaves out the situations that
+  // ended: a query never reads the clock, because it is not run again when time
+  // passes.
   .addFunction(
     FunctionSpec.internalQuery({
       name: "read",
       args: () => ({
         now: Schema.Finite,
+        said: Schema.String,
         topics: NinaMemoryTopics,
         userId: Id("users"),
       }),
       returns: () => NinaLearner,
+    })
+  )
+  // What the memory capability finds for Nina's query, as the memories are at
+  // the caller's time `now`. It reads the learner's words only, not the page.
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "lookup",
+      args: () => ({
+        now: Schema.Finite,
+        query: Schema.String,
+        userId: Id("users"),
+      }),
+      returns: () => NinaLookup,
     })
   )
   // Whether the learner paused memory. The capture asks once, before it sends

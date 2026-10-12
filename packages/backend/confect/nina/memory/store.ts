@@ -98,6 +98,31 @@ export const readNewest = Effect.fn("nina.memory.store.newest")(function* (
     .pipe(Effect.orDie);
 });
 
+/**
+ * Reads a learner's memories confirmed after `after`, the oldest first, at most
+ * `limit`: the same index range as `readNewest`, read from its other end, so a
+ * reader that goes on from the last moment it read meets each memory once.
+ * `after` must be the moment the learner last asked to delete every memory
+ * (`readMemoryState`) or a later one, because the range starts there and meets
+ * what that request took if it starts earlier. No function reads all the
+ * memories of a learner.
+ */
+export const readOldest = Effect.fn("nina.memory.store.oldest")(function* (
+  userId: UserId,
+  limit: number,
+  after: number
+) {
+  return yield* (yield* DatabaseReader)
+    .table("ninaMemories")
+    .index(
+      "by_userId_and_confirmedAt",
+      (query) => query.eq("userId", userId).gt("confirmedAt", after),
+      "asc"
+    )
+    .take(limit)
+    .pipe(Effect.orDie);
+});
+
 /** Reads one memory when it belongs to the learner, and nothing for any other id. */
 export const readOwnMemory = Effect.fn("nina.memory.store.own")(function* (
   userId: UserId,

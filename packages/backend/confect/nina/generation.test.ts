@@ -9,12 +9,15 @@ import {
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
+  appendNinaTurn,
   createNinaTest,
   ninaModel,
+  ninaModelFor,
   ninaStream,
   ninaToolInput,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -36,6 +39,9 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 }));
 
 const fixture = () => createNinaTest({ prompt: "Explain a function limit." });
+
+const CACHE_MARKER =
+  ',"providerOptions":{"openaiCompatible":{"cache_control":{"type":"ephemeral"}}}';
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const SUMMARY_UPDATED_AT = Date.UTC(2026, 8, 27, 12);
@@ -442,5 +448,47 @@ describe("Nina generation through the real Agent component", () => {
     expect(encodeJsonText(languageModel.doStreamCalls[0]?.prompt)).toContain(
       `- date: ${DateTime.formatIso(DateTime.makeUnsafe(turn?._creationTime ?? 0))}`
     );
+  });
+});
+
+describe("Nina generation with what the learner told her", () => {
+  /** The system prompt, without the cache marker that moves, and the newest message of a model call. */
+  function ends({ prompt }: { readonly prompt: readonly unknown[] }) {
+    return {
+      newest: encodeJsonText(Option.getOrUndefined(Arr.last(prompt))),
+      system: encodeJsonText(
+        Option.getOrUndefined(Arr.head(prompt))
+      ).replaceAll(CACHE_MARKER, ""),
+    };
+  }
+
+  it("keeps the system prompt byte for byte from one question to another, and gives each message the memories its words call up", async () => {
+    const languageModel = ninaModelFor(2);
+    provider.languageModel.mockReturnValue(languageModel);
+    const f = await createPortraitTest();
+    await f.seedPortrait({ text: "Duduk di kelas 12 dan suka contoh soal." });
+    await f.seed({ confirmedAt: 1, text: "Bingung limit." });
+    await f.seed({ confirmedAt: 2, text: "Suka main gitar." });
+    await f.seed({ confirmedAt: 3, text: "Tinggal di Bandung." });
+    await f.seed({ confirmedAt: 4, text: "Ikut SNBT 2027." });
+    await f.seed({ confirmedAt: 5, text: "Kelas 12 IPA." });
+    await f.t.action(run, { turnId: f.turnId });
+    // A new memory and another question change the message, not the prompt.
+    await f.seed({ confirmedAt: 6, text: "Mau kuliah di ITB." });
+    const next = await appendNinaTurn(f, {
+      prompt: "Bagaimana cara main gitar?",
+    });
+    await f.t.action(run, { turnId: next.turnId });
+    const [one, two] = Arr.map(languageModel.doStreamCalls, ends);
+    expect(two?.system).toBe(one?.system);
+    expect(one?.system).toContain(
+      "<portrait>\\nDuduk di kelas 12 dan suka contoh soal.\\n</portrait>"
+    );
+    expect(one?.system).not.toContain("Bingung limit.");
+    expect(one?.newest).toContain("# Memories");
+    expect(one?.newest).toContain("- Bingung limit. (1970-01-01)");
+    expect(one?.newest).not.toContain("Suka main gitar.");
+    expect(two?.newest).toContain("- Suka main gitar. (1970-01-01)");
+    expect(two?.newest).not.toContain("Bingung limit.");
   });
 });

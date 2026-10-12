@@ -291,6 +291,7 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
   it("asks for a portrait build when the learner adds a memory, but keeps the text the portrait has", async () => {
     const f = await createPortraitTest();
     await f.seedPortrait({
+      builtAt: NOW - 25 * 3_600_000,
       scheduledAt: NOW - 25 * 3_600_000,
       text: "Kelas 11.",
       through: 4,
@@ -301,7 +302,14 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
       expect.objectContaining({ scheduledAt: NOW, through: 4 }),
     ]);
     expect(await f.scheduled()).toEqual([{ userId: f.identity.userId }]);
-    // A second memory the same day asks for none.
+    // Once that build has gone to the model, a second memory the same day asks
+    // for none.
+    await f.t.mutation(async (ctx) => {
+      const row = await ctx.db.query("ninaMemoryPortraits").first();
+      if (row) {
+        await ctx.db.patch(row._id, { builtAt: NOW });
+      }
+    });
     await f.owner.mutation(add, { text: "Kelas 12 IPA" });
     expect(await f.scheduled()).toHaveLength(1);
   });
@@ -342,10 +350,15 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
     const f = await createPortraitTest();
     const other = await f.stranger();
     const theirs = await f.seed({ text: "Rahasia", userId: other.userId });
+    const gone = await f.seed({ text: "Sudah hilang" });
+    await f.t.mutation((ctx) => ctx.db.delete(gone));
     await f.seedPortrait({ text: "Kelas 12.", through: 4 });
+    await f.owner.mutation(remove, { id: gone });
     await f.owner.mutation(remove, { id: theirs });
     expect(await f.portrait()).toBe("Kelas 12.");
     expect(await f.scheduled()).toEqual([]);
+    // The other learner's memory is still theirs.
+    expect(await f.texts(other.userId)).toEqual(["Rahasia"]);
   });
 
   it("builds nothing while memory is paused, though a memory the learner changes still takes its text out of the portrait", async () => {

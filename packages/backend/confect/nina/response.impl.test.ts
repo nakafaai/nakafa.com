@@ -5,6 +5,7 @@ import { PostHog } from "@posthog/convex";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
+import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
@@ -13,6 +14,7 @@ import {
   ninaUsage,
 } from "@repo/backend/test/nina";
 import { createCapturingTest, level } from "@repo/backend/test/nina/capture";
+import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
@@ -28,9 +30,16 @@ vi.mock("@convex-dev/agent", async (load) => {
   return { ...actual, listMessages: vi.fn(actual.listMessages) };
 });
 
+vi.mock("@repo/backend/confect/nina/summary", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/summary")>();
+  return { ...actual, refreshSummary: vi.fn(actual.refreshSummary) };
+});
+
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
+const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 
 /** A model whose call stays silent until `release` is called, like a long thought. */
 function silentModel() {
@@ -318,6 +327,42 @@ describe("The Nina response run when generation fails", () => {
   );
 });
 
+describe("The Nina response run and the memory tool", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    provider.languageModel.mockReset();
+    vi.useRealTimers();
+  });
+
+  /** The names of the tools that the model of one whole turn is offered. */
+  async function offered({ paused }: { paused: boolean }) {
+    const model = ninaModel();
+    provider.languageModel.mockReturnValue(model);
+    const f = await createMemoryTest({ prompt: "Explain a function limit." });
+    if (paused) {
+      await f.owner.mutation(pause, { paused: true });
+    }
+    await f.t.action(run, { turnId: f.turnId });
+    expect(model.doStreamCalls).toHaveLength(1);
+    return Arr.map(model.doStreamCalls[0]?.tools ?? [], (tool) => tool.name);
+  }
+
+  it("offers the model the memory tool with the others", async () => {
+    expect(await offered({ paused: false })).toEqual(
+      expect.arrayContaining(["nakafa", "deepResearch", "math", "memory"])
+    );
+  });
+
+  it("leaves the memory tool out for a learner who paused memory, and keeps the others", async () => {
+    const names = await offered({ paused: true });
+    expect(names).not.toContain("memory");
+    expect(names).toEqual(
+      expect.arrayContaining(["nakafa", "deepResearch", "math"])
+    );
+  });
+});
+
 describe("The Nina response among its follow-up work", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -370,6 +415,33 @@ describe("The Nina response among its follow-up work", () => {
     expect((await f.owner.query(getChat, { chatId: f.chatId })).title).toBe(
       "Understanding A Function Limit"
     );
+  });
+
+  it("saves the memory, the suggestions and the title when the summary dies, and raises that failure once they are done", async () => {
+    const f = await createCapturingTest();
+    const generate = turnModel();
+    vi.mocked(refreshSummary).mockReturnValueOnce(
+      Effect.die(new Error("Private summary detail"))
+    );
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    expect(generate).toHaveBeenCalledTimes(3);
+    expect(await f.turn()).toMatchObject({
+      remembered: 1,
+      suggestions: ["How does this relate to continuity?"],
+    });
+    expect(await f.texts()).toEqual(["Kelas 12."]);
+    expect((await f.owner.query(getChat, { chatId: f.chatId })).title).toBe(
+      "Understanding A Function Limit"
+    );
+    // The follow-up action still fails with the summary's cause, so it is reported.
+    const failed = Arr.filter(
+      await f.t.query((ctx) =>
+        ctx.db.system.query("_scheduled_functions").collect()
+      ),
+      ({ state }) => state.kind === "failed"
+    );
+    expect(failed).toHaveLength(1);
   });
 
   it("never costs the turn its answer or its suggestions when the vault is down, and stores neither a memory nor a title in plain text", async () => {

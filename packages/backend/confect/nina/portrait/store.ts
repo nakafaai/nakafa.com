@@ -21,8 +21,9 @@ type UserId = Docs["users"]["_id"];
 export const PORTRAIT_DELAY = Duration.seconds(30);
 
 /**
- * How long one request keeps the next from asking for a build when memories are
- * only added. A memory the learner deletes or rewrites asks for a build at once.
+ * How long one build that went to the model keeps the next from being asked for
+ * when memories are only added. A memory the learner deletes or rewrites asks
+ * for a build at once.
  */
 const PORTRAIT_WINDOW = Duration.hours(24);
 
@@ -61,23 +62,27 @@ export const readPortrait = Effect.fn("nina.portrait.read")(function* (
     yield* readLearnerKeys(userId),
     PORTRAIT_FIELD,
     row.text
-  ).pipe(Effect.orDie);
-});
+  );
+}, Effect.orDie);
 
 /**
  * Asks for a build of the learner's portrait, in the transaction of the change
- * that asks. A memory the learner wrote or Nina saved asks only when the last
- * request is a day old or none was made. A memory the learner deleted or
- * rewrote on the Memory page (`reset`) takes what the portrait says out first,
- * in the same transaction, because a sentence that came from it must not stay,
- * and then asks for a build from scratch whatever the last request was. While
- * memory is paused nothing is asked, so a learner who paused is never built
- * for, but a reset still takes the text out and lets the next request ask.
+ * that asks. A memory the learner wrote or Nina saved asks unless a build went
+ * to the model in the last day (`builtAt`). The day is counted from that build
+ * and not from the last request, so a request that no build answered, such as
+ * one whose build found memory paused, does not close it. A memory the learner
+ * deleted or rewrote on the Memory page (`reset`) takes what the portrait says
+ * out first, in the same transaction, because a sentence that came from it must
+ * not stay, and then asks for a build from scratch whatever the last build was.
+ * While memory is paused nothing is asked, so a learner who paused is never
+ * built for, but a reset still takes the text out and lets the next request
+ * ask.
  *
  * The request writes its time into the portrait row, creating the row for a
- * learner who has none, and schedules the build after `PORTRAIT_DELAY`. Several
- * requests in a row each schedule a build, and only the last one finds its
- * time has come, so a burst of saves makes one model call.
+ * learner who has none, and schedules the build after `PORTRAIT_DELAY`. Every
+ * request that comes before a build has gone to the model does this, and only
+ * the last of the builds scheduled finds its quiet over, so a burst of saves, or
+ * of memories added within the quiet, makes one model call.
  */
 export const requestPortrait = Effect.fn("nina.portrait.request")(function* ({
   paused,
@@ -96,15 +101,15 @@ export const requestPortrait = Effect.fn("nina.portrait.request")(function* ({
     if (row !== null && reset) {
       yield* writer
         .table("ninaMemoryPortraits")
-        .patch(row._id, { ...cleared, scheduledAt: 0 })
+        .patch(row._id, { ...cleared, builtAt: undefined })
         .pipe(Effect.orDie);
     }
     return;
   }
   if (
-    row !== null &&
     !reset &&
-    now - row.scheduledAt < Duration.toMillis(PORTRAIT_WINDOW)
+    row?.builtAt !== undefined &&
+    now - row.builtAt < Duration.toMillis(PORTRAIT_WINDOW)
   ) {
     return;
   }

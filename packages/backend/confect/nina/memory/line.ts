@@ -2,7 +2,7 @@ import type { NinaMemoryNote } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, pipe, String as Str } from "effect";
 
 /** One memory as Nina and the capture call read it. */
-export type Note = typeof NinaMemoryNote.Type;
+type Note = typeof NinaMemoryNote.Type;
 
 /**
  * Characters of one memory in the list a capture call reads. The call only has
@@ -17,7 +17,7 @@ const WHITESPACE = /\s+/gu;
  * with their angle brackets written as entities, so they can never close the
  * block they sit in.
  */
-function oneLine(text: string) {
+export function oneLine(text: string) {
   return pipe(
     text,
     Str.replaceAll("<", "&lt;"),
@@ -60,11 +60,6 @@ function shorten(line: string, length: number) {
  */
 export function textLine(note: Pick<Note, "text" | "title">, length: number) {
   return shorten(wordsOf(note), length);
-}
-
-/** One memory as Nina reads it: `- (level) Kelas 12`, or `- Kelas 12` for one the learner wrote. */
-export function memoryLine(note: Pick<Note, "kind" | "text" | "title">) {
-  return `- ${label(note.kind)}${wordsOf(note)}`;
 }
 
 /**

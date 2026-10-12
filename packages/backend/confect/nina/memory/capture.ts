@@ -21,6 +21,7 @@ import {
   NinaMemoryError,
 } from "@repo/backend/confect/nina/memory/failure";
 import { knownLine } from "@repo/backend/confect/nina/memory/line";
+import { readSaid } from "@repo/backend/confect/nina/memory/said";
 import { topicsOf } from "@repo/backend/confect/nina/memory/topics";
 import {
   MEMORY_CAPTURE_LIMIT,
@@ -36,6 +37,7 @@ import {
   DateTime,
   Effect,
   Record as Rec,
+  String as Str,
   Struct,
 } from "effect";
 
@@ -141,21 +143,6 @@ function formatPrompt({
   );
 }
 
-/** Reads the learner's message of a turn, or nothing when the prompt is not the learner's words. */
-const readMessage = Effect.fn("nina.memory.message")(function* (
-  turn: Pick<NinaTurnsDoc, "promptMessageId">
-) {
-  const ctx = yield* ActionCtx;
-  const [prompt] = yield* Effect.tryPromise({
-    try: () =>
-      ctx.runQuery(components.nina.messages.getMessagesByIds, {
-        messageIds: [turn.promptMessageId],
-      }),
-    catch: () => new NinaMemoryError({ operation: "read", rejected: false }),
-  });
-  return prompt?.message?.role === "user" ? prompt.text : undefined;
-});
-
 /**
  * Saves what the learner's message says about themself, after a complete turn.
  * A decision model decides when the capture model is asked and which of its
@@ -171,8 +158,11 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
     turn: Pick<NinaTurnsDoc, "_id" | "page" | "promptMessageId" | "userId">,
     usageHandler: UsageHandler
   ) {
-    const message = yield* readMessage(turn);
-    if (message === undefined || !(yield* isLasting(turn.userId, message))) {
+    const message = yield* readSaid(turn);
+    if (
+      Str.isEmpty(Str.trim(message)) ||
+      !(yield* isLasting(turn.userId, message))
+    ) {
       return;
     }
     const topics = topicsOf(turn.page);

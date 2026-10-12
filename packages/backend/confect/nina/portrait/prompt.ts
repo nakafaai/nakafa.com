@@ -23,7 +23,8 @@ export const PORTRAIT_INSTRUCTIONS = Arr.join(
 
 /**
  * What the model reads: the portrait as it stands and the new memories, the
- * newest first, each as its title and words cut to `MEMORY_LENGTH` characters.
+ * oldest first, so that a newer memory comes after the one it may contradict,
+ * each as its title and words cut to `MEMORY_LENGTH` characters.
  */
 export function formatPortraitPrompt(
   portrait: string | undefined,
@@ -32,7 +33,7 @@ export function formatPortraitPrompt(
   return Arr.join(
     [
       `# Current Portrait\n\n${portrait ?? "None yet."}`,
-      `# New Memories, Newest First\n\n${Arr.join(
+      `# New Memories, Oldest First\n\n${Arr.join(
         Arr.map(memories, (memory) => `- ${textLine(memory, MEMORY_LENGTH)}`),
         "\n"
       )}`,

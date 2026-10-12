@@ -46,20 +46,43 @@ describe("a request for a portrait build", () => {
     expect(await f.scheduled()).toEqual([{ userId: f.identity.userId }]);
   });
 
-  it("asks once a day when memories are only added, and again when the day is over", async () => {
+  it("asks for nothing when memories are only added within a day of a build that went to the model, and asks again when the day is over", async () => {
+    const f = await createPortraitTest();
+    await f.seedPortrait({ builtAt: NOW, scheduledAt: NOW });
+    vi.setSystemTime(NOW + 24 * HOUR - 1);
+    await ask(f);
+    expect(await f.scheduled()).toEqual([]);
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ builtAt: NOW, scheduledAt: NOW }),
+    ]);
+    vi.setSystemTime(NOW + 24 * HOUR);
+    await ask(f);
+    expect(await f.scheduled()).toHaveLength(1);
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ builtAt: NOW, scheduledAt: NOW + 24 * HOUR }),
+    ]);
+  });
+
+  it("asks for every memory added before a build has gone to the model, so the quiet counts from the last of them", async () => {
     const f = await createPortraitTest();
     await ask(f);
-    vi.setSystemTime(NOW + 24 * HOUR - 1);
+    vi.setSystemTime(NOW + 20_000);
+    await ask(f);
+    vi.setSystemTime(NOW + 40_000);
+    await ask(f);
+    expect(await f.scheduled()).toHaveLength(3);
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ scheduledAt: NOW + 40_000 }),
+    ]);
+  });
+
+  it("is not closed for a day by a request that no build answered", async () => {
+    const f = await createPortraitTest();
+    await f.seedPortrait({ scheduledAt: NOW - HOUR });
     await ask(f);
     expect(await f.scheduled()).toHaveLength(1);
     expect(await f.rows()).toEqual([
       expect.objectContaining({ scheduledAt: NOW }),
-    ]);
-    vi.setSystemTime(NOW + 24 * HOUR);
-    await ask(f);
-    expect(await f.scheduled()).toHaveLength(2);
-    expect(await f.rows()).toEqual([
-      expect.objectContaining({ scheduledAt: NOW + 24 * HOUR }),
     ]);
   });
 
@@ -74,16 +97,21 @@ describe("a request for a portrait build", () => {
     expect(await f.scheduled()).toHaveLength(1);
   });
 
-  it("takes the text out at once and asks for a build from scratch when a memory is deleted or rewritten, whatever the last request was", async () => {
+  it("takes the text out at once and asks for a build from scratch when a memory is deleted or rewritten, whatever the last build was", async () => {
     const f = await createPortraitTest();
     await f.seedPortrait({
+      builtAt: NOW - HOUR,
       scheduledAt: NOW - HOUR,
       text: "Kelas 12.",
       through: 7,
     });
     await ask(f, { reset: true });
     const [row] = await f.rows();
-    expect(row).toMatchObject({ scheduledAt: NOW, through: 0 });
+    expect(row).toMatchObject({
+      builtAt: NOW - HOUR,
+      scheduledAt: NOW,
+      through: 0,
+    });
     expect(row).not.toHaveProperty("text");
     expect(await f.portrait()).toBeNull();
     expect(await f.scheduled()).toHaveLength(1);
@@ -116,14 +144,16 @@ describe("a request for a portrait build", () => {
   it("takes the text out of a paused learner's portrait on a reset and builds nothing, and the first request after they resume asks at once", async () => {
     const f = await createPortraitTest();
     await f.seedPortrait({
+      builtAt: NOW - HOUR,
       scheduledAt: NOW - HOUR,
       text: "Kelas 12.",
       through: 7,
     });
     await ask(f, { paused: true, reset: true });
     const [row] = await f.rows();
-    expect(row).toMatchObject({ scheduledAt: 0, through: 0 });
+    expect(row).toMatchObject({ scheduledAt: NOW - HOUR, through: 0 });
     expect(row).not.toHaveProperty("text");
+    expect(row).not.toHaveProperty("builtAt");
     expect(await f.scheduled()).toEqual([]);
     await ask(f);
     expect(await f.scheduled()).toHaveLength(1);

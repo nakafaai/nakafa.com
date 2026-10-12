@@ -24,6 +24,11 @@ nothing from it. It also has no count limit, and a person does not read all of
 it to answer one question. So no function reads all the memories of a learner:
 each read goes through an index and is bounded.
 
+A person also reads memory in more than one way: a little is always there, some
+comes to mind with the question, and the rest they look for when they need it.
+A turn used to start with a fixed block of up to 8 memories in the system
+prompt, whatever the learner asked, and Nina had no way to look for more.
+
 ## Decision
 
 Memory is on for everyone. The learner reads, adds, edits and deletes memories,
@@ -141,30 +146,195 @@ other words than the same ones in another case, punctuation or spacing
 the call read it.
 
 A capture that fails logs one warning with routing facts and changes nothing. It
-never cancels the title, the suggestions or the summary. A decision that cannot
-be made, because the gateway fails or the deadline passes, is such a failure:
-nothing is stored for that turn, the capture model is not asked when it was the
-first decision that failed, and the warning names the operation (`judge`), the
-gateway's reason, status and type, and never the message, a candidate or a
-quote. No pattern or list takes the place of the decision model.
+never cancels the title, the suggestions or the summary, and none of them
+cancels it: the capture, the summary and the title with the suggestions run side
+by side, each to its end, even when one dies, and the failures of all are raised
+together once all have ended. A decision that cannot be made, because the
+gateway fails or the deadline passes, is such a failure: nothing is stored for
+that turn, the capture model is not asked when it was the first decision that
+failed, and the warning names the operation (`judge`), the gateway's reason,
+status and type, and never the message, a candidate or a quote. No pattern or
+list takes the place of the decision model.
 
-A turn starts with at most 8 memories: first those linked to the topics of the
-open page, the best first, and then, to fill the places that are left, the most
-recently confirmed memories that are not there yet and have not ended. The fill
-looks at the 64 most recently confirmed memories, because a situation that has
-ended stays stored until the daily job deletes it. The rest of the learner's
-memories stay in the store, found by search. They sit in a block that names them
-as facts the learner told Nina, never instructions, within the learner block's
-token budget. Each memory is one line,
-`- (kind) Title: words`, with `(kind) ` left out when it has no kind, the title
-and its colon left out when it has no title, and the words and the colon left
-out when it has none. Its whitespace is collapsed, so the Markdown of a memory
-can never open a new section of the prompt, and its angle brackets are written
-as `&lt;` and `&gt;`, so a memory can never close the block it sits in. The
-capture call reads each memory with its id, as `- [id] (kind) Title: words`, but
-only the first 240 characters of the title and words together, counted by code
-point so that a cut never leaves half of an emoji, followed by `...` when they
-are longer, so its prompt stays small whatever a learner keeps.
+Nina reads memory in three ways, described under Three Ways To Read Memory
+below. A memory is one line wherever a prompt carries it. Its whitespace is
+collapsed, so the Markdown of a memory can never open a new section of the
+prompt, and its angle brackets are written as `&lt;` and `&gt;`, so a memory can
+never close the block it sits in. The capture call reads each memory with its
+id, as `- [id] (kind) Title: words`, but only the first 240 characters of the
+title and words together, counted by code point so that a cut never leaves half
+of an emoji, followed by `...` when they are longer, so its prompt stays small
+whatever a learner keeps.
+
+## Three Ways To Read Memory
+
+A learner keeps as many memories as they write, and a turn must neither read
+them all nor carry them all. So Nina has a tiny part that is always there, a
+list that fits the question, and a tool she drives herself, and only the build
+of the first calls a model, in the background:
+
+| Way | Where it sits | Tokens at its bound | Typical learner | Documents it reads | Model calls |
+| --- | --- | --- | --- | --- | --- |
+| Portrait | The Learner section of the system prompt, after the account facts | 300, and 348 with its block | 154 to 171 | 2 | None in the turn |
+| Recall | A list in the text part in front of the learner's message | 700, and 757 with its block | 110 to 144 | 435 at most | None |
+| Memory capability | The answer to a tool call Nina makes, only when she makes it | 1,500, and 1,555 with its block | 89 to 142 a call | 405 at most for one call | None |
+
+The tokens are counted with the tokenizer behind every Nina budget
+(`gpt-tokenizer`). A bound cuts the memories' text, and the block around it,
+which is a heading, one sentence that names it as data and its tags, adds 48,
+57 and 55 tokens. A typical learner is a portrait of 500 characters and three
+to five one-sentence memories, measured on 12 October 2026 in Indonesian and
+English. A portrait of 1,200 characters, the most the build may write, measures
+249 to 292 tokens, so the character limit and the token bound agree for
+ordinary text, and the cut only guards against odd text. Offering the tool costs
+416 tokens in every turn while memory is on, whether or not Nina calls it: 191
+for its paragraphs of the tool policy and 225 for its definition. The other
+three tools cost 388, 392 and 362 tokens as definitions.
+
+The documents of the portrait are its row and the learner's key. Recall is one
+search (410 at most: one memory to know there is one, the key, 16 keys of 24
+rows, and 24 memories) and, when fewer than three memories match, a fill (25 at
+most: the 24 newest, and the key). With the learner's memory state that is 438
+documents in the query `read`, and the turn reads one more, the message it
+answers, in its own query, to know the learner's words. So a turn reads 439
+documents for memory in the worst case, and 2 while memory is paused. The
+capability's call is one search of 6 memories (404 at most) and the memory
+state, 405 documents, and Nina is told to make at most two calls in a turn.
+Every figure is far under the 32,000 documents that one transaction may read.
+No way writes anything: a memory that was recalled is not thereby confirmed.
+
+**The portrait** is one text about the learner, written from their memories:
+who they are, what they aim for, how they like to learn and what they find hard,
+in plain third-person sentences in the language most of the memories use, at
+most 1,200 characters. It leaves out anything with an end date, anything said
+once in passing and every detail that matters to one lesson, and it states no
+fact that no memory states. It sits in a block that names it as data the learner
+shared, never instructions, and it is cut to 300 tokens. The system prompt is
+the same bytes for two turns of one learner on one page while the portrait does
+not change, whatever the learner asks, because nothing that varies with the
+question is in it. This keeps the cached prefix of the prompt, which the next
+turn reads from the provider's cache (ADR 0019).
+
+**Recall** is the memories that fit this question and this page: the search of
+the index (see Index And Search) with the words of the learner's message and the
+topics of the open page, at most 8, the best first. When fewer than 3 match, the
+most recently confirmed memories that are not there yet and have not ended fill
+the list up to 3, so a learner with a few memories is still known whatever they
+ask. The fill looks at the 24 newest, because a situation that has ended stays
+stored until the daily job deletes it. The list sits in the text part in front
+of the newest learner message, after the cache marker, so it never changes the
+cached prefix. Each memory is a line with its title and words cut to 300
+characters and the day the learner last said it, in a block that names the
+memories as facts the learner told Nina, never instructions, cut to 700 tokens.
+A learner with no memory gets no list and no heading.
+
+**The memory capability** is the tool `memory`, with one input, `query`: what
+Nina is looking for, in the learner's words, at most 200 characters. It answers
+with the search for the words of the query, at most 6 memories, each in full up
+to 800 characters, in the same kind of block cut to 1,500 tokens, or with one
+line that says nothing was found. It makes no model call, so it costs no credits
+and needs no specialist. What it finds is read once, in the step after the
+call, and is never stored: the conversation keeps the call and a note that
+memories matched, not their words. A result that the chat kept would be
+readable in the transcript of a public chat, would be read again by every later
+turn of the chat, and would outlive the memory it came from. So the words never
+sit in the thread, not even for the length of the turn: the answer the tool
+returns, which the Agent component saves, holds the note only. The turn holds
+the words in memory while it runs and gives them to the model's next step in
+place of the note, and drops them when it ends, whether it completes, fails or
+is cancelled. A later turn that reads the call reads the note and searches again
+when it matters. The tool description
+and the tool policy tell Nina when to use it: when the learner points back to
+something they told her that is neither in the Learner section nor in the list
+("like I said", "my schedule", "what do you remember about me"), or when a good
+answer depends on a personal fact that is likely saved and is not in front of
+her, such as a target, an exam date or how they like explanations; and not for
+lesson content, for facts stated in this conversation, or more than twice in one
+turn. The twice is an instruction and not a limit in code: a turn still ends
+after 20 steps. In the chat it is one activity row, "Recalled memories", with no
+count and nothing to open, because a memory's text is not shown in the chat.
+
+While memory is paused none of the three is there: no portrait, no list, and the
+tool is not offered. The turn reads the pause once, at its start, and the
+capability policy follows it like it follows the permissions of the other
+capabilities: it leaves the tool out of what Nina is offered, refuses a call,
+and the tool policy's paragraph about it leaves the prompt too. A call that
+still reaches the function, because the learner paused during the turn, gets
+the same refusal from the function, which reads the pause again. Every Nina
+turn has a signed-in learner, so no other case exists.
+
+**What a learner's delete does to each way.** Recall and the capability read the
+live index and the live rows, so a memory the learner deleted or rewrote is gone
+or new for the next turn and the next call, and "Delete all" hides at once what
+it took (see Implementation Contract). The chat keeps no copy of either: the
+memories a turn recalls travel with the learner's message and are never stored,
+and the words the capability finds are never stored. What Nina says in an answer
+is part of the chat, like anything said in it: an answer that already holds the
+words of a memory the learner then deletes stays until the learner deletes the
+chat. That is the one copy a delete does not reach. The portrait is derived from
+the memories, so a delete or a rewrite on the Memory page takes its text out in
+the same transaction, and no prompt carries a sentence that came from the
+memory from then on. It asks for a build from scratch (no old portrait in the
+input, every memory the learner has, the oldest first, a page of 40 at a time),
+which is not bound by the day. The worst-case delay is therefore not for the sentence, which
+is gone at once, but for Nina to have a portrait again: the quiet of 30 seconds
+that a build waits for, and one model call (at most 45 seconds), for each page of
+40 memories, one page after another. That is at most 75 seconds for each 40
+memories the learner keeps, and until the last page the portrait holds the
+memories read so far. A delete or a rewrite while the pages are being built
+starts them again from the first memory. When a call fails, the portrait stays
+as it was, and absent after a delete, until a later change asks: a delete or a
+rewrite asks at once, and an added memory asks when no build has gone to the
+model in the last day. "Delete all", the daily expiry that leaves a learner
+with no memory, and account deletion delete the portrait with the memories. A
+portrait is derived data, so deleting it loses nothing.
+
+**Why the portrait is built in the background.** A model call takes seconds and
+costs money that the learner's turn should neither wait for nor pay, and a text
+that changed with every question would break the cached prefix. So no turn
+builds it. A memory that Nina saves, or the learner adds, asks for a build
+unless one went to the model in the last day. The day is counted from that
+build (`builtAt`), not from the last request, so a request that no build
+answered, such as one whose build found memory paused, does not close it, and a
+build that had no lasting memory to hand on does not either. A request writes
+its time into the portrait row and schedules the build after 30 seconds. Every
+request that comes before a build has gone to the model does this, so the quiet
+counts from the last of them and only the last of the builds scheduled finds it
+over: a learner who adds three memories within a minute, or writes a memory and
+saves it every few seconds, makes one model call. A build claims the work
+first, which moves the time of the request to now, so two builds due at the same
+moment cannot both go on. A memory added after that build waits for the day to
+be over and for a request after it; the portrait may therefore lag the memories
+by more than a day, and the memory stays reachable by recall and the capability
+meanwhile.
+
+The build reads the portrait as it stands and the next page of memories
+confirmed after what it has read: the oldest first, at most 40, each as its
+title and words cut to 400 characters. It writes the whole new text, keeping
+what the old one says unless a newer memory contradicts it, and a newer memory
+comes after the one it may contradict in what the model reads. What the portrait
+has read is one moment, the confirmation time of the newest memory of the page,
+and the next build reads on from it, so no memory is skipped. A page never ends
+between memories confirmed at the same moment (a capture writes up to three at
+once), so it may hold fewer than 40; only a group of 40 or more at one moment,
+which nothing writes, would lose its rest. When memories remain after a full
+page, storing the page asks for the next build, which waits for the quiet of 30
+seconds and not for the day. A learner with N memories the portrait has not read
+therefore costs one model call for each 40 of them, one after another, and a
+build from scratch costs that for every memory the learner has: 25 calls for
+1,000 memories, at most 32 minutes if each takes its quiet and its whole 45
+seconds. No turn waits for or pays any of it. A series that stops, because the
+learner paused memory or the account is going, goes on from where it stopped at
+the first request after the day, and a delete or a rewrite starts it again. A
+situation is never handed to it, because it has an end date.
+It writes only if the portrait is still the one it read and every memory it fed
+to the model is as it read it, so a build that was running when the learner
+deleted or rewrote a memory, or deleted them all, or paused memory, stores
+nothing. A build with no memory newer than the portrait asks no model. The
+tokens of its one call are added to the portrait row (`usage`: the calls and
+their input and output tokens), as a summary's are to its row, because a build
+belongs to no turn and so to no turn's usage ledger. They count when the text is
+not stored too.
 
 A memory is independent of chats. Deleting a chat deletes no memory, not even
 one Nina wrote from that chat. Only three things delete a memory, and each
@@ -173,11 +343,12 @@ deletes its key rows with it:
 - The learner deletes one memory, or all of them, on the Memory page.
 - A daily job deletes the situations whose end day has passed, 25 per call, and
   schedules itself again while a call is full.
-- Account deletion removes the learner's memories in bounded batches, before the
-  learner's vault key goes. Every pass looks for memories first, so a capture
-  still running when the deletion starts is swept by the next pass, and one that
-  lands after the key is gone seals nothing, because a deleted account gets no
-  new key. The capture write needs no check of its own for a deleted account.
+- Account deletion removes the learner's memories in bounded batches, and
+  their portrait, before the learner's vault key goes. Every pass looks for
+  memories and the portrait first, so a capture still running when the deletion
+  starts is swept by the next pass, and one that lands after the key is gone
+  seals nothing, because a deleted account gets no new key. The capture write
+  needs no check of its own for a deleted account.
 
 ## Index And Search
 
@@ -266,10 +437,10 @@ are gone or are situations that ended drop out, and the first of the rest, as
 many as the limit, are the result. It reads at most 434 documents of the 32,000
 that one transaction may read, whatever the learner keeps: a word that many
 memories hold finds the ones confirmed last that hold it, not every one. The
-capture call asks for 12 memories, and a turn start searches by the topics of
-the page alone. The write does not search: it reads only the memories the
-capture call listed. The Memory page does not use it: its search runs in the
-browser.
+capture call asks for 12 memories, a turn for up to 8 by the learner's words
+and the topics of the page, and the memory capability for 6 by Nina's query.
+The write does not search: it reads only the memories the capture call listed.
+The Memory page does not use it: its search runs in the browser.
 
 ## Judgments
 
@@ -352,30 +523,41 @@ decides what a learner meant.
   `empty` and `missing`. `empty` means the write holds neither a title nor
   words, and it is checked first, before the memory is read. A title of more
   than 80 characters, or of only spaces, never reaches the function: its
-  arguments refuse it. `read`, `paused`, `known`, `capture`, `drain` and
-  `expire` are internal. `paused` tells whether the learner paused memory, and
-  the capture asks it once, before it sends the learner's message to any model
-  and before it reads a memory. `known` reads the learner's memory state once
-  more for the moment of the last Delete all, and the write reads it again as
-  the authority.
+  arguments refuse it. `read`, `paused`, `known`, `lookup`, `capture`, `drain`
+  and `expire` are internal. `paused` tells whether the learner paused memory,
+  and the capture asks it once, before it sends the learner's message to any
+  model and before it reads a memory. `known` reads the learner's memory state
+  once more for the moment of the last Delete all, and the write reads it again
+  as the authority.
+- `ninaMemoryPortraits` (index by user) holds one row for a learner who has
+  asked for a portrait: its sealed `text`, absent until a build has written
+  one and after a memory was deleted or rewritten; `through`, the newest
+  confirmation time the text has read, zero for none; `scheduledAt`, the time
+  of the last request; `builtAt`, the time the last build went to the model,
+  absent for none; and `usage`, the tokens of the model calls of its builds,
+  absent for none. The text is sealed for the learner in its own
+  field, like a memory. `nina/portrait:claim` and `save` are internal, and so
+  is the scheduled node action `nina/portrait/build:run`.
 - `clear` stores the moment the learner asked, as `ninaMemoryClearedAt` on
-  their learning preference, and in the same transaction deletes a batch of 25
-  memories with their keys. `drain` deletes the next batch, again and again,
-  until none is left, so one transaction never deletes more than 25 memories and
-  2,625 documents. `clear` returns at once. The batches delete the memories
-  confirmed up to that moment, so a memory the learner or Nina writes while they
-  still run stays. The daily expiry deletes a batch of 25 ended situations the
-  same way.
+  their learning preference, deletes the learner's portrait in the same
+  transaction, and deletes a batch of 25 memories with their keys. `drain`
+  deletes the next batch, again and again, until none is left, so one
+  transaction never deletes more than 25 memories and 2,625 documents. `clear`
+  returns at once. The batches delete the memories confirmed up to that moment,
+  so a memory the learner or Nina writes while they still run stays. The daily
+  expiry deletes a batch of 25 ended situations the same way, and deletes the
+  portrait of each learner it leaves with no memory at all.
 - From the moment `clear` stores it, every reader drops the memories confirmed
   at or before it, on every device and for Nina's next turn, though the batches
   may still hold them. Without that, the list would show the rest again once
   the page stopped hiding them, another device would show them, and the next
-  turn could still use them. The readers are `list`, `read`, `known`, the search
-  they and the capture write use, and the capture write's lookups by id, which
-  count such a memory as gone, so a chat never confirms and brings back what the
-  learner deleted. `edit` refuses such a memory as missing for the same reason.
+  turn could still use them. The readers are `list`, `read`, `lookup`, `known`,
+  the search they and the capture write use, and the capture write's lookups by
+  id, which count such a memory as gone, so a chat never confirms and brings
+  back what the learner deleted. `edit` refuses such a memory as missing for the
+  same reason.
   A reader that takes the newest first only drops the tail: the search, the
-  fill of a turn start and the keys read memories above that moment in their
+  fill of the recall and the keys read memories above that moment in their
   index ranges, so each read stays on its index and bounded, and `list` cuts
   its page at the first memory it drops and ends the list there. `list` keeps
   its index range whatever the learner did, because the cursors of the pages a
@@ -431,13 +613,20 @@ decides what a learner meant.
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
   because the browser has no page of its own to change until then.
-- `read` gives a turn the account profile and the at most 8 memories it starts
-  with, for the topics of the open page. `known` gives the capture call the
-  account profile and the at most 12 memories that match the message and the
-  topics of the open page. Both give a kind and a title only for a memory that
-  has them, and no memory while memory is paused. `known` tells the memories
-  best first, and the capture call lists them in that order, so a candidate can
-  name one by its place.
+- `read` gives a turn the account profile, the portrait when the learner has
+  one, and the at most 8 memories that the learner's words and the topics of
+  the open page recall. `known` gives the capture call the account profile and
+  the at most 12 memories that match the message and the topics of the open
+  page. `lookup` gives the memory capability the at most 6 memories that match
+  Nina's query. A memory comes with a kind and a title only when it has them,
+  and none of them gives a portrait or a memory while memory is paused. `lookup`
+  also tells that memory is paused, so the capability can refuse. `known` tells
+  the memories best first, and the capture call lists them in that order, so a
+  candidate can name one by its place.
+- The turn reads the learner's words from the message it answers, one document
+  of the Agent component, before it calls `read`, and the account deletion
+  cleanup deletes the portrait with the memories, a pass at a time, so a
+  portrait that a capture still running asks for is deleted by the next pass.
 - `capture` takes the turn, not the chat: it writes only while the turn exists
   and memory is not paused. It takes the topics of the open page and the
   memories the call listed, in the order it listed them, at most 12 (the

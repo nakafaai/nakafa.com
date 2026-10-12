@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import type { NinaUpkeepCall } from "@repo/backend/confect/nina/contract/usage";
 import type { NinaMemorySeen } from "@repo/backend/confect/nina/memory.spec";
 import { createPortraitTest, save } from "@repo/backend/test/nina/portrait";
 
@@ -24,13 +25,16 @@ async function build(text?: string) {
     args: Partial<{
       expected: number;
       memories: (typeof NinaMemorySeen.Type)[];
+      more: boolean;
       reached: number;
       text: string;
+      usage: typeof NinaUpkeepCall.Type;
     }> = {}
   ) =>
     f.t.mutation(save, {
       expected: 5,
       memories: [{ confirmedAt: 6, id }],
+      more: false,
       reached: 6,
       userId: f.identity.userId,
       ...args,
@@ -46,6 +50,29 @@ describe("storing a portrait build", () => {
     const [row] = await f.rows();
     expect(row).toMatchObject({ through: 6 });
     expect(new TextDecoder("latin1").decode(row?.text)).not.toContain("IPA");
+    // Nothing remains after the page it stored, so no next build is asked for.
+    expect(await f.scheduled()).toEqual([]);
+  });
+
+  it("asks for the next build, which waits for the quiet and not for the day, when more memories remain after the page", async () => {
+    const f = await build("Kelas 11.");
+    await f.t.mutation(async (ctx) => {
+      const row = await ctx.db.query("ninaMemoryPortraits").first();
+      if (row) {
+        await ctx.db.patch(row._id, { builtAt: NOW, scheduledAt: NOW - 5000 });
+      }
+    });
+    vi.setSystemTime(NOW + 4000);
+    expect(await f.store({ more: true, text: "Kelas 12 IPA." })).toBe(true);
+    expect(await f.portrait()).toBe("Kelas 12 IPA.");
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({
+        builtAt: NOW,
+        scheduledAt: NOW + 4000,
+        through: 6,
+      }),
+    ]);
+    expect(await f.scheduled()).toEqual([{ userId: f.identity.userId }]);
   });
 
   it("stores a first portrait, for a row that has none", async () => {
@@ -54,11 +81,54 @@ describe("storing a portrait build", () => {
     expect(await f.portrait()).toBe("Kelas 12 IPA.");
   });
 
+  it("adds the tokens of each call to the row, and counts the calls", async () => {
+    const f = await build("Kelas 11.");
+    expect(
+      await f.store({
+        text: "Kelas 12 IPA.",
+        usage: { input: 900, output: 70 },
+      })
+    ).toBe(true);
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ usage: { calls: 1, input: 900, output: 70 } }),
+    ]);
+    expect(
+      await f.store({
+        expected: 6,
+        memories: [],
+        reached: 6,
+        text: "Kelas 12 IPA, suka contoh soal.",
+        usage: { input: 1100, output: 90 },
+      })
+    ).toBe(true);
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({
+        usage: { calls: 2, input: 2000, output: 160 },
+      }),
+    ]);
+  });
+
+  it("counts the tokens of a call whose text it does not store", async () => {
+    const f = await build("Kelas 11.");
+    await f.owner.mutation(pause, { paused: true });
+    expect(
+      await f.store({
+        text: "Kelas 12 IPA.",
+        usage: { input: 900, output: 70 },
+      })
+    ).toBe(false);
+    expect(await f.portrait()).toBe("Kelas 11.");
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ usage: { calls: 1, input: 900, output: 70 } }),
+    ]);
+  });
+
   it("keeps the text when the build wrote none, and moves on only what it has read", async () => {
     const f = await build("Kelas 11.");
     const before = await f.rows();
     expect(await f.store({ memories: [], reached: 8 })).toBe(true);
     expect(await f.portrait()).toBe("Kelas 11.");
+    expect((await f.rows())[0]).not.toHaveProperty("usage");
     expect(await f.rows()).toEqual([expect.objectContaining({ through: 8 })]);
     expect(await f.store({ expected: 8, memories: [], reached: 8 })).toBe(true);
     expect(await f.rows()).toEqual([
@@ -80,6 +150,7 @@ describe("storing a portrait build", () => {
       await f.t.mutation(save, {
         expected: 5,
         memories: [],
+        more: false,
         reached: 5,
         userId: f.identity.userId,
       })
@@ -94,12 +165,14 @@ describe("storing a portrait build", () => {
       await f.t.mutation(save, {
         expected: 0,
         memories: [{ confirmedAt: 6, id }],
+        more: true,
         reached: 6,
         text: "Kelas 12 IPA.",
         userId: f.identity.userId,
       })
     ).toBe(false);
     expect(await f.rows()).toEqual([]);
+    expect(await f.scheduled()).toEqual([]);
   });
 
   it.each([
@@ -142,8 +215,10 @@ describe("storing a portrait build", () => {
     const f = await build("Kelas 11.");
     await change(f);
     const before = await f.rows();
-    expect(await f.store({ text: "Kelas 12 IPA." })).toBe(false);
+    expect(await f.store({ more: true, text: "Kelas 12 IPA." })).toBe(false);
     // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
     expect(await f.rows()).toStrictEqual(before);
+    // A page that was not stored asks for no next build either.
+    expect(await f.scheduled()).toEqual([]);
   });
 });
