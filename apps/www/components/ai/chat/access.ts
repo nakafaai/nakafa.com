@@ -15,9 +15,11 @@ export function readChatArgs(
 
 /**
  * What the viewer may do in a conversation, the same on every surface. Only the
- * owner continues it, retries an answer or takes its follow-up suggestions. A
- * chat the learner just started has no owner on record until it loads, so the
- * learner who started it can already write to it.
+ * owner continues it, retries an answer or takes its follow-up suggestions. The
+ * server names the owner in the chat of the owner alone, so a chat that names
+ * none is a reader's, whoever signed in. A chat the learner just started has no
+ * owner on record until it loads, so the learner who started it can already
+ * write to it.
  */
 export function readChatAccess({
   chatUserId,

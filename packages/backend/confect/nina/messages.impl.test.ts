@@ -14,6 +14,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Option } from "effect";
 
 vi.mock("@convex-dev/agent", async (importOriginal) => {
@@ -268,6 +269,57 @@ describe("Nina message boundary", () => {
         },
       }
     );
+  });
+
+  it("names the account that owns the chat in every message and stream to the owner, and to a reader who holds the share link in none", async () => {
+    const { t, owner, identity, args } = await fixture();
+    const streamId = await t.mutation(async (ctx) => {
+      const id = await ctx.runMutation(components.nina.streams.create, {
+        threadId: identity.threadId,
+        userId: identity.userId,
+        order: 1,
+        stepOrder: 0,
+        format: "UIMessageChunk",
+      });
+      await ctx.runMutation(components.nina.streams.addDelta, {
+        streamId: id,
+        start: 0,
+        end: 1,
+        parts: [{ type: "text-delta", id: "text-1", delta: "Live" }],
+      });
+      return id;
+    });
+    await owner.mutation(share, { chatId: args.chatId, visibility: "public" });
+    const shareToken = await owner.query(token, { chatId: args.chatId });
+    assert(shareToken !== null);
+    // The messages of the chat, its live streams, and the new parts of one.
+    const asked = (reader: typeof owner, access: { shareToken?: string }) =>
+      Promise.all([
+        reader.query(query, { ...args, ...access }),
+        reader.query(query, {
+          ...args,
+          ...access,
+          streamArgs: { kind: "list" },
+        }),
+        reader.query(query, {
+          ...args,
+          ...access,
+          streamArgs: { kind: "deltas", cursors: [{ streamId, cursor: 0 }] },
+        }),
+      ]);
+
+    // The owner is told the account in the messages and in the live streams.
+    const [ownMessages, ownStreams] = await asked(owner, {});
+    expect(encodeJsonText(ownMessages)).toContain(identity.userId);
+    expect(encodeJsonText(ownStreams)).toContain(identity.userId);
+    // A reader is told it in none of them, and still reads what they hold.
+    const [messages, streams, deltas] = await asked(t, { shareToken });
+    for (const read of [messages, streams, deltas]) {
+      expect(encodeJsonText(read)).not.toContain(identity.userId);
+    }
+    expect(encodeJsonText(messages)).toContain("The value is 2.");
+    expect(encodeJsonText(streams)).toContain(streamId);
+    expect(encodeJsonText(deltas)).toContain("Live");
   });
 
   it.each([

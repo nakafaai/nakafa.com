@@ -43,13 +43,21 @@ describe("chats/queries", () => {
     const shareToken = await owner.query(getShareToken, { chatId });
     assert(shareToken !== null);
 
-    expect(await t.query(getChat, { chatId, shareToken })).toEqual(
-      expect.objectContaining({
-        _id: chatId,
-        title: "Shared transcript",
-        visibility: "public",
-      })
-    );
+    // A reader is told what it takes to show the chat, and not which account
+    // owns it. The owner is told that too.
+    expect(await t.query(getChat, { chatId, shareToken })).toEqual({
+      _creationTime: expect.any(Number),
+      _id: chatId,
+      threadId: "fixture-thread",
+      title: "Shared transcript",
+      type: "study",
+      updatedAt: NOW,
+      visibility: "public",
+    });
+    expect(await owner.query(getChat, { chatId })).toMatchObject({
+      _id: chatId,
+      userId: identity.userId,
+    });
     await expect(t.query(getChat, { chatId })).rejects.toThrow(
       "CHAT_NOT_FOUND"
     );

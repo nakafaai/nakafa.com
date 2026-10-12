@@ -26,7 +26,11 @@ import {
   Option,
   pipe,
   Schema,
+  Struct,
 } from "effect";
+
+/** What a thread tells of its streams: the live ones, or the new parts of some. */
+type Streams = Effect.Success<ReturnType<typeof readStreams>>;
 
 /** Reads active streams or their deltas for one authorized thread. */
 const readStreams = Effect.fn("nina.messages.streams")(function* (
@@ -74,6 +78,18 @@ const readStreams = Effect.fn("nina.messages.streams")(function* (
   );
 });
 
+/**
+ * The streams as a reader who does not own the chat is told of them. A live
+ * stream names the account that runs it, which belongs to the owner.
+ */
+const readerStreams = (streams: Streams): Streams =>
+  streams.kind === "list"
+    ? {
+        ...streams,
+        messages: Arr.map(streams.messages, Struct.omit(["userId"])),
+      }
+    : streams;
+
 const list = FunctionImpl.make(
   schema,
   spec,
@@ -88,15 +104,17 @@ const list = FunctionImpl.make(
         message: "The conversation does not belong to this chat.",
       });
     }
+    const owner = chat.userId === viewerId;
     const ctx = yield* QueryCtx;
     if (args.streamArgs) {
       // Agent's streaming hook sends stream requests with an empty page, so a
       // delta round trip reads stream state only and skips the transcript.
+      const streams = yield* readStreams(args.threadId, args.streamArgs);
       return {
         page: [],
         isDone: true,
         continueCursor: "",
-        streams: yield* readStreams(args.threadId, args.streamArgs),
+        streams: owner ? streams : readerStreams(streams),
       };
     }
     // The component SDK owns message projection and the resumable delta protocol.
@@ -106,10 +124,10 @@ const list = FunctionImpl.make(
         new NinaReadError({ message: "Unable to read Nina messages." }),
     });
     const reader = yield* DatabaseReader;
-    const owner = chat.userId === viewerId;
     // Hydrate only the orders present in this bounded message page. Agent keeps
     // ownership of parts and stream cursors; app facts come from their own turn.
-    // A reader is told where a turn stands, not what it cost the owner.
+    // A reader is told where a turn stands, not what it cost the owner, and a
+    // message names no account.
     const turns = HashMap.fromIterable(
       yield* Effect.forEach(
         Arr.dedupe(Arr.map(page.page, (message) => message.order)),
@@ -146,7 +164,11 @@ const list = FunctionImpl.make(
         ) {
           createdAt = metadata.state.finishedAt;
         }
-        return { ...message, _creationTime: createdAt, metadata };
+        return {
+          ...(owner ? message : Struct.omit(message, ["userId"])),
+          _creationTime: createdAt,
+          metadata,
+        };
       }),
       streams: { kind: "list" as const, messages: [] },
     };

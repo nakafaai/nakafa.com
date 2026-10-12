@@ -28,6 +28,12 @@ describe("chat/access", () => {
     });
   });
 
+  it("gives a signed-in viewer nothing to write to a loaded chat that names no owner, which is how a reader receives a chat", () => {
+    expect(
+      readChatAccess({ ...loaded, chatUserId: undefined, viewerId: learner })
+    ).toEqual({ canWrite: false, owner: false });
+  });
+
   it("gives a signed-out viewer nothing to write, even to a chat with no owner yet", () => {
     expect(readChatAccess({ ...loaded, viewerId: undefined })).toEqual({
       canWrite: false,

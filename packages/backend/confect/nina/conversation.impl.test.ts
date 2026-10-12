@@ -54,7 +54,7 @@ async function fixture() {
     refs.public.nina.turns.start,
     await owner.mutation(start, input)
   );
-  return { t, owner, ...receipt };
+  return { t, owner, userId: identity.userId, ...receipt };
 }
 
 describe("Nina conversation visibility", () => {
@@ -225,6 +225,49 @@ describe("Nina conversation visibility", () => {
       ]) {
         expect(told).not.toContain(owned);
       }
+    }
+  });
+
+  it("names the owner's account and the turn that runs to the owner, and to a reader who holds the share link neither", async () => {
+    const f = await fixture();
+    await f.owner.mutation(share, {
+      chatId: f.chatId,
+      visibility: "public",
+    });
+    const shareToken = await f.owner.query(token, { chatId: f.chatId });
+    assert(shareToken !== null);
+    const stranger = await f.t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "stranger" })
+    );
+    const asStranger = f.t.withIdentity({
+      sessionId: stranger.sessionId,
+      subject: stranger.authUserId,
+    });
+    const chatOf = async (
+      reader: typeof f.owner,
+      access: { shareToken?: string }
+    ) => (await reader.query(get, { chatId: f.chatId, ...access })).chat;
+
+    // The turn that was admitted is the one that runs, so the owner is told it
+    // along with the account, by the chat id and through the share link.
+    for (const access of [{}, { shareToken }]) {
+      expect(await chatOf(f.owner, access)).toMatchObject({
+        activeTurnId: f.turnId,
+        userId: f.userId,
+      });
+    }
+    // A reader with no account, and a learner with another account, are told
+    // what it takes to show the chat and to read its messages, and no more.
+    for (const reader of [f.t, asStranger]) {
+      expect(await chatOf(reader, { shareToken })).toEqual({
+        _creationTime: expect.any(Number),
+        _id: f.chatId,
+        threadId: f.threadId,
+        title: DEFAULT_TITLE,
+        type: "study",
+        updatedAt: NOW,
+        visibility: "public",
+      });
     }
   });
 

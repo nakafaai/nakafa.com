@@ -178,7 +178,7 @@ export declare const api: {
           title?: string;
           type: "study";
           updatedAt: number;
-          userId: Id<"users">;
+          userId?: Id<"users">;
           visibility: "private" | "public";
         }
       >;
@@ -210,7 +210,7 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -250,7 +250,7 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -3338,7 +3338,7 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           };
           turn: {

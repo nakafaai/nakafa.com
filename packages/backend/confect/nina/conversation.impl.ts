@@ -5,6 +5,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import { openChat } from "@repo/backend/confect/chats/title";
+import { readerChat } from "@repo/backend/confect/chats/view";
 import session from "@repo/backend/confect/middleware/session.impl";
 import {
   NinaTurnSummary,
@@ -51,9 +52,11 @@ const get = FunctionImpl.make(
         )
       : null;
     const owner = chat.userId === viewerId;
+    const view = yield* openChat(chat);
+    // A reader is told where the turn stands, not what it cost the owner, and
+    // the chat names neither the owner's account nor the turn that runs.
     return {
-      chat: yield* openChat(chat),
-      // A reader is told where the turn stands, not what it cost the owner.
+      chat: owner ? view : readerChat(view),
       turn: summary && !owner ? readerTurn(summary) : summary,
     };
   })

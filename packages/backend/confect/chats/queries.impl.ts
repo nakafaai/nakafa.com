@@ -6,6 +6,7 @@ import { listChats } from "@repo/backend/confect/chats/list";
 import spec from "@repo/backend/confect/chats/queries.spec";
 import { findShare, openShareToken } from "@repo/backend/confect/chats/share";
 import { openChat } from "@repo/backend/confect/chats/title";
+import { readerChat } from "@repo/backend/confect/chats/view";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
 
@@ -15,9 +16,11 @@ const getChat = FunctionImpl.make(
   "getChat",
   Effect.fn("chats.queries.getChat")(function* (args) {
     const viewer = yield* getOptionalAppUserForRead();
-    return yield* openChat(
-      yield* readChat(args.chatId, viewer?.appUser._id ?? null, args.shareToken)
-    );
+    const viewerId = viewer?.appUser._id ?? null;
+    const chat = yield* readChat(args.chatId, viewerId, args.shareToken);
+    const view = yield* openChat(chat);
+    // Only the owner is told which account owns the chat and which turn runs.
+    return chat.userId === viewerId ? view : readerChat(view);
   })
 );
 /**
