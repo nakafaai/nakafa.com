@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { fuseRanks } from "@repo/backend/confect/contents/sections/fuse";
+import {
+  fuseRanks,
+  placeOf,
+} from "@repo/backend/confect/contents/sections/fuse";
 
 const identify = (item: string) => item;
 
@@ -76,5 +79,16 @@ describe("reciprocal rank fusion", () => {
       { id: "s", locale: "id" },
       { id: "t", locale: "en" },
     ]);
+  });
+});
+
+describe("place of a section", () => {
+  it("names the place by document and ordinal, whatever the language", () => {
+    expect(placeOf({ contentKey: "material/lesson/a", ordinal: 2 })).toBe(
+      "material/lesson/a#2"
+    );
+    expect(placeOf({ contentKey: "material/lesson/a", ordinal: 3 })).not.toBe(
+      placeOf({ contentKey: "material/lesson/a", ordinal: 2 })
+    );
   });
 });

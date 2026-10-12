@@ -69,7 +69,23 @@ async function indexed() {
       ({ anchor, appLocale }) => `${appLocale}:${anchor}`
     );
   };
-  return { idOf, places, resolve, t };
+  /** Resolves the hits and gives how many there are and how many documents the transaction read. */
+  const measure = (input: Input) =>
+    t.mutation(async (ctx) => {
+      const result = await Effect.runPromise(
+        resolveHits(input).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      );
+      const metrics = await ctx.meta.getTransactionMetrics();
+      return {
+        documentsRead: metrics.documentsRead.used,
+        hits: result.kind === "hits" ? result.hits.length : 0,
+      };
+    });
+  return { idOf, measure, places, resolve, t };
 }
 
 describe("section hits", () => {
@@ -183,6 +199,46 @@ describe("section hits", () => {
     expect(await places({ ids, limit: 5, locale: "id", query: "?!" })).toEqual([
       "id:determinan",
     ]);
+  });
+
+  it("reads the reference of a document once, however many of its sections rank", async () => {
+    const { idOf, measure } = await indexed();
+    const determinant = await idOf("id", "determinan", "section-1");
+    const square = await idOf("id", "matriks-persegi", "section-1");
+    const input = { limit: 5, locale: "id", query: "?!" } as const;
+    const one = await measure({ ...input, ids: [determinant] });
+    const two = await measure({ ...input, ids: [determinant, square] });
+    expect(two.hits).toBe(2);
+    // The second section costs its own row and nothing more.
+    expect(two.documentsRead - one.documentsRead).toBe(1);
+  });
+
+  it("reads a row once when both the meaning and the words found it", async () => {
+    const { idOf, measure } = await indexed();
+    const determinant = await idOf("id", "determinan", "section-1");
+    const input = { ids: [determinant], limit: 5, locale: "id" } as const;
+    const byMeaning = await measure({ ...input, query: "?!" });
+    // The words match the start of a word, so they find the same section in
+    // English and German too, two rows more, and the Indonesian row that the
+    // meaning found, which is not read a second time.
+    const both = await measure({ ...input, query: "determinan" });
+    expect(both).toEqual({
+      documentsRead: byMeaning.documentsRead + 2,
+      hits: 1,
+    });
+  });
+
+  it("reads the state of the content, the record of the index, one section, and the reference of its document for one hit", async () => {
+    const { idOf, measure } = await indexed();
+    const determinant = await idOf("id", "determinan", "section-1");
+    expect(
+      await measure({
+        ids: [determinant],
+        limit: 5,
+        locale: "id",
+        query: "?!",
+      })
+    ).toEqual({ documentsRead: 8, hits: 1 });
   });
 
   it("returns a place once when the words find it in several languages", async () => {

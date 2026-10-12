@@ -1,5 +1,18 @@
 import { FUSION_RANK_CONSTANT } from "@repo/backend/confect/contents/sections/limits";
+import type { SectionDraft } from "@repo/backend/confect/contents/sections/schema";
 import { Array as Arr, Option, Order } from "effect";
+
+/**
+ * The place of a section in its document as one string: the same for the
+ * section in every language that has it, so that fusion counts the languages
+ * of one place as one candidate.
+ */
+export function placeOf({
+  contentKey,
+  ordinal,
+}: Pick<SectionDraft, "contentKey" | "ordinal">) {
+  return `${contentKey}#${ordinal}`;
+}
 
 /**
  * Merges ranked lists into one by reciprocal rank fusion. An item scores

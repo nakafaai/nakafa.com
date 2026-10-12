@@ -1,6 +1,9 @@
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { searchNakafaContent } from "@repo/backend/agent/search";
-import { fuseRanks } from "@repo/backend/confect/contents/sections/fuse";
+import {
+  fuseRanks,
+  placeOf,
+} from "@repo/backend/confect/contents/sections/fuse";
 import type { Hit } from "@repo/backend/confect/contents/sections/hits.spec";
 import { searchSections } from "@repo/backend/confect/contents/sections/search";
 import { READ_START_SECTION } from "@repo/backend/confect/contents/sections/split";
@@ -115,7 +118,7 @@ const findBySections = Effect.fn("nakafa.findBySections")(function* (
     return Option.none<readonly Entry[]>();
   }
   const sections = Arr.dedupeWith(
-    fuseRanks(lists, ({ contentKey, ordinal }) => `${contentKey}#${ordinal}`),
+    fuseRanks(lists, placeOf),
     (left, right) => left.reference.content_id === right.reference.content_id
   );
   return Option.some(

@@ -1,6 +1,9 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { fuseRanks } from "@repo/backend/confect/contents/sections/fuse";
+import {
+  fuseRanks,
+  placeOf,
+} from "@repo/backend/confect/contents/sections/fuse";
 import type {
   Hit,
   hitsInputValidator,
@@ -18,13 +21,13 @@ import { materialLayer } from "@repo/backend/content/material/confect";
 import { quranLayer } from "@repo/backend/content/quran/confect";
 import { readContentReference } from "@repo/backend/content/reference/read";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
-import { Array as Arr, Effect, Layer, Option } from "effect";
+import { Array as Arr, Effect, HashMap, Layer, Option } from "effect";
 
 type Section = Docs["contentSections"];
 
-/** The section of a document as one place, whatever its language. */
-const placeOf = ({ contentKey, ordinal }: Section) =>
-  `${contentKey}#${ordinal}`;
+/** The document that holds a section, as one route in one language. */
+const routeOf = ({ appLocale, publicPath }: Section) =>
+  `${appLocale}/${publicPath}`;
 
 /**
  * The same place of the same document in the language of the learner, when
@@ -55,10 +58,10 @@ const inLocale = Effect.fn("contents.sections.inLocale")(function* (
 });
 
 /**
- * A section as a pointer, with the verified reference of its document, or
- * nothing when that document is not published any more.
+ * The verified reference of the document that holds a section, or none when
+ * that document is not published any more.
  */
-const toHit = Effect.fn("contents.sections.toHit")(function* (
+const referenceOf = Effect.fn("contents.sections.referenceOf")(function* (
   section: Section
 ) {
   const reference = yield* readContentReference({
@@ -70,19 +73,21 @@ const toHit = Effect.fn("contents.sections.toHit")(function* (
       Layer.mergeAll(articleLayer, materialLayer, quranLayer, tryoutLayer)
     )
   );
-  return Option.map(
-    Option.fromNullishOr(reference),
-    (found): Hit => ({
-      anchor: section.anchor,
-      appLocale: section.appLocale,
-      contentKey: section.contentKey,
-      excerpt: section.excerpt,
-      headingPath: section.headingPath,
-      ordinal: section.ordinal,
-      reference: found,
-    })
-  );
+  return Option.fromNullishOr(reference);
 });
+
+/** A section as a pointer, with the verified reference of its document. */
+function toHit(section: Section, reference: Hit["reference"]): Hit {
+  return {
+    anchor: section.anchor,
+    appLocale: section.appLocale,
+    contentKey: section.contentKey,
+    excerpt: section.excerpt,
+    headingPath: section.headingPath,
+    ordinal: section.ordinal,
+    reference,
+  };
+}
 
 /**
  * Ranks the sections that the vector search found, with those that the words
@@ -90,32 +95,22 @@ const toHit = Effect.fn("contents.sections.toHit")(function* (
  * of the learner. A section found by words may come from any language, and
  * the same place of the document in the learner's language is returned for it
  * when there is one. Only sections of documents that are still published are
- * returned. The answer is `empty` when the index cannot answer: its last
- * finished build is not for the active release and the model that embeds the
- * questions, so that it may lack sections or hold those of a release that is
- * gone, or the vector search found nothing in it.
+ * returned, and the reference of a document is read once however many of its
+ * sections rank. A section that both searches found is read once. The answer is
+ * `empty` when the index cannot answer: its last finished build is not for the
+ * active release and the model that embeds the questions, so that it may lack
+ * sections or hold those of a release that is gone, or the vector search found
+ * nothing in it.
  */
 export const resolveHits = Effect.fn("contents.sections.resolveHits")(
   function* (input: typeof hitsInputValidator.Type) {
-    if (!(yield* isReady(embeddingModelId))) {
+    if (
+      Arr.isReadonlyArrayEmpty(input.ids) ||
+      !(yield* isReady(embeddingModelId))
+    ) {
       return { kind: "empty" as const };
     }
-    const reader = yield* DatabaseReader;
-    const table = reader.table("contentSections");
-    const byMeaning = Arr.getSomes(
-      yield* Effect.forEach(input.ids, (id) =>
-        table.get(id).pipe(
-          Effect.asSome,
-          Effect.catchTag("GetByIdFailure", () =>
-            Effect.succeed(Option.none<Section>())
-          ),
-          Effect.orDie
-        )
-      )
-    );
-    if (Arr.isReadonlyArrayEmpty(byMeaning)) {
-      return { kind: "empty" as const };
-    }
+    const table = (yield* DatabaseReader).table("contentSections");
     const terms = textQuery(input.query);
     const byWords =
       terms === ""
@@ -128,19 +123,59 @@ export const resolveHits = Effect.fn("contents.sections.resolveHits")(
             )
             .take(CANDIDATES_PER_LEG)
             .pipe(Effect.orDie);
-    const ranked = Arr.take(
-      fuseRanks([byMeaning, byWords], placeOf),
-      input.limit + SEARCH_VERIFY_SLACK
+    const read = HashMap.fromIterable(
+      Arr.map(byWords, (row) => [row._id, row] as const)
     );
-    const sections = yield* Effect.forEach(ranked, (section) =>
-      inLocale(section, input.locale)
+    const byMeaning = Arr.getSomes(
+      yield* Effect.forEach(input.ids, (id) =>
+        Option.match(HashMap.get(read, id), {
+          onNone: () =>
+            table.get(id).pipe(
+              Effect.asSome,
+              Effect.catchTag("GetByIdFailure", () =>
+                Effect.succeed(Option.none<Section>())
+              ),
+              Effect.orDie
+            ),
+          onSome: (row) => Effect.succeedSome(row),
+        })
+      )
     );
-    const hits = yield* Effect.forEach(sections, toHit, {
-      concurrency: "unbounded",
-    });
-    return {
-      hits: Arr.take(Arr.getSomes(hits), input.limit),
-      kind: "hits" as const,
-    };
+    if (Arr.isReadonlyArrayEmpty(byMeaning)) {
+      return { kind: "empty" as const };
+    }
+    const sections = yield* Effect.forEach(
+      Arr.take(
+        fuseRanks([byMeaning, byWords], placeOf),
+        input.limit + SEARCH_VERIFY_SLACK
+      ),
+      (section) => inLocale(section, input.locale)
+    );
+    const references = HashMap.fromIterable(
+      Arr.getSomes(
+        yield* Effect.forEach(
+          Arr.dedupeWith(
+            sections,
+            (left, right) => routeOf(left) === routeOf(right)
+          ),
+          (section) =>
+            Effect.map(referenceOf(section), (reference) =>
+              Option.map(
+                reference,
+                (found) => [routeOf(section), found] as const
+              )
+            ),
+          { concurrency: "unbounded" }
+        )
+      )
+    );
+    const hits = Arr.getSomes(
+      Arr.map(sections, (section) =>
+        Option.map(HashMap.get(references, routeOf(section)), (reference) =>
+          toHit(section, reference)
+        )
+      )
+    );
+    return { hits: Arr.take(hits, input.limit), kind: "hits" as const };
   }
 );
