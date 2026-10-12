@@ -7,6 +7,7 @@ import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import type { ResearchAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
+import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import {
   addEligibleSourceUrls,
@@ -69,6 +70,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
   function* ({
     userId,
     task,
+    words,
     locale,
     context,
     sourceReferences: messageSourceReferences,
@@ -97,12 +99,12 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     const ctx = yield* ActionCtx;
     const { model, timeout } = (yield* Gateway).language("specialist");
     const agent = new Agent(components.nina, {
-      name: "research",
+      name: "research" satisfies UsageAgent,
       languageModel: model,
       usageHandler,
     });
     const sources = yield* scrapeSourceReferences({
-      task,
+      words,
       sourceReferences,
       toolCallId,
       publish,
@@ -163,7 +165,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       ? Option.some(
           yield* searchWeb({
             ...planned.success.input,
-            task,
+            words,
             toolCallId: planned.success.toolCallId,
             publish,
           })
@@ -265,15 +267,16 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 /**
  * Reads user-provided source references in parallel before broad research.
  * A source that could not be read keeps its URL and no text: it is never
- * shown to the model as evidence.
+ * shown to the model as evidence. The words choose the paragraphs of a page
+ * that is longer than the budget.
  */
 const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
   function* ({
-    task,
+    words,
     sourceReferences,
     toolCallId,
     publish,
-  }: Pick<ResearchAgentData, "task" | "sourceReferences" | "toolCallId"> & {
+  }: Pick<ResearchAgentData, "words" | "sourceReferences" | "toolCallId"> & {
     readonly publish: CapabilityProgress;
   }) {
     return yield* Effect.forEach(
@@ -281,7 +284,7 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
       (source, index) =>
         scrapeUrl({
           maxLength: exactSourceContentMaxLength,
-          selectionQuery: task,
+          selectionQuery: words,
           toolCallId: `${toolCallId}-source-${index + 1}`,
           url: source.href,
           publish,

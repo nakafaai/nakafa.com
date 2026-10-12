@@ -3,10 +3,10 @@ import {
   DataPartSchema,
   NakafaDataSchema,
 } from "@repo/backend/confect/nina/contract/data";
-import { webSearchMaxQueryLength } from "@repo/backend/confect/nina/research/schema";
+import { webSearchQueryMaxLength } from "@repo/backend/confect/nina/research/schema";
 import { NAKAFA_AGENT_MAX_QUERY_LENGTH } from "@repo/contents/agent/search";
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 
 const ref = readNakafaContentRefFixture("en", "quran/1", "quran");
 const common = {
@@ -97,22 +97,28 @@ describe("Nakafa persisted Quran data", () => {
 
 describe("persisted search queries", () => {
   it("keeps a query longer than a new search may send readable", () => {
-    const longer = "a".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH + 1);
+    const nakafa = "a".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH + 1);
+    const web = "a".repeat(webSearchQueryMaxLength + 1);
 
+    // The recorded input decodes with no limit on the text a query was written in.
     expect(
-      Schema.is(NakafaDataSchema)({
-        input: { limit: 10, locale: "en", offset: 0, queries: [longer] },
-        kind: "search",
-        status: "loading",
-      })
+      Result.isSuccess(
+        Schema.decodeUnknownResult(NakafaDataSchema)({
+          input: { limit: 10, locale: "en", offset: 0, queries: [nakafa] },
+          kind: "search",
+          status: "loading",
+        })
+      )
     ).toBe(true);
     expect(
-      Schema.is(DataPartSchema.fields["web-search"])({
-        provider: "firecrawl",
-        queries: [`${longer}${"a".repeat(webSearchMaxQueryLength)}`],
-        sources: [],
-        status: "done",
-      })
+      Result.isSuccess(
+        Schema.decodeUnknownResult(DataPartSchema.fields["web-search"])({
+          provider: "firecrawl",
+          queries: [web],
+          sources: [],
+          status: "done",
+        })
+      )
     ).toBe(true);
   });
 });

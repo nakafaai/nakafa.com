@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createMemoryTest, insertMemory } from "@repo/backend/test/nina/memory";
+import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { Array as Arr } from "effect";
 
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
@@ -142,6 +143,67 @@ it("leaves no memory behind when a capture lands during the deletion, and writes
   expect(await f.keys()).toEqual([]);
   expect(await keys()).toEqual([]);
   await f.t.finishAllScheduledFunctions(vi.runAllTimers);
+});
+
+it("retires the learner's upload grants a batch at a time and keeps another learner's", async () => {
+  const { t, owner, retained } = await createDeletedOwner("uploads");
+  await t.mutation(async (ctx) => {
+    for (const userId of [owner, retained]) {
+      await ctx.db.insert("ninaUploads", {
+        expiresAt: Date.UTC(2026, 8, 28),
+        state: { status: "uploading" },
+        userId,
+      });
+    }
+  });
+  const grants = () => t.query((ctx) => ctx.db.query("ninaUploads").collect());
+  await expect(
+    t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner })
+  ).resolves.toBe(true);
+  expect(await grants()).toEqual([
+    expect.objectContaining({ userId: retained }),
+  ]);
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+});
+
+it("deletes the learner's portrait with their memories, also one that a capture landing during the deletion asked for, and keeps another learner's", async () => {
+  vi.useFakeTimers();
+  const now = Date.UTC(2026, 9, 10, 12);
+  vi.setSystemTime(now);
+  const f = await createPortraitTest();
+  const userId = f.identity.userId;
+  const other = await f.stranger();
+  await f.seed({ author: "learner", text: "Before the deletion" });
+  await f.seedPortrait({ text: "Kelas 12." });
+  await f.seedPortrait({ text: "Kelas 11.", userId: other.userId });
+  await f.t.mutation((ctx) =>
+    ctx.db.patch(userId, createDeletedUserTombstone(userId, now))
+  );
+  const cleanup = () =>
+    f.t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId });
+  const owners = async () => Arr.map(await f.rows(), (row) => row.userId);
+  await expect(cleanup()).resolves.toBe(true);
+  expect(await owners()).toEqual([other.userId]);
+  // A capture that was still running lands between two passes and asks for a
+  // portrait of its own, and the next pass deletes that one too.
+  await expect(
+    f.t.mutation(capture, {
+      candidates: [
+        { kind: "level", quote: "aku kelas 12", text: "Kelas 12 IPA." },
+      ],
+      seen: [],
+      topics: [],
+      turnId: f.turnId,
+      userId,
+    })
+  ).resolves.toBe(1);
+  expect(await owners()).toEqual([other.userId, userId]);
+  while (await cleanup()) {
+    // Each pass deletes one batch of what is left.
+  }
+  expect(await owners()).toEqual([other.userId]);
+  await f.t.finishAllScheduledFunctions(vi.runAllTimers);
+  expect(await owners()).toEqual([other.userId]);
 });
 
 it("deletes both directions of comment votes before their owning comment while keeping shared counters accurate", async () => {

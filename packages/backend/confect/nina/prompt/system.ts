@@ -1,3 +1,4 @@
+import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
 import type { NinaContextPack } from "@repo/backend/confect/nina/contract/pack";
 import { createNinaPrompt } from "@repo/backend/confect/nina/prompt/prompt";
 import type { PromptUserRole } from "@repo/backend/confect/users/role";
@@ -43,16 +44,19 @@ export function formatNinaContextPackPrompt(context: NinaContextPack) {
 
 /**
  * Builds Nina's system prompt from the role, the signed current page, the
- * learner, the question focus, and the summary. The runtime facts of a turn
- * are not part of it: see `formatTurnContext`.
+ * learner, the question focus, the summary, and the capabilities she is
+ * offered. The runtime facts of a turn are not part of it: see
+ * `formatTurnContext`.
  */
 export function createNinaSystemPrompt({
+  capabilities,
   focus,
   learner,
   pageContent,
   summary,
   userRole,
 }: {
+  readonly capabilities: readonly LearningCapabilityName[];
   readonly focus?: string;
   readonly learner?: string;
   readonly pageContent?: string;
@@ -60,6 +64,7 @@ export function createNinaSystemPrompt({
   readonly userRole?: PromptUserRole | undefined;
 }) {
   return createNinaPrompt({
+    capabilities,
     ...(focus === undefined ? {} : { focus }),
     ...(learner === undefined ? {} : { learner }),
     ...(pageContent === undefined ? {} : { pageContent }),

@@ -4,6 +4,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import {
   ActionCtx,
   type QueryRunner,
+  type VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
@@ -15,6 +16,7 @@ import type { NakafaAgentData } from "@repo/backend/confect/nina/contract/agent"
 import { NinaReadOptionsSchema } from "@repo/backend/confect/nina/contract/data";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
+import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import {
   nakafaQuran,
   nakafaRead,
@@ -87,11 +89,13 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   const ctx = yield* ActionCtx;
   const { model, timeout } = (yield* Gateway).language("specialist");
   const agent = new Agent(components.nina, {
-    name: "nakafa",
+    name: "nakafa" satisfies UsageAgent,
     languageModel: model,
     usageHandler,
   });
-  const services = yield* Effect.context<QueryRunner>();
+  const services = yield* Effect.context<
+    Gateway | QueryRunner | VectorSearch
+  >();
   const runPromise = Effect.runPromiseWith(services);
   const limit = yield* limitDeadline(timeout);
   let hasPendingContentRead = false;

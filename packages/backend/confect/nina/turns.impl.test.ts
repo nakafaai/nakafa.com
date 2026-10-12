@@ -5,7 +5,10 @@ import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
+import {
+  START_DEADLINE,
+  TURN_DEADLINE,
+} from "@repo/backend/confect/nina/deadline";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import {
   seedAnalyticsConsent,
@@ -117,7 +120,17 @@ describe("native Nina admission", () => {
     expect(
       Arr.filter(state.schedules, (row) => row.name === "nina/response:run")
     ).toHaveLength(1);
-    // The recovery sweep covers a stuck turn, so admission schedules no check.
+    // One check follows the run, for the moment it must have started. The
+    // recovery sweep covers a turn that stays open past its deadline, so
+    // admission schedules no settlement.
+    expect(
+      Arr.filter(state.schedules, (row) => row.name === "nina/lifecycle:expire")
+    ).toEqual([
+      expect.objectContaining({
+        args: [{ turnId: first.turnId }],
+        scheduledTime: NOW + Duration.toMillis(START_DEADLINE),
+      }),
+    ]);
     expect(
       Arr.filter(
         state.schedules,

@@ -14,6 +14,12 @@ import {
   specialistResult,
   streamCapability,
 } from "@repo/backend/confect/nina/capability/progress";
+import {
+  done,
+  loading,
+  request,
+  verified,
+} from "@repo/backend/test/nina/artifact";
 import { inNewChatStep } from "@repo/backend/test/nina/deadline";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import {
@@ -33,16 +39,6 @@ import {
 } from "effect";
 import { TestClock } from "effect/testing";
 
-const loading = {
-  type: "data-web-search",
-  id: "search-1",
-  data: {
-    provider: "firecrawl",
-    queries: ["limit"],
-    sources: [],
-    status: "loading",
-  },
-} satisfies CapabilityArtifact;
 const options = {
   capability: "deepResearch",
   continuation: "Ask a narrower question.",
@@ -130,125 +126,6 @@ it.effect("emits pending evidence before the provider finishes", () =>
   })
 );
 
-const done = {
-  ...loading,
-  data: { ...loading.data, status: "done" },
-} satisfies CapabilityArtifact;
-const lost = {
-  ...loading,
-  id: "search-2",
-  data: { ...loading.data, status: "error", error: "Unavailable" },
-} satisfies CapabilityArtifact;
-const sum = { expression: "2", latex: "2" };
-const request = {
-  expression: "1 + 1",
-  kind: "math",
-  operation: "evaluate",
-} as const;
-const verified = {
-  type: "data-math",
-  id: "math-1",
-  data: {
-    input: request,
-    kind: "evaluate",
-    result: {
-      conditions: [],
-      input: request,
-      items: [],
-      kind: "evaluate",
-      operation: "evaluate",
-      primary: { expression: "1 + 1", latex: "1 + 1" },
-      reason: "verified",
-      secondary: sum,
-      stepStatus: "complete",
-      steps: [],
-      status: "verified",
-    },
-    status: "verified",
-    summary: "verified",
-  },
-} satisfies CapabilityArtifact;
-
-it.effect.each([
-  [
-    "a failed run that loaded nothing stays failed",
-    [loading],
-    "failed",
-    "failed",
-  ],
-  [
-    "a failed run never contradicts loaded sources",
-    [done],
-    "failed",
-    "partial",
-  ],
-  [
-    "a failed run never contradicts a verified calculation",
-    [verified],
-    "failed",
-    "partial",
-  ],
-  [
-    "a run that lost a card beside a loaded one is partial",
-    [done, lost],
-    undefined,
-    "partial",
-  ],
-  [
-    "a run that lost a card beside a verified calculation is partial",
-    [verified, lost],
-    undefined,
-    "partial",
-  ],
-  [
-    "a run that only lost cards is failed, whatever prose it returned",
-    [lost],
-    undefined,
-    "failed",
-  ],
-  [
-    "a run with every card loaded reports no outcome",
-    [done, verified],
-    undefined,
-    undefined,
-  ],
-  [
-    "an empty run that lost a card beside a settled one is partial",
-    [done, lost],
-    "empty",
-    "partial",
-  ],
-  ["an empty run stays empty beside settled cards", [done], "empty", "empty"],
-  [
-    "a denied run stays denied whatever its cards",
-    [done, lost],
-    "denied",
-    "denied",
-  ],
-  ["a stated outcome survives lost evidence", [lost], "empty", "empty"],
-] as const)("settles the stored outcome: %s", ([, cards, reported, stored]) =>
-  Effect.gen(function* () {
-    const snapshots = yield* streamCapability(
-      (publish) =>
-        Effect.forEach(cards, publish).pipe(
-          Effect.as({
-            text: "Research evidence",
-            ...(reported ? { outcome: reported } : {}),
-          })
-        ),
-      options
-    ).pipe(Stream.runCollect, inNewChatStep);
-    const final = yield* Schema.decodeEffect(CapabilityOutputSchema)(
-      Option.getOrThrow(Arr.last(snapshots))
-    );
-    expect(final).toEqual({
-      artifacts: cards,
-      ...(stored ? { outcome: stored } : {}),
-      text: "Research evidence",
-    });
-  })
-);
-
 class EvidenceUnavailable extends Schema.TaggedError<EvidenceUnavailable>()(
   "EvidenceUnavailable",
   {}
@@ -323,8 +200,9 @@ it.effect(
         () => Effect.succeed({ text: "Completed" }),
         { ...options, signal: yield* Effect.abortSignal }
       ).pipe(Stream.runCollect, inNewChatStep);
+      // It gathered no card and states no outcome, so it found nothing.
       expect(Arr.last(result)).toEqual(
-        Option.some({ text: "Completed", artifacts: [] })
+        Option.some({ text: "Completed", artifacts: [], outcome: "empty" })
       );
     })
 );

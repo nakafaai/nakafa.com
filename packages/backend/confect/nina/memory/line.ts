@@ -2,7 +2,7 @@ import type { NinaMemoryNote } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, pipe, String as Str } from "effect";
 
 /** One memory as Nina and the capture call read it. */
-export type Note = typeof NinaMemoryNote.Type;
+type Note = typeof NinaMemoryNote.Type;
 
 /**
  * Characters of one memory in the list a capture call reads. The call only has
@@ -17,7 +17,7 @@ const WHITESPACE = /\s+/gu;
  * with their angle brackets written as entities, so they can never close the
  * block they sit in.
  */
-function oneLine(text: string) {
+export function oneLine(text: string) {
   return pipe(
     text,
     Str.replaceAll("<", "&lt;"),
@@ -41,27 +41,35 @@ function wordsOf({ text, title }: Pick<Note, "text" | "title">) {
 }
 
 /**
- * The first `KNOWN_LENGTH` characters of a line, followed by `...` when it is
- * longer. It counts and cuts by code point, so a cut never leaves half of an
- * emoji in the prompt.
+ * The first `length` characters of a line, followed by `...` when it is longer.
+ * It counts and cuts by code point, so a cut never leaves half of an emoji in
+ * the prompt.
  */
-function shorten(line: string) {
+function shorten(line: string, length: number) {
   const characters = Arr.fromIterable(line);
-  return Arr.length(characters) > KNOWN_LENGTH
-    ? `${Arr.join(Arr.take(characters, KNOWN_LENGTH), "")}...`
+  return Arr.length(characters) > length
+    ? `${Arr.join(Arr.take(characters, length), "")}...`
     : line;
 }
 
-/** One memory as Nina reads it: `- (level) Kelas 12`, or `- Kelas 12` for one the learner wrote. */
-export function memoryLine(note: Pick<Note, "kind" | "text" | "title">) {
-  return `- ${label(note.kind)}${wordsOf(note)}`;
+/**
+ * A memory's title and words on one line, cut to `length` characters, with no
+ * kind and no id: `Sekolah: Kelas 12`. This is how a prompt that names no memory
+ * writes one, such as the build of a portrait, the memories a turn recalls and
+ * the answer of the memory capability.
+ */
+export function textLine(note: Pick<Note, "text" | "title">, length: number) {
+  return shorten(wordsOf(note), length);
 }
 
 /**
- * One memory as the capture call reads it, with the id it can name:
- * `- [id] (level) Kelas 12`. A long memory shows its first `KNOWN_LENGTH`
- * characters.
+ * One memory as the capture call reads it, with the place it can name, counted
+ * from 1 in the list: `- [1] (level) Kelas 12`. A long memory shows its first
+ * `KNOWN_LENGTH` characters.
  */
-export function knownLine(note: Pick<Note, "id" | "kind" | "text" | "title">) {
-  return `- [${note.id}] ${label(note.kind)}${shorten(wordsOf(note))}`;
+export function knownLine(
+  note: Pick<Note, "kind" | "text" | "title">,
+  place: number
+) {
+  return `- [${place}] ${label(note.kind)}${textLine(note, KNOWN_LENGTH)}`;
 }

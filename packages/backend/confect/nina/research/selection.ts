@@ -1,6 +1,8 @@
 import {
   Array as Arr,
-  MutableHashSet,
+  HashMap,
+  HashSet,
+  Iterable as Iter,
   Option,
   Order,
   pipe,
@@ -8,14 +10,15 @@ import {
 } from "effect";
 
 const DEFAULT_MAX_LENGTH = 2000;
-const MIN_KEYWORD_LENGTH = 3;
-const KEYWORD_BONUS_POINTS = 0.5;
-const PARAGRAPH_LENGTH_DIVISOR = 100;
 const TARGET_LENGTH_BUFFER = 0.9;
+/**
+ * The smoothing of the inverse document frequency in the Okapi BM25 ranking. It
+ * keeps the weight of a word that no paragraph holds, or that every paragraph
+ * holds, finite and above zero.
+ */
+const WEIGHT_SMOOTHING = 0.5;
 
 const PARAGRAPH_SPLIT_REGEX = /\n\s*\n/;
-const SEARCH_TOKEN_REGEX = /[\p{L}\p{N}][\p{L}\p{N}_-]*/gu;
-const REGEX_SPECIAL_CHARS = /[.*+?^${}()|[\]\\]/g;
 
 const TRUNCATION_THRESHOLDS = {
   sentence: 0.7,
@@ -44,53 +47,106 @@ type SelectRelevantContentParams =
   typeof SelectRelevantContentParamsSchema.Type;
 
 /**
- * Extracts searchable terms without assuming the user's language.
+ * Splits a text into its lowercased words the way the platform does, with no
+ * minimum length and no list of words to skip. The platform finds the word
+ * breaks of every script, also of those written without spaces.
  */
-function extractKeywords(query: string): string[] {
-  const seen = MutableHashSet.empty<string>();
-
-  return Arr.flatMap(
-    [...query.toLocaleLowerCase().matchAll(SEARCH_TOKEN_REGEX)],
-    ([word]) => {
-      if (word.length < MIN_KEYWORD_LENGTH || MutableHashSet.has(seen, word)) {
-        return [];
-      }
-
-      MutableHashSet.add(seen, word);
-      return [word];
-    }
+function readWords(segmenter: Intl.Segmenter, text: string) {
+  return Arr.flatMap(Arr.fromIterable(segmenter.segment(text)), (part) =>
+    part.isWordLike ? [part.segment.toLocaleLowerCase()] : []
   );
 }
 
 /**
- * Scores one paragraph based on language-agnostic term matches.
+ * Weighs a query word by how few paragraphs of the page hold it, with the
+ * inverse document frequency of the Okapi BM25 ranking, where the paragraphs
+ * play the part of the documents. A word that most paragraphs hold, such as a
+ * particle or a preposition, tells them little apart and weighs little. A word
+ * that few hold points at them and weighs much. The page shows which words are
+ * common, so no list of words to skip is needed and every language is treated
+ * the same.
  */
-function calculateRelevanceScore(
-  paragraph: string,
-  keywords: string[]
-): number {
-  const lowerParagraph = paragraph.toLocaleLowerCase();
-  let score = 0;
+function weighWord(
+  wordsByParagraph: readonly HashSet.HashSet<string>[],
+  word: string
+) {
+  const holding = Arr.countBy(wordsByParagraph, HashSet.has(word));
 
-  for (const keyword of keywords) {
-    const keywordRegex = new RegExp(escapeRegex(keyword), "gu");
-    const matches = (lowerParagraph.match(keywordRegex) || []).length;
-    score += matches;
-
-    if (lowerParagraph.includes(keyword)) {
-      score += KEYWORD_BONUS_POINTS;
-    }
-  }
-
-  // Normalize by paragraph length to avoid bias towards longer paragraphs
-  return score / Math.max(paragraph.length / PARAGRAPH_LENGTH_DIVISOR, 1);
+  return Math.log(
+    1 +
+      (wordsByParagraph.length - holding + WEIGHT_SMOOTHING) /
+        (holding + WEIGHT_SMOOTHING)
+  );
 }
 
 /**
- * Escapes a search term before using it in a regular expression.
+ * Scores one paragraph by the query words it holds. Each different query word
+ * counts once, however often the paragraph repeats it, and counts for as much
+ * as the page makes that word weigh. Repeating a word adds nothing, so length
+ * alone wins nothing, and a long paragraph that holds more of the query's words
+ * is not held back for being long.
  */
-function escapeRegex(value: string) {
-  return value.replace(REGEX_SPECIAL_CHARS, "\\$&");
+function scoreParagraph(
+  words: HashSet.HashSet<string>,
+  weights: HashMap.HashMap<string, number>
+) {
+  return HashMap.reduce(weights, 0, (total, weight, word) =>
+    HashSet.has(words, word) ? total + weight : total
+  );
+}
+
+/**
+ * Scores each paragraph of a page by the query words it holds. The words of
+ * every paragraph are read once: they give the weight of each query word first,
+ * and then the score of each paragraph.
+ */
+function analyzeParagraphs(
+  paragraphs: readonly string[],
+  queryWords: readonly string[],
+  segmenter: Intl.Segmenter
+): ContentParagraph[] {
+  const wordsByParagraph = Arr.map(paragraphs, (text) =>
+    HashSet.fromIterable(readWords(segmenter, text))
+  );
+  const weights = HashMap.fromIterable(
+    Arr.map(
+      queryWords,
+      (word) => [word, weighWord(wordsByParagraph, word)] as const
+    )
+  );
+
+  return Arr.map(
+    Arr.zip(paragraphs, wordsByParagraph),
+    ([text, words], index) => ({
+      index,
+      length: text.length,
+      score: scoreParagraph(words, weights),
+      text,
+    })
+  );
+}
+
+/**
+ * Finds where the last sentence that fits in `maxLength` characters ends, by
+ * the platform's own sentence rules, so it holds for the full stop of every
+ * script. The sentences are read from the whole text and the read stops at the
+ * first one that does not fit, so a sentence that ends exactly at the limit
+ * counts, and a long text is not read to its end. Returns 0 when no whole
+ * sentence fits.
+ */
+function findSentenceEnd(text: string, maxLength: number) {
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "sentence" });
+  const ends = pipe(
+    segmenter.segment(text),
+    // A blank part, such as the second line break between two paragraphs, is
+    // no sentence and ends nothing.
+    Iter.filter(({ segment }) => segment.trim().length > 0),
+    Iter.map(({ index, segment }) => index + segment.trimEnd().length),
+    Iter.takeWhile((end) => end <= maxLength),
+    Arr.fromIterable
+  );
+
+  return Option.getOrElse(Arr.last(ends), () => 0);
 }
 
 /**
@@ -102,13 +158,13 @@ function truncateAtBoundary(text: string, maxLength: number): string {
   }
 
   const truncated = text.slice(0, maxLength);
+  const sentenceEnd = findSentenceEnd(text, maxLength);
+
+  if (sentenceEnd > maxLength * TRUNCATION_THRESHOLDS.sentence) {
+    return truncated.slice(0, sentenceEnd);
+  }
 
   const boundaries = [
-    {
-      type: "sentence",
-      pattern: ". ",
-      threshold: TRUNCATION_THRESHOLDS.sentence,
-    },
     {
       type: "paragraph",
       pattern: "\n\n",
@@ -125,9 +181,8 @@ function truncateAtBoundary(text: string, maxLength: number): string {
   for (const boundary of boundaries) {
     const lastIndex = truncated.lastIndexOf(boundary.pattern);
     if (lastIndex > maxLength * boundary.threshold) {
-      const cutPoint = boundary.type === "sentence" ? lastIndex + 1 : lastIndex;
       return (
-        truncated.slice(0, cutPoint) + (boundary.type === "word" ? "..." : "")
+        truncated.slice(0, lastIndex) + (boundary.type === "word" ? "..." : "")
       );
     }
   }
@@ -137,6 +192,8 @@ function truncateAtBoundary(text: string, maxLength: number): string {
 
 /**
  * Selects and combines source paragraphs most relevant to the research query.
+ * Every word of the query is looked for, whatever its line starts with, so the
+ * caller gives only the words it wants found.
  */
 export function selectRelevantContent(
   params: SelectRelevantContentParams
@@ -162,8 +219,9 @@ export function selectRelevantContent(
     return truncateAtBoundary(content, maxLength);
   }
 
-  const keywords = extractKeywords(query);
-  if (keywords.length === 0) {
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "word" });
+  const queryWords = Arr.dedupe(readWords(segmenter, query));
+  if (queryWords.length === 0) {
     return truncateAtBoundary(content, maxLength);
   }
 
@@ -177,14 +235,10 @@ export function selectRelevantContent(
     return truncateAtBoundary(content, maxLength);
   }
 
-  const analyzedParagraphs: ContentParagraph[] = Arr.map(
+  const analyzedParagraphs = analyzeParagraphs(
     paragraphs,
-    (text, index) => ({
-      text,
-      score: calculateRelevanceScore(text, keywords),
-      index,
-      length: text.length,
-    })
+    queryWords,
+    segmenter
   );
 
   const intro = analyzedParagraphs[0];

@@ -2,19 +2,44 @@ import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
+import { HostnameSchema } from "@repo/backend/confect/nina/research/domain";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
 /**
- * The most characters one web-search query holds. The search provider's API
- * gives `query` a `maxLength` of 500, and its page documents no answer to a
- * longer one (https://docs.firecrawl.dev/api-reference/endpoint/search). Like
- * a fifth query, a longer one makes the model's call invalid, and
- * `runResearchAgent` drops an invalid call: no search is planned, the run reads
- * the links the learner sent, if any, and ends partial, or it fails when there
- * are none. A stored search keeps whatever query it ran with.
+ * The most sites one web search call may name. The search provider states no
+ * limit for `includeDomains`
+ * (https://docs.firecrawl.dev/api-reference/endpoint/search, read on 12
+ * October 2026), so this bound is Nakafa's own, not a provider limit and not a
+ * measurement. A task that limits a search names the site of an official
+ * source, its sub-sites, or a few outlets, and five cover them. A search over
+ * more sites is an open search, so the model leaves the field out. A call that
+ * names more is refused, as a call with more queries than
+ * `webSearchMaxQueries` is, and runs no search.
  */
-export const webSearchMaxQueryLength = 500;
+export const webSearchMaxSites = 5;
+/**
+ * The most characters one search query may have. The search provider documents
+ * its `query` with `maxLength: 500` (Firecrawl search endpoint,
+ * https://docs.firecrawl.dev/api-reference/endpoint/search, read on 12 October
+ * 2026) and documents no answer to a longer one. The tool input states the
+ * same limit, so the model is told it and no query is cut afterwards. A longer
+ * query makes the call invalid, like a fifth query, and `runResearchAgent`
+ * drops an invalid call: no search is planned, so the run answers from the
+ * links the learner sent, if any, and ends partial, or it fails when there are
+ * none. A search already stored keeps whatever query it ran with.
+ */
+export const webSearchQueryMaxLength = 500;
+/**
+ * One search query. The limit is checked on the text the model writes, so the
+ * JSON schema it reads holds it, and it counts characters as that schema's
+ * `maxLength` does: by code point, so an emoji or a rare Han character is one
+ * character here as it is there. The query is then trimmed and must not be
+ * blank.
+ */
+const queryInputSchema = Schema.String.check(
+  Schema.isMaxCodePoints(webSearchQueryMaxLength)
+).pipe(Schema.decodeTo(Schema.Trim), Schema.check(Schema.isMinLength(1)));
 /**
  * Requests the search provider's plan serves at once, measured on 10 October
  * 2026. One past it waits in the provider's queue and can time out there, so
@@ -61,14 +86,7 @@ const ScrapeOutputSchema = Schema.Struct({
   error: Schema.optional(Schema.String),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export const WebSearchInputSchema = Schema.Struct({
-  queries: Schema.Array(
-    Schema.Trim.pipe(
-      Schema.check(
-        Schema.isMinLength(1),
-        Schema.isMaxLength(webSearchMaxQueryLength)
-      )
-    )
-  )
+  queries: Schema.Array(queryInputSchema)
     .pipe(
       Schema.mutable,
       Schema.check(Schema.isMinLength(1)),
@@ -80,9 +98,9 @@ export const WebSearchInputSchema = Schema.Struct({
         One or more search-engine queries.
 
         Preserve task-relevant user-provided strings for:
-        - named entities, domains, products, APIs, and libraries.
+        - named entities, products, APIs, and libraries.
         - features, versions, institutions, and dates.
-        - URLs, source constraints, and document titles.
+        - source names, document titles, and the URL of a page the query is about.
 
         Omit answer-formatting instructions:
         - summary length.
@@ -92,18 +110,23 @@ export const WebSearchInputSchema = Schema.Struct({
       `,
       }),
     }),
-  sourcePreference: Schema.Literals(["primary", "any"]).annotate({
+  sites: Schema.optionalKey(
+    Schema.Array(HostnameSchema).pipe(
+      Schema.mutable,
+      Schema.check(Schema.isMaxLength(webSearchMaxSites))
+    )
+  ).annotate({
     description: createPrompt({
       taskContext: `
-      Choose primary when the task requires direct evidence from:
-      - a source owner.
-      - a first-party publisher.
-      - a maintainer or vendor.
-      - a standards body.
-      - paper authors.
+        Hostnames of the only sites the results may come from, such as bbc.com.
 
-      Choose any when broader credible sources are acceptable.
-    `,
+        Use it when the task asks for results of given sites only.
+        Write each site as a hostname, without a protocol or a path.
+        Every query of this call is then searched in those sites only.
+        Name at most ${webSearchMaxSites} sites.
+        A call that names more sites, or a site that is not a hostname, is refused and runs no search.
+        Leave this field out for an open search.
+      `,
     }),
   }),
 })
@@ -257,5 +280,4 @@ export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerati
 ) {}
 export type ScrapeOutput = typeof ScrapeOutputSchema.Type;
 export type ResearchOutput = typeof ResearchOutputSchema.Type;
-export type WebSearchInput = typeof WebSearchInputSchema.Type;
 export type WebSearchOutput = typeof WebSearchOutputSchema.Type;

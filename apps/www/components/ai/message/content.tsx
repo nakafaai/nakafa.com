@@ -10,7 +10,6 @@ import {
   MessageSections,
 } from "@/components/ai/message/section";
 import { SuggestionsPart } from "@/components/ai/message/suggestions";
-import { useViewer } from "@/lib/identity/client";
 
 /** Renders a message's work steps and answers in Agent order. */
 export function AiChatMessageContent() {
@@ -51,10 +50,7 @@ export function AiChatMessageContent() {
 AiChatMessageContent.displayName = "AiChatMessageContent";
 
 export function AiChatMessageSuggestions() {
-  const chat = useChat((s) => s.chat);
-
-  const currentUser = useViewer((s) => s.account);
-  const showSuggestions = chat?.userId === currentUser?.appUser._id;
+  const owner = useChat((state) => state.owner);
   const suggestions = useMessage((state) =>
     state.message.role === "assistant" &&
     state.turn?.state.status === "complete"
@@ -62,7 +58,7 @@ export function AiChatMessageSuggestions() {
       : undefined
   );
 
-  if (!(showSuggestions && suggestions)) {
+  if (!(owner && suggestions)) {
     return null;
   }
 

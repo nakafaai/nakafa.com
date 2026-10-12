@@ -1,6 +1,6 @@
 "use client";
 
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import { usePaginatedQuery } from "@confect/react";
 import {
   Globe02Icon,
   Search02Icon,
@@ -35,12 +35,12 @@ import { Array as Arr } from "effect";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
+import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
+import { useChatList } from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
-/** Chats the sidebar asks for at a time. */
-const CHAT_PAGE = 50;
 export function AiChatSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Ai");
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
@@ -125,9 +125,9 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
         type,
       };
   const pagination = usePaginatedQuery(chats.queries.getOwnChats, queryArgs, {
-    initialNumItems: CHAT_PAGE,
+    initialNumItems: CHAT_LIST_PAGE_SIZE,
   });
-  const { results } = pagination;
+  const { loadMore, results } = useChatList(pagination);
   return (
     <>
       <SidebarMenu>
@@ -162,10 +162,8 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
         })}
       </SidebarMenu>
       {/* A search page may hold no match while older chats remain, so the list
-          keeps asking until the end of the list is out of view or none is left. */}
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(CHAT_PAGE)} />
-      ) : null}
+          keeps asking while its end is in view and another page can load. */}
+      {loadMore ? <Intersection onIntersect={loadMore} /> : null}
     </>
   );
 }

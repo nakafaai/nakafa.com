@@ -4,6 +4,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { deleteBatch } from "@repo/backend/confect/nina/memory/store";
+import { dropPortrait } from "@repo/backend/confect/nina/portrait/store";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
 
@@ -125,10 +126,16 @@ const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
 
-/** Deletes one bounded batch of the learner's Nina memories, with their key rows. */
+/**
+ * Deletes one bounded batch of the learner's Nina memories, with their key
+ * rows, and the learner's portrait. A capture that lands during the deletion
+ * writes a memory and asks for a portrait, and the next pass deletes both.
+ */
 const cleanupNinaMemory = Effect.fn("auth.cleanup.ninaMemory")(
   function* (userId: Id<"users">) {
-    return (yield* deleteBatch(userId)) > 0;
+    const deleted = yield* deleteBatch(userId);
+    const dropped = yield* dropPortrait(userId);
+    return deleted > 0 || dropped;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );

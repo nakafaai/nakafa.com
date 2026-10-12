@@ -14,10 +14,15 @@ export const AgentCurriculumPreferenceSchema = Schema.Struct({
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type AgentCurriculumPreference =
   typeof AgentCurriculumPreferenceSchema.Type;
-/** Per-turn context shared by Nina and specialist agents after authenticated admission. */
+/**
+ * Per-turn context shared by Nina and specialist agents after authenticated
+ * admission. `memory` is whether the learner's memory is on for the turn, which
+ * only Nina's own turn knows: a context without it has no memory capability.
+ */
 const AgentContextSchema = Schema.Struct({
   currentDate: Schema.String,
   curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
+  memory: Schema.optional(Schema.Boolean),
   nina: Schema.optional(NinaContextPackSchema),
   slug: Schema.String,
   url: Schema.String,
@@ -42,10 +47,15 @@ const NakafaAgentDataSchema = Schema.Struct({
   addresses: Schema.Array(Schema.String),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type NakafaAgentData = typeof NakafaAgentDataSchema.Type;
-/** Schema-derived data passed to the external research specialist. */
+/**
+ * Schema-derived data passed to the external research specialist. `task` is
+ * the Markdown the research model reads. `words` are the tool call's own words
+ * with no heading, which choose the paragraphs of a page that are read.
+ */
 const ResearchAgentDataSchema = Schema.Struct({
   ...TaskAgentDataSchema.fields,
   sourceReferences: Schema.Array(SourceReferenceSchema),
   toolCallId: Schema.String,
+  words: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type ResearchAgentData = typeof ResearchAgentDataSchema.Type;

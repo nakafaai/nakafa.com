@@ -5,13 +5,12 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { endOfDay } from "@repo/backend/confect/nina/memory/check";
 import { syncKeys } from "@repo/backend/confect/nina/memory/keys";
-import { findTarget, sameWords } from "@repo/backend/confect/nina/memory/match";
+import { sameWords } from "@repo/backend/confect/nina/memory/match";
 import {
   MEMORY_FIELD,
   type Opened,
   openWith,
 } from "@repo/backend/confect/nina/memory/seal";
-import { searchMemories } from "@repo/backend/confect/nina/memory/search";
 import {
   isUnchanged,
   lostSeen,
@@ -26,6 +25,7 @@ import {
   type NinaMemoryCandidate,
   type NinaMemorySeen,
 } from "@repo/backend/confect/nina/memory.spec";
+import { requestPortrait } from "@repo/backend/confect/nina/portrait/store";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, HashSet, Option } from "effect";
@@ -35,8 +35,14 @@ type Candidate = typeof NinaMemoryCandidate.Type;
 type Seen = typeof NinaMemorySeen.Type;
 type LearnerKeys = Effect.Success<ReturnType<typeof ensureLearnerKeys>>;
 
-/** Memories searched for the one a candidate says again, besides the one it names. */
-const TARGET_LIMIT = 8;
+/**
+ * Whether a memory can be of a candidate's kind: it is of that kind, or it has
+ * none. Only a memory the learner wrote has none, and a chat that restates it
+ * gives it one. A situation's end day never lands on a goal this way.
+ */
+function takesKind(memory: Pick<Opened, "kind">, kind: Candidate["kind"]) {
+  return memory.kind === undefined || memory.kind === kind;
+}
 
 /** The end of a situation's last day. Any other kind has none. */
 function endOf(candidate: Candidate) {
@@ -47,14 +53,15 @@ function endOf(candidate: Candidate) {
 
 /**
  * Says a memory again: it was confirmed now. The candidate's words replace the
- * memory's only when Nina wrote the memory, they say something new, and nobody
- * changed the memory since the call read it. Words the learner wrote are never
- * replaced. A memory that nobody changed since takes the candidate's kind,
- * which is how a memory the learner wrote gets one, and a situation takes a new
- * end date. The memory is also linked to the topics of the open pages that it
- * is not linked to yet, up to `MEMORY_TOPIC_LIMIT`. Its keys follow in every
- * case: they take the new words and topics and the time of this confirmation,
- * so a memory that is said again stays among the first a lookup meets.
+ * memory's only when Nina wrote the memory, they are not the same words in
+ * another case, punctuation or spacing (`sameWords`), and nobody changed the
+ * memory since the call read it. Words the learner wrote are never replaced. A
+ * memory that nobody changed since takes the candidate's kind, which is how a
+ * memory the learner wrote gets one, and a situation takes a new end date. The
+ * memory is also linked to the topics of the open pages that it is not linked
+ * to yet, up to `MEMORY_TOPIC_LIMIT`. Its keys follow in every case: they take
+ * the new words and topics and the time of this confirmation, so a memory that
+ * is said again stays among the first a lookup meets.
  */
 const confirmMemory = Effect.fn("nina.memory.write.confirm")(function* ({
   candidate,
@@ -142,13 +149,34 @@ const createMemory = Effect.fn("nina.memory.write.create")(function* ({
 });
 
 /**
- * Writes one candidate against the memories it can say again: the one it names,
- * when the call read it, and the `TARGET_LIMIT` that match its words and the
- * open pages best. Both are read as they stand, so they include what the call
- * wrote before this candidate, and neither is a memory that "Delete all" took
- * (confirmed at or before `clearedAt`), which a confirmation would bring back.
- * It returns the memory it wrote or confirmed, or nothing when it dropped the
- * candidate.
+ * The candidates a write keeps, in their order. A situation without a usable
+ * end day is dropped, and candidates that hold the same words (`sameWords`),
+ * the same kind and the same name are one candidate, the first, because a call
+ * that settles a memory settles it once.
+ */
+function distinct(candidates: readonly Candidate[]) {
+  return Arr.dedupeWith(
+    Arr.filter(
+      candidates,
+      (candidate) =>
+        candidate.kind !== "situation" || Option.isSome(endOf(candidate))
+    ),
+    (first: Candidate, second: Candidate) =>
+      first.kind === second.kind &&
+      first.known === second.known &&
+      sameWords(first.text, second.text)
+  );
+}
+
+/**
+ * Writes one candidate: it confirms the memory it names, when that memory is on
+ * the list the call read and can take the candidate's kind, and otherwise
+ * becomes a new memory of Nina's. The model decides which memory a candidate
+ * restates, so no comparison of words looks for another one. The named memory
+ * is read as it stands now, so it includes what the call wrote before this
+ * candidate, and it is never a memory that "Delete all" took (confirmed at or
+ * before `clearedAt`), which a confirmation would bring back. It returns the
+ * memory it wrote or confirmed.
  */
 const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   candidate,
@@ -166,31 +194,17 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   readonly topics: readonly string[];
 }) {
   const validUntil = endOf(candidate);
-  if (candidate.kind === "situation" && Option.isNone(validUntil)) {
-    return Option.none();
-  }
   const named = yield* openWith(
     keys,
     Arr.fromOption(
       yield* readNamed(keys.userId, seen, candidate.known, clearedAt)
     )
   );
-  const matches = yield* searchMemories({
-    clearedAt,
-    limit: TARGET_LIMIT,
-    now,
-    text: candidate.text,
-    topics,
-    userId: keys.userId,
-  });
-  // What the learner wrote is theirs: the target is such a memory only when the
-  // candidate says the same. Otherwise the candidate confirms a memory that
-  // says it, or becomes a memory of Nina's.
-  const target = findTarget(Arr.appendAll(named, matches), candidate);
+  const target = Arr.findFirst(named, (memory) =>
+    takesKind(memory, candidate.kind)
+  );
   if (Option.isNone(target)) {
-    return Option.some(
-      yield* createMemory({ candidate, keys, now, topics, validUntil })
-    );
+    return yield* createMemory({ candidate, keys, now, topics, validUntil });
   }
   yield* confirmMemory({
     candidate,
@@ -201,28 +215,30 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
     topics,
     validUntil,
   });
-  return Option.some(target.value._id);
+  return target.value._id;
 });
 
 /**
  * Writes what one capture call found the learner saying about themself, and
  * returns how many memories it wrote or confirmed, which it also stores in the
- * turn. A candidate that names a memory the call read, or says what a memory of
- * its kind (or a memory without a kind) already says, confirms that memory. A
- * memory the learner wrote counts only when the candidate says the same as it,
- * so naming one that says something else confirms nothing by that name. Any
- * other candidate is a new memory. The model read the message some time ago, so
- * the write first checks what could have changed meanwhile: paused memory, a
- * deleted turn, or a memory the learner removed or deleted with "Delete all"
- * writes nothing, and a memory changed since the call read it, or one the call
- * never read, keeps its words, its kind and its end date. It looks up the at
- * most 12 memories the call read and searches for the others, so it touches a
+ * turn. A candidate that names a memory the call read (by its place on the
+ * list the call gave the model) and that can take the candidate's kind
+ * confirms that memory, and any other candidate is a new memory. The model
+ * says which memory a candidate restates: no comparison of words finds one. A
+ * situation without a usable end day is dropped, and candidates of one call
+ * that hold the same words, the same kind and the same name are one candidate
+ * (`distinct`). The model read the message some time ago, so the write first
+ * checks what could have changed meanwhile: paused memory, a deleted turn, or a
+ * memory the learner removed or deleted with "Delete all" writes nothing, and a
+ * memory changed since the call read it keeps its words, its kind and its end
+ * date. It looks up the at most 12 memories the call read, so it touches a
  * bounded number of documents whatever the learner keeps (besides the one row
- * of the learner's memory state it reads first): a candidate reads at most 411
- * to find its target
- * (the one it names and a search of 410) and touches at most 419 to write it
- * (the memory and at most 416 key rows read, deleted, moved or inserted), so
- * three candidates touch at most about 2,500.
+ * of the learner's memory state it reads first): a candidate reads at most one
+ * memory to find its target and touches at most 419 to write it (the memory and
+ * at most 416 key rows read, deleted, moved or inserted), so three candidates
+ * touch at most about 1,260. When it wrote or confirmed a memory it also asks
+ * for a build of the learner's portrait, which waits (`requestPortrait`): one
+ * row read and written, and one job scheduled.
  */
 export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   readonly candidates: readonly Candidate[];
@@ -247,22 +263,25 @@ export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   }
   const now = confirmedAfterClear(yield* Clock.currentTimeMillis, clearedAt);
   const keys = yield* ensureLearnerKeys(args.userId);
-  const written = yield* Effect.forEach(args.candidates, (candidate) =>
-    writeCandidate({
-      candidate,
-      clearedAt,
-      keys,
-      now,
-      seen: args.seen,
-      topics: args.topics,
-    })
+  const written = yield* Effect.forEach(
+    distinct(args.candidates),
+    (candidate) =>
+      writeCandidate({
+        candidate,
+        clearedAt,
+        keys,
+        now,
+        seen: args.seen,
+        topics: args.topics,
+      })
   );
-  const remembered = HashSet.size(HashSet.fromIterable(Arr.getSomes(written)));
+  const remembered = HashSet.size(HashSet.fromIterable(written));
   if (remembered > 0) {
     yield* (yield* DatabaseWriter)
       .table("ninaTurns")
       .patch(turn._id, { remembered })
       .pipe(Effect.orDie);
+    yield* requestPortrait({ paused, reset: false, userId: args.userId });
   }
   return remembered;
 }, Effect.orDie);

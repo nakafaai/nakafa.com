@@ -37,11 +37,11 @@ export function researchSearchPrompt({
       - Remove answer-formatting instructions from queries: summary length, tone, output language, and citation style.
       - Preserve task-relevant user-provided strings in every query that depends on them:
         - products, APIs, libraries, and features.
-        - versions, domains, URLs, source constraints, and document titles.
+        - versions, source names, and document titles.
+        - the URL of a page that the query is about.
       - Do not translate or paraphrase those preserved strings.
-      - Every webSearch call must set sourcePreference.
-      - Use primary sourcePreference for first-party, maintainer, vendor, standards-body, paper-author, primary, or official-source requests.
-      - Use any sourcePreference only when broader credible sources are acceptable.
+      - When the task asks for results of given sites only, put the hostname of each site in the sites field of webSearch, also when the task writes the site as a URL, and not in the queries.
+      - When the task asks for an official, first-party, or primary source, write queries that reach it and name the source in the query.
       - Search named or official sources before broadening.
       - Do not rewrite a specific source request into a generic trends query.
       - Avoid YouTube, social posts, and listicles unless requested or no primary source exists.
@@ -80,6 +80,7 @@ export function researchPrompt({
       Use only provided evidence and source references:
       - Put source titles and URLs from source evidence into findings[].citations.
       - Use only URLs explicitly present in the provided evidence or source references.
+      - When the task asks for an official, first-party, or primary source, prefer the results from that source for findings and citations.
       - Keep citation data separate from finding prose.
       - Omit any finding that has no explicit source URL.
       - Do not invent sources or facts.

@@ -114,7 +114,10 @@ export function AiSheet() {
   );
 }
 
-/** The new-chat body, or the open chat once the learner has one. */
+/**
+ * The new-chat body, or the open chat once the learner has one. A chat that
+ * could not open is forgotten when the learner picks another, which opens.
+ */
 function SheetBody() {
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
@@ -133,6 +136,7 @@ function SheetBody() {
         <ErrorBoundary
           fallback={<SheetError />}
           onError={handlePrivateChatError}
+          resetKeys={[activeChatId]}
         >
           <Authenticated>
             {!!activeChatId && <SheetConversation chatId={activeChatId} />}

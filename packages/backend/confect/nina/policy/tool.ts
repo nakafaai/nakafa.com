@@ -1,12 +1,46 @@
-/** Formats Nina's tool routing, evidence, and specialist input policy. */
-export function formatToolPolicyPrompt() {
+import { registry } from "@repo/backend/confect/nina/capability/registry";
+import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
+import dedent from "dedent";
+import { Array as Arr, String as Str } from "effect";
+
+/** The spaces in front of a line of the tool policy, which the prompt's dedent removes with the rest. */
+const INDENT = "      ";
+
+/**
+ * Sets a guideline in the tool policy: its lines take the indent of the text
+ * around it, so a capability writes its guideline in plain text at any indent.
+ */
+function indented(text: string) {
+  return Arr.join(
+    Arr.map(Str.split(dedent(text), "\n"), (line) =>
+      line === "" ? line : `${INDENT}${line}`
+    ),
+    "\n"
+  );
+}
+
+/**
+ * Formats Nina's tool routing, evidence, and specialist input policy. What it
+ * says of each capability comes from the capability's own guideline, in the
+ * order of the registry, and only for the capabilities Nina is offered in the
+ * turn: a learner who paused memory gets neither the memory tool nor its rules.
+ */
+export function formatToolPolicyPrompt({
+  capabilities,
+}: {
+  readonly capabilities: readonly LearningCapabilityName[];
+}) {
+  const guidelines = Arr.map(capabilities, (name) => registry[name].guideline);
+  const entries = Arr.map(guidelines, ({ entry }) => indented(`- ${entry}`));
+  const fields = Arr.flatMap(guidelines, ({ field }) =>
+    field === undefined ? [] : [indented(`- ${field}`)]
+  );
+  const sections = Arr.map(guidelines, ({ section }) => indented(section));
   return `
       # Tool Usage Guidelines
 
       Use the smallest reliable evidence path before the final answer:
-      - Nakafa: Nakafa-owned lessons, articles, Quran references, and exercises.
-      - deepResearch: external, current, official, or source-backed claims.
-      - math: deterministic calculations, formulas, answer keys, and verification.
+${Arr.join(entries, "\n")}
 
       Answer directly only for low-risk requests that need no source, current fact, or math check:
       - greetings.
@@ -29,9 +63,7 @@ export function formatToolPolicyPrompt() {
       - avoid copying the full user message when only part is relevant.
 
       Specialist-specific fields:
-      - deepResearch.sourceRequirements: source ownership, recency, domain, URL, and credibility.
-      - nakafa.deliverables: lessons, summaries, examples, exercises, answers, Quran references, or article needs.
-      - math.given: user-provided expressions, equations, variables, assumptions, matrices, data, selected exercise content, or answer keys.
+${Arr.join(fields, "\n")}
 
       Tool inputs must not include persona rules, global formatting rules, fallback answer wording, or outcome-dependent instructions.
 
@@ -46,67 +78,7 @@ export function formatToolPolicyPrompt() {
       If evidence is missing, call the matching specialist.
       If evidence still cannot be gathered, say what could not be verified instead of guessing.
 
-      ## Nakafa
-
-      Answer from the Current Page context when it covers the request.
-      Use Nakafa first for named educational topics, lesson explanations, study requests, other sections of the current page, and educational practice.
-      Practice includes warmups, starter examples, hints, quick reviews, quizzes, tryout preparation, and preparation before practice.
-
-      Nakafa routing rules:
-      - A link to Nakafa's own site is Nakafa content: Nakafa reads it, and it never goes to deepResearch.
-      - If Nakafa cannot read an address the learner sent, tell the learner that page could not be read. Do not describe it.
-      - Preserve every requested deliverable.
-      - Include helpful retrieval context: URL, verified status, user goal, subject, grade, topic, article, exercise, or Quran context.
-      - Search first when the exact content reference is not known.
-      - Do not add a lesson or concept overview unless the user asks for one.
-      - For warmups or starter examples followed by practice, ask Nakafa for exercise evidence only; Nina can write a short setup from that evidence.
-      - If the user asks for explanation plus practice, include both needs.
-      - If the user only asks for practice, scope Nakafa to exercise retrieval and explanation.
-
-      Do not use Nakafa to fill missing evidence for external, current, official-source, or source-owned verification questions.
-      Use Nakafa after weak external research only for a separate user-requested Nakafa deliverable:
-      - lessons.
-      - exercises.
-      - Quran content.
-      - articles.
-      - practice.
-
-      ## deepResearch
-
-      Use deepResearch before answering requests for:
-      - official documentation.
-      - source-backed claims.
-      - citations.
-      - links to sites outside Nakafa.
-      - current or latest information.
-      - named products outside Nakafa.
-      This applies in every user language. Do not answer those requests from memory.
-
-      Preserve source-scoping details in request or sourceRequirements:
-      - Products, APIs, libraries, features, versions, domains, URLs, source constraints, and document titles.
-      - Official, primary, maintainer, vendor, standards-body, paper-author, or named-domain requirements.
-
-      Keep research inputs neutral when sources may be missing or weak:
-      - Ask for direct-source verification.
-      - Do not prewrite failed-verification wording.
-      - Do not tell deepResearch to say something was not found.
-
-      ## math
-
-      Use math for deterministic evidence across arithmetic, algebra, equations, inequalities, calculus, series, matrices, statistics, probability, geometry, and discrete math.
-      Use math to verify user-provided expressions, user-provided data, and math content retrieved from another evidence path.
-
-      Do not use math as the first or only source for practice sets: warmups, quizzes, tryout preparation, examples, hints, or review tasks.
-      Call Nakafa first, then use math only for deterministic verification of selected content.
-
-      Math input rules:
-      - Include the complete expression or data, target operation, variables, and learning goal when relevant.
-      - Put only user-provided or retrieved math facts in given; do not preload solution methods or derived formulas.
-      - For extrema, minimum, or maximum requests, ask math for the valid location and function value unless the user asks only for the input location.
-      - Preserve derivation, proof, and "why" deliverables so math returns the checked value plus the conceptual bridge.
-      - For multi-part requests, enumerate each calculation or verification.
-      - Do not collapse several computations into a vague objective such as "verify these calculations".
-      - If deterministic math is inconclusive, explain the limitation clearly.
+${Arr.join(sections, "\n\n")}
 
       ## Combining Agents
 

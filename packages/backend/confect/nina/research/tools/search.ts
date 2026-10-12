@@ -2,57 +2,52 @@ import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/p
 import { planSearchQueries } from "@repo/backend/confect/nina/research/query";
 import {
   researchProviderConcurrency,
-  type WebSearchInput,
   type WebSearchOutput,
   webSearchMaxQueries,
 } from "@repo/backend/confect/nina/research/schema";
 import { formatWebSearchOutput } from "@repo/backend/confect/nina/research/search/format";
 import { searchFirecrawl } from "@repo/backend/confect/nina/research/search/provider";
-import { scopeSources } from "@repo/backend/confect/nina/research/search/scope";
 import {
   addSourceCitations,
   dedupeSources,
   readSearchSources,
-  type SearchSource,
 } from "@repo/backend/confect/nina/research/search/source";
-import { selectRelevantContent } from "@repo/backend/confect/nina/research/selection";
-import { readPage } from "@repo/backend/confect/nina/research/tools/scrape";
-import { Array as Arr, Effect, HashMap, identity, Option } from "effect";
+import { readTopPages } from "@repo/backend/confect/nina/research/tools/pages";
+import { Array as Arr, Effect, HashMap, Option } from "effect";
 
 /**
- * Result pages one search reads. Measured on 10 October 2026, the search
- * provider plan reads two pages at a time and about ten a minute, and a single
- * read takes 0.9 to 5.7 seconds. A page the provider refuses is no failure.
- */
-const RESULT_PAGES = 2;
-/**
- * A result page is extra evidence, so its read gets a short limit: the search
- * returned every result's description already.
- */
-const RESULT_PAGE = { deadlineMs: 10_000, timeoutMs: 8000 };
-
-/**
- * Searches the web and writes the web search UI data part.
+ * Searches the web and writes the web search UI data part. The model wrote the
+ * queries, so each runs as written, and every result the provider returns with
+ * an address is kept once, in the provider's order, web results first and then
+ * news: no word of the tool call or the query decides which result a learner
+ * sees. The words of the tool call only decide which paragraphs of a result
+ * page are read. The sites of the call, when the model named any, restrict
+ * every query alike, and the provider alone enforces that: no result is
+ * checked against them here.
  */
 export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   queries,
-  sourcePreference,
-  task,
+  sites,
+  words,
   toolCallId,
   publish,
 }: {
   queries: readonly string[];
-  sourcePreference: WebSearchInput["sourcePreference"];
-  task: string;
+  sites?: readonly string[];
+  words: string;
   toolCallId: string;
   publish: CapabilityProgress;
 }) {
   const searchQueries = planSearchQueries({
-    task,
     maxQueries: webSearchMaxQueries,
     queries,
-    scopeByNamedPhrases: true,
   });
+  // Every card of the call says which sites it was limited to, so results of
+  // one site, or no result, read as what they are.
+  const named = sites ?? [];
+  const limited = Arr.isReadonlyArrayNonEmpty(named)
+    ? { sites: [...named] }
+    : {};
 
   yield* Effect.forEach(searchQueries, (query, index) =>
     publish({
@@ -61,6 +56,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
       data: {
         provider: "firecrawl",
         queries: [query],
+        ...limited,
         status: "loading",
         sources: [],
       },
@@ -70,7 +66,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   const searched = yield* Effect.forEach(
     searchQueries,
     (query) =>
-      searchFirecrawl(query).pipe(
+      searchFirecrawl(query, sites).pipe(
         Effect.map(({ response }) => ({
           error: undefined,
           sources: dedupeSources(readSearchSources(response)),
@@ -89,7 +85,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   );
   const pages = yield* readTopPages(
     Arr.map(searched, (found) => found.sources),
-    task
+    words
   );
 
   const searchResults = yield* Effect.forEach(searched, (found, index) =>
@@ -102,6 +98,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
           data: {
             provider: "firecrawl",
             queries: [query],
+            ...limited,
             status: "error",
             sources: [],
             error: found.error,
@@ -109,26 +106,20 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
         });
         return { error: found.error, sources: [] };
       }
-      const sources = dedupeSources(
-        scopeSources({
-          task,
-          query,
-          sourcePreference,
-          sources: Arr.map(found.sources, (source) => ({
-            ...source,
-            content: Option.getOrElse(
-              HashMap.get(pages, source.url),
-              () => source.content
-            ),
-          })),
-        })
-      );
+      const sources = Arr.map(found.sources, (source) => ({
+        ...source,
+        content: Option.getOrElse(
+          HashMap.get(pages, source.url),
+          () => source.content
+        ),
+      }));
       yield* publish({
         id: getWebSearchPartId(toolCallId, index),
         type: "data-web-search",
         data: {
           provider: "firecrawl",
           queries: [query],
+          ...limited,
           status: "done",
           sources: addSourceCitations(sources),
         },
@@ -174,42 +165,6 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     result: output,
     text: formatWebSearchOutput(output),
   };
-});
-
-/**
- * Reads the best result pages in parallel and returns their selected text by
- * address: every query's first result, then every second one, until
- * `RESULT_PAGES` distinct pages. A page that is not read in time is no failure:
- * its source keeps the description the search returned.
- */
-const readTopPages = Effect.fn("research.readTopPages")(function* (
-  results: readonly (readonly SearchSource[])[],
-  task: string
-) {
-  const depth = Arr.reduce(results, 0, (deepest, sources) =>
-    Math.max(deepest, sources.length)
-  );
-  const ranked = Arr.flatMap(Arr.makeBy(depth, identity), (rank) =>
-    Arr.flatMap(results, (sources) => Arr.fromNullishOr(sources[rank]))
-  );
-  const read = yield* Effect.forEach(
-    Arr.take(dedupeSources(ranked), RESULT_PAGES),
-    (source) =>
-      Effect.map(readPage(source.url, RESULT_PAGE), (page) =>
-        "markdown" in page
-          ? Option.some([
-              source.url,
-              selectRelevantContent({
-                content: page.markdown,
-                preserveStructure: false,
-                query: task,
-              }),
-            ] as const)
-          : Option.none()
-      ),
-    { concurrency: researchProviderConcurrency }
-  );
-  return HashMap.fromIterable(Arr.getSomes(read));
 });
 
 /** Derives the stable UI data-part id for one executed web query. */

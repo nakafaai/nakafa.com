@@ -10,8 +10,8 @@ import { useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
   CatalogCard,
-  CatalogCardGradient,
   CatalogCardImage,
+  CatalogCardTile,
 } from "@/components/shared/catalog/card";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { ComingSoon } from "@/components/shared/upcoming";
@@ -87,12 +87,12 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
             {imageSrc ? (
               <CatalogCardImage preload={index === 0} src={imageSrc} />
             ) : (
-              <CatalogCardGradient seed={country.publicPath}>
+              <CatalogCardTile seed={country.publicPath}>
                 <CountryFlagIcon
-                  className="relative h-6 w-9 rounded-xs ring-1 ring-border/60"
+                  className="h-6 w-9 rounded-xs ring-1 ring-border/60"
                   countryCode={country.countryCode}
                 />
-              </CatalogCardGradient>
+              </CatalogCardTile>
             )}
           </CatalogCard>
         );

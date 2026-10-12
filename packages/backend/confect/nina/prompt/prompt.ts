@@ -1,3 +1,4 @@
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import {
   formatEvidencePrompt,
   formatToolPolicyPrompt,
@@ -14,8 +15,14 @@ import { formatTaskPrompt } from "@repo/backend/confect/nina/prompt/task";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { Array as Arr, pipe, Schema } from "effect";
 
-/** Authenticated role, current page, learner, question focus, and summary. */
+/**
+ * Authenticated role, current page, learner, question focus, and summary, and
+ * the capabilities Nina is offered in the turn (`capabilities`). The caller
+ * always says which: a prompt that left it out would describe tools that Nina
+ * is, or is not, given.
+ */
 const SystemPromptPropsSchema = Schema.Struct({
+  capabilities: Schema.Array(LearningCapabilityNameSchema),
   focus: Schema.optional(Schema.String),
   learner: Schema.optional(Schema.String),
   pageContent: Schema.optional(Schema.String),
@@ -34,6 +41,7 @@ type SystemPromptProps = typeof SystemPromptPropsSchema.Type;
  * rest of a turn's runtime facts travel with the learner's message instead.
  */
 export function createNinaPrompt({
+  capabilities,
   focus,
   learner,
   pageContent,
@@ -43,7 +51,7 @@ export function createNinaPrompt({
   const instructions = createPrompt({
     taskContext: formatIdentityPrompt(userRole),
     toneContext: formatTonePrompt(),
-    toolUsageGuidelines: formatToolPolicyPrompt(),
+    toolUsageGuidelines: formatToolPolicyPrompt({ capabilities }),
     detailedTaskInstructions: focus
       ? Arr.join([formatTaskPrompt(), formatFocusTaskPrompt()], "\n\n")
       : formatTaskPrompt(),

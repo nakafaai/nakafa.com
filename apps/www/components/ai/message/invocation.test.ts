@@ -1,7 +1,20 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
+import de from "@repo/internationalization/dictionaries/de.json" with {
+  type: "json",
+};
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
+import id from "@repo/internationalization/dictionaries/id.json" with {
+  type: "json",
+};
 import type { DynamicToolUIPart, ToolUIPart } from "ai";
+import { Array as Arr } from "effect";
 import { readInvocation } from "@/components/ai/message/invocation";
+
+const DIGIT = /\d/u;
 
 const input = {
   expression: "1 / 0",
@@ -109,6 +122,56 @@ describe("readInvocation", () => {
       )
     ).toMatchObject({ state: "failed" });
   });
+
+  it("reads the memory capability as one row that opens to nothing, found or not", () => {
+    const found: ToolUIPart = {
+      input: { query: "my exam date" },
+      output: { artifacts: [], text: "Saved memories matched this query." },
+      state: "output-available",
+      toolCallId: "call-3",
+      type: "tool-memory",
+    };
+    expect(readInvocation(found, true)).toEqual({
+      artifacts: [],
+      capability: "memory",
+      state: "done",
+    });
+    expect(
+      readInvocation(
+        { ...found, output: { artifacts: [], outcome: "empty", text: "None" } },
+        true
+      )
+    ).toEqual({ artifacts: [], capability: "memory", state: "empty" });
+    const running: ToolUIPart = {
+      input: { query: "my exam date" },
+      state: "input-available",
+      toolCallId: "call-3",
+      type: "tool-memory",
+    };
+    expect(readInvocation(running, false)).toMatchObject({
+      capability: "memory",
+      state: "running",
+    });
+  });
+
+  it.each([
+    ["English", en],
+    ["Indonesian", id],
+    ["German", de],
+  ])(
+    "labels every capability the row can name, and its failure, in %s",
+    (_language, dictionary) => {
+      for (const capability of Arr.append(
+        LearningCapabilityNameSchema.literals,
+        "unknown"
+      )) {
+        expect(dictionary.Ai.activity).toHaveProperty(capability);
+        expect(dictionary.Ai["tool-failures"]).toHaveProperty(capability);
+      }
+      // One label for the row, with no count and no number in it.
+      expect(dictionary.Ai.activity.memory).not.toMatch(DIGIT);
+    }
+  );
 
   it("marks denials and names capabilities Nina does not own as unknown", () => {
     const denied: DynamicToolUIPart = {
