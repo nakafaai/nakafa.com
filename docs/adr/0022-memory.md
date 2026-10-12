@@ -243,39 +243,52 @@ alone. The Memory page does not use it: its search runs in the browser.
   browser holds belong to that range.
 - `add` and `edit` take the words and an optional title, never a kind, so the
   learner never picks or changes a kind. `add` stores a memory with no kind and
-  the learner as author. Editing a memory changes its words and its title, makes
-  the learner its author, and leaves its kind, topics and end time as they are.
-  A write without a title takes the title off the memory, which is how the
-  learner removes one. A chat rewrites only words that Nina wrote, so the Memory
-  page never shows Nina's wording as the learner's own, and the learner's words
-  are never replaced by a chat.
+  the learner as author. It reads the moment of the last Delete all, as `edit`
+  and the capture write do, and confirms the memory after it: the database runs
+  the write again when a Delete all commits while it runs, and a clock that has
+  not moved on never stamps the memory as one the deletion took, which every
+  reader would hide and no batch might delete. Editing a memory changes its
+  words and its title, makes the learner its author, and leaves its kind,
+  topics and end time as they are. A write without a title takes the title off
+  the memory, which is how the learner removes one. A chat rewrites only words
+  that Nina wrote, so the Memory page never shows Nina's wording as the
+  learner's own, and the learner's words are never replaced by a chat.
 - The Memory page lists the title and the words and never a kind. It shows
   every memory a learner has, however many: the settings route reads the first
   page of 30 memories and whether memory is paused for the first paint, and one
   reader in the browser then loads the next page when the end of the list comes
-  into view. The list is windowed: only the rows in view and a few around them
-  are in the page, except that the rows the server rendered stay until the
-  learner first scrolls, so hydration moves none of them. Every row has the same
-  fixed height, in pixels, so the window knows where each stands before it has
-  measured any.
+  into view. A list of a page or more is windowed: only the rows in view and a
+  few around them are in the page, except that the rows the server rendered
+  stay until the learner first scrolls, so hydration moves none of them. Every
+  row has the same fixed height, in pixels, so the window knows where each
+  stands before it has measured any. A shorter list is not windowed, because the
+  window shows only the rows it started with until the learner scrolls and
+  would start again, with every row, each time the count changed: its rows are
+  all in the page and stay in place while memories come and go.
 - The Memory page searches in the browser alone, in any part of a word of the
   title and the words of the memories it holds. While the search box holds text,
   the reader loads the pages that are not loaded yet, 50 at a time (the most a
   page holds), until every memory is loaded, and a row that matches appears as
   its page arrives and stays while it matches. "No memory found" shows only when
   every page is loaded and nothing matches. The server has no search for the
-  page. Its index finds whole words only, because the text is sealed, so in
-  Indonesian and German, with their affixes and compounds, it misses most real
-  searches. Mixed with the browser's filter it also made rows leave and come
-  back while a learner typed, so the page keeps the browser's filter alone.
+  page: its index holds only the first 6 characters of each word, as blind keys
+  of the sealed text, so a part from the middle or the end of a word, or a word
+  under an affix or inside a compound, finds nothing there. Mixed with the
+  browser's filter it also made rows leave and come back while a learner typed,
+  and the browser's filter alone finds any part of a word and keeps a row for as
+  long as it matches.
 - The editor holds the memory it opened: opening it stores the memory in the
   page's state, and the editor never looks it up in the list again, so changing
   the search or the pages that are loaded never closes it. The learner closing
   it, the learner deleting that memory (from its row, from the editor, or with
   Delete all), and a save answered with `missing` are the only things that
-  close it. It is one editor in the panel beside the page and in the sheet, so
-  a window that crosses the width where the two swap loses nothing the learner
-  wrote.
+  close it. A new memory whose first save is on its way when the learner
+  deletes everything is among the memories the server deletes, so its editor
+  closes when the server answers the save, and nothing more is written. It is
+  one editor in the panel beside the page and in the sheet, so a window that
+  crosses the width where the two swap loses nothing the learner wrote. After a
+  save that failed the editor opens again with the words the server never took,
+  and the next close writes them, whatever the memory on the page shows.
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
   because the browser has no page of its own to change until then.
