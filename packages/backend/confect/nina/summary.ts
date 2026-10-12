@@ -1,4 +1,4 @@
-import { Agent, type MessageDoc, type UsageHandler } from "@convex-dev/agent";
+import { Agent, type MessageDoc } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -9,7 +9,6 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
 import { nextSummaryTarget } from "@repo/backend/confect/nina/fold";
 import { newestAskings, questionKey } from "@repo/backend/confect/nina/history";
@@ -180,17 +179,14 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
 /**
  * Folds settled turns into the chat's rolling summary once the turns it does
  * not cover cost more than the history budget. A failure keeps the previous
- * summary; generation still bounds its history. The model call records its
- * usage in the ledger of the turn that settled, as the title and the follow-up
- * suggestions do.
+ * summary; generation still bounds its history.
  */
 export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (
     turn: Pick<
       NinaTurnsDoc,
       "chatId" | "order" | "promptMessageId" | "threadId" | "userId"
-    >,
-    usageHandler: UsageHandler
+    >
   ) {
     const { runQuery: query } = yield* QueryRunner;
     const current = yield* query(refs.internal.nina.summaries.read, {
@@ -220,10 +216,9 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     const agent = new Agent(components.nina, {
       instructions: INSTRUCTIONS,
       languageModel: handle.model,
-      name: "summary" satisfies UsageAgent,
-      usageHandler,
+      name: "summary",
     });
-    const { finishReason, text } = yield* Effect.tryPromise({
+    const { finishReason, text, usage } = yield* Effect.tryPromise({
       try: (signal) =>
         agent.generateText(
           ctx,
@@ -254,6 +249,10 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
         chatId: turn.chatId,
         text: boundText(summary, NINA_BUDGET.summary, "Summary shortened."),
         throughOrder: target,
+        usage: {
+          input: usage.inputTokens ?? 0,
+          output: usage.outputTokens ?? 0,
+        },
       })
       .pipe(Effect.orDie);
   },

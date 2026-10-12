@@ -6,14 +6,18 @@ import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel, ninaStream } from "@repo/backend/test/nina";
-import { createCapturingTest, level } from "@repo/backend/test/nina/capture";
+import {
+  createCapturingTest,
+  level,
+  MESSAGE,
+} from "@repo/backend/test/nina/capture";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { createSilentTest } from "@repo/backend/test/nina/silent";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -279,6 +283,32 @@ describe("The Nina response among its follow-up work", () => {
       "Understanding A Function Limit"
     );
   });
+
+  it("keeps the tokens of a summary fold on the summary row and puts none in the ledger of the turn, which every web build decodes by the agent names it was built with", async () => {
+    // Six earlier turns of about 6,000 tokens outweigh the history budget, so
+    // the turn that settles folds them into the summary. It is not the first
+    // turn of its chat, so it gets no title.
+    const f = await createCapturingTest(
+      MESSAGE,
+      Arr.makeBy(6, () => ({ tokens: 6000 }))
+    );
+    const generate = turnModel();
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    // The capture, the suggestions and the fold each asked the model once.
+    expect(generate).toHaveBeenCalledTimes(3);
+    const agents = Arr.map((await f.turn())?.usage ?? [], ({ agent }) => agent);
+    expect(Arr.sort(agents, Order.String)).toEqual([
+      "memory",
+      "nina",
+      "suggestions",
+    ]);
+    expect(
+      await f.t.query((ctx) => ctx.db.query("ninaSummaries").collect())
+    ).toEqual([
+      expect.objectContaining({ usage: { calls: 1, input: 12, output: 4 } }),
+    ]);
+  }, 30_000);
 
   it("saves the memory, the suggestions and the title when the summary dies, and raises that failure once they are done", async () => {
     const f = await createCapturingTest();

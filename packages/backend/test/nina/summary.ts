@@ -2,12 +2,10 @@ import { Ref } from "@confect/core";
 import { RegisteredFunction } from "@confect/server";
 import { createThread, saveMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
-import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
-import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -18,7 +16,7 @@ import { providerStep } from "@repo/backend/test/nina/specialist";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 8, 27, 12);
 const read = Ref.getFunctionReference(refs.internal.nina.summaries.read);
@@ -101,7 +99,6 @@ export async function createSummaryTest(
       updatedAt: NOW,
     });
     let prompts: string[] = [];
-    let turnIds: NinaTurnsDoc["_id"][] = [];
     for (let order = 0; order < turns; order += 1) {
       const {
         cancelled = false,
@@ -129,7 +126,7 @@ export async function createSummaryTest(
           patch: { status: "failed", error: "cancelled" },
         });
       }
-      const turnId = await ctx.db.insert("ninaTurns", {
+      await ctx.db.insert("ninaTurns", {
         chatId,
         order,
         phase: "settled",
@@ -142,28 +139,21 @@ export async function createSummaryTest(
         userId,
         ...(retryOf === undefined ? {} : { retryOf }),
       });
-      turnIds = Arr.append(turnIds, turnId);
     }
-    return { chatId, prompts, threadId, turnIds, userId };
+    return { chatId, prompts, threadId, userId };
   });
   const settled = (order: number) => ({
     ...setup,
     order,
     promptMessageId: setup.prompts[order] ?? "",
   });
-  const turnId = (order: number) =>
-    Option.getOrThrow(Arr.get(setup.turnIds, order));
   // Refreshes the summary as the turn at `order` settles, optionally reading
   // another thread, and returns the arguments of the queries the refresh made.
-  // The model call records its usage in the ledger of that turn.
   const refresh = (order: number, threadId = setup.threadId) =>
     t.action(async (ctx) => {
       const runQuery = vi.spyOn(ctx, "runQuery");
       await Effect.runPromise(
-        createUsageHandler(turnId(order)).pipe(
-          Effect.flatMap((usageHandler) =>
-            refreshSummary({ ...settled(order), threadId }, usageHandler)
-          ),
+        refreshSummary({ ...settled(order), threadId }).pipe(
           Effect.provide([
             GatewayTest,
             RegisteredFunction.actionLayer(schema, ctx),
@@ -172,15 +162,10 @@ export async function createSummaryTest(
       );
       return Arr.map(runQuery.mock.calls, ([, args]) => args);
     });
-  // The row of the turn at `order`, with the ledger of its model calls.
-  const turn = (order: number) =>
-    t.query((ctx) => ctx.db.get("ninaTurns", turnId(order)));
   const summary = () =>
     t.query((ctx) => ctx.db.query("ninaSummaries").collect());
   // Stores the summary an earlier fold left, which covers the turns through
-  // `throughOrder`. It is a row from before a fold recorded its tokens in the
-  // ledger of its turn, so it holds the total of one call, which a refresh
-  // leaves as it is.
+  // `throughOrder` and has cost one call.
   const seed = (throughOrder: number, text: string) =>
     t.mutation(async (ctx) =>
       ctx.db.insert("ninaSummaries", {
@@ -226,6 +211,5 @@ export async function createSummaryTest(
     summary,
     t,
     text,
-    turn,
   };
 }

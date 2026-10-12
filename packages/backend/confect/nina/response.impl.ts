@@ -87,10 +87,12 @@ const present = FunctionImpl.make(
     // independent follow-up work. Each runs to its end whatever the others do,
     // because a step that dies would otherwise cancel the ones still running.
     // Their failures are raised together once all have ended, so none is lost.
+    // The summary gets no usage handler: it is chat upkeep, so its tokens stay
+    // on its own row (`NinaUpkeepCall`) and not in the ledger of the turn.
     yield* Effect.all(
       [
         Effect.exit(generatePresentation(turn, usageHandler)),
-        Effect.exit(refreshSummary(turn, usageHandler)),
+        Effect.exit(refreshSummary(turn)),
         Effect.exit(captureMemory(turn, usageHandler)),
       ],
       { concurrency: "unbounded" }

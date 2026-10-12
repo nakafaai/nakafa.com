@@ -1,16 +1,18 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { NinaUpkeepTotal } from "@repo/backend/confect/nina/contract/usage";
+import {
+  NinaUpkeepCall,
+  NinaUpkeepTotal,
+} from "@repo/backend/confect/nina/contract/usage";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema, Struct } from "effect";
 
 const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 
 /**
- * A chat's rolling summary of every turn up to and including `throughOrder`. A
- * refresh records its model call in the usage ledger of the turn that settled
- * (ADR 0001), so the row keeps no total of it. `usage` is the total that rows
- * written before that kept: nothing reads it, and a row written now has none.
+ * A chat's rolling summary of every turn up to and including `throughOrder`.
+ * Refreshes are chat upkeep rather than part of a turn's answer, so their
+ * provider usage accumulates here instead of in a turn's usage ledger.
  */
 export const NinaSummary = Schema.Struct({
   chatId: Id("chats"),
@@ -18,7 +20,7 @@ export const NinaSummary = Schema.Struct({
   text: Sealed,
   throughOrder: TurnOrder,
   updatedAt: Schema.Finite,
-  usage: Schema.optionalKey(NinaUpkeepTotal),
+  usage: NinaUpkeepTotal,
 });
 
 /** The summary facts generation and refresh read back, with the text opened. */
@@ -90,6 +92,7 @@ export default GroupSpec.make()
           .fields,
         // The caller sends plain text and the mutation seals it.
         text: Schema.String,
+        usage: NinaUpkeepCall,
       }),
       returns: () => Schema.Null,
     })

@@ -337,8 +337,9 @@ to the model is as it read it, so a build that was running when the learner
 deleted or rewrote a memory, or deleted them all, or paused memory, stores
 nothing. A build with no memory newer than the portrait asks no model. The
 tokens of its one call are added to the portrait row (`usage`: the calls and
-their input and output tokens), because a build belongs to no turn and so to no
-turn's usage ledger. They count when the text is not stored too.
+their input and output tokens), as a summary's are to its row, because a build
+belongs to no turn and so to no turn's usage ledger. They count when the text is
+not stored too.
 
 A memory is independent of chats. Deleting a chat deletes no memory, not even
 one Nina wrote from that chat. Only three things delete a memory, and each

@@ -11,49 +11,53 @@ const uncovered = Ref.getFunctionReference(
   refs.internal.nina.summaries.uncovered
 );
 const asked = Ref.getFunctionReference(refs.internal.nina.summaries.asked);
+const call = { input: 900, output: 120 };
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
 describe("Nina summary storage", () => {
-  it("stores, reads, and advances one summary per chat, with no token total of its own", async () => {
+  it("stores, reads, and advances one summary per chat", async () => {
     const { t, chatId } = await createNinaTest();
     expect(await t.query(read, { chatId })).toBeNull();
     await t.mutation(save, {
       chatId,
       text: "- First fold.",
       throughOrder: 3,
+      usage: call,
     });
     await t.mutation(save, {
       chatId,
       text: "- Second fold.",
       throughOrder: 7,
+      usage: call,
     });
     expect(await t.query(read, { chatId })).toEqual({
       text: "- Second fold.",
       throughOrder: 7,
     });
-    const rows = await t.query((ctx) =>
-      ctx.db.query("ninaSummaries").collect()
-    );
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).not.toHaveProperty("usage");
+    expect(
+      await t.query((ctx) => ctx.db.query("ninaSummaries").collect())
+    ).toEqual([
+      expect.objectContaining({
+        usage: { calls: 2, input: 1800, output: 240 },
+      }),
+    ]);
   });
 
-  it("never lets a slower refresh replace newer coverage, and writes nothing for it", async () => {
+  it("never lets a slower refresh replace newer coverage but counts its usage", async () => {
     const { t, chatId } = await createNinaTest();
     await t.mutation(save, {
       chatId,
       text: "- Newer.",
       throughOrder: 7,
+      usage: call,
     });
-    const before = await t.query((ctx) =>
-      ctx.db.query("ninaSummaries").collect()
-    );
     await t.mutation(save, {
       chatId,
       text: "- Older.",
       throughOrder: 3,
+      usage: call,
     });
     expect(await t.query(read, { chatId })).toEqual({
       text: "- Newer.",
@@ -61,7 +65,11 @@ describe("Nina summary storage", () => {
     });
     expect(
       await t.query((ctx) => ctx.db.query("ninaSummaries").collect())
-    ).toEqual(before);
+    ).toEqual([
+      expect.objectContaining({
+        usage: { calls: 2, input: 1800, output: 240 },
+      }),
+    ]);
   });
 
   it("stores the text sealed, so a table export shows no text, and reads it back as text", async () => {
@@ -70,6 +78,7 @@ describe("Nina summary storage", () => {
       chatId,
       text: "- Sealed row about limits.",
       throughOrder: 7,
+      usage: call,
     });
     const [row] = await t.query((ctx) =>
       ctx.db.query("ninaSummaries").collect()
@@ -88,6 +97,7 @@ describe("Nina summary storage", () => {
       chatId,
       text: "- Soon orphaned.",
       throughOrder: 3,
+      usage: call,
     });
     await t.mutation((ctx) => ctx.db.delete("chats", chatId));
     expect(await t.query(read, { chatId })).toBeNull();
@@ -100,6 +110,7 @@ describe("Nina summary storage", () => {
       chatId,
       text: "- Orphan.",
       throughOrder: 3,
+      usage: call,
     });
     expect(
       await t.query((ctx) => ctx.db.query("ninaSummaries").collect())

@@ -169,10 +169,12 @@ failures and folds, and Nina has none.
 The summary, at most 2,000 tokens, stays in the language of the conversation,
 adds no fact the turns did not state, sits in the system prompt context and is
 deleted with its chat. Its
-refreshes are chat upkeep that run after a turn settles. Each refresh records
-its model call in the ledger of that turn as the `summary` agent, like the title
-and the suggestions, and the summary row keeps no total of its own. The learner
-profile and learner memory follow [ADR 0022](./0022-memory.md). Old
+refreshes are chat upkeep, so their provider usage accumulates on the summary
+rather than in a turn's usage ledger, which clients read: a web build decodes
+only the agent names it was built with, so a refresh recorded under a name of
+its own would stop every build opened before that deploy from reading its
+conversation until it reloaded. The learner profile
+and learner memory follow [ADR 0022](./0022-memory.md). Old
 reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000
@@ -254,7 +256,11 @@ at each and what it leaves to the author.
    refs, so the registry would bring every runner into the page. Enforced: the
    ledger accepts no other name, and the output caps of the release gate follow
    the table and name no agent. A runner writes its Agent's name with
-   `satisfies UsageAgent`, so it does not compile until the line exists.
+   `satisfies UsageAgent`, so it does not compile until the line exists. Left
+   to the author: every web build decodes the ledger with the names it was built
+   with, so the web build that knows a new name ships first and the run records
+   under it once the older builds are gone, by the rollout rule of
+   `packages/backend/AGENTS.md`.
 3. Define it in `<folder>/capability.ts` with `defineCapability`: the
    description the model reads, the Schema of its input, its guideline for the
    tool policy (`entry`, `field` when its input has a field of its own,

@@ -10,6 +10,7 @@ import {
   summaryModel,
 } from "@repo/backend/test/nina/summary";
 import { encodeJsonText } from "@repo/utilities/json";
+import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Predicate } from "effect";
 
 /** A turn whose answer costs about 6,000 tokens, so six of them outweigh the history budget. */
@@ -77,29 +78,6 @@ describe("Nina rolling summary", () => {
     expect(encodeJsonText(shown)).toContain('"Question 4"');
     expect(encodeJsonText(shown)).toContain('"Question 5"');
   }, 15_000);
-
-  it("records the fold's model call in the ledger of the turn that settled, as the summary agent, and keeps no total on the summary row", async () => {
-    provider.languageModel.mockReturnValue(
-      summaryModel("- The learner studied limits.")
-    );
-    const f = await createSummaryTest(9, () => BIG);
-    await f.refresh(8);
-    const settled = await f.turn(8);
-    expect(settled?.usage).toEqual([
-      expect.objectContaining({
-        agent: "summary",
-        calls: 1,
-        input: 12,
-        output: 4,
-      }),
-    ]);
-    // The turn is settled, so its token totals follow its ledger.
-    expect(settled?.tokens).toEqual({ input: 12, output: 4, total: 16 });
-    const rows = await f.summary();
-    expect(rows).toEqual([expect.objectContaining({ throughOrder: 6 })]);
-    // The fold's tokens go to the ledger of its turn, so the row keeps no total.
-    expect(rows[0]).not.toHaveProperty("usage");
-  });
 
   it("folds a question the learner asked again once, in its newest asking, and leaves out a cancelled turn", async () => {
     const model = summaryModel("- A tidy fold.");
@@ -173,8 +151,7 @@ describe("Nina rolling summary", () => {
       expect.objectContaining({
         text: expect.any(ArrayBuffer),
         throughOrder: 9,
-        // The total that the older row holds stays as it was: a refresh adds none.
-        usage: { calls: 1, input: 900, output: 120 },
+        usage: { calls: 2, input: 912, output: 124 },
       }),
     ]);
     expect(await f.text()).toBe("- Limits, then derivatives.");
@@ -259,6 +236,41 @@ describe("Nina rolling summary", () => {
       expect.objectContaining({ throughOrder: 15 }),
     ]);
   }, 15_000);
+
+  it("records zero tokens when the provider omits usage counters", async () => {
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doGenerate: () =>
+          Promise.resolve({
+            content: [{ type: "text", text: "- A counted fold." }],
+            finishReason: { unified: "stop", raw: "stop" },
+            usage: {
+              inputTokens: {
+                total: undefined,
+                noCache: undefined,
+                cacheRead: undefined,
+                cacheWrite: undefined,
+              },
+              outputTokens: {
+                total: undefined,
+                text: undefined,
+                reasoning: undefined,
+              },
+            },
+            warnings: [],
+          }),
+      })
+    );
+    const f = await createSummaryTest(9, () => BIG);
+    await f.refresh(8);
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({
+        text: expect.any(ArrayBuffer),
+        usage: { calls: 1, input: 0, output: 0 },
+      }),
+    ]);
+    expect(await f.text()).toBe("- A counted fold.");
+  });
 
   it.each([
     ["the provider fails", failingModel()],

@@ -16,6 +16,11 @@ const Tokens = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
  * imports this module and the browser loads that schema through the generated
  * refs, so the registry would bring every runner into the page. A runner is
  * held to the list instead: it names its Agent `satisfies UsageAgent`.
+ *
+ * A turn's ledger is part of what a client reads (`NinaTurnSummary`), and a web
+ * build decodes only the names it was built with, so a name added here is a
+ * rollout step (ADR 0001, "Adding a capability"). Work that belongs to no
+ * turn's answer is not here: its row keeps the total (`NinaUpkeepCall`).
  */
 const AGENT_PURPOSES = {
   nina: "chat",
@@ -27,7 +32,6 @@ const AGENT_PURPOSES = {
   title: "presentation",
   "nina-repair": "background",
   memory: "background",
-  summary: "background",
 } satisfies Rec.ReadonlyRecord<string, Purpose>;
 
 const UsageAgentSchema = Schema.Literals(Rec.keys(AGENT_PURPOSES));
@@ -60,9 +64,9 @@ export const NinaUsageTotal = Schema.Struct({
 });
 
 /**
- * The provider tokens of one model call that belongs to no turn, such as a
- * portrait build. Such work has no turn ledger, so its row keeps the total
- * (`NinaUpkeepTotal`).
+ * The provider tokens of one model call that belongs to no turn's answer, such
+ * as a summary refresh or a portrait build. Such work has no turn ledger, so its
+ * row keeps the total (`NinaUpkeepTotal`).
  */
 export const NinaUpkeepCall = Schema.Struct({ input: Tokens, output: Tokens });
 
