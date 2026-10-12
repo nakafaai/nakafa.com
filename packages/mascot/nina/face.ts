@@ -1,6 +1,6 @@
 import { NINA, POP, SOFT_PINK } from "@repo/mascot/color";
 import { EYES, type EyeSchema } from "@repo/mascot/nina/eye";
-import { ink } from "@repo/mascot/nina/ink";
+import { free } from "@repo/mascot/nina/ink";
 import type { Mark } from "@repo/mascot/nina/mark";
 import { MOUTHS, type MouthSchema } from "@repo/mascot/nina/mouth";
 import { tenth } from "@repo/mascot/round";
@@ -93,17 +93,16 @@ const EXTRAS = {
   ],
   // Three short strokes of surprise above her right lobe.
   marks: [
-    ink("M176,44 L180,30", 4),
-    ink("M188,50 L198,40", 4),
-    ink("M194,62 L206,58", 4),
+    free("M176,44 L180,30"),
+    free("M188,50 L198,40"),
+    free("M194,62 L206,58"),
   ],
   none: [],
   sparkle: [sparkle(172, 28, 10, POP.yellow)],
   // A small coil of confusion over her right lobe.
   swirl: [
-    ink(
-      "M176,44 C170,36 178,26 188,30 C198,34 196,48 186,48 C180,48 178,40 184,38",
-      4
+    free(
+      "M176,44 C170,36 178,26 188,30 C198,34 196,48 186,48 C180,48 178,40 184,38"
     ),
   ],
   // One tear under her left eye.

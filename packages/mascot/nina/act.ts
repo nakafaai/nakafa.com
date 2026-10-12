@@ -1,4 +1,4 @@
-import { ink } from "@repo/mascot/nina/ink";
+import { free } from "@repo/mascot/nina/ink";
 import { type Curve, flip } from "@repo/mascot/nina/limb";
 import { at } from "@repo/mascot/nina/point";
 import {
@@ -129,9 +129,9 @@ function pointing(t: number): Pose {
   return {
     ...p,
     above: [
-      ink(`M${at(232 + reach, 124)} L${at(240 + reach, 116)}`, 4),
-      ink(`M${at(236 + reach, 138)} L${at(246 + reach, 138)}`, 4),
-      ink(`M${at(232 + reach, 152)} L${at(240 + reach, 160)}`, 4),
+      free(`M${at(232 + reach, 124)} L${at(240 + reach, 116)}`),
+      free(`M${at(236 + reach, 138)} L${at(246 + reach, 138)}`),
+      free(`M${at(232 + reach, 152)} L${at(240 + reach, 160)}`),
     ],
     armL: sway(p.armL, t, 0.3, 1),
     armR: [124, 146, 176, 148, 198 + reach, 154, 220 + reach, 138],

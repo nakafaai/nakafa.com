@@ -182,15 +182,19 @@ export function compose(
     };
   }
   const lean = LEANS[options.lean ?? "center"];
-  const placed = group(mirror(figure(pose, mood, look, mode)), {
-    transform: `translate(${100 + lean.x} ${200 + lean.y}) rotate(${lean.turn}) scale(${lean.size}) translate(-102 -200)`,
-  });
+  const transform = `translate(${100 + lean.x} ${200 + lean.y}) rotate(${lean.turn}) scale(${lean.size}) translate(-102 -200)`;
+  const drawn = mirror(figure(pose, mood, look, mode));
+  if (options.tile === undefined) {
+    return { box: HALF_BOX, shapes: [group(drawn, { transform })] };
+  }
+  // The ground of a tile is hers, so a line that stands free on it is drawn in
+  // her ink and not in the colour of the page's text.
   return {
     box: HALF_BOX,
-    shapes:
-      options.tile === undefined
-        ? [placed]
-        : [rect({ fill: POP[options.tile], height: 200, width: 200 }), placed],
+    shapes: [
+      rect({ fill: POP[options.tile], height: 200, width: 200 }),
+      group(drawn, { color: NINA.ink, transform }),
+    ],
   };
 }
 

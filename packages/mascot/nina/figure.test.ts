@@ -1,8 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { NINA, POP } from "@repo/mascot/color";
+import { NINA, POP, TEXT } from "@repo/mascot/color";
 import { ACTS, ActSchema } from "@repo/mascot/nina/act";
 import { compose, place, scene } from "@repo/mascot/nina/figure";
 import type { Mark } from "@repo/mascot/nina/mark";
+import type { Options } from "@repo/mascot/nina/options";
 import type { Place } from "@repo/mascot/nina/point";
 import { armLeft, type Pose, REST } from "@repo/mascot/nina/pose";
 import { CASES, DIGESTS, digestOf } from "@repo/mascot/nina/test.fixture";
@@ -34,6 +35,27 @@ function flat(shapes: readonly Shape<Mark>[]): readonly Shape<Mark>[] {
   return Arr.flatMap(shapes, (shape) =>
     shape._tag === "g" ? [shape, ...flat(shape.children)] : [shape]
   );
+}
+
+/**
+ * The colour that each free line of a picture is drawn in: the one its nearest
+ * group hands down, and the colour of the text around her when none does.
+ */
+function freeLines(
+  shapes: readonly Shape<Mark>[],
+  handed: string = TEXT
+): readonly string[] {
+  return Arr.flatMap(shapes, (shape) => {
+    if (shape._tag === "g") {
+      return freeLines(shape.children, shape.color ?? handed);
+    }
+    return shape.stroke === TEXT ? [handed] : [];
+  });
+}
+
+/** The free lines of her, as options ask for her. */
+function freeLinesOf(options: Options) {
+  return freeLines(scene(options).shapes);
 }
 
 /** The middle of two places. */
@@ -160,6 +182,38 @@ describe("the drawing of Nina", () => {
     expect(scene({ act: "reading", look: LOOK, t: 1.1, whole: true })).toEqual(
       scene({ act: "reading", t: 1.1, whole: true })
     );
+  });
+});
+
+describe("a line of hers that stands free of her body", () => {
+  it("takes the color of the text around her, so it shows on a dark page as on a light one", () => {
+    expect(freeLinesOf({ mood: "confused", whole: true })).toEqual([TEXT]);
+    expect(freeLinesOf({ mood: "surprised", whole: true })).toEqual([
+      TEXT,
+      TEXT,
+      TEXT,
+    ]);
+    expect(
+      freeLinesOf({ act: "pointing", mood: "hello", whole: true })
+    ).toEqual([TEXT, TEXT, TEXT]);
+    expect(freeLinesOf({ lean: "peek", mood: "confused" })).toEqual([TEXT]);
+    expect(freeLinesOf({ mood: "confused", side: "left" })).toEqual([TEXT]);
+  });
+
+  it("is drawn in her ink on the ground of a tile, which is hers and the same in every theme", () => {
+    for (const tile of Rec.keys(POP)) {
+      expect(freeLinesOf({ mood: "confused", tile }), tile).toEqual([NINA.ink]);
+      expect(freeLinesOf({ mood: "surprised", tile }), tile).toEqual([
+        NINA.ink,
+        NINA.ink,
+        NINA.ink,
+      ]);
+    }
+  });
+
+  it("is the only thing she draws in the color of the text", () => {
+    expect(freeLinesOf({ mood: "hello", whole: true })).toEqual([]);
+    expect(freeLinesOf({ mood: "asleep", tile: "blue" })).toEqual([]);
   });
 });
 
