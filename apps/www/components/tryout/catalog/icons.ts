@@ -1,72 +1,135 @@
 import {
-  AbsoluteIcon,
-  BookEditIcon,
+  BoardMathIcon,
+  BookOpenTextIcon,
+  BorobudurIcon,
   Brain02Icon,
+  Building02Icon,
+  Building04Icon,
+  Building05Icon,
+  Building06Icon,
+  Calendar01Icon,
+  Calendar02Icon,
   Calendar03Icon,
-  Certificate02Icon,
-  ChatQuestionIcon,
-  File01Icon,
-  LanguageSkillIcon,
+  CalendarCheck01Icon,
+  CalendarDate1Icon,
+  CalendarFavorite01Icon,
+  CalendarFoldIcon,
+  CalendarsIcon,
+  Castle02Icon,
+  Knowledge01Icon,
+  LandmarkIcon,
+  LibraryBigIcon,
+  MonasIcon,
   Mortarboard02Icon,
   PuzzleIcon,
+  Quiz04Icon,
   RankingIcon,
-  SchoolReportCardIcon,
+  SquareRootSquareIcon,
+  TextFontIcon,
+  TranslateIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { TryoutTrackKindSchema } from "@nakafa/aksara-contracts/tryout/spec";
-import { getMaterialIcon } from "@repo/contents/curriculum/material";
-import { Match } from "effect";
+import { getMaterialIcons } from "@repo/contents/curriculum/material";
+import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
+import { type Array as Arr, Match } from "effect";
 
-/** Exam subjects and subtests that are not curriculum materials. */
-const examSubjectIcons = {
-  "english-language": LanguageSkillIcon,
-  "general-knowledge-and-understanding": BookEditIcon,
-  "general-reasoning": Brain02Icon,
-  "indonesian-language": ChatQuestionIcon,
-  "literacy-in-english": LanguageSkillIcon,
-  "literacy-in-indonesian": ChatQuestionIcon,
-  "mathematical-reasoning": PuzzleIcon,
-  "quantitative-knowledge": AbsoluteIcon,
-  "reading-comprehension-and-writing": File01Icon,
+/** The exams that the catalog knows, each with an icon of its own. */
+export const TRYOUT_EXAM_ICONS = {
+  snbt: RankingIcon,
+  tka: Quiz04Icon,
 } satisfies Record<string, IconSvgElement>;
 
-type ExamSubjectKey = keyof typeof examSubjectIcons;
+/**
+ * The exam subjects and subtests that are not curriculum materials, each with
+ * an icon of its own. A subject or a section keeps its icon whether a track or
+ * a row of a set shows it.
+ */
+export const TRYOUT_SUBJECT_ICONS = {
+  "compulsory-mathematics": BoardMathIcon,
+  "english-language": TranslateIcon,
+  "general-knowledge-and-understanding": Knowledge01Icon,
+  "general-reasoning": Brain02Icon,
+  "indonesian-language": BorobudurIcon,
+  "literacy-in-english": TextFontIcon,
+  "literacy-in-indonesian": MonasIcon,
+  "mathematical-reasoning": PuzzleIcon,
+  "quantitative-knowledge": SquareRootSquareIcon,
+  "reading-comprehension-and-writing": BookOpenTextIcon,
+} satisfies Record<string, IconSvgElement>;
 
-function isExamSubjectKey(key: string): key is ExamSubjectKey {
-  return Object.hasOwn(examSubjectIcons, key);
+/** The calendars that the year tracks of one exam take apart, one each. */
+export const TRYOUT_YEAR_ICONS: Arr.NonEmptyReadonlyArray<IconSvgElement> = [
+  Calendar03Icon,
+  Calendar01Icon,
+  Calendar02Icon,
+  CalendarDate1Icon,
+  CalendarFoldIcon,
+  CalendarsIcon,
+  CalendarCheck01Icon,
+  CalendarFavorite01Icon,
+];
+
+/** The icons that the institution tracks of one exam take apart, one each. */
+export const TRYOUT_INSTITUTION_ICONS: Arr.NonEmptyReadonlyArray<IconSvgElement> =
+  [
+    Mortarboard02Icon,
+    LandmarkIcon,
+    Castle02Icon,
+    Building04Icon,
+    LibraryBigIcon,
+    Building06Icon,
+    Building05Icon,
+    Building02Icon,
+  ];
+
+function isExamKey(key: string): key is keyof typeof TRYOUT_EXAM_ICONS {
+  return Object.hasOwn(TRYOUT_EXAM_ICONS, key);
 }
 
-/** Resolves one try-out exam identity to its stable selector icon. */
-export function getTryoutExamIcon(examKey: string): IconSvgElement {
-  return Match.value(examKey).pipe(
-    Match.when("snbt", () => RankingIcon),
-    Match.when("tka", () => SchoolReportCardIcon),
-    Match.orElse(() => Certificate02Icon)
-  );
+function isExamSubjectKey(
+  key: string
+): key is keyof typeof TRYOUT_SUBJECT_ICONS {
+  return Object.hasOwn(TRYOUT_SUBJECT_ICONS, key);
 }
 
 /**
- * Resolves one subject or subtest identity, shared by subject tracks and the
- * sections they hold, to its icon. Curriculum subjects reuse material icons.
+ * Resolves the icons that one exam may show: its own, or the spare icons for an
+ * exam that the catalog does not know yet, so it never borrows the icon of
+ * another exam.
  */
-export function getTryoutSubjectIcon(key: string): IconSvgElement {
-  if (isExamSubjectKey(key)) {
-    return examSubjectIcons[key];
-  }
-  return getMaterialIcon(
-    key === "compulsory-mathematics" ? "mathematics" : key
-  );
+export function getTryoutExamIcons(
+  examKey: string
+): Arr.NonEmptyReadonlyArray<IconSvgElement> {
+  return isExamKey(examKey) ? [TRYOUT_EXAM_ICONS[examKey]] : SPARE_ICONS;
 }
 
-/** Resolves one track identity to its year, institution, or subject icon. */
-export function getTryoutTrackIcon(
+/**
+ * Resolves the icons that one subject or subtest may show, shared by the subject
+ * tracks and the sections they hold: its own, or for a curriculum subject the
+ * icon of that subject, or else the spare icons.
+ */
+export function getTryoutSubjectIcons(
+  key: string
+): Arr.NonEmptyReadonlyArray<IconSvgElement> {
+  return isExamSubjectKey(key)
+    ? [TRYOUT_SUBJECT_ICONS[key]]
+    : getMaterialIcons(key);
+}
+
+/**
+ * Resolves the icons that one track may show: the calendars of a year track,
+ * the buildings of an institution track, and the icons of the subject of a
+ * subject track. Tracks of one kind take them apart.
+ */
+export function getTryoutTrackIcons(
   trackKind: typeof TryoutTrackKindSchema.Type,
   trackKey: string
-): IconSvgElement {
+): Arr.NonEmptyReadonlyArray<IconSvgElement> {
   return Match.value(trackKind).pipe(
-    Match.when("year", () => Calendar03Icon),
-    Match.when("institution", () => Mortarboard02Icon),
-    Match.when("subject", () => getTryoutSubjectIcon(trackKey)),
+    Match.when("year", () => TRYOUT_YEAR_ICONS),
+    Match.when("institution", () => TRYOUT_INSTITUTION_ICONS),
+    Match.when("subject", () => getTryoutSubjectIcons(trackKey)),
     Match.exhaustive
   );
 }

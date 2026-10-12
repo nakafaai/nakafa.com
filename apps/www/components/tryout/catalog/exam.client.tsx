@@ -5,6 +5,7 @@ import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { TileIcon } from "@repo/design-system/components/ui/tile";
+import { getTileLooks } from "@repo/design-system/lib/tile";
 
 import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
@@ -15,7 +16,7 @@ import {
   CatalogCardTile,
 } from "@/components/shared/catalog/card";
 import { ComingSoon } from "@/components/shared/upcoming";
-import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
+import { getTryoutTrackIcons } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { getTryoutTrackCatalogArtwork } from "@/lib/tryout/artwork";
 
@@ -35,10 +36,21 @@ export function TryoutExamPageClient({
     return <ComingSoon />;
   }
 
+  const looks = getTileLooks(
+    Arr.map(
+      page.tracks,
+      (track) =>
+        [
+          getTryoutTrackIcons(track.trackKind, track.trackKey),
+          track.trackKey,
+        ] as const
+    )
+  );
+
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-24">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {Arr.map(page.tracks, (track, index) => {
+        {Arr.map(Arr.zip(page.tracks, looks), ([track, look], index) => {
           const imageSrc = getTryoutTrackCatalogArtwork(locale, {
             countryKey: page.country.countryKey,
             examKey: page.exam.examKey,
@@ -59,10 +71,8 @@ export function TryoutExamPageClient({
               {imageSrc ? (
                 <CatalogCardImage preload={index === 0} src={imageSrc} />
               ) : (
-                <CatalogCardTile seed={track.publicPath}>
-                  <TileIcon
-                    icon={getTryoutTrackIcon(track.trackKind, track.trackKey)}
-                  />
+                <CatalogCardTile seed={look.seed} shift={look.shift}>
+                  <TileIcon icon={look.icon} />
                 </CatalogCardTile>
               )}
             </CatalogCard>

@@ -5,6 +5,7 @@ import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { TileIcon } from "@repo/design-system/components/ui/tile";
+import { getTileLooks } from "@repo/design-system/lib/tile";
 import { Array as Arr, Schema } from "effect";
 
 import {
@@ -13,7 +14,7 @@ import {
   CatalogCardTile,
 } from "@/components/shared/catalog/card";
 import { ComingSoon } from "@/components/shared/upcoming";
-import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
+import { getTryoutExamIcons } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type CountryPageQuery = typeof tryouts.queries.catalog.getCountryPage;
@@ -39,9 +40,16 @@ export function TryoutCountryPageClient({
     return <ComingSoon />;
   }
 
+  const looks = getTileLooks(
+    Arr.map(
+      page.exams,
+      (exam) => [getTryoutExamIcons(exam.examKey), exam.examKey] as const
+    )
+  );
+
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(page.exams, (exam, index) => (
+      {Arr.map(Arr.zip(page.exams, looks), ([exam, look], index) => (
         <CatalogCard
           action={
             <IntentLink href={getTryoutPublicPathHref(exam.publicPath)} />
@@ -53,8 +61,8 @@ export function TryoutCountryPageClient({
           {exam.imageSrc ? (
             <CatalogCardImage preload={index === 0} src={exam.imageSrc} />
           ) : (
-            <CatalogCardTile seed={exam.publicPath}>
-              <TileIcon icon={getTryoutExamIcon(exam.examKey)} />
+            <CatalogCardTile seed={look.seed} shift={look.shift}>
+              <TileIcon icon={look.icon} />
             </CatalogCardTile>
           )}
         </CatalogCard>

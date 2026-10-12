@@ -4,6 +4,7 @@ import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { getTileShifts } from "@repo/design-system/lib/tile";
 import { Array as Arr, Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -65,9 +66,13 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
     ).then(() => undefined);
   }
 
+  const shifts = getTileShifts(
+    Arr.map(page.countries, (country) => country.countryKey)
+  );
+
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(page.countries, (country, index) => {
+      {Arr.map(Arr.zip(page.countries, shifts), ([country, shift], index) => {
         const imageSrc = getTryoutCountryCatalogArtwork(locale, {
           countryKey: country.countryKey,
         });
@@ -87,7 +92,7 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
             {imageSrc ? (
               <CatalogCardImage preload={index === 0} src={imageSrc} />
             ) : (
-              <CatalogCardTile seed={country.publicPath}>
+              <CatalogCardTile seed={country.countryKey} shift={shift}>
                 <CountryFlagIcon
                   className="h-6 w-9 rounded-xs ring-1 ring-border/60"
                   countryCode={country.countryCode}

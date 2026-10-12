@@ -8,6 +8,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 
+import type { TileLook } from "@repo/design-system/lib/tile";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { MaterialRow } from "@/components/home/material";
@@ -22,11 +23,14 @@ type RecentlyViewedSubject = Ref.Returns<
  * The route resolves the learner's ranked rows with its request credential and
  * passes them in, so the first client paint already contains the row list.
  * Resolving them after hydration instead would insert the section and push
- * trending content down.
+ * trending content down. The route also resolves the look of each row, because
+ * the families of icons that a row picks from stay out of the client bundle.
  */
 export function HomeContinueLearning({
+  looks,
   subjects,
 }: {
+  looks: readonly TileLook[];
   subjects: readonly RecentlyViewedSubject[];
 }) {
   const t = useTranslations("Home");
@@ -42,9 +46,10 @@ export function HomeContinueLearning({
         <HugeIcons className="size-4" icon={Progress03Icon} />
       </h2>
       <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-        {Arr.map(subjects, (subject) => (
+        {Arr.zipWith(subjects, looks, (subject, look) => (
           <MaterialRow
             key={`${subject.content_id}:${subject.contextKey}`}
+            look={look}
             material={subject}
           />
         ))}

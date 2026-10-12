@@ -32,8 +32,8 @@ import {
   type ProgramNavigationIconKey,
   ProgramNavigationIconKeySchema,
 } from "@nakafa/aksara-contracts/program/spec";
-import { getMaterialIcon } from "@repo/contents/curriculum/material";
-import { Schema } from "effect";
+import { getMaterialIcons } from "@repo/contents/curriculum/material";
+import { type Array as Arr, Schema } from "effect";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 
 const CurriculumVisualSourceSchema = Schema.Union([
@@ -49,7 +49,8 @@ const CurriculumVisualSourceSchema = Schema.Union([
 
 type CurriculumVisualSource = typeof CurriculumVisualSourceSchema.Type;
 
-const navigationIcons: {
+/** The icon of each source-owned navigation identity, none of them shared with any other key. */
+export const CURRICULUM_NAVIGATION_ICONS: {
   readonly [Key in ProgramNavigationIconKey]: IconSvgElement;
 } = {
   advanced: Mortarboard01Icon,
@@ -83,18 +84,24 @@ const navigationIcons: {
 
 /** Resolves a source-owned navigation identity to its Hugeicons card icon. */
 function readCurriculumNavigationIcon(key: ProgramNavigationIconKey) {
-  return navigationIcons[key];
+  return CURRICULUM_NAVIGATION_ICONS[key];
 }
 
-/** Resolves source-owned route identity to a verified Hugeicons card icon. */
-export function readCurriculumRouteIcon(route: CurriculumViewRoute) {
+/**
+ * Resolves source-owned route identity to the Hugeicons icons that its card may
+ * show: the navigation icon of the route, or the icon of its subject, or the
+ * spare icons for a subject that the product does not know yet.
+ */
+export function readCurriculumRouteIcons(
+  route: CurriculumViewRoute
+): Arr.NonEmptyReadonlyArray<IconSvgElement> {
   const source = readCurriculumVisualSource(route);
 
   if (source.kind === "navigation") {
-    return readCurriculumNavigationIcon(source.key);
+    return [readCurriculumNavigationIcon(source.key)];
   }
 
-  return getMaterialIcon(source.key);
+  return getMaterialIcons(source.key);
 }
 
 /**

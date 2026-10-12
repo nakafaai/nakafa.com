@@ -75,16 +75,22 @@ export function CatalogCardImage({
   );
 }
 
-/** Renders the tile of a catalog choice in the same 1200 by 630 visual frame. */
+/**
+ * Renders the tile of a catalog choice in the same 1200 by 630 visual frame.
+ * The choices of one grid take their `shift` from `getTileLooks` or
+ * `getTileShifts`, so that no two tiles of the grid share a blend.
+ */
 export function CatalogCardTile({
   children,
   seed,
+  shift,
 }: {
   children: ReactNode;
   seed: string;
+  shift: number;
 }) {
   return (
-    <Tile className="aspect-40/21" seed={seed} variant="card">
+    <Tile className="aspect-40/21" seed={seed} shift={shift} variant="card">
       {children}
     </Tile>
   );

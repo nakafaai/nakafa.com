@@ -1,8 +1,8 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
+import type { TileLook } from "@repo/design-system/lib/tile";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -11,7 +11,11 @@ import {
   type TryoutStatusValue,
 } from "@/components/tryout/status";
 
-/** Props of the divided try-out row list; each row carries its own tile and status. */
+/**
+ * Props of the divided try-out row list; each row carries its own tile and
+ * status. The caller takes the `visual` of every row from `getTileLooks`, so
+ * that no two rows of one list share an icon or a blend.
+ */
 interface TryoutListProps {
   emptyLabel: string;
   rows: readonly {
@@ -22,10 +26,7 @@ interface TryoutListProps {
     meta?: ReactNode;
     status?: TryoutStatusValue;
     title: string;
-    visual: Readonly<{
-      icon: IconSvgElement;
-      seed: string;
-    }>;
+    visual: TileLook;
   }[];
 }
 
@@ -63,7 +64,7 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
     >
       <div className="grid w-full gap-4">
         <div className="flex flex-1 items-start gap-3">
-          <Tile seed={row.visual.seed}>
+          <Tile seed={row.visual.seed} shift={row.visual.shift}>
             <TileIcon icon={row.visual.icon} />
           </Tile>
 

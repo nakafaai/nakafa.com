@@ -10,11 +10,12 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
+import { getTileLooks } from "@repo/design-system/lib/tile";
 import { Array as Arr, Effect, Option } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
-import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
+import { getTryoutExamIcons } from "@/components/tryout/catalog/icons";
 import type {
   TryoutCountrySelectorOption,
   TryoutExamSelectorOption,
@@ -147,15 +148,19 @@ export function TryoutExamSelector({
     label: option.title,
     value: option.value,
   }));
-  const currentOption = Arr.findFirst(
-    options,
-    (option) => option.value === currentValue
-  );
-  const currentIcon = getTryoutExamIcon(
-    Option.getOrElse(
-      Option.map(currentOption, (option) => option.examKey),
-      () => ""
+  const looks = getTileLooks(
+    Arr.map(
+      options,
+      (option) => [getTryoutExamIcons(option.examKey), option.examKey] as const
     )
+  );
+  const entries = Arr.zipWith(options, looks, (option, look) => ({
+    icon: look.icon,
+    option,
+  }));
+  const currentEntry = Arr.findFirst(
+    entries,
+    ({ option }) => option.value === currentValue
   );
 
   return (
@@ -168,10 +173,14 @@ export function TryoutExamSelector({
           className="flex min-w-0 items-center gap-2"
           data-slot="select-value"
         >
-          <HugeIcons className="size-4 shrink-0" icon={currentIcon} />
+          {Option.getOrNull(
+            Option.map(currentEntry, ({ icon }) => (
+              <HugeIcons className="size-4 shrink-0" icon={icon} />
+            ))
+          )}
           <span className="truncate">
             {Option.getOrElse(
-              Option.map(currentOption, (option) => option.title),
+              Option.map(currentEntry, ({ option }) => option.title),
               () => label
             )}
           </span>
@@ -184,16 +193,13 @@ export function TryoutExamSelector({
       >
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
-          {Arr.map(options, (option) => (
+          {Arr.map(entries, ({ icon, option }) => (
             <SelectItem
               key={option.value}
               render={<IntentLink href={option.href} />}
               value={option.value}
             >
-              <HugeIcons
-                className="size-4 shrink-0"
-                icon={getTryoutExamIcon(option.examKey)}
-              />
+              <HugeIcons className="size-4 shrink-0" icon={icon} />
               <span className="min-w-0 whitespace-normal leading-snug sm:whitespace-nowrap">
                 {option.title}
               </span>

@@ -5,6 +5,7 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { getMaterialLooks } from "@/components/home/look";
 import { MaterialRow } from "@/components/home/material";
 import { getHomeTrendingSubjects } from "@/lib/content/trending";
 import { isActiveLocale } from "@/lib/i18n/active";
@@ -24,6 +25,7 @@ export async function HomeTrending({ locale }: { locale: Locale }) {
   if (data.length === 0) {
     return null;
   }
+  const looks = getMaterialLooks(data);
   return (
     <section className="flex flex-col gap-4">
       <h2 className="flex items-center gap-2 px-3 font-medium">
@@ -31,15 +33,15 @@ export async function HomeTrending({ locale }: { locale: Locale }) {
         <HugeIcons className="size-4" icon={ArrowDown02Icon} />
       </h2>
       <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-        {Arr.map(data, (subject) => (
+        {Arr.zipWith(data, looks, (subject, look) => (
           <MaterialRow
             key={`${subject.content_id}:${subject.contextKey}`}
+            look={look}
             material={{
               content_id: subject.content_id,
               contextKey: subject.contextKey,
               description: subject.description,
               href: subject.href,
-              materialDomain: subject.materialDomain,
               title: subject.title,
             }}
             trailing={

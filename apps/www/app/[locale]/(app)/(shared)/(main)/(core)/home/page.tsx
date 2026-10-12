@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
+import { getMaterialLooks } from "@/components/home/look";
 import { HomeContinueLearning } from "@/components/home/recent";
 import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
@@ -81,7 +82,10 @@ async function AuthenticatedHome({
 
           <HomeExplore />
 
-          <HomeContinueLearning subjects={recentRows} />
+          <HomeContinueLearning
+            looks={getMaterialLooks(recentRows)}
+            subjects={recentRows}
+          />
 
           <Suspense fallback={null}>
             <HomeTrending locale={locale} />

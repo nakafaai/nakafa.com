@@ -1,6 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { getWcagContrast } from "@repo/design-system/lib/theme/contrast";
-import { getTileGradient } from "@repo/design-system/lib/tile";
+import {
+  getTileGradient,
+  getTileLooks,
+  getTileShifts,
+  TILE_HUE_GAP,
+} from "@repo/design-system/lib/tile";
 import Color from "colorjs.io";
 import { Array as Arr, HashMap, HashSet, Order } from "effect";
 
@@ -19,6 +24,8 @@ const ICON_SHARE = 16 / 40;
 const POSITIONS = [0.5, 0.5 + ICON_SHARE / 2];
 /** WCAG 2.1 criterion 1.4.11: a graphic that carries meaning needs 3:1. */
 const MINIMUM_ICON_CONTRAST = 3;
+/** A list of this many tiles always finds room: five tiles before it hide at most 355 of 360 hues. */
+const LONGEST_SURE_LIST = 6;
 
 /**
  * Effect's `Hash.string` turns a seed into a number, so these tiles are pinned
@@ -46,8 +53,8 @@ const PINNED = [
 ] as const;
 
 /** Reads the angle, both tones, and both hues out of one seed's gradient. */
-function readTile(seed: string) {
-  const match = TILE_PATTERN.exec(getTileGradient(seed));
+function readTile(seed: string, shift?: number) {
+  const match = TILE_PATTERN.exec(getTileGradient(seed, shift));
 
   return {
     angle: Number(match?.[1]),
@@ -58,11 +65,44 @@ function readTile(seed: string) {
   };
 }
 
-const TILES = Arr.map(SEEDS, readTile);
+const TILES = Arr.map(SEEDS, (seed) => readTile(seed));
 
 /** Lists each number once, from the smallest. */
 function distinct(values: readonly number[]) {
   return Arr.sort(Arr.fromIterable(HashSet.fromIterable(values)), Order.Number);
+}
+
+/** The hue halfway between the two tones of one tile, which is the hue the eye takes it to have. */
+function middleOf({ beside, hue }: { beside: number; hue: number }) {
+  const lean = (beside - hue + 360) % 360 === 34 ? 17 : -17;
+
+  return (hue + lean + 360) % 360;
+}
+
+/** The middle hue of the tile that a seed and a shift give. */
+function middleAt(seed: string, shift: number) {
+  return middleOf(readTile(seed, shift));
+}
+
+/** The distance between two hues, the short way around the wheel. */
+function apart(left: number, right: number) {
+  const gap = Math.abs(left - right);
+
+  return Math.min(gap, 360 - gap);
+}
+
+/** The least distance between any two hues of a list. */
+function leastDistance(hues: readonly number[]) {
+  return Arr.reduce(hues, 360, (least, hue, index) =>
+    Arr.reduce(Arr.drop(hues, index + 1), least, (nearest, other) =>
+      Math.min(nearest, apart(hue, other))
+    )
+  );
+}
+
+/** The middle hue of each tile of a list after its shifts. */
+function middlesOf(seeds: readonly string[]) {
+  return Arr.zipWith(seeds, getTileShifts(seeds), middleAt);
 }
 
 /** Measures white against the painted blend of two tones at each position. */
@@ -85,8 +125,8 @@ describe("getTileGradient", () => {
   it("gives the same seed the same tile every time", () => {
     const sample = Arr.take(SEEDS, 500);
 
-    expect(Arr.map(sample, getTileGradient)).toEqual(
-      Arr.map(sample, getTileGradient)
+    expect(Arr.map(sample, (seed) => getTileGradient(seed))).toEqual(
+      Arr.map(sample, (seed) => getTileGradient(seed))
     );
   });
 
@@ -125,5 +165,171 @@ describe("getTileGradient", () => {
         expect(contrast).toBeGreaterThanOrEqual(MINIMUM_ICON_CONTRAST);
       }
     }
+  });
+
+  it("turns both tones by the shift and keeps the side and the direction", () => {
+    const plain = readTile("aljabar");
+    const turned = readTile("aljabar", 100);
+
+    expect(turned.hue).toBe((plain.hue + 100) % 360);
+    expect(turned.beside).toBe((plain.beside + 100) % 360);
+    expect(turned.angle).toBe(plain.angle);
+  });
+
+  it("takes a shift that passes the end of the wheel back to the start", () => {
+    expect(readTile("aljabar", 359).hue).toBe(313);
+    expect(readTile("aljabar", 359).beside).toBe(347);
+  });
+
+  it("gives a shift of 0 the tile of the seed alone", () => {
+    expect(getTileGradient("gerak", 0)).toBe(getTileGradient("gerak"));
+  });
+});
+
+describe("getTileShifts", () => {
+  it("keeps the look of tiles that have room", () => {
+    expect(getTileShifts(["gerak", "curriculum/merdeka"])).toEqual([0, 0]);
+    expect(getTileShifts([])).toEqual([]);
+  });
+
+  it("moves a tile that is too close to the tile before it to the next free hue", () => {
+    const seeds = ["aljabar", "tryout/indonesia/snbt"];
+
+    expect(getTileShifts(seeds)).toEqual([0, 57]);
+    expect(middlesOf(seeds)).toEqual([331, 7]);
+  });
+
+  it("keeps a tile where it is whatever comes after it", () => {
+    const list = Arr.take(SEEDS, 9);
+
+    for (const length of [1, 3, 6]) {
+      expect(getTileShifts(Arr.take(list, length))).toEqual(
+        Arr.take(getTileShifts(list), length)
+      );
+    }
+  });
+
+  it(`keeps the middles of any ${LONGEST_SURE_LIST} tiles at least ${TILE_HUE_GAP} degrees apart`, () => {
+    for (const seeds of Arr.chunksOf(SEEDS, LONGEST_SURE_LIST)) {
+      expect(leastDistance(middlesOf(seeds))).toBeGreaterThanOrEqual(
+        TILE_HUE_GAP
+      );
+    }
+  });
+
+  it("spreads ten tiles that start together evenly around the wheel", () => {
+    const seeds = Arr.replicate("aljabar", 10);
+
+    expect(middlesOf(seeds)).toEqual(
+      Arr.makeBy(10, (step) => (331 + TILE_HUE_GAP * step) % 360)
+    );
+  });
+
+  it("gives tiles past the last free hue the hue farthest from the rest", () => {
+    const seeds = Arr.replicate("aljabar", 12);
+    const middles = middlesOf(seeds);
+
+    expect(Arr.take(middles, 10)).toEqual(
+      Arr.makeBy(10, (step) => (331 + TILE_HUE_GAP * step) % 360)
+    );
+    expect(Arr.drop(middles, 10)).toEqual([349, 25]);
+    expect(distinct(middles)).toHaveLength(12);
+  });
+});
+
+/** Five drawings that differ from each other, as a pool of icons. */
+const POOL = Arr.makeBy(
+  5,
+  (index) => [["path", { d: `M${index} 0` }]] as const
+);
+/** Three more drawings, as the pool of another subject. */
+const OTHER = Arr.makeBy(
+  3,
+  (index) => [["path", { d: `M0 ${index}` }]] as const
+);
+/** The pool of one icon that a key with its own icon offers. */
+const ALONE = [[["path", { d: "M9 9" }]] as const] as const;
+
+/** The icons that a list of tiles takes from one pool, one tile per seed. */
+function iconsFor(seeds: readonly string[]) {
+  return Arr.map(
+    getTileLooks(Arr.map(seeds, (seed) => [POOL, seed] as const)),
+    ({ icon }) => icon
+  );
+}
+
+describe("getTileLooks", () => {
+  it("starts a tile from the icon its seed points at", () => {
+    expect(iconsFor(["aljabar"])).toEqual([POOL[1]]);
+    expect(iconsFor(["gerak"])).toEqual([POOL[3]]);
+  });
+
+  it("reaches every icon of a pool from different seeds", () => {
+    const icons = Arr.map(Arr.take(SEEDS, 200), (seed) => iconsFor([seed]));
+
+    expect(Arr.dedupe(icons)).toHaveLength(5);
+  });
+
+  it("moves a tile whose icon is held to the next icon of its pool", () => {
+    expect(iconsFor(Arr.replicate("aljabar", 3))).toEqual([
+      POOL[1],
+      POOL[2],
+      POOL[3],
+    ]);
+  });
+
+  it("goes round the end of the pool", () => {
+    expect(iconsFor(Arr.replicate("gerak", 3))).toEqual([
+      POOL[3],
+      POOL[4],
+      POOL[0],
+    ]);
+  });
+
+  it("repeats an icon only once the whole pool is held, the least held first", () => {
+    expect(iconsFor(Arr.replicate("aljabar", 7))).toEqual(
+      Arr.map([1, 2, 3, 4, 0, 1, 2], (place) => POOL[place])
+    );
+  });
+
+  it("keeps the pools of different tiles apart", () => {
+    const looks = getTileLooks([
+      [POOL, "aljabar"],
+      [OTHER, "aljabar"],
+      [POOL, "aljabar"],
+    ]);
+
+    expect(Arr.map(looks, ({ icon }) => icon)).toEqual([
+      POOL[1],
+      OTHER[0],
+      POOL[2],
+    ]);
+  });
+
+  it("gives a pool of one icon to every tile that names it", () => {
+    const looks = getTileLooks([
+      [ALONE, "aljabar"],
+      [ALONE, "gerak"],
+    ]);
+
+    expect(Arr.map(looks, ({ icon }) => icon)).toEqual([ALONE[0], ALONE[0]]);
+  });
+
+  it("turns each tile as getTileShifts does", () => {
+    const seeds = ["aljabar", "tryout/indonesia/snbt"];
+    const looks = getTileLooks(Arr.map(seeds, (seed) => [POOL, seed] as const));
+
+    expect(Arr.map(looks, ({ shift }) => shift)).toEqual(getTileShifts(seeds));
+  });
+
+  it("gives each tile back the seed that its list placed it by", () => {
+    const seeds = ["aljabar", "gerak", "curriculum/merdeka"];
+    const looks = getTileLooks(Arr.map(seeds, (seed) => [POOL, seed] as const));
+
+    expect(Arr.map(looks, ({ seed }) => seed)).toEqual(seeds);
+  });
+
+  it("gives nothing for a list of nothing", () => {
+    expect(getTileLooks([])).toEqual([]);
   });
 });
