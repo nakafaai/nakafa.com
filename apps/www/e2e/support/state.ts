@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { FIGURE_WIDTH } from "@/components/state/size";
+import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { STATE_FIGURE } from "@/e2e/support/selector";
 
 /** What a full-page state says and offers: its title, its sentence, and each way on with where it leads. */
@@ -54,54 +55,34 @@ export const expectNoOverflow = Effect.fn("NakafaE2E.expectNoOverflow")(
   }
 );
 
+/** The files of a web font, as the browser asks for them. */
+const WEB_FONT = "**/*.woff2";
+
 /**
- * How far anything on the page moved up or down since navigation, or grew or
- * shrank in height, in pixels: the most of every layout shift the browser
- * reports.
+ * Keeps the web font away from a page, so its text stays in the fallback font
+ * from the first paint on. Call it before the page is opened.
  *
- * It leaves the sideways part out on purpose. The title and the sentence stand
- * in the middle, and a web font that arrives after the first paint makes a
- * line a few pixels wider or narrower, which moves its start sideways. The
- * browser reports that as a shift too, and whether it happens depends on which
- * of the font and the first paint comes first (measured on 13 October 2026:
- * 6 of 8 fresh visits of the standalone page, each 0.0002 or less). What a
- * state promises is that nothing already shown moves down when Nina arrives,
- * and this reads exactly that.
+ * A font that arrives after the first paint draws the text again a little
+ * wider or taller, and the browser reports that as a layout shift. Whether it
+ * happens depends on which of the font and the paint comes first: on a fast
+ * machine the words of the standalone page moved sideways in 6 of 8 fresh
+ * visits, and on a CI runner they also moved down by a pixel, and at 200
+ * pixels wide the title wrapped onto another line (measured on 13 October
+ * 2026). That is the font strategy of the whole site, which swaps the font in.
+ * With the font out of the way, whatever still moves is the page's own doing,
+ * and a state must not move at all.
  */
-const readVerticalShift = Effect.fn("NakafaE2E.readVerticalShift")(function* (
+export const holdWebFont = Effect.fn("NakafaE2E.holdWebFont")(function* (
   page: Page
 ) {
-  return yield* Effect.promise(() =>
-    page.evaluate(() => {
-      const observer = new PerformanceObserver(() => undefined);
-      observer.observe({ buffered: true, type: "layout-shift" });
-      const entries = observer.takeRecords();
-      observer.disconnect();
-      return entries
-        .flatMap((entry) =>
-          Array.from<{
-            currentRect: DOMRectReadOnly;
-            previousRect: DOMRectReadOnly;
-          }>(Reflect.get(entry, "sources") ?? [])
-        )
-        .reduce(
-          (most, { currentRect, previousRect }) =>
-            Math.max(
-              most,
-              Math.abs(currentRect.y - previousRect.y),
-              Math.abs(currentRect.height - previousRect.height)
-            ),
-          0
-        );
-    })
-  );
+  yield* Effect.promise(() => page.route(WEB_FONT, (route) => route.abort()));
 });
 
 /**
  * A state that Nina fills with a figure: its one title, its sentence and each
  * way on shown, each way on leading where it should, the things beside her
  * shown exactly when the room holds the three, the page no wider than the
- * window, and nothing moving up or down while it loads.
+ * window, and nothing moving while it loads. Open the page after `holdWebFont`.
  */
 export const expectState = Effect.fn("NakafaE2E.expectState")(function* (
   page: Page,
@@ -132,6 +113,6 @@ export const expectState = Effect.fn("NakafaE2E.expectState")(function* (
   yield* expectThings(page, room >= FIGURE_WIDTH);
   yield* expectNoOverflow(page);
   yield* Effect.promise(() => page.waitForLoadState("load"));
-  const moved = yield* readVerticalShift(page);
-  yield* Effect.sync(() => expect(moved).toBe(0));
+  const layoutShift = yield* readCumulativeLayoutShift(page);
+  yield* Effect.sync(() => expect(layoutShift).toBe(0));
 });

@@ -13,7 +13,12 @@ import { FIGURE_WIDTH } from "@/components/state/size";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { expectState, expectThings, readRoom } from "@/e2e/support/state";
+import {
+  expectState,
+  expectThings,
+  holdWebFont,
+  readRoom,
+} from "@/e2e/support/state";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   compactViewport,
@@ -74,6 +79,7 @@ const openMissing = Effect.fn("NakafaE2E.openMissing")(function* (
   address: string
 ) {
   yield* seedAnalyticsConsent(page, "denied");
+  yield* holdWebFont(page);
   return yield* Effect.promise(() =>
     page.goto(`/${locale}/${address}`, { waitUntil: "domcontentloaded" })
   );
@@ -85,6 +91,7 @@ const openStandalone = Effect.fn("NakafaE2E.openStandalone")(function* (
   locale: Locale
 ) {
   yield* seedAnalyticsConsent(page, "denied");
+  yield* holdWebFont(page);
   yield* Effect.promise(() =>
     page.setExtraHTTPHeaders({ [LOCALE_HEADER]: locale })
   );

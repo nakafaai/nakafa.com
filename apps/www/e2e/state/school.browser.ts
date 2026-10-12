@@ -9,7 +9,7 @@ import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { expectState } from "@/e2e/support/state";
+import { expectState, holdWebFont } from "@/e2e/support/state";
 import { touchViewport } from "@/e2e/support/viewport";
 
 /**
@@ -36,6 +36,7 @@ test.describe("the state of a school that cannot be found", () => {
           const origin = yield* Effect.fromNullishOr(baseURL);
           yield* signInLearner(page.context(), origin);
           yield* seedAnalyticsConsent(page, "denied");
+          yield* holdWebFont(page);
           yield* Effect.promise(() =>
             page.goto(UNKNOWN_SCHOOL, { waitUntil: "domcontentloaded" })
           );
