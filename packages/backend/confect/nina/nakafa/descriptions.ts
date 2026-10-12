@@ -6,6 +6,9 @@ export const nakafaSearch = createPrompt({
 
     Search Nakafa's public content index across articles, subjects, try-outs, and Quran.
     Use this when you need to discover stable content references before reading details.
+    Lessons, articles, and the Quran are found by meaning and by words, in Indonesian,
+    English, and German, and each result names the section that answers the question.
+    Try-outs are found by words in their titles and descriptions.
   `,
 
   toolUsageGuidelines: `
@@ -27,6 +30,7 @@ export const nakafaRead = createPrompt({
 
     Read one Nakafa content reference returned by search or supplied as a canonical Nakafa URL.
     Long content returns the sections that fit, then lists the other sections by name.
+    A search result names the section that answers the question: pass it as section to start reading there.
   `,
 
   toolUsageGuidelines: `

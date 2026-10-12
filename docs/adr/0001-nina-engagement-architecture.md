@@ -255,7 +255,9 @@ name, and a key with no type means production. So with a key set nothing could
 say where the gate would run. The CLI also loads `.env` and `.env.local` into
 the settings that are not set, so the command starts it with the deployment the
 check read and with the key and the token blank, and a file cannot send a
-command to a deployment that the check did not see.
+command to a deployment that the check did not see. The check and the start of
+the CLI live in `scripts/development/cli.ts`, and the model test of knowledge
+search (ADR 0023) runs behind the same check.
 
 The command signs in a synthetic learner with the rows the acceptance runtime
 creates. A sign-in that fails part way removes the rows it wrote. The command

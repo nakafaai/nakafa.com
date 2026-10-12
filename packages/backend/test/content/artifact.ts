@@ -39,6 +39,7 @@ export function testArtifactJson(options?: {
   readonly compiledCode?: string | undefined;
   readonly contentKey?: string | undefined;
   readonly plainText?: string | undefined;
+  readonly rawMdx?: string | undefined;
   readonly rendererDomain?: RendererDomain | undefined;
 }) {
   const compiledCode = options?.compiledCode ?? "return {};";
@@ -55,7 +56,7 @@ export function testArtifactJson(options?: {
       format: "mdx-function-body",
       mdxCompilerVersion: "3.1.1",
       plainText: options?.plainText ?? "Technical fixture",
-      rawMdx: "## Technical fixture",
+      rawMdx: options?.rawMdx ?? "## Technical fixture",
       rendererDomain: options?.rendererDomain ?? "mathematics",
       requiredComponents: [],
       sourceHash: TEST_DIGEST,

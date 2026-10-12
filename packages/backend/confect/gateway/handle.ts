@@ -1,5 +1,13 @@
 import { cachedPrefix } from "@repo/backend/confect/gateway/cache";
 import {
+  classify,
+  GatewayFailure,
+} from "@repo/backend/confect/gateway/failure";
+import {
+  type EmbeddingModelId,
+  embeddingDimensions,
+  embeddingModelId,
+  embeddingTimeoutMs,
   languageModelId,
   reasoning,
 } from "@repo/backend/confect/gateway/model";
@@ -8,8 +16,8 @@ import {
   type Purpose,
   purposes,
 } from "@repo/backend/confect/gateway/purpose";
-import { defaultSettingsMiddleware, wrapLanguageModel } from "ai";
-import { Context } from "effect";
+import { defaultSettingsMiddleware, embedMany, wrapLanguageModel } from "ai";
+import { Array as Arr, Context, Duration, Effect } from "effect";
 
 /** The one way Nakafa reaches a model. */
 export class Gateway extends Context.Service<
@@ -25,18 +33,38 @@ export class Gateway extends Context.Service<
       readonly model: ReturnType<typeof wrapLanguageModel>;
       readonly timeout: Deadline;
     };
+    /**
+     * One vector per text, in order, each of `embeddingDimensions` numbers,
+     * from the embedding model of knowledge search or from the candidate the
+     * model test names. The request carries no retention flags, because the AI
+     * SDK builds an embedding request from fixed fields, the model, the texts,
+     * and the vector length among them, that leave no place for them, so it
+     * relies on the gateway's own zero retention. Callers embed published
+     * lessons and Quran text, and the short search phrase that the specialist
+     * writes from a question, never a stored learner message.
+     */
+    readonly embed: (
+      texts: readonly string[],
+      model?: EmbeddingModelId
+    ) => Effect.Effect<readonly (readonly number[])[], GatewayFailure>;
   }
 >()("@repo/backend/confect/gateway/handle/Gateway") {}
 
 /**
- * Sent with every call: route only to an endpoint that keeps no prompt and no
- * answer, and refuse one that collects them. The gateway states zero data
- * retention itself; these flags make each request ask for it.
+ * Sent with every language model call: route only to an endpoint that keeps no
+ * prompt and no answer, and refuse one that collects them. The gateway states
+ * zero data retention itself; these flags make each request ask for it. An
+ * embedding request cannot carry them, because the AI SDK builds it from fixed
+ * fields that leave no place for them, so it relies on the gateway's own
+ * statement.
  */
 const retention = { data_collection: "deny", zdr: true };
 
 /** The language model every provider hands to the AI SDK. */
 type LanguageModel = Parameters<typeof wrapLanguageModel>[0]["model"];
+
+/** The embedding model every provider hands to the AI SDK. */
+type EmbeddingModel = Parameters<typeof embedMany>[0]["model"];
 
 /**
  * Builds every handle over one AI SDK provider, so the production adapter
@@ -44,6 +72,7 @@ type LanguageModel = Parameters<typeof wrapLanguageModel>[0]["model"];
  */
 export function make(provider: {
   readonly languageModel: (modelId: string) => LanguageModel;
+  readonly embeddingModel: (modelId: string) => EmbeddingModel;
 }): Gateway["Service"] {
   return Gateway.of({
     language: (purpose) => {
@@ -69,5 +98,39 @@ export function make(provider: {
         timeout,
       };
     },
+    embed: Effect.fn("gateway.embed")(function* (
+      texts: readonly string[],
+      model: EmbeddingModelId = embeddingModelId
+    ) {
+      const { embeddings } = yield* Effect.tryPromise({
+        try: (signal) =>
+          embedMany({
+            abortSignal: signal,
+            model: provider.embeddingModel(model),
+            providerOptions: {
+              openaiCompatible: { dimensions: embeddingDimensions },
+            },
+            values: Arr.fromIterable(texts),
+          }),
+        catch: classify,
+      }).pipe(
+        Effect.timeoutOrElse({
+          duration: Duration.millis(embeddingTimeoutMs),
+          orElse: () => Effect.fail(new GatewayFailure({ reason: "timeout" })),
+        })
+      );
+      // A reply that does not match the request is not a vector the index
+      // can hold.
+      if (
+        embeddings.length !== texts.length ||
+        Arr.some(
+          embeddings,
+          (embedding) => embedding.length !== embeddingDimensions
+        )
+      ) {
+        return yield* new GatewayFailure({ reason: "unknown" });
+      }
+      return embeddings;
+    }),
   });
 }

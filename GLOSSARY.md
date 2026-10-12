@@ -72,6 +72,12 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Purpose**: Why Nakafa calls a model, such as chat, specialist, background, suggestion, or presentation. It sets a handle's deadlines and reasoning effort.
 - **Gateway failure**: The one classification of a failed model call, carrying routing facts only and never the prompt, the answer, or a provider message.
 
+## Knowledge Search
+
+- **Section**: One heading section of a lesson or article, or one signed chunk of six verses of a surah, in one language. Its place, the document and its ordinal, is the same in every language, so a question in one language can lead to the same place in another.
+- **Section index**: The derived rows of every Section of the active release, with its text for search by words and a vector for search by meaning. A build makes it from the active release, and Nina's Nakafa search trusts it only while its record names the active release and the embedding model; otherwise Nina searches by words.
+- **Section version**: What a document's Sections were made from: the section format, the embedding model, and the signed facts of the source. A build passes over a document whose version the index holds, a Section whose text its document holds is never embedded again, wherever it stands now, and an unchanged Section is not written again either.
+
 ## Evaluation
 
 - **EvalCase**: A schema-derived test input with deterministic expected evidence, routing, or trace assertions.
