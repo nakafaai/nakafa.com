@@ -39,12 +39,8 @@ import {
   reportNinaFailure,
 } from "@/components/ai/feedback";
 import { optimisticPrompt } from "@/components/ai/optimistic";
+import { messageInput, retryInput } from "@/components/ai/turn";
 import { requireConvexOnline } from "@/lib/convex/online";
-import {
-  getLocale,
-  getMaterialContextHint,
-  getPathname,
-} from "@/lib/routing/location";
 
 type Start = typeof nina.turns.start;
 export type NinaDraft = PromptInputMessage &
@@ -241,7 +237,6 @@ export function useNinaSubmission() {
   }
 
   function send(prompt: NinaDraft, chatId?: Id<"chats">) {
-    const hint = getMaterialContextHint();
     return perform(
       uploadAttachments(
         prompt.files ?? [],
@@ -250,27 +245,16 @@ export function useNinaSubmission() {
         previews,
         convex
       ).pipe(
-        Effect.map((uploadIds) => ({
-          kind: "message" as const,
-          prompt: { text: prompt.text, uploadIds },
-          page: {
-            locale: getLocale(),
-            slug: getPathname(),
-            ...(hint ? { materialContextHint: hint } : {}),
-            ...(prompt.focus ? { focus: prompt.focus } : {}),
-          },
-        }))
+        Effect.map((uploadIds) =>
+          messageInput({ focus: prompt.focus, text: prompt.text, uploadIds })
+        )
       ),
       chatId
     );
   }
   function retry(order: number, chatId: Id<"chats">) {
     return perform(
-      Effect.succeed({
-        kind: "retry",
-        order,
-        page: { locale: getLocale(), slug: getPathname() },
-      }),
+      Effect.sync(() => retryInput(order)),
       chatId
     );
   }
