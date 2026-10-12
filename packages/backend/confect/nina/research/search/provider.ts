@@ -1,7 +1,14 @@
 import { timeLeft } from "@repo/backend/confect/nina/capability/deadline";
 import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
 import { ResearchSearchError } from "@repo/backend/confect/nina/research/schema";
-import { Duration, Effect, Option, Schedule, Schema } from "effect";
+import {
+  Array as Arr,
+  Duration,
+  Effect,
+  Option,
+  Schedule,
+  Schema,
+} from "effect";
 
 /** How long the search provider may take to answer, in milliseconds. */
 const SEARCH_TIMEOUT_MS = 10_000;
@@ -32,16 +39,29 @@ const ProviderFailure = Schema.Struct({ status: Schema.Finite });
  * reading every result page inside the search took 76 seconds when measured on
  * 10 October 2026, so `searchWeb` reads the best pages itself, in parallel.
  * Each attempt is cut to the time the running capability has left.
+ *
+ * Named sites restrict the search through the provider's own `includeDomains`
+ * field, not through a `site:` operator in the query: when measured on 12
+ * October 2026, the news source answered the operator with five results of
+ * other sites in one of four cases, and the field returned no result of
+ * another site in four of four. With no site the field is left out, because
+ * the SDK sends an empty list as it is: it tests the field for truth, and an
+ * empty array is true.
  */
 export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
-  query: string
+  query: string,
+  sites: readonly string[] = []
 ) {
   yield* Effect.annotateCurrentSpan("query", query);
+  yield* Effect.annotateCurrentSpan("sites", sites);
   const client = yield* readFirecrawlApp().pipe(
     Effect.mapError(
       (error) => new ResearchSearchError({ message: error.message })
     )
   );
+  const restriction = Arr.isReadonlyArrayNonEmpty(sites)
+    ? { includeDomains: [...sites] }
+    : {};
 
   const attempt = Effect.gen(function* () {
     const left = yield* timeLeft;
@@ -51,6 +71,7 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
           limit: 5,
           sources: ["web", "news"],
           timeout: Math.min(SEARCH_TIMEOUT_MS, Duration.toMillis(left)),
+          ...restriction,
         }),
       catch: (cause) =>
         searchFailure(

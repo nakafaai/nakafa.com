@@ -10,6 +10,7 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { boundText, countTextTokens } from "@repo/backend/confect/nina/budget";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
+import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import { checkCandidates } from "@repo/backend/confect/nina/memory/check";
 import {
   isLasting,
@@ -181,7 +182,7 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
     const agent = new Agent(components.nina, {
       instructions: INSTRUCTIONS,
       languageModel: handle.model,
-      name: "memory",
+      name: "memory" satisfies UsageAgent,
       usageHandler,
     });
     const { memories } = yield* Effect.tryPromise({

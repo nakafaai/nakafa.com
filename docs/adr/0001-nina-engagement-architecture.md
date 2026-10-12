@@ -172,16 +172,22 @@ reads the signed page once before the first model step and places it in that
 context within the page token budget. The model spends no forced tool step on
 it and asks Nakafa for other sections.
 
-Math, Nakafa retrieval, and external research are Agent tools implemented as
-Effect programs. Specialist agents use the same Convex AI gateway provider and
-Agent usage handler. Tool results retain progressive evidence cards and final
-model-facing evidence, which never exceeds the evidence token budget: a
-truncated output says what it omitted and how to ask for it, and Nakafa reads
-continue by heading section, or by numbered part inside a section too long for
-one read, with the following sections listed first. Context compaction changes
-provider input only; it does
-not discard the stored transcript. Math uses deterministic computation, Nakafa
-uses authenticated signed content, and research admits retrieved sources.
+Nakafa retrieval, external research, deterministic math, and the learner's
+memory are Agent tools implemented as Effect programs. Each is one capability
+definition in its own folder, listed once in `capability/registry.ts`: its name,
+the Schema of its input, the description and tool policy the model reads, the
+rule that offers it in a turn, and its run. One shared runner
+(`capability/define.ts`) builds every tool from its definition, so the policy
+check, the denial answer, the progress rows, the deadline, the failure
+classification and the settled outcome exist once. Specialist agents use the
+same Convex AI gateway provider and Agent usage handler. Tool results retain
+progressive evidence cards and final model-facing evidence, which never exceeds
+the evidence token budget: a truncated output says what it omitted and how to
+ask for it, and Nakafa reads continue by heading section, or by numbered part
+inside a section too long for one read, with the following sections listed
+first. Context compaction changes provider input only; it does not discard the
+stored transcript. Math uses deterministic computation, Nakafa uses
+authenticated signed content, and research admits retrieved sources.
 
 One collapsed Activity maps to one native `toolCallId`. Its children are the
 capability's published evidence artifacts, not an exhaustive specialist trace.
@@ -281,7 +287,10 @@ The summary, at most 2,000 tokens, stays in the language of the conversation,
 adds no fact the turns did not state, sits in the system prompt context and is
 deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
-rather than in a turn's usage ledger, which clients read. The learner profile
+rather than in a turn's usage ledger, which clients read: a web build decodes
+only the agent names it was built with, so a refresh recorded under a name of
+its own would stop every build opened before that deploy from reading its
+conversation until it reloaded. The learner profile
 and learner memory follow [ADR 0022](./0022-memory.md). Old
 reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
@@ -296,6 +305,38 @@ provider accepts for a query, so no query is cut. No letter case, word shape,
 or word length decides what a learner meant, because a rule built on one
 treats a task in Japanese, Arabic, or Thai differently from the same task in
 English.
+
+A search that names sites is restricted by the search provider's own field. The
+web search tool input has an optional `sites` list of at most five hostnames,
+a bound of Nakafa's own because the provider states none, and every query of the
+call is sent with it as `includeDomains`. A missing or empty list sends no
+field. A site the model writes as an address is reduced to its hostname by the
+platform `URL`, and that hostname must belong to the public web by the public
+suffix list that `domain.ts` also reads for citations and for the links a
+learner writes. A text with a comma, an underscore, a wildcard or a space, an IP
+address, `localhost`, and a single word that is no listed suffix are none of
+them a site. No code reads a `site:` operator out of a query, and no second
+filter runs over the results.
+
+A list of more than five sites, or one text that is no site, refuses the whole
+call, as a call with no query is refused, and the tool description says so.
+Research then goes on with the learner's own links, or ends with the error
+`Research search wrote no usable query.` Nothing drops a site or widens the
+search quietly, because a search that names its sites and runs without them
+brings back the sources of other sites that this field exists to keep out. A
+task that names more than five sites is an open search, and the model leaves
+the field out.
+
+The provider documents `includeDomains` as restricting results to the given
+hostnames and says it adds `site:` operators to the query itself
+(https://docs.firecrawl.dev/api-reference/endpoint/search and
+https://docs.firecrawl.dev/features/search, read on 12 October 2026), but
+neither page says whether that holds for the news source, so it was measured on
+the production plan the same day: the news source answered
+`site:snpmb.bppp.kemdikbud.go.id "2027"` with five results and all five were
+from other sites, while the same words with `includeDomains` returned no result
+from another site. The model guidance therefore says to use the field and not
+to write the operator.
 
 A page longer than its budget keeps the paragraphs that hold the most of the
 words of the tool call: the text of its request, its objective, and each item of
@@ -402,6 +443,75 @@ without an end date, and no migration rewrites Agent messages for a log line.
 Until the flatten, the test holds math at the depth its card has: a card that
 grows fails, and so does one that fits the bound, until the exception is
 deleted.
+
+## Adding a capability
+
+A capability is one definition in its own folder and one entry in the registry.
+The tools Nina is offered, the policy of each call and the tool section of her
+prompt follow from them, and all three follow `offered`: a turn whose page does
+not allow a capability, or whose learner paused it, is offered neither its tool
+nor its entry and rules in the prompt, so that turn's prompt prefix differs from
+the others, as its tool list does. Every page allows every capability today, so
+only a pause changes it. A few other places still name a capability or its
+Agent, and they are the steps below, in order, with what the compiler enforces
+at each and what it leaves to the author.
+
+1. Write the run, an Effect program in the capability's own folder. It takes its
+   input and the facts of the turn, publishes its cards through `publish`, and
+   ends with `{ text, outcome? }`. A model call inside it cuts its limits to the
+   time left with `limitDeadline`. Left to the author: what the run does.
+2. If the run calls a model, add its Agent to the usage ledger: one line in
+   `AGENT_PURPOSES` of `contract/usage.ts`, with the purpose its calls run
+   under. The list is not read from the registry, because the stored turn
+   schema imports it and the browser loads that schema through the generated
+   refs, so the registry would bring every runner into the page. Enforced: the
+   ledger accepts no other name, and the output caps of the release gate follow
+   the table and name no agent. A runner writes its Agent's name with
+   `satisfies UsageAgent`, so it does not compile until the line exists. Left
+   to the author: every web build decodes the ledger with the names it was built
+   with, so the web build that knows a new name ships first and the run records
+   under it once the older builds are gone, by the rollout rule of
+   `packages/backend/AGENTS.md`.
+3. Define it in `<folder>/capability.ts` with `defineCapability`: the
+   description the model reads, the Schema of its input, its guideline for the
+   tool policy (`entry`, `field` when its input has a field of its own,
+   `section`), the `continuation` that tells the model how to ask for what a
+   truncation omitted, `offered`, and `run`. Add `note` when its answer must
+   stay out of the conversation, and `textOnly` when it publishes no card: its
+   answer is the text, so a run that ends without a card is not read as empty,
+   and keeps the outcome it states, or none. Enforced: `offered` and `run` have
+   no default, so nothing is allowed by omission; the Schema types the input of
+   `run`; the typed errors of `run` end as `CapabilityDenied` or `failed`, so
+   none stays unhandled. Left to the author: a defect of `run` is not caught,
+   and its message reaches Nina, the stored thread and the transcript as the
+   text of a tool error. So a capability that handles the learner's private
+   words ends every failure of its run, a defect too, with a fixed line and no
+   message, and logs only the phase, as the memory capability does: its search
+   ends as `MemoryReadError`, and a defect anywhere else in its run ends the
+   same way.
+4. Add its name to `LearningCapabilityNameSchema` in `capability/spec.ts`, and
+   its definition to the end of the record in `capability/registry.ts`. The
+   order is the order of the tool list and of the tool policy, so it is part of
+   the prompt prefix that the provider caches. Enforced: the record is
+   `satisfies Record<LearningCapabilityName, Capability>`, so a name without a
+   definition and a definition without a name do not compile. The tools Nina is
+   offered, the policy of each call, the tool section of the prompt, and the
+   tool names that history and the web recognize follow from these two.
+5. In the web app, give the name an icon in the activity row and the keys
+   `Ai.activity.<name>` and `Ai.tool-failures.<name>` in the en, id and de
+   dictionaries. Enforced: the icon record is indexed by the name, the keys are
+   typed by the English dictionary, and a test lists every name in all three.
+6. If it publishes a new kind of card, add the card to the card schemas
+   (`client/nina/capability.ts`, `contract/data.ts`) and its renderer to
+   `evidence/list.tsx`. Enforced: that renderer matches the card type
+   exhaustively.
+
+Left to the author, because the compiler cannot judge them: the routing prose
+that combines capabilities in `policy/tool.ts`, `step.ts` when the capability
+should open a turn that names a source (the first step forces only a capability
+the turn offers, because the SDK lists no other tool in it), and the tests. No
+stored flag is added for a capability: `offered` reads the turn's context, and
+the allow flags of a turn page stay as they are.
 
 ## Verification
 

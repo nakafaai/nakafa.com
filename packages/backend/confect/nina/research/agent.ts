@@ -7,6 +7,7 @@ import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import type { ResearchAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
+import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import {
   addEligibleSourceUrls,
@@ -98,7 +99,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     const ctx = yield* ActionCtx;
     const { model, timeout } = (yield* Gateway).language("specialist");
     const agent = new Agent(components.nina, {
-      name: "research",
+      name: "research" satisfies UsageAgent,
       languageModel: model,
       usageHandler,
     });

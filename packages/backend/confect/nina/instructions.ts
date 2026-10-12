@@ -1,10 +1,12 @@
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
+import { registry } from "@repo/backend/confect/nina/capability/registry";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
 import { readSaid } from "@repo/backend/confect/nina/memory/said";
 import { topicsOf } from "@repo/backend/confect/nina/memory/topics";
 import { readPageContext } from "@repo/backend/confect/nina/page";
+import { offeredCapabilities } from "@repo/backend/confect/nina/policy/capability";
 import { formatFocusPrompt } from "@repo/backend/confect/nina/prompt/focus";
 import { formatLearnerPrompt } from "@repo/backend/confect/nina/prompt/learner";
 import { formatRecalled } from "@repo/backend/confect/nina/prompt/recall";
@@ -52,8 +54,11 @@ const readLearner = Effect.fn("nina.instructions.learner")(function* (
  * prompt must not carry: the summary, since history omits the turns it covers;
  * the memories the learner's words call up, which belong with their message and
  * not in the prompt, whose bytes the provider caches; and whether the learner
- * paused memory. The turn reads the pause here once, and the prompt, the tools
- * Nina is offered and the policy of each call all follow it.
+ * paused memory. The turn reads the pause here once. The capabilities Nina is
+ * offered follow from it and from what the turn's page allows
+ * (`capabilities`): the prompt describes exactly those, and the turn offers
+ * exactly those to the model. Every page allows all of them today
+ * (`resolveNinaToolContext`), so only the pause changes the prompt.
  */
 export const readInstructions = Effect.fn("nina.instructions")(function* (
   turn: Pick<
@@ -80,11 +85,16 @@ export const readInstructions = Effect.fn("nina.instructions")(function* (
     portrait: learner.portrait,
     profile: learner.profile,
   });
+  const capabilities = offeredCapabilities(registry, {
+    memory: !learner.paused,
+    nina: turn.page.nina,
+  });
   return {
+    capabilities,
     instructions: createNinaSystemPrompt({
+      capabilities,
       ...(focus === undefined ? {} : { focus }),
       ...(facts === undefined ? {} : { learner: facts }),
-      memory: !learner.paused,
       ...(pageContent === undefined ? {} : { pageContent }),
       ...(summary ? { summary: summary.text } : {}),
       userRole: turn.user.role,

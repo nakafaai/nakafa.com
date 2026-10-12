@@ -3366,8 +3366,7 @@ export declare const api: {
                     | "unknown";
                   status: "failed";
                 }
-              | { finishedAt: number; status: "cancelled" }
-              | { status: "unanswered" };
+              | { finishedAt: number; status: "cancelled" };
             suggestions?: Array<string>;
             tokens?: { input?: number; output?: number; total?: number };
             usage: Array<{
@@ -3515,8 +3514,7 @@ export declare const api: {
                       | "unknown";
                     status: "failed";
                   }
-                | { finishedAt: number; status: "cancelled" }
-                | { status: "unanswered" };
+                | { finishedAt: number; status: "cancelled" };
               suggestions?: Array<string>;
               tokens?: { input?: number; output?: number; total?: number };
               usage: Array<{
@@ -9117,170 +9115,6 @@ export declare const internal: {
             };
             userId: Id<"users">;
           }
-        | {
-            _creationTime: number;
-            _id: Id<"ninaTurns">;
-            chatId: Id<"chats">;
-            credits?: number;
-            fingerprint?: string;
-            order: number;
-            page?: {
-              locale: "en" | "id" | "de";
-              needsFetch: boolean;
-              nina: {
-                focus?: {
-                  attemptId: Id<"tryoutAttempts">;
-                  kind: "tryout-question";
-                  placementId: Id<"tryoutAttemptPlacements">;
-                  questionOrder: number;
-                  sectionKey: string;
-                };
-                learning: {
-                  assetId?: string;
-                  contentId?: string;
-                  locale: "en" | "id" | "de";
-                  materialKey?: string;
-                  section?: string;
-                  slug: string;
-                  sourcePath?: string;
-                  title?: string;
-                  url: string;
-                  verified: boolean;
-                };
-                placement?: {
-                  mode: "placement";
-                  nodeKey: string;
-                  parentHref: string;
-                  parentTitle: string;
-                  programKey: string;
-                };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
-                tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
-                  allowPageFetch: boolean;
-                  evidenceScope: "verified-page" | "general-learning";
-                };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
-              };
-              slug: string;
-              url: string;
-              verified: boolean;
-            };
-            phase: "unanswered";
-            promptMessageId: string;
-            promptedAt?: number;
-            remembered?: number;
-            requestId?: string;
-            retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            state: { status: "unanswered" };
-            suggestions?: Array<string>;
-            threadId: string;
-            timing?: {
-              claimedMs?: number;
-              progressMs?: number;
-              readyMs?: number;
-              tokenMs?: number;
-            };
-            tokens?: { input?: number; output?: number; total?: number };
-            transactionId?: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            usage: Array<{
-              agent:
-                | "nina"
-                | "nakafa"
-                | "research"
-                | "math"
-                | "math-repair"
-                | "suggestions"
-                | "title"
-                | "nina-repair"
-                | "memory";
-              cached?: number;
-              calls: number;
-              cost?: number;
-              input: number;
-              model: string;
-              output: number;
-              provider: string;
-              reasoning?: number;
-            }>;
-            user?: {
-              curriculumPreference?: {
-                program: { key: string; title: string };
-              };
-              role?: "teacher" | "student" | "parent" | "administrator";
-            };
-            userId: Id<"users">;
-          }
         | null
       >;
       expire: FunctionReference<
@@ -9648,170 +9482,6 @@ export declare const internal: {
             };
             userId: Id<"users">;
           }
-        | {
-            _creationTime: number;
-            _id: Id<"ninaTurns">;
-            chatId: Id<"chats">;
-            credits?: number;
-            fingerprint?: string;
-            order: number;
-            page?: {
-              locale: "en" | "id" | "de";
-              needsFetch: boolean;
-              nina: {
-                focus?: {
-                  attemptId: Id<"tryoutAttempts">;
-                  kind: "tryout-question";
-                  placementId: Id<"tryoutAttemptPlacements">;
-                  questionOrder: number;
-                  sectionKey: string;
-                };
-                learning: {
-                  assetId?: string;
-                  contentId?: string;
-                  locale: "en" | "id" | "de";
-                  materialKey?: string;
-                  section?: string;
-                  slug: string;
-                  sourcePath?: string;
-                  title?: string;
-                  url: string;
-                  verified: boolean;
-                };
-                placement?: {
-                  mode: "placement";
-                  nodeKey: string;
-                  parentHref: string;
-                  parentTitle: string;
-                  programKey: string;
-                };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
-                tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
-                  allowPageFetch: boolean;
-                  evidenceScope: "verified-page" | "general-learning";
-                };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
-              };
-              slug: string;
-              url: string;
-              verified: boolean;
-            };
-            phase: "unanswered";
-            promptMessageId: string;
-            promptedAt?: number;
-            remembered?: number;
-            requestId?: string;
-            retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            state: { status: "unanswered" };
-            suggestions?: Array<string>;
-            threadId: string;
-            timing?: {
-              claimedMs?: number;
-              progressMs?: number;
-              readyMs?: number;
-              tokenMs?: number;
-            };
-            tokens?: { input?: number; output?: number; total?: number };
-            transactionId?: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            usage: Array<{
-              agent:
-                | "nina"
-                | "nakafa"
-                | "research"
-                | "math"
-                | "math-repair"
-                | "suggestions"
-                | "title"
-                | "nina-repair"
-                | "memory";
-              cached?: number;
-              calls: number;
-              cost?: number;
-              input: number;
-              model: string;
-              output: number;
-              provider: string;
-              reasoning?: number;
-            }>;
-            user?: {
-              curriculumPreference?: {
-                program: { key: string; title: string };
-              };
-              role?: "teacher" | "student" | "parent" | "administrator";
-            };
-            userId: Id<"users">;
-          }
         | null
       >;
       recover: FunctionReference<
@@ -10081,14 +9751,6 @@ export declare const internal: {
         Array<{ order: number; retryOf?: number }>
       >;
     };
-    unanswered: {
-      settle: FunctionReference<
-        "mutation",
-        "internal",
-        { numItems: number },
-        { settled: number }
-      >;
-    };
     uploads: {
       complete: FunctionReference<
         "mutation",
@@ -10131,6 +9793,32 @@ export declare const internal: {
           };
         },
         null
+      >;
+    };
+    waits: {
+      summary: FunctionReference<
+        "query",
+        "internal",
+        { count: number },
+        {
+          newest?: number;
+          oldest?: number;
+          read: number;
+          statuses: {
+            cancelled: number;
+            complete: number;
+            failed: number;
+            open: number;
+          };
+          waits: Array<{
+            max?: number;
+            median?: number;
+            min?: number;
+            p90?: number;
+            stage: "claimedMs" | "readyMs" | "progressMs" | "tokenMs";
+            turns: number;
+          }>;
+        }
       >;
     };
   };

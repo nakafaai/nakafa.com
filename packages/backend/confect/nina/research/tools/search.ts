@@ -21,15 +21,19 @@ import { Array as Arr, Effect, HashMap, Option } from "effect";
  * an address is kept once, in the provider's order, web results first and then
  * news: no word of the tool call or the query decides which result a learner
  * sees. The words of the tool call only decide which paragraphs of a result
- * page are read.
+ * page are read. The sites of the call, when the model named any, restrict
+ * every query alike, and the provider alone enforces that: no result is
+ * checked against them here.
  */
 export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   queries,
+  sites,
   words,
   toolCallId,
   publish,
 }: {
   queries: readonly string[];
+  sites?: readonly string[];
   words: string;
   toolCallId: string;
   publish: CapabilityProgress;
@@ -38,6 +42,12 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     maxQueries: webSearchMaxQueries,
     queries,
   });
+  // Every card of the call says which sites it was limited to, so results of
+  // one site, or no result, read as what they are.
+  const named = sites ?? [];
+  const limited = Arr.isReadonlyArrayNonEmpty(named)
+    ? { sites: [...named] }
+    : {};
 
   yield* Effect.forEach(searchQueries, (query, index) =>
     publish({
@@ -46,6 +56,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
       data: {
         provider: "firecrawl",
         queries: [query],
+        ...limited,
         status: "loading",
         sources: [],
       },
@@ -55,7 +66,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   const searched = yield* Effect.forEach(
     searchQueries,
     (query) =>
-      searchFirecrawl(query).pipe(
+      searchFirecrawl(query, sites).pipe(
         Effect.map(({ response }) => ({
           error: undefined,
           sources: dedupeSources(readSearchSources(response)),
@@ -87,6 +98,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
           data: {
             provider: "firecrawl",
             queries: [query],
+            ...limited,
             status: "error",
             sources: [],
             error: found.error,
@@ -107,6 +119,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
         data: {
           provider: "firecrawl",
           queries: [query],
+          ...limited,
           status: "done",
           sources: addSourceCitations(sources),
         },

@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { readsPages } from "@repo/backend/test/nina/pages";
-import { createProgress } from "@repo/backend/test/nina/progress";
+import {
+  createProgress,
+  getWebSearchParts,
+} from "@repo/backend/test/nina/progress";
 import { Array as Arr, Effect, Logger, MutableRef, Option } from "effect";
 
 const firecrawlApp = vi.hoisted(() => ({
@@ -19,7 +21,10 @@ vi.mock("@repo/backend/confect/nina/research/tools/scrape", () => ({
   readPage,
 }));
 
-vi.mock("@repo/backend/confect/nina/research/domain", () => ({
+vi.mock("@repo/backend/confect/nina/research/domain", async (original) => ({
+  ...(await original<
+    typeof import("@repo/backend/confect/nina/research/domain")
+  >()),
   extractDomain: (url: string) => {
     const hostname = new URL(url).hostname;
 
@@ -33,6 +38,9 @@ vi.mock("@repo/backend/confect/nina/research/domain", () => ({
 
 /** What the provider is asked for with every query, besides the query itself. */
 const providerOptions = { limit: 5, sources: ["web", "news"], timeout: 10_000 };
+
+/** The sites the model named for the whole call: every query is sent with them. */
+const sites = ["kemdikbud.go.id", "bbc.com"];
 
 /**
  * A learner asks about a name written in Latin letters, in their own language.
@@ -65,17 +73,6 @@ const askedInOwnLanguage = [
     own: "ดีบักการเรียกใช้เครื่องมือ",
   },
 ];
-
-/** Extracts web-search data parts from a recorded test publish stream. */
-function getWebSearchParts(parts: readonly CapabilityArtifact[]) {
-  return Arr.flatMap(parts, (part) => {
-    if (part.type !== "data-web-search") {
-      return [];
-    }
-
-    return [part.data];
-  });
-}
 
 describe("research web search tool", () => {
   beforeEach(() => {
@@ -310,11 +307,15 @@ describe("research web search tool", () => {
           }),
         })
       );
+      // An open search names no site, so no card carries the field.
+      expect(
+        Arr.some(getWebSearchParts(parts()), (part) => "sites" in part)
+      ).toBe(false);
     })
   );
 
   it.effect.each(askedInOwnLanguage)(
-    "sends the provider every query the model wrote as written, also one that holds none of the request's names, and shows each query its own results ($language)",
+    "sends the provider every query the model wrote as written, also one that holds none of the request's names, each with the sites of the call, and shows each query its own results ($language)",
     ({ named, own, request }) =>
       Effect.gen(function* () {
         const urlOf = (query: string) =>
@@ -335,14 +336,15 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: [named, own],
+          sites,
           words: request,
           toolCallId: "web-search-queries",
           publish,
         });
 
         expect(firecrawlApp.search.mock.calls).toEqual([
-          [named, providerOptions],
-          [own, providerOptions],
+          [named, { ...providerOptions, includeDomains: sites }],
+          [own, { ...providerOptions, includeDomains: sites }],
         ]);
         expect(Arr.map(output.result.sources, (source) => source.url)).toEqual([
           "https://example.com/named",
@@ -363,6 +365,10 @@ describe("research web search tool", () => {
           [[named], ["https://example.com/named"]],
           [[own], ["https://example.com/own"]],
         ]);
+        // Every card of the call, loading or done, says the sites it was limited to.
+        expect(
+          Arr.map(getWebSearchParts(parts()), (part) => part.sites)
+        ).toEqual(Arr.makeBy(4, () => sites));
       })
   );
 

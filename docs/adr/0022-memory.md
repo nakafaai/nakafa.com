@@ -243,11 +243,12 @@ memories matched, not their words. A result that the chat kept would be
 readable in the transcript of a public chat, would be read again by every later
 turn of the chat, and would outlive the memory it came from. So the words never
 sit in the thread, not even for the length of the turn: the answer the tool
-returns, which the Agent component saves, holds the note only. The turn holds
-the words in memory while it runs and gives them to the model's next step in
-place of the note, and drops them when it ends, whether it completes, fails or
-is cancelled. A later turn that reads the call reads the note and searches again
-when it matters. The tool description
+returns, which the Agent component saves, holds the note only. The capability
+declares the note in its definition, and the shared runner of every capability
+applies it: the turn holds the words in memory while it runs and gives them to
+the model's next step in place of the note, and drops them when it ends,
+whether it completes, fails or is cancelled. A later turn that reads the call
+reads the note and searches again when it matters. The tool description
 and the tool policy tell Nina when to use it: when the learner points back to
 something they told her that is neither in the Learner section nor in the list
 ("like I said", "my schedule", "what do you remember about me"), or when a good

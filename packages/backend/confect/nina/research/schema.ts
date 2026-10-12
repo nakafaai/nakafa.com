@@ -2,9 +2,22 @@ import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
+import { HostnameSchema } from "@repo/backend/confect/nina/research/domain";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
+/**
+ * The most sites one web search call may name. The search provider states no
+ * limit for `includeDomains`
+ * (https://docs.firecrawl.dev/api-reference/endpoint/search, read on 12
+ * October 2026), so this bound is Nakafa's own, not a provider limit and not a
+ * measurement. A task that limits a search names the site of an official
+ * source, its sub-sites, or a few outlets, and five cover them. A search over
+ * more sites is an open search, so the model leaves the field out. A call that
+ * names more is refused, as a call with more queries than
+ * `webSearchMaxQueries` is, and runs no search.
+ */
+export const webSearchMaxSites = 5;
 /**
  * The most characters one search query may have. The search provider documents
  * its `query` with `maxLength: 500` (Firecrawl search endpoint,
@@ -81,9 +94,9 @@ export const WebSearchInputSchema = Schema.Struct({
         One or more search-engine queries.
 
         Preserve task-relevant user-provided strings for:
-        - named entities, domains, products, APIs, and libraries.
+        - named entities, products, APIs, and libraries.
         - features, versions, institutions, and dates.
-        - URLs, source constraints, and document titles.
+        - source names, document titles, and the URL of a page the query is about.
 
         Omit answer-formatting instructions:
         - summary length.
@@ -93,6 +106,25 @@ export const WebSearchInputSchema = Schema.Struct({
       `,
       }),
     }),
+  sites: Schema.optionalKey(
+    Schema.Array(HostnameSchema).pipe(
+      Schema.mutable,
+      Schema.check(Schema.isMaxLength(webSearchMaxSites))
+    )
+  ).annotate({
+    description: createPrompt({
+      taskContext: `
+        Hostnames of the only sites the results may come from, such as bbc.com.
+
+        Use it when the task asks for results of given sites only.
+        Write each site as a hostname, without a protocol or a path.
+        Every query of this call is then searched in those sites only.
+        Name at most ${webSearchMaxSites} sites.
+        A call that names more sites, or a site that is not a hostname, is refused and runs no search.
+        Leave this field out for an open search.
+      `,
+    }),
+  }),
 })
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   .annotate({

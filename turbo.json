@@ -48,6 +48,18 @@
           ]
         }
       },
+      "mascot": {
+        "dependencies": {
+          "deny": [
+            "app",
+            "analytics",
+            "backend",
+            "contents",
+            "design-system",
+            "mail"
+          ]
+        }
+      },
       "analytics": {
         "dependencies": {
           "deny": ["app", "backend", "contents", "design-system", "mail"]
