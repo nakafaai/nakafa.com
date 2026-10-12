@@ -235,7 +235,11 @@ analytics remains subject to account consent.
 
 A capability is one definition in its own folder and one entry in the registry.
 The tools Nina is offered, the policy of each call and the tool section of her
-prompt follow from them. A few other places still name a capability or its
+prompt follow from them, and all three follow `offered`: a turn whose page does
+not allow a capability, or whose learner paused it, is offered neither its tool
+nor its entry and rules in the prompt, so that turn's prompt prefix differs from
+the others, as its tool list does. Every page allows every capability today, so
+only a pause changes it. A few other places still name a capability or its
 Agent, and they are the steps below, in order, with what the compiler enforces
 at each and what it leaves to the author.
 
@@ -256,10 +260,18 @@ at each and what it leaves to the author.
    tool policy (`entry`, `field` when its input has a field of its own,
    `section`), the `continuation` that tells the model how to ask for what a
    truncation omitted, `offered`, and `run`. Add `note` when its answer must
-   stay out of the conversation, and `textOnly` when it publishes no card.
-   Enforced: `offered` and `run` have no default, so nothing is allowed by
-   omission; the Schema types the input of `run`; the typed errors of `run` end
-   as `CapabilityDenied` or `failed`, so none stays unhandled.
+   stay out of the conversation, and `textOnly` when it publishes no card: its
+   answer is the text, so a run that ends without a card is not read as empty,
+   and keeps the outcome it states, or none. Enforced: `offered` and `run` have
+   no default, so nothing is allowed by omission; the Schema types the input of
+   `run`; the typed errors of `run` end as `CapabilityDenied` or `failed`, so
+   none stays unhandled. Left to the author: a defect of `run` is not caught, and
+   its message reaches Nina, the stored thread and the transcript as the text of
+   a tool error. So a capability that handles the learner's private words ends
+   the failure of each platform call it makes as a typed error that holds no
+   message, and answers it with `failed`, as the memory capability does for its
+   search (`MemoryReadError`). A defect anywhere else in a run is a bug and
+   stays visible.
 4. Add its name to `LearningCapabilityNameSchema` in `capability/spec.ts`, and
    its definition to the end of the record in `capability/registry.ts`. The
    order is the order of the tool list and of the tool policy, so it is part of

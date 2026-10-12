@@ -13,8 +13,9 @@ type CapabilityOutcome = typeof CapabilityOutcomeSchema.Type;
  * done or empty: it is `partial` beside a loaded card and `failed` without
  * one. `limit` and `denied` are decisions, not results, and stay as stated. A
  * run with no card at all and no stated outcome is `empty`, whatever prose it
- * returned, because nothing it ran loaded evidence; a text-only capability has
- * no card to show and keeps no outcome.
+ * returned, because nothing it ran loaded evidence. A text-only capability is
+ * the one exception: its answer is the text and it has no card to show, so its
+ * run keeps the outcome it states, or none, which reads as done.
  */
 export function settleOutcome(
   outcome: CapabilityOutcome | undefined,

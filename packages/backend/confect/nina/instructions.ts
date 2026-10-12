@@ -54,9 +54,11 @@ const readLearner = Effect.fn("nina.instructions.learner")(function* (
  * prompt must not carry: the summary, since history omits the turns it covers;
  * the memories the learner's words call up, which belong with their message and
  * not in the prompt, whose bytes the provider caches; and whether the learner
- * paused memory. The turn reads the pause here once, and the capabilities Nina
- * is offered follow from it: the prompt describes exactly those, and the turn
- * offers exactly those to the model (`capabilities`).
+ * paused memory. The turn reads the pause here once. The capabilities Nina is
+ * offered follow from it and from what the turn's page allows
+ * (`capabilities`): the prompt describes exactly those, and the turn offers
+ * exactly those to the model. Every page allows all of them today
+ * (`resolveNinaToolContext`), so only the pause changes the prompt.
  */
 export const readInstructions = Effect.fn("nina.instructions")(function* (
   turn: Pick<
