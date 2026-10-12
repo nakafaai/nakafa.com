@@ -2,6 +2,7 @@ import { type Browser, expect, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { notAvailable, promptOf, SHARE_TOKEN } from "@/e2e/support/share";
 import {
@@ -48,24 +49,18 @@ const asAnotherLearner = <A, E, R>(
   baseURL: string,
   use: (page: Page) => Effect.Effect<A, E, R>
 ) =>
-  Effect.acquireUseRelease(
-    Effect.promise(() =>
-      browser.newContext({
-        baseURL,
-        serviceWorkers: "block",
-        viewport: VIEWPORT,
-      })
-    ),
+  withBrowserContext(
+    browser,
+    { baseURL, serviceWorkers: "block", viewport: VIEWPORT },
     (context) =>
       Effect.promise(() => context.newPage()).pipe(
         Effect.flatMap((page) => withObservedPageErrors(page, use(page)))
-      ),
-    (context) => Effect.promise(() => context.close())
+      )
   );
 
 /**
- * A learner shares a chat and opens it in Nina's sheet, where they write to it
- * as no one else does. The sheet remembers the chat in the browser. Returns the
+ * A learner shares a chat and opens it in Nina's sheet, where the owner has a
+ * box to write to it. The sheet remembers the chat in the browser. Returns the
  * chat and what the sheet remembered.
  */
 const sharesAndRemembers = Effect.fn("NakafaE2E.sharesAndRemembers")(function* (
@@ -122,11 +117,15 @@ const meetsTheChat = Effect.fn("NakafaE2E.meetsTheChat")(function* (
     // The sheet reads its storage as the page loads, so the browser holds what
     // the other learner left before the page loads with the sheet.
     await page.goto(LESSON_PATH);
-    await page.evaluate(
-      ({ key, value }) => localStorage.setItem(key, value),
-      { key: AI_STORAGE_KEY, value: shared.remembered }
-    );
+    await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+      key: AI_STORAGE_KEY,
+      value: shared.remembered,
+    });
     await page.reload();
+    // The page loaded with the other learner's chat as the one its sheet has
+    // open, and nothing has changed that yet, so the chat the sheet forgets
+    // next is that one.
+    expect(await storedBySheet(page)).toBe(shared.remembered);
     await page.getByRole("button", { exact: true, name: "Ask Nina" }).click();
 
     const sheet = inTheSheet(page);
@@ -134,6 +133,7 @@ const meetsTheChat = Effect.fn("NakafaE2E.meetsTheChat")(function* (
     await expect(sheet.getByText(NEW_CHAT)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
+    await expect(composerOf(sheet)).toBeVisible();
     await expect(promptWith(sheet, PROMPT)).toHaveCount(0);
     await expect
       .poll(() => rememberedChat(page), {

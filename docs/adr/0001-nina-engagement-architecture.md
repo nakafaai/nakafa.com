@@ -104,9 +104,13 @@ remembers the chat it had open. A learner who signs in after another one in the
 same browser can therefore open a sheet that remembers a chat they may not
 read, shared or not. The server answers that read as it answers for a chat that
 does not exist, the sheet forgets the chat and shows a new chat, and the
-learner starts one or opens one of their own.
-`apps/www/e2e/chat/access.browser.ts` proves it in the production build, with
-the address of the chat opened by a signed-in learner who holds no link.
+learner starts one or opens one of their own. The sheet gives each chat an error
+boundary of its own: a boundary that resets on a change of keys does not reset
+when the update that changes them hides the part of the sheet it sits in, and it
+showed nothing for every chat after the one it caught.
+`apps/www/e2e/chat/access.browser.ts` proves it in the production build: a
+signed-in learner who holds no link opens the address of the chat and a sheet
+that remembers it, and then opens a chat of their own in that sheet.
 
 The chat route renders its header on the server and the conversation after
 hydration, because a server never sees the fragment, and asking for the chat
