@@ -1,10 +1,11 @@
 import { RegisteredFunction } from "@confect/server";
+import { expect } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
 import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
 import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
-import { GatewayTest, provider } from "@repo/backend/test/gateway";
+import { decides, GatewayTest, provider } from "@repo/backend/test/gateway";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { memoryTools } from "@repo/backend/test/nina/memory";
 import { providerStep } from "@repo/backend/test/nina/specialist";
@@ -21,6 +22,29 @@ export const level: typeof NinaMemoryCandidate.Type = {
   quote: "Aku kelas 12",
   text: "Kelas 12.",
 };
+
+/** The log entry of a capture that saved nothing, with the routing facts it must hold. */
+export const unavailable = (fact: object) => [
+  ["Nina memory unavailable", expect.objectContaining(fact)],
+];
+
+/**
+ * A decision model that finds the message lasting or not, and each candidate,
+ * in the order they come, private or not. Its probabilities are far from every
+ * threshold, so a test never depends on the number a threshold has.
+ */
+export function judges({
+  lasting = true,
+  privates = [],
+}: {
+  readonly lasting?: boolean;
+  readonly privates?: readonly boolean[];
+} = {}) {
+  return decides((judgment, index) => {
+    const yes = judgment === "lasting" ? lasting : privates[index] === true;
+    return yes ? 0.99 : 0.01;
+  });
+}
 
 /** A model that answers every capture call with these candidates. */
 export function answers(...memories: (typeof NinaMemoryCandidate.Type)[]) {
@@ -60,9 +84,14 @@ export function fails(error: () => Promise<never>) {
   return model;
 }
 
-/** A learner who sent `prompt`, and a way to run one capture for that turn. */
+/**
+ * A learner who sent `prompt`, and a way to run one capture for that turn. The
+ * decision model finds the message lasting and nothing private, until a test
+ * says otherwise with `judges`.
+ */
 export async function createCapturingTest(prompt = MESSAGE) {
   const nina = await createNinaTest({ prompt });
+  judges();
   const f = { ...nina, ...memoryTools(nina) };
   const logged = MutableRef.make<readonly unknown[]>([]);
   const readTurn = async () =>

@@ -8,16 +8,17 @@ import { Effect, Schema } from "effect";
 /**
  * Why a background memory call saved nothing: the capture of what a learner
  * said, or the build of their portrait. `operation` names the step that failed:
- * reading the prompt, asking the model, or `unknown` for any other failure,
- * such as a query or a write that died. `rejected` marks an answer that did not
- * fit the asked object, and `gateway` classifies a failed call. None of them
- * holds the message, a memory, or the answer.
+ * reading the prompt, judging the words with the decision model, asking the
+ * model, or `unknown` for any other failure, such as a query or a write that
+ * died. `rejected` marks an answer that did not fit the asked object, and
+ * `gateway` classifies a failed call. None of them holds the message, a memory,
+ * or the answer.
  */
 export class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
   "NinaMemoryError",
   {
     gateway: Schema.optional(GatewayFailure),
-    operation: Schema.Literals(["read", "generate", "unknown"]),
+    operation: Schema.Literals(["read", "judge", "generate", "unknown"]),
     rejected: Schema.Boolean,
   }
 ) {}
@@ -31,6 +32,19 @@ export function generationFailure(error: unknown) {
         operation: "generate",
         rejected: false,
       });
+}
+
+/**
+ * Turns a decision that could not be made into the typed error: the gateway's
+ * routing facts, and nothing of the text that was judged. No decision means no
+ * verdict, and the capture saves nothing for that turn.
+ */
+export function judgmentFailure(failure: GatewayFailure) {
+  return new NinaMemoryError({
+    gateway: failure,
+    operation: "judge",
+    rejected: false,
+  });
 }
 
 /**

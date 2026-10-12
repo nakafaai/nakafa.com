@@ -13,6 +13,7 @@ export const get = registeredFunctions.get;
 export const known = registeredFunctions.known;
 export const list = registeredFunctions.list;
 export const pause = registeredFunctions.pause;
+export const paused = registeredFunctions.paused;
 export const read = registeredFunctions.read;
 export const remove = registeredFunctions.remove;
 export const state = registeredFunctions.state;

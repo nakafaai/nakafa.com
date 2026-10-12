@@ -9,6 +9,7 @@ const memory = refs.public.nina.memory;
 const pause = Ref.getFunctionReference(memory.pause);
 const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
 const known = Ref.getFunctionReference(refs.internal.nina.memory.known);
+const paused = Ref.getFunctionReference(refs.internal.nina.memory.paused);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
@@ -30,6 +31,16 @@ function words(notes: (typeof NinaLearner.Type)["prompt"]) {
 }
 
 describe("Nina memory for a turn", () => {
+  it("tells whether the learner paused memory, and follows the pause switch", async () => {
+    const f = await createMemoryTest();
+    const userId = f.identity.userId;
+    expect(await f.t.query(paused, { userId })).toBe(false);
+    await f.owner.mutation(pause, { paused: true });
+    expect(await f.t.query(paused, { userId })).toBe(true);
+    await f.owner.mutation(pause, { paused: false });
+    expect(await f.t.query(paused, { userId })).toBe(false);
+  });
+
   it("starts a turn with the memories for the open page, then the most recent, and no more than eight", async () => {
     const f = await createMemoryTest();
     const userId = f.identity.userId;

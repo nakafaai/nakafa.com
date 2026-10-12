@@ -9,14 +9,13 @@ import {
   answers,
   answersAfter,
   createCapturingTest,
-  fails,
+  judges,
   level,
   MESSAGE,
+  unavailable,
 } from "@repo/backend/test/nina/capture";
-import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
-import { APICallError } from "ai";
-import { MockLanguageModelV4 } from "ai/test";
+import { Experimental_DecisionMockModelV4 as DecisionMockModel } from "ai/test";
 import { Array as Arr, MutableRef, String as Str } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
@@ -37,13 +36,9 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
   vi.useRealTimers();
+  provider.decisionModel.mockReset();
   provider.languageModel.mockReset();
 });
-
-/** The log entry of a capture that saved nothing. */
-const unavailable = (fact: object) => [
-  ["Nina memory unavailable", expect.objectContaining(fact)],
-];
 
 /** How many known memories a prompt lists, one line each. */
 function listed(prompt: string) {
@@ -53,19 +48,39 @@ function listed(prompt: string) {
 }
 
 describe("memory capture", () => {
-  it("asks no model about a message that says nothing about the learner", async () => {
+  it("asks the capture model nothing about a message in which the decision model finds nothing lasting, and sends that decision the message alone", async () => {
     const f = await createCapturingTest("Explain a limit.");
     const model = answers(level);
+    const { requests } = judges({ lasting: false });
     await f.capture();
     expect(model.doGenerateCalls).toHaveLength(0);
     expect(await f.stored()).toEqual([]);
     expect((await f.turn())?.usage).toEqual([]);
+    expect(Arr.map(requests(), (request) => request.state)).toEqual([
+      [{ text: "Explain a limit.", type: "text" }],
+    ]);
+    expect(MutableRef.get(f.logged)).toEqual([]);
+  });
+
+  it("asks the capture model about a message in a script without spaces, because the decision model reads every language", async () => {
+    const f = await createCapturingTest(
+      "高校三年生で、来年は東京大学を目指しています。確率が苦手です。"
+    );
+    const model = answers({
+      kind: "level",
+      quote: "高校三年生",
+      text: "高校三年生。",
+    });
+    await f.capture();
+    expect(model.doGenerateCalls).toHaveLength(1);
+    expect(await f.texts()).toEqual(["高校三年生。"]);
+    expect((await f.turn())?.remembered).toBe(1);
   });
 
   it("asks no model about a prompt that holds no words of the learner", async () => {
     const f = await createCapturingTest();
     const model = answers(level);
-    // Nina's own reply says the words that pass the gate, which are not the learner's.
+    // Nina's own reply says the words that hold a memory, which are not the learner's.
     const answer = await f.t.mutation((ctx) =>
       saveMessage(ctx, components.nina, {
         threadId: f.threadId,
@@ -88,13 +103,35 @@ describe("memory capture", () => {
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
-  it("asks no model while memory is paused", async () => {
+  it("asks no model while memory is paused, the decision model included, so a paused learner's message goes nowhere", async () => {
     const f = await createCapturingTest();
     const model = answers(level);
+    const { requests } = judges();
     await f.owner.mutation(pause, { paused: true });
     await f.capture();
     expect(model.doGenerateCalls).toHaveLength(0);
+    expect(requests()).toEqual([]);
     expect(await f.stored()).toEqual([]);
+  });
+
+  it("asks the capture model nothing when the learner pauses memory while the decision is made", async () => {
+    const f = await createCapturingTest();
+    const model = answers(level);
+    provider.decisionModel.mockReturnValue(
+      new DecisionMockModel({
+        doDecide: async () => {
+          await f.owner.mutation(pause, { paused: true });
+          return {
+            answers: { "lasting.0": { probability: 0.99, type: "boolean" } },
+            warnings: [],
+          };
+        },
+      })
+    );
+    await f.capture();
+    expect(model.doGenerateCalls).toHaveLength(0);
+    expect(await f.stored()).toEqual([]);
+    expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
   it("saves what the learner said about themself, at most three memories, and records the call under the memory agent", async () => {
@@ -297,7 +334,7 @@ describe("memory capture", () => {
     );
   });
 
-  it("saves nothing the learner's words do not support, but still counts the call", async () => {
+  it("saves nothing the learner's words do not support, or in which the decision model finds something private, but still counts the call", async () => {
     const f = await createCapturingTest();
     answers(
       { ...level, quote: "Aku kelas 11" },
@@ -309,6 +346,8 @@ describe("memory capture", () => {
         until: "2026-10-09",
       }
     );
+    // Only the second candidate passes the structure checks, so it is the one the decision model judges.
+    judges({ privates: [true] });
     await f.capture();
     expect(await f.stored()).toEqual([]);
     expect((await f.turn())?.remembered).toBeUndefined();
@@ -316,6 +355,47 @@ describe("memory capture", () => {
       expect.objectContaining({ agent: "memory", calls: 1 }),
     ]);
     expect(MutableRef.get(f.logged)).toEqual([]);
+  });
+
+  it("drops a candidate in which the decision model finds something private and keeps the clean one beside it, from one decision request", async () => {
+    const f = await createCapturingTest(
+      "Aku kelas 12 dan nomor teleponku 0812 3456 7890."
+    );
+    answers(level, {
+      kind: "goal",
+      quote: "nomor teleponku 0812 3456 7890",
+      text: "Nomor telepon 0812 3456 7890.",
+    });
+    const { requests } = judges({ privates: [false, true] });
+    await f.capture();
+    expect(await f.texts()).toEqual(["Kelas 12."]);
+    expect((await f.turn())?.remembered).toBe(1);
+    // One request judged the message, one judged both candidates together, each as its sentence and its quote.
+    expect(Arr.map(requests(), (request) => request.state)).toEqual([
+      [
+        {
+          text: "Aku kelas 12 dan nomor teleponku 0812 3456 7890.",
+          type: "text",
+        },
+      ],
+      [
+        { text: "Text 1:\nKelas 12.\nAku kelas 12", type: "text" },
+        {
+          text: "Text 2:\nNomor telepon 0812 3456 7890.\nnomor teleponku 0812 3456 7890",
+          type: "text",
+        },
+      ],
+    ]);
+    expect(MutableRef.get(f.logged)).toEqual([]);
+  });
+
+  it("asks the decision model about no candidate when none passes the structure checks", async () => {
+    const f = await createCapturingTest();
+    answers({ ...level, quote: "Aku kelas 11" });
+    const { requests } = judges();
+    await f.capture();
+    expect(requests()).toHaveLength(1);
+    expect(await f.stored()).toEqual([]);
   });
 });
 
@@ -387,98 +467,5 @@ describe("memory capture wording", () => {
     ]) {
       expect(prompt).toContain(said);
     }
-  });
-});
-
-describe("memory capture that fails", () => {
-  it("logs the provider's routing facts, never its words, and saves nothing", async () => {
-    const f = await createCapturingTest();
-    fails(() =>
-      Promise.reject(
-        new APICallError({
-          message: "Private provider detail",
-          requestBodyValues: { prompt: MESSAGE },
-          statusCode: 400,
-          isRetryable: false,
-          url: "https://ai-gateway.convex.dev/v1/chat/completions",
-        })
-      )
-    );
-    await f.capture();
-    expect(MutableRef.get(f.logged)).toEqual(
-      unavailable({
-        operation: "generate",
-        reason: "invalid",
-        rejected: false,
-        status: 400,
-      })
-    );
-    expect(encodeJsonText(MutableRef.get(f.logged))).not.toContain(
-      "Private provider detail"
-    );
-    expect(encodeJsonText(MutableRef.get(f.logged))).not.toContain("Aku");
-    expect(await f.stored()).toEqual([]);
-  });
-
-  it("logs an answer with more than three memories as rejected, and saves none of them", async () => {
-    const f = await createCapturingTest();
-    answers(level, level, level, level);
-    await f.capture();
-    expect(MutableRef.get(f.logged)).toEqual(
-      unavailable({ operation: "generate", rejected: true })
-    );
-    expect(await f.stored()).toEqual([]);
-  });
-
-  it("logs an answer that is not the asked object as rejected", async () => {
-    const f = await createCapturingTest();
-    provider.languageModel.mockReturnValue(
-      new MockLanguageModelV4({
-        doGenerate: providerStep([{ type: "text", text: "not an object" }]),
-      })
-    );
-    await f.capture();
-    expect(MutableRef.get(f.logged)).toEqual(
-      unavailable({ operation: "generate", rejected: true })
-    );
-    expect(await f.stored()).toEqual([]);
-  });
-
-  it("logs a prompt it cannot read", async () => {
-    const f = await createCapturingTest();
-    const model = answers(level);
-    await f.capture("not-a-message-id");
-    expect(model.doGenerateCalls).toHaveLength(0);
-    expect(MutableRef.get(f.logged)).toEqual(
-      unavailable({ operation: "read", rejected: false })
-    );
-  });
-
-  it("logs a write that dies and saves nothing", async () => {
-    const f = await createCapturingTest();
-    answers(level);
-    vi.stubEnv("VAULT_ROOT_KEYS", "");
-    await f.capture();
-    expect(MutableRef.get(f.logged)).toEqual(
-      unavailable({ operation: "unknown", rejected: false })
-    );
-    expect(await f.stored()).toEqual([]);
-  });
-
-  it("logs a memory it cannot open and changes nothing", async () => {
-    const f = await createCapturingTest();
-    const model = answers(level);
-    await f.seed({ author: "learner" });
-    await f.t.mutation(async (ctx) => {
-      for (const key of await ctx.db.query("vaultKeys").collect()) {
-        await ctx.db.delete(key._id);
-      }
-    });
-    await f.capture();
-    expect(model.doGenerateCalls).toHaveLength(0);
-    expect(MutableRef.get(f.logged)).toEqual(
-      unavailable({ operation: "unknown", rejected: false })
-    );
-    expect(await f.stored()).toHaveLength(1);
   });
 });

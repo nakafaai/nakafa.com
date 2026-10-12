@@ -367,6 +367,15 @@ export default GroupSpec.make()
       returns: () => NinaLearner,
     })
   )
+  // Whether the learner paused memory. The capture asks before it sends the
+  // learner's message to any model, and before it searches a single memory.
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "paused",
+      args: () => ({ userId: Id("users") }),
+      returns: () => Schema.Boolean,
+    })
+  )
   // What the capture call reads: the account facts and the memories that match
   // the learner's message and the open pages, as they are at the caller's time
   // `now`.

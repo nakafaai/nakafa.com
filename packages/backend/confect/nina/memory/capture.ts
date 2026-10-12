@@ -12,11 +12,14 @@ import { boundText } from "@repo/backend/confect/nina/budget";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { checkCandidates } from "@repo/backend/confect/nina/memory/check";
 import {
+  isLasting,
+  withoutPrivate,
+} from "@repo/backend/confect/nina/memory/decision";
+import {
   generationFailure,
   logFailure,
   NinaMemoryError,
 } from "@repo/backend/confect/nina/memory/failure";
-import { passesGate } from "@repo/backend/confect/nina/memory/gate";
 import { knownLine } from "@repo/backend/confect/nina/memory/line";
 import { topicsOf } from "@repo/backend/confect/nina/memory/topics";
 import {
@@ -127,9 +130,11 @@ const readMessage = Effect.fn("nina.memory.message")(function* (
 
 /**
  * Saves what the learner's message says about themself, after a complete turn.
- * Plain code decides when the model is asked and which of its candidates stay;
- * the model only reads the message. Whatever fails, the turn is complete and
- * its other follow-up work goes on: the failure is logged and nothing is saved.
+ * A decision model decides when the capture model is asked and which of its
+ * candidates are private; plain code only checks structure (the quote is in the
+ * message, the sentence says something, a situation has an end day). The capture
+ * model only reads the message. Whatever fails, the turn is complete and its
+ * other follow-up work goes on: the failure is logged and nothing is saved.
  */
 export const captureMemory = Effect.fn("nina.memory.capture")(
   function* (
@@ -137,7 +142,7 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
     usageHandler: UsageHandler
   ) {
     const message = yield* readMessage(turn);
-    if (message === undefined || !passesGate(message)) {
+    if (message === undefined || !(yield* isLasting(turn.userId, message))) {
       return;
     }
     const topics = topicsOf(turn.page);
@@ -180,11 +185,15 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
           .then((result) => result.output),
       catch: generationFailure,
     });
-    const candidates = checkCandidates(
+    const checked = checkCandidates(
       message,
       memories,
       yield* Clock.currentTimeMillis
     );
+    if (!Arr.isReadonlyArrayNonEmpty(checked)) {
+      return;
+    }
+    const candidates = yield* withoutPrivate(checked);
     if (!Arr.isReadonlyArrayNonEmpty(candidates)) {
       return;
     }

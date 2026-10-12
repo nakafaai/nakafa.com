@@ -37,6 +37,20 @@ export const read = FunctionImpl.make(
 );
 
 /**
+ * Whether the learner paused memory. The capture asks before it sends the
+ * learner's message to any model, and before it searches a single memory, so a
+ * paused learner's message goes nowhere.
+ */
+export const paused = FunctionImpl.make(
+  schema,
+  spec,
+  "paused",
+  Effect.fn("nina.memory.paused")(function* ({ userId }) {
+    return (yield* readMemoryState(userId)).paused;
+  })
+);
+
+/**
  * What the capture call reads: the account profile and the at most
  * `MEMORY_KNOWN_LIMIT` memories that match the learner's message and the open
  * page best. While memory is paused, no memory is read, and a memory that

@@ -13,23 +13,10 @@ import {
 type Candidate = typeof NinaMemoryCandidate.Type;
 
 const WHITESPACE = /\s+/gu;
-const EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/u;
-const LINK =
-  /(?:https?:\/\/|www\.)\S+|\b[\p{L}\p{N}-]+\.(?:com|net|org|io|id|de|co|me|app|dev|ai|edu|gov)\b/iu;
-const LONG_NUMBER = /\d{8,}/u;
 
 /** Lower case with every run of whitespace as one space: the form a quote is searched in. */
 function collapse(text: string) {
   return Str.trim(Str.replaceAll(WHITESPACE, " ")(Str.toLowerCase(text)));
-}
-
-/**
- * Whether a text holds an email address, a link, or eight digits or more in a
- * row. A dash, a dot or a space ends a run of digits, because joining them
- * would also drop a date such as 20-10-2026.
- */
-function hasPrivateData(text: string) {
-  return EMAIL.test(text) || LINK.test(text) || LONG_NUMBER.test(text);
 }
 
 /**
@@ -60,8 +47,6 @@ function isSupported(candidate: Candidate, said: string, now: number) {
     hasWords(candidate.text) &&
     !labelsLearner(candidate.text, said) &&
     Str.includes(quote)(said) &&
-    !hasPrivateData(candidate.text) &&
-    !hasPrivateData(candidate.quote) &&
     (candidate.kind !== "situation" || endsInTime(candidate.until, now))
   );
 }
@@ -69,9 +54,10 @@ function isSupported(candidate: Candidate, said: string, now: number) {
 /**
  * Keeps the candidates the learner's own words support. A candidate stays only
  * when its quote is in the message, its text says something (it has a letter or
- * a digit) and does not label the learner (`labelsLearner`), neither its text
- * nor its quote holds an email address, a link or a long number, and a
- * situation ends today or later. Only a situation keeps its end date.
+ * a digit) and does not label the learner (`labelsLearner`), and a situation
+ * ends today or later. Only a situation keeps its end date. Whether a candidate
+ * holds something private is not decided here: the decision model says so
+ * (`judgment/catalog`).
  */
 export function checkCandidates(
   message: string,
