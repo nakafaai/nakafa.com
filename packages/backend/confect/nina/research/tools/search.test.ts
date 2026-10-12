@@ -206,6 +206,30 @@ describe("research web search tool", () => {
       })
   );
 
+  it.effect("chooses page paragraphs by the words, not the queries", () =>
+    Effect.gen(function* () {
+      const url = "https://example.com/krebs";
+      const forWords = "Siklus Krebs berlangsung di matriks. ".repeat(18);
+      const forQueries = "The citric acid cycle makes ATP. ".repeat(20);
+      const page = Arr.join(
+        ["Cuaca cerah hari ini. ".repeat(40), forWords, forQueries],
+        "\n\n"
+      );
+      firecrawlApp.search.mockResolvedValue({ web: [{ url }] });
+      readPage.mockImplementation(readsPages({ [url]: page }));
+      const output = yield* searchWeb({
+        queries: ["citric acid cycle"],
+        words: "Jelaskan siklus Krebs",
+        toolCallId: "web-search-words",
+        publish: createProgress().publish,
+      });
+
+      expect(output.result.sources).toEqual([
+        expect.objectContaining({ content: forWords.trim() }),
+      ]);
+    })
+  );
+
   it.effect(
     "shows an address once, however many results or queries repeat it",
     () =>
