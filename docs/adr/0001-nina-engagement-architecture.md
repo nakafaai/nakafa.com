@@ -172,7 +172,10 @@ refreshes are chat upkeep, so their provider usage accumulates on the summary
 rather than in a turn's usage ledger, which clients read: a web build decodes
 only the agent names it was built with, so a refresh recorded under a name of
 its own would stop every build opened before that deploy from reading its
-conversation until it reloaded. The learner profile
+conversation until it reloaded. A refresh whose answer is empty or cut at the
+output cap stores no text and counts its tokens all the same. A chat's first
+refresh has no summary to count them on, because a summary holds text, so a
+first refresh that is rejected counts nowhere. The learner profile
 and learner memory follow [ADR 0022](./0022-memory.md). Old
 reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
