@@ -49,17 +49,28 @@ which readers check without any key, and the token sealed for the owner, so the
 owner can copy the link again. The link carries the token in its fragment, which
 a browser sends to no server, so opening the link leaves the token in no request
 log, and the analytics client drops fragments from every URL it reports. Three
-flows send the current address on purpose, so that a visitor returns to the page
-they left: the return address of a sign-in, the language switch and the
-checkout return. They carry the token with them, to Nakafa's server and, for the
-checkout, to Polar. A learner who is not the owner reads the chat, its
-conversation and its messages only with that token, and every other read
-answers as if the chat did not exist, whether the chat is private, shared or
-gone. Turning sharing off, or deleting the chat, deletes the token, so every
-link stops at once, and turning sharing on again draws a new one. No list of
-another learner's chats exists. A chat that was public before share tokens had
+flows read the address of the current page and send it on, and none of them
+carries the token. The language switch asks Nakafa's server for the other
+language of the path and the query, keeps the fragment in the browser and puts
+it back on the answer. The return address of a checkout, which goes to Polar,
+and the return address of a sign-in, which travels in the query string of the
+auth routes, drop the token and keep any other entry of the fragment. A visitor
+who signs in from a shared chat comes back to the chat by id and opens the link
+again. A test for each flow proves that no address it sends holds the token. A
+learner who is not the owner reads the chat, its conversation and its messages
+only with that token, and every other read answers as if the chat did not exist,
+whether the chat is private, shared or gone. Turning sharing off, or deleting
+the chat, deletes the token, so every link stops at once, and turning sharing on
+again draws a new one. No list of another learner's chats exists, so a profile
+lists chats for its owner alone. A chat that was public before share tokens had
 only its id for a link: that link stops working when share tokens go live, the
 chat goes back to private, and its owner shares it again to get a link.
+
+The chat route renders its header on the server and the conversation after
+hydration, because a server never sees the fragment, and asking for the chat
+before the token is read would show the access denied state to a reader whose
+link is right. Convex data does not reach a server render, so before share
+tokens the server rendered the header and an empty conversation too.
 
 Nina's system prompt leads with stable instructions so provider prompt caching
 reuses them across turns. The current page, which learners share, the learner

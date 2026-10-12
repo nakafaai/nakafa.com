@@ -2,15 +2,14 @@ import { shareTokenValidator } from "@repo/backend/confect/chats/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { getAppUrl } from "@repo/next-config/app";
 import { Option, Schema, String as Str } from "effect";
-
-/** The name of the fragment entry that carries a share token. */
-const SHARE_ENTRY = "share";
+import { SHARE_ENTRY } from "@/lib/share/fragment";
 
 /**
  * The link a learner gives out for a shared chat. The token rides in the
  * fragment, which a browser sends to no server, so opening the link leaves it in
  * no request log, and the analytics client drops fragments from the URLs it
- * reports. The chat id alone opens nothing.
+ * reports. No flow that sends the address of the page on carries it either
+ * (ADR 0001). The chat id alone opens nothing.
  */
 export function shareLink(chatId: Id<"chats">, token: string) {
   const link = new URL(`/chat/${chatId}`, getAppUrl());

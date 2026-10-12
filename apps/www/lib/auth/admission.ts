@@ -1,6 +1,7 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { Option, Schema } from "effect";
 import { hasLocale } from "next-intl";
+import { withoutShareToken } from "@/lib/share/fragment";
 
 const URL_PARSE_BASE = "https://internal.invalid";
 const CONTROL_CHARACTER_PATTERN = /\p{Cc}/u;
@@ -138,7 +139,14 @@ type PostAuthDestination = typeof PostAuthDestinationSchema.Type;
 
 const decodeString = Schema.decodeUnknownOption(Schema.String);
 
-/** Resolves untrusted URL state into an explicit post-auth intent decision. */
+/**
+ * Resolves untrusted URL state into an explicit post-auth intent decision.
+ *
+ * An intent travels in the query string of the auth and onboarding routes, so
+ * it never carries a share token: the token is a credential that a fragment
+ * keeps away from every server. A visitor who signs in from a shared chat comes
+ * back to the chat by id and opens the link again.
+ */
 export function resolvePostAuthIntent(
   rawIntent: unknown,
   rawLocale: string = routing.defaultLocale
@@ -169,7 +177,7 @@ export function resolvePostAuthIntent(
     return { kind: "none", reason: "invalid" };
   }
 
-  const normalized = `/${parsed.locale}${parsed.pathname}${parsed.url.search}${parsed.url.hash}`;
+  const normalized = `/${parsed.locale}${parsed.pathname}${parsed.url.search}${withoutShareToken(parsed.url.hash)}`;
   const intent = PostAuthIntentSchema.makeOption(normalized);
   if (Option.isNone(intent)) {
     return { kind: "none", reason: "invalid" };
