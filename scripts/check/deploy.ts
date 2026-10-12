@@ -88,7 +88,7 @@ export function inspectDeploySource(
 
 /** The Ignored Build Step of one project: the script that decides, and the project it decides for. */
 function ignoreCommandOf(project: string) {
-  return `node "$(git rev-parse --show-toplevel)/scripts/vercel/ignore.mjs" ${project}`;
+  return `node "$(git rev-parse --show-toplevel)/scripts/vercel/step.mjs" ${project}`;
 }
 
 /**

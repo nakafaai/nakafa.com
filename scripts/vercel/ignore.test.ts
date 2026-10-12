@@ -208,12 +208,18 @@ describe("decideBuild", () => {
 function makeHost({
   changed,
   hasPrevious = true,
+  hasWorkspaceList = true,
+  strays = [],
 }: {
   readonly changed: readonly string[];
   readonly hasPrevious?: boolean;
+  readonly hasWorkspaceList?: boolean;
+  readonly strays?: readonly string[];
 }) {
   const files: Record<string, string> = {
-    "pnpm-workspace.yaml": "packages:\n  - apps/*\n  - packages/*\n",
+    ...(hasWorkspaceList
+      ? { "pnpm-workspace.yaml": "packages:\n  - apps/*\n  - packages/*\n" }
+      : {}),
     ...Rec.fromEntries(
       Arr.map(Rec.toEntries(manifests), ([dir, manifest]): [string, string] => [
         `${dir}/package.json`,
@@ -230,9 +236,12 @@ function makeHost({
   const host: Host = {
     git,
     list: (dir) =>
-      Arr.map(
-        Arr.filter(Rec.keys(manifests), (path) => path.startsWith(`${dir}/`)),
-        (path) => path.slice(dir.length + 1)
+      Arr.appendAll(
+        Arr.map(
+          Arr.filter(Rec.keys(manifests), (path) => path.startsWith(`${dir}/`)),
+          (path) => path.slice(dir.length + 1)
+        ),
+        dir === "apps" ? strays : []
       ),
     read: (file) => files[file],
   };
@@ -328,6 +337,29 @@ describe("runIgnoreStep", () => {
       });
     }
   );
+
+  it("leaves a folder without a package manifest out of the workspaces", () => {
+    const { host } = makeHost({
+      changed: ["docs/adr/0007-delivery.md"],
+      strays: [".DS_Store"],
+    });
+
+    expect(
+      runIgnoreStep({ argv, env: { VERCEL_GIT_PREVIOUS_SHA: "abc123" }, host })
+        .build
+    ).toBe(false);
+  });
+
+  it("refuses a repository that lists no workspaces, so the entry builds", () => {
+    const { host } = makeHost({
+      changed: ["docs/adr/0007-delivery.md"],
+      hasWorkspaceList: false,
+    });
+
+    expect(() =>
+      runIgnoreStep({ argv, env: { VERCEL_GIT_PREVIOUS_SHA: "abc123" }, host })
+    ).toThrow("pnpm-workspace.yaml lists no packages.");
+  });
 
   it("builds when no project is named", () => {
     const { host } = makeHost({ changed: ["docs/a.md"] });

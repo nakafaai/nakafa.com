@@ -1,14 +1,10 @@
 // Decides whether one Vercel project needs a new build.
 //
-// Each project names this script as its Ignored Build Step in `vercel.ts`.
-// Vercel runs that step before it installs any dependency, so this module is
-// plain JavaScript that uses Node.js built-ins only: the Effect modules that the
-// rest of the repository is written with do not exist yet at that point. Exit
-// code 0 skips the build and exit code 1 builds, and so does every failure.
-import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+// `step.mjs` runs this decision as the Ignored Build Step of each project. Vercel
+// runs that step before it installs any dependency, so these modules are plain
+// JavaScript with no import but Node.js built-ins: the Effect modules that the
+// rest of the repository is written with do not exist yet at that point. This
+// module reads the machine only through the `Host` that its caller hands it.
 
 /**
  * One workspace of the monorepo.
@@ -242,55 +238,4 @@ export function runIgnoreStep({ argv, env, host }) {
     project,
     workspaces: readWorkspaces(host),
   });
-}
-
-/**
- * The host of a real run: the git repository that contains the current
- * directory.
- * @returns {Host}
- */
-function makeNodeHost() {
-  const root = execFileSync("git", ["rev-parse", "--show-toplevel"], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "ignore"],
-  }).trim();
-  return {
-    git: (args) =>
-      execFileSync("git", ["-C", root, ...args], {
-        encoding: "utf8",
-        maxBuffer: 64 * 1024 * 1024,
-        stdio: ["ignore", "pipe", "ignore"],
-      }),
-    list: (dir) => readdirSync(join(root, dir)),
-    read: (file) =>
-      existsSync(join(root, file))
-        ? readFileSync(join(root, file), "utf8")
-        : undefined,
-  };
-}
-
-/** The entry point: prints the reason and sets the exit code. */
-function main() {
-  let decision;
-  try {
-    decision = runIgnoreStep({
-      argv: process.argv,
-      env: process.env,
-      host: makeNodeHost(),
-    });
-  } catch (error) {
-    decision = {
-      build: true,
-      reason: `The decision failed (${String(error)}), so it builds.`,
-    };
-  }
-  process.stdout.write(`${decision.reason}\n`);
-  process.exitCode = decision.build ? 1 : 0;
-}
-
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
-  main();
 }

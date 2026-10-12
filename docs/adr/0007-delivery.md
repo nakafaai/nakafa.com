@@ -94,8 +94,9 @@ contextual visit cannot first record a canonical view and then a placement view.
 - A merge to main creates a new deployment of every project, and every
   deployment starts with empty caches, so a project skips the build of a commit
   that nothing it is built from changed. Each `vercel.ts` names
-  `scripts/vercel/ignore.mjs` as its Ignored Build Step, and
-  `scripts/check/deploy.ts` keeps the four files equal. A project is built from
+  `scripts/vercel/step.mjs` as its Ignored Build Step, which asks the decision
+  in `scripts/vercel/ignore.mjs`, and `scripts/check/deploy.ts` keeps the four
+  files equal. A project is built from
   its own workspace, every workspace it depends on, the lockfile and the root
   configuration, so `www`, whose build deploys the Convex functions, builds
   whenever `packages/backend` changes. Documentation and tests build nothing. A

@@ -126,7 +126,7 @@ function configIgnoring(ignoreCommand: string) {
 }
 
 const WWW_COMMAND =
-  'node "$(git rev-parse --show-toplevel)/scripts/vercel/ignore.mjs" www';
+  'node "$(git rev-parse --show-toplevel)/scripts/vercel/step.mjs" www';
 
 describe("Vercel Ignored Build Step", () => {
   it.effect("accepts the command of the project that the file configures", () =>

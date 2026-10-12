@@ -8,7 +8,7 @@ import type { VercelConfig } from "@vercel/config/v1";
 export const config: VercelConfig = {
   buildCommand: "pnpm build",
   ignoreCommand:
-    'node "$(git rev-parse --show-toplevel)/scripts/vercel/ignore.mjs" api',
+    'node "$(git rev-parse --show-toplevel)/scripts/vercel/step.mjs" api',
   framework: null,
   outputDirectory: "public",
   git: {

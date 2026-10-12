@@ -6,7 +6,7 @@ export const config: VercelConfig = {
   // nothing that the app is built from changed. Its build deploys the Convex
   // functions, so a change to `packages/backend` builds it.
   ignoreCommand:
-    'node "$(git rev-parse --show-toplevel)/scripts/vercel/ignore.mjs" www',
+    'node "$(git rev-parse --show-toplevel)/scripts/vercel/step.mjs" www',
   // Keep database work beside the US East Convex production deployment.
   regions: ["iad1"],
   git: {

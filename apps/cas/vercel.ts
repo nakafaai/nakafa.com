@@ -4,7 +4,7 @@ export const config: VercelConfig = {
   framework: "fastapi",
   buildCommand: "turbo run build && uv sync --no-dev --frozen",
   ignoreCommand:
-    'node "$(git rev-parse --show-toplevel)/scripts/vercel/ignore.mjs" cas',
+    'node "$(git rev-parse --show-toplevel)/scripts/vercel/step.mjs" cas',
   git: {
     deploymentEnabled: {
       "**": false,
