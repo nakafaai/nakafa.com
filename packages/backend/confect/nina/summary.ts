@@ -26,8 +26,6 @@ import {
   Schema,
 } from "effect";
 
-/** Text one message contributes to a refresh transcript. */
-const MESSAGE_TOKENS = 1500;
 const MESSAGE_PAGE = 100;
 
 /**
@@ -133,7 +131,7 @@ function transcriptOf(docs: readonly MessageDoc[], orders: readonly number[]) {
       doc.tool || !doc.text
         ? Result.failVoid
         : Result.succeed(
-            `${doc.message?.role === "user" ? "Learner" : "Nina"}: ${boundText(doc.text, MESSAGE_TOKENS, "Message shortened.")}`
+            `${doc.message?.role === "user" ? "Learner" : "Nina"}: ${boundText(doc.text, NINA_BUDGET.foldMessage, "Message shortened.")}`
           )
     ),
     Arr.join("\n\n")

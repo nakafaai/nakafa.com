@@ -97,6 +97,14 @@ describe("memory capture", () => {
     expect(asked).not.toContain("oneOf");
   });
 
+  it("shows the capture model at most 1,000 tokens of a long message", async () => {
+    const f = await createCapturingTest("word ".repeat(2000));
+    const model = answers();
+    await f.capture();
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain("Shortened to about 1000 of");
+  });
+
   it("asks no model about a prompt that holds no words of the learner", async () => {
     const f = await createCapturingTest();
     const model = answers(level);
