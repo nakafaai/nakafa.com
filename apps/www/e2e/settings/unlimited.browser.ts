@@ -1,6 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
+  ANSWER_MILLISECONDS,
+  type Changes,
+  live,
+  reloadUntil,
+  saved,
+} from "@/e2e/support/changes";
+import {
   LATE,
   NEWEST,
   OLDEST,
@@ -8,17 +15,12 @@ import {
   writeLongList,
 } from "@/e2e/support/list";
 import {
-  ANSWER_MILLISECONDS,
-  type Changes,
   EMPTY,
   editorOf,
-  live,
   memoryRow,
   NO_RESULT,
   opened,
   openMemoryPage,
-  reloadUntil,
-  saved,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";

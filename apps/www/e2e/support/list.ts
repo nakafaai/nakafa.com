@@ -4,11 +4,9 @@ import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
 import {
   ANSWER_MILLISECONDS,
   type Changes,
-  EMPTY,
-  editorOf,
-  opened,
   saved,
-} from "@/e2e/support/memory";
+} from "@/e2e/support/changes";
+import { EMPTY, editorOf, opened } from "@/e2e/support/memory";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** How many memories the long list holds: three more than the first page loads. */
