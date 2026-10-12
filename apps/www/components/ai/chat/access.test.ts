@@ -1,10 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
-import { readChatAccess } from "@/components/ai/chat/access";
+import { readChatAccess, readChatArgs } from "@/components/ai/chat/access";
 
 const learner = Schema.decodeUnknownSync(Id("users"))("user_1");
 const stranger = Schema.decodeUnknownSync(Id("users"))("user_2");
+const chatId = Schema.decodeUnknownSync(Id("chats"))("chat_1");
+/** 43 URL-safe characters, the shape of a share token. */
+const token = "abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE";
 
 const loaded = {
   chatUserId: learner,
@@ -68,5 +71,20 @@ describe("chat/access", () => {
         viewerId: learner,
       })
     ).toEqual({ canWrite: false, owner: false });
+  });
+});
+
+describe("chat/access arguments", () => {
+  it("reads the chat by its id when the reader holds no link", () => {
+    // The key is absent, not undefined: the queries declare `shareToken` as an
+    // optional key, which takes a string or nothing.
+    expect(readChatArgs(chatId, undefined)).toStrictEqual({ chatId });
+  });
+
+  it("sends the share token of the link along with the chat id", () => {
+    expect(readChatArgs(chatId, token)).toStrictEqual({
+      chatId,
+      shareToken: token,
+    });
   });
 });

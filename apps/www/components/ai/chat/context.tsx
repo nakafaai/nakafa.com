@@ -16,7 +16,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { readChatAccess } from "@/components/ai/chat/access";
+import { readChatAccess, readChatArgs } from "@/components/ai/chat/access";
 import { isChatBusy } from "@/components/ai/chat/busy";
 import { optimisticCancel, readStopFailure } from "@/components/ai/chat/cancel";
 import { draftMessage } from "@/components/ai/chat/messages";
@@ -31,12 +31,15 @@ type CancelError = Ref.Error<typeof nina.lifecycle.cancel>;
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 
-/** Reads the authorized facts of one conversation: its chat and latest turn. */
-function useConversation(chatId: Id<"chats">) {
+/**
+ * Reads the authorized facts of one conversation: its chat and latest turn. A
+ * reader who is not the owner proves access with the share token of the link.
+ */
+function useConversation(chatId: Id<"chats">, shareToken: string | undefined) {
   const authenticating = useConvexAuth((auth) => auth.isLoading);
   const result = useQuery(
     nina.conversation.get,
-    authenticating ? "skip" : { chatId }
+    authenticating ? "skip" : readChatArgs(chatId, shareToken)
   );
   if (QueryResult.isFailure(result)) {
     throw result.error;
@@ -53,8 +56,8 @@ function useConversation(chatId: Id<"chats">) {
  * streams. Each action is one function for the life of the provider and
  * reads the latest render when it runs.
  */
-function useChatState(chatId: Id<"chats">) {
-  const { chat, turn } = useConversation(chatId);
+function useChatState(chatId: Id<"chats">, shareToken: string | undefined) {
+  const { chat, turn } = useConversation(chatId, shareToken);
   const submission = useNinaSubmission();
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
@@ -215,6 +218,7 @@ function useChatState(chatId: Id<"chats">) {
     owner,
     retry: actions.retry,
     send: actions.send,
+    shareToken,
     turn,
   };
 }
@@ -231,14 +235,19 @@ type ChatContextValue = ReturnType<typeof useChatState>;
  * Each chat gets its own state and its own subtree, so choosing another chat
  * starts with none of the previous chat's error, stop, send or pending prompt,
  * whichever surface renders the provider. The text the learner is typing is
- * not part of it: that draft is one for every chat.
+ * not part of it: that draft is one for every chat. `shareToken` is the one a
+ * shared link carries, for a reader who is not the owner.
  */
 export function ChatProvider({
   chatId,
   children,
-}: PropsWithChildren<{ chatId: Id<"chats"> }>) {
+  shareToken,
+}: PropsWithChildren<{
+  chatId: Id<"chats">;
+  shareToken?: string | undefined;
+}>) {
   return (
-    <ChatConversation chatId={chatId} key={chatId}>
+    <ChatConversation chatId={chatId} key={chatId} shareToken={shareToken}>
       {children}
     </ChatConversation>
   );
@@ -248,8 +257,12 @@ export function ChatProvider({
 function ChatConversation({
   chatId,
   children,
-}: PropsWithChildren<{ chatId: Id<"chats"> }>) {
-  const value = useChatState(chatId);
+  shareToken,
+}: PropsWithChildren<{
+  chatId: Id<"chats">;
+  shareToken: string | undefined;
+}>) {
+  const value = useChatState(chatId, shareToken);
   return <ChatContext value={value}>{children}</ChatContext>;
 }
 
