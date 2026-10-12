@@ -1,16 +1,28 @@
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Data, Record as Rec } from "effect";
+import {
+  Array as Arr,
+  Data,
+  Effect,
+  FileSystem,
+  Path,
+  Record as Rec,
+} from "effect";
 import {
   decideBuild,
   describeWorkspace,
   type Host,
   readWorkspaceRoots,
   runIgnoreStep,
+  settleIgnoreStep,
 } from "#scripts/vercel/ignore";
 
 /** A commit that a shallow clone does not hold. */
 class MissingCommit extends Data.TaggedError("MissingCommit") {}
+
+/** A machine that the step cannot read. */
+class UnreadableMachine extends Data.TaggedError("UnreadableMachine") {}
 
 /** The shape of the monorepo, reduced to the packages that the cases need. */
 const manifests = {
@@ -117,6 +129,9 @@ describe("decideBuild", () => {
     ["www", "packages/backend/README.md", false],
     ["www", "apps/www/lib/auth/proxy.test.ts", false],
     ["www", "packages/backend/confect/nina/turns.impl.test.ts", false],
+    ["www", "apps/www/public/skill.md", true],
+    ["www", "apps/www/public/guide/intro.test.js", true],
+    ["www", "packages/design-system/public/readme.md", true],
     ["api", "packages/utilities/uuid.ts", true],
     ["api", "apps/api/vercel.ts", true],
     ["api", "apps/www/app/page.tsx", false],
@@ -271,6 +286,22 @@ describe("runIgnoreStep", () => {
     ]);
   });
 
+  it("names the baseline it compared with, so the build log shows it", () => {
+    const skipped = makeHost({ changed: ["docs/adr/0007-delivery.md"] });
+    const built = makeHost({ changed: ["apps/www/app/page.tsx"] });
+    const env = { VERCEL_GIT_PREVIOUS_SHA: "abc123" };
+
+    expect(runIgnoreStep({ argv, env, host: skipped.host })).toEqual({
+      build: false,
+      reason:
+        "Nothing that www is built from changed, so it is skipped. Compared with abc123.",
+    });
+    expect(runIgnoreStep({ argv, env, host: built.host })).toEqual({
+      build: true,
+      reason: "apps/www/app/page.tsx is an input of www. Compared with abc123.",
+    });
+  });
+
   it("builds www after a backend change, which its build deploys to Convex", () => {
     const { host } = makeHost({
       changed: ["packages/backend/confect/nina/turns.impl.ts"],
@@ -304,7 +335,7 @@ describe("runIgnoreStep", () => {
     ]);
   });
 
-  it("builds when the last built commit is missing from a shallow clone", () => {
+  it("builds when the last successful deployment is missing from the shallow clone", () => {
     const { git, host } = makeHost({ changed: [], hasPrevious: false });
 
     const decision = runIgnoreStep({
@@ -315,7 +346,7 @@ describe("runIgnoreStep", () => {
 
     expect(decision).toEqual({
       build: true,
-      reason: "abc123 is not in this clone, so it builds.",
+      reason: "abc123 is not in this shallow clone, so it builds.",
     });
     expect(git).toHaveBeenCalledTimes(1);
   });
@@ -350,7 +381,7 @@ describe("runIgnoreStep", () => {
     ).toBe(false);
   });
 
-  it("refuses a repository that lists no workspaces, so the entry builds", () => {
+  it("refuses a repository that lists no workspaces", () => {
     const { host } = makeHost({
       changed: ["docs/adr/0007-delivery.md"],
       hasWorkspaceList: false,
@@ -372,4 +403,86 @@ describe("runIgnoreStep", () => {
       }).build
     ).toBe(true);
   });
+});
+
+describe("settleIgnoreStep", () => {
+  const argv = ["node", "step.mjs", "www"];
+  const env = { VERCEL_GIT_PREVIOUS_SHA: "abc123" };
+
+  it("exits 0, which skips the build, only for a decision to skip", () => {
+    const { host } = makeHost({ changed: ["docs/adr/0007-delivery.md"] });
+
+    expect(settleIgnoreStep({ argv, env, makeHost: () => host })).toEqual({
+      exitCode: 0,
+      output:
+        "Nothing that www is built from changed, so it is skipped. Compared with abc123.",
+    });
+  });
+
+  it("exits 1, which builds, for a decision to build", () => {
+    const { host } = makeHost({ changed: ["apps/www/app/page.tsx"] });
+
+    expect(settleIgnoreStep({ argv, env, makeHost: () => host })).toEqual({
+      exitCode: 1,
+      output: "apps/www/app/page.tsx is an input of www. Compared with abc123.",
+    });
+  });
+
+  it("builds, and says why, when the repository lists no workspaces", () => {
+    const { host } = makeHost({
+      changed: ["docs/adr/0007-delivery.md"],
+      hasWorkspaceList: false,
+    });
+
+    const outcome = settleIgnoreStep({ argv, env, makeHost: () => host });
+
+    expect(outcome.exitCode).toBe(1);
+    expect(outcome.output).toContain("pnpm-workspace.yaml lists no packages.");
+    expect(outcome.output).toContain("so it builds.");
+  });
+
+  it("builds, and says why, when the machine cannot be read", () => {
+    const outcome = settleIgnoreStep({
+      argv,
+      env,
+      makeHost: () => {
+        throw new UnreadableMachine();
+      },
+    });
+
+    expect(outcome.exitCode).toBe(1);
+    expect(outcome.output).toBe(
+      "The decision failed (UnreadableMachine), so it builds."
+    );
+  });
+});
+
+/** The specifiers that one module of the step imports. */
+const importedBy = Effect.fn("IgnoreTest.importedBy")(function* (name: string) {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const text = yield* fileSystem.readFileString(
+    path.join(import.meta.dirname, name)
+  );
+  return Arr.map(
+    Arr.fromIterable(text.matchAll(/^import\s[^;]*?\sfrom\s+"([^"]+)";/gmu)),
+    ([, specifier]) => specifier
+  );
+});
+
+describe("the modules of the Ignored Build Step", () => {
+  it.effect("import nothing that the install has to provide", () =>
+    Effect.gen(function* () {
+      expect(yield* importedBy("ignore.mjs")).toEqual([]);
+      expect(yield* importedBy("host.mjs")).toEqual([
+        "node:child_process",
+        "node:fs",
+        "node:path",
+      ]);
+      expect(yield* importedBy("step.mjs")).toEqual([
+        "./host.mjs",
+        "./ignore.mjs",
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
 });

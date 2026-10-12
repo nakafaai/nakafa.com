@@ -5,7 +5,7 @@ export default mergeConfig(config, {
   test: {
     include: ["scripts/**/*.test.ts"],
     coverage: {
-      include: ["scripts/**/*.ts"],
+      include: ["scripts/**/*.ts", "scripts/vercel/*.mjs"],
     },
   },
 });

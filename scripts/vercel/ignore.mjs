@@ -1,10 +1,13 @@
 // Decides whether one Vercel project needs a new build.
 //
-// `step.mjs` runs this decision as the Ignored Build Step of each project. Vercel
-// runs that step before it installs any dependency, so these modules are plain
-// JavaScript with no import but Node.js built-ins: the Effect modules that the
-// rest of the repository is written with do not exist yet at that point. This
-// module reads the machine only through the `Host` that its caller hands it.
+// `step.mjs` runs this decision as the Ignored Build Step of each project.
+// Vercel runs that step when the deployment enters the building state, and the
+// build step that follows begins by installing the dependencies. Its own
+// examples for the step run `npx turbo-ignore` and a global `turbo`. So nothing
+// can be assumed to be installed, and these modules are plain JavaScript with
+// no import but Node.js built-ins: the Effect modules that the rest of the
+// repository is written with may not exist yet. This module imports nothing at
+// all and reads the machine only through the `Host` that its caller hands it.
 
 /**
  * One workspace of the monorepo.
@@ -43,6 +46,9 @@ const ROOT_INPUTS = new Set([
 
 /** Documentation and tests: files that no build reads. */
 const NOT_BUILT_PATTERN = /(?:\.md|\.test\.[cm]?[jt]sx?)$/u;
+
+/** Next.js serves every file under a `public` folder, whatever its name. */
+const PUBLIC_PATTERN = /(?:^|\/)public\//u;
 
 /** One list item of `pnpm-workspace.yaml`. */
 const LIST_ITEM_PATTERN = /^\s+-\s+(\S+)\s*$/u;
@@ -136,8 +142,9 @@ function readClosure(project, workspaces) {
  * changed. A project is built from its own workspace, every workspace that it
  * depends on, the lockfile and the root configuration. `www` depends on
  * `@repo/backend`, whose Convex functions its build deploys, so a change to the
- * backend builds it. A change to documentation or to a test builds nothing.
- * Nothing proves a skip when no file is listed, so that case builds.
+ * backend builds it. A change to documentation or to a test builds nothing,
+ * unless the file is served from a `public` folder. Nothing proves a skip when
+ * no file is listed, so that case builds.
  * @param {object} input
  * @param {string} input.project The workspace name of the project.
  * @param {readonly Workspace[]} input.workspaces
@@ -160,7 +167,8 @@ export function decideBuild({ changedFiles, project, workspaces }) {
       return { build: true, reason: `${file} is an input of every project.` };
     }
     const owner = inputs.find(({ dir }) => file.startsWith(`${dir}/`));
-    if (owner !== undefined && !NOT_BUILT_PATTERN.test(file)) {
+    const isBuilt = PUBLIC_PATTERN.test(file) || !NOT_BUILT_PATTERN.test(file);
+    if (owner !== undefined && isBuilt) {
       const through = owner.name === project ? "" : ` through ${owner.name}`;
       return {
         build: true,
@@ -193,9 +201,15 @@ function readWorkspaces(host) {
 
 /**
  * Makes the decision for the project named on the command line. Vercel sets
- * `VERCEL_GIT_PREVIOUS_SHA` to the commit of the last deployment that was built,
- * so the files that changed since then are what the skipped builds would have
- * carried. A commit that is missing from a shallow clone builds.
+ * `VERCEL_GIT_PREVIOUS_SHA` to the commit of the last successful deployment of
+ * the project and branch, so a deployment that failed, or that this step
+ * skipped, is never the baseline: the files that changed since the last good
+ * deployment are what a skipped build would have left out. Vercel clones only
+ * ten commits, so a baseline that is further back is missing from the clone and
+ * the project builds, which sets a new baseline once it succeeds. The reason
+ * names the baseline, so the build log shows what the decision compared.
+ * https://vercel.com/docs/environment-variables/system-environment-variables
+ * https://vercel.com/docs/builds/configure-a-build
  * @param {object} input
  * @param {readonly string[]} input.argv The command line, as `process.argv`.
  * @param {Record<string, string | undefined>} input.env
@@ -219,7 +233,7 @@ export function runIgnoreStep({ argv, env, host }) {
   } catch {
     return {
       build: true,
-      reason: `${previous} is not in this clone, so it builds.`,
+      reason: `${previous} is not in this shallow clone, so it builds.`,
     };
   }
   const changedFiles = host
@@ -233,9 +247,43 @@ export function runIgnoreStep({ argv, env, host }) {
     ])
     .split("\0")
     .filter(Boolean);
-  return decideBuild({
+  const decision = decideBuild({
     changedFiles,
     project,
     workspaces: readWorkspaces(host),
   });
+  return {
+    ...decision,
+    reason: `${decision.reason} Compared with ${previous}.`,
+  };
+}
+
+/**
+ * What the step reports to Vercel.
+ * @typedef {object} Outcome
+ * @property {number} exitCode 1 builds and 0 skips, the two codes Vercel reads.
+ * @property {string} output The line for the build log.
+ */
+
+/**
+ * Turns the decision into the outcome that Vercel reads. Only a decision that
+ * says to skip gives 0. A host that cannot be made and a decision that throws
+ * are failures, and every failure builds.
+ * @param {object} input
+ * @param {readonly string[]} input.argv The command line, as `process.argv`.
+ * @param {Record<string, string | undefined>} input.env
+ * @param {() => Host} input.makeHost Makes the host, which may throw.
+ * @returns {Outcome}
+ */
+export function settleIgnoreStep({ argv, env, makeHost }) {
+  let decision;
+  try {
+    decision = runIgnoreStep({ argv, env, host: makeHost() });
+  } catch (error) {
+    decision = {
+      build: true,
+      reason: `The decision failed (${String(error)}), so it builds.`,
+    };
+  }
+  return { exitCode: decision.build ? 1 : 0, output: decision.reason };
 }

@@ -115,13 +115,25 @@ contextual visit cannot first record a canonical view and then a placement view.
   that nothing it is built from changed. Each `vercel.ts` names
   `scripts/vercel/step.mjs` as its Ignored Build Step, which asks the decision
   in `scripts/vercel/ignore.mjs`, and `scripts/check/deploy.ts` keeps the four
-  files equal. A project is built from
-  its own workspace, every workspace it depends on, the lockfile and the root
-  configuration, so `www`, whose build deploys the Convex functions, builds
-  whenever `packages/backend` changes. Documentation and tests build nothing. A
-  missing earlier commit, a missing earlier deployment, an empty change and any
-  failure build. Vercel runs the step before it installs a dependency, so the
-  script is plain JavaScript with Node.js built-ins only.
+  files equal. A project is built from its own workspace, every workspace it
+  depends on, the lockfile and the root configuration, so `www`, whose build
+  deploys the Convex functions, builds whenever `packages/backend` changes.
+  Documentation and tests build nothing, except a file under `public/`, which
+  Next.js serves.
+  The step compares the commit with `VERCEL_GIT_PREVIOUS_SHA`, which Vercel sets
+  to the last successful deployment of the project and branch. A deployment that
+  failed, or that the step skipped, is never the baseline, so a documentation
+  commit after a failed backend deploy still carries that backend change and
+  builds. Vercel clones ten commits, so a baseline further back is missing from
+  the clone and the step builds, which sets a new baseline: the tenth skippable
+  commit in a row builds. A missing baseline, a missing earlier deployment, an
+  empty change and any failure build, and the build log names the baseline that
+  the decision compared with. Vercel runs the step when the deployment enters
+  the building state and documents `npx turbo-ignore` and the global `turbo`
+  for it, while the build step that follows begins by installing the
+  dependencies. So the scripts are plain JavaScript with Node.js built-ins
+  only, a test keeps them so, and the coverage gate of the scripts measures
+  them.
 - RSS caches the completed XML. Its update timestamp comes from authored
   publication dates, so another request does not manufacture changed output.
 - Flight requests bypass the Proxy's duplicate publication ownership reads.
