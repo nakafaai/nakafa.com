@@ -20,5 +20,4 @@ render her again while she moves. With reduced motion she holds one pose. If
 her life cannot load she stays in that pose.
 
 Her colours and the pop family are theme tokens that look the same in every
-theme. The not-found page shows her first: she looks over the top edge of the
-card.
+theme.

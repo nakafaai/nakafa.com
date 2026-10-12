@@ -2,15 +2,14 @@ import { NINA, POP } from "@repo/mascot/color";
 import {
   ARM,
   FIN,
-  HALF_BOX,
   HEAD,
   LEANS,
   LEG,
   PALE,
   type SideSchema,
   TORSO,
-  WHOLE_BOX,
 } from "@repo/mascot/nina/body";
+import { HALF_BOX, WHOLE_BOX } from "@repo/mascot/nina/box";
 import { face, type Look, type MoodSchema } from "@repo/mascot/nina/face";
 import { type Curve, exit, limb } from "@repo/mascot/nina/limb";
 import {
