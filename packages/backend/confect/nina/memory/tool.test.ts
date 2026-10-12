@@ -33,6 +33,7 @@ vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 
+const list = Ref.getFunctionReference(refs.public.nina.messages.list);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
@@ -307,6 +308,17 @@ describe("a turn in which Nina searches what the learner told her", () => {
       })
     );
     expect(encodeJsonText(transcript)).not.toContain(words);
+    // A visitor who reads the public chat has no more than the learner sees.
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("chats", f.chatId, { visibility: "public" })
+    );
+    const shared = await f.t.query(list, {
+      chatId: f.chatId,
+      paginationOpts: { cursor: null, numItems: 20 },
+      threadId: f.threadId,
+    });
+    expect(encodeJsonText(shared)).toContain("recall-1");
+    expect(encodeJsonText(shared)).not.toContain(words);
     // The learner deletes the memory, and the next turn of the chat reads
     // neither the memory nor a copy of it that the thread kept.
     await f.owner.mutation(remove, { id: exam });
