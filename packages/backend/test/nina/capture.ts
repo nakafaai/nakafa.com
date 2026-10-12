@@ -19,6 +19,7 @@ import {
   Match,
   MutableRef,
   Schema,
+  String as Str,
 } from "effect";
 
 /** One thing the capture model says the learner stated, as the model writes it. */
@@ -38,6 +39,11 @@ export const level: Claim = {
 export const unavailable = (fact: object) => [
   ["Nina memory unavailable", expect.objectContaining(fact)],
 ];
+
+/** The lines of a capture prompt, read as JSON text, that list a known memory, one line each. */
+export function knownLines(prompt: string) {
+  return Arr.filter(Str.split(prompt, "\\n"), Str.startsWith("- ["));
+}
 
 /** The sentence of a candidate and the learner's words it quotes. */
 type Note = Pick<Claim, "quote" | "text">;

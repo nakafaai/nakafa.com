@@ -91,8 +91,10 @@ describe("Nina rolling summary", () => {
     });
     await f.refresh(8);
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    // Each answer costs about 6,000 tokens, and a message reaches the fold in at most 1,500.
-    expect(prompt).toContain("Shortened to about 1500 of");
+    // Each answer costs about 6,000 tokens, more than the fold reads of one message.
+    expect(prompt).toContain(
+      `Shortened to about ${NINA_BUDGET.foldMessage} of`
+    );
     expect(prompt).toContain("Learner: Question 0");
     expect(prompt).toContain("Nina: Answer 6");
     expect(prompt.split("Learner: Question 1")).toHaveLength(2);
