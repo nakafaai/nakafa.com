@@ -4,6 +4,7 @@ import type {
   CapabilityProgress,
 } from "@repo/backend/confect/nina/capability/progress";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
+import { readsPages } from "@repo/backend/test/nina/pages";
 import { Array as Arr, Effect, Logger, MutableRef, Option } from "effect";
 
 const firecrawlApp = vi.hoisted(() => ({
@@ -20,16 +21,6 @@ vi.mock("@repo/backend/confect/nina/research/tools/scrape", () => ({
   readPage,
 }));
 
-vi.mock("@repo/backend/confect/nina/research/selection", () => ({
-  selectRelevantContent: ({
-    content,
-  }: {
-    content: string;
-    preserveStructure: boolean;
-    query: string;
-  }) => content,
-}));
-
 vi.mock("@repo/backend/confect/nina/research/domain", () => ({
   extractDomain: (url: string) => {
     const hostname = new URL(url).hostname;
@@ -44,17 +35,40 @@ vi.mock("@repo/backend/confect/nina/research/domain", () => ({
 
 type WrittenPart = CapabilityArtifact;
 
-/** A page reader that reads the given pages; any other page is not read in time. */
-function reads(pages: Readonly<Record<string, string>>) {
-  return (url: string) => {
-    const markdown = pages[url];
-    return Effect.succeed(
-      markdown === undefined
-        ? { error: "The page could not be retrieved.", metadata: {}, url }
-        : { markdown, metadata: {}, url }
-    );
-  };
-}
+/** What the provider is asked for with every query, besides the query itself. */
+const providerOptions = { limit: 5, sources: ["web", "news"], timeout: 10_000 };
+
+/**
+ * A learner asks about a name written in Latin letters, in their own language.
+ * The model writes one query with the name and one in the learner's own words
+ * without it. Both run, whatever script the learner writes in.
+ */
+const askedInOwnLanguage = [
+  {
+    language: "English",
+    request: "What does AI SDK DevTools show about my tool calls?",
+    named: "AI SDK DevTools official docs",
+    own: "debug tool calls generations",
+  },
+  {
+    language: "Japanese",
+    request: "AI SDK DevTools で、ツール呼び出しの何が分かるのか知りたい",
+    named: "AI SDK DevTools 公式ドキュメント",
+    own: "ツール呼び出し デバッグ 方法",
+  },
+  {
+    language: "Arabic",
+    request: "ماذا يعرض AI SDK DevTools عن استدعاءات الأدوات؟",
+    named: "AI SDK DevTools الوثائق الرسمية",
+    own: "تتبع استدعاءات الأدوات وتصحيحها",
+  },
+  {
+    language: "Thai",
+    request: "AI SDK DevTools แสดงอะไรเกี่ยวกับการเรียกใช้เครื่องมือบ้าง",
+    named: "AI SDK DevTools เอกสารทางการ",
+    own: "ดีบักการเรียกใช้เครื่องมือ",
+  },
+];
 
 /** Creates a stream publish harness that records web-search data parts for assertions. */
 function createProgress() {
@@ -83,7 +97,7 @@ describe("research web search tool", () => {
   beforeEach(() => {
     firecrawlApp.search.mockReset();
     readPage.mockReset();
-    readPage.mockImplementation(reads({}));
+    readPage.mockImplementation(readsPages({}));
   });
 
   it.effect(
@@ -139,7 +153,7 @@ describe("research web search tool", () => {
           ],
         });
         readPage.mockImplementation(
-          reads({ "https://example.com/research": "Main source content." })
+          readsPages({ "https://example.com/research": "Main source content." })
         );
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
@@ -209,7 +223,7 @@ describe("research web search tool", () => {
   );
 
   it.effect(
-    "reads every query's first result before any second result, each page once",
+    "shows an address once, however many results or queries repeat it",
     () =>
       Effect.gen(function* () {
         const result = (name: string) => ({
@@ -218,19 +232,40 @@ describe("research web search tool", () => {
           url: `https://example.com/${name}`,
         });
         firecrawlApp.search
-          .mockResolvedValueOnce({ web: [result("a1"), result("a2")] })
-          .mockResolvedValueOnce({ web: [result("shared"), result("b2")] });
-        const { publish } = createProgress();
-        yield* searchWeb({
+          .mockResolvedValueOnce({
+            web: [result("a"), result("a"), result("b")],
+          })
+          .mockResolvedValueOnce({ web: [result("a"), result("c")] });
+        const { parts, publish } = createProgress();
+        const output = yield* searchWeb({
           queries: ["kurikulum merdeka", "kurikulum sma"],
           task: "kurikulum",
-          toolCallId: "web-search-pages",
+          toolCallId: "web-search-repeats",
           publish,
         });
 
+        // The first query repeats the address a, and the second finds it again.
+        expect(Arr.map(output.result.sources, (source) => source.url)).toEqual([
+          "https://example.com/a",
+          "https://example.com/b",
+          "https://example.com/c",
+        ]);
+        expect(
+          Arr.map(
+            Arr.filter(
+              getWebSearchParts(parts()),
+              ({ status }) => status === "done"
+            ),
+            ({ sources }) => Arr.map(sources, (source) => source.url)
+          )
+        ).toEqual([
+          ["https://example.com/a", "https://example.com/b"],
+          ["https://example.com/a", "https://example.com/c"],
+        ]);
+        // The two pages it reads are two different addresses.
         expect(Arr.map(readPage.mock.calls, ([url]) => url)).toEqual([
-          "https://example.com/a1",
-          "https://example.com/shared",
+          "https://example.com/a",
+          "https://example.com/b",
         ]);
       })
   );
@@ -270,102 +305,55 @@ describe("research web search tool", () => {
     })
   );
 
-  it.effect.each([
-    {
-      language: "English",
-      objective: "Find the official documentation.",
-      queries: ["Next.js 16 Cache Components official docs"],
-      request: "What changed in Next.js 16 Cache Components?",
-    },
-    {
-      language: "Japanese",
-      objective: "公式ドキュメントを確認する",
-      queries: ["Next.js 16 Cache Components 公式ドキュメント"],
-      request: "Next.js 16のCache Componentsで何が変わったのか知りたい",
-    },
-  ])(
-    "sends the provider the queries the model wrote as written, or else the task without its section labels ($language)",
-    ({ objective, queries, request }) =>
+  it.effect.each(askedInOwnLanguage)(
+    "sends the provider every query the model wrote as written, also one that holds none of the task's names, and shows each query its own results ($language)",
+    ({ named, own, request }) =>
       Effect.gen(function* () {
-        firecrawlApp.search.mockResolvedValue({ web: [] });
-        const { publish } = createProgress();
-        const task = `# Request\n\n${request}\n\n# Objective\n\n${objective}`;
-        const search = (written: readonly string[], text: string) =>
-          searchWeb({
-            queries: written,
-            task: text,
-            toolCallId: "web-search-sent",
-            publish,
-          });
-        const options = { limit: 5, sources: ["web", "news"], timeout: 10_000 };
-
-        yield* search(queries, task);
-        yield* search([], task);
-        // A task of section labels only holds no text, so no search runs.
-        yield* search([], "# Request\n\n# Objective");
-
-        expect(firecrawlApp.search.mock.calls).toEqual([
-          ...Arr.map(queries, (query) => [query, options]),
-          [`${request} ${objective}`, options],
-        ]);
-      })
-  );
-
-  it.effect(
-    "runs each query as written, also one without the task's named phrase, with query-scoped visible results",
-    () =>
-      Effect.gen(function* () {
+        const urlOf = (query: string) =>
+          query === named
+            ? "https://example.com/named"
+            : "https://example.com/own";
         firecrawlApp.search.mockImplementation((query: string) =>
           Promise.resolve({
             web: [
               {
                 description: `${query} result.`,
-                markdown: `${query} content.`,
                 title: query,
-                url: `https://example.com/${query.toLocaleLowerCase().replaceAll(" ", "-")}`,
+                url: urlOf(query),
               },
             ],
           })
         );
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
-          queries: ["AI SDK DevTools official docs", "release notes 2026"],
-          task: "AI SDK DevTools official docs",
+          queries: [named, own],
+          task: request,
           toolCallId: "web-search-queries",
           publish,
         });
 
-        expect(firecrawlApp.search).toHaveBeenCalledWith(
-          "AI SDK DevTools official docs",
-          expect.any(Object)
-        );
-        expect(firecrawlApp.search).toHaveBeenCalledWith(
-          "release notes 2026",
-          expect.any(Object)
-        );
-        expect(output.result.sources).toHaveLength(2);
+        expect(firecrawlApp.search.mock.calls).toEqual([
+          [named, providerOptions],
+          [own, providerOptions],
+        ]);
+        expect(Arr.map(output.result.sources, (source) => source.url)).toEqual([
+          "https://example.com/named",
+          "https://example.com/own",
+        ]);
         expect(
-          Arr.filter(
-            getWebSearchParts(parts()),
-            (part) => part.status === "done"
+          Arr.map(
+            Arr.filter(
+              getWebSearchParts(parts()),
+              ({ status }) => status === "done"
+            ),
+            ({ queries, sources }) => [
+              queries,
+              Arr.map(sources, (source) => source.url),
+            ]
           )
         ).toEqual([
-          expect.objectContaining({
-            queries: ["AI SDK DevTools official docs"],
-            sources: expect.arrayContaining([
-              expect.objectContaining({
-                url: "https://example.com/ai-sdk-devtools-official-docs",
-              }),
-            ]),
-          }),
-          expect.objectContaining({
-            queries: ["release notes 2026"],
-            sources: expect.arrayContaining([
-              expect.objectContaining({
-                url: "https://example.com/release-notes-2026",
-              }),
-            ]),
-          }),
+          [[named], ["https://example.com/named"]],
+          [[own], ["https://example.com/own"]],
         ]);
       })
   );
