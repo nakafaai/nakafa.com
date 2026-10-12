@@ -20,16 +20,16 @@ import { Array as Arr, Effect, HashMap, Option } from "effect";
  * queries, so each runs as written, and every result the provider returns with
  * an address is kept once, in the provider's order, web results first and then
  * news: no word of the task or the query decides which result a learner sees.
- * The task only decides which paragraphs of a result page are read.
+ * The task's words only decide which paragraphs of a result page are read.
  */
 export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   queries,
-  task,
+  words,
   toolCallId,
   publish,
 }: {
   queries: readonly string[];
-  task: string;
+  words: string;
   toolCallId: string;
   publish: CapabilityProgress;
 }) {
@@ -73,7 +73,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   );
   const pages = yield* readTopPages(
     Arr.map(searched, (found) => found.sources),
-    task
+    words
   );
 
   const searchResults = yield* Effect.forEach(searched, (found, index) =>

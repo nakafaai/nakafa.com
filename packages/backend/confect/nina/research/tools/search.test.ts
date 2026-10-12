@@ -158,7 +158,7 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: ["Next.js 16 Cache Components"],
-          task: "Next.js 16 Cache Components",
+          words: "Next.js 16 Cache Components",
           toolCallId: "web-search-1",
           publish,
         });
@@ -239,7 +239,7 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: ["kurikulum merdeka", "kurikulum sma"],
-          task: "kurikulum",
+          words: "kurikulum",
           toolCallId: "web-search-repeats",
           publish,
         });
@@ -285,7 +285,7 @@ describe("research web search tool", () => {
       const { parts, publish } = createProgress();
       yield* searchWeb({
         queries: [" AI SDK docs ", "", "ai sdk docs"],
-        task: "AI SDK docs",
+        words: "AI SDK docs",
         toolCallId: "web-search-normalized-queries",
         publish,
       });
@@ -327,7 +327,7 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: [named, own],
-          task: request,
+          words: request,
           toolCallId: "web-search-queries",
           publish,
         });
@@ -380,7 +380,7 @@ describe("research web search tool", () => {
       const { parts, publish } = createProgress();
       const output = yield* searchWeb({
         queries: ["AI SDK DevTools", "AI SDK DevTools recent updates"],
-        task: "AI SDK DevTools",
+        words: "AI SDK DevTools",
         toolCallId: "web-search-partial-success",
         publish,
       });
@@ -417,7 +417,7 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: ["latest solar energy research"],
-          task: "latest solar energy research",
+          words: "latest solar energy research",
           toolCallId: "web-search-empty",
           publish,
         });
@@ -450,7 +450,7 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: ["latest solar energy research"],
-          task: "latest solar energy research",
+          words: "latest solar energy research",
           toolCallId: "web-search-2",
           publish,
         }).pipe(

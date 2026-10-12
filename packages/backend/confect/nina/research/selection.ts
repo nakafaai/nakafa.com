@@ -18,7 +18,6 @@ const TARGET_LENGTH_BUFFER = 0.9;
  */
 const WEIGHT_SMOOTHING = 0.5;
 
-const LINE_BREAK_REGEX = /\r?\n/;
 const PARAGRAPH_SPLIT_REGEX = /\n\s*\n/;
 
 const TRUNCATION_THRESHOLDS = {
@@ -55,19 +54,6 @@ type SelectRelevantContentParams =
 function readWords(segmenter: Intl.Segmenter, text: string) {
   return Arr.flatMap(Arr.fromIterable(segmenter.segment(text)), (part) =>
     part.isWordLike ? [part.segment.toLocaleLowerCase()] : []
-  );
-}
-
-/**
- * Drops the lines of a task that start with `#`. They are the section labels
- * this codebase writes into a task, such as "Request", not the learner's words,
- * so no paragraph is chosen for holding one.
- */
-function withoutLabels(task: string) {
-  return pipe(
-    task.split(LINE_BREAK_REGEX),
-    Arr.filter((line) => !line.trimStart().startsWith("#")),
-    Arr.join("\n")
   );
 }
 
@@ -206,6 +192,8 @@ function truncateAtBoundary(text: string, maxLength: number): string {
 
 /**
  * Selects and combines source paragraphs most relevant to the research query.
+ * Every word of the query is looked for, whatever its line starts with, so the
+ * caller gives only the words it wants found.
  */
 export function selectRelevantContent(
   params: SelectRelevantContentParams
@@ -232,7 +220,7 @@ export function selectRelevantContent(
   }
 
   const segmenter = new Intl.Segmenter(undefined, { granularity: "word" });
-  const queryWords = Arr.dedupe(readWords(segmenter, withoutLabels(query)));
+  const queryWords = Arr.dedupe(readWords(segmenter, query));
   if (queryWords.length === 0) {
     return truncateAtBoundary(content, maxLength);
   }

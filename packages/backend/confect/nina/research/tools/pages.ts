@@ -22,12 +22,13 @@ const RESULT_PAGE = { deadlineMs: 10_000, timeoutMs: 8000 };
 /**
  * Reads the best result pages in parallel and returns their selected text by
  * address: every query's first result, then every second one, until
- * `RESULT_PAGES` distinct pages. A page that is not read in time is no failure:
- * its source keeps the description the search returned.
+ * `RESULT_PAGES` distinct pages. The words of the task choose the paragraphs of
+ * a page that is longer than the budget. A page that is not read in time is no
+ * failure: its source keeps the description the search returned.
  */
 export const readTopPages = Effect.fn("research.readTopPages")(function* (
   results: readonly (readonly SearchSource[])[],
-  task: string
+  words: string
 ) {
   const depth = Arr.reduce(results, 0, (deepest, sources) =>
     Math.max(deepest, sources.length)
@@ -45,7 +46,7 @@ export const readTopPages = Effect.fn("research.readTopPages")(function* (
               selectRelevantContent({
                 content: page.markdown,
                 preserveStructure: false,
-                query: task,
+                query: words,
               }),
             ] as const)
           : Option.none()

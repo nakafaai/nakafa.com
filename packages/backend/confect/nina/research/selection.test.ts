@@ -344,7 +344,7 @@ describe("selectRelevantContent", () => {
     ).toBe(relevant);
   });
 
-  it("does not look for the words of the task's section labels", () => {
+  it("looks for every word of the query it is given, also on a line that starts with #", () => {
     const relevant =
       "A Lyapunov function shows stability when it decreases along every solution.";
 
@@ -352,13 +352,12 @@ describe("selectRelevantContent", () => {
       pickParagraph(
         [
           "This page explains how an HTTP server answers a call.",
-          "Each request starts with a request line. The request headers follow, and then the request body ends the request.",
           relevant,
           "Weather notes for the week.",
           "Closing remarks.",
         ],
         150,
-        "# Request\n\nHow does a Lyapunov function show stability?\n\n# Objective\n\nExplain the idea."
+        "# Lyapunov\nHow does one show stability?"
       )
     ).toBe(relevant);
   });

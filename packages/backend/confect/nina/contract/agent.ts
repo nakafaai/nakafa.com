@@ -42,10 +42,15 @@ const NakafaAgentDataSchema = Schema.Struct({
   addresses: Schema.Array(Schema.String),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type NakafaAgentData = typeof NakafaAgentDataSchema.Type;
-/** Schema-derived data passed to the external research specialist. */
+/**
+ * Schema-derived data passed to the external research specialist. `task` is
+ * the Markdown the research model reads. `words` are the tool call's own words
+ * with no heading, which choose the paragraphs of a page that are read.
+ */
 const ResearchAgentDataSchema = Schema.Struct({
   ...TaskAgentDataSchema.fields,
   sourceReferences: Schema.Array(SourceReferenceSchema),
   toolCallId: Schema.String,
+  words: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type ResearchAgentData = typeof ResearchAgentDataSchema.Type;
