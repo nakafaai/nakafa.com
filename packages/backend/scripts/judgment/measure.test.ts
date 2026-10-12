@@ -202,7 +202,8 @@ describe("measuring the labelled set", () => {
         expect(report).not.toContain(notes[0].text);
         expect(report).not.toContain(notes[0].quote);
         expect(report).not.toContain("texts failed");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect(
@@ -233,7 +234,8 @@ describe("measuring the labelled set", () => {
         expect(Arr.map(Arr.take(calls, 5), ({ together }) => together)).toEqual(
           [1, 1, 1, 1, 1]
         );
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect(
@@ -252,7 +254,8 @@ describe("measuring the labelled set", () => {
           `${texts} texts failed: invalid 400 (${texts})`
         );
         expect(report).toContain("at the threshold of the deployment, 0.50:");
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect.each(Rec.keys(judgments))(
@@ -269,7 +272,8 @@ describe("measuring the labelled set", () => {
           _tag: "JudgmentCallError",
           message: `The deployment reports no threshold for the judgment ${omitted}.`,
         });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect(

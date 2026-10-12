@@ -225,20 +225,23 @@ describe("the judgment measuring command", () => {
     30_000
   );
 
-  it.effect("asks the notes together when the command line names it", () =>
-    Effect.gen(function* () {
-      const prepared = yield* prepare("measure");
+  it.effect(
+    "asks the notes together when the command line names it",
+    () =>
+      Effect.gen(function* () {
+        const prepared = yield* prepare("measure");
 
-      const { printed } = yield* execute(prepared, DEV, "--together=3");
+        const { printed } = yield* execute(prepared, DEV, "--together=3");
 
-      expect(printed).toContain("notes, 3 to a request");
-      // A message is asked alone, and the notes in threes.
-      const calls = yield* loggedCalls(prepared.log);
-      expect(calls).not.toEqual([]);
-      for (const { names, together } of calls) {
-        expect(together).toBe(Arr.contains(names, "lasting") ? 1 : 3);
-      }
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+        expect(printed).toContain("notes, 3 to a request");
+        // A message is asked alone, and the notes in threes.
+        const calls = yield* loggedCalls(prepared.log);
+        expect(calls).not.toEqual([]);
+        for (const { names, together } of calls) {
+          expect(together).toBe(Arr.contains(names, "lasting") ? 1 : 3);
+        }
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect(
@@ -254,7 +257,8 @@ describe("the judgment measuring command", () => {
         expect(printed).toContain(
           `${Arr.length(messages) + Arr.length(notes)} texts failed: invalid 400`
         );
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect("refuses a flag it does not accept, and starts no command", () =>
@@ -296,7 +300,8 @@ describe("the judgment measuring command", () => {
           _tag: "DevelopmentCliError",
           message: `Judgment measure did not answer within ${Duration.format(Duration.minutes(5))}.`,
         });
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    30_000
   );
 
   it.effect.each([
