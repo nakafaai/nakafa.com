@@ -4,9 +4,10 @@ import { v } from "convex/values";
 /**
  * Says whether a session is live for a user at `now`: the session exists, has
  * not expired and belongs to that user, and the user still exists. Every write
- * asks this before it runs, so the module imports no Better Auth code: the
- * adapter loads the whole library on each call, and this reads two rows by
- * their ids.
+ * asks this before it runs, so the module imports no Better Auth code and reads
+ * two rows by their ids. Measured on 12 October 2026: its bundle is 56 KiB
+ * against 2,830 KiB for the adapter's module (the Convex CLI's bundler
+ * options), and production ran one adapter lookup in 327 to 615 ms.
  */
 export const live = query({
   args: { now: v.number(), sessionId: v.string(), userId: v.string() },
@@ -18,11 +19,10 @@ export const live = query({
       return false;
     }
     const session = await ctx.db.get("session", sessionId);
-    if (
-      !session ||
-      session.userId !== userId ||
-      session.expiresAt <= args.now
-    ) {
+    // The comparison is the positive one, so a `now` that is not a number
+    // makes no session live.
+    const unexpired = session !== null && session.expiresAt > args.now;
+    if (!(unexpired && session.userId === userId)) {
       return false;
     }
     const user = await ctx.db.get("user", userId);

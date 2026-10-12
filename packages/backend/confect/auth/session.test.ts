@@ -135,16 +135,30 @@ describe("token-verified reads and session-validated writes", () => {
     });
   });
 
-  it("refuses a write whose token names no session", async () => {
+  it("fails a write whose token does not name its session, also where a caller without a session may write", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW, suffix: "no-session" })
     );
+    const unnamed = t.withIdentity({ subject: identity.authUserId });
+    const failed = {
+      data: {
+        _tag: "AuthReadError",
+        code: "AUTH_READ_FAILED",
+        message: "Unable to read authentication state.",
+      },
+    };
     await expect(
-      t
-        .withIdentity({ subject: identity.authUserId })
-        .mutation(updateName, { name: "Verified user" })
-    ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+      unnamed.mutation(updateName, { name: "Verified user" })
+    ).rejects.toMatchObject(failed);
+    // Onboarding admits a caller without a session, so an absent session
+    // would let this write through as anonymous.
+    await expect(unnamed.mutation(admitOnboarding, {})).rejects.toMatchObject(
+      failed
+    );
+    await expect(unnamed.action(customerPortal, {})).rejects.toMatchObject(
+      failed
+    );
   });
 
   it("rejects removed accounts instead of allowing them to write anonymously", async () => {

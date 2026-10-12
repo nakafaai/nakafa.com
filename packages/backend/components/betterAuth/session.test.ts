@@ -43,6 +43,17 @@ describe("a live Better Auth session", () => {
     expect(await live({ ...session, now: NOW + HOUR })).toBe(false);
   });
 
+  it("is not live at a time that is not a number", async () => {
+    const { live, one } = await seedTwoUsers();
+    expect(
+      await live({
+        now: Number.NaN,
+        sessionId: one.sessionId,
+        userId: one.authUserId,
+      })
+    ).toBe(false);
+  });
+
   it("is not live for a user it does not belong to", async () => {
     const { live, one, other } = await seedTwoUsers();
     expect(

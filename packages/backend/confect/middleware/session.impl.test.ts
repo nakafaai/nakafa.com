@@ -9,7 +9,9 @@ import {
 import { Option, Schema } from "effect";
 
 const transport = vi.hoisted(() => ({
-  live: vi.fn(() => true),
+  live: vi.fn(
+    (_session: { now: number; sessionId: string; userId: string }) => true
+  ),
   read: vi.fn(() => false),
 }));
 
@@ -23,7 +25,7 @@ vi.mock("@repo/backend/components/betterAuth/session", async () => {
     live: queryGeneric({
       args: { now: v.number(), sessionId: v.string(), userId: v.string() },
       returns: v.boolean(),
-      handler: () => transport.live(),
+      handler: (_ctx, session) => transport.live(session),
     }),
   };
 });
@@ -125,6 +127,31 @@ it.each([
     expect(failure.data).not.toHaveProperty("cause");
   }
 );
+
+it("asks Better Auth once for a write, with the session and the user its token names, and never for a read", async () => {
+  const now = Date.UTC(2026, 6, 28, 11);
+  vi.setSystemTime(now);
+  const test = createConvexTestWithBetterAuth();
+  const identity = await test.mutation((ctx) =>
+    seedAuthenticatedUser(ctx, { now, suffix: "one-read" })
+  );
+  const signedIn = test.withIdentity({
+    sessionId: identity.sessionId,
+    subject: identity.authUserId,
+  });
+  await signedIn.query(
+    Ref.getFunctionReference(refs.public.auth.queries.getCurrentUser),
+    {}
+  );
+  expect(transport.live).not.toHaveBeenCalled();
+  await signedIn.mutation(
+    Ref.getFunctionReference(refs.public.users.mutations.updateUserName),
+    { name: "Verified user" }
+  );
+  expect(transport.live.mock.calls).toEqual([
+    [{ now, sessionId: identity.sessionId, userId: identity.authUserId }],
+  ]);
+});
 
 it("asks Better Auth nothing for a write without a token", async () => {
   const test = createConvexTestWithBetterAuth();

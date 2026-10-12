@@ -26,27 +26,31 @@ const TokenSession = Schema.Struct({
   sessionId: Schema.String,
   subject: Schema.String,
 });
-const decodeTokenSession = Schema.decodeUnknownOption(TokenSession);
+const decodeTokenSession = Schema.decodeUnknownEffect(TokenSession);
 
 /**
  * A write confirms with Better Auth that its session is still live. The token
  * names the session and the user, and one read in the component says whether
  * that session exists, has not expired and belongs to that user, and whether
  * the user still exists. The read is the component's own small query and not
- * Better Auth's adapter, which loads the whole library twice for the same
- * answer.
+ * Better Auth's adapter, which answers the same question with two lookups
+ * through a module fifty times the size. A verified token that does not name
+ * its session is a failed read, never an absent session: Better Auth puts the
+ * session in every token it issues.
  */
 const readSessionAuthId = Effect.fn("auth.readSession")(function* (
   ctx: Pick<GenericActionCtx<GenericDataModel>, "runQuery">
 ) {
-  const token = yield* (yield* Auth).getUserIdentity.pipe(
-    Effect.map(decodeTokenSession),
+  const identity = yield* (yield* Auth).getUserIdentity.pipe(
+    Effect.asSome,
     Effect.catchTag("NoUserIdentityFoundError", () => Effect.succeedNone)
   );
-  if (Option.isNone(token)) {
+  if (Option.isNone(identity)) {
     return;
   }
-  const { sessionId, subject } = token.value;
+  const { sessionId, subject } = yield* decodeTokenSession(identity.value).pipe(
+    Effect.mapError(authReadFailure)
+  );
   const now = yield* Clock.currentTimeMillis;
   const live = yield* Effect.tryPromise({
     try: () =>
