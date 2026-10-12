@@ -76,7 +76,13 @@ run never exits, or that the learner's next prompt settles before its run
 exits, keeps its claim and no more. The page shows a part a little after the
 model produced it, once Agent has written it. The run counts the last three
 with its own clock, so they can differ from the database's clock by the
-difference between the two.
+difference between the two. The stages count from the creation of the turn, so
+they leave out what comes before it: the page's own work, the request to the
+admission mutation and its work, and for a new chat the change of route that
+follows its answer. A learner waits that long more than the stages show. The
+turn sent right after a stop waits for none of the stopped run's exit, its
+refund and the sweep, since its admission settles the stopped turn and
+schedules its own run in one transaction.
 
 Deleting a chat settles its open turn in the deleting transaction, whether or
 not the learner stopped it, and no new turn can start on a chat that is gone.

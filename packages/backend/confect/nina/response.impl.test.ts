@@ -87,16 +87,28 @@ async function fixture() {
         paginationOpts: { cursor: null, numItems: 20 },
       }),
     }));
+  /**
+   * Waits until the run has called the model. A run that ends before it does,
+   * by returning or by failing, ends the test with that outcome, not with a
+   * timeout.
+   */
+  const reachesModel = async (running: Promise<unknown>) => {
+    const called = await Promise.race([
+      silent.started.then(() => true),
+      running.then(() => false),
+    ]);
+    expect(called, "the run ended before it called the model").toBe(true);
+  };
   /** Starts the run and waits until its model call is in flight and its stream is open. */
   const begin = async () => {
     const running = f.t.action(run, { turnId: f.turnId });
-    await silent.started;
+    await reachesModel(running);
     expect((await inspect()).streams).toEqual([
       expect.objectContaining({ status: "streaming" }),
     ]);
     return { running };
   };
-  return { ...f, ...silent, inspect, begin };
+  return { ...f, ...silent, inspect, begin, reachesModel };
 }
 
 /** True when the thread holds an assistant message that counts as an answer. */
@@ -217,6 +229,12 @@ describe("Nina response run", () => {
       expect(
         Arr.filter(stopped.ledger, (row) => row.type === "refund")
       ).toHaveLength(1);
+      // It keeps the stages its run reached before the stop: the run took the
+      // turn and was about to call the model, and nothing came back.
+      expect(stopped.turn?.timing).toEqual({
+        claimedMs: expect.any(Number),
+        readyMs: expect.any(Number),
+      });
       expect(hasAnswer(stopped.messages)).toBe(false);
       // A stop the learner asked for is not an operational failure.
       expect(report).not.toHaveBeenCalled();
@@ -232,7 +250,7 @@ describe("Nina response run", () => {
     const f = await fixture();
     try {
       const running = f.t.action(run, { turnId: f.turnId });
-      await f.started;
+      await f.reachesModel(running);
       // The stream is not open yet. Agent finds it stopped when it opens it and
       // ends the generation itself, ahead of the watch's next check.
       await f.owner.mutation(cancel, { chatId: f.chatId });
@@ -375,6 +393,9 @@ describe("The Nina response run when generation fails", () => {
     });
     expect(state.user?.credits).toBe(10);
     expect(provider.languageModel).not.toHaveBeenCalled();
+    // The run took the turn and failed before it had a model to call, so the
+    // turn keeps its claim and holds no readiness.
+    expect(state.turn?.timing).toEqual({ claimedMs: expect.any(Number) });
   });
 
   it.effect("refunds a failure before the Agent stream starts", () =>

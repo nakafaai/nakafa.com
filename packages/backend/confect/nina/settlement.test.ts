@@ -178,10 +178,19 @@ describe("native Nina stop and resend", () => {
           scheduledTime: NOW + grace,
         }),
       ]);
-      await f.t.mutation(recover, { turnId: f.turnId });
+      // The run's exit also carries the stages it reached, and the turn stores
+      // none of them: it keeps its claim and no more.
+      await f.t.mutation(recover, {
+        turnId: f.turnId,
+        timing: { readyMs: 1500, progressMs: 4000, tokenMs: 4200 },
+      });
       vi.setSystemTime(NOW + grace);
       await f.t.mutation(recover, { turnId: f.turnId });
-      expect(await f.inspect()).toEqual(admitted);
+      const settled = await f.inspect();
+      expect(settled).toEqual(admitted);
+      expect(settled.turns[0]?.timing).toEqual({
+        claimedMs: expect.any(Number),
+      });
     }
   );
 
