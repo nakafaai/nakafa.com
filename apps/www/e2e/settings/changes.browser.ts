@@ -186,13 +186,15 @@ const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
       await expect(page.getByText(EMPTY)).toBeVisible();
 
       // Undo writes back what the editor showed, the letter included, and not
-      // the words the server had stored.
+      // the words the server had stored. The count starts again here, so the
+      // wait is for the Undo's own write and not for the deletion before it.
+      const undone = changes.sent;
       await page
         .locator("[data-sonner-toast]")
         .getByRole("button", { name: "Undo" })
         .click();
       await expect(memoryRow(page, "!")).toBeVisible();
-      await saved(changes, before);
+      await saved(changes, undone);
     });
   }
 );
