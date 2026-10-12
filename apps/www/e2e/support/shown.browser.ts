@@ -8,12 +8,19 @@ const NEVER = "Another text";
  * The recorder must hold a text that came and went before the test looked, or
  * a test that waits for a text never to show would pass on a page that showed
  * it for a moment. It must also say nothing of a text the page never showed.
+ * The page's scripts hold the whole dictionary of its texts, and a hidden
+ * element holds its text too: neither is something a learner sees, so neither
+ * counts. A recorder that read the text of the document would count both.
  */
 test("the text recorder holds a text that showed only for a moment", async ({
   page,
 }) => {
   // A blank document: the recorder is under test, not a product page.
-  await page.setContent("<!doctype html><title>recorder</title><main></main>");
+  await page.setContent(
+    `<!doctype html><title>recorder</title><main></main>
+     <script type="application/json">{"title":"${SEEN}"}</script>
+     <div hidden>${SEEN}</div>`
+  );
   await watchTexts(page, [SEEN, NEVER]);
   expect(await shownTexts(page)).toEqual([]);
 
