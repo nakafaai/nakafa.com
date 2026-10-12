@@ -154,6 +154,20 @@ export const NinaTurnSummary = Schema.Struct({
     "remembered",
   ])
 );
+/**
+ * The turn as a reader who does not own the chat is told of it: where it stands
+ * and which prompt it answers. What the turn cost, what Nina kept from it and
+ * what she suggests next belong to the owner's account, so a reader is told
+ * none of them. `usage` stays in the shape as an empty list.
+ */
+export function readerTurn(
+  turn: typeof NinaTurnSummary.Type
+): typeof NinaTurnSummary.Type {
+  return {
+    ...Struct.pick(turn, ["order", "promptMessageId", "promptedAt", "state"]),
+    usage: [],
+  };
+}
 export type NinaPage = typeof NinaPageSchema.Type;
 export type NinaRuntime = typeof NinaRuntimeSchema.Type;
 export type NinaUser = typeof NinaUserSchema.Type;

@@ -11,7 +11,10 @@ import { readChat } from "@repo/backend/confect/chats/access/read";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import type { StreamRequest } from "@repo/backend/confect/nina/contract/message";
-import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
+import {
+  NinaTurnSummary,
+  readerTurn,
+} from "@repo/backend/confect/nina/contract/turn";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
 import {
   Array as Arr,
@@ -77,11 +80,8 @@ const list = FunctionImpl.make(
   "list",
   Effect.fn("nina.messages.list")(function* (args) {
     const viewer = yield* getOptionalAppUserForRead();
-    const chat = yield* readChat(
-      args.chatId,
-      viewer?.appUser._id ?? null,
-      args.shareToken
-    );
+    const viewerId = viewer?.appUser._id ?? null;
+    const chat = yield* readChat(args.chatId, viewerId, args.shareToken);
     if (chat.threadId !== args.threadId) {
       return yield* new ChatAccessError({
         code: "FORBIDDEN",
@@ -106,8 +106,10 @@ const list = FunctionImpl.make(
         new NinaReadError({ message: "Unable to read Nina messages." }),
     });
     const reader = yield* DatabaseReader;
+    const owner = chat.userId === viewerId;
     // Hydrate only the orders present in this bounded message page. Agent keeps
     // ownership of parts and stream cursors; app facts come from their own turn.
+    // A reader is told where a turn stands, not what it cost the owner.
     const turns = HashMap.fromIterable(
       yield* Effect.forEach(
         Arr.dedupe(Arr.map(page.page, (message) => message.order)),
@@ -121,7 +123,10 @@ const list = FunctionImpl.make(
           const summary = turn
             ? yield* Schema.decodeEffect(NinaTurnSummary)(turn)
             : undefined;
-          return [order, summary] as const;
+          return [
+            order,
+            summary && !owner ? readerTurn(summary) : summary,
+          ] as const;
         }, Effect.orDie)
       )
     );
