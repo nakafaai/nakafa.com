@@ -3,24 +3,39 @@
 import { Frame } from "@repo/design-system/components/nina/frame";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { modeOf, type Options } from "@repo/mascot/nina/options";
-import { Array as Arr } from "effect";
-import {
-  lazy,
-  type ReactNode,
-  Suspense,
-  startTransition,
-  useState,
-} from "react";
+import { Array as Arr, Effect } from "effect";
+import { type ReactNode, startTransition, useState } from "react";
+
+/** Her life as a module: her motion and the numbers she is drawn from. */
+type Life = typeof import("@repo/design-system/components/nina/live.client");
 
 /**
- * Her life is loaded only when she is needed, so none of it is in the first
- * JavaScript of a page: not her motion, and not the numbers she is drawn from.
+ * Loads her life when it is asked for and hands it over in a transition, so
+ * none of it is in the first JavaScript of a page. A load that fails hands
+ * nothing over, and she stays the picture she was.
+ *
+ * It is loaded by hand and not through `lazy` with a `Suspense`. React keeps
+ * the error of a boundary that the server could not finish (a page that turned
+ * out not to exist) and reports it when the next `Suspense` completes, so a
+ * boundary of hers that mounts after hydration would log that error on every
+ * not-found page.
  */
-const Live = lazy(() =>
-  import("@repo/design-system/components/nina/live.client").then((module) => ({
-    default: module.Live,
-  }))
-);
+function loadLife(then: (life: Life) => void) {
+  Effect.runFork(
+    Effect.tryPromise(
+      () => import("@repo/design-system/components/nina/live.client")
+    ).pipe(
+      Effect.tap((life) =>
+        Effect.sync(() => {
+          startTransition(() => {
+            then(life);
+          });
+        })
+      ),
+      Effect.ignore
+    )
+  );
+}
 
 interface WakeProps {
   /** The picture of her that a server drew, which stays until her life is loaded. */
@@ -54,23 +69,23 @@ function whenNear(element: Element, then: () => void) {
  * her pose, and the page around her never sees the failure.
  */
 export function Wake({ children, label, options, size }: WakeProps) {
-  const [awake, setAwake] = useState(false);
+  const [life, setLife] = useState<Life>();
   const mode = modeOf(options);
-  const wake = () => {
-    startTransition(() => {
-      setAwake(true);
-    });
-  };
-
   const still = <Frame mode={mode}>{children}</Frame>;
 
-  return awake ? (
-    <ErrorBoundary fallback={still}>
-      <Suspense fallback={still}>
-        <Live key={mode} label={label} options={options} size={size} />
-      </Suspense>
-    </ErrorBoundary>
-  ) : (
+  if (life !== undefined) {
+    return (
+      <ErrorBoundary fallback={still}>
+        <life.Live key={mode} label={label} options={options} size={size} />
+      </ErrorBoundary>
+    );
+  }
+
+  const wake = () => {
+    loadLife(setLife);
+  };
+
+  return (
     <Frame
       mode={mode}
       onPointerEnter={wake}
