@@ -213,7 +213,10 @@ export function useMemoryActions() {
       return words;
     }
 
-    const undo = createUndo(() => add(take()));
+    const undo = createUndo(
+      () => add(take()),
+      () => release(memory.id)
+    );
 
     forget(memory.id);
 
@@ -228,9 +231,8 @@ export function useMemoryActions() {
         },
       },
       duration: Duration.toMillis(UNDO),
-      // An offer nobody took needs its words no more.
-      onAutoClose: () => release(memory.id),
-      onDismiss: () => release(memory.id),
+      onAutoClose: undo.closed,
+      onDismiss: undo.closed,
     });
 
     settle(() => removeById({ id: memory.id }), {
@@ -268,6 +270,13 @@ export function useMemoryActions() {
     const { session } = latest();
 
     settle(() => clearAll(), {
+      // The server deleted everything: the words the editor still held on its
+      // memory have nothing to come back to.
+      done: () => {
+        if (editing) {
+          release(editing.id);
+        }
+      },
       // The server deleted nothing: the memory the editor was on is the
       // learner's again with the words the editor held, and a first save on
       // its way keeps its editor.
