@@ -68,6 +68,11 @@ contextual visit cannot first record a canonical view and then a placement view.
   the activation, because a stale image is cosmetic and its lifetime bounds it.
   The image for a route the release does not know is kept for five minutes
   only, because the next release may add the route.
+- The image optimizer keeps an optimized copy for a week
+  (`images.minimumCacheTTL` in `@repo/next-config`), not the four hours it
+  defaults to. A static import already stays for a year, but a file in
+  `public/` and a remote image sent short lifetimes and were optimized again
+  every four hours for the same bytes.
 - RSS caches the completed XML. Its update timestamp comes from authored
   publication dates, so another request does not manufacture changed output.
 - Flight requests bypass the Proxy's duplicate publication ownership reads.
