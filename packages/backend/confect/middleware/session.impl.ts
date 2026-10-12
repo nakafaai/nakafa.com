@@ -1,4 +1,5 @@
 import { MiddlewareImpl } from "@confect/server";
+import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
@@ -8,11 +9,11 @@ import {
   MutationCtx,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
-import { authReader } from "@repo/backend/confect/auth/reader";
 import { Session } from "@repo/backend/confect/auth/session";
 import { AuthReadError } from "@repo/backend/confect/auth/spec";
 import SessionMiddleware from "@repo/backend/confect/middleware/session.spec";
-import { Effect } from "effect";
+import type { GenericActionCtx, GenericDataModel } from "convex/server";
+import { Clock, Effect, Option, Schema } from "effect";
 
 const authReadFailure = () =>
   new AuthReadError({
@@ -20,23 +21,48 @@ const authReadFailure = () =>
     message: "Unable to read authentication state.",
   });
 
+/** The session and the user that a verified token names. */
+const TokenSession = Schema.Struct({
+  sessionId: Schema.String,
+  subject: Schema.String,
+});
+const decodeTokenSession = Schema.decodeUnknownOption(TokenSession);
+
 /**
- * Better Auth confirms the session is still live before a write. Its SDK owns
- * session expiry and component identity validation.
+ * A write confirms with Better Auth that its session is still live. The token
+ * names the session and the user, and one read in the component says whether
+ * that session exists, has not expired and belongs to that user, and whether
+ * the user still exists. The read is the component's own small query and not
+ * Better Auth's adapter, which loads the whole library twice for the same
+ * answer.
  */
 const readSessionAuthId = Effect.fn("auth.readSession")(function* (
-  ctx: Parameters<typeof authReader.safeGetAuthUser>[0]
+  ctx: Pick<GenericActionCtx<GenericDataModel>, "runQuery">
 ) {
-  const authUser = yield* Effect.tryPromise({
-    try: () => authReader.safeGetAuthUser(ctx),
+  const token = yield* (yield* Auth).getUserIdentity.pipe(
+    Effect.map(decodeTokenSession),
+    Effect.catchTag("NoUserIdentityFoundError", () => Effect.succeedNone)
+  );
+  if (Option.isNone(token)) {
+    return;
+  }
+  const { sessionId, subject } = token.value;
+  const now = yield* Clock.currentTimeMillis;
+  const live = yield* Effect.tryPromise({
+    try: () =>
+      ctx.runQuery(components.betterAuth.session.live, {
+        now,
+        sessionId,
+        userId: subject,
+      }),
     catch: authReadFailure,
   });
-  return authUser?._id;
+  return live ? subject : undefined;
 });
 /**
  * A read trusts the token Convex verified against Better Auth's keys. The
  * token's short expiry bounds how long a revoked session can still read, and
- * skipping the two component lookups keeps every signed-in query fast.
+ * skipping the component read keeps every signed-in query fast.
  * @see https://docs.convex.dev/auth/functions-auth
  */
 const readTokenAuthId = Effect.fn("auth.readToken")(function* () {

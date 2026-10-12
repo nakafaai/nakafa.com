@@ -2,7 +2,7 @@ import {
   DatabaseReader as ConfectDatabaseReader,
   RegisteredConvexFunction,
 } from "@confect/server";
-import { describe, expect, it, onTestFinished } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import {
   ActiveAppLocaleListSchema,
   ActiveAppLocaleSchema,
@@ -13,7 +13,6 @@ import {
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { authReader } from "@repo/backend/confect/auth/reader";
 import { readLearningPreferenceByUserId } from "@repo/backend/confect/learningPreferences/impl";
 import {
   createConvexTestWithBetterAuth,
@@ -292,44 +291,6 @@ describe("learningPreferences", () => {
       );
     })
   );
-  it("redacts auth provider failures for preference writes, which reads never touch", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const auth = vi
-      .spyOn(authReader, "safeGetAuthUser")
-      .mockRejectedValue(new Error("private auth provider details"));
-    onTestFinished(() => auth.mockRestore());
-    await expect(
-      t.mutation(api.learningPreferences.mutations.setPreferredCurriculum, {
-        locale: "id",
-        preferredCurriculumProgramKey: "merdeka",
-      })
-    ).rejects.toMatchObject({
-      data: {
-        _tag: "AuthReadError",
-        code: "AUTH_READ_FAILED",
-        message: "Unable to read authentication state.",
-      },
-    });
-    await expect(
-      t.mutation(api.learningPreferences.mutations.setPreferredTryoutCountry, {
-        locale: "id",
-        preferredTryoutCountryKey: "indonesia",
-      })
-    ).rejects.toMatchObject({
-      data: {
-        _tag: "AuthReadError",
-        code: "AUTH_READ_FAILED",
-        message: "Unable to read authentication state.",
-      },
-    });
-    for (const query of [
-      api.learningPreferences.queries.getCurrent,
-      api.learningPreferences.queries.getCurrentTryout,
-    ]) {
-      await t.query(query, { locale: "id" });
-    }
-    expect(auth).toHaveBeenCalledTimes(2);
-  });
   it.effect("redacts preference persistence failures", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();

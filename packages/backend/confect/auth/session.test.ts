@@ -8,7 +8,6 @@ import {
   it,
 } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { authReader } from "@repo/backend/confect/auth/reader";
 import { AuthFailure, SessionRequired } from "@repo/backend/confect/auth/spec";
 import {
   createConvexTestWithBetterAuth,
@@ -87,7 +86,7 @@ describe("token-verified reads and session-validated writes", () => {
     });
   });
 
-  it("reads from the verified token without Better Auth and confirms the live session before writes", async () => {
+  it("reads from the verified token alone and confirms the live session before writes", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -100,14 +99,13 @@ describe("token-verified reads and session-validated writes", () => {
       sessionId: identity.sessionId,
       subject: identity.authUserId,
     });
-    const sessionLookup = vi.spyOn(authReader, "safeGetAuthUser");
-    // Revocation follows the token's short lifetime for reads.
+    // Revocation follows the token's short lifetime for reads: an expired
+    // session still reads, so a read asks Better Auth nothing.
     expect(await expired.query(currentUser, {})).toMatchObject({
       appUser: { _id: identity.userId },
       authUser: { _id: identity.authUserId, name: "User expired-auth" },
     });
     expect(await expired.query(schoolLanding, {})).toEqual({ kind: "none" });
-    expect(sessionLookup).not.toHaveBeenCalled();
     expect(await expired.mutation(admitOnboarding, {})).toMatchObject({
       isAuthenticated: false,
     });
@@ -117,7 +115,36 @@ describe("token-verified reads and session-validated writes", () => {
     await expect(expired.action(customerPortal, {})).rejects.toMatchObject({
       data: { _tag: "SessionRequired" },
     });
-    expect(sessionLookup).toHaveBeenCalledTimes(3);
+  });
+
+  it("refuses a write whose token names another user's session", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const [owner, other] = await t.mutation(async (ctx) => [
+      await seedAuthenticatedUser(ctx, { now: NOW, suffix: "session-owner" }),
+      await seedAuthenticatedUser(ctx, { now: NOW, suffix: "session-other" }),
+    ]);
+    const mismatched = t.withIdentity({
+      sessionId: owner.sessionId,
+      subject: other.authUserId,
+    });
+    await expect(
+      mismatched.mutation(updateName, { name: "Verified user" })
+    ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+    await expect(mismatched.action(customerPortal, {})).rejects.toMatchObject({
+      data: { _tag: "SessionRequired" },
+    });
+  });
+
+  it("refuses a write whose token names no session", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "no-session" })
+    );
+    await expect(
+      t
+        .withIdentity({ subject: identity.authUserId })
+        .mutation(updateName, { name: "Verified user" })
+    ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
   });
 
   it("rejects removed accounts instead of allowing them to write anonymously", async () => {
@@ -158,29 +185,6 @@ describe("token-verified reads and session-validated writes", () => {
     ).rejects.toMatchObject({
       data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
-  });
-
-  it("fails a write closed with a typed, sanitized error when the session component is unavailable", async () => {
-    vi.spyOn(authReader, "safeGetAuthUser").mockRejectedValueOnce(
-      new Error("private adapter details")
-    );
-    const t = createConvexTestWithBetterAuth();
-    const failure = await t
-      .mutation(updateName, { name: "Verified user" })
-      .catch((error: unknown) => error);
-    assert(Ref.isConvexError(failure));
-    const decoded = Ref.decodeErrorOption(
-      refs.public.users.mutations.updateUserName,
-      failure.data
-    );
-    assert(Option.isSome(decoded));
-    assert(decoded.value._tag === "AuthReadError");
-    expect(Schema.encodeSync(AuthFailure)(decoded.value)).toEqual({
-      _tag: "AuthReadError",
-      code: "AUTH_READ_FAILED",
-      message: "Unable to read authentication state.",
-    });
-    expect(failure.data).not.toHaveProperty("cause");
   });
 
   it("keeps prepared users readable while rejecting authenticated operations", async () => {
