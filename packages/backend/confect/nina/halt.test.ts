@@ -1,14 +1,18 @@
 import { Ref } from "@confect/core";
+import { QueryRunner } from "@confect/server";
 import { listMessages } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { PostHog } from "@posthog/convex";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
+import { watchHalt } from "@repo/backend/confect/nina/halt";
 import { provider } from "@repo/backend/test/gateway";
-import { ninaModel } from "@repo/backend/test/nina";
+import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
 import { createSilentTest, hasAnswer } from "@repo/backend/test/nina/silent";
-import { Array as Arr } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
+import { TestClock } from "effect/testing";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -79,6 +83,7 @@ describe("A running Nina turn that the learner stops", () => {
     const report = vi
       .spyOn(PostHog.prototype, "captureException")
       .mockResolvedValue(undefined);
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
     const f = await createSilentTest();
     try {
       const { running } = await f.begin();
@@ -108,8 +113,18 @@ describe("A running Nina turn that the learner stops", () => {
         readyMs: expect.any(Number),
       });
       expect(hasAnswer(stopped.messages)).toBe(false);
-      // A stop the learner asked for is not an operational failure.
+      // A stop the learner asked for is not an operational failure. The run
+      // still notes why it ended, with its turn and the reason and no text.
       expect(report).not.toHaveBeenCalled();
+      expect(info).toHaveBeenCalledWith(
+        expect.objectContaining({
+          level: "INFO",
+          message: [
+            "Nina run ended after its turn was halted",
+            { turnId: f.turnId, reason: "interrupted" },
+          ],
+        })
+      );
     } finally {
       f.release();
     }
@@ -171,4 +186,74 @@ describe("A running Nina turn that the learner stops", () => {
       f.release();
     }
   }, 15_000);
+});
+
+describe("A tool-call repair of a turn that the learner stops", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    provider.languageModel.mockReset();
+  });
+
+  it("ends with the stop, so a stopped turn spends no more on the background model", async () => {
+    let started: () => void = () => undefined;
+    const repairing = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    let repairSignal: AbortSignal | undefined;
+    // The model calls a capability with an input that fails its schema, so the
+    // SDK asks Nina to repair it. The repair call never answers: only its
+    // signal can end it.
+    const languageModel = ninaModel(true, false, { request: 42 });
+    languageModel.doGenerate = ({ abortSignal }) => {
+      repairSignal = abortSignal;
+      started();
+      return new Promise((_resolve, reject) => {
+        abortSignal?.addEventListener("abort", () =>
+          reject(abortSignal.reason)
+        );
+      });
+    };
+    provider.languageModel.mockReturnValue(languageModel);
+    const f = await createNinaTest({ prompt: "Explain a function limit." });
+    const running = f.t.action(run, { turnId: f.turnId });
+    await repairing;
+
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    await running;
+
+    expect(repairSignal?.aborted).toBe(true);
+    const state = await f.inspect();
+    expect(state.turn?.state.status).toBe("cancelled");
+    expect(state.user?.credits).toBe(10);
+  }, 15_000);
+});
+
+describe("The halt watch of a running turn", () => {
+  const turnId = Schema.decodeUnknownSync(Id("ninaTurns"))("turn");
+  const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
+
+  it.effect(
+    "keeps asking after one check fails, and aborts the run once a check finds its turn halted",
+    () =>
+      Effect.gen(function* () {
+        // The first read fails the way a lost connection does, the second finds
+        // the turn running and the third finds it stopped.
+        const runQuery = vi
+          .fn()
+          .mockRejectedValueOnce(new Error("Private connection failure"))
+          .mockResolvedValueOnce(false)
+          .mockResolvedValueOnce(true);
+        const halt = yield* watchHalt(turnId).pipe(
+          Effect.provide(QueryRunner.layer(runQuery))
+        );
+
+        yield* TestClock.adjust("1 second");
+        expect(halt.aborted).toBe(false);
+
+        yield* TestClock.adjust("1 second");
+        expect(halt.aborted).toBe(true);
+        expect(runQuery).toHaveBeenCalledTimes(3);
+        expect(runQuery).toHaveBeenLastCalledWith(halted, { turnId });
+      })
+  );
 });
