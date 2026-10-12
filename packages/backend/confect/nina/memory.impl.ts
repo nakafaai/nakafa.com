@@ -25,13 +25,19 @@ import {
   readMemoryState,
   readOwnMemory,
 } from "@repo/backend/confect/nina/memory/store";
-import { known, read } from "@repo/backend/confect/nina/memory/turn";
+import {
+  known,
+  lookup,
+  paused,
+  read,
+} from "@repo/backend/confect/nina/memory/turn";
 import { list, state } from "@repo/backend/confect/nina/memory/view";
 import { writeMemories } from "@repo/backend/confect/nina/memory/write";
 import spec, {
   type NinaMemoryDraft,
   NinaMemoryRejected,
 } from "@repo/backend/confect/nina/memory.spec";
+import { requestPortrait } from "@repo/backend/confect/nina/portrait/store";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { Clock, Duration, Effect, Layer, String as Str } from "effect";
@@ -66,7 +72,8 @@ const sealDraft = Effect.fn("nina.memory.sealDraft")(function* (
  * moment the learner last deleted every memory, as `edit` and the capture
  * write do: the database runs this write again when a "Delete all" commits
  * while it runs, and the memory is confirmed after that moment, so the batches
- * of that deletion never take it.
+ * of that deletion never take it. It asks for a build of the learner's
+ * portrait, which waits (`requestPortrait`).
  */
 const add = FunctionImpl.make(
   schema,
@@ -78,7 +85,7 @@ const add = FunctionImpl.make(
       return yield* new NinaMemoryRejected({ reason: "empty" });
     }
     const { keys, text, title } = yield* sealDraft(appUser._id, draft);
-    const { clearedAt } = yield* readMemoryState(appUser._id);
+    const { clearedAt, paused } = yield* readMemoryState(appUser._id);
     const confirmedAt = confirmedAfterClear(
       yield* Clock.currentTimeMillis,
       clearedAt
@@ -94,6 +101,7 @@ const add = FunctionImpl.make(
       })
       .pipe(Effect.orDie);
     yield* syncKeys(keys, id, { ...draft, confirmedAt });
+    yield* requestPortrait({ paused, reset: false, userId: appUser._id });
     return id;
   })
 );
@@ -103,6 +111,8 @@ const add = FunctionImpl.make(
  * title takes the title off. Its kind, topics and end date stay as they are,
  * and its keys follow its words. A memory that "Delete all" took is missing:
  * rewriting it would confirm it later than the batches that delete it reach.
+ * The learner's portrait may hold a sentence from the old words, so it loses its
+ * text at once and is built again from scratch (`requestPortrait`).
  */
 const edit = FunctionImpl.make(
   schema,
@@ -113,7 +123,7 @@ const edit = FunctionImpl.make(
     if (isEmpty(draft)) {
       return yield* new NinaMemoryRejected({ reason: "empty" });
     }
-    const { clearedAt } = yield* readMemoryState(appUser._id);
+    const { clearedAt, paused } = yield* readMemoryState(appUser._id);
     const memory = yield* readKeptMemory(appUser._id, id, clearedAt);
     if (!memory) {
       return yield* new NinaMemoryRejected({ reason: "missing" });
@@ -132,10 +142,16 @@ const edit = FunctionImpl.make(
       confirmedAt,
       topics: memory.topics,
     });
+    yield* requestPortrait({ paused, reset: true, userId: appUser._id });
     return null;
   })
 );
 
+/**
+ * Deletes one memory of the learner, with its keys. The learner's portrait may
+ * hold a sentence that came from it, so the portrait loses its text at once and
+ * is built again from scratch (`requestPortrait`).
+ */
 const remove = FunctionImpl.make(
   schema,
   spec,
@@ -145,12 +161,21 @@ const remove = FunctionImpl.make(
     const memory = yield* readOwnMemory(appUser._id, id);
     if (memory) {
       yield* deleteMemory(memory._id);
+      const { paused } = yield* readMemoryState(appUser._id);
+      yield* requestPortrait({ paused, reset: true, userId: appUser._id });
     }
     return null;
   })
 );
 
-/** Stops Nina from saving or reading memory, or lets her again. Nothing is deleted. */
+/**
+ * Stops Nina from saving or reading memory, or lets her again. Nothing is
+ * deleted. Letting her again asks for a build of the portrait, by the rule of
+ * a memory that is added (`requestPortrait`): while memory was paused nothing
+ * asked for one, and a build that came due during the pause built nothing, so
+ * what the learner wrote before and during the pause would otherwise wait for
+ * the next memory.
+ */
 const pause = FunctionImpl.make(
   schema,
   spec,
@@ -162,6 +187,9 @@ const pause = FunctionImpl.make(
       paused,
       userId: appUser._id,
     });
+    if (!paused) {
+      yield* requestPortrait({ paused, reset: false, userId: appUser._id });
+    }
     return null;
   })
 );
@@ -230,6 +258,8 @@ export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(pause),
   Layer.provide(clear),
   Layer.provide(read),
+  Layer.provide(lookup),
+  Layer.provide(paused),
   Layer.provide(known),
   Layer.provide(capture),
   Layer.provide(drain),

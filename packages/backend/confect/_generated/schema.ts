@@ -24,6 +24,9 @@ import contentKeys from "./tables/contentKeys";
 import contentModelBuilds from "./tables/contentModelBuilds";
 import contentPaths from "./tables/contentPaths";
 import contentReleases from "./tables/contentReleases";
+import contentSectionSources from "./tables/contentSectionSources";
+import contentSectionState from "./tables/contentSectionState";
+import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
 import creditResetPeriods from "./tables/creditResetPeriods";
@@ -46,6 +49,7 @@ import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
+import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
@@ -115,6 +119,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly contentModelBuilds: typeof contentModelBuilds;
   readonly contentPaths: typeof contentPaths;
   readonly contentReleases: typeof contentReleases;
+  readonly contentSectionSources: typeof contentSectionSources;
+  readonly contentSectionState: typeof contentSectionState;
+  readonly contentSections: typeof contentSections;
   readonly contentSnapshots: typeof contentSnapshots;
   readonly contentState: typeof contentState;
   readonly creditResetPeriods: typeof creditResetPeriods;
@@ -137,6 +144,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly materialCatalog: typeof materialCatalog;
   readonly ninaMemories: typeof ninaMemories;
   readonly ninaMemoryKeys: typeof ninaMemoryKeys;
+  readonly ninaMemoryPortraits: typeof ninaMemoryPortraits;
   readonly ninaSummaries: typeof ninaSummaries;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
@@ -205,6 +213,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   contentModelBuilds,
   contentPaths,
   contentReleases,
+  contentSectionSources,
+  contentSectionState,
+  contentSections,
   contentSnapshots,
   contentState,
   creditResetPeriods,
@@ -227,6 +238,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   materialCatalog,
   ninaMemories,
   ninaMemoryKeys,
+  ninaMemoryPortraits,
   ninaSummaries,
   ninaTurns,
   ninaUploads,

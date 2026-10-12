@@ -6,6 +6,8 @@ import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Effect, FileSystem, Schema } from "effect";
 
 const REDACTED_PERMISSION_FAILURE = /Permission denied \[redacted\]$/u;
+const REDACTED_PERMISSION_START =
+  /^Permission denied \[redacted\] Available function Available function/u;
 
 describe("acceptance command diagnostics", () => {
   afterEach(() => {
@@ -22,6 +24,20 @@ describe("acceptance command diagnostics", () => {
     );
 
     expect(result).toMatch(REDACTED_PERMISSION_FAILURE);
+    expect(result).not.toContain(deployKey);
+    expect(result).not.toContain("\n");
+    expect(result.length).toBe(2000);
+  });
+
+  it("keeps the start of a long output when asked, and redacts secrets before it cuts", () => {
+    const deployKey = "sensitive-deploy-key";
+    const result = sanitizeAcceptanceCommandError(
+      `\u001B[31mPermission denied\u001B[0m ${deployKey}\n${"Available function\n".repeat(200)}`,
+      [deployKey],
+      "start"
+    );
+
+    expect(result).toMatch(REDACTED_PERMISSION_START);
     expect(result).not.toContain(deployKey);
     expect(result).not.toContain("\n");
     expect(result.length).toBe(2000);

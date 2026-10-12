@@ -44,6 +44,7 @@ const RuntimeHeadOptionsSchema = Schema.Struct({
   plainText: Schema.optional(Schema.String),
   projectionJson: Schema.optional(Schema.String),
   publicPath: Schema.optional(Schema.String),
+  rawMdx: Schema.optional(Schema.String),
   rendererDomain: Schema.optional(RendererDomainSchema),
   sourcePath: Schema.optional(Schema.String),
 });
@@ -76,13 +77,18 @@ async function insertRuntimeArtifact(
   contentKey: string,
   options?: Pick<
     RuntimeHeadOptions,
-    "compiledCode" | "plainText" | "rendererDomain"
+    | "artifactLocale"
+    | "compiledCode"
+    | "plainText"
+    | "rawMdx"
+    | "rendererDomain"
   >
 ) {
   await insertTestArtifact(ctx, {
     artifactHash,
     artifactJson: testArtifactJson({
       artifactHash,
+      artifactLocale: options?.artifactLocale,
       ...(options?.compiledCode === undefined
         ? {}
         : {
@@ -93,6 +99,11 @@ async function insertRuntimeArtifact(
         ? {}
         : {
             plainText: options?.plainText,
+          }),
+      ...(options?.rawMdx === undefined
+        ? {}
+        : {
+            rawMdx: options?.rawMdx,
           }),
       rendererDomain: options?.rendererDomain,
     }),
@@ -138,7 +149,10 @@ export async function insertRuntimeVersion(
     sourceHash: TEST_DIGEST,
     sourcePath,
   });
-  await insertRuntimeArtifact(ctx, artifactHash, contentKey, options);
+  await insertRuntimeArtifact(ctx, artifactHash, contentKey, {
+    ...options,
+    artifactLocale,
+  });
 }
 
 /** Inserts one permanent content identity used by projection pagination. */

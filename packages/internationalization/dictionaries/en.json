@@ -559,7 +559,6 @@
     "error-message": "Nina could not finish this response. Please try again. If this continues, contact Nakafa support.",
     "retry": "Retry",
     "rate-limit-message": "You have reached the short-term message limit. Wait a moment, then send your message again.",
-    "nakafa": "Nakafa",
     "nakafa-search": "Nakafa results",
     "nakafa-search-results": "Content found",
     "nakafa-search-articles": "Articles found",
@@ -718,6 +717,7 @@
       "math": "Math check failed",
       "nakafa": "Content search failed",
       "deepResearch": "Web research failed",
+      "memory": "Memory search failed",
       "unknown": "Check failed"
     },
     "review-credits": "View credits",
@@ -756,6 +756,7 @@
       "math": "Checking the calculations",
       "nakafa": "Finding learning materials",
       "deepResearch": "Researching web sources",
+      "memory": "Recalled memories",
       "unknown": "Checking information",
       "stopped": "Stopped",
       "partial": "Partly done",

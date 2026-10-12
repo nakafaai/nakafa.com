@@ -8,21 +8,31 @@ import {
   ChatStep,
   makeChatStep,
 } from "@repo/backend/confect/nina/capability/deadline";
-import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import {
+  createNinaAgentContext,
+  readNinaLearningPage,
+} from "@repo/backend/confect/nina/contract/turn";
+import {
+  abortFailure,
   generationFailure,
   NinaGenerationError,
 } from "@repo/backend/confect/nina/failure";
 import { boundStep } from "@repo/backend/confect/nina/history";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
+import {
+  type Found,
+  restoreFound,
+} from "@repo/backend/confect/nina/memory/tool";
+import { decideNinaCapability } from "@repo/backend/confect/nina/policy/capability";
 import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { startNinaStep } from "@repo/backend/confect/nina/step";
 import type { RunTiming } from "@repo/backend/confect/nina/timing";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
-import { DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect, MutableHashMap } from "effect";
 
 /**
  * The scheduled Confect action owns generation; Agent owns its persistent
@@ -43,25 +53,40 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   const runtime = {
     currentDate: DateTime.formatIso(DateTime.makeUnsafe(turn._creationTime)),
   };
+  const { instructions, memories, paused, summary } = yield* readInstructions(
+    turn,
+    readNinaLearningPage(turn.page).url
+  );
+  // The turn reads once whether the learner paused memory: the prompt, the tools
+  // Nina is offered and the policy of each call all follow it.
   const context = createNinaAgentContext({
+    memory: !paused,
     page: turn.page,
     user: turn.user,
     runtime,
   });
-  const { instructions, summary } = yield* readInstructions(turn, context.url);
   // Nina reads its own turns, so the Agent fetches no history and sends this as is.
   const input = yield* readInput(turn, {
-    context: formatTurnContext({ page: turn.page, runtime, user: turn.user }),
+    context: formatTurnContext({
+      memories,
+      page: turn.page,
+      runtime,
+      user: turn.user,
+    }),
     through: summary?.throughOrder ?? null,
   });
   // The chat step's timer covers Nina's own call and the tools it starts, so
   // each step marks its start here and the tools count their time from it.
   const chatStep = yield* makeChatStep();
+  // The words the memory tool finds are read in the next step of this turn and
+  // never stored, so the thread, the transcript and later turns hold none.
+  const found: Found = MutableHashMap.empty();
   const tools = yield* createCapabilities(
     turn.userId,
     context,
     turn.page.locale,
-    usageHandler
+    usageHandler,
+    found
   ).pipe(Effect.provideService(ChatStep, chatStep));
   const handle = (yield* Gateway).language("chat");
   const agent = new Agent(components.nina, {
@@ -75,28 +100,37 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   });
   let streamFailure: NinaGenerationError | undefined;
   const result = yield* Effect.tryPromise({
-    try: (signal) =>
-      agent.streamText(
+    try: (signal) => {
+      // The stream, and the repair of a tool call inside it, end with the run
+      // and with a stop.
+      const stop = AbortSignal.any([signal, halt]);
+      return agent.streamText(
         ctx,
         { threadId: turn.threadId, userId: turn.userId },
         {
           promptMessageId: turn.promptMessageId,
-          abortSignal: AbortSignal.any([signal, halt]),
+          // Nina is offered the capabilities the policy allows this turn, in
+          // every step of it: not the memory tool while the learner's memory
+          // is paused.
+          activeTools: Arr.filter(
+            LearningCapabilityNameSchema.literals,
+            (capability) =>
+              decideNinaCapability({ capability, context }).state === "allowed"
+          ),
+          abortSignal: stop,
           onChunk: ({ chunk }) => timing.observe(chunk),
           onLanguageModelCallStart: () => timing.reach("readyMs"),
           onError: ({ error }) => {
             streamFailure ??= generationFailure(error);
           },
-          onAbort: () => {
-            streamFailure ??= new NinaGenerationError({
-              reason: "interrupted",
-            });
+          onAbort: ({ reason }) => {
+            streamFailure ??= abortFailure(reason);
           },
           prepareStep: (step) =>
             runPromise(
               startNinaStep(chatStep.begin, {
                 ...step,
-                messages: boundStep(step.messages),
+                messages: boundStep(restoreFound(step.messages, found)),
               })
             ),
           repairToolCall: (options) =>
@@ -105,13 +139,15 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
                 ...options,
                 userId: turn.userId,
                 usageHandler,
-              })
+              }),
+              { signal: stop }
             ),
           stopWhen: isStepCount(20),
           timeout: handle.timeout,
         },
         { saveStreamDeltas: { sendSources: true, returnImmediately: false } }
-      ),
+      );
+    },
     catch: (cause) => streamFailure ?? generationFailure(cause),
   });
   if (streamFailure) {

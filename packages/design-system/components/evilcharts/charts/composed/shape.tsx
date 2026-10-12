@@ -140,7 +140,7 @@ export const CustomBar = ({
       {variant === "stripped" ? (
         <RevealGroup
           animation={grow}
-          className="transition-opacity duration-200"
+          className="transition-opacity"
           filter={filter}
           opacity={fillOpacity}
         >
@@ -156,7 +156,7 @@ export const CustomBar = ({
       ) : (
         <RevealGroup animation={grow}>
           <rect
-            className="transition-opacity duration-200"
+            className="transition-opacity"
             fill={getFill()}
             filter={filter}
             height={height}

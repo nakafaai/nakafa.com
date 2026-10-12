@@ -1,14 +1,12 @@
 import { expect, type Locator, type Page, type Route } from "@playwright/test";
 import { Effect, MutableList, Schema } from "effect";
+import { type Changes, live, saved } from "@/e2e/support/changes";
 import {
-  type Changes,
   EMPTY,
   editorOf,
-  live,
   memoryRow,
   opened,
   openMemoryPage,
-  saved,
 } from "@/e2e/support/memory";
 import { CARD } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";

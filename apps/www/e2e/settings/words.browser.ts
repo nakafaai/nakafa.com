@@ -1,14 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
+import { live, saved } from "@/e2e/support/changes";
 import {
   EMPTY,
   editorOf,
-  live,
   MEMORY_PATH,
   memoryRow,
   opened,
   openMemoryPage,
-  saved,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";

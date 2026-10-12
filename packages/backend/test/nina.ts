@@ -20,16 +20,29 @@ import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, DateTime, Effect, Schema } from "effect";
 
 /**
- * The messages of one earlier turn: a question, tool steps, and an answer.
+ * Text that costs `tokens` model tokens by the shared tokenizer, one word per
+ * token, so a test sizes a turn by what the budgets count.
+ */
+export function filler(tokens: number) {
+  return Arr.join(
+    Arr.makeBy(tokens, () => "word"),
+    " "
+  );
+}
+
+/**
+ * The messages of one earlier turn: a question, tool steps, and an answer
+ * that is followed by `padding` when a test needs a turn of a size.
  * A cancelled turn has one tool step and no answer.
  */
 function earlierMessages(
   order: number,
   {
     cancelled,
+    padding,
     question,
     steps,
-  }: { cancelled: boolean; question: string; steps: number }
+  }: { cancelled: boolean; padding: string; question: string; steps: number }
 ) {
   const kind = cancelled ? "Cancelled" : "Earlier";
   const exchange = (step: number) => [
@@ -71,7 +84,12 @@ function earlierMessages(
         )),
     ...(cancelled
       ? []
-      : [{ role: "assistant" as const, content: `Earlier answer ${order}` }]),
+      : [
+          {
+            role: "assistant" as const,
+            content: `Earlier answer ${order}${padding}`,
+          },
+        ]),
   ];
 }
 
@@ -92,6 +110,7 @@ async function seedEarlierTurn(
     retryOf,
     steps = 0,
     threadId,
+    tokens = 0,
     userId,
   }: {
     cancelled?: boolean;
@@ -101,6 +120,7 @@ async function seedEarlierTurn(
     retryOf?: number;
     steps?: number;
     threadId: string;
+    tokens?: number;
     userId: Docs["users"]["_id"];
   }
 ) {
@@ -109,6 +129,7 @@ async function seedEarlierTurn(
     order,
     messages: earlierMessages(order, {
       cancelled,
+      padding: tokens === 0 ? "" : ` ${filler(tokens)}`,
       question: cancelled
         ? `Cancelled question ${order}`
         : `Earlier question ${retryOf ?? order}`,
@@ -140,11 +161,12 @@ async function seedEarlierTurn(
   });
 }
 
-/** What a test says about one earlier turn: it was cancelled, asks again the question that the turn `retryOf` first asked, or took `steps` tool steps. */
+/** What a test says about one earlier turn: it was cancelled, asks again the question that the turn `retryOf` first asked, took `steps` tool steps, or has an answer of `tokens` more tokens. */
 export const EarlierTurn = Schema.Struct({
   cancelled: Schema.optionalKey(Schema.Boolean),
   retryOf: Schema.optionalKey(Schema.Int),
   steps: Schema.optionalKey(Schema.Int),
+  tokens: Schema.optionalKey(Schema.Int),
 });
 
 /** `count` complete turns. makeBy always makes at least one, so none is its own case. */
@@ -377,6 +399,33 @@ const ninaAnswer: StreamPart[] = [
 export function ninaModelFor(count: number) {
   return new MockLanguageModelV4({
     doStream: Arr.makeBy(count, () => ninaStream(ninaAnswer)),
+  });
+}
+
+/**
+ * A model that searches the learner's memories for `query` in its first call,
+ * under the call id `recall-1`, and then answers `answers` calls in a row, so a
+ * test may run several turns of one chat.
+ */
+export function ninaRecallModel(query: string, answers: number) {
+  return new MockLanguageModelV4({
+    doStream: [
+      ninaStream([
+        { type: "stream-start", warnings: [] },
+        {
+          type: "tool-call",
+          toolCallId: "recall-1",
+          toolName: "memory",
+          input: encodeJsonText({ query }),
+        },
+        {
+          type: "finish",
+          usage: ninaUsage,
+          finishReason: { unified: "tool-calls", raw: "tool-calls" },
+        },
+      ]),
+      ...Arr.makeBy(answers, () => ninaStream(ninaAnswer)),
+    ],
   });
 }
 

@@ -5,7 +5,11 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 
 // Projects select files by folder path, so a file that repeats a basename
 // never joins a project by accident.
-// Marketing (119 s) and consent (22 s) run in this suite only to balance the run time: measured runtime 389 s, this suite 363 s.
+// Each CI leg pays about ten minutes to prepare and build before its first
+// test, so the suites are balanced by run time. Measured on 12 October: runtime
+// 290 s plus 40 s of site checks, learner 316 s, chat 361 s, visual 349 s,
+// navigation 267 to 344 s. Marketing and consent run in the visual suite only
+// for that balance.
 const VISUAL_TESTS = [
   "**/visual/**/*.browser.ts",
   "**/scene/**/*.browser.ts",
@@ -13,6 +17,19 @@ const VISUAL_TESTS = [
   "**/consent/**/*.browser.ts",
   "**/content/charts.browser.ts",
 ];
+
+// The account, settings and try-out pages are the slowest files of the shared
+// runtime (316 of its 604 s), and no test of a public page reads what they
+// write, so they run in their own leg.
+const LEARNER_TESTS = [
+  "**/account/**/*.browser.ts",
+  "**/settings/**/*.browser.ts",
+  "**/tryout/**/*.browser.ts",
+];
+
+// Nina's chats, on their page and in the sheet. They seed their own chats and
+// take as long as the whole learner suite, so they run in their own leg too.
+const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
 
 // Each project as it runs. No project names its dependency here: the suite
 // order below derives it.
@@ -28,8 +45,18 @@ const PROJECTS = {
     testIgnore: [
       "**/content/hydration.browser.ts",
       "**/navigation/instant.browser.ts",
+      ...CHAT_TESTS,
+      ...LEARNER_TESTS,
       ...VISUAL_TESTS,
     ],
+    workers: 1,
+  },
+  learner: {
+    testMatch: LEARNER_TESTS,
+    workers: 1,
+  },
+  chat: {
+    testMatch: CHAT_TESTS,
     workers: 1,
   },
   visual: {
@@ -58,6 +85,8 @@ type ProjectName = keyof typeof PROJECTS;
 // selection, every suite runs as one chain in this order.
 const SUITES = {
   runtime: ["cold-runtime", "shared-runtime"],
+  learner: ["learner"],
+  chat: ["chat"],
   visual: ["visual"],
   navigation: ["isolated-navigation", "webkit"],
 } satisfies Record<string, readonly ProjectName[]>;
@@ -113,5 +142,4 @@ export default defineConfig({
     trace: "retain-on-failure",
     video: "retain-on-failure",
   },
-  ...(process.env.CI ? { workers: 2 } : {}),
 });

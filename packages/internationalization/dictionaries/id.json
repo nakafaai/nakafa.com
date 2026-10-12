@@ -559,7 +559,6 @@
     "error-message": "Nina belum berhasil menyelesaikan jawaban ini. Silakan coba lagi. Jika masalah berlanjut, hubungi dukungan Nakafa.",
     "retry": "Coba lagi",
     "rate-limit-message": "Batas pengiriman pesan sementara sudah tercapai. Tunggu sebentar, lalu kirim lagi.",
-    "nakafa": "Nakafa",
     "nakafa-search": "hasil Nakafa",
     "nakafa-search-results": "Konten ditemukan",
     "nakafa-search-articles": "Artikel ditemukan",
@@ -718,6 +717,7 @@
       "math": "Pemeriksaan matematika gagal",
       "nakafa": "Pencarian materi gagal",
       "deepResearch": "Riset web gagal",
+      "memory": "Pencarian memori gagal",
       "unknown": "Pemeriksaan gagal"
     },
     "review-credits": "Lihat kredit",
@@ -756,6 +756,7 @@
       "math": "Memeriksa perhitungan",
       "nakafa": "Mencari materi belajar",
       "deepResearch": "Menelusuri sumber di web",
+      "memory": "Mengingat kembali memori",
       "unknown": "Memeriksa informasi",
       "stopped": "Dihentikan",
       "partial": "Sebagian selesai",

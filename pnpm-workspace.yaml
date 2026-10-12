@@ -45,7 +45,7 @@ update:
 catalog:
   '@confect/core': 10.1.0
   '@convex-dev/agent': 0.7.7
-  '@convex-dev/ai-sdk-provider': 0.2.1
+  '@convex-dev/ai-sdk-provider': 0.3.0
   '@effect/platform-browser': 4.0.2
   '@effect/platform-node': 4.0.2
   '@effect/vitest': 4.0.2

@@ -13,8 +13,8 @@ catalogs:
       specifier: 0.7.7
       version: 0.7.7
     '@convex-dev/ai-sdk-provider':
-      specifier: 0.2.1
-      version: 0.2.1
+      specifier: 0.3.0
+      version: 0.3.0
     '@effect/platform-browser':
       specifier: 4.0.2
       version: 4.0.2
@@ -508,7 +508,7 @@ importers:
         version: 0.3.1(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.3.0))(hono@4.13.13)(react@19.3.0)(typescript@7.0.2)(zod@4.6.5)
       '@convex-dev/ai-sdk-provider':
         specifier: 'catalog:'
-        version: 0.2.1(ai@7.0.136(zod@4.6.5))(convex@1.46.0(react@19.3.0))
+        version: 0.3.0(ai@7.0.136(zod@4.6.5))(convex@1.46.0(react@19.3.0))
       '@convex-dev/better-auth':
         specifier: 0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.33(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(solid-js@1.9.16)(vitest@5.0.3))(convex@1.46.0(react@19.3.0))(hono@4.13.13)(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)(typescript@7.0.2)
@@ -1841,8 +1841,8 @@ packages:
     peerDependencies:
       convex: ^1.43.0
 
-  '@convex-dev/ai-sdk-provider@0.2.1':
-    resolution: {integrity: sha512-w8Ps0a4E6+w+J7tBCM84CIEb0zmJD9yiGM1QTFo9zm/USpREmFDEgzdQKV8rPicfu6EvJoYR0RumZWBj9X14iw==}
+  '@convex-dev/ai-sdk-provider@0.3.0':
+    resolution: {integrity: sha512-0ENjkOgiCBybI/luPW8d9rszpb01FIXaU88Ff/5nXHRfFAVj0Xc1UW7XMtmq39rPlSPqyOdimJ+66AoFN7pzsw==}
     engines: {node: '>=22'}
     peerDependencies:
       ai: ^7.0.105
@@ -8619,7 +8619,7 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/ai-sdk-provider@0.2.1(ai@7.0.136(zod@4.6.5))(convex@1.46.0(react@19.3.0))':
+  '@convex-dev/ai-sdk-provider@0.3.0(ai@7.0.136(zod@4.6.5))(convex@1.46.0(react@19.3.0))':
     dependencies:
       '@ai-sdk/anthropic': 4.0.40(zod@4.6.5)
       '@ai-sdk/openai': 4.0.45(zod@4.6.5)

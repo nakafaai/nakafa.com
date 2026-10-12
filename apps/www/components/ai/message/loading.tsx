@@ -1,48 +1,24 @@
 "use client";
 
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
-import { isToolUIPart } from "ai";
-import { Array as Arr } from "effect";
 
-import { useChat } from "@/components/ai/chat/context";
 import { useMessage } from "@/components/ai/message/context";
+import { isAnswerWaiting } from "@/components/ai/message/waiting";
 
+/** Shows Nina typing in an answer that has begun but has nothing to show yet. */
 export function AiChatMessageLoading() {
-  const busy = useChat((state) => state.busy);
-  const lastMessageId = useChat((state) => state.lastMessageId);
-  const currentMessage = useMessage((state) => state.message);
+  const waiting = useMessage(({ last, message, turn }) =>
+    isAnswerWaiting({ last, message, status: turn?.state.status })
+  );
 
-  // Only show loading for assistant messages
-  if (currentMessage.role !== "assistant") {
+  if (!waiting) {
     return null;
   }
 
-  const isLastMessage = lastMessageId === currentMessage.id;
-
-  // Only show for the last assistant message
-  if (!isLastMessage) {
-    return null;
-  }
-
-  // Show loading when streaming but no text content yet
-  if (busy && currentMessage.status !== "failed") {
-    const hasContent = Arr.some(
-      currentMessage.parts,
-      (p) =>
-        isToolUIPart(p) ||
-        ((p.type === "text" || p.type === "reasoning") &&
-          p.text.trim().length > 0)
-    );
-
-    if (!hasContent) {
-      return (
-        <div className="flex flex-col gap-6">
-          <TypingLoader />
-        </div>
-      );
-    }
-  }
-
-  return null;
+  return (
+    <div className="flex flex-col gap-6">
+      <TypingLoader />
+    </div>
+  );
 }
 AiChatMessageLoading.displayName = "AiChatMessageLoading";

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { documentSections } from "@repo/backend/confect/contents/sections/draft";
 import {
   countTextTokens,
   NINA_BUDGET,
@@ -156,6 +157,76 @@ describe("Nakafa sectioned reads", () => {
     });
     expect(countTextTokens(read)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
     expect(read).toContain("Request one of the listed sections.");
+  });
+
+  it("opens every section that the section index lists, by the anchor it lists", () => {
+    const markdown = Arr.join(
+      [
+        "# Matriks",
+        "Pengantar singkat.",
+        "## Contoh",
+        "Contoh pertama.",
+        "### Langkah",
+        "Langkah pertama.",
+        "## Contoh",
+        "Contoh kedua.",
+      ],
+      "\n\n"
+    );
+    const sections = documentSections(
+      {
+        appLocale: "id",
+        contentKey: "material/lesson/matematika/matriks",
+        publicPath: "materi/matematika/matriks",
+        section: "material",
+      },
+      "Matriks",
+      markdown
+    );
+    expect(Arr.map(sections, ({ anchor }) => anchor)).toEqual([
+      "top",
+      "contoh",
+      "langkah",
+      "contoh-2",
+    ]);
+    const content = {
+      ...readNakafaContentRefFixture("id", subjectRoute, "material"),
+      text: markdown,
+      title: "Matriks",
+    };
+    for (const { anchor, excerpt } of sections) {
+      const read = formatRead(content, { section: anchor });
+      expect(read).not.toContain("was not found in this content");
+      expect(read).toContain(excerpt);
+    }
+  });
+
+  it("opens a surah at the verse that a Quran passage of the section index starts with", () => {
+    // The index names a passage by the section of its first verse, `verse-7`
+    // for the passage of the verses 7 to 12.
+    const text = Arr.join(
+      [
+        "# Al-Baqarah",
+        "## Verses",
+        ...Arr.flatMap(Arr.range(1, 12), (verse) => [
+          `### Verse ${verse}`,
+          `Ayat nomor ${verse}.`,
+        ]),
+      ],
+      "\n\n"
+    );
+    const read = formatRead(
+      {
+        ...readNakafaContentRefFixture("id", "quran/2", "quran"),
+        text,
+        title: "Al-Baqarah",
+      },
+      { section: "verse-7" }
+    );
+    expect(read).not.toContain("was not found in this content");
+    expect(read).toContain("Ayat nomor 7.");
+    expect(read).toContain("Ayat nomor 12.");
+    expect(read).not.toContain("Ayat nomor 6.");
   });
 
   it("lists the sections after a later read first in a capped outline", () => {

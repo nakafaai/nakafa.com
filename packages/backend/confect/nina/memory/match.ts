@@ -1,9 +1,4 @@
-import type { Opened } from "@repo/backend/confect/nina/memory/seal";
-import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, HashSet, Option, String as Str } from "effect";
-
-/** The share of words two texts must have in common to say the same thing. */
-const SAME_OVERLAP = 0.8;
+import { String as Str } from "effect";
 
 const NOT_WORD = /[^\p{L}\p{N}\s]/gu;
 const WHITESPACE = /\s+/gu;
@@ -18,11 +13,6 @@ function normalizeText(text: string) {
   );
 }
 
-/** The words of a normalized text, each counted once. */
-function wordsOf(text: string) {
-  return HashSet.fromIterable(Str.split(text, " "));
-}
-
 /**
  * Whether a text has a word once case, punctuation and spacing are ignored. A
  * letter or a digit makes a word. A memory that is only a title has none.
@@ -31,80 +21,12 @@ export function hasWords(text: string) {
   return Str.isNonEmpty(normalizeText(text));
 }
 
-/** Whether two texts hold the same words once case, punctuation and spacing are ignored. */
+/**
+ * Whether two texts are the same once case, punctuation and spacing are
+ * ignored. This is an identity check on what is stored: whether two sentences
+ * mean the same is for the capture model to say, never for a comparison of
+ * their words.
+ */
 export function sameWords(first: string, second: string) {
   return normalizeText(first) === normalizeText(second);
-}
-
-/**
- * Whether two texts say the same thing: the same words, or sharing at least 80
- * percent of their words (the words in both, over the words in either). A text
- * with no words says nothing, so it never says the same as another text.
- */
-export function saysSame(first: string, second: string) {
-  if (!(hasWords(first) && hasWords(second))) {
-    return false;
-  }
-  if (sameWords(first, second)) {
-    return true;
-  }
-  const leftWords = wordsOf(normalizeText(first));
-  const rightWords = wordsOf(normalizeText(second));
-  const shared = HashSet.size(HashSet.intersection(leftWords, rightWords));
-  const either = HashSet.size(HashSet.union(leftWords, rightWords));
-  return shared / either >= SAME_OVERLAP;
-}
-
-type Candidate = typeof NinaMemoryCandidate.Type;
-
-/** What a candidate is matched against: the memory's id, who wrote its words, its kind when it has one, and its opened words, never its title. */
-type Stored = Pick<Opened, "_id" | "author" | "kind" | "text">;
-
-/**
- * Whether a memory can be of a candidate's kind: it is of that kind, or it has
- * none. Only a memory the learner wrote has none, and a chat that says it again
- * gives it one.
- */
-function takesKind(memory: Stored, kind: Candidate["kind"]) {
-  return memory.kind === undefined || memory.kind === kind;
-}
-
-/**
- * Whether a candidate that names a memory may confirm it. Words that Nina wrote
- * can be confirmed whatever the candidate says, and the candidate may replace
- * them. A candidate never replaces the words the learner wrote, so it confirms
- * them only when it says the same.
- */
-function mayConfirm(memory: Stored, candidate: Candidate) {
-  return memory.author === "nina" || saysSame(memory.text, candidate.text);
-}
-
-/**
- * The memory a candidate confirms: the known memory it names, or else the first
- * memory that says the same. A memory of another kind does not count in either
- * case, so a situation's date never lands on a goal. A memory without a kind
- * counts for every kind. A named memory whose words the learner wrote and that
- * says something else does not count either: the candidate is matched by its
- * words, as if it named nothing, and may find a memory of Nina's that says it.
- */
-export function findTarget<Memory extends Stored>(
-  memories: readonly Memory[],
-  candidate: Candidate
-) {
-  return Arr.findFirst(
-    memories,
-    (memory) =>
-      memory._id === candidate.known &&
-      takesKind(memory, candidate.kind) &&
-      mayConfirm(memory, candidate)
-  ).pipe(
-    Option.orElse(() =>
-      Arr.findFirst(
-        memories,
-        (memory) =>
-          takesKind(memory, candidate.kind) &&
-          saysSame(memory.text, candidate.text)
-      )
-    )
-  );
 }
