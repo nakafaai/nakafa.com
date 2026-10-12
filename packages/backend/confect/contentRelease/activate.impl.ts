@@ -9,6 +9,7 @@ import {
   activateRecovery as activateRecoveryProgram,
   prepareRecovery as prepareRecoveryProgram,
 } from "@repo/backend/confect/contentRelease/activation/recovery";
+import { startSectionBuild } from "@repo/backend/confect/contents/sections/start";
 import { Effect, Layer } from "effect";
 
 const prepare = FunctionImpl.make(
@@ -28,11 +29,18 @@ const activate = FunctionImpl.make(
   spec,
   "activate",
   Effect.fn("contentRelease.activate.activate")(function* (args) {
-    return yield* activateCandidate(
+    const result = yield* activateCandidate(
       args.releaseId,
       args.rendererJson,
       args.manifestHash
     );
+    // Scheduled in the transaction that makes the release active, so the
+    // build is queued exactly when the activation commits, and a repeated
+    // activation, which finds the release completed, queues nothing.
+    if (result.kind === "activated") {
+      yield* startSectionBuild(args.releaseId);
+    }
+    return result;
   })
 );
 const prepareRecovery = FunctionImpl.make(
@@ -52,11 +60,15 @@ const activateRecovery = FunctionImpl.make(
   spec,
   "activateRecovery",
   Effect.fn("contentRelease.activate.activateRecovery")(function* (args) {
-    return yield* activateRecoveryProgram(
+    const result = yield* activateRecoveryProgram(
       args.releaseId,
       args.rendererJson,
       args.manifestHash
     );
+    if (result.kind === "activated") {
+      yield* startSectionBuild(args.releaseId);
+    }
+    return result;
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

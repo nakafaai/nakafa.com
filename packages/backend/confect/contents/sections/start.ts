@@ -4,8 +4,9 @@ import { Duration, Effect } from "effect";
 
 /**
  * Starts the build of the section index for a release that has just become
- * active. It runs on its own after the activation, so the activation itself
- * stays as it was.
+ * active. It is called in the transaction that makes the release active, so
+ * the build is queued exactly when the activation commits, and it runs on its
+ * own after the activation, so the activation itself stays as it was.
  */
 export const startSectionBuild = Effect.fn("contents.sections.start")(
   function* (releaseId: string) {
