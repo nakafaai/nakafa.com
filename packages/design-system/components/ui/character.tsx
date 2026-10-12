@@ -1,7 +1,6 @@
 import { Drawing } from "@repo/design-system/components/ui/drawing";
 import { CANVAS, draw } from "@repo/mascot/draw";
 import { forSeed } from "@repo/mascot/seed";
-import { group } from "@repo/mascot/shape";
 import { cn } from "cn";
 
 interface Props {
@@ -23,8 +22,6 @@ function marked() {
  * seed in `name`, so the same name always shows the same animal.
  */
 export function Character({ name, className }: Props) {
-  const { ground, shapes, transform } = draw(forSeed(name));
-
   return (
     <svg
       aria-hidden="true"
@@ -32,8 +29,7 @@ export function Character({ name, className }: Props) {
       data-look=""
       viewBox={`0 0 ${CANVAS} ${CANVAS}`}
     >
-      <rect fill={ground} height={CANVAS} width={CANVAS} />
-      <Drawing marked={marked} shape={group(shapes, { transform })} />
+      <Drawing marked={marked} shape={draw(forSeed(name))} />
     </svg>
   );
 }

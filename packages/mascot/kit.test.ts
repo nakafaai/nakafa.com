@@ -6,7 +6,6 @@ import {
   ellipse,
   eye,
   eyes,
-  faded,
   figure,
   INK,
   kindAt,
@@ -79,15 +78,6 @@ describe("mascot/kit", () => {
       third,
       fourth,
     ]);
-  });
-
-  it("keeps layers that are drawn together at one opacity in one group", () => {
-    const dot = ellipse(1, 1, 1, 1, INK);
-    expect(faded(0.3, [dot, dot])).toEqual({
-      _tag: "g",
-      children: [dot, dot],
-      opacity: 0.3,
-    });
   });
 
   describe("eyes", () => {

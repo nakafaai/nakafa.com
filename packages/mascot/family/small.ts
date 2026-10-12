@@ -20,8 +20,8 @@ import {
 export const small = {
   rabbit: {
     colors: [
-      ["#f6f4ef", "#f4c7cf"],
-      ["#dcd3f4", "#f6f4ef"],
+      [PEARL, "#f4c7cf"],
+      ["#dcd3f4", PEARL],
       ["#efd2a6", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -42,7 +42,7 @@ export const small = {
   hamster: {
     colors: [
       ["#e8b456", "#f4e6ce"],
-      ["#efd2a6", "#f6f4ef"],
+      ["#efd2a6", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -75,8 +75,8 @@ export const small = {
   squirrel: {
     colors: [
       ["#d9824a", "#f4e6ce"],
-      ["#b98a63", "#f6f4ef"],
-      ["#b9c0cc", "#f6f4ef"],
+      ["#b98a63", PEARL],
+      ["#b9c0cc", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -102,7 +102,7 @@ export const small = {
   porcupine: {
     colors: [
       ["#b98a63", "#f4e6ce"],
-      ["#8f6a4f", "#f6f4ef"],
+      ["#8f6a4f", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -124,7 +124,7 @@ export const small = {
   },
   koala: {
     colors: [
-      ["#c9d2dc", "#f6f4ef"],
+      ["#c9d2dc", PEARL],
       ["#b9c0cc", "#f4e6ce"],
     ],
     draw: (kit) =>

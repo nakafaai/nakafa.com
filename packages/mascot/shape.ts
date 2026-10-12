@@ -104,6 +104,13 @@ export function ellipse<const Mark = never>(
   return { _tag: "ellipse", ...fields } as const satisfies Shape<Mark>;
 }
 
+/** Draws a rectangle. */
+export function rect<const Mark = never>(
+  fields: typeof RectFields.Type & Marked<Mark>
+) {
+  return { _tag: "rect", ...fields } as const satisfies Shape<Mark>;
+}
+
 /** Draws a polygon from its points, written as SVG writes them. */
 export function polygon<const Mark = never>(
   fields: typeof PolygonFields.Type & Marked<Mark>

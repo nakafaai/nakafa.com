@@ -49,7 +49,7 @@ export const primate = {
         ]),
         torso(kit.body, 48),
         head(kit.body, 58, 50, 100),
-        belly("#f6f4ef", 24, 152),
+        belly(PEARL, 24, 152),
         both((side) => ellipse(100 + side * 28, 96, 27, 27, kit.second)),
         eyes(kit, 28, 96, 12),
         nose(124, 4, 3, kit.ink),

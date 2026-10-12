@@ -23,8 +23,8 @@ export const carnivore = {
   cat: {
     colors: [
       ["#ee8a4c", "#f4e6ce"],
-      ["#c9d2dc", "#f6f4ef"],
-      ["#efd2a6", "#f6f4ef"],
+      ["#c9d2dc", PEARL],
+      ["#efd2a6", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -41,7 +41,7 @@ export const carnivore = {
   bear: {
     colors: [
       ["#c89468", "#f4e6ce"],
-      ["#f6f4ef", "#c9d2dc"],
+      [PEARL, "#c9d2dc"],
       ["#e8b456", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -58,7 +58,7 @@ export const carnivore = {
   },
   fox: {
     colors: [
-      ["#ee8a4c", "#f6f4ef"],
+      ["#ee8a4c", PEARL],
       ["#f2a33a", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -78,7 +78,7 @@ export const carnivore = {
   },
   panda: {
     colors: [
-      ["#f6f4ef", "#f6f4ef"],
+      [PEARL, PEARL],
       ["#f4e6ce", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -102,7 +102,7 @@ export const carnivore = {
   tiger: {
     colors: [
       ["#f2a33a", "#f4e6ce"],
-      ["#ee8a4c", "#f6f4ef"],
+      ["#ee8a4c", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -163,7 +163,7 @@ export const carnivore = {
   dog: {
     colors: [
       ["#efd2a6", "#b98a63"],
-      ["#f6f4ef", "#c89468"],
+      [PEARL, "#c89468"],
       ["#e8b456", "#a8683a"],
     ],
     draw: (kit) =>
@@ -183,7 +183,7 @@ export const carnivore = {
   },
   civet: {
     colors: [
-      ["#b9c0cc", "#f6f4ef"],
+      ["#b9c0cc", PEARL],
       ["#c9a27e", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -206,7 +206,7 @@ export const carnivore = {
   },
   raccoon: {
     colors: [
-      ["#9aa3b0", "#f6f4ef"],
+      ["#9aa3b0", PEARL],
       ["#b8a58c", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -227,8 +227,8 @@ export const carnivore = {
   },
   seal: {
     colors: [
-      ["#c9d2dc", "#f6f4ef"],
-      ["#cfe6f7", "#f6f4ef"],
+      ["#c9d2dc", PEARL],
+      ["#cfe6f7", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -248,7 +248,7 @@ export const carnivore = {
   walrus: {
     colors: [
       ["#b08968", "#f4e6ce"],
-      ["#a8876f", "#f6f4ef"],
+      ["#a8876f", PEARL],
     ],
     draw: (kit) =>
       figure(

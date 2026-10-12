@@ -9,6 +9,7 @@ import {
   head,
   line,
   nose,
+  PEARL,
   path,
   smile,
   torso,
@@ -19,7 +20,7 @@ import { Array as Arr } from "effect";
 export const farm = {
   sheep: {
     colors: [
-      ["#f6f4ef", "#efd2a6"],
+      [PEARL, "#efd2a6"],
       ["#f4e6ce", "#c9a27e"],
     ],
     draw: (kit) =>
@@ -53,7 +54,7 @@ export const farm = {
   },
   cow: {
     colors: [
-      ["#f6f4ef", "#f4c7cf"],
+      [PEARL, "#f4c7cf"],
       ["#f4e6ce", "#f6c3a6"],
     ],
     draw: (kit) =>
@@ -111,7 +112,7 @@ export const farm = {
     colors: [
       ["#c89468", "#f4e6ce"],
       ["#8f6a4f", "#efd2a6"],
-      ["#b9c0cc", "#f6f4ef"],
+      ["#b9c0cc", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -135,7 +136,7 @@ export const farm = {
   },
   goat: {
     colors: [
-      ["#f6f4ef", "#c9a27e"],
+      [PEARL, "#c9a27e"],
       ["#c9d2dc", "#8f6a4f"],
       ["#efd2a6", "#b98a63"],
     ],
@@ -162,9 +163,9 @@ export const farm = {
   },
   alpaca: {
     colors: [
-      ["#f4e6ce", "#f6f4ef"],
+      ["#f4e6ce", PEARL],
       ["#c9a27e", "#f4e6ce"],
-      ["#f6f4ef", "#f4c7cf"],
+      [PEARL, "#f4c7cf"],
     ],
     draw: (kit) =>
       figure(

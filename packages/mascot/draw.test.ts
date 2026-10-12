@@ -38,7 +38,7 @@ function marked(shapes: readonly Layer[]): readonly Layer[] {
 
 /** The horizontal centres of the marked eyes of a picture. */
 function eyesOf(mascot: ReturnType<typeof mascotOf>) {
-  return Arr.map(marked(draw(mascot).shapes), (shape) =>
+  return Arr.map(marked([draw(mascot)]), (shape) =>
     "cx" in shape ? shape.cx : Number.NaN
   );
 }
@@ -51,6 +51,18 @@ function fills(shapes: readonly Layer[]): readonly string[] {
     }
     return shape.fill === undefined ? [] : [shape.fill];
   });
+}
+
+/** The transforms of the groups of a picture, outermost first. */
+function transforms(shapes: readonly Layer[]): readonly string[] {
+  return Arr.flatMap(shapes, (shape) =>
+    shape._tag === "g"
+      ? [
+          ...(shape.transform === undefined ? [] : [shape.transform]),
+          ...transforms(shape.children),
+        ]
+      : []
+  );
 }
 
 /** Every palette, pose, and eyes value of one animal, in the order that the fixture writes them. */
@@ -67,7 +79,9 @@ function picturesOf(animal: typeof Animal.Type) {
 }
 
 /** The codes of the pictures of one animal that no longer draw what was pinned. */
-const changedOf = Effect.fnUntraced(function* (animal: typeof Animal.Type) {
+const changedOf = Effect.fn("MascotTest.changedOf")(function* (
+  animal: typeof Animal.Type
+) {
   const mascots = picturesOf(animal);
   const pinned = Option.getOrElse(Rec.get(DIGESTS, animal), () => "");
   const drawn = yield* Effect.forEach(mascots, (mascot) =>
@@ -102,26 +116,26 @@ describe("mascot/draw", () => {
   it("draws the chosen palette on the chosen ground", () => {
     const first = draw(mascotOf("cat.0.243e66.center.open"));
     const second = draw(mascotOf("cat.1.b9624b.center.open"));
-    expect(first.ground).toBe("#243e66");
-    expect(second.ground).toBe("#b9624b");
-    expect(fills(first.shapes)).toEqual(
+    expect(Arr.head(fills([first]))).toEqual(Option.some("#243e66"));
+    expect(Arr.head(fills([second]))).toEqual(Option.some("#b9624b"));
+    expect(fills([first])).toEqual(
       expect.arrayContaining(["#ee8a4c", "#f4e6ce"])
     );
-    expect(fills(second.shapes)).toEqual(
+    expect(fills([second])).toEqual(
       expect.arrayContaining(["#c9d2dc", "#f6f4ef"])
     );
-    expect(fills(second.shapes)).not.toContain("#ee8a4c");
+    expect(fills([second])).not.toContain("#ee8a4c");
   });
 
   it("stands the animal in its pose", () => {
-    expect(draw(mascotOf(CAT)).transform).toBe(
-      "translate(134 218) rotate(-10) scale(1.16) translate(-100 -200)"
-    );
-    expect(draw(mascotOf("cat.0.243e66.center.open")).transform).toBe(
-      "translate(100 204) rotate(0) scale(1.04) translate(-100 -200)"
-    );
-    expect(draw(mascotOf("cat.0.243e66.peek-left.open")).transform).toBe(
-      "translate(56 246) rotate(14) scale(1.14) translate(-100 -200)"
+    expect(transforms([draw(mascotOf(CAT))])).toEqual([
+      "translate(134 218) rotate(-10) scale(1.16) translate(-100 -200)",
+    ]);
+    expect(transforms([draw(mascotOf("cat.0.243e66.center.open"))])).toEqual([
+      "translate(100 204) rotate(0) scale(1.04) translate(-100 -200)",
+    ]);
+    expect(transforms([draw(mascotOf("cat.0.243e66.peek-left.open"))])).toEqual(
+      ["translate(56 246) rotate(14) scale(1.14) translate(-100 -200)"]
     );
   });
 
@@ -135,8 +149,7 @@ describe("mascot/draw", () => {
     const wrong = Arr.filter(
       Animal.literals,
       (animal) =>
-        marked(draw(mascotOf(`${animal}.0.243e66.center.open`)).shapes)
-          .length !== 2
+        marked([draw(mascotOf(`${animal}.0.243e66.center.open`))]).length !== 2
     );
     expect(wrong).toEqual([]);
   });
@@ -145,8 +158,7 @@ describe("mascot/draw", () => {
     const awake = Arr.filter(
       Animal.literals,
       (animal) =>
-        marked(draw(mascotOf(`${animal}.0.243e66.center.asleep`)).shapes)
-          .length > 0
+        marked([draw(mascotOf(`${animal}.0.243e66.center.asleep`))]).length > 0
     );
     expect(awake).toEqual(["panda", "civet"]);
   });

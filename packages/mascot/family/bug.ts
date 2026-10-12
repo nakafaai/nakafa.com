@@ -9,6 +9,7 @@ import {
   kindAt,
   line,
   outlined,
+  PEARL,
   path,
   smile,
   torso,
@@ -20,7 +21,7 @@ export const bug = {
   bee: {
     colors: [
       ["#f7d774", "#cfe6f7"],
-      ["#e8b456", "#f6f4ef"],
+      ["#e8b456", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -46,7 +47,7 @@ export const bug = {
   beetle: {
     colors: [
       ["#ee6a5a", "#f4e6ce"],
-      ["#f2a33a", "#f6f4ef"],
+      ["#f2a33a", PEARL],
     ],
     draw: (kit) =>
       figure(

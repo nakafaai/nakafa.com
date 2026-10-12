@@ -85,25 +85,24 @@ export function cast(seed: string, count: number, skip = 0) {
     Order.Struct({ key: Order.Number, animal: Order.String })
   );
   const lean = hashed(`${seed}#pose`);
-  return Arr.map(
-    Arr.take(Arr.drop(order, skip), count),
-    ({ animal }, offset) => {
-      const place = skip + offset;
-      const text = `${seed}#${animal}`;
-      const palette = hashed(`${text}#palette`) % DESIGNS[animal].colors.length;
-      const grounds = groundsOf(animal, palette);
-      return Mascot.make({
-        animal,
-        eyes: "open",
-        ground: Arr.getUnsafe(
-          grounds,
-          (hashed(`${text}#ground`) + place) % grounds.length
-        ),
-        palette,
-        pose: Arr.getUnsafe(POSE_ORDER, (lean + place) % POSE_ORDER.length),
-      });
-    }
-  );
+  // Every animal keeps its place in the order, so a cast that starts further
+  // down shows the same animals as the rest of a cast that started at the top.
+  const all = Arr.map(order, ({ animal }, place) => {
+    const text = `${seed}#${animal}`;
+    const palette = hashed(`${text}#palette`) % DESIGNS[animal].colors.length;
+    const grounds = groundsOf(animal, palette);
+    return Mascot.make({
+      animal,
+      eyes: "open",
+      ground: Arr.getUnsafe(
+        grounds,
+        (hashed(`${text}#ground`) + place) % grounds.length
+      ),
+      palette,
+      pose: Arr.getUnsafe(POSE_ORDER, (lean + place) % POSE_ORDER.length),
+    });
+  });
+  return Arr.take(Arr.drop(all, skip), count);
 }
 
 /** One mascot per animal, in the order of the animals, for a gallery. */
@@ -113,7 +112,10 @@ export function gallery() {
     return Mascot.make({
       animal,
       eyes: "open",
-      ground: Arr.getUnsafe(grounds, hashed(animal) % grounds.length),
+      ground: Arr.getUnsafe(
+        grounds,
+        hashed(`${animal}#ground`) % grounds.length
+      ),
       palette: 0,
       pose: Arr.getUnsafe(
         POSE_ORDER,

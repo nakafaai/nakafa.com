@@ -46,7 +46,7 @@ export const wild = {
   deer: {
     colors: [
       ["#c89468", "#f4e6ce"],
-      ["#d9a36a", "#f6f4ef"],
+      ["#d9a36a", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -117,7 +117,7 @@ export const wild = {
   },
   zebra: {
     colors: [
-      ["#f6f4ef", "#f6f4ef"],
+      [PEARL, PEARL],
       ["#f4e6ce", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -195,7 +195,7 @@ export const wild = {
   },
   rhino: {
     colors: [
-      ["#c9d2dc", "#f6f4ef"],
+      ["#c9d2dc", PEARL],
       ["#b9c0cc", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -218,8 +218,8 @@ export const wild = {
   elephant: {
     colors: [
       ["#c9d2dc", "#f4c7cf"],
-      ["#cfe6f7", "#f6f4ef"],
-      ["#b9c0cc", "#f6f4ef"],
+      ["#cfe6f7", PEARL],
+      ["#b9c0cc", PEARL],
     ],
     draw: (kit) =>
       figure(

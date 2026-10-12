@@ -37,8 +37,8 @@ export const bird = {
   owl: {
     colors: [
       ["#c9a27e", "#f4e6ce"],
-      ["#c9d2dc", "#f6f4ef"],
-      ["#aeb8f5", "#f6f4ef"],
+      ["#c9d2dc", PEARL],
+      ["#aeb8f5", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -59,8 +59,8 @@ export const bird = {
   },
   penguin: {
     colors: [
-      ["#5b6b8c", "#f6f4ef"],
-      ["#7c8fc4", "#f6f4ef"],
+      ["#5b6b8c", PEARL],
+      ["#7c8fc4", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -77,7 +77,7 @@ export const bird = {
   },
   duck: {
     colors: [
-      ["#f6f4ef", "#f2a33a"],
+      [PEARL, "#f2a33a"],
       ["#f7d774", "#ee8a4c"],
       ["#9fd6b8", "#f2a33a"],
     ],
@@ -93,7 +93,7 @@ export const bird = {
   },
   cockatoo: {
     colors: [
-      ["#f6f4ef", "#f7d774"],
+      [PEARL, "#f7d774"],
       ["#f4c7cf", "#ec9ab0"],
     ],
     draw: (kit) =>
@@ -114,7 +114,7 @@ export const bird = {
   },
   hornbill: {
     colors: [
-      ["#5b6b8c", "#f6f4ef"],
+      ["#5b6b8c", PEARL],
       ["#6d4b78", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -133,7 +133,7 @@ export const bird = {
   },
   eagle: {
     colors: [
-      ["#8f6a4f", "#f6f4ef"],
+      ["#8f6a4f", PEARL],
       ["#a8794f", "#f4e6ce"],
     ],
     draw: (kit) =>
@@ -172,8 +172,8 @@ export const bird = {
   },
   flamingo: {
     colors: [
-      ["#f48fb1", "#f6f4ef"],
-      ["#f7a8a0", "#f6f4ef"],
+      ["#f48fb1", PEARL],
+      ["#f7a8a0", PEARL],
     ],
     draw: (kit) =>
       figure(

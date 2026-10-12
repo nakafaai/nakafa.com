@@ -11,6 +11,7 @@ import {
   kindAt,
   line,
   outlined,
+  PEARL,
   path,
   smile,
   spikes,
@@ -23,7 +24,7 @@ export const marine = {
   whale: {
     colors: [
       ["#aeb8f5", "#eef1fd"],
-      ["#8fb7e8", "#f6f4ef"],
+      ["#8fb7e8", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -74,7 +75,7 @@ export const marine = {
   octopus: {
     colors: [
       ["#f5a48e", "#f6c3a6"],
-      ["#dcd3f4", "#f6f4ef"],
+      ["#dcd3f4", PEARL],
       ["#ec9ab0", "#f4c7cf"],
     ],
     draw: (kit) =>
@@ -95,9 +96,9 @@ export const marine = {
   },
   jellyfish: {
     colors: [
-      ["#dcd3f4", "#f6f4ef"],
-      ["#f4c7cf", "#f6f4ef"],
-      ["#cfe6f7", "#f6f4ef"],
+      ["#dcd3f4", PEARL],
+      ["#f4c7cf", PEARL],
+      ["#cfe6f7", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -120,9 +121,9 @@ export const marine = {
   },
   pufferfish: {
     colors: [
-      ["#f3e7a6", "#f6f4ef"],
-      ["#8fd0c4", "#f6f4ef"],
-      ["#f6c3a6", "#f6f4ef"],
+      ["#f3e7a6", PEARL],
+      ["#8fd0c4", PEARL],
+      ["#f6c3a6", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -145,8 +146,8 @@ export const marine = {
   },
   clownfish: {
     colors: [
-      ["#f47c3c", "#f6f4ef"],
-      ["#f2a33a", "#f6f4ef"],
+      ["#f47c3c", PEARL],
+      ["#f2a33a", PEARL],
     ],
     draw: (kit) =>
       figure(
@@ -173,7 +174,7 @@ export const marine = {
     colors: [
       ["#f48a6a", "#f7d774"],
       ["#f2a33a", "#f4e6ce"],
-      ["#e88fb0", "#f6f4ef"],
+      ["#e88fb0", PEARL],
     ],
     draw: (kit) =>
       figure(
