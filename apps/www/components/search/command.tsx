@@ -32,7 +32,7 @@ import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
-import { getArticleCategoryIcon } from "@/components/articles/category";
+import { getArticleCategoryIcons } from "@/components/articles/category";
 import { SearchExcerpt } from "@/components/search/excerpt";
 import { useSearchSectionLabels } from "@/components/search/labels";
 import { holyMenu } from "@/components/sidebar/data/holy";
@@ -316,7 +316,7 @@ function useDefaultSearchGroups(
 
         return {
           href,
-          icon: item.icon,
+          icon: subItem.icon,
           key: href,
           label,
           type: "navigation" as const,
@@ -330,14 +330,18 @@ function useDefaultSearchGroups(
   return [
     ...subjectGroups,
     {
-      items: Arr.map(articleNavigation, (item) => ({
-        href: item.href,
-        icon: getArticleCategoryIcon(item.category),
-        key: item.href,
-        label: item.title,
-        type: "navigation" as const,
-        value: `${tArticles("articles")} ${item.title} ${item.href}`,
-      })),
+      items: Arr.zipWith(
+        articleNavigation,
+        getArticleCategoryIcons(articleNavigation),
+        (item, icon) => ({
+          href: item.href,
+          icon,
+          key: item.href,
+          label: item.title,
+          type: "navigation" as const,
+          value: `${tArticles("articles")} ${item.title} ${item.href}`,
+        })
+      ),
       value: tArticles("articles"),
     },
     {

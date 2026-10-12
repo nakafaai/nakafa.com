@@ -15,7 +15,7 @@ import {
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { getArticleCategoryIcon } from "@/components/articles/category";
+import { getArticleCategoryIcons } from "@/components/articles/category";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
@@ -36,11 +36,11 @@ export function NavExplore({
       icon: item.icon,
       label: tHoly(item.title),
     })),
-    ...Arr.map(articleNavigation, (item) => ({
-      href: item.href,
-      icon: getArticleCategoryIcon(item.category),
-      label: item.title,
-    })),
+    ...Arr.zipWith(
+      articleNavigation,
+      getArticleCategoryIcons(articleNavigation),
+      (item, icon) => ({ href: item.href, icon, label: item.title })
+    ),
   ];
 
   return (

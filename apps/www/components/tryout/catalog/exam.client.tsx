@@ -5,7 +5,7 @@ import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { TileIcon } from "@repo/design-system/components/ui/tile";
-import { getTileLooks } from "@repo/design-system/lib/tile";
+import { getTileLooks } from "@repo/design-system/lib/look";
 
 import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";

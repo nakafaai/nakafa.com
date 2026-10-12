@@ -1,4 +1,3 @@
-import { getTileLooks } from "@repo/design-system/lib/tile";
 import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -10,7 +9,7 @@ import { SubjectItem } from "@/components/shared/subject/item";
 import { SubjectList } from "@/components/shared/subject/list";
 import { readFeaturedTryout } from "@/components/tryout/catalog/server";
 import { getPublishedProgramSubjects } from "@/lib/content/program/catalog";
-import { readCurriculumRouteIcons } from "@/lib/curriculum/icons";
+import { getCurriculumLooks } from "@/lib/curriculum/look";
 
 export async function Features({ locale }: { locale: Locale }) {
   const [t, subjects, featuredTryout] = await Promise.all([
@@ -18,12 +17,7 @@ export async function Features({ locale }: { locale: Locale }) {
     getPublishedProgramSubjects(locale),
     readFeaturedTryout(locale),
   ]);
-  const looks = getTileLooks(
-    Arr.map(
-      subjects,
-      (route) => [readCurriculumRouteIcons(route), route.nodeKey] as const
-    )
-  );
+  const looks = getCurriculumLooks(subjects);
   return (
     <section
       className="relative isolate z-0 scroll-mt-28 border-y bg-background"

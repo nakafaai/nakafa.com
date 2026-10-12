@@ -4,8 +4,9 @@ import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { getMaterialIcons } from "@repo/contents/curriculum/material";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
 import { PRESENTED_MATERIAL_DOMAINS } from "@repo/contents/taxonomy";
-import { getTileLooks } from "@repo/design-system/lib/tile";
+import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Record as Rec } from "effect";
+import { ARTICLE_CATEGORY_ICONS } from "@/components/articles/category";
 import {
   getTryoutExamIcons,
   getTryoutSubjectIcons,
@@ -17,6 +18,8 @@ import {
 } from "@/components/tryout/catalog/icons";
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
 
+/** The exams of the catalog. */
+const EXAMS = ["snbt", "tka"];
 /** UTBK-SNBT subtests under their official names, in exam order. */
 const SNBT_SECTIONS = [
   "general-reasoning",
@@ -46,7 +49,22 @@ function iconsOf(pools: readonly Arr.NonEmptyReadonlyArray<IconSvgElement>[]) {
   );
 }
 
-describe("try-out icons", () => {
+/** The one icon that a lookup gives to a key it knows. */
+function ownIcon(pool: Arr.NonEmptyReadonlyArray<IconSvgElement>) {
+  expect(pool).toHaveLength(1);
+
+  return Arr.headNonEmpty(pool);
+}
+
+/**
+ * This file owns the property that no icon is the icon of two keys, because it
+ * is the one place that reads every map of the product that names an icon for a
+ * key: the subjects and their lessons, the spare icons, the try-out exams,
+ * subjects, years, and institutions, the curriculum navigation keys, which also
+ * name the stages of the sidebar and the search palette, and the article
+ * categories. Another test that restates it would only repeat this one.
+ */
+describe("icons of the product", () => {
   it("draws every icon of the product for one key only", () => {
     const icons = Arr.flatten([
       Rec.values(TRYOUT_EXAM_ICONS),
@@ -55,6 +73,7 @@ describe("try-out icons", () => {
       TRYOUT_INSTITUTION_ICONS,
       SPARE_ICONS,
       Rec.values(CURRICULUM_NAVIGATION_ICONS),
+      Rec.values(ARTICLE_CATEGORY_ICONS),
       Arr.flatMap(PRESENTED_MATERIAL_DOMAINS, (material) =>
         getLessonIcons(material)
       ),
@@ -63,17 +82,35 @@ describe("try-out icons", () => {
     expect(Arr.dedupe(icons)).toHaveLength(icons.length);
   });
 
-  it("gives every section of the UTBK-SNBT and every subject of the TKA an icon of its own", () => {
-    for (const key of [...SNBT_SECTIONS, ...TKA_SUBJECTS]) {
-      expect(getTryoutSubjectIcons(key)).toHaveLength(1);
-      expect(getTryoutSubjectIcons(key)).not.toBe(SPARE_ICONS);
-    }
+  it("holds more drawings of time, buildings, and spare icons than the longest list", () => {
+    expect(TRYOUT_YEAR_ICONS.length).toBeGreaterThan(LONGEST_LIST);
+    expect(TRYOUT_INSTITUTION_ICONS.length).toBeGreaterThan(LONGEST_LIST);
+    expect(SPARE_ICONS.length).toBeGreaterThan(LONGEST_LIST);
+  });
+});
+
+describe("try-out icons", () => {
+  it("gives every exam of the catalog exactly its own icon, different from every other", () => {
+    const icons = Arr.map(EXAMS, (key) => ownIcon(getTryoutExamIcons(key)));
+
+    expect(icons).toEqual(Arr.map(EXAMS, (key) => TRYOUT_EXAM_ICONS[key]));
+    expect(Arr.dedupe(icons)).toHaveLength(EXAMS.length);
   });
 
-  it("keeps the icon of a subject track the icon of its section", () => {
-    expect(getTryoutTrackIcons("subject", "english-language")).toEqual(
-      getTryoutSubjectIcons("english-language")
-    );
+  it("gives every section of the UTBK-SNBT and every subject of the TKA exactly its own icon, different from every other", () => {
+    const keys = [...SNBT_SECTIONS, ...TKA_SUBJECTS];
+    const icons = Arr.map(keys, (key) => ownIcon(getTryoutSubjectIcons(key)));
+
+    expect(icons).toEqual(Arr.map(keys, (key) => TRYOUT_SUBJECT_ICONS[key]));
+    expect(Arr.dedupe(icons)).toHaveLength(keys.length);
+  });
+
+  it("gives a subject track the icon of its section", () => {
+    for (const key of TKA_SUBJECTS) {
+      expect(getTryoutTrackIcons("subject", key)).toEqual(
+        getTryoutSubjectIcons(key)
+      );
+    }
   });
 
   it("reuses the icon of a curriculum subject for a subject that is one", () => {
@@ -82,7 +119,7 @@ describe("try-out icons", () => {
     );
   });
 
-  it("gives year tracks calendars and institution tracks buildings, whatever their key", () => {
+  it("gives year tracks drawings of time and institution tracks buildings, whatever their key", () => {
     expect(getTryoutTrackIcons("year", "2027")).toBe(TRYOUT_YEAR_ICONS);
     expect(getTryoutTrackIcons("institution", "studienkolleg")).toBe(
       TRYOUT_INSTITUTION_ICONS
@@ -92,24 +129,12 @@ describe("try-out icons", () => {
     );
   });
 
-  it("offers the spare icons for an exam or a subject that it does not know", () => {
-    expect(getTryoutExamIcons("unknown-exam")).toBe(SPARE_ICONS);
-    expect(getTryoutSubjectIcons("unknown-subject")).toBe(SPARE_ICONS);
+  it("offers the spare icons for an exam or a subject that it does not know, also under the name of an object method", () => {
+    for (const key of ["unknown-exam", "constructor", "toString"]) {
+      expect(getTryoutExamIcons(key)).toBe(SPARE_ICONS);
+      expect(getTryoutSubjectIcons(key)).toBe(SPARE_ICONS);
+    }
     expect(getTryoutTrackIcons("subject", "unknown-track")).toBe(SPARE_ICONS);
-  });
-
-  it("holds more calendars, buildings, and spare icons than the longest list", () => {
-    expect(TRYOUT_YEAR_ICONS.length).toBeGreaterThan(LONGEST_LIST);
-    expect(TRYOUT_INSTITUTION_ICONS.length).toBeGreaterThan(LONGEST_LIST);
-    expect(SPARE_ICONS.length).toBeGreaterThan(LONGEST_LIST);
-  });
-
-  it("tells the exams of a country apart", () => {
-    const icons = iconsOf(
-      Arr.map(["snbt", "tka"], (key) => getTryoutExamIcons(key))
-    );
-
-    expect(Arr.dedupe(icons)).toHaveLength(2);
   });
 
   it("gives a set of sections that it does not know one icon each", () => {
@@ -121,11 +146,15 @@ describe("try-out icons", () => {
     expect(Arr.dedupe(icons)).toHaveLength(LONGEST_LIST);
   });
 
-  it("gives year tracks one calendar each", () => {
+  it("gives year tracks one drawing of time each", () => {
     const years = Arr.makeBy(LONGEST_LIST, () =>
       getTryoutTrackIcons("year", "2027")
     );
+    const icons = iconsOf(years);
 
-    expect(Arr.dedupe(iconsOf(years))).toHaveLength(LONGEST_LIST);
+    expect(Arr.dedupe(icons)).toHaveLength(LONGEST_LIST);
+    expect(
+      Arr.every(icons, (icon) => Arr.contains(TRYOUT_YEAR_ICONS, icon))
+    ).toBe(true);
   });
 });

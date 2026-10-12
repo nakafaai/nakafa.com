@@ -3,6 +3,7 @@ import "server-only";
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { TileLook } from "@repo/design-system/lib/look";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { getMaterialLooks } from "@/components/home/look";
@@ -10,8 +11,18 @@ import { MaterialRow } from "@/components/home/material";
 import { getHomeTrendingSubjects } from "@/lib/content/trending";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-/** Renders the home-screen trending learning objects for the current locale. */
-export async function HomeTrending({ locale }: { locale: Locale }) {
+/**
+ * Renders the home-screen trending learning objects for the current locale.
+ * The page passes the looks of the lists above this one as `shown`, so no
+ * trending row repeats an icon that the page already shows.
+ */
+export async function HomeTrending({
+  locale,
+  shown,
+}: {
+  locale: Locale;
+  shown: readonly TileLook[];
+}) {
   if (!isActiveLocale(locale)) {
     return null;
   }
@@ -25,7 +36,7 @@ export async function HomeTrending({ locale }: { locale: Locale }) {
   if (data.length === 0) {
     return null;
   }
-  const looks = getMaterialLooks(data);
+  const looks = getMaterialLooks(data, shown);
   return (
     <section className="flex flex-col gap-4">
       <h2 className="flex items-center gap-2 px-3 font-medium">

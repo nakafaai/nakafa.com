@@ -2,7 +2,7 @@ import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
-import type { TileLook } from "@repo/design-system/lib/tile";
+import type { TileLook } from "@repo/design-system/lib/look";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";

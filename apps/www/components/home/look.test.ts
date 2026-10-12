@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
-import { getTileShifts } from "@repo/design-system/lib/tile";
+import { getTileShifts } from "@repo/design-system/lib/look";
 import { Array as Arr } from "effect";
 import { getMaterialLooks } from "@/components/home/look";
 
@@ -52,6 +52,18 @@ describe("getMaterialLooks", () => {
 
     expect(Arr.map(getMaterialLooks(lessons), ({ shift }) => shift)).toEqual(
       getTileShifts(Arr.map(lessons, ({ content_id }) => content_id))
+    );
+  });
+
+  it("keeps a second list apart from the first one of the page, a lesson in both lists included", () => {
+    const lessons = lessonsOf("mathematics", 4);
+    const first = getMaterialLooks(lessons);
+    const second = getMaterialLooks(lessons, first);
+    const icons = Arr.map(Arr.appendAll(first, second), ({ icon }) => icon);
+
+    expect(Arr.dedupe(icons)).toHaveLength(2 * lessons.length);
+    expect(Arr.map(second, ({ seed }) => seed)).toEqual(
+      Arr.map(lessons, ({ content_id }) => content_id)
     );
   });
 

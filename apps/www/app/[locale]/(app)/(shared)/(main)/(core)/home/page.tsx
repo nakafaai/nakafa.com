@@ -74,6 +74,8 @@ async function AuthenticatedHome({
     )
   );
 
+  const recentLooks = getMaterialLooks(recentRows);
+
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
       <div className="mx-auto w-full max-w-3xl px-6 py-24">
@@ -82,13 +84,10 @@ async function AuthenticatedHome({
 
           <HomeExplore />
 
-          <HomeContinueLearning
-            looks={getMaterialLooks(recentRows)}
-            subjects={recentRows}
-          />
+          <HomeContinueLearning looks={recentLooks} subjects={recentRows} />
 
           <Suspense fallback={null}>
-            <HomeTrending locale={locale} />
+            <HomeTrending locale={locale} shown={recentLooks} />
           </Suspense>
         </div>
       </div>

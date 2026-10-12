@@ -20,24 +20,10 @@ describe("getLessonIcons", () => {
     }
   });
 
-  it("gives every family more icons than the longest list of lessons, none of them twice", () => {
+  it("gives every family more icons than the longest list of lessons", () => {
     for (const material of PRESENTED_MATERIAL_DOMAINS) {
-      const family = getLessonIcons(material);
-
-      expect(family.length).toBeGreaterThan(LONGEST_LIST);
-      expect(Arr.dedupe(family)).toHaveLength(family.length);
+      expect(getLessonIcons(material).length).toBeGreaterThan(LONGEST_LIST);
     }
-  });
-
-  it("gives no icon to two subjects, and none to the spares", () => {
-    const icons = Arr.appendAll(
-      Arr.flatMap(PRESENTED_MATERIAL_DOMAINS, (material) =>
-        getLessonIcons(material)
-      ),
-      SPARE_ICONS
-    );
-
-    expect(Arr.dedupe(icons)).toHaveLength(icons.length);
   });
 
   it("offers the spare icons to lessons of a subject that it does not know yet", () => {

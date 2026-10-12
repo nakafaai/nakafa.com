@@ -1,6 +1,6 @@
 "use client";
 
-import { getTileLooks } from "@repo/design-system/lib/tile";
+import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, HashSet } from "effect";
 import { useTranslations } from "next-intl";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";

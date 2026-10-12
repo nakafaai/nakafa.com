@@ -28,28 +28,14 @@ import {
   Target01Icon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import {
-  type ProgramNavigationIconKey,
-  ProgramNavigationIconKeySchema,
-} from "@nakafa/aksara-contracts/program/spec";
-import { getMaterialIcons } from "@repo/contents/curriculum/material";
-import { type Array as Arr, Schema } from "effect";
-import type { CurriculumViewRoute } from "@/lib/curriculum/model";
+import type { ProgramNavigationIconKey } from "@nakafa/aksara-contracts/program/spec";
 
-const CurriculumVisualSourceSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("material"),
-    key: Schema.String,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("navigation"),
-    key: ProgramNavigationIconKeySchema,
-  }),
-]);
-
-type CurriculumVisualSource = typeof CurriculumVisualSourceSchema.Type;
-
-/** The icon of each source-owned navigation identity, none of them shared with any other key. */
+/**
+ * The icon of each source-owned navigation identity: a stage, a class, a
+ * course. It is the only owner of the icon of a stage, so the curriculum cards,
+ * the sidebar, and the search palette draw the same icon for the same stage,
+ * and none of them is shared with any other key of the product.
+ */
 export const CURRICULUM_NAVIGATION_ICONS: {
   readonly [Key in ProgramNavigationIconKey]: IconSvgElement;
 } = {
@@ -81,50 +67,3 @@ export const CURRICULUM_NAVIGATION_ICONS: {
   standards: Target01Icon,
   state: Flag01Icon,
 };
-
-/** Resolves a source-owned navigation identity to its Hugeicons card icon. */
-function readCurriculumNavigationIcon(key: ProgramNavigationIconKey) {
-  return CURRICULUM_NAVIGATION_ICONS[key];
-}
-
-/**
- * Resolves source-owned route identity to the Hugeicons icons that its card may
- * show: the navigation icon of the route, or the icon of its subject, or the
- * spare icons for a subject that the product does not know yet.
- */
-export function readCurriculumRouteIcons(
-  route: CurriculumViewRoute
-): Arr.NonEmptyReadonlyArray<IconSvgElement> {
-  const source = readCurriculumVisualSource(route);
-
-  if (source.kind === "navigation") {
-    return [readCurriculumNavigationIcon(source.key)];
-  }
-
-  return getMaterialIcons(source.key);
-}
-
-/**
- * Selects the source-owned identity that drives curriculum card visuals.
- *
- * Generic subject icon keys stay domain-driven so science siblings keep
- * biology, chemistry, and physics identities from `materialDomain`; specific
- * course/stage keys keep their authored navigation identity.
- */
-function readCurriculumVisualSource(
-  route: CurriculumViewRoute
-): CurriculumVisualSource {
-  if (!route.materialDomain) {
-    return { kind: "navigation", key: route.iconKey };
-  }
-
-  if (
-    route.iconKey &&
-    route.iconKey !== "mathematics" &&
-    route.iconKey !== "science"
-  ) {
-    return { kind: "navigation", key: route.iconKey };
-  }
-
-  return { kind: "material", key: route.materialDomain };
-}

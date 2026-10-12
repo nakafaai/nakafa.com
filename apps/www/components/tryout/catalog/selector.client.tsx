@@ -10,7 +10,7 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
-import { getTileLooks } from "@repo/design-system/lib/tile";
+import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Option } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -173,17 +173,15 @@ export function TryoutExamSelector({
           className="flex min-w-0 items-center gap-2"
           data-slot="select-value"
         >
-          {Option.getOrNull(
-            Option.map(currentEntry, ({ icon }) => (
-              <HugeIcons className="size-4 shrink-0" icon={icon} />
-            ))
-          )}
-          <span className="truncate">
-            {Option.getOrElse(
-              Option.map(currentEntry, ({ option }) => option.title),
-              () => label
-            )}
-          </span>
+          {Option.match(currentEntry, {
+            onNone: () => <span className="truncate">{label}</span>,
+            onSome: ({ icon, option }) => (
+              <>
+                <HugeIcons className="size-4 shrink-0" icon={icon} />
+                <span className="truncate">{option.title}</span>
+              </>
+            ),
+          })}
         </span>
       </SelectTrigger>
       <SelectContent

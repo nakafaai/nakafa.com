@@ -5,7 +5,7 @@ import type { Ref } from "@confect/core";
 import type contents from "@repo/backend/confect/_generated/refs/contents";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
-import type { TileLook } from "@repo/design-system/lib/tile";
+import type { TileLook } from "@repo/design-system/lib/look";
 
 import type { ReactNode } from "react";
 

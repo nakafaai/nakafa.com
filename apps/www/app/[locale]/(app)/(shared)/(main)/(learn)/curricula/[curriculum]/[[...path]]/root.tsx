@@ -1,6 +1,5 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { TileIcon } from "@repo/design-system/components/ui/tile";
-import { getTileLooks } from "@repo/design-system/lib/tile";
 import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import {
@@ -9,25 +8,11 @@ import {
   CatalogCardTile,
 } from "@/components/shared/catalog/card";
 import { resolveCurriculumCatalogArtwork } from "@/lib/curriculum/artwork";
-import { readCurriculumRouteIcons } from "@/lib/curriculum/icons";
+import { getCurriculumLooks } from "@/lib/curriculum/look";
 import type {
   CurriculumCatalogEntry,
   CurriculumViewRoute,
 } from "@/lib/curriculum/model";
-
-/**
- * Takes the icon and the turn of each tile of one grid, so that no two cards of
- * it share an icon or a blend. A card with artwork keeps its place in the list,
- * so the other cards look the same whether or not it has artwork.
- */
-function getRouteLooks(routes: readonly CurriculumViewRoute[]) {
-  return getTileLooks(
-    Arr.map(
-      routes,
-      (route) => [readCurriculumRouteIcons(route), route.nodeKey] as const
-    )
-  );
-}
 
 /** Renders the public Curriculum index as image cards with explicit actions. */
 export function CurriculumCatalogCards({
@@ -39,7 +24,7 @@ export function CurriculumCatalogCards({
   entries: readonly CurriculumCatalogEntry[];
   locale: Locale;
 }) {
-  const looks = getRouteLooks(Arr.map(entries, ({ route }) => route));
+  const looks = getCurriculumLooks(Arr.map(entries, ({ route }) => route));
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
@@ -80,7 +65,7 @@ export function CurriculumChildCards({
   locale: Locale;
   routes: readonly CurriculumViewRoute[];
 }) {
-  const looks = getRouteLooks(routes);
+  const looks = getCurriculumLooks(routes);
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
