@@ -1,9 +1,7 @@
 {
   "extends": "../packages/typescript-config/base.json",
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["./**/*.ts", "./**/*.mts", "./vercel/*.mjs"]
+  "include": ["./**/*.ts", "./**/*.mts"]
 }

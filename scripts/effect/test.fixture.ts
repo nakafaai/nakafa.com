@@ -98,24 +98,25 @@ export const commitFiles = Effect.fn("EffectSourceTest.commitFiles")(function* (
 });
 
 /** Initializes one fixture repository with a stable author. */
-export const initRepository = Effect.fn("EffectSourceTest.initRepository")(
-  function* (repository: string, files: Record<string, string>) {
-    yield* writeFiles(repository, files);
-    yield* runGit(repository, ["init", "--initial-branch=main"]);
-    // Git starts detached maintenance after a commit. A fixture repository lives
-    // in a scoped temporary folder, so nothing may still write into it when the
-    // scope removes that folder.
-    yield* runGit(repository, ["config", "gc.auto", "0"]);
-    yield* runGit(repository, ["config", "maintenance.auto", "false"]);
-    yield* runGit(repository, ["config", "user.name", "Source Fixture"]);
-    yield* runGit(repository, [
-      "config",
-      "user.email",
-      "source-fixture@example.com",
-    ]);
-    return yield* commitFiles(repository, {});
-  }
-);
+const initRepository = Effect.fn("EffectSourceTest.initRepository")(function* (
+  repository: string,
+  files: Record<string, string>
+) {
+  yield* writeFiles(repository, files);
+  yield* runGit(repository, ["init", "--initial-branch=main"]);
+  // Git starts detached maintenance after a commit. A fixture repository lives
+  // in a scoped temporary folder, so nothing may still write into it when the
+  // scope removes that folder.
+  yield* runGit(repository, ["config", "gc.auto", "0"]);
+  yield* runGit(repository, ["config", "maintenance.auto", "false"]);
+  yield* runGit(repository, ["config", "user.name", "Source Fixture"]);
+  yield* runGit(repository, [
+    "config",
+    "user.email",
+    "source-fixture@example.com",
+  ]);
+  return yield* commitFiles(repository, {});
+});
 
 /**
  * Creates an upstream with Effect 1.0.0 and 2.0.0 releases and a consumer

@@ -12,7 +12,7 @@ import {
 } from "typescript/unstable/ast";
 
 /** The Vercel project configuration of one app. */
-const VERCEL_CONFIG_PATTERN = /^apps\/([^/]+)\/vercel\.ts$/u;
+const VERCEL_CONFIG_PATTERN = /^apps\/[^/]+\/vercel\.ts$/u;
 const RULE =
   'set git.deploymentEnabled of the exported config to { "**": false, main: true }, so only the main branch deploys and Vercel creates no Preview deployment';
 
@@ -84,40 +84,4 @@ export function inspectDeploySource(
     Option.flatMap((git) => objectProperty(git, "deploymentEnabled"))
   );
   return Option.exists(policy, deploysMainOnly) ? [] : [`${file}: ${RULE}.`];
-}
-
-/** The Ignored Build Step of one project: the script that decides, and the project it decides for. */
-function ignoreCommandOf(project: string) {
-  return `node "$(git rev-parse --show-toplevel)/scripts/vercel/step.mjs" ${project}`;
-}
-
-/**
- * Reports a Vercel project configuration that does not name the Ignored Build
- * Step of its own project, so a commit that nothing the project is built from
- * changed would still build it and replace the deployment that serves it. Like
- * the deployment policy, every file states the command itself, because the
- * Python app cannot import a shared value, and this check keeps the files equal.
- */
-export function inspectIgnoreSource(
-  file: string,
-  sourceFile: SourceFile
-): readonly string[] {
-  return Option.match(
-    Option.fromNullishOr(VERCEL_CONFIG_PATTERN.exec(file)?.[1]),
-    {
-      onNone: () => [],
-      onSome: (project) => {
-        const expected = ignoreCommandOf(project);
-        const written = configObject(sourceFile).pipe(
-          Option.flatMap((config) => property(config, "ignoreCommand")),
-          Option.filter(isStringLiteralLikeNode)
-        );
-        return Option.exists(written, ({ text }) => text === expected)
-          ? []
-          : [
-              `${file}: set ignoreCommand of the exported config to '${expected}', so Vercel skips a build that nothing the project is built from changed.`,
-            ];
-      },
-    }
-  );
 }
