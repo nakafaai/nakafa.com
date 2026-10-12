@@ -1,8 +1,9 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { notAvailable, promptOf, SHARE_TOKEN } from "@/e2e/support/share";
 import {
   composerOf,
   inTheSheet,
@@ -14,10 +15,29 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const PROMPT = "How do I find the area under a curve?";
 const TITLE = "Area under a curve";
+const OWN_PROMPT = "What is the slope of a line?";
+const OWN_TITLE = "The slope of a line";
+/** What the sheet says when it holds no chat, in place of a conversation. */
+const NEW_CHAT = "What do you want to learn?";
 const VIEWPORT = { height: 900, width: 1440 };
 
-/** The part of a chat page that holds the conversation, beside the sidebar. */
-const onThePage = (page: Page) => page.locator("main main");
+/** What the sheet writes to the browser to remember the chat it has open. */
+const Remembered = Schema.fromJsonString(
+  Schema.Struct({
+    state: Schema.Struct({ activeChatId: Schema.NullOr(Schema.String) }),
+  })
+);
+const decodeRemembered = Schema.decodeSync(Remembered);
+
+/** What the sheet of the page has written to the browser's storage, none before it wrote. */
+const storedBySheet = (page: Page) =>
+  page.evaluate((key) => localStorage.getItem(key), AI_STORAGE_KEY);
+
+/** The chat the sheet of the page remembers, none when it remembers none. */
+const rememberedChat = async (page: Page) => {
+  const stored = await storedBySheet(page);
+  return stored === null ? null : decodeRemembered(stored).state.activeChatId;
+};
 
 /**
  * Runs `use` for a second learner in a browser of their own, and closes that
@@ -44,82 +64,113 @@ const asAnotherLearner = <A, E, R>(
   );
 
 /**
- * A chat that anyone with its link can read belongs to one learner. They write
- * in it on its page and in Nina's sheet, and the sheet remembers the chat. Another
- * learner who opens it, on its page and in a sheet that remembers it, reads
- * the conversation and finds no place to write. Only the owner continues a
- * conversation, the same on every surface.
+ * A learner shares a chat and opens it in Nina's sheet, where they write to it
+ * as no one else does. The sheet remembers the chat in the browser. Returns the
+ * chat and what the sheet remembered.
  */
-const onlyTheOwnerWrites = Effect.fn("NakafaE2E.onlyTheOwnerWrites")(function* (
-  browser: Browser,
+const sharesAndRemembers = Effect.fn("NakafaE2E.sharesAndRemembers")(function* (
   page: Page,
   baseURL: string
 ) {
   const { learner } = yield* openChatPage(page, baseURL);
   const started = yield* learner.startChat(PROMPT);
   yield* learner.titleNewest([TITLE]);
-  yield* learner.share(started.chatId);
+  const token = yield* learner.share(started.chatId);
+  yield* Effect.sync(() => expect(token).toMatch(SHARE_TOKEN));
 
-  yield* Effect.promise(async () => {
-    await page.goto(`/en/chat/${started.chatId}`);
-    await expect(composerOf(onThePage(page))).toBeVisible({
-      timeout: readinessTimeoutMilliseconds,
-    });
-  });
   yield* openSheet(page);
   yield* openFromHistory(page, TITLE);
-  const remembered = yield* Effect.promise(async () => {
-    await expect(composerOf(inTheSheet(page))).toBeVisible({
+  yield* Effect.promise(async () => {
+    await expect(promptWith(inTheSheet(page), PROMPT)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
-    return page.evaluate((key) => localStorage.getItem(key), AI_STORAGE_KEY);
+    await expect(composerOf(inTheSheet(page))).toBeVisible();
   });
-
-  yield* asAnotherLearner(browser, baseURL, (visitor) =>
-    Effect.gen(function* () {
-      // The sheet of this browser remembers the owner's chat, as it would
-      // after one learner signs out and another signs in.
-      yield* Effect.promise(() =>
-        visitor.addInitScript(
-          ({ key, value }) => {
-            if (value !== null) {
-              localStorage.setItem(key, value);
-            }
-          },
-          { key: AI_STORAGE_KEY, value: remembered }
-        )
-      );
-      yield* openChatPage(visitor, baseURL);
-
-      yield* Effect.promise(async () => {
-        await visitor.goto(`/en/chat/${started.chatId}`);
-        await expect(promptWith(onThePage(visitor), PROMPT)).toBeVisible({
-          timeout: readinessTimeoutMilliseconds,
-        });
-        await expect(composerOf(onThePage(visitor))).toHaveCount(0);
-      });
-      yield* openSheet(visitor);
-      yield* Effect.promise(async () => {
-        await expect(promptWith(inTheSheet(visitor), PROMPT)).toBeVisible({
-          timeout: readinessTimeoutMilliseconds,
-        });
-        await expect(composerOf(inTheSheet(visitor))).toHaveCount(0);
-      });
-    })
+  const remembered = yield* Effect.promise(() => storedBySheet(page)).pipe(
+    Effect.flatMap(Effect.fromNullishOr)
   );
+  yield* Effect.sync(() => expect(remembered).toContain(started.chatId));
+  return { chatId: started.chatId, remembered };
 });
 
-test.describe("Writing in a chat at 1440px", () => {
+/**
+ * Another learner signs in to the browser whose sheet remembers that chat. The
+ * id of a chat opens nothing for them, shared or not: its address is the page
+ * of a chat that is not there, and the sheet, which reads a chat by its id, gets
+ * the same answer. So the sheet shows nothing of the conversation, offers
+ * nothing to write to it, forgets it and shows a new chat. It does not stay
+ * there: the learner opens a chat of their own.
+ */
+const meetsTheChat = Effect.fn("NakafaE2E.meetsTheChat")(function* (
+  page: Page,
+  baseURL: string,
+  shared: { chatId: string; remembered: string }
+) {
+  const { learner } = yield* openChatPage(page, baseURL);
+  yield* learner.startChat(OWN_PROMPT);
+  yield* learner.titleNewest([OWN_TITLE]);
+
+  yield* Effect.promise(async () => {
+    await page.goto(`/en/chat/${shared.chatId}`);
+    await expect(notAvailable(page)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await expect(promptOf(page, PROMPT)).toHaveCount(0);
+  });
+
+  yield* Effect.promise(async () => {
+    // The sheet reads its storage as the page loads, so the browser holds what
+    // the other learner left before the page loads with the sheet.
+    await page.goto(LESSON_PATH);
+    await page.evaluate(
+      ({ key, value }) => localStorage.setItem(key, value),
+      { key: AI_STORAGE_KEY, value: shared.remembered }
+    );
+    await page.reload();
+    await page.getByRole("button", { exact: true, name: "Ask Nina" }).click();
+
+    const sheet = inTheSheet(page);
+
+    await expect(sheet.getByText(NEW_CHAT)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await expect(promptWith(sheet, PROMPT)).toHaveCount(0);
+    await expect
+      .poll(() => rememberedChat(page), {
+        timeout: readinessTimeoutMilliseconds,
+      })
+      .toBeNull();
+  });
+
+  yield* openFromHistory(page, OWN_TITLE);
+  yield* Effect.promise(async () => {
+    const sheet = inTheSheet(page);
+
+    await expect(promptWith(sheet, OWN_PROMPT)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await expect(composerOf(sheet)).toBeVisible();
+    await expect(promptWith(sheet, PROMPT)).toHaveCount(0);
+  });
+});
+
+test.describe("A chat the learner may not read, at 1440px", () => {
   test.use({ viewport: VIEWPORT });
   test.describe.configure({ timeout: 180_000 });
 
-  test("only the owner of a chat gets a composer, on its page and in the sheet", async ({
+  test("opens nothing on its page or in a sheet that remembers it, and the sheet lets the learner go on", async ({
     baseURL,
     browser,
     page,
   }) => {
     await runOnPage(page, baseURL, (origin) =>
-      onlyTheOwnerWrites(browser, page, origin)
+      Effect.gen(function* () {
+        const shared = yield* sharesAndRemembers(page, origin);
+
+        yield* asAnotherLearner(browser, origin, (visitor) =>
+          meetsTheChat(visitor, origin, shared)
+        );
+      })
     );
   });
 });

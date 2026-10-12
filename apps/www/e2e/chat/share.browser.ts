@@ -12,6 +12,8 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { pageRows } from "@/e2e/support/rows";
 import {
+  learnsOnlyWhereTurnsStand,
+  learnsWhatTurnsCost,
   linkOn,
   notAvailable,
   offersNoWriting,
@@ -229,10 +231,15 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
         yield* meetsNothing(reader, linkOn(origin, first.link));
         yield* readsByLink(reader, origin, second.link, chatId);
 
-        // No reader sent a mutation or an action to the server.
+        // No reader sent a mutation or an action to the server, and the pages
+        // of both were told where each turn stands and nothing of what it
+        // cost the owner, whose own page was told that as well.
         yield* Effect.sync(() => {
           expect(readerChanges.sent).toBe(0);
           expect(memberChanges.sent).toBe(memberSent);
+          learnsWhatTurnsCost(owner.changes);
+          learnsOnlyWhereTurnsStand(readerChanges);
+          learnsOnlyWhereTurnsStand(memberChanges);
         });
 
         // 7. No request of the reader's page holds a token, to any host, and the

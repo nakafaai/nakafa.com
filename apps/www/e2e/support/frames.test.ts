@@ -44,6 +44,8 @@ describe("the frames of the realtime connection", () => {
   it("reads the answer to an action and the moment a mutation was stored", () => {
     const stored = decodeGiven(
       encodeJsonText({
+        requestId: 7,
+        success: true,
         ts: Base64.encode(new Uint8Array([2, 1, 0, 0, 0, 0, 0, 0])),
         type: "MutationResponse",
       })
@@ -61,6 +63,33 @@ describe("the frames of the realtime connection", () => {
       Option.map(momentOf)
     );
     expect(moment).toEqual(Option.some(258n));
+  });
+
+  it("reads what an updated query now answers, and nothing for one that was removed", () => {
+    const transition = decodeGiven(
+      encodeJsonText({
+        endVersion: {
+          ts: Base64.encode(new Uint8Array([2, 1, 0, 0, 0, 0, 0, 0])),
+        },
+        modifications: [
+          { queryId: 3, type: "QueryUpdated", value: { turn: { order: 1 } } },
+          { queryId: 4, type: "QueryRemoved" },
+        ],
+        type: "Transition",
+      })
+    );
+
+    expect(
+      transition.pipe(
+        Option.map((frame) =>
+          frame.type === "Transition" ? frame.modifications : []
+        ),
+        Option.getOrUndefined
+      )
+    ).toEqual([
+      { queryId: 3, type: "QueryUpdated", value: { turn: { order: 1 } } },
+      { queryId: 4, type: "QueryRemoved" },
+    ]);
   });
 
   it("keeps the later of two moments", () => {

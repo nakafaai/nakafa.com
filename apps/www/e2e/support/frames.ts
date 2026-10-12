@@ -66,7 +66,12 @@ export const GivenSchema = Schema.Union([
   Schema.Struct({
     endVersion: Schema.Struct({ ts: Schema.Uint8ArrayFromBase64 }),
     modifications: Schema.Array(
-      Schema.Struct({ queryId: Schema.Finite, type: Schema.String })
+      Schema.Struct({
+        queryId: Schema.Finite,
+        type: Schema.String,
+        /** What an updated query now answers. */
+        value: Schema.optionalKey(Schema.Unknown),
+      })
     ),
     type: Schema.Literal("Transition"),
   }),

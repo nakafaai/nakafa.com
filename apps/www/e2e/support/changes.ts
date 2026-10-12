@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   Effect,
@@ -54,7 +55,8 @@ export const ANSWER_MILLISECONDS = 15_000;
  * whether the server holds given words (`took`). The count of changes cannot
  * say that: the editor saves after a pause as well as when it closes, and a
  * save that waits for the memory to be added goes out a moment after the
- * server answered the add.
+ * server answered the add. It keeps what the server answered to each query
+ * too, so a step can ask what the page was told (`answersTo`).
  */
 export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
   page: Page,
@@ -84,6 +86,8 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
   const waiting = MutableHashMap.empty<number, string>();
   // The frames of the changes the server took.
   const taken = MutableList.make<string>();
+  // What the server answered to each query the page runs, as JSON text.
+  const answers = MutableList.make<{ text: string; udfPath: string }>();
   const delayed = MutableList.make<() => void>();
   /** Gives the page a frame now, or after `release` while the answers are held back. */
   const deliver = (give: () => void) => {
@@ -163,6 +167,10 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
 
                 if (change.type === "QueryUpdated" && Option.isSome(path)) {
                   MutableHashSet.add(answeredPaths, path.value);
+                  MutableList.append(answers, {
+                    text: encodeJsonText(change.value),
+                    udfPath: path.value,
+                  });
                   changes.listed ||= Arr.contains(lists, path.value);
                 }
               }
@@ -226,6 +234,16 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     /** Whether the server has answered a query of the function `udfPath` on this page. */
     hasAnswered(udfPath: string) {
       return MutableHashSet.has(answeredPaths, udfPath);
+    },
+    /** Every answer to a query of the function `udfPath` on this page, as JSON text, in order. */
+    answersTo(udfPath: string) {
+      return Arr.map(
+        Arr.filter(
+          MutableList.toArray(answers),
+          (answer) => answer.udfPath === udfPath
+        ),
+        (answer) => answer.text
+      );
     },
     /** The arguments of every change the page sent to the function `udfPath`, in order. */
     argumentsOf(udfPath: string) {

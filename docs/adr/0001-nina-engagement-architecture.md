@@ -86,12 +86,27 @@ again, and send no mutation or action to the server, the address without the
 fragment opens what a chat that is not there opens, the pages that hold the
 chat lose it without a reload when sharing stops, sharing again makes a
 different link while the first stays dead, and no request of the reader's page
-holds the token, the analytics it reported included. The local runtime has no
-model, so each of its turns ends with the failure that offers no retry, and the
-browser test reaches no answer with follow-up suggestions and no failure that
-can be retried. A reader is sent no suggestions, and the Retry of a failed
-answer reads the same access as the composer, `readChatAccess`, which a unit
-test pins for a reader.
+holds the token, the analytics it reported included. The turn summaries those
+pages were told hold no cost, token count, memory count or suggestion of the
+owner's, while the owner's own page was told the credits and tokens of its
+turn. The local runtime has no model, so each of its turns ends with the
+failure that offers no retry, and the browser test reaches no answer with
+follow-up suggestions, no completed turn that shows the credits control, and no
+failure that can be retried. A reader is sent no suggestions, a reader's turn
+carries no credits for that control to show, and the Retry of a failed answer
+reads the same access as the composer, `readChatAccess`, which a unit test pins
+for a reader.
+
+Nina's sheet reads a chat by its id and never holds a share token: a link opens
+the chat page, and the chat the sheet shows comes from the learner's own list,
+from a chat the learner starts, or from the browser's storage, where the sheet
+remembers the chat it had open. A learner who signs in after another one in the
+same browser can therefore open a sheet that remembers a chat they may not
+read, shared or not. The server answers that read as it answers for a chat that
+does not exist, the sheet forgets the chat and shows a new chat, and the
+learner starts one or opens one of their own.
+`apps/www/e2e/chat/access.browser.ts` proves it in the production build, with
+the address of the chat opened by a signed-in learner who holds no link.
 
 The chat route renders its header on the server and the conversation after
 hydration, because a server never sees the fragment, and asking for the chat

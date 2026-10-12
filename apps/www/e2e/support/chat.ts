@@ -26,7 +26,9 @@ const LIST_QUERY = "chats/queries:getOwnChats";
 export const START = "nina/turns:start";
 export const RENAME = "chats/mutations:updateChatTitle";
 export const DELETE = "chats/mutations:deleteChat";
-const VISIBILITY = "chats/mutations:updateChatVisibility";
+/** The mutation the share dialog calls to turn sharing on, and the query it reads the token with. */
+const SHARE = "chats/mutations:updateChatVisibility";
+const SHARE_TOKEN = "chats/queries:getShareToken";
 /** What the pages say when a change fails. */
 export const FAILED = "We could not complete this action. Please try again.";
 
@@ -157,9 +159,17 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
       Effect.scoped,
       Effect.provide(nodeServicesLayer)
     ),
-    /** Makes a chat of the learner readable by anyone who has its link. */
+    /**
+     * Shares a chat of the learner the way the share dialog does: the same
+     * mutation turns sharing on, and the same query gives the owner the token
+     * the server drew, which the chat's link holds. The chat is readable by
+     * that link and by nothing else.
+     */
     share: Effect.fn("NakafaE2E.share")(function* (chatId: string) {
-      yield* call("mutation", VISIBILITY, { chatId, visibility: "public" });
+      yield* call("mutation", SHARE, { chatId, visibility: "public" });
+      return yield* call("query", SHARE_TOKEN, { chatId }).pipe(
+        Effect.flatMap(Schema.decodeUnknownEffect(Schema.String))
+      );
     }),
     /** Starts a chat the way the new chat page does, and returns where it lives. */
     startChat: Effect.fn("NakafaE2E.startChat")(function* (text: string) {

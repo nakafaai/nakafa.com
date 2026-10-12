@@ -1,5 +1,11 @@
 import { expect, type Page, type Request } from "@playwright/test";
-import { Array as Arr, MutableList, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  MutableList,
+  Option,
+  Record as Rec,
+  Schema,
+} from "effect";
 import {
   ANSWER_MILLISECONDS,
   type Changes,
@@ -139,6 +145,79 @@ export const offersNoWriting = async (page: Page) => {
   await expect(composer(page)).toHaveCount(0);
   await expect(chatMenu(page)).toHaveCount(0);
   await expect(retryButtons(page)).toHaveCount(0);
+};
+
+/** The queries that tell a page of a chat: its conversation with the latest turn, and its messages. */
+const CONVERSATION = "nina/conversation:get";
+const MESSAGES = "nina/messages:list";
+/** The facts a reader's page is told of a turn: where it stands, and which prompt it answers. */
+const READER_FACTS = [
+  "order",
+  "promptMessageId",
+  "promptedAt",
+  "state",
+  "usage",
+];
+/** What a turn cost the owner, which only the owner's page is told. */
+const COST_FACTS = ["credits", "tokens"];
+
+/** A turn summary as a page was told it: its keys are the facts the page was given. */
+const TurnSummary = Schema.Record(Schema.String, Schema.Unknown);
+const ToldConversation = Schema.fromJsonString(
+  Schema.Struct({ turn: Schema.NullOr(TurnSummary) })
+);
+const ToldMessages = Schema.fromJsonString(
+  Schema.Struct({
+    page: Schema.Array(
+      Schema.Struct({ metadata: Schema.optionalKey(TurnSummary) })
+    ),
+  })
+);
+
+/** Every turn summary a page was told, in its conversation and in its messages. */
+const summariesTold = (changes: Changes) =>
+  Arr.appendAll(
+    Arr.flatMap(changes.answersTo(CONVERSATION), (text) =>
+      Option.match(Schema.decodeOption(ToldConversation)(text), {
+        onNone: () => [],
+        onSome: ({ turn }) => Option.toArray(Option.fromNullishOr(turn)),
+      })
+    ),
+    Arr.flatMap(changes.answersTo(MESSAGES), (text) =>
+      Option.match(Schema.decodeOption(ToldMessages)(text), {
+        onNone: () => [],
+        onSome: ({ page }) =>
+          Arr.flatMap(page, ({ metadata }) =>
+            Option.toArray(Option.fromNullishOr(metadata))
+          ),
+      })
+    )
+  );
+
+/**
+ * What the owner's page was told of the turns of its chat: where each stands,
+ * and what each cost. The reader's page is checked against this.
+ */
+export const learnsWhatTurnsCost = (changes: Changes) => {
+  const facts = Arr.flatMap(summariesTold(changes), Rec.keys);
+
+  expect(facts).toEqual(expect.arrayContaining(COST_FACTS));
+};
+
+/**
+ * What a reader's page was told of the turns of a shared chat: where each
+ * stands and which prompt it answers, with an empty list of usage. None of
+ * what a turn cost the owner, what Nina kept from it or what she suggests next
+ * belongs to a reader.
+ */
+export const learnsOnlyWhereTurnsStand = (changes: Changes) => {
+  const summaries = summariesTold(changes);
+
+  expect(summaries.length).toBeGreaterThan(0);
+  for (const summary of summaries) {
+    expect(Arr.difference(Rec.keys(summary), READER_FACTS)).toEqual([]);
+    expect(summary.usage).toEqual([]);
+  }
 };
 
 /** One analytics event, as the proxy forwards it to PostHog. */
