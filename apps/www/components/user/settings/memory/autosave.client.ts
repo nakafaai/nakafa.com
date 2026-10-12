@@ -24,7 +24,8 @@ const LONGEST = Duration.seconds(3);
  * a moment after they stop writing, and at once when the editor closes. A save
  * that fails tells the learner and is tried again with the next change. When
  * the editor is closed by then, it opens again with what they wrote. A save
- * that finds the memory gone closes the editor.
+ * that finds the memory gone closes the editor. A stored memory the learner
+ * emptied is deleted when the editor closes, with an Undo.
  *
  * `restored` is the words of a save that failed, when the editor opens again
  * with them, and `starting` is the words the editor opens with. `change` takes
@@ -60,7 +61,7 @@ export function useAutosave(
   });
   const finish = useCallbackRef(() => {
     later.cancel();
-    write();
+    saving.close(send, memory);
   });
 
   // The editor closes: what the server does not have yet goes out now.

@@ -190,9 +190,19 @@ export function useMemoryActions() {
    * When the server does not delete the memory, everything the deletion took
    * comes back: the memory in the list, and the editor that was on it with the
    * words it held. The Undo goes, because nothing is left to undo.
+   *
+   * A memory the learner deleted already is not deleted again. That is the case
+   * of the editor on a memory whose words the learner removed, when the
+   * learner deletes the memory from its row: the deletion closes the editor,
+   * and the editor, closing on no words, would delete the memory a second time.
    */
   function remove(memory: Memory, restore: MemoryDraft = draftOf(memory)) {
     const before = latest();
+
+    if (before.deleted === memory.id) {
+      return;
+    }
+
     const editing = before.open && before.target?.id === memory.id;
 
     const taken = MutableRef.make(Option.none<MemoryDraft>());

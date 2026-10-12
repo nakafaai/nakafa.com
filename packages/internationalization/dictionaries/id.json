@@ -537,6 +537,7 @@
     "text": "Teks memori",
     "placeholder": "Tulis yang perlu Nina ingat",
     "missing": "Memori ini sudah tidak ada",
+    "too-long": "Teks itu terlalu panjang untuk satu memori",
     "title": "Judul",
     "untitled": "Tanpa judul",
     "count": "{count, number} / {limit, number}"
