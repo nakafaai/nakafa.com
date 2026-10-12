@@ -7,7 +7,6 @@ import { Array as Arr } from "effect";
 
 const memory = refs.public.nina.memory;
 const pause = Ref.getFunctionReference(memory.pause);
-const search = Ref.getFunctionReference(memory.search);
 const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
 const known = Ref.getFunctionReference(refs.internal.nina.memory.known);
 
@@ -149,7 +148,7 @@ describe("Nina memory for a turn", () => {
     ).toEqual(["Kept"]);
   });
 
-  it("reads a bounded number of memories for 300: eight for the turn, twelve for the capture call, at most thirty for a search", async () => {
+  it("reads a bounded number of memories for 300: eight for the turn, twelve for the capture call, at most 24 for a search that asks for more", async () => {
     const f = await createMemoryTest();
     const userId = f.identity.userId;
     await f.fill(300);
@@ -167,10 +166,47 @@ describe("Nina memory for a turn", () => {
       userId,
     });
     expect(words(capture.known)).toEqual(newest(12));
-    const found = Ref.decodeReturnsSync(
-      memory.search,
-      await f.owner.query(search, { query: "memory" })
-    );
-    expect(Arr.length(found)).toBe(24);
+    expect(Arr.length(await f.find({ limit: 30, text: "memory" }))).toBe(24);
+  });
+});
+
+describe("Nina memory for a turn after Delete all", () => {
+  it("reads nothing the learner deleted, by the pages of a lesson or by the newest, and tells that memory is on", async () => {
+    const f = await createMemoryTest();
+    const userId = f.identity.userId;
+    await f.fill(3, { topics: [LESSON] });
+    await f.markCleared(3);
+    expect(
+      await f.t.query(read, { now: NOW, topics: [LESSON], userId })
+    ).toMatchObject({ paused: false, prompt: [] });
+    expect(
+      await f.t.query(known, {
+        message: "memory",
+        now: NOW,
+        topics: [LESSON],
+        userId,
+      })
+    ).toMatchObject({ known: [], paused: false });
+  });
+
+  it("reads the memories confirmed after the request, and only those", async () => {
+    const f = await createMemoryTest();
+    const userId = f.identity.userId;
+    await f.fill(3, { topics: [LESSON] });
+    await f.markCleared(3);
+    await f.seed({ confirmedAt: 4, text: "Memory four", topics: [LESSON] });
+    await f.seed({ confirmedAt: 5, text: "Memory five" });
+    expect(
+      words(
+        (await f.t.query(read, { now: NOW, topics: [LESSON], userId })).prompt
+      )
+    ).toEqual(["Memory four", "Memory five"]);
+    const capture = await f.t.query(known, {
+      message: "memory",
+      now: NOW,
+      topics: [LESSON],
+      userId,
+    });
+    expect(words(capture.known)).toEqual(["Memory four", "Memory five"]);
   });
 });

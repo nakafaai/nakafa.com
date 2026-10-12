@@ -152,18 +152,27 @@ export const deleteKeys = Effect.fn("nina.memory.keys.delete")(function* (
 
 /**
  * The memories a learner has linked to one key, the most recently confirmed
- * first, at most `limit`, each with the time it was confirmed.
+ * first, at most `limit`, each with the time it was confirmed. A key holds the
+ * time its memory was confirmed, so the memories that "Delete all" took (those
+ * confirmed at or before `clearedAt`) are the tail of the index, and the range
+ * stops before them.
  */
 export const readLinked = Effect.fn("nina.memory.keys.linked")(function* (
   userId: UserId,
   key: string,
-  limit: number
+  limit: number,
+  clearedAt: number | undefined
 ) {
   const rows = yield* (yield* DatabaseReader)
     .table("ninaMemoryKeys")
     .index(
       "by_userId_and_key_and_confirmedAt",
-      (query) => query.eq("userId", userId).eq("key", key),
+      (query) => {
+        const linked = query.eq("userId", userId).eq("key", key);
+        return clearedAt === undefined
+          ? linked
+          : linked.gt("confirmedAt", clearedAt);
+      },
       "desc"
     )
     .take(limit)

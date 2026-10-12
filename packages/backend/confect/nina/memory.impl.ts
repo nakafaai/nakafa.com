@@ -21,14 +21,18 @@ import {
   TITLE_FIELD,
 } from "@repo/backend/confect/nina/memory/seal";
 import {
+  clearMemories,
+  confirmedAfterClear,
   deleteMemory,
   drainMemories,
   expireBatch,
   MEMORY_BATCH,
+  readKeptMemory,
+  readMemoryState,
   readOwnMemory,
 } from "@repo/backend/confect/nina/memory/store";
 import { known, read } from "@repo/backend/confect/nina/memory/turn";
-import { list, search, state } from "@repo/backend/confect/nina/memory/view";
+import { list, state } from "@repo/backend/confect/nina/memory/view";
 import { writeMemories } from "@repo/backend/confect/nina/memory/write";
 import spec, {
   type NinaMemoryDraft,
@@ -64,7 +68,11 @@ const sealDraft = Effect.fn("nina.memory.sealDraft")(function* (
 
 /**
  * Writes a memory in the learner's own words, with the title they gave it, and
- * indexes it. A learner keeps as many memories as they write.
+ * indexes it. A learner keeps as many memories as they write. It reads the
+ * moment the learner last deleted every memory, as `edit` and the capture
+ * write do: the database runs this write again when a "Delete all" commits
+ * while it runs, and the memory is confirmed after that moment, so the batches
+ * of that deletion never take it.
  */
 const add = FunctionImpl.make(
   schema,
@@ -76,7 +84,11 @@ const add = FunctionImpl.make(
       return yield* new NinaMemoryRejected({ reason: "empty" });
     }
     const { keys, text, title } = yield* sealDraft(appUser._id, draft);
-    const confirmedAt = yield* Clock.currentTimeMillis;
+    const { clearedAt } = yield* readMemoryState(appUser._id);
+    const confirmedAt = confirmedAfterClear(
+      yield* Clock.currentTimeMillis,
+      clearedAt
+    );
     const id = yield* (yield* DatabaseWriter)
       .table("ninaMemories")
       .insert({
@@ -95,7 +107,8 @@ const add = FunctionImpl.make(
 /**
  * Rewrites a memory as the learner's own words and title; a write without a
  * title takes the title off. Its kind, topics and end date stay as they are,
- * and its keys follow its words.
+ * and its keys follow its words. A memory that "Delete all" took is missing:
+ * rewriting it would confirm it later than the batches that delete it reach.
  */
 const edit = FunctionImpl.make(
   schema,
@@ -106,12 +119,16 @@ const edit = FunctionImpl.make(
     if (isEmpty(draft)) {
       return yield* new NinaMemoryRejected({ reason: "empty" });
     }
-    const memory = yield* readOwnMemory(appUser._id, id);
+    const { clearedAt } = yield* readMemoryState(appUser._id);
+    const memory = yield* readKeptMemory(appUser._id, id, clearedAt);
     if (!memory) {
       return yield* new NinaMemoryRejected({ reason: "missing" });
     }
     const { keys, text, title } = yield* sealDraft(appUser._id, draft);
-    const confirmedAt = yield* Clock.currentTimeMillis;
+    const confirmedAt = confirmedAfterClear(
+      yield* Clock.currentTimeMillis,
+      clearedAt
+    );
     yield* (yield* DatabaseWriter)
       .table("ninaMemories")
       .patch(id, { author: "learner", confirmedAt, text, title })
@@ -156,7 +173,8 @@ const pause = FunctionImpl.make(
 );
 
 /**
- * Deletes the memories the learner has now. It deletes one batch and goes on
+ * Deletes the memories the learner has now. Every reader drops them from this
+ * moment on (`clearMemories`), and the function deletes one batch and goes on
  * with the next by itself (`drain`), so a learner with many memories never
  * meets one huge transaction. A memory written after this moment stays.
  */
@@ -166,7 +184,7 @@ const clear = FunctionImpl.make(
   "clear",
   Effect.fn("nina.memory.clear")(function* () {
     const { appUser } = yield* requireAuth();
-    yield* drainMemories(appUser._id, yield* Clock.currentTimeMillis);
+    yield* clearMemories(appUser._id, yield* Clock.currentTimeMillis);
     return null;
   })
 );
@@ -212,7 +230,6 @@ const expire = FunctionImpl.make(
 export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(list),
   Layer.provide(state),
-  Layer.provide(search),
   Layer.provide(add),
   Layer.provide(edit),
   Layer.provide(remove),

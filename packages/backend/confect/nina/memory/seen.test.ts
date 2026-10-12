@@ -36,7 +36,7 @@ describe("memory a capture call had read", () => {
     const gone = await f.seed({ text: "Goes" });
     await f.owner.mutation(remove, { id: gone });
     const lost = (seen: Parameters<typeof lostSeen>[1]) =>
-      f.execute(lostSeen(f.identity.userId, seen));
+      f.execute(lostSeen(f.identity.userId, seen, undefined));
     expect(await lost([{ confirmedAt: 1, id: stays }])).toBe(false);
     expect(await lost([])).toBe(false);
     expect(
@@ -53,9 +53,23 @@ describe("memory a capture call had read", () => {
     const theirs = await f.seed({ text: "Theirs", userId: other.userId });
     expect(
       await f.execute(
-        lostSeen(f.identity.userId, [{ confirmedAt: 1, id: theirs }])
+        lostSeen(f.identity.userId, [{ confirmedAt: 1, id: theirs }], undefined)
       )
     ).toBe(true);
+  });
+
+  it("counts a memory that Delete all took as gone, though a batch still holds it, and keeps one confirmed after", async () => {
+    const f = await createCaptureTest();
+    const taken = await f.seed({ confirmedAt: 5, text: "Taken" });
+    const later = await f.seed({ confirmedAt: 6, text: "Later" });
+    const lost = (id: typeof taken, clearedAt: number | undefined) =>
+      f.execute(
+        lostSeen(f.identity.userId, [{ confirmedAt: 1, id }], clearedAt)
+      );
+    expect(await lost(taken, undefined)).toBe(false);
+    expect(await lost(taken, 4)).toBe(false);
+    expect(await lost(taken, 5)).toBe(true);
+    expect(await lost(later, 5)).toBe(false);
   });
 
   it("reads the memory a candidate names as it stands, only when the call read it", async () => {
@@ -68,10 +82,11 @@ describe("memory a capture call had read", () => {
       { confirmedAt: 1, id: gone },
     ];
     await f.owner.mutation(remove, { id: gone });
-    const named = (known: string | undefined) =>
+    const named = (known: string | undefined, clearedAt?: number) =>
       f.execute(
-        Effect.map(readNamed(f.identity.userId, seen, known), (found) =>
-          Option.getOrNull(Option.map(found, (row) => row._id))
+        Effect.map(
+          readNamed(f.identity.userId, seen, known, clearedAt),
+          (found) => Option.getOrNull(Option.map(found, (row) => row._id))
         )
       );
     expect(await named(read)).toBe(read);
@@ -81,6 +96,9 @@ describe("memory a capture call had read", () => {
     expect(await named(gone)).toBeNull();
     expect(await named("not-an-id")).toBeNull();
     expect(await named(undefined)).toBeNull();
+    // A memory that Delete all took names nothing, though a batch still holds it.
+    expect(await named(read, 0)).toBe(read);
+    expect(await named(read, 1)).toBeNull();
   });
 
   it("tells a memory as the call read it from one that was confirmed after, or that the call never read", () => {
@@ -115,6 +133,19 @@ describe("memory capture write after the learner changed their memory", () => {
       0
     );
     expect(await f.stored()).toEqual([]);
+  });
+
+  it("writes nothing when Delete all took a memory the call had read, though a batch still holds it", async () => {
+    const f = await createCaptureTest();
+    const id = await f.seed({ text: "Mau ikut SNBT 2027" });
+    await f.markCleared(NOW - 1);
+    expect(await f.run([candidate()], { seen: [{ confirmedAt: 1, id }] })).toBe(
+      0
+    );
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({ _id: id, confirmedAt: 1 }),
+    ]);
+    expect(await f.remembered()).toBeUndefined();
   });
 
   it("writes when every memory the call had read is still there, and when it had read none", async () => {

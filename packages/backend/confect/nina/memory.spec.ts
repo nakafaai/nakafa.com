@@ -29,10 +29,6 @@ export const MEMORY_TOPIC_LIMIT = 8;
 export const MEMORY_TOPIC_LENGTH = 256;
 /** Memories one page of the Memory page holds, however many the browser asks for. */
 export const MEMORY_PAGE_LIMIT = 50;
-/** Memories one search of the Memory page shows. */
-export const MEMORY_SEARCH_LIMIT = 30;
-/** Characters of a search on the Memory page. */
-const MEMORY_QUERY_LIMIT = 80;
 
 /**
  * What a memory Nina wrote is about. `situation` is something with an end,
@@ -267,7 +263,8 @@ const RetiredMemoryView = Schema.Struct({
 
 export default GroupSpec.make()
   // One page of the learner's memories, the most recently confirmed first, with
-  // their titles and words opened. A visitor gets an empty page.
+  // their titles and words opened. A memory that "Delete all" took is not
+  // listed, though a batch may still hold it. A visitor gets an empty page.
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "list",
@@ -278,20 +275,6 @@ export default GroupSpec.make()
     FunctionSpec.publicQuery({
       name: "state",
       returns: () => Schema.NullOr(NinaMemoryState),
-    }).middleware(Session)
-  )
-  // The memories that match a search of the Memory page, the best first. A
-  // visitor and an empty search get none.
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "search",
-      args: () => ({
-        query: Schema.Trim.check(Schema.isMaxLength(MEMORY_QUERY_LIMIT)),
-      }),
-      returns: () =>
-        Schema.mutable(Schema.Array(NinaMemoryView)).check(
-          Schema.isMaxLength(MEMORY_SEARCH_LIMIT)
-        ),
     }).middleware(Session)
   )
   .addFunction(
@@ -326,9 +309,9 @@ export default GroupSpec.make()
       error: () => AuthFailure,
     }).middleware(Session)
   )
-  // Deletes a batch of the learner's memories and goes on with `drain` until
-  // none is left, so a learner with many memories never meets one huge
-  // transaction.
+  // Deletes the memories the learner has now. Every reader drops them from this
+  // moment on, and a batch is deleted at once and the rest by `drain`, so a
+  // learner with many memories never meets one huge transaction.
   .addFunction(
     FunctionSpec.publicMutation({
       name: "clear",

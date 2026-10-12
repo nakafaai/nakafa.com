@@ -61,8 +61,14 @@ const bestFirst = Order.Tuple([
  *
  * It never reads the clock, because it runs inside queries and a query is not
  * run again when time passes: a caller that must not see ended situations says
- * what time it is. The Memory page gives no time and sees every stored memory,
- * as its list does.
+ * what time it is. Without a time it sees every stored memory.
+ *
+ * It never finds a memory that "Delete all" took, though the batches that
+ * delete it may still run. `clearedAt` is the moment the learner asked, from
+ * `readMemoryState`, or nothing when they never did. The keys hold the time
+ * their memory was confirmed and the index orders them by it, so what the
+ * learner deleted is the tail of each key and the range stops before it: those
+ * memories take none of the 24 places of a key.
  *
  * It reads a bounded number of documents whatever the learner keeps: one
  * memory to know there is one, the learner's key, at most 16 times 24 key rows
@@ -71,12 +77,14 @@ const bestFirst = Order.Tuple([
  * hold it, not every one.
  */
 export const searchMemories = Effect.fn("nina.memory.find")(function* ({
+  clearedAt,
   limit,
   now,
   text = "",
   topics = [],
   userId,
 }: {
+  readonly clearedAt: number | undefined;
   readonly limit: number;
   readonly now?: number;
   readonly text?: string;
@@ -92,11 +100,11 @@ export const searchMemories = Effect.fn("nina.memory.find")(function* ({
     wordsOf(Str.slice(0, TEXT_LIMIT)(text)),
     KEY_LIMIT - Arr.length(topicLookups)
   );
-  // A learner who never wrote a memory has no key to read and nothing to find.
+  // A learner who has no memory has no key to read and nothing to find.
   if (
     (Arr.isReadonlyArrayEmpty(topicLookups) &&
       Arr.isReadonlyArrayEmpty(words)) ||
-    Arr.isReadonlyArrayEmpty(yield* readNewest(userId, 1))
+    Arr.isReadonlyArrayEmpty(yield* readNewest(userId, 1, clearedAt))
   ) {
     return [];
   }
@@ -109,7 +117,7 @@ export const searchMemories = Effect.fn("nina.memory.find")(function* ({
   );
   const hits = Arr.flatten(
     yield* Effect.forEach(lookups, ([key, worth]) =>
-      Effect.map(readLinked(userId, key, LINKED_PER_KEY), (linked) =>
+      Effect.map(readLinked(userId, key, LINKED_PER_KEY, clearedAt), (linked) =>
         Arr.map(linked, ({ confirmedAt, memoryId }) => ({
           confirmedAt,
           memoryId,

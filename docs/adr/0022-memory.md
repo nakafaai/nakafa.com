@@ -30,7 +30,8 @@ Memory is on for everyone. The learner reads, adds, edits and deletes memories,
 pauses memory, and deletes all of it on one page, Settings, AI, Memory. Pausing
 sets `ninaMemoryPaused` on the learner's learning preference and keeps every
 row. While paused, Nina saves nothing and reads nothing. Resuming removes the
-mark, so a learner who never paused has no mark.
+mark, so a learner who never paused has no mark. Deleting all of it sets
+`ninaMemoryClearedAt` on the same row (see Implementation Contract).
 
 A memory is one row. It holds a title, words, or both. The words are at most
 2000 characters and may hold Markdown, whose formatting counts toward the limit;
@@ -189,17 +190,18 @@ a memory deletes its keys: `remove`, `clear`, the daily expiry, account
 deletion, and the retired `disable`.
 
 One function searches: `searchMemories` takes the learner, the text, the
-topics and a limit. It looks up at most 16 keys, the topics first, and reads the
-24 memories confirmed last for each. A memory scores 3 for the lesson that is
-open, 2 for a path above it, and 1 for each word. The memories go by score and
-then by the time they were last confirmed, the newest first, and the best three
-times the limit, at most 48, are loaded. Those that are gone or are situations
-that ended drop out, and the first of the rest, as many as the limit, are the
-result. It reads at most 434 documents of the 32,000 that one transaction may
-read, whatever the learner keeps: a word that many memories hold finds the ones
-confirmed last that hold it, not every one. The Memory page search asks for 30
-memories, the capture call for 12, the write for 8 for each candidate, and a
-turn start searches by the topics of the page alone.
+topics, a limit and the moment the learner last deleted all of it, if ever. It
+looks up at most 16 keys, the topics first, and reads the 24 memories confirmed
+last for each. A memory scores 3 for the lesson that is open, 2 for a path
+above it, and 1 for each word. The memories go by score and then by the time
+they were last confirmed, the newest first, and the best three times the limit,
+at most 48, are loaded. Those that are gone or are situations that ended drop
+out, and the first of the rest, as many as the limit, are the result. It reads
+at most 434 documents of the 32,000 that one transaction may read, whatever the
+learner keeps: a word that many memories hold finds the ones confirmed last
+that hold it, not every one. The capture call asks for 12 memories, the write
+for 8 for each candidate, and a turn start searches by the topics of the page
+alone. The Memory page does not use it: its search runs in the browser.
 
 ## Implementation Contract
 
@@ -207,32 +209,89 @@ turn start searches by the topics of the page alone.
   replaces the document with a `facts` array, and `ninaMemoryKeys` (index by
   user, key and confirmation time, index by memory) is its index. No table ties
   a memory to a chat, and the chats trigger touches no memory.
-- `nina/memory:list`, `state`, `search`, `add`, `edit`, `remove`, `pause` and
-  `clear` are public, pass the session middleware, and act only on the signed-in
-  learner. `list` is paginated, the most recently confirmed memory first, and
-  holds at most 50 memories to a page; a visitor gets an empty page. `state`
-  tells whether memory is paused, and `search` finds at most 30 memories for a
-  search of at most 80 characters. `add` and `edit` fail with
-  `NinaMemoryRejected` for `empty` and `missing`. `empty` means the write holds
-  neither a title nor words, and it is checked first, before the memory is
-  read. A title of more than 80 characters, or of only spaces, never reaches the
-  function: its arguments refuse it. `read`, `known`, `capture`, `drain` and
-  `expire` are internal.
-- `clear` deletes a batch of 25 memories with their keys, and `drain` deletes
-  the next batch, again and again, until none is left, so one transaction
-  never deletes more than 25 memories and 2,625 documents. `clear` returns at
-  once. The batches delete the memories confirmed up to the moment the learner
-  asked, so a memory the learner or Nina writes while they still run stays. The
-  daily expiry deletes a batch of 25 ended situations the same way.
+- `nina/memory:list`, `state`, `add`, `edit`, `remove`, `pause` and `clear` are
+  public, pass the session middleware, and act only on the signed-in learner.
+  `list` is paginated, the most recently confirmed memory first, and holds at
+  most 50 memories to a page; a visitor gets an empty page. `state` tells
+  whether memory is paused. `add` and `edit` fail with `NinaMemoryRejected` for
+  `empty` and `missing`. `empty` means the write holds neither a title nor
+  words, and it is checked first, before the memory is read. A title of more
+  than 80 characters, or of only spaces, never reaches the function: its
+  arguments refuse it. `read`, `known`, `capture`, `drain` and `expire` are
+  internal.
+- `clear` stores the moment the learner asked, as `ninaMemoryClearedAt` on
+  their learning preference, and in the same transaction deletes a batch of 25
+  memories with their keys. `drain` deletes the next batch, again and again,
+  until none is left, so one transaction never deletes more than 25 memories and
+  2,625 documents. `clear` returns at once. The batches delete the memories
+  confirmed up to that moment, so a memory the learner or Nina writes while they
+  still run stays. The daily expiry deletes a batch of 25 ended situations the
+  same way.
+- From the moment `clear` stores it, every reader drops the memories confirmed
+  at or before it, on every device and for Nina's next turn, though the batches
+  may still hold them. Without that, the list would show the rest again once
+  the page stopped hiding them, another device would show them, and the next
+  turn could still use them. The readers are `list`, `read`, `known`, the search
+  they and the capture write use, and the capture write's lookups by id, which
+  count such a memory as gone, so a chat never confirms and brings back what the
+  learner deleted. `edit` refuses such a memory as missing for the same reason.
+  A reader that takes the newest first only drops the tail: the search, the
+  fill of a turn start and the keys read memories above that moment in their
+  index ranges, so each read stays on its index and bounded, and `list` cuts
+  its page at the first memory it drops and ends the list there. `list` keeps
+  its index range whatever the learner did, because the cursors of the pages a
+  browser holds belong to that range.
 - `add` and `edit` take the words and an optional title, never a kind, so the
   learner never picks or changes a kind. `add` stores a memory with no kind and
-  the learner as author. Editing a memory changes its words and its title, makes
-  the learner its author, and leaves its kind, topics and end time as they are.
-  A write without a title takes the title off the memory, which is how the
-  learner removes one. A chat rewrites only words that Nina wrote, so the Memory
-  page never shows Nina's wording as the learner's own, and the learner's words
-  are never replaced by a chat.
-- The Memory page lists the title and the words and never a kind.
+  the learner as author. It reads the moment of the last Delete all, as `edit`
+  and the capture write do, and confirms the memory after it: the database runs
+  the write again when a Delete all commits while it runs, and a clock that has
+  not moved on never stamps the memory as one the deletion took, which every
+  reader would hide and no batch might delete. Editing a memory changes its
+  words and its title, makes the learner its author, and leaves its kind,
+  topics and end time as they are. A write without a title takes the title off
+  the memory, which is how the learner removes one. A chat rewrites only words
+  that Nina wrote, so the Memory page never shows Nina's wording as the
+  learner's own, and the learner's words are never replaced by a chat.
+- The Memory page lists the title and the words and never a kind. It shows
+  every memory a learner has, however many: the settings route reads the first
+  page of 30 memories and whether memory is paused for the first paint, and one
+  reader in the browser then loads the next page when the end of the list comes
+  into view. A list of a page or more is windowed: only the rows in view and a
+  few around them are in the page, except that the rows the server rendered
+  stay until the learner first scrolls, so hydration moves none of them. Every
+  row has the same fixed height, in pixels, so the window knows where each
+  stands before it has measured any. A shorter list is not windowed, because the
+  window shows only the rows it started with until the learner scrolls and
+  would start again, with every row, each time the count changed: its rows are
+  all in the page and stay in place while memories come and go.
+- The Memory page searches in the browser alone, in any part of a word of the
+  title and the words of the memories it holds. While the search box holds text,
+  the reader loads the pages that are not loaded yet, 50 at a time (the most a
+  page holds), until every memory is loaded, and a row that matches appears as
+  its page arrives and stays while it matches. "No memory found" shows only when
+  every page is loaded and nothing matches. The server has no search for the
+  page: its index holds only the first 6 characters of each word, as blind keys
+  of the sealed text, so a part from the middle or the end of a word, or a word
+  under an affix or inside a compound, finds nothing there. Mixed with the
+  browser's filter it also made rows leave and come back while a learner typed,
+  and the browser's filter alone finds any part of a word and keeps a row for as
+  long as it matches.
+- The editor holds the memory it opened: opening it stores the memory in the
+  page's state, and the editor never looks it up in the list again, so changing
+  the search or the pages that are loaded never closes it. The learner closing
+  it, the learner deleting that memory (from its row, from the editor, or with
+  Delete all), and a save answered with `missing` are the only things that
+  close it. A new memory whose first save is on its way when the learner
+  deletes everything is among the memories the server deletes, so its editor
+  closes when the server answers the save, and nothing more is written. It is
+  one editor in the panel beside the page and in the sheet, so a window that
+  crosses the width where the two swap loses nothing the learner wrote. After a
+  save that failed the editor opens again with the words the server never took,
+  and the next close writes them, whatever the memory on the page shows.
+- Every change shows at once on every loaded page and rolls back when it fails.
+  A change made before the live list has answered shows when it answers,
+  because the browser has no page of its own to change until then.
 - `read` gives a turn the account profile and the at most 8 memories it starts
   with, for the topics of the open page. `known` gives the capture call the
   account profile and the at most 12 memories that match the message and the

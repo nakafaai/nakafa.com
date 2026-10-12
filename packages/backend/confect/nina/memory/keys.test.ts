@@ -191,8 +191,8 @@ describe("memory keys", () => {
     const third = await f.seed({ confirmedAt: 20, text: "Limit deret" });
     await f.seed({ confirmedAt: 40, text: "Turunan" });
     const key = await f.wordKeyOf("limit");
-    const linked = (limit: number) =>
-      f.execute(readLinked(f.identity.userId, key, limit));
+    const linked = (limit: number, clearedAt?: number) =>
+      f.execute(readLinked(f.identity.userId, key, limit, clearedAt));
     expect(await linked(10)).toEqual([
       { confirmedAt: 30, memoryId: first },
       { confirmedAt: 20, memoryId: third },
@@ -202,6 +202,12 @@ describe("memory keys", () => {
       { confirmedAt: 30, memoryId: first },
       { confirmedAt: 20, memoryId: third },
     ]);
+    // The memories that "Delete all" took, confirmed at or before the moment
+    // the learner asked, are the tail of the key and the range stops before them.
+    expect(await linked(10, 20)).toEqual([
+      { confirmedAt: 30, memoryId: first },
+    ]);
+    expect(await linked(10, 30)).toEqual([]);
   });
 });
 

@@ -3470,20 +3470,6 @@ export declare const api: {
         { id: Id<"ninaMemories"> },
         null
       >;
-      search: FunctionReference<
-        "query",
-        "public",
-        { query: string },
-        Array<{
-          author: "nina" | "learner";
-          confirmedAt: number;
-          createdAt: number;
-          id: Id<"ninaMemories">;
-          text: string;
-          title?: string;
-          validUntil?: number;
-        }>
-      >;
       state: FunctionReference<
         "query",
         "public",

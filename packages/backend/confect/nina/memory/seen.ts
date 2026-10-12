@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { readOwnMemory } from "@repo/backend/confect/nina/memory/store";
+import { readKeptMemory } from "@repo/backend/confect/nina/memory/store";
 import type { NinaMemorySeen } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Effect, Option } from "effect";
 
@@ -9,15 +9,17 @@ type Seen = typeof NinaMemorySeen.Type;
  * Whether a memory that the capture call read is gone now. The learner removed
  * or cleared it while the model read the message, or it ended and was deleted,
  * so what the call knows is out of date and writing from it could bring back
- * what the learner deleted. The call reads at most 12 memories, and each is
- * looked up by its id.
+ * what the learner deleted. A memory that "Delete all" took (confirmed at or
+ * before `clearedAt`) is gone too, though the batches that delete it may still
+ * run. The call reads at most 12 memories, and each is looked up by its id.
  */
 export const lostSeen = Effect.fn("nina.memory.seen.lost")(function* (
   userId: Docs["users"]["_id"],
-  seen: readonly Seen[]
+  seen: readonly Seen[],
+  clearedAt: number | undefined
 ) {
   const found = yield* Effect.forEach(seen, ({ id }) =>
-    readOwnMemory(userId, id)
+    readKeptMemory(userId, id, clearedAt)
   );
   return Arr.some(found, (memory) => memory === null);
 });
@@ -25,16 +27,18 @@ export const lostSeen = Effect.fn("nina.memory.seen.lost")(function* (
 /**
  * The memory that a candidate names, as it stands now, when the call read a
  * memory under that id. The model may name any text, so an id that the call did
- * not read names nothing, and nothing is looked up for it.
+ * not read names nothing, and nothing is looked up for it. A memory that
+ * "Delete all" took names nothing either.
  */
 export const readNamed = Effect.fn("nina.memory.seen.named")(function* (
   userId: Docs["users"]["_id"],
   seen: readonly Seen[],
-  known: string | undefined
+  known: string | undefined,
+  clearedAt: number | undefined
 ) {
   const note = Arr.findFirst(seen, ({ id }) => id === known);
   return Option.isSome(note)
-    ? Option.fromNullOr(yield* readOwnMemory(userId, note.value.id))
+    ? Option.fromNullOr(yield* readKeptMemory(userId, note.value.id, clearedAt))
     : Option.none();
 });
 

@@ -17,7 +17,10 @@ import {
   lostSeen,
   readNamed,
 } from "@repo/backend/confect/nina/memory/seen";
-import { readPaused } from "@repo/backend/confect/nina/memory/store";
+import {
+  confirmedAfterClear,
+  readMemoryState,
+} from "@repo/backend/confect/nina/memory/store";
 import {
   MEMORY_TOPIC_LIMIT,
   type NinaMemoryCandidate,
@@ -142,17 +145,21 @@ const createMemory = Effect.fn("nina.memory.write.create")(function* ({
  * Writes one candidate against the memories it can say again: the one it names,
  * when the call read it, and the `TARGET_LIMIT` that match its words and the
  * open pages best. Both are read as they stand, so they include what the call
- * wrote before this candidate. It returns the memory it wrote or confirmed, or
- * nothing when it dropped the candidate.
+ * wrote before this candidate, and neither is a memory that "Delete all" took
+ * (confirmed at or before `clearedAt`), which a confirmation would bring back.
+ * It returns the memory it wrote or confirmed, or nothing when it dropped the
+ * candidate.
  */
 const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   candidate,
+  clearedAt,
   keys,
   now,
   seen,
   topics,
 }: {
   readonly candidate: Candidate;
+  readonly clearedAt: number | undefined;
   readonly keys: LearnerKeys;
   readonly now: number;
   readonly seen: readonly Seen[];
@@ -164,9 +171,12 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   }
   const named = yield* openWith(
     keys,
-    Arr.fromOption(yield* readNamed(keys.userId, seen, candidate.known))
+    Arr.fromOption(
+      yield* readNamed(keys.userId, seen, candidate.known, clearedAt)
+    )
   );
   const matches = yield* searchMemories({
+    clearedAt,
     limit: TARGET_LIMIT,
     now,
     text: candidate.text,
@@ -203,11 +213,13 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
  * so naming one that says something else confirms nothing by that name. Any
  * other candidate is a new memory. The model read the message some time ago, so
  * the write first checks what could have changed meanwhile: paused memory, a
- * deleted turn, or a memory the learner removed writes nothing, and a memory
- * changed since the call read it, or one the call never read, keeps its words,
- * its kind and its end date. It looks up the at most 12 memories the call read
- * and searches for the others, so it touches a bounded number of documents
- * whatever the learner keeps: a candidate reads at most 411 to find its target
+ * deleted turn, or a memory the learner removed or deleted with "Delete all"
+ * writes nothing, and a memory changed since the call read it, or one the call
+ * never read, keeps its words, its kind and its end date. It looks up the at
+ * most 12 memories the call read and searches for the others, so it touches a
+ * bounded number of documents whatever the learner keeps (besides the one row
+ * of the learner's memory state it reads first): a candidate reads at most 411
+ * to find its target
  * (the one it names and a search of 410) and touches at most 419 to write it
  * (the memory and at most 416 key rows read, deleted, moved or inserted), so
  * three candidates touch at most about 2,500.
@@ -226,17 +238,19 @@ export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
       Effect.orDie
     );
-  if (!turn || (yield* readPaused(args.userId))) {
+  const { clearedAt, paused } = yield* readMemoryState(args.userId);
+  if (!turn || paused) {
     return 0;
   }
-  if (yield* lostSeen(args.userId, args.seen)) {
+  if (yield* lostSeen(args.userId, args.seen, clearedAt)) {
     return 0;
   }
-  const now = yield* Clock.currentTimeMillis;
+  const now = confirmedAfterClear(yield* Clock.currentTimeMillis, clearedAt);
   const keys = yield* ensureLearnerKeys(args.userId);
   const written = yield* Effect.forEach(args.candidates, (candidate) =>
     writeCandidate({
       candidate,
+      clearedAt,
       keys,
       now,
       seen: args.seen,

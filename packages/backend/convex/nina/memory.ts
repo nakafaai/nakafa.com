@@ -15,5 +15,4 @@ export const list = registeredFunctions.list;
 export const pause = registeredFunctions.pause;
 export const read = registeredFunctions.read;
 export const remove = registeredFunctions.remove;
-export const search = registeredFunctions.search;
 export const state = registeredFunctions.state;

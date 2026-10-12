@@ -1,14 +1,12 @@
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
-import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
-import { UserSettingsMemory } from "@/components/user/settings/memory";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -49,7 +47,6 @@ async function AuthenticatedSettings({
         Effect.all(
           {
             account: client.query(auth.queries.getCurrentUser, {}),
-            memory: client.query(nina.memory.get, {}),
             preference: client.query(learningPreferences.queries.getCurrent, {
               locale,
             }),
@@ -74,7 +71,6 @@ async function AuthenticatedSettings({
         initialPrograms={data.programs}
         locale={locale}
       />
-      <UserSettingsMemory initialMemory={data.memory} />
     </UserSettingsProfilePage>
   );
 }
