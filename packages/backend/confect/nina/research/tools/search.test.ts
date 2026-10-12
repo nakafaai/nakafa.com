@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type {
-  CapabilityArtifact,
-  CapabilityProgress,
-} from "@repo/backend/confect/nina/capability/progress";
+import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { readsPages } from "@repo/backend/test/nina/pages";
+import { createProgress } from "@repo/backend/test/nina/progress";
 import { Array as Arr, Effect, Logger, MutableRef, Option } from "effect";
 
 const firecrawlApp = vi.hoisted(() => ({
@@ -32,8 +30,6 @@ vi.mock("@repo/backend/confect/nina/research/domain", () => ({
     return hostname;
   },
 }));
-
-type WrittenPart = CapabilityArtifact;
 
 /** What the provider is asked for with every query, besides the query itself. */
 const providerOptions = { limit: 5, sources: ["web", "news"], timeout: 10_000 };
@@ -70,20 +66,8 @@ const askedInOwnLanguage = [
   },
 ];
 
-/** Creates a stream publish harness that records web-search data parts for assertions. */
-function createProgress() {
-  const written = MutableRef.make<readonly WrittenPart[]>([]);
-  const publish: CapabilityProgress = Effect.fn("test.publish")((part) =>
-    Effect.sync(() => {
-      MutableRef.update(written, Arr.append(part));
-    })
-  );
-
-  return { parts: () => MutableRef.get(written), publish };
-}
-
 /** Extracts web-search data parts from a recorded test publish stream. */
-function getWebSearchParts(parts: readonly WrittenPart[]) {
+function getWebSearchParts(parts: readonly CapabilityArtifact[]) {
   return Arr.flatMap(parts, (part) => {
     if (part.type !== "data-web-search") {
       return [];
