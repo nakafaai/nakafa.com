@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
-import { mathResultMaxRows } from "@repo/math/schema/result";
+import { MathCasRequestError } from "@repo/math/errors";
 import { MathService } from "@repo/math/service";
 import {
   Array as Arr,
@@ -128,25 +127,35 @@ describe("MathService", () => {
     })
   );
   it.effect(
-    "refuses a CAS result whose list is longer than a page carries",
+    "admits a verified CAS result with more rows than a request holds",
     () =>
       Effect.gen(function* () {
-        const step = {
-          action: "evaluate",
-          items: [],
-          primary: { expression: "2 + 2", latex: "2 + 2" },
-        };
+        // The CAS bounds a result by its size, not by its rows, so a list can run
+        // past the 128 values a request may carry: a factorization with a factor
+        // for each of 129 primes gives 129 items.
+        const rows = Arr.makeBy(129, (index) => index + 2);
         fetcher.mockResolvedValue(
           Response.json({
-            conditions: [],
+            conditions: Arr.map(rows, (row) => ({
+              expression: `x != ${row}`,
+              latex: `x \\neq ${row}`,
+            })),
             input: { expression: "2 + 2", kind: "math", operation: "evaluate" },
-            items: [],
+            items: Arr.map(rows, (row) => ({
+              label: "factor",
+              latex: `${row}`,
+              value: `${row}`,
+            })),
             kind: "evaluate",
             operation: "evaluate",
             primary: { expression: "2 + 2", latex: "2 + 2" },
             reason: "Exact arithmetic was checked.",
             stepStatus: "complete",
-            steps: Arr.replicate(step, mathResultMaxRows + 1),
+            steps: Arr.map(rows, (row) => ({
+              action: "evaluate",
+              items: [],
+              primary: { expression: `${row}`, latex: `${row}` },
+            })),
             status: "verified",
           })
         );
@@ -163,14 +172,13 @@ describe("MathService", () => {
             Effect.provideService(FetchHttpClient.Fetch, fetcher)
           )
         );
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isSuccess(exit)) {
+        expect(Exit.isSuccess(exit)).toBe(true);
+        if (Exit.isFailure(exit)) {
           return;
         }
-        expect(exit.cause.toString()).toContain(MathCasResponseError.name);
-        expect(exit.cause.toString()).toContain(
-          `no more than ${mathResultMaxRows} steps, items or conditions`
-        );
+        expect(exit.value.conditions).toHaveLength(rows.length);
+        expect(exit.value.items).toHaveLength(rows.length);
+        expect(exit.value.steps).toHaveLength(rows.length);
       })
   );
   it.effect("keeps CAS HTTP failures typed", () =>

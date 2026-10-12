@@ -364,6 +364,64 @@ export const domain = replyOf("math-domain", [
   ),
 ]);
 
+/** The eight points the domain below leaves out, and the nine open intervals between them. */
+const EXCLUDED = Arr.makeBy(8, (index) => index + 1);
+const INTERVALS = Arr.makeBy(9, (index) => ({
+  latex: `\\left(${index === 0 ? "-\\infty" : index}, ${index === 8 ? "\\infty" : index + 1}\\right)`,
+  text: `Interval.open(${index === 0 ? "-oo" : index}, ${index === 8 ? "oo" : index + 1})`,
+}));
+const UNION = {
+  expression: `Union(${Arr.join(
+    Arr.map(INTERVALS, ({ text }) => text),
+    ", "
+  )})`,
+  latex: Arr.join(
+    Arr.map(INTERVALS, ({ latex }) => latex),
+    " \\cup "
+  ),
+};
+
+const CONDITIONS_INPUT = {
+  expression: `1/(${Arr.join(
+    Arr.map(EXCLUDED, (point) => `(x-${point})`),
+    "*"
+  )})`,
+  kind: "math",
+  operation: "domain",
+  variable: "x",
+} satisfies MathRequest;
+
+/** A domain with eight conditions, one for each point it leaves out: three more than the five a row shows. */
+export const conditions = replyOf("math-conditions", [
+  done(
+    "math-conditions-1",
+    result({
+      conditions: Arr.map(EXCLUDED, (point) => ({
+        expression: `Ne(x, ${point})`,
+        latex: `x \\neq ${point}`,
+      })),
+      input: CONDITIONS_INPUT,
+      items: [{ label: "domain", latex: UNION.latex, value: UNION.expression }],
+      primary: {
+        expression: `1/(${Arr.join(
+          Arr.map(Arr.reverse(EXCLUDED), (point) => `(x - ${point})`),
+          "*"
+        )})`,
+        latex: `\\frac{1}{${Arr.join(
+          Arr.map(
+            Arr.reverse(EXCLUDED),
+            (point) => `\\left(x - ${point}\\right)`
+          ),
+          " "
+        )}}`,
+      },
+      reason: "The real-valued domain was derived from the expression.",
+      secondary: UNION,
+      status: "verified",
+    })
+  ),
+]);
+
 const CHECK_INPUT = {
   expression: "(x^2-9)/(x-3)",
   kind: "math",

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  conditions,
   domain,
   eigen,
   euclid,
@@ -137,6 +138,23 @@ test.describe("Nina math on a phone", () => {
       await expect(items).toHaveCount(5);
       await page.getByRole("button", { name: "Mehr anzeigen" }).click();
       await expect(items).toHaveCount(20);
+    })
+  );
+
+  test(
+    "shows five conditions first and the other three behind one button",
+    onChat(conditions, { locale: "de" }, async (page) => {
+      const row = rowOf(page.getByText("Bedingung"));
+      const shown = row.locator(".katex");
+
+      await expect(shown).toHaveCount(5);
+      expect(await reachable(row)).toBe(true);
+      await page.getByRole("button", { name: "Mehr anzeigen" }).click();
+      await expect(shown).toHaveCount(8);
+      expect(await reachable(row)).toBe(true);
+      await page.getByRole("button", { name: "Weniger anzeigen" }).click();
+      await expect(shown).toHaveCount(5);
+      expect(await overflow(page)).toBe(0);
     })
   );
 

@@ -188,7 +188,12 @@ function ItemValue({ item }: ItemValueProps) {
   return <span>{item.value}</span>;
 }
 
-/** Renders domain restrictions and other required math conditions. */
+/**
+ * Renders domain restrictions and other required math conditions on one row.
+ * The CAS limits the size of a whole result, not how many conditions it holds,
+ * so the first five show and the rest sit behind the button that steps and
+ * items use.
+ */
 function ConditionList({ conditions }: ConditionListProps) {
   const t = useTranslations("Ai");
 
@@ -198,9 +203,11 @@ function ConditionList({ conditions }: ConditionListProps) {
 
   return (
     <Row label={t("math-condition")}>
-      {Arr.map(conditions, (condition) => (
-        <Expression key={condition.expression} value={condition.latex} />
-      ))}
+      <Rows>
+        {Arr.map(conditions, (condition) => (
+          <Expression key={condition.expression} value={condition.latex} />
+        ))}
+      </Rows>
     </Row>
   );
 }
