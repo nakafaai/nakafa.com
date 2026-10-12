@@ -36,14 +36,15 @@ import {
   mathSeriesInput,
   mathStatisticsInput,
 } from "@repo/backend/confect/nina/math/schema";
-import { prepareMathStep } from "@repo/backend/confect/nina/math/step";
+import {
+  MATH_STEPS,
+  prepareMathStep,
+} from "@repo/backend/confect/nina/math/step";
 import { compute } from "@repo/backend/confect/nina/math/tools/compute";
-import { mathOperations } from "@repo/math/schema/operations";
 import { MathService } from "@repo/math/service";
 import { isStepCount } from "ai";
 import { Effect } from "effect";
 
-const MAX_MATH_STEPS = mathOperations.length;
 /**
  * Runs deterministic math tools through Agent, within the time the capability
  * has left; its usage handler records provider calls. An answer that ended at
@@ -97,7 +98,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
             ),
           instructions: mathPrompt({ locale, context }),
           prepareStep: prepareMathStep,
-          stopWhen: isStepCount(MAX_MATH_STEPS),
+          stopWhen: isStepCount(MATH_STEPS),
           temperature: 0,
           timeout: limit,
           tools: {

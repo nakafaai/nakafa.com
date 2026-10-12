@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { mathPrompt } from "@repo/backend/confect/nina/math/prompt";
+import { MATH_STEPS } from "@repo/backend/confect/nina/math/step";
 import { mathOperations } from "@repo/math/schema/operations";
 
 const base = {
@@ -123,6 +124,28 @@ describe("mathPrompt", () => {
     expect(prompt).toContain('Avoid contextless labels such as "given"');
     expect(prompt).toContain(
       "Do not say the user provided a formula, method, or calculation"
+    );
+  });
+
+  it("asks for the fewest tool calls that answer the request, and for the answer once its values are checked", () => {
+    const prompt = mathPrompt(base);
+    const scope = prompt.slice(
+      prompt.indexOf("Scope:"),
+      prompt.indexOf("Multi-part requests:")
+    );
+
+    expect(scope).toContain("with the fewest tool calls that do it");
+    expect(scope).toContain(
+      "Do not add a second method, an expansion, a rewrite, or another check"
+    );
+    expect(scope).toContain(`You have ${MATH_STEPS} steps in all.`);
+    expect(scope).toContain("The last step cannot call a tool");
+    expect(scope).toContain(
+      "Write the answer as soon as every value the request asks for has a verified result."
+    );
+    // The bridge a derivation needs comes from checked steps, not from a new call.
+    expect(prompt).toContain(
+      "Write that bridge from the checked steps. It never needs another tool call."
     );
   });
 

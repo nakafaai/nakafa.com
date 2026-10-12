@@ -1,6 +1,7 @@
 import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
+import { MATH_STEPS } from "@repo/backend/confect/nina/math/step";
 import { compute } from "@repo/backend/confect/nina/math/tools/compute";
 import { provider } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
@@ -29,6 +30,7 @@ vi.mock("@repo/backend/confect/nina/math/tools/compute", () => ({
 }));
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.mocked(compute).mockReset();
   provider.languageModel.mockReset();
 });
 
@@ -228,6 +230,110 @@ describe("math Agent execution", () => {
       );
     }
   );
+
+  it("answers a derivative and its value in three model calls: the derivative, its value, and the answer", async () => {
+    const derivative: typeof MathCalculusInputSchema.Type = {
+      operation: "differentiate",
+      expression: "x^3 * sin(x)",
+    };
+    const value: typeof MathArithmeticInputSchema.Type = {
+      operation: "evaluate",
+      expression: "3 * (pi / 2)^2 * sin(pi / 2)",
+    };
+    const model = new MockLanguageModelV4({
+      doGenerate: [
+        providerStep(
+          [
+            {
+              type: "tool-call",
+              toolCallId: "derivative",
+              toolName: "calculus",
+              input: Schema.encodeSync(
+                Schema.fromJsonString(MathCalculusInputSchema)
+              )(derivative),
+            },
+          ],
+          "tool-calls"
+        ),
+        providerStep(
+          [
+            {
+              type: "tool-call",
+              toolCallId: "value",
+              toolName: "arithmetic",
+              input: Schema.encodeSync(
+                Schema.fromJsonString(MathArithmeticInputSchema)
+              )(value),
+            },
+          ],
+          "tool-calls"
+        ),
+        providerStep([{ type: "text", text: "The value is 3 pi^2 / 4." }]),
+      ],
+    });
+    provider.languageModel.mockReturnValue(model);
+    vi.mocked(compute)
+      .mockReturnValueOnce(Effect.succeed("The derivative is checked."))
+      .mockReturnValueOnce(Effect.succeed("The value is checked."));
+    const result = await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        task: "What is the derivative of x^3 sin x, and what is its value at x = pi / 2?",
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, casConfig))
+    );
+    expect(result).toEqual({ text: "The value is 3 pi^2 / 4." });
+    expect(model.doGenerateCalls).toHaveLength(3);
+    expect(model.doGenerateCalls[0]?.toolChoice).toEqual({ type: "required" });
+    expect(
+      Arr.map(vi.mocked(compute).mock.calls, ([call]) => call.input)
+    ).toEqual([derivative, value]);
+  });
+
+  it("ends a run that keeps checking with its answer, since the last step may call no tool", async () => {
+    const expansion: typeof MathSeriesInputSchema.Type = {
+      operation: "series",
+      expression: "x^3 * sin(x)",
+    };
+    const checking = providerStep(
+      [
+        {
+          type: "tool-call",
+          toolCallId: "expansion",
+          toolName: "series",
+          input: Schema.encodeSync(
+            Schema.fromJsonString(MathSeriesInputSchema)
+          )(expansion),
+        },
+      ],
+      "tool-calls"
+    );
+    const model = new MockLanguageModelV4({
+      doGenerate: [
+        ...Arr.makeBy(MATH_STEPS - 1, () => checking),
+        providerStep([{ type: "text", text: "The checked answer." }]),
+      ],
+    });
+    provider.languageModel.mockReturnValue(model);
+    vi.mocked(compute).mockReturnValue(Effect.succeed("The expansion."));
+    const result = await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, casConfig))
+    );
+    expect(result).toEqual({ text: "The checked answer." });
+    expect(model.doGenerateCalls).toHaveLength(MATH_STEPS);
+    expect(compute).toHaveBeenCalledTimes(MATH_STEPS - 1);
+    // Only the last call is told to write, and it is the only one.
+    expect(
+      Arr.map(model.doGenerateCalls, (call) => call.toolChoice?.type === "none")
+    ).toEqual(Arr.makeBy(MATH_STEPS, (step) => step === MATH_STEPS - 1));
+  });
 
   it("hands Nina a cut answer as partial, and says it was cut short, when its last step ended at the output cap", async () => {
     vi.mocked(compute).mockReturnValue(Effect.succeed("2x"));

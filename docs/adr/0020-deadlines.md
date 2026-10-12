@@ -117,6 +117,13 @@ of its own, and every model call has a cap on its output.
 - No capability repeats a model call after the SDK rejects its answer. The
   math repair call sends the validation error back, so it is not the same
   prompt.
+- A math run makes at most as many model calls as the specialist's step
+  deadline fits in its total deadline (`MATH_STEPS`, four). Its last call may
+  call no tool, so the run ends with its answer, and its prompt tells the model
+  the number and asks for the fewest tool calls that check what the request
+  asks. Before, the cap was the number of math operations (54). On 11 October a
+  request for a derivative and its value was seen to run five steps on
+  production, one of them an expansion that nobody had asked for.
 
 ## Consequences
 
