@@ -179,6 +179,23 @@
   color-scheme: dark;
 }
 
+/* Motion tokens. Interface motion enters and leaves on ease-out, a thing that
+ * moves from one place to another on ease-in-out, and nothing uses ease-in.
+ * press answers a press, ui covers menus, popovers, tooltips and colour
+ * changes, and surface covers dialogs, sheets and the sidebar, so every
+ * interface transition stays under 300ms. The drawer alone keeps the curve and
+ * the time of its swipe, which belong to the gesture. A transition that names
+ * no curve or duration takes ease-out and ui. */
+@theme {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --transition-duration-press: 120ms;
+  --transition-duration-ui: 180ms;
+  --transition-duration-surface: 240ms;
+  --default-transition-duration: var(--transition-duration-ui);
+  --default-transition-timing-function: var(--ease-out);
+}
+
 @theme inline {
   --text-chat: 15px;
   --text-chat--line-height: 1.625;
@@ -236,8 +253,10 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
-  --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-accordion-down: accordion-down var(--transition-duration-ui)
+    var(--ease-out);
+  --animate-accordion-up: accordion-up var(--transition-duration-ui)
+    var(--ease-out);
   --animate-marquee: marquee 60s linear infinite;
 
   @keyframes marquee {
@@ -289,6 +308,64 @@
   mark {
     @apply bg-transparent text-primary;
   }
+}
+
+/* A control that can be pressed answers the press by shrinking to 0.96 for
+ * press, and its transition names scale. Reduced motion keeps the colour and
+ * shadow answers and drops the scale. Three things stay still. A disabled
+ * control, however it says so. A control that opens a popup: the popup
+ * measures the control when it opens and never measures it again, so a popup
+ * that opens on a tap or on Space while the control is still shrunk lands
+ * narrower and off its trigger. And a label that borrows the look of a
+ * button, such as an answer choice: the control it labels answers the press.
+ * The :not() also lifts the press above any scale a state sets, such as a
+ * hover that grows the control. */
+@utility pressable {
+  @media (prefers-reduced-motion: no-preference) {
+    &:active:not(
+        :disabled,
+        [aria-disabled="true"],
+        [data-disabled],
+        [aria-haspopup],
+        label
+      ) {
+      scale: 0.96;
+      transition-duration: var(--transition-duration-press);
+    }
+  }
+}
+
+/* Nina's answers step their headings down so the order of her thinking shows:
+ * 22px for level one, 19px for level two, 17px for level three, and the size
+ * of the answer from level four. A heading element sets its own leading,
+ * tracking and weight, which a theme token's companions would yield to, so
+ * each level states all four. */
+@utility text-chat-h1 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 30px;
+  letter-spacing: -0.015em;
+}
+
+@utility text-chat-h2 {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: -0.01em;
+}
+
+@utility text-chat-h3 {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 26px;
+  letter-spacing: normal;
+}
+
+@utility text-chat-h4 {
+  font-size: --theme(--text-chat inline);
+  font-weight: 600;
+  line-height: --theme(--text-chat--line-height inline);
+  letter-spacing: normal;
 }
 
 @utility scrollbar-hide {
