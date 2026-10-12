@@ -1,8 +1,14 @@
 import { Schema } from "effect";
 
+/** The capability that reads the links to Nakafa's own site. */
+export const NAKAFA_CAPABILITY = "nakafa";
+
+/** The capability that reads the links to outside sites. */
+export const RESEARCH_CAPABILITY = "deepResearch";
+
 const LEARNING_CAPABILITY_NAME_VALUES = [
-  "nakafa",
-  "deepResearch",
+  NAKAFA_CAPABILITY,
+  RESEARCH_CAPABILITY,
   "math",
   "memory",
 ] as const;
@@ -10,7 +16,8 @@ const LEARNING_CAPABILITY_NAME_VALUES = [
  * Schema-owned names for Nina's internal education capabilities. The browser
  * reads this list to name an activity, so the module holds no runner. The
  * registry (`registry.ts`) lists the capability behind each name, and the
- * compiler rejects a name without one.
+ * compiler rejects a name without one. A name has a constant only where another
+ * module reads it on its own, so each name is written once.
  */
 export const LearningCapabilityNameSchema = Schema.Literals(
   LEARNING_CAPABILITY_NAME_VALUES
