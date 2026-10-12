@@ -3,13 +3,15 @@ import { NinaTurnTiming } from "@repo/backend/confect/nina/contract/turn";
 import { Schema, Struct } from "effect";
 
 /**
- * The most turns one report reads. A run at the maximum read 500 documents, of
- * the 32,000 that one query may scan, and 728,000 bytes, about 4 percent of the
- * 16 MiB it may read (https://docs.convex.dev/production/state/limits).
- * `waits.impl.test.ts` measured it with the transaction's own metrics: one
- * database query over turns of 1,456 bytes each, every turn settled by the
- * lifecycle with its page context, three usage rows and four waits. Turns on
- * production were not measured and may weigh more.
+ * The most turns one report reads. A run at the maximum reads 500 documents, of
+ * the 32,000 that one query may scan. On the turns that `waits.impl.test.ts`
+ * builds it read 728,000 bytes, about 4 percent of the 16 MiB it may read
+ * (https://docs.convex.dev/production/state/limits): the transaction's own
+ * metrics for one database query over copies of one turn of 1,456 bytes, settled
+ * by the lifecycle with its page context, three usage rows and four waits. The
+ * test pins the 500 documents and that the bytes stay under a tenth of the 16
+ * MiB. It does not pin the 728,000, which moves with the text of its fixture.
+ * Turns on production were not measured and may weigh more.
  */
 export const NINA_WAITS_MAX = 500;
 
@@ -58,9 +60,11 @@ const NinaWaitsSummary = Schema.Struct({
 
 /**
  * Reports how long learners waited at each stage of their newest turns. Run it
- * with `convex run nina/waits:summary '{"count": 500}'`. It reads the newest
- * `count` turns in one indexed read, so a run is bounded by `NINA_WAITS_MAX`,
- * and it returns counts and milliseconds only: no learner, chat, turn or text.
+ * with `convex run nina/waits:summary '{"count": 500}'` on the development
+ * deployment, and add `--prod` after the arguments to run it on production. It
+ * reads the newest `count` turns in one indexed read, so a run is bounded by
+ * `NINA_WAITS_MAX`, and it returns counts and milliseconds only: no learner,
+ * chat, turn or text.
  */
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalQuery({

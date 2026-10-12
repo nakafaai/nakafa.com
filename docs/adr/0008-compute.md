@@ -88,7 +88,8 @@ schedules its own run in one transaction.
 `convex run nina/waits:summary '{"count": 500}'` reports the smallest, median,
 90th percentile (nearest rank) and largest of each stage over the newest turns,
 as counts and milliseconds only, and one run is bounded: it reads at most 500
-turns in one indexed read.
+turns in one indexed read. It runs on the development deployment, and `--prod`
+after the arguments runs it on production.
 
 Deleting a chat settles its open turn in the deleting transaction, whether or
 not the learner stopped it, and no new turn can start on a chat that is gone.

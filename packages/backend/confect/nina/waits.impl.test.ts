@@ -304,6 +304,36 @@ describe("report of the waits of the newest turns", () => {
     ]);
   });
 
+  it("counts a wait of zero milliseconds as a wait, not as a missing one", async () => {
+    // A run that starts in the millisecond of the admission waited zero, and so
+    // did a stage that a run reached while its own clock was behind the
+    // database's: a wait is never below zero. A zero is a wait that someone had.
+    const fixture = await createNinaTest({ now: NOW });
+    const first = firstTurn(fixture);
+    await claimAt(fixture, first, 0);
+    await answer(fixture, first);
+    await exitAt(fixture, first, 0, { timing: { readyMs: 0 } });
+    const second = await queueAt(fixture, 10_000, "second");
+    await claimAt(fixture, second, 12_000);
+    await exitAt(fixture, second, 15_000, {
+      failure: "provider-unavailable",
+      timing: { readyMs: 2500 },
+    });
+    expect(await claimed(fixture, first)).toBe(0);
+    const wait = await claimed(fixture, second);
+
+    const result = await report(fixture, 2);
+
+    // With two values the median is the lower one, so the zero is the minimum
+    // and the median of both waits.
+    expect(result.waits).toStrictEqual([
+      { stage: "claimedMs", turns: 2, min: 0, median: 0, p90: wait, max: wait },
+      { stage: "readyMs", turns: 2, min: 0, median: 0, p90: 2500, max: 2500 },
+      { stage: "progressMs", turns: 0 },
+      { stage: "tokenMs", turns: 0 },
+    ]);
+  });
+
   it("returns counts of zero and no spread when there is no turn", async () => {
     const t = createConvexTestWithBetterAuth();
 
@@ -364,6 +394,16 @@ describe("report of the waits of the newest turns", () => {
       timing: { progressMs: 3000, readyMs: 1500, tokenMs: 3200 },
     });
     const { _id, _creationTime, ...turn } = await stored(fixture, first);
+    // The copies hold what makes a turn heavy, so the bytes below mean something:
+    // its page context, the usage of the models it called, and all four waits.
+    expect(turn.page).toBeDefined();
+    expect(turn.usage).toHaveLength(3);
+    expect(turn.timing).toStrictEqual({
+      claimedMs: expect.any(Number),
+      progressMs: 3000,
+      readyMs: 1500,
+      tokenMs: 3200,
+    });
     await fixture.t.mutation(async (ctx) => {
       for (let copy = 0; copy <= NINA_WAITS_MAX; copy += 1) {
         await ctx.db.insert("ninaTurns", turn);
@@ -378,8 +418,10 @@ describe("report of the waits of the newest turns", () => {
     expect(run.result.read).toBe(NINA_WAITS_MAX);
     expect(run.metrics.documentsRead.used).toBe(NINA_WAITS_MAX);
     expect(run.metrics.databaseQueries.used).toBe(1);
-    // What the run read is under a tenth of what the transaction may read.
+    // The bytes are not pinned, because they move with the text of the fixture.
+    // What is pinned is the margin: the run stays under a tenth of what the
+    // transaction may read.
     const { remaining, used } = run.metrics.bytesRead;
-    expect(used * 10).toBeLessThan(used + remaining);
+    expect(used).toBeLessThan((used + remaining) / 10);
   });
 });
