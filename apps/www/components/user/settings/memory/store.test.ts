@@ -276,7 +276,22 @@ describe("memory page store", () => {
     });
   });
 
-  it("gives nothing back on a memory the learner deleted since the failed save, and still gives back a new memory", () => {
+  it("gives nothing back on a memory deleted before another deletion replaced its note", () => {
+    const store = createMemoryStore();
+
+    store.getState().openEdit(first);
+    store.getState().close();
+    store.getState().forget(first.id);
+    store.getState().forget(second.id);
+    store.getState().reopen(1, grade, first);
+    expect(store.getState()).toMatchObject({
+      deleted: second.id,
+      draft: null,
+      open: false,
+    });
+  });
+
+  it("gives nothing back on a memory the learner deleted since the failed save, and still gives back a new memory written after the deletion", () => {
     const store = createMemoryStore();
 
     store.getState().openEdit(first);
@@ -286,10 +301,12 @@ describe("memory page store", () => {
     expect(store.getState()).toMatchObject({
       draft: null,
       open: false,
-      session: 1,
+      session: 2,
     });
 
-    store.getState().reopen(1, plan, null);
+    // An Undo pressed after the deletion writes a new memory in the opening
+    // that the deletion left.
+    store.getState().reopen(2, plan, null);
     expect(store.getState()).toMatchObject({
       draft: plan,
       open: true,

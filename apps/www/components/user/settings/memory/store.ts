@@ -101,11 +101,18 @@ interface MemoryActions {
 
 export type MemoryStore = MemoryState & MemoryActions;
 
-/** What changes when the learner deletes the memory `id`: the editor on it closes. */
+/**
+ * What changes when the learner deletes the memory `id`. The editor on it
+ * closes and its opening ends, so a save of that opening that fails later gives
+ * no words back, also when the learner has deleted another memory since and
+ * `deleted` names that one.
+ */
 function forgetting(state: MemoryState, id: Memory["id"]) {
   return {
     deleted: id,
-    ...(state.target?.id === id ? { draft: null, open: false } : {}),
+    ...(state.target?.id === id
+      ? { draft: null, open: false, session: state.session + 1 }
+      : {}),
   };
 }
 
