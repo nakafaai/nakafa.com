@@ -1,21 +1,11 @@
-import {
-  Array as Arr,
-  MutableHashSet,
-  Option,
-  Order,
-  pipe,
-  Schema,
-} from "effect";
+import { Array as Arr, HashSet, Option, Order, pipe, Schema } from "effect";
 
 const DEFAULT_MAX_LENGTH = 2000;
-const MIN_KEYWORD_LENGTH = 3;
 const KEYWORD_BONUS_POINTS = 0.5;
 const PARAGRAPH_LENGTH_DIVISOR = 100;
 const TARGET_LENGTH_BUFFER = 0.9;
 
 const PARAGRAPH_SPLIT_REGEX = /\n\s*\n/;
-const SEARCH_TOKEN_REGEX = /[\p{L}\p{N}][\p{L}\p{N}_-]*/gu;
-const REGEX_SPECIAL_CHARS = /[.*+?^${}()|[\]\\]/g;
 
 const TRUNCATION_THRESHOLDS = {
   sentence: 0.7,
@@ -44,53 +34,55 @@ type SelectRelevantContentParams =
   typeof SelectRelevantContentParamsSchema.Type;
 
 /**
- * Extracts searchable terms without assuming the user's language.
+ * Splits a text into its lowercased words the way the platform does, with no
+ * minimum length and no list of words to skip. The platform finds the word
+ * breaks of every script, also of those written without spaces.
  */
-function extractKeywords(query: string): string[] {
-  const seen = MutableHashSet.empty<string>();
-
-  return Arr.flatMap(
-    [...query.toLocaleLowerCase().matchAll(SEARCH_TOKEN_REGEX)],
-    ([word]) => {
-      if (word.length < MIN_KEYWORD_LENGTH || MutableHashSet.has(seen, word)) {
-        return [];
-      }
-
-      MutableHashSet.add(seen, word);
-      return [word];
-    }
+function readWords(segmenter: Intl.Segmenter, text: string) {
+  return Arr.flatMap(Arr.fromIterable(segmenter.segment(text)), (part) =>
+    part.isWordLike ? [part.segment.toLocaleLowerCase()] : []
   );
 }
 
 /**
- * Scores one paragraph based on language-agnostic term matches.
+ * Scores one paragraph by the task words it holds: every occurrence counts,
+ * and every different task word it holds earns a bonus. The score is taken per
+ * hundred characters, so a long paragraph does not win by its length alone.
  */
 function calculateRelevanceScore(
   paragraph: string,
-  keywords: string[]
+  keywords: HashSet.HashSet<string>,
+  segmenter: Intl.Segmenter
 ): number {
-  const lowerParagraph = paragraph.toLocaleLowerCase();
-  let score = 0;
+  const matches = Arr.filter(readWords(segmenter, paragraph), (word) =>
+    HashSet.has(keywords, word)
+  );
+  const distinct = HashSet.size(HashSet.fromIterable(matches));
 
-  for (const keyword of keywords) {
-    const keywordRegex = new RegExp(escapeRegex(keyword), "gu");
-    const matches = (lowerParagraph.match(keywordRegex) || []).length;
-    score += matches;
-
-    if (lowerParagraph.includes(keyword)) {
-      score += KEYWORD_BONUS_POINTS;
-    }
-  }
-
-  // Normalize by paragraph length to avoid bias towards longer paragraphs
-  return score / Math.max(paragraph.length / PARAGRAPH_LENGTH_DIVISOR, 1);
+  return (
+    (matches.length + distinct * KEYWORD_BONUS_POINTS) /
+    Math.max(paragraph.length / PARAGRAPH_LENGTH_DIVISOR, 1)
+  );
 }
 
 /**
- * Escapes a search term before using it in a regular expression.
+ * Finds where the last whole sentence of a cut text ends, by the platform's own
+ * sentence rules, so it holds for the full stop of every script. The last part
+ * is the sentence the cut may have broken, so it never counts. Returns 0 when
+ * the text holds no whole sentence.
  */
-function escapeRegex(value: string) {
-  return value.replace(REGEX_SPECIAL_CHARS, "\\$&");
+function findSentenceEnd(text: string) {
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "sentence" });
+  const ends = Arr.flatMap(
+    Arr.dropRight(Arr.fromIterable(segmenter.segment(text)), 1),
+    ({ index, segment }) => {
+      const sentence = segment.trimEnd();
+
+      return sentence ? [index + sentence.length] : [];
+    }
+  );
+
+  return Option.getOrElse(Arr.last(ends), () => 0);
 }
 
 /**
@@ -102,13 +94,13 @@ function truncateAtBoundary(text: string, maxLength: number): string {
   }
 
   const truncated = text.slice(0, maxLength);
+  const sentenceEnd = findSentenceEnd(truncated);
+
+  if (sentenceEnd > maxLength * TRUNCATION_THRESHOLDS.sentence) {
+    return truncated.slice(0, sentenceEnd);
+  }
 
   const boundaries = [
-    {
-      type: "sentence",
-      pattern: ". ",
-      threshold: TRUNCATION_THRESHOLDS.sentence,
-    },
     {
       type: "paragraph",
       pattern: "\n\n",
@@ -125,9 +117,8 @@ function truncateAtBoundary(text: string, maxLength: number): string {
   for (const boundary of boundaries) {
     const lastIndex = truncated.lastIndexOf(boundary.pattern);
     if (lastIndex > maxLength * boundary.threshold) {
-      const cutPoint = boundary.type === "sentence" ? lastIndex + 1 : lastIndex;
       return (
-        truncated.slice(0, cutPoint) + (boundary.type === "word" ? "..." : "")
+        truncated.slice(0, lastIndex) + (boundary.type === "word" ? "..." : "")
       );
     }
   }
@@ -162,8 +153,9 @@ export function selectRelevantContent(
     return truncateAtBoundary(content, maxLength);
   }
 
-  const keywords = extractKeywords(query);
-  if (keywords.length === 0) {
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "word" });
+  const keywords = HashSet.fromIterable(readWords(segmenter, query));
+  if (HashSet.size(keywords) === 0) {
     return truncateAtBoundary(content, maxLength);
   }
 
@@ -181,7 +173,7 @@ export function selectRelevantContent(
     paragraphs,
     (text, index) => ({
       text,
-      score: calculateRelevanceScore(text, keywords),
+      score: calculateRelevanceScore(text, keywords, segmenter),
       index,
       length: text.length,
     })

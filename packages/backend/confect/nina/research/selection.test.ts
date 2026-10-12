@@ -1,5 +1,69 @@
 import { describe, expect, it } from "@effect/vitest";
 import { selectRelevantContent } from "@repo/backend/confect/nina/research/selection";
+import { Array as Arr } from "effect";
+
+/**
+ * One page per language, with the task a learner writes about it as a single
+ * sentence. Only the middle paragraph is about the task; the others share a
+ * few common words with it at most. Japanese and Thai are written without
+ * spaces, so only the platform can tell where their words end. `maxLength` is
+ * shorter than the page and longer than the relevant paragraph.
+ */
+const pages = [
+  {
+    language: "Japanese",
+    task: "微分方程式の安定性とリャプノフ関数について知りたい",
+    before: [
+      "この記事では、学校の理科と数学で使う基本的な考え方を短く紹介します。",
+      "料理では、材料を切る順番と火を通す時間が大切です。",
+    ],
+    relevant:
+      "微分方程式の安定性は、解が小さな乱れのあとで元の状態に戻るかどうかで決まります。リャプノフ関数を使うと、解を求めずに安定性を確かめられます。",
+    after: [
+      "歴史の授業では、年表を使って出来事の順番を整理します。",
+      "図書館では、本を借りる前に貸出期間を確認してください。",
+      "最後に、これまでの内容を復習する問題を解いてみましょう。",
+    ],
+    maxLength: 150,
+  },
+  {
+    language: "Thai",
+    task: "วิธีเลี้ยงปลาทองให้อยู่ได้นาน",
+    before: [
+      "บทความนี้รวบรวมเรื่องน่ารู้เกี่ยวกับสัตว์เลี้ยงในบ้านสำหรับผู้เริ่มต้น",
+      "การเดินทางไปเชียงใหม่ด้วยรถไฟใช้เวลานานมาก แต่ผู้โดยสารได้ชมวิวสวยงามอยู่นานตลอดทาง",
+    ],
+    relevant:
+      "ปลาทองเป็นปลาที่เลี้ยงง่าย ควรเปลี่ยนน้ำทุกสัปดาห์และให้อาหารพอดี เพื่อให้ปลาอยู่ได้นานหลายปี",
+    after: [
+      "ร้านกาแฟแห่งนี้เปิดมาหลายปีและมีลูกค้าประจำจำนวนมาก",
+      "ก่อนยืมหนังสือจากห้องสมุด ควรตรวจสอบวันกำหนดคืนทุกครั้ง",
+      "สุดท้ายลองทำแบบฝึกหัดทบทวนเนื้อหาที่ผ่านมา",
+    ],
+    maxLength: 150,
+  },
+  {
+    language: "English",
+    task: "How does the stability of a differential equation depend on a Lyapunov function?",
+    before: [
+      "This guide introduces the basic ideas that students meet in school science and mathematics.",
+      "Cooking depends on preparing the ingredients and watching the time that each dish needs.",
+    ],
+    relevant:
+      "The stability of a differential equation depends on whether its solution returns to the original state after a small disturbance. A Lyapunov function checks this stability without solving the equation.",
+    after: [
+      "In history lessons, a timeline helps students put events in order.",
+      "Before borrowing a book from the library, check the due date.",
+      "Finally, try a few review exercises on the topics above.",
+    ],
+    maxLength: 300,
+  },
+];
+
+/** Writes a page the way it reads: a blank line between its paragraphs. */
+function writePage({ after, before, relevant }: (typeof pages)[number]) {
+  return Arr.join([...before, relevant, ...after], "\n\n");
+}
 
 describe("selectRelevantContent", () => {
   it("returns empty content unchanged", () => {
@@ -22,12 +86,12 @@ describe("selectRelevantContent", () => {
     ).toBe("Intro paragraph.\n\nCaptured data includes tool calls.");
   });
 
-  it("falls back to content truncation when a query has no keywords", () => {
+  it("falls back to content truncation when a query holds no word", () => {
     expect(
       selectRelevantContent({
         content: "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.",
         maxLength: 30,
-        query: "is be do",
+        query: "?! ... --",
       })
     ).toBe("First paragraph.\n\nSecond parag...");
   });
@@ -41,25 +105,25 @@ describe("selectRelevantContent", () => {
     ).toBe("Alpha intro.\n\nBeta detail.");
   });
 
-  it("uses paragraph boundaries when sentence boundaries are unavailable", () => {
+  it("uses paragraph boundaries when no sentence ends late enough", () => {
     expect(
       selectRelevantContent({
-        content: "aaaaaaaaaaaaaaaaaaaaaaaaa\n\nbbbbbbbbbbbbbbbbbbbb",
+        content: `${"a".repeat(22)}\n\n${"b".repeat(20)}`,
         maxLength: 35,
       })
-    ).toBe("aaaaaaaaaaaaaaaaaaaaaaaaa");
+    ).toBe("a".repeat(22));
   });
 
   it("uses sentence boundaries before paragraph boundaries", () => {
     expect(
       selectRelevantContent({
-        content: "aaaaaaaaaaaaaaaaaaaaaaaaa. bbbbbbbbbbbbbbbbbbbbb",
+        content: "aaaaaaaaaaaaaaaaaaaaaaaaa. Bbbbbbbbbbbbbbbbbbbbb",
         maxLength: 35,
       })
     ).toBe("aaaaaaaaaaaaaaaaaaaaaaaaa.");
   });
 
-  it("uses newline boundaries when paragraph boundaries are unavailable", () => {
+  it("ends at a line break, which the platform counts as the end of a sentence", () => {
     expect(
       selectRelevantContent({
         content: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbbb",
@@ -67,6 +131,30 @@ describe("selectRelevantContent", () => {
       })
     ).toBe("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
   });
+
+  it.each([
+    {
+      language: "English",
+      content:
+        "What is a differential equation? It links a function to its rate of change. Why does stability matter! It tells whether a small push dies out or grows.",
+      maxLength: 110,
+      expected:
+        "What is a differential equation? It links a function to its rate of change. Why does stability matter!",
+    },
+    {
+      language: "Japanese",
+      content:
+        "微分方程式は変化を表す式です。解が安定とは小さな乱れが消えることです。リャプノフ関数で安定性を確かめます。次に数値の例を見ていきます。",
+      maxLength: 60,
+      expected:
+        "微分方程式は変化を表す式です。解が安定とは小さな乱れが消えることです。リャプノフ関数で安定性を確かめます。",
+    },
+  ])(
+    "ends a cut at the end of a sentence ($language)",
+    ({ content, expected, maxLength }) => {
+      expect(selectRelevantContent({ content, maxLength })).toBe(expected);
+    }
+  );
 
   it("uses word boundaries before hard truncation", () => {
     expect(
@@ -109,6 +197,88 @@ describe("selectRelevantContent", () => {
     expect(selected).toBe(
       "導入です。\n\n微分方程式の安定性をリャプノフ関数で確認します。\n\n結論です。"
     );
+  });
+
+  it.each(pages)(
+    "keeps the paragraph that holds the task's words in a $language page",
+    (page) => {
+      const content = writePage(page);
+      const { maxLength, relevant, task } = page;
+
+      expect(
+        selectRelevantContent({
+          content,
+          maxLength,
+          maxRelevantParagraphs: 1,
+          preserveStructure: false,
+          query: task,
+        })
+      ).toBe(relevant);
+      expect(
+        selectRelevantContent({
+          content,
+          maxLength,
+          preserveStructure: false,
+          query: task,
+        }).startsWith(relevant)
+      ).toBe(true);
+    }
+  );
+
+  it("counts a word of any length, so a one-character word finds its paragraph", () => {
+    const content = Arr.join(
+      [
+        "この記事では、身近な動物について短く紹介します。",
+        "犬は人と一緒に歩くのが好きな動物です。",
+        "猫は小さな動物で、一日の多くを眠って過ごします。",
+        "鳥は空を飛び、季節によって住む場所を変えます。",
+      ],
+      "\n\n"
+    );
+
+    expect(
+      selectRelevantContent({
+        content,
+        maxLength: 80,
+        preserveStructure: false,
+        query: "猫",
+      })
+    ).toBe("猫は小さな動物で、一日の多くを眠って過ごします。");
+  });
+
+  it("matches whole words, so a word inside a longer word finds nothing", () => {
+    const content = Arr.join(
+      [
+        "Category theory studies the structure of mathematics.",
+        "The cat sleeps on the sofa all afternoon.",
+        "Dogs enjoy a long walk in the park every morning.",
+      ],
+      "\n\n"
+    );
+
+    expect(
+      selectRelevantContent({
+        content,
+        maxLength: 120,
+        preserveStructure: false,
+        query: "cat",
+      })
+    ).toBe("The cat sleeps on the sofa all afternoon.");
+  });
+
+  it("creates one word segmenter for a page, however many paragraphs it holds", () => {
+    const segmenter = vi.spyOn(Intl, "Segmenter");
+    const page = pages[0];
+
+    selectRelevantContent({
+      content: writePage(page),
+      maxLength: page.maxLength,
+      preserveStructure: false,
+      query: page.task,
+    });
+
+    expect(segmenter).toHaveBeenCalledTimes(1);
+    segmenter.mockRestore();
   });
 
   it("keeps introduction, relevant middle content, and conclusion when selecting from long structured content", () => {

@@ -122,7 +122,9 @@ The research model writes the search queries and reads the results, so code
 only trims, deduplicates, and bounds the queries and never filters a result by
 its words. No letter case, word shape, or word length decides what a learner
 meant, because a rule built on one treats a task in Japanese, Arabic, or Thai
-differently from the same task in English.
+differently from the same task in English. A page longer than its budget keeps
+the paragraphs that share the most words with the task, and the platform's
+`Intl.Segmenter` finds the words and the sentence ends of every script.
 
 Convex deployments own `FIRECRAWL_API_KEY`, `MATH_CAS_API_KEY`, and
 `NEXT_PUBLIC_CAS_URL`. The CAS key must match the
