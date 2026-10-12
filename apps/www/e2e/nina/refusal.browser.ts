@@ -14,6 +14,8 @@ import { SHEET_POPUP } from "@/e2e/support/selector";
 /** What the pages tell the learner when a prompt could not be confirmed. */
 const UNCONFIRMED =
   "We could not confirm the request. Check your connection and try again.";
+/** The limit of a prompt as the English notice writes it. */
+const LIMIT = `at most ${new Intl.NumberFormat("en").format(NINA_PROMPT_LENGTH)} characters`;
 /** The failures the server names, as the page receives them. */
 const TOO_LONG = {
   _tag: "NinaPromptError",
@@ -51,9 +53,7 @@ test.describe("A prompt over the limit at 390px", () => {
         yield* write(composer, tooLong);
         yield* Effect.promise(async () => {
           await composerOf(composer).press("Enter");
-          await expect(
-            noticeWith(page, "at most 100,000 characters")
-          ).toBeVisible();
+          await expect(noticeWith(page, LIMIT)).toBeVisible();
           // The words stay for the learner to shorten.
           await expect(composerOf(composer)).toHaveValue(tooLong);
         });
@@ -95,9 +95,7 @@ test.describe("A prompt over the limit at 390px", () => {
 
         yield* Effect.promise(async () => {
           await composerOf(composer).press("Enter");
-          await expect(
-            noticeWith(page, "This message is too long")
-          ).toBeVisible();
+          await expect(noticeWith(page, LIMIT)).toBeVisible();
           await expect(noticeWith(page, UNCONFIRMED)).toHaveCount(0);
           await expect(composerOf(composer)).toHaveValue(
             "A question the server finds too long"

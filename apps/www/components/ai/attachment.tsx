@@ -38,18 +38,28 @@ const imageVariants = cva("", {
 });
 
 /**
- * A file name whose start gives way first, so its version and extension stay
- * in view. The end never takes more than the title: where the characters at
- * the end are wider than the title, it shortens with an ellipsis.
+ * The two parts of a file name for a flex row: the start gives way first, so
+ * the version and the extension stay in view. The end never takes more than
+ * the row: where the characters at the end are wider than the row, it shortens
+ * with an ellipsis.
  */
-function NinaFileName({ name }: { name: string }) {
+function FileNameParts({ name }: { name: string }) {
   const { head, tail } = splitFileName(name);
   return (
-    <AttachmentTitle className="flex" dir="auto">
+    <>
       <span className="truncate">{head}</span>
       <span className="max-w-full shrink-0 overflow-hidden text-ellipsis whitespace-pre">
         {tail}
       </span>
+    </>
+  );
+}
+
+/** The name of a file in its chip. */
+function NinaFileName({ name }: { name: string }) {
+  return (
+    <AttachmentTitle className="flex" dir="auto">
+      <FileNameParts name={name} />
     </AttachmentTitle>
   );
 }
@@ -117,8 +127,9 @@ export function NinaAttachment({
 }
 
 /**
- * The reasons one pick was not attached in full. Each reason has its sentence
- * and the names of the files it dropped, one to a line, and how many more.
+ * The files one pick did not attach, each reason once. The names it dropped
+ * come one to a line with their ends in view, and the reason follows them in
+ * the quiet color of a description, so a file and its reason read together.
  */
 export function RejectedFiles({
   reasons,
@@ -126,25 +137,28 @@ export function RejectedFiles({
   reasons: readonly {
     more: string | null;
     names: readonly string[];
-    sentence: string;
+    reason: string;
   }[];
 }) {
   return (
-    <ul className="flex flex-col gap-2">
-      {Arr.map(reasons, (reason) => (
-        <li key={reason.sentence}>
-          <p>{reason.sentence}</p>
-          <ul className="flex flex-col gap-0.5 font-medium">
-            {Arr.map(Arr.dedupe(reason.names), (name) => (
-              <li className="wrap-anywhere" key={name}>
-                {name}
-              </li>
-            ))}
-            {reason.more ? <li>{reason.more}</li> : null}
-          </ul>
-        </li>
+    <dl className="flex flex-col gap-2">
+      {Arr.map(reasons, (entry) => (
+        <div key={entry.reason}>
+          {Arr.map(entry.names, (name) => (
+            <dt
+              className="flex text-popover-foreground"
+              dir="auto"
+              key={name}
+              title={name}
+            >
+              <FileNameParts name={name} />
+            </dt>
+          ))}
+          {entry.more ? <dt>{entry.more}</dt> : null}
+          <dd>{entry.reason}</dd>
+        </div>
       ))}
-    </ul>
+    </dl>
   );
 }
 

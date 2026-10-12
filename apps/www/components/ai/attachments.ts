@@ -31,39 +31,31 @@ export function exceedsDocumentLimit(
 }
 
 /**
- * The words that say why one pick was not attached in full: a title that
- * counts the files dropped, and for each reason its sentence, the first names
- * it dropped, and how many more. The numbers in the sentences are the limits
- * the code checks.
+ * The words that say why one pick was not attached in full: a title, and for
+ * each reason the first names it dropped, how many more there are, and the
+ * reason in a few words. The title names no count, because the names below it
+ * show which files and how many. The numbers in the reasons are the limits the
+ * code checks.
  */
 export function rejectionNotice(
   rejections: readonly PromptInputFileConstraintError[],
   t: ReturnType<typeof useTranslations<"Ai">>
 ) {
-  const dropped = Arr.reduce(
-    rejections,
-    0,
-    (total, rejection) => total + rejection.files.length
-  );
   return {
     reasons: Arr.map(rejections, (rejection) => {
-      const count = rejection.files.length;
-      const names = Arr.take(rejection.files, NAMES_SHOWN);
-      const more = count - names.length;
+      // Two files of one name are one line of the notice.
+      const files = Arr.dedupe(rejection.files);
+      const names = Arr.take(files, NAMES_SHOWN);
+      const more = files.length - names.length;
       return {
         more:
           more > 0 ? t("attachment-rejections.more", { count: more }) : null,
         names,
-        sentence: Match.value(rejection.code).pipe(
+        reason: Match.value(rejection.code).pipe(
           Match.when("accept", () => t("attachment-rejections.type")),
-          Match.when("empty", () =>
-            t("attachment-rejections.empty", { count })
-          ),
+          Match.when("empty", () => t("attachment-rejections.empty")),
           Match.when("max_file_size", () =>
-            t("attachment-rejections.size", {
-              count,
-              size: NINA_FILE_MEBIBYTES,
-            })
+            t("attachment-rejections.size", { size: NINA_FILE_MEBIBYTES })
           ),
           Match.when("max_files", () =>
             t("attachment-rejections.count", { count: NINA_FILE_COUNT })
@@ -72,7 +64,7 @@ export function rejectionNotice(
         ),
       };
     }),
-    title: t("attachment-rejections.title", { count: dropped }),
+    title: t("attachment-rejections.title"),
   };
 }
 

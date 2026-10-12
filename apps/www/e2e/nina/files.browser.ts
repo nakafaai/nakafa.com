@@ -17,19 +17,29 @@ import {
 } from "@/e2e/support/attachment";
 import { waitForSlide } from "@/e2e/support/layout";
 
-/** The sentence that says which files Nina reads. */
-const TYPES = "Nina reads PNG, JPEG, WebP, GIF, PDF, and text files.";
+/** The title of the notice, which names no count. */
+const TITLE = "Files not attached";
+/** The reason of a file that Nina does not read. */
+const TYPES = "Only PNG, JPEG, WebP, GIF, PDF, and text files";
 
 /** The part of a notice that gives one reason, with the files it dropped. */
-const reasonIn = (notice: Locator, sentence: string) =>
-  notice.getByRole("listitem").filter({ hasText: sentence });
+const reasonIn = (notice: Locator, reason: string) =>
+  notice.locator("dl > div").filter({ hasText: reason });
 
-/** Whether a notice lies inside the page and every name in it fits its line, read in the page. */
+/**
+ * Whether a notice lies inside the page, every name in it fits its line and
+ * keeps its end in view, read in the page.
+ */
 const readNotice = (notice: HTMLElement) => {
   const box = notice.getBoundingClientRect();
-  // The reasons are the items of a list, and each reason lists its names.
-  const names = Array.from(notice.querySelectorAll("ul > li > ul > li"));
+  // The files of every reason are the terms of one list, and each name is a
+  // start that gives way and an end that stays.
+  const names = Array.from(notice.querySelectorAll("dt"));
   return {
+    endsShown: names.every((name) => {
+      const end = name.lastElementChild;
+      return end !== null && end.scrollWidth <= end.clientWidth;
+    }),
     inside: box.left >= 0 && box.right <= innerWidth,
     namesFit: names.every((name) => name.scrollWidth <= name.clientWidth),
     namesShown: names.length,
@@ -57,17 +67,18 @@ for (const width of [320, 1440]) {
           ]);
 
           // The photo is the only file attached. One notice names the other
-          // three, each under the reason it was not attached.
+          // three, each with the reason it was not attached.
           yield* Effect.promise(async () => {
             await expect(chipsIn(composer)).toHaveCount(1);
-            const notice = noticeWith(page, "not attached");
+            const notice = noticeWith(page, TITLE);
             await expect(notice).toHaveCount(1);
-            await expect(notice).toContainText("3 files were not attached.");
+            // The title says nothing of how many files: the names show it.
+            await expect(notice.locator("[data-title]")).toHaveText(TITLE);
             await expect(reasonIn(notice, TYPES)).toContainText("essay.docx");
             await expect(
-              reasonIn(notice, `larger than ${NINA_FILE_MEBIBYTES} MiB`)
+              reasonIn(notice, `Larger than ${NINA_FILE_MEBIBYTES} MiB`)
             ).toContainText("report.pdf");
-            await expect(reasonIn(notice, "is empty")).toContainText(
+            await expect(reasonIn(notice, "Empty file")).toContainText(
               "empty.txt"
             );
             await expect(reasonIn(notice, TYPES)).not.toContainText(
@@ -94,8 +105,8 @@ for (const width of [320, 1440]) {
           yield* Effect.promise(async () => {
             await expect(chipsIn(composer)).toHaveCount(NINA_FILE_COUNT);
             const reason = reasonIn(
-              noticeWith(page, "not attached"),
-              `A message holds at most ${NINA_FILE_COUNT} files.`
+              noticeWith(page, TITLE),
+              `At most ${NINA_FILE_COUNT} files per message`
             );
             await expect(reason).toContainText("last-1.png");
             await expect(reason).toContainText("last-2.png");
@@ -113,7 +124,7 @@ for (const width of [320, 1440]) {
           const composer = yield* openComposer(page);
           const name = `${"a".repeat(NINA_FILENAME_LENGTH - ".docx".length)}.docx`;
           yield* pickFiles(composer, [fileOf(name, WORD_TYPE, 20)]);
-          const notice = noticeWith(page, "not attached");
+          const notice = noticeWith(page, TITLE);
           // The notice slides into place; its place is read once it stopped.
           yield* Effect.promise(() =>
             expect(notice).toHaveAttribute("data-mounted", "true")
@@ -123,6 +134,7 @@ for (const width of [320, 1440]) {
 
           yield* Effect.sync(() => {
             expect(read).toEqual({
+              endsShown: true,
               inside: true,
               namesFit: true,
               namesShown: 1,
@@ -142,12 +154,12 @@ for (const width of [320, 1440]) {
           yield* pickFiles(composer, [fileOf("empty.txt", "text/plain", 0)]);
 
           yield* Effect.promise(async () => {
-            const notice = noticeWith(page, "not attached");
-            await expect(reasonIn(notice, "is empty")).toContainText(
+            const notice = noticeWith(page, TITLE);
+            await expect(reasonIn(notice, "Empty file")).toContainText(
               "empty.txt"
             );
             await expect(chipsIn(composer)).toHaveCount(0);
-            await expect(notice).not.toContainText("larger than");
+            await expect(notice).not.toContainText("Larger than");
           });
         })
       );

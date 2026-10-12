@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { captureException } from "@repo/analytics/posthog/browser";
+import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
 import de from "@repo/internationalization/dictionaries/de.json";
@@ -113,6 +114,10 @@ describe("the sentences of the failure table", () => {
       expect(onError).not.toHaveBeenCalled();
       expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
         String(NINA_DOCUMENT_MEBIBYTES)
+      );
+      // A number reads the way its language writes it: 100,000 or 100.000.
+      expect(t("failures.prompt-length", ninaFailureLimits)).toContain(
+        new Intl.NumberFormat(locale).format(NINA_PROMPT_LENGTH)
       );
     });
   }

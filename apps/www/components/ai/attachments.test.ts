@@ -90,13 +90,12 @@ const rejected = (
 ) => new PromptInputFileConstraintError({ code, files, message: code });
 
 describe("notice of the files that were not attached", () => {
-  // Indonesian has one form for any count, so it words one file and two alike.
-  for (const [locale, messages, pluralForms] of [
-    ["en", en, true],
-    ["de", de, true],
-    ["id", id, false],
+  for (const [locale, messages] of [
+    ["en", en],
+    ["de", de],
+    ["id", id],
   ] as const) {
-    it(`words every reason with the limits the code checks, in ${locale}`, () => {
+    describe(`in ${locale}`, () => {
       const onError = vi.fn();
       const t = createTranslator({
         locale,
@@ -105,36 +104,63 @@ describe("notice of the files that were not attached", () => {
         onError,
       });
 
-      const notice = rejectionNotice(
-        [
-          rejected("accept", ["essay.docx"]),
-          rejected("empty", ["empty.txt"]),
-          rejected("max_file_size", ["report.pdf", "scan.pdf"]),
-          rejected(
-            "max_files",
-            Arr.makeBy(5, (index) => `${index}.png`)
-          ),
-        ],
-        t
-      );
-      const [type, empty, size, count] = notice.reasons;
+      it("gives every reason its own words, with the limits the code checks", () => {
+        const notice = rejectionNotice(
+          [
+            rejected("accept", ["essay.docx"]),
+            rejected("empty", ["empty.txt"]),
+            rejected("max_file_size", ["report.pdf"]),
+            rejected("max_files", ["extra.png"]),
+          ],
+          t
+        );
+        const reasons = Arr.map(notice.reasons, ({ reason }) => reason);
+        const [, , size, count] = reasons;
 
-      // A sentence that misspells a number or needs one nobody passed fails to format.
-      expect(onError).not.toHaveBeenCalled();
-      // One file of each of the first three reasons and two more of the last.
-      expect(notice.title).toContain("9");
-      expect(size?.sentence).toContain(String(NINA_FILE_MEBIBYTES));
-      expect(count?.sentence).toContain(String(NINA_FILE_COUNT));
-      // A notice lists three names for a reason, then counts the rest.
-      expect(count?.names).toEqual(["0.png", "1.png", "2.png"]);
-      expect(count?.more).toContain("2");
-      expect([type?.more, empty?.more, size?.more]).toEqual([null, null, null]);
-      // The sentence follows the count of files it speaks of.
-      const [emptyFiles] = rejectionNotice(
-        [rejected("empty", ["a.txt", "b.txt"])],
-        t
-      ).reasons;
-      expect(emptyFiles?.sentence === empty?.sentence).toBe(!pluralForms);
+        // A reason that misspells a number or needs one nobody passed fails to format.
+        expect(onError).not.toHaveBeenCalled();
+        expect(Arr.dedupe(reasons)).toHaveLength(4);
+        expect(size).toContain(String(NINA_FILE_MEBIBYTES));
+        expect(count).toContain(String(NINA_FILE_COUNT));
+      });
+
+      it("says the same title for one file as for many", () => {
+        const one = rejectionNotice([rejected("empty", ["a.txt"])], t);
+        const many = rejectionNotice(
+          [
+            rejected("accept", ["a.docx", "b.docx"]),
+            rejected("max_file_size", ["c.pdf"]),
+          ],
+          t
+        );
+
+        expect(one.title).toBe(many.title);
+      });
+
+      it("lists three names for a reason, then counts the rest", () => {
+        const [reason] = rejectionNotice(
+          [
+            rejected(
+              "max_files",
+              Arr.makeBy(5, (index) => `${index}.png`)
+            ),
+          ],
+          t
+        ).reasons;
+
+        expect(reason?.names).toEqual(["0.png", "1.png", "2.png"]);
+        expect(reason?.more).toContain("2");
+      });
+
+      it("lists two files of one name once", () => {
+        const [reason] = rejectionNotice(
+          [rejected("empty", ["a.txt", "a.txt", "b.txt"])],
+          t
+        ).reasons;
+
+        expect(reason?.names).toEqual(["a.txt", "b.txt"]);
+        expect(reason?.more).toBeNull();
+      });
     });
   }
 });
