@@ -13,6 +13,7 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
+import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import {
   assembleContext,
   splitTurns,
@@ -40,7 +41,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
     const gateway = yield* Gateway;
     const suggestion = gateway.language("suggestion");
     const suggestions = new Agent(components.nina, {
-      name: "suggestions",
+      name: "suggestions" satisfies UsageAgent,
       languageModel: suggestion.model,
       usageHandler,
       instructions: nakafaSuggestions({ locale: turn.page.locale }),
@@ -104,7 +105,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
     }
     const naming = gateway.language("presentation");
     const title = new Agent(components.nina, {
-      name: "title",
+      name: "title" satisfies UsageAgent,
       languageModel: naming.model,
       usageHandler,
       instructions: `Summarize the user's opening request as a descriptive title of 3 to 5 words, at most ${MAX_TITLE_LENGTH} characters. Use the user's language. Return only the title, without quotes or colons. Do not mention internal tools or services.`,

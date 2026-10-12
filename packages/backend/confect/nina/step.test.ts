@@ -6,6 +6,10 @@ import {
   makeChatStep,
   timeLeft,
 } from "@repo/backend/confect/nina/capability/deadline";
+import {
+  type LearningCapabilityName,
+  LearningCapabilityNameSchema,
+} from "@repo/backend/confect/nina/capability/spec";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import {
   type NinaPrepareStep,
@@ -56,6 +60,9 @@ const mixedUrlMessages = [
 
 const instructions = "Base system prompt";
 
+/** Every capability Nina has, as a turn that may use them all is offered them. */
+const everything = LearningCapabilityNameSchema.literals;
+
 /**
  * Runs Nina's deterministic step policy through the AI SDK callback contract.
  *
@@ -84,8 +91,11 @@ function stepInput({
   } satisfies Parameters<NinaPrepareStep>[0];
 }
 
-function readPreparedStep(options: Parameters<typeof stepInput>[0]) {
-  return prepareNinaStep(stepInput(options));
+function readPreparedStep(
+  options: Parameters<typeof stepInput>[0],
+  capabilities: readonly LearningCapabilityName[] = everything
+) {
+  return prepareNinaStep(stepInput(options), capabilities);
 }
 
 describe("nina/runtime/step", () => {
@@ -134,6 +144,43 @@ describe("nina/runtime/step", () => {
     });
   });
 
+  it.each([
+    [
+      "an outside link when research is not offered",
+      externalUrlMessages,
+      ["nakafa", "math", "memory"],
+    ],
+    [
+      "a link to Nakafa when Nakafa is not offered",
+      nakafaUrlMessages,
+      ["deepResearch", "math", "memory"],
+    ],
+    [
+      "both links when neither is offered",
+      mixedUrlMessages,
+      ["math", "memory"],
+    ],
+  ] as const)(
+    "forces no tool for %s, because the SDK lists only the tools the turn offers",
+    (_prompt, messages, offered) => {
+      expect(readPreparedStep({ messages, stepNumber: 0 }, offered)).toEqual({
+        messages,
+      });
+    }
+  );
+
+  it("starts with Nakafa when the first prompt links to both and the turn offers no research", () => {
+    expect(
+      readPreparedStep({ messages: mixedUrlMessages, stepNumber: 0 }, [
+        "nakafa",
+        "math",
+      ])
+    ).toEqual({
+      messages: mixedUrlMessages,
+      toolChoice: { type: "tool", toolName: "nakafa" },
+    });
+  });
+
   it("changes neither the instructions nor the tools after the first step, so the cached prefix holds", () => {
     const step = readPreparedStep({
       messages: externalUrlMessages,
@@ -154,6 +201,7 @@ describe("nina/runtime/step", () => {
         yield* TestClock.adjust("40 seconds");
         const prepared = yield* startNinaStep(
           chatStep.begin,
+          everything,
           stepInput({ messages: externalUrlMessages, stepNumber: 0 })
         );
         expect(yield* chatStep.startedAt).toBe(yield* Clock.currentTimeMillis);
@@ -223,5 +271,38 @@ describe("the chat steps of a real Nina run", () => {
     // The second step began later and its call took 5 seconds, so its run has
     // more left, not less, than the first run had.
     expect(second - first).toBe(35_000);
+  });
+
+  it("forces no research on a turn whose page does not allow it, although the prompt links an outside site", async () => {
+    const languageModel = ninaModel();
+    provider.languageModel.mockReturnValue(languageModel);
+    const f = await createNinaTest({
+      prompt: "Baca https://ai-sdk.dev/docs/ai-sdk-core/devtools dong.",
+    });
+    await f.t.mutation(async (ctx) => {
+      const turn = await ctx.db.get("ninaTurns", f.turnId);
+      if (turn?.phase !== "active") {
+        throw new Error("Expected one active Nina turn.");
+      }
+      await ctx.db.patch("ninaTurns", f.turnId, {
+        page: {
+          ...turn.page,
+          nina: {
+            ...turn.page.nina,
+            tools: { ...turn.page.nina.tools, allowDeepResearch: false },
+          },
+        },
+      });
+    });
+    await f.t.action(run, { turnId: f.turnId });
+    const [call] = languageModel.doStreamCalls;
+    // The SDK lists no research tool, so a call forced to it could never be made.
+    expect(Arr.map(call?.tools ?? [], (tool) => tool.name)).toEqual([
+      "nakafa",
+      "math",
+      "memory",
+    ]);
+    expect(call?.toolChoice).toEqual({ type: "auto" });
+    expect((await f.inspect()).turn?.state.status).toBe("complete");
   });
 });

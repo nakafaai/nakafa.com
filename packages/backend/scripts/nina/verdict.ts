@@ -3,9 +3,12 @@ import {
   providerId,
 } from "@repo/backend/confect/gateway/model";
 import { purposes } from "@repo/backend/confect/gateway/purpose";
-import { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
+import {
+  NinaUsageTotal,
+  purposeOf,
+} from "@repo/backend/confect/nina/contract/usage";
 import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
-import { Array as Arr, Duration, Match, Option, Result, Schema } from "effect";
+import { Array as Arr, Duration, Option, Result, Schema } from "effect";
 
 /**
  * The part of a stored turn that the release gate reads, as
@@ -109,27 +112,11 @@ export function hasFollowUp({ order, suggestions, usage }: GateTurn) {
 
 /**
  * The most one step of an agent may write: the output cap of the purpose its
- * calls run under. A new agent fails the compiler here until it has a cap.
+ * calls run under, which the usage ledger names for every agent it records. A
+ * new agent has a cap the moment the ledger accepts it.
  */
 function capOf(agent: Usage["agent"]) {
-  return Match.value(agent).pipe(
-    Match.when(CHAT_AGENT, () => purposes.chat.maxOutputTokens),
-    Match.whenOr(
-      "nakafa",
-      "research",
-      "math",
-      () => purposes.specialist.maxOutputTokens
-    ),
-    Match.whenOr(
-      "math-repair",
-      "memory",
-      "nina-repair",
-      () => purposes.background.maxOutputTokens
-    ),
-    Match.when("suggestions", () => purposes.suggestion.maxOutputTokens),
-    Match.when(TITLE_AGENT, () => purposes.presentation.maxOutputTokens),
-    Match.exhaustive
-  );
+  return purposes[purposeOf(agent)].maxOutputTokens;
 }
 
 /** Milliseconds from the admission of the turn to its end, when both are recorded. */
