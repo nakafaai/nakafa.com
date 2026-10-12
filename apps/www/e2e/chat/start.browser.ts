@@ -1,0 +1,302 @@
+import { expect, type Locator, type Page, test } from "@playwright/test";
+import { Effect, Schema } from "effect";
+import type { Changes } from "@/e2e/support/changes";
+import {
+  LESSON_PATH,
+  openChatPage,
+  runOnPage,
+  START,
+} from "@/e2e/support/chat";
+import { SHEET_POPUP } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+
+const PROMPT = "Why is the derivative of sine the cosine?";
+/** What the pages tell the learner when a prompt could not be confirmed. */
+const UNCONFIRMED =
+  "We could not confirm the request. Check your connection and try again.";
+/** What a chat says when Nina's answer failed, which the local backend cannot avoid. */
+const UNAVAILABLE =
+  "Nina cannot access the AI service right now. Please try again later. If this continues, contact Nakafa support.";
+/** The curriculum context a lesson link carries. */
+const CONTEXT = "high-school~functions";
+/** The Convex name of `nina.messages.list`, the query that reads the messages of a chat. */
+const MESSAGES = "nina/messages:list";
+/** The address of a chat that the page moves to once its first prompt is admitted. */
+const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
+
+/** The box where the learner writes to Nina, inside a surface. */
+const composerOf = (scope: Locator) =>
+  scope.getByRole("textbox", { name: "Ask Nina anything..." });
+
+/**
+ * The prompt a surface shows as the learner's message. The composer holds the
+ * same words as text, so the bubble is what tells a shown prompt from a typed one.
+ */
+const promptIn = (scope: Locator) =>
+  scope.locator('[data-slot="bubble"]').filter({ hasText: PROMPT });
+
+/**
+ * Writes the prompt, and waits until the surface lets it be sent: until the
+ * page knows who is signed in, a surface keeps its composer from sending.
+ */
+const write = async (scope: Locator) => {
+  await composerOf(scope).fill(PROMPT);
+  await expect(scope.getByRole("button", { name: "Send message" })).toBeEnabled(
+    { timeout: readinessTimeoutMilliseconds }
+  );
+};
+
+/**
+ * The prompt shows at once, with Nina typing after it and an empty composer,
+ * before the server has answered anything. Then the chat opens.
+ */
+const showsAtOnce = (
+  scope: Locator,
+  changes: Changes,
+  opensChat: () => Promise<void>
+) =>
+  Effect.promise(async () => {
+    await write(scope);
+    changes.hold();
+    await composerOf(scope).press("Enter");
+    await expect(promptIn(scope)).toBeVisible();
+    await expect(scope.getByText("Loading", { exact: true })).toBeVisible();
+    await expect(composerOf(scope)).toHaveValue("");
+    changes.release();
+    await opensChat();
+  });
+
+/**
+ * A prompt the server refuses shows at once, like any other. Once the page
+ * learns of the refusal the prompt is gone, the words are back in the composer,
+ * the learner is told, and nothing opened.
+ */
+const givesBackWhenRefused = (page: Page, scope: Locator, changes: Changes) =>
+  Effect.promise(async () => {
+    await write(scope);
+    changes.hold();
+    changes.failNext(START);
+    await composerOf(scope).press("Enter");
+    await expect(promptIn(scope)).toBeVisible();
+    changes.release();
+    await expect(page.getByText(UNCONFIRMED).first()).toBeVisible();
+    await expect(promptIn(scope)).toHaveCount(0);
+    await expect(composerOf(scope)).toHaveValue(PROMPT);
+    await expect(page).not.toHaveURL(OPENED_CHAT);
+  });
+
+/** The new chat page, where an admitted prompt moves to its own chat. */
+const onThePage = (page: Page) => page.locator("main main");
+
+/** Waits until the page of the chat that the new chat page moved to holds the prompt. */
+const pageOpensChat = (page: Page) => async () => {
+  await expect(page).toHaveURL(OPENED_CHAT, {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(promptIn(onThePage(page))).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+};
+
+/** Nina's sheet on a lesson, where an admitted prompt opens its chat inside the sheet. */
+const inTheSheet = (page: Page) => page.locator(SHEET_POPUP);
+
+/** Opens the sheet on a lesson, once the learner is signed in. */
+const openSheet = (page: Page) =>
+  Effect.promise(async () => {
+    await page.goto(LESSON_PATH);
+    await page.getByRole("button", { exact: true, name: "Ask Nina" }).click();
+  });
+
+/** Waits until the sheet shows the chat its prompt opened, with the answer that failed. */
+const sheetOpensChat = (page: Page) => async () => {
+  await expect(promptIn(inTheSheet(page))).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(inTheSheet(page).getByText(UNAVAILABLE)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(page).toHaveURL(new RegExp(`${LESSON_PATH}$`));
+};
+
+for (const width of [390, 1440]) {
+  test.describe(`New chat at ${width}px`, () => {
+    test.use({ viewport: { height: 900, width } });
+    test.describe.configure({ timeout: 180_000 });
+
+    test("the page shows the prompt at once and opens the chat", async ({
+      baseURL,
+      page,
+    }) => {
+      await runOnPage(page, baseURL, (origin) =>
+        Effect.gen(function* () {
+          const { changes } = yield* openChatPage(page, origin);
+
+          yield* showsAtOnce(onThePage(page), changes, pageOpensChat(page));
+        })
+      );
+    });
+
+    test("the page gives a refused prompt back", async ({ baseURL, page }) => {
+      await runOnPage(page, baseURL, (origin) =>
+        Effect.gen(function* () {
+          const { changes } = yield* openChatPage(page, origin);
+
+          yield* givesBackWhenRefused(page, onThePage(page), changes);
+        })
+      );
+    });
+
+    test("the sheet shows the prompt at once and opens the chat", async ({
+      baseURL,
+      page,
+    }) => {
+      await runOnPage(page, baseURL, (origin) =>
+        Effect.gen(function* () {
+          const { changes } = yield* openChatPage(page, origin);
+
+          yield* openSheet(page);
+          yield* showsAtOnce(inTheSheet(page), changes, sheetOpensChat(page));
+        })
+      );
+    });
+
+    test("the sheet gives a refused prompt back", async ({ baseURL, page }) => {
+      await runOnPage(page, baseURL, (origin) =>
+        Effect.gen(function* () {
+          const { changes } = yield* openChatPage(page, origin);
+
+          yield* openSheet(page);
+          yield* givesBackWhenRefused(page, inTheSheet(page), changes);
+        })
+      );
+    });
+  });
+}
+
+/**
+ * The learner closes the sheet while their first prompt is on its way, and the
+ * server refuses it. The sheet's new chat stops waiting for the answer once it
+ * is hidden, yet the words are not lost with it: they are in the composer when
+ * the learner opens the sheet again.
+ */
+const givesBackAfterClosingTheSheet = Effect.fn(
+  "NakafaE2E.givesBackAfterClosingTheSheet"
+)(function* (page: Page, baseURL: string) {
+  const { changes } = yield* openChatPage(page, baseURL);
+
+  yield* openSheet(page);
+  yield* Effect.promise(async () => {
+    const sheet = inTheSheet(page);
+    const hiddenComposer = composerOf(
+      page.locator('[data-slot="sheet-popup"]')
+    );
+
+    await write(sheet);
+    changes.hold();
+    changes.failNext(START);
+    await composerOf(sheet).press("Enter");
+    await expect(promptIn(sheet)).toBeVisible();
+
+    await sheet.getByRole("button", { name: "Close" }).click();
+    await expect(hiddenComposer).toBeHidden();
+    changes.release();
+    await expect(page.getByText(UNCONFIRMED).first()).toBeVisible();
+
+    await page.getByRole("button", { exact: true, name: "Ask Nina" }).click();
+    await expect(composerOf(inTheSheet(page))).toHaveValue(PROMPT);
+  });
+});
+
+test.describe("New chat in a sheet closed before the server answers at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("the refused prompt is back in the composer when the sheet opens again", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      givesBackAfterClosingTheSheet(page, origin)
+    );
+  });
+});
+
+/** The arguments of one start: the page the prompt names. */
+const StartArguments = Schema.Tuple([
+  Schema.Struct({
+    input: Schema.Struct({
+      kind: Schema.String,
+      page: Schema.Struct({
+        locale: Schema.String,
+        materialContextHint: Schema.optionalKey(Schema.String),
+        slug: Schema.String,
+      }),
+    }),
+  }),
+]);
+
+/**
+ * Asked from a lesson that a curriculum link opened, the first try names that
+ * context, and a retry from the same lesson names it again.
+ */
+const retriesWithTheLessonContext = Effect.fn(
+  "NakafaE2E.retriesWithTheLessonContext"
+)(function* (page: Page, baseURL: string) {
+  const { changes } = yield* openChatPage(page, baseURL);
+
+  yield* Effect.promise(async () => {
+    const sheet = inTheSheet(page);
+
+    await page.goto(`${LESSON_PATH}?ctx=${CONTEXT}`);
+    await page.getByRole("button", { exact: true, name: "Ask Nina" }).click();
+    await write(sheet);
+    await composerOf(sheet).press("Enter");
+    await expect(sheet.getByText(UNAVAILABLE)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    // A chat just started shows its first prompt from the receipt until its
+    // messages arrive, and a retry can show its own prompt only among them.
+    await expect
+      .poll(() => changes.hasAnswered(MESSAGES), {
+        timeout: readinessTimeoutMilliseconds,
+      })
+      .toBe(true);
+
+    // The retried prompt shows at once, before the server has answered.
+    await expect(promptIn(sheet)).toHaveCount(1);
+    changes.hold();
+    await sheet.getByRole("button", { name: "Retry message" }).click();
+    await expect(promptIn(sheet)).toHaveCount(2);
+    changes.release();
+    await expect
+      .poll(() => changes.argumentsOf(START).length, {
+        timeout: readinessTimeoutMilliseconds,
+      })
+      .toBe(2);
+  });
+  const [first, retry] = yield* Effect.forEach(
+    changes.argumentsOf(START),
+    (args) => Schema.decodeUnknownEffect(StartArguments)(args)
+  );
+  yield* Effect.sync(() => {
+    expect(first?.[0].input.kind).toBe("message");
+    expect(first?.[0].input.page.materialContextHint).toBe(CONTEXT);
+    expect(retry?.[0].input.kind).toBe("retry");
+    expect(retry?.[0].input.page).toEqual(first?.[0].input.page);
+  });
+});
+
+test.describe("Retry from a lesson at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("names the lesson context the first try named", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      retriesWithTheLessonContext(page, origin)
+    );
+  });
+});
