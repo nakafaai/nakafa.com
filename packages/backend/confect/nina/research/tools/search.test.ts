@@ -193,7 +193,6 @@ describe("research web search tool", () => {
           expect.objectContaining({
             type: "data-web-search",
             data: expect.objectContaining({
-              provider: "firecrawl",
               sources: expect.arrayContaining([
                 expect.objectContaining({
                   citation: "[example.com](https://example.com/research)",
@@ -436,7 +435,6 @@ describe("research web search tool", () => {
           expect.objectContaining({
             type: "data-web-search",
             data: expect.objectContaining({
-              provider: "firecrawl",
               status: "done",
               sources: [],
             }),
@@ -484,7 +482,6 @@ describe("research web search tool", () => {
           expect.objectContaining({
             type: "data-web-search",
             data: expect.objectContaining({
-              provider: "firecrawl",
               status: "error",
             }),
           })

@@ -44,7 +44,6 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
       id: getWebSearchPartId(toolCallId, index),
       type: "data-web-search",
       data: {
-        provider: "firecrawl",
         queries: [query],
         status: "loading",
         sources: [],
@@ -85,7 +84,6 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
           id: getWebSearchPartId(toolCallId, index),
           type: "data-web-search",
           data: {
-            provider: "firecrawl",
             queries: [query],
             status: "error",
             sources: [],
@@ -105,7 +103,6 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
         id: getWebSearchPartId(toolCallId, index),
         type: "data-web-search",
         data: {
-          provider: "firecrawl",
           queries: [query],
           status: "done",
           sources: addSourceCitations(sources),
