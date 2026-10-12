@@ -4,6 +4,7 @@ import schema from "@repo/backend/confect/_generated/schema";
 import type {
   ActionCtx,
   QueryRunner,
+  VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
 import type {
@@ -48,7 +49,7 @@ export const openHomeSession = openNinaLearningSession({
 export async function runSpecialist<A, E>(
   program: (
     userId: Docs["users"]["_id"]
-  ) => Effect.Effect<A, E, ActionCtx | Gateway | QueryRunner>
+  ) => Effect.Effect<A, E, ActionCtx | Gateway | QueryRunner | VectorSearch>
 ) {
   const t = createConvexTestWithBetterAuth();
   const { userId } = await t.mutation((ctx) =>

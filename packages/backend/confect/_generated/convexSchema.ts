@@ -25,6 +25,9 @@ import contentKeys from "./tables/contentKeys";
 import contentModelBuilds from "./tables/contentModelBuilds";
 import contentPaths from "./tables/contentPaths";
 import contentReleases from "./tables/contentReleases";
+import contentSectionSources from "./tables/contentSectionSources";
+import contentSectionState from "./tables/contentSectionState";
+import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
 import creditResetPeriods from "./tables/creditResetPeriods";
@@ -117,6 +120,9 @@ export default $defineSchema({
   contentModelBuilds: $Table.tableDefinition(contentModelBuilds),
   contentPaths: $Table.tableDefinition(contentPaths),
   contentReleases: $Table.tableDefinition(contentReleases),
+  contentSectionSources: $Table.tableDefinition(contentSectionSources),
+  contentSectionState: $Table.tableDefinition(contentSectionState),
+  contentSections: $Table.tableDefinition(contentSections),
   contentSnapshots: $Table.tableDefinition(contentSnapshots),
   contentState: $Table.tableDefinition(contentState),
   creditResetPeriods: $Table.tableDefinition(creditResetPeriods),

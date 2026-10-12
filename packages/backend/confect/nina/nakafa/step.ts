@@ -129,7 +129,8 @@ export function prepareReadStep(
       taskContext: `
         # Required Next Step
 
-        Call the read tool now with the single most relevant content_id.
+        Call the read tool now with the single most relevant content_id. When the
+        search result names a section to read for it, pass that section too.
       `,
       toolUsageGuidelines: `
         # Tool Constraints

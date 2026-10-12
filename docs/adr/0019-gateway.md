@@ -130,10 +130,22 @@ at 0.5 and are set from what that command prints.
   costs 5 credits. The model keys learners chose before October 2026 are
   gone: no function takes one and no stored row holds one.
 - **Routing and retention.** No routing choice is sent: Convex rejects
-  `provider.only` and the other routing fields. Every language call does send
-  `provider: { zdr: true, data_collection: "deny" }`, which the gateway accepts
-  (measured 10 October 2026), so each request asks for the zero data retention
-  that Convex states for the gateway as a whole. `gateway/route.ts` is deleted.
+  `provider.only` and the other routing fields. Every language model call does
+  send `provider: { zdr: true, data_collection: "deny" }`, which the gateway
+  accepts (measured 10 October 2026), so each such request asks for the zero
+  data retention that Convex states for the gateway as a whole. An embedding
+  request cannot ask: `@ai-sdk/openai-compatible` 3.0.14 builds its body from
+  the model, the texts, the encoding format, `dimensions`, and `user` alone, and
+  `convexGateway.embeddingModel` offers no way to add a field. Embedding
+  requests therefore rely on the gateway's own statement. They carry published
+  lesson and Quran text and the short search phrase that the specialist writes
+  from a learner's question, never a stored learner message.
+  `gateway/route.ts` is deleted.
+- **Embeddings.** `Gateway.embed(texts, model)` returns one vector of
+  `embeddingDimensions` numbers per text, from `embeddingModelId` in
+  `gateway/model.ts` or from the candidate that the model test of knowledge
+  search names. It fails with `GatewayFailure` when the reply does not match
+  the request, and ends a call after `embeddingTimeoutMs`.
 - **Prompt cache.** The gateway caches nothing on its own: a repeated prefix of
   53,624 tokens read zero cached tokens. `gateway/cache.ts` marks the last
   message before the newest user message with
