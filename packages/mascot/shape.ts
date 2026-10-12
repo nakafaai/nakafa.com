@@ -104,6 +104,13 @@ export function ellipse<const Mark = never>(
   return { _tag: "ellipse", ...fields } as const satisfies Shape<Mark>;
 }
 
+/** Draws a circle. */
+export function circle<const Mark = never>(
+  fields: typeof CircleFields.Type & Marked<Mark>
+) {
+  return { _tag: "circle", ...fields } as const satisfies Shape<Mark>;
+}
+
 /** Draws a rectangle. */
 export function rect<const Mark = never>(
   fields: typeof RectFields.Type & Marked<Mark>
