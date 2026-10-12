@@ -1,11 +1,25 @@
 import { Array as Arr, Schema } from "effect";
 
-/** A change the page sends, which the server answers with the same `requestId`. */
-const MutationSchema = Schema.Struct({
+/** What a mutation and an action share: the function they call, and the `requestId` the server answers with. */
+const callFields = {
   args: Schema.Array(Schema.Unknown),
   requestId: Schema.Finite,
-  type: Schema.Literal("Mutation"),
   udfPath: Schema.String,
+};
+
+/** A change the page sends, which the server answers with the same `requestId`. */
+const MutationSchema = Schema.Struct({
+  ...callFields,
+  type: Schema.Literal("Mutation"),
+});
+
+/**
+ * An action the page asks the server to run, such as an upload. It can write
+ * as a mutation does, so it is a change too.
+ */
+const ActionSchema = Schema.Struct({
+  ...callFields,
+  type: Schema.Literal("Action"),
 });
 
 /** The answer of a server that could not take a change, as the protocol words it. */
@@ -24,6 +38,7 @@ export const SentSchema = Schema.Union([
     type: Schema.Literal("Authenticate"),
   }),
   MutationSchema,
+  ActionSchema,
   Schema.Struct({
     modifications: Schema.Array(
       Schema.Struct({
@@ -45,6 +60,7 @@ export const GivenSchema = Schema.Union([
     ts: Schema.optionalKey(Schema.Uint8ArrayFromBase64),
     type: Schema.Literal("MutationResponse"),
   }),
+  Schema.Struct({ type: Schema.Literal("ActionResponse") }),
   Schema.Struct({
     endVersion: Schema.Struct({ ts: Schema.Uint8ArrayFromBase64 }),
     modifications: Schema.Array(

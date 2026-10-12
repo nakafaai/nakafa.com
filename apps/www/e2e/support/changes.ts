@@ -28,7 +28,9 @@ export const ANSWER_MILLISECONDS = 15_000;
 /**
  * Follows the page's realtime connection: the changes it sent and the ones the
  * server answered, whether it has signed in, and whether a list has answered.
- * `lists` names the Convex queries that read a list, such as `nina/memory:list`.
+ * A change is a mutation or an action, such as an upload, because either can
+ * write. `lists` names the Convex queries that read a list, such as
+ * `nina/memory:list`.
  * The page shows a change before the server has it, and a reload closes the
  * connection and drops a change that is still on its way, so a step that
  * reloads waits for the answer first. A reload also opens a connection that
@@ -43,7 +45,7 @@ export const ANSWER_MILLISECONDS = 15_000;
  * Every frame passes through this route, so a step can also hold the server's
  * answers back: after `hold` the page gets nothing from the server until
  * `release`, and what it shows meanwhile is what it showed on its own. A step
- * can also fail one change: after `failNext` the next change the page sends
+ * can also fail one mutation: after `failNext` the next mutation the page sends
  * never reaches the server, and the page is told the server could not take it.
  * What the tracker knows is what the page was given, never what the server sent.
  */
@@ -98,9 +100,18 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
       // The function that each query of this connection runs, by its id.
       const queries = MutableHashMap.empty<number, string>();
 
+      /** A mutation and an action are both changes the page asks the server to make. */
+      const noticeChange = ({
+        args,
+        udfPath,
+      }: Extract<typeof SentSchema.Type, { type: "Action" | "Mutation" }>) => {
+        changes.sent += 1;
+        MutableList.append(calls, { args, udfPath });
+      };
       const noticeSent = (frame: typeof SentSchema.Type) =>
         Match.value(frame).pipe(
           Match.discriminators("type")({
+            Action: noticeChange,
             Authenticate: () => {
               changes.signedIn = true;
             },
@@ -111,16 +122,16 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
                 }
               }
             },
-            Mutation: ({ args, udfPath }) => {
-              changes.sent += 1;
-              MutableList.append(calls, { args, udfPath });
-            },
+            Mutation: noticeChange,
           }),
           Match.exhaustive
         );
       const noticeGiven = (frame: typeof GivenSchema.Type) =>
         Match.value(frame).pipe(
           Match.discriminators("type")({
+            ActionResponse: () => {
+              changes.answered += 1;
+            },
             MutationResponse: ({ ts }) => {
               changes.answered += 1;
               if (ts) {
@@ -202,7 +213,7 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
       );
     },
     /**
-     * Fails the next change the page sends, or the next one to the function
+     * Fails the next mutation the page sends, or the next one to the function
      * `udfPath`: the server never gets it, and the page is told the server
      * could not take it.
      */
