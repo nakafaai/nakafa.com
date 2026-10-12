@@ -30,16 +30,20 @@ function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
     });
   const finish = async (releaseId: string, model = MODEL) =>
     (await finishMeasured(releaseId, model)).result;
-  const ready = (model = MODEL) =>
-    t.mutation((ctx) =>
-      Effect.runPromise(
+  /** Asks whether the index may answer and gives, with the answer, how many documents the transaction read. */
+  const readyMeasured = (model = MODEL) =>
+    t.mutation(async (ctx) => {
+      const value = await Effect.runPromise(
         isReady(model).pipe(
           Effect.provide(
             RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
           )
         )
-      )
-    );
+      );
+      const metrics = await ctx.meta.getTransactionMetrics();
+      return { documentsRead: metrics.documentsRead.used, value };
+    });
+  const ready = async (model = MODEL) => (await readyMeasured(model)).value;
   const sequence = (releaseId: string) =>
     t.mutation((ctx) =>
       Effect.runPromise(
@@ -62,7 +66,15 @@ function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
         activeReleaseId: releaseId,
       });
     });
-  return { activate, finish, finishMeasured, ready, records, sequence };
+  return {
+    activate,
+    finish,
+    finishMeasured,
+    ready,
+    readyMeasured,
+    records,
+    sequence,
+  };
 }
 
 /** A deployment whose active release is the one of the knowledge fixture. */
@@ -96,6 +108,12 @@ describe("section index state", () => {
       { key: "primary", model: MODEL, releaseId: ACTIVE },
     ]);
     expect(await ready()).toBe(true);
+  });
+
+  it("reads the state of the content and the record of the build to tell, and nothing else", async () => {
+    const { finish, readyMeasured } = await setup();
+    await finish(ACTIVE);
+    expect(await readyMeasured()).toEqual({ documentsRead: 2, value: true });
   });
 
   it("writes the record once, and not again when it says the same", async () => {

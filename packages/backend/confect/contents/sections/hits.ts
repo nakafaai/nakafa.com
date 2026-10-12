@@ -12,9 +12,7 @@ import {
   CANDIDATES_PER_LEG,
   SEARCH_VERIFY_SLACK,
 } from "@repo/backend/confect/contents/sections/limits";
-import { isReady } from "@repo/backend/confect/contents/sections/state";
 import { textQuery } from "@repo/backend/confect/contents/sections/terms";
-import { embeddingModelId } from "@repo/backend/confect/gateway/model";
 import type { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import { articleLayer } from "@repo/backend/content/article/confect";
 import { materialLayer } from "@repo/backend/content/material/confect";
@@ -97,17 +95,12 @@ function toHit(section: Section, reference: Hit["reference"]): Hit {
  * when there is one. Only sections of documents that are still published are
  * returned, and the reference of a document is read once however many of its
  * sections rank. A section that both searches found is read once. The answer is
- * `empty` when the index cannot answer: its last finished build is not for the
- * active release and the model that embeds the questions, so that it may lack
- * sections or hold those of a release that is gone, or the vector search found
- * nothing in it.
+ * `empty` when the vector search found nothing in the index. Whether the index
+ * may answer at all is asked before the search begins, by `state.ready`.
  */
 export const resolveHits = Effect.fn("contents.sections.resolveHits")(
   function* (input: typeof hitsInputValidator.Type) {
-    if (
-      Arr.isReadonlyArrayEmpty(input.ids) ||
-      !(yield* isReady(embeddingModelId))
-    ) {
+    if (Arr.isReadonlyArrayEmpty(input.ids)) {
       return { kind: "empty" as const };
     }
     const table = (yield* DatabaseReader).table("contentSections");

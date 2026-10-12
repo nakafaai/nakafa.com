@@ -1,9 +1,19 @@
 import { RegisteredFunction } from "@confect/server";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import { searchSections } from "@repo/backend/confect/contents/sections/search";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  ActionCtx,
+  MutationCtx,
+} from "@repo/backend/convex/_generated/server";
 import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import {
   embedWithKnowledge,
@@ -19,13 +29,17 @@ afterEach(() => provider.embeddingModel.mockReset());
 
 type Input = Parameters<typeof searchSections>[0];
 
-/** A deployment whose active release is indexed, searchable by its concept embedder. */
+/**
+ * A deployment whose active release is indexed, searchable by its concept
+ * embedder, whose record of the texts it embedded is cleared.
+ */
 async function indexed() {
-  embedWithKnowledge();
+  const model = embedWithKnowledge();
   const t = createConvexTestWithBetterAuth();
   await t.mutation(seedKnowledge);
   await knowledgeBuild(t).build();
-  return setup(t);
+  model.doEmbedCalls.length = 0;
+  return { model, ...setup(t) };
 }
 
 function setup(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
@@ -118,17 +132,18 @@ describe("section search", () => {
     );
   });
 
-  it("says the index is empty when it holds no section", async () => {
-    embedWithKnowledge();
+  it("says the index is empty, and does not embed the question, when it holds no section", async () => {
+    const model = embedWithKnowledge();
     const t = createConvexTestWithBetterAuth();
     await t.mutation(seedKnowledge);
     expect(
       await setup(t).search({ locale: "id", query: "determinan" })
     ).toEqual({ kind: "empty" });
+    expect(model.doEmbedCalls).toHaveLength(0);
   });
 
-  it("says the index is empty while the build of the active release has not finished", async () => {
-    embedWithKnowledge();
+  it("says the index is empty, and does not embed the question, while the build of the active release has not finished", async () => {
+    const model = embedWithKnowledge();
     const t = createConvexTestWithBetterAuth();
     await t.mutation(seedKnowledge);
     // One step stores the German and English lessons, but the build ends with
@@ -142,10 +157,57 @@ describe("section search", () => {
           .first()
       )
     ).not.toBeNull();
+    model.doEmbedCalls.length = 0;
     expect(
       await setup(t).search({ locale: "de", query: "Determinante" })
     ).toEqual({ kind: "empty" });
+    expect(model.doEmbedCalls).toHaveLength(0);
   });
+
+  it.each([
+    [
+      "the record of the finished build is gone",
+      async (ctx: MutationCtx) => {
+        for (const record of await ctx.db
+          .query("contentSectionState")
+          .collect()) {
+          await ctx.db.delete("contentSectionState", record._id);
+        }
+      },
+    ],
+    [
+      "a release that was built is no longer the active one",
+      async (ctx: MutationCtx) => {
+        const state = await ctx.db.query("contentState").unique();
+        assert.ok(state, "Expected one active content state.");
+        await ctx.db.patch("contentState", state._id, {
+          activeReleaseId: "release-later",
+        });
+      },
+    ],
+    [
+      "the model that embeds the questions is not the one that embedded the sections",
+      async (ctx: MutationCtx) => {
+        for (const record of await ctx.db
+          .query("contentSectionState")
+          .collect()) {
+          await ctx.db.patch("contentSectionState", record._id, {
+            model: "qwen/qwen3-embedding-8b",
+          });
+        }
+      },
+    ],
+  ])(
+    "says the index is empty, and does not embed the question, once %s",
+    async (_reason, change) => {
+      const { model, search, t } = await indexed();
+      await t.mutation(change);
+      expect(await search({ locale: "id", query: "determinan" })).toEqual({
+        kind: "empty",
+      });
+      expect(model.doEmbedCalls).toHaveLength(0);
+    }
+  );
 
   it("fails with the failure of the embedder", async () => {
     const { t } = await indexed();
