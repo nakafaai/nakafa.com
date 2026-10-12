@@ -3627,6 +3627,12 @@ export declare const api: {
       >;
     };
     uploads: {
+      release: FunctionReference<
+        "mutation",
+        "public",
+        { uploadId: Id<"ninaUploads"> },
+        null
+      >;
       save: FunctionReference<
         "action",
         "public",
