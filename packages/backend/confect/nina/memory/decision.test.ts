@@ -8,6 +8,7 @@ import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec
 import {
   askedOf,
   decides,
+  decidesLast,
   decidesTogether,
   GatewayTest,
   provider,
@@ -16,7 +17,14 @@ import {
 import { runSpecialist } from "@repo/backend/test/nina/specialist";
 import { APICallError } from "ai";
 import { Experimental_DecisionMockModelV4 as DecisionMockModel } from "ai/test";
-import { Array as Arr, Effect, MutableRef, Order, Record as Rec } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableRef,
+  Option,
+  Order,
+  Record as Rec,
+} from "effect";
 
 /** A probability well above every threshold, and one well below. */
 const SURE = 0.99;
@@ -122,7 +130,7 @@ function judging({
 
 describe("memory decision about candidates", () => {
   it.effect(
-    "keeps the candidates that are the learner's own note and hold nothing private, in their order, and asks about each one in a request of its own",
+    "keeps the candidates that are the learner's own note and hold nothing private, and asks about each one in a request of its own",
     () =>
       Effect.gen(function* () {
         const { requests } = judging({ privates: [candidates[1]] });
@@ -152,6 +160,28 @@ describe("memory decision about candidates", () => {
         );
         expect(yield* judgeCandidates(candidates)).toEqual(candidates);
         expect(MutableRef.get(opened)).toBe(Arr.length(candidates));
+      }).pipe(Effect.provide(GatewayTest))
+  );
+
+  it.effect(
+    "keeps the candidates in the order the capture model proposed them, whichever request is answered first",
+    () =>
+      Effect.gen(function* () {
+        // The request about the first candidate is answered after the requests
+        // about the others. Each candidate is the learner's own note with
+        // nothing private in it, so that all of them stay. The write settles a
+        // memory with the first candidate that names it, so this order decides
+        // what is stored.
+        const finished = decidesLast(
+          noteText(candidates[0]),
+          Arr.length(candidates),
+          (judgment) => (judgment === "private" ? UNLIKELY : SURE)
+        );
+        const kept = yield* judgeCandidates(candidates);
+        expect(Arr.last(Arr.map(MutableRef.get(finished), textOf))).toEqual(
+          Option.some(noteText(candidates[0]))
+        );
+        expect(kept).toEqual(candidates);
       }).pipe(Effect.provide(GatewayTest))
   );
 
