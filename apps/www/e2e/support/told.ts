@@ -185,6 +185,10 @@ export const learnsWhoOwnsTheChat = (page: Answered) => {
  * for in the owner's memories, whether something matched and whether memory is
  * paused belong to the owner. A stream carries chunks of a tool call that name
  * only the call, so a page that is told none cannot be told those of a search.
+ * The local runtime has no model, so a chat of a browser test holds neither a
+ * search nor a running stream: the check shows what the production build answers
+ * a reader's requests with, and the tests of this module show that it fails for
+ * a page that was told either.
  */
 export const learnsNoStreamAndNoMemory = (page: Answered) => {
   const { messages, streams } = told(page);

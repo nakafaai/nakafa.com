@@ -98,7 +98,11 @@ without reading the component: an empty list for the list of streams, and no
 deltas for a request of deltas. Agent's hook (`useUIMessages`) asks for deltas
 only for a stream it has listed, so the page never waits for a stream and never
 asks for one, and the page of messages, which is a live query, tells a reader
-each message when its step is saved. The owner's own pages stream as before.
+each message when its step is saved. So a reader sees a running turn one step at
+a time: Nina typing until a step that shows something is saved, and no sign of
+progress while a later step is written, because the loader of an answer stops
+once the answer shows a tool, reasoning or text part. The owner's own pages
+stream as before.
 `nina/reader.test.ts` pins the rules of both, and `nina/messages.impl.test.ts`
 and `nina/memory/tool.test.ts` pin them on the real Agent component, with a live
 stream and a memory call in the thread.
