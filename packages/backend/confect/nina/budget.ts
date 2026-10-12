@@ -4,7 +4,7 @@ import { countTokens, decode, encode } from "gpt-tokenizer";
 /**
  * Model-facing token budgets for one Nina turn. Gemini accepts far more, so
  * these bound cost and latency; every limit truncates with a visible note
- * instead of failing the turn.
+ * instead of failing the turn. `NINA_CALL_LIMIT` adds them up.
  */
 export const NINA_BUDGET = {
   /** One capability output returned to the main Agent. */
@@ -17,6 +17,13 @@ export const NINA_BUDGET = {
    * half of it.
    */
   history: 32_000,
+  /**
+   * Nina's static instructions, her three tool definitions and the runtime
+   * facts of a turn: what every call carries before any conversation. Nothing
+   * cuts to this number. The budget test measures the real ones against it
+   * from a real turn, and it is rounded up to the next 1,000 tokens.
+   */
+  instructions: 5000,
   /** Account facts and the memories Nina reads about the learner. */
   learner: 1500,
   /** The signed current page placed in the stable prompt context. */
@@ -24,6 +31,33 @@ export const NINA_BUDGET = {
   /** The rolling summary of the turns folded out of the history. */
   summary: 2000,
 } as const;
+
+/**
+ * The most tokens one Nina model call is built to carry, 62,500: the parts of
+ * `NINA_BUDGET` that a call holds at once, which are the instructions, the
+ * page, the learner, the summary, the history and the evidence of the current
+ * turn. One tool result (`evidence`) lies inside the turn's evidence, so it is
+ * not added again.
+ *
+ * The model accepts 1,048,576 input tokens
+ * (https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash, the model in
+ * `gateway/model.ts`, as that page read on 12 October 2026). Nina stays far
+ * below that on purpose. Every call bills every token it carries again, a
+ * larger call takes longer to read before the first word, and the provider
+ * keeps a prefix for only about five minutes (`gateway/cache.ts`), so the
+ * first call after a pause pays full price for all of it.
+ *
+ * This is what Nina's own builders hold. The learner's message and files are
+ * checked when a turn is admitted, and a question focus has no budget of its
+ * own.
+ */
+export const NINA_CALL_LIMIT =
+  NINA_BUDGET.instructions +
+  NINA_BUDGET.page +
+  NINA_BUDGET.learner +
+  NINA_BUDGET.summary +
+  NINA_BUDGET.history +
+  NINA_BUDGET.turnEvidence;
 
 /** Tokens reserved for the truncation note appended to bounded text. */
 const NOTE_TOKENS = 80;
