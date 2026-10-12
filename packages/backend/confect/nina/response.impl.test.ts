@@ -12,6 +12,8 @@ import {
   ninaStream,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { createCapturingTest, level } from "@repo/backend/test/nina/capture";
+import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
@@ -28,6 +30,7 @@ vi.mock("@convex-dev/agent", async (load) => {
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
+const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
 
 /** A model whose call stays silent until `release` is called, like a long thought. */
 function silentModel() {
@@ -313,4 +316,78 @@ describe("The Nina response run when generation fails", () => {
       ).toHaveLength(1);
     })
   );
+});
+
+describe("The Nina response among its follow-up work", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 10, 12));
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    provider.languageModel.mockReset();
+    vi.useRealTimers();
+  });
+
+  /**
+   * A model for a whole turn: it answers the capture call with `level` and
+   * answers the suggestions and the title as `ninaModel` does.
+   */
+  function turnModel() {
+    const model = ninaModel();
+    const generate = vi.fn<MockLanguageModelV4["doGenerate"]>(
+      ({ prompt, responseFormat }) => {
+        let text = "Understanding A Function Limit";
+        if (encodeJsonText(prompt).includes("# Learner Message")) {
+          text = encodeJsonText({ memories: [level] });
+        } else if (responseFormat?.type === "json") {
+          text = encodeJsonText({
+            suggestions: ["How does this relate to continuity?"],
+          });
+        }
+        return Promise.resolve(providerStep([{ type: "text", text }]));
+      }
+    );
+    model.doGenerate = generate;
+    provider.languageModel.mockReturnValue(model);
+    return generate;
+  }
+
+  it("saves a memory beside the suggestions and the title", async () => {
+    const f = await createCapturingTest();
+    const generate = turnModel();
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    expect(generate).toHaveBeenCalledTimes(3);
+    expect(await f.turn()).toMatchObject({
+      remembered: 1,
+      state: { status: "complete" },
+      suggestions: ["How does this relate to continuity?"],
+    });
+    expect(await f.texts()).toEqual(["Kelas 12."]);
+    // The title is stored sealed, so it is read the way every reader opens it.
+    expect((await f.owner.query(getChat, { chatId: f.chatId })).title).toBe(
+      "Understanding A Function Limit"
+    );
+  });
+
+  it("never costs the turn its answer or its suggestions when the vault is down, and stores neither a memory nor a title in plain text", async () => {
+    const f = await createCapturingTest();
+    const generate = turnModel();
+    vi.stubEnv("VAULT_ROOT_KEYS", "");
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    expect(generate).toHaveBeenCalledTimes(3);
+    expect(await f.turn()).toMatchObject({
+      state: { status: "complete" },
+      suggestions: ["How does this relate to continuity?"],
+    });
+    // A memory and a title are both sealed. Without the vault neither can be
+    // sealed, and neither is written as readable text in its place.
+    expect(
+      (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.title
+    ).toBeUndefined();
+    expect(await f.stored()).toEqual([]);
+  });
 });

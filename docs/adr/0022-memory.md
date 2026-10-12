@@ -63,19 +63,30 @@ edit and delete every one. After a complete turn:
    word in Indonesian, English or German. Any other message makes no model call.
 2. One call on the background purpose returns at most three candidates, each
    with a verbatim quote and one sentence that is never empty and at most 280
-   characters. A sentence that breaks that, or a fourth candidate, makes the
-   whole answer invalid, so the call saves nothing. The call reads the
-   learner's message and the at most 12 memories that match the message and the
-   open page best, found by search. Each memory shows at most its first 240
-   characters, and the whole list stays within a token budget, so a list that
-   does not fit loses its last memories. A candidate that repeats one of them
-   still confirms it by saying the same words. Its usage is recorded as agent
-   `memory` in the turn's ledger.
+   characters. The sentence states the fact in the language the learner wrote,
+   as a note the learner writes to themself, and leaves the learner out: "Kelas
+   12 IPA." and "Prefers worked examples before formulas.", never "Learner
+   berada di kelas 12 IPA." A sentence that breaks the length, or a fourth
+   candidate, makes the whole answer invalid, so the call saves nothing. The
+   call reads the learner's message and the at most 12 memories that match the
+   message and the open page best, found by search. Each memory shows at most
+   its first 240 characters, and the whole list stays within a token budget, so
+   a list that does not fit loses its last memories. A candidate that repeats
+   one of them still confirms it by saying the same words. Its usage is
+   recorded as agent `memory` in the turn's ledger.
 3. The check keeps a candidate only when its quote is in the message once
    lower-cased and with whitespace collapsed, its text has a letter or a digit,
-   neither its text nor its quote holds an email address, a link or eight digits
-   in a row, and a situation has an end day of today or later. A dash, a dot or
-   a space ends a run of digits, so a date such as 20-10-2026 stays.
+   its text does not label the learner, neither its text nor its quote holds an
+   email address, a link or eight digits in a row, and a situation has an end
+   day of today or later. A dash, a dot or a space ends a run of digits, so a
+   date such as 20-10-2026 stays. A text labels the learner when it starts with
+   a word that names them (Learner, Student, Pupil, User, Siswa, Murid,
+   Pelajar, Pembelajar, Pengguna, Lernende, Schüler, Nutzer, Benutzer, with the
+   article that may lead it) or holds an English label that the learner's own
+   words do not hold. The check drops such a candidate and does not rewrite it,
+   because a rewrite could say something the learner did not. Memories saved
+   before this rule keep their words until the learner says them again, which
+   replaces the words of a memory Nina wrote, or edits them.
 4. The write first checks what could have changed while the model read the
    message. Paused memory, a deleted turn, and a memory that the call read and
    that is gone now (the learner removed it, or it ended) each stop it. It looks

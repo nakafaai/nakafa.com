@@ -90,6 +90,30 @@ describe("memory candidate check", () => {
     ).toEqual(["12", "Ya."]);
   });
 
+  it("drops a candidate whose text labels the learner, and keeps the same fact without the label", () => {
+    expect(
+      kept([
+        candidate({ text: "Learner berada di kelas 12." }),
+        candidate({ text: "Siswa kelas 12." }),
+        candidate({ text: "The learner is in grade 12." }),
+        candidate({ text: "Der Lernende ist in Klasse 12." }),
+        candidate({ text: "Kelas 12." }),
+      ])
+    ).toEqual(["Kelas 12."]);
+  });
+
+  it("drops an English label the learner did not say, and keeps one the learner said", () => {
+    const said = "I am a language learner of German in grade 12.";
+    const quoting = (text: string) =>
+      checkCandidates(
+        said,
+        [candidate({ quote: "i am a language learner", text })],
+        NOW
+      );
+    expect(quoting("Language learner of German.")).toHaveLength(1);
+    expect(quoting("Language learner of German, student.")).toEqual([]);
+  });
+
   it.each([
     ["an email address", "nama@contoh.com"],
     ["a link", "https://contoh.com/saya"],

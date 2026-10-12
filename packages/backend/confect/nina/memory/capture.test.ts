@@ -3,8 +3,8 @@ import { saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
 import { provider } from "@repo/backend/test/gateway";
-import { ninaModel } from "@repo/backend/test/nina";
 import {
   answers,
   answersAfter,
@@ -27,9 +27,7 @@ const NOW = Date.UTC(2026, 9, 10, 12);
 const LESSON = "material:lesson:mathematics:material-section:limits";
 const SLUG = "subjects/mathematics/limits/concept";
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
-const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
-const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -321,6 +319,77 @@ describe("memory capture", () => {
   });
 });
 
+describe("memory capture wording", () => {
+  /** Three candidates that quote the same words of the learner. */
+  const candidates = (
+    quote: string,
+    ...texts: readonly [string, string, string]
+  ) =>
+    Arr.map(texts, (text): typeof NinaMemoryCandidate.Type => ({
+      kind: "level",
+      quote,
+      text,
+    }));
+
+  it.each([
+    [
+      "Indonesian",
+      "Aku kelas 12 IPA dan lebih suka belajar dengan contoh soal dulu sebelum rumus.",
+      "aku kelas 12 ipa",
+      [
+        "Learner berada di kelas 12 IPA.",
+        "Siswa lebih suka contoh soal dulu sebelum rumus.",
+        "Kelas 12 IPA.",
+      ],
+    ],
+    [
+      "English",
+      "I'm in grade 12 and I prefer worked examples before formulas.",
+      "i'm in grade 12",
+      [
+        "The learner is in grade 12.",
+        "Student prefers worked examples before formulas.",
+        "In grade 12.",
+      ],
+    ],
+    [
+      "German",
+      "Ich bin in Klasse 12 und lerne lieber erst mit Beispielaufgaben.",
+      "ich bin in klasse 12",
+      [
+        "Der Lernende ist in Klasse 12.",
+        "Schüler lernt lieber erst mit Beispielaufgaben.",
+        "Klasse 12.",
+      ],
+    ],
+  ] as const)(
+    "saves the fact of an %s message and drops the sentences that label the learner",
+    async (_language, message, quote, [first, second, clean]) => {
+      const f = await createCapturingTest(message);
+      answers(...candidates(quote, first, second, clean));
+      await f.capture();
+      expect(await f.texts()).toEqual([clean]);
+      expect(MutableRef.get(f.logged)).toEqual([]);
+    }
+  );
+
+  it("tells the model to state the fact without naming the learner, with a good and a bad example in each language", async () => {
+    const f = await createCapturingTest();
+    const model = answers();
+    await f.capture();
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    for (const said of [
+      "never start with a word that names them",
+      "'Kelas 12 IPA.'",
+      "'In grade 12.'",
+      "'Klasse 12, naturwissenschaftlicher Zweig.'",
+      "Bad: 'Learner berada di kelas 12 IPA.'",
+    ]) {
+      expect(prompt).toContain(said);
+    }
+  });
+});
+
 describe("memory capture that fails", () => {
   it("logs the provider's routing facts, never its words, and saves nothing", async () => {
     const f = await createCapturingTest();
@@ -411,68 +480,5 @@ describe("memory capture that fails", () => {
       unavailable({ operation: "unknown", rejected: false })
     );
     expect(await f.stored()).toHaveLength(1);
-  });
-});
-
-describe("memory capture among the follow-up work of a turn", () => {
-  /**
-   * A model for a whole turn: it answers the capture call with `level` and
-   * answers the suggestions and the title as `ninaModel` does.
-   */
-  function turnModel() {
-    const model = ninaModel();
-    const generate = vi.fn<MockLanguageModelV4["doGenerate"]>(
-      ({ prompt, responseFormat }) => {
-        let text = "Understanding A Function Limit";
-        if (encodeJsonText(prompt).includes("# Learner Message")) {
-          text = encodeJsonText({ memories: [level] });
-        } else if (responseFormat?.type === "json") {
-          text = encodeJsonText({
-            suggestions: ["How does this relate to continuity?"],
-          });
-        }
-        return Promise.resolve(providerStep([{ type: "text", text }]));
-      }
-    );
-    model.doGenerate = generate;
-    provider.languageModel.mockReturnValue(model);
-    return generate;
-  }
-
-  it("saves the memory beside the suggestions and the title", async () => {
-    const f = await createCapturingTest();
-    const generate = turnModel();
-    await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
-    expect(generate).toHaveBeenCalledTimes(3);
-    expect(await f.turn()).toMatchObject({
-      remembered: 1,
-      state: { status: "complete" },
-      suggestions: ["How does this relate to continuity?"],
-    });
-    expect(await f.texts()).toEqual(["Kelas 12."]);
-    // The title is stored sealed, so it is read the way every reader opens it.
-    expect((await f.owner.query(getChat, { chatId: f.chatId })).title).toBe(
-      "Understanding A Function Limit"
-    );
-  });
-
-  it("never costs the turn its answer or its suggestions when the vault is down, and stores neither a memory nor a title in plain text", async () => {
-    const f = await createCapturingTest();
-    const generate = turnModel();
-    vi.stubEnv("VAULT_ROOT_KEYS", "");
-    await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
-    expect(generate).toHaveBeenCalledTimes(3);
-    expect(await f.turn()).toMatchObject({
-      state: { status: "complete" },
-      suggestions: ["How does this relate to continuity?"],
-    });
-    // A memory and a title are both sealed. Without the vault neither can be
-    // sealed, and neither is written as readable text in its place.
-    expect(
-      (await f.t.query((ctx) => ctx.db.get("chats", f.chatId)))?.title
-    ).toBeUndefined();
-    expect(await f.stored()).toEqual([]);
   });
 });
