@@ -16,7 +16,6 @@ import {
   NinaTurnFacts,
   NinaTurnState,
   NinaUserSchema,
-  RetiredModelKey,
 } from "@repo/backend/confect/nina/contract/turn";
 import {
   NinaCreditError,
@@ -116,7 +115,6 @@ export default GroupSpec.make().addFunction(
     args: () => ({
       chatId: Schema.optionalKey(Id("chats")),
       requestId: NinaRequestId,
-      modelId: Schema.optionalKey(RetiredModelKey),
       input: NinaInput,
     }),
     returns: () => NinaReceipt,

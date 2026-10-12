@@ -183,9 +183,10 @@ function abandon(artifact: CapabilityArtifact): CapabilityArtifact {
  * never ends as `failed`, and a run that lost a card never ends as plainly
  * done or empty: it is `partial` beside a loaded card and `failed` without
  * one. `limit` and `denied` are decisions, not results, and stay as stated.
+ * A stated outcome always settles to an outcome, never to none.
  */
-function settleOutcome(
-  outcome: CapabilityOutcome | undefined,
+export function settleOutcome<Stated extends CapabilityOutcome | undefined>(
+  outcome: Stated,
   artifacts: readonly CapabilityArtifact[]
 ) {
   const loaded = Arr.some(
