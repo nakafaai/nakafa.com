@@ -6,11 +6,10 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 // Projects select files by folder path, so a file that repeats a basename
 // never joins a project by accident.
 // Each CI leg pays about ten minutes to prepare and build before its first
-// test, so the suites are balanced by run time. Measured on 12 October, before
-// the chat tests existed: runtime 288 s plus 40 s of site checks, learner 316 s,
-// visual 344 s, navigation 344 s. Marketing and consent run in the visual suite
-// only for that balance, and the try-out tests (63 s) run in the runtime suite
-// since the chat tests joined the learner suite.
+// test, so the suites are balanced by run time. Measured on 12 October: runtime
+// 290 s plus 40 s of site checks, learner 316 s, chat 361 s, visual 349 s,
+// navigation 267 to 344 s. Marketing and consent run in the visual suite only
+// for that balance.
 const VISUAL_TESTS = [
   "**/visual/**/*.browser.ts",
   "**/scene/**/*.browser.ts",
@@ -19,15 +18,18 @@ const VISUAL_TESTS = [
   "**/content/charts.browser.ts",
 ];
 
-// The pages of a signed-in learner (the account, the settings and Nina's
-// chats) hold the slowest files, and no test of a public page reads what they
+// The account, settings and try-out pages are the slowest files of the shared
+// runtime (316 of its 604 s), and no test of a public page reads what they
 // write, so they run in their own leg.
 const LEARNER_TESTS = [
   "**/account/**/*.browser.ts",
-  "**/chat/**/*.browser.ts",
-  "**/nina/**/*.browser.ts",
   "**/settings/**/*.browser.ts",
+  "**/tryout/**/*.browser.ts",
 ];
+
+// Nina's chats, on their page and in the sheet. They seed their own chats and
+// take as long as the whole learner suite, so they run in their own leg too.
+const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
 
 // Each project as it runs. No project names its dependency here: the suite
 // order below derives it.
@@ -43,6 +45,7 @@ const PROJECTS = {
     testIgnore: [
       "**/content/hydration.browser.ts",
       "**/navigation/instant.browser.ts",
+      ...CHAT_TESTS,
       ...LEARNER_TESTS,
       ...VISUAL_TESTS,
     ],
@@ -50,6 +53,10 @@ const PROJECTS = {
   },
   learner: {
     testMatch: LEARNER_TESTS,
+    workers: 1,
+  },
+  chat: {
+    testMatch: CHAT_TESTS,
     workers: 1,
   },
   visual: {
@@ -79,6 +86,7 @@ type ProjectName = keyof typeof PROJECTS;
 const SUITES = {
   runtime: ["cold-runtime", "shared-runtime"],
   learner: ["learner"],
+  chat: ["chat"],
   visual: ["visual"],
   navigation: ["isolated-navigation", "webkit"],
 } satisfies Record<string, readonly ProjectName[]>;
