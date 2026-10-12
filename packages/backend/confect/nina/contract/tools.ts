@@ -1,7 +1,7 @@
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { describedNonEmptyString } from "@repo/math/schema/shared";
-import { Array as Arr, pipe, Record, Schema, Struct } from "effect";
+import { Array as Arr, pipe, Record as Rec, Schema, Struct } from "effect";
 
 const SpecialistToolInputFields = {
   request: describedNonEmptyString(
@@ -160,7 +160,7 @@ const SECTION_HEADINGS = {
  */
 function readSections(input: SpecialistToolInput) {
   const fields: SpecialistToolFields = input;
-  return Arr.flatMap(Record.toEntries(SECTION_HEADINGS), ([field, heading]) => {
+  return Arr.flatMap(Rec.toEntries(SECTION_HEADINGS), ([field, heading]) => {
     const value = fields[field];
     return value === undefined ? [] : [{ heading, value }];
   });
