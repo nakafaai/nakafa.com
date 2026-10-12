@@ -1,6 +1,6 @@
 import type { CapabilityOutput } from "@repo/backend/confect/nina/capability/progress";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
-import { Array as Arr, Record, Schema } from "effect";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 
 /** Schema-owned permission result for a Nina capability in one turn. */
 const CapabilityDecisionSchema = Schema.Union([
@@ -62,11 +62,11 @@ export function decideCapability(
  * call all follow it.
  */
 export function offeredCapabilities<Name extends string>(
-  registry: Record.ReadonlyRecord<Name, Offering>,
+  registry: Rec.ReadonlyRecord<Name, Offering>,
   context: Pick<AgentContext, "memory" | "nina">
 ) {
   return Arr.filter(
-    Record.keys(registry),
+    Rec.keys(registry),
     (name) => decideCapability(registry[name], context).state === "allowed"
   );
 }

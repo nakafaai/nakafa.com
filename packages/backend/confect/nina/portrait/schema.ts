@@ -29,8 +29,8 @@ export const NinaPortraitDraft = Schema.Struct({ portrait: NinaPortraitText });
  * for none: a request within a day of it asks for no build. The two are apart
  * because a request that no build has answered yet must not close the day. A
  * build belongs to no turn, so its provider tokens accumulate in `usage`
- * instead of in a turn's usage ledger, as a summary's do; the field is absent
- * until a build has called the model.
+ * instead of in a turn's usage ledger; the field is absent until a build has
+ * called the model.
  */
 export const NinaMemoryPortrait = Schema.Struct({
   builtAt: Schema.optionalKey(Schema.Finite),

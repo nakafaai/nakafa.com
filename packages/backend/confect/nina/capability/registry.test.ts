@@ -36,7 +36,13 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect, MutableHashMap, MutableRef, Option, Record } from "effect";
+import {
+  Effect,
+  MutableHashMap,
+  MutableRef,
+  Option,
+  Record as Rec,
+} from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -169,7 +175,7 @@ async function runCapability(
 
 describe("the registry of Nina's capabilities", () => {
   it("lists them in the order of Nina's tool list, which the provider caches with the prompt", () => {
-    expect(Record.keys(registry)).toEqual([
+    expect(Rec.keys(registry)).toEqual([
       "nakafa",
       "deepResearch",
       "math",

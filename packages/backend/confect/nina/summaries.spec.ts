@@ -11,8 +11,9 @@ const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 
 /**
  * A chat's rolling summary of every turn up to and including `throughOrder`.
- * Refreshes are chat upkeep rather than part of a turn's answer, so their
- * provider usage accumulates here instead of in a turn's usage ledger.
+ * `usage` is the running total of the provider tokens of its refreshes. Each
+ * refresh also records its call in the usage ledger of the turn that settled
+ * (ADR 0001), which is where clients read it: nothing reads this total.
  */
 export const NinaSummary = Schema.Struct({
   chatId: Id("chats"),

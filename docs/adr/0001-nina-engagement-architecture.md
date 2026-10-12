@@ -152,7 +152,11 @@ analytics remains subject to account consent.
 
 ## Adding a capability
 
-A new capability is one definition and one entry. In order:
+A capability is one definition in its own folder and one entry in the registry.
+The tools Nina is offered, the policy of each call and the tool section of her
+prompt follow from them. A few other places still name a capability or its
+Agent, and they are the steps below, in order, with what the compiler enforces
+at each and what it leaves to the author.
 
 1. Write the run, an Effect program in the capability's own folder. It takes its
    input and the facts of the turn, publishes its cards through `publish`, and
@@ -160,9 +164,12 @@ A new capability is one definition and one entry. In order:
    time left with `limitDeadline`. Left to the author: what the run does.
 2. If the run calls a model, add its Agent to the usage ledger: one line in
    `AGENT_PURPOSES` of `contract/usage.ts`, with the purpose its calls run
-   under. Enforced: the ledger accepts no other name, and the output caps of
-   the release gate follow the table. Left to the author: the Agent's `name` is
-   a string, so write it `satisfies UsageAgent` and the compiler checks it.
+   under. The list is not read from the registry, because the stored turn
+   schema imports it and the browser loads that schema through the generated
+   refs, so the registry would bring every runner into the page. Enforced: the
+   ledger accepts no other name, and the output caps of the release gate follow
+   the table and name no agent. A runner writes its Agent's name with
+   `satisfies UsageAgent`, so it does not compile until the line exists.
 3. Define it in `<folder>/capability.ts` with `defineCapability`: the
    description the model reads, the Schema of its input, its guideline for the
    tool policy (`entry`, `field` when its input has a field of its own,

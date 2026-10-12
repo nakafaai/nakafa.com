@@ -29,7 +29,7 @@ import {
   Context,
   Effect,
   MutableHashMap,
-  Record,
+  Record as Rec,
   Schema,
   Stream,
 } from "effect";
@@ -251,9 +251,9 @@ export function defineCapability<Input, Requirements extends RunServices>(
  */
 export const createCapabilities = Effect.fn("nina.capabilities")(function* <
   Name extends string,
->(registry: Record.ReadonlyRecord<Name, Capability>) {
+>(registry: Rec.ReadonlyRecord<Name, Capability>) {
   const services = yield* Effect.context<ToolServices>();
-  return Record.map(registry, (capability, name) =>
+  return Rec.map(registry, (capability, name) =>
     capability.tool(name, services)
   );
 });
