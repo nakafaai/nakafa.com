@@ -203,7 +203,7 @@ pins the documents.
 | --- | ---: | ---: | --- |
 | First build of the release | 71 | 37 | `build.test.ts`: 71 and 37 |
 | Build of the same release again | 63 | 0 | `build.test.ts`: 63 and 0 |
-| Build of a new release that changed nothing | 63 | 1 | `build.test.ts`: 63 and 1 |
+| Build of a new release that changed nothing | 64 | 1 | `build.test.ts`: 64 and 1 |
 | One section of one lesson edited | 76 | 2 | `build.test.ts`: 76 and 2 |
 | Search with one hit | 8 | 0 | `hits.test.ts`: 8 |
 

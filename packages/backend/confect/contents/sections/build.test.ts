@@ -189,7 +189,9 @@ describe("section build", () => {
       }
     });
     const { total } = await measuredBuild(t);
-    expect(total.documentsRead).toBe(63);
+    // The 63 documents that a build of nothing new reads, and the record of the
+    // earlier release, which replacing it reads.
+    expect(total.documentsRead).toBe(64);
     expect(total.documentsWritten).toBe(1);
     expect(
       await t.query((ctx) => ctx.db.query("contentSectionState").collect())
