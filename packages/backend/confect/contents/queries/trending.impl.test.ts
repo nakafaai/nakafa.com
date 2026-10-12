@@ -318,5 +318,5 @@ describe("contents/queries/trending", () => {
     } finally {
       vi.useRealTimers();
     }
-  }, 30_000);
+  });
 });
