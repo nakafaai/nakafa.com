@@ -10,7 +10,6 @@ import {
 import {
   type knownInputValidator,
   type pageInputValidator,
-  type SectionDraft,
   sectionHeadValidator,
   sectionScope,
   type storeInputValidator,
@@ -21,50 +20,56 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const sameHead = Schema.toEquivalence(sectionHeadValidator);
 
-/** Finds the stored row of a section by its language, its document, and its place in it. */
-const findSection = Effect.fn("contents.sections.findSection")(function* (
-  key: Pick<SectionDraft, "appLocale" | "contentKey" | "ordinal">
+/** Reads the stored sections of one document, in the order of their places. */
+const documentRows = Effect.fn("contents.sections.documentRows")(function* (
+  key: Pick<typeof knownInputValidator.Type, "appLocale" | "contentKey">
 ) {
   return yield* (yield* DatabaseReader)
     .table("contentSections")
-    .get(
-      "by_appLocale_and_contentKey_and_ordinal",
-      key.appLocale,
-      key.contentKey,
-      key.ordinal
+    .index("by_appLocale_and_contentKey_and_ordinal", (index) =>
+      index.eq("appLocale", key.appLocale).eq("contentKey", key.contentKey)
     )
-    .pipe(
-      Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-      Effect.orDie
-    );
+    .take(SECTIONS_PER_DOCUMENT)
+    .pipe(Effect.orDie);
 });
 
+/** Whether a stored section has the text with that hash, made by that model, so that its vector is the vector of the text. */
+function holdsText(
+  row: Pick<typeof sectionHeadValidator.Type, "hash" | "model">,
+  hash: string,
+  model: string
+) {
+  return row.hash === hash && row.model === model;
+}
+
 /**
- * Tells, for each keyed section and in the same order, whether the index holds
- * it with the same text, made by the same model, so that it needs no new vector.
+ * Tells, for each hash and in the same order, whether the document holds a
+ * section with that text, made by the same model, at whatever place, so that
+ * the text needs no new vector.
  */
 export const knownSections = Effect.fn("contents.sections.known")(function* (
   input: typeof knownInputValidator.Type
 ) {
-  return yield* Effect.forEach(input.sections, (key) =>
-    Effect.map(
-      findSection(key),
-      (row) => row?.hash === key.hash && row.model === input.model
-    )
+  const stored = yield* documentRows(input);
+  return Arr.map(input.hashes, (hash) =>
+    Arr.some(stored, (row) => holdsText(row, hash, input.model))
   );
 });
 
 /**
  * Makes the index hold exactly the given sections of one document, and records
- * the version they were made from, in one transaction. A section that matches
- * the stored one in text and model keeps its vector, and is written again only
- * when something else about it changed, such as its place or its heading; a
- * changed or new section needs its vector with it. A stored row that no given
- * section matches is deleted, and so is the row of a section that came without
- * a vector and matches nothing, because the text that row holds is outdated.
- * Storing the same document again changes nothing. Nothing is stored once the
- * release is no longer the active one, because the build of the newer release
- * stores its documents and a late write would overwrite them.
+ * the version they were made from, in one transaction. A section keeps the
+ * vector of a stored section of the document that has the same text and was
+ * made by the same model, whichever place that section had, and is written
+ * again only when something else about it changed, such as its place or its
+ * heading: a section that another section pushed one place on is neither
+ * embedded again nor lost. A changed or new section needs its vector with it.
+ * A stored row that no given section takes the place of is deleted, and so is
+ * the row of a section that came without a vector and matches nothing, because
+ * the text that row holds is outdated. Storing the same document again changes
+ * nothing. Nothing is stored once the release is no longer the active one,
+ * because the build of the newer release stores its documents and a late write
+ * would overwrite them.
  */
 export const storeDocument = Effect.fn("contents.sections.store")(function* (
   input: typeof storeInputValidator.Type
@@ -72,14 +77,7 @@ export const storeDocument = Effect.fn("contents.sections.store")(function* (
   if (!(yield* isActive(input.releaseId))) {
     return { kept: 0, missing: 0, removed: 0, stale: true, written: 0 };
   }
-  const { appLocale, contentKey } = input.source;
-  const stored = yield* (yield* DatabaseReader)
-    .table("contentSections")
-    .index("by_appLocale_and_contentKey_and_ordinal", (index) =>
-      index.eq("appLocale", appLocale).eq("contentKey", contentKey)
-    )
-    .take(SECTIONS_PER_DOCUMENT)
-    .pipe(Effect.orDie);
+  const stored = yield* documentRows(input.source);
   const writer = yield* DatabaseWriter;
   const table = writer.table("contentSections");
   const outcomes = yield* Effect.forEach(
@@ -95,18 +93,23 @@ export const storeDocument = Effect.fn("contents.sections.store")(function* (
           model: input.model,
           scope: sectionScope(draft.appLocale, draft.section),
         };
-        const reusable = Option.filter(
-          current,
-          (row) => row.hash === draft.hash && row.model === input.model
+        const hasText = (row: (typeof stored)[number]) =>
+          holdsText(row, draft.hash, input.model);
+        // The row at its own place when it has the text, and otherwise any
+        // row of the document that has it, which is a section that moved. The
+        // rows are read before any is written, so a row that this loop
+        // replaces still gives its vector.
+        const holder = Option.orElse(Option.filter(current, hasText), () =>
+          Arr.findFirst(stored, hasText)
         );
-        const vector = Option.match(reusable, {
+        const vector = Option.match(holder, {
           onNone: () => embedding,
           onSome: (row) => row.embedding,
         });
         if (vector === undefined) {
           return { ordinal: draft.ordinal, outcome: "missing" as const };
         }
-        if (Option.exists(reusable, (row) => sameHead(row, head))) {
+        if (Option.exists(holder, (row) => sameHead(row, head))) {
           return { ordinal: draft.ordinal, outcome: "kept" as const };
         }
         yield* Option.match(current, {

@@ -4,7 +4,6 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { embedDrafts } from "@repo/backend/confect/contents/sections/embed";
-import { SECTIONS_PER_CHECK } from "@repo/backend/confect/contents/sections/limits";
 import type {
   SectionDocument,
   SectionDraft,
@@ -30,12 +29,13 @@ const withHash = (section: SectionFields) =>
  * Makes the index hold the given documents for one release: it embeds the
  * sections whose text the index does not hold yet, in bounded batches across
  * all the documents, and then stores each document in one transaction, which
- * records its version beside its sections. Sections the index holds already
- * are not sent to the embedder again nor written again, and a section whose
- * text the model refuses is left out of the index, which counts it as missing.
- * The answer says how many sections were embedded, kept, missing, written, and
- * how many rows were removed, and whether the release stopped being the active
- * one, in which case nothing was stored.
+ * records its version beside its sections. A text that its document holds
+ * already, at whatever place, is not sent to the embedder again, and a section
+ * whose row is the same is not written again. A section whose text the model
+ * refuses is left out of the index, which counts it as missing. The answer
+ * says how many sections were embedded, kept, missing, written, and how many
+ * rows were removed, and whether the release stopped being the active one, in
+ * which case nothing was stored.
  */
 export const syncDocuments = Effect.fn("contents.sections.sync")(function* (
   releaseId: string,
@@ -49,20 +49,23 @@ export const syncDocuments = Effect.fn("contents.sections.sync")(function* (
       source,
     }))
   );
-  const drafts = Arr.flatMap(hashed, (document) => document.drafts);
-  // The arguments are encoded through `knownInputValidator`, which keeps the
-  // key of each section and drops its text, so only the keys travel.
-  const known = Arr.flatten(
-    yield* Effect.forEach(Arr.chunksOf(drafts, SECTIONS_PER_CHECK), (chunk) =>
-      runQuery(refs.internal.contents.sections.rows.stored, {
-        model: embeddingModelId,
-        sections: chunk,
-      }).pipe(Effect.catchTag("SchemaError", Effect.die))
-    )
+  // One check for each document, which asks about the hash of each of its
+  // sections and sends no text.
+  const known = yield* Effect.forEach(hashed, ({ drafts, source }) =>
+    runQuery(refs.internal.contents.sections.rows.stored, {
+      appLocale: source.appLocale,
+      contentKey: source.contentKey,
+      hashes: Arr.map(drafts, ({ hash }) => hash),
+      model: embeddingModelId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die))
   );
-  const pending = Arr.map(
-    Arr.filter(Arr.zip(drafts, known), ([, isKnown]) => !isKnown),
-    ([draft]) => draft
+  const pending = Arr.flatten(
+    Arr.zipWith(hashed, known, ({ drafts }, found) =>
+      Arr.map(
+        Arr.filter(Arr.zip(drafts, found), ([, isKnown]) => !isKnown),
+        ([draft]) => draft
+      )
+    )
   );
   const vectors = yield* embedDrafts(pending);
   const embeddings = HashMap.fromIterable(

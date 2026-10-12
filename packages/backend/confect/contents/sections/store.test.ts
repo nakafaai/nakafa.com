@@ -24,6 +24,9 @@ const vector = Arr.makeBy(embeddingDimensions, (index) =>
 const otherVector = Arr.makeBy(embeddingDimensions, (index) =>
   index === 1 ? 1 : 0
 );
+const newVector = Arr.makeBy(embeddingDimensions, (index) =>
+  index === 2 ? 1 : 0
+);
 
 const matrix: Source = {
   appLocale: "id",
@@ -189,7 +192,7 @@ describe("section store", () => {
       await store(ACTIVE, [
         toStore(draft(0)),
         toStore(draft(1, "sha256:second")),
-        toStore(draft(2)),
+        toStore(draft(2, "sha256:third")),
       ])
     ).toEqual({ kept: 1, missing: 2, removed: 1, stale: false, written: 0 });
     expect(await rows()).toMatchObject([{ hash: "sha256:first", ordinal: 0 }]);
@@ -279,15 +282,107 @@ describe("section store", () => {
     expect(result).toMatchObject({ stale: true, written: 0 });
   });
 
-  it("tells which sections the index holds with the same text and model", async () => {
+  it("keeps the vector of a section that another section pushed one place on, and embeds only the new one", async () => {
+    const { rows, store } = await setup();
+    await store(ACTIVE, [
+      toStore(draft(0, "sha256:a"), vector),
+      toStore(draft(1, "sha256:b"), otherVector),
+      toStore(draft(2, "sha256:c"), vector),
+    ]);
+    // A new section comes before the second, so the second and the third move.
+    expect(
+      await store(ACTIVE, [
+        toStore(draft(0, "sha256:a")),
+        toStore(draft(1, "sha256:new"), newVector),
+        toStore(draft(2, "sha256:b")),
+        toStore(draft(3, "sha256:c")),
+      ])
+    ).toEqual({ kept: 1, missing: 0, removed: 0, stale: false, written: 3 });
+    expect(
+      Arr.map(await rows(), ({ embedding, hash, ordinal }) => [
+        ordinal,
+        hash,
+        embedding,
+      ])
+    ).toEqual([
+      [0, "sha256:a", vector],
+      [1, "sha256:new", newVector],
+      [2, "sha256:b", otherVector],
+      [3, "sha256:c", vector],
+    ]);
+  });
+
+  it("keeps the vector of a section that moved up when a section before it vanished, and deletes the row it left", async () => {
+    const { rows, store } = await setup();
+    await store(ACTIVE, [
+      toStore(draft(0, "sha256:a"), vector),
+      toStore(draft(1, "sha256:b"), otherVector),
+      toStore(draft(2, "sha256:c"), newVector),
+    ]);
+    expect(
+      await store(ACTIVE, [
+        toStore(draft(0, "sha256:a")),
+        toStore(draft(1, "sha256:c")),
+      ])
+    ).toEqual({ kept: 1, missing: 0, removed: 1, stale: false, written: 1 });
+    expect(
+      Arr.map(await rows(), ({ embedding, hash, ordinal }) => [
+        ordinal,
+        hash,
+        embedding,
+      ])
+    ).toEqual([
+      [0, "sha256:a", vector],
+      [1, "sha256:c", newVector],
+    ]);
+  });
+
+  it("does not take the vector of a section of another document, or of another model", async () => {
+    const { rows, store } = await setup();
+    await store(
+      ACTIVE,
+      [
+        toStore(
+          { ...draft(0, "sha256:a"), contentKey: "material/lesson/lain" },
+          vector
+        ),
+      ],
+      { source: { ...matrix, contentKey: "material/lesson/lain" } }
+    );
+    await store(ACTIVE, [toStore(draft(0, "sha256:b"), otherVector)], {
+      model: OTHER_MODEL,
+    });
+    // The text of the first is stored in another document, the text of the
+    // second by another model, and no new vector came with either.
+    expect(
+      await store(ACTIVE, [
+        toStore(draft(0, "sha256:a")),
+        toStore(draft(1, "sha256:b")),
+      ])
+    ).toEqual({ kept: 0, missing: 2, removed: 1, stale: false, written: 0 });
+    expect(Arr.map(await rows(), ({ contentKey }) => contentKey)).toEqual([
+      "material/lesson/lain",
+    ]);
+  });
+
+  it("tells which texts a document holds, made by the model, at whatever place", async () => {
     const { store, t } = await setup();
-    await store(ACTIVE, [toStore(draft(0), vector)]);
-    const ask = (model: string) =>
+    await store(ACTIVE, [
+      toStore(draft(0, "sha256:a"), vector),
+      toStore(draft(1, "sha256:b"), otherVector),
+    ]);
+    const ask = (
+      model: string,
+      hashes: readonly string[],
+      contentKey = matrix.contentKey
+    ) =>
       t.mutation((ctx) =>
         Effect.runPromise(
           knownSections({
+            appLocale: "id",
+            contentKey,
+            hashes,
             model,
-            sections: [draft(0), draft(0, "sha256:second"), draft(1)],
           }).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
@@ -295,7 +390,17 @@ describe("section store", () => {
           )
         )
       );
-    expect(await ask(MODEL)).toEqual([true, false, false]);
-    expect(await ask(OTHER_MODEL)).toEqual([false, false, false]);
+    expect(await ask(MODEL, ["sha256:b", "sha256:c", "sha256:a"])).toEqual([
+      true,
+      false,
+      true,
+    ]);
+    expect(await ask(OTHER_MODEL, ["sha256:a", "sha256:b"])).toEqual([
+      false,
+      false,
+    ]);
+    expect(await ask(MODEL, ["sha256:a"], "material/lesson/lain")).toEqual([
+      false,
+    ]);
   });
 });

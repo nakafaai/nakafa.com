@@ -2,7 +2,6 @@ import { RegisteredFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { documentSections } from "@repo/backend/confect/contents/sections/draft";
-import { SECTIONS_PER_CHECK } from "@repo/backend/confect/contents/sections/limits";
 import {
   knownInputValidator,
   type SectionDocument,
@@ -21,7 +20,7 @@ import {
 } from "@repo/backend/test/knowledge";
 import { MockEmbeddingModelV4 } from "ai/test";
 import { getFunctionName } from "convex/server";
-import { Array as Arr, Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => provider.embeddingModel.mockReset());
@@ -64,6 +63,35 @@ function lesson(
       )
     ),
     version: options.version ?? "first",
+  };
+}
+
+/** The document of a lesson whose sections are those, each a heading with its body, in order. */
+function lessonOf(
+  parts: readonly (readonly [heading: string, body: string])[],
+  version = "first"
+): SectionDocument {
+  return {
+    appLocale: source.appLocale,
+    contentKey: source.contentKey,
+    section: source.section,
+    sections: documentSections(
+      source,
+      "Matriks",
+      Arr.join(
+        [
+          "# Matriks",
+          ...Arr.flatMap(parts, ([heading, body]) => [
+            "",
+            `## ${heading}`,
+            "",
+            body,
+          ]),
+        ],
+        "\n"
+      )
+    ),
+    version,
   };
 }
 
@@ -260,12 +288,64 @@ describe("section sync", () => {
     expect(await sources()).toEqual([]);
   });
 
-  it("asks what the index holds a bounded group of sections at a time, with the key of each", async () => {
+  it("embeds only the new section when another section comes before the others and pushes them on", async () => {
+    const model = embedWithKnowledge();
+    const { rows, sync } = await setup();
+    await sync([
+      lessonOf([
+        ["Satu", "Isi satu."],
+        ["Dua", "Isi dua."],
+        ["Tiga", "Isi tiga."],
+      ]),
+    ]);
+    const before = await rows();
+    model.doEmbedCalls.length = 0;
+    // The second and the third section have the same text, one place on. All
+    // four rows are written, because each says how many sections the document
+    // has, but only the new text is sent to the embedder.
+    expect(
+      await sync([
+        lessonOf(
+          [
+            ["Satu", "Isi satu."],
+            ["Baru", "Isi baru."],
+            ["Dua", "Isi dua."],
+            ["Tiga", "Isi tiga."],
+          ],
+          "second"
+        ),
+      ])
+    ).toEqual({
+      embedded: 1,
+      kept: 0,
+      missing: 0,
+      removed: 0,
+      stale: false,
+      written: 4,
+    });
+    expect(Arr.flatMap(model.doEmbedCalls, ({ values }) => values)).toEqual([
+      expect.stringContaining("Isi baru."),
+    ]);
+    // The vector of each old section is where its text is now.
+    const vectorOf = (rowsOf: typeof before, anchor: string) =>
+      Arr.findFirst(rowsOf, (row) => row.anchor === anchor).pipe(
+        Option.map(({ embedding }) => embedding)
+      );
+    const after = await rows();
+    expect(after).toHaveLength(4);
+    for (const anchor of ["dua", "tiga"]) {
+      expect(vectorOf(after, anchor)).toEqual(vectorOf(before, anchor));
+    }
+  });
+
+  it("asks once for each document what the index holds, with the hash of each section and no text", async () => {
     embedWithKnowledge();
     const { syncObserved } = await setup();
-    const headings = 150;
-    const queries = await syncObserved([lesson(headings)]);
-    // Parsing refuses a section with more than its key, so the texts are not sent.
+    const queries = await syncObserved([
+      lesson(3),
+      lesson(2, undefined, { contentKey: "material/lesson/lain" }),
+    ]);
+    // Parsing refuses a field beyond the hashes, so the texts are not sent.
     const checks = Arr.map(
       Arr.filter(
         queries,
@@ -276,10 +356,11 @@ describe("section sync", () => {
           onExcessProperty: "error",
         })
     );
-    expect(Arr.map(checks, ({ sections }) => sections.length)).toEqual([
-      SECTIONS_PER_CHECK,
-      SECTIONS_PER_CHECK,
-      headings - 2 * SECTIONS_PER_CHECK,
+    expect(
+      Arr.map(checks, ({ contentKey, hashes }) => [contentKey, hashes.length])
+    ).toEqual([
+      [source.contentKey, 3],
+      ["material/lesson/lain", 2],
     ]);
   });
 });

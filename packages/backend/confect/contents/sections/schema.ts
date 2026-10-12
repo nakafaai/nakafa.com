@@ -163,18 +163,18 @@ export const surahResultValidator = Schema.Union([
   }),
 ]);
 
-/** The identity and text hash of a section, as the build asks whether it is stored already. */
-const sectionKeyValidator = Schema.Struct({
+/**
+ * Asks, for the hash of each text of a document, whether the index holds a
+ * section of that document with the same text made by the same model, at
+ * whatever place it has: such a section needs no new vector, even when
+ * another section came before it and moved it one place on. Only hashes
+ * travel, never the texts.
+ */
+export const knownInputValidator = Schema.Struct({
   appLocale: localeValidator,
   contentKey: Schema.String,
-  hash: Schema.String,
-  ordinal: Schema.Finite,
-});
-
-/** Asks which of the keyed sections are stored with the same text, made by the same model. */
-export const knownInputValidator = Schema.Struct({
+  hashes: Schema.Array(Schema.String),
   model: Schema.String,
-  sections: Schema.Array(sectionKeyValidator),
 });
 
 /** A section to store, with its vector when its text changed. */

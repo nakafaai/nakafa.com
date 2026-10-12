@@ -29,22 +29,16 @@ export const EMBED_RETRIES = 4;
 export const EMBED_RETRY_DELAY_MS = 5000;
 
 /**
- * Sections one stored check reads. Convex counts a vector of 768 numbers as
- * 6,914 bytes, and a section keeps up to 12,000 characters of text beside it,
- * 24,000 bytes when they are Arabic, so a full check reads about 2 MB, far
- * below the 16 MiB read limit however many sections a step finds in its
- * lessons.
- */
-export const SECTIONS_PER_CHECK = 64;
-
-/**
  * Sections one document may have. One store mutation replaces all the sections
  * of a document, so that the stored sections and the version recorded for them
  * are never apart. It reads this many rows of about 31 KB at the most, a
- * vector and a longest text, and may read each of them twice more when it
+ * vector and a longest text (Convex counts a vector of 768 numbers as 6,914
+ * bytes, and a section keeps up to 12,000 characters of text beside it, 24,000
+ * bytes when they are Arabic), and may read each of them twice more when it
  * replaces or deletes them, about 12 MB in all, below the 16 MiB limits. The
- * longest lesson of the corpus has 19 sections and the longest surah 48
- * passages, so a document over the limit is a source to fix, and the build
+ * check that asks which texts a document holds reads the rows once, about 4
+ * MB. The longest lesson of the corpus has 19 sections and the longest surah
+ * 48 passages, so a document over the limit is a source to fix, and the build
  * fails and names it.
  */
 export const SECTIONS_PER_DOCUMENT = 128;

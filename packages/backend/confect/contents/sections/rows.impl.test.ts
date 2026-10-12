@@ -37,11 +37,12 @@ const source = {
   version: "1:google/gemini-embedding-2:first",
 } as const;
 
-const key = {
+/** Asks whether the document holds the text of the section the function stores. */
+const known = {
   appLocale: section.appLocale,
   contentKey: section.contentKey,
-  hash: section.hash,
-  ordinal: section.ordinal,
+  hashes: [section.hash],
+  model: "google/gemini-embedding-2",
 };
 
 const model = "google/gemini-embedding-2";
@@ -87,7 +88,7 @@ describe("section rows", () => {
         source,
       })
     ).toEqual({ kept: 0, missing: 0, removed: 0, stale: false, written: 1 });
-    expect(await t.query(stored, { model, sections: [key] })).toEqual([true]);
+    expect(await t.query(stored, known)).toEqual([true]);
     // The fixture publishes no lesson with this identity.
     expect(
       await t.mutation(prune, {
@@ -95,7 +96,7 @@ describe("section rows", () => {
         releaseId: KNOWLEDGE_RELEASE.releaseId,
       })
     ).toMatchObject({ deleted: 1, done: true, stale: false });
-    expect(await t.query(stored, { model, sections: [key] })).toEqual([false]);
+    expect(await t.query(stored, known)).toEqual([false]);
   });
 
   it("records a finished build for the active release only", async () => {

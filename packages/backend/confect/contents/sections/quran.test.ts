@@ -1,11 +1,18 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { EMBED_BATCH_SIZE } from "@repo/backend/confect/contents/sections/limits";
 import { readSurah } from "@repo/backend/confect/contents/sections/quran";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
+import { provider } from "@repo/backend/test/gateway";
+import {
+  embedWhileAnotherReleaseActivates,
+  embedWithKnowledge,
+  knowledgeBuild,
+} from "@repo/backend/test/knowledge";
 import { makeQuranChunk, makeQuranSurah } from "@repo/backend/test/quran/rows";
 import {
   activateQuranSnapshot,
@@ -252,5 +259,125 @@ describe("section Quran passages", () => {
   it("is stale while no release is active", async () => {
     const { read } = setup();
     expect(await read({ surah: 1 })).toEqual({ kind: "stale" });
+  });
+});
+
+describe("section build of the Quran", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => provider.embeddingModel.mockReset());
+
+  /** A test deployment with the steps of the build and the rows that they store. */
+  function building() {
+    const t = createConvexTestWithBetterAuth();
+    const rows = () =>
+      t.query((ctx) => ctx.db.query("contentSections").collect());
+    const sources = () =>
+      t.query((ctx) => ctx.db.query("contentSectionSources").collect());
+    return { ...knowledgeBuild(t), rows, sources, t };
+  }
+
+  it("indexes a surah at a time, in bounded batches", async () => {
+    const model = embedWithKnowledge();
+    const { rows, run, sources, t } = building();
+    const verses = 300;
+    const chunk = 6;
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranSurah(2, verses),
+        ...Arr.makeBy(verses / chunk, (index) =>
+          makeQuranChunk({
+            firstQuranNumber: index * chunk + 1,
+            firstVerse: index * chunk + 1,
+            surahNumber: 2,
+            verseCount: chunk,
+          })
+        ),
+      ])
+    );
+    const result = await run({
+      position: { phase: "quran", surah: 2 },
+      releaseId: TEST_RELEASE_ID,
+    });
+    const passages = (verses / chunk) * 3;
+    expect(result).toMatchObject({
+      embedded: passages,
+      next: {
+        position: { phase: "quran", surah: 3 },
+        releaseId: TEST_RELEASE_ID,
+      },
+      skipped: 0,
+      written: passages,
+    });
+    expect(model.doEmbedCalls).toHaveLength(
+      Math.ceil(passages / EMBED_BATCH_SIZE)
+    );
+    expect(await rows()).toHaveLength(passages);
+    expect(await sources()).toHaveLength(3);
+  });
+
+  it("builds the active release when a manual start names no release", async () => {
+    embedWithKnowledge();
+    const { run, t } = building();
+    await t.mutation(activateQuranSource);
+    expect(await run({ position: { phase: "quran", surah: 1 } })).toMatchObject(
+      {
+        next: {
+          position: { cursor: null, phase: "prune" },
+          releaseId: TEST_RELEASE_ID,
+        },
+        stale: false,
+      }
+    );
+  });
+
+  it("follows the last surah with the clean up", async () => {
+    embedWithKnowledge();
+    const { run, t } = building();
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranSurah(114, 6),
+        makeQuranChunk({
+          firstQuranNumber: 6231,
+          firstVerse: 1,
+          surahNumber: 114,
+          verseCount: 6,
+        }),
+      ])
+    );
+    expect(
+      await run({
+        position: { phase: "quran", surah: 114 },
+        releaseId: TEST_RELEASE_ID,
+      })
+    ).toMatchObject({
+      next: {
+        position: { cursor: null, phase: "prune" },
+        releaseId: TEST_RELEASE_ID,
+      },
+    });
+  });
+
+  it("stores nothing and stops when another release becomes active while a surah is embedded", async () => {
+    const { rows, run, sources, t } = building();
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranSurah(1, 6),
+        makeQuranChunk({
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 6,
+        }),
+      ])
+    );
+    embedWhileAnotherReleaseActivates(t);
+    expect(
+      await run({
+        position: { phase: "quran", surah: 1 },
+        releaseId: TEST_RELEASE_ID,
+      })
+    ).toMatchObject({ next: null, stale: true, written: 0 });
+    expect(await rows()).toEqual([]);
+    expect(await sources()).toEqual([]);
   });
 });
