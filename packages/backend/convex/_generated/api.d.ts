@@ -8724,13 +8724,18 @@ export declare const internal: {
           texts: Array<string>;
           together: number;
         },
-        {
-          rows: Array<
-            | { probabilities: Record<string, number> }
-            | { failure: { reason: string; status?: number; type?: string } }
-          >;
-          thresholds: Record<string, number>;
-        }
+        | {
+            kind: "measured";
+            rows: Array<
+              | { probabilities: Record<string, number> }
+              | { failure: { reason: string; status?: number; type?: string } }
+            >;
+            thresholds: Record<string, number>;
+          }
+        | {
+            failure: { _tag: "GatewayConfigurationError"; message: string };
+            kind: "failed";
+          }
       >;
     };
     lifecycle: {
