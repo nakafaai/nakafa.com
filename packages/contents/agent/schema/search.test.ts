@@ -3,7 +3,10 @@ import {
   NakafaAgentSearchFactsSchema,
   NakafaAgentSearchOptionsSchema,
 } from "@repo/contents/agent/schema/search";
-import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
+import {
+  NAKAFA_AGENT_MAX_QUERY_LENGTH,
+  NAKAFA_AGENT_SEARCH_WINDOW,
+} from "@repo/contents/agent/search";
 import { Schema } from "effect";
 
 describe("NakafaAgentSearchOptionsSchema", () => {
@@ -27,6 +30,26 @@ describe("NakafaAgentSearchOptionsSchema", () => {
     expect(
       Schema.is(NakafaAgentSearchFactsSchema)({ ...executed, limit: -1 })
     ).toBe(false);
+  });
+  it("refuses a query longer than the search can use, and still reads a recorded one", () => {
+    const atLimit = "a".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH);
+    const search = (query: string) => ({
+      limit: 10,
+      locale: "en",
+      offset: 0,
+      queries: [query],
+    });
+
+    expect(Schema.is(NakafaAgentSearchOptionsSchema)(search(atLimit))).toBe(
+      true
+    );
+    expect(
+      Schema.is(NakafaAgentSearchOptionsSchema)(search(`${atLimit}a`))
+    ).toBe(false);
+    // A search recorded with a longer query before the limit still decodes.
+    expect(Schema.is(NakafaAgentSearchFactsSchema)(search(`${atLimit}a`))).toBe(
+      true
+    );
   });
   it("applies the documented search defaults", () => {
     expect(Schema.decodeSync(NakafaAgentSearchOptionsSchema)({})).toEqual({

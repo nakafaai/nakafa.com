@@ -8,6 +8,7 @@ import {
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,
   NAKAFA_AGENT_MAX_QUERIES,
+  NAKAFA_AGENT_MAX_QUERY_LENGTH,
 } from "@repo/contents/agent/search";
 import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Schema, Struct } from "effect";
@@ -63,7 +64,14 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
     description: "Zero-based result offset for pagination.",
   }),
   queries: Schema.optionalKey(
-    Schema.Array(Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))))
+    Schema.Array(
+      Schema.Trim.pipe(
+        Schema.check(
+          Schema.isMinLength(1),
+          Schema.isMaxLength(NAKAFA_AGENT_MAX_QUERY_LENGTH)
+        )
+      )
+    )
       .pipe(
         Schema.mutable,
         Schema.check(Schema.isMaxLength(NAKAFA_AGENT_MAX_QUERIES))

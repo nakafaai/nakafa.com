@@ -1,7 +1,7 @@
 import { casApiKey, casUrl } from "@repo/math/config";
 import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
 import type { MathRequest } from "@repo/math/schema/request";
-import { type MathResult, MathResultSchema } from "@repo/math/schema/result";
+import { MathCasResultSchema, type MathResult } from "@repo/math/schema/result";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Array as Arr, Context, Effect, Layer, Result, Schema } from "effect";
 import {
@@ -74,7 +74,7 @@ export class MathService extends Context.Service<
                 })
             )
           );
-          return yield* Schema.decodeUnknownEffect(MathResultSchema)(
+          return yield* Schema.decodeUnknownEffect(MathCasResultSchema)(
             payload
           ).pipe(
             Effect.mapError(

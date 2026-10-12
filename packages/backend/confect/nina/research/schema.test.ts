@@ -4,6 +4,7 @@ import {
   researchOutputSchema,
   ScrapeInputSchema,
   WebSearchInputSchema,
+  webSearchMaxQueryLength,
 } from "@repo/backend/confect/nina/research/schema";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Result, Schema } from "effect";
@@ -62,6 +63,19 @@ describe("research schema", () => {
     expect(Result.isFailure(invalid)).toBe(true);
     expect(Result.isFailure(missingPreference)).toBe(true);
     expect(Result.isFailure(invalidPreference)).toBe(true);
+  });
+  it("refuses a web-search query longer than the provider takes", () => {
+    const search = (query: string) =>
+      Schema.decodeResult(WebSearchInputSchema)({
+        queries: [query],
+        sourcePreference: "any",
+      });
+    const atLimit = "a".repeat(webSearchMaxQueryLength);
+
+    expect(Result.isSuccess(search(atLimit))).toBe(true);
+    expect(Result.isFailure(search(`${atLimit}a`))).toBe(true);
+    // The spaces around a query are cut before its length counts.
+    expect(Result.isSuccess(search(`  ${atLimit}  `))).toBe(true);
   });
   it("asks research findings for their shape and leaves citations to the filter", () => {
     const cited = Schema.decodeResult(ResearchOutputSchema)({

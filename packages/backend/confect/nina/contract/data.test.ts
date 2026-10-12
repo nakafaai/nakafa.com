@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { NakafaDataSchema } from "@repo/backend/confect/nina/contract/data";
+import {
+  DataPartSchema,
+  NakafaDataSchema,
+} from "@repo/backend/confect/nina/contract/data";
+import { webSearchMaxQueryLength } from "@repo/backend/confect/nina/research/schema";
+import { NAKAFA_AGENT_MAX_QUERY_LENGTH } from "@repo/contents/agent/search";
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Schema } from "effect";
 
@@ -87,5 +92,27 @@ describe("Nakafa persisted Quran data", () => {
         result: preview,
       })
     ).toBe(false);
+  });
+});
+
+describe("persisted search queries", () => {
+  it("keeps a query longer than a new search may send readable", () => {
+    const longer = "a".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH + 1);
+
+    expect(
+      Schema.is(NakafaDataSchema)({
+        input: { limit: 10, locale: "en", offset: 0, queries: [longer] },
+        kind: "search",
+        status: "loading",
+      })
+    ).toBe(true);
+    expect(
+      Schema.is(DataPartSchema.fields["web-search"])({
+        provider: "firecrawl",
+        queries: [`${longer}${"a".repeat(webSearchMaxQueryLength)}`],
+        sources: [],
+        status: "done",
+      })
+    ).toBe(true);
   });
 });

@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { MathCasRequestError } from "@repo/math/errors";
+import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
+import { mathResultMaxRows } from "@repo/math/schema/result";
 import { MathService } from "@repo/math/service";
-import { ConfigProvider, Deferred, Effect, Exit, Fiber } from "effect";
+import {
+  Array as Arr,
+  ConfigProvider,
+  Deferred,
+  Effect,
+  Exit,
+  Fiber,
+} from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 
@@ -118,6 +126,52 @@ describe("MathService", () => {
         })
       );
     })
+  );
+  it.effect(
+    "refuses a CAS result whose list is longer than a page carries",
+    () =>
+      Effect.gen(function* () {
+        const step = {
+          action: "evaluate",
+          items: [],
+          primary: { expression: "2 + 2", latex: "2 + 2" },
+        };
+        fetcher.mockResolvedValue(
+          Response.json({
+            conditions: [],
+            input: { expression: "2 + 2", kind: "math", operation: "evaluate" },
+            items: [],
+            kind: "evaluate",
+            operation: "evaluate",
+            primary: { expression: "2 + 2", latex: "2 + 2" },
+            reason: "Exact arithmetic was checked.",
+            stepStatus: "complete",
+            steps: Arr.replicate(step, mathResultMaxRows + 1),
+            status: "verified",
+          })
+        );
+        const exit = yield* Effect.exit(
+          MathService.use((service) =>
+            service.compute({
+              expression: "2 + 2",
+              kind: "math",
+              operation: "evaluate",
+            })
+          ).pipe(
+            Effect.provide(MathService.layer),
+            Effect.provideService(ConfigProvider.ConfigProvider, provider),
+            Effect.provideService(FetchHttpClient.Fetch, fetcher)
+          )
+        );
+        expect(Exit.isFailure(exit)).toBe(true);
+        if (Exit.isSuccess(exit)) {
+          return;
+        }
+        expect(exit.cause.toString()).toContain(MathCasResponseError.name);
+        expect(exit.cause.toString()).toContain(
+          `no more than ${mathResultMaxRows} steps, items or conditions`
+        );
+      })
   );
   it.effect("keeps CAS HTTP failures typed", () =>
     Effect.gen(function* () {
