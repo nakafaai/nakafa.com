@@ -30,6 +30,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { loadedForChat } from "@/components/ai/chat/state";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
@@ -63,28 +64,32 @@ const optimisticCancel: OptimisticUpdate<typeof nina.lifecycle.cancel> = (
   store,
   args
 ) => {
-  const current = store.getQuery(nina.conversation.get, args);
-  if (Option.isNone(current) || !current.value.turn) {
-    return;
-  }
-  const turn = current.value.turn;
-  if (turn.state.status !== "running" && turn.state.status !== "queued") {
-    return;
-  }
-  store.setQuery(
-    nina.conversation.get,
-    args,
-    Option.some({
-      ...current.value,
-      turn: {
-        ...turn,
-        state: {
-          status: "cancelled",
-          finishedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+  for (const { args: access, value: current } of loadedForChat(
+    store.getAllQueries(nina.conversation.get),
+    args.chatId
+  )) {
+    const turn = current.turn;
+    if (
+      !turn ||
+      (turn.state.status !== "running" && turn.state.status !== "queued")
+    ) {
+      continue;
+    }
+    store.setQuery(
+      nina.conversation.get,
+      access,
+      Option.some({
+        ...current,
+        turn: {
+          ...turn,
+          state: {
+            status: "cancelled",
+            finishedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+          },
         },
-      },
-    })
-  );
+      })
+    );
+  }
 };
 
 /** Keeps admitted and optimistic prompts stable until the Agent feed catches up. */

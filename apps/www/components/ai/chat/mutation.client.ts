@@ -8,12 +8,17 @@ import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option } from "effect";
 import {
+  loadedForChat,
   patchChatPage,
   removeChatFromPage,
   updateOwnChatVisibility,
 } from "@/components/ai/chat/state";
 
-/** Patch a loaded chat detail projection when it is subscribed. */
+/**
+ * Patch a loaded chat detail projection when it is subscribed. The owner who
+ * opened the chat through its own share link holds it under other arguments,
+ * and is patched too.
+ */
 function patchChatDetail(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   chatId: Id<"chats">,
@@ -22,17 +27,14 @@ function patchChatDetail(
     visibility?: ChatVisibility;
   }
 ) {
-  const conversation = localStore.getQuery(nina.conversation.get, {
-    chatId,
-  });
-  if (Option.isSome(conversation)) {
+  for (const { args, value } of loadedForChat(
+    localStore.getAllQueries(nina.conversation.get),
+    chatId
+  )) {
     localStore.setQuery(
       nina.conversation.get,
-      { chatId },
-      Option.some({
-        ...conversation.value,
-        chat: { ...conversation.value.chat, ...patch },
-      })
+      args,
+      Option.some({ ...value, chat: { ...value.chat, ...patch } })
     );
   }
   const chat = Option.getOrUndefined(

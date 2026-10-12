@@ -32,6 +32,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { exceedsDocumentLimit } from "@/components/ai/attachments";
+import { loadedForChat } from "@/components/ai/chat/state";
 import { useAi } from "@/components/ai/context";
 import {
   NinaConnectionError,
@@ -60,10 +61,11 @@ function optimisticPrompt(
     if (!args.chatId) {
       return;
     }
-    const conversation = store.getQuery(nina.conversation.get, {
-      chatId: args.chatId,
-    });
-    if (Option.isNone(conversation)) {
+    const [conversation] = loadedForChat(
+      store.getAllQueries(nina.conversation.get),
+      args.chatId
+    );
+    if (!conversation) {
       return;
     }
     const threadId = conversation.value.chat.threadId;
