@@ -1,28 +1,25 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import { fails } from "@repo/backend/test/nina/capture";
-import { candidate, createCaptureTest } from "@repo/backend/test/nina/memory";
 import {
   createPortraitTest,
+  createRequestedTest,
   promptOf,
-  scheduledBuilds,
   writes,
   writesAfter,
   writesUncounted,
 } from "@repo/backend/test/nina/portrait";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
-import { Effect, MutableRef } from "effect";
+import { MutableRef } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 
 const memory = refs.public.nina.memory;
-const add = Ref.getFunctionReference(memory.add);
 const clear = Ref.getFunctionReference(memory.clear);
 const edit = Ref.getFunctionReference(memory.edit);
 const pause = Ref.getFunctionReference(memory.pause);
@@ -47,20 +44,9 @@ const unavailable = (fact: object) => [
   ["Nina portrait unavailable", expect.objectContaining(fact)],
 ];
 
-/**
- * A learner whose portrait row asks for a build and whose request has had its
- * quiet, with the text and what the portrait has read when the test says so.
- */
-async function requested(portrait: { text?: string; through?: number } = {}) {
-  const f = await createPortraitTest();
-  await f.seedPortrait({ scheduledAt: NOW, ...portrait });
-  f.quiet();
-  return f;
-}
-
 describe("a portrait build", () => {
-  it("writes a first portrait from the newest memories, the newest first, each as its title and words", async () => {
-    const f = await requested();
+  it("writes a first portrait from the learner's memories, the oldest first, each as its title and words", async () => {
+    const f = await createRequestedTest();
     await f.seed({ confirmedAt: 1, text: "Mau ikut SNBT 2027." });
     await f.seed({
       author: "learner",
@@ -83,14 +69,14 @@ describe("a portrait build", () => {
     const prompt = promptOf(model);
     expect(prompt).toContain("# Current Portrait\\n\\nNone yet.");
     expect(prompt).toContain("- Gaya belajar: Lebih suka contoh soal dulu.");
-    expect(prompt.indexOf("Gaya belajar")).toBeLessThan(
-      prompt.indexOf("Mau ikut SNBT 2027.")
+    expect(prompt.indexOf("Mau ikut SNBT 2027.")).toBeLessThan(
+      prompt.indexOf("Gaya belajar")
     );
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
   it("counts the tokens of a call as none when the provider reports none, and still counts the call", async () => {
-    const f = await requested();
+    const f = await createRequestedTest();
     await f.seed({ text: "Mau ikut SNBT 2027." });
     writesUncounted("Mau ikut SNBT 2027.");
     await f.build();
@@ -100,7 +86,10 @@ describe("a portrait build", () => {
   });
 
   it("reads only the memories newer than the portrait and hands it the portrait it has", async () => {
-    const f = await requested({ text: "Siap SNBT 2027.", through: 2 });
+    const f = await createRequestedTest({
+      text: "Siap SNBT 2027.",
+      through: 2,
+    });
     await f.seed({ confirmedAt: 1, text: "Mau ikut SNBT 2027." });
     await f.seed({ confirmedAt: 2, text: "Kelas 12 IPA." });
     await f.seed({ confirmedAt: 3, text: "Sulit di peluang." });
@@ -116,7 +105,10 @@ describe("a portrait build", () => {
   });
 
   it("stores what the model writes when a newer memory contradicts a sentence, and sends it the old portrait and the newer memory to judge", async () => {
-    const f = await requested({ text: "Duduk di kelas 11.", through: 2 });
+    const f = await createRequestedTest({
+      text: "Duduk di kelas 11.",
+      through: 2,
+    });
     await f.seed({ confirmedAt: 3, text: "Sekarang aku kelas 12." });
     const model = writes("Duduk di kelas 12.");
     await f.build();
@@ -127,7 +119,7 @@ describe("a portrait build", () => {
   });
 
   it("cuts each memory to 400 characters and reads no more than forty", async () => {
-    const f = await requested();
+    const f = await createRequestedTest();
     const long = `Long ${"word ".repeat(120)}`.trim();
     await f.fill(45, { text: long });
     const model = writes("Panjang.");
@@ -138,26 +130,41 @@ describe("a portrait build", () => {
     expect(prompt).not.toContain(long.slice(0, 401));
   });
 
-  it("moves past the memories beyond the forty it reads, so no later build reads them", async () => {
-    const f = await requested();
+  it("reads the memories forty at a time, the oldest first, and asks for the next build without the wait of a day until none is left", async () => {
+    const f = await createRequestedTest();
     await f.fill(45);
-    writes("Panjang.");
+    const first = writes("Panjang.");
     await f.build();
-    expect(await f.rows()).toEqual([expect.objectContaining({ through: 45 })]);
-    await f.seed({ confirmedAt: 46, text: "Memory 45" });
-    await f.seed({ confirmedAt: 47, text: "Baru" });
+    // The prompt's own part, then the oldest forty.
+    const one = promptOf(first).split("\\n- ");
+    expect(one).toHaveLength(41);
+    expect(one[1]).toContain("Memory 0");
+    expect(one[40]).toContain("Memory 39");
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ builtAt: NOW + 31_000, through: 40 }),
+    ]);
+    // The page that was stored asked for the next build, though a build went
+    // to the model a moment ago.
+    expect(await f.scheduled()).toEqual([{ userId: f.identity.userId }]);
     f.quiet();
-    const later = writes("Panjang dan baru.");
+    const second = writes("Panjang dan baru.");
     await f.build();
-    // The prompt's own part, then the two new memories, the newest first.
-    const memories = promptOf(later).split("\\n- ");
-    expect(memories).toHaveLength(3);
-    expect(memories[1]).toContain("Baru");
-    expect(memories[2]).toContain("Memory 45");
+    const two = promptOf(second).split("\\n- ");
+    expect(two).toHaveLength(6);
+    expect(two[1]).toContain("Memory 40");
+    expect(two[5]).toContain("Memory 44");
+    expect(promptOf(second)).toContain("# Current Portrait\\n\\nPanjang.");
+    expect(await f.portrait()).toBe("Panjang dan baru.");
+    expect(await f.rows()).toEqual([expect.objectContaining({ through: 45 })]);
+    // The last page asks for no more.
+    expect(await f.scheduled()).toHaveLength(1);
   });
 
   it("asks no model when no memory is newer than the portrait, and writes nothing", async () => {
-    const f = await requested({ text: "Siap SNBT 2027.", through: 3 });
+    const f = await createRequestedTest({
+      text: "Siap SNBT 2027.",
+      through: 3,
+    });
     await f.seed({ confirmedAt: 3, text: "Already read" });
     const model = writes("Never written.");
     await f.build();
@@ -167,7 +174,10 @@ describe("a portrait build", () => {
   });
 
   it("hands no situation to the model, and moves past it so the next build does not read it again", async () => {
-    const f = await requested({ text: "Siap SNBT 2027.", through: 3 });
+    const f = await createRequestedTest({
+      text: "Siap SNBT 2027.",
+      through: 3,
+    });
     await f.seed({
       confirmedAt: 5,
       kind: "situation",
@@ -182,7 +192,10 @@ describe("a portrait build", () => {
   });
 
   it("takes the text out when the model finds nothing worth keeping, and keeps the row so the memories are not read again", async () => {
-    const f = await requested({ text: "Siap SNBT 2027.", through: 2 });
+    const f = await createRequestedTest({
+      text: "Siap SNBT 2027.",
+      through: 2,
+    });
     await f.seed({ confirmedAt: 3, text: "Besok ulangan." });
     writes("");
     await f.build();
@@ -209,8 +222,8 @@ describe("a portrait build", () => {
     expect(await f.rows()).toEqual([]);
   });
 
-  it("builds nothing and reads no memory while memory is paused", async () => {
-    const f = await requested();
+  it("builds nothing while memory is paused", async () => {
+    const f = await createRequestedTest();
     await f.seed({ text: "Mau ikut SNBT 2027." });
     await f.owner.mutation(pause, { paused: true });
     const model = writes("Never written.");
@@ -220,7 +233,7 @@ describe("a portrait build", () => {
   });
 
   it("builds nothing for an account that is going", async () => {
-    const f = await requested();
+    const f = await createRequestedTest();
     await f.seed({ text: "Mau ikut SNBT 2027." });
     await f.t.mutation((ctx) =>
       ctx.db.patch(f.identity.userId, { deletionPreparedAt: NOW })
@@ -231,7 +244,7 @@ describe("a portrait build", () => {
   });
 
   it("removes the row of a learner who has no memory left, without asking a model", async () => {
-    const f = await requested();
+    const f = await createRequestedTest();
     const model = writes("Never written.");
     await f.build();
     expect(model.doGenerateCalls).toHaveLength(0);
@@ -302,7 +315,10 @@ describe("a portrait build that the learner changes things under", () => {
   });
 
   it("writes nothing when the learner deletes a memory the model was reading, and the rebuild the deletion asked for has the last word", async () => {
-    const f = await requested({ text: "Siap SNBT 2027.", through: 1 });
+    const f = await createRequestedTest({
+      text: "Siap SNBT 2027.",
+      through: 1,
+    });
     await f.seed({ confirmedAt: 1, text: "Siap SNBT 2027." });
     const gone = await f.seed({
       confirmedAt: 2,
@@ -323,7 +339,7 @@ describe("a portrait build that the learner changes things under", () => {
   });
 
   it("writes nothing when the learner deletes every memory while the model reads", async () => {
-    const f = await requested();
+    const f = await createRequestedTest();
     await f.seed({ text: "Mau ikut SNBT 2027." });
     writesAfter(() => f.owner.mutation(clear, {}), "Mau ikut SNBT 2027.");
     await f.build();
@@ -331,7 +347,7 @@ describe("a portrait build that the learner changes things under", () => {
   });
 
   it("writes nothing when a second build stored first", async () => {
-    const f = await requested();
+    const f = await createRequestedTest();
     await f.seed({ confirmedAt: 4, text: "Mau ikut SNBT 2027." });
     writesAfter(async () => {
       await f.t.mutation(async (ctx) => {
@@ -348,7 +364,10 @@ describe("a portrait build that the learner changes things under", () => {
 
 describe("a portrait build that fails", () => {
   it("logs the provider's routing facts, never its words, and leaves the portrait as it was", async () => {
-    const f = await requested({ text: "Siap SNBT 2027.", through: 1 });
+    const f = await createRequestedTest({
+      text: "Siap SNBT 2027.",
+      through: 1,
+    });
     await f.seed({ confirmedAt: 2, text: "Sulit di peluang." });
     fails(() =>
       Promise.reject(
@@ -377,7 +396,10 @@ describe("a portrait build that fails", () => {
   });
 
   it("rejects a portrait of more than 1200 characters, and keeps 1200", async () => {
-    const f = await requested({ text: "Siap SNBT 2027.", through: 1 });
+    const f = await createRequestedTest({
+      text: "Siap SNBT 2027.",
+      through: 1,
+    });
     await f.seed({ confirmedAt: 2, text: "Sulit di peluang." });
     writes("x".repeat(1201));
     await f.build();
@@ -392,7 +414,7 @@ describe("a portrait build that fails", () => {
   });
 
   it("logs a build that dies and saves nothing", async () => {
-    const f = await requested();
+    const f = await createRequestedTest();
     await f.seed({ text: "Mau ikut SNBT 2027." });
     writes("Never stored.");
     vi.stubEnv("VAULT_ROOT_KEYS", "");
@@ -401,93 +423,5 @@ describe("a portrait build that fails", () => {
       unavailable({ operation: "unknown", rejected: false })
     );
     expect(await f.rows()).toEqual([expect.objectContaining({ through: 0 })]);
-  });
-});
-
-describe("the scheduled portrait build", () => {
-  it("runs after the quiet a memory the learner added asks for, and builds the portrait", async () => {
-    const f = await createPortraitTest();
-    await f.owner.mutation(add, { text: "Mau ikut SNBT 2027." });
-    const model = writes("Mau ikut SNBT 2027.");
-    await f.t.finishAllScheduledFunctions(vi.runAllTimers);
-    expect(model.doGenerateCalls).toHaveLength(1);
-    expect(await f.portrait()).toBe("Mau ikut SNBT 2027.");
-  });
-
-  it("logs a missing gateway and builds nothing", async () => {
-    const f = await requested();
-    await f.seed({ text: "Mau ikut SNBT 2027." });
-    deployment.mockReturnValue(
-      Effect.fail(
-        new GatewayConfigurationError({
-          message: "AI Gateway is not configured.",
-        })
-      )
-    );
-    const model = writes("Never stored.");
-    await f.runScheduled();
-    expect(model.doGenerateCalls).toHaveLength(0);
-    expect(await f.portrait()).toBeNull();
-  });
-
-  it("runs the build of the learner it was scheduled for", async () => {
-    const f = await requested();
-    await f.seed({ text: "Mau ikut SNBT 2027." });
-    writes("Mau ikut SNBT 2027.");
-    await f.runScheduled();
-    expect(await f.portrait()).toBe("Mau ikut SNBT 2027.");
-  });
-
-  it("is asked for when a capture stores or confirms a memory, unless a build went to the model in the last day, and not when the capture stores none", async () => {
-    const f = await createCaptureTest();
-    expect(await f.run([])).toBe(0);
-    expect(await scheduledBuilds(f)).toEqual([]);
-    expect(await f.run([candidate()])).toBe(1);
-    expect(await scheduledBuilds(f)).toEqual([{ userId: f.identity.userId }]);
-    // A build went to the model. The same memory said again is confirmed, and
-    // the day's build stands.
-    await f.t.mutation(async (ctx) => {
-      const row = await ctx.db.query("ninaMemoryPortraits").first();
-      if (row) {
-        await ctx.db.patch(row._id, { builtAt: NOW });
-      }
-    });
-    expect(await f.run([candidate()])).toBe(1);
-    expect(await scheduledBuilds(f)).toHaveLength(1);
-  });
-
-  it("makes one model call with every memory the learner adds within the quiet, and asks for none after the build went to the model", async () => {
-    const f = await createPortraitTest();
-    const model = writes("Ikut SNBT 2027, kelas 12 IPA, suka contoh soal.");
-    for (const [seconds, text] of [
-      [0, "Ikut SNBT 2027"],
-      [20, "Kelas 12 IPA"],
-      [40, "Suka contoh soal"],
-    ] as const) {
-      vi.setSystemTime(NOW + seconds * 1000);
-      await f.owner.mutation(add, { text });
-    }
-    expect(await f.scheduled()).toHaveLength(3);
-    await f.t.finishAllScheduledFunctions(vi.runAllTimers);
-    expect(model.doGenerateCalls).toHaveLength(1);
-    const prompt = promptOf(model);
-    for (const text of ["Ikut SNBT 2027", "Kelas 12 IPA", "Suka contoh soal"]) {
-      expect(prompt).toContain(`- ${text}`);
-    }
-    expect(await f.portrait()).toBe(
-      "Ikut SNBT 2027, kelas 12 IPA, suka contoh soal."
-    );
-    // A memory added once the build has gone to the model waits for the day to
-    // be over.
-    const scheduled = (await f.scheduled()).length;
-    await f.owner.mutation(add, { text: "Hobi main gitar" });
-    expect(await f.scheduled()).toHaveLength(scheduled);
-  });
-
-  it("is not asked for by a capture while memory is paused", async () => {
-    const f = await createCaptureTest();
-    await f.owner.mutation(pause, { paused: true });
-    expect(await f.run([candidate()])).toBe(0);
-    expect(await scheduledBuilds(f)).toEqual([]);
   });
 });

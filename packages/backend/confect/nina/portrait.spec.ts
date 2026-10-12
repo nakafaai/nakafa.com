@@ -13,18 +13,19 @@ import { Schema } from "effect";
 
 /**
  * What a build reads before the model does. `memories` are the lasting
- * memories confirmed after `through`, the newest first, at most
+ * memories confirmed after `through`, the oldest first, at most
  * `PORTRAIT_MEMORY_LIMIT`, and `portrait` is the text as it stands. `reached`
  * is the newest confirmation time among the memories read, situations
- * included, or `through` when none is newer. It is nothing when no build is
- * due: no request is waiting or its quiet is not over, memory is paused, or the
- * account is going.
+ * included, or `through` when none is newer. `more` is whether memories remain
+ * after the ones read. It is nothing when no build is due: no request is
+ * waiting or its quiet is not over, memory is paused, or the account is going.
  */
 const NinaPortraitClaim = Schema.NullOr(
   Schema.Struct({
     memories: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
       Schema.isMaxLength(PORTRAIT_MEMORY_LIMIT)
     ),
+    more: Schema.Boolean,
     portrait: Schema.optionalKey(NinaPortraitText),
     reached: Schema.Finite,
     through: Schema.Finite,
@@ -48,8 +49,10 @@ export default GroupSpec.make()
   // answer is false, when the portrait changed meanwhile, or when the learner
   // paused memory, deleted or rewrote one of those memories, or deleted them
   // all. A missing `text` keeps the current text, and an empty one removes it.
-  // `usage` is the tokens of the model call the build made, if it made one,
-  // and they count whether or not the text is stored.
+  // `more` is the claim's: when memories remain after the ones the build read,
+  // storing them asks for the next build. `usage` is the tokens of the model
+  // call the build made, if it made one, and they count whether or not the text
+  // is stored.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "save",
@@ -58,6 +61,7 @@ export default GroupSpec.make()
         memories: Schema.mutable(Schema.Array(NinaMemorySeen)).check(
           Schema.isMaxLength(PORTRAIT_MEMORY_LIMIT)
         ),
+        more: Schema.Boolean,
         reached: Schema.Finite,
         text: Schema.optionalKey(NinaPortraitText),
         usage: Schema.optionalKey(NinaUpkeepCall),

@@ -27,6 +27,19 @@ async function claimAt(
   );
 }
 
+/** Moves on what the portrait has read, as a stored build does. */
+function readThrough(
+  f: Awaited<ReturnType<typeof createPortraitTest>>,
+  through = 0
+) {
+  return f.t.mutation(async (ctx) => {
+    const row = await ctx.db.query("ninaMemoryPortraits").first();
+    if (row) {
+      await ctx.db.patch(row._id, { through });
+    }
+  });
+}
+
 /** The words of each memory a claim hands on, in order. */
 function texts(claimed: Awaited<ReturnType<typeof claimAt>>) {
   return Arr.map(
@@ -106,7 +119,7 @@ describe("claiming a portrait build", () => {
     expect(await claimAt(f)).toBeNull();
   });
 
-  it("reads the lasting memories confirmed after what the portrait has read, the newest first, and the portrait as it stands", async () => {
+  it("reads the lasting memories confirmed after what the portrait has read, the oldest first, and the portrait as it stands", async () => {
     const f = await createPortraitTest();
     await f.seedPortrait({ text: "Kelas 11.", through: 5 });
     await f.seed({ confirmedAt: 3, text: "Older than the portrait" });
@@ -123,14 +136,15 @@ describe("claiming a portrait build", () => {
     });
     expect(await claimAt(f)).toEqual({
       memories: [
+        { confirmedAt: 6, id: level, kind: "level", text: "Kelas 12 IPA" },
         {
           confirmedAt: 7,
           id: style,
           text: "Lebih suka contoh soal dulu",
           title: "Gaya belajar",
         },
-        { confirmedAt: 6, id: level, kind: "level", text: "Kelas 12 IPA" },
       ],
+      more: false,
       portrait: "Kelas 11.",
       reached: 7,
       through: 5,
@@ -157,18 +171,73 @@ describe("claiming a portrait build", () => {
     const f = await createPortraitTest();
     await f.seedPortrait({ through: 4 });
     await f.seed({ confirmedAt: 4, text: "Already read" });
-    expect(await claimAt(f)).toEqual({ memories: [], reached: 4, through: 4 });
+    expect(await claimAt(f)).toEqual({
+      memories: [],
+      more: false,
+      reached: 4,
+      through: 4,
+    });
   });
 
-  it("reads from the first memory when the portrait has read nothing, at most forty, the newest", async () => {
+  it("reads the oldest forty from the first memory when the portrait has read nothing, and says that more remain", async () => {
     const f = await createPortraitTest();
     await f.seedPortrait();
     await f.fill(45);
     const claimed = await claimAt(f);
     expect(claimed?.memories).toHaveLength(40);
-    expect(claimed?.memories[0]?.text).toBe("Memory 44");
-    expect(claimed?.memories[39]?.text).toBe("Memory 5");
-    expect(claimed).toMatchObject({ reached: 45, through: 0 });
+    expect(claimed?.memories[0]?.text).toBe("Memory 0");
+    expect(claimed?.memories[39]?.text).toBe("Memory 39");
+    expect(claimed).toMatchObject({ more: true, reached: 40, through: 0 });
+  });
+
+  it("reads on from where the last page ended until none is left, so no memory is skipped", async () => {
+    const f = await createPortraitTest();
+    await f.seedPortrait();
+    await f.fill(85);
+    const first = await claimAt(f, NOW + QUIET);
+    await readThrough(f, first?.reached);
+    const second = await claimAt(f, NOW + 2 * QUIET);
+    await readThrough(f, second?.reached);
+    const third = await claimAt(f, NOW + 3 * QUIET);
+    expect([first?.more, second?.more, third?.more]).toEqual([
+      true,
+      true,
+      false,
+    ]);
+    expect(
+      Arr.map([first, second, third], (claimed) => texts(claimed).length)
+    ).toEqual([40, 40, 5]);
+    expect(
+      Arr.flatMap([first, second, third], (claimed) => texts(claimed))
+    ).toEqual(Arr.makeBy(85, (index) => `Memory ${index}`));
+    expect(third?.reached).toBe(85);
+  });
+
+  it("keeps the memories confirmed at the same moment together: a page ends before a group that it would cut", async () => {
+    const f = await createPortraitTest();
+    await f.seedPortrait();
+    await f.fill(38);
+    for (const text of ["Group A", "Group B", "Group C"]) {
+      await f.seed({ confirmedAt: 39, text });
+    }
+    const first = await claimAt(f, NOW + QUIET);
+    expect(first?.memories).toHaveLength(38);
+    expect(first).toMatchObject({ more: true, reached: 38 });
+    await readThrough(f, first?.reached);
+    const second = await claimAt(f, NOW + 2 * QUIET);
+    expect(texts(second)).toEqual(["Group A", "Group B", "Group C"]);
+    expect(second).toMatchObject({ more: false, reached: 39 });
+  });
+
+  it("reads a group longer than a page as a page, because it cannot be kept together", async () => {
+    const f = await createPortraitTest();
+    await f.seedPortrait();
+    for (const index of Arr.range(0, 40)) {
+      await f.seed({ confirmedAt: 7, text: `Same moment ${index}` });
+    }
+    const claimed = await claimAt(f);
+    expect(claimed?.memories).toHaveLength(40);
+    expect(claimed).toMatchObject({ more: true, reached: 7 });
   });
 
   it("reads nothing that Delete all took, though a batch still holds it", async () => {
@@ -177,18 +246,21 @@ describe("claiming a portrait build", () => {
     await f.fill(10);
     await f.markCleared(6);
     expect(texts(await claimAt(f))).toEqual([
-      "Memory 9",
-      "Memory 8",
-      "Memory 7",
       "Memory 6",
+      "Memory 7",
+      "Memory 8",
+      "Memory 9",
     ]);
   });
 
-  it("reads no memory of another learner", async () => {
+  it("reads the memories of the learner it claims for, and none of another learner", async () => {
     const f = await createPortraitTest();
     const other = await f.stranger();
     await f.seedPortrait();
-    await f.seed({ confirmedAt: 5, text: "Not theirs", userId: other.userId });
-    expect(await claimAt(f)).toEqual({ memories: [], reached: 0, through: 0 });
+    await f.seed({ confirmedAt: 5, text: "Mine" });
+    await f.seed({ confirmedAt: 6, text: "Not mine", userId: other.userId });
+    const claimed = await claimAt(f);
+    expect(texts(claimed)).toEqual(["Mine"]);
+    expect(claimed).toMatchObject({ more: false, reached: 5, through: 0 });
   });
 });

@@ -25,6 +25,7 @@ async function build(text?: string) {
     args: Partial<{
       expected: number;
       memories: (typeof NinaMemorySeen.Type)[];
+      more: boolean;
       reached: number;
       text: string;
       usage: typeof NinaUpkeepCall.Type;
@@ -33,6 +34,7 @@ async function build(text?: string) {
     f.t.mutation(save, {
       expected: 5,
       memories: [{ confirmedAt: 6, id }],
+      more: false,
       reached: 6,
       userId: f.identity.userId,
       ...args,
@@ -48,6 +50,29 @@ describe("storing a portrait build", () => {
     const [row] = await f.rows();
     expect(row).toMatchObject({ through: 6 });
     expect(new TextDecoder("latin1").decode(row?.text)).not.toContain("IPA");
+    // Nothing remains after the page it stored, so no next build is asked for.
+    expect(await f.scheduled()).toEqual([]);
+  });
+
+  it("asks for the next build, which waits for the quiet and not for the day, when more memories remain after the page", async () => {
+    const f = await build("Kelas 11.");
+    await f.t.mutation(async (ctx) => {
+      const row = await ctx.db.query("ninaMemoryPortraits").first();
+      if (row) {
+        await ctx.db.patch(row._id, { builtAt: NOW, scheduledAt: NOW - 5000 });
+      }
+    });
+    vi.setSystemTime(NOW + 4000);
+    expect(await f.store({ more: true, text: "Kelas 12 IPA." })).toBe(true);
+    expect(await f.portrait()).toBe("Kelas 12 IPA.");
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({
+        builtAt: NOW,
+        scheduledAt: NOW + 4000,
+        through: 6,
+      }),
+    ]);
+    expect(await f.scheduled()).toEqual([{ userId: f.identity.userId }]);
   });
 
   it("stores a first portrait, for a row that has none", async () => {
@@ -125,6 +150,7 @@ describe("storing a portrait build", () => {
       await f.t.mutation(save, {
         expected: 5,
         memories: [],
+        more: false,
         reached: 5,
         userId: f.identity.userId,
       })
@@ -139,12 +165,14 @@ describe("storing a portrait build", () => {
       await f.t.mutation(save, {
         expected: 0,
         memories: [{ confirmedAt: 6, id }],
+        more: true,
         reached: 6,
         text: "Kelas 12 IPA.",
         userId: f.identity.userId,
       })
     ).toBe(false);
     expect(await f.rows()).toEqual([]);
+    expect(await f.scheduled()).toEqual([]);
   });
 
   it.each([
@@ -187,8 +215,10 @@ describe("storing a portrait build", () => {
     const f = await build("Kelas 11.");
     await change(f);
     const before = await f.rows();
-    expect(await f.store({ text: "Kelas 12 IPA." })).toBe(false);
+    expect(await f.store({ more: true, text: "Kelas 12 IPA." })).toBe(false);
     // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
     expect(await f.rows()).toStrictEqual(before);
+    // A page that was not stored asks for no next build either.
+    expect(await f.scheduled()).toEqual([]);
   });
 });

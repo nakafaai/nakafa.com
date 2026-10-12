@@ -1,5 +1,9 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import type { NinaUpkeepCall } from "@repo/backend/confect/nina/contract/usage";
 import { isUnchanged } from "@repo/backend/confect/nina/memory/seen";
 import {
@@ -9,12 +13,13 @@ import {
 } from "@repo/backend/confect/nina/memory/store";
 import type { NinaMemorySeen } from "@repo/backend/confect/nina/memory.spec";
 import {
+  PORTRAIT_DELAY,
   PORTRAIT_FIELD,
   readPortraitRow,
 } from "@repo/backend/confect/nina/portrait/store";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Clock, Effect } from "effect";
 
 type Seen = typeof NinaMemorySeen.Type;
 type Call = typeof NinaUpkeepCall.Type;
@@ -81,7 +86,10 @@ const nextText = Effect.fn("nina.portrait.next")(function* (
  * Otherwise it moves `through` to `reached` and replaces the text with the new
  * one (an empty one removes it), or keeps it when the build wrote none. A
  * portrait left with no text for a learner with no memory at all is deleted:
- * nothing remains to remember.
+ * nothing remains to remember. When `more` memories remain after the page the
+ * build read, it also asks for the next build, which waits only for the quiet
+ * and not for the day: the page it stored is not the whole of what the learner
+ * has told Nina.
  *
  * The tokens of the model call the build made (`usage`) are added to the row
  * first, so they count whether or not the text is stored. A portrait that is
@@ -91,6 +99,7 @@ const nextText = Effect.fn("nina.portrait.next")(function* (
 export const savePortrait = Effect.fn("nina.portrait.keep")(function* (args: {
   readonly expected: number;
   readonly memories: readonly Seen[];
+  readonly more: boolean;
   readonly reached: number;
   readonly text?: string | undefined;
   readonly usage?: Call | undefined;
@@ -135,8 +144,19 @@ export const savePortrait = Effect.fn("nina.portrait.keep")(function* (args: {
   if (args.text !== undefined || args.reached !== row.through) {
     yield* writer
       .table("ninaMemoryPortraits")
-      .patch(row._id, { text, through: args.reached })
+      .patch(row._id, {
+        text,
+        through: args.reached,
+        ...(args.more ? { scheduledAt: yield* Clock.currentTimeMillis } : {}),
+      })
       .pipe(Effect.orDie);
+  }
+  if (args.more) {
+    yield* (yield* Scheduler).runAfter(
+      PORTRAIT_DELAY,
+      refs.internal.nina.portrait.build.run,
+      { userId }
+    );
   }
   return true;
 });

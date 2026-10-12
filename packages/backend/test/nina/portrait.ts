@@ -113,6 +113,22 @@ export async function scheduledBuilds(f: Pick<NinaTest, "t">) {
   );
 }
 
+/**
+ * A learner whose portrait row asks for a build and whose request has had its
+ * quiet, with the text and what the portrait has read when the test says so.
+ */
+export async function createRequestedTest(
+  portrait: { readonly text?: string; readonly through?: number } = {}
+) {
+  const f = await createPortraitTest();
+  await f.seedPortrait({
+    scheduledAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+    ...portrait,
+  });
+  f.quiet();
+  return f;
+}
+
 /** A memory fixture with the helpers to read and build a learner's portrait. */
 export async function createPortraitTest() {
   const f = await createMemoryTest();
