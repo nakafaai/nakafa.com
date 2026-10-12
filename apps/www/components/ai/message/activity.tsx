@@ -98,7 +98,7 @@ function ActivityTrigger() {
       aria-atomic="true"
       aria-live="polite"
       className={cn(
-        "group/activity flex min-h-6 w-fit max-w-full items-center gap-2 rounded-sm text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default",
+        "group/activity flex min-h-6 w-fit max-w-full items-start gap-2 rounded-sm py-0.5 text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default",
         problem
           ? "text-destructive"
           : "text-muted-foreground hover:text-foreground"
@@ -107,17 +107,18 @@ function ActivityTrigger() {
     >
       <Spinner
         aria-hidden="true"
-        className="size-4"
+        className="mt-0.5 size-4"
         icon={problem ? Sad02Icon : icon}
         isLoading={state === "running"}
       />
-      <span className="min-w-0 truncate" title={label}>
+      {/* The note follows the label in the same line of text, so a narrow row wraps both and cuts neither. */}
+      <span className="min-w-0">
         {label}
+        {note ? <span className="ms-2 text-xs">{note}</span> : null}
       </span>
-      {note ? <span className="shrink-0 text-xs">{note}</span> : null}
       {artifactCount > 0 ? (
         <HugeIcons
-          className="size-4 shrink-0 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"
+          className="mt-0.5 size-4 shrink-0 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"
           icon={ArrowDown01Icon}
         />
       ) : null}

@@ -1,7 +1,5 @@
-import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/backend/confect/nina/contract/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { MathResult } from "@repo/math/schema/result";
 import type {
   MathExpression,
@@ -15,6 +13,8 @@ import {
   getItemLabelKey,
   getItemValueKey,
 } from "@/components/ai/message/evidence/math/labels";
+import { Row } from "@/components/ai/message/evidence/math/row";
+import { Rows } from "@/components/ai/message/evidence/rows";
 
 interface MathEvidenceProps {
   message: DataPart["math"];
@@ -81,13 +81,15 @@ function StepList({ steps }: StepListProps) {
 
   return (
     <div className="flex max-w-full flex-col gap-2">
-      {Arr.map(steps, (step, index) => (
-        <StepRow
-          key={`${step.action}-${step.primary.expression}-${step.relation?.expression ?? ""}-${step.secondary?.expression ?? ""}`}
-          number={index + 1}
-          step={step}
-        />
-      ))}
+      <Rows>
+        {Arr.map(steps, (step, index) => (
+          <StepRow
+            key={`${step.action}-${step.primary.expression}-${step.relation?.expression ?? ""}-${step.secondary?.expression ?? ""}`}
+            number={index + 1}
+            step={step}
+          />
+        ))}
+      </Rows>
     </div>
   );
 }
@@ -97,17 +99,11 @@ function StepRow({ number, step }: StepRowProps) {
   const t = useTranslations("Ai");
 
   return (
-    <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
-      <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
-        <span>{t("math-step", { number })}</span>
-        <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
-      </span>
-      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden py-1">
-        <Expression value={step.primary.latex} />
-        {step.relation ? <Expression value={step.relation.latex} /> : null}
-        {step.secondary ? <Expression value={step.secondary.latex} /> : null}
-      </span>
-    </div>
+    <Row label={t("math-step", { number })}>
+      <Expression value={step.primary.latex} />
+      {step.relation ? <Expression value={step.relation.latex} /> : null}
+      {step.secondary ? <Expression value={step.secondary.latex} /> : null}
+    </Row>
   );
 }
 
@@ -117,19 +113,11 @@ function ResultLine({ result }: ResultLineProps) {
   const label = result.secondary ? t("math-item-result") : t("math-input");
 
   return (
-    <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
-      <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
-        <span>{label}</span>
-        <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
-      </span>
-      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden py-1">
-        <Expression value={result.primary.latex} />
-        {result.secondary ? <Relation result={result} /> : null}
-        {result.secondary ? (
-          <Expression value={result.secondary.latex} />
-        ) : null}
-      </span>
-    </div>
+    <Row label={label}>
+      <Expression value={result.primary.latex} />
+      {result.secondary ? <Relation result={result} /> : null}
+      {result.secondary ? <Expression value={result.secondary.latex} /> : null}
+    </Row>
   );
 }
 
@@ -164,9 +152,11 @@ function ItemList({ items }: ItemListProps) {
 
   return (
     <div className="flex max-w-full flex-col gap-2">
-      {Arr.map(items, (item) => (
-        <ItemRow item={item} key={`${item.label}-${item.value}`} />
-      ))}
+      <Rows>
+        {Arr.map(items, (item) => (
+          <ItemRow item={item} key={`${item.label}-${item.value}`} />
+        ))}
+      </Rows>
     </div>
   );
 }
@@ -176,15 +166,9 @@ function ItemRow({ item }: ItemRowProps) {
   const t = useTranslations("Ai");
 
   return (
-    <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
-      <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
-        <span>{t(getItemLabelKey(item.label))}</span>
-        <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
-      </span>
-      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden py-1">
-        <ItemValue item={item} />
-      </span>
-    </div>
+    <Row label={t(getItemLabelKey(item.label))}>
+      <ItemValue item={item} />
+    </Row>
   );
 }
 
@@ -213,16 +197,10 @@ function ConditionList({ conditions }: ConditionListProps) {
   }
 
   return (
-    <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
-      <span className="flex shrink-0 items-center gap-2 text-muted-foreground">
-        <span>{t("math-condition")}</span>
-        <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
-      </span>
-      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden py-1">
-        {Arr.map(conditions, (condition) => (
-          <Expression key={condition.expression} value={condition.latex} />
-        ))}
-      </span>
-    </div>
+    <Row label={t("math-condition")}>
+      {Arr.map(conditions, (condition) => (
+        <Expression key={condition.expression} value={condition.latex} />
+      ))}
+    </Row>
   );
 }

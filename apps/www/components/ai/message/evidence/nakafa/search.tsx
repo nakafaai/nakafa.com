@@ -1,19 +1,12 @@
 "use client";
 
-import {
-  ArrowDown01Icon,
-  ArrowUp01Icon,
-  ArrowUpRight01Icon,
-  Search02Icon,
-} from "@hugeicons/core-free-icons";
-import { useDisclosure } from "@mantine/hooks";
+import { ArrowUpRight01Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Match, Option } from "effect";
 import { useTranslations } from "next-intl";
-
-const MAX_SHOWN_RESULTS = 5;
+import { Rows } from "@/components/ai/message/evidence/rows";
 
 interface Props {
   message: Extract<NakafaDataPart, { kind: "search"; status: "done" }>;
@@ -22,11 +15,7 @@ interface Props {
 /** Renders Nakafa search results with a bounded default list. */
 export function SearchPart({ message }: Props) {
   const t = useTranslations("Ai");
-  const [expanded, { toggle }] = useDisclosure(false);
-  const items = expanded
-    ? message.result.items
-    : Arr.take(message.result.items, MAX_SHOWN_RESULTS);
-  const hasItems = items.length > 0;
+  const hasItems = message.result.items.length > 0;
 
   return (
     <div className="flex flex-col gap-3">
@@ -39,13 +28,13 @@ export function SearchPart({ message }: Props) {
           {getSearchLabel(message, t)}
         </span>
       </div>
-      <div className="ms-2 flex flex-col gap-3 border-s ps-4">
-        <SearchPartQueries message={message} />
-        {hasItems ? (
-          <div className="flex flex-wrap items-center gap-2">
-            {Arr.map(items, (item) => (
+      <SearchPartQueries message={message} />
+      {hasItems ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Rows>
+            {Arr.map(message.result.items, (item) => (
               <Button
-                className="max-w-full"
+                className="h-auto min-h-8 max-w-full whitespace-normal py-1 text-start"
                 key={item.content_id}
                 nativeButton={false}
                 render={
@@ -55,7 +44,7 @@ export function SearchPart({ message }: Props) {
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    <span className="truncate">{item.title}</span>
+                    <span className="wrap-anywhere min-w-0">{item.title}</span>
                     <HugeIcons icon={ArrowUpRight01Icon} />
                   </a>
                 }
@@ -63,19 +52,13 @@ export function SearchPart({ message }: Props) {
                 variant="outline"
               />
             ))}
-            {message.result.items.length > MAX_SHOWN_RESULTS ? (
-              <Button onClick={toggle} size="sm" variant="outline">
-                {expanded ? t("show-less") : t("show-more")}
-                <HugeIcons icon={expanded ? ArrowUp01Icon : ArrowDown01Icon} />
-              </Button>
-            ) : null}
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            {t("nakafa-search-empty")}
-          </p>
-        )}
-      </div>
+          </Rows>
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-sm">
+          {t("nakafa-search-empty")}
+        </p>
+      )}
     </div>
   );
 }
@@ -109,7 +92,9 @@ function SearchPartQueries({ message }: Props) {
 SearchPartQueries.displayName = "SearchPartQueries";
 
 function SearchQueryText({ query }: { query: string }) {
-  return <p className="text-muted-foreground text-sm">{`"${query}"`}</p>;
+  return (
+    <p className="text-muted-foreground text-sm" dir="auto">{`"${query}"`}</p>
+  );
 }
 
 /** Returns the clearest visible label for the current search result section. */

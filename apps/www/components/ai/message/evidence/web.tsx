@@ -45,9 +45,7 @@ export function WebSearchPart({ message }: Props) {
           <HugeIcons className="size-4 shrink-0" icon={Sad02Icon} />
           <span>{t("web-search-error")}</span>
         </div>
-        <div className="ms-2 flex flex-col gap-3 border-s ps-4">
-          <WebSearchPartQueries queries={message.queries} />
-        </div>
+        <WebSearchPartQueries queries={message.queries} />
       </div>
     );
   }
@@ -61,14 +59,11 @@ export function WebSearchPart({ message }: Props) {
         />
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
       </div>
-      {/* The line starts under the row's icon, so the queries and sources read as its children. */}
-      <div className="ms-2 flex flex-col gap-3 border-s ps-4">
-        <WebSearchPartQueries queries={message.queries} />
-        <WebSearchPartPreview
-          emptyLabel={t("web-search-empty")}
-          results={results}
-        />
-      </div>
+      <WebSearchPartQueries queries={message.queries} />
+      <WebSearchPartPreview
+        emptyLabel={t("web-search-empty")}
+        results={results}
+      />
     </div>
   );
 }
@@ -90,7 +85,9 @@ function WebSearchPartQueries({ queries }: { queries: string[] }) {
 WebSearchPartQueries.displayName = "WebSearchPartQueries";
 
 function WebSearchQueryText({ query }: { query: string }) {
-  return <p className="text-muted-foreground text-sm">{`"${query}"`}</p>;
+  return (
+    <p className="text-muted-foreground text-sm" dir="auto">{`"${query}"`}</p>
+  );
 }
 
 function WebSearchPartPreview({
@@ -105,11 +102,11 @@ function WebSearchPartPreview({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-2">
       {Arr.map(results, (item) => (
         <Source href={item.url} key={item.url}>
-          <SourceTrigger showFavicon />
-          <SourceContent description={item.description} title={item.title} />
+          <SourceTrigger title={item.title} />
+          <SourceContent description={item.description} />
         </Source>
       ))}
     </div>

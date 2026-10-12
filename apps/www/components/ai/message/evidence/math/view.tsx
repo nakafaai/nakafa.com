@@ -35,27 +35,28 @@ export function MathPart({ children, icon, message }: Props) {
     >
       <CollapsibleTrigger
         className={cn(
-          "group/math flex w-full cursor-pointer items-center gap-2 text-sm transition-colors",
+          "group/math flex w-full cursor-pointer items-start gap-2 text-start text-sm transition-colors",
           message.status === "error"
             ? "text-destructive"
             : "text-muted-foreground hover:text-foreground"
         )}
       >
-        <HugeIcons className="size-4 shrink-0" icon={icon} />
-        <span className="truncate">
+        <HugeIcons className="mt-0.5 size-4 shrink-0" icon={icon} />
+        {/* The label wraps, so a long one in any language is read in full. */}
+        <span className="min-w-0 flex-1">
           {message.status === "error"
             ? t("tool-failures.math")
             : t(`math-${message.kind}`)}
         </span>
         <HugeIcons
           className={cn(
-            "size-4 shrink-0 transition-[opacity,rotate] duration-150 group-hover/math:opacity-100 group-focus-visible/math:opacity-100 motion-reduce:transition-none [@media(hover:hover)]:opacity-0",
+            "mt-0.5 size-4 shrink-0 transition-[opacity,rotate] duration-150 group-hover/math:opacity-100 group-focus-visible/math:opacity-100 motion-reduce:transition-none [@media(hover:hover)]:opacity-0",
             expanded ? "rotate-180" : "rotate-0"
           )}
           icon={ArrowDown01Icon}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent className="ms-2 max-w-full overflow-hidden border-s ps-4 text-muted-foreground text-sm outline-none">
+      <CollapsibleContent className="max-w-full overflow-hidden text-muted-foreground text-sm outline-none">
         {children}
       </CollapsibleContent>
     </Collapsible>

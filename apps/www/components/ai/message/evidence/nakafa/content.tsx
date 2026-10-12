@@ -48,9 +48,9 @@ export function ContentPart({ message }: Props) {
           target="_blank"
           title={message.result.url}
         >
-          <p className="text-sm">{message.result.title}</p>
+          <p className="wrap-anywhere text-sm">{message.result.title}</p>
           {message.result.description ? (
-            <span className="text-muted-foreground text-sm">
+            <span className="wrap-anywhere line-clamp-3 text-muted-foreground text-sm">
               {message.result.description}
             </span>
           ) : null}
