@@ -23,9 +23,19 @@ export type NinaFailure =
   | Ref.Error<typeof nina.lifecycle.cancel>
   | NinaConnectionError;
 
-/** The recovery the chat offers after a failure. */
-const FeedbackActionSchema = Schema.Literals([
-  "retry",
+/**
+ * The recovery a failed response offers: a Retry button that sends the turn's
+ * prompt again, a new message, or time.
+ */
+const ResponseActionSchema = Schema.Literals(["retry", "edit", "wait"]);
+
+/**
+ * The recovery a failed send offers. While the learner stays in the chat, a
+ * failed send leaves its message and attachments in the composer, so `edit`
+ * is the way on: send it again, or change it first. There is no Retry button
+ * for a send, because it would send the attachments a second time.
+ */
+const AdmissionActionSchema = Schema.Literals([
   "edit",
   "wait",
   "credits",
@@ -34,17 +44,18 @@ const FeedbackActionSchema = Schema.Literals([
 ]);
 
 /**
- * The recovery and the localized message of one failure. The message is a key
- * of `Ai.failures`, and the `t(...)` calls that read it check that key.
+ * The recovery and the localized message of one failed response. The message
+ * is a key of `Ai.failures`, and the `t(...)` calls that read it check that key.
  */
-const FeedbackRowSchema = Schema.Struct({
-  action: FeedbackActionSchema,
+const ResponseFeedbackRowSchema = Schema.Struct({
+  action: ResponseActionSchema,
   message: Schema.String,
 });
 
-/** A typed admission failure: the same row, and whether it is reported. */
+/** A typed admission failure: its recovery, its message, and whether it is reported. */
 const FailureFeedbackRowSchema = Schema.Struct({
-  ...FeedbackRowSchema.fields,
+  action: AdmissionActionSchema,
+  message: Schema.String,
   report: Schema.Boolean,
 });
 
@@ -52,10 +63,10 @@ const FailureFeedbackRowSchema = Schema.Struct({
 export const ninaFailureFeedback = {
   NINA_CONNECTION_FAILED: {
     message: "connection",
-    action: "retry",
+    action: "edit",
     report: true,
   },
-  NINA_OFFLINE: { message: "connection", action: "retry", report: false },
+  NINA_OFFLINE: { message: "connection", action: "edit", report: false },
   INSUFFICIENT_CREDITS: {
     message: "credits",
     action: "credits",
@@ -66,7 +77,7 @@ export const ninaFailureFeedback = {
   UNAUTHORIZED: { message: "account", action: "sign-in", report: false },
   AUTH_READ_FAILED: {
     message: "authentication",
-    action: "retry",
+    action: "edit",
     report: true,
   },
   CHAT_NOT_FOUND: {
@@ -77,7 +88,7 @@ export const ninaFailureFeedback = {
   FORBIDDEN: { message: "chat-access", action: "new-chat", report: false },
   NINA_CREDIT_IO_FAILED: {
     message: "admission",
-    action: "retry",
+    action: "edit",
     report: true,
   },
   NINA_BUSY: { message: "busy", action: "wait", report: false },
@@ -91,8 +102,8 @@ export const ninaFailureFeedback = {
     action: "edit",
     report: true,
   },
-  NINA_WRITE_FAILED: { message: "admission", action: "retry", report: true },
-  NINA_CONTEXT_FAILED: { message: "context", action: "retry", report: true },
+  NINA_WRITE_FAILED: { message: "admission", action: "edit", report: true },
+  NINA_CONTEXT_FAILED: { message: "context", action: "edit", report: true },
   NINA_UPLOAD_INVALID: {
     message: "attachment-invalid",
     action: "edit",
@@ -110,7 +121,7 @@ export const ninaFailureFeedback = {
   },
   NINA_UPLOAD_FAILED: {
     message: "attachment-failed",
-    action: "retry",
+    action: "edit",
     report: true,
   },
 } as const satisfies Record<
@@ -132,7 +143,7 @@ export const ninaResponseFeedback = {
   unknown: { message: "unknown", action: "retry" },
 } as const satisfies Record<
   typeof NinaFailureReason.Type,
-  typeof FeedbackRowSchema.Type
+  typeof ResponseFeedbackRowSchema.Type
 >;
 
 /** Report operational failures and show only the caller's localized message. */

@@ -1,17 +1,19 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { writeMemory } from "@/e2e/support/list";
 import {
   ANSWER_MILLISECONDS,
   type Changes,
+  live,
+  reloadUntil,
+  saved,
+} from "@/e2e/support/changes";
+import { writeMemory } from "@/e2e/support/list";
+import {
   EMPTY,
   editorOf,
-  live,
   memoryRow,
   opened,
   openMemoryPage,
-  reloadUntil,
-  saved,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";

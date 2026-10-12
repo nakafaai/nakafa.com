@@ -3,13 +3,15 @@ import { Effect } from "effect";
 import {
   ANSWER_MILLISECONDS,
   type Changes,
+  reloadUntil,
+  saved,
+} from "@/e2e/support/changes";
+import {
   EMPTY,
   editorOf,
   memoryRow,
   opened,
   openMemoryPage,
-  reloadUntil,
-  saved,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";

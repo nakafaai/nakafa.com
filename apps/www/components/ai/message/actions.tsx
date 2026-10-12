@@ -15,7 +15,6 @@ import { useChat } from "@/components/ai/chat/context";
 import { ninaResponseFeedback } from "@/components/ai/feedback";
 import { useMessage } from "@/components/ai/message/context";
 import { AiChatMessageRemembered } from "@/components/ai/message/remembered";
-import { useViewer } from "@/lib/identity/client";
 
 export function AiChatMessageActions() {
   const t = useTranslations("Ai");
@@ -39,17 +38,13 @@ export function AiChatMessageActions() {
 
   const retry = useChat((state) => state.retry);
   const busy = useChat((state) => state.busy);
-
-  const chat = useChat((s) => s.chat);
-
-  const currentUser = useViewer((s) => s.account);
-  const showActions = chat?.userId === currentUser?.appUser._id;
+  const owner = useChat((state) => state.owner);
 
   const clipboard = useClipboard({ timeout: 1000 });
 
   const disabled = busy;
 
-  if (!showActions) {
+  if (!owner) {
     return null;
   }
 
