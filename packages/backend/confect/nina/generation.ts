@@ -19,6 +19,7 @@ import { readInstructions } from "@repo/backend/confect/nina/instructions";
 import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { startNinaStep } from "@repo/backend/confect/nina/step";
+import type { RunTiming } from "@repo/backend/confect/nina/timing";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
 import { DateTime, Effect } from "effect";
@@ -26,11 +27,13 @@ import { DateTime, Effect } from "effect";
 /**
  * The scheduled Confect action owns generation; Agent owns its persistent
  * stream. Aborting `halt` ends the generation early and lets Agent clean up its
- * stream before this returns.
+ * stream before this returns. `timing` notes when the model is first called and
+ * when its stream first shows something to the learner.
  */
 export const generateResponse = Effect.fn("nina.generate")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>,
-  halt: AbortSignal
+  halt: AbortSignal,
+  timing: RunTiming
 ) {
   const ctx = yield* ActionCtx;
   const services = yield* Effect.context<ActionCtx | Gateway>();
@@ -79,6 +82,8 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
         {
           promptMessageId: turn.promptMessageId,
           abortSignal: AbortSignal.any([signal, halt]),
+          onChunk: ({ chunk }) => timing.observe(chunk),
+          onLanguageModelCallStart: () => timing.reach("readyMs"),
           onError: ({ error }) => {
             streamFailure ??= generationFailure(error);
           },

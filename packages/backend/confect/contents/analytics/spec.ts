@@ -1,15 +1,13 @@
-import {
-  POPULARITY_SCOPE,
-  POPULARITY_WINDOW,
-} from "@repo/backend/confect/contents/popularity";
+import { POPULARITY_SCOPE } from "@repo/backend/confect/contents/popularity";
+import { learningPopularityWindowValidator } from "@repo/backend/confect/contents/schema";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const invalidContentAnalyticsPartitionCode =
   "INVALID_CONTENT_ANALYTICS_PARTITION";
 const contentAnalyticsIoFailedCode = "CONTENT_ANALYTICS_IO_FAILED";
 // Page chains exist only for the maintained ranking, so a page for any other
-// window or scope is refused when it is scheduled.
-const learningPopularityWindowValidator = Schema.Literal(POPULARITY_WINDOW);
+// scope is refused when it is scheduled. The stored scope vocabulary is wider
+// while older rows age out (ADR 0008).
 const learningPopularityScopeValidator = Schema.Literal(POPULARITY_SCOPE);
 export const scheduleContentAnalyticsPartitionsResultValidator = Schema.Struct({
   enqueuedPartitions: Schema.Finite,
@@ -51,8 +49,6 @@ export const scheduleLearningPopularityExpiriesResultValidator = Schema.Struct({
 });
 export const pruneLearningPopularityResultValidator = Schema.Struct({
   hasMore: Schema.Boolean,
-  retiredCounters: Schema.Finite,
-  retiredCycles: Schema.Finite,
   signalsDeleted: Schema.Finite,
   viewersDeleted: Schema.Finite,
   waitingForMaintenance: Schema.Boolean,

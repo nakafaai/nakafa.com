@@ -10,15 +10,15 @@ import {
   POPULARITY_DAY_MS,
 } from "@repo/backend/confect/contents/popularity";
 import {
-  learningPopularityFiniteWindowValidator,
   learningPopularityScopeValidator,
+  learningPopularityWindowValidator,
 } from "@repo/backend/confect/contents/schema";
 import { Clock, Effect, flow, Schema, Struct } from "effect";
 
 const CycleKeySchema = Schema.Struct({
   day: Schema.Finite,
   scopeMode: learningPopularityScopeValidator,
-  windowKey: learningPopularityFiniteWindowValidator,
+  windowKey: learningPopularityWindowValidator,
 });
 type CycleKey = typeof CycleKeySchema.Type;
 const CyclePageKeySchema = Schema.Struct({

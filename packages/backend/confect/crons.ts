@@ -12,7 +12,6 @@ const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const NINA_TURN_SWEEP_INTERVAL_MINUTES = 5;
-const POPULARITY_RETENTION_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
@@ -166,9 +165,24 @@ export default CronJobs.make()
     )
   )
   .add(
-    /** Prunes expired popularity inputs in bounded pages and, until none is left, retires the rows earlier versions kept. */ CronJob.make(
+    /**
+     * Prunes expired popularity inputs in bounded pages, at minute 45 of every
+     * hour. The pass reads the maintenance row, when an expired daily signal
+     * exists, and never writes it. The daily expiry and the weekly repair start
+     * at minute 15 of hour 0 and rewrite that row on every page of their chain,
+     * and Convex runs the pass again when its read overlaps such a write.
+     * Starting 30 minutes from them keeps the pass out of any chain that ends
+     * within 30 minutes.
+     */
+    CronJob.make(
       "prune expired popularity inputs",
-      Duration.hours(POPULARITY_RETENTION_INTERVAL_HOURS),
+      Cron.make({
+        minutes: [45],
+        hours: [],
+        days: [],
+        months: [],
+        weekdays: [],
+      }),
       internal.contents.mutations.popularity.pruneLearningPopularity,
       {}
     )

@@ -3,6 +3,7 @@ import { Effect, FileSystem, Layer, Path, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { CSSProperties } from "react";
 import { ImageResponse } from "takumi-js/response";
+import { OG_IMAGE_HEADERS } from "@/lib/og/headers";
 import { OgImage, type OgImageProps } from "@/lib/og/image";
 
 const ogLogoStyle = {
@@ -14,12 +15,13 @@ const ogLogoStyle = {
   borderRadius: "50%",
 } satisfies CSSProperties;
 
-const OgImageSizeSchema = Schema.Struct({
+const OgImageResponseSchema = Schema.Struct({
+  headers: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
   height: Schema.optionalKey(Schema.Finite),
   width: Schema.optionalKey(Schema.Finite),
 });
 
-type GenerateOGImageOptions = OgImageProps & typeof OgImageSizeSchema.Type;
+type GenerateOGImageOptions = OgImageProps & typeof OgImageResponseSchema.Type;
 
 /** Loads the shared logo asset as a serializable data URL for OG rendering. */
 async function getLogoDataUrl() {
@@ -39,11 +41,20 @@ async function getLogoDataUrl() {
   );
 }
 
-/** Generates one OG image response with cached persistent assets. */
+/**
+ * Generates one OG image response with cached persistent assets. The response
+ * carries the CDN headers of a known route unless the caller names others.
+ */
 export function generateOGImage(options: GenerateOGImageOptions) {
   return Effect.runPromise(
     Effect.gen(function* () {
-      const { height = 630, icon, width = 1200, ...imageProps } = options;
+      const {
+        headers = OG_IMAGE_HEADERS,
+        height = 630,
+        icon,
+        width = 1200,
+        ...imageProps
+      } = options;
       const logoDataUrl = yield* Effect.tryPromise(getLogoDataUrl);
 
       return new ImageResponse(
@@ -61,6 +72,7 @@ export function generateOGImage(options: GenerateOGImageOptions) {
           }
         />,
         {
+          headers,
           width,
           height,
         }

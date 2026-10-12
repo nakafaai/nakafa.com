@@ -13,7 +13,6 @@ import { learningPopularityRankings } from "@repo/backend/confect/contents/ranki
 import { buildContentSearchRef } from "@repo/backend/confect/contents/search/documents";
 import {
   type GetTrendingSubjectsArgs,
-  maxTrendingSubjectsLimit,
   TrendingSubjectIoError,
   trendingSubjectIoFailedCode,
 } from "@repo/backend/confect/contents/trending/spec";
@@ -22,8 +21,10 @@ import type { TrendingSubject } from "@repo/backend/confect/lib/validators/trend
 import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, Struct } from "effect";
 
-const defaultTrendingSubjectsLimit = 6;
-const defaultTrendingMinViews = 5;
+/** Cards the homepage list shows, and the size of one ranking page. */
+const trendingSubjectsLimit = 6;
+/** Views a lesson needs in the window to be listed. */
+const trendingMinViews = 5;
 const trendingRankingMaxPages = 5;
 
 /** Maps thrown Convex IO failures into the trending-material error channel. */
@@ -35,28 +36,10 @@ function toTrendingSubjectIoError(error: unknown) {
   });
 }
 
-/** Normalizes caller-provided result filters to bounded query settings. */
-function getTrendingSettings(args: GetTrendingSubjectsArgs) {
-  const rawLimit = args.limit ?? defaultTrendingSubjectsLimit;
-  const rawMinViews = args.minViews ?? defaultTrendingMinViews;
-  const limit = Math.min(Math.max(rawLimit, 0), maxTrendingSubjectsLimit);
-  const minViews = Math.max(rawMinViews, 0);
-  return {
-    limit,
-    minViews,
-  };
-}
-
 /** Reads aggregate-ranked counter IDs for one homepage popularity namespace. */
 const loadRankedPopularityCounterIds = Effect.fn(
   "contents.trending.loadRankedPopularityCounterIds"
-)(function* (
-  args: GetTrendingSubjectsArgs,
-  settings: {
-    readonly limit: number;
-    readonly minViews: number;
-  }
-) {
+)(function* (args: GetTrendingSubjectsArgs) {
   const ctx = yield* QueryCtxService;
   let ids: Docs["learningPopularityCounters"]["_id"][] = [];
   let cursor: string | undefined;
@@ -72,7 +55,7 @@ const loadRankedPopularityCounterIds = Effect.fn(
             POPULARITY_WINDOW,
           ],
           order: "asc",
-          pageSize: settings.limit,
+          pageSize: trendingSubjectsLimit,
           ...(cursor
             ? {
                 cursor,
@@ -171,15 +154,11 @@ function toTrendingSubject(
 export const listTrendingSubjects = Effect.fn(
   "contents.trending.listTrendingSubjects"
 )(function* (args: GetTrendingSubjectsArgs) {
-  const settings = getTrendingSettings(args);
-  if (settings.limit === 0) {
-    return [];
-  }
-  const ids = yield* loadRankedPopularityCounterIds(args, settings);
+  const ids = yield* loadRankedPopularityCounterIds(args);
   const rows = yield* loadRankedPopularityCounters(ids);
   let subjects: TrendingSubject[] = [];
   for (const row of rows) {
-    if (row.score < settings.minViews) {
+    if (row.score < trendingMinViews) {
       continue;
     }
     const route = yield* loadCurrentTrendingRoute(row);
@@ -187,9 +166,9 @@ export const listTrendingSubjects = Effect.fn(
       continue;
     }
     subjects = Arr.append(subjects, toTrendingSubject(row, route));
-    if (subjects.length >= settings.limit) {
+    if (subjects.length >= trendingSubjectsLimit) {
       break;
     }
   }
-  return Arr.take(subjects, settings.limit);
+  return subjects;
 });

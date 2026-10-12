@@ -1,25 +1,19 @@
 import { createHmac } from "node:crypto";
+import { createLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { JsonTextSchema } from "@repo/utilities/json";
-import { Clock, Crypto, Effect, FileSystem, Schema } from "effect";
-import { Base64Url, Hex } from "effect/encoding";
+import { Duration, Effect, FileSystem, Schema } from "effect";
 
 /** Better Auth's session cookie under its default name on plain HTTP. */
 const SESSION_COOKIE = "better-auth.session_token";
 /** Outlives any browser suite run; the whole runtime is discarded after. */
-const SESSION_LIFETIME_MS = 24 * 60 * 60 * 1000;
-const CreatedDocument = Schema.fromJsonString(
-  Schema.Struct({ _creationTime: Schema.Finite, _id: Schema.String })
-);
+const SESSION_LIFETIME = Duration.hours(24);
 /** The cookie file a browser test reads back before it signs in. */
 const SessionCookie = Schema.fromJsonString(
   Schema.Struct({ name: Schema.String, value: Schema.String })
 );
-/** One Convex function's arguments as the CLI takes them, JSON text. */
-const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 
 /**
  * Signs one synthetic learner into the running local acceptance backend and
@@ -39,46 +33,10 @@ export const createAcceptanceLearner = Effect.fn(
       "Run pnpm acceptance:prepare and start acceptance before creating a learner."
     );
   }
-  const now = yield* Clock.currentTimeMillis;
-  const crypto = yield* Crypto.Crypto;
-  const id = Hex.encode(yield* crypto.randomBytes(8));
-  const token = Base64Url.encode(yield* crypto.randomBytes(32));
-  const user = {
-    createdAt: now,
-    email: `learner-${id}@acceptance.invalid`,
-    emailVerified: true,
-    name: "Acceptance Learner",
-    updatedAt: now,
-  };
-  const created = yield* runLocalConvex(runtime, "Learner account", [
-    "run",
-    "--component",
-    "betterAuth",
-    "adapter:create",
-    yield* encodeArguments({ input: { data: user, model: "user" } }),
-  ]).pipe(Effect.flatMap(Schema.decodeEffect(CreatedDocument)));
-  yield* runLocalConvex(runtime, "Learner profile", [
-    "run",
-    "auth/lifecycle:onCreate",
-    yield* encodeArguments({ doc: { ...user, ...created }, model: "user" }),
-  ]);
-  const session = yield* encodeArguments({
-    input: {
-      data: {
-        createdAt: now,
-        expiresAt: now + SESSION_LIFETIME_MS,
-        token,
-        updatedAt: now,
-        userId: created._id,
-      },
-      model: "session",
-    },
-  });
-  yield* runLocalConvex(
-    runtime,
-    "Learner session",
-    ["run", "--component", "betterAuth", "adapter:create", session],
-    [token]
+  const { token } = yield* createLearnerAccount(
+    (operation, args, sensitiveValues) =>
+      runLocalConvex(runtime, operation, args, sensitiveValues),
+    SESSION_LIFETIME
   );
   // Better Auth signs its cookie with HMAC-SHA256, which Effect's Crypto does
   // not provide, so Node's signs it.

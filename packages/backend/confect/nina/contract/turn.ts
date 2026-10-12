@@ -66,17 +66,40 @@ export const NinaTurnState = Schema.Union([
   }),
   Schema.Struct({ status: Schema.Literal("unanswered") }),
 ]);
+/**
+ * Milliseconds counted from the admission of a turn, never below zero. A
+ * creation time carries a fraction of a millisecond, and so does the count.
+ */
+const MillisecondsSinceAdmission = Schema.Finite.check(
+  Schema.isGreaterThanOrEqualTo(0)
+);
+
+/**
+ * How long a learner waited at each stage of a turn, in milliseconds after its
+ * admission. Each stage is stored the first time the turn reaches it, so a turn
+ * that ended early holds only the stages it reached, and the gap between two
+ * stages is the wait between them. It holds numbers only, never a word of the
+ * conversation.
+ */
+export const NinaTurnTiming = Schema.Struct({
+  /** A run started and took the turn. This holds the wait for its action to start. */
+  claimedMs: Schema.optionalKey(MillisecondsSinceAdmission),
+  /** The run had read what the model needs and was about to call it. */
+  readyMs: Schema.optionalKey(MillisecondsSinceAdmission),
+  /**
+   * The model produced the first part that the page can show: reasoning, a
+   * capability row or answer text. The page shows it a little later, once
+   * Agent has written it.
+   */
+  progressMs: Schema.optionalKey(MillisecondsSinceAdmission),
+  /** The model produced the first word of an answer. */
+  tokenMs: Schema.optionalKey(MillisecondsSinceAdmission),
+});
+
 /** A request key survives settlement so network retries remain idempotent. */
 export const NinaRequestId = Schema.NonEmptyString.check(
   Schema.isMaxLength(128)
 );
-/**
- * The model key learners chose before October 2026. Old turns still store
- * it and old browser tabs still send it. Nothing reads it; the contract
- * change unsets the stored values and deletes this schema.
- */
-export const RetiredModelKey = Schema.Literals(["nakafa-lite", "nakafa-pro"]);
-
 /** Recorded response facts never invent an unknown model, charge or token count. */
 export const NinaTurnFacts = Schema.Struct({
   userId: Id("users"),
@@ -92,7 +115,6 @@ export const NinaTurnFacts = Schema.Struct({
    * and history shows only the newest complete one.
    */
   retryOf: Schema.optionalKey(Schema.Finite),
-  modelId: Schema.optionalKey(RetiredModelKey),
   credits: Schema.optionalKey(Schema.Finite),
   requestId: Schema.optionalKey(NinaRequestId),
   fingerprint: Schema.optionalKey(Schema.String),
@@ -109,6 +131,8 @@ export const NinaTurnFacts = Schema.Struct({
     })
   ),
   usage: Schema.Array(NinaUsageTotal).check(Schema.isMaxLength(32)),
+  /** The waits of the turn. Turns stored before this field have none. */
+  timing: Schema.optionalKey(NinaTurnTiming),
   suggestions: Schema.optionalKey(NinaSuggestions),
   /** Memories Nina saved or confirmed from this turn's message, when there are any. */
   remembered: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),

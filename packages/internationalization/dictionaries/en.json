@@ -522,6 +522,7 @@
     "clear-description": "This cannot be undone",
     "search": "Search memories",
     "add": "Add memory",
+    "memory": "Memory",
     "new": "New memory",
     "empty": "No memories yet",
     "empty-description": "Tell Nina about yourself in a chat, or add a memory here",

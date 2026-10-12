@@ -5,7 +5,6 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
-import { retireObsoletePopularity } from "@repo/backend/confect/contents/metrics/retire";
 import {
   getPopularitySignalDay,
   getPopularityWindowStartDay,
@@ -35,9 +34,8 @@ const hasCompletedWindow = Effect.fn("contents.metrics.hasCompletedWindow")(
  * Expires deduplication keys and window inputs in bounded transactions. Queue
  * payloads own pending work. A daily signal is kept only while the window can
  * still expire it, so the window start is the retention cutoff once the
- * window's own maintenance has completed the day. Until nothing is left, the
- * same hourly pass also retires what earlier versions kept (`retire.ts`). The
- * earliest indexed rows are the cursor, so retries need no checkpoint.
+ * window's own maintenance has completed the day. The earliest indexed rows are
+ * the cursor, so retries need no checkpoint.
  */
 export const pruneLearningPopularity = Effect.fn(
   "contents.metrics.pruneLearningPopularity"
@@ -52,7 +50,7 @@ export const pruneLearningPopularity = Effect.fn(
       .index("by_signalDay", (query) => query.lt("signalDay", day))
       .take(PAGE_SIZE)
       .pipe(Effect.orDie);
-    const signalCutoff = getPopularityWindowStartDay(POPULARITY_WINDOW, day);
+    const signalCutoff = getPopularityWindowStartDay(day);
     const expiredSignal = yield* database
       .table("learningPopularitySignals")
       .index("by_signalDay", (query) => query.lt("signalDay", signalCutoff))
@@ -76,12 +74,8 @@ export const pruneLearningPopularity = Effect.fn(
         signalsDeleted += 1;
       }
     }
-    const { retiredCounters, retiredCycles } =
-      yield* retireObsoletePopularity();
     const hasMore =
-      viewers.length === PAGE_SIZE ||
-      signalsDeleted === PAGE_SIZE ||
-      retiredCounters + retiredCycles > 0;
+      viewers.length === PAGE_SIZE || signalsDeleted === PAGE_SIZE;
     if (hasMore) {
       // Native scheduling and these deletions commit together. A failed page
       // rolls back; the hourly cron also recovers a terminated chain.
@@ -95,8 +89,6 @@ export const pruneLearningPopularity = Effect.fn(
     }
     return {
       hasMore,
-      retiredCounters,
-      retiredCycles,
       signalsDeleted,
       viewersDeleted: viewers.length,
       waitingForMaintenance,

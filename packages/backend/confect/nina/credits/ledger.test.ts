@@ -72,7 +72,7 @@ describe("Nina credit transactions", () => {
     ]);
   });
 
-  it("holds five credits for one response, refuses less, and names no model", async () => {
+  it("holds five credits for one response and refuses less", async () => {
     const priced = await fixture(5);
     const hold = await priced.reserve();
     const state = await priced.t.query(async (ctx) => ({
@@ -80,7 +80,6 @@ describe("Nina credit transactions", () => {
       ledger: await ctx.db.query("creditTransactions").collect(),
     }));
     expect(hold).toMatchObject({ credits: 5 });
-    expect(hold).not.toHaveProperty("modelId");
     expect(state.user?.credits).toBe(0);
     expect(Arr.map(state.ledger, (row) => row.metadata)).toEqual([
       { phase: "reserved" },

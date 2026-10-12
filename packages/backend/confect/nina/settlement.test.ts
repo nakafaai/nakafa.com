@@ -129,6 +129,17 @@ describe("native Nina stop and resend", () => {
         order: next.order,
       });
       expect(next.order).toBeGreaterThan(0);
+      // The next turn waits for nothing of the stopped one: its run is scheduled
+      // for the moment of the prompt, not behind the stopped run, its refund or
+      // the sweep.
+      expect(
+        Arr.filter(admitted.jobs, (job) => job.name === "nina/response:run")
+      ).toEqual([
+        expect.objectContaining({
+          args: [{ turnId: next.turnId }],
+          scheduledTime: NOW + 1000,
+        }),
+      ]);
       // The old hold came back once and the new prompt took a hold of its own.
       expect(admitted.user?.credits).toBe(credits - 5);
       expect(admitted.ledger).toEqual([
@@ -167,10 +178,19 @@ describe("native Nina stop and resend", () => {
           scheduledTime: NOW + grace,
         }),
       ]);
-      await f.t.mutation(recover, { turnId: f.turnId });
+      // The run's exit also carries the stages it reached, and the turn stores
+      // none of them: it keeps its claim and no more.
+      await f.t.mutation(recover, {
+        turnId: f.turnId,
+        timing: { readyMs: 1500, progressMs: 4000, tokenMs: 4200 },
+      });
       vi.setSystemTime(NOW + grace);
       await f.t.mutation(recover, { turnId: f.turnId });
-      expect(await f.inspect()).toEqual(admitted);
+      const settled = await f.inspect();
+      expect(settled).toEqual(admitted);
+      expect(settled.turns[0]?.timing).toEqual({
+        claimedMs: expect.any(Number),
+      });
     }
   );
 

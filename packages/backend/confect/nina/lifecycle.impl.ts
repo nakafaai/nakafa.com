@@ -13,6 +13,7 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/nina/lifecycle.spec";
 import { settleTurn, stopTurn } from "@repo/backend/confect/nina/settlement";
 import { startsLate, sweepTurns } from "@repo/backend/confect/nina/sweep";
+import { sinceAdmission } from "@repo/backend/confect/nina/timing";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { Clock, Effect, Layer } from "effect";
 
@@ -70,15 +71,16 @@ const claim = FunctionImpl.make(
       yield* settleTurn(turn, "failed", "response-timeout");
       return null;
     }
-    const state = {
-      status: "running" as const,
-      startedAt: yield* Clock.currentTimeMillis,
-    };
+    const startedAt = yield* Clock.currentTimeMillis;
+    // The claim is the first write of a run and comes before any model call.
+    // Its time since the admission is the wait for the run to start.
+    const state = { status: "running" as const, startedAt };
+    const timing = { claimedMs: sinceAdmission(turn, startedAt) };
     yield* (yield* DatabaseWriter)
       .table("ninaTurns")
-      .patch(turn._id, { state })
+      .patch(turn._id, { state, timing })
       .pipe(Effect.orDie);
-    return { ...turn, state };
+    return { ...turn, state, timing };
   }, Effect.catchDefect(lifecycleFailure))
 );
 
@@ -118,7 +120,8 @@ const presentation = FunctionImpl.make(
  * the run's own exit, the settlement that a stop schedules, and the recovery
  * sweep all come here. Reconciles committed Agent output before releasing an
  * interrupted turn's credits. A turn the learner stopped ends as cancelled,
- * whatever ended its run.
+ * whatever ended its run. Only the run's own exit knows which stages the turn
+ * reached, so only it passes `timing`.
  */
 const recover = FunctionImpl.make(
   schema,
@@ -132,7 +135,8 @@ const recover = FunctionImpl.make(
     yield* settleTurn(
       turn,
       turn.cancelRequestedAt === undefined ? "failed" : "cancelled",
-      args.failure
+      args.failure,
+      args.timing
     );
     return null;
   }, Effect.catchDefect(lifecycleFailure))

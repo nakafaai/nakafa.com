@@ -64,6 +64,26 @@ Whichever settlement comes first, the turn ends as cancelled at the time of the
 stop, and the later ones find it settled and change nothing. A saved answer wins
 a race with a cancel and settles as complete.
 
+A turn stores how long its learner waited, as `timing`: numbers only, in
+milliseconds after the admission. `claimedMs` is the wait for the run to start,
+stored by the claim, which is the first write of a run and comes before any
+model call. `readyMs` is the moment before the first model call, `progressMs`
+the first part of the model's stream that the page shows (reasoning, a
+capability row or answer text), and `tokenMs` the first word of the answer. The
+run notes the last three in memory and its exit hands them to the settlement,
+which adds them to the claim, so timing costs no write of its own. A turn whose
+run never exits, or that the learner's next prompt settles before its run
+exits, keeps its claim and no more. The page shows a part a little after the
+model produced it, once Agent has written it. The run counts the last three
+with its own clock, so they can differ from the database's clock by the
+difference between the two. The stages count from the creation of the turn, so
+they leave out what comes before it: the page's own work, the request to the
+admission mutation and its work, and for a new chat the change of route that
+follows its answer. A learner waits that long more than the stages show. The
+turn sent right after a stop waits for none of the stopped run's exit, its
+refund and the sweep, since its admission settles the stopped turn and
+schedules its own run in one transaction.
+
 Deleting a chat settles its open turn in the deleting transaction, whether or
 not the learner stopped it, and no new turn can start on a chat that is gone.
 The hold is paid back without waiting for the run, whose next check finds its
@@ -128,9 +148,15 @@ weekly pass restores its score from the signals. The pipeline writes a signal
 and its counter in one transaction, so a counter missing while its signals are
 live is not a state the pipeline produces.
 
-One hourly cron prunes bounded indexed pages and atomically schedules a next
-page when needed. Each page derives the current day again, so a chain crossing
-midnight waits for the new day's maintenance before deleting daily inputs.
+One hourly cron, at minute 45, prunes bounded indexed pages and atomically
+schedules a next page when needed. The pass only reads the maintenance row. The
+daily expiry and the weekly repair start at minute 15 of hour 0 and rewrite that
+row on every page of their chain, and Convex runs the pass again when its read
+overlaps such a write. Starting 30 minutes from them keeps the pass out of any
+chain that ends within 30 minutes. A longer chain costs a retried pass, and the
+next hourly pass recovers one that fails. Each page derives the current day
+again, so a chain crossing midnight waits for the new day's maintenance before
+deleting daily inputs.
 Maintenance rows are read only when an expired daily input exists. Missing or
 incomplete cycles retain those inputs while viewer-key expiration continues.
 The remaining indexed rows are the resume position; there is no separate
@@ -146,22 +172,26 @@ forever. Regression tests verify the transaction, window cutoff, delayed queue,
 restart and midnight behavior rather than treating cycle completion as a claim
 of historical data completeness.
 
-Two temporary contract steps remain from the change that narrowed the pipeline
-to one ranking. This ADR owns them, and they end together. Until they do, the
-same hourly pass retires the counters, ranking entries and maintenance
-watermarks of the windows and the scope that earlier versions kept (its index
-ranges are its resume position, so a pass with nothing left to retire reads no
-document), and `getTrendingSubjects` accepts and ignores the `windowKey`
-argument that an older web deployment still sends. The exit is met when dev and
-production report no retired counter and no retired watermark from the hourly
-pass, and the production deploy is 8 days old (the window plus the day its
-maintenance runs, the longest an older signal lives), with no older web
-deployment taking requests. The cleanup is one change: delete
-`contents/metrics/retire.ts` with its call and tests, drop `retiredCounters` and
-`retiredCycles` from the prune result, narrow the stored window and scope values
-of popularity rows, and the `applied` windows of daily signals, to the
-maintained ones, and delete the `windowKey` argument with its compatibility
-test.
+The change that narrowed the pipeline to one ranking left temporary contract
+steps, and most are done. On 12 October 2026 the prune found no counter and no
+maintenance watermark of another window or scope on dev or production, so the
+step that retired them is deleted, and counters and watermarks are stored under
+the seven-day window alone. `getTrendingSubjects` takes only the locale. Only
+the web server calls it, from the cached home page, and the last web deployment
+that sent the deleted `windowKey` argument was created on 11 October 2026 at
+18:23 UTC. The project keeps a browser on its own deployment for 12 hours after
+that deployment was created (`skewProtectionMaxAge` 43,200 seconds, read from
+the Vercel project on 12 October 2026), so since 12 October 06:23 UTC no
+deployment that sends the argument takes requests.
+
+One step remains, which this ADR owns. A daily signal, a viewer key or a queued
+view written before the narrowing may still carry the placement scope, and a
+daily signal written before it carries the other windows in `applied`. The
+longest an older signal lives is 8 days, the window plus the day its
+maintenance runs. Once the narrowing has been in production for 8 days, which is
+20 October 2026, one change narrows the stored scope values and the `applied`
+windows to the maintained ones, together with the placement check of
+`isRankedPopularityView`.
 
 Mutations that write only tables without registered triggers use native Convex
 builders. Mutations that own message, subscription, score, or other registered
