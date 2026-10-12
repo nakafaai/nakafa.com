@@ -6,6 +6,7 @@ import {
   ResearchOutputSchema,
   WebSearchInputSchema,
   webSearchMaxSites,
+  webSearchQueryMaxLength,
 } from "@repo/backend/confect/nina/research/schema";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
@@ -99,6 +100,10 @@ const searchCallWith = (input: typeof WebSearchInputSchema.Encoded) =>
     "tool-calls"
   );
 const noQuery = searchCallWith({ queries: [] });
+/** Writes a query one character longer than the provider takes, so the schema refuses the whole call. */
+const longQuery = searchCallWith({
+  queries: ["a".repeat(webSearchQueryMaxLength + 1)],
+});
 /** Names one site more than a call may, so the schema refuses the whole call. */
 const tooManySites = searchCallWith({
   queries: ["official agents"],
@@ -387,6 +392,11 @@ describe("research Agent evidence boundary", () => {
       { phase: "search", rejected: true },
     ],
     [
+      "the model writes a query longer than the provider takes",
+      () => Promise.resolve(longQuery),
+      { phase: "search", rejected: true },
+    ],
+    [
       "the model names more sites than a call may",
       () => Promise.resolve(tooManySites),
       { phase: "search", rejected: true },
@@ -451,6 +461,11 @@ describe("research Agent evidence boundary", () => {
     [
       "the model writes no usable query",
       () => Promise.resolve(noQuery),
+      { message: "Research search wrote no usable query.", rejected: true },
+    ],
+    [
+      "the model writes a query longer than the provider takes, so no search runs and none is cut",
+      () => Promise.resolve(longQuery),
       { message: "Research search wrote no usable query.", rejected: true },
     ],
     [
