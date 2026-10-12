@@ -12,7 +12,6 @@ const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const NINA_TURN_SWEEP_INTERVAL_MINUTES = 5;
-const POPULARITY_RETENTION_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
@@ -166,9 +165,21 @@ export default CronJobs.make()
     )
   )
   .add(
-    /** Prunes expired popularity inputs in bounded pages. */ CronJob.make(
+    /**
+     * Prunes expired popularity inputs in bounded pages, at minute 45 of every
+     * hour. The daily expiry and the weekly repair of the popularity window
+     * start at minute 15 of hour 0 and rewrite the maintenance row this pass
+     * reads, so the pass keeps 30 minutes from them on both sides.
+     */
+    CronJob.make(
       "prune expired popularity inputs",
-      Duration.hours(POPULARITY_RETENTION_INTERVAL_HOURS),
+      Cron.make({
+        minutes: [45],
+        hours: [],
+        days: [],
+        months: [],
+        weekdays: [],
+      }),
       internal.contents.mutations.popularity.pruneLearningPopularity,
       {}
     )
