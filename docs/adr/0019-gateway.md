@@ -162,9 +162,12 @@ at 0.5 and are set from what that command prints.
   newest learner message, which is never stored in the thread. Because the
   marker sits before that message, the block never makes the prefix change. The
   prefix does change when something in it does: the learner moves to a page
-  with other content, a remembered fact or the summary changes, or the history,
-  kept to 12,000 tokens, is full and each new turn pushes the oldest out.
-  Between those events a turn adds only its question and answer to the prefix.
+  with other content, a remembered fact changes, the learner retries an
+  answer, which takes the replaced asking out of the history, or the summary
+  folds the oldest turns of the history. The history, kept to 32,000 tokens,
+  otherwise only grows at its end between folds, and a fold brings it down to
+  16,000, so folds are about half a budget of turns apart. Between those events
+  a turn adds only its question and answer to the prefix.
 - **Spend.** No tenant or person identifier goes to the gateway, so the `space`
   argument leaves `Gateway.language`. Nakafa records cost itself: each usage row
   keeps the `providerMetadata.convexGateway.cost` its calls report, summed per

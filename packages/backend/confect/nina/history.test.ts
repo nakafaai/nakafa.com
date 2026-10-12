@@ -7,29 +7,27 @@ import {
   assembleContext,
   boundStep,
   newestAskings,
+  sentTurn,
   splitTurns,
 } from "@repo/backend/confect/nina/history";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { ModelMessage } from "ai";
 import { Array as Arr, Option } from "effect";
 
-/** One complete turn with a verified capability result. */
-function turn(
-  question: string,
-  evidence = "Verified evidence."
+/** One tool call and its verified result; a turn's first call follows private reasoning. */
+function toolRound(
+  id: string,
+  evidence: string,
+  reasoning = false
 ): ModelMessage[] {
   return [
-    { role: "user", content: question },
     {
       role: "assistant",
       content: [
-        { type: "reasoning", text: "Private chain" },
-        {
-          type: "tool-call",
-          toolCallId: `${question}-call`,
-          toolName: "nakafa",
-          input: {},
-        },
+        ...(reasoning
+          ? [{ type: "reasoning" as const, text: "Private chain" }]
+          : []),
+        { type: "tool-call", toolCallId: id, toolName: "nakafa", input: {} },
       ],
     },
     {
@@ -37,18 +35,36 @@ function turn(
       content: [
         {
           type: "tool-result",
-          toolCallId: `${question}-call`,
+          toolCallId: id,
           toolName: "nakafa",
-          output: {
-            type: "json",
-            value: { text: evidence, artifacts: [] },
-          },
+          output: { type: "json", value: { text: evidence, artifacts: [] } },
         },
       ],
     },
+  ];
+}
+
+/** One complete turn with `rounds` verified capability results. */
+function turn(
+  question: string,
+  evidence = "Verified evidence.",
+  rounds = 1
+): ModelMessage[] {
+  return [
+    { role: "user", content: question },
+    ...Arr.flatMap(Arr.range(1, rounds), (round) =>
+      toolRound(
+        `${question}-call${round === 1 ? "" : `-${round}`}`,
+        evidence,
+        round === 1
+      )
+    ),
     { role: "assistant", content: `Answer to ${question}` },
   ];
 }
+
+/** A tool result long enough to fill the evidence budget on its own. */
+const HUGE = "Evidence paragraph.\n\n".repeat(20_000);
 
 function tokens(messages: readonly ModelMessage[]) {
   return countTextTokens(encodeJsonText(messages));
@@ -211,36 +227,52 @@ describe("Nina provider context", () => {
   });
 
   it("keeps whole newest turns within the history budget and drops a turn that does not fit", () => {
-    const large = "Long evidence paragraph.\n\n".repeat(900);
+    // Each turn holds one result at the evidence cap, so a few turns fit.
+    const large = "Long evidence paragraph.\n\n".repeat(1600);
+    // The turns differ in one digit of their name, so they all cost the same.
+    const cost = sentTurn(turn("Turn 0", large)).tokens;
+    const fits = Math.floor(NINA_BUDGET.history / cost);
+    expect(fits).toBeGreaterThan(1);
+    expect((fits + 1) * cost).toBeGreaterThan(NINA_BUDGET.history);
     const result = assembleContext({
       current: [{ role: "user", content: "Latest" }],
-      history: [turn("Old", large), turn("Middle", large), turn("New", large)],
+      history: Arr.makeBy(fits + 1, (index) => turn(`Turn ${index}`, large)),
     });
     const history = Arr.dropRight(result, 1);
-    expect(tokens(history)).toBeLessThanOrEqual(NINA_BUDGET.history + 200);
+    expect(Arr.filter(history, ({ role }) => role === "user")).toHaveLength(
+      fits
+    );
     expect(history[0]).toMatchObject({ role: "user" });
-    expect(encodeJsonText(result)).not.toContain("Answer to Old");
-    expect(encodeJsonText(result)).toContain("Answer to Middle");
-    expect(encodeJsonText(result)).toContain("Answer to New");
+    // The oldest turn is dropped whole, and the newer ones stay.
+    expect(encodeJsonText(result)).not.toContain('"Answer to Turn 0"');
+    expect(encodeJsonText(result)).toContain('"Answer to Turn 1"');
+    expect(encodeJsonText(result)).toContain(`"Answer to Turn ${fits}"`);
   });
 
   it("shortens the evidence of one oversized newest turn instead of dropping it", () => {
-    const huge = "Evidence paragraph.\n\n".repeat(20_000);
-    // Three results each fill the evidence budget, so the turn outgrows history.
-    const oversized = [
-      ...turn("Huge", huge),
-      ...Arr.take(Arr.drop(turn("Huge", huge), 1), 2),
-      ...Arr.take(Arr.drop(turn("Huge", huge), 1), 2),
-    ];
+    // Six results that each fill the evidence budget outgrow the history budget.
     const result = assembleContext({
       current: [{ role: "user", content: "Follow up" }],
-      history: [oversized],
+      history: [turn("Huge", HUGE, 6)],
     });
     expect(result[0]).toEqual({ role: "user", content: "Huge" });
     expect(encodeJsonText(result)).toContain(
       "Earlier evidence in this conversation, shortened."
     );
     expect(tokens(result)).toBeLessThanOrEqual(NINA_BUDGET.history);
+  });
+
+  it("counts an oversized turn at its shortened cost, so an older one that fits shortened stays", () => {
+    // It costs more than the whole budget, but about a fifth of it once shortened.
+    expect(sentTurn(turn("Huge", HUGE, 6)).tokens).toBeLessThan(
+      NINA_BUDGET.history / 5
+    );
+    const result = assembleContext({
+      current: [{ role: "user", content: "Follow up" }],
+      history: [turn("Huge", HUGE, 6), turn("Next")],
+    });
+    expect(encodeJsonText(result)).toContain("Answer to Huge");
+    expect(encodeJsonText(result)).toContain("Answer to Next");
   });
 
   it("counts an earlier image at what the model bills, so a few images fill the history budget", () => {
@@ -259,12 +291,12 @@ describe("Nina provider context", () => {
     ];
     const result = assembleContext({
       current: [{ role: "user", content: "Latest" }],
-      history: Arr.map(Arr.range(1, 12), imageTurn),
+      history: Arr.map(Arr.range(1, 30), imageTurn),
     });
-    // An image costs 1,120 tokens, so ten turns fit in 12,000 and the two oldest do not.
-    expect(encodeJsonText(result)).not.toContain("Photo 2");
-    expect(encodeJsonText(result)).toContain("Photo 3");
-    expect(encodeJsonText(result)).toContain("Photo 12");
+    // An image costs 1,120 tokens, so 28 turns fit in 32,000 and the two oldest of 30 do not.
+    expect(encodeJsonText(result)).not.toContain('"Photo 2"');
+    expect(encodeJsonText(result)).toContain('"Photo 3"');
+    expect(encodeJsonText(result)).toContain('"Photo 30"');
   });
 
   it("keeps earlier images but leaves earlier documents as a note", () => {
@@ -373,33 +405,14 @@ describe("Nina provider context", () => {
 
   it("shortens older evidence within the current turn and keeps the newest result", () => {
     const evidence = "Current evidence paragraph.\n\n".repeat(900);
-    const toolRound = (id: string): ModelMessage[] => [
-      {
-        role: "assistant",
-        content: [
-          { type: "tool-call", toolCallId: id, toolName: "nakafa", input: {} },
-        ],
-      },
-      {
-        role: "tool",
-        content: [
-          {
-            type: "tool-result",
-            toolCallId: id,
-            toolName: "nakafa",
-            output: { type: "json", value: { text: evidence, artifacts: [] } },
-          },
-        ],
-      },
-    ];
     const history = turn("Earlier", evidence);
     const result = boundStep([
       ...history,
       { role: "user", content: "Gather everything" },
-      ...toolRound("one"),
-      ...toolRound("two"),
-      ...toolRound("three"),
-      ...toolRound("four"),
+      ...toolRound("one", evidence),
+      ...toolRound("two", evidence),
+      ...toolRound("three", evidence),
+      ...toolRound("four", evidence),
     ]);
     const current = Arr.drop(
       result,
@@ -426,25 +439,6 @@ describe("Nina provider context", () => {
 
   it("does not count the learner's message or its attachments against the evidence budget", () => {
     const evidence = "Small evidence paragraph.\n\n".repeat(400);
-    const toolRound = (id: string): ModelMessage[] => [
-      {
-        role: "assistant",
-        content: [
-          { type: "tool-call", toolCallId: id, toolName: "nakafa", input: {} },
-        ],
-      },
-      {
-        role: "tool",
-        content: [
-          {
-            type: "tool-result",
-            toolCallId: id,
-            toolName: "nakafa",
-            output: { type: "json", value: { text: evidence, artifacts: [] } },
-          },
-        ],
-      },
-    ];
     // Fifteen images alone cost 16,800 tokens, more than the whole evidence budget.
     const prompt: ModelMessage = {
       role: "user",
@@ -453,7 +447,11 @@ describe("Nina provider context", () => {
         ...Arr.makeBy(15, () => ({ type: "image" as const, image: "photo" })),
       ],
     };
-    const messages = [prompt, ...toolRound("one"), ...toolRound("two")];
+    const messages = [
+      prompt,
+      ...toolRound("one", evidence),
+      ...toolRound("two", evidence),
+    ];
     expect(boundStep(messages)).toEqual(
       Arr.map(messages, (message) =>
         message.role === "tool"

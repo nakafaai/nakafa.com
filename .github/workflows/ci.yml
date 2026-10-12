@@ -137,10 +137,9 @@ jobs:
       - name: Run tests
         # The backend suite runs in its own job. Its filter keeps it out of this
         # run. The test tasks in turbo.json reach other packages only through
-        # transit nodes, which run no tests.
+        # transit nodes, which run no tests. The Lint step above already ran
+        # the patch and policy checks of the root test script on this tree.
         run: |
-          pnpm check:patches
-          pnpm check:tests
           pnpm test:scripts
           pnpm exec turbo run test --filter='!@repo/backend'
 
@@ -179,7 +178,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [runtime, visual, navigation]
+        suite: [runtime, learner, visual, navigation]
     env:
       VERCEL_GIT_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:

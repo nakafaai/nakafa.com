@@ -144,7 +144,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
   );
 
   for (const [operation, command] of [
-    ["build", ["nice", "-n", "10", "pnpm", "run", "build"]],
+    ["build", ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"]],
     ["start", ["pnpm", "run", "start"]],
   ] as const) {
     it.effect(

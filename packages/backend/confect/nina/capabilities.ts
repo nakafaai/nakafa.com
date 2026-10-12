@@ -18,6 +18,7 @@ import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
   formatSpecialistToolTask,
+  getSpecialistToolWords,
   mathToolInputSchema,
   memoryToolInputSchema,
   nakafaToolInputSchema,
@@ -132,6 +133,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   context,
                   locale,
                   task: formatSpecialistToolTask(input),
+                  words: getSpecialistToolWords(input),
                   sourceReferences: getSourceReferencesFromMessages(messages),
                   toolCallId,
                   publish,

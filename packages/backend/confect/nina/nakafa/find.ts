@@ -38,7 +38,7 @@ type SearchFacts = typeof NakafaAgentSearchFactsSchema.Type;
  */
 type Entry = Pick<Hit, "anchor" | "excerpt" | "headingPath" | "reference">;
 
-/** Sections one question asks the index for, before the best section of each document is kept. */
+/** Documents one question asks the index for. The index gives the best section of each. */
 const SECTION_CANDIDATES = 20;
 
 /** The word search of Nakafa content, ranked and formatted for the specialist. */
@@ -83,7 +83,8 @@ const findTryouts = Effect.fn("nakafa.findTryouts")(function* (
 
 /**
  * Finds the sections that answer each question, merges the answers into one
- * ranking, and keeps the best section of each document. A search over all
+ * ranking, and keeps the best section of a document that several questions
+ * found. A search over all
  * kinds of content adds the try-outs that the words find, ranked among the
  * sections. The answer is none when the index gave no answer to any question,
  * so that the caller can search by words.

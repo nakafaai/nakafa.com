@@ -363,6 +363,17 @@ describe("Nina capability execution policy", () => {
     });
   });
 
+  it("hands web research the words of the tool call with no heading, beside the task its model reads", async () => {
+    await runCapability("deepResearch", "allowed");
+
+    expect(runResearchAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: expect.stringContaining("# Request"),
+        words: "Read the page\nGather evidence\nprimary sources",
+      })
+    );
+  });
+
   it("tells Nina what this attempt could not verify and to name a direct channel when external research fails, without an absence claim", async () => {
     const { result } = await runCapability("deepResearch", "failed");
 
