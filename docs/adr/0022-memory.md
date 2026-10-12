@@ -209,16 +209,22 @@ Nina is looking for, in the learner's words, at most 200 characters. It answers
 with the search for the words of the query, at most 6 memories, each in full up
 to 800 characters, in the same kind of block cut to 1,500 tokens, or with one
 line that says nothing was found. It makes no model call, so it costs no credits
-and needs no specialist. The tool description and the tool policy tell Nina when
-to use it: when the learner points back to something they told her that is
-neither in the Learner section nor in the list ("like I said", "my schedule",
-"what do you remember about me"), or when a good answer depends on a personal
-fact that is likely saved and is not in front of her, such as a target, an exam
-date or how they like explanations; and not for lesson content, for facts stated
-in this conversation, or more than twice in one turn. The twice is an
-instruction and not a limit in code: a turn still ends after 20 steps. In the
-chat it is one activity row, "Recalled memories", with no count and nothing to
-open, because a memory's text is not shown in the chat.
+and needs no specialist. What it finds is read once, in the step after the
+call, and is never stored: the conversation keeps the call and a note that
+memories matched, not their words. A result that the chat kept would be
+readable in the transcript of a public chat, would be read again by every later
+turn of the chat, and would outlive the memory it came from. The turn holds the
+words while it runs and drops them when it ends, and a later turn that reads
+the call reads the note and searches again when it matters. The tool description
+and the tool policy tell Nina when to use it: when the learner points back to
+something they told her that is neither in the Learner section nor in the list
+("like I said", "my schedule", "what do you remember about me"), or when a good
+answer depends on a personal fact that is likely saved and is not in front of
+her, such as a target, an exam date or how they like explanations; and not for
+lesson content, for facts stated in this conversation, or more than twice in one
+turn. The twice is an instruction and not a limit in code: a turn still ends
+after 20 steps. In the chat it is one activity row, "Recalled memories", with no
+count and nothing to open, because a memory's text is not shown in the chat.
 
 While memory is paused none of the three is there: no portrait, no list, and the
 tool is not offered. Its paragraph leaves the tool policy too, and a call that
@@ -228,10 +234,14 @@ refusal. Every Nina turn has a signed-in learner, so no other case exists.
 **What a learner's delete does to each way.** Recall and the capability read the
 live index and the live rows, so a memory the learner deleted or rewrote is gone
 or new for the next turn and the next call, and "Delete all" hides at once what
-it took (see Implementation Contract). The portrait is derived from the
-memories, so a delete or a rewrite on the Memory page takes its text out in the
-same transaction, and no prompt carries a sentence that came from the memory
-from then on. It asks for a build from scratch (no old portrait in the input,
+it took (see Implementation Contract). The chat keeps no copy of either: the
+memories a turn recalls travel with the learner's message and are never stored,
+and the words the capability finds are never stored. What Nina says in an answer
+is part of the chat, like anything said in it, and a delete does not take it
+back from an answer already given. The portrait is derived from the memories,
+so a delete or a rewrite on the Memory page takes its text out in the same
+transaction, and no prompt carries a sentence that came from the memory from
+then on. It asks for a build from scratch (no old portrait in the input,
 the newest 40 memories), which is not bound by the day. The worst-case delay is
 therefore not for the sentence, which is gone at once, but for Nina to have a
 portrait again: the quiet of 30 seconds that a build waits for, and one model

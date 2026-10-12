@@ -31,7 +31,14 @@ import {
 import { encodeJsonText } from "@repo/utilities/json";
 import { isStepCount } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Logger, MutableRef } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Logger,
+  MutableHashMap,
+  MutableRef,
+  Option,
+} from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -82,22 +89,30 @@ function toolCall(toolName: string, input: object, toolCallId = "capability") {
 /**
  * Plays a scripted model through the real Agent, with the capability tools of
  * one learner, and returns what its tool calls produced and what the turn
- * logged.
+ * logged. The memory tool leaves the words it finds in `found`, as in a turn.
  */
 function playTurn({
   context,
+  found = MutableHashMap.empty<string, string>(),
   model,
   prompt,
   userId,
 }: {
   readonly context: Parameters<typeof createCapabilities>[1];
+  readonly found?: Parameters<typeof createCapabilities>[4];
   readonly model: MockLanguageModelV4;
   readonly prompt: string;
   readonly userId: Parameters<typeof createCapabilities>[0];
 }) {
   const logged = MutableRef.make<readonly unknown[]>([]);
   return Effect.gen(function* () {
-    const tools = yield* createCapabilities(userId, context, "en", vi.fn());
+    const tools = yield* createCapabilities(
+      userId,
+      context,
+      "en",
+      vi.fn(),
+      found
+    );
     const ctx = yield* ActionCtx;
     const generated = yield* Effect.promise(() =>
       new Agent(components.nina, {
@@ -376,8 +391,13 @@ describe("Nina capability execution policy", () => {
 describe("Nina memory capability execution", () => {
   const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 
-  /** Plays a model that searches the memories of the fixture's learner once, and answers. */
+  /**
+   * Plays a model that searches the memories of the fixture's learner once, and
+   * answers. It returns what the turn produced and the words the search left
+   * for the model's next step.
+   */
   async function search(f: Awaited<ReturnType<typeof createNinaTest>>) {
+    const found = MutableHashMap.empty<string, string>();
     const model = new MockLanguageModelV4({
       doGenerate: [toolCall("memory", { query: "snbt" }), request],
     });
@@ -385,6 +405,7 @@ describe("Nina memory capability execution", () => {
       Effect.runPromise(
         playTurn({
           context: specialistRequest.context,
+          found,
           model,
           prompt: "What do you remember about my exam?",
           userId: f.identity.userId,
@@ -396,52 +417,41 @@ describe("Nina memory capability execution", () => {
         )
       )
     );
-    return { ...played, model };
+    return { ...played, found };
   }
 
-  it("answers the model with the memories that match its query, which it reads in its next step", async () => {
+  it("hands the next step the memories that match its query, and leaves none of their words in the result the conversation stores", async () => {
     const f = await createMemoryTest();
     await f.seed({
       confirmedAt: Date.UTC(2026, 8, 1),
       text: "Mau ikut SNBT 2027",
     });
     await f.seed({ text: "Hobi main gitar" });
-    const { logged, model, result } = await search(f);
+    const { found, logged, result } = await search(f);
     expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({
-      text: expect.stringContaining("- Mau ikut SNBT 2027 (2026-09-01)"),
-    });
     expect(result[0]).not.toHaveProperty("outcome");
-    expect(encodeJsonText(result)).not.toContain("Hobi main gitar");
-    expect(encodeJsonText(model.doGenerateCalls[1]?.prompt)).toContain(
-      "Mau ikut SNBT 2027"
-    );
+    expect(encodeJsonText(result)).not.toContain("SNBT");
+    const words = Option.getOrThrow(MutableHashMap.get(found, "capability"));
+    expect(words).toContain("- Mau ikut SNBT 2027 (2026-09-01)");
+    expect(words).not.toContain("Hobi main gitar");
     expect(MutableRef.get(logged)).toEqual([]);
   });
 
   it("says that nothing was found, and marks the run as empty, for a learner who told Nina nothing", async () => {
     const f = await createMemoryTest();
-    const { result } = await search(f);
-    expect(result).toMatchObject([
-      {
-        outcome: "empty",
-        text: expect.stringContaining("No saved memory matches this query."),
-      },
-    ]);
+    const { found, result } = await search(f);
+    expect(result).toMatchObject([{ outcome: "empty" }]);
+    expect(MutableHashMap.size(found)).toBe(0);
   });
 
   it("refuses to look while the learner has paused memory, and reads none of it", async () => {
     const f = await createMemoryTest();
     await f.seed({ text: "Mau ikut SNBT 2027" });
     await f.owner.mutation(pause, { paused: true });
-    const { logged, result } = await search(f);
-    expect(result).toMatchObject([
-      {
-        outcome: "denied",
-        text: expect.stringContaining("The learner paused memory"),
-      },
-    ]);
+    const { found, logged, result } = await search(f);
+    expect(result).toMatchObject([{ outcome: "denied" }]);
     expect(encodeJsonText(result)).not.toContain("Mau ikut SNBT 2027");
+    expect(MutableHashMap.size(found)).toBe(0);
     expect(MutableRef.get(logged)).toEqual([]);
   });
 
@@ -451,12 +461,7 @@ describe("Nina memory capability execution", () => {
     );
     const f = await createMemoryTest();
     const { logged, result } = await search(f);
-    expect(result).toMatchObject([
-      {
-        outcome: "failed",
-        text: expect.stringContaining("could not check what they told you"),
-      },
-    ]);
+    expect(result).toMatchObject([{ outcome: "failed" }]);
     expect(MutableRef.get(logged)).toEqual([
       [
         "Nina capability failed",

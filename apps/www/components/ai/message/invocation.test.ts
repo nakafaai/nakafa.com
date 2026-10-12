@@ -126,7 +126,7 @@ describe("readInvocation", () => {
   it("reads the memory capability as one row that opens to nothing, found or not", () => {
     const found: ToolUIPart = {
       input: { query: "my exam date" },
-      output: { artifacts: [], text: "# Memories Found" },
+      output: { artifacts: [], text: "Saved memories matched this query." },
       state: "output-available",
       toolCallId: "call-3",
       type: "tool-memory",

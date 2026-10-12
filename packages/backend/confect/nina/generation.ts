@@ -20,12 +20,16 @@ import {
 import { boundStep } from "@repo/backend/confect/nina/history";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
+import {
+  type Found,
+  restoreFound,
+} from "@repo/backend/confect/nina/memory/tool";
 import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { startNinaStep } from "@repo/backend/confect/nina/step";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
-import { Array as Arr, DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect, MutableHashMap } from "effect";
 
 /**
  * The scheduled Confect action owns generation; Agent owns its persistent
@@ -66,11 +70,15 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   // The chat step's timer covers Nina's own call and the tools it starts, so
   // each step marks its start here and the tools count their time from it.
   const chatStep = yield* makeChatStep();
+  // The words the memory tool finds are read in the next step of this turn and
+  // never stored, so the thread, the transcript and later turns hold none.
+  const found: Found = MutableHashMap.empty();
   const tools = yield* createCapabilities(
     turn.userId,
     context,
     turn.page.locale,
-    usageHandler
+    usageHandler,
+    found
   ).pipe(Effect.provideService(ChatStep, chatStep));
   const handle = (yield* Gateway).language("chat");
   const agent = new Agent(components.nina, {
@@ -113,7 +121,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
             runPromise(
               startNinaStep(chatStep.begin, {
                 ...step,
-                messages: boundStep(step.messages),
+                messages: boundStep(restoreFound(step.messages, found)),
               })
             ),
           repairToolCall: (options) =>

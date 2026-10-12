@@ -23,7 +23,7 @@ import {
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
-import { runMemory } from "@repo/backend/confect/nina/memory/tool";
+import { type Found, runMemory } from "@repo/backend/confect/nina/memory/tool";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import {
   decideNinaCapability,
@@ -39,12 +39,17 @@ import { Array as Arr, Effect, Stream } from "effect";
 
 const outputSchema = createEffectSchema(CapabilityOutputSchema);
 
-/** Agent tools own progressive evidence; no HTTP writer or persistence adapter. */
+/**
+ * Agent tools own progressive evidence; no HTTP writer or persistence adapter.
+ * `found` is where the memory tool leaves the words it finds, for the turn to
+ * hand to the model's next step, so that no word is stored with the result.
+ */
 export const createCapabilities = Effect.fn("nina.capabilities")(function* (
   userId: Docs["users"]["_id"],
   context: AgentContext,
   locale: Locale,
-  usageHandler: UsageHandler
+  usageHandler: UsageHandler,
+  found: Found
 ) {
   const services = yield* Effect.context<
     ActionCtx | ChatStep | Gateway | QueryRunner
@@ -208,11 +213,16 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
         "Search what the learner told Nina before and saved as memories, such as their target, exam date, level, how they like explanations, or what they find hard. Use it when the learner points back to something they told you that is neither in the Learner section nor in the Memories list, or when a good answer depends on a personal fact that is probably saved and is not in front of you. Do not use it for lesson content, for facts in this conversation, or more than twice in one turn.",
       inputSchema: memoryToolInputSchema,
       outputSchema,
-      execute: (_ctx, input, { abortSignal }) =>
+      execute: (_ctx, input, { abortSignal, toolCallId }) =>
         Stream.toAsyncIterableWith(
           streamCapability(
             () =>
-              runMemory({ query: input.query, userId }).pipe(
+              runMemory({
+                found,
+                query: input.query,
+                toolCallId,
+                userId,
+              }).pipe(
                 Effect.catchDefect(() =>
                   failed(
                     "memory",
