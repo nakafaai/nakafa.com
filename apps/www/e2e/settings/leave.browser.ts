@@ -123,6 +123,68 @@ test.describe("Memory editor closed on a memory the learner emptied", () => {
   });
 });
 
+/**
+ * The learner types a first word and deletes the new memory while the server is
+ * still storing it. Its row showed from the moment the save went out, so it is
+ * deleted as a stored memory is: a toast, and an Undo that brings it back.
+ */
+const verifyFirstSave = Effect.fn("NakafaE2E.verifyFirstSave")(function* (
+  page: Page,
+  baseURL: string
+) {
+  const changes = yield* openMemoryPage(page, baseURL);
+
+  yield* startsEmpty(page, changes);
+  yield* Effect.promise(async () => {
+    const row = memoryRow(page, WORDS);
+    const toast = page.locator(TOAST);
+
+    await page.getByRole("button", { name: "Add memory" }).click();
+    await opened(page, "");
+    changes.hold();
+    const before = changes.sent;
+
+    await page.keyboard.type(WORDS);
+    // The first save goes out, the server's answer is held back, and the row
+    // of the new memory shows meanwhile.
+    await expect.poll(() => changes.sent).toBeGreaterThan(before);
+    await expect(row).toBeVisible();
+    await page.getByRole("button", { exact: true, name: "Delete" }).click();
+    await expect(editorOf(page)).toHaveCount(0);
+    await expect(toast.getByText("Memory deleted")).toHaveCount(0);
+
+    changes.release();
+    await expect(toast.getByText("Memory deleted")).toBeVisible();
+    await expect(row).toHaveCount(0);
+    await expect(page.getByText(EMPTY)).toBeVisible();
+
+    const undone = changes.sent;
+
+    await toast.getByRole("button", { name: "Undo" }).click();
+    await expect(row).toBeVisible();
+    await saved(changes, undone);
+    await reloadUntil(page, () => expect(row).toBeVisible({ timeout: 3000 }));
+  });
+});
+
+test.describe("Memory deleted while its first save is on its way", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("is deleted with an Undo, as a stored memory is", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.fromNullishOr(baseURL).pipe(
+          Effect.flatMap((origin) => verifyFirstSave(page, origin))
+        )
+      )
+    );
+  });
+});
+
 const NOTICE = "That text is too long for one memory";
 
 /**

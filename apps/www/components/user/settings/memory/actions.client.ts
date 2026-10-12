@@ -170,17 +170,6 @@ export function useMemoryActions() {
   }
 
   /**
-   * Deletes a memory without a word, for one the learner never saw stored. The
-   * editor on it closes, and nothing it still had to save is saved. When the
-   * server does not delete it, the memory is in the list again, so the note
-   * that it was deleted is taken back and the editor saves it again.
-   */
-  function drop(id: Memory["id"]) {
-    forget(id);
-    settle(() => removeById({ id }), { failed: () => recall(id) });
-  }
-
-  /**
    * Deletes a memory at once, on the page and on the server, so that closing
    * the page can never leave it stored. The toast offers an Undo, which writes
    * the memory back as the learner's own: the words an open editor on it still
@@ -310,5 +299,5 @@ export function useMemoryActions() {
     });
   }
 
-  return { add, clear, drop, edit, pause, remove };
+  return { add, clear, edit, pause, remove };
 }
