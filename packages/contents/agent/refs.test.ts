@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   createNakafaContentRefFromGraphProjection,
   createNakafaContentRefFromSummary,
+  isNakafaHostname,
   normalizeNakafaContentInput,
   parseNakafaUrlRoute,
 } from "@repo/contents/agent/refs";
@@ -20,6 +21,14 @@ const graphProjection = {
 } as const;
 
 describe("Nakafa agent references", () => {
+  it("knows Nakafa's own site by its production domain and its www alias only", () => {
+    expect(isNakafaHostname("nakafa.com")).toBe(true);
+    expect(isNakafaHostname("www.nakafa.com")).toBe(true);
+    expect(isNakafaHostname("api.nakafa.com")).toBe(false);
+    expect(isNakafaHostname("nakafa.com.example.org")).toBe(false);
+    expect(isNakafaHostname("example.com")).toBe(false);
+  });
+
   it("parses canonical Nakafa URLs for backend route lookup", () => {
     expect(
       Option.getOrUndefined(

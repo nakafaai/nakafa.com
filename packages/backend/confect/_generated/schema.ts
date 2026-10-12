@@ -16,6 +16,7 @@ import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
 import contentBindings from "./tables/contentBindings";
+import contentCompaction from "./tables/contentCompaction";
 import contentHeads from "./tables/contentHeads";
 import contentIndex from "./tables/contentIndex";
 import contentItems from "./tables/contentItems";
@@ -44,6 +45,7 @@ import learningViews from "./tables/learningViews";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
+import ninaMemoryKeys from "./tables/ninaMemoryKeys";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
@@ -105,6 +107,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly contentArtifactFacts: typeof contentArtifactFacts;
   readonly contentArtifacts: typeof contentArtifacts;
   readonly contentBindings: typeof contentBindings;
+  readonly contentCompaction: typeof contentCompaction;
   readonly contentHeads: typeof contentHeads;
   readonly contentIndex: typeof contentIndex;
   readonly contentItems: typeof contentItems;
@@ -133,6 +136,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly materialBuckets: typeof materialBuckets;
   readonly materialCatalog: typeof materialCatalog;
   readonly ninaMemories: typeof ninaMemories;
+  readonly ninaMemoryKeys: typeof ninaMemoryKeys;
   readonly ninaSummaries: typeof ninaSummaries;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
@@ -193,6 +197,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   contentArtifactFacts,
   contentArtifacts,
   contentBindings,
+  contentCompaction,
   contentHeads,
   contentIndex,
   contentItems,
@@ -221,6 +226,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   materialBuckets,
   materialCatalog,
   ninaMemories,
+  ninaMemoryKeys,
   ninaSummaries,
   ninaTurns,
   ninaUploads,

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { deriveKeys, open, seal } from "@repo/backend/confect/vault/cipher";
+import {
+  blindHash,
+  deriveKeys,
+  open,
+  seal,
+} from "@repo/backend/confect/vault/cipher";
 import { Array as Arr, Effect } from "effect";
 import { Hex } from "effect/encoding";
 
@@ -96,6 +101,66 @@ describe("vault cipher", () => {
       expect(yield* attempt(keys, "memory", sealed.slice(0, 28))).toBe(
         "cipher"
       );
+    })
+  );
+});
+
+describe("vault blind hash", () => {
+  it.effect(
+    "gives the same hash for the same key, binding and bytes, and another for any change",
+    () =>
+      Effect.gen(function* () {
+        const keys = yield* deriveKeys(key(1));
+        const first = yield* blindHash(keys, "memory", text);
+        expect(first).toHaveLength(16);
+        expect(yield* blindHash(keys, "memory", text)).toEqual(first);
+        expect(yield* blindHash(keys, "summary", text)).not.toEqual(first);
+        expect(
+          yield* blindHash(keys, "memory", encoder.encode("Kelas 11."))
+        ).not.toEqual(first);
+        expect(
+          yield* blindHash(yield* deriveKeys(key(2)), "memory", text)
+        ).not.toEqual(first);
+      })
+  );
+
+  it.effect(
+    "keeps the stored format: a fixed key, binding and text hash to the same bytes forever",
+    () =>
+      Effect.gen(function* () {
+        // Rows are looked up by this value, so a change would lose every one.
+        // The value was computed apart from this code: HKDF-SHA-256 of the key
+        // with the info label `nakafa/vault/blind/v1`, then an HMAC-SHA-256 of
+        // the four-byte binding length, the binding and the text.
+        const keys = yield* deriveKeys(key(7));
+        const hash = yield* blindHash(
+          keys,
+          "binding",
+          encoder.encode("Kelas 12 IPA")
+        );
+        expect(Hex.encode(hash)).toBe("866266b49081099bcb8aa1fa480f087f");
+      })
+  );
+
+  it.effect(
+    "never reuses the key that makes nonces, so a nonce reveals nothing about a hash",
+    () =>
+      Effect.gen(function* () {
+        const keys = yield* deriveKeys(key(1));
+        const sealed = yield* seal(keys, "memory", text);
+        const hash = yield* blindHash(keys, "memory", text);
+        expect(hash.slice(0, 12)).not.toEqual(
+          new Uint8Array(sealed).slice(1, 13)
+        );
+      })
+  );
+
+  it.effect("never blurs a binding into the text that follows it", () =>
+    Effect.gen(function* () {
+      const keys = yield* deriveKeys(key(1));
+      const short = yield* blindHash(keys, "memo", encoder.encode("ryX"));
+      const long = yield* blindHash(keys, "memory", encoder.encode("X"));
+      expect(short).not.toEqual(long);
     })
   );
 });

@@ -53,6 +53,8 @@ export function formatToolPolicyPrompt() {
       Practice includes warmups, starter examples, hints, quick reviews, quizzes, tryout preparation, and preparation before practice.
 
       Nakafa routing rules:
+      - A link to Nakafa's own site is Nakafa content: Nakafa reads it, and it never goes to deepResearch.
+      - If Nakafa cannot read an address the learner sent, tell the learner that page could not be read. Do not describe it.
       - Preserve every requested deliverable.
       - Include helpful retrieval context: URL, verified status, user goal, subject, grade, topic, article, exercise, or Quran context.
       - Search first when the exact content reference is not known.
@@ -75,7 +77,7 @@ export function formatToolPolicyPrompt() {
       - official documentation.
       - source-backed claims.
       - citations.
-      - external links.
+      - links to sites outside Nakafa.
       - current or latest information.
       - named products outside Nakafa.
       This applies in every user language. Do not answer those requests from memory.

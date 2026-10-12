@@ -52,32 +52,30 @@ describe("Nina content evidence", () => {
       content.text
     );
   });
-  it.each(["missing", "failed"] as const)(
+  it.each([
+    ["missing", Effect.succeedNone, "Nakafa content was not found."],
+    [
+      "failed",
+      Effect.fail(
+        new NakafaAgentDataReadError({
+          message: "Content verification failed.",
+        })
+      ),
+      "Content verification failed.",
+    ],
+  ] as const)(
     "publishes an honest %s result without inventing content",
-    async (kind) => {
-      vi.mocked(getNakafaContent).mockReturnValue(
-        kind === "missing"
-          ? Effect.succeedNone
-          : Effect.fail(
-              new NakafaAgentDataReadError({
-                message: "Content verification failed.",
-              })
-            )
-      );
+    async (_kind, lookup, error) => {
+      vi.mocked(getNakafaContent).mockReturnValue(lookup);
       const { artifacts, publish } = recordProgress();
       const text = await runSpecialist(() =>
         read({ input, publish, toolCallId: "read" })
       );
-      expect(text).toBe(
-        kind === "missing"
-          ? "Nakafa content was not found."
-          : "Content verification failed."
-      );
+      // The answer names the reference, so several reads can be told apart.
+      expect(text).toBe(`${error} Reference: ${content.url}`);
       expect(
         Option.getOrThrow(Arr.last(MutableList.toArray(artifacts)))
-      ).toMatchObject({
-        data: { status: "error", error: text },
-      });
+      ).toMatchObject({ data: { status: "error", error } });
     }
   );
 });

@@ -30,7 +30,9 @@ import {
   readPublishedPageLocalePath,
   verifyPublishedPageCatalog,
 } from "@/lib/content/page/catalog";
+import { activateTestRelease } from "@/test/active";
 import { testPageProjection } from "@/test/content-page";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -72,8 +74,18 @@ vi.mock("@confect/js", async (importOriginal) => {
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
 }));
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 describe("published Page catalog", () => {
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease("release-pages");
     cacheMock.mockReset();
     runtimeQueryMock.mockReset().mockReturnValue(
       Effect.succeed({
@@ -124,6 +136,19 @@ describe("published Page catalog", () => {
         activeReleaseId,
         projections: [testPageProjection],
       });
+    })
+  );
+  it.effect("reaches Convex once for the catalog of each release", () =>
+    Effect.gen(function* () {
+      yield* readPublishedPageCatalog();
+      yield* readPublishedPageCatalog();
+      yield* Effect.tryPromise(() => getPublishedPageCatalog());
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
+
+      activateTestRelease("release-pages-next");
+      yield* readPublishedPageCatalog();
+      yield* readPublishedPageCatalog();
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
     })
   );
   it.effect("caches the complete signed Page catalog", () =>
@@ -264,6 +289,9 @@ describe("published Page catalog", () => {
       expect(unmanaged).toEqual({
         kind: "unmanaged",
       });
+      // A release never changes, so a catalog without the counterpart can
+      // only come from the next release.
+      activateTestRelease("release-pages-next");
       runtimeQueryMock.mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId,

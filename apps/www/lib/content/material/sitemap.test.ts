@@ -8,10 +8,20 @@ import {
   readPublishedMaterialBuckets,
   readPublishedMaterialSitemap,
 } from "@/lib/content/material/sitemap";
+import { activateTestRelease } from "@/test/active";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-material");
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -33,8 +43,47 @@ vi.mock("@confect/js", async (importOriginal) => {
 });
 beforeEach(() => {
   runtimeQueryMock.mockReset();
+  resetTestRuntimeCache();
+  activateTestRelease(activeReleaseId);
 });
 describe("published material sitemap", () => {
+  it.effect(
+    "asks Convex once for the buckets and each partition of a release",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockImplementation((reference) =>
+          Effect.succeed(
+            reference.convexFunctionName.endsWith("sitemapBuckets")
+              ? {
+                  activeReleaseId,
+                  buckets: ["abc"],
+                  managed: true,
+                  materialCount: 1,
+                }
+              : {
+                  routes: [
+                    {
+                      lastModified: "2026-07-25",
+                      publicPath: "subjects/mathematics/functions",
+                    },
+                  ],
+                }
+          )
+        );
+
+        for (const _ of [1, 2, 3]) {
+          yield* readPublishedMaterialBuckets("en");
+          yield* readPublishedMaterialSitemap("en", ["abc"]);
+        }
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+
+        activateTestRelease("release-material-next");
+        yield* readPublishedMaterialBuckets("en");
+        yield* readPublishedMaterialSitemap("en", ["abc"]);
+        yield* readPublishedMaterialSitemap("en", ["abc", "def"]);
+        expect(runtimeQueryMock).toHaveBeenCalledTimes(5);
+      })
+  );
   it.effect(
     "enumerates every localized route through authenticated bucket reads",
     () =>
@@ -133,8 +182,10 @@ describe("published material sitemap", () => {
             materialCount: 0,
           })
         );
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        const failure = yield* readPublishedMaterialBuckets("en").pipe(
+      // Each attempt asks for another locale, because an answer that can be
+      // stored is answered from the store the second time.
+      for (const locale of ["en", "id", "de"] as const) {
+        const failure = yield* readPublishedMaterialBuckets(locale).pipe(
           Effect.flip
         );
         expect(failure).toMatchObject({

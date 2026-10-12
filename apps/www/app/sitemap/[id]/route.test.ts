@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect } from "effect";
 import { GET } from "@/app/sitemap/[id]/route";
 
+const mockGetCachedSitemapDescriptors = vi.hoisted(() => vi.fn());
 const mockGetCachedSitemapEntries = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
 const mockCaptureServerExceptionSafely = vi.hoisted(() => vi.fn());
@@ -12,6 +13,10 @@ const mockCaptureServerExceptionSafely = vi.hoisted(() => vi.fn());
 class TestSitemapPageError extends Data.TaggedError("TestSitemapPageError")<{
   readonly message: string;
 }> {}
+
+vi.mock("@/lib/sitemap/catalog", () => ({
+  getCachedSitemapDescriptors: mockGetCachedSitemapDescriptors,
+}));
 
 vi.mock("@/lib/sitemap/entries", () => ({
   getCachedSitemapEntries: mockGetCachedSitemapEntries,
@@ -29,6 +34,12 @@ describe("sitemap page route", () => {
   beforeEach(() => {
     mockCaptureServerExceptionSafely.mockReset();
     mockCaptureServerExceptionSafely.mockReturnValue(Effect.void);
+    mockGetCachedSitemapDescriptors
+      .mockReset()
+      .mockResolvedValue([
+        { id: "base" },
+        { id: "material_en_p7", kind: "material", locale: "en", partition: 7 },
+      ]);
     mockGetCachedSitemapEntries.mockReset();
     mockGetSitemapPageDescriptor.mockReset();
     mockGetSitemapPageDescriptor.mockImplementation((pageId) =>
@@ -91,6 +102,41 @@ describe("sitemap page route", () => {
     expect(response.status).toBe(404);
     expect(await response.text()).toBe("Not found");
     expect(mockGetCachedSitemapEntries).not.toHaveBeenCalled();
+  });
+
+  it("rejects a well-formed id that the release does not list, without reading or caching it", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({
+      id: "article_en_p999999",
+      kind: "article",
+      locale: "en",
+      partition: 999_999,
+    });
+
+    const response = await GET(
+      new Request("https://nakafa.com/sitemap/article_en_p999999.xml"),
+      { params: Promise.resolve({ id: "article_en_p999999.xml" }) }
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.text()).toBe("Not found");
+    expect(mockGetCachedSitemapEntries).not.toHaveBeenCalled();
+    expect(mockCaptureServerExceptionSafely).not.toHaveBeenCalled();
+  });
+
+  it("reports a failed index read as a page failure", async () => {
+    const failure = new TestSitemapPageError({ message: "index read failed" });
+    mockGetCachedSitemapDescriptors.mockRejectedValueOnce(failure);
+
+    const response = await GET(
+      new Request("https://nakafa.com/sitemap/base.xml"),
+      { params: Promise.resolve({ id: "base.xml" }) }
+    );
+
+    expect(response.status).toBe(500);
+    expect(mockGetCachedSitemapEntries).not.toHaveBeenCalled();
+    expect(mockCaptureServerExceptionSafely).toHaveBeenCalledWith(failure, {
+      source: "sitemap-page",
+    });
   });
 
   it("rejects canonical ids whose materialized page does not exist", async () => {

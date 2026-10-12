@@ -106,9 +106,16 @@ export const readSitemapPageDescriptors = Effect.fn(
 
 /** Reads sitemap page descriptors inside the sitemap origin cache.
  *
- * Descriptors keep the long built-in profile on purpose. Every publication
- * hard-expires them through the shared sitemap tag, so the index never needs
- * the hourly content revalidation the shared profile carries. */
+ * The `use cache` boundary stays so that the route still prerenders and the
+ * sitemap tag still expires it. Descriptors keep the long built-in profile on
+ * purpose: every release hard-expires them through the shared sitemap tag, so
+ * the index never needs the hourly content revalidation the shared profile
+ * carries. Every Convex read behind the boundary goes through the content
+ * store, so an instance that starts empty or an expiry rebuilds the index from
+ * stored answers and not from Convex. The index itself is derived on every
+ * fill, so a deploy that changes the locales or the partition size takes effect
+ * at once, and the final release check runs on every fill, so a stale release
+ * pointer can never put a previous index behind the long lifetime. */
 async function readCachedSitemapDescriptors(): Promise<readonly SitemapPage[]> {
   "use cache";
 

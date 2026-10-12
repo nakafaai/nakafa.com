@@ -12,6 +12,7 @@ import {
   getMaterialModel,
   getMaterialPublication,
 } from "@/lib/content/material/publication";
+import { activateTestRelease, advanceTestRelease } from "@/test/active";
 import {
   previewWireArtifact as artifact,
   previewDeProjection as deProjection,
@@ -19,6 +20,7 @@ import {
   previewProjection as projection,
   previewSourcePath as sourcePath,
 } from "@/test/content-preview";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const queryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -83,6 +85,14 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
 }));
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 vi.mock("@/lib/content/published/exchange", () => ({
   decodePublishedDelivery: deliveryMock,
 }));
@@ -93,6 +103,8 @@ vi.mock("@/lib/content/published/material", async (importOriginal) => ({
   renderMaterialArtifact: renderMock,
 }));
 beforeEach(() => {
+  resetTestRuntimeCache();
+  activateTestRelease(activeReleaseId);
   queryMock.mockReset().mockImplementation((reference) =>
     Effect.succeed(
       reference.convexFunctionName ===
@@ -129,13 +141,17 @@ describe("coherent material publication", () => {
         })
       )
       // Native HTTP failures remain tagged across the content-read boundary.
-      .mockReturnValueOnce(
-        Effect.fail(
+      // The next release goes live in Convex while the navigation read fails.
+      // The stored pointer still names the old release until the failed read
+      // drops it, so the lesson read that follows must start from Convex.
+      .mockImplementationOnce(() => {
+        advanceTestRelease(nextRelease);
+        return Effect.fail(
           new HttpClient.HttpClientError({
             cause: new Error("Cached navigation read failed"),
           })
-        )
-      )
+        );
+      })
       .mockReturnValueOnce(
         Effect.succeed({
           materialKey: projection.materialKey,
@@ -195,7 +211,11 @@ describe("coherent material publication", () => {
       };
       queryMock
         .mockReturnValueOnce(Effect.succeed(lesson))
-        .mockReturnValueOnce(Effect.fail(cause));
+        .mockImplementationOnce(() => {
+          // The next release goes live while the navigation read fails.
+          advanceTestRelease("release-next");
+          return Effect.fail(cause);
+        });
       if (stage === "navigation") {
         queryMock.mockReturnValueOnce(
           Effect.succeed({
@@ -244,10 +264,18 @@ describe("coherent material publication", () => {
         cause,
         stage: "navigation",
       });
-      expect(queryMock).toHaveBeenCalledTimes(3);
+      // The second read of the lesson finds it in the content store, so the
+      // failed navigation read is the last read of Convex.
+      expect(queryMock).toHaveBeenCalledTimes(2);
       expect(renderMock).not.toHaveBeenCalled();
     }
   );
+  it("reads the lesson and its navigation once for the page and the social image", async () => {
+    await getMaterialPublication("en", projection.publicPath);
+    await getMaterialModel("en", projection.publicPath);
+
+    expect(queryMock).toHaveBeenCalledTimes(2);
+  });
   it("reads the shell and body once and verifies them before rendering", async () => {
     await expect(
       getMaterialPublication("en", projection.publicPath)

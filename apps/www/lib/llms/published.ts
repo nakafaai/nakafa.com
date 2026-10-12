@@ -6,15 +6,18 @@ import {
 } from "@nakafa/aksara-contracts/content";
 import {
   type GitCommitSha,
+  GitCommitShaSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
   type AppLocale,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { Array as Arr, Effect, Schema } from "effect";
-import { applyContentCache } from "@/lib/content/cache";
+import { applyReleaseContentCache } from "@/lib/content/cache";
 import { decodeMaterialProjection } from "@/lib/content/material/decode";
 import { readPublishedContent } from "@/lib/content/published/exchange";
 import {
@@ -22,6 +25,7 @@ import {
   decodePublishedPage,
 } from "@/lib/content/published/projection";
 import { getRawAksaraUrl } from "@/lib/content/repository";
+import { readContentStore } from "@/lib/content/store/read";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader, getMdxDescription } from "@/lib/llms/format";
 
@@ -86,42 +90,77 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   );
 });
 
-/** Reads one verified body-bearing artifact as agent-facing text data. */
-const readPublishedTextData = Effect.fn("www.llms.published.data")(function* (
+/**
+ * What Convex answered for one body: its signed projection and its raw source
+ * with the provenance of the release. The content store keeps exactly this and
+ * nothing that code derives from it, so a deploy that changes the projection of
+ * the Markdown, the header or the site address takes effect at once.
+ */
+const PublishedMarkdownSourceSchema = Schema.Struct({
+  projection: ContentProjectionSchema,
+  rawMdx: Schema.String,
+  sourcePath: PublicContentRuntimeFoundSchema.fields.sourcePath,
+  sourceRevision: Schema.NullOr(GitCommitShaSchema),
+});
+
+/** Reads the signed source of one verified body-bearing artifact. */
+const readPublishedMarkdownSource = Effect.fn("www.llms.published.source")(
+  function* (input: PublishedMarkdownInput) {
+    const data = yield* readPublishedContent(input);
+    return {
+      projection: data.projection,
+      rawMdx: data.artifact.payload.rawMdx,
+      sourcePath: data.sourcePath,
+      sourceRevision: data.sourceRevision,
+    } satisfies typeof PublishedMarkdownSourceSchema.Type;
+  }
+);
+
+/**
+ * Reads the stored signed source of one body, then derives its agent-facing
+ * Markdown text from it. The source is read from Convex once for each release
+ * that the caller proved; the text is derived on every fill.
+ */
+const readPublishedText = Effect.fn("www.llms.published.read")(function* (
   input: PublishedMarkdownInput
 ) {
-  const data = yield* readPublishedContent(input);
+  const source = yield* readContentStore({
+    kind: "markdown.source",
+    load: readPublishedMarkdownSource(input),
+    parts: [input.appLocale, input.family, input.publicPath],
+    release: input.activeReleaseId,
+    schema: PublishedMarkdownSourceSchema,
+  });
   const projection = yield* {
     article: decodePublishedArticle,
     material: decodeMaterialProjection,
     page: decodePublishedPage,
-  }[input.family](data.projection, input);
-  return {
+  }[input.family](source.projection, input);
+  return yield* buildPublishedText({
     description: getMdxDescription(projection.metadata),
+    appLocale: input.appLocale,
     publicPath: projection.publicPath,
-    rawMdx: data.artifact.payload.rawMdx,
-    sourcePath: data.sourcePath,
-    sourceRevision: data.sourceRevision,
+    rawMdx: source.rawMdx,
+    sourcePath: source.sourcePath,
+    sourceRevision: source.sourceRevision,
     title: projection.metadata.title,
-  };
+  });
 });
 
-/** Caches one verified Aksara body under its exact shared content tags. */
+/**
+ * Caches one verified Aksara body under its exact shared content tags. The `use
+ * cache` boundary stays so that the route handler still carries the scope tag
+ * that expires it and so that the derived text lives only as long as the build
+ * that derived it. Behind the boundary the content store keeps the signed
+ * source for the release that the caller proved, so the body is read from
+ * Convex once for each release. The key holds that release, so the entry needs
+ * no timer.
+ */
 export async function getCachedPublishedText(input: PublishedMarkdownInput) {
   "use cache";
 
-  const data = await Effect.runPromise(readPublishedTextData(input));
-  applyContentCache(input.family);
+  const text = await Effect.runPromise(readPublishedText(input));
+  applyReleaseContentCache(input.family);
 
-  return await Effect.runPromise(
-    buildPublishedText({
-      description: data.description,
-      appLocale: input.appLocale,
-      publicPath: data.publicPath,
-      rawMdx: data.rawMdx,
-      sourcePath: data.sourcePath,
-      sourceRevision: data.sourceRevision,
-      title: data.title,
-    })
-  );
+  return text;
 }

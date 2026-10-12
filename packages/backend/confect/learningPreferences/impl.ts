@@ -186,3 +186,61 @@ export const upsertPreferredTryoutCountry = Effect.fn(
     );
   return current._id;
 });
+
+/**
+ * Pauses or resumes the current user's Nina memory. Memory is on while the row
+ * or its pause mark is absent, so resuming creates nothing. The caller declares
+ * no persistence error, so a failed read or write dies.
+ */
+export const setNinaMemoryPaused = Effect.fn(
+  "learningPreferences.setNinaMemoryPaused"
+)(function* ({
+  now,
+  paused,
+  userId,
+}: {
+  now: number;
+  paused: boolean;
+  userId: Id<"users">;
+}) {
+  const writer = yield* DatabaseWriter;
+  const current = yield* readLearningPreferenceByUserId(userId);
+  if (!current) {
+    if (paused) {
+      yield* writer
+        .table("learningPreferences")
+        .insert({ ninaMemoryPaused: true, updatedAt: now, userId });
+    }
+    return;
+  }
+  if ((current.ninaMemoryPaused === true) === paused) {
+    return;
+  }
+  yield* writer.table("learningPreferences").patch(current._id, {
+    ninaMemoryPaused: paused ? true : undefined,
+    updatedAt: now,
+  });
+}, Effect.orDie);
+
+/**
+ * Marks that the current user asked to delete every Nina memory at `now`. The
+ * mark only moves forward, so an older request never shows what a newer one
+ * hid. The row is created when the learner has none. The caller declares no
+ * persistence error, so a failed read or write dies.
+ */
+export const setNinaMemoryCleared = Effect.fn(
+  "learningPreferences.setNinaMemoryCleared"
+)(function* ({ now, userId }: { now: number; userId: Id<"users"> }) {
+  const writer = yield* DatabaseWriter;
+  const current = yield* readLearningPreferenceByUserId(userId);
+  if (!current) {
+    yield* writer
+      .table("learningPreferences")
+      .insert({ ninaMemoryClearedAt: now, updatedAt: now, userId });
+    return;
+  }
+  yield* writer.table("learningPreferences").patch(current._id, {
+    ninaMemoryClearedAt: Math.max(current.ninaMemoryClearedAt ?? now, now),
+    updatedAt: now,
+  });
+}, Effect.orDie);

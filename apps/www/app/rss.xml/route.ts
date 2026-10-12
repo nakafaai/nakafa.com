@@ -8,7 +8,7 @@ import { getTranslations } from "next-intl/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { applyContentCache } from "@/lib/content/cache";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
-import { readActiveContentIdentity } from "@/lib/content/published/active";
+import { loadActiveContentIdentity } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
   type ContentReleasePin,
@@ -91,7 +91,10 @@ async function readFeed() {
 function getFeedContentRoutes() {
   return Effect.runPromise(
     Effect.gen(function* () {
-      const active = yield* readActiveContentIdentity();
+      // The feed reads Convex directly and stores nothing, so it pins the
+      // release as Convex holds it now. A stored pointer that still names the
+      // previous release would pin every read to a release that is gone.
+      const active = yield* loadActiveContentIdentity();
       if (!active) {
         return yield* new PublishedProjectionError({
           appLocale: AppLocaleSchema.make(routing.defaultLocale),
@@ -108,7 +111,7 @@ function getFeedContentRoutes() {
           ]),
         { concurrency: routing.locales.length }
       );
-      const latest = yield* readActiveContentIdentity();
+      const latest = yield* loadActiveContentIdentity();
       yield* decodeContentReleasePin(
         latest?.releaseId ?? null,
         activeReleaseId,

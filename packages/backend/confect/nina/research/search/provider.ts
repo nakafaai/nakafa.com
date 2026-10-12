@@ -1,6 +1,10 @@
+import { timeLeft } from "@repo/backend/confect/nina/capability/deadline";
 import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
 import { ResearchSearchError } from "@repo/backend/confect/nina/research/schema";
 import { Duration, Effect, Option, Schedule, Schema } from "effect";
+
+/** How long the search provider may take to answer, in milliseconds. */
+const SEARCH_TIMEOUT_MS = 10_000;
 
 /**
  * A search returns results without reading their pages, so it answers in about
@@ -27,6 +31,7 @@ const ProviderFailure = Schema.Struct({ status: Schema.Finite });
  * Calls Firecrawl search with one generated query. It asks for results only:
  * reading every result page inside the search took 76 seconds when measured on
  * 10 October 2026, so `searchWeb` reads the best pages itself, in parallel.
+ * Each attempt is cut to the time the running capability has left.
  */
 export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
   query: string
@@ -38,24 +43,30 @@ export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
     )
   );
 
-  return yield* Effect.tryPromise({
-    try: () =>
-      client.search(query, {
-        limit: 5,
-        sources: ["web", "news"],
-        timeout: 10_000,
-      }),
-    catch: (cause) =>
-      searchFailure(
-        Option.getOrUndefined(
-          Schema.decodeUnknownOption(ProviderFailure)(cause)
-        )
-      ),
-  }).pipe(
-    Effect.timeoutOrElse({
-      duration: SEARCH_DEADLINE,
-      orElse: () => Effect.fail(searchFailure()),
-    }),
+  const attempt = Effect.gen(function* () {
+    const left = yield* timeLeft;
+    return yield* Effect.tryPromise({
+      try: () =>
+        client.search(query, {
+          limit: 5,
+          sources: ["web", "news"],
+          timeout: Math.min(SEARCH_TIMEOUT_MS, Duration.toMillis(left)),
+        }),
+      catch: (cause) =>
+        searchFailure(
+          Option.getOrUndefined(
+            Schema.decodeUnknownOption(ProviderFailure)(cause)
+          )
+        ),
+    }).pipe(
+      Effect.timeoutOrElse({
+        duration: Duration.min(SEARCH_DEADLINE, left),
+        orElse: () => Effect.fail(searchFailure()),
+      })
+    );
+  });
+
+  return yield* attempt.pipe(
     // Every learner shares the plan's rate limit, so a refused search waits a
     // moment and asks once more before it counts as failed.
     Effect.retry({

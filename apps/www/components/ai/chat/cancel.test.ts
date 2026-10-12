@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import nina from "@repo/backend/confect/_generated/refs/nina";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Option, Schema } from "effect";
 import { optimisticCancel } from "@/components/ai/chat/cancel";
 import { createLocalStore } from "@/test/optimistic";
@@ -19,7 +19,7 @@ const chat = {
   updatedAt: 1,
   userId,
   visibility: "private",
-} satisfies Docs["chats"];
+} satisfies ChatView;
 
 const turn = { order: 0, promptMessageId: "message_0_user", usage: [] };
 

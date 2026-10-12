@@ -4,10 +4,11 @@ import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { ensureCompaction } from "@repo/backend/confect/contentRelease/compact/state";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import {
+  COMPACTION_OLD_TIME,
   compactionIdentity,
+  insertCompaction,
   insertCompletedRelease,
   seedCompactionHistory,
 } from "@repo/backend/test/content/compact";
@@ -17,7 +18,9 @@ import {
 } from "@repo/backend/test/content/state";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest, type TestConvex } from "convex-test";
-import { DateTime, Effect, Schema } from "effect";
+import { Array as Arr, DateTime, Effect, Schema } from "effect";
+
+const NOW = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
 /** Runs one compaction step in its own mutation. */
 function compact(t: TestConvex<typeof schema>) {
@@ -34,26 +37,26 @@ describe("contentRelease/compact/state", () => {
     expect(await compact(t)).toMatchObject({
       complete: false,
       cycle: {
+        compaction: {
+          compactedFloor: 0,
+        },
         floor: 1,
         phase: "heads",
-        state: {
-          nextSequence: 1,
-        },
       },
     });
     const resumed = await compact(t);
     expect(resumed).toMatchObject({
       complete: false,
       cycle: {
-        state: {
+        compaction: {
           compactPhase: "heads",
         },
       },
     });
     await t.mutation(async (ctx) => {
-      const state = await ctx.db.query("contentState").unique();
-      assert.ok(state);
-      await ctx.db.patch("contentState", state._id, {
+      const compaction = await ctx.db.query("contentCompaction").unique();
+      assert.ok(compaction);
+      await ctx.db.patch("contentCompaction", compaction._id, {
         compactFloor: undefined,
         compactFrom: undefined,
         compactPhase: undefined,
@@ -68,40 +71,44 @@ describe("contentRelease/compact/state", () => {
   });
   it.each([
     {
-      nextSequence: 0,
+      state: { nextSequence: 0 },
     },
     {
-      compactedFloor: -1,
+      compaction: { compactedFloor: -1 },
     },
     {
-      compactedFloor: 3,
+      compaction: { compactedFloor: 3 },
     },
     {
-      activeReleaseId: "incomplete",
+      state: { activeReleaseId: "incomplete" },
     },
     {
-      compactPhase: "heads",
+      compaction: { compactPhase: "heads" },
     },
     {
-      compactCursor: "orphaned-production-cursor",
+      compaction: { compactCursor: "orphaned-production-cursor" },
     },
-  ] satisfies Partial<Doc<"contentState">>[])(
-    "rejects invalid lifecycle state %j",
-    async (patch) => {
-      const t = convexTest(schema, convexModules);
-      await t.mutation(async (ctx) => {
-        await insertTestState(ctx, {
-          nextSequence: 2,
-        });
-        const state = await ctx.db.query("contentState").unique();
-        assert.ok(state);
-        await ctx.db.patch("contentState", state._id, patch);
+  ] as const)("rejects invalid lifecycle state %j", async (patch) => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertTestState(ctx, {
+        nextSequence: 2,
       });
-      await expect(compact(t)).rejects.toMatchObject({
-        code: "CONTENT_RELEASE_INTEGRITY",
-      });
-    }
-  );
+      await insertCompaction(ctx);
+      const state = await ctx.db.query("contentState").unique();
+      const compaction = await ctx.db.query("contentCompaction").unique();
+      assert.ok(state && compaction);
+      await ctx.db.patch("contentState", state._id, patch.state ?? {});
+      await ctx.db.patch(
+        "contentCompaction",
+        compaction._id,
+        patch.compaction ?? {}
+      );
+    });
+    await expect(compact(t)).rejects.toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
+  });
   it("protects a first active release with no predecessor", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -395,6 +402,36 @@ describe("contentRelease/compact/state", () => {
           floor: 3,
         },
       });
+    });
+  });
+  it("starts a cycle once the release at the completed floor leaves retention", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      const releases = Arr.makeBy(5, (index) => compactionIdentity(index + 1));
+      for (const [index, release] of Arr.map(
+        releases,
+        (identity, position) => [position, identity] as const
+      )) {
+        await insertCompletedRelease(
+          ctx,
+          release,
+          releases[index - 1],
+          index === 0 ? COMPACTION_OLD_TIME : NOW
+        );
+      }
+      await insertTestState(ctx, {
+        active: releases[4],
+        nextSequence: 6,
+      });
+      await insertCompaction(ctx, { compactedFloor: 1 });
+    });
+    expect(await compact(t)).toMatchObject({
+      complete: false,
+      cycle: {
+        floor: 2,
+        from: 1,
+        phase: "heads",
+      },
     });
   });
 });

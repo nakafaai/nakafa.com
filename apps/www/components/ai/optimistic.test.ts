@@ -1,8 +1,8 @@
 import type { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import nina from "@repo/backend/confect/_generated/refs/nina";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import type { NinaPageInput } from "@repo/backend/confect/nina/turns.spec";
 import type { FileUIPart } from "ai";
 import { Array as Arr, HashMap, Option, Schema } from "effect";
@@ -27,7 +27,7 @@ const chat = {
   updatedAt: 1,
   userId,
   visibility: "private",
-} satisfies Docs["chats"];
+} satisfies ChatView;
 
 const preview = {
   filename: "graph.png",

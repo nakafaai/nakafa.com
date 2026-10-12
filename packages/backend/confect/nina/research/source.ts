@@ -1,4 +1,6 @@
 import { getLatestUserText } from "@repo/backend/confect/nina/prompt/user";
+import { isNakafaHostname } from "@repo/contents/agent/refs";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import type { ModelMessage } from "ai";
 import { Array as Arr, HashMap, HashSet, MutableHashSet, Option } from "effect";
 import { ParseResultType, parseDomain } from "parse-domain";
@@ -30,9 +32,41 @@ const pairedBoundaryPunctuation = HashMap.make(
   ["}", "{"]
 );
 /**
- * Extracts every unique external source reference from plain user text.
+ * Extracts every unique source reference to an outside site from plain user
+ * text. A link to Nakafa's own site is not one: Nakafa content is read from
+ * its signed content, never scraped from the web.
  */
 export function getSourceReferences(text: string) {
+  return Arr.filter(getLinks(text), (link) => !isNakafaHostname(link.hostname));
+}
+/**
+ * Extracts every unique link to Nakafa's own site from plain user text. Each is
+ * the address Nakafa reads: the same page on the production origin over https,
+ * whichever scheme or `www` alias the learner wrote.
+ */
+export function getNakafaReferences(text: string) {
+  const addresses = Arr.map(
+    Arr.filter(getLinks(text), (link) => isNakafaHostname(link.hostname)),
+    toNakafaAddress
+  );
+  return Arr.dedupeWith(addresses, (left, right) => left.href === right.href);
+}
+/**
+ * Extracts outside source references from the latest AI SDK user message.
+ */
+export function getSourceReferencesFromMessages(messages: ModelMessage[]) {
+  return getSourceReferences(getLatestUserText(messages) ?? "");
+}
+/**
+ * Extracts links to Nakafa's own site from the latest AI SDK user message.
+ */
+export function getNakafaReferencesFromMessages(messages: ModelMessage[]) {
+  return getNakafaReferences(getLatestUserText(messages) ?? "");
+}
+/**
+ * Extracts every unique link, to any site, from plain user text.
+ */
+function getLinks(text: string) {
   const seen = MutableHashSet.empty<string>();
   return Arr.flatMap(text.split(whitespacePattern), (token) =>
     Arr.flatMap(splitSourceToken(token), (segment) => {
@@ -47,16 +81,6 @@ export function getSourceReferences(text: string) {
       return [reference];
     })
   );
-}
-/**
- * Extracts external source references from the latest AI SDK user message.
- */
-export function getSourceReferencesFromMessages(messages: ModelMessage[]) {
-  const latestText = getLatestUserText(messages);
-  if (!latestText) {
-    return [];
-  }
-  return getSourceReferences(latestText);
 }
 /**
  * Parses one candidate segment into an external source reference.
@@ -165,6 +189,18 @@ function createSourceReference(text: string, url: URL) {
     hostname: url.hostname,
     text,
   };
+}
+/**
+ * Moves a link to Nakafa's own site onto the production origin, keeping its
+ * path, query, and fragment as written.
+ */
+function toNakafaAddress(link: ReturnType<typeof createSourceReference>) {
+  const { hash, pathname, search } = new URL(link.href);
+  const address = new URL(SITE_ORIGIN);
+  address.pathname = pathname;
+  address.search = search;
+  address.hash = hash;
+  return { ...link, hostname: address.hostname, href: address.toString() };
 }
 /**
  * Removes punctuation that users commonly place around URLs or domains.

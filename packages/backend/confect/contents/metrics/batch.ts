@@ -1,10 +1,9 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   getPopularitySignalDay,
-  isFinitePopularityWindow,
   isPopularitySignalInWindow,
-  type LearningPopularityWindow,
-  learningPopularityWindowValues,
+  isRankedPopularityView,
+  POPULARITY_WINDOW,
 } from "@repo/backend/confect/contents/popularity";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, MutableHashMap, Option, Struct } from "effect";
@@ -114,36 +113,13 @@ function createPopularitySignalDelta(item: QueuedLearningEngagement) {
   };
 }
 
-/** Creates the first configured-window counter delta for one queued view. */
-function createPopularityCounterDelta(
-  item: QueuedLearningEngagement,
-  windowKey: LearningPopularityWindow
-) {
+/** Creates the first counter delta of the maintained window for one queued view. */
+function createPopularityCounterDelta(item: QueuedLearningEngagement) {
   return {
     ...createAnalyticsCount(item),
     latestDay: getPopularitySignalDay(item.viewedAt),
-    windowKey,
+    windowKey: POPULARITY_WINDOW,
   };
-}
-
-/** Returns whether one queued event should update the requested counter row. */
-function shouldApplyPopularityCounterDelta({
-  signalDay,
-  updatedAt,
-  windowKey,
-}: {
-  readonly signalDay: number;
-  readonly updatedAt: number;
-  readonly windowKey: LearningPopularityWindow;
-}) {
-  if (!isFinitePopularityWindow(windowKey)) {
-    return true;
-  }
-  return isPopularitySignalInWindow({
-    signalDay,
-    timestamp: updatedAt,
-    windowKey,
-  });
 }
 
 /** Aggregated daily popularity signal delta derived from queued view docs. */
@@ -151,12 +127,18 @@ export type PopularitySignalDelta = ReturnType<
   typeof createPopularitySignalDelta
 >;
 
-/** Aggregated configured-window counter delta derived from queued view docs. */
+/** Aggregated maintained-window counter delta derived from queued view docs. */
 export type PopularityCounterDelta = ReturnType<
   typeof createPopularityCounterDelta
 >;
 
-/** Builds one analytics batch from append-only queued unique views. */
+/**
+ * Builds one analytics batch from append-only queued unique views.
+ *
+ * A view counts only when it belongs to the ranking the homepage reads and its
+ * day is still inside that window. Anything else changes no row: an older view
+ * could not rank, and its signal would be deleted before it was ever used.
+ */
 export function buildMetricsBatch({
   queueItems,
   updatedAt,
@@ -168,62 +150,54 @@ export function buildMetricsBatch({
   const signals = MutableHashMap.empty<string, PopularitySignalDelta>();
   for (const queueItem of queueItems) {
     const signalDay = getPopularitySignalDay(queueItem.viewedAt);
+    if (
+      !(
+        isRankedPopularityView(queueItem) &&
+        isPopularitySignalInWindow({
+          signalDay,
+          timestamp: updatedAt,
+          windowKey: POPULARITY_WINDOW,
+        })
+      )
+    ) {
+      continue;
+    }
     const signalKey = encodeMetricsKey([
       queueItem.scopeMode,
       signalDay,
       queueItem.content_id,
       queueItem.contextKey,
     ]);
-    if (
-      isPopularitySignalInWindow({
-        signalDay,
-        timestamp: updatedAt,
-        windowKey: "365d",
-      })
-    ) {
-      const signalCount = Option.getOrUndefined(
-        MutableHashMap.get(signals, signalKey)
-      );
-      MutableHashMap.set(signals, signalKey, {
-        ...createPopularitySignalDelta(queueItem),
-        viewCount: (signalCount?.viewCount ?? 0) + 1,
+    const signalCount = Option.getOrUndefined(
+      MutableHashMap.get(signals, signalKey)
+    );
+    MutableHashMap.set(signals, signalKey, {
+      ...createPopularitySignalDelta(queueItem),
+      viewCount: (signalCount?.viewCount ?? 0) + 1,
+    });
+    const counterKey = encodeMetricsKey([
+      queueItem.scopeMode,
+      queueItem.content_id,
+      queueItem.contextKey,
+    ]);
+    const counterCount = Option.getOrUndefined(
+      MutableHashMap.get(counters, counterKey)
+    );
+    if (counterCount) {
+      const latest =
+        signalDay >= counterCount.latestDay
+          ? createPopularityCounterDelta(queueItem)
+          : counterCount;
+      MutableHashMap.set(counters, counterKey, {
+        ...latest,
+        viewCount: counterCount.viewCount + 1,
       });
-    }
-    for (const windowKey of learningPopularityWindowValues) {
-      if (
-        !shouldApplyPopularityCounterDelta({
-          signalDay,
-          updatedAt,
-          windowKey,
-        })
-      ) {
-        continue;
-      }
-      const counterKey = encodeMetricsKey([
-        windowKey,
-        queueItem.scopeMode,
-        queueItem.content_id,
-        queueItem.contextKey,
-      ]);
-      const counterCount = Option.getOrUndefined(
-        MutableHashMap.get(counters, counterKey)
+    } else {
+      MutableHashMap.set(
+        counters,
+        counterKey,
+        createPopularityCounterDelta(queueItem)
       );
-      if (counterCount) {
-        const latest =
-          signalDay >= counterCount.latestDay
-            ? createPopularityCounterDelta(queueItem, windowKey)
-            : counterCount;
-        MutableHashMap.set(counters, counterKey, {
-          ...latest,
-          viewCount: counterCount.viewCount + 1,
-        });
-      } else {
-        MutableHashMap.set(
-          counters,
-          counterKey,
-          createPopularityCounterDelta(queueItem, windowKey)
-        );
-      }
     }
   }
   return {

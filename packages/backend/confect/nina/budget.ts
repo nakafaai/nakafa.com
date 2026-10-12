@@ -13,7 +13,7 @@ export const NINA_BUDGET = {
   turnEvidence: 16_000,
   /** Older complete turns kept verbatim after the conversation summary. */
   history: 12_000,
-  /** Account facts and remembered facts about the learner. */
+  /** Account facts and the memories Nina reads about the learner. */
   learner: 1500,
   /** The signed current page placed in the stable prompt context. */
   page: 6000,
@@ -27,6 +27,28 @@ const NOTE_TOKENS = 80;
 /** Counts model tokens with the shared tokenizer used for every budget. */
 export function countTextTokens(text: string) {
   return countTokens(text);
+}
+
+/**
+ * What Gemini 3 bills at its default media resolution, which Nina leaves
+ * unset: 1,120 tokens for an image of any size and 560 for a page of a
+ * document. Earlier Gemini models billed an image by 768 pixel tiles instead.
+ *
+ * @see https://ai.google.dev/gemini-api/docs/media-resolution
+ */
+const IMAGE_TOKENS = 1120;
+const DOCUMENT_PAGE_TOKENS = 560;
+
+/**
+ * Tokens the model bills for one attachment, from its media type alone: this
+ * is the one rule for what a file costs, so a file's bytes never reach the
+ * tokenizer. A stored message keeps no size, page count, or dimensions of its
+ * files, so a document counts one page. History only ever counts images: an
+ * earlier document is replaced by a note before anything is counted, and the
+ * learner's own message is not evidence.
+ */
+export function countFileTokens(mediaType: string) {
+  return mediaType.startsWith("image/") ? IMAGE_TOKENS : DOCUMENT_PAGE_TOKENS;
 }
 
 /**

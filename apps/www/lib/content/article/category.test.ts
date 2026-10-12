@@ -21,6 +21,8 @@ import {
   readPublishedCategoryAlternates,
   readPublishedCategoryPage,
 } from "@/lib/content/article/category";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const categoryReaderMock = vi.hoisted(() => vi.fn());
 const articleReaderMock = vi.hoisted(() => vi.fn());
@@ -39,6 +41,14 @@ vi.mock("@/lib/content/article/catalog", () => ({
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
 }));
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 
 /** Builds one bounded category result from the signed catalog. */
 function categoryPage({
@@ -95,10 +105,36 @@ function categoryModel({
 
 describe("published article category", () => {
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease(releaseId);
     categoryReaderMock.mockReset();
     articleReaderMock.mockReset();
     cacheMock.mockReset();
   });
+
+  it.effect(
+    "answers the proxy, the pages and every locale from one list for each release",
+    () =>
+      Effect.gen(function* () {
+        categoryReaderMock.mockReturnValue(Effect.succeed(categoryPage()));
+
+        expect(yield* hasPublishedArticleCategory("politik", "de")).toBe(true);
+        expect(yield* hasPublishedArticleCategory("politik", "de")).toBe(true);
+        expect(yield* hasPublishedArticleCategory("missing", "de")).toBe(false);
+        yield* readPublishedArticleCategory("politik", "de");
+        yield* Effect.tryPromise(() =>
+          getPublishedArticleCategory("politik", "de")
+        );
+        expect(categoryReaderMock).toHaveBeenCalledTimes(1);
+
+        yield* hasPublishedArticleCategory("politik", "en");
+        expect(categoryReaderMock).toHaveBeenCalledTimes(2);
+
+        activateTestRelease("release-article-next");
+        yield* hasPublishedArticleCategory("politik", "de");
+        expect(categoryReaderMock).toHaveBeenCalledTimes(3);
+      })
+  );
 
   it.effect(
     "resolves one localized category and caches the framework adapter",

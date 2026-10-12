@@ -1,5 +1,6 @@
 import { assert } from "@effect/vitest";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   insertTestArtifact,
@@ -213,6 +214,18 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
   }
 }
 
+/** Inserts the compaction row with a completed floor and an optional cycle. */
+export function insertCompaction(
+  ctx: MutationCtx,
+  fields: Partial<Omit<Doc<"contentCompaction">, "_creationTime" | "_id">> = {}
+) {
+  return ctx.db.insert("contentCompaction", {
+    compactedFloor: 0,
+    key: "primary",
+    ...fields,
+  });
+}
+
 /** Seeds a snapshot backlog larger than one bounded compaction run. */
 export async function seedExpiredSnapshotBacklog(ctx: MutationCtx) {
   await ctx.db.insert("contentState", {
@@ -222,6 +235,8 @@ export async function seedExpiredSnapshotBacklog(ctx: MutationCtx) {
     key: "primary",
     nextSequence: 2,
     updatedAt: 0,
+  });
+  await insertCompaction(ctx, {
     compactFloor: 1,
     compactFrom: 0,
     compactPhase: "snapshots",

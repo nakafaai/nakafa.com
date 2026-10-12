@@ -4,15 +4,21 @@ import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { createCapabilities } from "@repo/backend/confect/nina/capabilities";
+import {
+  ChatStep,
+  makeChatStep,
+} from "@repo/backend/confect/nina/capability/deadline";
 import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn";
 import {
   generationFailure,
   NinaGenerationError,
 } from "@repo/backend/confect/nina/failure";
-import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
+import { boundStep } from "@repo/backend/confect/nina/history";
+import { readInput } from "@repo/backend/confect/nina/input";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
+import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
-import { prepareNinaStep } from "@repo/backend/confect/nina/step";
+import { startNinaStep } from "@repo/backend/confect/nina/step";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
 import { DateTime, Effect } from "effect";
@@ -39,17 +45,21 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     user: turn.user,
     runtime,
   });
-  const { instructions, summary } = yield* readInstructions(
-    turn,
-    context.url,
-    runtime
-  );
+  const { instructions, summary } = yield* readInstructions(turn, context.url);
+  // Nina reads its own turns, so the Agent fetches no history and sends this as is.
+  const input = yield* readInput(turn, {
+    context: formatTurnContext({ page: turn.page, runtime, user: turn.user }),
+    through: summary?.throughOrder ?? null,
+  });
+  // The chat step's timer covers Nina's own call and the tools it starts, so
+  // each step marks its start here and the tools count their time from it.
+  const chatStep = yield* makeChatStep();
   const tools = yield* createCapabilities(
     turn.userId,
     context,
     turn.page.locale,
     usageHandler
-  );
+  ).pipe(Effect.provideService(ChatStep, chatStep));
   const handle = (yield* Gateway).language("chat");
   const agent = new Agent(components.nina, {
     name: "nina",
@@ -57,20 +67,8 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     instructions,
     tools,
     usageHandler,
-    contextOptions: { recentMessages: 50, excludeToolMessages: false },
-    contextHandler: (_ctx, fetched) =>
-      Promise.resolve(
-        assembleContext({
-          current: [
-            ...fetched.inputMessages,
-            ...fetched.inputPrompt,
-            ...fetched.existingResponses,
-          ],
-          currentOrder: turn.order,
-          recent: fetched.recent,
-          throughOrder: summary?.throughOrder ?? null,
-        })
-      ),
+    contextOptions: { recentMessages: 0 },
+    contextHandler: () => Promise.resolve(input),
   });
   let streamFailure: NinaGenerationError | undefined;
   const result = yield* Effect.tryPromise({
@@ -90,7 +88,12 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
             });
           },
           prepareStep: (step) =>
-            prepareNinaStep({ ...step, messages: boundStep(step.messages) }),
+            runPromise(
+              startNinaStep(chatStep.begin, {
+                ...step,
+                messages: boundStep(step.messages),
+              })
+            ),
           repairToolCall: (options) =>
             runPromise(
               repairToolCall({

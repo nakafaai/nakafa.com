@@ -17,6 +17,7 @@ export type ContentAnalyticsPartitionsDoc = Document.Document<typeof schemaDefin
 export type ContentArtifactFactsDoc = Document.Document<typeof schemaDefinition, "contentArtifactFacts">;
 export type ContentArtifactsDoc = Document.Document<typeof schemaDefinition, "contentArtifacts">;
 export type ContentBindingsDoc = Document.Document<typeof schemaDefinition, "contentBindings">;
+export type ContentCompactionDoc = Document.Document<typeof schemaDefinition, "contentCompaction">;
 export type ContentHeadsDoc = Document.Document<typeof schemaDefinition, "contentHeads">;
 export type ContentIndexDoc = Document.Document<typeof schemaDefinition, "contentIndex">;
 export type ContentItemsDoc = Document.Document<typeof schemaDefinition, "contentItems">;
@@ -45,6 +46,7 @@ export type LearningViewsDoc = Document.Document<typeof schemaDefinition, "learn
 export type MaterialBucketsDoc = Document.Document<typeof schemaDefinition, "materialBuckets">;
 export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "materialCatalog">;
 export type NinaMemoriesDoc = Document.Document<typeof schemaDefinition, "ninaMemories">;
+export type NinaMemoryKeysDoc = Document.Document<typeof schemaDefinition, "ninaMemoryKeys">;
 export type NinaSummariesDoc = Document.Document<typeof schemaDefinition, "ninaSummaries">;
 export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
@@ -106,6 +108,7 @@ export interface Docs {
   contentArtifactFacts: ContentArtifactFactsDoc;
   contentArtifacts: ContentArtifactsDoc;
   contentBindings: ContentBindingsDoc;
+  contentCompaction: ContentCompactionDoc;
   contentHeads: ContentHeadsDoc;
   contentIndex: ContentIndexDoc;
   contentItems: ContentItemsDoc;
@@ -134,6 +137,7 @@ export interface Docs {
   materialBuckets: MaterialBucketsDoc;
   materialCatalog: MaterialCatalogDoc;
   ninaMemories: NinaMemoriesDoc;
+  ninaMemoryKeys: NinaMemoryKeysDoc;
   ninaSummaries: NinaSummariesDoc;
   ninaTurns: NinaTurnsDoc;
   ninaUploads: NinaUploadsDoc;

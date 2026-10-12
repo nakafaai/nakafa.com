@@ -8,6 +8,7 @@ import {
 import { Data, Effect } from "effect";
 import {
   applyContentCache,
+  applyReleaseContentCache,
   ContentCacheInvalidationError,
   invalidateContentCache,
 } from "@/lib/content/cache";
@@ -39,6 +40,12 @@ describe("content runtime cache", () => {
       "content-scope:program"
     );
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
+  });
+  it("keeps the scope tag of an entry keyed by its release and drops its timer", () => {
+    applyReleaseContentCache("article");
+
+    expect(cacheTagMock).toHaveBeenCalledWith("content-scope:article");
+    expect(cacheLifeMock).toHaveBeenCalledExactlyOnceWith("max");
   });
   it.effect.each(ContentCacheScopeSchema.literals)(
     "invalidates only the changed %s dependency",

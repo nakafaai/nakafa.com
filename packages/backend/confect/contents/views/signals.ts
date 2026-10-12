@@ -4,15 +4,13 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import {
-  createCanonicalLearningContext,
-  type LearningContextStorage,
-} from "@repo/backend/confect/contents/context";
+import { createCanonicalLearningContext } from "@repo/backend/confect/contents/context";
 import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/partitions";
 import {
   createPopularityViewerKey,
   getPopularitySignalDay,
-  type LearningPopularityScope,
+  POPULARITY_SCOPE,
+  POPULARITY_SECTION,
 } from "@repo/backend/confect/contents/popularity";
 import {
   type RecordContentViewArgs,
@@ -20,45 +18,18 @@ import {
 } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
 import type { ContentViewer } from "@repo/backend/confect/contents/views/viewer";
-import {
-  Array as Arr,
-  Duration,
-  Effect,
-  flow,
-  Predicate,
-  Struct,
-} from "effect";
+import { Duration, Effect, flow, Struct } from "effect";
 
-/** Creates one popularity signal scope from verified learning-context storage. */
-function createSignalScope(
-  context: LearningContextStorage,
-  scopeMode: LearningPopularityScope
-) {
-  return {
-    context,
-    scopeMode,
-  };
-}
+/** The ranking is global, so every popularity row uses the canonical context. */
+const context = createCanonicalLearningContext();
 
-/** Returns the popularity scopes produced by one verified learning context. */
-function createSignalScopes(context: LearningContextStorage) {
-  let scopes = [createSignalScope(createCanonicalLearningContext(), "global")];
-  if (context.contextMode === "placement") {
-    scopes = Arr.append(scopes, createSignalScope(context, "placement"));
-  }
-  return scopes;
-}
-
-/** Loads an existing viewer signal for one content/context/day identity. */
+/** Loads an existing viewer signal for one content/day identity. */
 const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
-  function* (
-    scope: ReturnType<typeof createSignalScopes>[number],
-    input: {
-      readonly contentId: ContentViewTarget["content_id"];
-      readonly signalDay: number;
-      readonly viewerKey: string;
-    }
-  ) {
+  function* (input: {
+    readonly contentId: ContentViewTarget["content_id"];
+    readonly signalDay: number;
+    readonly viewerKey: string;
+  }) {
     const database = yield* DatabaseReader;
     return yield* database
       .table("learningPopularityViewerSignals")
@@ -67,8 +38,8 @@ const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
         input.viewerKey,
         input.contentId,
         input.signalDay,
-        scope.scopeMode,
-        scope.context.contextKey
+        POPULARITY_SCOPE,
+        context.contextKey
       )
       .pipe(
         Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
@@ -78,21 +49,31 @@ const loadViewerSignal = Effect.fn("contents.views.loadViewerSignal")(
   Effect.catchDefect(flow(toContentViewIoError, Effect.fail))
 );
 
-/** Inserts one daily popularity signal if the viewer has not contributed yet. */
-const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
+/**
+ * Inserts one daily popularity signal if the viewer has not contributed yet,
+ * and returns the analytics partition that must drain it.
+ *
+ * Only a material view feeds the ranking the homepage reads, in its global
+ * scope, so any other view writes nothing here.
+ */
+export const enqueuePopularitySignal = Effect.fn(
+  "contents.views.enqueuePopularitySignal"
+)(
   function* (
     route: ContentViewTarget,
     args: RecordContentViewArgs,
-    scope: ReturnType<typeof createSignalScopes>[number],
     input: {
       readonly now: number;
       readonly viewer: ContentViewer;
     }
   ) {
+    if (route.section !== POPULARITY_SECTION) {
+      return null;
+    }
     const writer = yield* DatabaseWriter;
     const signalDay = getPopularitySignalDay(input.now);
     const viewerKey = createPopularityViewerKey(input.viewer);
-    const existingSignal = yield* loadViewerSignal(scope, {
+    const existingSignal = yield* loadViewerSignal({
       contentId: route.content_id,
       signalDay,
       viewerKey,
@@ -106,7 +87,7 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
       input.viewer.kind === "account" &&
       input.viewer.deviceId !== undefined
     ) {
-      const existingDeviceSignal = yield* loadViewerSignal(scope, {
+      const existingDeviceSignal = yield* loadViewerSignal({
         contentId: route.content_id,
         signalDay,
         viewerKey: createPopularityViewerKey({
@@ -119,7 +100,7 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
       }
     }
     const partition = getContentAnalyticsPartition(
-      `${route.content_id}:${scope.scopeMode}:${scope.context.contextKey}`
+      `${route.content_id}:${POPULARITY_SCOPE}:${context.contextKey}`
     );
     yield* writer
       .table("learningPopularityViewerSignals")
@@ -128,11 +109,11 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
         assetId: route.assetId,
         conceptId: route.conceptId,
         content_id: route.content_id,
-        ...scope.context,
+        ...context,
         learningObjectId: route.learningObjectId,
         lensId: route.lensId,
         locale: args.locale,
-        scopeMode: scope.scopeMode,
+        scopeMode: POPULARITY_SCOPE,
         section: route.section,
         signalDay,
         viewedAt: input.now,
@@ -146,20 +127,16 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
         assetId: route.assetId,
         conceptId: route.conceptId,
         content_id: route.content_id,
-        ...scope.context,
+        ...context,
         ...Struct.pick(route, ["description"]),
         insertedAt: input.now,
         learningObjectId: route.learningObjectId,
         lensId: route.lensId,
         locale: args.locale,
-        ...(route.kind === "curriculum-lesson"
-          ? {
-              materialDomain: route.materialDomain,
-            }
-          : {}),
+        materialDomain: route.materialDomain,
         partition,
         route: route.route,
-        scopeMode: scope.scopeMode,
+        scopeMode: POPULARITY_SCOPE,
         section: route.section,
         sourcePath: route.sourcePath,
         title: route.title,
@@ -172,38 +149,20 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
   Effect.catchDefect(flow(toContentViewIoError, Effect.fail))
 );
 
-/** Enqueues daily global and placement popularity signals for one view event. */
-export const enqueuePopularitySignals = Effect.fn(
-  "contents.views.enqueuePopularitySignals"
-)(function* (
-  route: ContentViewTarget,
-  args: RecordContentViewArgs,
-  context: LearningContextStorage,
-  input: {
-    readonly now: number;
-    readonly viewer: ContentViewer;
+/** Schedules bounded popularity processing for a newly enqueued partition. */
+export const schedulePopularityPartition = Effect.fn(
+  "contents.views.schedulePopularityPartition"
+)(function* (partition: number | null) {
+  if (partition === null) {
+    return;
   }
-) {
-  const partitions = yield* Effect.forEach(
-    createSignalScopes(context),
-    (scope) => enqueueSignalScope(route, args, scope, input)
-  );
-  return Arr.dedupe(Arr.filter(partitions, Predicate.isNotNull));
-});
-
-/** Schedules bounded popularity processing for every newly enqueued partition. */
-export const schedulePopularityPartitions = Effect.fn(
-  "contents.views.schedulePopularityPartitions"
-)(function* (partitions: readonly number[]) {
   const scheduler = yield* Scheduler;
-  for (const partition of partitions) {
-    yield* scheduler.runAfter(
-      Duration.zero,
-      refs.internal.contents.mutations.analytics
-        .scheduleContentAnalyticsPartition,
-      {
-        partition,
-      }
-    );
-  }
+  yield* scheduler.runAfter(
+    Duration.zero,
+    refs.internal.contents.mutations.analytics
+      .scheduleContentAnalyticsPartition,
+    {
+      partition,
+    }
+  );
 });

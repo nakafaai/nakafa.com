@@ -1,10 +1,8 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
-import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { cache } from "react";
 import { applyContentCache } from "@/lib/content/cache";
@@ -19,7 +17,7 @@ import {
   decodeMaterialData,
   renderMaterialArtifact,
 } from "@/lib/content/published/material";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 
 /** Verifies the signed query result without evaluating its immutable body.
  *
@@ -125,25 +123,20 @@ const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(
   }
 );
 
-/** The release id makes a verified group immutable across its lesson URLs.
- * New publications select a new key; mutable lesson caches still use the
- * material tag. Never cache a failed or mismatched publication lookup. */
+/** The release id makes a verified group immutable across its lesson URLs, and
+ * the content store keeps it once for each release. New publications select a
+ * new key. Never store a failed or mismatched publication lookup. */
 async function readMaterialNavigation(
   locale: Locale,
   materialKey: string,
   expectedActiveReleaseId: string
 ) {
-  "use cache";
-
-  cacheLife("max");
   return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(contentRelease.material.navigation, {
-        appLocale: AppLocaleSchema.make(locale),
-        expectedActiveReleaseId,
-        materialKey,
-      })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
+    queryContentStore(contentRelease.material.navigation, {
+      appLocale: AppLocaleSchema.make(locale),
+      expectedActiveReleaseId,
+      materialKey,
+    }).pipe(Effect.withTracerTiming(false))
   );
 }
 class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
@@ -154,15 +147,15 @@ class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
   }
 ) {}
 
-/** Starts native IO before Effect at the request-less prerendering seam. */
+/** Starts native IO before Effect at the request-less prerendering seam. The
+ * lesson is read through the content store, so the page and its social image
+ * share one read of Convex for each release. */
 async function fetchMaterialLesson(locale: Locale, publicPath: string) {
   return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(contentRelease.material.lesson, {
-        appLocale: AppLocaleSchema.make(locale),
-        publicPath,
-      })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
+    queryContentStore(contentRelease.material.lesson, {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    }).pipe(Effect.withTracerTiming(false))
   );
 }
 const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
@@ -222,7 +215,9 @@ const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
   );
 });
 
-/** Reads and verifies one signed material delivery inside the content cache. */
+/** Reads and verifies one signed material delivery inside the content cache.
+ * The `use cache` boundary stays so that lessons prerender and the material tag
+ * still expires them, and it holds the rendered body that the store cannot. */
 async function readMaterialDelivery(locale: Locale, publicPath: string) {
   "use cache";
 
@@ -248,7 +243,9 @@ export const getMaterialPublication = cache(readMaterialDelivery);
 /** Reads and verifies signed release metadata without rendering its body.
  *
  * Social images resolve copy through this seam so a missing release falls
- * back to brand artwork instead of rendering the application shell. */
+ * back to brand artwork instead of rendering the application shell. The `use
+ * cache` boundary stays so that the material tag still expires the verified
+ * model; the lesson behind it is the one that the page already stored. */
 async function readMaterialModel(locale: Locale, publicPath: string) {
   "use cache";
 

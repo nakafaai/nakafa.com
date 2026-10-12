@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer } from "effect";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
+import { activateTestRelease } from "@/test/active";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const readNakafaRuntimeQueryMock = vi.hoisted(() => vi.fn());
 const articleMocks = vi.hoisted(() => ({
@@ -29,6 +31,14 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 vi.mock("@/lib/content/article/category", () => ({
   hasPublishedArticleCategory: articleMocks.hasCategory,
 }));
@@ -41,6 +51,8 @@ vi.mock("@/lib/routing/public/tryout", () => ({
 }));
 describe("public URL migration redirects", () => {
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease("release-test");
     readNakafaRuntimeQueryMock.mockReset();
     articleMocks.hasCategory.mockReset();
     articleMocks.readActiveRoute.mockReset();
@@ -121,6 +133,27 @@ describe("public URL migration redirects", () => {
           expectedSectionKey: "central-angle-and-inscribed-angle",
         }
       );
+    })
+  );
+  it.effect("asks Convex once for a missing successor in each release", () =>
+    Effect.gen(function* () {
+      const request = {
+        hasAttemptCapability: false,
+        method: "GET",
+        pathname:
+          "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
+      };
+      readNakafaRuntimeQueryMock.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-test",
+          managed: true,
+          publicPath: null,
+        })
+      );
+
+      expect(yield* readPublicUrlMigrationRedirect(request)).toBeNull();
+      expect(yield* readPublicUrlMigrationRedirect(request)).toBeNull();
+      expect(readNakafaRuntimeQueryMock).toHaveBeenCalledTimes(1);
     })
   );
   it.effect(

@@ -3127,15 +3127,7 @@ export declare const api: {
             limit?: number;
             locale: "en" | "id" | "de";
             minViews?: number;
-            windowKey?:
-              | "1d"
-              | "7d"
-              | "14d"
-              | "30d"
-              | "90d"
-              | "180d"
-              | "365d"
-              | "lifetime";
+            windowKey?: "7d";
           },
           Array<{
             alignmentId: string;
@@ -3353,6 +3345,7 @@ export declare const api: {
             order: number;
             promptMessageId: string;
             promptedAt?: number;
+            remembered?: number;
             state:
               | { status: "queued" }
               | { startedAt: number; status: "running" }
@@ -3385,7 +3378,8 @@ export declare const api: {
                 | "math-repair"
                 | "suggestions"
                 | "title"
-                | "nina-repair";
+                | "nina-repair"
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -3408,7 +3402,20 @@ export declare const api: {
       >;
     };
     memory: {
+      add: FunctionReference<
+        "mutation",
+        "public",
+        { text: string; title?: string },
+        Id<"ninaMemories">
+      >;
+      clear: FunctionReference<"mutation", "public", {}, null>;
       disable: FunctionReference<"mutation", "public", {}, null>;
+      edit: FunctionReference<
+        "mutation",
+        "public",
+        { id: Id<"ninaMemories">; text: string; title?: string },
+        null
+      >;
       enable: FunctionReference<
         "mutation",
         "public",
@@ -3426,6 +3433,48 @@ export declare const api: {
         "public",
         {},
         { facts: Array<{ key: number; savedAt: number; text: string }> } | null
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            author: "nina" | "learner";
+            confirmedAt: number;
+            createdAt: number;
+            id: Id<"ninaMemories">;
+            text: string;
+            title?: string;
+            validUntil?: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      pause: FunctionReference<"mutation", "public", { paused: boolean }, null>;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { id: Id<"ninaMemories"> },
+        null
+      >;
+      state: FunctionReference<
+        "query",
+        "public",
+        {},
+        { paused: boolean } | null
       >;
     };
     messages: {
@@ -3463,6 +3512,7 @@ export declare const api: {
               order: number;
               promptMessageId: string;
               promptedAt?: number;
+              remembered?: number;
               state:
                 | { status: "queued" }
                 | { startedAt: number; status: "running" }
@@ -3495,7 +3545,8 @@ export declare const api: {
                   | "math-repair"
                   | "suggestions"
                   | "title"
-                  | "nina-repair";
+                  | "nina-repair"
+                  | "memory";
                 cached?: number;
                 calls: number;
                 cost?: number;
@@ -6144,24 +6195,6 @@ export declare const internal: {
         any
       >;
     };
-    tokens: {
-      encryptStoredTokens: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: null | string },
-        {
-          continueCursor: string;
-          encrypted: number;
-          isDone: boolean;
-          scanned: number;
-          unreadable: Array<{
-            account: string;
-            field: "accessToken" | "refreshToken";
-            reason: string;
-          }>;
-        }
-      >;
-    };
   };
   classes: {
     forums: {
@@ -7739,8 +7772,8 @@ export declare const internal: {
           {
             cursor?: string;
             day: number;
-            scopeMode: "global" | "placement";
-            windowKey: "1d" | "7d" | "14d" | "30d" | "90d" | "180d" | "365d";
+            scopeMode: "global";
+            windowKey: "7d";
           },
           {
             continueCursor: string;
@@ -7757,6 +7790,8 @@ export declare const internal: {
           {},
           {
             hasMore: boolean;
+            retiredCounters: number;
+            retiredCycles: number;
             signalsDeleted: number;
             viewersDeleted: number;
             waitingForMaintenance: boolean;
@@ -7768,8 +7803,8 @@ export declare const internal: {
           {
             cursor?: string;
             day: number;
-            scopeMode: "global" | "placement";
-            windowKey: "1d" | "7d" | "14d" | "30d" | "90d" | "180d" | "365d";
+            scopeMode: "global";
+            windowKey: "7d";
           },
           {
             continueCursor: string;
@@ -8503,7 +8538,9 @@ export declare const internal: {
             planCreditGrantId?: Id<"creditTransactions">;
             promptMessageId: string;
             promptedAt?: number;
+            remembered?: number;
             requestId: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -8554,7 +8591,8 @@ export declare const internal: {
                 | "math-repair"
                 | "suggestions"
                 | "title"
-                | "nina-repair";
+                | "nina-repair"
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -8660,7 +8698,9 @@ export declare const internal: {
             phase: "settled";
             promptMessageId: string;
             promptedAt?: number;
+            remembered?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -8727,7 +8767,8 @@ export declare const internal: {
                 | "math-repair"
                 | "suggestions"
                 | "title"
-                | "nina-repair";
+                | "nina-repair"
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -8833,7 +8874,9 @@ export declare const internal: {
             phase: "unanswered";
             promptMessageId: string;
             promptedAt?: number;
+            remembered?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -8883,7 +8926,8 @@ export declare const internal: {
                 | "math-repair"
                 | "suggestions"
                 | "title"
-                | "nina-repair";
+                | "nina-repair"
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9004,7 +9048,9 @@ export declare const internal: {
             planCreditGrantId?: Id<"creditTransactions">;
             promptMessageId: string;
             promptedAt?: number;
+            remembered?: number;
             requestId: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9055,7 +9101,8 @@ export declare const internal: {
                 | "math-repair"
                 | "suggestions"
                 | "title"
-                | "nina-repair";
+                | "nina-repair"
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9161,7 +9208,9 @@ export declare const internal: {
             phase: "settled";
             promptMessageId: string;
             promptedAt?: number;
+            remembered?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9228,7 +9277,8 @@ export declare const internal: {
                 | "math-repair"
                 | "suggestions"
                 | "title"
-                | "nina-repair";
+                | "nina-repair"
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9334,7 +9384,9 @@ export declare const internal: {
             phase: "unanswered";
             promptMessageId: string;
             promptedAt?: number;
+            remembered?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9384,7 +9436,8 @@ export declare const internal: {
                 | "math-repair"
                 | "suggestions"
                 | "title"
-                | "nina-repair";
+                | "nina-repair"
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9431,32 +9484,49 @@ export declare const internal: {
       >;
     };
     memory: {
-      apply: FunctionReference<
+      capture: FunctionReference<
         "mutation",
         "internal",
         {
-          changes: {
-            forget: Array<number>;
-            remember: Array<string>;
-            update: Array<{ key: number; text: string }>;
-          };
-          chatId: Id<"chats">;
-          memory: { id: Id<"ninaMemories">; revision: number };
-          usage: { input: number; output: number };
+          candidates: Array<{
+            kind: "level" | "goal" | "style" | "struggle" | "situation";
+            known?: string;
+            quote: string;
+            text: string;
+            until?: string;
+          }>;
+          seen: Array<{ confirmedAt: number; id: Id<"ninaMemories"> }>;
+          topics: Array<string>;
+          turnId: Id<"ninaTurns">;
           userId: Id<"users">;
         },
-        null
+        number
       >;
-      read: FunctionReference<
+      drain: FunctionReference<
+        "mutation",
+        "internal",
+        { through: number; userId: Id<"users"> },
+        number
+      >;
+      expire: FunctionReference<"mutation", "internal", {}, number>;
+      known: FunctionReference<
         "query",
         "internal",
-        { userId: Id<"users"> },
         {
-          memory: {
-            facts: Array<{ key: number; text: string }>;
+          message: string;
+          now: number;
+          topics: Array<string>;
+          userId: Id<"users">;
+        },
+        {
+          known: Array<{
+            confirmedAt: number;
             id: Id<"ninaMemories">;
-            revision: number;
-          } | null;
+            kind?: "level" | "goal" | "style" | "struggle" | "situation";
+            text: string;
+            title?: string;
+          }>;
+          paused: boolean;
           profile: {
             focus?: "learning" | "tryout";
             region?:
@@ -9478,6 +9548,42 @@ export declare const internal: {
             };
             tryoutCountry?: string;
           };
+        }
+      >;
+      read: FunctionReference<
+        "query",
+        "internal",
+        { now: number; topics: Array<string>; userId: Id<"users"> },
+        {
+          paused: boolean;
+          profile: {
+            focus?: "learning" | "tryout";
+            region?:
+              | "indonesia"
+              | "singapore"
+              | "united-kingdom"
+              | "germany"
+              | "united-states"
+              | "international";
+            tryout?: {
+              correct: number;
+              exam: string;
+              finishedAt: number;
+              score: number;
+              sections: Array<{ correct: number; key: string; total: number }>;
+              set: string;
+              status: "provisional" | "official";
+              total: number;
+            };
+            tryoutCountry?: string;
+          };
+          prompt: Array<{
+            confirmedAt: number;
+            id: Id<"ninaMemories">;
+            kind?: "level" | "goal" | "style" | "struggle" | "situation";
+            text: string;
+            title?: string;
+          }>;
         }
       >;
     };
@@ -9507,31 +9613,18 @@ export declare const internal: {
         null
       >;
     };
-    seal: {
-      sealChats: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null },
-        { next: string | null; sealed: number; skipped: number }
-      >;
-      sealSummaries: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null },
-        {
-          next: string | null;
-          removed: number;
-          sealed: number;
-          skipped: number;
-        }
-      >;
-    };
     summaries: {
       anchor: FunctionReference<
         "query",
         "internal",
         { chatId: Id<"chats">; order: number },
         string | null
+      >;
+      asked: FunctionReference<
+        "query",
+        "internal",
+        { before: number; chatId: Id<"chats">; questions: Array<number> },
+        Array<{ order: number; retryOf?: number }>
       >;
       read: FunctionReference<
         "query",
@@ -9549,6 +9642,12 @@ export declare const internal: {
           usage: { input: number; output: number };
         },
         null
+      >;
+      uncovered: FunctionReference<
+        "query",
+        "internal",
+        { before: number; chatId: Id<"chats">; through: number | null },
+        Array<{ order: number; retryOf?: number }>
       >;
     };
     uploads: {
@@ -9581,7 +9680,8 @@ export declare const internal: {
               | "math-repair"
               | "suggestions"
               | "title"
-              | "nina-repair";
+              | "nina-repair"
+              | "memory";
             cached?: number;
             cost?: number;
             input: number;

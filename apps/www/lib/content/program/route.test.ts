@@ -9,6 +9,7 @@ import {
   getPublishedProgramRoute,
   readPublishedProgramRoute,
 } from "@/lib/content/program/route";
+import { activateTestRelease } from "@/test/active";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 import {
   readTestPublishedRoute,
@@ -19,6 +20,7 @@ import {
   testProgramRowJson,
   testProgramSubject,
 } from "@/test/content-program";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
@@ -88,11 +90,42 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 describe("published program route", () => {
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease("program-release");
     cacheMock.mockReset();
     runtimeQueryMock.mockReset();
   });
+  it.effect("reaches Convex once for each route of each release", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValue(Effect.succeed(routeResponse()));
+      const path = testProgramSubject.publicPath;
+
+      yield* readPublishedProgramRoute("en", path);
+      yield* Effect.tryPromise(() => getPublishedProgramRoute("en", path));
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
+
+      // The response does not describe another path, so that read fails its
+      // checks; it still has to reach Convex.
+      yield* readPublishedProgramRoute("en", `${path}/other`).pipe(
+        Effect.ignore
+      );
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
+
+      activateTestRelease("program-release-next");
+      yield* readPublishedProgramRoute("en", path);
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(3);
+    })
+  );
   it.effect(
     "reads signed curriculum models and preserves managed absence",
     () =>

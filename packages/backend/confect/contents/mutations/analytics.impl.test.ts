@@ -7,8 +7,8 @@ import {
 import { CONTENT_ANALYTICS_LEASE_DURATION_MS } from "@repo/backend/confect/contents/constants";
 import {
   getPopularitySignalDay,
-  learningPopularityWindowValues,
   POPULARITY_DAY_MS,
+  POPULARITY_WINDOW,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
@@ -57,19 +57,6 @@ function identity(index: number) {
   };
 }
 
-/** Returns exact current-window provenance for one existing signal. */
-function applied() {
-  return {
-    d1: 1,
-    d7: 1,
-    d14: 1,
-    d30: 1,
-    d90: 1,
-    d180: 1,
-    d365: 1,
-  };
-}
-
 /** Seeds one existing identity and its queued update without firing triggers. */
 async function seedIdentity(ctx: MutationCtx, index: number) {
   const graph = identity(index);
@@ -90,24 +77,22 @@ async function seedIdentity(ctx: MutationCtx, index: number) {
 
   await ctx.db.insert("learningPopularitySignals", {
     ...previous,
-    applied: applied(),
+    applied: { d7: 1 },
     signalDay: SIGNAL_DAY,
     viewCount: 1,
   });
 
-  for (const windowKey of learningPopularityWindowValues) {
-    const counterId = await ctx.db.insert("learningPopularityCounters", {
-      ...previous,
-      latestDay: SIGNAL_DAY,
-      score: 1,
-      windowKey,
-    });
-    const counter = await ctx.db.get(counterId);
-    if (!counter) {
-      throw new Error("Expected the popularity counter seed.");
-    }
-    await learningPopularityRankings.insert(ctx, counter);
+  const counterId = await ctx.db.insert("learningPopularityCounters", {
+    ...previous,
+    latestDay: SIGNAL_DAY,
+    score: 1,
+    windowKey: POPULARITY_WINDOW,
+  });
+  const counter = await ctx.db.get(counterId);
+  if (!counter) {
+    throw new Error("Expected the popularity counter seed.");
   }
+  await learningPopularityRankings.insert(ctx, counter);
 
   const queueSize = index === 0 ? CONTENT_ANALYTICS_GROUP_SIZE : 1;
   for (let offset = 0; offset < queueSize; offset += 1) {
@@ -169,22 +154,17 @@ async function runDrainPage(target: TestConvex<typeof schema>) {
 /** Reads exact counter, signal, queue, lease, and ranking state. */
 async function readDrainState(target: TestConvex<typeof schema>) {
   return await target.query(async (ctx) => {
-    const rankings = await Promise.all(
-      Arr.map(learningPopularityWindowValues, async (windowKey) => {
-        const page = await learningPopularityRankings.paginate(ctx, {
-          namespace: ["material", "en", "global", windowKey],
-          order: "asc",
-          pageSize: IDENTITY_COUNT,
-        });
-        return Arr.map(page.page, (item) => item.key);
-      })
-    );
+    const page = await learningPopularityRankings.paginate(ctx, {
+      namespace: ["material", "en", "global", POPULARITY_WINDOW],
+      order: "asc",
+      pageSize: IDENTITY_COUNT,
+    });
 
     return {
       counters: await ctx.db.query("learningPopularityCounters").collect(),
       partition: await ctx.db.query("contentAnalyticsPartitions").unique(),
       queue: await ctx.db.query("learningEngagementQueue").collect(),
-      rankings,
+      ranking: Arr.map(page.page, (item) => item.key),
       signals: await ctx.db.query("learningPopularitySignals").collect(),
     };
   });
@@ -256,17 +236,13 @@ describe("contents/mutations/analytics", () => {
         state.signals,
         (signal) =>
           signal.viewCount === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
-          signal.applied.d1 === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
-          signal.applied.d365 === CONTENT_ANALYTICS_GROUP_SIZE + 1
+          signal.applied.d7 === CONTENT_ANALYTICS_GROUP_SIZE + 1
       )
     ).toHaveLength(1);
     expect(
       Arr.filter(
         state.signals,
-        (signal) =>
-          signal.viewCount === 2 &&
-          signal.applied.d1 === 2 &&
-          signal.applied.d365 === 2
+        (signal) => signal.viewCount === 2 && signal.applied.d7 === 2
       )
     ).toHaveLength(IDENTITY_COUNT - 1);
     expect(
@@ -274,9 +250,7 @@ describe("contents/mutations/analytics", () => {
         signal.title.startsWith("Current title ")
       )
     ).toBe(true);
-    expect(state.counters).toHaveLength(
-      IDENTITY_COUNT * learningPopularityWindowValues.length
-    );
+    expect(state.counters).toHaveLength(IDENTITY_COUNT);
     expect(
       Arr.filter(
         state.counters,
@@ -284,33 +258,28 @@ describe("contents/mutations/analytics", () => {
           counter.score === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
           counter.latestDay === SIGNAL_DAY
       )
-    ).toHaveLength(learningPopularityWindowValues.length);
+    ).toHaveLength(1);
     expect(
       Arr.filter(
         state.counters,
         (counter) => counter.score === 2 && counter.latestDay === SIGNAL_DAY
       )
-    ).toHaveLength(
-      (IDENTITY_COUNT - 1) * learningPopularityWindowValues.length
-    );
+    ).toHaveLength(IDENTITY_COUNT - 1);
     expect(
       Arr.every(state.counters, (counter) =>
         counter.title.startsWith("Current title ")
       )
     ).toBe(true);
+    expect(state.ranking).toHaveLength(IDENTITY_COUNT);
     expect(
-      Arr.every(
-        state.rankings,
-        (ranking) =>
-          ranking.length === IDENTITY_COUNT &&
-          Arr.filter(
-            ranking,
-            ([score]) => score === -(CONTENT_ANALYTICS_GROUP_SIZE + 1)
-          ).length === 1 &&
-          Arr.filter(ranking, ([score]) => score === -2).length ===
-            IDENTITY_COUNT - 1
+      Arr.filter(
+        state.ranking,
+        ([score]) => score === -(CONTENT_ANALYTICS_GROUP_SIZE + 1)
       )
-    ).toBe(true);
+    ).toHaveLength(1);
+    expect(Arr.filter(state.ranking, ([score]) => score === -2)).toHaveLength(
+      IDENTITY_COUNT - 1
+    );
 
     const minimumRemaining = Rec.fromEntries(
       Arr.map(METRIC_KEYS, (key) => [

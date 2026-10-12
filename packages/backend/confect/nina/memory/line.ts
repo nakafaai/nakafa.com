@@ -1,0 +1,67 @@
+import type { NinaMemoryNote } from "@repo/backend/confect/nina/memory.spec";
+import { Array as Arr, pipe, String as Str } from "effect";
+
+/** One memory as Nina and the capture call read it. */
+export type Note = typeof NinaMemoryNote.Type;
+
+/**
+ * Characters of one memory in the list a capture call reads. The call only has
+ * to tell the memories apart, and a memory may hold 2000 characters.
+ */
+const KNOWN_LENGTH = 240;
+
+const WHITESPACE = /\s+/gu;
+
+/**
+ * Words on one line, so they can never open a new section of a prompt, and
+ * with their angle brackets written as entities, so they can never close the
+ * block they sit in.
+ */
+function oneLine(text: string) {
+  return pipe(
+    text,
+    Str.replaceAll("<", "&lt;"),
+    Str.replaceAll(">", "&gt;"),
+    Str.replaceAll(WHITESPACE, " "),
+    Str.trim
+  );
+}
+
+/** The kind in front of a memory's words, when Nina gave it one. */
+function label(kind: Note["kind"]) {
+  return kind === undefined ? "" : `(${kind}) `;
+}
+
+/** A memory's title and its words on one line: `Sekolah: Kelas 12`, or the one it has. */
+function wordsOf({ text, title }: Pick<Note, "text" | "title">) {
+  return Arr.join(
+    Arr.filter([oneLine(title ?? ""), oneLine(text)], Str.isNonEmpty),
+    ": "
+  );
+}
+
+/**
+ * The first `KNOWN_LENGTH` characters of a line, followed by `...` when it is
+ * longer. It counts and cuts by code point, so a cut never leaves half of an
+ * emoji in the prompt.
+ */
+function shorten(line: string) {
+  const characters = Arr.fromIterable(line);
+  return Arr.length(characters) > KNOWN_LENGTH
+    ? `${Arr.join(Arr.take(characters, KNOWN_LENGTH), "")}...`
+    : line;
+}
+
+/** One memory as Nina reads it: `- (level) Kelas 12`, or `- Kelas 12` for one the learner wrote. */
+export function memoryLine(note: Pick<Note, "kind" | "text" | "title">) {
+  return `- ${label(note.kind)}${wordsOf(note)}`;
+}
+
+/**
+ * One memory as the capture call reads it, with the id it can name:
+ * `- [id] (level) Kelas 12`. A long memory shows its first `KNOWN_LENGTH`
+ * characters.
+ */
+export function knownLine(note: Pick<Note, "id" | "kind" | "text" | "title">) {
+  return `- [${note.id}] ${label(note.kind)}${shorten(wordsOf(note))}`;
+}

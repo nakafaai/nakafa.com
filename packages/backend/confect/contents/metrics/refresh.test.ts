@@ -1,11 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { getAppliedCount } from "@repo/backend/confect/contents/metrics/signal";
 import {
-  getFinitePopularityWindows,
   getPopularitySignalDay,
   getPopularityWindowDayCount,
-  type LearningPopularityFiniteWindow,
   POPULARITY_DAY_MS,
+  POPULARITY_SCOPE,
+  POPULARITY_WINDOW,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
@@ -15,29 +14,11 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest, type TestConvex } from "convex-test";
-import { Array as Arr, HashSet, Order, pipe } from "effect";
+import { Array as Arr } from "effect";
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
-
-/** Models one late outgoing view without charging a window that excluded it. */
-function appliedAt(offset: number, viewCount: number) {
-  const count = (days: number) => {
-    if (offset < days) {
-      return viewCount;
-    }
-    return offset === days ? 1 : 0;
-  };
-  return {
-    d1: count(1),
-    d7: count(7),
-    d14: count(14),
-    d30: count(30),
-    d90: count(90),
-    d180: count(180),
-    d365: count(365),
-  };
-}
+const OUTGOING_OFFSET = getPopularityWindowDayCount(POPULARITY_WINDOW);
 
 /** Builds a Convex test instance with production popularity triggers enabled. */
 function createPopularityConvexTest() {
@@ -54,19 +35,16 @@ function withContentId(graph: ReturnType<typeof testMaterialGraph>) {
 /** Runs the registered refresh interface and exposes its transaction cost. */
 async function runRefresh(
   target: ReturnType<typeof createPopularityConvexTest>,
-  input: {
-    readonly day?: number;
-    readonly windowKey?: LearningPopularityFiniteWindow;
-  } = {}
+  day: number
 ) {
   return await target.mutation(async (ctx) => {
     const result = await ctx.runMutation(
       internal.contents.mutations.popularity
         .refreshLearningPopularityWindowPage,
       {
-        day: input.day ?? getPopularitySignalDay(NOW),
-        scopeMode: "global",
-        windowKey: input.windowKey ?? "7d",
+        day,
+        scopeMode: POPULARITY_SCOPE,
+        windowKey: POPULARITY_WINDOW,
       }
     );
     const metrics = await ctx.meta.getTransactionMetrics();
@@ -78,16 +56,15 @@ async function runRefresh(
 /** Runs one incremental expiry page and exposes its transaction cost. */
 async function runExpiry(
   target: ReturnType<typeof createPopularityConvexTest>,
-  day: number,
-  windowKey: LearningPopularityFiniteWindow
+  day: number
 ) {
   return await target.mutation(async (ctx) => {
     const result = await ctx.runMutation(
       internal.contents.mutations.popularity.expireLearningPopularityWindowPage,
       {
         day,
-        scopeMode: "global",
-        windowKey,
+        scopeMode: POPULARITY_SCOPE,
+        windowKey: POPULARITY_WINDOW,
       }
     );
     const metrics = await ctx.meta.getTransactionMetrics();
@@ -96,7 +73,11 @@ async function runExpiry(
   });
 }
 
-/** Seeds one full-history identity immediately before the requested expiry. */
+/**
+ * Seeds one identity with a signal for every day of the window and for the day
+ * leaving it, immediately before the requested maintenance. The outgoing day
+ * was processed late: two views, only one of them applied to the counter.
+ */
 async function insertBoundedHistory(
   ctx: MutationCtx,
   day: number,
@@ -105,30 +86,15 @@ async function insertBoundedHistory(
   const subject = withContentId(
     testMaterialGraph("vector", "addition", "en", "mathematics")
   );
-  const scores = {
-    "1d": 0,
-    "7d": 0,
-    "14d": 0,
-    "30d": 0,
-    "90d": 0,
-    "180d": 0,
-    "365d": 0,
-  };
-  const boundaries = HashSet.fromIterable(
-    Arr.map(getFinitePopularityWindows(), getPopularityWindowDayCount)
-  );
-  let lifetimeScore = 0;
+  let score = 0;
 
-  for (let offset = 0; offset <= 365; offset += 1) {
-    const viewCount = HashSet.has(boundaries, offset) ? 2 : 1;
-    lifetimeScore += viewCount;
-    const applied = appliedAt(offset, viewCount);
-    for (const windowKey of getFinitePopularityWindows()) {
-      scores[windowKey] += getAppliedCount(applied, windowKey);
-    }
+  for (let offset = 0; offset <= OUTGOING_OFFSET; offset += 1) {
+    const viewCount = offset === OUTGOING_OFFSET ? 2 : 1;
+    const applied = offset === OUTGOING_OFFSET ? 1 : viewCount;
+    score += applied;
     await ctx.db.insert("learningPopularitySignals", {
       ...subject,
-      applied,
+      applied: { d7: applied },
       contextKey: "canonical",
       contextMode: offset === 0 ? "canonical" : "placement",
       description:
@@ -146,69 +112,53 @@ async function insertBoundedHistory(
     });
   }
 
-  for (const windowKey of [
-    ...getFinitePopularityWindows(),
-    "lifetime",
-  ] as const) {
-    const id = await ctx.db.insert("learningPopularityCounters", {
-      ...subject,
-      contextKey: "canonical",
-      contextMode: "canonical",
-      description: "Current subject description",
-      latestDay: day,
-      locale: "en",
-      materialDomain: "mathematics",
-      route: SUBJECT_ROUTE,
-      score: windowKey === "lifetime" ? lifetimeScore : scores[windowKey],
-      section: "material",
-      scopeMode: "global",
-      sourcePath: SUBJECT_ROUTE,
-      title: "Current Vector Addition",
-      updatedAt: day - POPULARITY_DAY_MS,
-      windowKey,
-    });
-    const counter = await ctx.db.get(id);
-    if (!counter) {
-      throw new Error("Expected the bounded popularity counter fixture.");
-    }
-    await learningPopularityRankings.insert(ctx, counter);
-    if (windowKey === "lifetime") {
-      continue;
-    }
-    await ctx.db.insert("learningPopularityCycles", {
-      completedDay: day - POPULARITY_DAY_MS,
-      mode,
-      scopeMode: "global",
-      startedDay: day,
-      windowKey,
-    });
+  const id = await ctx.db.insert("learningPopularityCounters", {
+    ...subject,
+    contextKey: "canonical",
+    contextMode: "canonical",
+    description: "Current subject description",
+    latestDay: day,
+    locale: "en",
+    materialDomain: "mathematics",
+    route: SUBJECT_ROUTE,
+    score,
+    section: "material",
+    scopeMode: "global",
+    sourcePath: SUBJECT_ROUTE,
+    title: "Current Vector Addition",
+    updatedAt: day - POPULARITY_DAY_MS,
+    windowKey: POPULARITY_WINDOW,
+  });
+  const counter = await ctx.db.get(id);
+  if (!counter) {
+    throw new Error("Expected the bounded popularity counter fixture.");
   }
+  await learningPopularityRankings.insert(ctx, counter);
+  await ctx.db.insert("learningPopularityCycles", {
+    completedDay: day - POPULARITY_DAY_MS,
+    mode,
+    scopeMode: "global",
+    startedDay: day,
+    windowKey: POPULARITY_WINDOW,
+  });
 }
 
-/** Reads counter values and aggregate sort keys without database-specific IDs. */
+/** Reads the counter and its aggregate sort key without database-specific IDs. */
 async function readBoundedState(target: TestConvex<typeof schema>) {
   return await target.query(async (ctx) => {
     const counters = await ctx.db.query("learningPopularityCounters").collect();
-    const rankings = await Promise.all(
-      Arr.map(getFinitePopularityWindows(), async (windowKey) => {
-        const ranking = await learningPopularityRankings.paginate(ctx, {
-          namespace: ["material", "en", "global", windowKey],
-          order: "asc",
-          pageSize: 10,
-        });
-        return {
-          keys: Arr.map(ranking.page, (item) => item.key),
-          windowKey,
-        };
-      })
-    );
+    const ranking = await learningPopularityRankings.paginate(ctx, {
+      namespace: ["material", "en", "global", POPULARITY_WINDOW],
+      order: "asc",
+      pageSize: 10,
+    });
 
     return {
-      counters: pipe(
-        Arr.map(counters, ({ _creationTime, _id, ...counter }) => counter),
-        Arr.sortWith((counter) => counter.windowKey, Order.String)
+      counters: Arr.map(
+        counters,
+        ({ _creationTime, _id, ...counter }) => counter
       ),
-      rankings,
+      ranking: Arr.map(ranking.page, (item) => item.key),
     };
   });
 }
@@ -224,7 +174,7 @@ describe("contents/metrics/refresh", () => {
     vi.restoreAllMocks();
   });
 
-  it("matches full payload repair after seven bounded late-event reads", async () => {
+  it("matches full payload repair after one bounded late-event read", async () => {
     const expiry = createPopularityConvexTest();
     const repair = createPopularityConvexTest();
     const day = getPopularitySignalDay(NOW);
@@ -232,46 +182,35 @@ describe("contents/metrics/refresh", () => {
     await expiry.mutation((ctx) => insertBoundedHistory(ctx, day, "expiry"));
     await repair.mutation((ctx) => insertBoundedHistory(ctx, day, "repair"));
 
-    const expiryMetrics = {
-      databaseQueries: 0,
-      documentsRead: 0,
-      documentsWritten: 0,
-    };
-    const repairMetrics = {
-      databaseQueries: 0,
-      documentsRead: 0,
-      documentsWritten: 0,
-    };
-
-    for (const windowKey of getFinitePopularityWindows()) {
-      const expired = await runExpiry(expiry, day, windowKey);
-      const rebuilt = await runRefresh(repair, { day, windowKey });
-
-      expiryMetrics.databaseQueries += expired.metrics.databaseQueries.used;
-      expiryMetrics.documentsRead += expired.metrics.documentsRead.used;
-      expiryMetrics.documentsWritten += expired.metrics.documentsWritten.used;
-      repairMetrics.databaseQueries += rebuilt.metrics.databaseQueries.used;
-      repairMetrics.documentsRead += rebuilt.metrics.documentsRead.used;
-      repairMetrics.documentsWritten += rebuilt.metrics.documentsWritten.used;
-    }
+    const expired = await runExpiry(expiry, day);
+    const rebuilt = await runRefresh(repair, day);
 
     expect(await readBoundedState(expiry)).toEqual(
       await readBoundedState(repair)
     );
     // Aggregate 0.3 checks its async queue once per synchronous counter write.
-    // These seven writes add seven queries without reading queue documents.
     // Domain-owned ranking updates reuse loaded counters, removing two reads
-    // per write that the generic trigger previously needed.
-    // Completing a window page only updates its own cycle watermark.
-    expect(expiryMetrics).toEqual({
-      databaseQueries: 84,
-      documentsRead: 105,
-      documentsWritten: 28,
+    // per write that the generic trigger previously needed. Completing the
+    // page only updates the cycle watermark. The same fixture with seven
+    // windows and a 366 day history read 105 documents to expire and 792 to
+    // repair.
+    expect({
+      databaseQueries: expired.metrics.databaseQueries.used,
+      documentsRead: expired.metrics.documentsRead.used,
+      documentsWritten: expired.metrics.documentsWritten.used,
+    }).toEqual({
+      databaseQueries: 12,
+      documentsRead: 15,
+      documentsWritten: 4,
     });
-    expect(repairMetrics).toEqual({
-      databaseQueries: 91,
-      documentsRead: 792,
-      documentsWritten: 28,
+    expect({
+      databaseQueries: rebuilt.metrics.databaseQueries.used,
+      documentsRead: rebuilt.metrics.documentsRead.used,
+      documentsWritten: rebuilt.metrics.documentsWritten.used,
+    }).toEqual({
+      databaseQueries: 12,
+      documentsRead: 21,
+      documentsWritten: 4,
     });
   });
 });

@@ -34,7 +34,11 @@ export function CardSection({
   );
 }
 
-/** Holds a section's actions in a bar that follows its section variant. */
+/**
+ * Holds a section's actions in a bar that follows its section variant. The bar
+ * is as tall with a line of text alone as with a button, so every card ends the
+ * same way.
+ */
 export function CardSectionFooter({
   className,
   ...props
@@ -42,7 +46,7 @@ export function CardSectionFooter({
   return (
     <CardFooter
       className={cn(
-        "border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
+        "min-h-15 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
         className
       )}
       {...props}

@@ -5,19 +5,18 @@ import {
   MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { forgetChat } from "@repo/backend/confect/nina/memory/store";
 import { settleTurn } from "@repo/backend/confect/nina/settlement";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
 import { Duration, Effect } from "effect";
 
 /**
- * Settles the chat's open turn, forgets the facts remembered from the chat, and
- * cascades journal deletion through Agent. The turn settles in this
- * transaction, so its hold is paid back without waiting for its run to exit:
- * the stream is cut off, and the run's next check finds the turn settled and
- * stops its provider call. Agent deletes the journal page by page, the first
- * page here and the rest in the mutations it schedules.
+ * Settles the chat's open turn and cascades journal deletion through Agent. The
+ * turn settles in this transaction, so its hold is paid back without waiting
+ * for its run to exit: the stream is cut off, and the run's next check finds
+ * the turn settled and stops its provider call. Agent deletes the journal page
+ * by page, the first page here and the rest in the mutations it schedules. A
+ * memory is the learner's own and stays when a chat is deleted.
  */
 export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
   function* (change: Change<DataModel, "chats">) {
@@ -37,7 +36,6 @@ export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
         yield* settleTurn(turn, "cancelled").pipe(Effect.orDie);
       }
     }
-    yield* forgetChat(change.oldDoc);
     const ctx = yield* MutationCtx;
     // Component-owned batched deletion includes messages, streams and file references.
     yield* Effect.promise(() =>

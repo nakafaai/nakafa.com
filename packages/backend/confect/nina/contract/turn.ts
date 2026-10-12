@@ -85,6 +85,13 @@ export const NinaTurnFacts = Schema.Struct({
   promptMessageId: Schema.String,
   promptedAt: Schema.optionalKey(Schema.Finite),
   order: Schema.Finite,
+  /**
+   * The order of the turn that first asked this turn's question, when this turn
+   * is a retry. A retry saves its question once more, and a retry of a retry
+   * names the same first turn, so every asking of one question carries one key
+   * and history shows only the newest complete one.
+   */
+  retryOf: Schema.optionalKey(Schema.Finite),
   modelId: Schema.optionalKey(RetiredModelKey),
   credits: Schema.optionalKey(Schema.Finite),
   requestId: Schema.optionalKey(NinaRequestId),
@@ -103,6 +110,8 @@ export const NinaTurnFacts = Schema.Struct({
   ),
   usage: Schema.Array(NinaUsageTotal).check(Schema.isMaxLength(32)),
   suggestions: Schema.optionalKey(NinaSuggestions),
+  /** Memories Nina saved or confirmed from this turn's message, when there are any. */
+  remembered: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
 });
 /** Public response facts exclude account, billing-period and private page context. */
 export const NinaTurnSummary = Schema.Struct({
@@ -118,6 +127,7 @@ export const NinaTurnSummary = Schema.Struct({
     "suggestions",
     "promptMessageId",
     "promptedAt",
+    "remembered",
   ])
 );
 export type NinaPage = typeof NinaPageSchema.Type;

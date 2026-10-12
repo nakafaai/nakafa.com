@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  prepareAddressStep,
   prepareAnswerFromNakafaEvidenceStep,
   prepareReadStep,
   prepareTaxonomyAnswerStep,
@@ -127,6 +128,93 @@ describe("Nakafa agent step state", () => {
     expect(quranSearch).toEqual({ shouldReadContent: false });
     expect(emptySearch).toEqual({ shouldReadContent: false });
     expect(failedSearch).toEqual({ shouldReadContent: false });
+  });
+
+  describe("reading the addresses the learner sent", () => {
+    const lesson = "https://nakafa.com/en/articles/a";
+    const quran = "https://nakafa.com/id/quran/1";
+    const messages = [
+      { role: "user", content: "jelaskan halaman ini" },
+    ] satisfies Parameters<typeof prepareAddressStep>[1];
+    /** A step in which the model called the read tool for `contentRef`. */
+    const readOf = (contentRef: string) => ({
+      toolCalls: [{ input: { content_ref: contentRef }, toolName: "read" }],
+    });
+
+    it("forces a step to read every address, before the model has read any", () => {
+      const step = prepareAddressStep([lesson, quran], messages, []);
+
+      if (!step) {
+        throw new Error("Expected a forced read step.");
+      }
+
+      expect(step.activeTools).toEqual(["read"]);
+      expect(step.toolChoice).toEqual({ toolName: "read", type: "tool" });
+      expect(Option.getOrThrow(Arr.last(step.messages))).toEqual(
+        expect.objectContaining({
+          content: expect.stringContaining(`- ${lesson}\n- ${quran}`),
+          role: "user",
+        })
+      );
+    });
+
+    it("keeps forcing a step for the addresses no step has asked for, and lists only those", () => {
+      const step = prepareAddressStep([lesson, quran], messages, [
+        readOf(lesson),
+      ]);
+
+      if (!step) {
+        throw new Error("Expected a forced read step.");
+      }
+
+      expect(step.toolChoice).toEqual({ toolName: "read", type: "tool" });
+      const last = Option.getOrThrow(Arr.last(step.messages));
+      expect(last).toEqual(
+        expect.objectContaining({
+          content: expect.stringContaining(`- ${quran}`),
+        })
+      );
+      expect(last).toEqual(
+        expect.objectContaining({
+          content: expect.not.stringContaining(lesson),
+        })
+      );
+    });
+
+    it("counts an address as read only for a read of exactly that address", () => {
+      const step = prepareAddressStep([lesson], messages, [
+        {
+          toolCalls: [
+            { input: { content_ref: lesson }, toolName: "search" },
+            { input: { query: lesson }, toolName: "read" },
+            { input: "not an object", toolName: "read" },
+            { input: { content_ref: `${lesson}/other` }, toolName: "read" },
+          ],
+        },
+      ]);
+
+      expect(step?.toolChoice).toEqual({ toolName: "read", type: "tool" });
+    });
+
+    it("forces no step without an address, or once every address was asked for", () => {
+      expect(prepareAddressStep([], messages, [])).toBeUndefined();
+      expect(
+        prepareAddressStep([lesson, quran], messages, [
+          readOf(lesson),
+          readOf(quran),
+        ])
+      ).toBeUndefined();
+      expect(
+        prepareAddressStep([lesson, quran], messages, [
+          {
+            toolCalls: [
+              { input: { content_ref: quran }, toolName: "read" },
+              { input: { content_ref: lesson }, toolName: "read" },
+            ],
+          },
+        ])
+      ).toBeUndefined();
+    });
   });
 
   it("forces read for one step when content search evidence is pending", () => {

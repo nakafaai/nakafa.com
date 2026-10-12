@@ -38,6 +38,25 @@ describe("scopeSources", () => {
     ]);
   });
 
+  it("takes no first-party domain from a link to Nakafa's own site, which is not a web source", () => {
+    const sources = scopeSources({
+      query: "kurikulum merdeka",
+      task: "Bandingkan https://nakafa.com/en/articles/politics/example dengan kemdikbud.go.id",
+      sourcePreference: "primary",
+      sources: [
+        makeSearchSource("Kurikulum", "https://kemdikbud.go.id/kurikulum"),
+        makeSearchSource(
+          "Salinan",
+          "https://nakafa.com/en/articles/politics/example"
+        ),
+      ],
+    });
+
+    expect(Arr.map(sources, (source) => source.url)).toEqual([
+      "https://kemdikbud.go.id/kurikulum",
+    ]);
+  });
+
   it("gives a leading number no neighbor on its left", () => {
     const sources = scopeSources({
       query: "for",

@@ -9,6 +9,8 @@ import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,
 } from "@/lib/og/metadata";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const routeMocks = vi.hoisted(() => ({
   read: vi.fn(),
@@ -44,6 +46,14 @@ vi.mock("next/cache", () => ({
   cacheLife: cacheMocks.life,
   cacheTag: cacheMocks.tag,
 }));
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 const translatedDefaults = {
   authors: [
     {
@@ -55,6 +65,8 @@ const translatedDefaults = {
   title: "Made with love",
 };
 beforeEach(() => {
+  resetTestRuntimeCache();
+  activateTestRelease("release-metadata");
   routeMocks.read.mockReset();
   cacheMocks.life.mockClear();
   cacheMocks.tag.mockClear();

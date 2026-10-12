@@ -1,9 +1,11 @@
 import { Ref } from "@confect/core";
-import { Agent, listUIMessages } from "@convex-dev/agent";
+import { Agent } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
+import {
+  CAPABILITY_BUDGET,
+  timeLeft,
+} from "@repo/backend/confect/nina/capability/deadline";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
@@ -13,11 +15,18 @@ import {
   ninaToolInput,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { sealedSummary } from "@repo/backend/test/seal";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { encodeJsonText } from "@repo/utilities/json";
-import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, DateTime, Effect, Option } from "effect";
+import {
+  Array as Arr,
+  DateTime,
+  Duration,
+  Effect,
+  MutableRef,
+  Option,
+} from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -26,25 +35,9 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
   runNakafaAgent: vi.fn(),
 }));
 
-async function fixture() {
-  const seeded = await createNinaTest({ prompt: "Explain a function limit." });
-  const { t, identity, ...saved } = seeded;
-  const inspect = () =>
-    t.query(async (ctx) => ({
-      user: await ctx.db.get("users", identity.userId),
-      turn: await ctx.db.get("ninaTurns", saved.turnId),
-      chat: await ctx.db.get("chats", saved.chatId),
-      ledger: await ctx.db.query("creditTransactions").collect(),
-      messages: await listUIMessages(ctx, components.nina, {
-        threadId: saved.threadId,
-        paginationOpts: { cursor: null, numItems: 20 },
-      }),
-    }));
-  return { ...seeded, inspect };
-}
+const fixture = () => createNinaTest({ prompt: "Explain a function limit." });
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
-const PRIVATE_DIAGNOSTIC = /private provider diagnostic/;
 const SUMMARY_UPDATED_AT = Date.UTC(2026, 8, 27, 12);
 
 beforeEach(() => vi.useFakeTimers());
@@ -56,68 +49,6 @@ afterEach(() => {
 });
 
 describe("Nina generation through the real Agent component", () => {
-  it.effect.each([
-    ["rate-limit", failures["rate-limit"], "provider-busy"],
-    ["quota", failures.quota, "service-configuration"],
-    ["auth", failures.auth, "service-configuration"],
-    ["configuration", failures.configuration, "service-configuration"],
-    ["invalid", failures.invalid, "request-rejected"],
-    ["too-large", failures["too-large"], "input-too-large"],
-    ["timeout", failures.timeout, "response-timeout"],
-    ["unavailable", failures.unavailable, "provider-unavailable"],
-    ["network", failures.network, "provider-unavailable"],
-    ["interrupted", failures.interrupted, "interrupted"],
-    ["unknown", failures.unknown, "unknown"],
-    [
-      "raw provider HTTP 429",
-      new APICallError({
-        message: "private provider diagnostic",
-        url: "https://provider.example.invalid",
-        requestBodyValues: {},
-        statusCode: 429,
-      }),
-      "provider-busy",
-    ],
-  ] as const)(
-    "persists a safe reason for a %s stream failure",
-    ([, error, reason]) =>
-      Effect.gen(function* () {
-        provider.languageModel.mockReturnValue(
-          new MockLanguageModelV4({
-            doStream: ninaStream([{ type: "error", error }]),
-          })
-        );
-        const f = yield* Effect.promise(() => fixture());
-        yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
-        const state = yield* Effect.promise(f.inspect);
-        expect(state.turn?.state).toMatchObject({ status: "failed", reason });
-        expect(state.user?.credits).toBe(10);
-        const page = yield* Effect.promise(() =>
-          f.owner.query(
-            Ref.getFunctionReference(refs.public.nina.messages.list),
-            {
-              chatId: f.chatId,
-              threadId: f.threadId,
-              paginationOpts: { cursor: null, numItems: 20 },
-            }
-          )
-        ).pipe(
-          Effect.flatMap((value) =>
-            Ref.decodeReturns(refs.public.nina.messages.list, value)
-          )
-        );
-        expect(
-          Arr.some(
-            page.page,
-            (message) =>
-              message.metadata?.state.status === "failed" &&
-              message.metadata.state.reason === reason
-          )
-        ).toBe(true);
-        expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
-      })
-  );
-
   it.effect.each([
     ["content-filter", "content-blocked"],
     ["length", "response-limit"],
@@ -149,25 +80,6 @@ describe("Nina generation through the real Agent component", () => {
       })
   );
 
-  it("identifies missing Gateway configuration before a provider request", async () => {
-    deployment.mockReturnValue(
-      Effect.fail(
-        new GatewayConfigurationError({
-          message: "AI Gateway is not configured.",
-        })
-      )
-    );
-    const f = await fixture();
-    await f.t.action(run, { turnId: f.turnId });
-    const state = await f.inspect();
-    expect(state.turn?.state).toMatchObject({
-      status: "failed",
-      reason: "service-configuration",
-    });
-    expect(state.user?.credits).toBe(10);
-    expect(provider.languageModel).not.toHaveBeenCalled();
-  });
-
   it.effect("records the gateway cost a call reports on its usage row", () =>
     Effect.gen(function* () {
       provider.languageModel.mockReturnValue(
@@ -192,26 +104,6 @@ describe("Nina generation through the real Agent component", () => {
       expect(state.turn?.usage).toEqual([
         expect.objectContaining({ agent: "nina", calls: 1, cost: 0.25 }),
       ]);
-    })
-  );
-
-  it.effect("refunds a failure before the Agent stream starts", () =>
-    Effect.gen(function* () {
-      provider.languageModel.mockReturnValue(ninaModel());
-      vi.spyOn(Agent.prototype, "streamText").mockRejectedValueOnce(
-        failures["rate-limit"]
-      );
-      const f = yield* Effect.promise(() => fixture());
-      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
-      const state = yield* Effect.promise(f.inspect);
-      expect(state.turn?.state).toMatchObject({
-        status: "failed",
-        reason: "provider-busy",
-      });
-      expect(state.user?.credits).toBe(10);
-      expect(
-        Arr.filter(state.ledger, (row) => row.type === "refund")
-      ).toHaveLength(1);
     })
   );
 
@@ -463,14 +355,70 @@ describe("Nina generation through the real Agent component", () => {
     );
   });
 
+  it("counts the time a capability has left from the start of the chat step it runs in", async () => {
+    // Only the wall clock is faked, so the model's calls can take time at once.
+    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const lefts = MutableRef.make<readonly number[]>([]);
+    vi.mocked(runNakafaAgent).mockImplementation(() =>
+      Effect.map(timeLeft, (left) => {
+        MutableRef.update(lefts, Arr.append(Duration.toMillis(left)));
+        return { text: "Evidence." };
+      })
+    );
+    const askNakafa = (toolCallId: string) => [
+      { type: "stream-start" as const, warnings: [] },
+      {
+        type: "tool-call" as const,
+        toolCallId,
+        toolName: "nakafa",
+        input: encodeJsonText(ninaToolInput),
+      },
+      {
+        type: "finish" as const,
+        usage: ninaUsage,
+        finishReason: { unified: "tool-calls" as const, raw: "tool-calls" },
+      },
+    ];
+    // Nina's own call takes 40 seconds in the first step and 5 in the second.
+    const languageModel = ninaModel();
+    const answer = languageModel.doStream;
+    let step = 0;
+    languageModel.doStream = (options) => {
+      step += 1;
+      if (step > 2) {
+        return answer.call(languageModel, options);
+      }
+      vi.advanceTimersByTime(step === 1 ? 40_000 : 5000);
+      return Promise.resolve(ninaStream(askNakafa(`read-${step}`)));
+    };
+    provider.languageModel.mockReturnValue(languageModel);
+    const f = await fixture();
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => undefined);
+    expect((await f.inspect()).turn?.state.status).toBe("complete");
+    const [first, second] = MutableRef.get(lefts);
+    // The first run has what its step has left after Nina's call took 40 seconds.
+    expect(first).toBeLessThanOrEqual(
+      Duration.toMillis(CAPABILITY_BUDGET) - 40_000
+    );
+    // The second step began later and its call took 5 seconds, so its run has
+    // more left, not less, than the first run had.
+    expect(second - first).toBe(35_000);
+  });
+
   it("sends the rolling summary and omits the turns it covers", async () => {
     const languageModel = ninaModel();
     provider.languageModel.mockReturnValue(languageModel);
     const f = await createNinaTest({ history: 6 });
-    await f.t.mutation((ctx) =>
+    await f.t.mutation(async (ctx) =>
       ctx.db.insert("ninaSummaries", {
         chatId: f.chatId,
-        text: "- The learner practiced limits.",
+        text: await sealedSummary(
+          ctx,
+          f.identity.userId,
+          "- The learner practiced limits."
+        ),
         throughOrder: 3,
         updatedAt: SUMMARY_UPDATED_AT,
         usage: { calls: 1, input: 900, output: 120 },

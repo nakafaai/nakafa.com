@@ -16,6 +16,7 @@ import schema from "@repo/backend/convex/schema";
 import {
   COMPACTION_OLD_TIME,
   compactionIdentity,
+  insertCompaction,
   insertCompletedRelease,
   seedCompactionHistory,
   seedExpiredSnapshotBacklog,
@@ -28,6 +29,8 @@ import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
 import { Array as Arr, DateTime, Effect, Option, Order } from "effect";
+
+const IDLE_RELEASE_COUNT = 40;
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
@@ -56,7 +59,7 @@ describe("contentRelease/compact", () => {
       await t.query((ctx) => ctx.db.query("contentSnapshots").collect())
     ).toEqual([]);
     expect(
-      await t.query((ctx) => ctx.db.query("contentState").unique())
+      await t.query((ctx) => ctx.db.query("contentCompaction").unique())
     ).toMatchObject({
       compactedFloor: 1,
     });
@@ -77,12 +80,17 @@ describe("contentRelease/compact", () => {
         text: "active search entry",
       });
     });
+    const stateBefore = await t.run((ctx) =>
+      ctx.db.query("contentState").unique()
+    );
     const first = await t.mutation((ctx) =>
       Effect.runPromise(
         compactProgram().pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
       )
     );
-    const paused = await t.run((ctx) => ctx.db.query("contentState").unique());
+    const paused = await t.run((ctx) =>
+      ctx.db.query("contentCompaction").unique()
+    );
     expect(first).toMatchObject({
       complete: false,
       floor: 3,
@@ -90,7 +98,7 @@ describe("contentRelease/compact", () => {
     });
     expect(paused?.compactCursor).toBeUndefined();
     expect(paused?.compactPhase).toBe("heads");
-    expect(paused?.compactedFloor).toBeUndefined();
+    expect(paused?.compactedFloor).toBe(0);
     const completed = await t.action((ctx) =>
       Effect.runPromise(
         runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
@@ -104,6 +112,7 @@ describe("contentRelease/compact", () => {
       items: await ctx.db.query("contentItems").collect(),
       search: await ctx.db.query("contentIndex").collect(),
       releases: await ctx.db.query("contentReleases").collect(),
+      compaction: await ctx.db.query("contentCompaction").unique(),
       state: await ctx.db.query("contentState").unique(),
     }));
     expect(completed).toMatchObject({
@@ -162,10 +171,13 @@ describe("contentRelease/compact", () => {
         )
       )?.retainUntil
     ).toBeGreaterThan(DateTime.toEpochMillis(DateTime.nowUnsafe()));
-    expect(stored.state).toMatchObject({
+    expect(stored.compaction).toMatchObject({
       compactedFloor: 3,
     });
-    expect(stored.state?.compactPhase).toBeUndefined();
+    expect(stored.compaction?.compactPhase).toBeUndefined();
+    // Every page of the cycle wrote the compaction row; the state row that
+    // every content query loads was never written.
+    expect(stored.state).toEqual(stateBefore);
     await expect(
       t.action((ctx) =>
         Effect.runPromise(
@@ -286,6 +298,47 @@ describe("contentRelease/compact", () => {
     });
     expect(Arr.sort(sequences, Order.Number)).toEqual([2, 4, 5, 6, 7]);
   });
+  it("reads two documents and writes nothing on an idle tick", async () => {
+    const t = convexTest(schema, convexModules);
+    const retained = Arr.makeBy(IDLE_RELEASE_COUNT, (index) =>
+      compactionIdentity(index + 1)
+    );
+    await t.mutation(async (ctx) => {
+      for (const [index, release] of Arr.map(
+        retained,
+        (identity, position) => [position, identity] as const
+      )) {
+        await insertCompletedRelease(
+          ctx,
+          release,
+          retained[index - 1],
+          DateTime.toEpochMillis(DateTime.nowUnsafe())
+        );
+      }
+      await insertTestState(ctx, {
+        active: retained[IDLE_RELEASE_COUNT - 1],
+        nextSequence: IDLE_RELEASE_COUNT + 1,
+      });
+      await insertCompaction(ctx, { compactedFloor: 1 });
+    });
+    const before = await t.run((ctx) => ctx.db.query("contentState").unique());
+
+    const tick = await t.mutation(async (ctx) => ({
+      receipt: await ctx.runMutation(internal.contentRelease.compact.page, {}),
+      metrics: await ctx.meta.getTransactionMetrics(),
+    }));
+
+    expect(tick.receipt).toMatchObject({ complete: true, floor: 1 });
+    // The compaction row and the oldest release. Before the compaction row
+    // moved out of the state row and gated the scan, the same tick read 40
+    // documents (185588 bytes): the state row, the protected slots with their
+    // bases, and a 33 release scan, to conclude that nothing was due.
+    expect(tick.metrics.documentsRead.used).toBe(2);
+    expect(tick.metrics.documentsWritten.used).toBe(0);
+    expect(await t.run((ctx) => ctx.db.query("contentState").unique())).toEqual(
+      before
+    );
+  });
 });
 describe("contentRelease/compact permanent history", () => {
   beforeEach(() => vi.setSystemTime(TRYOUT_TEST_NOW));
@@ -314,9 +367,9 @@ describe("contentRelease/compact permanent history", () => {
         activeManifestHash: active.manifestHash,
         activeReleaseId: active.releaseId,
         activeSequence: active.sequence,
-        compactedFloor: 1,
         nextSequence: 6,
       });
+      await insertCompaction(ctx, { compactedFloor: 1 });
       const snapshot = await ctx.db.query("contentSnapshots").unique();
       assert.ok(snapshot);
       await ctx.db.patch(snapshot._id, {

@@ -9,9 +9,11 @@ import { createTestPublication } from "@repo/backend/test/content/publication";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Layer, Schema } from "effect";
 import { readActiveContentRoute } from "@/lib/content/published/route";
+import { activateTestRelease } from "@/test/active";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
 import { testArticleProjection } from "@/test/content-article";
 import { previewProjection } from "@/test/content-preview";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-active");
@@ -42,10 +44,45 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 beforeEach(() => {
+  resetTestRuntimeCache();
+  activateTestRelease(activeReleaseId);
   fetchQueryMock.mockReset();
 });
 describe("published content route", () => {
+  it.effect(
+    "asks Convex once for a route in each release, found or missing",
+    () =>
+      Effect.gen(function* () {
+        fetchQueryMock
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              kind: "found",
+              projectionJson: routedJson(previewProjection),
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({ activeReleaseId, kind: "missing" })
+          );
+        const missing = { ...input, publicPath: "subjects/missing" };
+
+        for (let reads = 0; reads < 3; reads += 1) {
+          expect((yield* readActiveContentRoute(input)).kind).toBe("found");
+          expect((yield* readActiveContentRoute(missing)).kind).toBe("missing");
+        }
+
+        expect(fetchQueryMock).toHaveBeenCalledTimes(2);
+      })
+  );
   it.effect(
     "resolves owned material and absence from authenticated snapshot rows",
     () =>
@@ -147,6 +184,8 @@ describe("published content route", () => {
           contentRelease.ownership.resolve,
           input
         );
+        // Ownership belongs to a release, so the next answer needs the next one.
+        activateTestRelease(nextReleaseId);
         expect(yield* readActiveContentRoute(input)).toEqual({
           activeReleaseId: nextReleaseId,
           kind: "found",
