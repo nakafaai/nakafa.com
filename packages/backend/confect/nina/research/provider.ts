@@ -204,7 +204,9 @@ const scrapeFailure = () => new ResearchScrapeError({ message: SCRAPE_FAILED });
  * retries included. A failure carries the HTTP status of the provider's
  * answer, which the caller reads to tell a refusal by the rate limit from
  * other failures. It never carries the provider's message, which may repeat
- * the query.
+ * the query. A `timeoutMs` of no time sends nothing and fails at once, because
+ * the provider's `timeout` is a positive number and a caller with no time left
+ * would pay for a request that it cancels.
  */
 export const requestSearch = Effect.fn("research.requestSearch")(
   function* (search: {
@@ -219,6 +221,9 @@ export const requestSearch = Effect.fn("research.requestSearch")(
         (error) => new ResearchSearchError({ message: error.message })
       )
     );
+    if (search.timeoutMs <= 0) {
+      return yield* searchFailure();
+    }
     const answer = yield* post({
       body: {
         query: search.query,
@@ -249,7 +254,8 @@ export const requestSearch = Effect.fn("research.requestSearch")(
  * a refusal and this function does not ask again: the SDK would have waited
  * for a document that the provider keeps processing, unless told not to.
  * `deadline` is the backstop for a provider that never answers, bad gateway
- * retries included.
+ * retries included. A `timeoutMs` of no time sends nothing and fails at once,
+ * as a search does.
  */
 export const requestScrape = Effect.fn("research.requestScrape")(
   function* (page: {
@@ -262,6 +268,9 @@ export const requestScrape = Effect.fn("research.requestScrape")(
         (error) => new ResearchScrapeError({ message: error.message })
       )
     );
+    if (page.timeoutMs <= 0) {
+      return yield* scrapeFailure();
+    }
     const answer = yield* post({
       body: { url: page.url, formats: ["markdown"], timeout: page.timeoutMs },
       key,

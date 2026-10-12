@@ -245,6 +245,23 @@ describe("a research provider request that fails", () => {
       })
   );
 
+  it.effect("sends nothing when the caller has no time left", () =>
+    Effect.gen(function* () {
+      const none = { deadline: Duration.zero, timeoutMs: 0 };
+
+      const searched = yield* Effect.flip(
+        requestSearch({ ...search, ...none }).pipe(overFetch)
+      );
+      const read = yield* Effect.flip(
+        requestScrape({ ...page, ...none }).pipe(overFetch)
+      );
+
+      expect(searched._tag).toBe("ResearchSearchError");
+      expect(read._tag).toBe("ResearchScrapeError");
+      expect(fetcher).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("has no status when no answer came", () =>
     Effect.gen(function* () {
       fetcher.mockRejectedValue(new Error("socket hang up"));
