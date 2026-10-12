@@ -174,8 +174,9 @@ export function useMemoryActions() {
   /**
    * Deletes a memory at once, on the page and on the server, so that closing
    * the page can never leave it stored. The toast offers an Undo, which writes
-   * `restore` back as the learner's own memory, the words of the memory unless
-   * the caller names others: the end date of a situation does not come back.
+   * the memory back as the learner's own: the words an open editor on it still
+   * held, else `restore`, which is the words of the memory unless the caller
+   * names others. The end date of a situation does not come back.
    *
    * When the server does not delete the memory, everything the deletion took
    * comes back: the memory in the list, and the editor that was on it with the
@@ -184,7 +185,18 @@ export function useMemoryActions() {
   function remove(memory: Memory, restore: MemoryDraft = draftOf(memory)) {
     const before = latest();
     const editing = before.open && before.target?.id === memory.id;
-    const undo = createUndo(() => add(restore));
+
+    /**
+     * The words to bring back: what the editor on the memory still held when
+     * the deletion closed it, or `restore` when it held nothing more.
+     */
+    function words() {
+      const held = latest().withheld;
+
+      return held?.id === memory.id ? held.draft : restore;
+    }
+
+    const undo = createUndo(() => add(words()));
 
     forget(memory.id);
 
@@ -197,17 +209,13 @@ export function useMemoryActions() {
     settle(() => removeById({ id: memory.id }), {
       done: undo.deleted,
       failed: () => {
-        const held = latest().withheld;
+        const held = words();
 
         undo.kept();
         toast.dismiss(shown);
         recall(memory.id);
         if (editing) {
-          reopen(
-            session,
-            held?.id === memory.id ? held.draft : restore,
-            memory
-          );
+          reopen(session, held, memory);
         }
       },
     });
