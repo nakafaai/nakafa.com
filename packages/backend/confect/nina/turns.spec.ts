@@ -82,7 +82,12 @@ export const NinaSettledTurn = Schema.Struct({
   ]),
 });
 
-/** A saved prompt without a response has no inferred charge or completion time. */
+/**
+ * A saved prompt that no turn answered, as a migration before the turn
+ * lifecycle stored it. No code writes this phase. `nina.unanswered.settle`
+ * ends the stored rows, and the change that deletes that function deletes
+ * this phase with it.
+ */
 const NinaUnansweredTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
   phase: Schema.Literal("unanswered"),

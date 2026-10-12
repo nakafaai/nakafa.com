@@ -10,6 +10,7 @@ import { requireAuth } from "@repo/backend/confect/auth/session";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { abandonTurn } from "@repo/backend/confect/nina/abandon";
 import spec from "@repo/backend/confect/nina/lifecycle.spec";
 import { settleTurn, stopTurn } from "@repo/backend/confect/nina/settlement";
 import { startsLate, sweepTurns } from "@repo/backend/confect/nina/sweep";
@@ -142,6 +143,48 @@ const recover = FunctionImpl.make(
   }, Effect.catchDefect(lifecycleFailure))
 );
 
+/**
+ * The check that admission schedules for the moment a queued turn must have
+ * started. It settles a turn whose run never started, which no run is left to
+ * settle, as timed out with its credits back. A turn that was claimed or
+ * settled by then is left alone: a started run settles itself, and the sweep
+ * backs it up.
+ */
+const expire = FunctionImpl.make(
+  schema,
+  spec,
+  "expire",
+  Effect.fn("nina.lifecycle.expire")(function* (args) {
+    const turn = yield* readTurn(args.turnId);
+    if (turn?.phase !== "active" || turn.state.status !== "queued") {
+      return null;
+    }
+    yield* settleTurn(turn, "failed", "response-timeout");
+    return null;
+  }, Effect.catchDefect(lifecycleFailure))
+);
+
+/**
+ * The last try of the sweep for a turn that stayed open past its deadline:
+ * `recover` has been tried at each of its runs since and the turn is still
+ * open. It ends the turn without relying on the Agent journal, so the chat is
+ * free again and the credits are back. A turn that settled meanwhile is left
+ * alone.
+ */
+const abandon = FunctionImpl.make(
+  schema,
+  spec,
+  "abandon",
+  Effect.fn("nina.lifecycle.abandon")(function* (args) {
+    const turn = yield* readTurn(args.turnId);
+    if (turn?.phase !== "active") {
+      return null;
+    }
+    yield* abandonTurn(turn);
+    return null;
+  }, Effect.catchDefect(lifecycleFailure))
+);
+
 /** True once a run has no reason to go on: its turn was stopped, settled or removed. */
 const halted = FunctionImpl.make(
   schema,
@@ -197,6 +240,8 @@ export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(claim),
   Layer.provide(presentation),
   Layer.provide(recover),
+  Layer.provide(expire),
+  Layer.provide(abandon),
   Layer.provide(halted),
   Layer.provide(sweep),
   Layer.provide(cancel),

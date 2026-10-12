@@ -1,12 +1,12 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { TileIcon } from "@repo/design-system/components/ui/tile";
 import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import {
   CatalogCard,
-  CatalogCardGradient,
   CatalogCardImage,
+  CatalogCardTile,
 } from "@/components/shared/catalog/card";
-import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import { resolveCurriculumCatalogArtwork } from "@/lib/curriculum/artwork";
 import { readCurriculumRouteIcon } from "@/lib/curriculum/icons";
 import type {
@@ -42,9 +42,9 @@ export function CurriculumCatalogCards({
             {imageSrc ? (
               <CatalogCardImage preload={index === 0} src={imageSrc} />
             ) : (
-              <CatalogCardGradient seed={route.nodeKey}>
-                <ChoiceCardIcon icon={readCurriculumRouteIcon(route)} />
-              </CatalogCardGradient>
+              <CatalogCardTile seed={route.nodeKey}>
+                <TileIcon icon={readCurriculumRouteIcon(route)} />
+              </CatalogCardTile>
             )}
           </CatalogCard>
         );
@@ -53,7 +53,7 @@ export function CurriculumCatalogCards({
   );
 }
 
-/** Renders curriculum child routes with reviewed art or an identity gradient. */
+/** Renders curriculum child routes with reviewed art or an identity tile. */
 export function CurriculumChildCards({
   actionLabel,
   locale,
@@ -82,9 +82,9 @@ export function CurriculumChildCards({
             {imageSrc ? (
               <CatalogCardImage preload={index === 0} src={imageSrc} />
             ) : (
-              <CatalogCardGradient seed={route.nodeKey}>
-                <ChoiceCardIcon icon={readCurriculumRouteIcon(route)} />
-              </CatalogCardGradient>
+              <CatalogCardTile seed={route.nodeKey}>
+                <TileIcon icon={readCurriculumRouteIcon(route)} />
+              </CatalogCardTile>
             )}
           </CatalogCard>
         );

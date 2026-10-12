@@ -74,9 +74,12 @@ export const readPortrait = Effect.fn("nina.portrait.read")(function* (
  * deleted or rewrote on the Memory page (`reset`) takes what the portrait says
  * out first, in the same transaction, because a sentence that came from it must
  * not stay, and then asks for a build from scratch whatever the last build was.
+ * A reset takes the day of the last build with the text: a portrait with no
+ * text has no build to count a day from, so the request after it asks, also
+ * when the build that the reset scheduled found memory paused.
  * While memory is paused nothing is asked, so a learner who paused is never
  * built for, but a reset still takes the text out and lets the next request
- * ask.
+ * ask. The learner who lets Nina use memory again asks too (`memory.pause`).
  *
  * The request writes its time into the portrait row, creating the row for a
  * learner who has none, and schedules the build after `PORTRAIT_DELAY`. Every
@@ -96,12 +99,14 @@ export const requestPortrait = Effect.fn("nina.portrait.request")(function* ({
   const writer = yield* DatabaseWriter;
   const row = yield* readPortraitRow(userId);
   const now = yield* Clock.currentTimeMillis;
-  const cleared = reset ? { text: undefined, through: 0 } : {};
+  const cleared = reset
+    ? { builtAt: undefined, text: undefined, through: 0 }
+    : {};
   if (paused) {
     if (row !== null && reset) {
       yield* writer
         .table("ninaMemoryPortraits")
-        .patch(row._id, { ...cleared, builtAt: undefined })
+        .patch(row._id, cleared)
         .pipe(Effect.orDie);
     }
     return;

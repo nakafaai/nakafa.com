@@ -31,7 +31,13 @@ export const activeTurns = Effect.fn("nina.capacity.active")(function* (
  * admission already uses for its limits. Admission runs it before it holds any
  * credit, so a refusal leaves nothing to refund. A turn counts from admission
  * until its deadline: past it the turn can no longer run and waits only for the
- * sweep, so a settlement that keeps failing never locks the learner out.
+ * sweep, so a settlement that keeps failing never keeps the learner from other
+ * chats. That holds for a turn the learner stopped too: its next prompt skips a
+ * stopped turn that cannot be settled (`settleStopped`). It cannot keep the
+ * learner from its own chat for long either: the sweep ends such a turn without
+ * the Agent journal after `SETTLE_GRACE` (`abandonTurn`), which frees the chat
+ * and pays the hold back. Only a hold that cannot be paid back, because the
+ * credit state itself cannot be read, keeps the chat busy until it can.
  */
 export const requireOpenCapacity = Effect.fn("nina.capacity.require")(
   function* (userId: Docs["users"]["_id"]) {

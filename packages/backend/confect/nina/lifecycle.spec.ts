@@ -58,6 +58,22 @@ export default GroupSpec.make()
     }).middleware(Atomic)
   )
   .addFunction(
+    FunctionSpec.internalMutation({
+      name: "expire",
+      args: () => ({ turnId: Id("ninaTurns") }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([NinaCreditError, NinaTurnError]),
+    }).middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "abandon",
+      args: () => ({ turnId: Id("ninaTurns") }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([NinaCreditError, NinaTurnError]),
+    }).middleware(Atomic)
+  )
+  .addFunction(
     FunctionSpec.internalQuery({
       name: "halted",
       args: () => ({ turnId: Id("ninaTurns") }),

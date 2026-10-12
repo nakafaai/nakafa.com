@@ -81,7 +81,7 @@ export function MessageScrollerButton({
   return (
     <Primitive.Button
       className={cn(
-        "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border-border bg-background text-foreground transition-[translate,scale,opacity] duration-200 hover:bg-muted data-[active=false]:pointer-events-none data-[active=false]:translate-y-full data-[active=true]:translate-y-0 data-[active=false]:scale-95 data-[active=true]:scale-100 data-[active=false]:opacity-0 data-[active=true]:opacity-100 motion-reduce:transition-none",
+        "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border-border bg-background text-foreground transition-[translate,scale,opacity] hover:bg-muted data-[active=false]:pointer-events-none data-[active=false]:translate-y-full data-[active=true]:translate-y-0 data-[active=false]:scale-95 data-[active=true]:scale-100 data-[active=false]:opacity-0 data-[active=true]:opacity-100 motion-reduce:transition-none",
         className
       )}
       data-slot="message-scroller-button"
