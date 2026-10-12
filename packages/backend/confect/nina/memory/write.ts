@@ -26,6 +26,7 @@ import {
   type NinaMemoryCandidate,
   type NinaMemorySeen,
 } from "@repo/backend/confect/nina/memory.spec";
+import { requestPortrait } from "@repo/backend/confect/nina/portrait/store";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, HashSet, Option } from "effect";
@@ -222,7 +223,9 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
  * to find its target
  * (the one it names and a search of 410) and touches at most 419 to write it
  * (the memory and at most 416 key rows read, deleted, moved or inserted), so
- * three candidates touch at most about 2,500.
+ * three candidates touch at most about 2,500. When it wrote or confirmed a
+ * memory it also asks for a build of the learner's portrait, which waits
+ * (`requestPortrait`): one row read and written, and one job scheduled.
  */
 export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   readonly candidates: readonly Candidate[];
@@ -263,6 +266,7 @@ export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
       .table("ninaTurns")
       .patch(turn._id, { remembered })
       .pipe(Effect.orDie);
+    yield* requestPortrait({ paused, reset: false, userId: args.userId });
   }
   return remembered;
 }, Effect.orDie);

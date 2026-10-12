@@ -41,15 +41,25 @@ function wordsOf({ text, title }: Pick<Note, "text" | "title">) {
 }
 
 /**
- * The first `KNOWN_LENGTH` characters of a line, followed by `...` when it is
- * longer. It counts and cuts by code point, so a cut never leaves half of an
- * emoji in the prompt.
+ * The first `length` characters of a line, followed by `...` when it is longer.
+ * It counts and cuts by code point, so a cut never leaves half of an emoji in
+ * the prompt.
  */
-function shorten(line: string) {
+function shorten(line: string, length: number) {
   const characters = Arr.fromIterable(line);
-  return Arr.length(characters) > KNOWN_LENGTH
-    ? `${Arr.join(Arr.take(characters, KNOWN_LENGTH), "")}...`
+  return Arr.length(characters) > length
+    ? `${Arr.join(Arr.take(characters, length), "")}...`
     : line;
+}
+
+/**
+ * A memory's title and words on one line, cut to `length` characters, with no
+ * kind and no id: `Sekolah: Kelas 12`. This is how a prompt that names no memory
+ * writes one, such as the build of a portrait, the memories a turn recalls and
+ * the answer of the memory capability.
+ */
+export function textLine(note: Pick<Note, "text" | "title">, length: number) {
+  return shorten(wordsOf(note), length);
 }
 
 /** One memory as Nina reads it: `- (level) Kelas 12`, or `- Kelas 12` for one the learner wrote. */
@@ -63,5 +73,5 @@ export function memoryLine(note: Pick<Note, "kind" | "text" | "title">) {
  * characters.
  */
 export function knownLine(note: Pick<Note, "id" | "kind" | "text" | "title">) {
-  return `- [${note.id}] ${label(note.kind)}${shorten(wordsOf(note))}`;
+  return `- [${note.id}] ${label(note.kind)}${textLine(note, KNOWN_LENGTH)}`;
 }

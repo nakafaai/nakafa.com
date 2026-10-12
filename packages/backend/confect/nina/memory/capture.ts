@@ -7,14 +7,15 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
-import {
-  classify,
-  GatewayFailure,
-} from "@repo/backend/confect/gateway/failure";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { boundText } from "@repo/backend/confect/nina/budget";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { checkCandidates } from "@repo/backend/confect/nina/memory/check";
+import {
+  generationFailure,
+  logFailure,
+  NinaMemoryError,
+} from "@repo/backend/confect/nina/memory/failure";
 import { passesGate } from "@repo/backend/confect/nina/memory/gate";
 import { knownLine } from "@repo/backend/confect/nina/memory/line";
 import { topicsOf } from "@repo/backend/confect/nina/memory/topics";
@@ -25,14 +26,13 @@ import {
   type NinaMemoryKind,
 } from "@repo/backend/confect/nina/memory.spec";
 import { formatLearnerProfile } from "@repo/backend/confect/nina/prompt/learner";
-import { NoObjectGeneratedError, Output } from "ai";
+import { Output } from "ai";
 import {
   Array as Arr,
   Clock,
   DateTime,
   Effect,
   Record as Rec,
-  Schema,
   Struct,
 } from "effect";
 
@@ -77,48 +77,6 @@ const INSTRUCTIONS = Arr.join(
   ],
   "\n"
 );
-
-/**
- * Why a capture call saved nothing. `operation` names the step that failed:
- * reading the prompt, asking the model, or `unknown` for any other failure,
- * such as a query or a write that died. `rejected` marks an answer that did not
- * fit the asked object, and `gateway` classifies a failed call. None of them
- * holds the message, a memory, or the answer.
- */
-class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
-  "NinaMemoryError",
-  {
-    gateway: Schema.optional(GatewayFailure),
-    operation: Schema.Literals(["read", "generate", "unknown"]),
-    rejected: Schema.Boolean,
-  }
-) {}
-
-/** Turns what a model call raised into the typed error: a rejected answer, or the gateway's routing facts. */
-function generationFailure(error: unknown) {
-  return NoObjectGeneratedError.isInstance(error)
-    ? new NinaMemoryError({ operation: "generate", rejected: true })
-    : new NinaMemoryError({
-        gateway: classify(error),
-        operation: "generate",
-        rejected: false,
-      });
-}
-
-/**
- * Records why a capture saved nothing. The turn is already complete and the
- * learner never sees this, so the log is the one place the reason survives,
- * as routing facts without the message or the answer.
- */
-function logFailure(error: NinaMemoryError) {
-  return Effect.logWarning("Nina memory unavailable", {
-    operation: error.operation,
-    reason: error.gateway?.reason,
-    rejected: error.rejected,
-    status: error.gateway?.status,
-    type: error.gateway?.type,
-  });
-}
 
 /** The memories the model can name, each cut short, within `KNOWN_TOKENS`. */
 function formatKnown(known: (typeof NinaKnown.Type)["known"]) {
@@ -243,5 +201,7 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
   Effect.catchDefect(() =>
     Effect.fail(new NinaMemoryError({ operation: "unknown", rejected: false }))
   ),
-  Effect.catchTag("NinaMemoryError", logFailure)
+  Effect.catchTag("NinaMemoryError", (error) =>
+    logFailure("Nina memory unavailable", error)
+  )
 );

@@ -1,7 +1,7 @@
 import { FunctionImpl } from "@confect/server";
 import schema from "@repo/backend/confect/_generated/schema";
 import { readLearnerProfile } from "@repo/backend/confect/nina/memory/profile";
-import type { Opened } from "@repo/backend/confect/nina/memory/seal";
+import { toNote } from "@repo/backend/confect/nina/memory/seal";
 import { searchMemories } from "@repo/backend/confect/nina/memory/search";
 import { startMemories } from "@repo/backend/confect/nina/memory/start";
 import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
@@ -9,20 +9,6 @@ import spec, {
   MEMORY_KNOWN_LIMIT,
 } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Effect } from "effect";
-
-/**
- * One memory as Nina and the capture call read it, with a kind and a title
- * only when it has one.
- */
-function toNote(memory: Opened) {
-  return {
-    confirmedAt: memory.confirmedAt,
-    id: memory._id,
-    ...(memory.kind === undefined ? {} : { kind: memory.kind }),
-    text: memory.text,
-    ...(memory.title === undefined ? {} : { title: memory.title }),
-  };
-}
 
 /**
  * What a turn starts with: the account profile and the memories for the open

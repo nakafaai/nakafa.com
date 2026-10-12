@@ -4,6 +4,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { MEMORY_BATCH } from "@repo/backend/confect/nina/memory/store";
 import type { NinaLearner } from "@repo/backend/confect/nina/memory.spec";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { Array as Arr, Order } from "effect";
 
 const memory = refs.public.nina.memory;
@@ -106,6 +107,22 @@ describe("Nina memory removal", () => {
     expect(await f.texts()).toEqual([]);
     expect(await f.texts(other.userId)).toEqual(["Theirs"]);
     expect(await keyOwners(f)).toEqual([other.userId]);
+  });
+
+  it("deletes the learner's portrait with the memories it came from in the same transaction, and no one else's", async () => {
+    const f = await createPortraitTest();
+    const other = await f.stranger();
+    await f.fill(MEMORY_BATCH + 5);
+    await f.seed({ text: "Theirs", userId: other.userId });
+    await f.seedPortrait({ text: "Mine." });
+    await f.seedPortrait({ text: "Theirs.", userId: other.userId });
+    expect(await f.owner.mutation(clear, {})).toBeNull();
+    // Five of the learner's memories wait for the next batch, and the portrait
+    // is gone already.
+    expect(await f.stored()).toHaveLength(6);
+    expect(Arr.map(await f.rows(), (row) => row.userId)).toEqual([
+      other.userId,
+    ]);
   });
 
   it("clears the memories a batch of 25 at a time and goes on by itself until none is left", async () => {
@@ -395,6 +412,25 @@ describe("Nina memory expiry", () => {
       await f.wordKeyOf("usang")
     );
     expect(await f.t.mutation(expire, {})).toBe(0);
+  });
+
+  it("deletes the portrait of a learner whose last memory ended, and keeps the portrait of one who has another memory", async () => {
+    const f = await createPortraitTest();
+    const other = await f.stranger();
+    for (const userId of [f.identity.userId, other.userId]) {
+      await f.seed({
+        kind: "situation",
+        text: "Usang",
+        userId,
+        validUntil: NOW - 1,
+      });
+      await f.seedPortrait({ text: "Kelas 12.", userId });
+    }
+    await f.seed({ text: "Lasts", userId: other.userId });
+    expect(await f.t.mutation(expire, {})).toBe(2);
+    expect(Arr.map(await f.rows(), (row) => row.userId)).toEqual([
+      other.userId,
+    ]);
   });
 
   it("goes on with the next batch by itself while a batch is full", async () => {
