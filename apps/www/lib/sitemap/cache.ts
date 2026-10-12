@@ -4,7 +4,7 @@ import { invalidateByTag } from "@vercel/functions";
 import { Effect, Schema } from "effect";
 import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
-import { readContentStore } from "@/lib/content/store/read";
+import { purgeOncePerRelease } from "@/lib/content/store/purge";
 
 /** One CDN-only tag shared by every bounded sitemap response. */
 export const CONTENT_SITEMAP_CACHE_TAG = "content-sitemap";
@@ -14,9 +14,6 @@ export class SitemapCacheInvalidationError extends Schema.TaggedError<SitemapCac
   "SitemapCacheInvalidationError",
   {}
 ) {}
-
-/** Proof, kept in the content store, that a release has purged the sitemap. */
-const SitemapPurgeSchema = Schema.Struct({ purged: Schema.Literal(true) });
 
 /** Applies the sitemap origin-cache dependency inside a `use cache` boundary.
  *
@@ -52,27 +49,18 @@ const purgeSitemapCache = Effect.fn("www.sitemap.cache.purge")(function* () {
     catch: () => new SitemapCacheInvalidationError(),
     try: () => invalidateByTag(CONTENT_SITEMAP_CACHE_TAG),
   });
-  return SitemapPurgeSchema.make({ purged: true });
 });
 
 /**
- * Purges the sitemap once for each release. The publisher invalidates one
- * scope at a time, so a release arrives here once for every scope it changed,
- * yet its sitemap pages are the same for all of them: the purge is the loader
- * of a content store entry, so the first call of a release purges and the
- * later calls find the proof. A call that fails stores no proof, and the
- * publisher retries it. The caller names the release because it has just
- * proved it against Convex, while the stored pointer may still name the
- * previous release and would file the proof under the wrong one.
+ * Purges the sitemap once for each release, however many scopes the release
+ * changes, because its sitemap pages are the same for all of them.
  */
 export const invalidateSitemapCache = Effect.fn("www.sitemap.cache.invalidate")(
   function* (releaseId: ActiveContentReleaseId) {
-    yield* readContentStore({
+    yield* purgeOncePerRelease({
       kind: "sitemap.purge",
-      load: purgeSitemapCache(),
-      parts: [],
-      release: releaseId,
-      schema: SitemapPurgeSchema,
+      purge: purgeSitemapCache(),
+      releaseId,
     });
   }
 );

@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { generateOGImage } from "@/lib/og";
+import { OG_FALLBACK_HEADERS } from "@/lib/og/headers";
 
 /** Generates the brand fallback image for unknown slugs.
  *
@@ -17,6 +18,7 @@ export function generateFallbackImage(locale: Locale) {
       const response = yield* Effect.tryPromise(() =>
         generateOGImage({
           description: t("description"),
+          headers: OG_FALLBACK_HEADERS,
           title: t("title"),
         })
       );

@@ -61,6 +61,13 @@ contextual visit cannot first record a canonical view and then a placement view.
   anything, and a try-out page below the count of its release is the only one
   that is read, so a request can never create a stored or cached entry for an
   id that the release does not list.
+- Social images carry the CDN lifetime of the sitemap, a day and a stale day,
+  and a CDN tag. An image changes only when its route changes, and a route
+  changes only with a release, so the activation of a release purges the tag
+  once, as it purges the sitemap. A purge that fails is logged and never fails
+  the activation, because a stale image is cosmetic and its lifetime bounds it.
+  The image for a route the release does not know is kept for five minutes
+  only, because the next release may add the route.
 - RSS caches the completed XML. Its update timestamp comes from authored
   publication dates, so another request does not manufacture changed output.
 - Flight requests bypass the Proxy's duplicate publication ownership reads.

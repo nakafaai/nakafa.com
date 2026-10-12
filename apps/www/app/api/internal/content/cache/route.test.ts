@@ -1,16 +1,9 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-  ContentCacheRequestSchema,
-  makeArtifactCacheTag,
-} from "@nakafa/aksara-contracts/cache/content";
-import {
-  ReleaseIdSchema,
-  Sha256HashSchema,
-} from "@nakafa/aksara-contracts/ids";
-import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Record as Rec, Schema } from "effect";
+import { ContentCacheRequestSchema } from "@nakafa/aksara-contracts/cache/content";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { Effect, Record as Rec } from "effect";
 import { NextRequest } from "next/server";
 import {
   ContentCacheInvalidationError,
@@ -19,20 +12,19 @@ import {
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { ContentStoreUnavailableError } from "@/lib/content/store/entry";
 import {
+  type invalidateOgCache,
+  OgCacheInvalidationError,
+} from "@/lib/og/cache";
+import {
   type invalidateSitemapCache,
   SitemapCacheInvalidationError,
 } from "@/lib/sitemap/cache";
+import { encodeCacheRequest, invalidBodies, releaseId } from "@/test/cache";
 
-const releaseId = ReleaseIdSchema.make("release-cache-test");
-const artifactHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
-const artifactTag = makeArtifactCacheTag(artifactHash);
 const exactRequest = ContentCacheRequestSchema.make({
   scope: "material",
   releaseId,
 });
-const encodeCacheRequest = Schema.encodeSync(
-  Schema.fromJsonString(ContentCacheRequestSchema)
-);
 
 const loadActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const expireActiveContentIdentityMock = vi.hoisted(() => vi.fn());
@@ -42,6 +34,9 @@ const invalidateContentCacheMock = vi.hoisted(() =>
 );
 const invalidateSitemapCacheMock = vi.hoisted(() =>
   vi.fn<typeof invalidateSitemapCache>()
+);
+const invalidateOgCacheMock = vi.hoisted(() =>
+  vi.fn<typeof invalidateOgCache>()
 );
 
 vi.mock("@/env", () => ({
@@ -59,6 +54,12 @@ vi.mock("@/lib/sitemap/cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/sitemap/cache")>()),
   /** Records the shared sitemap invalidation without calling Vercel. */
   invalidateSitemapCache: invalidateSitemapCacheMock,
+}));
+
+vi.mock("@/lib/og/cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/og/cache")>()),
+  /** Records the social image invalidation without calling Vercel. */
+  invalidateOgCache: invalidateOgCacheMock,
 }));
 
 vi.mock("@/lib/content/published/active", () => ({
@@ -84,6 +85,7 @@ beforeEach(() => {
     .mockReset()
     .mockImplementation((tags) => Effect.succeed(tags));
   invalidateSitemapCacheMock.mockReset().mockReturnValue(Effect.void);
+  invalidateOgCacheMock.mockReset().mockReturnValue(Effect.void);
 });
 
 /** Creates one Next POST request for the cache route. */
@@ -374,6 +376,37 @@ describe("content runtime cache revalidation route", () => {
     });
   });
 
+  it("purges the social images once, after the sitemap", async () => {
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(200);
+    expect(invalidateOgCacheMock).toHaveBeenCalledExactlyOnceWith(releaseId);
+    expect(invalidateSitemapCacheMock.mock.invocationCallOrder[0]).toBeLessThan(
+      invalidateOgCacheMock.mock.invocationCallOrder[0] ?? 0
+    );
+  });
+
+  it("answers with a receipt when the social images could not be purged", async () => {
+    invalidateOgCacheMock.mockReturnValueOnce(
+      Effect.fail(new OgCacheInvalidationError())
+    );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      scope: "material",
+      releaseId,
+      revalidated: true,
+    });
+    expect(expireActiveContentIdentityMock).toHaveBeenCalledTimes(2);
+  });
+
   it("skips the sitemap when the content cache invalidation fails", async () => {
     invalidateContentCacheMock.mockReturnValueOnce(
       Effect.fail(new ContentCacheInvalidationError())
@@ -387,73 +420,7 @@ describe("content runtime cache revalidation route", () => {
     expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ["{", { "Content-Type": "application/json" }, 400],
-    [
-      encodeJsonText({
-        extra: true,
-        scope: "material",
-        releaseId,
-      }),
-      { "Content-Type": "application/json" },
-      400,
-    ],
-    [
-      encodeJsonText({
-        scope: "material",
-        releaseId,
-        tags: ["unknown"],
-      }),
-      { "Content-Type": "application/json" },
-      400,
-    ],
-    [
-      encodeJsonText({
-        releaseId,
-        scope: "material",
-        tags: ["content-family:material", "content-runtime"],
-      }),
-      { "Content-Type": "application/json" },
-      400,
-    ],
-    [
-      encodeJsonText({
-        releaseId,
-        scope: "material",
-        tags: [
-          "content-runtime",
-          "content-family:material",
-          ...Array.from({ length: 99 }, () => artifactTag),
-        ],
-      }),
-      { "Content-Type": "application/json" },
-      400,
-    ],
-    [
-      encodeCacheRequest({
-        scope: "material",
-        releaseId,
-      }),
-      { "Content-Type": "text/plain" },
-      415,
-    ],
-    [
-      encodeCacheRequest({
-        scope: "material",
-        releaseId,
-      }),
-      {},
-      415,
-    ],
-    [new Uint8Array(), { "Content-Type": "application/json" }, 400],
-    ["{}", { "Content-Length": "invalid" }, 413],
-    ["{}", { "Content-Length": "-1" }, 413],
-    ["{}", { "Content-Length": "9".repeat(400) }, 413],
-    ["{}", { "Content-Length": String(32 * 1024 + 1) }, 413],
-    ["{}", { "Content-Length": "3", "Content-Type": "application/json" }, 400],
-    [new Uint8Array([255]), { "Content-Type": "application/json" }, 400],
-    ["x".repeat(32 * 1024 + 1), { "Content-Type": "application/json" }, 413],
-  ] as const)(
+  it.each(invalidBodies)(
     "rejects an invalid scoped body",
     async (body, headers, status) => {
       const { POST } = await import("@/app/api/internal/content/cache/route");
