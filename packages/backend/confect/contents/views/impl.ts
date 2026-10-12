@@ -5,8 +5,8 @@ import type { LearningContextStorage } from "@repo/backend/confect/contents/cont
 import { resolveLearningContext } from "@repo/backend/confect/contents/views/context";
 import { upsertUserRecent } from "@repo/backend/confect/contents/views/recent";
 import {
-  enqueuePopularitySignals,
-  schedulePopularityPartitions,
+  enqueuePopularitySignal,
+  schedulePopularityPartition,
 } from "@repo/backend/confect/contents/views/signals";
 import {
   type RecordContentViewArgs,
@@ -146,13 +146,11 @@ export const recordUniqueContentView = Effect.fn(
       userId: viewer.value.userId,
     });
   }
-  const partitions = yield* enqueuePopularitySignals(
-    target,
-    args,
-    learningContext,
-    { now, viewer: viewer.value }
-  );
-  yield* schedulePopularityPartitions(partitions);
+  const partition = yield* enqueuePopularitySignal(target, args, {
+    now,
+    viewer: viewer.value,
+  });
+  yield* schedulePopularityPartition(partition);
   if (existingView) {
     return alreadyViewed;
   }

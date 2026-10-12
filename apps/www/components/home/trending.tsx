@@ -34,7 +34,6 @@ async function getHomeTrendingSubjects(locale: PublicAppLocale) {
     Effect.flatMap(HttpClient.HttpClient, (client) =>
       client.query(contents.queries.trending.getTrendingSubjects, {
         locale,
-        windowKey: "7d",
       })
     ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );

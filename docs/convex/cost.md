@@ -136,6 +136,60 @@ as a normal-traffic projection.
   entitlements, scoring, and IRT state. It deletes only rebuildable local
   projections.
 
+### 2026-10-11 reads nobody needed
+
+The 2026-09-12 to 2026-10-12 usage showed 92.9 GB of Database I/O. Five backend
+reads were examined. Four had no reader or no reason and changed. The fifth,
+the featured try-out question, reads what its completeness proof needs and stays
+as it was. Each row is one call measured with Convex test metrics, which count
+documents and bytes the way the backend does; production row sizes and counts
+were not measured, so these are ratios to carry into the next invoice, not
+invoice figures. The last column names the committed test that pins the
+documents read after the change.
+
+| Read | Fixture | Before | After | Pinned by |
+| --- | --- | ---: | ---: | --- |
+| Staging four projections | four staged items | 16 documents, 21,347 bytes | 12 documents, 17,739 bytes | `projection.test.ts`: 12 |
+| Saved curriculum program (`getCurrent`) | six programs | 16 documents, 17,371 bytes | 5 documents, 5,988 bytes | `program.test.ts`: 5 |
+| Featured try-out question | real SNBT set 1: seven sections, twenty landing questions | 34 documents, 60,975 bytes | unchanged | `featured.test.ts`: 34 |
+| Idle compaction tick | 40 retained releases | 40 documents, 185,588 bytes | 2 documents, 4,655 bytes | `compact.test.ts`: 2 |
+| One more view of a known lesson | ten lessons, five days of signals | 101 documents, 115,371 bytes, 27 writes | 17 documents, 18,169 bytes, 6 writes | `apply.test.ts`: 16 on one lesson |
+| Daily popularity expiry | the same ten lessons | 14 pages, 112 documents, 76,104 bytes | 1 page, 12 documents, 8,820 bytes | `refresh.test.ts`: 15 on one lesson |
+| Weekly popularity repair | the same ten lessons | 14 pages, 714 documents, 621,839 bytes | 1 page, 62 documents, 52,020 bytes | `refresh.test.ts`: 21 on one lesson |
+
+The three popularity rows were measured once, before and after the change, on a
+fixture of ten lessons with five days of signals, four of them also viewed
+through a curriculum placement. That fixture is not committed, so the tests pin
+the same operations on one lesson instead.
+
+One featured question call is large because it proves the landing section
+complete before it returns one question: the state, release and snapshot rows
+(3), the country, exam, track and set rows (4), the seven section rows of the
+set (7), and all twenty placements of the landing section (20), each carrying
+its whole response. A read of the one placement took 15 documents and 20,268
+bytes, and also stopped noticing a missing sibling placement or a broken order,
+so it was reverted. Any saving belongs to the caller, which can ask once per
+content release instead of once per request.
+
+The popularity pipeline cost 3.27 GB in that invoice, of which the view drain
+was 1.66 GB, the daily expiry 1.04 GB and the weekly repair 0.57 GB. Each is
+multiplied by the bytes read after the change over the bytes read before it in
+the ten-lesson rows (18,169 over 115,371, 8,820 over 76,104 and 52,020 over
+621,839), which gives about 0.26 GB, 0.12 GB and 0.05 GB. That leaves about
+0.43 GB, so roughly 2.8 GB a month fewer once the retired rows are gone. The
+estimate assumes the invoice splits the way the fixture does. Retiring the rows
+costs about 11.6 KB per counter once (a page of ten counters read 95 documents
+and 116,105 bytes in a throwaway fixture).
+
+Compaction no longer writes `contentState`, the row every content query reads,
+so a compaction page stops making Convex run those queries again. That saving
+is in function executions, not in Database I/O.
+
+Three temporary steps of these changes end in later changes, each with its exit
+and cleanup written where it lives: the retirement of the older popularity rows
+and the ignored `windowKey` argument (ADR 0008), and the carry of the
+compaction fields out of `contentState` (`packages/backend/AGENTS.md`).
+
 ### Recovery evidence
 
 Pre-migration logical backups exist for both deployments and were opened as ZIP

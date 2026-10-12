@@ -11,6 +11,7 @@ import { setPreferredCurriculumProgram } from "@repo/backend/confect/learningPre
 import {
   listCurriculumPrograms,
   readCurrentCurriculumProgram,
+  readCurriculumProgram,
   saveCurriculumProgram,
 } from "@repo/backend/confect/learningPreferences/program";
 import {
@@ -27,6 +28,8 @@ import {
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Schema } from "effect";
+
+const PROGRAM_COUNT = 6;
 
 describe("learningPreferences/program", () => {
   it.effect("returns no curriculum for a retired saved key", () =>
@@ -78,6 +81,146 @@ describe("learningPreferences/program", () => {
         )
       ).toBeNull();
     })
+  );
+  it.effect("reads the saved program without reading the catalog", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const test = createConvexTestWithBetterAuth();
+      const data = yield* makeProgramSnapshotData(
+        Arr.makeBy(PROGRAM_COUNT, (index) => makeTechnicalProgram(index + 1))
+      );
+      yield* Effect.promise(() =>
+        test.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateProgramSnapshot(data).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
+      const userId = yield* Effect.promise(() =>
+        test.mutation(async (ctx) => {
+          const user = await seedAuthenticatedUser(ctx, { now: 1 });
+          await Effect.runPromiseWith(runtimeServices)(
+            setPreferredCurriculumProgram({
+              now: 1,
+              programKey: "technical-program-3",
+              userId: user.userId,
+            }).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          );
+          return user.userId;
+        })
+      );
+
+      const read = yield* Effect.promise(() =>
+        test.query(async (ctx) => ({
+          current: await Effect.runPromiseWith(runtimeServices)(
+            readCurrentCurriculumProgram("en", userId).pipe(
+              Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+            )
+          ),
+          metrics: await ctx.meta.getTransactionMetrics(),
+        }))
+      );
+
+      expect(read.current).toMatchObject({
+        preferredCurriculumProgramKey: "technical-program-3",
+        program: { key: "technical-program-3", title: "Technical Program 3" },
+      });
+      // The saved preference, the active state, release and snapshot rows, and
+      // the one program row. The catalog read before this change also loaded
+      // every program and every root route: 16 documents for six programs.
+      expect(read.metrics.documentsRead.used).toBe(5);
+    })
+  );
+  it.effect(
+    "keeps a verified saved program readable while another program's root is broken",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const test = createConvexTestWithBetterAuth();
+        const data = yield* makeProgramSnapshotData();
+        yield* Effect.promise(() =>
+          test.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateProgramSnapshot(data).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
+        const userId = yield* Effect.promise(() =>
+          test.mutation(async (ctx) => {
+            const user = await seedAuthenticatedUser(ctx, { now: 1 });
+            await Effect.runPromiseWith(runtimeServices)(
+              setPreferredCurriculumProgram({
+                now: 1,
+                programKey: "technical-program-1",
+                userId: user.userId,
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            );
+            const root = await ctx.db
+              .query("curriculumRoutes")
+              .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
+                index
+                  .eq("snapshotId", data.snapshotId)
+                  .eq("appLocale", "en")
+                  .eq("path", "curriculum/technical-program-2")
+              )
+              .unique();
+            if (!root) {
+              expect.fail("Expected the second program's English root.");
+            }
+            await ctx.db.delete(root._id);
+            return user.userId;
+          })
+        );
+
+        const current = yield* Effect.promise(() =>
+          test.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readCurrentCurriculumProgram("en", userId).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
+            )
+          )
+        );
+
+        // Only the saved program's own signed row is authenticated. The
+        // catalog's root closure belongs to the list that offers programs,
+        // which still refuses the same release (ADR 0002).
+        expect(current).toMatchObject({
+          preferredCurriculumProgramKey: "technical-program-1",
+          program: { key: "technical-program-1" },
+        });
+        yield* Effect.promise(() =>
+          expect(
+            test.query((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                listCurriculumPrograms("en").pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
+              )
+            )
+          ).rejects.toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" })
+        );
+      })
   );
   it.effect(
     "maps preference read and write failures to the curriculum error contract",
@@ -236,6 +379,27 @@ describe("learningPreferences/program", () => {
       })
     );
   });
+  it.effect(
+    "fails closed reading one program without an active snapshot",
+    () => {
+      const t = convexTest(schema, convexModules);
+      return Effect.promise(() =>
+        expect(
+          t.query((_ctx) =>
+            Effect.runPromise(
+              readCurriculumProgram("en", "technical-program-1").pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+                )
+              )
+            )
+          )
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_MISSING",
+        })
+      );
+    }
+  );
   it.effect(
     "filters program kinds before enforcing the curriculum preference limit",
     () =>

@@ -16,14 +16,13 @@ import {
   getPopularityCyclePage,
 } from "@repo/backend/confect/contents/metrics/cycle";
 import { repairPopularityCounter } from "@repo/backend/confect/contents/metrics/repair";
-import { getAppliedCount } from "@repo/backend/confect/contents/metrics/signal";
 import {
-  getFinitePopularityWindows,
   getPopularitySignalDay,
   getPopularityWindowStartDay,
   type LearningPopularityFiniteWindow,
-  learningPopularityScopeValues,
   POPULARITY_DAY_MS,
+  POPULARITY_SCOPE,
+  POPULARITY_WINDOW,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { Clock, Duration, Effect, flow, Struct } from "effect";
@@ -69,9 +68,7 @@ const expirePopularityCounter = Effect.fn(
     const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;
     const signal = yield* loadExpiringSignal(counter, windowKey, day);
-    const expiredCount = signal
-      ? getAppliedCount(signal.applied, windowKey)
-      : 0;
+    const expiredCount = signal ? signal.applied.d7 : 0;
     const score = counter.score - expiredCount;
     if (expiredCount < 0 || score < 0) {
       const repair = yield* repairPopularityCounter(
@@ -131,57 +128,48 @@ const expirePopularityCounter = Effect.fn(
   Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail))
 );
 
-/** Claims and schedules one daily maintenance job per finite namespace. */
+/** Claims and schedules the daily maintenance job of the maintained ranking. */
 export const scheduleLearningPopularityExpiries = Effect.fn(
   "contents.metrics.scheduleLearningPopularityExpiries"
 )(function* () {
   const timestamp = yield* Clock.currentTimeMillis;
   const day = getPopularitySignalDay(timestamp);
-  let expiryWindows = 0;
-  let repairWindows = 0;
-  let skippedWindows = 0;
-  for (const scopeMode of learningPopularityScopeValues) {
-    for (const windowKey of getFinitePopularityWindows()) {
-      const cycle = yield* beginPopularityCycle({
-        day,
-        forceRepair: false,
-        scopeMode,
-        windowKey,
-      });
-      if (cycle.mode === "skipped") {
-        skippedWindows += 1;
-        continue;
-      }
-      const reference =
-        cycle.mode === "expiry"
-          ? refs.internal.contents.mutations.popularity
-              .expireLearningPopularityWindowPage
-          : refs.internal.contents.mutations.popularity
-              .refreshLearningPopularityWindowPage;
-      const scheduler = yield* Scheduler;
-      yield* scheduler
-        .runAfter(Duration.zero, reference, {
-          ...(cycle.cursor === undefined
-            ? {}
-            : {
-                cursor: cycle.cursor,
-              }),
-          day,
-          scopeMode,
-          windowKey,
-        })
-        .pipe(Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail)));
-      if (cycle.mode === "expiry") {
-        expiryWindows += 1;
-      } else {
-        repairWindows += 1;
-      }
-    }
+  const cycle = yield* beginPopularityCycle({
+    day,
+    forceRepair: false,
+    scopeMode: POPULARITY_SCOPE,
+    windowKey: POPULARITY_WINDOW,
+  });
+  if (cycle.mode === "skipped") {
+    return {
+      expiryWindows: 0,
+      repairWindows: 0,
+      skippedWindows: 1,
+    };
   }
+  const reference =
+    cycle.mode === "expiry"
+      ? refs.internal.contents.mutations.popularity
+          .expireLearningPopularityWindowPage
+      : refs.internal.contents.mutations.popularity
+          .refreshLearningPopularityWindowPage;
+  const scheduler = yield* Scheduler;
+  yield* scheduler
+    .runAfter(Duration.zero, reference, {
+      ...(cycle.cursor === undefined
+        ? {}
+        : {
+            cursor: cycle.cursor,
+          }),
+      day,
+      scopeMode: POPULARITY_SCOPE,
+      windowKey: POPULARITY_WINDOW,
+    })
+    .pipe(Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail)));
   return {
-    expiryWindows,
-    repairWindows,
-    skippedWindows,
+    expiryWindows: cycle.mode === "expiry" ? 1 : 0,
+    repairWindows: cycle.mode === "repair" ? 1 : 0,
+    skippedWindows: 0,
   };
 });
 

@@ -15,14 +15,16 @@ export default Table.make(() =>
   Schema.Struct({
     ...learningGraphIdentityValidator.fields,
     ...learningContextStorageFields,
+    // Only the seven-day count is written now. Rows from before that change
+    // still carry the other windows; they are optional until those rows age out.
     applied: Schema.Struct({
-      d1: Schema.Finite,
+      d1: Schema.optionalKey(Schema.Finite),
       d7: Schema.Finite,
-      d14: Schema.Finite,
-      d30: Schema.Finite,
-      d90: Schema.Finite,
-      d180: Schema.Finite,
-      d365: Schema.Finite,
+      d14: Schema.optionalKey(Schema.Finite),
+      d30: Schema.optionalKey(Schema.Finite),
+      d90: Schema.optionalKey(Schema.Finite),
+      d180: Schema.optionalKey(Schema.Finite),
+      d365: Schema.optionalKey(Schema.Finite),
     }),
     content_id: graphContentIdValidator,
     description: Schema.optionalKey(Schema.String),

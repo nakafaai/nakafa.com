@@ -104,6 +104,17 @@ contract generation change must not be able to strand the cleaner that retires
 old history. Content readers stay strict, and an unprovable reachability fact
 protects all stored history instead of risking deletion.
 
+Compaction keeps its completed floor and its cycle cursor in the one
+`contentCompaction` row, never in `contentState`: every content query reads the
+state row, so each write to it makes Convex run all of those queries again. A
+tick whose oldest release is still inside retention proves that from the
+compaction row and one release row (two documents) and does nothing else.
+`ensureCompactionRow` carries the fields a deployment still holds in
+`contentState` into that row on its first tick. The carry is temporary: once
+dev and production each hold the `contentCompaction` row and no `contentState`
+row holds a compaction field, one change deletes the carry with its tests and
+the six optional `compact*` fields of `contentState`.
+
 Artifact staging, retention, cleanup, and compaction likewise read only the
 small `contentArtifactFacts` row written beside each artifact body: its hash,
 the digest of its exact stored bytes, the body ID, and `retainUntil`. They never

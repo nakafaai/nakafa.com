@@ -16,6 +16,7 @@ import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
 import contentBindings from "./tables/contentBindings";
+import contentCompaction from "./tables/contentCompaction";
 import contentHeads from "./tables/contentHeads";
 import contentIndex from "./tables/contentIndex";
 import contentItems from "./tables/contentItems";
@@ -106,6 +107,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly contentArtifactFacts: typeof contentArtifactFacts;
   readonly contentArtifacts: typeof contentArtifacts;
   readonly contentBindings: typeof contentBindings;
+  readonly contentCompaction: typeof contentCompaction;
   readonly contentHeads: typeof contentHeads;
   readonly contentIndex: typeof contentIndex;
   readonly contentItems: typeof contentItems;
@@ -195,6 +197,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   contentArtifactFacts,
   contentArtifacts,
   contentBindings,
+  contentCompaction,
   contentHeads,
   contentIndex,
   contentItems,

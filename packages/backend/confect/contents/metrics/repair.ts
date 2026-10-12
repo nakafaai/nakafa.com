@@ -17,32 +17,6 @@ import { Array as Arr, Effect, flow, Struct } from "effect";
 type PopularityCounter = Docs["learningPopularityCounters"];
 type PopularitySignal = Docs["learningPopularitySignals"];
 
-/** Finds the finite counter owned by one durable popularity identity. */
-const loadPopularityCounter = Effect.fn(
-  "contents.metrics.loadPopularityCounter"
-)(
-  function* (
-    identity: PopularityCounter,
-    windowKey: LearningPopularityFiniteWindow
-  ) {
-    const database = yield* DatabaseReader;
-    return yield* database
-      .table("learningPopularityCounters")
-      .get(
-        "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
-        windowKey,
-        identity.scopeMode,
-        identity.content_id,
-        identity.contextKey
-      )
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
-  },
-  Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail))
-);
-
 /** Rebuilt semantics; `updatedAt` advances only when one of these changes. */
 const refreshFields = [
   "alignmentId",
@@ -136,73 +110,40 @@ function projectPopularityRefresh(
   };
 }
 
-/** Rebuilds or recreates one finite counter from authoritative daily signals. */
+/**
+ * Recomputes one existing seven-day counter from its daily signals, or removes
+ * it when no signal of its window backs it any more. It never creates a
+ * counter: the next view of a lesson that has none creates it with that view,
+ * and the next repair restores its score from the signals.
+ */
 export const repairPopularityCounter = Effect.fn(
   "contents.metrics.repairPopularityCounter"
 )(
   function* (
-    identity: PopularityCounter,
+    counter: PopularityCounter,
     windowKey: LearningPopularityFiniteWindow,
     day: number,
     updatedAt: number
   ) {
     const ctx = yield* MutationCtxService;
-    const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const counter =
-      identity.windowKey === windowKey
-        ? identity
-        : yield* loadPopularityCounter(identity, windowKey);
     const { latestSignal, score } = yield* recomputePopularityCounter(
-      identity,
+      counter,
       windowKey,
       day
     );
     if (latestSignal === null || score <= 0) {
-      if (counter) {
-        yield* writer.table("learningPopularityCounters").delete(counter._id);
-        yield* Effect.tryPromise({
-          try: () => learningPopularityRankings.delete(ctx, counter),
-          catch: toContentAnalyticsIoError,
-        });
-      }
-      return {
-        removed: counter !== null,
-        refreshed: false,
-      };
-    }
-    const update = projectPopularityRefresh(
-      counter ?? identity,
-      latestSignal,
-      score
-    );
-    if (!counter) {
-      const counterId = yield* writer
-        .table("learningPopularityCounters")
-        .insert({
-          ...update,
-          content_id: identity.content_id,
-          contextKey: identity.contextKey,
-          locale: latestSignal.locale,
-          scopeMode: identity.scopeMode,
-          section: latestSignal.section,
-          updatedAt,
-          windowKey,
-        })
-        .pipe(Effect.orDie);
-      const inserted = yield* database
-        .table("learningPopularityCounters")
-        .get(counterId)
-        .pipe(Effect.orDie);
+      yield* writer.table("learningPopularityCounters").delete(counter._id);
       yield* Effect.tryPromise({
-        try: () => learningPopularityRankings.insert(ctx, inserted),
+        try: () => learningPopularityRankings.delete(ctx, counter),
         catch: toContentAnalyticsIoError,
       });
       return {
-        removed: false,
-        refreshed: true,
+        removed: true,
+        refreshed: false,
       };
     }
+    const update = projectPopularityRefresh(counter, latestSignal, score);
     const changed = Arr.some(
       refreshFields,
       (field) => counter[field] !== update[field]

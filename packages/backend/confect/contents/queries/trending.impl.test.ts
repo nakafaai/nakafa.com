@@ -10,15 +10,23 @@ import {
 } from "@nakafa/aksara-contracts/projection/material";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
-import { getDefaultPopularityWindow } from "@repo/backend/confect/contents/popularity";
+import { POPULARITY_WINDOW } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { listTrendingSubjects } from "@repo/backend/confect/contents/trending/impl";
-import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
+import {
+  createConvexTestWithBetterAuth,
+  registerLearningPopularityAggregate,
+} from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import {
+  CONTENT_VIEW_NOW,
+  insertContentViewMaterial as insertMaterial,
+  makeMaterialViewArgs,
+} from "@repo/backend/test/content/view";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import type { Locale } from "@repo/contents/content";
 import { convexTest } from "convex-test";
@@ -66,7 +74,7 @@ async function insertMaterialCounter(
     sourcePath: "stale/copied/source",
     title: "Stale copied title",
     updatedAt: NOW,
-    windowKey: getDefaultPopularityWindow(),
+    windowKey: POPULARITY_WINDOW,
   });
   const counter = await ctx.db.get(counterId);
   if (!counter) {
@@ -182,7 +190,6 @@ describe("contents/queries/trending", () => {
       locale: "en",
       limit: 2,
       minViews: 5,
-      windowKey: getDefaultPopularityWindow(),
     });
     expect(results).toEqual([
       expect.objectContaining({
@@ -241,7 +248,6 @@ describe("contents/queries/trending", () => {
       locale: "en",
       limit: 1,
       minViews: 5,
-      windowKey: getDefaultPopularityWindow(),
     });
     expect(results).toEqual([
       expect.objectContaining({
@@ -257,8 +263,60 @@ describe("contents/queries/trending", () => {
       target.query(getTrendingSubjects, {
         locale: "en",
         limit: 0,
-        windowKey: getDefaultPopularityWindow(),
       })
     ).resolves.toEqual([]);
+  });
+  it("ranks a lesson from the views the pipeline recorded", async () => {
+    vi.useFakeTimers({ now: CONTENT_VIEW_NOW });
+    try {
+      const target = createConvexTestWithBetterAuth();
+      const material = await target.mutation((ctx) => insertMaterial(ctx));
+      for (const deviceId of ["device-1", "device-2", "device-3"]) {
+        await target.mutation(
+          api.contents.mutations.views.recordContentView,
+          makeMaterialViewArgs(deviceId)
+        );
+      }
+      await target.finishAllScheduledFunctions(vi.runAllTimers);
+
+      await expect(
+        target.query(getTrendingSubjects, { locale: "en", minViews: 1 })
+      ).resolves.toEqual([
+        expect.objectContaining({
+          assetId: material.contentId,
+          viewCount: 3,
+        }),
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  // Temporary compatibility with an older web deployment. Delete this test
+  // with the `windowKey` argument (see the validator in trending/spec.ts).
+  it("still accepts the retired window argument an older web deployment sends", async () => {
+    const target = createTrendingConvexTest();
+    const projection = makeMaterialProjection("en", 1, 30);
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog([projection]).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
+    await target.mutation((ctx) =>
+      insertMaterialCounter(ctx, projection, "en", 10)
+    );
+
+    const named = await target.query(getTrendingSubjects, {
+      locale: "en",
+      windowKey: POPULARITY_WINDOW,
+    });
+
+    expect(named).toHaveLength(1);
+    expect(named).toEqual(
+      await target.query(getTrendingSubjects, { locale: "en" })
+    );
   });
 });
