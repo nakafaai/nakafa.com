@@ -81,6 +81,10 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   convex: ConvexReactClient,
   status: UploadStore
 ) {
+  // A file that holds an upload from an earlier send is not uploaded again. A
+  // failed send leaves its uploads where they are: the server refuses with a
+  // failure it throws, which rolls the whole mutation back, and Convex's client
+  // sends a mutation again when it lost the answer instead of failing it.
   const cached = status.uploadOf(attachment.id);
   if (Option.isSome(cached)) {
     return cached.value;
