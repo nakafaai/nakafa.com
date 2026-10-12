@@ -156,7 +156,6 @@ export function buildMetricsBatch({
         isPopularitySignalInWindow({
           signalDay,
           timestamp: updatedAt,
-          windowKey: POPULARITY_WINDOW,
         })
       )
     ) {

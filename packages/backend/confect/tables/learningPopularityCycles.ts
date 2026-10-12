@@ -1,7 +1,7 @@
 import { Table } from "@confect/core";
 import {
-  learningPopularityFiniteWindowValidator,
   learningPopularityScopeValidator,
+  learningPopularityWindowValidator,
 } from "@repo/backend/confect/contents/schema";
 import { Schema } from "effect";
 export default Table.make(() =>
@@ -11,6 +11,6 @@ export default Table.make(() =>
     mode: Schema.Union([Schema.Literal("expiry"), Schema.Literal("repair")]),
     scopeMode: learningPopularityScopeValidator,
     startedDay: Schema.Finite,
-    windowKey: learningPopularityFiniteWindowValidator,
+    windowKey: learningPopularityWindowValidator,
   })
 ).index("by_scopeMode_and_windowKey", ["scopeMode", "windowKey"]);

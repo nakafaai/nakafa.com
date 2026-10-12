@@ -50,7 +50,7 @@ export const pruneLearningPopularity = Effect.fn(
       .index("by_signalDay", (query) => query.lt("signalDay", day))
       .take(PAGE_SIZE)
       .pipe(Effect.orDie);
-    const signalCutoff = getPopularityWindowStartDay(POPULARITY_WINDOW, day);
+    const signalCutoff = getPopularityWindowStartDay(day);
     const expiredSignal = yield* database
       .table("learningPopularitySignals")
       .index("by_signalDay", (query) => query.lt("signalDay", signalCutoff))

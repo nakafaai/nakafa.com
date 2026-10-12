@@ -19,7 +19,6 @@ import { repairPopularityCounter } from "@repo/backend/confect/contents/metrics/
 import {
   getPopularitySignalDay,
   getPopularityWindowStartDay,
-  type LearningPopularityFiniteWindow,
   POPULARITY_DAY_MS,
   POPULARITY_SCOPE,
   POPULARITY_WINDOW,
@@ -28,16 +27,11 @@ import { learningPopularityRankings } from "@repo/backend/confect/contents/ranki
 import { Clock, Duration, Effect, flow, Struct } from "effect";
 
 type PopularityCounter = Docs["learningPopularityCounters"];
-/** Loads the one daily signal leaving a finite popularity window. */
+/** Loads the one daily signal leaving the popularity window. */
 const loadExpiringSignal = Effect.fn("contents.metrics.loadExpiringSignal")(
-  function* (
-    counter: PopularityCounter,
-    windowKey: LearningPopularityFiniteWindow,
-    day: number
-  ) {
+  function* (counter: PopularityCounter, day: number) {
     const database = yield* DatabaseReader;
-    const signalDay =
-      getPopularityWindowStartDay(windowKey, day) - POPULARITY_DAY_MS;
+    const signalDay = getPopularityWindowStartDay(day) - POPULARITY_DAY_MS;
     return yield* database
       .table("learningPopularitySignals")
       .get(
@@ -59,24 +53,14 @@ const loadExpiringSignal = Effect.fn("contents.metrics.loadExpiringSignal")(
 const expirePopularityCounter = Effect.fn(
   "contents.metrics.expirePopularityCounter"
 )(
-  function* (
-    counter: PopularityCounter,
-    windowKey: LearningPopularityFiniteWindow,
-    day: number,
-    updatedAt: number
-  ) {
+  function* (counter: PopularityCounter, day: number, updatedAt: number) {
     const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;
-    const signal = yield* loadExpiringSignal(counter, windowKey, day);
+    const signal = yield* loadExpiringSignal(counter, day);
     const expiredCount = signal ? signal.applied.d7 : 0;
     const score = counter.score - expiredCount;
     if (expiredCount < 0 || score < 0) {
-      const repair = yield* repairPopularityCounter(
-        counter,
-        windowKey,
-        day,
-        updatedAt
-      );
+      const repair = yield* repairPopularityCounter(counter, day, updatedAt);
       return {
         expired: false,
         removed: repair.removed,
@@ -214,7 +198,6 @@ export const expireLearningPopularityWindowPage = Effect.fn(
     for (const counter of page.page) {
       const result = yield* expirePopularityCounter(
         counter,
-        args.windowKey,
         args.day,
         updatedAt
       );

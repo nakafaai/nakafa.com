@@ -7,9 +7,8 @@ import {
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
 import {
   getPopularitySignalDay,
-  getPopularityWindowDayCount,
   getPopularityWindowStartDay,
-  type LearningPopularityFiniteWindow,
+  POPULARITY_WINDOW_DAYS,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { Array as Arr, Effect, flow, Struct } from "effect";
@@ -41,19 +40,14 @@ const refreshFields = [
 ] as const satisfies readonly (keyof PopularityCounter)[];
 type Refresh = Pick<PopularityCounter, (typeof refreshFields)[number]>;
 
-/** Loads bounded daily signal rows for one counter and finite window. */
+/** Loads bounded daily signal rows for one counter inside the window. */
 const loadPopularitySignals = Effect.fn(
   "contents.metrics.loadPopularitySignals"
 )(
-  function* (
-    counter: PopularityCounter,
-    windowKey: LearningPopularityFiniteWindow,
-    timestamp: number
-  ) {
+  function* (counter: PopularityCounter, timestamp: number) {
     const database = yield* DatabaseReader;
     const currentDay = getPopularitySignalDay(timestamp);
-    const startDay = getPopularityWindowStartDay(windowKey, timestamp);
-    const dayCount = getPopularityWindowDayCount(windowKey);
+    const startDay = getPopularityWindowStartDay(timestamp);
     return yield* database
       .table("learningPopularitySignals")
       .index("by_scopeMode_and_content_id_and_contextKey_and_signalDay", (q) =>
@@ -64,21 +58,17 @@ const loadPopularitySignals = Effect.fn(
           .gte("signalDay", startDay)
           .lte("signalDay", currentDay)
       )
-      .take(dayCount)
+      .take(POPULARITY_WINDOW_DAYS)
       .pipe(Effect.orDie);
   },
   Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail))
 );
 
-/** Recomputes one finite-window counter from durable daily signal rows. */
+/** Recomputes one counter from its durable daily signal rows. */
 const recomputePopularityCounter = Effect.fn(
   "contents.metrics.recomputePopularityCounter"
-)(function* (
-  counter: PopularityCounter,
-  windowKey: LearningPopularityFiniteWindow,
-  timestamp: number
-) {
-  const signals = yield* loadPopularitySignals(counter, windowKey, timestamp);
+)(function* (counter: PopularityCounter, timestamp: number) {
+  const signals = yield* loadPopularitySignals(counter, timestamp);
   let latestSignal: PopularitySignal | null = null;
   let score = 0;
   for (const signal of signals) {
@@ -119,17 +109,11 @@ function projectPopularityRefresh(
 export const repairPopularityCounter = Effect.fn(
   "contents.metrics.repairPopularityCounter"
 )(
-  function* (
-    counter: PopularityCounter,
-    windowKey: LearningPopularityFiniteWindow,
-    day: number,
-    updatedAt: number
-  ) {
+  function* (counter: PopularityCounter, day: number, updatedAt: number) {
     const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;
     const { latestSignal, score } = yield* recomputePopularityCounter(
       counter,
-      windowKey,
       day
     );
     if (latestSignal === null || score <= 0) {

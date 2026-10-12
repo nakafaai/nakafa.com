@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   getPopularitySignalDay,
-  getPopularityWindowDayCount,
   POPULARITY_DAY_MS,
   POPULARITY_SCOPE,
   POPULARITY_WINDOW,
+  POPULARITY_WINDOW_DAYS,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
@@ -18,7 +18,7 @@ import { Array as Arr } from "effect";
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
-const OUTGOING_OFFSET = getPopularityWindowDayCount(POPULARITY_WINDOW);
+const OUTGOING_OFFSET = POPULARITY_WINDOW_DAYS;
 
 /** Builds a Convex test instance with production popularity triggers enabled. */
 function createPopularityConvexTest() {
