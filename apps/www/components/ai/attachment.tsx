@@ -28,7 +28,10 @@ import { Array as Arr, Effect, HashSet } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { splitFileName } from "@/components/ai/attachments";
+import {
+  type rejectionNotice,
+  splitFileName,
+} from "@/components/ai/attachments";
 import { useAi } from "@/components/ai/context";
 import { releaseUploads } from "@/components/ai/uploads";
 
@@ -127,35 +130,33 @@ export function NinaAttachment({
 }
 
 /**
- * The files one pick did not attach, each reason once. The names it dropped
- * come one to a line with their ends in view, and the reason follows them in
- * the quiet color of a description, so a file and its reason read together.
+ * The files one pick did not attach, grouped by the reason that dropped them.
+ * Each reason leads its group in the quiet color of a description, so it stays
+ * in view above however many names follow, and every dropped file is named on
+ * a line of its own with its end in view. The list scrolls inside itself past
+ * a height, so a pick of many files never makes the notice taller than the
+ * page.
  */
 export function RejectedFiles({
   reasons,
 }: {
-  reasons: readonly {
-    more: string | null;
-    names: readonly string[];
-    reason: string;
-  }[];
+  reasons: ReturnType<typeof rejectionNotice>["reasons"];
 }) {
   return (
-    <dl className="flex flex-col gap-2">
+    <dl className="flex max-h-[min(12rem,35dvh)] flex-col gap-2 overflow-y-auto overscroll-contain">
       {Arr.map(reasons, (entry) => (
         <div key={entry.reason}>
+          <dt>{entry.reason}</dt>
           {Arr.map(entry.names, (name) => (
-            <dt
+            <dd
               className="flex text-popover-foreground"
               dir="auto"
               key={name}
               title={name}
             >
               <FileNameParts name={name} />
-            </dt>
+            </dd>
           ))}
-          {entry.more ? <dt>{entry.more}</dt> : null}
-          <dd>{entry.reason}</dd>
         </div>
       ))}
     </dl>

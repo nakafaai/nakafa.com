@@ -137,19 +137,14 @@ describe("notice of the files that were not attached", () => {
         expect(one.title).toBe(many.title);
       });
 
-      it("lists three names for a reason, then counts the rest", () => {
-        const [reason] = rejectionNotice(
-          [
-            rejected(
-              "max_files",
-              Arr.makeBy(5, (index) => `${index}.png`)
-            ),
-          ],
-          t
-        ).reasons;
+      it("names every file of a reason, however many, and counts none of them", () => {
+        const dropped = Arr.makeBy(25, (index) => `${index}.png`);
 
-        expect(reason?.names).toEqual(["0.png", "1.png", "2.png"]);
-        expect(reason?.more).toContain("2");
+        const notice = rejectionNotice([rejected("max_files", dropped)], t);
+
+        expect(notice.reasons).toEqual([
+          { names: dropped, reason: expect.any(String) },
+        ]);
       });
 
       it("lists two files of one name once", () => {
@@ -159,7 +154,6 @@ describe("notice of the files that were not attached", () => {
         ).reasons;
 
         expect(reason?.names).toEqual(["a.txt", "b.txt"]);
-        expect(reason?.more).toBeNull();
       });
     });
   }

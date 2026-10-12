@@ -32,9 +32,9 @@ const reasonIn = (notice: Locator, reason: string) =>
  */
 const readNotice = (notice: HTMLElement) => {
   const box = notice.getBoundingClientRect();
-  // The files of every reason are the terms of one list, and each name is a
-  // start that gives way and an end that stays.
-  const names = Array.from(notice.querySelectorAll("dt"));
+  // The files of every reason are the descriptions of one list, and each name
+  // is a start that gives way and an end that stays.
+  const names = Array.from(notice.querySelectorAll("dd"));
   return {
     endsShown: names.every((name) => {
       const end = name.lastElementChild;
@@ -43,6 +43,40 @@ const readNotice = (notice: HTMLElement) => {
     inside: box.left >= 0 && box.right <= innerWidth,
     namesFit: names.every((name) => name.scrollWidth <= name.clientWidth),
     namesShown: names.length,
+  };
+};
+
+/**
+ * Whether a notice with a long list lies inside the page, keeps the reason of
+ * the list in view, and lets the list show its last name once it is scrolled
+ * to its end, read in the page. The read scrolls the list, so it comes last.
+ */
+const readList = (notice: HTMLElement) => {
+  const list = notice.querySelector("dl");
+  const reason = list?.querySelector("dt");
+  const names = Array.from(notice.querySelectorAll("dd"));
+  const last = names.at(-1);
+  if (!(list && reason && last)) {
+    return null;
+  }
+  const box = notice.getBoundingClientRect();
+  const inList = (element: Element) => {
+    const bounds = list.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
+    return rect.top >= bounds.top - 0.5 && rect.bottom <= bounds.bottom + 0.5;
+  };
+  const reasonShown = inList(reason);
+  list.scrollTop = list.scrollHeight;
+  return {
+    inside:
+      box.top >= 0 &&
+      box.bottom <= innerHeight &&
+      box.left >= 0 &&
+      box.right <= innerWidth,
+    lastReachable: inList(last),
+    names: names.length,
+    reasonShown,
+    scrolls: list.scrollHeight > list.clientHeight,
   };
 };
 
@@ -110,6 +144,45 @@ for (const width of [320, 1440]) {
             );
             await expect(reason).toContainText("last-1.png");
             await expect(reason).toContainText("last-2.png");
+          });
+        })
+      );
+    });
+
+    test("names every file of a long pick, scrolls the list, and stays inside the page", async ({
+      page,
+    }) => {
+      await runPage(
+        page,
+        Effect.gen(function* () {
+          const composer = yield* openComposer(page);
+          // Far more files than a notice shows without scrolling.
+          const surplus = Arr.makeBy(25, (index) => `extra-${index + 1}.png`);
+          yield* pickFiles(composer, [
+            ...Arr.makeBy(NINA_FILE_COUNT, (index) =>
+              photo(`photo-${index + 1}.png`)
+            ),
+            ...Arr.map(surplus, photo),
+          ]);
+          const notice = noticeWith(page, TITLE);
+          // The notice slides into place; its place is read once it stopped.
+          yield* Effect.promise(async () => {
+            await expect(chipsIn(composer)).toHaveCount(NINA_FILE_COUNT);
+            await expect(notice).toHaveAttribute("data-mounted", "true");
+          });
+          yield* waitForSlide(notice);
+          const read = yield* Effect.promise(() => notice.evaluate(readList));
+
+          // Every file that was dropped has a line, no line counts them, the
+          // reason stays above the names, and the last name can be reached.
+          yield* Effect.sync(() => {
+            expect(read).toEqual({
+              inside: true,
+              lastReachable: true,
+              names: surplus.length,
+              reasonShown: true,
+              scrolls: true,
+            });
           });
         })
       );

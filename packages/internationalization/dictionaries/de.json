@@ -557,8 +557,7 @@
       "type": "Nur PNG-, JPEG-, WebP-, GIF-, PDF- und Textdateien",
       "empty": "Leere Datei",
       "size": "Größer als {size, number} MiB",
-      "count": "Höchstens {count, number} Dateien pro Nachricht",
-      "more": "und {count, number} weitere"
+      "count": "Höchstens {count, number} Dateien pro Nachricht"
     },
     "ask-nina": "Nina fragen",
     "text-placeholder": "Frag Nina etwas...",

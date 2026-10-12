@@ -557,8 +557,7 @@
       "type": "Hanya file PNG, JPEG, WebP, GIF, PDF, dan teks",
       "empty": "File kosong",
       "size": "Lebih besar dari {size, number} MiB",
-      "count": "Paling banyak {count, number} file per pesan",
-      "more": "dan {count, number} lainnya"
+      "count": "Paling banyak {count, number} file per pesan"
     },
     "ask-nina": "Tanya Nina",
     "text-placeholder": "Tanya Nina apa saja...",
