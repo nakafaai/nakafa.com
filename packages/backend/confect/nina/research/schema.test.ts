@@ -50,8 +50,26 @@ describe("research schema", () => {
     const invalid = Schema.decodeResult(WebSearchInputSchema)({
       queries: [],
     });
+    const blank = Schema.decodeResult(WebSearchInputSchema)({
+      queries: ["AI SDK DevTools", "  \n"],
+    });
+    const spaced = Schema.decodeResult(WebSearchInputSchema)({
+      queries: ["  AI SDK DevTools\n"],
+    });
     expect(Result.isSuccess(valid)).toBe(true);
     expect(Result.isFailure(invalid)).toBe(true);
+    expect(Result.isFailure(blank)).toBe(true);
+    expect(Result.getOrThrow(spaced).queries).toEqual(["AI SDK DevTools"]);
+  });
+  it("tells the model the 500 characters the search provider accepts for a query, and refuses a longer one instead of cutting it", async () => {
+    const decode = (query: string) =>
+      Schema.decodeResult(WebSearchInputSchema)({ queries: [query] });
+
+    expect(Result.isSuccess(decode("a".repeat(500)))).toBe(true);
+    expect(Result.isFailure(decode("a".repeat(501)))).toBe(true);
+    expect(await webSearchInputSchema.jsonSchema).toMatchObject({
+      properties: { queries: { items: { maxLength: 500 } } },
+    });
   });
   it("asks the model for the queries only, and drops a field it still writes instead of refusing the call", async () => {
     const stale = {

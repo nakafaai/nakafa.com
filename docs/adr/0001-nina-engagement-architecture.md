@@ -120,9 +120,11 @@ sources are never silently omitted.
 
 The research model writes the search queries and reads the results, so code
 only trims, deduplicates, and bounds the queries and never filters a result by
-its words. No letter case, word shape, or word length decides what a learner
-meant, because a rule built on one treats a task in Japanese, Arabic, or Thai
-differently from the same task in English.
+its words. The tool input tells the model the 500 characters that the search
+provider accepts for a query, so no query is cut. No letter case, word shape,
+or word length decides what a learner meant, because a rule built on one
+treats a task in Japanese, Arabic, or Thai differently from the same task in
+English.
 
 A page longer than its budget keeps the paragraphs that hold the most of the
 task's words. The platform's `Intl.Segmenter` finds the words of every script,
