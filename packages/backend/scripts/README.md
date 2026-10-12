@@ -59,15 +59,15 @@ change customer, subscription, or content state.
 
 ## Dev deployment scripts
 
-The release gate and the model test of knowledge search run the Convex CLI on
-the dev deployment of this checkout, through `development/cli.ts`. That module
-reads `CONVEX_DEPLOYMENT` from the environment and then from
-`packages/backend/.env.local`, where the CLI looks for it too. A script goes on
-only when that names a dev deployment, and it refuses to run with no
-deployment named, with a production deployment, or with a deploy key or a
-deployment token set. The CLI gets exactly the deployment that was checked, so
-a `.env` file cannot choose another, and it holds its own login, so the scripts
-read no credential.
+The release gate, the judgment measurement and the model test of knowledge
+search run the Convex CLI on the dev deployment of this checkout, through
+`development/cli.ts`. That module reads `CONVEX_DEPLOYMENT` from the
+environment and then from `packages/backend/.env.local`, where the CLI looks for
+it too. A script goes on only when that names a dev deployment, and it refuses
+to run with no deployment named, with a production deployment, or with a deploy
+key or a deployment token set. The CLI gets exactly the deployment that was
+checked, so a `.env` file cannot choose another, and it holds its own login, so
+the scripts read no credential.
 
 ## Nina release gate
 
@@ -93,12 +93,21 @@ pnpm --filter @repo/backend judgment:measure --together=3
 
 This command sets the thresholds of Nina's judgments (`confect/nina/judgment`)
 from a labelled set (`test/judgment/message.ts` and `test/judgment/note.ts`),
-never from taste. It sends the set to the deployment its environment
-configures, the development deployment unless it is given `--prod`, with the
-same credential and variables as `customers:verify`. The deployment answers
-through its internal `nina/judgment:measure` action, which asks the decision
-model about every text. Each judgment is measured on the form of text and the
-grouping that production asks it: `lasting` on a whole message, alone, and
+never from taste. It spends model calls, so it runs only on the dev deployment
+that `packages/backend/.env.local` names, refuses any other, and needs no other
+setting. It starts the internal action `nina/judgment:measure` with
+`convex run`, which asks the decision model about every text, and reads the
+answer from what the CLI prints. One call holds at most `MEASURE_TEXT_LIMIT`
+texts (30), which is less than the set, so the set goes up in several calls,
+one after another. A call gets the five minutes that the request of the CLI can
+wait, and a call that needs more ends the command with an error that says it
+did not answer. When the deployment cannot reach the gateway, the action
+answers with that failure instead of failing the call, because the CLI prints a
+failed call as text and drops the typed data of its error; the command then
+stops at the first call and fails with that reason. When the deployment does
+not have the action yet, the CLI cannot run it, and the command fails with the
+start of what the CLI printed. Each judgment is measured on the form of text and
+the grouping that production asks it: `lasting` on a whole message, alone, and
 `ownNote` and `private` on a note, which is the sentence the capture model
 proposes with the words of the learner it quotes (`noteText`), both judgments
 in one request about the notes together. For each judgment the command prints

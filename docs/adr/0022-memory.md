@@ -488,9 +488,9 @@ the learner's own voice, sentences that describe the learner from the outside
 quote), and sentences that hold private data of a dozen forms, among them a
 phone number written with spaces, a street address, an illness, a religion and
 a salary. Each carries its expected labels.
-`pnpm --filter @repo/backend judgment:measure` runs the set through the
-deployment the caller's environment configures (the development deployment
-unless it is given `--prod`): a message alone for `lasting`, and the notes for
+`pnpm --filter @repo/backend judgment:measure` runs the set through the dev
+deployment that `packages/backend/.env.local` names, and refuses any other,
+because it spends model calls: a message alone for `lasting`, and the notes for
 `ownNote` and `private`, both in one request, `--together=N` of them to a
 request, from 1 to the 3 candidates one capture proposes. It prints, for each
 judgment, the probabilities by label, the counts at the threshold the
