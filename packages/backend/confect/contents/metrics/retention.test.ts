@@ -1,5 +1,12 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { pruneLearningPopularity } from "@repo/backend/confect/contents/metrics/retention";
 import {
@@ -7,6 +14,7 @@ import {
   POPULARITY_SCOPE,
   POPULARITY_WINDOW,
 } from "@repo/backend/confect/contents/popularity";
+import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -68,6 +76,23 @@ function insertSignal(ctx: MutationCtx, signalDay: number) {
     updatedAt: signalDay,
     viewCount: 1,
   });
+}
+
+/** Seeds the ranked counter of the window the pipeline maintains. */
+async function insertCounter(ctx: MutationCtx) {
+  const counterId = await ctx.db.insert("learningPopularityCounters", {
+    ...identity,
+    latestDay: DAY,
+    route: "material/vector",
+    score: 3,
+    sourcePath: "material/vector",
+    title: "Vector",
+    updatedAt: DAY,
+    windowKey: POPULARITY_WINDOW,
+  });
+  const counter = await ctx.db.get(counterId);
+  assert.ok(counter, "Expected one ranked popularity counter fixture.");
+  await learningPopularityRankings.insert(ctx, counter);
 }
 
 describe("contents/metrics/retention", () => {
@@ -224,8 +249,10 @@ describe("contents/metrics/retention", () => {
   });
   it("reads no document on an hourly pass with nothing left to prune", async () => {
     const target = convexTest(schema, convexModules);
+    registerLearningPopularityAggregate(target);
     await target.mutation(async (ctx) => {
       await completeWindow(ctx);
+      await insertCounter(ctx);
       await insertViewer(ctx, DAY);
       await insertSignal(ctx, DAY - POPULARITY_DAY_MS);
     });
