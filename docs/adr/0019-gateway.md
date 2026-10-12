@@ -247,8 +247,10 @@ Not yet established:
 
 ## Implementation Contract
 
-- `gateway/model.ts` owns the gateway model id and the reasoning effort of each
-  effort.
+- `gateway/model.ts` owns the gateway model id, the provider id that usage rows
+  store for a call through the gateway, and the reasoning effort of each effort.
+  The release gate in [ADR 0001](./0001-nina-engagement-architecture.md) reads
+  the first two back from a real turn.
 - `gateway/handle.ts` builds every handle over one AI SDK provider, so the
   production adapter and tests set the same defaults.
 - `gateway/live.ts` holds the production layer and the one service token read.

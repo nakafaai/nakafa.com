@@ -5,7 +5,7 @@ import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { TURN_DEADLINE } from "@repo/backend/confect/nina/sweep";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import {
   seedAnalyticsConsent,
