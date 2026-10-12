@@ -4,9 +4,8 @@ import type { Ref } from "@confect/core";
 
 import type contents from "@repo/backend/confect/_generated/refs/contents";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 
 import type { ReactNode } from "react";
 
@@ -50,20 +49,9 @@ export function MaterialRow({
       href={material.href}
     >
       <div className="flex items-start gap-3">
-        <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
-          <GradientBlock
-            className="absolute inset-0"
-            colorScheme="vibrant"
-            intensity="medium"
-            keyString={material.content_id}
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <HugeIcons
-              className="size-4 text-background drop-shadow-md"
-              icon={getMaterialIcon(material.materialDomain)}
-            />
-          </div>
-        </div>
+        <Tile seed={material.content_id}>
+          <TileIcon icon={getMaterialIcon(material.materialDomain)} />
+        </Tile>
         <div className="-mt-1 flex flex-1 flex-col gap-0.5">
           {trailing ? (
             <div className="relative">
