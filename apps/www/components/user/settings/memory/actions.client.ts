@@ -286,13 +286,15 @@ export function useMemoryActions() {
           recall(before.target.id);
         }
         if (editing) {
-          reopen(
-            session,
-            Option.getOrElse(Rec.get(latest().withheld, editing.id), () =>
-              draftOf(editing)
-            ),
-            editing
+          const held = Option.getOrElse(
+            Rec.get(latest().withheld, editing.id),
+            () => draftOf(editing)
           );
+
+          // An editor the learner opened since keeps its place, so the words
+          // are let go here whether or not the old editor comes back.
+          release(editing.id);
+          reopen(session, held, editing);
         }
       },
     });
