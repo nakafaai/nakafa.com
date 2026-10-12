@@ -75,20 +75,6 @@ export const WebSearchInputSchema = Schema.Struct({
       `,
       }),
     }),
-  sourcePreference: Schema.Literals(["primary", "any"]).annotate({
-    description: createPrompt({
-      taskContext: `
-      Choose primary when the task requires direct evidence from:
-      - a source owner.
-      - a first-party publisher.
-      - a maintainer or vendor.
-      - a standards body.
-      - paper authors.
-
-      Choose any when broader credible sources are acceptable.
-    `,
-    }),
-  }),
 })
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   .annotate({
@@ -240,5 +226,4 @@ export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerati
 ) {}
 export type ScrapeOutput = typeof ScrapeOutputSchema.Type;
 export type ResearchOutput = typeof ResearchOutputSchema.Type;
-export type WebSearchInput = typeof WebSearchInputSchema.Type;
 export type WebSearchOutput = typeof WebSearchOutputSchema.Type;

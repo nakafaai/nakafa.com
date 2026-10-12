@@ -4,6 +4,7 @@ import {
   researchOutputSchema,
   ScrapeInputSchema,
   WebSearchInputSchema,
+  webSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Result, Schema } from "effect";
@@ -45,23 +46,29 @@ describe("research schema", () => {
   it("validates optimized web-search query arrays", () => {
     const valid = Schema.decodeResult(WebSearchInputSchema)({
       queries: ["AI SDK DevTools official documentation"],
-      sourcePreference: "primary",
     });
     const invalid = Schema.decodeResult(WebSearchInputSchema)({
       queries: [],
-      sourcePreference: "any",
-    });
-    const missingPreference = Schema.decodeUnknownResult(WebSearchInputSchema)({
-      queries: ["AI SDK DevTools documentation"],
-    });
-    const invalidPreference = Schema.decodeUnknownResult(WebSearchInputSchema)({
-      queries: ["AI SDK DevTools official documentation"],
-      sourcePreference: "official",
     });
     expect(Result.isSuccess(valid)).toBe(true);
     expect(Result.isFailure(invalid)).toBe(true);
-    expect(Result.isFailure(missingPreference)).toBe(true);
-    expect(Result.isFailure(invalidPreference)).toBe(true);
+  });
+  it("asks the model for the queries only, and drops a field it still writes instead of refusing the call", async () => {
+    const stale = {
+      queries: ["AI SDK DevTools official documentation"],
+      sourcePreference: "primary",
+    };
+    expect(await webSearchInputSchema.validate?.(stale)).toEqual({
+      success: true,
+      value: { queries: stale.queries },
+    });
+    expect(await webSearchInputSchema.jsonSchema).toMatchObject({
+      properties: { queries: expect.any(Object) },
+      required: ["queries"],
+    });
+    expect(encodeJsonText(await webSearchInputSchema.jsonSchema)).not.toContain(
+      "sourcePreference"
+    );
   });
   it("asks research findings for their shape and leaves citations to the filter", () => {
     const cited = Schema.decodeResult(ResearchOutputSchema)({

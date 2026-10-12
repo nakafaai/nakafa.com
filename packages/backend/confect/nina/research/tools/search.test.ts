@@ -87,7 +87,7 @@ describe("research web search tool", () => {
   });
 
   it.effect(
-    "returns every result and adds the text of the best pages it could read",
+    "returns every result once, in the provider's order, whatever words it holds, and adds the text of the best pages it could read",
     () =>
       Effect.gen(function* () {
         firecrawlApp.search.mockResolvedValue({
@@ -143,9 +143,8 @@ describe("research web search tool", () => {
         );
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
-          queries: ["latest solar energy research"],
-          sourcePreference: "any",
-          task: "latest solar energy research",
+          queries: ["Next.js 16 Cache Components"],
+          task: "Next.js 16 Cache Components",
           toolCallId: "web-search-1",
           publish,
         });
@@ -224,7 +223,6 @@ describe("research web search tool", () => {
         const { publish } = createProgress();
         yield* searchWeb({
           queries: ["kurikulum merdeka", "kurikulum sma"],
-          sourcePreference: "any",
           task: "kurikulum",
           toolCallId: "web-search-pages",
           publish,
@@ -252,7 +250,6 @@ describe("research web search tool", () => {
       const { parts, publish } = createProgress();
       yield* searchWeb({
         queries: [" AI SDK docs ", "", "ai sdk docs"],
-        sourcePreference: "any",
         task: "AI SDK docs",
         toolCallId: "web-search-normalized-queries",
         publish,
@@ -273,8 +270,49 @@ describe("research web search tool", () => {
     })
   );
 
+  it.effect.each([
+    {
+      language: "English",
+      objective: "Find the official documentation.",
+      queries: ["Next.js 16 Cache Components official docs"],
+      request: "What changed in Next.js 16 Cache Components?",
+    },
+    {
+      language: "Japanese",
+      objective: "公式ドキュメントを確認する",
+      queries: ["Next.js 16 Cache Components 公式ドキュメント"],
+      request: "Next.js 16のCache Componentsで何が変わったのか知りたい",
+    },
+  ])(
+    "sends the provider the queries the model wrote as written, or else the task without its section labels ($language)",
+    ({ objective, queries, request }) =>
+      Effect.gen(function* () {
+        firecrawlApp.search.mockResolvedValue({ web: [] });
+        const { publish } = createProgress();
+        const task = `# Request\n\n${request}\n\n# Objective\n\n${objective}`;
+        const search = (written: readonly string[], text: string) =>
+          searchWeb({
+            queries: written,
+            task: text,
+            toolCallId: "web-search-sent",
+            publish,
+          });
+        const options = { limit: 5, sources: ["web", "news"], timeout: 10_000 };
+
+        yield* search(queries, task);
+        yield* search([], task);
+        // A task of section labels only holds no text, so no search runs.
+        yield* search([], "# Request\n\n# Objective");
+
+        expect(firecrawlApp.search.mock.calls).toEqual([
+          ...Arr.map(queries, (query) => [query, options]),
+          [`${request} ${objective}`, options],
+        ]);
+      })
+  );
+
   it.effect(
-    "searches each optimized query with query-scoped visible results",
+    "runs each query as written, also one without the task's named phrase, with query-scoped visible results",
     () =>
       Effect.gen(function* () {
         firecrawlApp.search.mockImplementation((query: string) =>
@@ -291,11 +329,7 @@ describe("research web search tool", () => {
         );
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
-          queries: [
-            "AI SDK DevTools official docs",
-            "AI SDK DevTools release notes",
-          ],
-          sourcePreference: "any",
+          queries: ["AI SDK DevTools official docs", "release notes 2026"],
           task: "AI SDK DevTools official docs",
           toolCallId: "web-search-queries",
           publish,
@@ -306,7 +340,7 @@ describe("research web search tool", () => {
           expect.any(Object)
         );
         expect(firecrawlApp.search).toHaveBeenCalledWith(
-          "AI SDK DevTools release notes",
+          "release notes 2026",
           expect.any(Object)
         );
         expect(output.result.sources).toHaveLength(2);
@@ -325,10 +359,10 @@ describe("research web search tool", () => {
             ]),
           }),
           expect.objectContaining({
-            queries: ["AI SDK DevTools release notes"],
+            queries: ["release notes 2026"],
             sources: expect.arrayContaining([
               expect.objectContaining({
-                url: "https://example.com/ai-sdk-devtools-release-notes",
+                url: "https://example.com/release-notes-2026",
               }),
             ]),
           }),
@@ -358,7 +392,6 @@ describe("research web search tool", () => {
       const { parts, publish } = createProgress();
       const output = yield* searchWeb({
         queries: ["AI SDK DevTools", "AI SDK DevTools recent updates"],
-        sourcePreference: "any",
         task: "AI SDK DevTools",
         toolCallId: "web-search-partial-success",
         publish,
@@ -396,7 +429,6 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: ["latest solar energy research"],
-          sourcePreference: "any",
           task: "latest solar energy research",
           toolCallId: "web-search-empty",
           publish,
@@ -430,7 +462,6 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: ["latest solar energy research"],
-          sourcePreference: "any",
           task: "latest solar energy research",
           toolCallId: "web-search-2",
           publish,

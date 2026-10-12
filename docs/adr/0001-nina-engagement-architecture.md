@@ -118,6 +118,12 @@ Agent storage. External research admits at most
 selected characters per source. Excess requests receive an explicit limit;
 sources are never silently omitted.
 
+The research model writes the search queries and reads the results, so code
+only trims, deduplicates, and bounds the queries and never filters a result by
+its words. No letter case, word shape, or word length decides what a learner
+meant, because a rule built on one treats a task in Japanese, Arabic, or Thai
+differently from the same task in English.
+
 Convex deployments own `FIRECRAWL_API_KEY`, `MATH_CAS_API_KEY`, and
 `NEXT_PUBLIC_CAS_URL`. The CAS key must match the
 production CAS service, and its URL is `https://cas.nakafa.com`. These are

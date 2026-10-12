@@ -74,10 +74,7 @@ const searchCall = providerStep(
       type: "tool-call",
       toolCallId: "search",
       toolName: "webSearch",
-      input: encodeSearchInput({
-        queries: ["official agents"],
-        sourcePreference: "primary",
-      }),
+      input: encodeSearchInput({ queries: ["official agents"] }),
     },
   ],
   "tool-calls"
@@ -97,7 +94,7 @@ const noQuery = providerStep(
       type: "tool-call",
       toolCallId: "search",
       toolName: "webSearch",
-      input: encodeJsonText({ queries: [], sourcePreference: "primary" }),
+      input: encodeJsonText({ queries: [] }),
     },
   ],
   "tool-calls"
@@ -213,7 +210,6 @@ describe("research Agent evidence boundary", () => {
     expect(searchWeb).toHaveBeenCalledWith(
       expect.objectContaining({
         queries: ["official agents"],
-        sourcePreference: "primary",
         toolCallId: "search",
       })
     );

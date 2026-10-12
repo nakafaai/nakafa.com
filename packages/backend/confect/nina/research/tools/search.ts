@@ -2,13 +2,11 @@ import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/p
 import { planSearchQueries } from "@repo/backend/confect/nina/research/query";
 import {
   researchProviderConcurrency,
-  type WebSearchInput,
   type WebSearchOutput,
   webSearchMaxQueries,
 } from "@repo/backend/confect/nina/research/schema";
 import { formatWebSearchOutput } from "@repo/backend/confect/nina/research/search/format";
 import { searchFirecrawl } from "@repo/backend/confect/nina/research/search/provider";
-import { scopeSources } from "@repo/backend/confect/nina/research/search/scope";
 import {
   addSourceCitations,
   dedupeSources,
@@ -32,17 +30,18 @@ const RESULT_PAGES = 2;
 const RESULT_PAGE = { deadlineMs: 10_000, timeoutMs: 8000 };
 
 /**
- * Searches the web and writes the web search UI data part.
+ * Searches the web and writes the web search UI data part. The model wrote the
+ * queries, so each runs as written, and every result the provider returns with
+ * an address is kept once, in the provider's order, web results first and then
+ * news: no word of the task or the query decides which result a learner sees.
  */
 export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   queries,
-  sourcePreference,
   task,
   toolCallId,
   publish,
 }: {
   queries: readonly string[];
-  sourcePreference: WebSearchInput["sourcePreference"];
   task: string;
   toolCallId: string;
   publish: CapabilityProgress;
@@ -51,7 +50,6 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     task,
     maxQueries: webSearchMaxQueries,
     queries,
-    scopeByNamedPhrases: true,
   });
 
   yield* Effect.forEach(searchQueries, (query, index) =>
@@ -109,20 +107,13 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
         });
         return { error: found.error, sources: [] };
       }
-      const sources = dedupeSources(
-        scopeSources({
-          task,
-          query,
-          sourcePreference,
-          sources: Arr.map(found.sources, (source) => ({
-            ...source,
-            content: Option.getOrElse(
-              HashMap.get(pages, source.url),
-              () => source.content
-            ),
-          })),
-        })
-      );
+      const sources = Arr.map(found.sources, (source) => ({
+        ...source,
+        content: Option.getOrElse(
+          HashMap.get(pages, source.url),
+          () => source.content
+        ),
+      }));
       yield* publish({
         id: getWebSearchPartId(toolCallId, index),
         type: "data-web-search",
