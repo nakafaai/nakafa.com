@@ -5,6 +5,7 @@ import {
   runAcceptance,
 } from "@repo/backend/scripts/content/acceptance/build";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { importAcceptanceRows } from "@repo/backend/scripts/content/acceptance/import";
 import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
@@ -24,12 +25,16 @@ const main = Effect.gen(function* () {
   if (mode === "clean") {
     return yield* cleanLocalRuntime(root);
   }
-  const output = process.argv[3];
-  if (mode === "learner" && output !== undefined) {
-    return yield* createAcceptanceLearner(root, output);
+  const first = process.argv[3];
+  const second = process.argv[4];
+  if (mode === "learner" && first !== undefined) {
+    return yield* createAcceptanceLearner(root, first);
+  }
+  if (mode === "import" && first !== undefined && second !== undefined) {
+    return yield* importAcceptanceRows(root, first, second);
   }
   return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>>"
+    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|import <table> <rows-file>>"
   );
 });
 

@@ -178,7 +178,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [runtime, learner, visual, navigation]
+        suite: [runtime, learner, chat, visual, navigation]
     env:
       VERCEL_GIT_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:

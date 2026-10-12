@@ -17,8 +17,8 @@ import { getAppUrl } from "@repo/next-config/app";
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
 import { toast } from "sonner";
+import { useChange } from "@/components/ai/chat/change.client";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -34,14 +34,14 @@ export function ChatSharing({
 }) {
   const t = useTranslations("Ai");
   const actionErrorMessage = useTranslations("Common")("action-error");
-  const [isPending, startTransition] = useTransition();
+  const { change, isPending } = useChange();
   const clipboard = useClipboard({ timeout: 500 });
   const updateChatVisibility = useUpdateChatVisibilityMutation();
   const isPrivate = chat.visibility === "private";
   const link = `${getAppUrl()}/chat/${chat._id}`;
   /** Persist the selected chat visibility. */
   const handleUpdateVisibility = (visibility: ChatVisibility) => {
-    startTransition(async () =>
+    change(() =>
       Effect.runPromise(
         Effect.asVoid(
           Effect.tryPromise(() =>
