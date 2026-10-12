@@ -55,10 +55,33 @@ describe("research prompt", () => {
     const synthesis = researchPrompt({ context, locale: "id" });
 
     expect(search).toContain(
-      "When the task asks for an official, first-party, or primary source, write queries that reach it and name its site in the query."
+      "When the task asks for an official, first-party, or primary source, write queries that reach it and name the source in the query."
     );
     expect(synthesis).toContain(
       "When the task asks for an official, first-party, or primary source, prefer the results from that source for findings and citations."
+    );
+  });
+
+  it("restricts a search to given sites through the sites field, in the search step and in the tool description", () => {
+    const search = researchSearchPrompt({ context, locale: "id" });
+
+    expect(search).toContain(
+      "When the task asks for results of given sites only, put their hostnames in the sites field of webSearch and not in the queries."
+    );
+    expect(nakafaWebSearch).toContain(
+      "When the task asks for results of given sites only, put their hostnames in the sites field and not in the queries."
+    );
+  });
+
+  it("never asks for a domain in the query text, and says why a site operator stays out of it", () => {
+    const search = researchSearchPrompt({ context, locale: "id" });
+
+    for (const guidance of [search, nakafaWebSearch]) {
+      expect(guidance.toLowerCase()).not.toContain("domain");
+      expect(guidance).not.toContain("name its site in the query");
+    }
+    expect(nakafaWebSearch).toContain(
+      "Do not write a site: operator into a query: the search provider's news source did not honor it when measured on 12 October 2026."
     );
   });
 
@@ -84,7 +107,6 @@ describe("research prompt", () => {
   });
 
   it("guides search toward primary sources", () => {
-    expect(nakafaWebSearch).toContain("official domain");
     expect(nakafaWebSearch).toContain("generic industry trend search");
     expect(nakafaWebSearch).toContain(
       "Keep task-relevant user-provided strings"
@@ -93,7 +115,7 @@ describe("research prompt", () => {
       "named products, APIs, libraries, and features"
     );
     expect(nakafaWebSearch).toContain(
-      "write queries that reach it: include the exact named source and its official domain."
+      "write queries that reach it: include the exact name of the source."
     );
     expect(nakafaWebSearch).not.toContain("sourcePreference");
     expect(nakafaWebSearch).toContain(

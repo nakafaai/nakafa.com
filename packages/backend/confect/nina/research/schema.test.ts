@@ -5,9 +5,10 @@ import {
   ScrapeInputSchema,
   WebSearchInputSchema,
   webSearchInputSchema,
+  webSearchMaxSites,
 } from "@repo/backend/confect/nina/research/schema";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Result, Schema } from "effect";
+import { Array as Arr, Result, Schema } from "effect";
 
 describe("research schema", () => {
   it("validates scrape URLs with Effect schema", () => {
@@ -75,7 +76,7 @@ describe("research schema", () => {
       properties: { queries: { items: { maxLength: 500 } } },
     });
   });
-  it("asks the model for the queries only, and drops a field it still writes instead of refusing the call", async () => {
+  it("asks the model for the queries, and for the sites only when it limits the search, and drops a field it still writes instead of refusing the call", async () => {
     const stale = {
       queries: ["AI SDK DevTools official documentation"],
       sourcePreference: "primary",
@@ -85,12 +86,85 @@ describe("research schema", () => {
       value: { queries: stale.queries },
     });
     expect(await webSearchInputSchema.jsonSchema).toMatchObject({
-      properties: { queries: expect.any(Object) },
+      properties: { queries: expect.any(Object), sites: expect.any(Object) },
       required: ["queries"],
     });
     expect(encodeJsonText(await webSearchInputSchema.jsonSchema)).not.toContain(
       "sourcePreference"
     );
+  });
+  it("decodes a call that names no site, as every call did before the field existed", () => {
+    const older = Result.getOrThrow(
+      Schema.decodeResult(WebSearchInputSchema)({
+        queries: ["AI SDK DevTools"],
+      })
+    );
+    expect(older).toEqual({ queries: ["AI SDK DevTools"] });
+    expect(older).not.toHaveProperty("sites");
+  });
+  it("keeps a site written as a hostname, reduces one written as an address to its hostname, and refuses a text with no hostname", () => {
+    const decode = (sites: string[]) =>
+      Schema.decodeResult(WebSearchInputSchema)({
+        queries: ["kurikulum merdeka"],
+        sites,
+      });
+
+    expect(
+      Result.getOrThrow(decode(["bbc.com", "snpmb.bppp.kemdikbud.go.id"])).sites
+    ).toEqual(["bbc.com", "snpmb.bppp.kemdikbud.go.id"]);
+    expect(
+      Result.getOrThrow(
+        decode([
+          "https://www.bbc.com/news?page=2",
+          "kemdikbud.go.id/berita",
+          "  BBC.com\n",
+        ])
+      ).sites
+    ).toEqual(["www.bbc.com", "kemdikbud.go.id", "bbc.com"]);
+    expect(Result.getOrThrow(decode([])).sites).toEqual([]);
+    for (const text of ["", "   ", "/news", "https://", "two words"]) {
+      const refused = decode(["bbc.com", text]);
+      expect(Result.isFailure(refused)).toBe(true);
+      if (Result.isFailure(refused)) {
+        expect(refused.failure.message).toContain(
+          "Expected a hostname, such as bbc.com."
+        );
+      }
+    }
+  });
+  it("tells the model the most sites it may name and refuses more instead of dropping any", async () => {
+    const decode = (count: number) =>
+      Schema.decodeResult(WebSearchInputSchema)({
+        queries: ["kurikulum merdeka"],
+        sites: Arr.makeBy(count, (index) => `site${index}.example.com`),
+      });
+
+    expect(Result.isSuccess(decode(webSearchMaxSites))).toBe(true);
+    expect(Result.isFailure(decode(webSearchMaxSites + 1))).toBe(true);
+    expect(await webSearchInputSchema.jsonSchema).toMatchObject({
+      properties: {
+        sites: { items: { type: "string" }, maxItems: webSearchMaxSites },
+      },
+    });
+  });
+  it("tells the model to name sites only when the task asks for results of given sites, and to leave the field out for an open search", async () => {
+    const json = encodeJsonText(await webSearchInputSchema.jsonSchema);
+    expect(json).toContain(
+      "Use it when the task asks for results of given sites only."
+    );
+    expect(json).toContain(
+      "Every query of this call is then searched in those sites only."
+    );
+    expect(json).toContain("Leave this field out for an open search.");
+  });
+  it("does not ask the queries to carry a domain, which the sites field carries", async () => {
+    expect(await webSearchInputSchema.jsonSchema).toMatchObject({
+      properties: {
+        queries: {
+          description: expect.not.stringContaining("domains"),
+        },
+      },
+    });
   });
   it("asks research findings for their shape and leaves citations to the filter", () => {
     const cited = Schema.decodeResult(ResearchOutputSchema)({

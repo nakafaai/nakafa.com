@@ -37,9 +37,10 @@ export function researchSearchPrompt({
       - Remove answer-formatting instructions from queries: summary length, tone, output language, and citation style.
       - Preserve task-relevant user-provided strings in every query that depends on them:
         - products, APIs, libraries, and features.
-        - versions, domains, URLs, source constraints, and document titles.
+        - versions, URLs, source names, and document titles.
       - Do not translate or paraphrase those preserved strings.
-      - When the task asks for an official, first-party, or primary source, write queries that reach it and name its site in the query.
+      - When the task asks for results of given sites only, put their hostnames in the sites field of webSearch and not in the queries.
+      - When the task asks for an official, first-party, or primary source, write queries that reach it and name the source in the query.
       - Search named or official sources before broadening.
       - Do not rewrite a specific source request into a generic trends query.
       - Avoid YouTube, social posts, and listicles unless requested or no primary source exists.

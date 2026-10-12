@@ -74,7 +74,10 @@ const searchCall = providerStep(
       type: "tool-call",
       toolCallId: "search",
       toolName: "webSearch",
-      input: encodeSearchInput({ queries: ["official agents"] }),
+      input: encodeSearchInput({
+        queries: ["official agents"],
+        sites: ["ai-sdk.dev"],
+      }),
     },
   ],
   "tool-calls"
@@ -175,7 +178,7 @@ async function research(
 }
 
 describe("research Agent evidence boundary", () => {
-  it("searches once, synthesizes once and keeps only retrieved citations", async () => {
+  it("searches once, in the sites the model named, synthesizes once and keeps only retrieved citations", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
     vi.mocked(scrapeUrl).mockReturnValue(read);
     const model = new MockLanguageModelV4({
@@ -212,6 +215,7 @@ describe("research Agent evidence boundary", () => {
     expect(searchWeb).toHaveBeenCalledWith(
       expect.objectContaining({
         queries: ["official agents"],
+        sites: ["ai-sdk.dev"],
         toolCallId: "search",
         words: researchRequest.words,
       })
