@@ -5,6 +5,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import type { OutcomeCursor } from "@repo/backend/confect/nina/outcome.spec";
 import {
+  agentChat,
   chatOf,
   counts,
   done,
@@ -126,10 +127,8 @@ describe("nina/outcome", () => {
     }
   );
 
-  it("makes the chat read the outcome of an old output", async () => {
-    const f = await fixture(
-      turn("deepResearch", json(oldOutput("failed", [loaded])))
-    );
+  it("makes the chat read the outcome of an old output that the Agent stored itself", async () => {
+    const f = await agentChat(oldOutput("failed", [loaded]));
     const [threadId = ""] = f.threadIds;
     const outcomes = async () =>
       Arr.flatMap(toUIMessages(await stored(f.t, threadId)), ({ parts }) =>

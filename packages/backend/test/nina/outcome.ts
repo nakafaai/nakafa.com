@@ -1,5 +1,10 @@
 import { Ref } from "@confect/core";
-import { createThread, saveMessages } from "@convex-dev/agent";
+import {
+  Agent,
+  createThread,
+  createTool,
+  saveMessages,
+} from "@convex-dev/agent";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
@@ -14,8 +19,15 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import type { ModelMessage, ToolResultPart } from "ai";
-import { Array as Arr } from "effect";
+import { providerStep } from "@repo/backend/test/nina/specialist";
+import {
+  isStepCount,
+  jsonSchema,
+  type ModelMessage,
+  type ToolResultPart,
+} from "ai";
+import { MockLanguageModelV4 } from "ai/test";
+import { Array as Arr, Stream } from "effect";
 
 const NOW = Date.UTC(2026, 9, 12, 8);
 
@@ -179,6 +191,67 @@ export async function fixture(...conversations: ModelMessage[][]) {
 }
 
 type Fixture = Awaited<ReturnType<typeof fixture>>;
+
+/**
+ * A chat whose turn the Agent itself stored. A mock model calls the capability
+ * `deepResearch`, whose tool yields a progress snapshot and then `output`, as
+ * the capabilities do, and the Agent saves the question, the call, the result
+ * and the answer. Only the final output is stored, as in production.
+ */
+export async function agentChat(output: JsonValue) {
+  const t = createConvexTestWithBetterAuth();
+  const { userId } = await t.mutation((ctx) =>
+    seedAuthenticatedUser(ctx, { now: NOW })
+  );
+  const model = new MockLanguageModelV4({
+    doGenerate: [
+      providerStep(
+        [
+          {
+            type: "tool-call",
+            toolCallId: "call-1",
+            toolName: "deepResearch",
+            input: "{}",
+          },
+        ],
+        "tool-calls"
+      ),
+      providerStep([{ type: "text", text: "Answer" }]),
+    ],
+  });
+  const agent = new Agent(components.nina, {
+    languageModel: model,
+    name: "test",
+    stopWhen: isStepCount(3),
+    tools: {
+      deepResearch: createTool({
+        description: "Researches a question.",
+        execute: () =>
+          Stream.toAsyncIterable(Stream.make({ ...done, text: "" }, output)),
+        inputSchema: jsonSchema({ properties: {}, type: "object" }),
+      }),
+    },
+  });
+  const threadId = await t.action(async (ctx) => {
+    const created = await agent.createThread(ctx, { userId });
+    await agent.generateText(
+      ctx,
+      { threadId: created.threadId, userId },
+      { prompt: "Question" }
+    );
+    return created.threadId;
+  });
+  const chatId = await t.mutation((ctx) =>
+    ctx.db.insert("chats", {
+      threadId,
+      type: "study",
+      updatedAt: NOW,
+      userId,
+      visibility: "private",
+    })
+  );
+  return { chatIds: [chatId], t, threadIds: [threadId] };
+}
 
 /** Calls the function until its cursor is null, as a pass is run, and returns every report. */
 export async function pass(
