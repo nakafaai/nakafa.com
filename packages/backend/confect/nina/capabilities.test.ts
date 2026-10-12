@@ -107,7 +107,10 @@ function playTurn({
         stopWhen: isStepCount(3),
       }).generateText(ctx, { userId }, { prompt })
     );
-    return { logged, result: Arr.map(generated.toolResults, (r) => r.output) };
+    return {
+      logged,
+      result: Arr.map(generated.toolResults, ({ output }) => output),
+    };
   }).pipe(
     inNewChatStep,
     Effect.provide(
