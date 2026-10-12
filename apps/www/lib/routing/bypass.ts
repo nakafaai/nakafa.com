@@ -2,7 +2,11 @@ import { HashSet } from "effect";
 
 const UNSUPPORTED_ROOT_FILE_PATTERN =
   /^\/[^/]+\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$/i;
-const LOCALE_BYPASS_PATHS = HashSet.fromIterable([
+/**
+ * The exact public paths that skip locale routing. The proxy matcher leaves
+ * every one of them out, and its test reads this set to keep the two equal.
+ */
+export const LOCALE_BYPASS_PATHS = HashSet.fromIterable([
   "/llms.txt",
   "/logo.svg",
   "/manifest.webmanifest",

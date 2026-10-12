@@ -10,6 +10,7 @@ import {
   localeHints,
   matched,
   passedOn,
+  passedOnFiles,
   publicRoutes,
   redirectCases,
   representations,
@@ -216,9 +217,7 @@ describe("proxy", () => {
     });
   });
   it("matches localized PNG aliases without intercepting static assets", () => {
-    expect(
-      Arr.every([...matched, "/MISSING.XML", "/llms.txt"], matchesProxy)
-    ).toBe(true);
+    expect(Arr.every([...matched, "/MISSING.XML"], matchesProxy)).toBe(true);
     expect(
       Arr.every(
         [
@@ -226,12 +225,26 @@ describe("proxy", () => {
           "/fr/example.png",
           "/FR/example.png",
           "/EN/example.png",
+          "/en/og/example/image.png",
         ],
         matchesProxy
       )
     ).toBe(true);
     expect(Arr.some(bypassed, matchesProxy)).toBe(false);
   });
+  it.each(passedOnFiles)(
+    "leaves %s, which the proxy passes on by name, out of the proxy",
+    (path) => {
+      expect(matchesProxy(path)).toBe(false);
+    }
+  );
+  it.each(passedOnFiles)(
+    "keeps the other spellings of %s in the proxy",
+    (path) => {
+      expect(matchesProxy(`${path}/`)).toBe(true);
+      expect(matchesProxy(path.toUpperCase())).toBe(true);
+    }
+  );
   it.each(["/en/example.og", "/en/example.png", "/og/example/image.png"])(
     "delegates the active OG alias %s before document routing",
     async (path) => {

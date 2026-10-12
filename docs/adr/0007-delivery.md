@@ -111,10 +111,15 @@ contextual visit cannot first record a canonical view and then a placement view.
 - The Proxy runs before the CDN cache as a Node.js function, so every request
   its matcher lets in costs one run, a cached page included. The matcher keeps
   out only what the Proxy passes on unchanged: the analytics path, which
-  `next.config.ts` rewrites to PostHog, and the icon and the manifest that every
-  page links. Documents, Flight navigations and prefetches stay in because they
-  can redirect, rewrite or reject a locale, and an unknown root file stays in
-  because the Proxy answers it with a plain 404.
+  `next.config.ts` rewrites to PostHog, and every path in `LOCALE_BYPASS_PATHS`
+  (the icon, the manifest, `llms.txt`, `robots.txt`, `rss.xml`, the sitemaps,
+  `skill.md`, the IndexNow key and the agent skill files). The Proxy test reads
+  that list to keep the matcher equal to it. Documents, Flight navigations and
+  prefetches stay in because they can redirect, rewrite or reject a locale, an
+  unknown root file stays in because the Proxy answers it with a plain 404, and
+  the localized image aliases stay in because the Proxy rejects a locale that
+  the site does not serve. A social image therefore costs one Proxy run on every
+  request, cached or not; the CDN saves its render.
 - The browser reads its Better Auth session on every page load and every return
   to the tab, signed in or not. A read that carries no session cookie and no
   bearer token is answered by the route itself with the `null` that Better Auth

@@ -1,6 +1,7 @@
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import { Array as Arr, Effect } from "effect";
 import type { NextRequest } from "next/server";
+import { LOCALE_BYPASS_PATHS } from "@/lib/routing/bypass";
 /** Public redirect examples cover renderer URLs, locale spelling and suffixes. */
 export const redirectCases: [
   string,
@@ -51,6 +52,8 @@ export const matched = [
   "/logo.svgx",
   "/logo.svg/",
 ];
+/** Every file the proxy passes on by name, read from the proxy's own list. */
+export const passedOnFiles = Arr.fromIterable(LOCALE_BYPASS_PATHS);
 /** Resources owned by static serving, the analytics rewrite, or hard not-found routing. */
 export const bypassed = [
   "/.well-known/llms.txt",
@@ -65,8 +68,7 @@ export const bypassed = [
   POSTHOG_PROXY_PATH,
   `${POSTHOG_PROXY_PATH}/i/v0/e/`,
   `${POSTHOG_PROXY_PATH}/flags`,
-  "/logo.svg",
-  "/manifest.webmanifest",
+  ...passedOnFiles,
 ];
 
 /** Paths that the proxy passes on without locale routing, whatever its matcher does with them. */
@@ -75,9 +77,7 @@ export const passedOn: [
   ConstructorParameters<typeof NextRequest>[1]?,
 ][] = [
   [`${POSTHOG_PROXY_PATH}/i/v0/e/`, { method: "POST" }],
-  ["/llms.txt", undefined],
-  ["/logo.svg", undefined],
-  ["/manifest.webmanifest", undefined],
+  ...Arr.map(passedOnFiles, (path): [string] => [path]),
 ];
 
 /** Locale hints cannot authorize access to internal route spellings. */
