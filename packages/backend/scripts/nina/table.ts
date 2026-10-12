@@ -50,7 +50,7 @@ function sum<Row>(rows: readonly Row[], pick: (row: Row) => number) {
   return Arr.reduce(rows, 0, (total, row) => total + pick(row));
 }
 
-/** The line of one agent's row. A row stored before October 2026 may lack cached or reasoning tokens. */
+/** The line of one agent's row. A row stored before the ledger recorded cached and reasoning tokens lacks them. */
 function lineOf(row: GateTurn["usage"][number]): Line {
   return {
     agent: row.agent,
