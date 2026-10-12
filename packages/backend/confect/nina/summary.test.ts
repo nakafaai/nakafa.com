@@ -1,20 +1,16 @@
-import { RegisteredFunction } from "@confect/server";
 import { createThread, saveMessage } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
-import schema from "@repo/backend/confect/_generated/schema";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { sentTurn } from "@repo/backend/confect/nina/history";
-import { refreshSummary } from "@repo/backend/confect/nina/summary";
-import { createUsageHandler } from "@repo/backend/confect/nina/usage";
-import { GatewayTest, provider } from "@repo/backend/test/gateway";
+import { provider } from "@repo/backend/test/gateway";
 import {
   createSummaryTest,
   failingModel,
   summaryModel,
 } from "@repo/backend/test/nina/summary";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Predicate } from "effect";
+import { Array as Arr, Predicate } from "effect";
 
 /** A turn whose answer costs about 6,000 tokens, so six of them outweigh the history budget. */
 const BIG = { tokens: 6000 } as const;
@@ -87,34 +83,8 @@ describe("Nina rolling summary", () => {
       summaryModel("- The learner studied limits.")
     );
     const f = await createSummaryTest(9, () => BIG);
-    const turn = await f.t.query((ctx) =>
-      ctx.db
-        .query("ninaTurns")
-        .withIndex("by_chatId_and_order", (q) =>
-          q.eq("chatId", f.chatId).eq("order", 8)
-        )
-        .unique()
-    );
-    if (!turn) {
-      throw new Error("Expected the newest turn of the fixture.");
-    }
-    await f.t.action((ctx) =>
-      Effect.runPromise(
-        createUsageHandler(turn._id).pipe(
-          Effect.flatMap((usageHandler) =>
-            refreshSummary(
-              { ...f, order: 8, promptMessageId: turn.promptMessageId },
-              usageHandler
-            )
-          ),
-          Effect.provide([
-            GatewayTest,
-            RegisteredFunction.actionLayer(schema, ctx),
-          ])
-        )
-      )
-    );
-    const settled = await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id));
+    await f.refresh(8);
+    const settled = await f.turn(8);
     expect(settled?.usage).toEqual([
       expect.objectContaining({
         agent: "summary",
