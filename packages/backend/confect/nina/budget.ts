@@ -27,7 +27,7 @@ export const NINA_BUDGET = {
    * Nina's static instructions, her four tool definitions and the runtime
    * facts of a turn: what every call carries before any conversation. Nothing
    * cuts to this number. The budget test measures the real ones against it
-   * from a real turn (5,174 tokens with the memory capability, measured on 12
+   * from a real turn (5,143 tokens with the memory capability, measured on 12
    * October 2026), and it is rounded up to the next 1,000 tokens.
    */
   instructions: 6000,

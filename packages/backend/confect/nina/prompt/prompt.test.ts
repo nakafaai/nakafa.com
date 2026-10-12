@@ -316,7 +316,7 @@ describe("createNinaPrompt", () => {
 
     expect(prompt).not.toContain("# Runtime Context");
     expect(prompt).not.toContain("- date:");
-    expect(prompt).not.toContain("Current page:");
+    expect(prompt).not.toContain("Learning asset:");
     expect(prompt).not.toContain("# Nina Context Pack");
     expect(prompt).not.toContain("- curriculum preference:");
   });

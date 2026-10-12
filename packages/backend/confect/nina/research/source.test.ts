@@ -214,7 +214,7 @@ describe("lib/source", () => {
   it("does not take the page of the runtime facts for a source the learner named", () => {
     const message = withTurnContext(
       { role: "user", content: "Baca https://ai-sdk.dev/docs" },
-      "# Runtime Context\n\nCurrent page:\n- url: https://nakafa.com/en/home"
+      "# Runtime Context\n\nLearning asset:\n- url: https://nakafa.com/en/home"
     );
     expect(
       Arr.map(
@@ -226,7 +226,7 @@ describe("lib/source", () => {
       getSourceReferencesFromMessages([
         withTurnContext(
           { role: "user", content: "Jelaskan limit" },
-          "Current page:\n- url: https://nakafa.com/en/home"
+          "Learning asset:\n- url: https://nakafa.com/en/home"
         ),
       ])
     ).toEqual([]);
@@ -240,7 +240,7 @@ describe("lib/source", () => {
               role: "user",
               content: "Baca https://nakafa.com/id/materi/matematika",
             },
-            "Current page:\n- url: https://nakafa.com/en/home"
+            "Learning asset:\n- url: https://nakafa.com/en/home"
           ),
         ]),
         (link) => link.href
