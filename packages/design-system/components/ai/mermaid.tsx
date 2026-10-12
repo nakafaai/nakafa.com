@@ -1,5 +1,7 @@
 "use client";
 import { captureException } from "@repo/analytics/posthog/browser";
+import { CodeBlockText } from "@repo/design-system/components/code-block/text";
+import { codeFencePreVariants } from "@repo/design-system/components/markdown/react/variants";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   type MermaidRenderConfig,
@@ -29,29 +31,23 @@ const diagramVariants = cva("flex [&>svg]:m-auto", {
 });
 
 /**
- * Renders one attempt. A failed attempt keeps the last good SVG when one
- * exists, and only a failure other than rejected chart text is reported.
+ * Renders one attempt and returns the SVG to show. A failed attempt returns
+ * the last good SVG, and only a failure other than rejected chart text is
+ * reported.
  */
 function renderAttempt(
   attemptId: string,
   chart: string,
   config: MermaidRenderConfig,
-  renderKey: string,
   lastValidSvg: RefObject<string>
 ) {
-  const failedState = () => {
-    const svg = lastValidSvg.current;
-    return { failed: !svg, renderKey, svg };
-  };
   return renderMermaid(attemptId, chart, config).pipe(
-    Effect.tap(({ svg }) =>
-      Effect.sync(() => {
-        lastValidSvg.current = svg;
-      })
-    ),
-    Effect.map(({ svg }) => ({ failed: false, renderKey, svg })),
+    Effect.map(({ svg }) => {
+      lastValidSvg.current = svg;
+      return svg;
+    }),
     Effect.catchTags({
-      MermaidSyntaxError: () => Effect.sync(failedState),
+      MermaidSyntaxError: () => Effect.sync(() => lastValidSvg.current),
       MermaidRenderError: (error) =>
         Effect.sync(() => {
           captureException(error.cause, {
@@ -59,7 +55,7 @@ function renderAttempt(
             operation: error.operation,
             source: "mermaid-render",
           });
-          return failedState();
+          return lastValidSvg.current;
         }),
     })
   );
@@ -94,7 +90,6 @@ export function Mermaid({
     (getThemeAppearance(resolvedTheme) === "dark" ? "dark" : "default");
   const renderKey = `${renderId}-${theme}`;
   const [renderState, setRenderState] = useState({
-    failed: false,
     renderKey: "",
     svg: "",
   });
@@ -106,15 +101,9 @@ export function Mermaid({
     renderSequence.current += 1;
     const attemptId = `${renderId}-${renderSequence.current}`;
     const renderFiber = Effect.runFork(
-      renderAttempt(
-        attemptId,
-        chart,
-        { ...config, theme },
-        renderKey,
-        lastValidSvg
-      ).pipe(
-        Effect.tap((nextRenderState) =>
-          Effect.sync(() => setRenderState(nextRenderState))
+      renderAttempt(attemptId, chart, { ...config, theme }, lastValidSvg).pipe(
+        Effect.tap((svg) =>
+          Effect.sync(() => setRenderState({ renderKey, svg }))
         )
       )
     );
@@ -132,15 +121,15 @@ export function Mermaid({
     );
   }
   // With no SVG to show, the chart text stays readable instead of an error.
-  if (hasCurrentRender && renderState.failed) {
+  if (!renderState.svg) {
     return (
       <div className={cn("flex flex-col gap-2 overflow-auto", className)}>
         <p className="text-muted-foreground text-sm">
           This diagram could not be drawn. Its source is below.
         </p>
-        <pre className="overflow-x-auto rounded border bg-background p-2 text-foreground text-xs">
+        <CodeBlockText preClassName={codeFencePreVariants()}>
           {chart}
-        </pre>
+        </CodeBlockText>
       </div>
     );
   }
