@@ -244,6 +244,8 @@ describe("Nina fold by size", () => {
           chatId: f.chatId,
           text: expect.any(ArrayBuffer),
           throughOrder: 1,
+          // The fold's provider usage counts toward the chat's summary upkeep.
+          usage: { calls: 1, input: 12, output: 4 },
         }),
       ]);
       expect(await f.text()).toBe("- The learner studied limits.");
