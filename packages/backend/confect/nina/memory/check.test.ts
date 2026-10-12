@@ -90,36 +90,30 @@ describe("memory candidate check", () => {
     ).toEqual(["12", "Ya."]);
   });
 
-  it.each([
-    ["an email address", "nama@contoh.com"],
-    ["a link", "https://contoh.com/saya"],
-    ["a link without a scheme", "www.contoh.com"],
-    ["a bare domain", "contoh.co"],
-    ["a long number", "081234567890"],
-    ["eight digits in a row", "12345678"],
-  ])("drops a candidate whose text holds %s", (_, secret) => {
-    expect(kept([candidate({ text: `Kontak ${secret}.` })])).toEqual([]);
-  });
-
-  it("drops a candidate whose quote holds an email address or a long number", () => {
-    const said = "Aku bisa dihubungi di nama@contoh.com dan 081234567890.";
-    const quoting = (quote: string) =>
-      checkCandidates(said, [candidate({ quote })], NOW);
-    expect(quoting("nama@contoh.com")).toEqual([]);
-    expect(quoting("081234567890")).toEqual([]);
-    expect(quoting("aku bisa dihubungi")).toHaveLength(1);
-  });
-
-  it("allows short numbers such as a grade or a year, seven digits in a row, and a date written with dashes", () => {
-    expect(
-      kept([candidate({ quote: "snbt\n2027", text: "SNBT 2027, kelas 12." })])
-    ).toEqual(["SNBT 2027, kelas 12."]);
+  it("leaves what a candidate means to the decision model: it keeps a text that names the learner from outside, in any language, and one that holds a link, an address or a long number, and a quote that holds one", () => {
     expect(
       kept([
-        candidate({ text: "Nomor 1234567." }),
+        candidate({ text: "Learner berada di kelas 12." }),
+        candidate({ text: "Siswa kelas 12." }),
+        candidate({ text: "The learner is in grade 12." }),
+        candidate({ text: "Der Lernende ist in Klasse 12." }),
+        candidate({ text: "学習者は高校三年生です。" }),
+        candidate({ text: "Kontak nama@contoh.com." }),
+        candidate({ text: "Lihat https://contoh.com/saya." }),
+        candidate({ text: "Kontak www.contoh.com." }),
+        candidate({ text: "Nomor 081234567890." }),
+        candidate({ text: "Nomor 12345678." }),
+        candidate({ text: "SNBT 2027, kelas 12." }),
         candidate({ text: "Ujian 20-10-2026 pukul 14.30." }),
       ])
-    ).toEqual(["Nomor 1234567.", "Ujian 20-10-2026 pukul 14.30."]);
+    ).toHaveLength(12);
+    const said = "Aku bisa dihubungi di nama@contoh.com dan 081234567890.";
+    expect(
+      checkCandidates(said, [candidate({ quote: "nama@contoh.com" })], NOW)
+    ).toHaveLength(1);
+    expect(
+      checkCandidates(said, [candidate({ quote: "081234567890" })], NOW)
+    ).toHaveLength(1);
   });
 
   it("keeps a situation that ends today or later and its date", () => {

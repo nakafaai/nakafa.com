@@ -11,6 +11,8 @@ const PROVIDER =
   "import @convex-dev/ai-sdk-provider only inside packages/backend/confect/gateway/; take model handles from its Gateway service";
 const CLIENT =
   "take model handles from the Gateway service in confect/gateway instead of the AI SDK's gateway client";
+const DECISION =
+  "take decisions from the Gateway service in confect/gateway instead of the AI SDK's decide";
 const MODEL =
   "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK resolves through its default Vercel gateway";
 
@@ -54,15 +56,27 @@ import * as AI from "ai";
 import SDK from "ai";
 export { gateway as client } from "ai";
 export { createGateway } from "ai";
-export * from "ai";
-export * as sdk from "ai";
 const lite = AI.gateway("google/gemini-3.5-flash-lite");
 const pro = SDK.createGateway({}).languageModel("google/gemini-3.7-flash");`);
       assert.deepStrictEqual(
         violations,
-        Arr.replicate(`${NINA}: ${CLIENT}.`, 8)
+        Arr.replicate(`${NINA}: ${CLIENT}.`, 6)
       );
     })
+  );
+
+  it.effect.each(['export * from "ai";', 'export * as sdk from "ai";'])(
+    "rejects %s as a way to reach the AI SDK's gateway client and its decide, and allows its decide inside the gateway module",
+    (source) =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(yield* inspect(source), [
+          `${NINA}: ${CLIENT}.`,
+          `${NINA}: ${DECISION}.`,
+        ]);
+        assert.deepStrictEqual(yield* inspect(source, GATEWAY), [
+          `${GATEWAY}: ${CLIENT}.`,
+        ]);
+      })
   );
 
   it.effect(
@@ -74,6 +88,28 @@ const pro = SDK.createGateway({}).languageModel("google/gemini-3.7-flash");`);
           GATEWAY
         );
         assert.deepStrictEqual(violations, [`${GATEWAY}: ${CLIENT}.`]);
+      })
+  );
+
+  it.effect(
+    "rejects the AI SDK's decide outside the gateway module in every form, and allows it inside",
+    () =>
+      Effect.gen(function* () {
+        const source = `
+import { experimental_decide as decide, generateText } from "ai";
+import { experimental_evaluate } from "ai";
+import * as AI from "ai";
+import SDK from "ai";
+export { experimental_decide } from "ai";
+export { generateText as ask } from "ai";
+const answers = AI.experimental_decide({ model, state, questions });
+const legacy = SDK.experimental_evaluate({ model, state, questions });
+const text = AI.generateText;`;
+        assert.deepStrictEqual(
+          yield* inspect(source),
+          Arr.replicate(`${NINA}: ${DECISION}.`, 5)
+        );
+        assert.deepStrictEqual(yield* inspect(source, GATEWAY), []);
       })
   );
 

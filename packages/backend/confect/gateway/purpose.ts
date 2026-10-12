@@ -1,5 +1,5 @@
 import { Effort } from "@repo/backend/confect/gateway/model";
-import { Schema } from "effect";
+import { Duration, Schema } from "effect";
 
 /** Why Nakafa calls a model. Its reasoning effort and deadlines follow from it. */
 export const Purpose = Schema.Literals([
@@ -79,3 +79,12 @@ export const purposes = {
     timeout: { stepMs: 15_000, totalMs: 45_000 },
   },
 } satisfies Record<Purpose, typeof Budget.Type>;
+
+/**
+ * How long one decision may take, its retries included. A decision is one short
+ * request with no streamed answer: the gateway answered in 140 to 310 ms when
+ * measured on the dev deployment on 12 October 2026 (ADR 0019). Two retries wait
+ * 2 and 4 seconds, so ten seconds hold all three attempts, and a request that is
+ * still open after it has hung.
+ */
+export const decisionDeadline = Duration.seconds(10);

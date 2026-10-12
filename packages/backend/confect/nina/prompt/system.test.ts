@@ -138,9 +138,10 @@ describe("formatNinaContextPackPrompt", () => {
 
 describe("createNinaSystemPrompt", () => {
   it("adds a focused question and its teaching rules only when present", () => {
-    const plain = createNinaSystemPrompt({});
+    const plain = createNinaSystemPrompt({ memory: false });
     const focused = createNinaSystemPrompt({
       focus: "# Focused Try-out Question\n\n## Question\n\nWhat is 2 + 2?",
+      memory: false,
     });
 
     expect(plain).not.toContain("Focused Try-out Question");
@@ -156,6 +157,7 @@ describe("createNinaSystemPrompt", () => {
     const prompt = createNinaSystemPrompt({
       focus: "# Focused Try-out Question\n\n## Question\n\nWhat is 2 + 2?",
       learner: "# Learner\n\n- Focus: preparing for try-outs",
+      memory: false,
       pageContent: "# Current Page\n\nThe learner is viewing a lesson.",
       summary: "- The learner practiced limits.",
       userRole: "student",

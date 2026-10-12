@@ -48,6 +48,20 @@ export const openWith = Effect.fn("nina.memory.openWith")(function* (
 export type Opened = Effect.Success<ReturnType<typeof openWith>>[number];
 
 /**
+ * One opened memory as Nina and the capture call read it, with a kind and a
+ * title only when it has one.
+ */
+export function toNote(memory: Opened) {
+  return {
+    confirmedAt: memory.confirmedAt,
+    id: memory._id,
+    ...(memory.kind === undefined ? {} : { kind: memory.kind }),
+    text: memory.text,
+    ...(memory.title === undefined ? {} : { title: memory.title }),
+  };
+}
+
+/**
  * Opens the text and the titles of a learner's stored memories. A learner with
  * no memories has no key to read, and a memory without its key is a defect.
  */

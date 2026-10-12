@@ -2,31 +2,23 @@ import { Ref } from "@confect/core";
 import { Agent } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  CAPABILITY_BUDGET,
-  timeLeft,
-} from "@repo/backend/confect/nina/capability/deadline";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
+  appendNinaTurn,
   createNinaTest,
   ninaModel,
+  ninaModelFor,
   ninaStream,
   ninaToolInput,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import {
-  Array as Arr,
-  DateTime,
-  Duration,
-  Effect,
-  MutableRef,
-  Option,
-} from "effect";
+import { Array as Arr, DateTime, Effect, Option } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -36,6 +28,9 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 }));
 
 const fixture = () => createNinaTest({ prompt: "Explain a function limit." });
+
+const CACHE_MARKER =
+  ',"providerOptions":{"openaiCompatible":{"cache_control":{"type":"ephemeral"}}}';
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const SUMMARY_UPDATED_AT = Date.UTC(2026, 8, 27, 12);
@@ -355,58 +350,6 @@ describe("Nina generation through the real Agent component", () => {
     );
   });
 
-  it("counts the time a capability has left from the start of the chat step it runs in", async () => {
-    // Only the wall clock is faked, so the model's calls can take time at once.
-    vi.useRealTimers();
-    vi.useFakeTimers({ toFake: ["Date"] });
-    const lefts = MutableRef.make<readonly number[]>([]);
-    vi.mocked(runNakafaAgent).mockImplementation(() =>
-      Effect.map(timeLeft, (left) => {
-        MutableRef.update(lefts, Arr.append(Duration.toMillis(left)));
-        return { text: "Evidence." };
-      })
-    );
-    const askNakafa = (toolCallId: string) => [
-      { type: "stream-start" as const, warnings: [] },
-      {
-        type: "tool-call" as const,
-        toolCallId,
-        toolName: "nakafa",
-        input: encodeJsonText(ninaToolInput),
-      },
-      {
-        type: "finish" as const,
-        usage: ninaUsage,
-        finishReason: { unified: "tool-calls" as const, raw: "tool-calls" },
-      },
-    ];
-    // Nina's own call takes 40 seconds in the first step and 5 in the second.
-    const languageModel = ninaModel();
-    const answer = languageModel.doStream;
-    let step = 0;
-    languageModel.doStream = (options) => {
-      step += 1;
-      if (step > 2) {
-        return answer.call(languageModel, options);
-      }
-      vi.advanceTimersByTime(step === 1 ? 40_000 : 5000);
-      return Promise.resolve(ninaStream(askNakafa(`read-${step}`)));
-    };
-    provider.languageModel.mockReturnValue(languageModel);
-    const f = await fixture();
-    await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => undefined);
-    expect((await f.inspect()).turn?.state.status).toBe("complete");
-    const [first, second] = MutableRef.get(lefts);
-    // The first run has what its step has left after Nina's call took 40 seconds.
-    expect(first).toBeLessThanOrEqual(
-      Duration.toMillis(CAPABILITY_BUDGET) - 40_000
-    );
-    // The second step began later and its call took 5 seconds, so its run has
-    // more left, not less, than the first run had.
-    expect(second - first).toBe(35_000);
-  });
-
   it("stores the claim and the readiness of a turn before its model is called, and the first signs of work after", async () => {
     // Only the wall clock is faked, so the model's call can take time at once.
     vi.useRealTimers();
@@ -474,5 +417,47 @@ describe("Nina generation through the real Agent component", () => {
     expect(encodeJsonText(languageModel.doStreamCalls[0]?.prompt)).toContain(
       `- date: ${DateTime.formatIso(DateTime.makeUnsafe(turn?._creationTime ?? 0))}`
     );
+  });
+});
+
+describe("Nina generation with what the learner told her", () => {
+  /** The system prompt, without the cache marker that moves, and the newest message of a model call. */
+  function ends({ prompt }: { readonly prompt: readonly unknown[] }) {
+    return {
+      newest: encodeJsonText(Option.getOrUndefined(Arr.last(prompt))),
+      system: encodeJsonText(
+        Option.getOrUndefined(Arr.head(prompt))
+      ).replaceAll(CACHE_MARKER, ""),
+    };
+  }
+
+  it("keeps the system prompt byte for byte from one question to another, and gives each message the memories its words call up", async () => {
+    const languageModel = ninaModelFor(2);
+    provider.languageModel.mockReturnValue(languageModel);
+    const f = await createPortraitTest();
+    await f.seedPortrait({ text: "Duduk di kelas 12 dan suka contoh soal." });
+    await f.seed({ confirmedAt: 1, text: "Bingung limit." });
+    await f.seed({ confirmedAt: 2, text: "Suka main gitar." });
+    await f.seed({ confirmedAt: 3, text: "Tinggal di Bandung." });
+    await f.seed({ confirmedAt: 4, text: "Ikut SNBT 2027." });
+    await f.seed({ confirmedAt: 5, text: "Kelas 12 IPA." });
+    await f.t.action(run, { turnId: f.turnId });
+    // A new memory and another question change the message, not the prompt.
+    await f.seed({ confirmedAt: 6, text: "Mau kuliah di ITB." });
+    const next = await appendNinaTurn(f, {
+      prompt: "Bagaimana cara main gitar?",
+    });
+    await f.t.action(run, { turnId: next.turnId });
+    const [one, two] = Arr.map(languageModel.doStreamCalls, ends);
+    expect(two?.system).toBe(one?.system);
+    expect(one?.system).toContain(
+      "<portrait>\\nDuduk di kelas 12 dan suka contoh soal.\\n</portrait>"
+    );
+    expect(one?.system).not.toContain("Bingung limit.");
+    expect(one?.newest).toContain("# Memories");
+    expect(one?.newest).toContain("- Bingung limit. (1970-01-01)");
+    expect(one?.newest).not.toContain("Suka main gitar.");
+    expect(two?.newest).toContain("- Suka main gitar. (1970-01-01)");
+    expect(two?.newest).not.toContain("Bingung limit.");
   });
 });

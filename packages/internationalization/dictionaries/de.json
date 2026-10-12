@@ -717,6 +717,7 @@
       "math": "Mathematische Prüfung fehlgeschlagen",
       "nakafa": "Inhaltssuche fehlgeschlagen",
       "deepResearch": "Webrecherche fehlgeschlagen",
+      "memory": "Erinnerungssuche fehlgeschlagen",
       "unknown": "Prüfung fehlgeschlagen"
     },
     "review-credits": "Credits ansehen",
@@ -755,6 +756,7 @@
       "math": "Berechnungen prüfen",
       "nakafa": "Lernmaterial suchen",
       "deepResearch": "Quellen im Web recherchieren",
+      "memory": "Erinnerungen abrufen",
       "unknown": "Informationen prüfen",
       "stopped": "Beendet",
       "partial": "Teilweise fertig",

@@ -2,6 +2,7 @@ import type { CapabilityOutput } from "@repo/backend/confect/nina/capability/pro
 import {
   type LearningCapabilityName,
   MATH_CAPABILITY,
+  MEMORY_CAPABILITY,
   NAKAFA_CAPABILITY,
   RESEARCH_CAPABILITY,
 } from "@repo/backend/confect/nina/capability/spec";
@@ -14,6 +15,18 @@ const NinaCapabilityDecisionSchema = Schema.Union([
   Schema.Struct({ state: Schema.Literal("denied"), reason: Schema.String }),
 ]);
 type NinaCapabilityDecision = typeof NinaCapabilityDecisionSchema.Type;
+
+/**
+ * Why the memory capability is denied while the learner has paused memory. The
+ * policy decides it for a turn from its context, and the capability decides it
+ * again for a call, because the learner may pause while the turn runs.
+ */
+export const MEMORY_PAUSED = {
+  state: "denied",
+  reason:
+    "The learner paused memory, so what they told Nina before is not available. Tell the learner you cannot look it up while memory is paused.",
+} satisfies NinaCapabilityDecision;
+
 /** Resolves whether one Nina capability may run under the immutable context pack. */
 export function decideNinaCapability({
   capability,
@@ -47,6 +60,9 @@ export function decideNinaCapability({
       reason: "Math verification is not allowed for this context.",
     };
   }
+  if (capability === MEMORY_CAPABILITY && context.memory !== true) {
+    return MEMORY_PAUSED;
+  }
   return { state: "allowed" };
 }
 /** Builds model-facing evidence for a capability denied by turn policy. */
@@ -68,7 +84,7 @@ export function deniedCapabilityResult({
       "# Final Answer Constraint",
       "",
       "Use only evidence already available in the conversation.",
-      "Do not invent unavailable Nakafa, research, or math evidence.",
+      "Do not invent what this capability would have returned.",
     ],
     "\n"
   );

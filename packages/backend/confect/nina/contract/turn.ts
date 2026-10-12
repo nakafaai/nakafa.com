@@ -181,12 +181,19 @@ export function readNinaLearningPage(page: NinaPage) {
     verified: learning.verified,
   };
 }
-/** Builds the shared specialist context from validated Nina turn inputs. */
+/**
+ * Builds the shared specialist context from validated Nina turn inputs.
+ * `memory` is whether the learner's memory is on for the turn. The turn reads
+ * the pause once, and the capability policy decides from it whether the memory
+ * capability is offered and whether a call may run.
+ */
 export function createNinaAgentContext({
+  memory,
   page,
   runtime,
   user,
 }: {
+  readonly memory: boolean;
   readonly page: NinaPage;
   readonly runtime: NinaRuntime;
   readonly user: NinaUser;
@@ -194,6 +201,7 @@ export function createNinaAgentContext({
   const learningPage = readNinaLearningPage(page);
   return {
     currentDate: runtime.currentDate,
+    memory,
     nina: page.nina,
     slug: learningPage.slug,
     url: learningPage.url,

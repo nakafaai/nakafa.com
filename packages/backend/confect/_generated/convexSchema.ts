@@ -51,6 +51,7 @@ import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
+import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
@@ -146,6 +147,7 @@ export default $defineSchema({
   materialCatalog: $Table.tableDefinition(materialCatalog),
   ninaMemories: $Table.tableDefinition(ninaMemories),
   ninaMemoryKeys: $Table.tableDefinition(ninaMemoryKeys),
+  ninaMemoryPortraits: $Table.tableDefinition(ninaMemoryPortraits),
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),

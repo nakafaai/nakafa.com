@@ -14,10 +14,15 @@ export const AgentCurriculumPreferenceSchema = Schema.Struct({
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type AgentCurriculumPreference =
   typeof AgentCurriculumPreferenceSchema.Type;
-/** Per-turn context shared by Nina and specialist agents after authenticated admission. */
+/**
+ * Per-turn context shared by Nina and specialist agents after authenticated
+ * admission. `memory` is whether the learner's memory is on for the turn, which
+ * only Nina's own turn knows: a context without it has no memory capability.
+ */
 const AgentContextSchema = Schema.Struct({
   currentDate: Schema.String,
   curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
+  memory: Schema.optional(Schema.Boolean),
   nina: Schema.optional(NinaContextPackSchema),
   slug: Schema.String,
   url: Schema.String,

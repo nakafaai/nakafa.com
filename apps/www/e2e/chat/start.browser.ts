@@ -72,8 +72,13 @@ const givesBackWhenRefused = (page: Page, scope: Locator, changes: Changes) =>
     await expect(page).not.toHaveURL(OPENED_CHAT);
   });
 
-/** The new chat page, where an admitted prompt moves to its own chat. */
-const onThePage = (page: Page) => page.locator("main main");
+/**
+ * The new chat page, where an admitted prompt moves to its own chat. The page
+ * the learner left stays in the document, hidden, for a moment after the chat
+ * opens, so only the page a learner can see counts.
+ */
+const onThePage = (page: Page) =>
+  page.locator("main main").filter({ visible: true });
 
 /** Waits until the page of the chat that the new chat page moved to holds the prompt. */
 const pageOpensChat = (page: Page) => async () => {

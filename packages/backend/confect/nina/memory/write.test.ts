@@ -11,7 +11,7 @@ const NOW = Date.UTC(2026, 9, 10, 12);
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
 const PATH = "path:materials/mathematics";
 const CHEMISTRY = "lesson:material:lesson:chemistry";
-/** Nine words, and a text that has them all and one more: they say the same, in other words. */
+/** A text, and the same text with one more word: not the same words, though they say the same thing. */
 const SCHOOL = "Saya kelas 12 IPA di SMA Negeri 1 Bandung";
 const SCHOOL_NOW = `${SCHOOL} sekarang`;
 
@@ -89,7 +89,7 @@ describe("memory capture write", () => {
         [
           candidate({
             kind: "situation",
-            known: id,
+            known: 1,
             text: "Ulangan kimia diundur",
             until: "2026-10-25",
           }),
@@ -110,7 +110,7 @@ describe("memory capture write", () => {
     ]);
   });
 
-  it("rewrites the words of a memory Nina wrote when the candidate names it and says something new, and moves its keys to the new words", async () => {
+  it("rewrites the words of a memory Nina wrote when the candidate names it with other words, and moves its keys to the new words", async () => {
     const f = await createCaptureTest();
     const id = await f.seed({
       confirmedAt: 1,
@@ -118,7 +118,7 @@ describe("memory capture write", () => {
       text: "Kelas 11.",
       topics: [CHEMISTRY],
     });
-    expect(await f.run([candidate({ known: id })], { topics: [LESSON] })).toBe(
+    expect(await f.run([candidate({ known: 1 })], { topics: [LESSON] })).toBe(
       1
     );
     expect(await f.stored()).toEqual([
@@ -137,24 +137,23 @@ describe("memory capture write", () => {
     expect(await f.find({ limit: 5, text: "ipa" })).toEqual(["Kelas 12 IPA."]);
   });
 
-  it("rewrites the words of a memory Nina wrote when the candidate says nearly the same, because Nina wrote them", async () => {
+  it("adds a memory for a candidate that names none, though it says nearly the same as one: the model says what is restated, and no comparison of words does", async () => {
     const f = await createCaptureTest();
     await f.seed({ kind: "level", text: SCHOOL });
     expect(await f.run([candidate({ text: SCHOOL_NOW })])).toBe(1);
-    expect(await f.stored()).toEqual([
-      expect.objectContaining({ author: "nina", confirmedAt: NOW }),
-    ]);
-    expect(await f.texts()).toEqual([SCHOOL_NOW]);
+    expect(await f.texts()).toEqual([SCHOOL, SCHOOL_NOW]);
   });
 
-  it("keeps Nina's wording of a memory when the candidate only restates it in another case, punctuation or spacing", async () => {
+  it("keeps Nina's wording of a memory when the candidate that names it only restates it in another case, punctuation or spacing", async () => {
     const f = await createCaptureTest();
     const id = await f.seed({
       confirmedAt: 1,
       kind: "level",
       text: "Kelas 12 IPA.",
     });
-    expect(await f.run([candidate({ text: "kelas   12,  ipa" })])).toBe(1);
+    expect(
+      await f.run([candidate({ known: 1, text: "kelas   12,  ipa" })])
+    ).toBe(1);
     // The memory is confirmed now, and its words are the ones Nina wrote first.
     expect(await f.stored()).toEqual([
       expect.objectContaining({
@@ -171,94 +170,23 @@ describe("memory capture write", () => {
     );
   });
 
-  it("never replaces the words of a memory the learner wrote when the candidate names it but says something else: the candidate becomes a memory of Nina's", async () => {
-    const f = await createCaptureTest();
-    const id = await f.seed({
-      author: "learner",
-      confirmedAt: 1,
-      text: "Kelas 11.",
-      title: "Sekolah",
-      topics: [CHEMISTRY],
-    });
-    const [before] = await f.stored();
-    expect(await f.run([candidate({ known: id })], { topics: [LESSON] })).toBe(
-      1
-    );
-    const [learners, ninas, ...others] = await f.stored();
-    expect(others).toEqual([]);
-    // The learner's row is the same bytes: `toStrictEqual` compares the sealed
-    // text and title, where `toEqual` takes any two buffers for equal.
-    expect(learners).toStrictEqual(before);
-    expect(ninas).toMatchObject({
-      author: "nina",
-      confirmedAt: NOW,
-      kind: "level",
-      topics: [LESSON],
-    });
-    expect(ninas).not.toHaveProperty("title");
-    expect(await f.texts()).toEqual(["Kelas 11.", "Kelas 12 IPA."]);
-    expect(await f.titles()).toEqual(["Sekolah", null]);
-    expect(await f.remembered()).toBe(1);
-  });
-
-  it("confirms the memory of Nina's that says the same, and adds no copy of it, when the candidate names a memory the learner wrote that says something else", async () => {
-    const f = await createCaptureTest();
-    const id = await f.seed({
-      author: "learner",
-      confirmedAt: 1,
-      text: "Kelas 11.",
-    });
-    const ninas = await f.seed({
-      confirmedAt: 1,
-      kind: "level",
-      text: "Kelas 12 IPA.",
-    });
-    const [before] = await f.stored();
-    expect(await f.run([candidate({ known: id })])).toBe(1);
-    const [learners, confirmed, ...others] = await f.stored();
-    expect(others).toEqual([]);
-    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
-    expect(learners).toStrictEqual(before);
-    expect(confirmed).toMatchObject({
-      _id: ninas,
-      author: "nina",
-      confirmedAt: NOW,
-      kind: "level",
-    });
-    expect(await f.texts()).toEqual(["Kelas 11.", "Kelas 12 IPA."]);
-    expect(await f.remembered()).toBe(1);
-  });
-
-  it("leaves a memory that is only a title as it is, though a candidate that says nothing either seems to repeat its empty words", async () => {
-    const f = await createCaptureTest();
-    await f.seed({ author: "learner", text: "", title: "Ujian UTBK" });
-    const [before] = await f.stored();
-    await f.run([
-      candidate({ kind: "situation", text: "?", until: "2026-10-20" }),
-    ]);
-    const [learners] = await f.stored();
-    // The memory is a title alone, so it gets no kind and no end day to expire by.
-    expect(learners).toStrictEqual(before);
-  });
-
   it.each([
-    ["names it", true],
-    ["says words like it", false],
+    ["with other words", SCHOOL_NOW],
+    ["with a fact of its own", "Kelas 11 SMA."],
   ])(
-    "confirms a memory the learner wrote when a candidate that %s says the same, and leaves its words and its author",
-    async (_, named) => {
+    "confirms a memory the learner wrote when a candidate names it %s, and leaves its words, its title and its author",
+    async (_, text) => {
       const f = await createCaptureTest();
       const id = await f.seed({
         author: "learner",
         confirmedAt: 1,
         text: SCHOOL,
         title: "Sekolah",
+        topics: [CHEMISTRY],
       });
       const [before] = await f.stored();
       expect(
-        await f.run([
-          candidate({ ...(named ? { known: id } : {}), text: SCHOOL_NOW }),
-        ])
+        await f.run([candidate({ known: 1, text })], { topics: [LESSON] })
       ).toBe(1);
       const [after, ...others] = await f.stored();
       expect(others).toEqual([]);
@@ -267,24 +195,51 @@ describe("memory capture write", () => {
         author: "learner",
         confirmedAt: NOW,
         kind: "level",
+        topics: [CHEMISTRY, LESSON],
       });
       // `toEqual` takes any two sealed buffers for equal; `toStrictEqual` compares their bytes.
       expect(after?.text).toStrictEqual(before?.text);
       expect(after?.title).toStrictEqual(before?.title);
       expect(await f.texts()).toEqual([SCHOOL]);
       expect(await f.titles()).toEqual(["Sekolah"]);
+      expect(await f.remembered()).toBe(1);
     }
   );
 
-  it("gives a memory the learner wrote the kind of the candidate that names it, or that says the same", async () => {
+  it("confirms a memory that is only a title when a candidate names it, and leaves its title", async () => {
     const f = await createCaptureTest();
-    const named = await f.seed({ author: "learner", text: "Kelas 12 IPA" });
+    const id = await f.seed({
+      author: "learner",
+      text: "",
+      title: "Ujian UTBK",
+    });
+    const [before] = await f.stored();
+    expect(
+      await f.run([
+        candidate({
+          kind: "situation",
+          known: 1,
+          text: "Ujian UTBK.",
+          until: "2026-10-20",
+        }),
+      ])
+    ).toBe(1);
+    const [after] = await f.stored();
+    expect(after).toMatchObject({ _id: id, kind: "situation" });
+    expect(after?.title).toStrictEqual(before?.title);
+    expect(await f.titles()).toEqual(["Ujian UTBK"]);
+  });
+
+  it("gives a memory the learner wrote the kind of the candidate that names it", async () => {
+    const f = await createCaptureTest();
+    await f.seed({ author: "learner", text: "Kelas 12 IPA" });
     await f.seed({ author: "learner", text: "Mau ikut SNBT 2027" });
     expect(
       await f.run([
-        candidate({ known: named }),
+        candidate({ known: 1 }),
         candidate({
           kind: "goal",
+          known: 2,
           quote: "mau ikut snbt 2027",
           text: "mau ikut SNBT 2027!",
         }),
@@ -308,12 +263,12 @@ describe("memory capture write", () => {
 
   it("dates a memory the learner wrote when a chat says it is a situation", async () => {
     const f = await createCaptureTest();
-    const id = await f.seed({ author: "learner", text: "Ulangan kimia" });
+    await f.seed({ author: "learner", text: "Ulangan kimia" });
     expect(
       await f.run([
         candidate({
           kind: "situation",
-          known: id,
+          known: 1,
           text: "Ulangan kimia.",
           until: "2026-10-25",
         }),
@@ -328,33 +283,30 @@ describe("memory capture write", () => {
     ]);
   });
 
-  it("writes a new memory when the memory it names or repeats is of another kind, or the known memory is another learner's", async () => {
+  it("writes a new memory when the memory it names is of another kind", async () => {
     const f = await createCaptureTest();
-    const other = await f.stranger();
     const goal = await f.seed({ kind: "goal", text: "Ikut SNBT" });
-    const theirs = await f.seed({
-      kind: "level",
-      text: "Kelas 9",
-      userId: other.userId,
-    });
-    expect(await f.run([candidate({ known: goal })])).toBe(1);
-    expect(await f.run([candidate({ text: "Ikut SNBT" })])).toBe(1);
-    expect(
-      await f.run([candidate({ known: theirs, text: "Kelas 12 SMA." })])
-    ).toBe(1);
-    expect(await f.texts()).toEqual([
-      "Ikut SNBT",
-      "Kelas 12 IPA.",
-      "Ikut SNBT",
-      "Kelas 12 SMA.",
-    ]);
+    expect(await f.run([candidate({ known: 1 })])).toBe(1);
+    expect(await f.texts()).toEqual(["Ikut SNBT", "Kelas 12 IPA."]);
     expect(await f.stored()).toContainEqual(
       expect.objectContaining({ _id: goal, confirmedAt: 1, kind: "goal" })
     );
-    expect(await f.texts(other.userId)).toEqual(["Kelas 9"]);
   });
 
-  it("folds candidates of one call that say the same into one memory", async () => {
+  it.each([2, 0, -1])(
+    "writes a new memory when the place %s that it names is not on the list the call read",
+    async (place) => {
+      const f = await createCaptureTest();
+      await f.seed({ kind: "level", text: "Kelas 11." });
+      expect(await f.run([candidate({ known: place })])).toBe(1);
+      expect(await f.texts()).toEqual(["Kelas 11.", "Kelas 12 IPA."]);
+      expect(await f.stored()).toContainEqual(
+        expect.objectContaining({ confirmedAt: 1, kind: "level" })
+      );
+    }
+  );
+
+  it("folds candidates of one call that hold the same words, kind and name into one memory", async () => {
     const f = await createCaptureTest();
     expect(
       await f.run([candidate(), candidate({ text: "kelas 12 ipa" })])
@@ -412,7 +364,8 @@ describe("memory capture write topics", () => {
       text: "Kelas 12 IPA.",
       topics: [PATH],
     });
-    expect(await f.run([candidate()], { topics: [LESSON, PATH] })).toBe(1);
+    const again = candidate({ known: 1 });
+    expect(await f.run([again], { topics: [LESSON, PATH] })).toBe(1);
     expect(await f.stored()).toEqual([
       expect.objectContaining({ _id: id, topics: [PATH, LESSON] }),
     ]);
@@ -421,11 +374,11 @@ describe("memory capture write topics", () => {
     );
     // Said again on the same page, the memory gains nothing and its keys stay.
     const keys = await f.keys();
-    expect(await f.run([candidate()], { topics: [LESSON, PATH] })).toBe(1);
+    expect(await f.run([again], { topics: [LESSON, PATH] })).toBe(1);
     expect(await f.keys()).toStrictEqual(keys);
     // Said on other pages, it gains six topics and stops at eight.
     const topic = (index: number) => `path:materials/subject${index}`;
-    await f.run([candidate()], { topics: Arr.makeBy(8, topic) });
+    await f.run([again], { topics: Arr.makeBy(8, topic) });
     const [row] = await f.stored();
     expect(row?.topics).toEqual([PATH, LESSON, ...Arr.makeBy(6, topic)]);
     expect(Arr.map(await f.keys(), (key) => key.key)).not.toContain(

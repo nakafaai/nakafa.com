@@ -65,14 +65,68 @@ maps `message.reasoning` and `delta.reasoning` to reasoning parts, sends
 the cost as `providerMetadata.convexGateway.cost`, and drops provider-executed
 tools with a warning.
 
+### Decisions
+
+Measured on the dev deployment on 12 October 2026, through `experimental_decide`
+from `ai` 7.0.136 and the evaluation model of `@convex-dev/ai-sdk-provider`
+0.2.1, with the HTTP route `POST /alpha/decisions`, the model
+`typesafe/jev-1.13`, and two yes-or-no questions (`noul` on the wire,
+`boolean` in the AI SDK) about each of 15 short messages in seven languages.
+Each call took 140 to 310 ms and about 390 input tokens, and
+`usage.cost` was 0.0000164 US dollars a call (0.042 US dollars per million
+input tokens, output free). A request holds 64k tokens. The AI SDK warned
+`The feature "providerOptions.convexGateway" is not supported` on every call:
+the evaluation model of 0.2.1 sends no `provider` field.
+
+| Message (shortened) | lasting | private |
+| --- | --- | --- |
+| id: grade 12 science, wants ITB informatics next year | 0.95 | 0.03 |
+| id: what is the derivative of x^3 sin x | 0.03 | 0.01 |
+| en: understands better with a worked example first | 0.92 | 0.01 |
+| en: explain photosynthesis | 0.06 | 0.01 |
+| de: exam on 3 November, integrals are hard | 0.97 | 0.03 |
+| de: derivative of e^x | 0.04 | 0.01 |
+| ja: third year of high school, Tokyo University next year, probability is hard | 0.97 | 0.03 |
+| ja: how to solve a quadratic equation | 0.04 | 0.01 |
+| ar: grade 11, organic chemistry is very hard | 0.95 | 0.02 |
+| jv: grade 11, prefers learning with pictures | 0.93 | 0.02 |
+| id: please explain again, still confused | 0.16 | 0.01 |
+| id: an email address and a phone number | 0.06 | 0.93 |
+| id: has diabetes and misses school, wants a study plan | 0.80 | 0.98 |
+| id: thanks | 0.04 | 0.01 |
+| es: prefers step by step, gets lost in long formulas | 0.92 | 0.01 |
+
+The two questions were `lasting` ("The learner states something about
+themselves that will still matter in later study sessions: their grade or
+level, a goal, how they like to learn, something they find hard, or a situation
+with a date such as an exam.") and `private` ("The message contains contact
+details, a home address, an identity or account number, a password, or
+information about health, religion, ethnicity, political views or money.").
+The `private` question there said "message" where the catalog now says "text",
+because it also judges a saved sentence with its quote. A third question,
+`ownNote`, which asks whether a saved sentence reads as the learner's own note
+and not as a description of the learner from the outside, was not measured
+then. Fifteen messages say little about how a threshold behaves on many
+languages and on texts that sit near it, so the thresholds in
+`nina/judgment/catalog.ts` are not set from this table.
+`pnpm --filter @repo/backend judgment:measure` runs a labelled set of 124
+messages and 85 notes in 17 languages and 8 scripts through the deployment,
+each judgment on the form of text that production asks it, one text to a
+request (ADR 0022), and prints the probabilities by label, the counts at the
+threshold the deployment reports and the threshold that separates best. The
+thresholds in the catalog were set from what that command printed on 12 October
+2026, and ADR 0022 holds the tables.
+
 ## Decision
 
-- **Provider.** `convexGateway` from `@convex-dev/ai-sdk-provider` 0.2.1 is
+- **Provider.** `convexGateway` from `@convex-dev/ai-sdk-provider` 0.3.0 is
   imported only inside `packages/backend/confect/gateway`. `@ai-sdk/gateway` is
   imported nowhere. `ai` still installs it as its own dependency, which the
-  dependency policy allows.
-- **Model.** Every call runs `google/gemini-3.8-flash`, the one model that
-  `gateway/model.ts` names. Learners cannot choose a model, so
+  dependency policy allows. Release 0.3.0 (9 October 2026) is the first that
+  puts `provider.zdr` on a Decisions request, which the decision model below
+  needs (see Decisions).
+- **Model.** Every language call runs `google/gemini-3.8-flash`, the one model
+  that `gateway/model.ts` names for text. Learners cannot choose a model, so
   `Gateway.language(purpose)` takes only the purpose, and every Nina answer
   costs 5 credits. The model keys learners chose before October 2026 are
   gone: no function takes one and no stored row holds one.
@@ -149,6 +203,37 @@ tools with a warning.
 - **Availability.** `GatewayLive` reads the service token once per action. A
   deployment that cannot use the gateway, such as a free, local, or self-hosted
   one, fails with `GatewayConfigurationError` before any request.
+- **Decisions.** A decision asks typed questions about one text and answers
+  with a probability instead of writing text. `Gateway.decide(state,
+  questions)` sends them to the Decisions route in one request, through the
+  provider's evaluation model for `typesafe/jev-1.13` (Jev, named by
+  `gateway/model.ts`), and answers with one typed answer for each question: a
+  choice, a score, or a probability for a yes-or-no question. Nothing outside
+  `confect/gateway` imports `ai`'s decide or the provider's evaluation model.
+  Nina asks through `confect/nina/judgment` (ADR 0022), and `make(provider)`
+  takes the decision model from the provider it is given, so tests pass a
+  deterministic one as they pass a language model.
+  - Zero retention. `make` asks the provider for the decision model with
+    `{ zdr: true }`, and release 0.3.0 puts `provider: { zdr: true }` in the
+    request. The provider's evaluation model has no option for
+    `data_collection: "deny"`, so a decision asks for `zdr` alone, which the
+    gateway documents as requiring an endpoint with a zero data retention
+    policy. The AI SDK's `providerOptions` never reach a Decisions request (the
+    evaluation model only turns them into warnings), so the flags of a language
+    call could not be sent that way. `gateway/live.test.ts` asserts the body
+    the production adapter sends. That the gateway serves a decision that asks
+    for `zdr` is not yet proven (see Not yet established), and this ADR claims
+    nothing more about it until it has been run against a deployment.
+  - One retry policy and one deadline. The AI SDK retries a failure the
+    provider marks as retryable twice, after 2 and 4 seconds, and honors
+    `Retry-After`. The whole call, retries included, ends after ten seconds
+    (`decisionDeadline` in `gateway/purpose.ts`), aborts its request, and
+    fails as a `timeout`.
+  - Failures. A failure of any kind is a `GatewayFailure`, classified by the
+    one `classify` that reads a failed language call. A model that refuses a
+    question is a failure, and no answer is kept.
+  - Cost. A call costs about 0.00002 US dollars (see Probe Results) and is not
+    written to a usage row.
 - **Failures.** `gateway/failure.ts` keeps its reason vocabulary and carries
   routing facts only. It classifies an `APICallError` by its HTTP status, the
   gateway's error `type` or string `code`, and `Retry-After`. A request that
@@ -172,8 +257,11 @@ tools with a warning.
   present.
 - **Policy.** `scripts/check/gateway.ts` rejects any import of `@ai-sdk/gateway`,
   the AI SDK's `gateway` and `createGateway` exports, any import of
-  `@convex-dev/ai-sdk-provider` outside `confect/gateway`, and, outside tests, a
-  gateway model id string where the AI SDK takes a model.
+  `@convex-dev/ai-sdk-provider` outside `confect/gateway`, the AI SDK's
+  `experimental_decide` and `experimental_evaluate` outside `confect/gateway`
+  (by name, through a default or namespace import, and through `export *` or
+  `export * as`), and, outside tests, a gateway model id string where the AI SDK
+  takes a model.
 - **Configuration.** `AI_GATEWAY_API_KEY` is removed from `turbo.json` and the
   acceptance environment. `CONVEX_INTERNAL_AI_GATEWAY_HOST` stays unset.
 - **Dependencies.** `@convex-dev/ai-sdk-provider` joins the AI SDK cohort in
@@ -256,15 +344,27 @@ Not yet established:
   changed in nakafaai/aksara#403.
 - Cost and latency figures, bundle size, and whether the dev and production
   teams have the paid plan that the gateway requires were not measured here.
+- Whether the gateway serves `typesafe/jev-1.13` to a request that asks for
+  `zdr`. Convex documents that a request no zero data retention endpoint can
+  serve fails, and its model list, checked on 9 October 2026, marks no Jev
+  model as having such an endpoint (it names `typesafe/jev-router` without the
+  mark and does not list `jev-1.13`). The decision request that asks for `zdr`
+  has not been run against a deployment. If the gateway refuses it, every
+  decision fails, Nina stores no memory, and `judgment:measure` says so for
+  every message; no decision is made without asking for zero retention.
 
 ## Implementation Contract
 
-- `gateway/model.ts` owns the gateway model id, the provider id that usage rows
-  store for a call through the gateway, and the reasoning effort of each effort.
-  The release gate in [ADR 0001](./0001-nina-engagement-architecture.md) reads
-  the first two back from a real turn.
+- `gateway/model.ts` owns the gateway model ids, the language model and the
+  decision model, the provider id that usage rows store for a call through the
+  gateway, and the reasoning effort of each effort. The release gate in
+  [ADR 0001](./0001-nina-engagement-architecture.md) reads the language model id
+  and the provider id back from a real turn.
 - `gateway/handle.ts` builds every handle over one AI SDK provider, so the
-  production adapter and tests set the same defaults.
+  production adapter and tests set the same defaults. `gateway/decide.ts` owns
+  the decision call: the AI SDK's decide, its one retry policy, and its
+  deadline, which `gateway/purpose.ts` names.
+- `nina/judgment` is the only caller of `Gateway.decide`.
 - `gateway/live.ts` holds the production layer and the one service token read.
 - `gateway/failure.ts` owns `GatewayConfigurationError` and the classifier.
 - `nina/usage.spec.ts`, `nina/usage.ts`, and `nina/usage.impl.ts` record cost per

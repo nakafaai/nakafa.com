@@ -4,6 +4,7 @@ const LEARNING_CAPABILITY_NAME_VALUES = [
   "nakafa",
   "deepResearch",
   "math",
+  "memory",
 ] as const;
 /** Schema-owned names for Nina's internal education capabilities. */
 export const LearningCapabilityNameSchema = Schema.Literals(
@@ -14,3 +15,4 @@ export const NAKAFA_CAPABILITY = "nakafa" satisfies LearningCapabilityName;
 export const RESEARCH_CAPABILITY =
   "deepResearch" satisfies LearningCapabilityName;
 export const MATH_CAPABILITY = "math" satisfies LearningCapabilityName;
+export const MEMORY_CAPABILITY = "memory" satisfies LearningCapabilityName;
