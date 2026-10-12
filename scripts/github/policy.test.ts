@@ -205,7 +205,9 @@ describe("GitHub Action policy", () => {
               name: "Production",
               strategy: {
                 "fail-fast": false,
-                matrix: { suite: ["runtime", "visual", "navigation"] },
+                matrix: {
+                  suite: ["runtime", "learner", "visual", "navigation"],
+                },
               },
             }),
           }),
