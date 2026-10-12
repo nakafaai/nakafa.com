@@ -14,6 +14,7 @@ import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
 import { generatePresentation } from "@repo/backend/confect/nina/presentation";
 import spec from "@repo/backend/confect/nina/response.spec";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
+import { makeTiming } from "@repo/backend/confect/nina/timing";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import {
   Cause,
@@ -80,7 +81,8 @@ const run = FunctionImpl.make(
       return null;
     }
     const halt = yield* watchHalt(turn._id);
-    yield* generateResponse(turn, halt).pipe(
+    const timing = yield* makeTiming(turn);
+    yield* generateResponse(turn, halt, timing).pipe(
       Effect.provide(GatewayLive),
       Effect.catchTag("GatewayConfigurationError", () =>
         Effect.fail(
@@ -103,10 +105,13 @@ const run = FunctionImpl.make(
               Option.getOrElse(() => "unknown" as const)
             )
           : undefined;
-        return mutate(refs.internal.nina.lifecycle.recover, {
-          ...args,
-          ...(failure ? { failure } : {}),
-        }).pipe(Effect.orDie);
+        return Effect.flatMap(timing.read, (reached) =>
+          mutate(refs.internal.nina.lifecycle.recover, {
+            ...args,
+            ...(failure ? { failure } : {}),
+            timing: reached,
+          }).pipe(Effect.orDie)
+        );
       }),
       // The scheduled action boundary preserves diagnostics while the durable
       // lifecycle reconciles completed output or refunds the failed response.

@@ -5,6 +5,7 @@ import { PostHog } from "@posthog/convex";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
+import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
@@ -12,6 +13,7 @@ import {
   ninaStream,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { args, contextFor, start } from "@repo/backend/test/nina/admission";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
@@ -25,6 +27,12 @@ vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
   return { ...actual, listMessages: vi.fn(actual.listMessages) };
 });
+
+// Admission freezes the page facts of a prompt; the stop and resend test needs
+// no signed content for them.
+vi.mock("@repo/backend/confect/nina/context", () => ({
+  resolveNinaContext: vi.fn(),
+}));
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
@@ -105,6 +113,81 @@ describe("Nina response run", () => {
     vi.restoreAllMocks();
     provider.languageModel.mockReset();
   });
+
+  it("has taken the turn and opened its answer before the model says a word, and stores each stage once it is reached", async () => {
+    const f = await fixture();
+    try {
+      const { running } = await f.begin();
+
+      // The model is called and silent. The learner's page already has what
+      // shows the turn as started: it runs, its claim is stored, and its answer
+      // is open to be filled. No stage that needs the model is stored yet.
+      const waiting = await f.inspect();
+      expect(waiting.turn).toMatchObject({
+        phase: "active",
+        state: { status: "running" },
+        timing: { claimedMs: expect.any(Number) },
+      });
+      expect(waiting.turn?.timing).not.toHaveProperty("progressMs");
+      expect(Arr.map(waiting.messages.page, ({ status }) => status)).toContain(
+        "pending"
+      );
+
+      f.release();
+      await running;
+      const {
+        claimedMs = 0,
+        readyMs = 0,
+        progressMs = 0,
+        tokenMs = 0,
+      } = (await f.inspect()).turn?.timing ?? {};
+      expect(readyMs).toBeGreaterThanOrEqual(claimedMs);
+      expect(progressMs).toBeGreaterThanOrEqual(readyMs);
+      expect(tokenMs).toBeGreaterThanOrEqual(progressMs);
+      expect(tokenMs).toBeGreaterThan(0);
+    } finally {
+      f.release();
+    }
+  }, 30_000);
+
+  it("answers the turn sent right after a stop while the stopped run still winds down, and the late exit changes nothing", async () => {
+    vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
+    const f = await fixture();
+    try {
+      const { running } = await f.begin();
+      await f.owner.mutation(cancel, { chatId: f.chatId });
+
+      // The next prompt settles the stopped turn and queues its own, and that
+      // turn's run needs neither the stopped run to end nor a sweep.
+      provider.languageModel.mockReturnValue(ninaModel());
+      const next = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await f.owner.mutation(start, {
+          ...args,
+          chatId: f.chatId,
+          requestId: "next",
+        })
+      );
+      await f.t.action(run, { turnId: next.turnId });
+      const answered = await f.t.query((ctx) =>
+        ctx.db.get("ninaTurns", next.turnId)
+      );
+      expect(answered?.state.status).toBe("complete");
+
+      // The stopped run exits later and finds its turn settled.
+      f.release();
+      await running;
+      const state = await f.inspect();
+      expect(state.turn?.state.status).toBe("cancelled");
+      expect(state.chat?.activeTurnId).toBeUndefined();
+      expect(state.user?.credits).toBe(5);
+      expect(
+        Arr.filter(state.ledger, (row) => row.type === "refund")
+      ).toHaveLength(1);
+    } finally {
+      f.release();
+    }
+  }, 30_000);
 
   // The run asks about its turn once a second, so these tests wait in real time
   // and get a longer limit than the default.

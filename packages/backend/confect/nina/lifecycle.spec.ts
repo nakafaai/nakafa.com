@@ -5,7 +5,10 @@ import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
+import {
+  NinaFailureReason,
+  NinaTurnTiming,
+} from "@repo/backend/confect/nina/contract/turn";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { Schema } from "effect";
@@ -48,6 +51,7 @@ export default GroupSpec.make()
       args: () => ({
         turnId: Id("ninaTurns"),
         failure: Schema.optionalKey(NinaFailureReason),
+        timing: Schema.optionalKey(NinaTurnTiming),
       }),
       returns: () => Schema.Null,
       error: () => Schema.Union([NinaCreditError, NinaTurnError]),

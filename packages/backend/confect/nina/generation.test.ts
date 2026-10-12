@@ -407,6 +407,38 @@ describe("Nina generation through the real Agent component", () => {
     expect(second - first).toBe(35_000);
   });
 
+  it("stores the claim and the readiness of a turn before its model is called, and the first signs of work after", async () => {
+    // Only the wall clock is faked, so the model's call can take time at once.
+    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const languageModel = ninaModel();
+    const answer = languageModel.doStream;
+    // The model takes five seconds to say anything.
+    languageModel.doStream = (options) => {
+      vi.advanceTimersByTime(5000);
+      return answer.call(languageModel, options);
+    };
+    provider.languageModel.mockReturnValue(languageModel);
+    const f = await fixture();
+    // The run starts two seconds after the admission.
+    const created = Math.ceil((await f.inspect()).turn?._creationTime ?? 0);
+    vi.setSystemTime(created + 2000);
+    await f.t.action(run, { turnId: f.turnId });
+
+    const state = await f.inspect();
+    expect(state.turn?.state.status).toBe("complete");
+    const { claimedMs, readyMs, progressMs, tokenMs } =
+      state.turn?.timing ?? {};
+    // A model call that came first would carry its five seconds into both of
+    // these stages.
+    expect(claimedMs).toBeGreaterThanOrEqual(2000);
+    expect(claimedMs).toBeLessThan(2001);
+    expect(readyMs).toBe(claimedMs);
+    // The reasoning, the answer text and the model's first word come with it.
+    expect((progressMs ?? 0) - (readyMs ?? 0)).toBeCloseTo(5000, 2);
+    expect(tokenMs).toBe(progressMs);
+  });
+
   it("sends the rolling summary and omits the turns it covers", async () => {
     const languageModel = ninaModel();
     provider.languageModel.mockReturnValue(languageModel);

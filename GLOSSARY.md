@@ -48,6 +48,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 ## Nina
 
 - **Nina turn**: One admitted user prompt, credit reservation, immutable learning context, provider usage, and durable response lifecycle. Confect owns admission and settlement; the Convex Agent component owns messages and streaming.
+- **Turn timing**: The waits a Nina turn stores, as numbers of milliseconds after its admission and never any text: when a run took the turn (`claimedMs`), when the run was about to call the model (`readyMs`), when the model first produced a part the page shows (`progressMs`), and when it first wrote a word of the answer (`tokenMs`). A turn keeps only the stages it reached.
 - **LearningCapability**: An internal education Module Nina can invoke for bounded evidence such as Nakafa retrieval, deterministic math, or external research.
 - **Evidence**: Schema-derived facts, calculations, citations, content references, and limitations that constrain Nina's answer.
 - **Capability output**: A persisted Agent tool result with bounded model-facing evidence, progressive artifacts, and a capability outcome when the run fell short. The evidence never exceeds its token budget; a truncation says what was omitted and how to ask for it. Agent stores the final result with the conversation so it survives reconnects.
