@@ -1,255 +1,232 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
-  DatabaseReader,
   DatabaseWriter,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import {
-  getOptionalAppUserForRead,
-  requireAuth,
-} from "@repo/backend/confect/auth/session";
+import { requireAuth } from "@repo/backend/confect/auth/session";
+import { setNinaMemoryPaused } from "@repo/backend/confect/learningPreferences/impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { readLearnerProfile } from "@repo/backend/confect/nina/memory/profile";
-import { findMemory } from "@repo/backend/confect/nina/memory/store";
-import spec, {
-  MEMORY_FACTS,
-  type NinaMemoryChanges,
-} from "@repo/backend/confect/nina/memory.spec";
+import { syncKeys } from "@repo/backend/confect/nina/memory/keys";
 import {
-  Array as Arr,
-  Clock,
-  Effect,
-  HashMap,
-  HashSet,
-  Layer,
-  MutableHashSet,
-  Option,
-} from "effect";
+  disable,
+  enable,
+  forget,
+  get,
+} from "@repo/backend/confect/nina/memory/retired";
+import {
+  MEMORY_FIELD,
+  TITLE_FIELD,
+} from "@repo/backend/confect/nina/memory/seal";
+import {
+  deleteMemory,
+  drainMemories,
+  expireBatch,
+  MEMORY_BATCH,
+  readOwnMemory,
+} from "@repo/backend/confect/nina/memory/store";
+import { known, read } from "@repo/backend/confect/nina/memory/turn";
+import { list, search, state } from "@repo/backend/confect/nina/memory/view";
+import { writeMemories } from "@repo/backend/confect/nina/memory/write";
+import spec, {
+  type NinaMemoryDraft,
+  NinaMemoryRejected,
+} from "@repo/backend/confect/nina/memory.spec";
+import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
+import { sealText } from "@repo/backend/confect/vault/text";
+import { Clock, Duration, Effect, Layer, String as Str } from "effect";
 
-type Memory = Docs["ninaMemories"];
-
-/** Lists facts for settings, most recently saved first. */
-function toView(facts: Memory["facts"]) {
-  return {
-    facts: Arr.map(Arr.reverse(facts), ({ key, savedAt, text }) => ({
-      key,
-      savedAt,
-      text,
-    })),
-  };
+/** Whether a draft says nothing: it has no title and no words. */
+function isEmpty(draft: typeof NinaMemoryDraft.Type) {
+  return draft.title === undefined && Str.isEmpty(draft.text);
 }
 
 /**
- * Applies curated changes. Rewritten and new facts move to the recent end, a
- * new fact that repeats a kept one is skipped, and the least recently saved
- * facts beyond the cap leave.
+ * Seals what the learner wrote for one memory: its words, and its title when
+ * it has one. It returns the learner's keys too, for the index.
  */
-function reviseFacts(
-  memory: Memory,
-  changes: typeof NinaMemoryChanges.Type,
-  source: {
-    readonly chatId: Memory["facts"][number]["chatId"];
-    readonly savedAt: number;
-  }
+const sealDraft = Effect.fn("nina.memory.sealDraft")(function* (
+  userId: Docs["users"]["_id"],
+  draft: typeof NinaMemoryDraft.Type
 ) {
-  const forgotten = HashSet.fromIterable(changes.forget);
-  const updates = HashMap.fromIterable(
-    Arr.map(changes.update, ({ key, text }) => [key, text])
-  );
-  let kept: Memory["facts"] = [];
-  let rewritten: Memory["facts"] = [];
-  for (const fact of memory.facts) {
-    if (HashSet.has(forgotten, fact.key)) {
-      continue;
-    }
-    const text = Option.getOrUndefined(HashMap.get(updates, fact.key));
-    if (text === undefined) {
-      kept = Arr.append(kept, fact);
-    } else {
-      rewritten = Arr.append(rewritten, { ...source, key: fact.key, text });
-    }
-  }
-  const known = MutableHashSet.fromIterable(
-    Arr.map([...kept, ...rewritten], (fact) => fact.text.toLowerCase())
-  );
-  let added: Memory["facts"] = [];
-  for (const text of changes.remember) {
-    if (!MutableHashSet.has(known, text.toLowerCase())) {
-      MutableHashSet.add(known, text.toLowerCase());
-      added = Arr.append(added, {
-        ...source,
-        key: memory.next + added.length,
-        text,
-      });
-    }
-  }
+  const keys = yield* ensureLearnerKeys(userId);
   return {
-    facts: Arr.takeRight([...kept, ...rewritten, ...added], MEMORY_FACTS),
-    next: memory.next + added.length,
+    keys,
+    text: yield* sealText(keys, MEMORY_FIELD, draft.text),
+    title:
+      draft.title === undefined
+        ? undefined
+        : yield* sealText(keys, TITLE_FIELD, draft.title),
   };
-}
+}, Effect.orDie);
 
-const get = FunctionImpl.make(
+/**
+ * Writes a memory in the learner's own words, with the title they gave it, and
+ * indexes it. A learner keeps as many memories as they write.
+ */
+const add = FunctionImpl.make(
   schema,
   spec,
-  "get",
-  Effect.fn("nina.memory.get")(function* () {
-    const user = yield* getOptionalAppUserForRead();
-    if (!user) {
-      return null;
-    }
-    const memory = yield* findMemory(user.appUser._id);
-    return memory ? toView(memory.facts) : null;
-  })
-);
-
-const enable = FunctionImpl.make(
-  schema,
-  spec,
-  "enable",
-  Effect.fn("nina.memory.enable")(function* () {
+  "add",
+  Effect.fn("nina.memory.add")(function* (draft) {
     const { appUser } = yield* requireAuth();
-    const memory = yield* findMemory(appUser._id);
-    if (memory) {
-      return toView(memory.facts);
+    if (isEmpty(draft)) {
+      return yield* new NinaMemoryRejected({ reason: "empty" });
     }
-    yield* (yield* DatabaseWriter)
+    const { keys, text, title } = yield* sealDraft(appUser._id, draft);
+    const confirmedAt = yield* Clock.currentTimeMillis;
+    const id = yield* (yield* DatabaseWriter)
       .table("ninaMemories")
       .insert({
-        facts: [],
-        next: 0,
-        updatedAt: yield* Clock.currentTimeMillis,
-        usage: { calls: 0, input: 0, output: 0 },
+        author: "learner",
+        confirmedAt,
+        text,
+        ...(title === undefined ? {} : { title }),
         userId: appUser._id,
       })
       .pipe(Effect.orDie);
-    return toView([]);
-  })
-);
-
-/** Turning memory off forgets every fact at once. */
-const disable = FunctionImpl.make(
-  schema,
-  spec,
-  "disable",
-  Effect.fn("nina.memory.disable")(function* () {
-    const { appUser } = yield* requireAuth();
-    const memory = yield* findMemory(appUser._id);
-    if (memory) {
-      yield* (yield* DatabaseWriter)
-        .table("ninaMemories")
-        .delete(memory._id)
-        .pipe(Effect.orDie);
-    }
-    return null;
-  })
-);
-
-const forget = FunctionImpl.make(
-  schema,
-  spec,
-  "forget",
-  Effect.fn("nina.memory.forget")(function* ({ key }) {
-    const { appUser } = yield* requireAuth();
-    const memory = yield* findMemory(appUser._id);
-    if (!memory) {
-      return null;
-    }
-    const facts = Arr.filter(memory.facts, (fact) => fact.key !== key);
-    if (facts.length < memory.facts.length) {
-      yield* (yield* DatabaseWriter)
-        .table("ninaMemories")
-        .patch(memory._id, {
-          facts,
-          updatedAt: yield* Clock.currentTimeMillis,
-        })
-        .pipe(Effect.orDie);
-    }
-    return toView(facts);
-  })
-);
-
-const read = FunctionImpl.make(
-  schema,
-  spec,
-  "read",
-  Effect.fn("nina.memory.read")(function* ({ userId }) {
-    const profile = yield* readLearnerProfile(userId);
-    const memory = yield* findMemory(userId);
-    return {
-      memory: memory
-        ? {
-            facts: Arr.map(memory.facts, ({ key, text }) => ({ key, text })),
-            id: memory._id,
-            revision: memory.updatedAt,
-          }
-        : null,
-      profile,
-    };
+    yield* syncKeys(keys, id, { ...draft, confirmedAt });
+    return id;
   })
 );
 
 /**
- * Stores one curation. Memory turned off meanwhile keeps nothing. The call's
- * usage always counts, but its changes apply only to the memory and revision
- * it read, so a curation that raced memory being reset, a newer curation, or
- * a fact the learner forgot changes nothing, and a chat deleted meanwhile
- * leaves no facts behind.
+ * Rewrites a memory as the learner's own words and title; a write without a
+ * title takes the title off. Its kind, topics and end date stay as they are,
+ * and its keys follow its words.
  */
-const apply = FunctionImpl.make(
+const edit = FunctionImpl.make(
   schema,
   spec,
-  "apply",
-  Effect.fn("nina.memory.apply")(function* ({
-    changes,
-    chatId,
-    memory: read,
-    usage: call,
-    userId,
-  }) {
-    const memory = yield* findMemory(userId);
-    if (!memory) {
-      return null;
+  "edit",
+  Effect.fn("nina.memory.edit")(function* ({ id, ...draft }) {
+    const { appUser } = yield* requireAuth();
+    if (isEmpty(draft)) {
+      return yield* new NinaMemoryRejected({ reason: "empty" });
     }
-    const chat = yield* (yield* DatabaseReader)
-      .table("chats")
-      .get(chatId)
-      .pipe(
-        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
-    const current =
-      memory._id === read.id && memory.updatedAt === read.revision;
-    const savedAt = yield* Clock.currentTimeMillis;
-    const { facts, next } =
-      chat && current
-        ? reviseFacts(memory, changes, { chatId, savedAt })
-        : memory;
+    const memory = yield* readOwnMemory(appUser._id, id);
+    if (!memory) {
+      return yield* new NinaMemoryRejected({ reason: "missing" });
+    }
+    const { keys, text, title } = yield* sealDraft(appUser._id, draft);
+    const confirmedAt = yield* Clock.currentTimeMillis;
     yield* (yield* DatabaseWriter)
       .table("ninaMemories")
-      .patch(memory._id, {
-        facts,
-        next,
-        updatedAt: savedAt,
-        usage: {
-          calls: memory.usage.calls + 1,
-          input: memory.usage.input + call.input,
-          output: memory.usage.output + call.output,
-        },
-      })
+      .patch(id, { author: "learner", confirmedAt, text, title })
       .pipe(Effect.orDie);
+    yield* syncKeys(keys, id, {
+      ...draft,
+      confirmedAt,
+      topics: memory.topics,
+    });
     return null;
+  })
+);
+
+const remove = FunctionImpl.make(
+  schema,
+  spec,
+  "remove",
+  Effect.fn("nina.memory.remove")(function* ({ id }) {
+    const { appUser } = yield* requireAuth();
+    const memory = yield* readOwnMemory(appUser._id, id);
+    if (memory) {
+      yield* deleteMemory(memory._id);
+    }
+    return null;
+  })
+);
+
+/** Stops Nina from saving or reading memory, or lets her again. Nothing is deleted. */
+const pause = FunctionImpl.make(
+  schema,
+  spec,
+  "pause",
+  Effect.fn("nina.memory.pause")(function* ({ paused }) {
+    const { appUser } = yield* requireAuth();
+    yield* setNinaMemoryPaused({
+      now: yield* Clock.currentTimeMillis,
+      paused,
+      userId: appUser._id,
+    });
+    return null;
+  })
+);
+
+/**
+ * Deletes the memories the learner has now. It deletes one batch and goes on
+ * with the next by itself (`drain`), so a learner with many memories never
+ * meets one huge transaction. A memory written after this moment stays.
+ */
+const clear = FunctionImpl.make(
+  schema,
+  spec,
+  "clear",
+  Effect.fn("nina.memory.clear")(function* () {
+    const { appUser } = yield* requireAuth();
+    yield* drainMemories(appUser._id, yield* Clock.currentTimeMillis);
+    return null;
+  })
+);
+
+/** Writes the memories a capture call found and returns how many it wrote or confirmed. */
+const capture = FunctionImpl.make(
+  schema,
+  spec,
+  "capture",
+  Effect.fn("nina.memory.capture")(function* (args) {
+    return yield* writeMemories(args);
+  })
+);
+
+/** Deletes one batch of a learner's memories and goes on while a batch is full. */
+const drain = FunctionImpl.make(
+  schema,
+  spec,
+  "drain",
+  Effect.fn("nina.memory.drain")(function* ({ through, userId }) {
+    return yield* drainMemories(userId, through);
+  })
+);
+
+/** Deletes one batch of the situations that have ended, and runs again while a batch is full. */
+const expire = FunctionImpl.make(
+  schema,
+  spec,
+  "expire",
+  Effect.fn("nina.memory.expire")(function* () {
+    const deleted = yield* expireBatch(yield* Clock.currentTimeMillis);
+    if (deleted === MEMORY_BATCH) {
+      yield* (yield* Scheduler).runAfter(
+        Duration.zero,
+        refs.internal.nina.memory.expire,
+        {}
+      );
+    }
+    return deleted;
   })
 );
 
 export default GroupImpl.make(schema, spec).pipe(
+  Layer.provide(list),
+  Layer.provide(state),
+  Layer.provide(search),
+  Layer.provide(add),
+  Layer.provide(edit),
+  Layer.provide(remove),
+  Layer.provide(pause),
+  Layer.provide(clear),
   Layer.provide(get),
   Layer.provide(enable),
   Layer.provide(disable),
   Layer.provide(forget),
   Layer.provide(read),
-  Layer.provide(apply),
+  Layer.provide(known),
+  Layer.provide(capture),
+  Layer.provide(drain),
+  Layer.provide(expire),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

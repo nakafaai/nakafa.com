@@ -1,12 +1,16 @@
+import { Ref } from "@confect/core";
 import { RegisteredFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { getNakafaContent } from "@repo/backend/agent/content";
+import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
 import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
+import { MEMORY_START_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
+import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Effect, Schema } from "effect";
@@ -17,6 +21,8 @@ vi.mock("@repo/backend/agent/content", () => ({
 
 const runtime = { currentDate: "2026-09-30T00:00:00.000Z" };
 const NOW = Date.parse(runtime.currentDate);
+const LESSON = "material:lesson:mathematics:material-section:limits";
+const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 
 /** Reads one fixture turn's instructions, or the typed failure's reason. */
 async function instructionsFor(
@@ -118,40 +124,89 @@ describe("Nina instructions", () => {
     }
   });
 
-  it("places the learner's account facts and remembered facts", async () => {
-    const f = await createNinaTest();
-    await f.t.mutation(async (ctx) => {
-      await ctx.db.insert("onboardingProfiles", {
+  it("places the learner's account facts and the memories chosen for the turn", async () => {
+    const f = await createMemoryTest();
+    await f.t.mutation((ctx) =>
+      ctx.db.insert("onboardingProfiles", {
         focus: "tryout",
         updatedAt: NOW,
         userId: f.identity.userId,
-      });
-      await ctx.db.insert("ninaMemories", {
-        facts: [
-          {
-            chatId: f.chatId,
-            key: 0,
-            savedAt: NOW,
-            text: "Sulit di peluang.",
-          },
-        ],
-        next: 1,
-        updatedAt: NOW,
-        usage: { calls: 1, input: 300, output: 20 },
-        userId: f.identity.userId,
-      });
+      })
+    );
+    await f.seed({ kind: "struggle", text: "Sulit di peluang." });
+    await f.seed({ author: "learner", text: "Kelas 12 IPA." });
+    await f.seed({
+      author: "learner",
+      confirmedAt: 3,
+      text: "Ikut SNBT 2027.",
+      title: "Tujuan",
+    });
+    await f.seed({
+      author: "learner",
+      confirmedAt: 2,
+      text: "",
+      title: "Ujian akhir",
     });
     const result = await instructionsFor(f);
     for (const expected of [
       "# Learner",
       "- Focus: preparing for try-outs",
-      "- Sulit di peluang.",
+      "<memories>\n- Tujuan: Ikut SNBT 2027.\n- Ujian akhir\n- Kelas 12 IPA.\n- (struggle) Sulit di peluang.\n</memories>",
     ]) {
       expect(result).toHaveProperty(
         "instructions",
         expect.stringContaining(expected)
       );
     }
+  });
+
+  it("puts the memories about the page the learner has open ahead of newer ones, the lesson and the paths above it", async () => {
+    const f = await createMemoryTest();
+    await f.fill(MEMORY_START_LIMIT - 1);
+    await f.seed({
+      confirmedAt: 0,
+      text: "Bingung limit.",
+      topics: [`lesson:${LESSON}`],
+    });
+    await f.seed({
+      confirmedAt: 0,
+      text: "Suka matematika.",
+      topics: ["path:subjects/mathematics"],
+    });
+    expect(await instructionsFor(f)).toHaveProperty(
+      "instructions",
+      expect.not.stringContaining("Bingung limit.")
+    );
+    await f.openLesson(
+      `asset:en:${LESSON}`,
+      "subjects/mathematics/limits/idea"
+    );
+    const open = await instructionsFor(f);
+    for (const expected of [
+      "- (goal) Bingung limit.\n- (goal) Suka matematika.\n",
+      "- (goal) Memory 6\n",
+    ]) {
+      expect(open).toHaveProperty(
+        "instructions",
+        expect.stringContaining(expected)
+      );
+    }
+    // Eight memories fit: the page's two, then the six most recently confirmed.
+    expect(open).toHaveProperty(
+      "instructions",
+      expect.not.stringContaining("- (goal) Memory 0\n")
+    );
+  });
+
+  it("places no memory while the learner has paused memory", async () => {
+    const f = await createMemoryTest();
+    await f.seed({ text: "Sulit di peluang." });
+    await f.owner.mutation(pause, { paused: true });
+    const result = await instructionsFor(f);
+    expect(result).toHaveProperty(
+      "instructions",
+      expect.not.stringContaining("Sulit di peluang.")
+    );
   });
 
   it("reads a focused question from its signed body and official explanation", async () => {

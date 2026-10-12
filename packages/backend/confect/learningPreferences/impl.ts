@@ -186,3 +186,38 @@ export const upsertPreferredTryoutCountry = Effect.fn(
     );
   return current._id;
 });
+
+/**
+ * Pauses or resumes the current user's Nina memory. Memory is on while the row
+ * or its pause mark is absent, so resuming creates nothing. The caller declares
+ * no persistence error, so a failed read or write dies.
+ */
+export const setNinaMemoryPaused = Effect.fn(
+  "learningPreferences.setNinaMemoryPaused"
+)(function* ({
+  now,
+  paused,
+  userId,
+}: {
+  now: number;
+  paused: boolean;
+  userId: Id<"users">;
+}) {
+  const writer = yield* DatabaseWriter;
+  const current = yield* readLearningPreferenceByUserId(userId);
+  if (!current) {
+    if (paused) {
+      yield* writer
+        .table("learningPreferences")
+        .insert({ ninaMemoryPaused: true, updatedAt: now, userId });
+    }
+    return;
+  }
+  if ((current.ninaMemoryPaused === true) === paused) {
+    return;
+  }
+  yield* writer.table("learningPreferences").patch(current._id, {
+    ninaMemoryPaused: paused ? true : undefined,
+    updatedAt: now,
+  });
+}, Effect.orDie);

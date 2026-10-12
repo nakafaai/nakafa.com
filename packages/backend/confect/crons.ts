@@ -29,6 +29,14 @@ export default CronJobs.make()
     )
   )
   .add(
+    /** Deletes the situations Nina remembered whose end date has passed. */ CronJob.make(
+      "expire ended Nina memories",
+      Duration.hours(24),
+      internal.nina.memory.expire,
+      {}
+    )
+  )
+  .add(
     /** Settles Nina turns that stayed open past their deadline, so no chat stays busy. */ CronJob.make(
       "sweep stuck Nina turns",
       Duration.minutes(NINA_TURN_SWEEP_INTERVAL_MINUTES),

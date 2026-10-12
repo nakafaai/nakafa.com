@@ -2,11 +2,12 @@ import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
+import { topicsOf } from "@repo/backend/confect/nina/memory/topics";
 import { readPageContext } from "@repo/backend/confect/nina/page";
 import { formatFocusPrompt } from "@repo/backend/confect/nina/prompt/focus";
 import { formatLearnerPrompt } from "@repo/backend/confect/nina/prompt/learner";
 import { createNinaSystemPrompt } from "@repo/backend/confect/nina/prompt/system";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 
 /** A focused turn never answers without its rechecked, signed question. */
 const readFocus = Effect.fn("nina.instructions.focus")(
@@ -26,10 +27,10 @@ const readFocus = Effect.fn("nina.instructions.focus")(
 );
 
 /**
- * Reads what a turn's system prompt carries (its question focus, the learner,
- * the current page, and the conversation summary) concurrently and assembles
- * Nina's instructions. The summary also returns, since history omits the turns
- * it covers.
+ * Reads what a turn's system prompt carries (its question focus, the learner
+ * and the memories chosen for the open page, the current page, and the
+ * conversation summary) concurrently and assembles Nina's instructions. The
+ * summary also returns, since history omits the turns it covers.
  */
 export const readInstructions = Effect.fn("nina.instructions")(function* (
   turn: Pick<
@@ -43,10 +44,12 @@ export const readInstructions = Effect.fn("nina.instructions")(function* (
     {
       focus: turn.page.nina.focus ? readFocus(turn._id) : Effect.undefined,
       learner: query(refs.internal.nina.memory.read, {
+        now: yield* Clock.currentTimeMillis,
+        topics: topicsOf(turn.page),
         userId: turn.userId,
       }).pipe(
-        Effect.map(({ memory, profile }) =>
-          formatLearnerPrompt({ facts: memory?.facts ?? [], profile })
+        Effect.map(({ profile, prompt }) =>
+          formatLearnerPrompt({ memories: prompt, profile })
         ),
         Effect.orDie
       ),
