@@ -1,8 +1,8 @@
 # Backend scripts
 
-These scripts verify signed content releases and durable customer state.
-Package scripts in `packages/backend/package.json` are the command source of
-truth.
+These scripts verify signed content releases and durable customer state, and
+measure Nina's judgments. Package scripts in `packages/backend/package.json` are
+the command source of truth.
 
 ## Signed content ownership
 
@@ -55,3 +55,26 @@ changing content ownership.
 
 `customers/verify.ts` is a read-only operational integrity check. It does not
 change customer, subscription, or content state.
+
+## Judgment measurement
+
+```sh
+pnpm --filter @repo/backend judgment:measure
+pnpm --filter @repo/backend judgment:measure --together=3
+```
+
+This command sets the thresholds of Nina's judgments (`confect/nina/judgment`)
+from a labelled set of messages (`test/judgment/set.ts`), never from taste. It
+sends the set to the deployment its environment configures, the development
+deployment unless it is given `--prod`, with the same credential and variables
+as `customers:verify`. The deployment answers through its internal
+`nina/judgment:measure` action, which asks the decision model about every
+message. For each judgment the command prints the probabilities by label, the
+counts at the threshold the deployment holds, the threshold that separates best,
+and the messages the held threshold judges wrongly. A message is named by its
+number in the set and described by its language and form, and is never
+quoted. `--together=N` sends N messages in one request, as the capture asks
+about up to three candidates together. The command exits with 1 when the
+deployment could not measure a message, and says why. Run it again whenever a
+judgment's instructions or the decision model change, and set the new
+thresholds in `confect/nina/judgment/catalog.ts` from what it prints.
