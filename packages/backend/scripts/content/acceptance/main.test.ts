@@ -7,6 +7,7 @@ import type {
 } from "@repo/backend/scripts/content/acceptance/build";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import type { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import type { importAcceptanceRows } from "@repo/backend/scripts/content/acceptance/import";
 import type { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import type { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -18,6 +19,7 @@ type EntryError =
   | Effect.Error<ReturnType<typeof runAcceptance>>
   | Effect.Error<ReturnType<typeof cleanLocalRuntime>>
   | Effect.Error<ReturnType<typeof createAcceptanceLearner>>
+  | Effect.Error<ReturnType<typeof importAcceptanceRows>>
   | ReturnType<typeof acceptanceRuntimeError>
   | Effect.Error<ReturnType<FileSystem.FileSystem["realPath"]>>;
 
@@ -28,6 +30,7 @@ const mocks = vi.hoisted(() => {
     run: vi.fn(),
     clean: vi.fn(),
     learner: vi.fn(),
+    rows: vi.fn(),
     getEntry: () => entry,
     runMain: vi.fn((program: Effect.Effect<void, EntryError>) => {
       entry = program;
@@ -46,6 +49,9 @@ vi.mock("@repo/backend/scripts/content/acceptance/local", () => ({
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/learner", () => ({
   createAcceptanceLearner: mocks.learner,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/import", () => ({
+  importAcceptanceRows: mocks.rows,
 }));
 
 const originalArgv = process.argv;
@@ -70,7 +76,13 @@ const execute = Effect.fn("AcceptanceCliTest.execute")(function* (
 describe("isolated acceptance CLI", () => {
   beforeEach(() => {
     vi.resetModules();
-    for (const mock of [mocks.prepare, mocks.run, mocks.clean, mocks.learner]) {
+    for (const mock of [
+      mocks.prepare,
+      mocks.run,
+      mocks.clean,
+      mocks.learner,
+      mocks.rows,
+    ]) {
       mock.mockReturnValue(Effect.void);
     }
   });
@@ -99,7 +111,7 @@ describe("isolated acceptance CLI", () => {
           stderrPath: outputPath,
         }).pipe(Effect.flip);
         expect(yield* fs.readFileString(outputPath)).toContain(
-          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>>"
+          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|import <table> <rows-file>>"
         );
       }).pipe(Effect.provide(nodeServicesLayer))
   );
@@ -271,28 +283,49 @@ finally:
             mocks.prepare.mock.calls.length +
               mocks.run.mock.calls.length +
               mocks.clean.mock.calls.length +
-              mocks.learner.mock.calls.length
+              mocks.learner.mock.calls.length +
+              mocks.rows.mock.calls.length
           ).toBe(1);
         })
     );
   }
+
+  it.live("imports the rows file of the table it names", () =>
+    Effect.gen(function* () {
+      yield* execute("import", ["chats", "/rows/chats.jsonl"]);
+
+      expect(mocks.rows).toHaveBeenCalledOnce();
+      expect(mocks.rows).toHaveBeenCalledWith(
+        expect.any(String),
+        "chats",
+        "/rows/chats.jsonl"
+      );
+      expect(mocks.learner).not.toHaveBeenCalled();
+    })
+  );
+
   const rejected: readonly (readonly [string | undefined, string[]])[] = [
     [undefined, []],
     ["unsupported", []],
     ["learner", []],
+    ["import", []],
+    ["import", ["chats"]],
   ];
   for (const [mode, args] of rejected) {
-    it.live(`rejects ${mode} before any acceptance operation`, () =>
-      Effect.gen(function* () {
-        expect(yield* execute(mode, args).pipe(Effect.flip)).toMatchObject({
-          _tag: "AcceptanceRuntimeError",
-          message: expect.stringContaining("Usage: acceptance"),
-        });
-        expect(mocks.prepare).not.toHaveBeenCalled();
-        expect(mocks.run).not.toHaveBeenCalled();
-        expect(mocks.clean).not.toHaveBeenCalled();
-        expect(mocks.learner).not.toHaveBeenCalled();
-      })
+    it.live(
+      `rejects ${mode} with ${args.length} arguments before any acceptance operation`,
+      () =>
+        Effect.gen(function* () {
+          expect(yield* execute(mode, args).pipe(Effect.flip)).toMatchObject({
+            _tag: "AcceptanceRuntimeError",
+            message: expect.stringContaining("Usage: acceptance"),
+          });
+          expect(mocks.prepare).not.toHaveBeenCalled();
+          expect(mocks.run).not.toHaveBeenCalled();
+          expect(mocks.clean).not.toHaveBeenCalled();
+          expect(mocks.learner).not.toHaveBeenCalled();
+          expect(mocks.rows).not.toHaveBeenCalled();
+        })
     );
   }
 });

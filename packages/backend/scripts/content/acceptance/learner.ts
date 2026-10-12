@@ -1,15 +1,8 @@
 import { createHmac } from "node:crypto";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
-import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import {
-  type LocalRuntime,
-  readLocalRuntime,
-} from "@repo/backend/scripts/content/acceptance/local";
-import {
-  localConvexEnvironment,
-  makeConvexTemporaryRoot,
-} from "@repo/backend/scripts/content/acceptance/process";
+import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Clock, Crypto, Effect, FileSystem, Schema } from "effect";
 import { Base64Url, Hex } from "effect/encoding";
@@ -27,30 +20,6 @@ const SessionCookie = Schema.fromJsonString(
 );
 /** One Convex function's arguments as the CLI takes them, JSON text. */
 const encodeArguments = Schema.encodeEffect(JsonTextSchema);
-
-/** Runs one Convex CLI command against the running local backend. */
-const runLocalConvex = Effect.fn("contentAcceptance.runLocalConvex")(function* (
-  runtime: LocalRuntime,
-  operation: string,
-  args: readonly string[],
-  sensitiveValues: readonly string[] = []
-) {
-  const fs = yield* FileSystem.FileSystem;
-  const temporaryRoot = yield* makeConvexTemporaryRoot();
-  const output = `${temporaryRoot}/output.json`;
-  yield* runAcceptanceCommand({
-    args: ["node_modules/convex/bin/main.js", ...args],
-    command: process.execPath,
-    cwd: runtime.backend,
-    env: { ...localConvexEnvironment, TMPDIR: temporaryRoot },
-    operation,
-    reportStderr: true,
-    sensitiveValues,
-    stderrPath: `${temporaryRoot}/error.log`,
-    stdoutPath: output,
-  });
-  return yield* fs.readFileString(output);
-}, Effect.scoped);
 
 /**
  * Signs one synthetic learner into the running local acceptance backend and
