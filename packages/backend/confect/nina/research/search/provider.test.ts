@@ -45,6 +45,72 @@ describe("searchFirecrawl", () => {
       })
   );
 
+  it.effect(
+    "restricts the search to the sites it is given through the provider's own includeDomains field, exactly as given",
+    () =>
+      Effect.gen(function* () {
+        firecrawlApp.search.mockClear();
+        firecrawlApp.search.mockResolvedValueOnce({ web: [] });
+        yield* searchFirecrawl("kurikulum merdeka", [
+          "snpmb.bppp.kemdikbud.go.id",
+          "bbc.com",
+        ]);
+        expect(firecrawlApp.search).toHaveBeenLastCalledWith(
+          "kurikulum merdeka",
+          {
+            limit: 5,
+            sources: ["web", "news"],
+            timeout: 10_000,
+            includeDomains: ["snpmb.bppp.kemdikbud.go.id", "bbc.com"],
+          }
+        );
+      })
+  );
+
+  it.effect.each([
+    { sites: undefined, text: "no site" },
+    { sites: [], text: "an empty list of sites" },
+  ])(
+    "sends no includeDomains field for $text, because the SDK would send an empty list to the provider as it is",
+    ({ sites }) =>
+      Effect.gen(function* () {
+        firecrawlApp.search.mockClear();
+        firecrawlApp.search.mockResolvedValueOnce({ web: [] });
+        yield* searchFirecrawl("kurikulum merdeka", sites);
+        const [, options] = firecrawlApp.search.mock.calls[0] ?? [];
+        expect(options).toEqual({
+          limit: 5,
+          sources: ["web", "news"],
+          timeout: 10_000,
+        });
+        expect(options).not.toHaveProperty("includeDomains");
+      })
+  );
+
+  it.effect(
+    "asks again with the same sites when the rate limit refuses a restricted search, so a retry never widens it",
+    () =>
+      Effect.gen(function* () {
+        firecrawlApp.search.mockClear();
+        firecrawlApp.search
+          .mockRejectedValueOnce(
+            Object.assign(new Error("Rate limit"), { status: 429 })
+          )
+          .mockResolvedValueOnce({ web: [] });
+        const fiber = yield* Effect.forkChild(
+          searchFirecrawl("kurikulum merdeka", ["bbc.com"])
+        );
+        yield* TestClock.adjust("1 second");
+        yield* Fiber.join(fiber);
+        expect(
+          Arr.map(
+            firecrawlApp.search.mock.calls,
+            ([, options]) => options.includeDomains
+          )
+        ).toEqual([["bbc.com"], ["bbc.com"]]);
+      })
+  );
+
   it.effect("has no status when the provider never answered", () =>
     Effect.gen(function* () {
       firecrawlApp.search.mockRejectedValueOnce(new Error("socket hang up"));

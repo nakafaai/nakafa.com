@@ -79,7 +79,7 @@ export function Sidebar({
       >
         <div
           className={cn(
-            "relative w-64 bg-transparent transition-[width] duration-200 ease-out",
+            "relative w-64 bg-transparent transition-[width] duration-surface",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -90,7 +90,7 @@ export function Sidebar({
         />
         <div
           className={cn(
-            "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-200 ease-out md:flex",
+            "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-surface md:flex",
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:-left-64"
               : "right-0 group-data-[collapsible=offcanvas]:-right-64",
@@ -168,7 +168,7 @@ export function SidebarRail({ className, ...props }: ComponentProps<"button">) {
     <button
       aria-label="Toggle Sidebar"
       className={cn(
-        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-out after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 hover:after:bg-sidebar-border group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
+        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-[translate,left,right,background-color] duration-surface after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 hover:after:bg-sidebar-border group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-sidebar-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-sidebar-state=collapsed]_&]:cursor-w-resize",
         "group-data-[collapsible=offcanvas]:translate-x-0 hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:after:left-full",

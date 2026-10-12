@@ -180,7 +180,7 @@ function StepperTrigger({
     props: {
       children,
       className: cn(
-        "inline-flex items-center gap-3 rounded-full outline-none focus-visible:z-10 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50",
+        "pressable inline-flex items-center gap-3 rounded-full outline-none transition-[scale] focus-visible:z-10 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50",
         className
       ),
       "data-slot": "stepper-trigger",
@@ -205,16 +205,16 @@ function StepperDefaultIndicator() {
 
   return (
     <>
-      <span className="transition-all group-data-[step-state=completed]/step:scale-0 group-data-loading/step:scale-0 group-data-[step-state=completed]/step:opacity-0 group-data-loading/step:opacity-0 group-data-loading/step:transition-none">
+      <span className="transition-[scale,opacity] group-data-[step-state=completed]/step:scale-0 group-data-loading/step:scale-0 group-data-[step-state=completed]/step:opacity-0 group-data-loading/step:opacity-0 group-data-loading/step:transition-none">
         {step}
       </span>
       <HugeIcons
         aria-hidden="true"
-        className="absolute size-4 scale-0 opacity-0 transition-all group-data-[step-state=completed]/step:scale-100 group-data-[step-state=completed]/step:opacity-100"
+        className="absolute size-4 scale-0 opacity-0 transition-[scale,opacity] group-data-[step-state=completed]/step:scale-100 group-data-[step-state=completed]/step:opacity-100"
         icon={Tick01Icon}
       />
       {isLoading ? (
-        <span className="absolute transition-all">
+        <span className="absolute">
           <Spinner aria-hidden="true" className="size-3.5" />
         </span>
       ) : null}

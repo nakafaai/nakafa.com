@@ -41,7 +41,7 @@ function DropdownMenuContent({
       >
         <MenuPrimitive.Popup
           className={cn(
-            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 inset-shadow-[0_-1px_--theme(--color-black/4%)] z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-y-auto overflow-x-hidden rounded-md border bg-popover not-dark:bg-clip-padding p-1 text-popover-foreground shadow-md outline-none duration-100 data-closed:animate-out data-open:animate-in data-closed:overflow-hidden dark:inset-shadow-[0_1px_--theme(--color-white/6%)]",
+            "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 inset-shadow-[0_-1px_--theme(--color-black/4%)] z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-y-auto overflow-x-hidden rounded-md border bg-popover not-dark:bg-clip-padding p-1 text-popover-foreground shadow-md outline-none duration-ui ease-out data-closed:animate-out data-open:animate-in data-closed:overflow-hidden dark:inset-shadow-[0_1px_--theme(--color-white/6%)]",
             className
           )}
           data-slot="dropdown-menu-content"

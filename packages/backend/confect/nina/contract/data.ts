@@ -201,6 +201,12 @@ export const DataPartSchema = Schema.Struct({
   "web-search": Schema.Struct({
     error: Schema.optional(Schema.String),
     queries: Schema.Array(Schema.String).pipe(Schema.mutable),
+    /**
+     * The sites the search was limited to, when the model named any. A card
+     * shows them beside the query, so results of one site, or none at all,
+     * read as what they are. Answers stored before 12 October 2026 have none.
+     */
+    sites: Schema.optional(Schema.Array(Schema.String).pipe(Schema.mutable)),
     sources: Schema.Array(
       Schema.Struct({
         citation: Schema.String,
