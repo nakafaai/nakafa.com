@@ -64,7 +64,6 @@ export const NinaTurnState = Schema.Union([
     status: Schema.Literal("cancelled"),
     finishedAt: Schema.Finite,
   }),
-  Schema.Struct({ status: Schema.Literal("unanswered") }),
 ]);
 /**
  * Milliseconds counted from the admission of a turn, never below zero. A

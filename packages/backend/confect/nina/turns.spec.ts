@@ -82,18 +82,7 @@ export const NinaSettledTurn = Schema.Struct({
   ]),
 });
 
-/** A saved prompt without a response has no inferred charge or completion time. */
-const NinaUnansweredTurn = Schema.Struct({
-  ...NinaTurnFacts.fields,
-  phase: Schema.Literal("unanswered"),
-  state: NinaTurnState.members[5],
-});
-
-export const NinaTurn = Schema.Union([
-  NinaActiveTurn,
-  NinaSettledTurn,
-  NinaUnansweredTurn,
-]);
+export const NinaTurn = Schema.Union([NinaActiveTurn, NinaSettledTurn]);
 
 export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
   "NinaTurnError",

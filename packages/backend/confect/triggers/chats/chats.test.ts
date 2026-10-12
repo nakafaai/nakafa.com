@@ -158,8 +158,8 @@ describe("native Nina deletion lifecycle", () => {
           promptMessageId: receipt.promptMessageId,
           order,
           usage: [],
-          phase: "unanswered",
-          state: { status: "unanswered" },
+          phase: "settled",
+          state: { status: "complete", finishedAt: NOW },
         });
       }
       await ctx.db.insert("ninaSummaries", {
