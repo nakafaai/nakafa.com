@@ -2,12 +2,7 @@ import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
-import {
-  ResearchOutputSchema,
-  WebSearchInputSchema,
-  webSearchMaxSites,
-  webSearchQueryMaxLength,
-} from "@repo/backend/confect/nina/research/schema";
+import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { provider } from "@repo/backend/test/gateway";
@@ -21,7 +16,7 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, MutableList, Schema } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 
 vi.mock("@repo/backend/confect/nina/research/tools/search", () => ({
   searchWeb: vi.fn(),
@@ -57,37 +52,8 @@ const output = {
   ],
   limitations: [],
 };
-const encodeSearchInput = Schema.encodeSync(
-  Schema.fromJsonString(WebSearchInputSchema)
-);
-const encodeResearchOutput = Schema.encodeSync(
-  Schema.fromJsonString(ResearchOutputSchema)
-);
-const searchCall = providerStep(
-  [
-    {
-      type: "tool-call",
-      toolCallId: "search",
-      toolName: "webSearch",
-      input: encodeSearchInput({
-        queries: ["official agents"],
-        sites: ["ai-sdk.dev"],
-      }),
-    },
-  ],
-  "tool-calls"
-);
-/** One scripted synthesis answer, as the model would return it. */
-const synthesis = (answer: typeof ResearchOutputSchema.Type) =>
-  providerStep([{ type: "text", text: encodeResearchOutput(answer) }]);
-const final = synthesis(output);
-const noDate = "The official page did not state a date.";
-/** How the instruction Nina reads when research returns no source-backed finding begins. */
-const noFindingStart =
-  /^Research returned no source-backed finding\. Tell the learner what this attempt could not verify\./u;
-const unusable = providerStep([{ type: "text", text: "Invalid JSON" }]);
 /** A search call whose input the model wrote as `input`, before any check. */
-const searchCallWith = (input: typeof WebSearchInputSchema.Encoded) =>
+const searchCallWith = (input: unknown) =>
   providerStep(
     [
       {
@@ -99,15 +65,32 @@ const searchCallWith = (input: typeof WebSearchInputSchema.Encoded) =>
     ],
     "tool-calls"
   );
-const noQuery = searchCallWith({ queries: [] });
-/** Writes a query one character longer than the provider takes, so the schema refuses the whole call. */
-const longQuery = searchCallWith({
-  queries: ["a".repeat(webSearchQueryMaxLength + 1)],
+const searchCall = searchCallWith({
+  queries: ["official agents"],
+  sites: ["ai-sdk.dev"],
 });
-/** Names one site more than a call may, so the schema refuses the whole call. */
+/** One scripted synthesis answer, as the model would return it. */
+const synthesis = (answer: ResearchOutput) =>
+  providerStep([{ type: "text", text: encodeJsonText(answer) }]);
+const final = synthesis(output);
+const noDate = "The official page did not state a date.";
+/** How the instruction Nina reads when research returns no source-backed finding begins. */
+const noFindingStart =
+  /^Research returned no source-backed finding\. Tell the learner what this attempt could not verify\./u;
+const unusable = providerStep([{ type: "text", text: "Invalid JSON" }]);
+const noQuery = searchCallWith({ queries: [] });
+/**
+ * Writes a query far longer than the provider takes, so the schema refuses the
+ * whole call. `schema.test.ts` pins the exact bound.
+ */
+const longQuery = searchCallWith({ queries: ["a".repeat(5000)] });
+/**
+ * Names far more sites than a call may, so the schema refuses the whole call.
+ * `schema.test.ts` pins the exact bound.
+ */
 const tooManySites = searchCallWith({
   queries: ["official agents"],
-  sites: Arr.makeBy(webSearchMaxSites + 1, (index) => `site${index}.dev`),
+  sites: Arr.makeBy(50, (index) => `site${index}.dev`),
 });
 /** Names a site by its name, not its hostname, next to a valid one. */
 const noHostname = searchCallWith({

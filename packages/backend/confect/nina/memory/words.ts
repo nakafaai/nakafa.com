@@ -7,7 +7,7 @@ const KEPT_LENGTH = 6;
  * The most a word is worth to a memory that holds it: when no other memory of
  * the learner holds the word. A word is never worth more.
  */
-export const WORD_WORTH = 1;
+const WORD_WORTH = 1;
 
 /**
  * The words of a text, by the word boundaries of Unicode (UAX 29), which the

@@ -49,14 +49,14 @@ function readsOf(queries: readonly unknown[]) {
   };
 }
 
-/** The summary stays as `seed` stored it: its text, what it covers, and what it cost. */
-async function expectEarlier(f: SummaryTest) {
+/** What the summary that `seed` stores has cost. */
+const EARLIER_USAGE = { calls: 1, input: 900, output: 120 };
+
+/** The summary stays as `seed` stored it: its text and what it covers, and it has cost `usage`. */
+async function expectEarlier(f: SummaryTest, usage = EARLIER_USAGE) {
   expect(await f.text()).toBe(EARLIER);
   expect(await f.summary()).toEqual([
-    expect.objectContaining({
-      throughOrder: EARLIER_THROUGH,
-      usage: { calls: 1, input: 900, output: 120 },
-    }),
+    expect.objectContaining({ throughOrder: EARLIER_THROUGH, usage }),
   ]);
 }
 
@@ -91,6 +91,10 @@ describe("Nina rolling summary", () => {
     });
     await f.refresh(8);
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    // Each answer costs about 6,000 tokens, more than the fold reads of one message.
+    expect(prompt).toContain(
+      `Shortened to about ${NINA_BUDGET.foldMessage} of`
+    );
     expect(prompt).toContain("Learner: Question 0");
     expect(prompt).toContain("Nina: Answer 6");
     expect(prompt.split("Learner: Question 1")).toHaveLength(2);
@@ -273,15 +277,34 @@ describe("Nina rolling summary", () => {
   });
 
   it.each([
-    ["the provider fails", failingModel()],
-    ["the answer is empty", summaryModel("   ")],
-    ["the answer is cut at the output cap", summaryModel("- Cut", "length")],
-  ])("keeps the previous summary when %s", async (_failure, model) => {
-    provider.languageModel.mockReturnValue(model);
+    ["the provider fails", failingModel(), EARLIER_USAGE],
+    // A call that answered spent its tokens, so they count though its text is not stored.
+    [
+      "the answer is empty",
+      summaryModel("   "),
+      { calls: 2, input: 912, output: 124 },
+    ],
+    [
+      "the answer is cut at the output cap",
+      summaryModel("- Cut", "length"),
+      { calls: 2, input: 912, output: 124 },
+    ],
+  ])(
+    "keeps the previous summary when %s, and counts the tokens of a call that answered",
+    async (_failure, model, usage) => {
+      provider.languageModel.mockReturnValue(model);
+      const f = await createSummaryTest(9, () => BIG);
+      await f.seed(EARLIER_THROUGH, EARLIER);
+      await f.refresh(8);
+      await expectEarlier(f, usage);
+    }
+  );
+
+  it("stores no summary when the first fold of a chat is cut, because a summary holds text", async () => {
+    provider.languageModel.mockReturnValue(summaryModel("- Cut", "length"));
     const f = await createSummaryTest(9, () => BIG);
-    await f.seed(EARLIER_THROUGH, EARLIER);
     await f.refresh(8);
-    await expectEarlier(f);
+    expect(await f.summary()).toEqual([]);
   });
 
   it("reads back only from the prompt of the last folded turn", async () => {

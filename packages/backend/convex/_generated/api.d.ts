@@ -9504,13 +9504,21 @@ export declare const internal: {
         "mutation",
         "internal",
         {
-          candidates: Array<{
-            kind: "level" | "goal" | "style" | "struggle" | "situation";
-            known?: number;
-            quote: string;
-            text: string;
-            until?: string;
-          }>;
+          candidates: Array<
+            | {
+                kind: "situation";
+                known?: number;
+                quote: string;
+                text: string;
+                until: string;
+              }
+            | {
+                kind: "level" | "goal" | "style" | "struggle";
+                known?: number;
+                quote: string;
+                text: string;
+              }
+          >;
           seen: Array<{ confirmedAt: number; id: Id<"ninaMemories"> }>;
           topics: Array<string>;
           turnId: Id<"ninaTurns">;
@@ -9721,7 +9729,7 @@ export declare const internal: {
         "internal",
         {
           chatId: Id<"chats">;
-          text: string;
+          text?: string;
           throughOrder: number;
           usage: { input: number; output: number };
         },

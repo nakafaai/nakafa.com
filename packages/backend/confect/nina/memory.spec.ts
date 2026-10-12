@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { NinaMemoryDay } from "@repo/backend/confect/nina/memory/day";
 import { NinaPortraitText } from "@repo/backend/confect/nina/portrait/schema";
 import {
   onboardingFocusValidator,
@@ -35,6 +36,9 @@ export const MEMORY_TOPIC_LENGTH = 256;
 /** Memories one page of the Memory page holds, however many the browser asks for. */
 export const MEMORY_PAGE_LIMIT = 50;
 
+/** The kinds of memory that never end. */
+const NinaLastingKind = Schema.Literals(["level", "goal", "style", "struggle"]);
+
 /**
  * What a memory Nina wrote is about. `situation` is something with an end,
  * such as an exam date, and Nina dates every one with `validUntil`. The learner
@@ -42,10 +46,7 @@ export const MEMORY_PAGE_LIMIT = 50;
  * kind until a later chat says it again.
  */
 export const NinaMemoryKind = Schema.Literals([
-  "level",
-  "goal",
-  "style",
-  "struggle",
+  ...NinaLastingKind.literals,
   "situation",
 ]);
 
@@ -154,32 +155,62 @@ export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()
 ) {}
 
 /**
- * One thing a capture call says the learner stated about themself. `text` is
- * one short sentence: never empty, and at most `MEMORY_SENTENCE_LIMIT`
- * characters. `quote` holds the learner's exact words; the write is refused
- * unless the message contains them, and unless the sentence has a letter or a
- * digit. `known` is the place, counted from 1, in the list of known memories
- * the call was given (`NinaKnown`) of the memory that this one restates. The
- * model reads the memories and says which one it restates, and no comparison of
- * words decides it: a place that is not on the list names nothing. A stored
- * memory without a kind takes this one's kind, and the words of the stored
- * memory change only when Nina wrote them, so a memory the learner wrote keeps
- * its words. `until` is the day a situation ends, as `YYYY-MM-DD`.
+ * What a claim and a candidate say besides their kind. `text` is one short
+ * sentence: never empty, and at most `MEMORY_SENTENCE_LIMIT` characters.
+ * `quote` holds the learner's exact words; the write is refused unless the
+ * message contains them, and unless the sentence has a letter or a digit.
+ * `known` is the place, counted from 1, in the list of known memories the call
+ * was given (`NinaKnown`) of the memory that this one restates. The model reads
+ * the memories and says which one it restates, and no comparison of words
+ * decides it: a place that is not on the list names nothing. A stored memory
+ * without a kind takes this one's kind, and the words of the stored memory
+ * change only when Nina wrote them, so a memory the learner wrote keeps its
+ * words.
  */
-export const NinaMemoryCandidate = Schema.Struct({
-  kind: NinaMemoryKind,
+const NinaMemoryStatement = {
   known: Schema.optionalKey(Schema.Int),
   quote: Schema.NonEmptyString,
   text: NinaMemorySentence,
+};
+
+/**
+ * One thing a capture call says the learner stated about themself, as the model
+ * writes it: a kind, a statement, and `until`, the day a situation ends, as
+ * `YYYY-MM-DD`. The model is asked for this one flat shape for every kind,
+ * because a union in a structured output is not known to pass the gateway
+ * (Gemini's structured output page lists no `anyOf`, read on 12 October 2026,
+ * and the capture call has never sent one). A claim that fits no candidate is
+ * dropped by the check, so one claim cannot refuse the others.
+ */
+export const NinaMemoryClaim = Schema.Struct({
+  kind: NinaMemoryKind,
+  ...NinaMemoryStatement,
   until: Schema.optionalKey(Schema.String),
 });
 
 /** What one capture call proposes. Most messages yield none. */
 export const NinaMemoryCapture = Schema.Struct({
-  memories: Schema.mutable(Schema.Array(NinaMemoryCandidate)).check(
+  memories: Schema.mutable(Schema.Array(NinaMemoryClaim)).check(
     Schema.isMaxLength(MEMORY_CAPTURE_LIMIT)
   ),
 });
+
+/**
+ * A claim that can be written. A situation names the real day it ends
+ * (`NinaMemoryDay`), and a memory of any other kind has no end, so the shape of
+ * a candidate says which it is. The check makes a claim into a candidate: a
+ * situation without a real day is no candidate, and any other kind drops the
+ * day it was given. The write takes this same Schema as its argument, so it
+ * refuses a situation whose day is not real, and none is stored without an end.
+ */
+export const NinaMemoryCandidate = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("situation"),
+    ...NinaMemoryStatement,
+    until: NinaMemoryDay,
+  }),
+  Schema.Struct({ kind: NinaLastingKind, ...NinaMemoryStatement }),
+]);
 
 /** Correct answers in one section of the latest finished try-out. */
 const NinaProfileSection = Schema.Struct({
@@ -233,7 +264,7 @@ export const NinaMemorySeen = NinaMemoryNote.mapFields(
  * page call up (`recalled`), at most `MEMORY_RECALL_LIMIT`. While memory is
  * paused it holds neither the portrait nor a memory.
  */
-export const NinaLearner = Schema.Struct({
+const NinaLearner = Schema.Struct({
   paused: Schema.Boolean,
   portrait: Schema.optionalKey(NinaPortraitText),
   profile: NinaLearnerProfile,
@@ -388,7 +419,9 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "capture",
       args: () => ({
-        candidates: NinaMemoryCapture.fields.memories,
+        candidates: Schema.mutable(Schema.Array(NinaMemoryCandidate)).check(
+          Schema.isMaxLength(MEMORY_CAPTURE_LIMIT)
+        ),
         seen: Schema.mutable(Schema.Array(NinaMemorySeen)).check(
           Schema.isMaxLength(MEMORY_KNOWN_LIMIT)
         ),

@@ -3,7 +3,6 @@ import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { HostnameSchema } from "@repo/backend/confect/nina/research/domain";
-import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
 /**
@@ -17,7 +16,7 @@ export const webSearchMaxQueries = 4;
  * names more is refused, as a call with more queries than
  * `webSearchMaxQueries` is, and runs no search.
  */
-export const webSearchMaxSites = 5;
+const webSearchMaxSites = 5;
 /**
  * The most characters one search query may have. The search provider documents
  * its `query` with `maxLength: 500` (Firecrawl search endpoint,
@@ -29,7 +28,7 @@ export const webSearchMaxSites = 5;
  * links the learner sent, if any, and ends partial, or it fails when there are
  * none. A search already stored keeps whatever query it ran with.
  */
-export const webSearchQueryMaxLength = 500;
+const webSearchQueryMaxLength = 500;
 /**
  * One search query. The limit is checked on the text the model writes, so the
  * JSON schema it reads holds it, and it counts characters as that schema's
@@ -51,30 +50,6 @@ export class ResearchSourceLimitError extends Schema.TaggedError<ResearchSourceL
   "ResearchSourceLimitError",
   { maximum: Schema.Literal(researchMaxSources), received: Schema.Int }
 ) {}
-const urlInputSchema = Schema.NonEmptyString.pipe(
-  Schema.check(
-    Schema.makeFilter(isPublicHttpUrlSyntax, {
-      message: "Expected a public http(s) URL.",
-    })
-  )
-).annotate({
-  description: createPrompt({
-    taskContext: `
-      The public http(s) URL to scrape.
-    `,
-  }),
-});
-export const ScrapeInputSchema = Schema.Struct({
-  urlToCrawl: urlInputSchema,
-})
-  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
-  .annotate({
-    description: createPrompt({
-      taskContext: `
-        Get content from one selected public URL.
-      `,
-    }),
-  });
 const ScrapeOutputSchema = Schema.Struct({
   data: Schema.Struct({
     content: Schema.String,
@@ -85,7 +60,7 @@ const ScrapeOutputSchema = Schema.Struct({
   }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
   error: Schema.optional(Schema.String),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export const WebSearchInputSchema = Schema.Struct({
+const WebSearchInputSchema = Schema.Struct({
   queries: Schema.Array(queryInputSchema)
     .pipe(
       Schema.mutable,
@@ -203,7 +178,7 @@ const ResearchFindingSchema = Schema.Struct({
  * decides which findings count, so a stray URL or an unsupported finding drops
  * that finding instead of rejecting the whole answer.
  */
-export const ResearchOutputSchema = Schema.Struct({
+const ResearchOutputSchema = Schema.Struct({
   findings: Schema.Array(ResearchFindingSchema)
     .pipe(Schema.mutable)
     .annotate({

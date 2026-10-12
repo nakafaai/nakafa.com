@@ -3,7 +3,6 @@ import {
   DataPartSchema,
   NakafaDataSchema,
 } from "@repo/backend/confect/nina/contract/data";
-import { webSearchQueryMaxLength } from "@repo/backend/confect/nina/research/schema";
 import { NAKAFA_AGENT_MAX_QUERY_LENGTH } from "@repo/contents/agent/search";
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Result, Schema } from "effect";
@@ -98,7 +97,8 @@ describe("Nakafa persisted Quran data", () => {
 describe("persisted search queries", () => {
   it("keeps a query longer than a new search may send readable", () => {
     const nakafa = "a".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH + 1);
-    const web = "a".repeat(webSearchQueryMaxLength + 1);
+    // Far longer than the web search tool takes, which research/schema.test.ts pins.
+    const web = "a".repeat(5000);
 
     // The recorded input decodes with no limit on the text a query was written in.
     expect(

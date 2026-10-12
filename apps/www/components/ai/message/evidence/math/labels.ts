@@ -1,26 +1,5 @@
+import type { MathItem } from "@repo/math/schema/shared";
 import { Match, Schema } from "effect";
-
-const ItemLabelKey = Schema.Literals([
-  "math-item-algebraic-multiplicity",
-  "math-item-approximation",
-  "math-item-counterexample",
-  "math-item-diagonalizable",
-  "math-item-domain",
-  "math-item-eigenbasis",
-  "math-item-eigenvalue",
-  "math-item-eigenvector",
-  "math-item-factor",
-  "math-item-geometric-multiplicity",
-  "math-item-mode",
-  "math-item-q1",
-  "math-item-q2",
-  "math-item-q3",
-  "math-item-root",
-  "math-item-solution",
-  "math-item-singularity",
-  "math-item-status",
-  "math-item-result",
-]);
 
 const ItemValueKey = Schema.Literals([
   "math-value-no",
@@ -28,38 +7,38 @@ const ItemValueKey = Schema.Literals([
   "math-value-divergent",
 ]);
 
+/**
+ * The translation key of each math item label. Every label has one, so a new
+ * label fails the typecheck here until it has one.
+ */
+const ITEM_LABEL_KEYS = {
+  algebraic_multiplicity: "math-item-algebraic-multiplicity",
+  approximation: "math-item-approximation",
+  counterexample: "math-item-counterexample",
+  diagonalizable: "math-item-diagonalizable",
+  domain: "math-item-domain",
+  eigenbasis: "math-item-eigenbasis",
+  eigenvalue: "math-item-eigenvalue",
+  eigenvector: "math-item-eigenvector",
+  factor: "math-item-factor",
+  geometric_multiplicity: "math-item-geometric-multiplicity",
+  mode: "math-item-mode",
+  q1: "math-item-q1",
+  q2: "math-item-q2",
+  q3: "math-item-q3",
+  root: "math-item-root",
+  singularity: "math-item-singularity",
+  solution: "math-item-solution",
+  status: "math-item-status",
+} as const satisfies Record<MathItem["label"], string>;
+
 /** Maps math item labels to stable translation keys. */
-export const getItemLabelKey = Match.type<string>().pipe(
-  Match.withReturnType<typeof ItemLabelKey.Type>(),
-  Match.when(
-    "algebraic_multiplicity",
-    () => "math-item-algebraic-multiplicity"
-  ),
-  Match.when("approximation", () => "math-item-approximation"),
-  Match.when("counterexample", () => "math-item-counterexample"),
-  Match.when("diagonalizable", () => "math-item-diagonalizable"),
-  Match.when("domain", () => "math-item-domain"),
-  Match.when("eigenbasis", () => "math-item-eigenbasis"),
-  Match.when("eigenvalue", () => "math-item-eigenvalue"),
-  Match.when("eigenvector", () => "math-item-eigenvector"),
-  Match.when("factor", () => "math-item-factor"),
-  Match.when(
-    "geometric_multiplicity",
-    () => "math-item-geometric-multiplicity"
-  ),
-  Match.when("mode", () => "math-item-mode"),
-  Match.when("q1", () => "math-item-q1"),
-  Match.when("q2", () => "math-item-q2"),
-  Match.when("q3", () => "math-item-q3"),
-  Match.when("root", () => "math-item-root"),
-  Match.when("solution", () => "math-item-solution"),
-  Match.when("singularity", () => "math-item-singularity"),
-  Match.when("status", () => "math-item-status"),
-  Match.orElse(() => "math-item-result")
-);
+export function getItemLabelKey(label: MathItem["label"]) {
+  return ITEM_LABEL_KEYS[label];
+}
 
 /** Maps semantic math item values to localized display text. */
-export function getItemValueKey(label: string, value: string) {
+export function getItemValueKey(label: MathItem["label"], value: string) {
   if (label === "diagonalizable") {
     return Match.value(value).pipe(
       Match.withReturnType<typeof ItemValueKey.Type | undefined>(),

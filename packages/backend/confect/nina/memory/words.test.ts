@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   longestWords,
-  WORD_WORTH,
   wordsOf,
   wordWorth,
 } from "@repo/backend/confect/nina/memory/words";
@@ -151,14 +150,14 @@ describe("memory words looked up first", () => {
 
 describe("memory word worth", () => {
   it("is the most a word is worth for a word that one memory holds, and the inverse of how many memories hold it", () => {
-    expect(wordWorth(1)).toBe(WORD_WORTH);
-    expect(wordWorth(2)).toBe(WORD_WORTH / 2);
-    expect(wordWorth(8)).toBe(WORD_WORTH / 8);
+    expect(wordWorth(1)).toBe(1);
+    expect(wordWorth(2)).toBe(1 / 2);
+    expect(wordWorth(8)).toBe(1 / 8);
   });
 
   it("falls with every memory that holds the word, and a word that 24 hold is worth less than any word that fewer hold", () => {
     const worth = Arr.map(Arr.range(1, 24), wordWorth);
-    expect(Arr.headNonEmpty(worth)).toBe(WORD_WORTH);
+    expect(Arr.headNonEmpty(worth)).toBe(1);
     expect(
       Arr.every(
         Arr.zip(worth, Arr.drop(worth, 1)),
