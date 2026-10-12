@@ -10,7 +10,10 @@ import type {
   CapabilityArtifact,
   CapabilityProgress,
 } from "@repo/backend/confect/nina/capability/progress";
-import type { TaskAgentDataSchema } from "@repo/backend/confect/nina/contract/agent";
+import type {
+  ResearchAgentData,
+  TaskAgentDataSchema,
+} from "@repo/backend/confect/nina/contract/agent";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -30,6 +33,17 @@ export const specialistRequest = {
   locale: "en",
   task: "Verify the requested evidence.",
 } satisfies Omit<typeof TaskAgentDataSchema.Type, "userId">;
+
+/**
+ * The data of a research run besides its user, progress and usage: no link from
+ * the learner, and words that differ from the task its model reads.
+ */
+export const researchRequest = {
+  ...specialistRequest,
+  sourceReferences: [],
+  toolCallId: "research",
+  words: "requested evidence",
+} satisfies Omit<ResearchAgentData, "userId">;
 
 /** Executes the real Agent component in its native action context over the test gateway. */
 export async function runSpecialist<A, E>(

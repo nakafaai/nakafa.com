@@ -171,6 +171,35 @@ Agent storage. External research admits at most
 selected characters per source. Excess requests receive an explicit limit;
 sources are never silently omitted.
 
+The research model writes the search queries and reads the results, so code
+only trims, deduplicates, and bounds the queries and never filters a result by
+its words. The tool input tells the model the 500 characters that the search
+provider accepts for a query, so no query is cut. No letter case, word shape,
+or word length decides what a learner meant, because a rule built on one
+treats a task in Japanese, Arabic, or Thai differently from the same task in
+English.
+
+A page longer than its budget keeps the paragraphs that hold the most of the
+words of the tool call: the text of its request, its objective, and each item of
+its lists, one per line with no heading. The words are not taken from the
+Markdown task that the research model reads, so a heading that the task writes
+never scores a paragraph, and a line of the request that starts with `#`, such
+as a pasted heading or a hashtag, is looked for like any other. The platform's
+`Intl.Segmenter` finds the words of every script, also of those written without
+spaces. A word counts once for a paragraph, however often the paragraph repeats
+it, and it weighs less the more paragraphs of the page hold it, so the words
+that fill every paragraph, such as particles and prepositions, weigh little
+without any list of words to skip. A word matches only as a whole word: an
+inflected form of a word of the tool call, such as `cats` for `cat`, does not
+match it, because no stemmer covers every language and a wrong stem is worse
+than a miss.
+
+A cut ends where `Intl.Segmenter` ends a sentence: after a full stop, a
+question mark, an exclamation mark, a Japanese `。`, or a line break. A script
+that marks no sentence end, such as Thai, which separates its sentences with a
+space, is one sentence to the segmenter, so a cut in it falls back to the end
+of a paragraph, a line, or a word.
+
 Convex deployments own `FIRECRAWL_API_KEY`, `MATH_CAS_API_KEY`, and
 `NEXT_PUBLIC_CAS_URL`. The CAS key must match the
 production CAS service, and its URL is `https://cas.nakafa.com`. These are
