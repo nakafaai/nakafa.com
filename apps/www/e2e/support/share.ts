@@ -130,7 +130,11 @@ export const offersWriting = async (page: Page) => {
   await expect(retryButtons(page).first()).toBeVisible();
 };
 
-/** What a reader who is not the owner is offered: nothing that writes. */
+/**
+ * What a reader who is not the owner is offered of those controls: no box to
+ * write to Nina, no menu to rename, share or delete the chat, and no button to
+ * send a message again.
+ */
 export const offersNoWriting = async (page: Page) => {
   await expect(composer(page)).toHaveCount(0);
   await expect(chatMenu(page)).toHaveCount(0);

@@ -118,8 +118,8 @@ const copiesALink = Effect.fn("NakafaE2E.copiesALink")(function* (
 
 /**
  * A reader opens the link in a new load of the page: the transcript is there,
- * and nothing that writes. The document is marked, so a later step can tell
- * whether the page was reloaded.
+ * and none of the controls that write. The document is marked, so a later step
+ * can tell whether the page was reloaded.
  */
 const readsByLink = (
   reader: Page,
@@ -204,7 +204,7 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
         // The learner's own change, their decision about analytics, is stored by now.
         const memberSent = memberChanges.sent;
 
-        // 2. A reader with no session reads the chat, and nothing writes.
+        // 2. A reader with no session reads the chat, with no control to write.
         yield* readsByLink(reader, origin, first.link, chatId);
         // 3. The address without the fragment is a chat that is not there.
         const withoutLink = yield* meetsNothing(reader, `/en/chat/${chatId}`);
@@ -213,7 +213,7 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
           `/en/chat/${gone.chatId}`
         );
         yield* Effect.sync(() => expect(withoutLink).toBe(ofGoneChat));
-        // 4. Another learner reads the chat, and nothing writes.
+        // 4. Another learner reads the chat, with no control to write.
         yield* readsByLink(member, origin, first.link, chatId);
 
         // 5. The owner stops sharing: both pages lose the chat without a reload.
@@ -229,7 +229,7 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
         yield* meetsNothing(reader, linkOn(origin, first.link));
         yield* readsByLink(reader, origin, second.link, chatId);
 
-        // No reader sent a change: nothing they saw could write.
+        // No reader sent a mutation or an action to the server.
         yield* Effect.sync(() => {
           expect(readerChanges.sent).toBe(0);
           expect(memberChanges.sent).toBe(memberSent);

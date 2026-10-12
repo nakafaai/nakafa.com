@@ -59,19 +59,39 @@ who signs in from a shared chat comes back to the chat by id and opens the link
 again. A test for each flow proves that no address it sends holds the token. A
 learner who is not the owner reads the chat, its conversation and its messages
 only with that token, and every other read answers as if the chat did not exist,
-whether the chat is private, shared or gone. Turning sharing off, or deleting
-the chat, deletes the token, so every link stops at once, and turning sharing on
-again draws a new one. No list of another learner's chats exists, so a profile
-lists chats for its owner alone. A chat that was public before share tokens had
-only its id for a link: that link stops working when share tokens go live, the
-chat goes back to private, and its owner shares it again to get a link.
-`apps/www/e2e/chat/share.browser.ts` proves the whole life of a link in the
-production build: a reader with no session and a learner signed in as someone
-else read the chat and are offered nothing that writes, the address without the
-fragment opens what a chat that is not there opens, the pages that hold the chat
-lose it without a reload when sharing stops, sharing again makes a different
-link while the first stays dead, and no request of the reader's page holds the
-token, the analytics it reported included.
+whether the chat is private, shared or gone. A reader is told where each turn
+stands and which prompt it answers, and never what it cost, what Nina kept from
+it or what she suggests next, because those belong to the owner's account: the
+owner, who opens a chat by its id or through their own link, is told all of it.
+Turning sharing off, or deleting the chat, deletes the token, so every link
+stops at once, and turning sharing on again draws a new one. One thing outlives
+a link: the address of a file attached to a message. The link guards the chat,
+not the files in it. A reader sees an attachment through the address that file
+storage gives it, which works for anyone who holds it until the file is deleted
+(the [Convex documentation](https://docs.convex.dev/file-storage/serve-files)
+says anyone with the URL can access the file, and that deleting the file revokes
+it), so turning sharing off takes the chat from a reader and leaves them the
+address of a file they already saw. Deleting the chat deletes its files within
+two days: the Agent component keeps a file that nothing refers to for 24 hours,
+and the storage sweep runs daily. The owner accepted this exception on 12
+October 2026, and it is not engineered around. No list of another learner's
+chats exists, so a profile lists chats for its owner alone. A chat that was
+public before share tokens had only its id for a link: that link stops working
+when share tokens go live, the chat goes back to private, and its owner shares
+it again to get a link. `apps/www/e2e/chat/share.browser.ts` proves the whole
+life of a link in the production build: a reader with no session and a learner
+signed in as someone else read the chat, are offered no box to write to Nina,
+no menu to rename, share or delete the chat and no button to send a message
+again, and send no mutation or action to the server, the address without the
+fragment opens what a chat that is not there opens, the pages that hold the
+chat lose it without a reload when sharing stops, sharing again makes a
+different link while the first stays dead, and no request of the reader's page
+holds the token, the analytics it reported included. The local runtime has no
+model, so each of its turns ends with the failure that offers no retry, and the
+browser test reaches no answer with follow-up suggestions and no failure that
+can be retried. A reader is sent no suggestions, and the Retry of a failed
+answer reads the same access as the composer, `readChatAccess`, which a unit
+test pins for a reader.
 
 The chat route renders its header on the server and the conversation after
 hydration, because a server never sees the fragment, and asking for the chat
