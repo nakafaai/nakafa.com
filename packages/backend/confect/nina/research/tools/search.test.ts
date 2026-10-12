@@ -307,6 +307,10 @@ describe("research web search tool", () => {
           }),
         })
       );
+      // An open search names no site, so no card carries the field.
+      expect(
+        Arr.some(getWebSearchParts(parts()), (part) => "sites" in part)
+      ).toBe(false);
     })
   );
 
@@ -361,6 +365,10 @@ describe("research web search tool", () => {
           [[named], ["https://example.com/named"]],
           [[own], ["https://example.com/own"]],
         ]);
+        // Every card of the call, loading or done, says the sites it was limited to.
+        expect(
+          Arr.map(getWebSearchParts(parts()), (part) => part.sites)
+        ).toEqual(Arr.makeBy(4, () => sites));
       })
   );
 

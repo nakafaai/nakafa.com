@@ -42,6 +42,12 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     maxQueries: webSearchMaxQueries,
     queries,
   });
+  // Every card of the call says which sites it was limited to, so results of
+  // one site, or no result, read as what they are.
+  const named = sites ?? [];
+  const limited = Arr.isReadonlyArrayNonEmpty(named)
+    ? { sites: [...named] }
+    : {};
 
   yield* Effect.forEach(searchQueries, (query, index) =>
     publish({
@@ -50,6 +56,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
       data: {
         provider: "firecrawl",
         queries: [query],
+        ...limited,
         status: "loading",
         sources: [],
       },
@@ -91,6 +98,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
           data: {
             provider: "firecrawl",
             queries: [query],
+            ...limited,
             status: "error",
             sources: [],
             error: found.error,
@@ -111,6 +119,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
         data: {
           provider: "firecrawl",
           queries: [query],
+          ...limited,
           status: "done",
           sources: addSourceCitations(sources),
         },
