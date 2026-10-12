@@ -8575,6 +8575,12 @@ export declare const internal: {
               { status: "queued" } | { startedAt: number; status: "running" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId: Id<"creditTransactions">;
             transition?: {
@@ -8751,6 +8757,12 @@ export declare const internal: {
               | { finishedAt: number; status: "cancelled" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
             transition?: {
@@ -8910,6 +8922,12 @@ export declare const internal: {
             state: { status: "unanswered" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
             transition?: {
@@ -9085,6 +9103,12 @@ export declare const internal: {
               { status: "queued" } | { startedAt: number; status: "running" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId: Id<"creditTransactions">;
             transition?: {
@@ -9261,6 +9285,12 @@ export declare const internal: {
               | { finishedAt: number; status: "cancelled" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
             transition?: {
@@ -9420,6 +9450,12 @@ export declare const internal: {
             state: { status: "unanswered" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
             transition?: {
@@ -9472,6 +9508,12 @@ export declare const internal: {
             | "response-limit"
             | "interrupted"
             | "unknown";
+          timing?: {
+            claimedMs?: number;
+            progressMs?: number;
+            readyMs?: number;
+            tokenMs?: number;
+          };
           turnId: Id<"ninaTurns">;
         },
         null
