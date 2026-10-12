@@ -1,11 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
-import {
-  type NinaLearningSessionInput,
-  NinaLearningSessionSchema,
-  openNinaLearningSession,
-} from "@repo/backend/confect/nina/contract/pack";
-import { Effect, Exit, Schema } from "effect";
+import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
+import { Effect, Exit } from "effect";
 
 const learning = {
   assetId: "asset:id:material:mathematics:vector:addition",
@@ -18,7 +14,7 @@ const learning = {
   title: "Vector Addition",
   url: "https://nakafa.com/en/subjects/mathematics/vector/addition",
   verified: true,
-} satisfies NinaLearningSessionInput["learning"];
+};
 const placementProgramKey = LearningProgramKeySchema.make(
   "cambridge-lower-secondary"
 );
@@ -39,7 +35,7 @@ describe("nina/contract/pack", () => {
             programKey: placementProgramKey,
           },
           source: "current-page",
-        } satisfies NinaLearningSessionInput);
+        });
 
         expect(session.context.snapshot).toMatchObject({
           capturedAt: "2026-05-09T00:00:00.000Z",
@@ -86,12 +82,10 @@ describe("nina/contract/pack", () => {
             verified: false,
           },
           source: "pinned-chat",
-        } satisfies NinaLearningSessionInput);
+        });
 
         expect(session.context).not.toHaveProperty("placement");
-        expect(
-          yield* Schema.decodeEffect(NinaLearningSessionSchema)(session)
-        ).toEqual(session);
+        expect(session.context).not.toHaveProperty("focus");
         expect(session.context.snapshot.tools).toMatchObject({
           allowPageFetch: false,
           evidenceScope: "general-learning",

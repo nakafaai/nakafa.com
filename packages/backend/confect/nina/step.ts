@@ -15,7 +15,7 @@ const firstStepNumber = 0;
 export type NinaToolSet = Record<LearningCapabilityName, Tool>;
 
 /** AI SDK-derived callback type for Nina's per-step tool policy. */
-export type NinaPrepareStep = NonNullable<
+type NinaPrepareStep = NonNullable<
   ToolLoopAgentSettings<never, NinaToolSet>["prepareStep"]
 >;
 
@@ -34,7 +34,7 @@ type NinaPreparedStep = Awaited<ReturnType<NinaPrepareStep>>;
  * reads the prompt prefix the first one cached. The current page arrives in the
  * prompt context, so no step forces a page read.
  */
-export function prepareNinaStep(
+function prepareNinaStep(
   { messages, stepNumber }: NinaPrepareStepInput,
   capabilities: readonly LearningCapabilityName[]
 ): NinaPreparedStep {

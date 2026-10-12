@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   mathToolInputSchema,
   memoryToolInputSchema,
-  NakafaToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
@@ -16,13 +15,11 @@ import {
 import { encodeJsonText } from "@repo/utilities/json";
 import { InvalidToolInputError, NoSuchToolError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Schema } from "effect";
 
 afterEach(() => {
   vi.restoreAllMocks();
   provider.languageModel.mockReset();
 });
-const nakafaInputJsonSchema = Schema.fromJsonString(NakafaToolInputSchema);
 const tools = {
   nakafa: { inputSchema: nakafaToolInputSchema },
   math: { inputSchema: mathToolInputSchema },
@@ -70,10 +67,7 @@ describe("Nina tool repair with the Agent component", () => {
   it("repairs a known task through the model and records usage", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: providerStep([
-        {
-          type: "text",
-          text: Schema.encodeSync(nakafaInputJsonSchema)(ninaToolInput),
-        },
+        { type: "text", text: encodeJsonText(ninaToolInput) },
       ]),
     });
     provider.languageModel.mockReturnValue(model);
@@ -83,7 +77,7 @@ describe("Nina tool repair with the Agent component", () => {
     );
     expect(result).toEqual({
       ...toolCall,
-      input: Schema.encodeSync(nakafaInputJsonSchema)(ninaToolInput),
+      input: encodeJsonText(ninaToolInput),
     });
     expect(usageHandler).toHaveBeenCalledWith(
       expect.anything(),

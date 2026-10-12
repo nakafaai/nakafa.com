@@ -233,7 +233,7 @@ export const NinaMemorySeen = NinaMemoryNote.mapFields(
  * page call up (`recalled`), at most `MEMORY_RECALL_LIMIT`. While memory is
  * paused it holds neither the portrait nor a memory.
  */
-export const NinaLearner = Schema.Struct({
+const NinaLearner = Schema.Struct({
   paused: Schema.Boolean,
   portrait: Schema.optionalKey(NinaPortraitText),
   profile: NinaLearnerProfile,

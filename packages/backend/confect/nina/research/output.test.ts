@@ -1,9 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  addEligibleCitationUrl,
   addEligibleSourceUrls,
   filterResearchOutputCitations,
-  normalizeResearchCitationUrl,
 } from "@repo/backend/confect/nina/research/citations";
 import {
   formatResearchOutput,
@@ -171,10 +169,9 @@ describe("formatResearchOutput", () => {
 
   it("drops generated findings whose citations are not eligible source evidence", () => {
     const eligibleUrls = MutableHashSet.empty<string>();
-    addEligibleCitationUrl(
-      eligibleUrls,
-      "https://ai-sdk.dev/docs/ai-sdk-core/devtools"
-    );
+    addEligibleSourceUrls(eligibleUrls, [
+      { url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools" },
+    ]);
 
     const output = filterResearchOutputCitations(
       {
@@ -223,10 +220,9 @@ describe("formatResearchOutput", () => {
 
   it("drops only unsupported citations when a finding keeps source-backed evidence", () => {
     const eligibleUrls = MutableHashSet.empty<string>();
-    addEligibleCitationUrl(
-      eligibleUrls,
-      "https://ai-sdk.dev/docs/ai-sdk-core/devtools"
-    );
+    addEligibleSourceUrls(eligibleUrls, [
+      { url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools" },
+    ]);
 
     const output = filterResearchOutputCitations(
       {
@@ -263,12 +259,12 @@ describe("formatResearchOutput", () => {
     ]);
   });
 
-  it("keeps findings unchanged when every citation is eligible", () => {
+  it("keeps findings unchanged when every citation is eligible, and adds no address that is not a public link", () => {
     const eligibleUrls = MutableHashSet.empty<string>();
     addEligibleSourceUrls(eligibleUrls, [
       { url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools" },
+      { url: "notaurl" },
     ]);
-    addEligibleCitationUrl(eligibleUrls, "notaurl");
 
     const output = {
       findings: [
@@ -286,6 +282,6 @@ describe("formatResearchOutput", () => {
     };
 
     expect(filterResearchOutputCitations(output, eligibleUrls)).toBe(output);
-    expect(normalizeResearchCitationUrl("notaurl")).toBeUndefined();
+    expect(MutableHashSet.size(eligibleUrls)).toBe(1);
   });
 });

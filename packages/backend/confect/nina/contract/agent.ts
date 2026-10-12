@@ -31,7 +31,7 @@ const AgentContextSchema = Schema.Struct({
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type AgentContext = typeof AgentContextSchema.Type;
 /** Schema-derived data passed to task-oriented specialist agents. */
-export const TaskAgentDataSchema = Schema.Struct({
+const TaskAgentDataSchema = Schema.Struct({
   userId: Id("users"),
   context: AgentContextSchema,
   locale: LocaleSchema,

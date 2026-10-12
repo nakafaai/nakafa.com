@@ -4,10 +4,10 @@ import { Schema } from "effect";
 
 /**
  * Agent message statuses: `streaming` for a live message, then the Agent
- * component's `pending`, `success`, and `failed`. The parity test checks the
- * component values against the installed Agent validators.
+ * component's `pending`, `success`, and `failed`. The parity test reads a page
+ * of each value the installed Agent validators accept.
  */
-export const AgentMessageStatus = Schema.Literals([
+const AgentMessageStatus = Schema.Literals([
   "streaming",
   "pending",
   "success",
@@ -15,17 +15,10 @@ export const AgentMessageStatus = Schema.Literals([
 ]);
 
 /** Stream statuses stored by the Agent component. */
-export const StreamStatus = Schema.Literals([
-  "streaming",
-  "finished",
-  "aborted",
-]);
+const StreamStatus = Schema.Literals(["streaming", "finished", "aborted"]);
 
 /** Stream formats stored by the Agent component. */
-export const StreamFormat = Schema.Literals([
-  "UIMessageChunk",
-  "TextStreamPart",
-]);
+const StreamFormat = Schema.Literals(["UIMessageChunk", "TextStreamPart"]);
 
 /** Agent owns part decoding and delta assembly; Confect validates its envelope. */
 const AgentMessage = Schema.Struct({

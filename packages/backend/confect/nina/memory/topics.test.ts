@@ -1,11 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import type { NinaPage } from "@repo/backend/confect/nina/contract/turn";
-import {
-  isLesson,
-  lessonOf,
-  topicsOf,
-} from "@repo/backend/confect/nina/memory/topics";
+import { isLesson, topicsOf } from "@repo/backend/confect/nina/memory/topics";
 import { Array as Arr, Effect } from "effect";
 
 const IDENTITY =
@@ -38,21 +34,26 @@ const page = Effect.fn("test.memory.topics.page")(function* (
   } satisfies NinaPage;
 });
 
+/** The topics of a page that name a lesson: the one it shows, or none. */
+function lessonTopics(target: NinaPage | undefined) {
+  return Arr.filter(topicsOf(target), isLesson);
+}
+
 describe("memory lesson", () => {
   it.effect.each(["en", "id", "de"])(
     "names a lesson the same in the %s page",
     (locale) =>
       Effect.gen(function* () {
-        expect(lessonOf(yield* page(`asset:${locale}:${IDENTITY}`))).toBe(
-          IDENTITY
-        );
+        expect(
+          lessonTopics(yield* page(`asset:${locale}:${IDENTITY}`))
+        ).toEqual([`lesson:${IDENTITY}`]);
       })
   );
 
   it.effect("names no lesson for a page without one", () =>
     Effect.gen(function* () {
-      expect(lessonOf(undefined)).toBeUndefined();
-      expect(lessonOf(yield* page())).toBeUndefined();
+      expect(lessonTopics(undefined)).toEqual([]);
+      expect(lessonTopics(yield* page())).toEqual([]);
     })
   );
 
@@ -63,7 +64,7 @@ describe("memory lesson", () => {
     "asset:en:material",
   ])("names no lesson for the asset id %j", (assetId) =>
     Effect.gen(function* () {
-      expect(lessonOf(yield* page(assetId))).toBeUndefined();
+      expect(lessonTopics(yield* page(assetId))).toEqual([]);
     })
   );
 });
