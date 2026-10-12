@@ -158,7 +158,7 @@ export function Toy({
       hidden={scatter !== null && place !== undefined}
       ref={merged}
     >
-      <div className="transition-[scale] duration-180 ease-out group-data-[held=true]/toy:scale-108">
+      <div className="transition-[scale] group-data-[held=true]/toy:scale-108">
         {children}
       </div>
     </div>

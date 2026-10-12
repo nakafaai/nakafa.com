@@ -162,5 +162,5 @@
  * this utility. */
 @utility look {
   translate: calc(var(--look-x, 0) * 1px) calc(var(--look-y, 0) * 1px);
-  transition: translate 120ms var(--ease-out);
+  transition: translate var(--transition-duration-press) var(--ease-out);
 }
