@@ -49,6 +49,14 @@ const admission = {
     page: { locale: "en", slug: "home" },
   },
 };
+/** The admission of one prompt that sends the given uploads. */
+const sending = <T extends string>(uploadIds: T[]) => ({
+  ...admission,
+  input: {
+    ...admission.input,
+    prompt: { ...admission.input.prompt, uploadIds },
+  },
+});
 
 async function fixture() {
   const t = createConvexTestWithBetterAuth();
@@ -127,13 +135,7 @@ describe("native Nina attachment ownership", () => {
       throw new Error("Expected ready upload");
     }
     const fileId = grant.state.fileId;
-    const args = {
-      ...admission,
-      input: {
-        ...admission.input,
-        prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
-      },
-    };
+    const args = sending([uploadId]);
     const first = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
@@ -183,24 +185,12 @@ describe("native Nina attachment ownership", () => {
       subject: other.authUserId,
       sessionId: other.sessionId,
     });
-    const args = {
-      ...admission,
-      input: {
-        ...admission.input,
-        prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
-      },
-    };
+    const args = sending([uploadId]);
     await expect(stranger.mutation(start, args)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_INVALID" },
     });
     await expect(
-      owner.mutation(start, {
-        ...args,
-        input: {
-          ...args.input,
-          prompt: { ...args.input.prompt, uploadIds: [uploadId, uploadId] },
-        },
-      })
+      owner.mutation(start, sending([uploadId, uploadId]))
     ).rejects.toMatchObject({ data: { code: "NINA_UPLOAD_INVALID" } });
     await t.mutation((ctx) =>
       ctx.db.patch("ninaUploads", uploadId, { expiresAt: NOW })
@@ -279,13 +269,7 @@ describe("native Nina attachment ownership", () => {
     );
     const first = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
-      await owner.mutation(start, {
-        ...admission,
-        input: {
-          ...admission.input,
-          prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
-        },
-      })
+      await owner.mutation(start, sending([uploadId]))
     );
     await owner.mutation(cancel, { chatId: first.chatId });
     vi.mocked(resolveNinaContext).mockClear();
@@ -348,13 +332,7 @@ describe("native Nina attachment ownership", () => {
       refs.public.nina.uploads.save,
       await f.owner.action(save, attachment)
     );
-    const args = {
-      ...admission,
-      input: {
-        ...admission.input,
-        prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
-      },
-    };
+    const args = sending([uploadId]);
     vi.mocked(getFile).mockRejectedValueOnce(new Error("File unavailable"));
     await expect(f.owner.mutation(start, args)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_FAILED" },
@@ -386,13 +364,7 @@ describe("native Nina attachment ownership", () => {
     );
     const result = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
-      await f.owner.mutation(start, {
-        ...admission,
-        input: {
-          ...admission.input,
-          prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
-        },
-      })
+      await f.owner.mutation(start, sending([uploadId]))
     );
     expect(result.prompt.files).toEqual([
       expect.objectContaining({
@@ -469,13 +441,7 @@ describe("native Nina attachment ownership", () => {
     const fileId = grant.state.fileId;
     const sent = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
-      await f.owner.mutation(start, {
-        ...admission,
-        input: {
-          ...admission.input,
-          prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
-        },
-      })
+      await f.owner.mutation(start, sending([uploadId]))
     );
 
     await expect(f.owner.mutation(release, { uploadId })).rejects.toMatchObject(
