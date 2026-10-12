@@ -110,6 +110,38 @@ export function NinaAttachment({
   );
 }
 
+/**
+ * The reasons one pick was not attached in full. Each reason has its sentence
+ * and the names of the files it dropped, one to a line, and how many more.
+ */
+export function RejectedFiles({
+  reasons,
+}: {
+  reasons: readonly {
+    more: string | null;
+    names: readonly string[];
+    sentence: string;
+  }[];
+}) {
+  return (
+    <ul className="flex flex-col gap-2">
+      {Arr.map(reasons, (reason) => (
+        <li key={reason.sentence}>
+          <p>{reason.sentence}</p>
+          <ul className="flex flex-col gap-0.5 font-medium">
+            {Arr.map(Arr.dedupe(reason.names), (name) => (
+              <li className="wrap-anywhere" key={name}>
+                {name}
+              </li>
+            ))}
+            {reason.more ? <li>{reason.more}</li> : null}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Selected files remain editable when upload or message admission fails. */
 export function NinaAttachments({
   submittedFiles,

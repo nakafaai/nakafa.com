@@ -39,7 +39,11 @@ import { Array as Arr, Effect, Match } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
-import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
+import {
+  NinaAttach,
+  NinaAttachments,
+  RejectedFiles,
+} from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
 import {
   NINA_NOTICE_POSITION,
@@ -49,38 +53,6 @@ import {
 
 /** How many file names a notice lists for one reason before it counts the rest. */
 const NAMES_SHOWN = 3;
-
-/**
- * The reasons one pick was not attached in full. Each reason has its sentence
- * and the names of the files it dropped, one to a line, and how many more.
- */
-function RejectedFiles({
-  reasons,
-}: {
-  reasons: readonly {
-    more: string | null;
-    names: readonly string[];
-    sentence: string;
-  }[];
-}) {
-  return (
-    <ul className="flex flex-col gap-2">
-      {Arr.map(reasons, (reason) => (
-        <li key={reason.sentence}>
-          <p>{reason.sentence}</p>
-          <ul className="flex flex-col gap-0.5 font-medium">
-            {Arr.map(Arr.dedupe(reason.names), (name) => (
-              <li className="wrap-anywhere" key={name}>
-                {name}
-              </li>
-            ))}
-            {reason.more ? <li>{reason.more}</li> : null}
-          </ul>
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 interface Props {
   autoFocus?: boolean;
