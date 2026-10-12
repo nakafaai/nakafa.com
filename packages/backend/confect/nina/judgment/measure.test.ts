@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/confect/nina/judgment/measure";
 import {
   askedOf,
-  decides,
+  decidesLast,
   decidesSlowly,
   GatewayTest,
   provider,
@@ -13,7 +13,14 @@ import {
 } from "@repo/backend/test/gateway";
 import { APICallError } from "ai";
 import { Experimental_DecisionMockModelV4 as DecisionMockModel } from "ai/test";
-import { Array as Arr, Effect, MutableRef, Order, Record as Rec } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableRef,
+  Option,
+  Order,
+  Record as Rec,
+} from "effect";
 
 afterEach(() => provider.decisionModel.mockReset());
 
@@ -35,7 +42,12 @@ describe("measuring the judgments", () => {
     "gives every text the probability of every named judgment, in one request for each text that asks all of them, in the order of the texts",
     () =>
       Effect.gen(function* () {
-        const { requests } = decides(
+        // The request about the first text is answered after the requests about
+        // the others, so rows placed in the order of the answers would not be in
+        // the order of the texts.
+        const finished = decidesLast(
+          "a",
+          3,
           (judgment, text) => chance[judgment][text]
         );
         const rows = yield* measureTexts(
@@ -48,12 +60,14 @@ describe("measuring the judgments", () => {
           { probabilities: { ownNote: 0.6, private: 0.1 } },
         ]);
         // One request for each text, and each asks both judgments.
-        expect(Arr.sort(Arr.map(requests(), textOf), Order.String)).toEqual([
+        const requests = MutableRef.get(finished);
+        expect(Arr.last(Arr.map(requests, textOf))).toEqual(Option.some("a"));
+        expect(Arr.sort(Arr.map(requests, textOf), Order.String)).toEqual([
           "a",
           "b",
           "c",
         ]);
-        for (const request of requests()) {
+        for (const request of requests) {
           expect(askedOf(request)).toEqual(["ownNote", "private"]);
         }
       }).pipe(Effect.provide(GatewayTest))
