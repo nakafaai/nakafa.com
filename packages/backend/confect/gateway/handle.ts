@@ -1,9 +1,17 @@
 import { cachedPrefix } from "@repo/backend/confect/gateway/cache";
 import {
+  type Answers,
+  type DecisionModel,
+  decideWith,
+  type Question,
+  type State,
+} from "@repo/backend/confect/gateway/decide";
+import {
   classify,
   GatewayFailure,
 } from "@repo/backend/confect/gateway/failure";
 import {
+  decisionModelId,
   type EmbeddingModelId,
   embeddingDimensions,
   embeddingModelId,
@@ -34,6 +42,16 @@ export class Gateway extends Context.Service<
       readonly timeout: Deadline;
     };
     /**
+     * Answers typed questions about one state with the decision model, in one
+     * request with zero retention. The answers are typed by the questions. The
+     * call retries a transient failure, ends at its deadline, and fails with a
+     * `GatewayFailure` that `classify` reads like a failed language call.
+     */
+    readonly decide: <const Questions extends Record<string, Question>>(
+      state: State,
+      questions: Questions
+    ) => Effect.Effect<Answers<Questions>, GatewayFailure>;
+    /**
      * One vector per text, in order, each of `embeddingDimensions` numbers,
      * from the embedding model of knowledge search or from the candidate the
      * model test names. The request carries no retention flags, because the AI
@@ -53,10 +71,11 @@ export class Gateway extends Context.Service<
 /**
  * Sent with every language model call: route only to an endpoint that keeps no
  * prompt and no answer, and refuse one that collects them. The gateway states
- * zero data retention itself; these flags make each request ask for it. An
- * embedding request cannot carry them, because the AI SDK builds it from fixed
- * fields that leave no place for them, so it relies on the gateway's own
- * statement.
+ * zero data retention itself; these flags make each request ask for it. A
+ * decision asks with `zdr` alone, the only flag the provider's decision model
+ * sends. An embedding request cannot carry them, because the AI SDK builds it
+ * from fixed fields that leave no place for them, so it relies on the gateway's
+ * own statement.
  */
 const retention = { data_collection: "deny", zdr: true };
 
@@ -69,12 +88,24 @@ type EmbeddingModel = Parameters<typeof embedMany>[0]["model"];
 /**
  * Builds every handle over one AI SDK provider, so the production adapter
  * (`gateway/live.ts`) and deterministic models in tests set the same defaults.
+ * The provider makes both kinds of model: the language model of a purpose, and
+ * the decision model, which it makes with the zero retention request.
  */
 export function make(provider: {
+  readonly decisionModel: (
+    modelId: string,
+    options: { readonly zdr: boolean }
+  ) => DecisionModel;
   readonly languageModel: (modelId: string) => LanguageModel;
   readonly embeddingModel: (modelId: string) => EmbeddingModel;
 }): Gateway["Service"] {
   return Gateway.of({
+    decide: (state, questions) =>
+      decideWith(
+        provider.decisionModel(decisionModelId, { zdr: retention.zdr }),
+        state,
+        questions
+      ),
     language: (purpose) => {
       const { effort, maxOutputTokens, timeout } = purposes[purpose];
       return {

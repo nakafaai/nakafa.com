@@ -15,7 +15,7 @@ const edit = Ref.getFunctionReference(refs.public.nina.memory.edit);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
-/** Nine words, and a text that has them all and one more: they say the same, in other words. */
+/** A text, and the same text with one more word: not the same words, though they say the same thing. */
 const SCHOOL = "Saya kelas 12 IPA di SMA Negeri 1 Bandung";
 const SCHOOL_NOW = `${SCHOOL} sekarang`;
 
@@ -72,33 +72,35 @@ describe("memory a capture call had read", () => {
     expect(await lost(later, 5)).toBe(false);
   });
 
-  it("reads the memory a candidate names as it stands, only when the call read it", async () => {
+  it("reads the memory a candidate names by its place on the list, as it stands now", async () => {
     const f = await createCaptureTest();
     const read = await f.seed({ text: "Read" });
-    const unread = await f.seed({ text: "Unread" });
     const gone = await f.seed({ text: "Goes" });
+    await f.seed({ text: "Unread" });
+    // The list the call gave the model: two memories, the second removed since.
     const seen = [
       { confirmedAt: 1, id: read },
       { confirmedAt: 1, id: gone },
     ];
     await f.owner.mutation(remove, { id: gone });
-    const named = (known: string | undefined, clearedAt?: number) =>
+    const named = (place: number | undefined, clearedAt?: number) =>
       f.execute(
         Effect.map(
-          readNamed(f.identity.userId, seen, known, clearedAt),
+          readNamed(f.identity.userId, seen, place, clearedAt),
           (found) => Option.getOrNull(Option.map(found, (row) => row._id))
         )
       );
-    expect(await named(read)).toBe(read);
-    // A memory the call did not read, one that is gone, one that is no id, and
-    // no name at all each name nothing.
-    expect(await named(unread)).toBeNull();
-    expect(await named(gone)).toBeNull();
-    expect(await named("not-an-id")).toBeNull();
+    expect(await named(1)).toBe(read);
+    // A memory that is gone, a place beyond the list, a place before it, a
+    // memory the call never listed, and no name at all each name nothing.
+    expect(await named(2)).toBeNull();
+    expect(await named(3)).toBeNull();
+    expect(await named(0)).toBeNull();
+    expect(await named(-1)).toBeNull();
     expect(await named(undefined)).toBeNull();
     // A memory that Delete all took names nothing, though a batch still holds it.
-    expect(await named(read, 0)).toBe(read);
-    expect(await named(read, 1)).toBeNull();
+    expect(await named(1, 0)).toBe(read);
+    expect(await named(1, 1)).toBeNull();
   });
 
   it("tells a memory as the call read it from one that was confirmed after, or that the call never read", () => {
@@ -177,40 +179,14 @@ describe("memory capture write after the learner changed their memory", () => {
     vi.setSystemTime(NOW + 1000);
     await f.owner.mutation(edit, { id, text: "Kelas 12 IPA" });
     vi.setSystemTime(NOW + 2000);
-    // The candidate says what the learner wrote since. It confirms the memory
-    // and takes nothing from it.
-    expect(await f.run([candidate({ known: id })], { seen })).toBe(1);
+    // The candidate names the memory the call read. It confirms the memory and
+    // takes nothing from it, since the learner has written it since.
+    expect(await f.run([candidate({ known: 1 })], { seen })).toBe(1);
     expect(await f.texts()).toEqual(["Kelas 12 IPA"]);
     const [row] = await f.stored();
     expect(row).toMatchObject({ author: "learner", confirmedAt: NOW + 2000 });
     // A memory that changed since the call read it is not given the kind either.
     expect(row).not.toHaveProperty("kind");
-  });
-
-  it("keeps the learner's edit made after the call read the memory when the candidate says something else, and writes a memory of Nina's", async () => {
-    const f = await createCaptureTest();
-    const id = await f.seed({
-      author: "learner",
-      confirmedAt: 1,
-      text: "Kelas 11.",
-    });
-    const seen = [{ confirmedAt: 1, id }];
-    vi.setSystemTime(NOW + 1000);
-    await f.owner.mutation(edit, { id, text: "Kelas 12 SMA" });
-    vi.setSystemTime(NOW + 2000);
-    expect(await f.run([candidate({ known: id })], { seen })).toBe(1);
-    expect(await f.texts()).toEqual(["Kelas 12 SMA", "Kelas 12 IPA."]);
-    const [edited, written] = await f.stored();
-    expect(edited).toMatchObject({
-      author: "learner",
-      confirmedAt: NOW + 1000,
-    });
-    expect(edited).not.toHaveProperty("kind");
-    expect(written).toMatchObject({
-      author: "nina",
-      confirmedAt: NOW + 2000,
-      kind: "level",
-    });
   });
 
   it("keeps the kind and the end of a situation that the learner edited after the call read it", async () => {
@@ -231,7 +207,7 @@ describe("memory capture write after the learner changed their memory", () => {
         [
           candidate({
             kind: "situation",
-            known: id,
+            known: 1,
             text: "Ulangan kimia hari Senin.",
             until: "2026-10-25",
           }),
@@ -250,47 +226,18 @@ describe("memory capture write after the learner changed their memory", () => {
     ]);
   });
 
-  it("treats a memory that the call did not read at all as changed: a memory of Nina's keeps its words though a candidate says nearly the same", async () => {
+  it("treats a memory of Nina's that was confirmed after the call read it as changed: it keeps its words though the candidate that names it says them differently", async () => {
     const f = await createCaptureTest();
-    const read = await f.seed({ kind: "goal", text: "Mau ikut SNBT 2027" });
-    await f.seed({ confirmedAt: 2, kind: "level", text: SCHOOL });
-    // The call read the first memory and not the second, which was written after.
+    const id = await f.seed({ confirmedAt: 2, kind: "level", text: SCHOOL });
+    // The call read the memory when it was confirmed at 1, and it was said again since.
     expect(
-      await f.run([candidate({ text: SCHOOL_NOW })], {
-        seen: [{ confirmedAt: 1, id: read }],
+      await f.run([candidate({ known: 1, text: SCHOOL_NOW })], {
+        seen: [{ confirmedAt: 1, id }],
       })
     ).toBe(1);
-    expect(await f.texts()).toEqual(["Mau ikut SNBT 2027", SCHOOL]);
+    expect(await f.texts()).toEqual([SCHOOL]);
     expect(await f.stored()).toEqual([
-      expect.objectContaining({ confirmedAt: 1 }),
       expect.objectContaining({ author: "nina", confirmedAt: NOW }),
     ]);
-  });
-
-  it("treats a memory the learner added after the call read what it knows as changed: it takes no kind and no end", async () => {
-    const f = await createCaptureTest();
-    const read = await f.seed({ author: "learner", text: "Kelas 12 IPA" });
-    const added = await f.seed({ author: "learner", text: "Ulangan kimia" });
-    const situation = candidate({
-      kind: "situation",
-      text: "Ulangan kimia.",
-      until: "2026-10-25",
-    });
-    expect(
-      await f.run([candidate({ known: read }), situation], {
-        seen: [{ confirmedAt: 1, id: read }],
-      })
-    ).toBe(2);
-    const [fresh, late] = await f.stored();
-    // The memory the call read takes the kind. The one added after is only confirmed.
-    expect(fresh).toMatchObject({ _id: read, kind: "level" });
-    expect(late).toMatchObject({
-      _id: added,
-      author: "learner",
-      confirmedAt: NOW,
-    });
-    expect(late).not.toHaveProperty("kind");
-    expect(late).not.toHaveProperty("validUntil");
-    expect(await f.texts()).toEqual(["Kelas 12 IPA", "Ulangan kimia"]);
   });
 });

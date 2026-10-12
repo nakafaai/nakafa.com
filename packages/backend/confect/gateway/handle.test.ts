@@ -3,7 +3,11 @@ import { make } from "@repo/backend/confect/gateway/handle";
 import { Purpose, purposes } from "@repo/backend/confect/gateway/purpose";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
-import { MockEmbeddingModelV4, MockLanguageModelV4 } from "ai/test";
+import {
+  Experimental_DecisionMockModelV4 as DecisionMockModel,
+  MockEmbeddingModelV4,
+  MockLanguageModelV4,
+} from "ai/test";
 import { Array as Arr, Effect, Fiber } from "effect";
 import { TestClock } from "effect/testing";
 
@@ -43,7 +47,7 @@ function vector(first: number) {
   return Arr.makeBy(DIMENSIONS, (index) => (index === 0 ? first : 0));
 }
 
-/** A gateway over one recording language model and one embedding model. */
+/** A gateway over one recording language model, one deterministic decision model and one embedding model. */
 function serve(doEmbed?: MockEmbeddingModelV4["doEmbed"]) {
   const model = new MockLanguageModelV4({
     doGenerate: answer,
@@ -63,13 +67,24 @@ function serve(doEmbed?: MockEmbeddingModelV4["doEmbed"]) {
   const languageModel = vi.fn<Parameters<typeof make>[0]["languageModel"]>(
     () => model
   );
+  const decider = new DecisionMockModel({
+    doDecide: () =>
+      Promise.resolve({
+        answers: { lasting: { type: "boolean", probability: 0.9 } },
+        warnings: [],
+      }),
+  });
+  const decisionModel = vi.fn<Parameters<typeof make>[0]["decisionModel"]>(
+    () => decider
+  );
   const embeddingModel = vi.fn<Parameters<typeof make>[0]["embeddingModel"]>(
     () => embedder
   );
   return {
+    decisionModel,
     embedder,
     embeddingModel,
-    gateway: make({ embeddingModel, languageModel }),
+    gateway: make({ decisionModel, embeddingModel, languageModel }),
     languageModel,
     model,
   };
@@ -168,6 +183,24 @@ describe("Gateway handles", () => {
         },
       });
     })
+  );
+
+  it.effect(
+    "asks the provider for the decision model with the zero retention request, and answers a decision with it",
+    () =>
+      Effect.gen(function* () {
+        const { decisionModel, gateway } = serve();
+        const answers = yield* gateway.decide("Kelas 12 IPA.", {
+          lasting: { type: "boolean", instructions: "Does it last?" },
+        });
+        expect(decisionModel).toHaveBeenCalledExactlyOnceWith(
+          "typesafe/jev-1.13",
+          { zdr: true }
+        );
+        expect(answers).toEqual({
+          lasting: { type: "boolean", probability: 0.9 },
+        });
+      })
   );
 
   it("keeps the served model's identity for usage accounting", () => {

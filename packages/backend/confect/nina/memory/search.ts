@@ -11,7 +11,10 @@ import {
   readOwnMemory,
 } from "@repo/backend/confect/nina/memory/store";
 import { isLesson } from "@repo/backend/confect/nina/memory/topics";
-import { wordsOf } from "@repo/backend/confect/nina/memory/words";
+import {
+  longestWords,
+  wordWorth,
+} from "@repo/backend/confect/nina/memory/words";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import {
   Array as Arr,
@@ -32,10 +35,9 @@ const LOAD_FACTOR = 3;
 const LOAD_LIMIT = 48;
 /** Characters of the text that count. Sixteen keys need far fewer. */
 const TEXT_LIMIT = 1000;
-/** What a matched key adds to a memory's score: the open lesson, a path above it, a word. */
+/** What a matched key adds to a memory's score: the open lesson, a path above it. A word adds `wordWorth`. */
 const LESSON_WORTH = 3;
 const PATH_WORTH = 2;
-const WORD_WORTH = 1;
 
 /** The highest score first, then the memory confirmed last. */
 const bestFirst = Order.Tuple([
@@ -51,13 +53,18 @@ const bestFirst = Order.Tuple([
  * The text becomes words, in the one way the writer of the index does it
  * (`memory/words`), and a word is looked up by its blind hash, so the database
  * never reads it. At most 16 keys are looked up, the topics first, and a key
- * finds the 24 memories confirmed last that are linked to it. A memory scores
- * what its matched keys are worth: 3 for the lesson that is open, 2 for a path
- * above it, 1 for a word. The memories go by score, then by confirmation, the
- * newest first. The best `limit * 3`, 48 at most, are loaded; those that are
- * gone drop out, and with `now` so do the situations that ended before it; and
- * the first `limit` of the rest are opened. With no word and no topic it finds
- * nothing.
+ * finds the 24 memories confirmed last that are linked to it. When the text has
+ * more words than the keys that are left, the longest whole words are looked up
+ * first, because the words that are frequent in a language are short in it
+ * (`longestWords`). A memory scores what its matched keys are worth: 3 for the
+ * lesson that is open, 2 for a path above it, and for a word `wordWorth` of how
+ * many memories the read of its key found: 1 when one memory holds the word,
+ * and less as more do, so that a word most of the learner's memories hold
+ * ranks a memory below a rare word, in any language, with no list of words
+ * that say nothing. The memories go by score, then by confirmation, the newest
+ * first. The best `limit * 3`, 48 at most, are loaded; those that are gone drop
+ * out, and with `now` so do the situations that ended before it; and the first
+ * `limit` of the rest are opened. With no word and no topic it finds nothing.
  *
  * It never reads the clock, because it runs inside queries and a query is not
  * run again when time passes: a caller that must not see ended situations says
@@ -91,13 +98,12 @@ export const searchMemories = Effect.fn("nina.memory.find")(function* ({
   readonly topics?: readonly string[];
   readonly userId: Docs["users"]["_id"];
 }) {
-  const topicLookups = Arr.map(
-    Arr.take(topics, KEY_LIMIT),
-    (topic) =>
-      [topicKey(topic), isLesson(topic) ? LESSON_WORTH : PATH_WORTH] as const
-  );
-  const words = Arr.take(
-    wordsOf(Str.slice(0, TEXT_LIMIT)(text)),
+  const topicLookups = Arr.map(Arr.take(topics, KEY_LIMIT), (topic) => ({
+    key: topicKey(topic),
+    worth: () => (isLesson(topic) ? LESSON_WORTH : PATH_WORTH),
+  }));
+  const words = longestWords(
+    Str.slice(0, TEXT_LIMIT)(text),
     KEY_LIMIT - Arr.length(topicLookups)
   );
   // A learner who has no memory has no key to read and nothing to find.
@@ -112,16 +118,17 @@ export const searchMemories = Effect.fn("nina.memory.find")(function* ({
   const lookups = Arr.appendAll(
     topicLookups,
     yield* Effect.forEach(words, (word) =>
-      Effect.map(wordKey(keys, word), (key) => [key, WORD_WORTH] as const)
+      Effect.map(wordKey(keys, word), (key) => ({ key, worth: wordWorth }))
     )
   );
+  // What a key is worth may depend on how many memories the read of it found.
   const hits = Arr.flatten(
-    yield* Effect.forEach(lookups, ([key, worth]) =>
+    yield* Effect.forEach(lookups, ({ key, worth }) =>
       Effect.map(readLinked(userId, key, LINKED_PER_KEY, clearedAt), (linked) =>
         Arr.map(linked, ({ confirmedAt, memoryId }) => ({
           confirmedAt,
           memoryId,
-          worth,
+          worth: worth(Arr.length(linked)),
         }))
       )
     )

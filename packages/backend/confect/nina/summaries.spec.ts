@@ -1,13 +1,13 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import {
+  NinaUpkeepCall,
+  NinaUpkeepTotal,
+} from "@repo/backend/confect/nina/contract/usage";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema, Struct } from "effect";
 
 const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
-const Tokens = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
-
-/** Provider tokens one summary refresh spent. */
-const NinaSummaryCall = Schema.Struct({ input: Tokens, output: Tokens });
 
 /**
  * A chat's rolling summary of every turn up to and including `throughOrder`.
@@ -20,10 +20,7 @@ export const NinaSummary = Schema.Struct({
   text: Sealed,
   throughOrder: TurnOrder,
   updatedAt: Schema.Finite,
-  usage: Schema.Struct({
-    ...NinaSummaryCall.fields,
-    calls: Schema.Int.check(Schema.isGreaterThan(0)),
-  }),
+  usage: NinaUpkeepTotal,
 });
 
 /** The summary facts generation and refresh read back, with the text opened. */
@@ -95,7 +92,7 @@ export default GroupSpec.make()
           .fields,
         // The caller sends plain text and the mutation seals it.
         text: Schema.String,
-        usage: NinaSummaryCall,
+        usage: NinaUpkeepCall,
       }),
       returns: () => Schema.Null,
     })

@@ -717,6 +717,7 @@
       "math": "Math check failed",
       "nakafa": "Content search failed",
       "deepResearch": "Web research failed",
+      "memory": "Memory search failed",
       "unknown": "Check failed"
     },
     "review-credits": "View credits",
@@ -755,6 +756,7 @@
       "math": "Checking the calculations",
       "nakafa": "Finding learning materials",
       "deepResearch": "Researching web sources",
+      "memory": "Recalled memories",
       "unknown": "Checking information",
       "stopped": "Stopped",
       "partial": "Partly done",

@@ -402,6 +402,33 @@ export function ninaModelFor(count: number) {
   });
 }
 
+/**
+ * A model that searches the learner's memories for `query` in its first call,
+ * under the call id `recall-1`, and then answers `answers` calls in a row, so a
+ * test may run several turns of one chat.
+ */
+export function ninaRecallModel(query: string, answers: number) {
+  return new MockLanguageModelV4({
+    doStream: [
+      ninaStream([
+        { type: "stream-start", warnings: [] },
+        {
+          type: "tool-call",
+          toolCallId: "recall-1",
+          toolName: "memory",
+          input: encodeJsonText({ query }),
+        },
+        {
+          type: "finish",
+          usage: ninaUsage,
+          finishReason: { unified: "tool-calls", raw: "tool-calls" },
+        },
+      ]),
+      ...Arr.makeBy(answers, () => ninaStream(ninaAnswer)),
+    ],
+  });
+}
+
 export function ninaModel(
   withTool = false,
   failed = false,

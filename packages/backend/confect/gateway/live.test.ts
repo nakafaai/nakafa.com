@@ -74,6 +74,14 @@ const events = `${Arr.join(
   ""
 )}data: [DONE]\n\n`;
 
+/** What the Decisions route answers for one yes-or-no question, which the HTTP API calls `noul`. */
+const decision = {
+  id: "decision-test",
+  model: "typesafe/jev-1.13",
+  answers: { lasting: { type: "noul", noul: 0.95 } },
+  usage: { input_tokens: 12, output_tokens: 1, cost: 0.000_01 },
+};
+
 /** The one fetch double this file stubs globally and resets between tests. */
 const fetch = vi.fn<typeof globalThis.fetch>();
 
@@ -136,6 +144,39 @@ describe("The production gateway", () => {
           max_tokens: purposes[purpose].maxOutputTokens,
           model: "google/gemini-3.8-flash",
           reasoning_effort: effort,
+        });
+      }).pipe(deployed);
+    }
+  );
+
+  it.effect(
+    "sends a decision to the Convex AI gateway's decisions route with the zero retention request, and reads the probability back",
+    () => {
+      serviceToken.mockResolvedValue("service-token");
+      fetch.mockResolvedValue(Response.json(decision));
+      return Effect.gen(function* () {
+        const answers = yield* (yield* Gateway).decide("Kelas 12 IPA.", {
+          lasting: { type: "boolean", instructions: "Does it last?" },
+        });
+        expect(answers).toEqual({
+          lasting: { type: "boolean", probability: 0.95 },
+        });
+        expect(fetch).toHaveBeenCalledTimes(1);
+        const [url, init] = fetch.mock.calls[0] ?? [];
+        expect(url).toBe("https://ai-gateway.convex.dev/alpha/decisions");
+        expect(new Headers(init?.headers).get("authorization")).toBe(
+          "Bearer service-token"
+        );
+        const body = yield* Schema.decodeUnknownEffect(JsonTextSchema)(
+          init?.body
+        );
+        expect(body).toEqual({
+          model: "typesafe/jev-1.13",
+          provider: { zdr: true },
+          questions: {
+            lasting: { type: "noul", instructions: "Does it last?" },
+          },
+          state: [{ type: "text", text: "Kelas 12 IPA." }],
         });
       }).pipe(deployed);
     }

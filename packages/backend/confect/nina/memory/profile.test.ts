@@ -48,7 +48,9 @@ describe("learner profile", () => {
       });
       return owner;
     });
-    expect(await f.t.query(read, { now: NOW, topics: [], userId })).toEqual({
+    expect(
+      await f.t.query(read, { now: NOW, said: "", topics: [], userId })
+    ).toEqual({
       paused: false,
       profile: {
         focus: "tryout",
@@ -65,7 +67,7 @@ describe("learner profile", () => {
         },
         tryoutCountry: "indonesia",
       },
-      prompt: [],
+      recalled: [],
     });
   });
 
@@ -97,10 +99,12 @@ describe("learner profile", () => {
       await ctx.db.delete("tryoutAttempts", attempt._id);
       return runtime.identity.userId;
     });
-    expect(await f.t.query(read, { now: NOW, topics: [], userId })).toEqual({
+    expect(
+      await f.t.query(read, { now: NOW, said: "", topics: [], userId })
+    ).toEqual({
       paused: false,
       profile: {},
-      prompt: [],
+      recalled: [],
     });
   });
 });

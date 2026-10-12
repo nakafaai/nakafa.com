@@ -7,6 +7,12 @@ import { countTokens, decode, encode } from "gpt-tokenizer";
  * instead of failing the turn. `NINA_CALL_LIMIT` adds them up.
  */
 export const NINA_BUDGET = {
+  /**
+   * The account facts Nina reads about the learner. A try-out stores as many
+   * sections as its set has, so the facts are bounded here and never crowd the
+   * rest of the learner section out.
+   */
+  account: 500,
   /** One capability output returned to the main Agent. */
   evidence: 6000,
   /** Evidence gathered by all tool calls in the current turn. */
@@ -18,26 +24,33 @@ export const NINA_BUDGET = {
    */
   history: 32_000,
   /**
-   * Nina's static instructions, her three tool definitions and the runtime
+   * Nina's static instructions, her four tool definitions and the runtime
    * facts of a turn: what every call carries before any conversation. Nothing
    * cuts to this number. The budget test measures the real ones against it
-   * from a real turn, and it is rounded up to the next 1,000 tokens.
+   * from a real turn (5,174 tokens with the memory capability, measured on 12
+   * October 2026), and it is rounded up to the next 1,000 tokens.
    */
-  instructions: 5000,
-  /** Account facts and the memories Nina reads about the learner. */
-  learner: 1500,
+  instructions: 6000,
+  /** The memories the memory capability returns to Nina in one call. */
+  lookup: 1500,
   /** The signed current page placed in the stable prompt context. */
   page: 6000,
+  /** The learner's portrait in the stable system prompt. */
+  portrait: 300,
+  /** The memories a turn recalls, in front of the learner's message. */
+  recall: 700,
   /** The rolling summary of the turns folded out of the history. */
   summary: 2000,
 } as const;
 
 /**
- * The most tokens one Nina model call is built to carry, 62,500: the parts of
+ * The most tokens one Nina model call is built to carry, 63,500: the parts of
  * `NINA_BUDGET` that a call holds at once, which are the instructions, the
- * page, the learner, the summary, the history and the evidence of the current
- * turn. One tool result (`evidence`) lies inside the turn's evidence, so it is
- * not added again.
+ * page, what Nina reads about the learner (the account facts, the portrait and
+ * the recalled memories, 1,500 together), the summary, the history and the
+ * evidence of the current turn. One tool result (`evidence`, or `lookup` for
+ * the memory capability) lies inside the turn's evidence, so it is not added
+ * again.
  *
  * The model accepts 1,048,576 input tokens
  * (https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash, the model in
@@ -57,7 +70,9 @@ export const NINA_BUDGET = {
 export const NINA_CALL_LIMIT =
   NINA_BUDGET.instructions +
   NINA_BUDGET.page +
-  NINA_BUDGET.learner +
+  NINA_BUDGET.account +
+  NINA_BUDGET.portrait +
+  NINA_BUDGET.recall +
   NINA_BUDGET.summary +
   NINA_BUDGET.history +
   NINA_BUDGET.turnEvidence;

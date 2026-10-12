@@ -19,6 +19,7 @@
     "dev": "convex dev --tail-logs",
     "generate-schema": "cd components/betterAuth && auth generate --config cli.config.ts --yes && pnpm --workspace-root exec ultracite fix packages/backend/components/betterAuth/schema.ts",
     "insights": "convex insights",
+    "judgment:measure": "tsx scripts/judgment/main.ts",
     "knowledge:compare": "tsx scripts/knowledge/main.ts",
     "nina:gate": "tsx scripts/nina/main.ts",
     "setup": "pnpm codegen && convex dev --once",

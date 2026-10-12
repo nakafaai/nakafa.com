@@ -6,6 +6,7 @@ import {
   syncKeys,
 } from "@repo/backend/confect/nina/memory/keys";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
+import { blindText } from "@repo/backend/confect/vault/text";
 import {
   candidate,
   createCaptureTest,
@@ -115,6 +116,35 @@ describe("memory keys", () => {
         Arr.filter(before, (row) => row.key === key)
       );
     }
+  });
+
+  it("makes a word key under the version of the index, so that a key made under another version never equals it", async () => {
+    const f = await createMemoryTest();
+    await f.seed({ text: "Kelas 12 IPA" });
+    // Version 1 of the index blinded its words for the field `words`.
+    const earlier = await f.execute(
+      Effect.flatMap(readLearnerKeys(f.identity.userId), (learner) =>
+        blindText(learner, { field: "words", table: "ninaMemories" }, "kelas")
+      )
+    );
+    expect(`w:${earlier}`).not.toBe(await f.wordKeyOf("kelas"));
+  });
+
+  it("returns how many rows it wrote: none when nothing changed, two for a word that was replaced, and every row when the memory was confirmed later", async () => {
+    const f = await createMemoryTest();
+    const id = await f.seed({
+      confirmedAt: 1,
+      text: "Kelas dua",
+      topics: [PATH],
+    });
+    const content = { confirmedAt: 1, topics: [PATH] };
+    expect(await sync(f, id, { ...content, text: "Kelas dua" })).toBe(0);
+    // One key goes and one comes; the rows of the other keys stay.
+    expect(await sync(f, id, { ...content, text: "Kelas tiga" })).toBe(2);
+    // The topic and the two words each move to the new time.
+    expect(
+      await sync(f, id, { confirmedAt: 9, text: "Kelas tiga", topics: [PATH] })
+    ).toBe(3);
   });
 
   it("writes nothing when the memory says what its keys already say, at the time they hold", async () => {
@@ -228,7 +258,10 @@ describe("memory keys over time", () => {
       text: "Saya belajar matematika",
       topics: [LESSON],
     });
+    // The memory was stored first, so it is the first the capture call lists,
+    // and the candidate that restates it names that place.
     const again = candidate({
+      known: 1,
       quote: "saya belajar matematika",
       text: "Saya belajar matematika",
     });

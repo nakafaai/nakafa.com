@@ -4,6 +4,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { MEMORY_BATCH } from "@repo/backend/confect/nina/memory/store";
 import type { NinaLearner } from "@repo/backend/confect/nina/memory.spec";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { Array as Arr, Order } from "effect";
 
 const memory = refs.public.nina.memory;
@@ -49,13 +50,13 @@ async function storedIds(f: Awaited<ReturnType<typeof createMemoryTest>>) {
 }
 
 /** The words of each memory a turn tells about, in the order they are told. */
-function words(notes: (typeof NinaLearner.Type)["prompt"]) {
+function words(notes: (typeof NinaLearner.Type)["recalled"]) {
   return Arr.map(notes, (note) => note.text);
 }
 
 /**
  * What every reader of a learner's memories returns, as the words of the
- * memories: the Memory page's list, the memories a turn starts with, the ones
+ * memories: the Memory page's list, the memories a turn recalls, the ones
  * the capture call reads, and the search they use.
  */
 async function readers(f: Awaited<ReturnType<typeof createMemoryTest>>) {
@@ -66,7 +67,12 @@ async function readers(f: Awaited<ReturnType<typeof createMemoryTest>>) {
       paginationOpts: { cursor: null, numItems: 50 },
     })
   );
-  const turn = await f.t.query(read, { now: NOW, topics: [], userId });
+  const turn = await f.t.query(read, {
+    now: NOW,
+    said: "memory",
+    topics: [],
+    userId,
+  });
   const capture = await f.t.query(known, {
     message: "memory",
     now: NOW,
@@ -77,7 +83,7 @@ async function readers(f: Awaited<ReturnType<typeof createMemoryTest>>) {
     capture: words(capture.known),
     found: await f.find({ limit: 30, text: "memory" }),
     listed: Arr.map(page.page, (item) => item.text),
-    turn: words(turn.prompt),
+    turn: words(turn.recalled),
   };
 }
 
@@ -106,6 +112,22 @@ describe("Nina memory removal", () => {
     expect(await f.texts()).toEqual([]);
     expect(await f.texts(other.userId)).toEqual(["Theirs"]);
     expect(await keyOwners(f)).toEqual([other.userId]);
+  });
+
+  it("deletes the learner's portrait when it clears, before the later batches have deleted the memories it came from, and no one else's", async () => {
+    const f = await createPortraitTest();
+    const other = await f.stranger();
+    await f.fill(MEMORY_BATCH + 5);
+    await f.seed({ text: "Theirs", userId: other.userId });
+    await f.seedPortrait({ text: "Mine." });
+    await f.seedPortrait({ text: "Theirs.", userId: other.userId });
+    expect(await f.owner.mutation(clear, {})).toBeNull();
+    // Five of the learner's memories wait for the next batch, and the portrait
+    // is gone already.
+    expect(await f.stored()).toHaveLength(6);
+    expect(Arr.map(await f.rows(), (row) => row.userId)).toEqual([
+      other.userId,
+    ]);
   });
 
   it("clears the memories a batch of 25 at a time and goes on by itself until none is left", async () => {
@@ -307,8 +329,8 @@ describe("Nina memory removal", () => {
     const f = await createMemoryTest();
     await f.fill(300, { topics: ["path:materials/math"] });
     expect(await f.stored()).toHaveLength(300);
-    // Each memory has a key for its topic and for its word, and for its number when it has one.
-    expect(await f.keys()).toHaveLength(890);
+    // Each memory has a key for its topic, for its word and for its number.
+    expect(await f.keys()).toHaveLength(900);
     expect(await f.owner.mutation(clear, {})).toBeNull();
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     expect(await f.stored()).toEqual([]);
@@ -339,10 +361,11 @@ describe("Nina memory pause", () => {
     expect(
       await f.t.query(read, {
         now: NOW,
+        said: "kept",
         topics: [],
         userId: f.identity.userId,
       })
-    ).toMatchObject({ paused: true, prompt: [] });
+    ).toMatchObject({ paused: true, recalled: [] });
     expect(await f.stored()).toHaveLength(1);
     await f.owner.mutation(pause, { paused: false });
     const [resumed] = await preferences();
@@ -352,12 +375,13 @@ describe("Nina memory pause", () => {
     expect(
       await f.t.query(read, {
         now: NOW,
+        said: "kept",
         topics: [],
         userId: f.identity.userId,
       })
     ).toMatchObject({
       paused: false,
-      prompt: [expect.objectContaining({ text: "Kept" })],
+      recalled: [expect.objectContaining({ text: "Kept" })],
     });
   });
 
@@ -389,12 +413,31 @@ describe("Nina memory expiry", () => {
     await f.seed({ kind: "goal", text: "A goal" });
     expect(await f.t.mutation(expire, {})).toBe(1);
     expect(await f.texts()).toEqual(["Today", "Open-ended", "A goal"]);
-    // Four keys: today, open, ended and goal. The ended situation left its key.
-    expect(await f.keys()).toHaveLength(4);
+    // Five keys: today, open, ended, a and goal. The ended situation left its key.
+    expect(await f.keys()).toHaveLength(5);
     expect(Arr.map(await f.keys(), (row) => row.key)).not.toContain(
       await f.wordKeyOf("usang")
     );
     expect(await f.t.mutation(expire, {})).toBe(0);
+  });
+
+  it("deletes the portrait of a learner whose last memory ended, and keeps the portrait of one who has another memory", async () => {
+    const f = await createPortraitTest();
+    const other = await f.stranger();
+    for (const userId of [f.identity.userId, other.userId]) {
+      await f.seed({
+        kind: "situation",
+        text: "Usang",
+        userId,
+        validUntil: NOW - 1,
+      });
+      await f.seedPortrait({ text: "Kelas 12.", userId });
+    }
+    await f.seed({ text: "Lasts", userId: other.userId });
+    expect(await f.t.mutation(expire, {})).toBe(2);
+    expect(Arr.map(await f.rows(), (row) => row.userId)).toEqual([
+      other.userId,
+    ]);
   });
 
   it("goes on with the next batch by itself while a batch is full", async () => {

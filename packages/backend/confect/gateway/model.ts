@@ -4,6 +4,13 @@ import { Schema } from "effect";
 export const languageModelId = "google/gemini-3.8-flash";
 
 /**
+ * The decision model behind every judgment of a learner's words, as the Convex
+ * AI gateway names it: Jev from TypeSafe, which answers typed questions about a
+ * text with a probability instead of writing text.
+ */
+export const decisionModelId = "typesafe/jev-1.13";
+
+/**
  * The provider id the AI SDK gives the chat models of `convexGateway`. Every
  * usage row of a call that went through a gateway handle stores it.
  */
