@@ -190,6 +190,65 @@ and cleanup written where it lives: the retirement of the older popularity rows
 and the ignored `windowKey` argument (ADR 0008), and the carry of the
 compaction fields out of `contentState` (`packages/backend/AGENTS.md`).
 
+### 2026-10-12 the section index
+
+Knowledge search (ADR 0023) keeps one row for each section of a lesson, an
+article, and a Quran passage, and builds the rows again for each content release.
+Each row below is one build or one search measured with Convex test metrics on
+the nine documents and 27 sections of `test/knowledge.ts`, which count documents
+and bytes the way the backend does. The last column names the committed test that
+pins the documents.
+
+| Operation | Documents read | Documents written | Pinned by |
+| --- | ---: | ---: | --- |
+| First build of the release | 71 | 37 | `build.test.ts`: 71 and 37 |
+| Build of the same release again | 63 | 0 | `build.test.ts`: 63 and 0 |
+| Build of a new release that changed nothing | 63 | 1 | `build.test.ts`: 63 and 1 |
+| One section of one lesson edited | 76 | 2 | `build.test.ts`: 76 and 2 |
+| Search with one hit | 8 | 0 | `hits.test.ts`: 8 |
+
+The first build writes 27 sections, 9 records of the version each document was
+made from, and the record that the build finished. A build that changes nothing
+writes nothing, and a new release writes only that last record, because a row
+does not say which release made it and an unchanged section is not written again.
+One edited section writes its row and the record of its document, 7,744 bytes in
+the fixture and 6,914 of them the vector, and embeds one text.
+
+The documents a build that changes nothing reads are 4 for each lesson (its
+search row, its head, its route, and its record), 2 for each of the 2 pages that
+load the active release, 2 for the Quran call, 19 for the clean up (2 for each
+document, 1 for the state), and 2 for the record. The Aksara corpus at
+`9821d3f38b`, read with the real splitter, has 1,170 documents and 9,567 lesson
+sections (19 at the most in a document), and the Quran has 114 surahs and 1,085
+chunks, 3,255 passages in three languages: 12,822 rows and 1,512 documents. Those
+counts give 5,100 to 6,200 documents read for the lessons in 195 pages, about
+350 for the Quran, and 2,800 to 4,000 for the clean up, so 8,200 to 10,600 in all
+and none written. The range comes from a head being read twice for a lesson with
+two versions. The bytes of a search row, which carry each lesson's whole plain
+text, and of a release were not measured in production.
+
+The first build reads each lesson's artifact and each surah once, and writes
+14,335 documents: 12,822 sections, 1,512 records, and the record of the build. It
+calls the embedder about 356 times, 231 for the lessons in 195 steps and 125 for
+the Quran in 114, for 12,822 texts. A vector is 6,914 bytes, so the vectors alone
+are 89 MB, and the text of the lessons adds 15 MB (1,608 bytes for a section,
+measured with the real splitter). The text of the Quran is estimated at 12 MB
+from the size of its sources, which makes about 120 MB written in all.
+
+The first version of this change stored the release on every row, so each new
+release rewrote every section whether its text had changed or not, reading each
+row three times and writing it once. For 12,822 rows that is about 120 MB written
+and 360 MB read for every release. These two numbers come from reading that code
+and were not measured.
+
+A search reads the state and the record of the index (2 documents), one row for
+each section that the vector search and the word search return (at most 32 and
+32, and a row both found is read once), the same place in the learner's language
+for each section found in another language, and the reference of each document
+among the best sections, 5 documents each, once however many of its sections
+rank. A second section of one document adds one document, and a row found by both
+searches adds none; both are pinned in `hits.test.ts`.
+
 ### Recovery evidence
 
 Pre-migration logical backups exist for both deployments and were opened as ZIP
