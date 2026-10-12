@@ -8,15 +8,15 @@ import {
   figure,
   head,
   nose,
+  PEARL,
   roundEars,
   smile,
   torso,
-  WHITE,
 } from "@repo/mascot/kit";
 
 /** The apes and monkeys, and the tarsier that watches from the trees. */
 export const primate = {
-  "orang-utan": {
+  orangutan: {
     colors: [
       ["#ee8a4c", "#f6c3a6"],
       ["#d9824a", "#efd2a6"],
@@ -36,7 +36,7 @@ export const primate = {
         smile(120, 14, 10, kit.ink)
       ),
   },
-  tarsius: {
+  tarsier: {
     colors: [
       ["#efd2a6", "#f7d774"],
       ["#c9a27e", "#f3e7a6"],
@@ -56,7 +56,7 @@ export const primate = {
         smile(130, 6, 5, kit.ink)
       ),
   },
-  monyet: {
+  monkey: {
     colors: [
       ["#b98a63", "#f4e6ce"],
       ["#c9a27e", "#f6c3a6"],
@@ -75,7 +75,7 @@ export const primate = {
         smile(120, 13, 9, kit.ink)
       ),
   },
-  bekantan: {
+  proboscis: {
     colors: [
       ["#d9824a", "#f6c3a6"],
       ["#c9783a", "#efd2a6"],
@@ -89,7 +89,7 @@ export const primate = {
         head(kit.body, 56, 54, 98),
         both((side) => ellipse(100 + side * 18, 92, 23, 22, kit.second)),
         ellipse(100, 116, 33, 27, kit.second),
-        belly(WHITE, 32, 150),
+        belly(PEARL, 32, 150),
         eyes(kit, 19, 90),
         smile(134, 11, 6, kit.ink),
         ellipse(100, 114, 11, 19, "#e89c7c")

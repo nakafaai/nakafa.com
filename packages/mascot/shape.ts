@@ -91,44 +91,30 @@ export type Shape<Mark = never> =
   | Group<Mark>;
 
 /** Draws a path. */
-export function path<Mark = never>(
+export function path<const Mark = never>(
   fields: typeof PathFields.Type & Marked<Mark>
 ) {
   return { _tag: "path", ...fields } as const satisfies Shape<Mark>;
 }
 
 /** Draws an ellipse. */
-export function ellipse<Mark = never>(
+export function ellipse<const Mark = never>(
   fields: typeof EllipseFields.Type & Marked<Mark>
 ) {
   return { _tag: "ellipse", ...fields } as const satisfies Shape<Mark>;
 }
 
-/** Draws a circle. */
-export function circle<Mark = never>(
-  fields: typeof CircleFields.Type & Marked<Mark>
-) {
-  return { _tag: "circle", ...fields } as const satisfies Shape<Mark>;
-}
-
-/** Draws a rectangle. */
-export function rect<Mark = never>(
-  fields: typeof RectFields.Type & Marked<Mark>
-) {
-  return { _tag: "rect", ...fields } as const satisfies Shape<Mark>;
-}
-
 /** Draws a polygon from its points, written as SVG writes them. */
-export function polygon<Mark = never>(
+export function polygon<const Mark = never>(
   fields: typeof PolygonFields.Type & Marked<Mark>
 ) {
   return { _tag: "polygon", ...fields } as const satisfies Shape<Mark>;
 }
 
 /** Draws shapes together, under one paint and one transform. */
-export function group<Mark = never>(
+export function group<const Mark = never>(
   children: readonly Shape<Mark>[],
-  fields: GroupPaint & Marked<Mark> = {}
+  fields?: GroupPaint & Marked<Mark>
 ) {
   return { _tag: "g", children, ...fields } as const satisfies Shape<Mark>;
 }

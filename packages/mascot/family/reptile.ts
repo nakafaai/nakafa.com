@@ -11,10 +11,10 @@ import {
   head,
   kindAt,
   line,
+  PEARL,
   path,
   smile,
   torso,
-  WHITE,
 } from "@repo/mascot/kit";
 import { Array as Arr } from "effect";
 
@@ -46,7 +46,7 @@ export const reptile = {
         line("M70,126 Q100,136 130,126", kit.ink, 4.4)
       ),
   },
-  buaya: {
+  crocodile: {
     colors: [
       ["#6fae6a", "#ddebb5"],
       ["#5e9c7c", "#cfebd9"],
@@ -85,14 +85,14 @@ export const reptile = {
           ([x, y]) =>
             blob(
               [100 + x - 4.5, y, 100 + x + 4.5, y, 100 + x, y + 9],
-              WHITE,
+              PEARL,
               2.4
             )
         ),
         line("M50,134 Q100,150 150,134", kit.ink, 4.6)
       ),
   },
-  ular: {
+  snake: {
     colors: [
       ["#7fc7a0", "#f7d774"],
       ["#f2a33a", "#f4e6ce"],
@@ -113,7 +113,7 @@ export const reptile = {
         line("M84,102 Q100,113 116,102", kit.ink, 4.2)
       ),
   },
-  katak: {
+  frog: {
     colors: [
       ["#98cf82", "#ddebb5"],
       ["#7fc7a0", "#cfebd9"],

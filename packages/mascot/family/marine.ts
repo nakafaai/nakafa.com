@@ -20,7 +20,7 @@ import { Array as Arr } from "effect";
 
 /** The animals of the open sea, the reef, and the shore. */
 export const marine = {
-  paus: {
+  whale: {
     colors: [
       ["#aeb8f5", "#eef1fd"],
       ["#8fb7e8", "#f6f4ef"],
@@ -47,7 +47,7 @@ export const marine = {
         smile(128, 20, 9, kit.ink)
       ),
   },
-  penyu: {
+  turtle: {
     colors: [
       ["#98cf82", "#e8b456"],
       ["#7fc7a0", "#efd2a6"],
@@ -71,7 +71,7 @@ export const marine = {
         smile(102, 14, 10, kit.ink)
       ),
   },
-  gurita: {
+  octopus: {
     colors: [
       ["#f5a48e", "#f6c3a6"],
       ["#dcd3f4", "#f6f4ef"],
@@ -93,7 +93,7 @@ export const marine = {
         smile(112, 10, 9, kit.ink)
       ),
   },
-  "ubur-ubur": {
+  jellyfish: {
     colors: [
       ["#dcd3f4", "#f6f4ef"],
       ["#f4c7cf", "#f6f4ef"],
@@ -118,7 +118,7 @@ export const marine = {
         smile(112, 10, 8, kit.ink)
       ),
   },
-  "ikan-buntal": {
+  pufferfish: {
     colors: [
       ["#f3e7a6", "#f6f4ef"],
       ["#8fd0c4", "#f6f4ef"],
@@ -143,7 +143,7 @@ export const marine = {
         ellipse(100, 126, 8.4, 7.4, kit.ink)
       ),
   },
-  badut: {
+  clownfish: {
     colors: [
       ["#f47c3c", "#f6f4ef"],
       ["#f2a33a", "#f6f4ef"],
@@ -169,7 +169,7 @@ export const marine = {
         smile(121, 11, 9, kit.ink)
       ),
   },
-  bintang: {
+  starfish: {
     colors: [
       ["#f48a6a", "#f7d774"],
       ["#f2a33a", "#f4e6ce"],
@@ -201,7 +201,7 @@ export const marine = {
         smile(124, 9, 7, kit.ink)
       ),
   },
-  kepiting: {
+  crab: {
     colors: [
       ["#ee6a5a", "#f6c3a6"],
       ["#f2a33a", "#f4e6ce"],

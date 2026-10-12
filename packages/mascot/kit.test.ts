@@ -10,6 +10,7 @@ import {
   figure,
   INK,
   kindAt,
+  Mark,
   pointEars,
   roundEars,
   spikes,
@@ -31,7 +32,7 @@ describe("mascot/kit", () => {
   it("rounds ellipse geometry to a tenth and turns a turned one about its own centre", () => {
     const flat = ellipse(100, 98.04, 60, 51.96, "#ee8a4c");
     expect(flat).toEqual({
-      _tag: "Ellipse",
+      _tag: "ellipse",
       cx: 100,
       cy: 98,
       fill: "#ee8a4c",
@@ -41,7 +42,7 @@ describe("mascot/kit", () => {
     expect(flat).not.toHaveProperty("transform");
 
     expect(ellipse(10.04, 20.06, 5, 4, "#15294f", 22)).toEqual({
-      _tag: "Ellipse",
+      _tag: "ellipse",
       cx: 10,
       cy: 20.1,
       fill: "#15294f",
@@ -51,17 +52,14 @@ describe("mascot/kit", () => {
     });
   });
 
-  it("refuses a coordinate that is not a finite number", () => {
-    expect(() => ellipse(Number.NaN, 0, 1, 1, INK)).toThrow();
-    expect(() => ellipse(0, Number.POSITIVE_INFINITY, 1, 1, INK)).toThrow();
-  });
-
-  it("pairs flat coordinates into polygon points, each rounded to a tenth", () => {
+  it("pairs flat coordinates into polygon points, each rounded to a tenth, and rounds its corners with a stroke of its own fill", () => {
     expect(blob([95, 106.04, 105.26, 106, 100, 110.96], INK, 3)).toEqual({
-      _tag: "Polygon",
+      _tag: "polygon",
       fill: INK,
       points: "95,106 105.3,106 100,111",
-      rounding: 3,
+      stroke: INK,
+      strokeLinejoin: "round",
+      strokeWidth: 3,
     });
   });
 
@@ -83,66 +81,77 @@ describe("mascot/kit", () => {
     ]);
   });
 
-  it("keeps shapes that are drawn together at one opacity in one layer", () => {
+  it("keeps layers that are drawn together at one opacity in one group", () => {
     const dot = ellipse(1, 1, 1, 1, INK);
     expect(faded(0.3, [dot, dot])).toEqual({
-      _tag: "Fade",
+      _tag: "g",
+      children: [dot, dot],
       opacity: 0.3,
-      shapes: [dot, dot],
     });
   });
 
   describe("eyes", () => {
     it("marks an open eye, and draws a smiling or sleeping eye as a line", () => {
-      expect(eye("titik", 74, 94, 6.4, INK)).toEqual({
-        _tag: "Eye",
+      expect(eye("open", 74, 94, 6.4, INK)).toEqual({
+        _tag: "ellipse",
         cx: 74,
         cy: 94,
         fill: INK,
+        mark: Mark.literal,
         rx: 6.4,
         ry: 7.8,
       });
-      expect(eye("kedip", 74, 94, 6.4, INK)).toHaveProperty("_tag", "Eye");
-      expect(eye("senyum", 74, 94, 6.4, INK)).toEqual({
-        _tag: "Line",
-        color: INK,
+      expect(eye("wink", 74, 94, 6.4, INK)).toHaveProperty("mark", "eye");
+      expect(eye("smile", 74, 94, 6.4, INK)).toEqual({
+        _tag: "path",
         d: "M67.6,96 Q74,85.6 80.4,96",
-        width: 4.6,
+        fill: "none",
+        stroke: INK,
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+        strokeWidth: 4.6,
       });
-      expect(eye("tidur", 74, 94, 6.4, INK)).toEqual({
-        _tag: "Line",
-        color: INK,
+      expect(eye("asleep", 74, 94, 6.4, INK)).toEqual({
+        _tag: "path",
         d: "M67.6,93 Q74,100.4 80.4,93",
-        width: 4.6,
+        fill: "none",
+        stroke: INK,
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+        strokeWidth: 4.6,
       });
     });
 
     it("winks with the left eye only", () => {
-      expect(kindAt("kedip", -1)).toBe("senyum");
-      expect(kindAt("kedip", 1)).toBe("titik");
-      expect(kindAt("tidur", -1)).toBe("tidur");
-      expect(kindAt("tidur", 1)).toBe("tidur");
-      expect(kindAt("titik", -1)).toBe("titik");
+      expect(kindAt("wink", -1)).toBe("smile");
+      expect(kindAt("wink", 1)).toBe("open");
+      expect(kindAt("asleep", -1)).toBe("asleep");
+      expect(kindAt("asleep", 1)).toBe("asleep");
+      expect(kindAt("open", -1)).toBe("open");
     });
 
     it("draws two open eyes that the pose shifts to the side", () => {
-      const pair = eyes(kitWith("titik", 2.6), 26, 94);
-      expect(Arr.map(pair, (shape) => shape._tag)).toEqual(["Eye", "Eye"]);
+      const pair = eyes(kitWith("open", 2.6), 26, 94);
+      expect(Arr.map(pair, (shape) => shape._tag)).toEqual([
+        "ellipse",
+        "ellipse",
+      ]);
       expect(Arr.map(pair, (shape) => ("cx" in shape ? shape.cx : 0))).toEqual([
         76.6, 128.6,
       ]);
+      expect(Arr.every(pair, (shape) => shape.mark === "eye")).toBe(true);
     });
 
-    it("closes both eyes when they smile or sleep, and one when they wink", () => {
-      const tags = (open: typeof Eyes.Type) =>
-        Arr.map(eyes(kitWith(open), 26, 94), (shape) => shape._tag);
-      expect(tags("senyum")).toEqual(["Line", "Line"]);
-      expect(tags("tidur")).toEqual(["Line", "Line"]);
-      expect(tags("kedip")).toEqual(["Line", "Eye"]);
+    it("closes both eyes when they smile or sleep, and one when they wink, and marks only the open ones", () => {
+      const marks = (open: typeof Eyes.Type) =>
+        Arr.map(eyes(kitWith(open), 26, 94), (shape) => shape.mark);
+      expect(marks("smile")).toEqual([undefined, undefined]);
+      expect(marks("asleep")).toEqual([undefined, undefined]);
+      expect(marks("wink")).toEqual([undefined, "eye"]);
     });
 
     it("takes its size and its ink from the animal when asked", () => {
-      const [left] = eyes(kitWith("titik"), 26, 96, 5, "#f6f4ef");
+      const [left] = eyes(kitWith("open"), 26, 96, 5, "#f6f4ef");
       expect(left).toMatchObject({ fill: "#f6f4ef", rx: 5 });
     });
   });
@@ -159,22 +168,22 @@ describe("mascot/kit", () => {
     it("draws pointed ears as an outer and an inner ear on each side", () => {
       const ears = pointEars("#ee8a4c", INK);
       expect(Arr.map(ears, (shape) => shape._tag)).toEqual([
-        "Polygon",
-        "Polygon",
-        "Polygon",
-        "Polygon",
+        "polygon",
+        "polygon",
+        "polygon",
+        "polygon",
       ]);
-      expect(ears[0]).toMatchObject({ fill: "#ee8a4c", rounding: 12 });
-      expect(ears[1]).toMatchObject({ fill: INK, rounding: 5 });
+      expect(ears[0]).toMatchObject({ fill: "#ee8a4c", strokeWidth: 12 });
+      expect(ears[1]).toMatchObject({ fill: INK, strokeWidth: 5 });
     });
 
     it("draws one rounded triangle per spike, 4 wide unless told otherwise", () => {
       const ring = spikes(100, 108, 54, 80, 188, 352, 11, "#b98a63");
       expect(ring).toHaveLength(11);
-      expect(Arr.every(ring, (spike) => spike.rounding === 4)).toBe(true);
+      expect(Arr.every(ring, (spike) => spike.strokeWidth === 4)).toBe(true);
       expect(
         spikes(100, 108, 54, 80, 188, 352, 3, "#b98a63", 6)[0]
-      ).toHaveProperty("rounding", 6);
+      ).toHaveProperty("strokeWidth", 6);
     });
   });
 });

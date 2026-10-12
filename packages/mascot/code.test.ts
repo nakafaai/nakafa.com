@@ -5,7 +5,7 @@ import { Eyes } from "@repo/mascot/kit";
 import { Pose } from "@repo/mascot/pose";
 import { Array as Arr, Result, Schema } from "effect";
 
-const CODE = "kucing.0.243e66.kanan.titik";
+const CODE = "cat.0.243e66.right.open";
 
 /** Every animal in every one of its palettes, in every pose and with every eyes value. */
 const EVERY = Arr.flatMap(Animal.literals, (animal) =>
@@ -22,11 +22,11 @@ describe("mascot/code", () => {
   it("reads the parts of a code", () => {
     expect(decode(CODE)).toEqual(
       Result.succeed({
-        animal: "kucing",
-        eyes: "titik",
+        animal: "cat",
+        eyes: "open",
         ground: "243e66",
         palette: 0,
-        pose: "kanan",
+        pose: "right",
       })
     );
   });
@@ -34,13 +34,13 @@ describe("mascot/code", () => {
   it("writes a mascot as animal.palette.ground.pose.eyes", () => {
     expect(
       encode({
-        animal: "burung-hantu",
-        eyes: "kedip",
+        animal: "owl",
+        eyes: "wink",
         ground: "f4e6ce",
         palette: 2,
-        pose: "intip-kiri",
+        pose: "peek-left",
       })
-    ).toBe("burung-hantu.2.f4e6ce.intip-kiri.kedip");
+    ).toBe("owl.2.f4e6ce.peek-left.wink");
   });
 
   it("reads back every mascot it writes: every animal, palette, pose, and eyes value", () => {
@@ -52,23 +52,23 @@ describe("mascot/code", () => {
       })
     );
     expect(lost).toEqual([]);
-    expect(decode(encode(EVERY[100]))).toEqual(Result.succeed(EVERY[100]));
   });
 
   it.each([
-    ["an animal that does not exist", "naga.0.243e66.kanan.titik"],
-    ["a pose that does not exist", "kucing.0.243e66.terbang.titik"],
-    ["an eyes value that does not exist", "kucing.0.243e66.kanan.marah"],
-    ["a palette that the animal does not have", "domba.2.243e66.kanan.titik"],
-    ["a palette with a leading zero", "kucing.00.243e66.kanan.titik"],
-    ["a palette with a sign", "kucing.+1.243e66.kanan.titik"],
-    ["a palette in exponent form", "kucing.1e0.243e66.kanan.titik"],
-    ["a ground in upper case", "kucing.0.243E66.kanan.titik"],
-    ["a ground with a #", "kucing.0.#243e66.kanan.titik"],
-    ["a ground of five digits", "kucing.0.243e6.kanan.titik"],
-    ["a missing part", "kucing.0.243e66.kanan"],
-    ["an extra part", "kucing.0.243e66.kanan.titik.extra"],
-    ["a space before the code", " kucing.0.243e66.kanan.titik"],
+    ["an animal that does not exist", "dragon.0.243e66.right.open"],
+    ["a pose that does not exist", "cat.0.243e66.flying.open"],
+    ["an eyes value that does not exist", "cat.0.243e66.right.angry"],
+    ["a palette that the animal does not have", "sheep.2.243e66.right.open"],
+    ["a palette with a leading zero", "cat.00.243e66.right.open"],
+    ["a palette with a sign", "cat.+1.243e66.right.open"],
+    ["a palette in exponent form", "cat.1e0.243e66.right.open"],
+    ["a ground that is not one of the grounds", "cat.0.123456.right.open"],
+    ["a ground in upper case", "cat.0.243E66.right.open"],
+    ["a ground with a #", "cat.0.#243e66.right.open"],
+    ["a ground of five digits", "cat.0.243e6.right.open"],
+    ["a missing part", "cat.0.243e66.right"],
+    ["an extra part", "cat.0.243e66.right.open.extra"],
+    ["a space before the code", " cat.0.243e66.right.open"],
     ["an empty code", ""],
   ])("fails with a MascotCodeError for %s", (_what, code) => {
     expect(decode(code)).toMatchObject({
@@ -87,17 +87,28 @@ describe("mascot/code", () => {
   });
 
   it("says which palette an animal lacks", () => {
-    expect(decode("domba.2.243e66.kanan.titik")).toMatchObject({
-      failure: { message: expect.stringContaining("domba has no palette 2") },
+    expect(decode("sheep.2.243e66.right.open")).toMatchObject({
+      failure: { message: expect.stringContaining("sheep has no palette 2") },
     });
+  });
+
+  it("does not make a mascot on a colour that is not one of the grounds", () => {
+    const cat = {
+      animal: "cat",
+      eyes: "open",
+      palette: 0,
+      pose: "right",
+    } as const;
+    expect(Schema.is(Mascot)({ ...cat, ground: "243e66" })).toBe(true);
+    expect(Schema.is(Mascot)({ ...cat, ground: "123456" })).toBe(false);
   });
 
   it("does not make a mascot with a palette that its animal lacks", () => {
     const sheep = {
-      animal: "domba",
-      eyes: "titik",
+      animal: "sheep",
+      eyes: "open",
       ground: "243e66",
-      pose: "kanan",
+      pose: "right",
     } as const;
     expect(Schema.is(Mascot)({ ...sheep, palette: 1 })).toBe(true);
     expect(Schema.is(Mascot)({ ...sheep, palette: 2 })).toBe(false);

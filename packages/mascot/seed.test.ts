@@ -2,18 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
 import { decode, encode, type Mascot } from "@repo/mascot/code";
 import { contrast } from "@repo/mascot/ground";
-import reference from "@repo/mascot/reference/seed.json" with { type: "json" };
-import { cast, forSeed, gallery, hash, reroll } from "@repo/mascot/seed";
-import { Array as Arr, Record as Rec, Result } from "effect";
+import { cast, forSeed, gallery, reroll } from "@repo/mascot/seed";
+import { Array as Arr, Result } from "effect";
 
 /** The mascot of a code that is known to be good. */
 function mascotOf(code: string) {
   return Result.getOrThrow(decode(code));
-}
-
-/** The codes of some mascots, as one text. */
-function codesOf(mascots: readonly (typeof Mascot.Type)[]) {
-  return Arr.join(Arr.map(mascots, encode), " ");
 }
 
 /** Whether the animal of a mascot stands out from its ground. */
@@ -26,50 +20,29 @@ function standsOut({ animal, ground, palette }: typeof Mascot.Type) {
 const SEEDS = Arr.makeBy(2000, (index) => `learner-${index}`);
 
 describe("mascot/seed", () => {
-  describe("hash", () => {
-    it("hashes text as the prototype does, also Unicode, emoji, and the empty text", () => {
-      const entries = Rec.toEntries(reference.hashes);
-      expect(entries.length).toBeGreaterThan(40);
-      expect(
-        Arr.filter(entries, ([text, value]) => hash(text) !== value)
-      ).toEqual([]);
-    });
-
-    it("hashes the empty text to the FNV offset basis", () => {
-      expect(hash("")).toBe(2_166_136_261);
-    });
-
-    it("continues the hash of the text before it", () => {
-      for (const [first, second] of [
-        ["Nabil", "#warna"],
-        ["", "abc"],
-        ["abc", ""],
-        ["日本", "語🙂"],
-      ]) {
-        expect(hash(second, hash(first))).toBe(hash(first + second));
-      }
-    });
-  });
-
   describe("forSeed", () => {
-    it("gives a seed the mascot that the prototype gives it", () => {
-      const entries = Rec.toEntries(reference.codes);
-      expect(entries.length).toBeGreaterThan(40);
-      expect(
-        Arr.filter(entries, ([seed, code]) => encode(forSeed(seed)) !== code)
-      ).toEqual([]);
+    it("gives three neutral seeds the mascots that Effect's hash picks, so an upgrade that changes the hash is seen", () => {
+      expect(encode(forSeed("nakafa"))).toBe("crab.1.6d4b78.left.smile");
+      expect(encode(forSeed("a"))).toBe("elephant.2.8c5a8f.peek-left.open");
+      expect(encode(forSeed("0"))).toBe("parrot.1.4b4fb0.peek.open");
     });
 
     it("always gives the same mascot for the same seed", () => {
-      expect(forSeed("Nabil Akbarazzima Fatih - nabilfatih")).toEqual(
-        forSeed("Nabil Akbarazzima Fatih - nabilfatih")
-      );
-      expect(forSeed("Nabil")).not.toEqual(forSeed("Nabila"));
+      expect(forSeed("nakafa")).toEqual(forSeed("nakafa"));
+      expect(forSeed("nakafa")).not.toEqual(forSeed("nakafa-"));
     });
 
     it("can pick every animal", () => {
       const animals = Arr.map(SEEDS, (seed) => forSeed(seed).animal);
       expect(Arr.dedupe(animals)).toHaveLength(Animal.literals.length);
+    });
+
+    it("keeps the eyes open for most seeds, and picks the other three for the rest", () => {
+      const kinds = Arr.map(SEEDS, (seed) => forSeed(seed).eyes);
+      expect(Arr.dedupe(kinds)).toHaveLength(4);
+      expect(
+        Arr.filter(kinds, (eyes) => eyes === "open").length
+      ).toBeGreaterThan(SEEDS.length / 2);
     });
 
     it("stands the animal out from its ground, for every seed", () => {
@@ -80,21 +53,10 @@ describe("mascot/seed", () => {
   });
 
   describe("cast", () => {
-    it("gives the casts of the prototype", () => {
-      expect(reference.casts.length).toBeGreaterThan(10);
-      expect(
-        Arr.filter(
-          reference.casts,
-          ({ codes, count, seed, skip }) =>
-            codesOf(cast(seed, count, skip)) !== Arr.join(codes, " ")
-        )
-      ).toEqual([]);
-    });
-
     it("gives 65 different animals in a cast of 65, whatever the seed", () => {
       for (const seed of [
-        "beranda",
-        "harga",
+        "home",
+        "pricing",
         "",
         "日本語",
         ...Arr.take(SEEDS, 20),
@@ -107,42 +69,35 @@ describe("mascot/seed", () => {
 
     it("never gives an animal twice, however many it is asked for", () => {
       for (const count of [1, 7, 16, 52, 64]) {
-        const animals = Arr.map(cast("beranda", count), ({ animal }) => animal);
+        const animals = Arr.map(cast("home", count), ({ animal }) => animal);
         expect(animals).toHaveLength(count);
         expect(Arr.dedupe(animals)).toHaveLength(count);
       }
     });
 
     it("gives no more than the animals there are, and none past the end", () => {
-      expect(cast("beranda", 100)).toHaveLength(65);
-      expect(cast("beranda", 0)).toEqual([]);
-      expect(cast("beranda", 5, 65)).toEqual([]);
+      expect(cast("home", 100)).toHaveLength(65);
+      expect(cast("home", 0)).toEqual([]);
+      expect(cast("home", 5, 65)).toEqual([]);
     });
 
     it("continues the same order when it skips", () => {
-      expect(cast("harga", 10, 5)).toEqual(Arr.drop(cast("harga", 15), 5));
+      expect(cast("pricing", 10, 5)).toEqual(Arr.drop(cast("pricing", 15), 5));
+    });
+
+    it("gives the same cast again, and another for another seed", () => {
+      expect(cast("home", 8)).toEqual(cast("home", 8));
+      expect(cast("home", 8)).not.toEqual(cast("pricing", 8));
     });
 
     it("stands every animal out from its ground", () => {
       expect(
-        Arr.filter(cast("beranda", 65), (mascot) => !standsOut(mascot))
+        Arr.filter(cast("home", 65), (mascot) => !standsOut(mascot))
       ).toEqual([]);
     });
   });
 
   describe("reroll", () => {
-    it("gives the rerolls of the prototype", () => {
-      expect(reference.rerolls.length).toBeGreaterThan(40);
-      expect(
-        Arr.filter(
-          reference.rerolls,
-          ({ codes, count, current, seed }) =>
-            codesOf(reroll(seed, mascotOf(current), count)) !==
-            Arr.join(codes, " ")
-        )
-      ).toEqual([]);
-    });
-
     it("never gives the current animal back, whoever asks", () => {
       const clashes = Arr.filter(Arr.take(SEEDS, 300), (seed) => {
         const current = forSeed(seed);
@@ -155,35 +110,47 @@ describe("mascot/seed", () => {
     });
 
     it("gives as many as are asked for, each one different", () => {
-      const current = forSeed("Nabil");
-      const others = reroll("Nabil", current, 8);
+      const current = forSeed("nakafa");
+      const others = reroll("nakafa", current, 8);
       expect(others).toHaveLength(8);
       expect(Arr.dedupe(Arr.map(others, encode))).toHaveLength(8);
     });
 
     it("gives the same rerolls again, and others for another current mascot", () => {
-      const current = forSeed("Nabil");
-      expect(reroll("Nabil", current, 3)).toEqual(reroll("Nabil", current, 3));
-      expect(reroll("Nabil", current, 3)).not.toEqual(
-        reroll("Nabil", forSeed("Nabila"), 3)
+      const current = forSeed("nakafa");
+      expect(reroll("nakafa", current, 3)).toEqual(
+        reroll("nakafa", current, 3)
+      );
+      expect(reroll("nakafa", current, 3)).not.toEqual(
+        reroll("nakafa", mascotOf("elephant.2.8c5a8f.peek-left.open"), 3)
       );
     });
 
     it("gives nothing when none is asked for", () => {
-      expect(reroll("Nabil", forSeed("Nabil"), 0)).toEqual([]);
+      expect(reroll("nakafa", forSeed("nakafa"), 0)).toEqual([]);
+    });
+
+    it("gives up at its limit of tries, with what it found, when it is asked for more than there are", () => {
+      const found = reroll("nakafa", forSeed("nakafa"), 1000);
+      expect(found.length).toBeGreaterThan(100);
+      expect(found.length).toBeLessThan(200);
     });
 
     it("stands every animal out from its ground", () => {
-      const rerolled = reroll("Nabil", forSeed("Nabil"), 65);
+      const rerolled = reroll("nakafa", forSeed("nakafa"), 65);
       expect(Arr.filter(rerolled, (mascot) => !standsOut(mascot))).toEqual([]);
     });
   });
 
   describe("gallery", () => {
-    it("shows each animal once, in order, as the prototype does", () => {
-      const shown = gallery();
-      expect(Arr.map(shown, encode)).toEqual(reference.gallery);
-      expect(Arr.map(shown, ({ animal }) => animal)).toEqual(Animal.literals);
+    it("shows each animal once, in the order of the animals", () => {
+      expect(Arr.map(gallery(), ({ animal }) => animal)).toEqual(
+        Animal.literals
+      );
+    });
+
+    it("gives the same gallery every time", () => {
+      expect(gallery()).toEqual(gallery());
     });
 
     it("stands every animal out from its ground", () => {

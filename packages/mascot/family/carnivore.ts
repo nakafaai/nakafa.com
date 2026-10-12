@@ -9,18 +9,18 @@ import {
   figure,
   head,
   nose,
+  PEARL,
   path,
   pointEars,
   roundEars,
   smile,
   torso,
-  WHITE,
 } from "@repo/mascot/kit";
 import { Array as Arr } from "effect";
 
 /** The meat eaters on land, and the seals and walruses that hunt in the sea. */
 export const carnivore = {
-  kucing: {
+  cat: {
     colors: [
       ["#ee8a4c", "#f4e6ce"],
       ["#c9d2dc", "#f6f4ef"],
@@ -38,7 +38,7 @@ export const carnivore = {
         smile(116, 9, 8, kit.ink)
       ),
   },
-  beruang: {
+  bear: {
     colors: [
       ["#c89468", "#f4e6ce"],
       ["#f6f4ef", "#c9d2dc"],
@@ -56,7 +56,7 @@ export const carnivore = {
         smile(118, 8, 7, kit.ink)
       ),
   },
-  rubah: {
+  fox: {
     colors: [
       ["#ee8a4c", "#f6f4ef"],
       ["#f2a33a", "#f4e6ce"],
@@ -93,13 +93,13 @@ export const carnivore = {
           ellipse(100 + side * 27, 98, 15, 19, kit.ink, side * 22)
         ),
         both((side) =>
-          eye("titik", 100 + side * 26 + kit.look, 97, 5, kit.body)
+          eye("open", 100 + side * 26 + kit.look, 97, 5, kit.body)
         ),
         nose(118, 7, 5, kit.ink),
         smile(126, 8, 7, kit.ink)
       ),
   },
-  harimau: {
+  tiger: {
     colors: [
       ["#f2a33a", "#f4e6ce"],
       ["#ee8a4c", "#f6f4ef"],
@@ -134,7 +134,7 @@ export const carnivore = {
         smile(119, 8, 7, kit.ink)
       ),
   },
-  singa: {
+  lion: {
     colors: [
       ["#e8b456", "#c9783a"],
       ["#f7d774", "#ee8a4c"],
@@ -160,7 +160,7 @@ export const carnivore = {
         smile(117, 8, 7, kit.ink)
       ),
   },
-  anjing: {
+  dog: {
     colors: [
       ["#efd2a6", "#b98a63"],
       ["#f6f4ef", "#c89468"],
@@ -173,15 +173,15 @@ export const carnivore = {
         both((side) =>
           ellipse(100 + side * 54, 96, 17, 36, kit.second, side * 8)
         ),
-        ellipse(100, 116, 28, 21, WHITE),
-        belly(WHITE),
+        ellipse(100, 116, 28, 21, PEARL),
+        belly(PEARL),
         eyes(kit, 25, 92),
         nose(107, 8.4, 6, kit.ink),
         smile(117, 8, 6, kit.ink),
         ellipse(100, 128, 5.6, 7, "#ec9ab0")
       ),
   },
-  musang: {
+  civet: {
     colors: [
       ["#b9c0cc", "#f6f4ef"],
       ["#c9a27e", "#f4e6ce"],
@@ -196,7 +196,7 @@ export const carnivore = {
           ellipse(100 + side * 28, 96, 23, 15, kit.ink, side * 18)
         ),
         both((side) =>
-          eye("titik", 100 + side * 26 + kit.look, 96, 5, kit.second)
+          eye("open", 100 + side * 26 + kit.look, 96, 5, kit.second)
         ),
         ellipse(100, 120, 22, 17, kit.second),
         belly(kit.second),
@@ -204,7 +204,7 @@ export const carnivore = {
         smile(123, 7, 6, kit.ink)
       ),
   },
-  rakun: {
+  raccoon: {
     colors: [
       ["#9aa3b0", "#f6f4ef"],
       ["#b8a58c", "#f4e6ce"],
@@ -220,12 +220,12 @@ export const carnivore = {
           ellipse(100 + side * 27, 96, 23, 15, kit.ink, side * 18)
         ),
         belly(kit.second),
-        eyes(kit, 26, 96, 5, WHITE),
+        eyes(kit, 26, 96, 5, PEARL),
         nose(110, 6, 4.6, kit.ink),
         smile(120, 8, 6, kit.ink)
       ),
   },
-  "anjing-laut": {
+  seal: {
     colors: [
       ["#c9d2dc", "#f6f4ef"],
       ["#cfe6f7", "#f6f4ef"],
@@ -260,7 +260,7 @@ export const carnivore = {
         both((side) =>
           blob(
             [100 + side * 11, 132, 100 + side * 21, 132, 100 + side * 15, 170],
-            WHITE,
+            PEARL,
             7
           )
         ),

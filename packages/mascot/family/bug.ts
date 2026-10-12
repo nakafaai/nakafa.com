@@ -17,7 +17,7 @@ import { Array as Arr } from "effect";
 
 /** The insects, the spider, and the snail: the small ones that crawl and fly. */
 export const bug = {
-  lebah: {
+  bee: {
     colors: [
       ["#f7d774", "#cfe6f7"],
       ["#e8b456", "#f6f4ef"],
@@ -43,7 +43,7 @@ export const bug = {
         smile(110, 10, 9, kit.ink)
       ),
   },
-  kumbang: {
+  beetle: {
     colors: [
       ["#ee6a5a", "#f4e6ce"],
       ["#f2a33a", "#f6f4ef"],
@@ -73,7 +73,7 @@ export const bug = {
         smile(96, 10, 8, kit.ink)
       ),
   },
-  capung: {
+  dragonfly: {
     colors: [
       ["#5fbfa8", "#cfe6f7"],
       ["#6fb1e8", "#dcd3f4"],
@@ -102,7 +102,7 @@ export const bug = {
         smile(98, 6, 4.6, kit.ink)
       ),
   },
-  kupu: {
+  butterfly: {
     colors: [
       ["#f2a33a", "#f7d774"],
       ["#8e9ad6", "#dcd3f4"],
@@ -130,7 +130,7 @@ export const bug = {
         smile(101, 6, 5, kit.ink)
       ),
   },
-  laba: {
+  spider: {
     colors: [
       ["#6d5aa8", "#dcd3f4"],
       ["#4b6a8f", "#cfe6f7"],
@@ -158,7 +158,7 @@ export const bug = {
         smile(121, 8, 6, kit.ink)
       ),
   },
-  siput: {
+  snail: {
     colors: [
       ["#f6c3a6", "#b98a63"],
       ["#f3e7a6", "#c9783a"],

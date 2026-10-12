@@ -8,16 +8,16 @@ import {
   figure,
   head,
   line,
+  PEARL,
   path,
   spikes,
   torso,
-  WHITE,
 } from "@repo/mascot/kit";
 import { Array as Arr } from "effect";
 
 /** The birds, from the farmyard to the forest canopy. */
 export const bird = {
-  ayam: {
+  chicken: {
     colors: [
       ["#f7d774", "#ee8a4c"],
       ["#f3e7a6", "#f2a33a"],
@@ -34,7 +34,7 @@ export const bird = {
         blob([90, 106, 110, 106, 100, 117], kit.second, 6)
       ),
   },
-  "burung-hantu": {
+  owl: {
     colors: [
       ["#c9a27e", "#f4e6ce"],
       ["#c9d2dc", "#f6f4ef"],
@@ -75,7 +75,7 @@ export const bird = {
         blob([92, 110, 108, 110, 100, 120], "#ee8a4c", 5)
       ),
   },
-  bebek: {
+  duck: {
     colors: [
       ["#f6f4ef", "#f2a33a"],
       ["#f7d774", "#ee8a4c"],
@@ -91,7 +91,7 @@ export const bird = {
         eyes(kit, 24, 90)
       ),
   },
-  kakatua: {
+  cockatoo: {
     colors: [
       ["#f6f4ef", "#f7d774"],
       ["#f4c7cf", "#ec9ab0"],
@@ -112,7 +112,7 @@ export const bird = {
         )
       ),
   },
-  rangkong: {
+  hornbill: {
     colors: [
       ["#5b6b8c", "#f6f4ef"],
       ["#6d4b78", "#f4e6ce"],
@@ -131,7 +131,7 @@ export const bird = {
         path("M86,98 C88,80 112,80 114,98 Z", "#ee8a4c")
       ),
   },
-  elang: {
+  eagle: {
     colors: [
       ["#8f6a4f", "#f6f4ef"],
       ["#a8794f", "#f4e6ce"],
@@ -148,7 +148,7 @@ export const bird = {
         blob([90, 106, 110, 106, 100, 126], "#f7d774", 7)
       ),
   },
-  nuri: {
+  parrot: {
     colors: [
       ["#ee6a5a", "#f7d774"],
       ["#7fc7a0", "#f7d774"],
@@ -162,7 +162,7 @@ export const bird = {
         torso(kit.body, 58),
         head(kit.body, 56, 52, 98),
         belly(kit.second, 30, 152),
-        both((side) => ellipse(100 + side * 27, 92, 20, 20, WHITE)),
+        both((side) => ellipse(100 + side * 27, 92, 20, 20, PEARL)),
         eyes(kit, 27, 92),
         path(
           "M86,102 C90,94 110,94 114,102 C113,120 106,132 100,134 C94,132 87,120 86,102 Z",
@@ -194,7 +194,7 @@ export const bird = {
         )
       ),
   },
-  merak: {
+  peacock: {
     colors: [
       ["#3f7fc4", "#7fc7a0"],
       ["#2f9a8f", "#f7d774"],
@@ -226,7 +226,7 @@ export const bird = {
         blob([94, 106, 106, 106, 100, 117], "#f7d774", 4)
       ),
   },
-  kasuari: {
+  cassowary: {
     colors: [
       ["#2f3a56", "#3f8fd0"],
       ["#34344a", "#4aa3c7"],

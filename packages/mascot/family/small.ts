@@ -8,17 +8,17 @@ import {
   figure,
   head,
   nose,
+  PEARL,
   path,
   roundEars,
   smile,
   spikes,
   torso,
-  WHITE,
 } from "@repo/mascot/kit";
 
 /** The small mammals: the gnawers, the rabbit, the koala, and the bat. */
 export const small = {
-  kelinci: {
+  rabbit: {
     colors: [
       ["#f6f4ef", "#f4c7cf"],
       ["#dcd3f4", "#f6f4ef"],
@@ -56,7 +56,7 @@ export const small = {
         smile(114, 6, 6, kit.ink)
       ),
   },
-  tikus: {
+  mouse: {
     colors: [
       ["#c9d2dc", "#f4c7cf"],
       ["#efd2a6", "#f4c7cf"],
@@ -72,7 +72,7 @@ export const small = {
         smile(119, 7, 6, kit.ink)
       ),
   },
-  tupai: {
+  squirrel: {
     colors: [
       ["#d9824a", "#f4e6ce"],
       ["#b98a63", "#f6f4ef"],
@@ -96,10 +96,10 @@ export const small = {
         belly(kit.second, 26, 152),
         eyes(kit, 24, 92),
         nose(106, 5, 3.8, kit.ink),
-        path("M96,112 L104,112 L103,122 L97,122 Z", WHITE)
+        path("M96,112 L104,112 L103,122 L97,122 Z", PEARL)
       ),
   },
-  landak: {
+  porcupine: {
     colors: [
       ["#b98a63", "#f4e6ce"],
       ["#8f6a4f", "#f6f4ef"],
@@ -138,7 +138,7 @@ export const small = {
         smile(130, 8, 6, kit.ink)
       ),
   },
-  kelelawar: {
+  bat: {
     colors: [
       ["#8e7fb8", "#f4c7cf"],
       ["#6f7fa8", "#dcd3f4"],
@@ -193,7 +193,7 @@ export const small = {
               100 + side * 7,
               128,
             ],
-            WHITE,
+            PEARL,
             2
           )
         )

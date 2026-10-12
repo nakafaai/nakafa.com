@@ -35,10 +35,10 @@ const PaletteDigits = Schema.String.check(
 
 /**
  * A mascot as the text that is stored, `animal.palette.ground.pose.eyes`, for
- * example `kucing.0.243e66.kanan.titik`. Decoding text that names no mascot
- * fails; nothing is guessed.
+ * example `cat.0.243e66.right.open`. Decoding text that names no mascot fails;
+ * nothing is guessed.
  */
-export const Code = Schema.TemplateLiteralParser([
+const Code = Schema.TemplateLiteralParser([
   Animal,
   ".",
   PaletteDigits,

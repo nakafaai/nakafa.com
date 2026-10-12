@@ -1,33 +1,92 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
-import { decode } from "@repo/mascot/code";
+import { decode, encode, Mascot } from "@repo/mascot/code";
 import { draw } from "@repo/mascot/draw";
-import { Eyes } from "@repo/mascot/kit";
-import { Picture } from "@repo/mascot/shape";
-import { Array as Arr, Result, Schema } from "effect";
+import { Eyes, type Layer } from "@repo/mascot/kit";
+import { Pose } from "@repo/mascot/pose";
+import { DIGESTS } from "@repo/mascot/test.fixture";
+import { sha256Hex } from "@repo/utilities/digest";
+import { encodeJsonText } from "@repo/utilities/json";
+import {
+  Array as Arr,
+  Effect,
+  Option,
+  Record as Rec,
+  Result,
+  String as Str,
+} from "effect";
+
+const CAT = "cat.0.243e66.right.open";
+
+/** How many hexadecimal digits of the SHA-256 a pinned digest keeps. */
+const DIGEST_LENGTH = 8;
 
 /** The mascot of a code that is known to be good. */
 function mascotOf(code: string) {
   return Result.getOrThrow(decode(code));
 }
 
-/** The horizontal centres of the open eyes of a picture. */
-function openEyes(picture: ReturnType<typeof draw>) {
-  return Arr.filterMap(picture.parts, (part) =>
-    part._tag === "Eye" ? Result.succeed(part.cx) : Result.failVoid
+/** The shapes of a picture that carry a mark, also those inside a group. */
+function marked(shapes: readonly Layer[]): readonly Layer[] {
+  return Arr.flatMap(shapes, (shape) => {
+    if (shape._tag === "g") {
+      return marked(shape.children);
+    }
+    return shape.mark === undefined ? [] : [shape];
+  });
+}
+
+/** The horizontal centres of the marked eyes of a picture. */
+function eyesOf(mascot: ReturnType<typeof mascotOf>) {
+  return Arr.map(marked(draw(mascot).shapes), (shape) =>
+    "cx" in shape ? shape.cx : Number.NaN
   );
 }
 
-/** The colours that a picture fills its layers with. */
-function fills(picture: ReturnType<typeof draw>) {
-  return Arr.dedupe(
-    Arr.filterMap(picture.parts, (part) =>
-      "fill" in part ? Result.succeed(part.fill) : Result.failVoid
+/** The colours that a picture fills its shapes with, also inside a group. */
+function fills(shapes: readonly Layer[]): readonly string[] {
+  return Arr.flatMap(shapes, (shape) => {
+    if (shape._tag === "g") {
+      return fills(shape.children);
+    }
+    return shape.fill === undefined ? [] : [shape.fill];
+  });
+}
+
+/** Every palette, pose, and eyes value of one animal, in the order that the fixture writes them. */
+function picturesOf(animal: typeof Animal.Type) {
+  return Arr.flatMap(
+    Arr.range(0, DESIGNS[animal].colors.length - 1),
+    (palette) =>
+      Arr.flatMap(Pose.literals, (pose) =>
+        Arr.map(Eyes.literals, (eyes) =>
+          Mascot.make({ animal, eyes, ground: "243e66", palette, pose })
+        )
+      )
+  );
+}
+
+/** The codes of the pictures of one animal that no longer draw what was pinned. */
+const changedOf = Effect.fnUntraced(function* (animal: typeof Animal.Type) {
+  const mascots = picturesOf(animal);
+  const pinned = Option.getOrElse(Rec.get(DIGESTS, animal), () => "");
+  const drawn = yield* Effect.forEach(mascots, (mascot) =>
+    Effect.map(
+      sha256Hex(encodeJsonText(draw(mascot))),
+      Str.slice(0, DIGEST_LENGTH)
     )
   );
-}
-
-const CAT = "kucing.0.243e66.kanan.titik";
+  return Arr.length(mascots) * DIGEST_LENGTH === Str.length(pinned)
+    ? Arr.filterMap(Arr.zip(mascots, drawn), ([mascot, digest], index) =>
+        Str.slice(
+          index * DIGEST_LENGTH,
+          (index + 1) * DIGEST_LENGTH
+        )(pinned) === digest
+          ? Result.failVoid
+          : Result.succeed(encode(mascot))
+      )
+    : [`${animal}: the fixture holds ${Str.length(pinned)} digits`];
+});
 
 describe("mascot/draw", () => {
   it("draws the same picture for the same mascot", () => {
@@ -36,70 +95,71 @@ describe("mascot/draw", () => {
 
   it("draws another picture for other eyes, and for another pose", () => {
     const cat = draw(mascotOf(CAT));
-    expect(draw(mascotOf("kucing.0.243e66.kanan.senyum"))).not.toEqual(cat);
-    expect(draw(mascotOf("kucing.0.243e66.kiri.titik"))).not.toEqual(cat);
+    expect(draw(mascotOf("cat.0.243e66.right.smile"))).not.toEqual(cat);
+    expect(draw(mascotOf("cat.0.243e66.left.open"))).not.toEqual(cat);
   });
 
   it("draws the chosen palette on the chosen ground", () => {
-    const first = draw(mascotOf("kucing.0.243e66.tengah.titik"));
-    const second = draw(mascotOf("kucing.1.b9624b.tengah.titik"));
+    const first = draw(mascotOf("cat.0.243e66.center.open"));
+    const second = draw(mascotOf("cat.1.b9624b.center.open"));
     expect(first.ground).toBe("#243e66");
     expect(second.ground).toBe("#b9624b");
-    expect(fills(first)).toEqual(
+    expect(fills(first.shapes)).toEqual(
       expect.arrayContaining(["#ee8a4c", "#f4e6ce"])
     );
-    expect(fills(second)).toEqual(
+    expect(fills(second.shapes)).toEqual(
       expect.arrayContaining(["#c9d2dc", "#f6f4ef"])
     );
-    expect(fills(second)).not.toContain("#ee8a4c");
+    expect(fills(second.shapes)).not.toContain("#ee8a4c");
   });
 
   it("stands the animal in its pose", () => {
     expect(draw(mascotOf(CAT)).transform).toBe(
       "translate(134 218) rotate(-10) scale(1.16) translate(-100 -200)"
     );
-    expect(draw(mascotOf("kucing.0.243e66.tengah.titik")).transform).toBe(
+    expect(draw(mascotOf("cat.0.243e66.center.open")).transform).toBe(
       "translate(100 204) rotate(0) scale(1.04) translate(-100 -200)"
     );
-    expect(draw(mascotOf("kucing.0.243e66.intip-kiri.titik")).transform).toBe(
+    expect(draw(mascotOf("cat.0.243e66.peek-left.open")).transform).toBe(
       "translate(56 246) rotate(14) scale(1.14) translate(-100 -200)"
     );
   });
 
   it("turns the open eyes the way the pose looks", () => {
-    expect(openEyes(draw(mascotOf("kucing.0.243e66.tengah.titik")))).toEqual([
-      74, 126,
-    ]);
-    expect(openEyes(draw(mascotOf("kucing.0.243e66.kiri.titik")))).toEqual([
-      76.6, 128.6,
-    ]);
-    expect(openEyes(draw(mascotOf("kucing.0.243e66.kanan.titik")))).toEqual([
-      71.4, 123.4,
-    ]);
+    expect(eyesOf(mascotOf("cat.0.243e66.center.open"))).toEqual([74, 126]);
+    expect(eyesOf(mascotOf("cat.0.243e66.left.open"))).toEqual([76.6, 128.6]);
+    expect(eyesOf(mascotOf(CAT))).toEqual([71.4, 123.4]);
   });
 
   it("marks the two open eyes of every animal, so that they can follow the pointer", () => {
     const wrong = Arr.filter(
       Animal.literals,
       (animal) =>
-        openEyes(draw(mascotOf(`${animal}.0.243e66.tengah.titik`))).length !== 2
+        marked(draw(mascotOf(`${animal}.0.243e66.center.open`)).shapes)
+          .length !== 2
     );
     expect(wrong).toEqual([]);
   });
 
-  it("draws a picture that satisfies its schema, for every animal and every eyes value", () => {
-    const isPicture = Schema.is(Picture);
-    const invalid = Arr.flatMap(Animal.literals, (animal) =>
-      Arr.filter(Eyes.literals, (eyes) =>
-        Arr.some(
-          Arr.range(0, DESIGNS[animal].colors.length - 1),
-          (palette) =>
-            !isPicture(
-              draw(mascotOf(`${animal}.${palette}.243e66.kanan.${eyes}`))
-            )
-        )
-      )
+  it("marks no eye of an animal that sleeps, except the panda and the civet, whose eyes stay open on their dark patches", () => {
+    const awake = Arr.filter(
+      Animal.literals,
+      (animal) =>
+        marked(draw(mascotOf(`${animal}.0.243e66.center.asleep`)).shapes)
+          .length > 0
     );
-    expect(invalid).toEqual([]);
+    expect(awake).toEqual(["panda", "civet"]);
   });
+
+  it.effect(
+    "draws every animal in every palette, pose, and eyes value as it was pinned",
+    () =>
+      Effect.gen(function* () {
+        expect(Rec.keys(DIGESTS)).toEqual(Animal.literals);
+        const changed = yield* Effect.forEach(Animal.literals, changedOf, {
+          concurrency: 8,
+        });
+        expect(Arr.flatten(changed)).toEqual([]);
+      })
+  );
 });

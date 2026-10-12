@@ -1,9 +1,25 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DESIGNS } from "@repo/mascot/animal";
-import { contrast, GROUNDS, groundsFor } from "@repo/mascot/ground";
-import { Array as Arr, Record as Rec } from "effect";
+import { contrast, Ground, groundsFor } from "@repo/mascot/ground";
+import { Array as Arr, Record as Rec, Schema } from "effect";
+
+const HEX_DIGITS = /^[0-9a-f]{6}$/u;
 
 describe("mascot/ground", () => {
+  it("lists 22 grounds, each of six lower-case hexadecimal digits", () => {
+    expect(Ground.literals).toHaveLength(22);
+    expect(Arr.dedupe(Ground.literals)).toHaveLength(22);
+    expect(
+      Arr.every(Ground.literals, (ground) => HEX_DIGITS.test(ground))
+    ).toBe(true);
+  });
+
+  it("accepts only a listed ground, not any colour", () => {
+    expect(Schema.is(Ground)("243e66")).toBe(true);
+    expect(Schema.is(Ground)("243e67")).toBe(false);
+    expect(Schema.is(Ground)("#243e66")).toBe(false);
+  });
+
   it("measures contrast from 1 for one colour up to 21 for black on white", () => {
     expect(contrast("#ffffff", "#000000")).toBeCloseTo(21, 10);
     expect(contrast("#243e66", "#243e66")).toBe(1);
@@ -18,13 +34,13 @@ describe("mascot/ground", () => {
     const body = "#f6f4ef";
     const fit = groundsFor(body);
     expect(fit.length).toBeGreaterThan(0);
-    expect(fit.length).toBeLessThan(GROUNDS.length);
+    expect(fit.length).toBeLessThan(Ground.literals.length);
     expect(Arr.every(fit, (ground) => contrast(body, ground) >= 2.4)).toBe(
       true
     );
     expect(
       Arr.every(
-        Arr.difference(GROUNDS, fit),
+        Arr.difference(Ground.literals, fit),
         (ground) => contrast(body, ground) < 2.4
       )
     ).toBe(true);

@@ -3,13 +3,14 @@ import { Animal, DESIGNS } from "@repo/mascot/animal";
 import { bird } from "@repo/mascot/family/bird";
 import { bug } from "@repo/mascot/family/bug";
 import { carnivore } from "@repo/mascot/family/carnivore";
-import { hoofed } from "@repo/mascot/family/hoofed";
+import { farm } from "@repo/mascot/family/farm";
 import { marine } from "@repo/mascot/family/marine";
 import { primate } from "@repo/mascot/family/primate";
 import { reptile } from "@repo/mascot/family/reptile";
 import { small } from "@repo/mascot/family/small";
+import { wild } from "@repo/mascot/family/wild";
 import { type Design, INK } from "@repo/mascot/kit";
-import { markup } from "@repo/mascot/svg";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Number as Num, Order, Record as Rec } from "effect";
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/u;
@@ -18,11 +19,12 @@ const FAMILIES: readonly Record<string, Design>[] = [
   bird,
   bug,
   carnivore,
-  hoofed,
+  farm,
   marine,
   primate,
   reptile,
   small,
+  wild,
 ];
 
 describe("mascot/animal", () => {
@@ -59,13 +61,13 @@ describe("mascot/animal", () => {
   it("draws every animal differently from every other", () => {
     const kit = {
       body: "#ee8a4c",
-      eyes: "titik",
+      eyes: "open",
       ink: INK,
       look: 0,
       second: "#f4e6ce",
     } as const;
     const drawings = Arr.map(Rec.values(DESIGNS), ({ draw }) =>
-      Arr.join(Arr.map(draw(kit), markup), "")
+      encodeJsonText(draw(kit))
     );
     expect(Arr.dedupe(drawings)).toHaveLength(65);
   });

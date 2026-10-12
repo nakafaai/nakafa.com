@@ -3,14 +3,7 @@ import { encode, Mascot } from "@repo/mascot/code";
 import { groundsFor } from "@repo/mascot/ground";
 import { Eyes } from "@repo/mascot/kit";
 import { POSE_ORDER } from "@repo/mascot/pose";
-import { Array as Arr, Order } from "effect";
-
-/** Every 32-bit word is an unsigned integer below this. */
-const WORD = 2 ** 32;
-
-/** The FNV-1a offset basis and prime for 32 bits. */
-const FNV_OFFSET = 2_166_136_261;
-const FNV_PRIME = 16_777_619;
+import { Array as Arr, Hash, Order } from "effect";
 
 /**
  * How many shifts of a seed `reroll` tries, and so how far it looks for animals
@@ -19,54 +12,39 @@ const FNV_PRIME = 16_777_619;
 const REROLL_TRIES = 200;
 
 /**
- * `a` XOR `b` for non-negative integers, worked out bit by bit from the low
- * end. Biome bans the bitwise operators, and the hash below needs this one.
+ * The number that a text stands for. `Hash.string` can be negative, so a pick
+ * takes the remainder of its absolute value. A part of a mascot that needs a
+ * number of its own hashes the seed with a tag, such as `${seed}#palette`.
  */
-function xor(a: number, b: number): number {
-  return b === 0
-    ? a
-    : ((a + b) % 2) + 2 * xor(Math.floor(a / 2), Math.floor(b / 2));
+function hashed(text: string) {
+  return Math.abs(Hash.string(text));
+}
+
+/** The grounds that the body of one palette of an animal stands out from. */
+function groundsOf(animal: typeof Animal.Type, palette: number) {
+  const [body] = Arr.getUnsafe(DESIGNS[animal].colors, palette);
+  return groundsFor(body);
 }
 
 /**
- * FNV-1a over the UTF-16 code units of a text, as an unsigned 32-bit integer.
- * It starts from `state`, the hash of the text before, so the hash of one text
- * that follows another continues the hash of the first:
- * `hash(a + b)` is `hash(b, hash(a))`.
+ * The mascot that a seed, such as a name or an id, gives. It is always the
+ * same, and each part of it comes from a tag of its own.
  */
-export function hash(text: string, state = FNV_OFFSET) {
-  return Arr.reduce(
-    Arr.map(text.split(""), (unit) => unit.charCodeAt(0)),
-    state,
-    (current, unit) => {
-      const product = Math.imul(xor(current, unit), FNV_PRIME);
-      return product < 0 ? product + WORD : product;
-    }
+export function forSeed(seed: string) {
+  const animal = Arr.getUnsafe(
+    Animal.literals,
+    hashed(seed) % Animal.literals.length
   );
-}
-
-/**
- * The mascot that the hash of a seed gives. Each part of it, from the palette
- * to the pose, continues that hash with a tag of its own.
- */
-function pick(base: number) {
-  const animal = Arr.getUnsafe(Animal.literals, base % Animal.literals.length);
-  const { colors } = DESIGNS[animal];
-  const palette = hash("#warna", base) % colors.length;
-  const grounds = groundsFor(Arr.getUnsafe(colors, palette)[0]);
-  const mood = hash("#mata", base);
+  const palette = hashed(`${seed}#palette`) % DESIGNS[animal].colors.length;
+  const grounds = groundsOf(animal, palette);
+  const mood = hashed(`${seed}#eyes`);
   return Mascot.make({
     animal,
     eyes: Arr.getUnsafe(Eyes.literals, mood % 8 < 5 ? 0 : 1 + (mood % 3)),
-    ground: Arr.getUnsafe(grounds, hash("#latar", base) % grounds.length),
+    ground: Arr.getUnsafe(grounds, hashed(`${seed}#ground`) % grounds.length),
     palette,
-    pose: Arr.getUnsafe(POSE_ORDER, hash("#pose", base) % POSE_ORDER.length),
+    pose: Arr.getUnsafe(POSE_ORDER, hashed(`${seed}#pose`) % POSE_ORDER.length),
   });
-}
-
-/** The mascot that a seed, such as a name or an id, gives. It is always the same. */
-export function forSeed(seed: string) {
-  return pick(hash(seed));
 }
 
 /**
@@ -78,7 +56,7 @@ export function reroll(
   current: typeof Mascot.Type,
   count: number
 ) {
-  const prefix = hash(`${seed}:${encode(current)}`);
+  const prefix = `${seed}:${encode(current)}`;
   const gather = (
     shift: number,
     found: readonly (typeof Mascot.Type)[]
@@ -86,7 +64,7 @@ export function reroll(
     if (found.length >= count || shift >= REROLL_TRIES) {
       return found;
     }
-    const next = pick(hash(`#${shift}`, prefix));
+    const next = forSeed(`${prefix}#${shift}`);
     const fresh = next.animal !== current.animal && !Arr.contains(found, next);
     return gather(shift + 1, fresh ? Arr.append(found, next) : found);
   };
@@ -99,32 +77,30 @@ export function reroll(
  * never shows two of a kind. `skip` starts further down the same order.
  */
 export function cast(seed: string, count: number, skip = 0) {
-  const base = hash(seed);
-  const prefix = hash("#", base);
-  const pose = hash("#pose", base);
   const order = Arr.sort(
     Arr.map(Animal.literals, (animal) => ({
       animal,
-      key: hash(animal, prefix),
+      key: Hash.string(`${seed}#${animal}`),
     })),
     Order.Struct({ key: Order.Number, animal: Order.String })
   );
+  const lean = hashed(`${seed}#pose`);
   return Arr.map(
     Arr.take(Arr.drop(order, skip), count),
-    ({ animal, key }, offset) => {
+    ({ animal }, offset) => {
       const place = skip + offset;
-      const { colors } = DESIGNS[animal];
-      const palette = hash("#warna", key) % colors.length;
-      const grounds = groundsFor(Arr.getUnsafe(colors, palette)[0]);
+      const text = `${seed}#${animal}`;
+      const palette = hashed(`${text}#palette`) % DESIGNS[animal].colors.length;
+      const grounds = groundsOf(animal, palette);
       return Mascot.make({
         animal,
-        eyes: "titik",
+        eyes: "open",
         ground: Arr.getUnsafe(
           grounds,
-          (hash("#latar", key) + place) % grounds.length
+          (hashed(`${text}#ground`) + place) % grounds.length
         ),
         palette,
-        pose: Arr.getUnsafe(POSE_ORDER, (pose + place) % POSE_ORDER.length),
+        pose: Arr.getUnsafe(POSE_ORDER, (lean + place) % POSE_ORDER.length),
       });
     }
   );
@@ -133,14 +109,16 @@ export function cast(seed: string, count: number, skip = 0) {
 /** One mascot per animal, in the order of the animals, for a gallery. */
 export function gallery() {
   return Arr.map(Animal.literals, (animal) => {
-    const key = hash(animal);
-    const grounds = groundsFor(Arr.getUnsafe(DESIGNS[animal].colors, 0)[0]);
+    const grounds = groundsOf(animal, 0);
     return Mascot.make({
       animal,
-      eyes: "titik",
-      ground: Arr.getUnsafe(grounds, key % grounds.length),
+      eyes: "open",
+      ground: Arr.getUnsafe(grounds, hashed(animal) % grounds.length),
       palette: 0,
-      pose: Arr.getUnsafe(POSE_ORDER, hash("#pose", key) % POSE_ORDER.length),
+      pose: Arr.getUnsafe(
+        POSE_ORDER,
+        hashed(`${animal}#pose`) % POSE_ORDER.length
+      ),
     });
   });
 }

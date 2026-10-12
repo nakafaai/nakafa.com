@@ -1,29 +1,32 @@
 import {
-  Ellipse,
-  Eye,
-  Fade,
-  Line,
-  type Part,
-  Path,
-  Polygon,
-  type Solid,
+  ellipse as drawEllipse,
+  path as drawPath,
+  group,
+  polygon,
+  type Shape,
 } from "@repo/mascot/shape";
 import { Array as Arr, Match, Number as Num, Schema } from "effect";
 
 /** The ink of every eye, mouth, and nose. */
 export const INK = "#15294f";
 
-/** The white that several animals share. */
-export const WHITE = "#f6f4ef";
+/** The pale white that several animals share. */
+export const PEARL = "#f6f4ef";
+
+/** What an animal marks in its drawing: the open eyes, which can follow the pointer. */
+export const Mark = Schema.Literal("eye");
+
+/** One layer of an animal, or layers drawn together. */
+export type Layer = Shape<typeof Mark.Type>;
 
 /** What the eyes of an animal do: open, smiling, one winking, or asleep. */
-export const Eyes = Schema.Literals(["titik", "senyum", "kedip", "tidur"]);
+export const Eyes = Schema.Literals(["open", "smile", "wink", "asleep"]);
 
 /**
  * What an animal is drawn with: the colours of its palette, the ink, how its
  * eyes look, and how far its pose turns them to the side.
  */
-export const Kit = Schema.Struct({
+const Kit = Schema.Struct({
   body: Schema.String,
   eyes: Eyes,
   ink: Schema.String,
@@ -34,20 +37,18 @@ export const Kit = Schema.Struct({
 /** One animal: its palettes as [body, second] colour pairs, and how to draw it. */
 export interface Design {
   readonly colors: readonly (readonly [string, string])[];
-  readonly draw: (kit: typeof Kit.Type) => readonly (typeof Part.Type)[];
+  readonly draw: (kit: typeof Kit.Type) => readonly Layer[];
 }
 
 const tenth = Num.round(1);
 
 /** The layers of an animal, back to front, with each group of layers laid flat. */
-export function figure(
-  ...layers: readonly (typeof Part.Type | readonly (typeof Part.Type)[])[]
-) {
+export function figure(...layers: readonly (Layer | readonly Layer[])[]) {
   return Arr.flatMap(layers, Arr.ensure);
 }
 
 /** Draws a layer once on each side of the centre line. The layer receives -1 or 1. */
-export function both<A extends typeof Part.Type>(
+export function both<A extends Layer>(
   layer: (side: number) => A | readonly A[]
 ) {
   return Arr.flatMap([-1, 1], (side) => Arr.ensure(layer(side)));
@@ -62,7 +63,7 @@ export function ellipse(
   fill: string,
   turn = 0
 ) {
-  return Ellipse.make({
+  return drawEllipse({
     cx: tenth(cx),
     cy: tenth(cy),
     fill,
@@ -76,7 +77,7 @@ export function ellipse(
 
 /** A flat path. */
 export function path(d: string, fill: string) {
-  return Path.make({ d, fill });
+  return drawPath({ d, fill });
 }
 
 /** A path whose corners an outline rounds. */
@@ -86,29 +87,44 @@ export function outlined(
   color: string,
   width: number
 ) {
-  return Path.make({ d, fill, outline: { color, width } });
+  return drawPath({
+    d,
+    fill,
+    stroke: color,
+    strokeLinejoin: "round",
+    strokeWidth: width,
+  });
 }
 
 /** A polygon from flat `x, y` pairs, its corners rounded by a stroke of `width`. */
 export function blob(points: readonly number[], fill: string, width: number) {
-  return Polygon.make({
+  return polygon({
     fill,
     points: Arr.join(
       Arr.map(Arr.chunksOf(points, 2), ([x, y]) => `${tenth(x)},${tenth(y)}`),
       " "
     ),
-    rounding: width,
+    stroke: fill,
+    strokeLinejoin: "round",
+    strokeWidth: width,
   });
 }
 
 /** A stroke with round ends. */
 export function line(d: string, color: string, width: number) {
-  return Line.make({ color, d, width });
+  return drawPath({
+    d,
+    fill: "none",
+    stroke: color,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    strokeWidth: width,
+  });
 }
 
-/** Shapes drawn together at one opacity. */
-export function faded(opacity: number, shapes: readonly (typeof Solid.Type)[]) {
-  return Fade.make({ opacity, shapes });
+/** Layers drawn together at one opacity. */
+export function faded(opacity: number, layers: readonly Layer[]) {
+  return group(layers, { opacity });
 }
 
 /** The head: an ellipse on the centre line. */
@@ -156,14 +172,14 @@ export function eye(
   ink: string
 ) {
   return Match.value(kind).pipe(
-    Match.when("senyum", () =>
+    Match.when("smile", () =>
       line(
         `M${tenth(x - r)},${tenth(y + 2)} Q${tenth(x)},${tenth(y - r - 2)} ${tenth(x + r)},${tenth(y + 2)}`,
         ink,
         4.6
       )
     ),
-    Match.when("tidur", () =>
+    Match.when("asleep", () =>
       line(
         `M${tenth(x - r)},${tenth(y - 1)} Q${tenth(x)},${tenth(y + r)} ${tenth(x + r)},${tenth(y - 1)}`,
         ink,
@@ -171,10 +187,11 @@ export function eye(
       )
     ),
     Match.orElse(() =>
-      Eye.make({
+      drawEllipse({
         cx: tenth(x),
         cy: tenth(y),
         fill: ink,
+        mark: Mark.literal,
         rx: tenth(r),
         ry: tenth(r * 1.22),
       })
@@ -185,8 +202,8 @@ export function eye(
 /** What one side does when the eyes wink: the left eye smiles, the right stays open. */
 export function kindAt(eyes: typeof Eyes.Type, side: number) {
   return Match.value(eyes).pipe(
-    Match.when("kedip", () => (side < 0 ? "senyum" : "titik")),
-    Match.orElse((open) => open)
+    Match.when("wink", () => (side < 0 ? "smile" : "open")),
+    Match.orElse((kept) => kept)
   );
 }
 

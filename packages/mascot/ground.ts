@@ -1,7 +1,10 @@
 import { Array as Arr, Schema } from "effect";
 
-/** The grounds that an animal can stand on, as six hexadecimal digits. */
-export const GROUNDS = [
+/**
+ * The grounds that an animal can stand on, each as six lower-case hexadecimal
+ * digits without the `#`. A code with any other colour is not a mascot.
+ */
+export const Ground = Schema.Literals([
   "b9624b",
   "2f7b6e",
   "6d4b78",
@@ -24,10 +27,7 @@ export const GROUNDS = [
   "f4c7cf",
   "ddebb5",
   "dcd3f4",
-];
-
-/** A ground: six lower-case hexadecimal digits, without the `#`. */
-export const Ground = Schema.String.check(Schema.isPattern(/^[0-9a-f]{6}$/u));
+]);
 
 /** How much brighter or darker than its ground an animal's body must be. */
 const STANDS_OUT = 2.4;
@@ -51,5 +51,8 @@ export function contrast(first: string, second: string) {
 
 /** The grounds that a body colour stands out from. */
 export function groundsFor(body: string) {
-  return Arr.filter(GROUNDS, (ground) => contrast(body, ground) >= STANDS_OUT);
+  return Arr.filter(
+    Ground.literals,
+    (ground) => contrast(body, ground) >= STANDS_OUT
+  );
 }
