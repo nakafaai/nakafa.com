@@ -45,7 +45,7 @@ afterEach(() => {
 
 describe("the judgment measuring command", () => {
   it.live(
-    "measures the development deployment unless it is given --prod, prints the report, and exits with the number of failures as 1",
+    "measures the development deployment unless it is given --prod, prints the report, and exits with 1 when some text could not be measured",
     () =>
       Effect.gen(function* () {
         const written = vi

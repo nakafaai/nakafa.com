@@ -106,7 +106,7 @@ describe("judgment report best threshold", () => {
 });
 
 describe("judgment report table", () => {
-  const table = judgmentTable("lasting", 0.5, points);
+  const table = judgmentTable("lasting", "message", 0.5, points);
 
   it("names the judgment and counts the labels, with a table of probabilities by label", () => {
     expect(table).toContain(
@@ -126,16 +126,28 @@ describe("judgment report table", () => {
     );
   });
 
-  it("names a message judged wrongly by its number, label, probability, language and form, and quotes none", () => {
-    expect(table).toContain("judged wrongly at 0.50");
+  it("names a text judged wrongly by its number, label, probability, language and form, and quotes none", () => {
+    expect(table).toContain(
+      "judged wrongly at 0.50 (message, label, probability, language, form):"
+    );
     expect(table).toContain("    2  yes  0.40  ja  ");
     expect(table).toContain("    3  no   0.62  en  phone");
     expect(table).toContain("    5  no   0.50  ar  ");
   });
+
+  it("names what the judgment is asked about in its counts and in its list of wrong texts", () => {
+    const noted = judgmentTable("private", "note", 0.5, points);
+    expect(noted).toContain(
+      "judgment private: 3 notes labelled yes, 3 labelled no"
+    );
+    expect(noted).toContain(
+      "judged wrongly at 0.50 (note, label, probability, language, form):"
+    );
+  });
 });
 
 describe("judgment report failures", () => {
-  it("counts how many messages each kind of failure kept from the measure", () => {
+  it("counts how many texts each kind of failure kept from the measure", () => {
     expect(
       failureLine([
         { reason: "invalid", status: 400, type: "unsupported_parameter" },
@@ -144,7 +156,7 @@ describe("judgment report failures", () => {
         { reason: "unavailable", status: 503 },
       ])
     ).toBe(
-      "4 messages failed: invalid 400 unsupported_parameter (2), network (1), unavailable 503 (1)"
+      "4 texts failed: invalid 400 unsupported_parameter (2), network (1), unavailable 503 (1)"
     );
   });
 });

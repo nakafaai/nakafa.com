@@ -1,10 +1,11 @@
 import { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
+import type { JudgmentName } from "@repo/backend/confect/nina/judgment/catalog";
 import { Measurement } from "@repo/backend/confect/nina/judgment.spec";
 import { FetchClient } from "@repo/utilities/http/client";
 import { getFunctionName } from "convex/server";
-import { Duration, Effect, Schema } from "effect";
+import { Array as Arr, Duration, Effect, Schema } from "effect";
 import {
   HttpClient,
   type HttpClientError,
@@ -42,12 +43,16 @@ const failedToReach = (error: HttpClientError.HttpClientError) =>
 /**
  * Runs the measuring action of a deployment on some texts, through Convex's
  * admin HTTP API with the credential `config` holds, and answers with its
- * measurement. The deployment is the one `config` names, so a caller chooses
- * it by the environment it configures; this call never picks production.
+ * measurement of the named judgments. The deployment is the one `config` names,
+ * so a caller chooses it by the environment it configures; this call never
+ * picks production. An answer that holds more or fewer rows than the texts it
+ * was given is refused, because a row that matched no text would be matched
+ * with the wrong one.
  */
 export const callMeasure = Effect.fn("judgment.callMeasure")(
   function* (
     config: { readonly accessToken: string; readonly url: string },
+    names: Arr.NonEmptyReadonlyArray<JudgmentName>,
     texts: readonly string[],
     together: number
   ) {
@@ -63,7 +68,7 @@ export const callMeasure = Effect.fn("judgment.callMeasure")(
         `Convex ${config.accessToken}`
       ),
       HttpClientRequest.bodyJsonUnsafe({
-        args: { texts, together },
+        args: { names, texts, together },
         format: "json",
         path,
       }),
@@ -89,6 +94,11 @@ export const callMeasure = Effect.fn("judgment.callMeasure")(
         message: `${path}: ${reply.errorMessage ?? "Unknown Convex error"}`,
       });
     }
+    if (Arr.length(reply.value.rows) !== Arr.length(texts)) {
+      return yield* new JudgmentCallError({
+        message: `${path}: the deployment measured ${Arr.length(reply.value.rows)} of ${Arr.length(texts)} texts`,
+      });
+    }
     return reply.value;
   },
   // The deadline covers the send and the read, so a stalled answer ends.
@@ -97,7 +107,7 @@ export const callMeasure = Effect.fn("judgment.callMeasure")(
     orElse: () =>
       Effect.fail(
         new JudgmentCallError({
-          message: "Convex did not answer within 60 seconds.",
+          message: `Convex did not answer within ${Duration.toSeconds(CALL_DEADLINE)} seconds.`,
         })
       ),
   }),

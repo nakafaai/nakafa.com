@@ -16,21 +16,25 @@ function refuses(error: APICallError) {
 
 describe("measuring the judgments", () => {
   it.effect(
-    "gives every text the probability of every judgment, one request for each judgment about each group of texts, in the order of the texts",
+    "gives every text the probability of every named judgment, one request for each group of texts that asks all of them, in the order of the texts",
     () =>
       Effect.gen(function* () {
         const { requests } = decides((judgment, index) => {
-          const first = judgment === "lasting" ? 0.9 : 0.2;
+          const first = judgment === "private" ? 0.9 : 0.2;
           return index === 0 ? first : first - 0.1;
         });
-        const rows = yield* measureTexts(["a", "b", "c"], 2);
+        const rows = yield* measureTexts(
+          ["private", "ownNote"],
+          ["a", "b", "c"],
+          2
+        );
         expect(rows).toEqual([
-          { probabilities: { lasting: 0.9, private: 0.2 } },
-          { probabilities: { lasting: 0.8, private: 0.1 } },
-          { probabilities: { lasting: 0.9, private: 0.2 } },
+          { probabilities: { ownNote: 0.2, private: 0.9 } },
+          { probabilities: { ownNote: 0.1, private: 0.8 } },
+          { probabilities: { ownNote: 0.2, private: 0.9 } },
         ]);
-        // Two groups ("a" and "b" together, "c" alone) and two judgments: four
-        // requests, each about one judgment, with a question for each text of its group.
+        // Two groups ("a" and "b" together, "c" alone), each one request that
+        // asks both judgments about each of its texts.
         expect(
           Arr.sort(
             Arr.map(requests(), (request) =>
@@ -38,13 +42,27 @@ describe("measuring the judgments", () => {
             ),
             Order.Number
           )
-        ).toEqual([1, 1, 2, 2]);
+        ).toEqual([2, 4]);
       }).pipe(Effect.provide(GatewayTest))
+  );
+
+  it.effect("asks one text at a time when each group is one text", () =>
+    Effect.gen(function* () {
+      const { requests } = decides(() => 0.6);
+      expect(yield* measureTexts(["lasting"], ["a", "b"], 1)).toEqual([
+        { probabilities: { lasting: 0.6 } },
+        { probabilities: { lasting: 0.6 } },
+      ]);
+      expect(Arr.map(requests(), (request) => request.state)).toEqual([
+        [{ text: "a", type: "text" }],
+        [{ text: "b", type: "text" }],
+      ]);
+    }).pipe(Effect.provide(GatewayTest))
   );
 
   it.effect("asks nothing about no text", () =>
     Effect.gen(function* () {
-      expect(yield* measureTexts([], 1)).toEqual([]);
+      expect(yield* measureTexts(["lasting"], [], 1)).toEqual([]);
       expect(provider.decisionModel).not.toHaveBeenCalled();
     }).pipe(Effect.provide(GatewayTest))
   );
@@ -63,7 +81,9 @@ describe("measuring the judgments", () => {
             url: "https://ai-gateway.convex.dev/alpha/decisions",
           })
         );
-        expect(yield* measureTexts(["Kelas 12", "Terima kasih"], 2)).toEqual([
+        expect(
+          yield* measureTexts(["lasting"], ["Kelas 12", "Terima kasih"], 2)
+        ).toEqual([
           {
             failure: {
               reason: "invalid",
@@ -94,7 +114,7 @@ describe("measuring the judgments", () => {
             url: "https://ai-gateway.convex.dev/alpha/decisions",
           })
         );
-        expect(yield* measureTexts(["Kelas 12"], 1)).toEqual([
+        expect(yield* measureTexts(["lasting"], ["Kelas 12"], 1)).toEqual([
           { failure: { reason: "network" } },
         ]);
       }).pipe(Effect.provide(GatewayTest))
@@ -125,9 +145,9 @@ describe("measuring the judgments", () => {
                 }),
         })
       );
-      expect(yield* measureTexts(["a", "b", "c"], 2)).toEqual([
-        { probabilities: { lasting: 0.7, private: 0.7 } },
-        { probabilities: { lasting: 0.7, private: 0.7 } },
+      expect(yield* measureTexts(["lasting"], ["a", "b", "c"], 2)).toEqual([
+        { probabilities: { lasting: 0.7 } },
+        { probabilities: { lasting: 0.7 } },
         { failure: { reason: "unavailable", status: 503 } },
       ]);
     }).pipe(Effect.provide(GatewayTest))

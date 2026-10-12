@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Record as Rec, Schema } from "effect";
 
 /**
  * One question Nina asks about a learner's words, as data. `type` is the kind
@@ -16,10 +16,14 @@ const Judgment = Schema.Struct({
 /**
  * Every judgment, by name. Adding a judgment is adding an entry here.
  *
- * The thresholds come from a labelled set of messages in many languages and
- * scripts, measured with the `judgment:measure` command, not from taste (ADR
- * 0022). The starting instructions were measured on 12 October 2026 on 15
- * messages in seven languages.
+ * `lasting` is asked about a whole message. `ownNote` and `private` are asked
+ * about a note, the sentence the capture model proposes with the words of the
+ * learner it quotes (`judgment/ask`, `noteText`). The thresholds come from a
+ * labelled set of messages and notes in many languages and scripts, measured
+ * with the `judgment:measure` command, not from taste (ADR 0022). The starting
+ * instructions of `lasting` and `private` were measured on 12 October 2026 on
+ * 15 messages in seven languages, and those of `ownNote` have not been
+ * measured yet.
  */
 export const judgments = {
   // Whether the capture model runs for a message.
@@ -29,7 +33,14 @@ export const judgments = {
     threshold: 0.5,
     type: "boolean",
   },
-  // Whether a saved sentence and its quote hold something private.
+  // Whether a saved sentence is the learner's own note, kept when it is.
+  ownNote: {
+    instructions:
+      "The note is a fact the learner could jot down for themself, in the language of the quote, short as notes are. It does not talk about the learner from the outside, as a third person would.",
+    threshold: 0.5,
+    type: "boolean",
+  },
+  // Whether a saved sentence and its quote hold something private, dropped when they do.
   private: {
     instructions:
       "The text contains contact details, a home address, an identity or account number, a password, or information about health, religion, ethnicity, political views or money.",
@@ -38,5 +49,6 @@ export const judgments = {
   },
 } satisfies Record<string, typeof Judgment.Type>;
 
-/** The name of a judgment. */
-export type JudgmentName = keyof typeof judgments;
+/** The name of a judgment, as a schema for the contracts that name one. */
+export const JudgmentName = Schema.Literals(Rec.keys(judgments));
+export type JudgmentName = typeof JudgmentName.Type;

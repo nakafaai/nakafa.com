@@ -1,9 +1,9 @@
 import { Array as Arr, Record as Rec, Schema, String as Str } from "effect";
 
 /**
- * One message of the labelled set as one judgment measured it: its number in
- * the set, the label it should get, and the probability the judgment gave.
- * `languages` and `form` describe the message without quoting it.
+ * One text of the labelled set as one judgment measured it: its number among
+ * the texts of its shape, the label it should get, and the probability the
+ * judgment gave. `languages` and `form` describe the text without quoting it.
  */
 const Point = Schema.Struct({
   form: Schema.optionalKey(Schema.String),
@@ -15,7 +15,7 @@ const Point = Schema.Struct({
 
 export type Point = typeof Point.Type;
 
-/** What kept a message from a measure: the routing facts of a failed request. */
+/** What kept a text from a measure: the routing facts of a failed request. */
 const Failure = Schema.Struct({
   reason: Schema.String,
   status: Schema.optionalKey(Schema.Finite),
@@ -40,14 +40,14 @@ function count(points: readonly Point[], predicate: (point: Point) => boolean) {
   return Arr.length(Arr.filter(points, predicate));
 }
 
-/** Whether a threshold judges a message to be yes: from the threshold on, the threshold included. */
+/** Whether a threshold judges a text to be yes: from the threshold on, the threshold included. */
 function judgedYes(point: Point, threshold: number) {
   return point.probability >= threshold;
 }
 
 /**
- * What a threshold makes of the points. `found` are the messages labelled yes
- * that count as yes and `missed` those that do not; `wrong` are the messages
+ * What a threshold makes of the points. `found` are the texts labelled yes
+ * that count as yes and `missed` those that do not; `wrong` are the texts
  * labelled no that count as yes and `cleared` those that do not.
  */
 export function confusion(points: readonly Point[], threshold: number) {
@@ -70,8 +70,8 @@ export function confusion(points: readonly Point[], threshold: number) {
 
 /**
  * How well a threshold separates the labels: the mean of the share of yes
- * messages it finds and the share of no messages it clears, so that a rare
- * label weighs as much as a common one.
+ * texts it finds and the share of no texts it clears, so that a rare label
+ * weighs as much as a common one.
  */
 export function balance(points: readonly Point[], threshold: number) {
   const { cleared, found, missed, wrong } = confusion(points, threshold);
@@ -96,7 +96,7 @@ export function bestThreshold(points: readonly Point[]) {
   return ties[Math.floor((Arr.length(ties) - 1) / 2)].threshold;
 }
 
-/** The messages a threshold judges wrongly, in the order of the set. */
+/** The texts a threshold judges wrongly, in the order of the set. */
 export function wrongly(points: readonly Point[], threshold: number) {
   return Arr.filter(
     points,
@@ -104,7 +104,7 @@ export function wrongly(points: readonly Point[], threshold: number) {
   );
 }
 
-/** The probabilities by label: for each tenth, how many yes and no messages fall in it. */
+/** The probabilities by label: for each tenth, how many yes and no texts fall in it. */
 export function histogram(points: readonly Point[]) {
   const bucketOf = (point: Point) =>
     Math.min(
@@ -134,7 +134,7 @@ function matrix(points: readonly Point[], threshold: number) {
   ];
 }
 
-/** One line for a message judged wrongly: its number, label, probability, language and form. */
+/** One line for a text judged wrongly: its number, label, probability, language and form. */
 function wrongLine(point: Point) {
   return Arr.join(
     [
@@ -151,19 +151,21 @@ function wrongLine(point: Point) {
 /**
  * The table of one judgment: the probabilities by label, the counts at the
  * threshold the deployment holds, the threshold that separates best with its
- * counts, and the messages the held threshold judges wrongly. A message is
- * named by its number and described by its language and form; it is never
+ * counts, and the texts the held threshold judges wrongly. `noun` names what
+ * the judgment is asked about, a message or a note. A text is named by its
+ * number among those and described by its language and form; it is never
  * quoted.
  */
 export function judgmentTable(
   name: string,
+  noun: string,
   threshold: number,
   points: readonly Point[]
 ) {
   const best = bestThreshold(points);
   return Arr.join(
     [
-      `judgment ${name}: ${count(points, (point) => point.label)} messages labelled yes, ${count(points, (point) => !point.label)} labelled no`,
+      `judgment ${name}: ${count(points, (point) => point.label)} ${noun}s labelled yes, ${count(points, (point) => !point.label)} labelled no`,
       "probability   yes    no",
       ...Arr.map(
         histogram(points),
@@ -174,7 +176,7 @@ export function judgmentTable(
       ...matrix(points, threshold),
       `at the threshold that separates best, ${best.toFixed(2)}:`,
       ...matrix(points, best),
-      `judged wrongly at ${threshold.toFixed(2)} (message, label, probability, language, form):`,
+      `judged wrongly at ${threshold.toFixed(2)} (${noun}, label, probability, language, form):`,
       ...Arr.map(wrongly(points, threshold), wrongLine),
     ],
     "\n"
@@ -192,10 +194,10 @@ function kindOf({ reason, status, type }: Failure) {
   );
 }
 
-/** How many messages each kind of failure kept from the measure, on one line. */
+/** How many texts each kind of failure kept from the measure, on one line. */
 export function failureLine(failures: readonly Failure[]) {
   const kinds = Rec.toEntries(Arr.groupBy(failures, kindOf));
-  return `${Arr.length(failures)} messages failed: ${Arr.join(
+  return `${Arr.length(failures)} texts failed: ${Arr.join(
     Arr.map(kinds, ([kind, group]) => `${kind} (${Arr.length(group)})`),
     ", "
   )}`;

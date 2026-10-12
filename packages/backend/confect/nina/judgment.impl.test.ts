@@ -19,21 +19,22 @@ afterEach(() => {
 });
 
 describe("the measuring of the judgments", () => {
-  it("measures the texts it is given, and reports the thresholds the deployment holds", async () => {
+  it("measures the texts it is given with the judgments it is given, and reports the thresholds the deployment holds for those", async () => {
     const t = createConvexTestWithBetterAuth();
-    decides((judgment) => (judgment === "lasting" ? 0.77 : 0.23));
+    decides((judgment) => (judgment === "private" ? 0.77 : 0.23));
     expect(
       await t.action(measure, {
+        names: ["private", "ownNote"],
         texts: ["Kelas 12", "Terima kasih"],
         together: 1,
       })
     ).toEqual({
       rows: [
-        { probabilities: { lasting: 0.77, private: 0.23 } },
-        { probabilities: { lasting: 0.77, private: 0.23 } },
+        { probabilities: { ownNote: 0.23, private: 0.77 } },
+        { probabilities: { ownNote: 0.23, private: 0.77 } },
       ],
       thresholds: {
-        lasting: judgments.lasting.threshold,
+        ownNote: judgments.ownNote.threshold,
         private: judgments.private.threshold,
       },
     });
@@ -49,7 +50,11 @@ describe("the measuring of the judgments", () => {
       )
     );
     await expect(
-      t.action(measure, { texts: ["Kelas 12"], together: 1 })
+      t.action(measure, {
+        names: ["lasting"],
+        texts: ["Kelas 12"],
+        together: 1,
+      })
     ).rejects.toMatchObject({ data: { _tag: "GatewayConfigurationError" } });
     expect(provider.decisionModel).not.toHaveBeenCalled();
   });

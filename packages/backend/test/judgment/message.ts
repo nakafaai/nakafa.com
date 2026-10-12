@@ -1,35 +1,34 @@
-import { judgments } from "@repo/backend/confect/nina/judgment/catalog";
-import { type Array as Arr, Record as Rec, Schema } from "effect";
+import { type Array as Arr, Schema } from "effect";
 
 /**
- * One short message of a learner, with the answer each judgment should give
- * (`judgment/catalog`: one label for each judgment). `languages` holds the ISO
- * 639 code of its language, or two codes joined by `+` when the message mixes
- * two. `script` is the ISO 15924 code of its script, and `Zyyy` when it has
- * none. `form` names the kind of private data a message holds and is set for
- * a private message only.
+ * One whole message of a learner, with the answer `lasting` should give
+ * (`judgment/catalog`), the only judgment asked about a whole message.
+ * `languages` holds the ISO 639 code of its language, or two codes joined by
+ * `+` when the message mixes two. `script` is the ISO 15924 code of its script,
+ * and `Zyyy` when it has none. `form` names the kind of private data a message
+ * holds, to describe it in a report without quoting it.
  *
  * Every message is invented for this set. None holds a real person's data:
  * numbers, addresses and names are made up.
  */
-const Labelled = Schema.Struct({
-  ...Rec.map(judgments, () => Schema.Boolean),
+const Message = Schema.Struct({
   form: Schema.optionalKey(Schema.NonEmptyString),
   languages: Schema.NonEmptyString,
+  lasting: Schema.Boolean,
   script: Schema.NonEmptyString,
   text: Schema.NonEmptyString,
 });
 
-type Row = typeof Labelled.Type;
+type Row = typeof Message.Type;
 
 /** A message that states something lasting about the learner and holds nothing private. */
 function lasting(languages: string, script: string, text: string): Row {
-  return { languages, lasting: true, private: false, script, text };
+  return { languages, lasting: true, script, text };
 }
 
 /** A message that states nothing lasting, such as a question, a request or thanks, and holds nothing private. */
 function passing(languages: string, script: string, text: string): Row {
-  return { languages, lasting: false, private: false, script, text };
+  return { languages, lasting: false, script, text };
 }
 
 /** A message that holds private data of one form and states nothing lasting. */
@@ -39,7 +38,7 @@ function secret(
   form: string,
   text: string
 ): Row {
-  return { form, languages, lasting: false, private: true, script, text };
+  return { form, languages, lasting: false, script, text };
 }
 
 /** A message that states something lasting and holds private data of one form. */
@@ -49,16 +48,16 @@ function both(
   form: string,
   text: string
 ): Row {
-  return { form, languages, lasting: true, private: true, script, text };
+  return { form, languages, lasting: true, script, text };
 }
 
 /**
- * The labelled set the judgments are measured against (`judgment:measure`):
- * 124 messages in 17 languages and 8 scripts. The number of a message is its
- * position in this list, counted from 1, and it is the only thing the command
- * prints about a message.
+ * The messages `lasting` is measured against (`judgment:measure`): 124 whole
+ * messages in 17 languages and 8 scripts, asked one at a time as the capture
+ * asks. The number of a message is its position in this list, counted from 1,
+ * and it is the only thing the command prints about a message.
  */
-export const labelledSet: Arr.NonEmptyReadonlyArray<Row> = [
+export const messages: Arr.NonEmptyReadonlyArray<Row> = [
   // Something lasting: a grade or level, a goal, how they like to learn, something hard, a dated situation.
   lasting(
     "id",
@@ -211,7 +210,7 @@ export const labelledSet: Arr.NonEmptyReadonlyArray<Row> = [
     "मुझे calculus में limits समझ नहीं आते, यह मेरे लिए hard है।"
   ),
 
-  // Nothing lasting, nothing private: questions, requests, thanks, a message about another person, a long number in a sum, a public link.
+  // Nothing lasting: questions, requests, thanks, a message about another person, a long number in a sum, a public link.
   passing("id", "Latn", "Apa turunan dari x^3 sin x?"),
   passing("id", "Latn", "Tolong jelaskan lagi, aku masih bingung."),
   passing("id", "Latn", "Makasih ya!"),
@@ -264,7 +263,7 @@ export const labelledSet: Arr.NonEmptyReadonlyArray<Row> = [
     "Wie berechne ich the limit of sin(x)/x für x gegen 0?"
   ),
 
-  // Private data of one form each, and nothing lasting.
+  // Private data of one form each, and nothing lasting about the learner.
   secret(
     "id",
     "Latn",
@@ -356,7 +355,7 @@ export const labelledSet: Arr.NonEmptyReadonlyArray<Row> = [
   ),
   secret("ko", "Hang", "identity", "제 주민등록번호는 050505-3123456입니다."),
 
-  // Something lasting that holds private data: both judgments say yes.
+  // Something lasting that also holds private data: a lasting message the capture reads, and a candidate that `private` then drops.
   both(
     "de",
     "Latn",

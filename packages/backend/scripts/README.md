@@ -64,17 +64,25 @@ pnpm --filter @repo/backend judgment:measure --together=3
 ```
 
 This command sets the thresholds of Nina's judgments (`confect/nina/judgment`)
-from a labelled set of messages (`test/judgment/set.ts`), never from taste. It
-sends the set to the deployment its environment configures, the development
-deployment unless it is given `--prod`, with the same credential and variables
-as `customers:verify`. The deployment answers through its internal
-`nina/judgment:measure` action, which asks the decision model about every
-message. For each judgment the command prints the probabilities by label, the
-counts at the threshold the deployment holds, the threshold that separates best,
-and the messages the held threshold judges wrongly. A message is named by its
-number in the set and described by its language and form, and is never
-quoted. `--together=N` sends N messages in one request, as the capture asks
-about up to three candidates together. The command exits with 1 when the
-deployment could not measure a message, and says why. Run it again whenever a
-judgment's instructions or the decision model change, and set the new
-thresholds in `confect/nina/judgment/catalog.ts` from what it prints.
+from a labelled set (`test/judgment/message.ts` and `test/judgment/note.ts`),
+never from taste. It sends the set to the deployment its environment
+configures, the development deployment unless it is given `--prod`, with the
+same credential and variables as `customers:verify`. The deployment answers
+through its internal `nina/judgment:measure` action, which asks the decision
+model about every text. Each judgment is measured on the form of text and the
+grouping that production asks it: `lasting` on a whole message, alone, and
+`ownNote` and `private` on a note, which is the sentence the capture model
+proposes with the words of the learner it quotes (`noteText`), both judgments
+in one request about the notes together. For each judgment the command prints
+the probabilities by label, the counts at the threshold the deployment holds,
+the threshold that separates best, and the texts the held threshold judges
+wrongly. A text is named by its number among the messages or the notes and
+described by its language and form, and is never quoted. `--together=N` sends N
+notes in one request, from 1 to 3, because the capture asks about up to three
+candidates of a turn together; run it with 1 and with 3 and set a threshold
+that holds for both. The command exits with 1 when the deployment could not
+measure a text, and it fails, naming the judgment, when the deployment reports
+no threshold for one or answers a different number of rows than the texts it
+was sent. Run it again whenever a judgment's instructions or the decision model
+change, and set the new thresholds in `confect/nina/judgment/catalog.ts` from
+what it prints.

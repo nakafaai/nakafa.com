@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { judge, probabilities } from "@repo/backend/confect/nina/judgment/ask";
+import {
+  judge,
+  noteText,
+  probabilities,
+} from "@repo/backend/confect/nina/judgment/ask";
 import { judgments } from "@repo/backend/confect/nina/judgment/catalog";
 import { decides, GatewayTest, provider } from "@repo/backend/test/gateway";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { Experimental_DecisionMockModelV4 as DecisionMockModel } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Record as Rec } from "effect";
 
 /** A probability well above every threshold, and one well below. */
 const SURE = 0.99;
@@ -45,7 +49,7 @@ describe("judgment", () => {
       }).pipe(Effect.provide(GatewayTest))
   );
 
-  it.effect.each(["lasting", "private"] as const)(
+  it.effect.each(Rec.keys(judgments))(
     "counts %s as yes from the probability its entry names, that probability included",
     (name) =>
       Effect.gen(function* () {
@@ -96,6 +100,29 @@ describe("judgment", () => {
             type: "boolean",
           },
         });
+      }).pipe(Effect.provide(GatewayTest))
+  );
+
+  it.effect(
+    "asks the judgments of a note about its sentence and its quote in one form, and gives each its own verdict",
+    () =>
+      Effect.gen(function* () {
+        const { requests } = decides((judgment) =>
+          judgment === "ownNote" ? SURE : UNLIKELY
+        );
+        const note = { quote: "aku kelas 12", text: "Kelas 12." };
+        expect(noteText(note)).toBe("Note: Kelas 12.\nQuote: aku kelas 12");
+        const verdicts = yield* judge(["ownNote", "private"], [noteText(note)]);
+        expect(verdicts).toEqual([{ ownNote: true, private: false }]);
+        const [request, ...others] = requests();
+        expect(others).toEqual([]);
+        expect(request?.state).toEqual([
+          { text: "Note: Kelas 12.\nQuote: aku kelas 12", type: "text" },
+        ]);
+        expect(Rec.keys(request?.questions ?? {})).toEqual([
+          "ownNote.0",
+          "private.0",
+        ]);
       }).pipe(Effect.provide(GatewayTest))
   );
 

@@ -1,19 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { callMeasure } from "@repo/backend/scripts/judgment/call";
-import { Effect, Fiber } from "effect";
+import { Array as Arr, Effect, Fiber } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 
 const config = { accessToken: "test-token", url: "https://test.convex.cloud" };
-const texts = ["Kelas 12", "Terima kasih"];
+const names = ["ownNote", "private"] as const;
+const texts = [
+  "Note: Kelas 12\nQuote: Aku kelas 12",
+  "Note: Terima kasih\nQuote: Makasih",
+];
 
 /** What the action answers for those two texts. */
 const measurement = {
   rows: [
-    { probabilities: { lasting: 0.95, private: 0.02 } },
+    { probabilities: { ownNote: 0.95, private: 0.02 } },
     { failure: { reason: "invalid", status: 400 } },
   ],
-  thresholds: { lasting: 0.5, private: 0.5 },
+  thresholds: { ownNote: 0.5, private: 0.5 },
 };
 
 /** The fetch that Effect's client calls in place of the global one. */
@@ -21,7 +25,7 @@ const fetcher = vi.fn<typeof fetch>();
 
 /** Calls the action through the controlled fetch. */
 function call() {
-  return callMeasure(config, texts, 2).pipe(
+  return callMeasure(config, names, texts, 2).pipe(
     Effect.provideService(FetchHttpClient.Fetch, fetcher)
   );
 }
@@ -58,7 +62,7 @@ describe("the call to the measuring action", () => {
               new Response(fetcher.mock.calls[0]?.[1]?.body).json()
           )
         ).toEqual({
-          args: { texts, together: 2 },
+          args: { names, texts, together: 2 },
           format: "json",
           path: "nina/judgment:measure",
         });
@@ -75,6 +79,26 @@ describe("the call to the measuring action", () => {
         message: "Convex did not answer within 60 seconds.",
       });
     })
+  );
+
+  it.effect.each([0, 1, 3])(
+    "refuses an answer of %s rows for two texts, so that no row is matched with the wrong text",
+    (count) =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValue(
+          Response.json({
+            status: "success",
+            value: {
+              ...measurement,
+              rows: Arr.take(Arr.replicate(measurement.rows[0], 3), count),
+            },
+          })
+        );
+        expect(yield* Effect.flip(call())).toMatchObject({
+          _tag: "JudgmentCallError",
+          message: `nina/judgment:measure: the deployment measured ${count} of 2 texts`,
+        });
+      })
   );
 
   it.effect.each([
@@ -112,7 +136,7 @@ describe("the call to the measuring action", () => {
       message: "nina/judgment:measure: HTTP 401",
       response: new Response("unauthorized", { status: 401 }),
     },
-    { message: "", response: new Response("{") },
+    { message: "JSON", response: new Response("{") },
   ])(
     "preserves a transport failure as a typed error: $message",
     ({ message, response }) =>
