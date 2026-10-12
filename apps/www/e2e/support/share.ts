@@ -201,7 +201,9 @@ const summariesTold = (changes: Changes) =>
 export const learnsWhatTurnsCost = (changes: Changes) => {
   const facts = Arr.flatMap(summariesTold(changes), Rec.keys);
 
-  expect(facts).toEqual(expect.arrayContaining(COST_FACTS));
+  expect(facts, "what the owner's page was told of the turns").toEqual(
+    expect.arrayContaining(COST_FACTS)
+  );
 };
 
 /**
@@ -213,9 +215,15 @@ export const learnsWhatTurnsCost = (changes: Changes) => {
 export const learnsOnlyWhereTurnsStand = (changes: Changes) => {
   const summaries = summariesTold(changes);
 
-  expect(summaries.length).toBeGreaterThan(0);
+  expect(
+    summaries.length,
+    "the turns the reader's page was told"
+  ).toBeGreaterThan(0);
   for (const summary of summaries) {
-    expect(Arr.difference(Rec.keys(summary), READER_FACTS)).toEqual([]);
+    expect(
+      Arr.difference(Rec.keys(summary), READER_FACTS),
+      "the facts of a turn that the reader's page was told beyond where it stands"
+    ).toEqual([]);
     expect(summary.usage).toEqual([]);
   }
 };
