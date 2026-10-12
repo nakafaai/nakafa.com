@@ -1,6 +1,8 @@
 import type { OptimisticUpdate } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
+import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import { Option } from "effect";
+import { isTurnWorking } from "@/components/ai/chat/busy";
 
 /**
  * Marks the chat's queued or running turn as cancelled, so the stop press
@@ -16,7 +18,7 @@ export function optimisticCancel(
       return;
     }
     const turn = current.value.turn;
-    if (turn.state.status !== "running" && turn.state.status !== "queued") {
+    if (!isTurnWorking(turn.state.status)) {
       return;
     }
     store.setQuery(
@@ -28,4 +30,26 @@ export function optimisticCancel(
       })
     );
   };
+}
+
+/**
+ * The failure to show for a stop the server did not take. It belongs to the
+ * turn that was running when the learner pressed stop, so it shows only while
+ * that turn is still working. A turn that has settled, or a new turn from a
+ * send or a retry, starts without it. `order` is the turn the press was for,
+ * which is none for a chat that had not loaded its turn yet.
+ */
+export function readStopFailure<Failure>(
+  stop: {
+    readonly failure: Failure;
+    readonly order: number | undefined;
+  } | null,
+  turn: Pick<typeof NinaTurnSummary.Type, "order" | "state"> | null
+) {
+  if (!stop || turn?.order !== stop.order) {
+    return null;
+  }
+  return turn === null || isTurnWorking(turn.state.status)
+    ? stop.failure
+    : null;
 }

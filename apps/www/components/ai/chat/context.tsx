@@ -18,7 +18,7 @@ import {
 } from "react";
 import { readChatAccess } from "@/components/ai/chat/access";
 import { isChatBusy } from "@/components/ai/chat/busy";
-import { optimisticCancel } from "@/components/ai/chat/cancel";
+import { optimisticCancel, readStopFailure } from "@/components/ai/chat/cancel";
 import { draftMessage } from "@/components/ai/chat/messages";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
@@ -59,9 +59,10 @@ function useChatState(chatId: Id<"chats">) {
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
   const [draft, showDraft] = useOptimistic<NinaMessage | null>(null);
-  const [cancelError, setCancelError] = useState<
-    CancelError | NinaConnectionError | null
-  >(null);
+  const [stopFailure, setStopFailure] = useState<{
+    failure: CancelError | NinaConnectionError;
+    order: number | undefined;
+  } | null>(null);
   const setText = useAi((state) => state.setText);
   const opening = useAi(
     (state) => state.openingChat?.receipt.chatId === chatId
@@ -92,7 +93,7 @@ function useChatState(chatId: Id<"chats">) {
     chatId,
     isPending,
     optimisticallyCancel,
-    setCancelError,
+    setStopFailure,
     setText,
     showDraft,
     startTransition,
@@ -110,29 +111,35 @@ function useChatState(chatId: Id<"chats">) {
       if (now.isPending) {
         return;
       }
-      now.setCancelError(null);
+      now.setStopFailure(null);
+      const stoppedOrder = now.turn?.order;
       const cancelTurn = now.cancelChat.withOptimisticUpdate(
         optimisticCancel(DateTime.toEpochMillis(DateTime.nowUnsafe()))
       );
+      // The stop starts before the transition, so Convex shows the cancelled
+      // turn at once: an update made inside a transition waits for its end.
+      const stopping = Effect.runPromise(
+        Effect.tryPromise({
+          try: () => cancelTurn({ chatId: now.chatId }),
+          catch: () =>
+            new NinaConnectionError({
+              code: "NINA_CONNECTION_FAILED",
+              message: "Nina cancellation could not be confirmed.",
+            }),
+        }).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.matchEffect({
+            onFailure: (failure) =>
+              Effect.sync(() =>
+                now.setStopFailure({ failure, order: stoppedOrder })
+              ),
+            onSuccess: () => Effect.void,
+          })
+        )
+      );
       now.startTransition(() => {
         now.optimisticallyCancel(true);
-        return Effect.runPromise(
-          Effect.tryPromise({
-            try: () => cancelTurn({ chatId: now.chatId }),
-            catch: () =>
-              new NinaConnectionError({
-                code: "NINA_CONNECTION_FAILED",
-                message: "Nina cancellation could not be confirmed.",
-              }),
-          }).pipe(
-            Effect.flatMap(Effect.fromResult),
-            Effect.matchEffect({
-              onFailure: (failure) =>
-                Effect.sync(() => now.setCancelError(failure)),
-              onSuccess: () => Effect.void,
-            })
-          )
-        );
+        return stopping;
       });
     },
     /** Sends the same prompt again, or the latest one when no turn is named. */
@@ -142,12 +149,10 @@ function useChatState(chatId: Id<"chats">) {
       if (target === undefined || !now.chat || now.busy || now.isPending) {
         return;
       }
+      // The retry starts before the transition, for the same reason as a stop.
+      const retrying = now.submission.retry(target, now.chatId);
       now.startTransition(() =>
-        Effect.runPromise(
-          Effect.asVoid(
-            Effect.promise(() => now.submission.retry(target, now.chatId))
-          )
-        )
+        Effect.runPromise(Effect.asVoid(Effect.promise(() => retrying)))
       );
     },
     /**
@@ -166,7 +171,6 @@ function useChatState(chatId: Id<"chats">) {
       if (!chat || now.busy || now.isPending) {
         return false;
       }
-      now.setCancelError(null);
       now.setText((previous) =>
         previous.trim() === prompt.text.trim() ? "" : previous
       );
@@ -205,7 +209,7 @@ function useChatState(chatId: Id<"chats">) {
     chat,
     chatId,
     draft,
-    error: submission.error ?? cancelError,
+    error: submission.error ?? readStopFailure(stopFailure, turn),
     isLoading: loading,
     isPending,
     owner,
