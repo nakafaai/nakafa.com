@@ -106,8 +106,8 @@ export function NinaInput({
   }
 
   /**
-   * Says why a pick was not attached in full: one notice for the pick, with
-   * each reason followed by the files it dropped. Two notices would stack, and
+   * Says why a pick was not attached in full: one notice for the pick, naming
+   * the files it dropped and the reason of each. Two notices would stack, and
    * the one in front would hide the other.
    */
   function handleFileErrors(

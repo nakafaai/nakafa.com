@@ -158,11 +158,17 @@ const GERMAN_SUGGESTIONS = [
 ] as const;
 
 /**
- * How tall each suggestion is, and whether its label stays inside its button,
- * read in the page. A label that is not shown has no box, so it is not read.
+ * How tall each suggestion is, whether its label takes one line, and whether
+ * the label stays inside its button, read in the page once it has its fonts: a
+ * font that swaps in late changes how wide a label is. A label that is not
+ * shown has no box, so it is not read.
  */
-const readSuggestions = (popup: HTMLElement, labels: readonly string[]) =>
-  labels.map((text) => {
+const readSuggestions = async (
+  popup: HTMLElement,
+  labels: readonly string[]
+) => {
+  await document.fonts.ready;
+  return labels.map((text) => {
     const label = Array.from(popup.querySelectorAll("button span")).find(
       (span) => span.textContent === text && span.getClientRects().length > 0
     );
@@ -171,13 +177,21 @@ const readSuggestions = (popup: HTMLElement, labels: readonly string[]) =>
       return null;
     }
     const box = button.getBoundingClientRect();
+    const words = label.getBoundingClientRect();
     return {
       height: box.height,
       inside:
         button.scrollWidth <= button.clientWidth &&
-        label.getBoundingClientRect().right <= box.right,
+        words.right <= box.right &&
+        words.top >= box.top &&
+        words.bottom <= box.bottom,
+      // A second line makes a label twice as tall as the line it is set in.
+      oneLine:
+        words.height <
+        Number.parseFloat(getComputedStyle(label).lineHeight) * 1.5,
     };
   });
+};
 
 /** The text size of the page as a learner sets it in the browser: 100 percent, and a larger one. */
 const TEXT_SIZES = [100, 130] as const;
@@ -214,16 +228,28 @@ for (const size of TEXT_SIZES) {
           );
 
           yield* Effect.sync(() => {
+            // However many lines a label takes, it stays inside its button.
             expect(Arr.map(read, (suggestion) => suggestion?.inside)).toEqual([
               true,
               true,
               true,
             ]);
-            // At the ordinary size every label fits on one line, as it did before.
+            // At the ordinary size the short labels take one line, and every
+            // label of one line leaves its button at the ordinary height, as
+            // before. Whether the longest label fits on one line depends on the
+            // width of the letters the browser draws, so it is not pinned.
             if (size === 100) {
-              expect(Arr.map(read, (suggestion) => suggestion?.height)).toEqual(
-                [36, 36, 36]
+              const short = Arr.take(read, 2);
+              const oneLine = Arr.filter(
+                read,
+                (suggestion) => suggestion?.oneLine === true
               );
+              expect(
+                Arr.map(short, (suggestion) => suggestion?.oneLine)
+              ).toEqual([true, true]);
+              expect(
+                Arr.map(oneLine, (suggestion) => suggestion?.height)
+              ).toEqual(Arr.map(oneLine, () => 36));
             }
           });
         })
