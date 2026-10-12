@@ -2,8 +2,10 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Schema } from "effect";
 
 /**
- * The most rows one call may read, far below the transaction limits. The
- * operator may ask for fewer rows when a call is refused.
+ * The most rows one call may ask for. It is a ceiling, not a size known to
+ * work: nobody has run this function on a deployment yet. The operator starts
+ * with a small page and raises it while calls succeed. A call that a deployment
+ * refuses writes nothing, and the operator repeats it with fewer rows.
  */
 export const PAGE_LIMIT = 100;
 

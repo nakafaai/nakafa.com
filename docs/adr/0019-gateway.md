@@ -33,7 +33,7 @@ path `convexGateway` uses.
 
 | Probe | Result |
 | --- | --- |
-| `GET /models` | 200. `google/gemini-3.5-flash-lite` and `google/gemini-3.7-flash` are listed, so stored model keys and ids stay as they are. |
+| `GET /models` | 200. `google/gemini-3.5-flash-lite` and `google/gemini-3.7-flash` are listed. |
 | Plain chat on `google/gemini-3.5-flash-lite` | 200 in 722 ms. `usage.cost` holds the US dollar cost of the call. |
 | Plain chat on `google/gemini-3.7-flash` | 200 in 2312 ms. |
 | `reasoning_effort: "high"` on `gemini-3.7-flash` | 200. 357 reasoning tokens, and the reasoning summary comes back in `message.reasoning` without asking for it. `"low"` gives 189 reasoning tokens, no setting gives 377. |

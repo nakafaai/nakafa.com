@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { NinaTurn } from "@repo/backend/confect/nina/turns.spec";
 import {
   PAGE_LIMIT,
   type UnsetTable,
@@ -19,9 +20,10 @@ type Table = typeof UnsetTable.Type;
 
 /**
  * The credit transactions the learner has besides the hold of the active
- * turn, in creation order. The first three are written as the code before
- * 10 October 2026 wrote them. The last one notes a `modelId` that is not a
- * model key, so it is not the key.
+ * turn, in creation order. The first three hold the key as the code before
+ * 10 October 2026 wrote it, and the second also notes a boolean and a null,
+ * the other kinds of value that a note can hold. The last one notes a
+ * `modelId` that is not a model key, so it is not the key.
  */
 const LEDGER = [
   {
@@ -35,7 +37,9 @@ const LEDGER = [
     balanceAfter: 5,
     metadata: {
       chatId: "chat",
+      flagged: true,
       modelId: "nakafa-pro",
+      note: null,
       phase: "complete",
       turnId: "turn",
     },
@@ -70,8 +74,11 @@ const LEDGER = [
  * A learner whose chat holds seven turns and whose ledger holds seven credit
  * transactions, stored as the code before 10 October 2026 stored them. The
  * turns at positions 0, 1, 3, 5 and 6 hold the key, in all three phases: the
- * active turn at 0 is the one the fixture queues. The ledger rows at 1, 2 and
- * 3 hold it. One settled turn carries every optional field a turn can have.
+ * active turn at 0 is the one the fixture queues, with its stop requested.
+ * Between them these turns hold every key that a turn can hold (the first test
+ * checks that against the schema of the table), the reason of a failed turn,
+ * the optional counts of a usage entry and a partial token count. The ledger
+ * rows at 1, 2 and 3 hold the key.
  */
 async function seeded() {
   const nina = await createNinaTest({ now: NOW });
@@ -87,27 +94,51 @@ async function seeded() {
   });
   const complete = { finishedAt: NOW, status: "complete" } as const;
   await t.mutation(async (ctx) => {
-    await ctx.db.patch("ninaTurns", turnId, { modelId: "nakafa-lite" });
+    const active = await ctx.db.get("ninaTurns", turnId);
+    if (active?.phase !== "active") {
+      return Promise.reject(new Error("Fixture turn is not active"));
+    }
+    const { fingerprint, page, requestId, transactionId } = active;
+    const { snapshot, transition } = page.nina;
+    await ctx.db.patch("ninaTurns", turnId, {
+      cancelRequestedAt: NOW,
+      modelId: "nakafa-lite",
+      // Any credit transaction will do as the grant that the hold drew from.
+      planCreditGrantId: transactionId,
+      snapshot,
+      state: { startedAt: NOW, status: "running" },
+      transition,
+    });
     await ctx.db.insert("ninaTurns", {
       ...facts(1),
       credits: 5,
+      fingerprint,
       modelId: "nakafa-pro",
+      page,
       phase: "settled",
       promptedAt: NOW,
       remembered: 1,
+      requestId,
+      snapshot,
       state: complete,
       suggestions: ["How does this relate to continuity?"],
       tokens: { input: 12, output: 4, total: 16 },
+      transactionId,
+      transition,
       usage: [
         {
           agent: "nina",
+          cached: 8,
           calls: 1,
+          cost: 0.0003,
           input: 12,
           model: "google/gemini-3.5-flash-lite",
           output: 4,
           provider: "gateway",
+          reasoning: 2,
         },
       ],
+      user: { role: "student" },
     });
     await ctx.db.insert("ninaTurns", {
       ...facts(2),
@@ -120,6 +151,7 @@ async function seeded() {
       phase: "settled",
       retryOf: 1,
       state: complete,
+      tokens: { total: 9 },
     });
     await ctx.db.insert("ninaTurns", {
       ...facts(4),
@@ -136,7 +168,7 @@ async function seeded() {
       ...facts(6),
       modelId: "nakafa-lite",
       phase: "settled",
-      state: complete,
+      state: { finishedAt: NOW, reason: "provider-busy", status: "failed" },
     });
     for (const row of LEDGER) {
       await ctx.db.insert("creditTransactions", { userId, ...row });
@@ -204,6 +236,18 @@ describe("nina/unset", { timeout: 15_000 }, () => {
       "nakafa-pro",
       "nakafa-lite",
     ]);
+    // Between them the turns that hold the key hold every key that a turn can
+    // hold, so the comparison below shows that the rewrite keeps each of them.
+    const held = Arr.filter(before.turns, Predicate.hasProperty("modelId"));
+    const schemaKeys: readonly string[] = Arr.dedupe(
+      Arr.flatMap(NinaTurn.members, (member) => Struct.keys(member.fields))
+    );
+    expect(
+      Arr.difference(
+        schemaKeys,
+        Arr.flatMap(held, (turn) => Struct.keys(turn))
+      )
+    ).toEqual([]);
 
     expect(await call(nina, "ninaTurns", null, 10)).toMatchObject({
       changed: 5,
@@ -237,7 +281,13 @@ describe("nina/unset", { timeout: 15_000 }, () => {
     expect(Arr.map(after.ledger, (row) => row.metadata)).toEqual([
       { phase: "reserved" },
       { phase: "reserved" },
-      { chatId: "chat", phase: "complete", turnId: "turn" },
+      {
+        chatId: "chat",
+        flagged: true,
+        note: null,
+        phase: "complete",
+        turnId: "turn",
+      },
       { reservationId: "turn" },
       { "previous-balance": 0, "previous-reset-at": 1, "reset-at": 2 },
       undefined,
