@@ -4,15 +4,8 @@ import {
 } from "@repo/backend/confect/gateway/model";
 import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
-import {
-  Array as Arr,
-  Match,
-  Option,
-  Predicate,
-  Result,
-  Schema,
-  String as Str,
-} from "effect";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
+import { Array as Arr, Duration, Match, Option, Result, Schema } from "effect";
 
 /**
  * The part of a stored turn that the release gate reads, as
@@ -22,6 +15,7 @@ import {
  * decodes it here, so the two cannot drift apart unseen.
  */
 export const GateTurn = Schema.Struct({
+  order: Schema.Finite,
   promptedAt: Schema.optionalKey(Schema.Finite),
   state: Schema.Struct({
     finishedAt: Schema.optionalKey(Schema.Finite),
@@ -58,7 +52,13 @@ export type StoredMessage = typeof StoredMessage.Type;
 type Usage = typeof NinaUsageTotal.Type;
 
 /** The agent that writes the chat answer, step by step. */
-const CHAT_AGENT = "nina" satisfies Usage["agent"];
+export const CHAT_AGENT = "nina" satisfies Usage["agent"];
+
+/** The agent that names a chat after its first turn. */
+const TITLE_AGENT = "title" satisfies Usage["agent"];
+
+/** The order of the turn that opens a chat, which is the one that names it. */
+const FIRST_TURN = 0;
 
 /** Steps the chat agent must take before a later step can read what an earlier one cached. */
 const MINIMUM_CHAT_STEPS = 2;
@@ -86,16 +86,25 @@ export function chatSteps(messages: readonly StoredMessage[]) {
     })
   );
 }
-type ChatStep = ReturnType<typeof chatSteps>[number];
+export type ChatStep = ReturnType<typeof chatSteps>[number];
 
 /** Whether the turn is still queued or running, so that it can change by itself. */
 export function isOpen({ state }: GateTurn) {
   return state.status === "queued" || state.status === "running";
 }
 
-/** Whether the follow-up work after the answer has saved its suggestions. */
-export function hasFollowUp({ suggestions }: GateTurn) {
-  return suggestions !== undefined;
+/**
+ * Whether the follow-up work after the answer is done: the suggestions are
+ * saved and, for the turn that opens a chat, the call that names the chat has
+ * recorded its usage. The title call starts after the suggestions are saved, so
+ * the suggestions alone do not mean that it ran.
+ */
+export function hasFollowUp({ order, suggestions, usage }: GateTurn) {
+  return (
+    suggestions !== undefined &&
+    (order !== FIRST_TURN ||
+      Arr.some(usage, (row) => row.agent === TITLE_AGENT))
+  );
 }
 
 /**
@@ -118,21 +127,16 @@ function capOf(agent: Usage["agent"]) {
       () => purposes.background.maxOutputTokens
     ),
     Match.when("suggestions", () => purposes.suggestion.maxOutputTokens),
-    Match.when("title", () => purposes.presentation.maxOutputTokens),
+    Match.when(TITLE_AGENT, () => purposes.presentation.maxOutputTokens),
     Match.exhaustive
   );
 }
 
 /** Milliseconds from the admission of the turn to its end, when both are recorded. */
-function elapsedMillis({ promptedAt, state }: GateTurn) {
+export function elapsedMillis({ promptedAt, state }: GateTurn) {
   return promptedAt === undefined || state.finishedAt === undefined
     ? Option.none()
     : Option.some(state.finishedAt - promptedAt);
-}
-
-/** The sum of one number over rows. */
-function sum<Row>(rows: readonly Row[], pick: (row: Row) => number) {
-  return Arr.reduce(rows, 0, (total, row) => total + pick(row));
 }
 
 /**
@@ -195,8 +199,10 @@ function judgeChatCaps(steps: readonly ChatStep[]) {
 }
 
 /**
- * No other agent wrote as much as its steps would write at their cap. Their
- * steps are not in the journal, and the usage record sums them.
+ * No other agent wrote as many tokens as its steps would write at their cap.
+ * Their steps are not in the journal and the usage record sums them, so a row of
+ * one call is judged exactly, and a row of several calls only by its sum: one
+ * step at its cap among shorter ones passes.
  */
 function judgeCaps({ usage }: GateTurn) {
   return Arr.map(
@@ -210,9 +216,9 @@ function judgeCaps({ usage }: GateTurn) {
   );
 }
 
-/** The turn ended inside the total budget of the chat call, counted from its admission. */
+/** The turn ended inside the deadline that the product gives a turn, counted from its admission. */
 function judgeDeadline(turn: GateTurn) {
-  const limit = purposes.chat.timeout.totalMs;
+  const limit = Duration.toMillis(TURN_DEADLINE);
   return Option.match(elapsedMillis(turn), {
     onNone: () => ["The turn has no recorded start and end to measure."],
     onSome: (elapsed) =>
@@ -238,135 +244,4 @@ export function judgeTurn(turn: GateTurn, steps: readonly ChatStep[]) {
     judgeCaps(turn),
     judgeDeadline(turn),
   ]);
-}
-
-/** One printed line of the table: an agent's row of the usage record, or the total. */
-const Line = Schema.Struct({
-  agent: Schema.String,
-  cached: Schema.Finite,
-  cost: Schema.UndefinedOr(Schema.Finite),
-  input: Schema.Finite,
-  output: Schema.Finite,
-  reasoning: Schema.Finite,
-  seconds: Schema.UndefinedOr(Schema.Finite),
-  steps: Schema.Finite,
-});
-type Line = typeof Line.Type;
-
-/** The table's columns: a header, a side to align on, and the text of each line. */
-const COLUMNS = [
-  { cell: (line: Line) => line.agent, header: "agent", left: true },
-  { cell: (line: Line) => String(line.steps), header: "steps", left: false },
-  { cell: (line: Line) => String(line.input), header: "input", left: false },
-  { cell: (line: Line) => String(line.cached), header: "cached", left: false },
-  { cell: (line: Line) => String(line.output), header: "output", left: false },
-  {
-    cell: (line: Line) => String(line.reasoning),
-    header: "reasoning",
-    left: false,
-  },
-  {
-    cell: (line: Line) =>
-      line.cost === undefined ? "-" : line.cost.toFixed(6),
-    header: "cost",
-    left: false,
-  },
-  {
-    cell: (line: Line) =>
-      line.seconds === undefined ? "" : line.seconds.toFixed(1),
-    header: "seconds",
-    left: false,
-  },
-];
-
-/** The line of one agent's row. A row stored before October 2026 may lack cached or reasoning tokens. */
-function lineOf(row: Usage): Line {
-  return {
-    agent: row.agent,
-    cached: row.cached ?? 0,
-    cost: row.cost,
-    input: row.input,
-    output: row.output,
-    reasoning: row.reasoning ?? 0,
-    seconds: undefined,
-    steps: row.calls,
-  };
-}
-
-/** The line that adds up every row and holds the time of the whole turn. */
-function totalOf(turn: GateTurn, lines: readonly Line[]): Line {
-  const costs = Arr.filter(
-    Arr.map(lines, (line) => line.cost),
-    Predicate.isNotUndefined
-  );
-  return {
-    agent: "total",
-    cached: sum(lines, (line) => line.cached),
-    cost: Arr.isReadonlyArrayNonEmpty(costs)
-      ? sum(costs, (cost) => cost)
-      : undefined,
-    input: sum(lines, (line) => line.input),
-    output: sum(lines, (line) => line.output),
-    reasoning: sum(lines, (line) => line.reasoning),
-    seconds: Option.getOrUndefined(
-      Option.map(elapsedMillis(turn), (elapsed) => elapsed / 1000)
-    ),
-    steps: sum(lines, (line) => line.steps),
-  };
-}
-
-/**
- * The line under the table that shows the cache step by step: the input tokens
- * of each chat step that the provider read from its cache. A first step that
- * already read the cache means an earlier turn with the same prompt prefix
- * warmed it, so the later reads do not prove that this turn wrote it.
- */
-function describeSteps(steps: readonly ChatStep[]) {
-  if (Arr.isReadonlyArrayEmpty(steps)) {
-    return `The Agent journal holds no step of the ${CHAT_AGENT} agent.`;
-  }
-  const line = `Cached of input tokens, by ${CHAT_AGENT} step: ${Arr.join(
-    Arr.map(steps, (step) => `${step.cached} of ${step.input}`),
-    ", "
-  )}.`;
-  return Arr.some(Arr.take(steps, 1), (step) => step.cached > 0)
-    ? `${line} The first step already read the cache, so a turn before this one with the same prompt prefix warmed it. Run the gate again after five minutes to see the turn's own cache.`
-    : line;
-}
-
-/**
- * The table of a stored turn: steps, input, cached, output, reasoning, cost
- * and seconds, one row for each agent of the usage record and a total, with a
- * line under it for the cache of each chat step. Cost is in US dollars. It
- * holds no message text.
- */
-export function renderTable(turn: GateTurn, steps: readonly ChatStep[]) {
-  const lines = Arr.map(turn.usage, lineOf);
-  const shown = Arr.append(lines, totalOf(turn, lines));
-  const sized = Arr.map(COLUMNS, (column) => ({
-    column,
-    width: Arr.reduce(shown, column.header.length, (width, line) =>
-      Math.max(width, column.cell(line).length)
-    ),
-  }));
-  const format = (cell: (column: (typeof COLUMNS)[number]) => string) =>
-    Str.trimEnd(
-      Arr.join(
-        Arr.map(sized, ({ column, width }) =>
-          column.left
-            ? Str.padEnd(width)(cell(column))
-            : Str.padStart(width)(cell(column))
-        ),
-        "  "
-      )
-    );
-  return Arr.join(
-    [
-      format((column) => column.header),
-      ...Arr.map(shown, (line) => format((column) => column.cell(line))),
-      "",
-      describeSteps(steps),
-    ],
-    "\n"
-  );
 }

@@ -2,10 +2,7 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
-import { ConvexCli } from "@repo/backend/scripts/nina/convex";
 import {
-  Deployment,
-  DeploymentLive,
   makeDeployment,
   type Question,
 } from "@repo/backend/scripts/nina/deployment";
@@ -15,11 +12,8 @@ import {
 } from "@repo/backend/scripts/nina/error";
 import {
   Array as Arr,
-  ConfigProvider,
   Crypto,
-  Duration,
   Effect,
-  FileSystem,
   MutableList,
   Option,
   Schema,
@@ -96,7 +90,7 @@ const RemovalArguments = Schema.fromJsonString(
 
 describe("the deployment of the release gate over a runner", () => {
   it.effect(
-    "signs a learner in through the account, profile and session rows",
+    "signs a learner in through the account, session and profile rows",
     () =>
       Effect.gen(function* () {
         const { run } = scripted({
@@ -113,31 +107,48 @@ describe("the deployment of the release gate over a runner", () => {
       }).pipe(Effect.provide(nodeServicesLayer))
   );
 
-  it.effect("keeps the failure of a command as it is", () =>
-    Effect.gen(function* () {
-      const failure = gateError("Learner profile failed: no such function");
-      const { run } = scripted({
-        "Learner account": Effect.succeed('{"_creationTime":1,"_id":"user-1"}'),
-        "Learner profile": Effect.fail(failure),
-      });
-      const deployment = yield* deploymentOver(run);
+  it.effect(
+    "keeps the failure of a command as it is, and removes the rows written before it",
+    () =>
+      Effect.gen(function* () {
+        const failure = gateError("Learner profile failed: no such function");
+        const { calls, run } = scripted({
+          "Learner account": Effect.succeed(
+            '{"_creationTime":1,"_id":"user-1"}'
+          ),
+          "Learner profile": Effect.fail(failure),
+          "Learner session": Effect.succeed(
+            '{"_creationTime":2,"_id":"session-1"}'
+          ),
+        });
+        const deployment = yield* deploymentOver(run);
 
-      expect(yield* deployment.signIn.pipe(Effect.flip)).toBe(failure);
-    }).pipe(Effect.provide(nodeServicesLayer))
+        expect(yield* deployment.signIn.pipe(Effect.flip)).toBe(failure);
+        expect(Arr.map(MutableList.toArray(calls), ([step]) => step)).toEqual([
+          "Learner account",
+          "Learner session",
+          "Learner profile",
+          "Learner session removal",
+          "Learner account removal",
+        ]);
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
-  it.effect("names the step of an answer it cannot read", () =>
-    Effect.gen(function* () {
-      const { run } = scripted({
-        "Learner account": Effect.succeed("Uncaught ConvexError"),
-      });
-      const deployment = yield* deploymentOver(run);
+  it.effect(
+    "names the step of an answer it cannot read, and not the answer",
+    () =>
+      Effect.gen(function* () {
+        const { run } = scripted({
+          "Learner account": Effect.succeed("Uncaught ConvexError token-9f2c"),
+        });
+        const deployment = yield* deploymentOver(run);
 
-      const error = yield* deployment.signIn.pipe(Effect.flip);
+        const error = yield* deployment.signIn.pipe(Effect.flip);
 
-      expect(error._tag).toBe("NinaGateError");
-      expect(error.message).toMatch(ACCOUNT_STEP);
-    }).pipe(Effect.provide(nodeServicesLayer))
+        expect(error._tag).toBe("NinaGateError");
+        expect(error.message).toMatch(ACCOUNT_STEP);
+        expect(error.message).not.toContain("token-9f2c");
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.effect("asks a question as the learner and reads the receipt", () =>
@@ -246,17 +257,21 @@ describe("the deployment of the release gate over a runner", () => {
     }).pipe(Effect.provide(nodeServicesLayer))
   );
 
-  it.effect("names the step when the journal cannot be read", () =>
-    Effect.gen(function* () {
-      const { run } = scripted({
-        "Agent journal": Effect.succeed("Uncaught ConvexError"),
-      });
-      const deployment = yield* deploymentOver(run);
+  it.effect.each([
+    ["is not JSON", "Uncaught ConvexError the answer text"],
+    ["has another shape", '{"page":[{"message":"the answer text"}]}'],
+  ] as const)(
+    "names the step when the journal %s, and never quotes it",
+    ([, printed]) =>
+      Effect.gen(function* () {
+        const { run } = scripted({ "Agent journal": Effect.succeed(printed) });
+        const deployment = yield* deploymentOver(run);
 
-      const error = yield* deployment.journal("thread-1").pipe(Effect.flip);
+        const error = yield* deployment.journal("thread-1").pipe(Effect.flip);
 
-      expect(error.message).toMatch(JOURNAL_STEP);
-    }).pipe(Effect.provide(nodeServicesLayer))
+        expect(error.message).toMatch(JOURNAL_STEP);
+        expect(error.message).not.toContain("the answer text");
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.effect("removes the chat as its learner", () =>
@@ -276,7 +291,7 @@ describe("the deployment of the release gate over a runner", () => {
   );
 
   it.effect(
-    "starts the removal of the learner through the app's own deletion",
+    "starts the removal of the learner by claiming the deletion that Better Auth's before-delete hook claims",
     () =>
       Effect.gen(function* () {
         const { calls, run } = scripted({
@@ -313,128 +328,5 @@ describe("the deployment of the release gate over a runner", () => {
         "Learner removal answered continue instead of ready."
       );
     }).pipe(Effect.provide(nodeServicesLayer))
-  );
-});
-
-/**
- * A double for the Convex CLI that logs each call and answers the functions of
- * the gate the way the deployment does.
- */
-const FAKE_CLI = `
-import { appendFileSync } from "node:fs";
-const [log, ...args] = process.argv.slice(2);
-const fn = args.find((arg) => /^[A-Za-z][\\w/-]*:[A-Za-z]\\w*$/.test(arg));
-appendFileSync(log, JSON.stringify({ args, fn }) + "\\n");
-const last = args[args.length - 1];
-const answers = {
-  "adapter:create": () =>
-    JSON.parse(last).input.model === "user"
-      ? { _creationTime: 1, _id: "user-1" }
-      : { _creationTime: 2, _id: "session-1" },
-  "nina/turns:start": () => (${RECEIPT}),
-  "nina/conversation:get": () => ({ chat: {}, turn: ${TURN} }),
-  "messages:listMessagesByThreadId": () => (${JOURNAL}),
-  "auth/deletion:claimAccountDeletion": () => "ready",
-};
-const answer = fn === undefined ? undefined : answers[fn]?.();
-if (answer !== undefined) {
-  process.stdout.write(JSON.stringify(answer));
-}
-`;
-
-const Logged = Schema.fromJsonString(
-  Schema.Struct({ fn: Schema.optionalKey(Schema.String) })
-);
-
-/** A folder with the CLI double, the log it writes, and the way to start it. */
-const fixture = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const directory = yield* fs.realPath(
-    yield* fs.makeTempDirectoryScoped({ prefix: "nina-gate-deployment-test-" })
-  );
-  const script = `${directory}/cli.mjs`;
-  const log = `${directory}/calls.log`;
-  yield* fs.writeFileString(script, FAKE_CLI);
-  return {
-    cli: {
-      args: [script, log],
-      command: process.execPath,
-      cwd: directory,
-      deadline: Duration.seconds(30),
-    },
-    log,
-  };
-});
-
-/** The functions that the CLI double was asked to run, in order. */
-const loggedFunctions = (log: string) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const lines = Arr.filter(
-      (yield* fs.readFileString(log)).split("\n"),
-      (line) => line !== ""
-    );
-    const entries = yield* Effect.forEach(lines, (line) =>
-      Schema.decodeEffect(Logged)(line)
-    );
-    return Arr.map(entries, ({ fn }) => fn);
-  });
-
-/** A configuration that holds exactly these environment settings. */
-const settings = (env: Record<string, string>) =>
-  Effect.provideService(
-    ConfigProvider.ConfigProvider,
-    ConfigProvider.fromEnv({ env })
-  );
-
-describe("the deployment of the release gate over the Convex CLI", () => {
-  it.live("runs every step of the gate as a Convex function", () =>
-    Effect.gen(function* () {
-      const { cli, log } = yield* fixture;
-
-      yield* Effect.gen(function* () {
-        const deployment = yield* Deployment;
-        const learner = yield* deployment.signIn;
-        const receipt = yield* deployment.ask(learner, QUESTION);
-        const turn = yield* deployment.read(learner, receipt.chatId);
-        const journal = yield* deployment.journal(receipt.threadId);
-        yield* deployment.forget(learner, receipt.chatId);
-        yield* deployment.retire(learner);
-        expect(turn.state.status).toBe("complete");
-        expect(journal).toHaveLength(1);
-      }).pipe(
-        Effect.provide(DeploymentLive),
-        settings({ CONVEX_DEPLOYMENT: "dev:happy-animal-123" }),
-        Effect.provideService(ConvexCli, cli)
-      );
-
-      expect(yield* loggedFunctions(log)).toEqual([
-        "adapter:create",
-        "auth/lifecycle:onCreate",
-        "adapter:create",
-        "nina/turns:start",
-        "nina/conversation:get",
-        "messages:listMessagesByThreadId",
-        "chats/mutations:deleteChat",
-        "auth/deletion:claimAccountDeletion",
-      ]);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
-  );
-
-  it.live("refuses production before it runs a single command", () =>
-    Effect.gen(function* () {
-      const { cli, log } = yield* fixture;
-      const fs = yield* FileSystem.FileSystem;
-
-      const error = yield* Effect.service(Deployment).pipe(
-        Effect.provide(DeploymentLive),
-        settings({ CONVEX_DEPLOYMENT: "prod:some-name-1" }),
-        Effect.provideService(ConvexCli, cli),
-        Effect.flip
-      );
-
-      expect(error.message).toContain("Refusing to run against the production");
-      expect(yield* fs.exists(log)).toBe(false);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 });

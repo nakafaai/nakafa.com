@@ -8,15 +8,18 @@ import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
 import {
+  START_DEADLINE,
+  TURN_DEADLINE,
+} from "@repo/backend/confect/nina/deadline";
+import {
   chatSteps,
   GateTurn,
   hasFollowUp,
   isOpen,
   judgeTurn,
-  renderTable,
   StoredMessage,
 } from "@repo/backend/scripts/nina/verdict";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Duration, Schema } from "effect";
 
 type Usage = typeof NinaUsageTotal.Type;
 
@@ -77,6 +80,7 @@ const steps = chatSteps([
 
 /** A turn that passes: complete in 31.5 seconds, a cache read, no step at its cap. */
 const healthy = {
+  order: 0,
   promptedAt: 1000,
   state: { finishedAt: 32_500, status: "complete" },
   suggestions: ["What is an exponent?"],
@@ -298,8 +302,8 @@ describe("release gate verdict", () => {
     expect(judgeTurn(withUsage([heavy, nakafa]), steps)).toEqual([]);
   });
 
-  it("fails a turn that took longer than the chat deadline", () => {
-    const limit = purposes.chat.timeout.totalMs;
+  it("fails a turn that took longer than the deadline the product gives a turn", () => {
+    const limit = Duration.toMillis(TURN_DEADLINE);
 
     expect(
       judgeTurn(
@@ -323,15 +327,31 @@ describe("release gate verdict", () => {
     ).toEqual([]);
   });
 
+  it("accepts a turn that waited to start and then used the whole chat call, which the product allows", () => {
+    const elapsed =
+      Duration.toMillis(START_DEADLINE) + purposes.chat.timeout.totalMs;
+
+    expect(
+      judgeTurn(
+        {
+          ...healthy,
+          state: { finishedAt: 1000 + elapsed, status: "complete" },
+        },
+        steps
+      )
+    ).toEqual([]);
+  });
+
   it("fails a turn without a recorded start or end", () => {
     const sentence = "The turn has no recorded start and end to measure.";
 
     expect(
-      judgeTurn({ state: healthy.state, usage: healthy.usage }, steps)
+      judgeTurn({ order: 0, state: healthy.state, usage: healthy.usage }, steps)
     ).toEqual([sentence]);
     expect(
       judgeTurn(
         {
+          order: 0,
           promptedAt: 1000,
           state: { status: "complete" },
           usage: healthy.usage,
@@ -344,6 +364,7 @@ describe("release gate verdict", () => {
   it("lists every failure in the order of the gate", () => {
     const failures = judgeTurn(
       {
+        order: 0,
         promptedAt: 1000,
         state: { finishedAt: 1_000_000, status: "failed" },
         usage: [
@@ -363,75 +384,26 @@ describe("release gate verdict", () => {
     ]);
   });
 
-  it("recognizes a turn that can still change and one whose follow-up is saved", () => {
+  it("recognizes a turn that can still change", () => {
     expect(isOpen({ ...healthy, state: { status: "queued" } })).toBe(true);
     expect(isOpen({ ...healthy, state: { status: "running" } })).toBe(true);
     expect(isOpen(healthy)).toBe(false);
-    expect(hasFollowUp(healthy)).toBe(true);
-    expect(hasFollowUp({ usage: healthy.usage, state: healthy.state })).toBe(
-      false
-    );
-  });
-});
-
-describe("the table of the release gate", () => {
-  it("prints a row for each agent and a total, and the cache of each chat step, without any message text", () => {
-    expect(renderTable(healthy, steps)).toBe(
-      Arr.join(
-        [
-          "agent   steps  input  cached  output  reasoning      cost  seconds",
-          "nina        3  21034   17210     455        212  0.012345",
-          "nakafa      2   6120       0     310          0  0.001200",
-          "total       5  27154   17210     765        212  0.013545     31.5",
-          "",
-          "Cached of input tokens, by nina step: 0 of 10234, 10200 of 10890.",
-        ],
-        "\n"
-      )
-    );
   });
 
-  it("says when the first step already read the cache", () => {
-    const warm = chatSteps([
-      stored({}, { cached: 9000, input: 9500 }),
-      stored({}, { cached: 9000, input: 9800 }),
-    ]);
+  it("waits for the title call of the first turn of a chat, which runs after the suggestions", () => {
+    const named = withUsage([...healthy.usage, usage("title", { output: 8 })]);
 
-    const lines = renderTable(healthy, warm).split("\n");
-
-    expect(Option.getOrThrow(Arr.last(lines))).toBe(
-      "Cached of input tokens, by nina step: 9000 of 9500, 9000 of 9800. The first step already read the cache, so a turn before this one with the same prompt prefix warmed it. Run the gate again after five minutes to see the turn's own cache."
-    );
+    expect(hasFollowUp(healthy)).toBe(false);
+    expect(hasFollowUp(named)).toBe(true);
   });
 
-  it("prints zero for counts a row stored before October 2026 lacks, and a dash for a missing cost", () => {
-    const old = usage("nina", { calls: 2, input: 800, output: 40 });
+  it("waits for the suggestions, and for no title after the first turn", () => {
+    const named = withUsage([...healthy.usage, usage("title", { output: 8 })]);
 
-    expect(renderTable({ state: healthy.state, usage: [old] }, [])).toBe(
-      Arr.join(
-        [
-          "agent  steps  input  cached  output  reasoning  cost  seconds",
-          "nina       2    800       0      40          0     -",
-          "total      2    800       0      40          0     -",
-          "",
-          "The Agent journal holds no step of the nina agent.",
-        ],
-        "\n"
-      )
-    );
-  });
-
-  it("prints a total even when the turn recorded nothing", () => {
-    expect(renderTable(withUsage([]), steps)).toBe(
-      Arr.join(
-        [
-          "agent  steps  input  cached  output  reasoning  cost  seconds",
-          "total      0      0       0       0          0     -     31.5",
-          "",
-          "Cached of input tokens, by nina step: 0 of 10234, 10200 of 10890.",
-        ],
-        "\n"
-      )
-    );
+    expect(hasFollowUp({ ...healthy, order: 1 })).toBe(true);
+    expect(hasFollowUp({ ...named, suggestions: undefined })).toBe(false);
+    expect(
+      hasFollowUp({ order: 1, state: healthy.state, usage: healthy.usage })
+    ).toBe(false);
   });
 });

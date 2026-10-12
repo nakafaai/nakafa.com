@@ -10,8 +10,11 @@ import { removeWelcomeIntent } from "@repo/backend/confect/emails/welcome/impl";
 import { Clock, Effect, flow } from "effect";
 
 /**
- * Claims the irreversible deletion phase only from Better Auth's before-delete
- * hook. Browser preparation remains cancelable until this mutation commits.
+ * Claims the irreversible deletion phase. Better Auth's before-delete hook
+ * calls it after its own checks, which include that PostHog erasure is
+ * configured. The Nina release gate calls it directly to remove its synthetic
+ * learner, so it skips those checks. Browser preparation remains cancelable
+ * until this mutation commits.
  */
 export const claimAccountDeletion = Effect.fn(
   "auth.deletion.claimAccountDeletion"

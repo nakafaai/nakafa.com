@@ -6,17 +6,12 @@ import {
   type RunConvex,
 } from "@repo/backend/scripts/content/acceptance/account";
 import { sanitizeAcceptanceCommandError } from "@repo/backend/scripts/content/acceptance/error";
-import {
-  requireDevelopment,
-  runConvex,
-} from "@repo/backend/scripts/nina/convex";
 import { gateError, NinaGateError } from "@repo/backend/scripts/nina/error";
 import { GateTurn, StoredMessage } from "@repo/backend/scripts/nina/verdict";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { randomUuid } from "@repo/utilities/uuid";
 import { getFunctionName } from "convex/server";
-import { Context, Crypto, Duration, Effect, Layer, Schema } from "effect";
-import { ChildProcessSpawner } from "effect/process";
+import { Context, Crypto, Duration, Effect, Schema } from "effect";
 
 /** Outlasts the longest turn and its follow-up and nothing more: the learner is removed after. */
 const SESSION_LIFETIME = Duration.minutes(30);
@@ -88,7 +83,12 @@ function asGateError(step: string, error: { readonly message: string }) {
       );
 }
 
-/** Decodes what a command printed. A failure quotes at most the decoder's own account of it. */
+/**
+ * Decodes what a command printed. A failure names the step and what the
+ * decoder expected, and never quotes what the command printed, which may hold
+ * a session token or an answer: Effect keeps the input out of a decode error
+ * unless the decode asks it to report the input, and this one does not.
+ */
 const readPrinted = Effect.fn("ninaGate.readPrinted")(function* <A, I>(
   step: string,
   schema: Schema.Codec<A, I, never, never>,
@@ -190,6 +190,10 @@ export function makeDeployment(
         { chatId }
       );
     }),
+    // The claim is the call that Better Auth's before-delete hook makes, with a
+    // fresh UUID as the attempt id the hook requires. It skips the hook's check
+    // that PostHog erasure is configured, which a CLI cannot run. The account
+    // recovery sweep then deletes the learner and every row the app keeps.
     retire: Effect.fn("ninaGate.retire")(function* (learner: Learner) {
       const printed = yield* run("Learner removal", [
         "run",
@@ -212,27 +216,3 @@ export function makeDeployment(
     }),
   });
 }
-
-/**
- * The deployment that the caller's configuration names, reached through the
- * Convex CLI. It refuses to exist for production or for no deployment at all,
- * so nothing in the gate can run before that check.
- */
-export const DeploymentLive = Layer.effect(
-  Deployment,
-  Effect.gen(function* () {
-    yield* requireDevelopment();
-    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    const crypto = yield* Crypto.Crypto;
-    return makeDeployment(
-      (operation, args, sensitiveValues) =>
-        runConvex(operation, args, sensitiveValues).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            spawner
-          )
-        ),
-      crypto
-    );
-  })
-);

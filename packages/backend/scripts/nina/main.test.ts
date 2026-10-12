@@ -26,7 +26,7 @@ vi.mock("@repo/backend/scripts/customers/convex", async () => {
       Effect.succeed(ConfigProvider.fromEnv({ env: {} })),
   };
 });
-vi.mock("@repo/backend/scripts/nina/deployment", async () => {
+vi.mock("@repo/backend/scripts/nina/live", async () => {
   const { Layer } = await import("effect");
   return { DeploymentLive: Layer.empty };
 });

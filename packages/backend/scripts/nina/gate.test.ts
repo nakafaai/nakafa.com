@@ -4,7 +4,6 @@ import {
   languageModelId,
   providerId,
 } from "@repo/backend/confect/gateway/model";
-import { purposes } from "@repo/backend/confect/gateway/purpose";
 import {
   getNakafaReferencesFromMessages,
   getSourceReferencesFromMessages,
@@ -47,39 +46,59 @@ const RECEIPT = {
   turnId: TURN,
 };
 
-/** A turn that passes once it is complete: it read the cache through the gateway. */
-const usage = [
-  {
-    agent: "nina",
-    cached: 5000,
-    calls: 2,
-    cost: 0.01,
-    input: 9000,
-    model: languageModelId,
-    output: 300,
-    provider: providerId,
-  },
-] satisfies GateTurn["usage"];
+/** The usage of the chat agent in a turn that passes: its second step read the cache through the gateway. */
+const chatRow = {
+  agent: "nina",
+  cached: 5000,
+  calls: 2,
+  cost: 0.01,
+  input: 9000,
+  model: languageModelId,
+  output: 300,
+  provider: providerId,
+} satisfies GateTurn["usage"][number];
+
+/** The usage of the call that names the chat, which runs after the suggestions are saved. */
+const titleRow = {
+  agent: "title",
+  calls: 1,
+  input: 800,
+  model: languageModelId,
+  output: 8,
+  provider: providerId,
+} satisfies GateTurn["usage"][number];
+
+/** The first turn of a chat, complete 20 seconds after its admission. */
+const complete = {
+  order: 0,
+  promptedAt: 1000,
+  state: { finishedAt: 21_000, status: "complete" },
+} as const;
 const running = Effect.succeed({
+  order: 0,
   promptedAt: 1000,
   state: { status: "running" },
   usage: [],
 } satisfies GateTurn);
 const answered = Effect.succeed({
-  promptedAt: 1000,
-  state: { finishedAt: 21_000, status: "complete" },
-  usage,
+  ...complete,
+  usage: [chatRow],
+} satisfies GateTurn);
+const suggested = Effect.succeed({
+  ...complete,
+  suggestions: ["Next?"],
+  usage: [chatRow],
 } satisfies GateTurn);
 const followedUp = Effect.succeed({
-  promptedAt: 1000,
-  state: { finishedAt: 21_000, status: "complete" },
+  ...complete,
   suggestions: ["Next?"],
-  usage,
+  usage: [chatRow, titleRow],
 } satisfies GateTurn);
 const failed = Effect.succeed({
+  order: 0,
   promptedAt: 1000,
   state: { finishedAt: 21_000, reason: "response-limit", status: "failed" },
-  usage,
+  usage: [chatRow],
 } satisfies GateTurn);
 
 /** The journal of a turn that passes: the second chat step read what the first one cached. */
@@ -273,6 +292,38 @@ describe("the release gate", () => {
     })
   );
 
+  it.live(
+    "waits for the title call of the first turn, which runs after the suggestions are saved",
+    () =>
+      Effect.gen(function* () {
+        const { calls, layer } = scripted({
+          reads: [running, answered, suggested, followedUp],
+        });
+
+        const report = yield* runGate().pipe(Effect.provide(layer), quickly());
+
+        expect(report.failures).toEqual([]);
+        expect(report.table).toContain("title");
+        expect(
+          Arr.filter(MutableList.toArray(calls), (call) => call === "read")
+        ).toHaveLength(4);
+      })
+  );
+
+  it.live("judges the turn it has when the title call does not come", () =>
+    Effect.gen(function* () {
+      const { layer } = scripted({ reads: [suggested] });
+
+      const report = yield* runGate().pipe(
+        Effect.provide(layer),
+        quickly(500, 20)
+      );
+
+      expect(report.failures).toEqual([]);
+      expect(report.table).not.toContain("title");
+    })
+  );
+
   it.live("judges a turn that failed and still removes what it made", () =>
     Effect.gen(function* () {
       const { calls, layer } = scripted({ reads: [failed] });
@@ -402,7 +453,9 @@ describe("the release gate", () => {
       Effect.gen(function* () {
         const { layer, questions } = scripted({ reads: [followedUp] });
 
-        yield* runGate().pipe(Effect.provide(layer), quickly());
+        // The turn is done at the first read, so it waits for nothing and the
+        // default pace serves.
+        yield* runGate().pipe(Effect.provide(layer));
 
         const [question] = MutableList.toArray(questions);
         expect(question?.kind).toBe("message");
@@ -438,20 +491,4 @@ describe("the report of the release gate", () => {
       renderReport({ failures: ["first", "second"], table: "the table" })
     ).toBe("the table\n\nThe gate failed:\n- first\n- second");
   });
-
-  it.effect(
-    "waits as long as the chat call may run plus a minute, and one suggestion step for the follow-up",
-    () =>
-      Effect.gen(function* () {
-        const pace = yield* Pace;
-
-        expect(Duration.toMillis(pace.settle)).toBe(
-          purposes.chat.timeout.totalMs + 60_000
-        );
-        expect(Duration.toMillis(pace.followUp)).toBe(
-          purposes.suggestion.timeout.stepMs
-        );
-        expect(Duration.toMillis(pace.every)).toBeGreaterThan(0);
-      })
-  );
 });

@@ -1,8 +1,8 @@
 import { runMain } from "@effect/platform-node/NodeRuntime";
 import { layer } from "@effect/platform-node/NodeServices";
 import { loadCustomerEnvProvider } from "@repo/backend/scripts/customers/convex";
-import { DeploymentLive } from "@repo/backend/scripts/nina/deployment";
 import { renderReport, runGate } from "@repo/backend/scripts/nina/gate";
+import { DeploymentLive } from "@repo/backend/scripts/nina/live";
 import { Array as Arr, ConfigProvider, Effect } from "effect";
 
 /**

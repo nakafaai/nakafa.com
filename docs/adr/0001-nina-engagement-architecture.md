@@ -166,23 +166,34 @@ pnpm --filter @repo/backend nina:gate
 
 The command reads the deployment from the caller's own configuration:
 `CONVEX_DEPLOYMENT` in the shell or in `packages/backend/.env.local`. It refuses
-production, and it refuses to run when no deployment is named. It signs in a
-synthetic learner with the rows the acceptance runtime creates, asks one question
-about a lesson with a link to that lesson's own page, and reads the stored turn
-through `nina/conversation:get` once the turn has settled and, for a short while
-longer, until its suggestions are saved. It reads the steps of the chat agent
-from the Agent journal of the thread, because the usage record sums the steps of
-an agent and cannot show which step read the cache. A link to Nakafa's own site
+production, and it refuses to run when no deployment is named. The Convex CLI
+picks its deployment from three settings, the deployment, a deploy key and a
+deployment token, and loads `.env` and `.env.local` into the ones that are not
+set. The check reads all three, and the command starts the CLI with exactly what
+the check read, the settings it did not find blank, so a file cannot send a
+command to a deployment that the check did not see.
+
+The command signs in a synthetic learner with the rows the acceptance runtime
+creates. A sign-in that fails part way removes the rows it wrote. The command
+asks one question about a lesson with a link to that lesson's own page, and reads
+the stored turn through `nina/conversation:get` once the turn has settled and,
+for a short while longer, until its suggestions are saved and, for the first turn
+of a chat, the call that names the chat has recorded its usage, because that call
+starts after the suggestions are saved. It reads the steps of the chat agent from
+the Agent journal of the thread, because the usage record sums the steps of an
+agent and cannot show which step read the cache. A link to Nakafa's own site
 starts Nina's first step with the Nakafa capability, so the answer always has a
 second step. The deployment must hold the signed release of that lesson.
 
 The command prints one table: the steps, input, cached, output and reasoning
 tokens, the cost in US dollars, and the seconds the turn took, for each agent and
 in total. A line under it shows the cached input tokens of each chat step. The
-command prints no message text. Then it removes the chat and starts the app's own
-deletion of the learner, which the account recovery sweep finishes in about
-twenty minutes. A removal that fails is logged with the learner or chat it left
-behind, and it does not change the verdict.
+command prints no message text. Then it removes the chat and claims the deletion
+of the learner, the same claim that Better Auth's before-delete hook makes. It
+does not run the hook's own check that PostHog erasure is configured. The account
+recovery sweep finishes the deletion in about twenty minutes. A removal that
+fails is logged with the learner or chat it left behind, and it does not change
+the verdict.
 
 The gate passes only when:
 
@@ -194,20 +205,24 @@ The gate passes only when:
   input tokens from the provider's cache, which the first step wrote;
 - no chat step ended at its output cap, and no other agent wrote as many tokens
   as its steps would write at the cap of their purpose;
-- the turn ended inside the total budget of the chat call, counted from its
-  admission.
+- the turn ended inside its deadline, counted from its admission: the wait for
+  its run to start, the total budget of the chat call, and half a minute to
+  settle.
 
 It proves that a real provider run through the production adapter ends in an
-answer, records its tokens and its cost, and reads its prompt cache at every
-step after the first. A first step that already read the cache means that an
-earlier turn with the same prompt prefix warmed it, which the provider allows for
-about five minutes, so the later reads then do not prove that this turn wrote the
-cache. The line under the table says so, and the gate is run again after five
-minutes. The gate does not prove that a specialist step stayed under its cap,
-because the usage record sums the steps of those agents. It does not prove the
-quality of an answer, because it reads no message text. It does not cover the
-math, research, and Quran capabilities, memory capture, the conversation summary,
-attachments, or a turn on production, where a real turn is checked by hand.
+answer, records its tokens, and reads its prompt cache at every step after the
+first. A first step that already read the cache means that an earlier turn with
+the same prompt prefix warmed it, which the provider allows for about five
+minutes, so the later reads then do not prove that this turn wrote the cache. The
+line under the table says so, and the gate is run again after five minutes. The
+cost is printed and not judged, because a call that reports no cost has none. The
+gate does not prove that every specialist step stayed under its cap. The usage
+record sums the steps of those agents, so a row of one call is judged exactly, and
+a row of several calls only by its sum: one step at its cap among shorter ones
+passes. It does not prove the quality of an answer, because it reads no message
+text. It does not cover the math, research, and Quran capabilities, memory
+capture, the conversation summary, attachments, or a turn on production, where a
+real turn is checked by hand.
 
 ## Learning engagement
 

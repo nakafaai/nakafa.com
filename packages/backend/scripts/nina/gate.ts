@@ -1,15 +1,16 @@
 import { purposes } from "@repo/backend/confect/gateway/purpose";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import {
   Deployment,
   type Question,
 } from "@repo/backend/scripts/nina/deployment";
 import { gateError } from "@repo/backend/scripts/nina/error";
+import { renderTable } from "@repo/backend/scripts/nina/table";
 import {
   chatSteps,
   hasFollowUp,
   isOpen,
   judgeTurn,
-  renderTable,
 } from "@repo/backend/scripts/nina/verdict";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
@@ -42,18 +43,17 @@ const QUESTION = {
 
 /**
  * How long the gate waits. It reads the stored turn every `every`. It gives the
- * turn the total budget of the chat call and one minute more for the queue and
- * the settlement, and gives the follow-up work after the answer the time of one
- * suggestion step. A test sets all three small.
+ * turn its deadline and one minute more for the polling and the clocks, and
+ * gives the follow-up work after the answer the time of one suggestion step and
+ * one title step, which run one after the other. A test sets all three small.
  */
 export const Pace = Context.Reference("@repo/backend/scripts/nina/gate/Pace", {
   defaultValue: () => ({
     every: Duration.seconds(3),
-    followUp: Duration.millis(purposes.suggestion.timeout.stepMs),
-    settle: Duration.sum(
-      Duration.millis(purposes.chat.timeout.totalMs),
-      Duration.minutes(1)
+    followUp: Duration.millis(
+      purposes.suggestion.timeout.stepMs + purposes.presentation.timeout.stepMs
     ),
+    settle: Duration.sum(TURN_DEADLINE, Duration.minutes(1)),
   }),
 });
 
@@ -116,8 +116,9 @@ export const runGate = Effect.fn("ninaGate.run")(function* () {
             ),
         })
       );
-      // The suggestions and the title come after the answer. They are optional,
-      // so the gate waits for them a little and judges what it has.
+      // The suggestions and then the title come after the answer, and each
+      // records the usage of its call. They are optional, so the gate waits for
+      // them a little and judges what it has.
       const turn =
         settled.state.status === "complete"
           ? yield* read.pipe(
