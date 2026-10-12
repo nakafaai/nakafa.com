@@ -4,8 +4,8 @@ import { Schema } from "effect";
 
 /**
  * Agent message statuses: `streaming` for a live message, then the Agent
- * component's `pending`, `success`, and `failed`. The parity test reads a page
- * of each value the installed Agent validators accept.
+ * component's `pending`, `success`, and `failed`. The parity test checks the
+ * values of the page schema against the installed Agent validators.
  */
 const AgentMessageStatus = Schema.Literals([
   "streaming",
