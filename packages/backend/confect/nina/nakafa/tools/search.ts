@@ -1,10 +1,5 @@
-import { searchNakafaContent } from "@repo/backend/agent/search";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
-import {
-  formatSearchGroup,
-  getSearchTokens,
-  rankSearchResult,
-} from "@repo/backend/confect/nina/nakafa/search";
+import { findContent } from "@repo/backend/confect/nina/nakafa/find";
 import type { NakafaAgentSearchInput } from "@repo/contents/agent/schema/search";
 import type { Locale } from "@repo/contents/content";
 import { Effect, Result } from "effect";
@@ -32,14 +27,8 @@ export const search = Effect.fn("nakafa.search")(function* ({
       status: "loading",
     },
   });
-  const result = yield* Effect.result(
-    searchNakafaContent(dataInput).pipe(
-      Effect.map((searchResult) =>
-        rankSearchResult(searchResult, getSearchTokens(dataInput.queries ?? []))
-      )
-    )
-  );
-  if (Result.isFailure(result)) {
+  const found = yield* Effect.result(findContent(dataInput));
+  if (Result.isFailure(found)) {
     yield* publish({
       id: partId,
       type: "data-nakafa",
@@ -47,12 +36,12 @@ export const search = Effect.fn("nakafa.search")(function* ({
         kind: "search",
         input: dataInput,
         status: "error",
-        error: result.failure.message,
+        error: found.failure.message,
       },
     });
     return {
       result: null,
-      text: result.failure.message,
+      text: found.failure.message,
     };
   }
   yield* publish({
@@ -62,13 +51,10 @@ export const search = Effect.fn("nakafa.search")(function* ({
       kind: "search",
       input: dataInput,
       status: "done",
-      result: result.success,
+      result: found.success.result,
     },
   });
-  return {
-    result: result.success,
-    text: formatSearchGroup(dataInput, result.success),
-  };
+  return found.success;
 });
 /** Applies server-owned locale before calling the Convex-backed search adapter. */
 function getSearchInput(input: NakafaAgentSearchInput, locale: Locale) {
