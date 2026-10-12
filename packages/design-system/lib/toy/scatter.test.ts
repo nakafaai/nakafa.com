@@ -1,9 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { createScatter, type Place } from "@repo/design-system/lib/toy/scatter";
-import { Array as Arr, MutableList, Option, Record as Rec } from "effect";
+import {
+  define,
+  FRAME,
+  leave,
+  stagePage,
+  wait,
+} from "@repo/design-system/test/toy";
+import { Array as Arr, MutableList, Option } from "effect";
 
 /** The page the layer covers: as wide as a test sets, with its corner at (10, 20) in the window. */
-const world = { width: 800 };
+const page = { width: 800 };
 let observers: ResizeObserverStub[] = [];
 let fontsArrive: () => void = () => undefined;
 
@@ -25,28 +32,20 @@ class ResizeObserverStub {
   }
 }
 
-function define(el: Element, values: Record<string, unknown>) {
-  Object.defineProperties(
-    el,
-    Rec.map(values, (value) => ({ configurable: true, value }))
-  );
-}
-
 function rect(left: number, top: number, width: number, height: number) {
   return () => new DOMRect(left, top, width, height);
 }
 
-function wait(ms: number) {
-  vi.advanceTimersByTime(ms);
+/** The page changed: the observer tells the layer, and the frame that follows places the toys. */
+function changed() {
+  Arr.forEach(observers, (observer) => observer.callback());
+  wait(FRAME);
 }
 
 beforeEach(() => {
-  world.width = 800;
+  page.width = 800;
   observers = [];
-  vi.useFakeTimers({
-    now: 0,
-    toFake: ["requestAnimationFrame", "cancelAnimationFrame"],
-  });
+  stagePage();
   vi.stubGlobal("ResizeObserver", ResizeObserverStub);
   const ready = new Promise<void>((resolve) => {
     fontsArrive = () => resolve();
@@ -59,14 +58,14 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  vi.useRealTimers();
+  leave();
 });
 
 /** A layer over the page, a scatter on it, and a way to add toys with a place. */
 function scatter() {
   const layer = document.createElement("div");
   document.body.replaceChildren(layer);
-  Object.defineProperty(layer, "clientWidth", { get: () => world.width });
+  Object.defineProperty(layer, "clientWidth", { get: () => page.width });
   define(layer, { getBoundingClientRect: rect(10, 20, 800, 2000) });
   const rest = vi.fn();
   const placed = createScatter(rest);
@@ -103,7 +102,7 @@ describe("placing toys", () => {
       });
     });
     placed.attach(layer);
-    wait(16);
+    wait(FRAME);
     expect(el.hidden).toBe(false);
     expect(el.style.left).toBe("104px");
     expect(el.style.top).toBe("261px");
@@ -115,7 +114,7 @@ describe("placing toys", () => {
     const place = vi.fn(anywhere);
     const el = toy(place);
     placed.attach(layer);
-    wait(16);
+    wait(FRAME);
     expect(place).toHaveBeenCalledWith(800, expect.any(Function));
     expect(el.style.getPropertyValue("--toy")).toBe("");
   });
@@ -125,10 +124,10 @@ describe("placing toys", () => {
     let room = false;
     const el = toy(() => (room ? Option.some({ x: 5, y: 6 }) : Option.none()));
     placed.attach(layer);
-    wait(16);
+    wait(FRAME);
     expect(el.hidden).toBe(true);
     room = true;
-    placed.layout();
+    changed();
     expect(el.hidden).toBe(false);
     expect(el.style.left).toBe("5px");
   });
@@ -143,9 +142,9 @@ describe("placing toys", () => {
       return Option.some({ x: 0, y: 0 });
     });
     placed.attach(layer);
-    wait(16);
+    wait(FRAME);
     left = 111;
-    placed.layout();
+    changed();
     // The second place was read while the first toy had not yet moved.
     expect(MutableList.toArray(seen)).toEqual(["", "10px"]);
     expect(first.style.left).toBe("111px");
@@ -158,15 +157,15 @@ describe("a new width", () => {
     const shown = toy(anywhere);
     const hidden = toy(() => Option.none());
     placed.attach(layer);
-    wait(16);
+    wait(FRAME);
     // The first width is no change of page.
     expect(rest).not.toHaveBeenCalled();
-    placed.layout();
+    changed();
     expect(rest).not.toHaveBeenCalled();
-    world.width = 600;
-    placed.layout();
+    page.width = 600;
+    changed();
     expect(rest.mock.calls).toEqual([[shown], [hidden]]);
-    placed.layout();
+    changed();
     expect(rest).toHaveBeenCalledTimes(2);
   });
 
@@ -175,16 +174,16 @@ describe("a new width", () => {
     const place = vi.fn(anywhere);
     toy(place);
     placed.attach(layer);
-    wait(16);
+    wait(FRAME);
     place.mockClear();
-    world.width = 640;
+    page.width = 640;
     Arr.forEach(observers, (observer) => {
       observer.callback();
       observer.callback();
       observer.callback();
     });
     expect(place).not.toHaveBeenCalled();
-    wait(16);
+    wait(FRAME);
     expect(place).toHaveBeenCalledTimes(1);
     expect(place).toHaveBeenCalledWith(640, expect.any(Function));
   });
@@ -194,17 +193,17 @@ describe("toys that come and go", () => {
   it("places a toy that is added later at the next frame, and leaves one that is taken out", () => {
     const { layer, placed, toy } = scatter();
     placed.attach(layer);
-    wait(16);
+    wait(FRAME);
     const place = vi.fn(anywhere);
     const el = document.createElement("div");
     layer.append(el);
     const remove = placed.add(el, place);
-    wait(16);
+    wait(FRAME);
     expect(el.style.left).toBe("1px");
     remove();
     place.mockClear();
     toy(anywhere);
-    wait(16);
+    wait(FRAME);
     expect(place).not.toHaveBeenCalled();
   });
 
@@ -212,23 +211,11 @@ describe("toys that come and go", () => {
     const { layer, placed, toy } = scatter();
     const place = vi.fn(anywhere);
     const el = toy(place);
-    wait(32);
+    wait(2 * FRAME);
     expect(place).not.toHaveBeenCalled();
     expect(el.style.left).toBe("");
-    placed.layout();
-    expect(place).not.toHaveBeenCalled();
     placed.attach(layer);
-    wait(16);
-    expect(place).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not place a pass twice when one is asked for by hand", () => {
-    const { layer, placed, toy } = scatter();
-    const place = vi.fn(anywhere);
-    toy(place);
-    placed.attach(layer);
-    placed.layout();
-    wait(32);
+    wait(FRAME);
     expect(place).toHaveBeenCalledTimes(1);
   });
 });
@@ -239,11 +226,11 @@ describe("the fonts", () => {
     const place = vi.fn(anywhere);
     toy(place);
     placed.attach(layer);
-    wait(16);
+    wait(FRAME);
     place.mockClear();
     fontsArrive();
     await document.fonts.ready;
-    wait(16);
+    wait(FRAME);
     expect(place).toHaveBeenCalledTimes(1);
   });
 });
@@ -259,9 +246,9 @@ describe("stopping", () => {
       true
     );
     expect(vi.getTimerCount()).toBe(0);
-    wait(32);
+    wait(2 * FRAME);
     expect(place).not.toHaveBeenCalled();
-    placed.layout();
+    changed();
     expect(place).not.toHaveBeenCalled();
   });
 });

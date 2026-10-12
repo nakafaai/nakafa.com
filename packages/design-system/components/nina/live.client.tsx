@@ -9,10 +9,11 @@ import {
   useWindowEvent,
 } from "@mantine/hooks";
 import { Frame } from "@repo/design-system/components/nina/frame";
+import { marked } from "@repo/design-system/components/nina/mark";
 import { paint, sameFigure } from "@repo/design-system/components/nina/paint";
-import { Picture } from "@repo/design-system/components/nina/picture";
+import { Picture } from "@repo/design-system/components/ui/picture";
 import type { MoodSchema } from "@repo/mascot/nina/face";
-import { type Options, scene } from "@repo/mascot/nina/figure";
+import { scene } from "@repo/mascot/nina/figure";
 import {
   gazeAt,
   type Life,
@@ -22,7 +23,7 @@ import {
   step,
   view,
 } from "@repo/mascot/nina/life";
-import { homeOf, modeOf } from "@repo/mascot/nina/mode";
+import { homeOf, modeOf, type Options } from "@repo/mascot/nina/options";
 import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
@@ -100,10 +101,11 @@ function Calm({ label, options, size }: LiveProps) {
     wait();
   });
   return (
-    <Frame edge={modeOf(options) === "peek"} ref={pressed}>
+    <Frame mode={modeOf(options)} ref={pressed}>
       <Picture
         {...scene(glad === undefined ? options : { ...options, mood: glad })}
         label={label}
+        marked={marked}
         size={size}
       />
     </Frame>
@@ -244,12 +246,13 @@ function Alive({ label, options, size }: LiveProps) {
   useEffect(() => () => ducking.current?.cancel(), []);
 
   return (
-    <Frame edge={modeOf(options) === "peek"} ref={place}>
+    <Frame mode={modeOf(options)} ref={place}>
       <span className="block" ref={stage}>
         <Picture
           box={figure.box}
           key={figure.version}
           label={label}
+          marked={marked}
           ref={svg}
           shapes={figure.shapes}
           size={size}

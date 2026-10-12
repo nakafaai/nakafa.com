@@ -1,15 +1,14 @@
 "use client";
 
-import { useIntersection } from "@mantine/hooks";
 import { Frame } from "@repo/design-system/components/nina/frame";
-import type { Options } from "@repo/mascot/nina/figure";
-import { modeOf } from "@repo/mascot/nina/mode";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { modeOf, type Options } from "@repo/mascot/nina/options";
+import { Array as Arr } from "effect";
 import {
   lazy,
   type ReactNode,
   Suspense,
   startTransition,
-  useEffect,
   useState,
 } from "react";
 
@@ -31,37 +30,52 @@ interface WakeProps {
   size: number;
 }
 
+/** Tells `then` when the element comes within 300 pixels of the screen. Answers what ends the watch. */
+function whenNear(element: Element, then: () => void) {
+  const near = new IntersectionObserver(
+    (entries) => {
+      if (Arr.some(entries, ({ isIntersecting }) => isIntersecting)) {
+        then();
+      }
+    },
+    { rootMargin: "300px" }
+  );
+  near.observe(element);
+  return () => near.disconnect();
+}
+
 /**
- * Keeps her picture still until she nears the screen, or a pointer or the
- * focus comes to her, and then loads her life. The picture stays in place while
- * the code loads, and her life takes over from it in one step, so nothing
- * flashes and nothing moves.
+ * Keeps her picture still until she nears the screen, or a pointer comes to
+ * her, and then loads her life. The observer's own callback wakes her, and so
+ * does the pointer; her frame is a `span` that cannot take the focus, so
+ * nothing else does. The picture stays in place while the code loads, and her
+ * life takes over from it in one step, so nothing flashes and nothing moves.
+ * When her life cannot load or breaks, the picture stays too: she stands in
+ * her pose, and the page around her never sees the failure.
  */
 export function Wake({ children, label, options, size }: WakeProps) {
   const [awake, setAwake] = useState(false);
-  const { entry, ref } = useIntersection({ rootMargin: "300px" });
-  const near = entry?.isIntersecting === true;
-  const edge = modeOf(options) === "peek";
+  const mode = modeOf(options);
   const wake = () => {
     startTransition(() => {
       setAwake(true);
     });
   };
 
-  useEffect(() => {
-    if (near) {
-      startTransition(() => {
-        setAwake(true);
-      });
-    }
-  }, [near]);
+  const still = <Frame mode={mode}>{children}</Frame>;
 
   return awake ? (
-    <Suspense fallback={<Frame edge={edge}>{children}</Frame>}>
-      <Live key={modeOf(options)} label={label} options={options} size={size} />
-    </Suspense>
+    <ErrorBoundary fallback={still}>
+      <Suspense fallback={still}>
+        <Live key={mode} label={label} options={options} size={size} />
+      </Suspense>
+    </ErrorBoundary>
   ) : (
-    <Frame edge={edge} onFocus={wake} onPointerEnter={wake} ref={ref}>
+    <Frame
+      mode={mode}
+      onPointerEnter={wake}
+      ref={(frame) => (frame === null ? undefined : whenNear(frame, wake))}
+    >
       {children}
     </Frame>
   );

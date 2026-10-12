@@ -1,21 +1,26 @@
 import { describe, expect, it } from "@effect/vitest";
+import { marked } from "@repo/design-system/components/nina/mark";
 import { paint, sameFigure } from "@repo/design-system/components/nina/paint";
-import { Picture } from "@repo/design-system/components/nina/picture";
-import { type Options, scene } from "@repo/mascot/nina/figure";
-import { limbOf } from "@repo/mascot/nina/mark";
+import { Picture } from "@repo/design-system/components/ui/picture";
+import { scene } from "@repo/mascot/nina/figure";
+import { limbOf, type Mark } from "@repo/mascot/nina/mark";
+import type { Options } from "@repo/mascot/nina/options";
 import { circle, group, path } from "@repo/mascot/shape";
 import { Array as Arr, Option, Order } from "effect";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-/** Draws a picture as the page does, and answers the svg element that holds it. */
+/**
+ * Draws a picture as a page that sizes it with its styles does, and answers the
+ * svg element that holds it. The picture has no name, so a screen reader skips it.
+ */
 function draw(
   shapes: ReturnType<typeof scene>["shapes"],
   box: readonly [number, number, number, number] = [0, 0, 200, 200]
 ) {
   const host = document.createElement("div");
   host.innerHTML = renderToStaticMarkup(
-    createElement(Picture, { box, label: "", shapes, size: 100 })
+    createElement(Picture<Mark>, { box, marked, shapes })
   );
   return Option.getOrThrow(Option.fromNullishOr(host.firstElementChild));
 }
@@ -128,7 +133,12 @@ describe("painting a frame onto the elements of the one before", () => {
     const after = scene({ act: "relaxed", t: 1.1, whole: true });
     const host = document.createElement("div");
     host.innerHTML = renderToStaticMarkup(
-      createElement(Picture, { ...before, label: "Nina", size: 100 })
+      createElement(Picture<Mark>, {
+        ...before,
+        label: "Nina",
+        marked,
+        size: 100,
+      })
     );
     const svg = Option.getOrThrow(Option.fromNullishOr(host.firstElementChild));
     const attributes = () =>

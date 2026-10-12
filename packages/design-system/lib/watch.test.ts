@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { gaze, LOOK_ATTRIBUTE, watch } from "@repo/design-system/lib/watch";
+import { leave, stagePage, world } from "@repo/design-system/test/toy";
 import { Array as Arr, MutableList } from "effect";
 
-const world = { calm: false };
 const SVG = "http://www.w3.org/2000/svg";
 let stopped: (() => void)[] = [];
 let observers: ObserverStub[] = [];
@@ -47,25 +47,16 @@ function move(x: number, y: number) {
 }
 
 beforeEach(() => {
-  world.calm = false;
   observers = [];
-  vi.useFakeTimers({
-    now: 0,
-    toFake: ["requestAnimationFrame", "cancelAnimationFrame"],
-  });
+  stagePage();
   vi.stubGlobal("IntersectionObserver", ObserverStub);
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: () => ({ matches: world.calm }),
-  });
 });
 
 afterEach(() => {
   Arr.forEach(stopped, (stop) => stop());
   stopped = [];
-  vi.restoreAllMocks();
   vi.unstubAllGlobals();
-  vi.useRealTimers();
+  leave();
 });
 
 describe("where eyes look", () => {
@@ -174,11 +165,13 @@ describe("eyes that follow the pointer", () => {
     expect(first.style.getPropertyValue("--look-x")).toBe("");
   });
 
-  it("do not follow a person who asked for less motion, and listen to nothing", () => {
+  it("do not follow a person who asked for less motion, and listen to nothing, even when the faces come near", () => {
     world.calm = true;
     const { first, root } = faces(MutableList.make<string>());
     const listening = vi.spyOn(window, "addEventListener");
     begin(root);
+    // Were the faces watched, they would be near the screen now, and listened to.
+    come(true);
     expect(observers).toHaveLength(0);
     move(1000, 50);
     vi.advanceTimersByTime(16);

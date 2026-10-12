@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { hitter } from "@repo/mascot/nina/test.hit";
+import { hitter, outlineOf } from "@repo/mascot/nina/test.hit";
 import {
   circle,
   ellipse,
@@ -15,6 +15,24 @@ import { Option } from "effect";
 function topAt(shapes: readonly Shape[], x: number, y: number) {
   return Option.getOrUndefined(hitter(shapes)(x, y));
 }
+
+describe("the places along a path", () => {
+  it("are the places it draws, in order: its moves and lines, then twelve along each curve, and the start again where it closes", () => {
+    expect(outlineOf("M0,0 L10,0 H20 V5 Z")).toEqual([
+      [0, 0],
+      [10, 0],
+      [20, 0],
+      [20, 5],
+      [0, 0],
+    ]);
+    const curve = outlineOf("M0,0 Q10,0 10,10");
+    expect(curve).toHaveLength(13);
+    expect(curve[0]).toEqual([0, 0]);
+    expect(curve[12]).toEqual([10, 10]);
+    expect(curve[6][0]).toBeCloseTo(7.5, 9);
+    expect(curve[6][1]).toBeCloseTo(2.5, 9);
+  });
+});
 
 describe("the shape on top at a place", () => {
   it("is found inside the outline of a filled path of lines", () => {

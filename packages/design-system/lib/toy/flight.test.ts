@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  type Bounds,
   frameSeconds,
   homeward,
   isMoving,
@@ -9,31 +8,15 @@ import {
   type Toy,
   transformOf,
 } from "@repo/design-system/lib/toy/flight";
+import {
+  FRAME_SECONDS,
+  fly,
+  INSIDE,
+  MIDDLE,
+  PEN,
+  within,
+} from "@repo/design-system/test/toy";
 import { Array as Arr, Option } from "effect";
-
-const WALLS: Bounds = { maxX: 300, maxY: 250, minX: -100, minY: -50 };
-const INSIDE = Option.some(WALLS);
-const FRAME = 0.016;
-/** A toy at rest in the middle of its box. */
-const MIDDLE: Toy = { ...REST, x: 100, y: 100 };
-
-/** Lets a toy fly for a while and gives every frame it passed through. */
-function fly(toy: Toy, bounds: Option.Option<Bounds>, frames = 600) {
-  return Arr.scan(
-    Arr.makeBy(frames, () => FRAME),
-    toy,
-    (state, dt) => (isMoving(state) ? step(state, dt, bounds) : state)
-  );
-}
-
-function within(toy: Toy) {
-  return (
-    toy.x >= WALLS.minX &&
-    toy.x <= WALLS.maxX &&
-    toy.y >= WALLS.minY &&
-    toy.y <= WALLS.maxY
-  );
-}
 
 describe("a toy in flight", () => {
   it("slows down and comes to rest where it landed", () => {
@@ -50,24 +33,27 @@ describe("a toy in flight", () => {
 
   it("leans with its speed and settles upright", () => {
     const toy: Toy = { ...MIDDLE, vx: 1500 };
-    expect(step(toy, FRAME, Option.none()).tilt).toBeGreaterThan(0);
+    expect(step(toy, FRAME_SECONDS, Option.none()).tilt).toBeGreaterThan(0);
     expect(Arr.lastNonEmpty(fly(toy, Option.none())).tilt).toBe(0);
   });
 
   it("turns back at a wall with part of its speed", () => {
-    const bounced = step({ ...REST, vx: 1000, x: 299 }, FRAME, INSIDE);
-    expect(bounced.x).toBe(WALLS.maxX);
-    expect(bounced.vx).toBeCloseTo(-1000 * Math.exp(-3.4 * FRAME) * 0.45, 6);
+    const bounced = step({ ...REST, vx: 1000, x: 299 }, FRAME_SECONDS, INSIDE);
+    expect(bounced.x).toBe(PEN.maxX);
+    expect(bounced.vx).toBeCloseTo(
+      -1000 * Math.exp(-3.4 * FRAME_SECONDS) * 0.45,
+      6
+    );
   });
 
   it("leaves a toy that is in a hand alone", () => {
     const held: Toy = { ...MIDDLE, mode: "held" };
-    expect(step(held, FRAME, INSIDE)).toBe(held);
+    expect(step(held, FRAME_SECONDS, INSIDE)).toBe(held);
   });
 
   it("goes where it is sent when its parent cannot be measured", () => {
     const frames = fly({ ...REST, vx: 2000 }, Option.none());
-    expect(Arr.lastNonEmpty(frames).x).toBeGreaterThan(WALLS.maxX);
+    expect(Arr.lastNonEmpty(frames).x).toBeGreaterThan(PEN.maxX);
   });
 
   it.each([
@@ -83,8 +69,8 @@ describe("a toy in flight", () => {
       const frames = fly({ ...MIDDLE, vx, vy }, INSIDE);
       expect(Arr.every(frames, within)).toBe(true);
       const walls = {
-        x: [WALLS.minX, WALLS.maxX],
-        y: [WALLS.minY, WALLS.maxY],
+        x: [PEN.minX, PEN.maxX],
+        y: [PEN.minY, PEN.maxY],
       };
       expect(
         Arr.some(
@@ -100,7 +86,7 @@ describe("a toy in flight", () => {
     const tight = Option.some({ maxX: 0, maxY: 0, minX: 10, minY: 10 });
     const squeezed = step(
       { ...REST, vx: 100, vy: 100, x: 5, y: 5 },
-      FRAME,
+      FRAME_SECONDS,
       tight
     );
     expect(squeezed).toMatchObject({ x: 0, y: 0 });
@@ -128,10 +114,10 @@ describe("the frames", () => {
     expect(frameSeconds(2000, 1000)).toBe(0.032);
   });
 
-  it("counts a frame that cannot be measured as a usual one", () => {
-    expect(frameSeconds(1000, 1000)).toBe(0.016);
-    expect(frameSeconds(990, 1000)).toBe(0.016);
-    expect(frameSeconds(Number.NaN, 1000)).toBe(0.016);
+  it("takes a step of zero for a frame that is not after the moment the loop woke up, never a negative step and never a whole frame", () => {
+    expect(frameSeconds(1000, 1000)).toBe(0);
+    expect(frameSeconds(990, 1000)).toBe(0);
+    expect(frameSeconds(-5000, 1000)).toBe(0);
   });
 });
 

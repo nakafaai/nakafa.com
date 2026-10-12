@@ -1,6 +1,8 @@
-import { Picture } from "@repo/design-system/components/nina/picture";
+import { marked } from "@repo/design-system/components/nina/mark";
 import { Wake } from "@repo/design-system/components/nina/wake.client";
-import { type Options, scene } from "@repo/mascot/nina/figure";
+import { Picture } from "@repo/design-system/components/ui/picture";
+import { scene } from "@repo/mascot/nina/figure";
+import type { Options } from "@repo/mascot/nina/options";
 
 type NinaProps = Options & {
   /**
@@ -22,7 +24,7 @@ type NinaProps = Options & {
 export function Nina({ label = "Nina", size = 96, ...options }: NinaProps) {
   return (
     <Wake label={label} options={options} size={size}>
-      <Picture {...scene(options)} label={label} size={size} />
+      <Picture {...scene(options)} label={label} marked={marked} size={size} />
     </Wake>
   );
 }

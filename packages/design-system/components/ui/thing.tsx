@@ -1,11 +1,13 @@
-import { Drawing } from "@repo/design-system/components/ui/drawing";
+import type { MarkAttributes } from "@repo/design-system/components/ui/drawing";
+import { Picture } from "@repo/design-system/components/ui/picture";
 import type { Mark } from "@repo/mascot/thing/mark";
 import type { ThingName } from "@repo/mascot/thing/name";
 import { PICTURES } from "@repo/mascot/thing/picture";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
-import { createElement, type SVGAttributes } from "react";
+
+/** The square that every thing is drawn on. */
+const BOX = [0, 0, 64, 64] as const;
 
 /**
  * What a shape does by itself. A motion plays only for people who have not
@@ -29,7 +31,7 @@ const motionVariants = cva("", {
 });
 
 /** The class of a marked shape, and the delay its motion starts after. */
-function marked({ delay, motion }: Mark): SVGAttributes<SVGElement> {
+function marked({ delay, motion }: Mark): MarkAttributes {
   return {
     className: motionVariants({ motion }),
     style: delay === undefined ? undefined : { animationDelay: `${delay}s` },
@@ -51,20 +53,17 @@ export function Thing({
   name: ThingName;
   size?: number;
 }) {
-  return createElement(
-    "svg",
-    {
-      "aria-hidden": true,
-      className: cn(
-        "block size-[var(--toy,56px)] overflow-visible text-foreground",
+  return (
+    <Picture
+      box={BOX}
+      className={cn(
+        "overflow-visible text-foreground",
+        size === undefined && "size-[var(--toy,56px)]",
         className
-      ),
-      "data-thing": name,
-      style: size === undefined ? undefined : { height: size, width: size },
-      viewBox: "0 0 64 64",
-    },
-    ...Arr.map(PICTURES[name], (shape) =>
-      createElement(Drawing<Mark>, { marked, shape })
-    )
+      )}
+      marked={marked}
+      shapes={PICTURES[name]}
+      size={size}
+    />
   );
 }

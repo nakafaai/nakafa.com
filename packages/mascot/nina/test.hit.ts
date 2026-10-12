@@ -42,11 +42,7 @@ function quadratic(a: number, b: number, c: number, t: number) {
   return m * m * a + 2 * m * t * b + t * t * c;
 }
 
-/**
- * The places along a curve that leaves `from` and bends toward its control
- * places, the last of which it reaches: a quadratic curve has two, a cubic
- * curve three.
- */
+/** The places along a curve from `from` through its control places, the last of which it reaches: two for a quadratic curve, three for a cubic. */
 function curveFrom(from: Place, controls: readonly Place[]): readonly Place[] {
   return Arr.makeBy(PIECES, (i): Place => {
     const t = (i + 1) / PIECES;
@@ -95,6 +91,11 @@ function piecesOf(d: string): readonly (readonly Place[])[] {
   );
 }
 
+/** The places along a path, in the order it draws them. The one reader of path text in her tests. */
+export function outlineOf(d: string): readonly Place[] {
+  return Arr.flatten(piecesOf(d));
+}
+
 /** Whether a place is inside an outline, counting how often a ray from it crosses the outline. */
 function inside(outline: readonly Place[], [x, y]: Place) {
   return Arr.reduce(
@@ -129,10 +130,7 @@ function touches(line: readonly Place[], at: Place, width: number) {
   );
 }
 
-/**
- * A transform function with all of its numbers: a translation by x and y, a
- * scale by x and y, or a rotation by degrees about x and y.
- */
+/** A transform function with all its numbers: a translation, a scale, or a rotation in degrees about a place. */
 type Call = readonly [name: string, a: number, b: number, c: number];
 
 /** Reads one transform function, giving the numbers it leaves out their default. */
@@ -176,7 +174,7 @@ interface Layer<Mark> {
   readonly shape: Shape<Mark>;
 }
 
-/** What a kind of shape covers: the places that bound it, and the test inside them. */
+/** What a kind of shape covers: the places that bound it, and the test inside. */
 interface Cover {
   readonly bound: readonly Place[];
   readonly covers: (at: Place) => boolean;
@@ -285,10 +283,10 @@ function layersOf<Mark>(
 }
 
 /**
- * Finds what is on top at a place of a picture, the way a browser does when it
- * is asked which element lies there: it looks through the groups and their
- * transforms, takes the shape that is drawn last, and counts a stroke as well
- * as a fill. Answers the shape, or nothing when the place is empty.
+ * Finds what is on top at a place of a picture, as a browser does when it is
+ * asked which element lies there: through the groups and their transforms, the
+ * shape drawn last, a stroke counting as well as a fill. Answers the shape, or
+ * nothing when the place is empty.
  */
 export function hitter<Mark>(shapes: readonly Shape<Mark>[]) {
   const layers = layersOf(shapes, []);

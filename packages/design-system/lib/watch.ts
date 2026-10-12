@@ -1,10 +1,10 @@
+import { isCalm } from "@repo/design-system/lib/calm";
 import { Array as Arr, Option } from "effect";
 
 /** The attribute that marks the face of an animal or of Nina, whose eyes follow the pointer. */
 export const LOOK_ATTRIBUTE = "data-look";
 
 const LOOK_SELECTOR = `[${LOOK_ATTRIBUTE}]`;
-const CALM = "(prefers-reduced-motion: reduce)";
 /** How far, in units of a face's picture, an eye may turn toward the pointer. */
 const REACH = 3.2;
 /** A pointer this far from a face, in pixels, or further, pulls the eyes all the way. */
@@ -46,7 +46,7 @@ export function gaze(
  * Returns what stops it.
  */
 export function watch(element: HTMLElement) {
-  if (window.matchMedia(CALM).matches) {
+  if (isCalm()) {
     return () => undefined;
   }
   // The last place the pointer was seen: a frame is only asked for after it moved.

@@ -4,6 +4,7 @@ import {
   lean,
   type Point,
   PointSchema,
+  REST,
   type Toy,
   ToySchema,
 } from "@repo/design-system/lib/toy/flight";
@@ -22,10 +23,13 @@ type Sample = typeof SampleSchema.Type;
 /**
  * A toy in a hand: the toy, where the hand took it, where it started, and the
  * last reading of the pointer. A hand that has not moved far enough has not
- * dragged yet, so a press stays a click.
+ * dragged yet, so a press stays a click. `home` says that the toy was sent home
+ * while the hand held it: it stays under the hand, and goes home when the hand
+ * lets go.
  */
 const HoldSchema = Schema.Struct({
   dragged: Schema.Boolean,
+  home: Schema.Boolean,
   offset: PointSchema,
   origin: PointSchema,
   point: PointSchema,
@@ -56,6 +60,7 @@ const PULL = 900;
 export function grab(toy: Toy, pointer: Sample, scroll: Point): Hold {
   return {
     dragged: false,
+    home: false,
     offset: {
       x: pointer.x + scroll.x - toy.x,
       y: pointer.y + scroll.y - toy.y,
@@ -126,21 +131,37 @@ export function drag(
   );
 }
 
+/** Sends a toy in a hand home: it stays under the hand until the hand lets go of it. */
+export function sendHome(hold: Hold): Hold {
+  return { ...hold, home: true };
+}
+
+/** Puts a toy in a hand back at rest: no lean, no speed, nowhere to go. It stays under the hand. */
+export function still(hold: Hold): Hold {
+  return { ...hold, home: false, toy: { ...hold.toy, tilt: 0, vx: 0, vy: 0 } };
+}
+
 /**
  * Lets go of a toy. It is thrown at the speed of the hand, up to a limit. A
  * hand that waited before letting go, a press that never moved, and a person
- * who asked for less motion throw nothing.
+ * who asked for less motion throw nothing. A toy that was sent home while it
+ * was held goes home from where it is, at once for a person who asked for less
+ * motion.
  */
 export function release(hold: Hold, now: number, calm: boolean): Toy {
   const { toy } = hold;
-  if (calm || !hold.dragged) {
-    return { ...toy, mode: "free", tilt: 0, vx: 0, vy: 0 };
+  if (calm) {
+    return hold.home ? REST : { ...toy, mode: "free", tilt: 0, vx: 0, vy: 0 };
+  }
+  const mode = hold.home ? "home" : "free";
+  if (!hold.dragged) {
+    return { ...toy, mode, tilt: 0, vx: 0, vy: 0 };
   }
   const rested = now - hold.time > REST_AFTER;
   const limit = { maximum: THROW_LIMIT, minimum: -THROW_LIMIT };
   return {
     ...toy,
-    mode: "free",
+    mode,
     vx: rested ? 0 : Num.clamp(toy.vx, limit),
     vy: rested ? 0 : Num.clamp(toy.vy, limit),
   };

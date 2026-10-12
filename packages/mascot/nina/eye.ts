@@ -1,7 +1,8 @@
 import { NINA } from "@repo/mascot/color";
 import { ink, line } from "@repo/mascot/nina/ink";
 import { EYE, type Mark } from "@repo/mascot/nina/mark";
-import { at, tenth } from "@repo/mascot/nina/point";
+import { at } from "@repo/mascot/nina/point";
+import { tenth } from "@repo/mascot/round";
 import { circle, ellipse, path, type Shape } from "@repo/mascot/shape";
 import { Schema } from "effect";
 

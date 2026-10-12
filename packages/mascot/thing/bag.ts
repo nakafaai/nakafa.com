@@ -1,4 +1,12 @@
-import { BASE, BOARD, NINA, PAPER, PINK, POP, WHITE } from "@repo/mascot/color";
+import {
+  BASE,
+  BOARD,
+  NINA,
+  PAPER,
+  POP,
+  SOFT_PINK,
+  WHITE,
+} from "@repo/mascot/color";
 import { circle, group, path, rect, type Shape } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 import type { Mark } from "@repo/mascot/thing/mark";
@@ -59,7 +67,7 @@ export const BAG = {
     }),
     path({
       d: "M32,12 c8,-2 18,6 20,15 c2,10 -5,22 -15,24 c-9,3 -22,-2 -25,-13 c-3,-10 4,-21 12,-24 c3,-1 5,-2 8,-2 Z M32,24 a8,8 0 1 1 -0.01,0 Z",
-      fill: PINK,
+      fill: SOFT_PINK,
       fillRule: "evenodd",
     }),
     path({

@@ -1,7 +1,8 @@
-import { NINA, PINK } from "@repo/mascot/color";
+import { NINA, SOFT_PINK } from "@repo/mascot/color";
 import { ink, line } from "@repo/mascot/nina/ink";
 import type { Mark } from "@repo/mascot/nina/mark";
-import { at, tenth } from "@repo/mascot/nina/point";
+import { at } from "@repo/mascot/nina/point";
+import { tenth } from "@repo/mascot/round";
 import { ellipse, path, type Shape } from "@repo/mascot/shape";
 import { Schema } from "effect";
 
@@ -58,7 +59,13 @@ export const MOUTHS = {
       strokeLinejoin: "round",
       strokeWidth: 3,
     }),
-    ellipse({ cx: tenth(x), cy: tenth(y + 20), fill: PINK, rx: 9, ry: 5 }),
+    ellipse({
+      cx: tenth(x),
+      cy: tenth(y + 20),
+      fill: SOFT_PINK,
+      rx: 9,
+      ry: 5,
+    }),
   ],
   oh: (x, y) => [
     ellipse({ cx: tenth(x), cy: tenth(y + 6), fill: NINA.ink, rx: 5, ry: 6 }),
@@ -72,7 +79,13 @@ export const MOUTHS = {
   ],
   // A pressed mouth with the tip of her tongue out at one corner.
   tongue: (x, y) => [
-    ellipse({ cx: tenth(x + 9), cy: tenth(y + 10), fill: PINK, rx: 5, ry: 6 }),
+    ellipse({
+      cx: tenth(x + 9),
+      cy: tenth(y + 10),
+      fill: SOFT_PINK,
+      rx: 5,
+      ry: 6,
+    }),
     ink(line([x - 10, y + 6], [x + 10, y + 6])),
   ],
   wave: (x, y) => [

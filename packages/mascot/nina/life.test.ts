@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { type Options, scene } from "@repo/mascot/nina/figure";
+import { scene } from "@repo/mascot/nina/figure";
 import {
   gazeAt,
   type Life,
@@ -10,8 +10,11 @@ import {
   view,
 } from "@repo/mascot/nina/life";
 import type { Mark } from "@repo/mascot/nina/mark";
+import { BEHAVIORS, type Options } from "@repo/mascot/nina/options";
+import { wholeNumbers } from "@repo/mascot/nina/spring";
+import { EVERY_OPTIONS } from "@repo/mascot/nina/test.fixture";
 import type { Shape } from "@repo/mascot/shape";
-import { Array as Arr } from "effect";
+import { Array as Arr, Formatter, Number as Num } from "effect";
 
 const WHOLE: Options = { act: "relaxed", whole: true };
 const PEEK: Options = { act: "gripping", lean: "peek" };
@@ -63,12 +66,24 @@ function surprised(life: Life, options: Options) {
 }
 
 describe("her life", () => {
-  it("takes over from the still picture without a jump, in all three windows", () => {
-    for (const options of [WHOLE, PEEK, TILE]) {
-      expect(view(start(options, LOWEST), options).picture).toEqual(
-        scene(options)
-      );
+  it("takes over from the still picture without a jump, for every set of options", () => {
+    expect(EVERY_OPTIONS).toHaveLength(592);
+    for (const options of EVERY_OPTIONS) {
+      // A failure names the set of options in the message.
+      expect(
+        view(start(options, LOWEST), options).picture,
+        Formatter.format(options)
+      ).toEqual(scene(options));
     }
+  });
+
+  it("shows the face of an act over an edge from the very first frame, as the still picture does", () => {
+    const greeting: Options = { act: "greeting", lean: "peek" };
+    expect(scene(greeting)).toEqual(scene({ ...greeting, mood: "happy" }));
+    expect(scene({ act: "drumming", lean: "left" })).toEqual(
+      scene({ act: "drumming", lean: "left", mood: "laughing" })
+    );
+    expect(scene(greeting)).not.toEqual(scene({ ...greeting, mood: "hello" }));
   });
 
   it("starts on the moment and the look that the options ask for", () => {
@@ -96,12 +111,20 @@ describe("her life", () => {
     expect(life.act).toBe("relaxed");
   });
 
-  it("moves her limbs after the act without throwing one, even when frames take long", () => {
+  it("brings her limbs to the act in a frame that took long, as small steps would, and throws none past it", () => {
     const options: Options = { act: "waving", whole: true };
-    const slow = Arr.reduce(Arr.range(1, 200), start(options, LOWEST), (held) =>
-      step(held, options, 0.05, STILL, LOWEST)
-    );
-    expect(Arr.every(slow.springs.x, (x) => Math.abs(x) < 400)).toBe(true);
+    const changed = retarget(start(WHOLE, LOWEST), "waving");
+    const slow = 0.3;
+    const target = wholeNumbers(BEHAVIORS.waving.pose(slow));
+    const gap = (life: Life) =>
+      Arr.map(Arr.zip(life.springs.x, target), ([x, goal]) =>
+        Math.abs(x - goal)
+      );
+    const after = step(changed, options, slow, STILL, LOWEST);
+    // One step as long as the frame would run away: each limb would end up far
+    // past the act, where small steps leave it a few percent from it.
+    expect(Num.sumAll(gap(after))).toBeLessThan(Num.sumAll(gap(changed)) / 4);
+    expect(Math.max(...gap(after))).toBeLessThan(Math.max(...gap(changed)));
   });
 
   it("changes what she does without a jump", () => {

@@ -1,99 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { TOY_ATTRIBUTE } from "@repo/design-system/lib/toy/dom";
-import { createToys } from "@repo/design-system/lib/toy/drag";
 import {
   click,
   define,
   FRAME,
   flight,
+  leave,
+  listening,
   offsetOf,
+  play,
   point,
-  room,
+  put,
+  ROOM_WALLS,
   stagePage,
+  throwToy,
   toyIn,
   wait,
   world,
 } from "@repo/design-system/test/toy";
-import { Array as Arr, MutableList, Predicate, Result } from "effect";
-
-let stopped: (() => void)[] = [];
-
-/**
- * A toy of 56 at (200, 150) in a parent of 800 by 600 can move this far from
- * the place it lies at before it meets a wall.
- */
-const WALLS = { maxX: 544, maxY: 394, minX: -200, minY: -150 };
-/** The fastest a toy is thrown, in pixels per second. */
-const TOP_SPEED = 2200;
-
-/** A room with the toys started on its root, and one toy in it. */
-function play(heard: Parameters<ReturnType<typeof createToys>["add"]>[1] = {}) {
-  const { parent, root } = room();
-  const toys = createToys();
-  stopped = Arr.append(stopped, toys.attach(root));
-  const toy = toyIn(parent);
-  const remove = toys.add(toy, heard);
-  return { parent, remove, root, toy, toys };
-}
-
-/** Reactions that write down what a toy tells its page. */
-function listening() {
-  const told = MutableList.make<string>();
-  return {
-    heard: {
-      drop: ({ x, y }: { x: number; y: number }) =>
-        MutableList.append(told, `drop ${x},${y}`),
-      grab: () => MutableList.append(told, "grab"),
-      release: () => MutableList.append(told, "release"),
-    },
-    told,
-  };
-}
-
-/**
- * Takes a toy in the middle of the window and moves the hand by (dx, dy) a
- * frame, three frames, then lets go at once. The hand stops short of every
- * wall, so the toy meets it in flight.
- */
-function throwToy(toy: HTMLElement, dx: number, dy: number) {
-  point(toy, "pointerdown", 400, 300);
-  Arr.forEach(Arr.range(1, 3), (frame) => {
-    wait(FRAME);
-    point(toy, "pointermove", 400 + dx * frame, 300 + dy * frame);
-  });
-  point(toy, "pointerup", 400 + dx * 3, 300 + dy * 3);
-}
-
-/** Takes a toy and moves it by `dx`, then lets go after a rest, so that it is put down and not thrown. */
-function put(toy: HTMLElement, dx: number) {
-  point(toy, "pointerdown", 400, 300);
-  wait(FRAME);
-  point(toy, "pointermove", 400 + dx, 300);
-  wait(96);
-  point(toy, "pointerup", 400 + dx, 300);
-}
-
-function inside({ x, y }: { x: number; y: number }) {
-  return (
-    x >= WALLS.minX && x <= WALLS.maxX && y >= WALLS.minY && y <= WALLS.maxY
-  );
-}
-
-function atWall({ x, y }: { x: number; y: number }) {
-  return (
-    Arr.contains([WALLS.minX, WALLS.maxX], x) ||
-    Arr.contains([WALLS.minY, WALLS.maxY], y)
-  );
-}
+import { Array as Arr, MutableList } from "effect";
 
 beforeEach(stagePage);
-
-afterEach(() => {
-  Arr.forEach(stopped, (stop) => stop());
-  stopped = [];
-  vi.restoreAllMocks();
-  vi.useRealTimers();
-});
+afterEach(leave);
 
 describe("a toy in a hand", () => {
   it("follows the hand from the point where it was taken, and never jumps under the pointer", () => {
@@ -133,10 +60,10 @@ describe("a toy in a hand", () => {
     const { parent, toy, toys } = play();
     const other = toyIn(parent);
     toys.add(other, {});
-    Arr.forEach([toy, other, toy], (taken) => {
+    for (const taken of [toy, other, toy]) {
       point(taken, "pointerdown", 400, 300);
       point(taken, "pointerup", 400, 300);
-    });
+    }
     expect([toy.style.zIndex, other.style.zIndex]).toEqual(["13", "12"]);
   });
 
@@ -165,9 +92,9 @@ describe("a toy in a hand", () => {
     point(toy, "pointerdown", 400, 300);
     wait(FRAME);
     point(toy, "pointermove", 3400, -2700);
-    expect(offsetOf(toy)).toEqual({ x: WALLS.maxX, y: WALLS.minY });
+    expect(offsetOf(toy)).toEqual({ x: ROOM_WALLS.maxX, y: ROOM_WALLS.minY });
     point(toy, "pointermove", -2600, 3300);
-    expect(offsetOf(toy)).toEqual({ x: WALLS.minX, y: WALLS.maxY });
+    expect(offsetOf(toy)).toEqual({ x: ROOM_WALLS.minX, y: ROOM_WALLS.maxY });
   });
 
   it("goes where the hand takes it when it has no parent to measure", () => {
@@ -197,71 +124,50 @@ describe("a toy in a hand", () => {
     point(toy, "pointerup", 400, 300);
     expect(offsetOf(toy)).toEqual({ x: 0, y: 0 });
   });
+});
+
+describe("a toy that pulls the page", () => {
+  /** Takes a toy, holds it at height `y` of the window for ten frames, and answers how far the page was pulled. */
+  function pulled(y: number) {
+    world.scrollY = 1000;
+    const { toy } = play();
+    point(toy, "pointerdown", 400, 300);
+    wait(FRAME);
+    point(toy, "pointermove", 400, y);
+    wait(10 * FRAME);
+    return world.scrollY - 1000;
+  }
 
   it.each([
-    { edge: "bottom", y: 790, sign: 1 },
-    { edge: "top", y: 10, sign: -1 },
+    { by: -144, where: "top edge", y: 0 },
+    { by: 144, where: "bottom edge", y: 800 },
+    { by: -72, where: "halfway between the top edge and the middle", y: 42 },
+    { by: 72, where: "halfway between the middle and the bottom edge", y: 758 },
   ])(
-    "pulls the page along near the $edge of the window, no faster than 900 pixels a second",
-    ({ sign, y }) => {
-      world.scrollY = 1000;
-      const { toy } = play();
-      point(toy, "pointerdown", 400, 300);
-      wait(FRAME);
-      point(toy, "pointermove", 400, y);
-      wait(1000);
-      const pulled = (world.scrollY - 1000) * sign;
-      expect(pulled).toBeGreaterThan(500);
-      expect(pulled).toBeLessThanOrEqual(900);
+    "pulls the page by $by pixels in ten frames at the $where: 900 pixels a second at the very edge, and less toward the middle",
+    ({ by, y }) => {
+      expect(pulled(y)).toBeCloseTo(by, 6);
     }
   );
 
   it("does not pull the page along in the middle of the window", () => {
-    const { toy } = play();
-    point(toy, "pointerdown", 400, 300);
-    wait(FRAME);
-    point(toy, "pointermove", 400, 400);
-    wait(1000);
-    expect(world.scrollY).toBe(0);
+    expect(pulled(400)).toBe(0);
   });
 });
 
 describe("a toy let go", () => {
-  it.each([
-    { name: "right wall", dx: 40, dy: 0 },
-    { name: "left wall", dx: -40, dy: 0 },
-    { name: "bottom wall", dx: 0, dy: 40 },
-    { name: "top wall", dx: 0, dy: -40 },
-    { name: "bottom right corner", dx: 30, dy: 30 },
-    { name: "top left corner", dx: -30, dy: -30 },
-  ])(
-    "never leaves its box when thrown at the $name, and comes to rest",
-    ({ dx, dy }) => {
-      const { toy } = play();
-      throwToy(toy, dx, dy);
-      const offsets = flight(toy, 5000);
-      expect(Arr.every(offsets, inside)).toBe(true);
-      expect(Arr.some(offsets, atWall)).toBe(true);
-      expect(vi.getTimerCount()).toBe(0);
-    }
-  );
-
-  it("never passes the top speed, however fast the hand was", () => {
+  it("never leaves its box when thrown at a wall, and comes to rest", () => {
     const { toy } = play();
-    point(toy, "pointerdown", 100, 300);
-    wait(FRAME);
-    // Three hundred pixels in one frame is 18 750 pixels a second.
-    point(toy, "pointermove", 400, 300);
-    point(toy, "pointerup", 400, 300);
-    const offsets = Arr.prepend(flight(toy, 1000), { x: 300, y: 0 });
-    const steps = Arr.map(
-      Arr.zip(offsets, Arr.drop(offsets, 1)),
-      ([from, to]) => Math.abs(to.x - from.x)
-    );
-    expect(Arr.some(steps, (step) => step > 0)).toBe(true);
-    expect(Arr.every(steps, (step) => step <= (TOP_SPEED * FRAME) / 1000)).toBe(
-      true
-    );
+    throwToy(toy, 40, 0);
+    const offsets = flight(toy, 5000);
+    expect(
+      Arr.every(
+        offsets,
+        ({ x }) => x >= ROOM_WALLS.minX && x <= ROOM_WALLS.maxX
+      )
+    ).toBe(true);
+    expect(Arr.some(offsets, ({ x }) => x === ROOM_WALLS.maxX)).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("throws nothing when the hand rested for more than 80 milliseconds before letting go", () => {
@@ -295,45 +201,44 @@ describe("a toy let go", () => {
     wait(800);
     expect(offsetOf(toy)).toEqual(stoppedAt);
   });
+});
 
-  it("is let go without a throw and without a drop when the pointer is cancelled", () => {
-    const { heard, told } = listening();
-    const { toy } = play(heard);
-    point(toy, "pointerdown", 300, 200);
-    wait(FRAME);
-    point(toy, "pointermove", 360, 200);
-    const held = offsetOf(toy);
-    point(toy, "pointercancel", 360, 200);
-    wait(480);
-    expect(offsetOf(toy)).toEqual(held);
-    expect(MutableList.takeAll(told)).toEqual(["grab", "release"]);
-  });
-
-  it("is let go when the pointer capture is lost", () => {
-    const { toy } = play();
-    point(toy, "pointerdown", 400, 300);
-    toy.dispatchEvent(
-      new PointerEvent("lostpointercapture", { bubbles: true, pointerId: 1 })
-    );
-    expect(toy.dataset.held).toBe("false");
-  });
-
-  it("is let go when the toys are stopped, and stopping again needs no care", () => {
-    const { parent, root } = room();
-    const toys = createToys();
-    const stop = toys.attach(root);
-    const toy = toyIn(parent);
-    toys.add(toy, {});
-    point(toy, "pointerdown", 400, 300);
-    wait(FRAME);
-    point(toy, "pointermove", 460, 300);
-    stop();
-    expect(toy.dataset.held).toBe("false");
-    expect(vi.getTimerCount()).toBe(0);
-    point(toy, "pointermove", 600, 300);
-    expect(offsetOf(toy)).toEqual({ x: 60, y: 0 });
-    expect(() => stop()).not.toThrow();
-  });
+describe("a hold that is cancelled or whose capture is lost", () => {
+  it.each([
+    {
+      end: (toy: HTMLElement) => point(toy, "pointercancel", 0, 0),
+      name: "pointer is cancelled",
+    },
+    {
+      end: (toy: HTMLElement) =>
+        toy.dispatchEvent(
+          new PointerEvent("lostpointercapture", {
+            bubbles: true,
+            pointerId: 1,
+          })
+        ),
+      name: "pointer capture is lost",
+    },
+  ])(
+    "is thrown on at the speed of the hand, and the page hears where the hand was, when the $name",
+    ({ end }) => {
+      const { heard, told } = listening();
+      const { toy } = play(heard);
+      point(toy, "pointerdown", 300, 200);
+      wait(FRAME);
+      point(toy, "pointermove", 360, 200);
+      const held = offsetOf(toy);
+      end(toy);
+      expect(toy.dataset.held).toBe("false");
+      expect(Arr.some(flight(toy, 1000), ({ x }) => x > held.x)).toBe(true);
+      expect(MutableList.takeAll(told)).toEqual([
+        "grab",
+        "release",
+        "drop 360,200",
+      ]);
+      expect(click(toy).defaultPrevented).toBe(true);
+    }
+  );
 });
 
 describe("a press", () => {
@@ -360,108 +265,5 @@ describe("a press", () => {
     put(toy, 60);
     point(parent, "pointerdown", 10, 10);
     expect(click(toy).defaultPrevented).toBe(false);
-  });
-});
-
-describe("a toy that tells its page", () => {
-  it("tells when it is taken, let go, and, after a drag, where the hand dropped it", () => {
-    const { heard, told } = listening();
-    const { toy } = play(heard);
-    point(toy, "pointerdown", 400, 300);
-    wait(FRAME);
-    point(toy, "pointermove", 460, 300);
-    point(toy, "pointerup", 470, 310);
-    expect(MutableList.takeAll(told)).toEqual([
-      "grab",
-      "release",
-      "drop 470,310",
-    ]);
-  });
-
-  it("tells no drop for a press that never moved", () => {
-    const { heard, told } = listening();
-    const { toy } = play(heard);
-    point(toy, "pointerdown", 400, 300);
-    point(toy, "pointerup", 400, 300);
-    expect(MutableList.takeAll(told)).toEqual(["grab", "release"]);
-  });
-
-  it("is a toy only while it is added, and forgets where it was left once it is taken out", () => {
-    const { remove, toy, toys } = play();
-    expect(toy.hasAttribute(TOY_ATTRIBUTE)).toBe(true);
-    put(toy, 100);
-    remove();
-    expect(toy.hasAttribute(TOY_ATTRIBUTE)).toBe(false);
-    point(toy, "pointerdown", 400, 300);
-    expect(toy.dataset.held).toBe("false");
-    toys.add(toy, {});
-    put(toy, 10);
-    expect(offsetOf(toy)).toEqual({ x: 10, y: 0 });
-  });
-});
-
-describe("a toy sent home", () => {
-  it("springs back to its place and rests there", () => {
-    const { toy, toys } = play();
-    throwToy(toy, 20, 20);
-    wait(2000);
-    expect(offsetOf(toy)).not.toEqual({ x: 0, y: 0 });
-    toys.home(toy);
-    wait(4000);
-    expect(offsetOf(toy)).toEqual({ x: 0, y: 0 });
-    expect(vi.getTimerCount()).toBe(0);
-  });
-
-  it("goes home at once for a person who asked for less motion", () => {
-    world.calm = true;
-    const { toy, toys } = play();
-    put(toy, 60);
-    toys.home(toy);
-    expect(offsetOf(toy)).toEqual({ x: 0, y: 0 });
-  });
-
-  it("is put back at once when told to rest", () => {
-    const { toy, toys } = play();
-    put(toy, 60);
-    toys.rest(toy);
-    expect(offsetOf(toy)).toEqual({ x: 0, y: 0 });
-  });
-});
-
-describe("the listeners of the toys", () => {
-  it("are one press on the root until a toy is taken, and gone again once it is let go", () => {
-    const { parent, root } = room();
-    const onRoot = vi.spyOn(root, "addEventListener");
-    const onWindow = vi.spyOn(window, "addEventListener");
-    const toys = createToys();
-    stopped = Arr.append(stopped, toys.attach(root));
-    const toy = toyIn(parent);
-    const onToy = vi.spyOn(toy, "addEventListener");
-    toys.add(toy, {});
-    expect(Arr.map(onRoot.mock.calls, ([type]) => type)).toEqual([
-      "pointerdown",
-    ]);
-    expect(onWindow).not.toHaveBeenCalled();
-    expect(onToy).not.toHaveBeenCalled();
-
-    point(toy, "pointerdown", 400, 300);
-    expect(Arr.map(onWindow.mock.calls, ([type]) => type)).toEqual([
-      "pointermove",
-      "pointerup",
-      "pointercancel",
-      "lostpointercapture",
-      "scroll",
-    ]);
-    const signals = Arr.filterMap(onWindow.mock.calls, ([, , options]) =>
-      Predicate.hasProperty(options, "signal") &&
-      options.signal instanceof AbortSignal
-        ? Result.succeed(options.signal)
-        : Result.failVoid
-    );
-    expect(signals).toHaveLength(5);
-    expect(Arr.every(signals, (signal) => !signal.aborted)).toBe(true);
-
-    point(toy, "pointerup", 400, 300);
-    expect(Arr.every(signals, (signal) => signal.aborted)).toBe(true);
   });
 });

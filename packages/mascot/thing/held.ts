@@ -1,4 +1,12 @@
-import { BASE, NINA, PAGE, PINK, POP, TEXT, WHITE } from "@repo/mascot/color";
+import {
+  BASE,
+  NINA,
+  PAGE,
+  POP,
+  SOFT_PINK,
+  TEXT,
+  WHITE,
+} from "@repo/mascot/color";
 import { circle, group, path, rect, type Shape } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 import type { Mark } from "@repo/mascot/thing/mark";
@@ -137,7 +145,14 @@ export const HELD = {
             path({ d: "M0,0 L1.9,-4.2 L-1.9,-4.2 Z", fill: TEXT }),
             rect({ fill: POP.yellow, height: 27, width: 10, x: -5, y: -38 }),
             rect({ fill: BASE, height: 4, width: 10, x: -5, y: -42 }),
-            rect({ fill: PINK, height: 8, rx: 3, width: 10, x: -5, y: -50 }),
+            rect({
+              fill: SOFT_PINK,
+              height: 8,
+              rx: 3,
+              width: 10,
+              x: -5,
+              y: -50,
+            }),
           ],
           { transform: "translate(31 47) rotate(32)" }
         ),

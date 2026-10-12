@@ -49,14 +49,9 @@ export function createScatter(rest: (el: HTMLElement) => void) {
   let width = 0;
   let frame = 0;
 
-  /** Places every toy, with one pass over the page to read and one to write. */
-  function layout() {
-    cancelAnimationFrame(frame);
+  /** Places every toy over the layer, with one pass over the page to read and one to write. */
+  function lay(current: HTMLElement) {
     frame = 0;
-    if (Option.isNone(layer)) {
-      return;
-    }
-    const current = layer.value;
     const next = current.clientWidth;
     // The first width is no change of page: nothing has moved yet.
     const fresh = width !== 0 && next !== width;
@@ -97,7 +92,8 @@ export function createScatter(rest: (el: HTMLElement) => void) {
   /** Asks for a pass at the next frame, once however many changes come. */
   function ask() {
     if (frame === 0 && Option.isSome(layer)) {
-      frame = requestAnimationFrame(layout);
+      const current = layer.value;
+      frame = requestAnimationFrame(() => lay(current));
     }
   }
 
@@ -127,7 +123,5 @@ export function createScatter(rest: (el: HTMLElement) => void) {
         layer = Option.none();
       };
     },
-
-    layout,
   };
 }

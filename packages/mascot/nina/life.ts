@@ -1,9 +1,13 @@
-import { ACTS, ActSchema } from "@repo/mascot/nina/act";
-import { EDGES, EdgeSchema } from "@repo/mascot/nina/edge";
 import { type Look, LookSchema, MoodSchema } from "@repo/mascot/nina/face";
-import { compose, type Options, viewed } from "@repo/mascot/nina/figure";
-import { homeOf, modeOf } from "@repo/mascot/nina/mode";
-import { type Pose, REST } from "@repo/mascot/nina/pose";
+import { appear } from "@repo/mascot/nina/figure";
+import {
+  BEHAVIORS,
+  BehaviorSchema,
+  homeOf,
+  modeOf,
+  type Options,
+} from "@repo/mascot/nina/options";
+import type { Pose } from "@repo/mascot/nina/pose";
 import {
   followPeek,
   followWhole,
@@ -15,9 +19,6 @@ import {
   wholeSprung,
 } from "@repo/mascot/nina/spring";
 import { Array as Arr, Match, Number as Num, Schema } from "effect";
-
-/** An act of the whole figure, or one over an edge. */
-const NameSchema = Schema.Union([ActSchema, EdgeSchema]);
 
 /** A face that a press shows for a moment, and the time it is shown. */
 const GladSchema = Schema.Struct({
@@ -32,12 +33,12 @@ const GladSchema = Schema.Struct({
  * press has shown for a moment. All of it moves with one clock, `now`.
  */
 const LifeSchema = Schema.Struct({
-  act: NameSchema,
+  act: BehaviorSchema,
   clicks: Schema.Finite,
   clock: Schema.Finite,
   gaze: LookSchema,
   glad: Schema.optionalKey(GladSchema),
-  home: NameSchema,
+  home: BehaviorSchema,
   idle: Schema.Finite,
   next: Schema.Finite,
   now: Schema.Finite,
@@ -47,16 +48,13 @@ const LifeSchema = Schema.Struct({
 
 export type Life = typeof LifeSchema.Type;
 
-/** Where a person's pointer stands in relation to her: the box her picture fills on the screen. */
+/** The box her picture fills on the screen, in pixels: her eyes look from it toward a pointer. */
 const BoxSchema = Schema.Struct({
   height: Schema.Finite,
   left: Schema.Finite,
   top: Schema.Finite,
   width: Schema.Finite,
 });
-
-/** Every act she does, whole or over an edge. */
-const BEHAVIORS = { ...ACTS, ...EDGES };
 
 /** The faces of a tile, one for each press in turn. */
 const FACES = ["laughing", "winking", "proud"] as const;
@@ -245,39 +243,38 @@ export function press(life: Life, options: Options) {
   );
 }
 
+/** The face that a press shows right now, if it shows one. */
+function gladOf({ glad, now }: Life) {
+  return glad !== undefined && now >= glad.from && now < glad.until
+    ? glad.mood
+    : undefined;
+}
+
+/** Her limbs where her springs hold them. In a tile nothing but her face moves, so there are none. */
+function sprung(life: Life, options: Options, pose: Pose) {
+  return Match.value(modeOf(options)).pipe(
+    Match.when("whole", () => wholeSprung(life.springs, pose)),
+    Match.when("peek", () => peekSprung(life.springs, pose)),
+    Match.when("tile", () => pose),
+    Match.exhaustive
+  );
+}
+
 /**
  * What she looks like now, in her window, and whether she holds something,
- * which then arrives with a small pop.
+ * which then arrives with a small pop. It is drawn by the same function as her
+ * still picture, so the first frame of her life is that picture.
  */
 export function view(life: Life, options: Options) {
   const pose = BEHAVIORS[life.act].pose(life.clock);
-  const glad =
-    life.glad !== undefined &&
-    life.now >= life.glad.from &&
-    life.now < life.glad.until
-      ? life.glad.mood
-      : undefined;
-  const mood = glad ?? options.mood ?? pose.mood ?? "hello";
-  const mode = modeOf(options);
-  const holds = pose.held.length > 0;
-  if (mode === "whole") {
-    return {
-      holds,
-      picture: compose(
-        options,
-        wholeSprung(life.springs, pose),
-        mood,
-        pose.look ?? viewed(options.side, life.gaze)
-      ),
-    };
-  }
   return {
-    holds,
-    picture: compose(
+    holds: pose.held.length > 0,
+    picture: appear(
       options,
-      mode === "peek" ? peekSprung(life.springs, pose) : REST,
-      mood,
-      viewed(options.side, life.gaze)
+      pose,
+      sprung(life, options, pose),
+      life.gaze,
+      gladOf(life)
     ),
   };
 }

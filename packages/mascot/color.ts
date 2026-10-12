@@ -29,6 +29,6 @@ export const PAPER = "#ffe2a8";
 export const LID = "#c9d4ea";
 export const BASE = "#9fb0d0";
 export const BOARD = "#d9a441";
-export const PINK = "#ff8fa3";
+export const SOFT_PINK = "#ff8fa3";
 export const WHITE = "#ffffff";
 export const TEXT = "currentColor";

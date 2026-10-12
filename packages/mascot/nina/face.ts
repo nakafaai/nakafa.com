@@ -1,9 +1,9 @@
-import { NINA, PINK, POP } from "@repo/mascot/color";
+import { NINA, POP, SOFT_PINK } from "@repo/mascot/color";
 import { EYES, type EyeSchema } from "@repo/mascot/nina/eye";
 import { ink } from "@repo/mascot/nina/ink";
 import type { Mark } from "@repo/mascot/nina/mark";
 import { MOUTHS, type MouthSchema } from "@repo/mascot/nina/mouth";
-import { tenth } from "@repo/mascot/nina/point";
+import { tenth } from "@repo/mascot/round";
 import { circle, ellipse, group, path, type Shape } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 import { Schema } from "effect";
@@ -74,8 +74,22 @@ const FACES = {
 /** What goes with a face: a sparkle, marks, a tear, a thought. */
 const EXTRAS = {
   blush: [
-    ellipse({ cx: 42, cy: 104, fill: PINK, opacity: 0.85, rx: 11, ry: 5.5 }),
-    ellipse({ cx: 162, cy: 104, fill: PINK, opacity: 0.85, rx: 11, ry: 5.5 }),
+    ellipse({
+      cx: 42,
+      cy: 104,
+      fill: SOFT_PINK,
+      opacity: 0.85,
+      rx: 11,
+      ry: 5.5,
+    }),
+    ellipse({
+      cx: 162,
+      cy: 104,
+      fill: SOFT_PINK,
+      opacity: 0.85,
+      rx: 11,
+      ry: 5.5,
+    }),
   ],
   // Three short strokes of surprise above her right lobe.
   marks: [

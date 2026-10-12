@@ -2,14 +2,15 @@ import { describe, expect, it } from "@effect/vitest";
 import { ARM } from "@repo/mascot/nina/body";
 import {
   type Curve,
+  cubic,
   exit,
   flip,
   limb,
   onBody,
   wide,
 } from "@repo/mascot/nina/limb";
-import { tenth } from "@repo/mascot/nina/point";
-import { Array as Arr, String as Str } from "effect";
+import { tenth } from "@repo/mascot/round";
+import { String as Str } from "effect";
 
 /** An arm that hangs from her shoulder and curls out at its tip. */
 const HANGING: Curve = [80, 146, 38, 166, 36, 204, 12, 200];
@@ -26,6 +27,14 @@ const ENDS_CLOSED = / Z$/u;
 /** How many curved segments an outline draws. */
 function curves(outline: string) {
   return Str.split(outline, "Q").length - 1;
+}
+
+/** Whether the middle of a limb is on her body at `t` along its middle line. */
+function middleOnBody(c: Curve, t: number) {
+  return onBody(
+    cubic(c[0], c[2], c[4], c[6], t),
+    cubic(c[1], c[3], c[5], c[7], t)
+  );
 }
 
 describe("a limb", () => {
@@ -71,14 +80,13 @@ describe("a limb", () => {
     expect(onBody(102, 230)).toBe(false);
   });
 
-  it("starts its top part where the whole width of the arm has left her body", () => {
+  it("starts its top part in the open, where the middle of the arm has left her body", () => {
     const from = exit(HANGING, ARM);
-    expect(from).toBeGreaterThan(0.12);
-    expect(from).toBeLessThan(0.8);
+    expect(middleOnBody(HANGING, 0.12)).toBe(true);
+    expect(middleOnBody(HANGING, from)).toBe(false);
+    // Nothing of an arm that stays inside her body is in the open, and an arm
+    // that starts in the open needs no search.
     expect(exit(HIDDEN, ARM)).toBe(0.8);
     expect(exit(STRAIGHT, ARM)).toBe(0.12);
-    expect(
-      Arr.every([HANGING, STRAIGHT, HIDDEN], (c) => exit(c, ARM) >= 0.12)
-    ).toBe(true);
   });
 });

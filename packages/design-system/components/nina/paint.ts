@@ -1,28 +1,10 @@
+import { attributeName, attributesOf } from "@repo/design-system/lib/attribute";
 import type { Mark } from "@repo/mascot/nina/mark";
 import type { Shape } from "@repo/mascot/shape";
 import { Array as Arr, Equal, Record as Rec } from "effect";
-import { camelCaseAttributes, camelToDash } from "motion";
 
 /** What she is drawn from, in the order it is drawn. */
 type Shapes = readonly Shape<Mark>[];
-
-/**
- * What a shape sets on its element: everything but the name of the element,
- * the mark that names it for her life, and the shapes it holds.
- */
-function settings(shape: Shape<Mark>): Readonly<Record<string, unknown>> {
-  if (shape._tag === "g") {
-    const { _tag, children, mark, ...rest } = shape;
-    return rest;
-  }
-  const { _tag, mark, ...rest } = shape;
-  return rest;
-}
-
-/** The name that the browser gives an attribute that React names `name`. */
-function attributeName(name: string) {
-  return camelCaseAttributes.has(name) ? name : camelToDash(name);
-}
 
 /** Whether two shapes are the same kind of shape with the same mark, and, for a group, hold the same shapes. */
 function sameShape(before: Shape<Mark>, after: Shape<Mark>): boolean {
@@ -50,18 +32,18 @@ export function sameFigure(before: Shapes, after: Shapes): boolean {
 
 /** Writes what a shape sets differently now than it did before, and takes away what it no longer sets. */
 function repaint(element: Element, before: Shape<Mark>, after: Shape<Mark>) {
-  const was = settings(before);
-  const now = settings(after);
-  Arr.forEach(Rec.keys({ ...was, ...now }), (name) => {
-    const value = now[name];
-    if (value === was[name]) {
+  const was = attributesOf(before);
+  const now = attributesOf(after);
+  Arr.forEach(Rec.keys({ ...was, ...now }), (field) => {
+    const value = now[field];
+    if (value === was[field]) {
       return;
     }
     if (value === undefined) {
-      element.removeAttribute(attributeName(name));
+      element.removeAttribute(attributeName(field));
       return;
     }
-    element.setAttribute(attributeName(name), String(value));
+    element.setAttribute(attributeName(field), String(value));
   });
 }
 

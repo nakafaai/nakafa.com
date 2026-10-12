@@ -3,8 +3,8 @@ import {
   BOARD,
   NINA,
   PAGE,
-  PINK,
   POP,
+  SOFT_PINK,
   TEXT,
   WHITE,
 } from "@repo/mascot/color";
@@ -102,7 +102,7 @@ export const DESK = {
   eraser: [
     group(
       [
-        rect({ fill: PINK, height: 24, rx: 6, width: 50, x: 7, y: 20 }),
+        rect({ fill: SOFT_PINK, height: 24, rx: 6, width: 50, x: 7, y: 20 }),
         path({
           d: "M26,20 H51 a6,6 0 0 1 6,6 V38 a6,6 0 0 1 -6,6 H26 Z",
           fill: POP.blue,
@@ -151,7 +151,7 @@ export const DESK = {
       fill: "none",
       mark: { motion: "draw" },
       pathLength: 1,
-      stroke: PINK,
+      stroke: SOFT_PINK,
       strokeLinecap: "round",
       strokeOpacity: 0.6,
       strokeWidth: 9,
@@ -159,7 +159,7 @@ export const DESK = {
     group(
       [
         path({ d: "M-5,0 H5 L7,-10 H-7 Z", fill: BLUSH }),
-        rect({ fill: PINK, height: 30, rx: 4, width: 18, x: -9, y: -40 }),
+        rect({ fill: SOFT_PINK, height: 30, rx: 4, width: 18, x: -9, y: -40 }),
         rect({ fill: BASE, height: 12, rx: 4, width: 18, x: -9, y: -50 }),
       ],
       { transform: "translate(38 50) rotate(38)" }

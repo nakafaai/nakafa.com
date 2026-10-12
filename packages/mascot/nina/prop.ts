@@ -5,10 +5,11 @@ import {
   NINA,
   PAGE,
   PAPER,
-  PINK,
   POP,
+  SOFT_PINK,
 } from "@repo/mascot/color";
-import { at, type Place, tenth } from "@repo/mascot/nina/point";
+import { at, type Place } from "@repo/mascot/nina/point";
+import { tenth } from "@repo/mascot/round";
 import { circle, group, path, rect } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 import { Array as Arr } from "effect";
@@ -145,7 +146,7 @@ export function pencil(x: number, y: number) {
       [
         path({ d: "M0,0 L4,-9 L-4,-9 Z", fill: NINA.ink }),
         rect({ fill: POP.yellow, height: 29, width: 8, x: -4, y: -38 }),
-        rect({ fill: PINK, height: 7, rx: 2, width: 8, x: -4, y: -44 }),
+        rect({ fill: SOFT_PINK, height: 7, rx: 2, width: 8, x: -4, y: -44 }),
       ],
       { transform: `translate(${tenth(x)} ${tenth(y)}) rotate(40) scale(1.3)` }
     ),

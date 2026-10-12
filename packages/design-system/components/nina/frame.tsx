@@ -1,15 +1,19 @@
+import type { Mode } from "@repo/mascot/nina/options";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 
 type FrameProps = ComponentProps<"span"> & {
-  /** Whether she looks over an edge, which hides whatever goes down behind it. */
-  edge: boolean;
+  /** How much of her shows. Over an edge, whatever goes down behind the edge is hidden. */
+  mode: Mode;
 };
 
 /** The box that holds her, exactly as large as her picture. */
-export function Frame({ children, edge, ...props }: FrameProps) {
+export function Frame({ children, mode, ...props }: FrameProps) {
   return (
-    <span className={cn("block w-fit", edge && "overflow-hidden")} {...props}>
+    <span
+      className={cn("block w-fit", mode === "peek" && "overflow-hidden")}
+      {...props}
+    >
       {children}
     </span>
   );

@@ -1,11 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type Bounds,
-  isMoving,
-  REST,
-  step,
-  type Toy,
-} from "@repo/design-system/lib/toy/flight";
+import { isMoving, REST } from "@repo/design-system/lib/toy/flight";
 import {
   carry,
   drag,
@@ -13,16 +7,20 @@ import {
   grab,
   type Hold,
   release,
+  sendHome,
+  still,
 } from "@repo/design-system/lib/toy/hand";
-import { Array as Arr, Option } from "effect";
+import {
+  FRAME_SECONDS,
+  fly,
+  INSIDE,
+  MIDDLE,
+  TOP_SPEED,
+  within,
+} from "@repo/design-system/test/toy";
+import { Array as Arr, Effect, Option, Random } from "effect";
 
 const SCROLL = { x: 0, y: 0 };
-const WALLS: Bounds = { maxX: 300, maxY: 250, minX: -100, minY: -50 };
-const INSIDE = Option.some(WALLS);
-const FRAME = 0.016;
-const TOP_SPEED = 2200;
-/** A toy at rest in the middle of its box. */
-const MIDDLE: Toy = { ...REST, x: 100, y: 100 };
 
 /** Where the pointer was, in the window, at a time in milliseconds. */
 function at(t: number, x: number, y: number) {
@@ -33,18 +31,9 @@ function at(t: number, x: number, y: number) {
 function thrown(vx: number, vy: number) {
   return drag(
     grab(MIDDLE, at(0, 400, 400), SCROLL),
-    at(16, 400 + vx * FRAME, 400 + vy * FRAME),
+    at(16, 400 + vx * FRAME_SECONDS, 400 + vy * FRAME_SECONDS),
     SCROLL,
     Option.none()
-  );
-}
-
-function within(toy: Toy) {
-  return (
-    toy.x >= WALLS.minX &&
-    toy.x <= WALLS.maxX &&
-    toy.y >= WALLS.minY &&
-    toy.y <= WALLS.maxY
   );
 }
 
@@ -156,6 +145,55 @@ describe("letting go", () => {
   });
 });
 
+describe("a toy sent home while a hand holds it", () => {
+  it("stays under the hand, which keeps dragging it", () => {
+    const sent = sendHome(thrown(800, -300));
+    expect(sent.home).toBe(true);
+    expect(sent.toy).toMatchObject({ mode: "held" });
+    const further = drag(sent, at(32, 380, 280), SCROLL, INSIDE);
+    expect(further.home).toBe(true);
+    expect(further.toy).toMatchObject({ mode: "held", x: 80, y: -20 });
+  });
+
+  it("goes home from where it is let go, at the speed of the hand, whether it was dragged or not", () => {
+    const leaving = release(sendHome(thrown(800, -300)), 16, false);
+    expect(leaving.mode).toBe("home");
+    expect(leaving.vx).toBeCloseTo(800, 6);
+    const pressed = sendHome(grab(MIDDLE, at(0, 400, 300), SCROLL));
+    expect(release(pressed, 5, false)).toMatchObject({
+      mode: "home",
+      vx: 0,
+      vy: 0,
+      x: 100,
+      y: 100,
+    });
+  });
+
+  it("goes home at once for a person who asked for less motion", () => {
+    expect(release(sendHome(thrown(800, -300)), 16, true)).toBe(REST);
+  });
+
+  it("is put at rest by a hold that is made still: upright, at no speed, with nowhere to go, and under the hand", () => {
+    const leaning = sendHome(thrown(800, -300));
+    expect(leaning.toy.tilt).not.toBe(0);
+    const calmed = still(leaning);
+    expect(calmed.home).toBe(false);
+    expect(calmed.toy).toMatchObject({
+      mode: "held",
+      tilt: 0,
+      vx: 0,
+      vy: 0,
+      x: leaning.toy.x,
+      y: leaning.toy.y,
+    });
+    expect(release(calmed, 16, false)).toMatchObject({
+      mode: "free",
+      vx: 0,
+      vy: 0,
+    });
+  });
+});
+
 describe("a toy that pulls the page", () => {
   const dragged: Hold = drag(
     grab(MIDDLE, at(0, 400, 300), SCROLL),
@@ -183,50 +221,43 @@ describe("a toy that pulls the page", () => {
   });
 });
 
-/** The n-th number, from `low` up to `high`, of a fixed sequence: every run takes the same paths. */
-function spread(n: number, low: number, high: number) {
-  const noise = Math.sin(n * 12.9898) * 43_758.5453;
-  return low + (noise - Math.floor(noise)) * (high - low);
-}
+/** A path of the hand: 120 readings of the pointer, and how far the page is scrolled at each. */
+const wander = Effect.forEach(Arr.range(1, 120), (index) =>
+  Effect.all({
+    scroll: Random.nextBetween(0, 3000),
+    t: Effect.succeed(16 * index),
+    x: Random.nextBetween(-2000, 2400),
+    y: Random.nextBetween(-2000, 2400),
+  })
+);
 
 describe("a toy carried and thrown along any path", () => {
-  it("never leaves its walls, nor passes the top speed", () => {
-    for (const path of Arr.range(1, 40)) {
-      const holds = Arr.scan(
-        Arr.makeBy(120, (index) => index + 1),
-        grab(MIDDLE, at(0, 400, 400), SCROLL),
-        (hold, index) => {
-          const base = path * 1000 + index * 3;
-          return drag(
-            hold,
-            at(
-              16 * index,
-              spread(base, -2000, 2400),
-              spread(base + 1, -2000, 2400)
-            ),
-            { x: 0, y: spread(base + 2, 0, 3000) },
-            INSIDE
-          );
-        }
-      );
-      expect(
-        Arr.every(holds, (hold) => within(hold.toy)),
-        `path ${path}`
-      ).toBe(true);
-      const last = Arr.lastNonEmpty(holds);
-      const flight = Arr.scan(
-        Arr.makeBy(600, () => FRAME),
-        release(last, last.time + 10, false),
-        (toy, dt) => (isMoving(toy) ? step(toy, dt, INSIDE) : toy)
-      );
-      expect(Arr.every(flight, within), `throw ${path}`).toBe(true);
-      expect(
-        Arr.every(
-          flight,
-          ({ vx, vy }) => Math.abs(vx) <= TOP_SPEED && Math.abs(vy) <= TOP_SPEED
-        ),
-        `speed ${path}`
-      ).toBe(true);
-    }
-  });
+  it.effect("never leaves its walls, nor passes the top speed", () =>
+    Effect.gen(function* () {
+      for (const path of Arr.range(1, 40)) {
+        const readings = yield* wander.pipe(Random.withSeed(`path ${path}`));
+        const holds = Arr.scan(
+          readings,
+          grab(MIDDLE, at(0, 400, 400), SCROLL),
+          (hold, { scroll, t, x, y }) =>
+            drag(hold, at(t, x, y), { x: 0, y: scroll }, INSIDE)
+        );
+        expect(
+          Arr.every(holds, (hold) => within(hold.toy)),
+          `path ${path}`
+        ).toBe(true);
+        const last = Arr.lastNonEmpty(holds);
+        const flight = fly(release(last, last.time + 10, false), INSIDE);
+        expect(Arr.every(flight, within), `throw ${path}`).toBe(true);
+        expect(
+          Arr.every(
+            flight,
+            ({ vx, vy }) =>
+              Math.abs(vx) <= TOP_SPEED && Math.abs(vy) <= TOP_SPEED
+          ),
+          `speed ${path}`
+        ).toBe(true);
+      }
+    })
+  );
 });

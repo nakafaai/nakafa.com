@@ -15,24 +15,48 @@ export function toyAt(root: HTMLElement, target: EventTarget | null) {
 }
 
 /**
- * Swallows the next click on a toy inside `root`, and only that one: a drag
- * must not also count as a click on the toy. A click elsewhere passes. Returns
- * what ends the wait, for a click that never comes.
+ * The click that follows a drag must not also count as a click on the toy.
+ * `arm` swallows the next click on a toy inside a root, and only that one; a
+ * click elsewhere passes. `clear` ends the wait, for a click that never comes.
  */
-export function swallowClick(root: HTMLElement) {
-  const swallow = new AbortController();
-  root.addEventListener(
-    "click",
-    (event) => {
-      if (Option.isSome(toyAt(root, event.target))) {
-        event.preventDefault();
-        event.stopPropagation();
-        swallow.abort();
-      }
+export function createSwallow() {
+  let waiting = Option.none<AbortController>();
+
+  function clear() {
+    if (Option.isSome(waiting)) {
+      waiting.value.abort();
+      waiting = Option.none();
+    }
+  }
+
+  return {
+    arm(root: HTMLElement) {
+      const swallow = new AbortController();
+      waiting = Option.some(swallow);
+      root.addEventListener(
+        "click",
+        (event) => {
+          if (Option.isSome(toyAt(root, event.target))) {
+            event.preventDefault();
+            event.stopPropagation();
+            swallow.abort();
+          }
+        },
+        { capture: true, signal: swallow.signal }
+      );
     },
-    { capture: true, signal: swallow.signal }
-  );
-  return swallow;
+    clear,
+  };
+}
+
+/** One reading of the pointer, taken now: where it is in the window, and when, in milliseconds. */
+export function sampleOf(event: PointerEvent) {
+  return { t: performance.now(), x: event.clientX, y: event.clientY };
+}
+
+/** How far the page is scrolled. */
+export function scrollOf() {
+  return { x: window.scrollX, y: window.scrollY };
 }
 
 /**

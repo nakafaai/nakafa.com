@@ -58,7 +58,6 @@ const STOPPED_LEAN = 0.2;
 const STOPPED_DISTANCE = 0.5;
 /** A frame is never longer than this, in seconds, whatever the page did meanwhile. */
 const LONGEST_FRAME = 0.032;
-const USUAL_FRAME = 0.016;
 
 /** The lean a toy settles toward at a speed. */
 export function lean(vx: number) {
@@ -115,13 +114,16 @@ export function isMoving(toy: Toy) {
 }
 
 /**
- * How long the last frame was, in seconds. It is never longer than
- * `LONGEST_FRAME`, and a frame with no length, or none that can be measured
- * yet, counts as a usual one.
+ * How long the frame at `now` lasted since `last`, in seconds. It is never
+ * longer than `LONGEST_FRAME`, and never less than nothing: a frame whose time
+ * is before the moment the loop woke up, as a frame that began just before a
+ * hand let go is, takes a step of zero.
  */
 export function frameSeconds(now: number, last: number) {
-  const seconds = (now - last) / 1000;
-  return seconds > 0 ? Math.min(LONGEST_FRAME, seconds) : USUAL_FRAME;
+  return Num.clamp((now - last) / 1000, {
+    maximum: LONGEST_FRAME,
+    minimum: 0,
+  });
 }
 
 /**

@@ -1,10 +1,6 @@
+import { tenth } from "@repo/mascot/round";
 import { path } from "@repo/mascot/shape";
-import { Array as Arr, Number as Num } from "effect";
-
-/** Rounds to one decimal, as the points of a drawing are written. */
-function tenth(value: number) {
-  return Num.round(value, 1);
-}
+import { Array as Arr } from "effect";
 
 /**
  * A flat four-point sparkle centred on `x`, `y`: the one ornament of the

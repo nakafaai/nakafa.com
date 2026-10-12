@@ -1,4 +1,4 @@
-import { type ARM, TORSO } from "@repo/mascot/nina/body";
+import { type ARM, TORSO_CURVES, TORSO_START } from "@repo/mascot/nina/body";
 import { at, type Place } from "@repo/mascot/nina/point";
 import { Array as Arr, Schema } from "effect";
 
@@ -6,7 +6,6 @@ import { Array as Arr, Schema } from "effect";
 type Girth = typeof ARM;
 
 const STEPS = 16;
-const NUMBER = /-?\d+(\.\d+)?/g;
 
 /** One middle line of a limb as a cubic curve: the root, two bends and the tip. */
 export const CurveSchema = Schema.Tuple([
@@ -55,37 +54,23 @@ export function wide(t: number, { thick, thin }: Girth) {
   return (thick + (thin - thick) * t ** 0.85) / 2 + thick * 0.45 * join * join;
 }
 
-const TORSO_NUMBERS = Arr.map(
-  Arr.fromIterable(TORSO.matchAll(NUMBER)),
-  ([text]) => Number(text)
-);
-
 /**
- * The outline of her body as points, for asking whether a place is on it. One
- * move and four curves: each curve starts where the one before it ended.
+ * The outline of her body as points, for asking whether a place is on it:
+ * twelve along each of its four curves, each of which starts where the one
+ * before it ended.
  */
 const TORSO_POINTS = Arr.flatMap(
-  Arr.makeBy((TORSO_NUMBERS.length - 2) / 6, (curve) => 2 + 6 * curve),
-  (k) =>
-    Arr.makeBy(12, (i): Place => {
+  TORSO_CURVES,
+  ([first, second, end], index) => {
+    const from = index === 0 ? TORSO_START : TORSO_CURVES[index - 1][2];
+    return Arr.makeBy(12, (i): Place => {
       const t = i / 12;
       return [
-        cubic(
-          TORSO_NUMBERS[k - 2],
-          TORSO_NUMBERS[k],
-          TORSO_NUMBERS[k + 2],
-          TORSO_NUMBERS[k + 4],
-          t
-        ),
-        cubic(
-          TORSO_NUMBERS[k - 1],
-          TORSO_NUMBERS[k + 1],
-          TORSO_NUMBERS[k + 3],
-          TORSO_NUMBERS[k + 5],
-          t
-        ),
+        cubic(from[0], first[0], second[0], end[0], t),
+        cubic(from[1], first[1], second[1], end[1], t),
       ];
-    })
+    });
+  }
 );
 
 /** Each point of the outline with the one before it, the first with the last. */

@@ -1,4 +1,5 @@
-import { Schema } from "effect";
+import { at, type Place } from "@repo/mascot/nina/point";
+import { Array as Arr, Schema } from "effect";
 
 /**
  * The head: the hammer with its two lobes and the two cat ears, closed under
@@ -10,11 +11,48 @@ export const HEAD =
   "C66,114 60,112 52,114 C40,116 22,116 10,102 C2,90 8,62 30,58 Z";
 
 /**
- * The body of the octopus: a round drop that starts right under the chin, so
- * she has shoulders and no long neck.
+ * The outline of the body of the octopus, as numbers: the place it starts at,
+ * then four curves, each from where the one before it ended, with its two
+ * bends and its end. A round drop that starts right under the chin, so she has
+ * shoulders and no long neck. The outline is drawn from these numbers (`TORSO`)
+ * and asked whether a place lies on it (`onBody`).
  */
-export const TORSO =
-  "M64,116 C52,126 42,148 42,172 C42,196 68,210 102,210 C136,210 162,196 162,172 C162,148 152,126 140,116 Z";
+export const TORSO_START: Place = [64, 116];
+export const TORSO_CURVES: readonly (readonly [Place, Place, Place])[] = [
+  [
+    [52, 126],
+    [42, 148],
+    [42, 172],
+  ],
+  [
+    [42, 196],
+    [68, 210],
+    [102, 210],
+  ],
+  [
+    [136, 210],
+    [162, 196],
+    [162, 172],
+  ],
+  [
+    [162, 148],
+    [152, 126],
+    [140, 116],
+  ],
+];
+
+/** The path that draws the body: its start, its four curves, closed. */
+export const TORSO = `M${at(...TORSO_START)} ${Arr.join(
+  Arr.map(
+    TORSO_CURVES,
+    (curve) =>
+      `C${Arr.join(
+        Arr.map(curve, (place) => at(...place)),
+        " "
+      )}`
+  ),
+  " "
+)} Z`;
 
 /** The pale face: the inside of the hammer, down the chin and over the belly. */
 export const PALE =
@@ -41,9 +79,6 @@ export const LeanSchema = Schema.Literals(["right", "left", "center", "peek"]);
 
 /** Which way she faces: `left` mirrors her, fin and all. */
 export const SideSchema = Schema.Literals(["right", "left"]);
-
-/** How much of her a window shows: all of her, a tile, or what is over an edge. */
-export const CutSchema = Schema.Literals(["whole", "bust", "peek"]);
 
 /**
  * How the half figure sits in its 200 unit window. In a tile she is small
