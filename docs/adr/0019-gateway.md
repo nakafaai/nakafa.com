@@ -103,14 +103,18 @@ with a date such as an exam.") and `private` ("The message contains contact
 details, a home address, an identity or account number, a password, or
 information about health, religion, ethnicity, political views or money.").
 The `private` question there said "message" where the catalog now says "text",
-because it also judges a saved sentence with its quote. Fifteen messages say
-little about how a threshold behaves on many languages and on messages that sit
-near it, so the thresholds in `nina/judgment/catalog.ts` are not set from this
-table. `pnpm --filter @repo/backend judgment:measure` runs a labelled set of 124
-messages in 17 languages and 8 scripts through the deployment and prints the
-probabilities by label, the counts at the held threshold and the threshold that
-separates best. The thresholds start at 0.5 and are set from what that command
-prints.
+because it also judges a saved sentence with its quote. A third question,
+`ownNote`, which asks whether a saved sentence reads as the learner's own note
+and not as a description of the learner from the outside, was not measured
+then. Fifteen messages say little about how a threshold behaves on many
+languages and on texts that sit near it, so the thresholds in
+`nina/judgment/catalog.ts` are not set from this table.
+`pnpm --filter @repo/backend judgment:measure` runs a labelled set of 124
+messages and 85 notes in 17 languages and 8 scripts through the deployment,
+each judgment on the form of text and the grouping that production asks it (ADR
+0022), and prints the probabilities by label, the counts at the threshold the
+deployment reports and the threshold that separates best. The thresholds start
+at 0.5 and are set from what that command prints.
 
 ## Decision
 
@@ -129,8 +133,7 @@ prints.
   `provider.only` and the other routing fields. Every language call does send
   `provider: { zdr: true, data_collection: "deny" }`, which the gateway accepts
   (measured 10 October 2026), so each request asks for the zero data retention
-  that Convex states for the gateway as a whole. A decision asks with
-  `provider: { zdr: true }` (see Decisions). `gateway/route.ts` is deleted.
+  that Convex states for the gateway as a whole. `gateway/route.ts` is deleted.
 - **Prompt cache.** The gateway caches nothing on its own: a repeated prefix of
   53,624 tokens read zero cached tokens. `gateway/cache.ts` marks the last
   message before the newest user message with
@@ -202,7 +205,9 @@ prints.
     policy. The AI SDK's `providerOptions` never reach a Decisions request (the
     evaluation model only turns them into warnings), so the flags of a language
     call could not be sent that way. `gateway/live.test.ts` asserts the body
-    the production adapter sends.
+    the production adapter sends. That the gateway serves a decision that asks
+    for `zdr` is not yet proven (see Not yet established), and this ADR claims
+    nothing more about it until it has been run against a deployment.
   - One retry policy and one deadline. The AI SDK retries a failure the
     provider marks as retryable twice, after 2 and 4 seconds, and honors
     `Retry-After`. The whole call, retries included, ends after ten seconds
@@ -237,8 +242,10 @@ prints.
 - **Policy.** `scripts/check/gateway.ts` rejects any import of `@ai-sdk/gateway`,
   the AI SDK's `gateway` and `createGateway` exports, any import of
   `@convex-dev/ai-sdk-provider` outside `confect/gateway`, the AI SDK's
-  `experimental_decide` and `experimental_evaluate` outside `confect/gateway`,
-  and, outside tests, a gateway model id string where the AI SDK takes a model.
+  `experimental_decide` and `experimental_evaluate` outside `confect/gateway`
+  (by name, through a default or namespace import, and through `export *` or
+  `export * as`), and, outside tests, a gateway model id string where the AI SDK
+  takes a model.
 - **Configuration.** `AI_GATEWAY_API_KEY` is removed from `turbo.json` and the
   acceptance environment. `CONVEX_INTERNAL_AI_GATEWAY_HOST` stays unset.
 - **Dependencies.** `@convex-dev/ai-sdk-provider` joins the AI SDK cohort in
