@@ -29,6 +29,7 @@ describe("the measuring of the judgments", () => {
         together: 1,
       })
     ).toEqual({
+      kind: "measured",
       rows: [
         { probabilities: { ownNote: 0.23, private: 0.77 } },
         { probabilities: { ownNote: 0.23, private: 0.77 } },
@@ -40,7 +41,7 @@ describe("the measuring of the judgments", () => {
     });
   });
 
-  it("fails with the typed error and asks nothing when the deployment cannot use the gateway", async () => {
+  it("answers with the failure and asks nothing when the deployment cannot use the gateway", async () => {
     const t = createConvexTestWithBetterAuth();
     deployment.mockReturnValueOnce(
       Effect.fail(
@@ -49,13 +50,19 @@ describe("the measuring of the judgments", () => {
         })
       )
     );
-    await expect(
-      t.action(measure, {
+    expect(
+      await t.action(measure, {
         names: ["lasting"],
         texts: ["Kelas 12"],
         together: 1,
       })
-    ).rejects.toMatchObject({ data: { _tag: "GatewayConfigurationError" } });
+    ).toEqual({
+      failure: {
+        _tag: "GatewayConfigurationError",
+        message: "The AI gateway is not available on this deployment.",
+      },
+      kind: "failed",
+    });
     expect(provider.decisionModel).not.toHaveBeenCalled();
   });
 });

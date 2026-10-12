@@ -5,7 +5,6 @@ import {
   type Measurement,
 } from "@repo/backend/confect/nina/judgment.spec";
 import { MEMORY_CAPTURE_LIMIT } from "@repo/backend/confect/nina/memory.spec";
-import { getCustomerConvexConfig } from "@repo/backend/scripts/customers/convex";
 import {
   callMeasure,
   JudgmentCallError,
@@ -86,7 +85,7 @@ const Item = Schema.Struct({
  */
 const Shape = Schema.Struct({
   items: Schema.NonEmptyArray(Item),
-  names: Schema.NonEmptyArray(JudgmentName),
+  names: Schema.mutable(Schema.NonEmptyArray(JudgmentName)),
   noun: Schema.String,
   together: Schema.Int,
 });
@@ -166,14 +165,17 @@ function thresholdOf(
 
 /**
  * Sends the texts of one shape to the deployment, whole groups to a call, and
- * writes one table for each judgment asked about them. The thresholds in the
- * tables are the ones the deployment reports, and a judgment it reports none
- * for is a failure.
+ * writes one table for each judgment asked about them. One call holds at most
+ * `MEASURE_TEXT_LIMIT` texts, so a shape with more texts goes up in several
+ * calls, one after another. The thresholds in the tables are the ones the
+ * deployment reports, and a judgment it reports none for is a failure.
  */
-const measureShape = Effect.fn("judgment.measureShape")(function* (
-  config: Parameters<typeof callMeasure>[0],
-  { items, names, noun, together }: typeof Shape.Type
-) {
+const measureShape = Effect.fn("judgment.measureShape")(function* ({
+  items,
+  names,
+  noun,
+  together,
+}: typeof Shape.Type) {
   // A call holds whole groups, so that a group never straddles two calls.
   const size = Math.floor(MEASURE_TEXT_LIMIT / together) * together;
   const measurements = yield* Effect.forEach(
@@ -181,7 +183,7 @@ const measureShape = Effect.fn("judgment.measureShape")(function* (
       Arr.map(items, ({ text }) => text),
       size
     ),
-    (texts) => callMeasure(config, names, texts, together)
+    (texts) => callMeasure({ names, texts, together })
   );
   const rows = Arr.flatMap(measurements, (measurement) => measurement.rows);
   // Every call reads the same deployment, so every call reports the same thresholds.
@@ -204,30 +206,27 @@ const measureShape = Effect.fn("judgment.measureShape")(function* (
 });
 
 /**
- * Runs the labelled set through the deployment `prod` names, development unless
- * `prod` is true, and writes one table for each judgment: the probabilities by
- * label, the counts at the threshold the deployment holds, and the threshold
- * that separates best. Each judgment is measured on the form of text and the
- * grouping that production asks it: `lasting` on a whole message alone, and
- * `ownNote` and `private` on a note, the sentence with its quote, `together`
- * notes to a request. It answers with that report and the number of texts the
- * deployment could not measure. A text is named by its number among the
- * messages or the notes, and never quoted.
+ * Runs the labelled set through the dev deployment that the Convex CLI of the
+ * caller reaches (`ConvexCli`), and writes one table for each judgment: the
+ * probabilities by label, the counts at the threshold the deployment holds, and
+ * the threshold that separates best. Each judgment is measured on the form of
+ * text and the grouping that production asks it: `lasting` on a whole message
+ * alone, and `ownNote` and `private` on a note, the sentence with its quote,
+ * `together` notes to a request. It answers with that report and the number of
+ * texts the deployment could not measure. A text is named by its number among
+ * the messages or the notes, and never quoted. Its caller has to check that the
+ * CLI goes to a dev deployment (`requireDevelopment`) before this runs.
  */
 export const measureSet = Effect.fn("judgment.measureSet")(function* (
-  prod: boolean,
   together: number
 ) {
-  const config = yield* getCustomerConvexConfig(prod);
-  const measured = yield* Effect.forEach(shapesOf(together), (shape) =>
-    measureShape(config, shape)
-  );
+  const measured = yield* Effect.forEach(shapesOf(together), measureShape);
   const failures = Arr.flatMap(measured, (shape) => shape.failures);
   return {
     failed: Arr.length(failures),
     report: Arr.join(
       [
-        `${Arr.length(messages)} messages, one to a request, and ${Arr.length(notes)} notes, ${together} to a request, measured on ${prod ? "production" : "the development deployment"}.`,
+        `${Arr.length(messages)} messages, one to a request, and ${Arr.length(notes)} notes, ${together} to a request, measured on the development deployment.`,
         ...Arr.flatMap(measured, (shape) => shape.tables),
         ...(Arr.isReadonlyArrayNonEmpty(failures)
           ? [failureLine(failures)]

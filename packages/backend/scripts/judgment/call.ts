@@ -1,115 +1,81 @@
-import { Ref } from "@confect/core";
-import refs from "@repo/backend/confect/_generated/refs";
-import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
-import type { JudgmentName } from "@repo/backend/confect/nina/judgment/catalog";
-import { Measurement } from "@repo/backend/confect/nina/judgment.spec";
-import { FetchClient } from "@repo/utilities/http/client";
-import { getFunctionName } from "convex/server";
-import { Array as Arr, Duration, Effect, Schema } from "effect";
 import {
-  HttpClient,
-  type HttpClientError,
-  HttpClientRequest,
-} from "effect/http";
+  measureInputValidator,
+  measureResultValidator,
+} from "@repo/backend/confect/nina/judgment.spec";
+import { runConvex } from "@repo/backend/scripts/development/cli";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /**
- * How long one measuring call may take. It asks the gateway about up to 30
- * texts, a few at a time, so it takes seconds; this is the backstop for a call
- * that never answers.
+ * Where the measuring action lives in a deployment: its module and its export.
+ * The script cannot load the generated references, because they load every
+ * function of the backend and with it modules that the script runner cannot
+ * load, so it names the function and takes the shape of its arguments and
+ * answer from the contract that the function declares. A test holds this path
+ * to the name that the references give the function.
  */
-const CALL_DEADLINE = Duration.seconds(60);
+const MEASURE_PATH = "nina/judgment:measure";
 
-/** Why a measuring call failed: the deployment, the network, or an answer the command cannot read. */
+/**
+ * The arguments of the action as the CLI takes them, one JSON text in one
+ * command line argument. The largest call of the labelled set, 30 notes, is
+ * 3,635 bytes (measured on 12 October 2026), far below the limit of one
+ * argument (128 KiB on Linux, and 1 MiB for all arguments and the environment
+ * on macOS), so no other way to hand them over is needed.
+ */
+const Arguments = Schema.fromJsonString(measureInputValidator);
+
+/** What the CLI prints when the action returns: its result, as the action declares it. */
+const Answer = Schema.fromJsonString(measureResultValidator);
+
+/**
+ * Why the measuring command stopped: the command line asks for something it
+ * does not do, the deployment cannot reach the gateway, or its answer is
+ * something the command cannot use. A Convex CLI that cannot run, does not
+ * answer in time or fails is a `DevelopmentCliError` instead.
+ */
 export class JudgmentCallError extends Schema.TaggedError<JudgmentCallError>()(
   "JudgmentCallError",
   { message: Schema.String }
 ) {}
 
-/** The answer of Convex's admin API for an action: its value, or the message of its failure. */
-const Reply = Schema.Union([
-  Schema.Struct({ status: Schema.Literal("success"), value: Measurement }),
-  Schema.Struct({
-    errorMessage: Schema.optionalKey(Schema.String),
-    status: Schema.Literal("error"),
-  }),
-]);
-
-/** Reports why Convex could not be reached or read, in the words of its cause. */
-const failedToReach = (error: HttpClientError.HttpClientError) =>
-  new JudgmentCallError({
-    message: getUnknownErrorMessage(error.reason.cause),
-  });
-
 /**
- * Runs the measuring action of a deployment on some texts, through Convex's
- * admin HTTP API with the credential `config` holds, and answers with its
- * measurement of the named judgments. The deployment is the one `config` names,
- * so a caller chooses it by the environment it configures; this call never
- * picks production. An answer that holds more or fewer rows than the texts it
- * was given is refused, because a row that matched no text would be matched
- * with the wrong one.
+ * Runs the measuring action of the dev deployment on some texts with the Convex
+ * CLI, and gives back its measurement. The action is internal, and the CLI
+ * holds the credential that reaches it. When the deployment cannot reach the
+ * gateway, the action answers with that failure, because the CLI prints a
+ * failed call as text and drops the typed data of its error; the call then
+ * fails with the reason. When the action cannot run at all, such as when the
+ * deployment does not have it yet, the CLI exits with an error, which
+ * `runConvex` reports with the start of what the CLI printed. An answer that
+ * holds more or fewer rows than the texts it was given is refused, because a
+ * row that matched no text would be matched with the wrong one.
  */
-export const callMeasure = Effect.fn("judgment.callMeasure")(
-  function* (
-    config: { readonly accessToken: string; readonly url: string },
-    names: Arr.NonEmptyReadonlyArray<JudgmentName>,
-    texts: readonly string[],
-    together: number
-  ) {
-    const path = getFunctionName(
-      Ref.getFunctionReference(refs.internal.nina.judgment.measure)
-    );
-    const client = yield* HttpClient.HttpClient;
-    const response = yield* HttpClientRequest.post(
-      `${config.url}/api/action`
-    ).pipe(
-      HttpClientRequest.setHeader(
-        "Authorization",
-        `Convex ${config.accessToken}`
-      ),
-      HttpClientRequest.bodyJsonUnsafe({
-        args: { names, texts, together },
-        format: "json",
-        path,
-      }),
-      client.execute,
-      Effect.mapError(failedToReach)
-    );
-    if (response.status < 200 || response.status >= 300) {
-      return yield* new JudgmentCallError({
-        message: `${path}: HTTP ${response.status}`,
-      });
-    }
-    const body = yield* response.json.pipe(Effect.mapError(failedToReach));
-    const reply = yield* Schema.decodeUnknownEffect(Reply)(body).pipe(
-      Effect.mapError(
-        () =>
-          new JudgmentCallError({
-            message: `${path}: the answer is not what the command reads`,
-          })
-      )
-    );
-    if (reply.status === "error") {
-      return yield* new JudgmentCallError({
-        message: `${path}: ${reply.errorMessage ?? "Unknown Convex error"}`,
-      });
-    }
-    if (Arr.length(reply.value.rows) !== Arr.length(texts)) {
-      return yield* new JudgmentCallError({
-        message: `${path}: the deployment measured ${Arr.length(reply.value.rows)} of ${Arr.length(texts)} texts`,
-      });
-    }
-    return reply.value;
-  },
-  // The deadline covers the send and the read, so a stalled answer ends.
-  Effect.timeoutOrElse({
-    duration: CALL_DEADLINE,
-    orElse: () =>
-      Effect.fail(
+export const callMeasure = Effect.fn("judgment.callMeasure")(function* (
+  input: typeof measureInputValidator.Type
+) {
+  const args = yield* Schema.encodeEffect(Arguments)(input).pipe(Effect.orDie);
+  const printed = yield* runConvex("Judgment measure", [
+    "run",
+    MEASURE_PATH,
+    args,
+  ]);
+  const answer = yield* Schema.decodeEffect(Answer)(printed).pipe(
+    Effect.mapError(
+      (error) =>
         new JudgmentCallError({
-          message: `Convex did not answer within ${Duration.toSeconds(CALL_DEADLINE)} seconds.`,
+          message: `Judgment measure printed an answer that the action does not declare: ${error.message}`,
         })
-      ),
-  }),
-  Effect.provide(FetchClient)
-);
+    )
+  );
+  if (answer.kind === "failed") {
+    return yield* new JudgmentCallError({
+      message: `Judgment measure failed: ${answer.failure.message}`,
+    });
+  }
+  if (Arr.length(answer.rows) !== Arr.length(input.texts)) {
+    return yield* new JudgmentCallError({
+      message: `Judgment measure: the deployment measured ${Arr.length(answer.rows)} of ${Arr.length(input.texts)} texts`,
+    });
+  }
+  return answer;
+});
