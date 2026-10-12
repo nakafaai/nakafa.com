@@ -304,7 +304,7 @@ describe("a turn in which Nina searches what the learner told her", () => {
     expect(first).not.toContain(words);
     expect(second).toContain(words);
     // The thread keeps the call and a result, never the words, and neither does
-    // the transcript that any reader of a public chat gets.
+    // the transcript that the owner reads.
     const thread = encodeJsonText(await stored(f));
     expect(thread).toContain("recall-1");
     expect(thread).not.toContain(words);
@@ -321,19 +321,29 @@ describe("a turn in which Nina searches what the learner told her", () => {
       })
     );
     expect(encodeJsonText(transcript)).not.toContain(words);
-    // A visitor who reads the shared chat through its link has no more than
-    // the learner sees.
+    // A reader who opens the shared chat through its link is sent no part of the
+    // search, neither the call nor the note, and still reads the answer. The
+    // owner who opens their own link is sent the note, as before.
     await f.owner.mutation(share, { chatId: f.chatId, visibility: "public" });
     const shareToken = await f.owner.query(token, { chatId: f.chatId });
     assert(shareToken !== null);
-    const shared = await f.t.query(list, {
-      chatId: f.chatId,
-      paginationOpts: { cursor: null, numItems: 20 },
-      shareToken,
-      threadId: f.threadId,
-    });
-    expect(encodeJsonText(shared)).toContain("recall-1");
-    expect(encodeJsonText(shared)).not.toContain(words);
+    const readThrough = (reader: typeof f.owner, access: object) =>
+      reader.query(list, {
+        chatId: f.chatId,
+        paginationOpts: { cursor: null, numItems: 20 },
+        threadId: f.threadId,
+        ...access,
+      });
+    const shared = encodeJsonText(await readThrough(f.t, { shareToken }));
+    expect(shared).not.toContain("recall-1");
+    expect(shared).not.toContain("tool-memory");
+    expect(shared).not.toContain(words);
+    expect(shared).toContain("A limit describes the value approached.");
+    const byOwnLink = encodeJsonText(
+      await readThrough(f.owner, { shareToken })
+    );
+    expect(byOwnLink).toContain("recall-1");
+    expect(byOwnLink).not.toContain(words);
     // The learner deletes the memory, and the next turn of the chat reads
     // neither the memory nor a copy of it that the thread kept.
     await f.owner.mutation(remove, { id: exam });

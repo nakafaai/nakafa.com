@@ -19,6 +19,7 @@ import {
 } from "@/e2e/support/share";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
+  learnsNoStreamAndNoMemory,
   learnsNothingOfWhoOwnsTheChat,
   learnsOnlyWhereTurnsStand,
   learnsWhatTurnsCost,
@@ -166,8 +167,9 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
 
         // No reader sent a mutation or an action to the server. The pages of
         // both were told where each turn stands and nothing of what it cost the
-        // owner, and nothing of the account that owns the chat. The owner's own
-        // page was told all of it.
+        // owner, nothing of the account that owns the chat, no live stream and
+        // no part of a memory call. The owner's own page was told what the turn
+        // cost and which account owns the chat.
         yield* Effect.sync(() => {
           expect(readerChanges.sent).toBe(0);
           expect(memberChanges.sent).toBe(memberSent);
@@ -176,6 +178,7 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
           for (const readerSide of [readerChanges, memberChanges]) {
             learnsOnlyWhereTurnsStand(readerSide);
             learnsNothingOfWhoOwnsTheChat(readerSide);
+            learnsNoStreamAndNoMemory(readerSide);
           }
         });
 

@@ -6,11 +6,14 @@ export const NAKAFA_CAPABILITY = "nakafa";
 /** The capability that reads the links to outside sites. */
 export const RESEARCH_CAPABILITY = "deepResearch";
 
+/** The capability that searches what the learner told Nina before. */
+export const MEMORY_CAPABILITY = "memory";
+
 const LEARNING_CAPABILITY_NAME_VALUES = [
   NAKAFA_CAPABILITY,
   RESEARCH_CAPABILITY,
   "math",
-  "memory",
+  MEMORY_CAPABILITY,
 ] as const;
 /**
  * Schema-owned names for Nina's internal education capabilities. The browser

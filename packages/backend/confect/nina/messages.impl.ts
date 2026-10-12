@@ -17,6 +17,10 @@ import {
 } from "@repo/backend/confect/nina/contract/turn";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
 import {
+  readerMessage,
+  readerStreams,
+} from "@repo/backend/confect/nina/reader";
+import {
   Array as Arr,
   Effect,
   HashMap,
@@ -26,11 +30,7 @@ import {
   Option,
   pipe,
   Schema,
-  Struct,
 } from "effect";
-
-/** What a thread tells of its streams: the live ones, or the new parts of some. */
-type Streams = Effect.Success<ReturnType<typeof readStreams>>;
 
 /** Reads active streams or their deltas for one authorized thread. */
 const readStreams = Effect.fn("nina.messages.streams")(function* (
@@ -78,18 +78,6 @@ const readStreams = Effect.fn("nina.messages.streams")(function* (
   );
 });
 
-/**
- * The streams as a reader who does not own the chat is told of them. A live
- * stream names the account that runs it, which belongs to the owner.
- */
-const readerStreams = (streams: Streams): Streams =>
-  streams.kind === "list"
-    ? {
-        ...streams,
-        messages: Arr.map(streams.messages, Struct.omit(["userId"])),
-      }
-    : streams;
-
 const list = FunctionImpl.make(
   schema,
   spec,
@@ -108,13 +96,15 @@ const list = FunctionImpl.make(
     const ctx = yield* QueryCtx;
     if (args.streamArgs) {
       // Agent's streaming hook sends stream requests with an empty page, so a
-      // delta round trip reads stream state only and skips the transcript.
-      const streams = yield* readStreams(args.threadId, args.streamArgs);
+      // delta round trip reads stream state only and skips the transcript. A
+      // reader reads no stream state at all.
       return {
         page: [],
         isDone: true,
         continueCursor: "",
-        streams: owner ? streams : readerStreams(streams),
+        streams: owner
+          ? yield* readStreams(args.threadId, args.streamArgs)
+          : readerStreams(args.streamArgs),
       };
     }
     // The component SDK owns message projection and the resumable delta protocol.
@@ -127,7 +117,7 @@ const list = FunctionImpl.make(
     // Hydrate only the orders present in this bounded message page. Agent keeps
     // ownership of parts and stream cursors; app facts come from their own turn.
     // A reader is told where a turn stands, not what it cost the owner, and a
-    // message names no account.
+    // message names no account and holds nothing of the owner's memory.
     const turns = HashMap.fromIterable(
       yield* Effect.forEach(
         Arr.dedupe(Arr.map(page.page, (message) => message.order)),
@@ -165,7 +155,7 @@ const list = FunctionImpl.make(
           createdAt = metadata.state.finishedAt;
         }
         return {
-          ...(owner ? message : Struct.omit(message, ["userId"])),
+          ...(owner ? message : readerMessage(message)),
           _creationTime: createdAt,
           metadata,
         };

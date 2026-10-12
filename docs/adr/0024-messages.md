@@ -71,7 +71,7 @@ The deltas stay for five minutes after a stream finishes (`streams.ts:69`,
 | Title | `presentation.ts:106-113` | The same fetch of 50 rows, and it uses one: `inputPrompt`. |
 | Settlement | `settlement.ts:28-53` | The newest row, to see whether it holds a non-empty answer. It runs only for an active turn (`:95`). |
 | The page of messages | `messages.impl.ts:103-107`, `:108-144` | `listUIMessages`, which lists rows and runs `toUIMessages`, and the turn facts for each `order`. |
-| Streaming | `messages.impl.ts:28-69` | `listStreams` and `syncStreams`, which carry the deltas to the browser. |
+| Streaming | `messages.impl.ts:28-69` | `listStreams` and `syncStreams`, which carry the deltas to the owner's browser. A reader of a shared chat is told no stream (ADR 0001). |
 | Deletion | `triggers/chats/chats.ts:45` | `deleteAllForThreadIdAsync`, which deletes row by row (`threads.ts:184-247`, `messages.ts:59-71`) without reading content. |
 | Recovery inside the component | `messages.ts:484-551`, `streams.ts:662-741` | `finalizeMessage` rebuilds a row from the deltas when a pending row has no content, and writes it from inside the component. |
 

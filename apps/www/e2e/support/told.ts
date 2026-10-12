@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { MEMORY_CAPABILITY } from "@repo/backend/confect/nina/capability/spec";
 import {
   Array as Arr,
   Option,
@@ -37,14 +38,27 @@ const ToldConversation = Schema.fromJsonString(
     turn: Schema.NullOr(TurnSummary),
   })
 );
+/** What a page is told of the live streams: the running ones, or the new parts of some. */
+const ToldStreams = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("list"),
+    messages: Schema.Array(Schema.Unknown),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("deltas"),
+    deltas: Schema.Array(Schema.Unknown),
+  }),
+]);
 const ToldMessages = Schema.fromJsonString(
   Schema.Struct({
     page: Schema.Array(
       Schema.Struct({
         metadata: Schema.optionalKey(TurnSummary),
+        parts: Schema.Array(Schema.Struct({ type: Schema.String })),
         ...Owned,
       })
     ),
+    streams: ToldStreams,
   })
 );
 const readConversation = Schema.decodeResult(ToldConversation);
@@ -75,23 +89,26 @@ const readAnswers = <A>(
 
 /**
  * Everything a page was told of its chat, in the order it was told: its
- * conversations, each with the latest turn, and the messages of every page of
- * messages. A page that was told no conversation or no message fails the
- * check, so one source cannot stand in for the other.
+ * conversations, each with the latest turn, the messages of every page of
+ * messages, and the streams that each answer about messages carried. A page
+ * that was told no conversation or no message fails the check, so one source
+ * cannot stand in for the other.
  */
 const told = (page: Answered) => {
   const conversations = readAnswers(page, CONVERSATION, readConversation);
-  const messages = Arr.flatMap(
-    readAnswers(page, MESSAGES, readMessages),
-    (answer) => answer.page
-  );
+  const answers = readAnswers(page, MESSAGES, readMessages);
+  const messages = Arr.flatMap(answers, (answer) => answer.page);
 
   expect(
     conversations.length,
     "the conversations the page was told"
   ).toBeGreaterThan(0);
   expect(messages.length, "the messages the page was told").toBeGreaterThan(0);
-  return { conversations, messages };
+  return {
+    conversations,
+    messages,
+    streams: Arr.map(answers, (answer) => answer.streams),
+  };
 };
 
 type Told = ReturnType<typeof told>;
@@ -159,6 +176,34 @@ export const learnsWhoOwnsTheChat = (page: Answered) => {
     Arr.every(owners, (owner) => owner !== undefined),
     "whether the chat and each message the owner's page was told name the owner"
   ).toBe(true);
+};
+
+/**
+ * A reader's page is told no live stream: each answer about its messages lists
+ * no running stream and holds no part of one, and no message it was told holds
+ * the call of a search of the owner's memory or its result. What Nina looked
+ * for in the owner's memories, whether something matched and whether memory is
+ * paused belong to the owner. A stream carries chunks of a tool call that name
+ * only the call, so a page that is told none cannot be told those of a search.
+ */
+export const learnsNoStreamAndNoMemory = (page: Answered) => {
+  const { messages, streams } = told(page);
+
+  expect(
+    Arr.filter(streams, (stream) =>
+      stream.kind === "list"
+        ? stream.messages.length > 0
+        : stream.deltas.length > 0
+    ),
+    "the streams that the reader's page was told"
+  ).toEqual([]);
+  expect(
+    Arr.filter(
+      Arr.flatMap(messages, ({ parts }) => parts),
+      ({ type }) => type === `tool-${MEMORY_CAPABILITY}`
+    ),
+    "the parts of a memory call that the reader's page was told"
+  ).toEqual([]);
 };
 
 /**

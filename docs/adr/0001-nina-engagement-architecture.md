@@ -65,17 +65,44 @@ it or what she suggests next, because those belong to the owner's account: the
 owner, who opens a chat by its id or through their own link, is told all of it.
 The same holds for the account itself. The chat a reader is sent names neither
 the account that owns it (`userId`) nor the turn that runs in it
-(`activeTurnId`), and no message or live stream a reader is sent names an
-account. What a page needs of a chat is its id, its thread to list the messages,
-its title and its visibility, and it takes a chat that names no owner as not its
-own, so `readChatAccess` gives a reader nothing to write. The owner is told every
-field the chat had, so an older page decodes the owner's chat as it always did,
-and an older page is never a reader of a link, because only a page that sends
-the token reads by one. The conversation itself is not a fact of the account: a
-reader is sent every part of every message, the rows of what Nina looked up
-included. That includes the "Recalled memories" row of a search of the owner's
-memory, whose stored result is a note and never the words of a memory (ADR
-0022); `nina/memory/tool.test.ts` pins it.
+(`activeTurnId`), and no message a reader is sent names an account. What a page
+needs of a chat is its id, its thread to list the messages, its title and its
+visibility, and it takes a chat that names no owner as not its own, so
+`readChatAccess` gives a reader nothing to write. The owner is told every field
+the chat had, so an older page decodes the owner's chat as it always did, and an
+older page is never a reader of a link, because only a page that sends the token
+reads by one.
+
+The conversation is not a fact of the account, with one exception: what Nina
+looked for in the owner's memory is. A search of memory tells a reader what Nina
+looked for (the stored call holds the query, in the owner's words), whether
+something matched (the stored result is a note, a line that nothing was found,
+or the denial) and whether the owner paused memory. So the page of messages a
+reader is sent holds no part of a memory call: neither the call, nor its result,
+nor the step marker that Agent writes in front of a call. `nina/reader.ts` drops
+them in the one projection that also drops the account from each message, and
+reads the name of the capability from `capability/spec.ts`. The owner is sent
+every part, by the chat id and through their own link, the "Recalled memories"
+row included, whose stored result is a note and never the words of a memory (ADR
+0022). A message left with no part is the empty answer that Agent saves as
+pending when a turn begins (`saveInputMessages.ts` in the installed Agent), which
+the page shows as Nina typing while the turn runs (`isAnswerWaiting`) and as an
+empty answer once the turn has ended.
+
+A reader is sent no live stream either. After its first chunk, the chunks of a
+tool call name only the call (`tool-input-delta`, `tool-output-available`,
+`tool-output-error` and `tool-output-denied` hold a call id and no tool name), so
+a read that holds no state cannot tell the chunks of a memory call from another
+tool's. The stream requests of a reader's page are answered with no stream and
+without reading the component: an empty list for the list of streams, and no
+deltas for a request of deltas. Agent's hook (`useUIMessages`) asks for deltas
+only for a stream it has listed, so the page never waits for a stream and never
+asks for one, and the page of messages, which is a live query, tells a reader
+each message when its step is saved. The owner's own pages stream as before.
+`nina/reader.test.ts` pins the rules of both, and `nina/messages.impl.test.ts`
+and `nina/memory/tool.test.ts` pin them on the real Agent component, with a live
+stream and a memory call in the thread.
+
 Turning sharing off, or deleting the chat, deletes the token, so every link
 stops at once, and turning sharing on again draws a new one. One thing outlives
 a link: the address of a file attached to a message. The link guards the chat,
@@ -103,10 +130,15 @@ holds the token, the analytics it reported included. The turn summaries those
 pages were told hold no cost, token count, memory count or suggestion of the
 owner's, and the chat and the messages they were told name no account, while
 the owner's own page was told the credits and tokens of its turn and the account
-in its chat and in each message. The local runtime has no model, so each of its
-turns ends with the failure that offers no retry, and the browser test reaches
-no answer with follow-up suggestions, no completed turn that shows the credits
-control, and no failure that can be retried. A reader is sent no suggestions, a
+in its chat and in each message. They were told no live stream and no part of a
+memory call either (`apps/www/e2e/support/told.ts`, whose own tests show that
+the checks fail for a page that was told one). The local runtime has no model, so
+each of its turns ends with the failure that offers no retry, and the browser
+test reaches no answer with follow-up suggestions, no completed turn that shows
+the credits control, no failure that can be retried, no memory call and no live
+stream: for the last two it shows only that the production build answers a
+reader's requests with no stream. The server tests above are what fail when a
+reader is sent a stream or a memory call. A reader is sent no suggestions, a
 reader's turn carries no credits for that control to show, and the Retry of a
 failed answer reads the same access as the composer, `readChatAccess`, which a
 unit test pins for a reader.

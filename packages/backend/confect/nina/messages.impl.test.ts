@@ -3,19 +3,20 @@ import {
   createThread,
   listStreams,
   listUIMessages,
-  saveMessage,
-  saveMessages,
   syncStreams,
 } from "@convex-dev/agent";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
+  createThreadTest,
+  MEMORY_TURN,
+  SEARCH,
+  SEARCHING_TURN,
+} from "@repo/backend/test/nina/thread";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Option } from "effect";
+import type { FunctionArgs } from "convex/server";
+import { Array as Arr, Option, Schema } from "effect";
 
 vi.mock("@convex-dev/agent", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@convex-dev/agent")>();
@@ -32,92 +33,89 @@ const share = Ref.getFunctionReference(
   refs.public.chats.mutations.updateChatVisibility
 );
 const token = Ref.getFunctionReference(refs.public.chats.queries.getShareToken);
-const paginationOpts = { cursor: null, numItems: 20 };
-const NOW = Date.UTC(2026, 8, 27, 12);
 
-async function fixture() {
-  const t = createConvexTestWithBetterAuth();
-  const identity = await t.mutation(async (ctx) => {
-    const user = await seedAuthenticatedUser(ctx, { now: NOW });
-    const threadId = await createThread(ctx, components.nina, {
-      userId: user.userId,
-    });
-    const chatId = await ctx.db.insert("chats", {
-      threadId,
-      type: "study",
-      userId: user.userId,
-      updatedAt: NOW,
-      visibility: "private",
-    });
-    const prompt = await saveMessage(ctx, components.nina, {
-      threadId,
-      prompt: "Explain a limit.",
-    });
-    await saveMessages(ctx, components.nina, {
-      threadId,
-      promptMessageId: prompt.messageId,
-      messages: [
-        {
-          role: "assistant",
-          content: [
-            {
-              type: "reasoning",
-              text: "Check the expression.",
-              providerOptions: { gateway: { signature: "continuation" } },
-            },
-            {
-              type: "tool-call",
-              toolCallId: "math-1",
-              toolName: "math",
-              input: { expression: "1+1" },
-            },
-          ],
-        },
-        {
-          role: "tool",
-          content: [
-            {
-              type: "tool-result",
-              toolCallId: "math-1",
-              toolName: "math",
-              output: {
-                type: "json",
-                value: {
-                  text: "2",
-                  artifacts: [
-                    { type: "data-math", id: "math-1", data: { primary: "2" } },
-                  ],
-                },
-              },
-            },
-          ],
-        },
-        { role: "assistant", content: "The value is 2." },
-      ],
-    });
-    return { ...user, chatId, threadId };
+type Fixture = Awaited<ReturnType<typeof createThreadTest>>;
+
+/** Shares the chat, and returns the token of its link. */
+async function shareChat(f: Fixture) {
+  await f.owner.mutation(share, {
+    chatId: f.args.chatId,
+    visibility: "public",
   });
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
+  const shareToken = await f.owner.query(token, { chatId: f.args.chatId });
+  assert(shareToken !== null);
+  return shareToken;
+}
+
+/** Starts a stream on the thread of the chat, as a running turn does, and writes "Live" to it. */
+function startStream(f: Fixture) {
+  return f.t.mutation(async (ctx) => {
+    const streamId = await ctx.runMutation(components.nina.streams.create, {
+      threadId: f.identity.threadId,
+      userId: f.identity.userId,
+      order: 1,
+      stepOrder: 0,
+      format: "UIMessageChunk",
+    });
+    await ctx.runMutation(components.nina.streams.addDelta, {
+      streamId,
+      start: 0,
+      end: 1,
+      parts: [{ type: "text-delta", id: "text-1", delta: "Live" }],
+    });
+    return streamId;
   });
-  return {
-    t,
-    owner,
-    identity,
-    args: {
-      chatId: identity.chatId,
-      threadId: identity.threadId,
-      paginationOpts,
-    },
-  };
+}
+
+/** What a reader is told by one call of the query, as the page decodes it. */
+async function tell(
+  reader: Fixture["owner"],
+  args: FunctionArgs<typeof query>
+) {
+  return Ref.decodeReturnsSync(
+    refs.public.nina.messages.list,
+    await reader.query(query, args)
+  );
+}
+
+/** What a reader is told by the messages of the chat, by its live streams, and by the new parts of one. */
+function askAll(
+  reader: Fixture["owner"],
+  f: Fixture,
+  streamId: string,
+  access: { shareToken?: string }
+) {
+  return Promise.all([
+    tell(reader, { ...f.args, ...access }),
+    tell(reader, { ...f.args, ...access, streamArgs: { kind: "list" } }),
+    tell(reader, {
+      ...f.args,
+      ...access,
+      streamArgs: { kind: "deltas", cursors: [{ streamId, cursor: 0 }] },
+    }),
+  ]);
+}
+
+const PartKinds = Schema.Array(Schema.Struct({ type: Schema.String }));
+
+/** The kinds of the parts of the assistant's message in what a reader was told, in order. */
+function kindsOf(told: Awaited<ReturnType<typeof tell>>) {
+  const assistant = Arr.findFirst(
+    told.page,
+    ({ role }) => role === "assistant"
+  );
+  assert(Option.isSome(assistant));
+  return Arr.map(
+    Schema.decodeUnknownSync(PartKinds)(assistant.value.parts),
+    ({ type }) => type
+  );
 }
 
 describe("Nina message boundary", () => {
   afterEach(() => vi.clearAllMocks());
 
   it("reads the component transcript with reasoning and tool artifacts intact", async () => {
-    const { owner, args } = await fixture();
+    const { owner, args } = await createThreadTest();
     const page = Ref.decodeReturnsSync(
       refs.public.nina.messages.list,
       await owner.query(query, args)
@@ -151,7 +149,7 @@ describe("Nina message boundary", () => {
   });
 
   it("allows an anonymous reader with the share token and denies every other reader before touching the component", async () => {
-    const shared = await fixture();
+    const shared = await createThreadTest();
     await shared.owner.mutation(share, {
       chatId: shared.args.chatId,
       visibility: "public",
@@ -172,7 +170,7 @@ describe("Nina message boundary", () => {
         data: { _tag: "ChatAccessError", code: "CHAT_NOT_FOUND" },
       });
     }
-    const privateChat = await fixture();
+    const privateChat = await createThreadTest();
     await expect(
       privateChat.t.query(query, privateChat.args)
     ).rejects.toMatchObject({
@@ -182,7 +180,7 @@ describe("Nina message boundary", () => {
   });
 
   it("denies a guessed thread even when the reader owns the supplied chat", async () => {
-    const { owner, args } = await fixture();
+    const { owner, args } = await createThreadTest();
     await expect(
       owner.query(query, { ...args, threadId: "another-thread" })
     ).rejects.toMatchObject({
@@ -192,7 +190,7 @@ describe("Nina message boundary", () => {
   });
 
   it("resumes only deltas belonging to the authorized thread", async () => {
-    const { t, owner, identity, args } = await fixture();
+    const { t, owner, identity, args } = await createThreadTest();
     const streams = await t.mutation(async (ctx) => {
       const otherThread = await createThread(ctx, components.nina);
       const own = await ctx.runMutation(components.nina.streams.create, {
@@ -271,55 +269,104 @@ describe("Nina message boundary", () => {
     );
   });
 
-  it("names the account that owns the chat in every message and stream to the owner, and to a reader who holds the share link in none", async () => {
-    const { t, owner, identity, args } = await fixture();
-    const streamId = await t.mutation(async (ctx) => {
-      const id = await ctx.runMutation(components.nina.streams.create, {
-        threadId: identity.threadId,
-        userId: identity.userId,
-        order: 1,
-        stepOrder: 0,
-        format: "UIMessageChunk",
-      });
-      await ctx.runMutation(components.nina.streams.addDelta, {
-        streamId: id,
-        start: 0,
-        end: 1,
-        parts: [{ type: "text-delta", id: "text-1", delta: "Live" }],
-      });
-      return id;
-    });
-    await owner.mutation(share, { chatId: args.chatId, visibility: "public" });
-    const shareToken = await owner.query(token, { chatId: args.chatId });
-    assert(shareToken !== null);
-    // The messages of the chat, its live streams, and the new parts of one.
-    const asked = (reader: typeof owner, access: { shareToken?: string }) =>
-      Promise.all([
-        reader.query(query, { ...args, ...access }),
-        reader.query(query, {
-          ...args,
-          ...access,
-          streamArgs: { kind: "list" },
-        }),
-        reader.query(query, {
-          ...args,
-          ...access,
-          streamArgs: { kind: "deltas", cursors: [{ streamId, cursor: 0 }] },
-        }),
-      ]);
-
-    // The owner is told the account in the messages and in the live streams.
-    const [ownMessages, ownStreams] = await asked(owner, {});
-    expect(encodeJsonText(ownMessages)).toContain(identity.userId);
-    expect(encodeJsonText(ownStreams)).toContain(identity.userId);
-    // A reader is told it in none of them, and still reads what they hold.
-    const [messages, streams, deltas] = await asked(t, { shareToken });
-    for (const read of [messages, streams, deltas]) {
-      expect(encodeJsonText(read)).not.toContain(identity.userId);
+  it("names the account that owns the chat in every message and live stream it tells the owner", async () => {
+    const f = await createThreadTest();
+    const streamId = await startStream(f);
+    const [messages, streams, deltas] = await askAll(f.owner, f, streamId, {});
+    for (const read of [messages, streams]) {
+      expect(encodeJsonText(read)).toContain(f.identity.userId);
     }
-    expect(encodeJsonText(messages)).toContain("The value is 2.");
     expect(encodeJsonText(streams)).toContain(streamId);
     expect(encodeJsonText(deltas)).toContain("Live");
+  });
+
+  it("tells a reader who holds the share link no live stream whatever it asks, reads none for it, and still lists the messages", async () => {
+    const f = await createThreadTest();
+    const streamId = await startStream(f);
+    const shareToken = await shareChat(f);
+    vi.clearAllMocks();
+
+    const [messages, streams, deltas] = await askAll(f.t, f, streamId, {
+      shareToken,
+    });
+
+    // The two answers that Agent's hook reads as no stream: it lists none, so it
+    // asks for no deltas, and a request for deltas gets none.
+    expect(streams).toEqual({
+      continueCursor: "",
+      isDone: true,
+      page: [],
+      streams: { kind: "list", messages: [] },
+    });
+    expect(deltas).toEqual({
+      continueCursor: "",
+      isDone: true,
+      page: [],
+      streams: { kind: "deltas", deltas: [] },
+    });
+    // The component is not asked for a stream, so none is read and then hidden.
+    expect(listStreams).not.toHaveBeenCalled();
+    expect(syncStreams).not.toHaveBeenCalled();
+    // The page of messages is the live query that tells a reader what is written.
+    expect(messages.streams).toEqual({ kind: "list", messages: [] });
+    expect(encodeJsonText(messages)).toContain("The value is 2.");
+    for (const read of [messages, streams, deltas]) {
+      expect(encodeJsonText(read)).not.toContain(f.identity.userId);
+      expect(encodeJsonText(read)).not.toContain(streamId);
+      expect(encodeJsonText(read)).not.toContain("Live");
+    }
+  });
+
+  it("tells a reader no part of a search of the owner's memory, and the owner all of it", async () => {
+    const f = await createThreadTest(MEMORY_TURN);
+    const shareToken = await shareChat(f);
+    const ownerTold = await tell(f.owner, { ...f.args });
+    const ownerByLink = await tell(f.owner, { ...f.args, shareToken });
+    const readerTold = await tell(f.t, { ...f.args, shareToken });
+
+    // The owner is told every part, by the chat id and through their own link.
+    const everything = [
+      "reasoning",
+      "step-start",
+      "tool-math",
+      "step-start",
+      "tool-memory",
+      "text",
+    ];
+    expect(kindsOf(ownerTold)).toEqual(everything);
+    expect(kindsOf(ownerByLink)).toEqual(everything);
+    // A reader is told the rest, and neither the search nor the marker Agent
+    // writes in front of it: the marker of the sum stays where it was.
+    expect(kindsOf(readerTold)).toEqual([
+      "reasoning",
+      "step-start",
+      "tool-math",
+      "text",
+    ]);
+    // None of what the search holds is on the wire to a reader.
+    for (const words of [SEARCH.id, SEARCH.query, SEARCH.text]) {
+      expect(encodeJsonText(ownerTold)).toContain(words);
+      expect(encodeJsonText(readerTold)).not.toContain(words);
+    }
+    expect(encodeJsonText(readerTold)).not.toContain("tool-memory");
+    expect(encodeJsonText(readerTold)).toContain("The value is 2.");
+  });
+
+  it("keeps the message of a turn that has only searched the memory, with no part, for a reader", async () => {
+    const f = await createThreadTest(SEARCHING_TURN);
+    const shareToken = await shareChat(f);
+    const ownerTold = await tell(f.owner, { ...f.args });
+    const readerTold = await tell(f.t, { ...f.args, shareToken });
+
+    expect(kindsOf(ownerTold)).toEqual(["step-start", "tool-memory"]);
+    // The answer is still listed, as the empty answer the page shows as Nina
+    // typing, and holds nothing of the search.
+    expect(Arr.map(readerTold.page, ({ role }) => role)).toEqual([
+      "user",
+      "assistant",
+    ]);
+    expect(kindsOf(readerTold)).toEqual([]);
+    expect(encodeJsonText(readerTold)).not.toContain(SEARCH.query);
   });
 
   it.each([
@@ -329,7 +376,7 @@ describe("Nina message boundary", () => {
   ])(
     "rejects invalid or unbounded cursor batches before reading the component",
     async (...cursors) => {
-      const { owner, args } = await fixture();
+      const { owner, args } = await createThreadTest();
       await expect(
         owner.query(query, { ...args, streamArgs: { kind: "deltas", cursors } })
       ).rejects.toThrow();
@@ -344,7 +391,7 @@ describe("Nina message boundary", () => {
     ["cursors", { kind: "deltas", cursors: [] }],
     ["missing streams", { kind: "list" }],
   ] as const)("redacts %s transport failures", async (source, streamArgs) => {
-    const { owner, args } = await fixture();
+    const { owner, args } = await createThreadTest();
     const error = new Error("private transport diagnostic");
     if (source === "messages") {
       vi.mocked(listUIMessages).mockRejectedValueOnce(error);

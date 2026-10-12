@@ -3,6 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import {
+  learnsNoStreamAndNoMemory,
   learnsNothingOfWhoOwnsTheChat,
   learnsOnlyWhereTurnsStand,
   learnsWhatTurnsCost,
@@ -41,6 +42,22 @@ const messagesOf = (...page: Record<string, unknown>[]) =>
     streams: { kind: "list", messages: [] },
   });
 
+/** The answer to a request for the streams of the chat, which carries no message. */
+const streamsOf = (streams: Record<string, unknown>) =>
+  encodeJsonText({ continueCursor: "", isDone: true, page: [], streams });
+
+/** The parts of an answer that did a sum: the step, the sum, and the words. */
+const answered = [
+  { type: "step-start" },
+  { toolCallId: "math-1", type: "tool-math" },
+  { text: "The value is 2.", type: "text" },
+];
+/** The parts of a search of the owner's memory, which only the owner is told. */
+const searched = [
+  { type: "step-start" },
+  { toolCallId: "recall-1", type: "tool-memory" },
+];
+
 /** A page of the browser that was given these answers, by the query that answered them. */
 const given = (answers: Readonly<Record<string, string[]>>) => ({
   answersTo: (udfPath: string) =>
@@ -65,15 +82,24 @@ const owner = {
     messagesOf({
       id: "message-1",
       metadata: { ...standing, ...cost },
+      parts: [...searched, ...answered],
       userId: OWNER,
     }),
   ],
 };
 
-/** A reader's page, loaded the way the browser test loads it: the chat three times, and its messages. */
+/**
+ * A reader's page, loaded the way the browser test loads it: the chat three
+ * times, its messages, and the answers to the requests for streams, which list
+ * none and hold no delta.
+ */
 const reader = {
   [CONVERSATION]: Arr.replicate(conversationOf({}, standing), 3),
-  [MESSAGES]: [messagesOf({ id: "message-1", metadata: standing })],
+  [MESSAGES]: [
+    messagesOf({ id: "message-1", metadata: standing, parts: answered }),
+    streamsOf({ kind: "list", messages: [] }),
+    streamsOf({ kind: "deltas", deltas: [] }),
+  ],
 };
 
 describe("the checks of what a page was told of a chat", () => {
@@ -82,6 +108,49 @@ describe("the checks of what a page was told of a chat", () => {
     learnsWhoOwnsTheChat(given(owner));
     learnsOnlyWhereTurnsStand(given(reader));
     learnsNothingOfWhoOwnsTheChat(given(reader));
+    learnsNoStreamAndNoMemory(given(reader));
+  });
+
+  it("fail for a reader's page that was told a live stream, the new parts of one, or a part of a memory call", () => {
+    const running = { streamId: "stream-1" };
+    const written = { end: 1, parts: [], start: 0, streamId: "stream-1" };
+    const STREAMS = "the streams that the reader's page was told";
+    expect(() =>
+      learnsNoStreamAndNoMemory(
+        given({
+          ...reader,
+          [MESSAGES]: [
+            ...reader[MESSAGES],
+            streamsOf({ kind: "list", messages: [running] }),
+          ],
+        })
+      )
+    ).toThrow(STREAMS);
+    expect(() =>
+      learnsNoStreamAndNoMemory(
+        given({
+          ...reader,
+          [MESSAGES]: [
+            ...reader[MESSAGES],
+            streamsOf({ deltas: [written], kind: "deltas" }),
+          ],
+        })
+      )
+    ).toThrow(STREAMS);
+    expect(() =>
+      learnsNoStreamAndNoMemory(
+        given({
+          ...reader,
+          [MESSAGES]: [
+            messagesOf({
+              id: "message-1",
+              metadata: standing,
+              parts: [...searched, ...answered],
+            }),
+          ],
+        })
+      )
+    ).toThrow("the parts of a memory call that the reader's page was told");
   });
 
   it("fail for a reader's page that was told what only the owner is told", () => {
@@ -106,7 +175,12 @@ describe("the checks of what a page was told of a chat", () => {
         given({
           ...reader,
           [MESSAGES]: [
-            messagesOf({ id: "message-1", metadata: standing, userId: OWNER }),
+            messagesOf({
+              id: "message-1",
+              metadata: standing,
+              parts: answered,
+              userId: OWNER,
+            }),
           ],
         })
       )
@@ -135,6 +209,7 @@ describe("the checks of what a page was told of a chat", () => {
     ["learnsWhoOwnsTheChat", learnsWhoOwnsTheChat, owner],
     ["learnsOnlyWhereTurnsStand", learnsOnlyWhereTurnsStand, reader],
     ["learnsNothingOfWhoOwnsTheChat", learnsNothingOfWhoOwnsTheChat, reader],
+    ["learnsNoStreamAndNoMemory", learnsNoStreamAndNoMemory, reader],
   ] as const)(
     "%s reads every answer it names, and no other answer stands in for one it cannot",
     (_name, check, page) => {
