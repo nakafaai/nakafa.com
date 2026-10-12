@@ -59,6 +59,11 @@ describe("the release gate command", () => {
         });
         const outputPath = `${directory}/output.log`;
 
+        // The mocks above reach only this process, so the child reads the
+        // `.env.local` of this machine, as the gate always has. A deploy key or
+        // a deployment token in that file would make it refuse for that reason
+        // instead. `development/cli.test.ts` proves each refusal in a temporary
+        // folder.
         const error = yield* runAcceptanceCommand({
           args: [
             "--import",
