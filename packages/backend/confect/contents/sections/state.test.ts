@@ -15,16 +15,21 @@ const ACTIVE = KNOWLEDGE_RELEASE.releaseId;
 
 /** What a test does to the state of the index of one deployment. */
 function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
-  const finish = (releaseId: string, model = MODEL) =>
-    t.mutation((ctx) =>
-      Effect.runPromise(
+  /** Finishes the build and gives, with the answer, how many documents the transaction wrote. */
+  const finishMeasured = (releaseId: string, model = MODEL) =>
+    t.mutation(async (ctx) => {
+      const result = await Effect.runPromise(
         finishBuild({ model, releaseId }).pipe(
           Effect.provide(
             RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
           )
         )
-      )
-    );
+      );
+      const metrics = await ctx.meta.getTransactionMetrics();
+      return { documentsWritten: metrics.documentsWritten.used, result };
+    });
+  const finish = async (releaseId: string, model = MODEL) =>
+    (await finishMeasured(releaseId, model)).result;
   const ready = (model = MODEL) =>
     t.mutation((ctx) =>
       Effect.runPromise(
@@ -57,7 +62,7 @@ function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
         activeReleaseId: releaseId,
       });
     });
-  return { activate, finish, ready, records, sequence };
+  return { activate, finish, finishMeasured, ready, records, sequence };
 }
 
 /** A deployment whose active release is the one of the knowledge fixture. */
@@ -93,11 +98,19 @@ describe("section index state", () => {
     expect(await ready()).toBe(true);
   });
 
-  it("does not write the record again when it says the same", async () => {
-    const { finish, records } = await setup();
-    await finish(ACTIVE);
+  it("writes the record once, and not again when it says the same", async () => {
+    const { finishMeasured, records } = await setup();
+    // A rewrite of a record with the same words leaves it equal to what it
+    // was, so only what the transaction wrote can tell the two apart.
+    expect(await finishMeasured(ACTIVE)).toEqual({
+      documentsWritten: 1,
+      result: { recorded: true },
+    });
     const [first] = await records();
-    expect(await finish(ACTIVE)).toEqual({ recorded: true });
+    expect(await finishMeasured(ACTIVE)).toEqual({
+      documentsWritten: 0,
+      result: { recorded: true },
+    });
     expect(await records()).toEqual([first]);
   });
 
