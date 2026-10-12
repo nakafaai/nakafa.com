@@ -12,21 +12,52 @@ import {
   SchemaAST,
 } from "effect";
 
+/*
+ * What Convex does with the nesting of a document. The installed `convex`
+ * package ships only the client, so none of this is in `node_modules`. It was
+ * read in the open source of the backend, get-convex/convex-backend, at
+ * commit 5a633b42800113d393f0db162f8fc67f5bf01e14 (12 October 2026):
+ *
+ * - `crates/value/src/array.rs` and `object.rs` count an array or an object as
+ *   one level more than its deepest member, and an empty one as one level.
+ *   `crates/value/src/size.rs` counts a scalar as none.
+ * - `crates/common/src/document.rs` refuses a document above
+ *   `MAX_DOCUMENT_NESTING`, which is 16.
+ * - `approaching_limit_warning` in `crates/udf/src/warnings.rs` warns for a
+ *   value above `FUNCTION_LIMIT_WARNING_RATIO` times its limit, cut to a whole
+ *   number, up to the limit. `add_warnings_to_log_lines` in
+ *   `crates/isolate/src/environment/udf/mod.rs` calls it with the nesting of
+ *   the deepest document a function wrote and `MAX_DOCUMENT_NESTING`, and
+ *   that is the log line "Deeply nested document written with ID ... (actual:
+ *   N levels, limit: 16 levels)".
+ * - `crates/common/src/knobs.rs` sets the ratio to 0.8 unless a deployment
+ *   overrides it.
+ *
+ * The ratio of the hosted deployment cannot be read from here. Production
+ * logged the warning at 13 levels, which agrees with the default. That 12
+ * levels stay silent follows from the source, not from a production log.
+ */
+
+/** The most levels Convex accepts in a document (`MAX_DOCUMENT_NESTING`). */
+const DOCUMENT_LEVELS = 16;
+
+/** The share of the limit above which Convex warns by default. */
+const WARNING_RATIO = 0.8;
+
 /**
  * The most levels a stored capability result may reach in its message row, so
  * that Convex's warning for a deeply nested document never fires (it fired on
  * a real math turn, at 13 levels) and four levels stay free below the 16 that
- * Convex accepts.
+ * Convex accepts. It is the warning limit of the default ratio, 12.8 cut to a
+ * whole number as Convex cuts it.
  */
-export const STORED_LEVELS = 12;
+export const STORED_LEVELS = Math.trunc(DOCUMENT_LEVELS * WARNING_RATIO);
 
 /**
- * How many levels Convex counts in a value. A scalar has none, and an array or
- * an object has one more than its deepest member, so an empty one has one: the
- * rule of `size.rs`, `array.rs` and `object.rs` in `crates/value` of
- * get-convex/convex-backend. A stored document is such an object, with `_id`
- * and `_creationTime` among its fields, and it is refused above 16 levels
- * (`MAX_DOCUMENT_NESTING` in `crates/common/src/document.rs`).
+ * How many levels Convex counts in a value: a scalar has none, and an array or
+ * an object has one more than its deepest member, so an empty one has one. A
+ * stored document is such an object, with `_id` and `_creationTime` among its
+ * fields.
  */
 export function levels(value: unknown): number {
   if (Arr.isArray(value)) {

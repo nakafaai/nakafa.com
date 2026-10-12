@@ -3,6 +3,8 @@ import { abortStream, listMessages, saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { CreditStateError } from "@repo/backend/confect/credits/spec";
+import { resolveEffectiveCreditState } from "@repo/backend/confect/credits/state";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import {
   SETTLE_GRACE,
@@ -10,11 +12,19 @@ import {
 } from "@repo/backend/confect/nina/deadline";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
-import { Array as Arr, Duration } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
+vi.mock("@repo/backend/confect/credits/state", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/credits/state")>();
+  return {
+    ...actual,
+    resolveEffectiveCreditState: vi.fn(actual.resolveEffectiveCreditState),
+  };
+});
 vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
   return {
@@ -57,6 +67,7 @@ describe("A Nina turn that cannot be settled", () => {
   afterEach(() => {
     vi.mocked(listMessages).mockReset();
     vi.mocked(abortStream).mockReset();
+    vi.mocked(resolveEffectiveCreditState).mockReset();
     vi.clearAllMocks();
     vi.useRealTimers();
   });
@@ -197,6 +208,59 @@ describe("A Nina turn that cannot be settled", () => {
     });
     expect(state.user?.credits).toBe(10);
     expect(state.chats[0]?.activeTurnId).toBeUndefined();
+  });
+
+  it("changes nothing when the hold cannot be paid back, so no credit is dropped and a later try ends the turn", async () => {
+    const f = await stranded();
+    const promptStatus = () =>
+      f.t.query(async (ctx) => {
+        const [prompt] = await ctx.runQuery(
+          components.nina.messages.getMessagesByIds,
+          { messageIds: [f.promptMessageId] }
+        );
+        return prompt?.status;
+      });
+    const before = await promptStatus();
+    vi.setSystemTime(f.found + GRACE);
+
+    // The credit state cannot be read, so the refund fails. Ending the turn
+    // without it would drop the learner's credits, which no fallback may do.
+    // The ending fails as a whole, and the cut-off it had made in the journal
+    // is rolled back with it.
+    vi.mocked(resolveEffectiveCreditState).mockImplementationOnce(() =>
+      Effect.fail(
+        new CreditStateError({
+          code: "CREDIT_STATE_FAILED",
+          message: "Unable to read or update the credit reset period.",
+        })
+      )
+    );
+    await expect(
+      f.t.mutation(abandon, { turnId: f.turnId })
+    ).rejects.toMatchObject({ data: { code: "NINA_CREDIT_IO_FAILED" } });
+    const kept = await f.inspect();
+    expect(kept.turns[0]).toMatchObject({
+      phase: "active",
+      state: { status: "running" },
+    });
+    expect(kept.user?.credits).toBe(5);
+    expect(kept.chats[0]?.activeTurnId).toBe(f.turnId);
+    expect(Arr.filter(kept.ledger, (row) => row.type === "refund")).toEqual([]);
+    expect(await promptStatus()).toBe(before);
+
+    // The next try, which the next sweep schedules, ends the turn and pays the
+    // hold back once.
+    await f.t.mutation(abandon, { turnId: f.turnId });
+    const ended = await f.inspect();
+    expect(ended.turns[0]).toMatchObject({
+      phase: "settled",
+      state: { status: "failed", reason: "unknown" },
+    });
+    expect(ended.user?.credits).toBe(10);
+    expect(
+      Arr.filter(ended.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
+    expect(ended.chats[0]?.activeTurnId).toBeUndefined();
   });
 
   it("leaves a turn alone that a try settled meanwhile, and pays nothing back twice", async () => {

@@ -1,7 +1,10 @@
 import { saveMessages } from "@convex-dev/agent";
 import { describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
-import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
+import {
+  type LearningCapabilityName,
+  LearningCapabilityNameSchema,
+} from "@repo/backend/confect/nina/capability/spec";
 import { createNinaTest } from "@repo/backend/test/nina";
 import {
   deepestResult,
@@ -11,21 +14,27 @@ import {
 import { Array as Arr, Schema } from "effect";
 
 /**
- * The most levels each capability's stored result may reach. Math is the one
- * that passes `STORED_LEVELS`, at 14 for the deepest card its schema admits and
- * 13 for a card with one step. The card nests `result`, then its list of
- * `steps`, then the expressions and `items` of each step, and `result` repeats
- * the request that the card already holds. Flattening it changes what
- * `evidence/math/result.tsx` and `marketing/about/nina/section.tsx` in
- * `apps/www` read and build, so it waits for the web round. Until then the
- * number below stops the card from growing. Delete the entry with the nesting.
+ * The capabilities whose stored result may still pass `STORED_LEVELS`, with the
+ * levels the message row of their deepest card reaches today. Math is the only
+ * one. Below the row, its card nests `message`, `content`, a part, `output` and
+ * `value`, and then `artifacts`, an artifact, `data`, `result`, `steps`, a step,
+ * its `items` and an item: 14 levels for the deepest card its schema admits. A
+ * card with one step and no items is 13, the depth at which production logged
+ * Convex's warning on 12 October 2026. The other capabilities measure 12 for
+ * Nakafa retrieval, 11 for research and 7 for memory.
+ *
+ * Flattening the card changes the stored shape that the page decodes with
+ * `CapabilityOutputSchema`, so the rollout contract of
+ * `packages/backend/AGENTS.md` orders it: first the schema accepts both shapes
+ * and a web build that reads both is served, then the writer stores the flat
+ * one. That is a change of the web round, and nothing here may run ahead of it.
+ *
+ * Until then the entry stops the card from growing, and the test fails once the
+ * card fits the bound, so the exception cannot outlive its cause. Owner: the
+ * Nina program. Exit: math measures at most `STORED_LEVELS`. Cleanup: delete
+ * this table and the branch that reads it.
  */
-const bound = {
-  deepResearch: STORED_LEVELS,
-  math: 14,
-  memory: STORED_LEVELS,
-  nakafa: STORED_LEVELS,
-};
+const above: Partial<Record<LearningCapabilityName, number>> = { math: 14 };
 
 describe("the results Nina stores for a capability", () => {
   it.each(LearningCapabilityNameSchema.literals)(
@@ -59,7 +68,20 @@ describe("the results Nina stores for a capability", () => {
         );
         return stored;
       });
-      expect(levels(row)).toBeLessThanOrEqual(bound[capability]);
+      const reached = levels(row);
+      const exception = above[capability];
+      if (exception === undefined) {
+        expect(reached).toBeLessThanOrEqual(STORED_LEVELS);
+        return;
+      }
+      expect(
+        reached,
+        `${capability} fits ${STORED_LEVELS} levels now: delete its entry in "above"`
+      ).toBeGreaterThan(STORED_LEVELS);
+      expect(
+        reached,
+        `${capability} grew past the levels its card reached`
+      ).toBeLessThanOrEqual(exception);
     },
     30_000
   );

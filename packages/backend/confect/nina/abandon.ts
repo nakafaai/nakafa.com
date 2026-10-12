@@ -13,6 +13,15 @@ import { Effect } from "effect";
  * learner stopped ends as cancelled, any other as failed for a reason the
  * learner reads as "unknown". Only an active turn is passed in, so a second
  * ending of the same turn changes nothing and the hold is paid back once.
+ *
+ * The reason is `unknown` and not one of its own because a new reason is a new
+ * value that every web build must read and word before the backend may store
+ * it (ADR 0001). The refund is the one step it never skips: a hold that cannot
+ * be paid back, because the credit state cannot be read or written, fails the
+ * whole ending and changes nothing, the cut-off included. The learner's credits
+ * are not dropped to free the chat, and the next sweep tries again. That is the
+ * storage every credit operation of the learner reads, so no fallback could
+ * route around it.
  */
 export const abandonTurn = Effect.fn("nina.abandon.turn")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>

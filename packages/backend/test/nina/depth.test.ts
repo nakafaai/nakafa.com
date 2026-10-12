@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { deepest, deepestResult, levels } from "@repo/backend/test/nina/depth";
+import {
+  deepest,
+  deepestResult,
+  levels,
+  STORED_LEVELS,
+} from "@repo/backend/test/nina/depth";
 import { Schema, SchemaAST } from "effect";
 
 describe("the levels Convex counts", () => {
@@ -12,6 +17,10 @@ describe("the levels Convex counts", () => {
     expect(levels({})).toBe(1);
     expect(levels([])).toBe(1);
     expect(levels({ a: 1, b: [{ c: "x" }] })).toBe(3);
+  });
+
+  it("keeps the bound of a stored result below the 13 levels at which production logged the warning", () => {
+    expect(STORED_LEVELS).toBeLessThan(13);
   });
 
   it("builds the deepest value a schema admits and counts it", () => {
