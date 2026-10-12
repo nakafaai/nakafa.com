@@ -169,7 +169,7 @@ export declare const api: {
       getChat: FunctionReference<
         "query",
         "public",
-        { chatId: Id<"chats"> },
+        { chatId: Id<"chats">; shareToken?: string },
         {
           _creationTime: number;
           _id: Id<"chats">;
@@ -256,6 +256,12 @@ export declare const api: {
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      getShareToken: FunctionReference<
+        "query",
+        "public",
+        { chatId: Id<"chats"> },
+        string | null
       >;
     };
   };
@@ -3327,7 +3333,7 @@ export declare const api: {
       get: FunctionReference<
         "query",
         "public",
-        { chatId: Id<"chats"> },
+        { chatId: Id<"chats">; shareToken?: string },
         {
           chat: {
             _creationTime: number;
@@ -3491,6 +3497,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          shareToken?: string;
           streamArgs?:
             | { kind: "list"; startOrder?: number }
             | {
@@ -3630,7 +3637,6 @@ export declare const api: {
                   slug: string;
                 };
               };
-          modelId?: "nakafa-lite" | "nakafa-pro";
           requestId: string;
         },
         {
@@ -6196,6 +6202,16 @@ export declare const internal: {
       >;
     };
   };
+  chats: {
+    unshare: {
+      closeLegacy: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; dry: boolean },
+        { closed: number; legacy: number; next: string | null; shared: number }
+      >;
+    };
+  };
   classes: {
     forums: {
       attachments: {
@@ -7920,10 +7936,7 @@ export declare const internal: {
                 }
               | {
                   name: "chat message sent";
-                  properties: {
-                    chat_type: "study";
-                    model_id?: "nakafa-lite" | "nakafa-pro";
-                  };
+                  properties: { chat_type: "study" };
                 }
               | {
                   name: "chat response completed";
@@ -9587,6 +9600,26 @@ export declare const internal: {
         }
       >;
     };
+    outcome: {
+      rewriteFailures: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: {
+            chats: string | null;
+            messages: { cursor: string; threadId: string } | null;
+          } | null;
+        },
+        {
+          cursor: {
+            chats: string | null;
+            messages: { cursor: string; threadId: string } | null;
+          } | null;
+          rewritten: number;
+          scanned: number;
+        }
+      >;
+    };
     presentation: {
       save: FunctionReference<
         "mutation",
@@ -9648,6 +9681,23 @@ export declare const internal: {
         "internal",
         { before: number; chatId: Id<"chats">; through: number | null },
         Array<{ order: number; retryOf?: number }>
+      >;
+    };
+    unset: {
+      modelKey: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: string | null;
+          numItems: number;
+          table: "ninaTurns" | "creditTransactions";
+        },
+        {
+          changed: number;
+          continueCursor: string;
+          isDone: boolean;
+          scanned: number;
+        }
       >;
     };
     uploads: {
