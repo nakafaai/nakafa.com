@@ -25,6 +25,15 @@ const placeOf = (page: Page, text: string) =>
     };
   }, text);
 
+/** How many rows of the page hold more than the height they are given. */
+const overflowingRows = (page: Page) =>
+  page.evaluate(
+    () =>
+      [...document.querySelectorAll("main ul > li")].filter(
+        (item) => item.scrollHeight > item.clientHeight
+      ).length
+  );
+
 /** Whether React has taken over the first row of the list. */
 export const isHydrated = (page: Page) =>
   page.evaluate(() =>
@@ -99,7 +108,8 @@ export const hydratesInPlace = Effect.fn("NakafaE2E.hydratesInPlace")(
  * The same check with the text of the page half as large again from its first
  * paint. Every row has one fixed height in pixels, so the window knows where
  * each row stands at any text size. A height that follows the text would not
- * match the places the window gives the rows before it has measured any.
+ * match the places the window gives the rows before it has measured any. At
+ * this size the two lines of every row still fit in that height.
  */
 export const hydratesInPlaceAtLargeText = Effect.fn(
   "NakafaE2E.hydratesInPlaceAtLargeText"
@@ -133,6 +143,9 @@ export const hydratesInPlaceAtLargeText = Effect.fn(
     );
 
     expect(rootSize).toBe("24px");
+    // The rows at the top are back in the page, and none holds more than its height.
+    await expect(memoryRow(page, NEWEST)).toBeVisible();
+    expect(await overflowingRows(page)).toBe(0);
     await larger.dispose();
   });
 });
