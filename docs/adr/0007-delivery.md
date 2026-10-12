@@ -41,9 +41,9 @@ contextual visit cannot first record a canonical view and then a placement view.
   - `max`, with the release in the key: the reciprocal article category routes,
     the category page and the llms.txt documents.
   - `max`, because the key holds what the output is built from: the rendered
-    bodies and the try-out batches, by content hash, the SEO metadata, by its
-    context and locale with translations that change only with a deploy, and
-    the logo of a social image.
+    bodies, by content hash, the try-out batches, by immutable selector, the SEO
+    metadata, by its context and locale with translations that change only with
+    a deploy, and the logo of a social image.
   - `max`, purged by a release only: the sitemap index and pages. They fit no
     other kind. The purge expires them in the instance that ran the activation
     and clears the CDN, and another instance keeps its copy until it ends.
