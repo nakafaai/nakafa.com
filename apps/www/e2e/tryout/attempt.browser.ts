@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate, visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
@@ -79,12 +79,10 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   yield* signInLearner(page.context(), baseURL);
   yield* observeShell(page);
   yield* openHub(page);
-  // A signed-in learner decides analytics once for the account.
-  const decline = page.getByRole("button", { exact: true, name: "Decline" });
-  yield* activate(decline, hasTouch);
-  yield* Effect.promise(() =>
-    expect(decline).toBeHidden({ timeout: readinessTimeoutMilliseconds })
-  );
+  // The page loads again only at the reload below. The attempt starts before
+  // it on this connection, and the server runs the changes of a connection in
+  // the order they were sent, so it stores this choice first.
+  yield* pressDecline(page, hasTouch);
   yield* openTrack(page, hasTouch);
 
   // Starting from the public set locks the shell only with the attempt's

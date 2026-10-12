@@ -70,21 +70,48 @@ const describePage = Effect.fn("NakafaE2E.describeUsageDataPage")(function* (
   return `Page ${page.url()}, signed in ${changes.signedIn}, learner read ${changes.hasAnswered(CURRENT_USER)}, choice read ${changes.hasAnswered(CURRENT_CHOICE)}, text "${pipe(text, Str.replaceAll(/\s+/gu, " "), Str.trim, Str.slice(0, 300))}".`;
 });
 
+/** The Decline button of the usage-data prompt. */
+const declineButton = (page: Page) =>
+  page.getByRole("button", { exact: true, name: "Decline" });
+
 /**
- * Presses Decline on the usage-data prompt of a signed-in learner, and waits
- * until the server has stored the choice. A signed-in learner decides once for
- * the account, so the denial a suite seeds in the browser is not the choice the
- * prompt reads, and the first page of each learner shows it. The prompt hides
- * at once, before the server has the choice, and a page that loads again drops
- * a change that is still on its way. The next page would then ask again, and
+ * Presses Decline on the usage-data prompt of a signed-in learner and waits
+ * until the prompt is gone. A signed-in learner decides once for the account,
+ * so the denial a suite seeds in the browser is not the choice the prompt
+ * reads, and the first page of each learner shows it. The prompt hides at once,
+ * before the server has the choice: a test that loads another page next waits
+ * for the server with `declineUsageData`.
+ */
+export const pressDecline = Effect.fn("NakafaE2E.pressDecline")(function* (
+  page: Page,
+  hasTouch: boolean
+) {
+  const decline = declineButton(page);
+
+  yield* activate(decline, hasTouch);
+  yield* Effect.promise(() =>
+    expect(decline).toBeHidden({ timeout: readinessTimeoutMilliseconds })
+  );
+});
+
+/**
+ * Declines the usage data of a signed-in learner and waits until the server has
+ * stored the choice, for a test that loads another page next. The prompt hides
+ * before the server has the choice. The Convex client asks the browser to
+ * confirm a leave while a change is unanswered, and Playwright accepts that
+ * confirmation when a test registers no dialog handler, so the next page can
+ * load first. That page finds no choice for the account and asks again, and
  * the prompt would cover what the test presses at a phone's width.
+ *
+ * The prompt must show within the readiness bound of the suite, or the helper
+ * fails with what the page showed.
  */
 export const declineUsageData = Effect.fn("NakafaE2E.declineUsageData")(
   function* (page: Page, changes: Changes) {
-    const decline = page.getByRole("button", { exact: true, name: "Decline" });
-
     yield* Effect.tryPromise(() =>
-      expect(decline).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+      expect(declineButton(page)).toBeVisible({
+        timeout: readinessTimeoutMilliseconds,
+      })
     ).pipe(
       Effect.catchTag("UnknownError", () =>
         describePage(page, changes).pipe(
@@ -93,11 +120,8 @@ export const declineUsageData = Effect.fn("NakafaE2E.declineUsageData")(
       )
     );
     const before = changes.sent;
-    yield* activate(decline, false);
+    yield* pressDecline(page, false);
     yield* Effect.promise(async () => {
-      await expect(decline).toBeHidden({
-        timeout: readinessTimeoutMilliseconds,
-      });
       await expect
         .poll(() => changes.took(SAVE_CHOICE), {
           timeout: ANSWER_MILLISECONDS,
