@@ -122,9 +122,24 @@ The research model writes the search queries and reads the results, so code
 only trims, deduplicates, and bounds the queries and never filters a result by
 its words. No letter case, word shape, or word length decides what a learner
 meant, because a rule built on one treats a task in Japanese, Arabic, or Thai
-differently from the same task in English. A page longer than its budget keeps
-the paragraphs that share the most words with the task, and the platform's
-`Intl.Segmenter` finds the words and the sentence ends of every script.
+differently from the same task in English.
+
+A page longer than its budget keeps the paragraphs that hold the most of the
+task's words. The platform's `Intl.Segmenter` finds the words of every script,
+also of those written without spaces. A task word counts once for a paragraph,
+however often the paragraph repeats it, and it weighs less the more paragraphs
+of the page hold it, so the words that fill every paragraph, such as particles
+and prepositions, weigh little without any list of words to skip. A word
+matches only as a whole word: an inflected form of a task word, such as `cats`
+for `cat`, does not match it, because no stemmer covers every language and a
+wrong stem is worse than a miss. The section labels that this codebase writes
+into a task are not the learner's words and are never looked for.
+
+A cut ends where `Intl.Segmenter` ends a sentence: after a full stop, a
+question mark, an exclamation mark, a Japanese `。`, or a line break. A script
+that marks no sentence end, such as Thai, which separates its sentences with a
+space, is one sentence to the segmenter, so a cut in it falls back to the end
+of a paragraph, a line, or a word.
 
 Convex deployments own `FIRECRAWL_API_KEY`, `MATH_CAS_API_KEY`, and
 `NEXT_PUBLIC_CAS_URL`. The CAS key must match the

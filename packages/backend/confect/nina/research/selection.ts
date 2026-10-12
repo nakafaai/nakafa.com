@@ -1,10 +1,23 @@
-import { Array as Arr, HashSet, Option, Order, pipe, Schema } from "effect";
+import {
+  Array as Arr,
+  HashMap,
+  HashSet,
+  Option,
+  Order,
+  pipe,
+  Schema,
+} from "effect";
 
 const DEFAULT_MAX_LENGTH = 2000;
-const KEYWORD_BONUS_POINTS = 0.5;
-const PARAGRAPH_LENGTH_DIVISOR = 100;
 const TARGET_LENGTH_BUFFER = 0.9;
+/**
+ * The smoothing of the inverse document frequency in the Okapi BM25 ranking. It
+ * keeps the weight of a word that no paragraph holds, or that every paragraph
+ * holds, finite and above zero.
+ */
+const WEIGHT_SMOOTHING = 0.5;
 
+const LINE_BREAK_REGEX = /\r?\n/;
 const PARAGRAPH_SPLIT_REGEX = /\n\s*\n/;
 
 const TRUNCATION_THRESHOLDS = {
@@ -45,23 +58,84 @@ function readWords(segmenter: Intl.Segmenter, text: string) {
 }
 
 /**
- * Scores one paragraph by the task words it holds: every occurrence counts,
- * and every different task word it holds earns a bonus. The score is taken per
- * hundred characters, so a long paragraph does not win by its length alone.
+ * Drops the lines of a task that start with `#`. They are the section labels
+ * this codebase writes into a task, such as "Request", not the learner's words,
+ * so no paragraph is chosen for holding one.
  */
-function calculateRelevanceScore(
-  paragraph: string,
-  keywords: HashSet.HashSet<string>,
-  segmenter: Intl.Segmenter
-): number {
-  const matches = Arr.filter(readWords(segmenter, paragraph), (word) =>
-    HashSet.has(keywords, word)
+function withoutLabels(task: string) {
+  return pipe(
+    task.split(LINE_BREAK_REGEX),
+    Arr.filter((line) => !line.trimStart().startsWith("#")),
+    Arr.join("\n")
   );
-  const distinct = HashSet.size(HashSet.fromIterable(matches));
+}
 
-  return (
-    (matches.length + distinct * KEYWORD_BONUS_POINTS) /
-    Math.max(paragraph.length / PARAGRAPH_LENGTH_DIVISOR, 1)
+/**
+ * Weighs a task word by how few paragraphs of the page hold it, with the
+ * inverse document frequency of the Okapi BM25 ranking, where the paragraphs
+ * play the part of the documents. A word that most paragraphs hold, such as a
+ * particle or a preposition, tells them little apart and weighs little. A word
+ * that few hold points at them and weighs much. The page shows which words are
+ * common, so no list of words to skip is needed and every language is treated
+ * the same.
+ */
+function weighWord(
+  wordsByParagraph: readonly HashSet.HashSet<string>[],
+  word: string
+) {
+  const holding = Arr.countBy(wordsByParagraph, HashSet.has(word));
+
+  return Math.log(
+    1 +
+      (wordsByParagraph.length - holding + WEIGHT_SMOOTHING) /
+        (holding + WEIGHT_SMOOTHING)
+  );
+}
+
+/**
+ * Scores one paragraph by the task words it holds. Each different task word
+ * counts once, however often the paragraph repeats it, and counts for as much
+ * as the page makes that word weigh. Repeating a word adds nothing, so length
+ * alone wins nothing, and a long paragraph that holds more of the task's words
+ * is not held back for being long.
+ */
+function scoreParagraph(
+  words: HashSet.HashSet<string>,
+  weights: HashMap.HashMap<string, number>
+) {
+  return HashMap.reduce(weights, 0, (total, weight, word) =>
+    HashSet.has(words, word) ? total + weight : total
+  );
+}
+
+/**
+ * Scores each paragraph of a page by the task words it holds. The words of
+ * every paragraph are read once: they give the weight of each task word first,
+ * and then the score of each paragraph.
+ */
+function analyzeParagraphs(
+  paragraphs: readonly string[],
+  queryWords: readonly string[],
+  segmenter: Intl.Segmenter
+): ContentParagraph[] {
+  const wordsByParagraph = Arr.map(paragraphs, (text) =>
+    HashSet.fromIterable(readWords(segmenter, text))
+  );
+  const weights = HashMap.fromIterable(
+    Arr.map(
+      queryWords,
+      (word) => [word, weighWord(wordsByParagraph, word)] as const
+    )
+  );
+
+  return Arr.map(
+    Arr.zip(paragraphs, wordsByParagraph),
+    ([text, words], index) => ({
+      index,
+      length: text.length,
+      score: scoreParagraph(words, weights),
+      text,
+    })
   );
 }
 
@@ -154,8 +228,8 @@ export function selectRelevantContent(
   }
 
   const segmenter = new Intl.Segmenter(undefined, { granularity: "word" });
-  const keywords = HashSet.fromIterable(readWords(segmenter, query));
-  if (HashSet.size(keywords) === 0) {
+  const queryWords = Arr.dedupe(readWords(segmenter, withoutLabels(query)));
+  if (queryWords.length === 0) {
     return truncateAtBoundary(content, maxLength);
   }
 
@@ -169,14 +243,10 @@ export function selectRelevantContent(
     return truncateAtBoundary(content, maxLength);
   }
 
-  const analyzedParagraphs: ContentParagraph[] = Arr.map(
+  const analyzedParagraphs = analyzeParagraphs(
     paragraphs,
-    (text, index) => ({
-      text,
-      score: calculateRelevanceScore(text, keywords, segmenter),
-      index,
-      length: text.length,
-    })
+    queryWords,
+    segmenter
   );
 
   const intro = analyzedParagraphs[0];

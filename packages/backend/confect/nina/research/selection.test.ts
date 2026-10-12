@@ -3,11 +3,13 @@ import { selectRelevantContent } from "@repo/backend/confect/nina/research/selec
 import { Array as Arr } from "effect";
 
 /**
- * One page per language, with the task a learner writes about it as a single
- * sentence. Only the middle paragraph is about the task; the others share a
- * few common words with it at most. Japanese and Thai are written without
- * spaces, so only the platform can tell where their words end. `maxLength` is
- * shorter than the page and longer than the relevant paragraph.
+ * One page per case, with the task a learner writes about it as a single
+ * sentence. Only the `relevant` paragraph answers the task; the others share at
+ * most a few words with it. Japanese and Thai are written without spaces, so
+ * only the platform can tell where their words end. In the last two pages the
+ * task is made of common words (the particles の and と, or "I", "do" and "my"):
+ * the other paragraphs are full of them, and only the answer holds the rare
+ * ones. `maxLength` is shorter than the page and longer than the answer.
  */
 const pages = [
   {
@@ -58,11 +60,55 @@ const pages = [
     ],
     maxLength: 300,
   },
+  {
+    language: "Japanese, task of particles",
+    task: "微分方程式の安定性とリャプノフ関数について知りたい",
+    before: [
+      "私の家の近くにある古い店では、毎朝、近所の人が犬と散歩をして、季節の花を眺めています。",
+      "友達の家で開かれた夕食会では、母の作った料理と、父の好きな酒が並びました。",
+      "町の図書館の本は、子どもの頃の思い出と、今の暮らしを結びつけてくれます。",
+    ],
+    relevant: "リャプノフ関数で、安定性を確かめる方法を説明します。",
+    after: [],
+    maxLength: 140,
+  },
+  {
+    language: "English, task of common words",
+    task: "How do I reset my password?",
+    before: [
+      "I do not know my plan, and I think I will do it later.",
+      "I do my homework after school, and my brother helps me when I get stuck.",
+      "My sister and I do the dishes, and I dry them with my towel.",
+      "Do you think I should call my aunt? I do not mind either way.",
+      "Rain fell all afternoon, so we stayed inside and played cards.",
+    ],
+    relevant: "To reset your password, open the account settings page.",
+    after: [],
+    maxLength: 200,
+  },
 ];
 
 /** Writes a page the way it reads: a blank line between its paragraphs. */
 function writePage({ after, before, relevant }: (typeof pages)[number]) {
   return Arr.join([...before, relevant, ...after], "\n\n");
+}
+
+/**
+ * Selects the one paragraph nearest to the query from a page that is longer
+ * than `maxLength`.
+ */
+function pickParagraph(
+  paragraphs: readonly string[],
+  maxLength: number,
+  query: string
+) {
+  return selectRelevantContent({
+    content: Arr.join(paragraphs, "\n\n"),
+    maxLength,
+    maxRelevantParagraphs: 1,
+    preserveStructure: false,
+    query,
+  });
 }
 
 describe("selectRelevantContent", () => {
@@ -200,70 +246,113 @@ describe("selectRelevantContent", () => {
   });
 
   it.each(pages)(
-    "keeps the paragraph that holds the task's words in a $language page",
+    "keeps the paragraph that holds the task's words ($language)",
     (page) => {
-      const content = writePage(page);
       const { maxLength, relevant, task } = page;
+      const options = {
+        content: writePage(page),
+        maxLength,
+        preserveStructure: false,
+        query: task,
+      };
 
       expect(
-        selectRelevantContent({
-          content,
-          maxLength,
-          maxRelevantParagraphs: 1,
-          preserveStructure: false,
-          query: task,
-        })
+        selectRelevantContent({ ...options, maxRelevantParagraphs: 1 })
       ).toBe(relevant);
-      expect(
-        selectRelevantContent({
-          content,
-          maxLength,
-          preserveStructure: false,
-          query: task,
-        }).startsWith(relevant)
-      ).toBe(true);
+      expect(selectRelevantContent(options).startsWith(relevant)).toBe(true);
     }
   );
 
   it("counts a word of any length, so a one-character word finds its paragraph", () => {
-    const content = Arr.join(
-      [
-        "この記事では、身近な動物について短く紹介します。",
-        "犬は人と一緒に歩くのが好きな動物です。",
-        "猫は小さな動物で、一日の多くを眠って過ごします。",
-        "鳥は空を飛び、季節によって住む場所を変えます。",
-      ],
-      "\n\n"
-    );
-
     expect(
-      selectRelevantContent({
-        content,
-        maxLength: 80,
-        preserveStructure: false,
-        query: "猫",
-      })
+      pickParagraph(
+        [
+          "この記事では、身近な動物について短く紹介します。",
+          "犬は人と一緒に歩くのが好きな動物です。",
+          "猫は小さな動物で、一日の多くを眠って過ごします。",
+          "鳥は空を飛び、季節によって住む場所を変えます。",
+        ],
+        80,
+        "猫"
+      )
     ).toBe("猫は小さな動物で、一日の多くを眠って過ごします。");
   });
 
   it("matches whole words, so a word inside a longer word finds nothing", () => {
-    const content = Arr.join(
+    expect(
+      pickParagraph(
+        [
+          "Category theory studies the structure of mathematics.",
+          "The cat sleeps on the sofa all afternoon.",
+          "Dogs enjoy a long walk in the park every morning.",
+        ],
+        120,
+        "cat"
+      )
+    ).toBe("The cat sleeps on the sofa all afternoon.");
+  });
+
+  it("counts a task word once for a paragraph, however often the paragraph repeats it", () => {
+    const winner =
+      "The domain of a rational expression excludes every zero of its denominator.";
+
+    expect(
+      pickParagraph(
+        [
+          "A function is a rule. A function takes an input. Each function gives one output.",
+          winner,
+          "Weather notes for the week and a list of the shops that stay open.",
+          "Travel notes about trains and the weather in spring.",
+        ],
+        150,
+        "domain rational function"
+      )
+    ).toBe(winner);
+  });
+
+  it("keeps the long paragraph that holds the most of the task's words over a short heading that holds fewer", () => {
+    const relevant = Arr.join(
       [
-        "Category theory studies the structure of mathematics.",
-        "The cat sleeps on the sofa all afternoon.",
-        "Dogs enjoy a long walk in the park every morning.",
+        "A Lyapunov function shows the stability of an equilibrium without solving the equation.",
+        "It behaves like an energy: it is zero at the rest point, positive everywhere else, and it never grows along a solution.",
+        "When such a function exists, every solution that starts near the rest point stays near it.",
+        "Finding one is the hard part, and textbooks usually start from a mechanical example, such as a pendulum with friction, before they move to the general theory.",
       ],
-      "\n\n"
+      " "
     );
 
     expect(
-      selectRelevantContent({
-        content,
-        maxLength: 120,
-        preserveStructure: false,
-        query: "cat",
-      })
-    ).toBe("The cat sleeps on the sofa all afternoon.");
+      pickParagraph(
+        [
+          "Welcome to the notes of the week.",
+          "Lyapunov stability.",
+          relevant,
+          "Cooking notes and a list of the shops that stay open.",
+          "Travel notes about trains and the weather in spring.",
+        ],
+        560,
+        "stability Lyapunov function"
+      )
+    ).toBe(relevant);
+  });
+
+  it("does not look for the words of the task's section labels", () => {
+    const relevant =
+      "A Lyapunov function shows stability when it decreases along every solution.";
+
+    expect(
+      pickParagraph(
+        [
+          "This page explains how an HTTP server answers a call.",
+          "Each request starts with a request line. The request headers follow, and then the request body ends the request.",
+          relevant,
+          "Weather notes for the week.",
+          "Closing remarks.",
+        ],
+        150,
+        "# Request\n\nHow does a Lyapunov function show stability?\n\n# Objective\n\nExplain the idea."
+      )
+    ).toBe(relevant);
   });
 
   it("creates one word segmenter for a page, however many paragraphs it holds", () => {
