@@ -188,6 +188,17 @@ export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
  * can be saved and the refund is the one the run's exit would give a moment
  * later. A turn that was not stopped is left as it is.
  *
+ * A stopped turn whose journal cannot be read or cut off is left as it is and
+ * logged with its id, and the others still settle. The failure belongs to that
+ * turn's own thread, so it must not refuse a prompt in another chat. Its own
+ * chat stays busy, as for any turn that is still open, until a later try
+ * settles it or the sweep ends it (`abandonTurn`). Until its deadline passes it
+ * also counts toward the open-turn limit (`requireOpenCapacity`). Only a
+ * failure of the journal is skipped. Its steps come before the settlement
+ * writes its own rows, and the stop already ran them once. A failure of the
+ * refund still fails the prompt, because the writes of a half-made refund would
+ * otherwise commit with it.
+ *
  * The refund changes the balance, so a hold taken from the copy the caller
  * started with would overwrite it. Returns the learner as the settlements left
  * them, and the caller carries on with that copy.
@@ -202,9 +213,18 @@ export const settleStopped = Effect.fn("nina.settlement.stopped")(function* (
   if (!Arr.isReadonlyArrayNonEmpty(stopped)) {
     return learner;
   }
-  yield* Effect.forEach(stopped, (turn) => settleTurn(turn, "cancelled"), {
-    discard: true,
-  });
+  yield* Effect.forEach(
+    stopped,
+    (turn) =>
+      settleTurn(turn, "cancelled").pipe(
+        Effect.catchTag("NinaTurnError", () =>
+          Effect.logWarning("Nina could not settle a stopped turn", {
+            turnId: turn._id,
+          })
+        )
+      ),
+    { discard: true }
+  );
   return yield* (yield* DatabaseReader)
     .table("users")
     .get(learner._id)

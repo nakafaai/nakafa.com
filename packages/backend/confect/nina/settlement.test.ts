@@ -1,4 +1,5 @@
 import { Ref } from "@confect/core";
+import { listMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -10,6 +11,10 @@ import { Array as Arr, DateTime, Duration, Effect } from "effect";
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
+vi.mock("@convex-dev/agent", async (load) => {
+  const actual = await load<typeof import("@convex-dev/agent")>();
+  return { ...actual, listMessages: vi.fn(actual.listMessages) };
+});
 
 const NOW = Date.UTC(2026, 8, 27, 12);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
@@ -74,6 +79,7 @@ describe("native Nina stop and resend", () => {
     );
   });
   afterEach(() => {
+    vi.mocked(listMessages).mockReset();
     vi.clearAllMocks();
     vi.useRealTimers();
   });
@@ -277,6 +283,79 @@ describe("native Nina stop and resend", () => {
         (row) => row.balanceAfter
       )
     ).toEqual([10, 15]);
+  });
+
+  it("admits a prompt in a new chat while a stopped turn's journal cannot be read, and settles that turn once it can", async () => {
+    const actual =
+      await vi.importActual<typeof import("@convex-dev/agent")>(
+        "@convex-dev/agent"
+      );
+    const f = await fixture();
+    await f.setCredits(10);
+    const other = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, { ...args, requestId: "other-chat" })
+    );
+    await f.t.mutation(claim, { turnId: f.turnId });
+    await f.t.mutation(claim, { turnId: other.turnId });
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    await f.owner.mutation(cancel, { chatId: other.chatId });
+
+    // The journal of the first chat's thread stops answering, so its stopped
+    // turn cannot settle. The other chat's stopped turn still can.
+    vi.mocked(listMessages).mockImplementation((ctx, component, query) =>
+      query.threadId === f.threadId
+        ? Promise.reject(new Error("Private component failure"))
+        : actual.listMessages(ctx, component, query)
+    );
+    const next = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, { ...args, requestId: "new-chat" })
+    );
+    const admitted = await f.inspect();
+    expect(Arr.map(admitted.turns, (turn) => [turn._id, turn.phase])).toEqual([
+      [f.turnId, "active"],
+      [other.turnId, "settled"],
+      [next.turnId, "active"],
+    ]);
+    expect(admitted.user?.credits).toBe(5);
+    expect(
+      Arr.filter(admitted.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
+    expect(admitted.chats[0]?.activeTurnId).toBe(f.turnId);
+
+    // That one chat stays busy, because its thread cannot be used either, and
+    // the refusal says so. It does not become a failure to write.
+    await expect(
+      f.owner.mutation(start, {
+        ...args,
+        requestId: "same-chat",
+        chatId: f.chatId,
+      })
+    ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
+
+    // Once the journal can be read, the next prompt settles the turn at the
+    // time of the stop, pays its hold back once and takes the chat.
+    vi.mocked(listMessages).mockImplementation(actual.listMessages);
+    const again = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, {
+        ...args,
+        requestId: "same-chat-again",
+        chatId: f.chatId,
+      })
+    );
+    const settled = await f.inspect();
+    expect(settled.turns[0]).toMatchObject({
+      _id: f.turnId,
+      phase: "settled",
+      state: { status: "cancelled", finishedAt: NOW },
+    });
+    expect(settled.chats[0]?.activeTurnId).toBe(again.turnId);
+    expect(settled.user?.credits).toBe(5);
+    expect(
+      Arr.filter(settled.ledger, (row) => row.type === "refund")
+    ).toHaveLength(2);
   });
 
   it.each([
