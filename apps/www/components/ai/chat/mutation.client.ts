@@ -15,9 +15,9 @@ import {
 } from "@/components/ai/chat/state";
 
 /**
- * Patch a loaded chat detail projection when it is subscribed. The owner who
- * opened the chat through its own share link holds it under other arguments,
- * and is patched too.
+ * Patch the loaded conversation of a chat. The owner who opened the chat
+ * through its own share link holds it under other arguments, and is patched
+ * too.
  */
 function patchChatDetail(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
@@ -35,23 +35,6 @@ function patchChatDetail(
       nina.conversation.get,
       args,
       Option.some({ ...value, chat: { ...value.chat, ...patch } })
-    );
-  }
-  const chat = Option.getOrUndefined(
-    localStore.getQuery(chats.queries.getChat, {
-      chatId,
-    })
-  );
-  if (chat) {
-    localStore.setQuery(
-      chats.queries.getChat,
-      {
-        chatId,
-      },
-      Option.some({
-        ...chat,
-        ...patch,
-      })
     );
   }
 }
@@ -117,20 +100,6 @@ export function useUpdateChatTitleMutation() {
       patchLoadedLists(localStore, chatId, {
         title,
       });
-      const currentTitle = Option.getOrUndefined(
-        localStore.getQuery(chats.queries.getChatTitle, {
-          chatId,
-        })
-      );
-      if (currentTitle !== undefined) {
-        localStore.setQuery(
-          chats.queries.getChatTitle,
-          {
-            chatId,
-          },
-          Option.some(title)
-        );
-      }
     }
   );
 }
