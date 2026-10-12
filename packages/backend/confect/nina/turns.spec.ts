@@ -19,7 +19,6 @@ import {
   NinaRequestId,
   NinaRunningState,
   NinaTurnFacts,
-  NinaUnansweredState,
   NinaUserSchema,
 } from "@repo/backend/confect/nina/contract/turn";
 import {
@@ -83,18 +82,7 @@ export const NinaSettledTurn = Schema.Struct({
   state: Schema.Union([NinaCompleteState, NinaFailedState, NinaCancelledState]),
 });
 
-/** A saved prompt without a response has no inferred charge or completion time. */
-const NinaUnansweredTurn = Schema.Struct({
-  ...NinaTurnFacts.fields,
-  phase: Schema.Literal("unanswered"),
-  state: NinaUnansweredState,
-});
-
-export const NinaTurn = Schema.Union([
-  NinaActiveTurn,
-  NinaSettledTurn,
-  NinaUnansweredTurn,
-]);
+export const NinaTurn = Schema.Union([NinaActiveTurn, NinaSettledTurn]);
 
 export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
   "NinaTurnError",

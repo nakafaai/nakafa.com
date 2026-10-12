@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
+import { Tile } from "@repo/design-system/components/ui/tile";
 import Image from "next/image";
 import type { ReactElement, ReactNode } from "react";
 
@@ -19,7 +19,7 @@ interface CatalogCardProps {
   readonly title: string;
 }
 
-/** Renders one image or gradient catalog choice with an explicit action. */
+/** Renders one image or tile catalog choice with an explicit action. */
 export function CatalogCard({
   action,
   actionLabel,
@@ -75,8 +75,8 @@ export function CatalogCardImage({
   );
 }
 
-/** Renders a hard-edged gradient in the same 1200 by 630 visual frame. */
-export function CatalogCardGradient({
+/** Renders the tile of a catalog choice in the same 1200 by 630 visual frame. */
+export function CatalogCardTile({
   children,
   seed,
 }: {
@@ -84,14 +84,8 @@ export function CatalogCardGradient({
   seed: string;
 }) {
   return (
-    <div className="relative flex aspect-40/21 w-full items-center justify-center">
-      <GradientBlock
-        className="pointer-events-none absolute inset-0"
-        colorScheme="vibrant"
-        intensity="medium"
-        keyString={seed}
-      />
+    <Tile className="aspect-40/21" seed={seed} variant="card">
       {children}
-    </div>
+    </Tile>
   );
 }

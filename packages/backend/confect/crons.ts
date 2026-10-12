@@ -4,6 +4,7 @@ import {
   ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
 } from "@repo/backend/confect/auth/deletion/constants";
+import { SWEEP_INTERVAL } from "@repo/backend/confect/nina/deadline";
 import { Cron, Duration } from "effect";
 
 const { internal } = refs;
@@ -11,7 +12,6 @@ const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
-const NINA_TURN_SWEEP_INTERVAL_MINUTES = 5;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
@@ -38,7 +38,7 @@ export default CronJobs.make()
   .add(
     /** Settles Nina turns that stayed open past their deadline, so no chat stays busy. */ CronJob.make(
       "sweep stuck Nina turns",
-      Duration.minutes(NINA_TURN_SWEEP_INTERVAL_MINUTES),
+      SWEEP_INTERVAL,
       internal.nina.lifecycle.sweep,
       {}
     )

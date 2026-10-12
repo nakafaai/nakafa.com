@@ -184,6 +184,11 @@ const givesBackAfterClosingTheSheet = Effect.fn(
     await expect(hiddenComposer).toBeHidden();
     changes.release();
     await expect(page.getByText(UNCONFIRMED).first()).toBeVisible();
+    // The toast covers the entry for a moment, and a press that lands on it
+    // holds it there for as long as the pointer stays, so the press waits.
+    await expect(page.locator("[data-sonner-toast]")).toHaveCount(0, {
+      timeout: readinessTimeoutMilliseconds,
+    });
 
     await page.getByRole("button", { exact: true, name: "Ask Nina" }).click();
     await expect(composerOf(inTheSheet(page))).toHaveValue(PROMPT);

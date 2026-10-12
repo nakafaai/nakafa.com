@@ -4,16 +4,16 @@ import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { TileIcon } from "@repo/design-system/components/ui/tile";
 
 import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import {
   CatalogCard,
-  CatalogCardGradient,
   CatalogCardImage,
+  CatalogCardTile,
 } from "@/components/shared/catalog/card";
-import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
@@ -59,11 +59,11 @@ export function TryoutExamPageClient({
               {imageSrc ? (
                 <CatalogCardImage preload={index === 0} src={imageSrc} />
               ) : (
-                <CatalogCardGradient seed={track.publicPath}>
-                  <ChoiceCardIcon
+                <CatalogCardTile seed={track.publicPath}>
+                  <TileIcon
                     icon={getTryoutTrackIcon(track.trackKind, track.trackKey)}
                   />
-                </CatalogCardGradient>
+                </CatalogCardTile>
               )}
             </CatalogCard>
           );

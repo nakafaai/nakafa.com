@@ -330,8 +330,12 @@ build from scratch costs that for every memory the learner has: 25 calls for
 1,000 memories, at most 32 minutes if each takes its quiet and its whole 45
 seconds. No turn waits for or pays any of it. A series that stops, because the
 learner paused memory or the account is going, goes on from where it stopped at
-the first request after the day, and a delete or a rewrite starts it again. A
-situation is never handed to it, because it has an end date.
+the first request after the day, and a delete or a rewrite starts it again.
+The learner who lets Nina use memory again asks for a build too, by the rule of
+an added memory: nothing asked while memory was paused, and a build that came
+due during the pause built nothing, so the memories written before and during
+the pause would otherwise wait for the next one. A situation is never handed to
+it, because it has an end date.
 It writes only if the portrait is still the one it read and every memory it fed
 to the model is as it read it, so a build that was running when the learner
 deleted or rewrote a memory, or deleted them all, or paused memory, stores
@@ -393,19 +397,15 @@ search never finds a memory by a key of a word that meant something else. A
 change in what a word is, including a change in the platform's dictionaries, is
 a new version. A memory that was written under an older version is re-keyed by
 its next write (the learner's edit, or a capture that names it), because the
-sync of its keys deletes the keys it should not have. The temporary internal
-function `nina/memory/rekey:page` re-keys the others, 25 memories to a call: it
-takes the cursor of the call before, reads the next page of memories, gives each
-the keys of the current version from its own words, title and topics, returns
-how many it looked at and how many it changed together with the next cursor, and
-never schedules itself. The order of a rollout is: deploy, then run it at once
-on that deployment, on dev and then on production, until `done`, and once more
-to see that no memory changes. Until it is done, a memory that holds only
-version 1 keys is found through its topics and not through its words, so a
-search misses it and a capture that restates it, because the model never saw it
-on its list, adds a copy; the window lasts as long as the walk, and the learner
-can delete a copy. When both deployments show that no memory changes, the
-function and its tests are deleted; the version stays.
+sync of its keys deletes the keys it should not have. A new version ships with
+a job that re-keys the memories no write touches: a page of memories a call,
+each given the keys of the current version from its own words, title and
+topics, run by the operator on dev and then on production until it reports
+done, and deleted with its tests once both show no memory left to change. Until
+it is done, a memory that holds only keys of the older version is found through
+its topics and not through its words. The job for version 2 ran on both
+deployments on 12 October 2026. Neither held a memory then, so it changed
+nothing, and it is deleted; the version stays.
 
 The index uses no embeddings. A vector index holds its vectors in plain form,
 and an embedding can be turned back into the text it stands for, so it would

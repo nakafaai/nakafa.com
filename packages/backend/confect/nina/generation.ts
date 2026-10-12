@@ -22,6 +22,7 @@ import {
 } from "@repo/backend/confect/nina/contract/turn";
 import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import {
+  abortFailure,
   generationFailure,
   NinaGenerationError,
 } from "@repo/backend/confect/nina/failure";
@@ -104,8 +105,11 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   });
   let streamFailure: NinaGenerationError | undefined;
   const result = yield* Effect.tryPromise({
-    try: (signal) =>
-      agent.streamText(
+    try: (signal) => {
+      // The stream, and the repair of a tool call inside it, end with the run
+      // and with a stop.
+      const stop = AbortSignal.any([signal, halt]);
+      return agent.streamText(
         ctx,
         { threadId: turn.threadId, userId: turn.userId },
         {
@@ -114,16 +118,14 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
           // every step of it: not the memory tool while the learner's memory
           // is paused.
           activeTools: capabilities,
-          abortSignal: AbortSignal.any([signal, halt]),
+          abortSignal: stop,
           onChunk: ({ chunk }) => timing.observe(chunk),
           onLanguageModelCallStart: () => timing.reach("readyMs"),
           onError: ({ error }) => {
             streamFailure ??= generationFailure(error);
           },
-          onAbort: () => {
-            streamFailure ??= new NinaGenerationError({
-              reason: "interrupted",
-            });
+          onAbort: ({ reason }) => {
+            streamFailure ??= abortFailure(reason);
           },
           prepareStep: (step) =>
             runPromise(
@@ -138,13 +140,15 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
                 ...options,
                 userId: turn.userId,
                 usageHandler,
-              })
+              }),
+              { signal: stop }
             ),
           stopWhen: isStepCount(20),
           timeout: handle.timeout,
         },
         { saveStreamDeltas: { sendSources: true, returnImmediately: false } }
-      ),
+      );
+    },
     catch: (cause) => streamFailure ?? generationFailure(cause),
   });
   if (streamFailure) {

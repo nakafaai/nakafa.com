@@ -66,7 +66,6 @@ describe("message/waiting", () => {
       "complete",
       "failed",
       "cancelled",
-      "unanswered",
       undefined,
     ] as const) {
       expect(isAnswerWaiting({ ...waiting, status })).toBe(false);

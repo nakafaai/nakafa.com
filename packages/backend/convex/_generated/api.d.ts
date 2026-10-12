@@ -3360,8 +3360,7 @@ export declare const api: {
                     | "unknown";
                   status: "failed";
                 }
-              | { finishedAt: number; status: "cancelled" }
-              | { status: "unanswered" };
+              | { finishedAt: number; status: "cancelled" };
             suggestions?: Array<string>;
             tokens?: { input?: number; output?: number; total?: number };
             usage: Array<{
@@ -3374,8 +3373,7 @@ export declare const api: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory"
-                | "summary";
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -3509,8 +3507,7 @@ export declare const api: {
                       | "unknown";
                     status: "failed";
                   }
-                | { finishedAt: number; status: "cancelled" }
-                | { status: "unanswered" };
+                | { finishedAt: number; status: "cancelled" };
               suggestions?: Array<string>;
               tokens?: { input?: number; output?: number; total?: number };
               usage: Array<{
@@ -3523,8 +3520,7 @@ export declare const api: {
                   | "suggestions"
                   | "title"
                   | "nina-repair"
-                  | "memory"
-                  | "summary";
+                  | "memory";
                 cached?: number;
                 calls: number;
                 cost?: number;
@@ -8743,6 +8739,12 @@ export declare const internal: {
       >;
     };
     lifecycle: {
+      abandon: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
+      >;
       claim: FunctionReference<
         "mutation",
         "internal",
@@ -8897,8 +8899,7 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory"
-                | "summary";
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9079,173 +9080,7 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory"
-                | "summary";
-              cached?: number;
-              calls: number;
-              cost?: number;
-              input: number;
-              model: string;
-              output: number;
-              provider: string;
-              reasoning?: number;
-            }>;
-            user?: {
-              curriculumPreference?: {
-                program: { key: string; title: string };
-              };
-              role?: "teacher" | "student" | "parent" | "administrator";
-            };
-            userId: Id<"users">;
-          }
-        | {
-            _creationTime: number;
-            _id: Id<"ninaTurns">;
-            chatId: Id<"chats">;
-            credits?: number;
-            fingerprint?: string;
-            order: number;
-            page?: {
-              locale: "en" | "id" | "de";
-              needsFetch: boolean;
-              nina: {
-                focus?: {
-                  attemptId: Id<"tryoutAttempts">;
-                  kind: "tryout-question";
-                  placementId: Id<"tryoutAttemptPlacements">;
-                  questionOrder: number;
-                  sectionKey: string;
-                };
-                learning: {
-                  assetId?: string;
-                  contentId?: string;
-                  locale: "en" | "id" | "de";
-                  materialKey?: string;
-                  section?: string;
-                  slug: string;
-                  sourcePath?: string;
-                  title?: string;
-                  url: string;
-                  verified: boolean;
-                };
-                placement?: {
-                  mode: "placement";
-                  nodeKey: string;
-                  parentHref: string;
-                  parentTitle: string;
-                  programKey: string;
-                };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
-                tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
-                  allowPageFetch: boolean;
-                  evidenceScope: "verified-page" | "general-learning";
-                };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
-              };
-              slug: string;
-              url: string;
-              verified: boolean;
-            };
-            phase: "unanswered";
-            promptMessageId: string;
-            promptedAt?: number;
-            remembered?: number;
-            requestId?: string;
-            retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            state: { status: "unanswered" };
-            suggestions?: Array<string>;
-            threadId: string;
-            timing?: {
-              claimedMs?: number;
-              progressMs?: number;
-              readyMs?: number;
-              tokenMs?: number;
-            };
-            tokens?: { input?: number; output?: number; total?: number };
-            transactionId?: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            usage: Array<{
-              agent:
-                | "nina"
-                | "nakafa"
-                | "research"
-                | "math"
-                | "math-repair"
-                | "suggestions"
-                | "title"
-                | "nina-repair"
-                | "memory"
-                | "summary";
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9264,6 +9099,12 @@ export declare const internal: {
             userId: Id<"users">;
           }
         | null
+      >;
+      expire: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
       >;
       halted: FunctionReference<
         "query",
@@ -9425,8 +9266,7 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory"
-                | "summary";
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9607,173 +9447,7 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory"
-                | "summary";
-              cached?: number;
-              calls: number;
-              cost?: number;
-              input: number;
-              model: string;
-              output: number;
-              provider: string;
-              reasoning?: number;
-            }>;
-            user?: {
-              curriculumPreference?: {
-                program: { key: string; title: string };
-              };
-              role?: "teacher" | "student" | "parent" | "administrator";
-            };
-            userId: Id<"users">;
-          }
-        | {
-            _creationTime: number;
-            _id: Id<"ninaTurns">;
-            chatId: Id<"chats">;
-            credits?: number;
-            fingerprint?: string;
-            order: number;
-            page?: {
-              locale: "en" | "id" | "de";
-              needsFetch: boolean;
-              nina: {
-                focus?: {
-                  attemptId: Id<"tryoutAttempts">;
-                  kind: "tryout-question";
-                  placementId: Id<"tryoutAttemptPlacements">;
-                  questionOrder: number;
-                  sectionKey: string;
-                };
-                learning: {
-                  assetId?: string;
-                  contentId?: string;
-                  locale: "en" | "id" | "de";
-                  materialKey?: string;
-                  section?: string;
-                  slug: string;
-                  sourcePath?: string;
-                  title?: string;
-                  url: string;
-                  verified: boolean;
-                };
-                placement?: {
-                  mode: "placement";
-                  nodeKey: string;
-                  parentHref: string;
-                  parentTitle: string;
-                  programKey: string;
-                };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
-                tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
-                  allowPageFetch: boolean;
-                  evidenceScope: "verified-page" | "general-learning";
-                };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
-              };
-              slug: string;
-              url: string;
-              verified: boolean;
-            };
-            phase: "unanswered";
-            promptMessageId: string;
-            promptedAt?: number;
-            remembered?: number;
-            requestId?: string;
-            retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            state: { status: "unanswered" };
-            suggestions?: Array<string>;
-            threadId: string;
-            timing?: {
-              claimedMs?: number;
-              progressMs?: number;
-              readyMs?: number;
-              tokenMs?: number;
-            };
-            tokens?: { input?: number; output?: number; total?: number };
-            transactionId?: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            usage: Array<{
-              agent:
-                | "nina"
-                | "nakafa"
-                | "research"
-                | "math"
-                | "math-repair"
-                | "suggestions"
-                | "title"
-                | "nina-repair"
-                | "memory"
-                | "summary";
+                | "memory";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9954,14 +9628,6 @@ export declare const internal: {
           }>;
         }
       >;
-      rekey: {
-        page: FunctionReference<
-          "mutation",
-          "internal",
-          { cursor?: string },
-          { checked: number; cursor: string; done: boolean; rekeyed: number }
-        >;
-      };
     };
     portrait: {
       build: {
@@ -10053,7 +9719,12 @@ export declare const internal: {
       save: FunctionReference<
         "mutation",
         "internal",
-        { chatId: Id<"chats">; text: string; throughOrder: number },
+        {
+          chatId: Id<"chats">;
+          text: string;
+          throughOrder: number;
+          usage: { input: number; output: number };
+        },
         null
       >;
       uncovered: FunctionReference<
@@ -10094,8 +9765,7 @@ export declare const internal: {
               | "suggestions"
               | "title"
               | "nina-repair"
-              | "memory"
-              | "summary";
+              | "memory";
             cached?: number;
             cost?: number;
             input: number;

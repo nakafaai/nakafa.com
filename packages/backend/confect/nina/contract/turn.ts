@@ -70,10 +70,6 @@ export const NinaCancelledState = Schema.Struct({
   status: Schema.Literal("cancelled"),
   finishedAt: Schema.Finite,
 });
-/** A saved prompt that no turn answered. */
-export const NinaUnansweredState = Schema.Struct({
-  status: Schema.Literal("unanswered"),
-});
 /**
  * Every state a turn can be in. The order of the members is the order the
  * stored validator lists them in. A phase picks its states by these names, so a
@@ -86,7 +82,6 @@ export const NinaTurnState = Schema.Union([
   NinaCompleteState,
   NinaFailedState,
   NinaCancelledState,
-  NinaUnansweredState,
 ]);
 /**
  * Milliseconds counted from the admission of a turn, never below zero. A
