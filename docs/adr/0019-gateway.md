@@ -189,6 +189,28 @@ thresholds in the catalog were set from what that command printed on 12 October
   alone 0.5 to 2.3 seconds, one page read 0.9 to 5.7 seconds, and the provider
   plan refuses more than about ten page reads a minute. A page that is not read
   keeps the description the search returned, so it is evidence, not a failure.
+- **Search provider.** Research sends two things to Firecrawl: the query that
+  the research model writes from the learner's request, in a search
+  (`research/search/provider.ts`), and the address of a page, in a page read
+  (`research/tools/scrape.ts`), which is a link the learner gave or a result of
+  a search. Neither call sets a retention option, although the installed SDK
+  (4.46.0) types offer `enterprise: ["zdr"]` for a search and
+  `zeroDataRetention` for a scrape. Three Firecrawl pages were read on 12
+  October 2026. The Enterprise page lists zero data retention among the
+  controls its team provisions, and says that page content and extracted data
+  are then processed in memory and not kept beyond the request. The search page
+  says that `["zdr"]` makes Firecrawl and its upstream search provider keep no
+  query and no result, on an Enterprise plan. Neither page says how long a
+  query or an address is kept when zero data retention is off, or what a search
+  sends to its upstream provider. The privacy policy gives a retention rule for
+  personal information only (kept until deletion is requested in writing) and
+  none for requests to the API. So the retention of what Nakafa sends follows
+  terms that no page states. Whether Nakafa's plan has zero data retention
+  switched on is a fact of the account and is not in the repository, so this
+  record claims nothing about it. The query used to be put on the span of a
+  search as an attribute. The repository sets up no tracer layer and no
+  exporter, so no span leaves the process, and the attribute is gone, so a
+  tracer added later cannot carry the learner's words anywhere.
 - **Attachments.** The documents of one turn, every attachment whose media type
   does not start with `image/`, may total at most 10 MiB (`NINA_DOCUMENT_SIZE`).
   Documents travel inside the request body, which the gateway accepts up to

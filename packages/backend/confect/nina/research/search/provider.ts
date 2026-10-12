@@ -36,7 +36,6 @@ const ProviderFailure = Schema.Struct({ status: Schema.Finite });
 export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
   query: string
 ) {
-  yield* Effect.annotateCurrentSpan("query", query);
   const client = yield* readFirecrawlApp().pipe(
     Effect.mapError(
       (error) => new ResearchSearchError({ message: error.message })
