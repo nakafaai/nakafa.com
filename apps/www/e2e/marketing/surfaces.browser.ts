@@ -2,7 +2,6 @@ import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, Order, Record as Rec } from "effect";
 import { activateUntilVisible, press } from "@/e2e/support/input";
 import {
-  legacyAvatarFragmentIds,
   measureMarketingPage,
   readFirstContributor,
   swipeContributorDrawer,
@@ -21,19 +20,21 @@ import { targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
- * Raw Community markup is dominated by the 16 preserved vector Characters.
- * Protected #330 and the exact-head trace both measured 755 total descendants,
- * 220 non-SVG descendants, and about 210 KB. These ceilings leave about six
- * percent regression room without changing the visible avatar representation.
+ * Raw Community markup is dominated by the 16 contributor Characters, each one
+ * animal drawn as a single svg. Rendering the section on the server counts 306
+ * total descendants, 42 non-SVG descendants, and 33,874 bytes. The same count
+ * gave 755, 220, and 210,970 for the avatars that the animals replaced, the
+ * figures that protected #330 had measured. These ceilings leave about six
+ * percent regression room.
  *
- * The homepage ceiling still carried the trust chapter that #660 removed. Its
- * five production viewports now measure 2390 to 2394 body descendants, so the
- * ceiling is 2540 for the same six percent room.
+ * The homepage ceiling falls by the 449 descendants that those avatars carried,
+ * so it keeps the room above the five production viewports that it had: they
+ * measured 2390 to 2394 body descendants under the ceiling of 2540.
  */
-const COMMUNITY_MAX_CHROME_DESCENDANTS = 235;
-const COMMUNITY_MAX_DESCENDANTS = 800;
-const COMMUNITY_MAX_HTML_BYTES = 223_000;
-const HOMEPAGE_MAX_DESCENDANTS = 2540;
+const COMMUNITY_MAX_CHROME_DESCENDANTS = 45;
+const COMMUNITY_MAX_DESCENDANTS = 325;
+const COMMUNITY_MAX_HTML_BYTES = 36_000;
+const HOMEPAGE_MAX_DESCENDANTS = 2091;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 
 type MarketingViewport = (typeof targetViewports)[number];
@@ -68,10 +69,7 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
     const measurements = yield* measureMarketingPage(page);
 
     yield* Effect.sync(() => {
-      expect(measurements.unexpectedDuplicateIds).toEqual([]);
-      expect(measurements.legacyAvatarDuplicateIds).toEqual(
-        Arr.sort(legacyAvatarFragmentIds, Order.String)
-      );
+      expect(measurements.duplicateIds).toEqual([]);
       expect(measurements.missingFragmentReferences).toEqual([]);
       expect(measurements.communityChromeDescendants).toBeLessThanOrEqual(
         COMMUNITY_MAX_CHROME_DESCENDANTS

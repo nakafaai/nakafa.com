@@ -898,9 +898,6 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.3.0)(react@19.3.0)(supports-color@7.2.0)
-      react-nice-avatar:
-        specifier: ^1.5.0
-        version: 1.5.0(react@19.3.0)
       react-phone-number-input:
         specifier: ^3.4.18
         version: 3.4.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -4612,9 +4609,6 @@ packages:
     resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
     engines: {node: '>= 20.19.0'}
 
-  chroma-js@2.6.0:
-    resolution: {integrity: sha512-BLHvCB9s8Z1EV4ethr6xnkl/P2YRFOGqfgvuMG/MyCbZPrTA+NeiByY6XvgF0zP4/2deU2CXnWyMa3zu1LqQ3A==}
-
   citty@0.2.2:
     resolution: {integrity: sha512-+6vJA3L98yv+IdfKGZHBNiGW5KHn22e/JwID0Strsz8h4S/csAu/OuICwxrg44k5MRiZHWIo8XXuJgQTriRP4w==}
 
@@ -6841,11 +6835,6 @@ packages:
     resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
     peerDependencies:
       '@types/react': 19.3.0
-      react: 19.3.0
-
-  react-nice-avatar@1.5.0:
-    resolution: {integrity: sha512-sGusqbgWIA4Il6Y0zHEfs4XF+a06etNljhwFYiHIGATDmVVf53Nez7U7GY5EwEz5/xGuUhs6uel5AC5NN/2UPg==}
-    peerDependencies:
       react: 19.3.0
 
   react-phone-number-input@3.4.18:
@@ -11108,8 +11097,6 @@ snapshots:
     dependencies:
       readdirp: 5.1.1
 
-  chroma-js@2.6.0: {}
-
   citty@0.2.2: {}
 
   class-variance-authority@0.7.1:
@@ -13574,13 +13561,6 @@ snapshots:
       vfile: 6.0.3
     transitivePeerDependencies:
       - supports-color
-
-  react-nice-avatar@1.5.0(react@19.3.0):
-    dependencies:
-      '@babel/runtime': 7.29.10
-      chroma-js: 2.6.0
-      prop-types: 15.8.1
-      react: 19.3.0
 
   react-phone-number-input@3.4.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:

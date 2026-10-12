@@ -3,13 +3,6 @@ import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
 import { readBounds, swipeDown } from "@/e2e/support/input";
 
-export const legacyAvatarFragmentIds = [
-  "clip0",
-  "mask-id",
-  "mouth-laugh-id",
-  "path-id",
-] as const;
-
 const MarketingSurfaceSchema = Schema.Literals([
   "contributor-drawer",
   "community",
@@ -50,26 +43,12 @@ export const readFirstContributor = Effect.fn(
 export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
   function* (page: Page) {
     const measurements = yield* Effect.promise(() =>
-      page.evaluate((legacyIds) => {
-        const knownAvatarFragmentIds = new Set<string>(legacyIds);
+      page.evaluate(() => {
         const community = document.querySelector("#community");
         const ids = [...document.querySelectorAll("[id]")].map(({ id }) => id);
         const duplicateIds = [
           ...new Set(ids.filter((id, index) => ids.indexOf(id) !== index)),
         ];
-        const unexpectedDuplicateIds = duplicateIds.filter((id) => {
-          if (!knownAvatarFragmentIds.has(id)) {
-            return true;
-          }
-
-          const matchingElements = [
-            ...document.querySelectorAll(`[id="${CSS.escape(id)}"]`),
-          ];
-          return matchingElements.some(
-            (element) =>
-              !element.closest("#community [data-contributor-gallery] svg")
-          );
-        });
         const fragmentReferences = [
           ...document.querySelectorAll("[clip-path], [mask]"),
         ].flatMap((element) => {
@@ -93,10 +72,8 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
             ? new TextEncoder().encode(community.outerHTML).byteLength
             : -1,
           communityPresent: community !== null,
+          duplicateIds: duplicateIds.sort(),
           homepageDescendants: document.body.querySelectorAll("*").length,
-          legacyAvatarDuplicateIds: duplicateIds
-            .filter((id) => knownAvatarFragmentIds.has(id))
-            .sort(),
           missingFragmentReferences: [
             ...new Set(
               fragmentReferences.filter(
@@ -104,9 +81,8 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
               )
             ),
           ],
-          unexpectedDuplicateIds: unexpectedDuplicateIds.sort(),
         };
-      }, legacyAvatarFragmentIds)
+      })
     );
 
     if (!measurements.communityPresent) {
