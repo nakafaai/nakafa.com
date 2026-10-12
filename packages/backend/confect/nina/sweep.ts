@@ -5,6 +5,7 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import {
+  SETTLE_GRACE,
   START_DEADLINE,
   TURN_DEADLINE,
 } from "@repo/backend/confect/nina/deadline";
@@ -30,10 +31,14 @@ export const startsLate = Effect.fn("nina.sweep.late")(function* (
 
 /**
  * Settles every turn that stayed open past its deadline, whatever stopped its
- * own settlement: a crashed action, a lost schedule or a failed write. Each
- * overdue turn gets its own scheduled settlement, so one that cannot settle
- * never blocks the others, and the next sweep tries it again. A call reads one
- * page and schedules the next while more remain.
+ * own settlement: a crashed action, a deploy that took the run away, a lost
+ * schedule or a failed write. No run is alive past the deadline, so such a
+ * turn is stored as interrupted, never as a timeout. Each overdue turn gets its
+ * own scheduled settlement, so one that cannot settle never blocks the others,
+ * and the next sweep tries it again. Every sweep also schedules `abandon` for
+ * the turn at the end of `SETTLE_GRACE`, counted from that sweep. The first one
+ * to run ends a turn that every try failed to settle, and the rest find it
+ * settled. A call reads one page and schedules the next while more remain.
  */
 export const sweepTurns = Effect.fn("nina.sweep")(function* (
   resume?: typeof NinaSweepResume.Type
@@ -51,16 +56,24 @@ export const sweepTurns = Effect.fn("nina.sweep")(function* (
     .pipe(Effect.orDie);
   if (Arr.isReadonlyArrayNonEmpty(page.page)) {
     yield* Effect.logWarning("Nina turns stayed open past their deadline", {
-      count: page.page.length,
+      turnIds: Arr.map(page.page, (turn) => turn._id),
     });
   }
   yield* Effect.forEach(
     page.page,
-    (turn) =>
-      scheduler.runAfter(Duration.zero, refs.internal.nina.lifecycle.recover, {
-        turnId: turn._id,
-        failure: "response-timeout",
-      }),
+    Effect.fn(function* (turn) {
+      const turnId = turn._id;
+      yield* scheduler.runAfter(
+        Duration.zero,
+        refs.internal.nina.lifecycle.recover,
+        { turnId }
+      );
+      yield* scheduler.runAfter(
+        SETTLE_GRACE,
+        refs.internal.nina.lifecycle.abandon,
+        { turnId }
+      );
+    }),
     { discard: true }
   );
   if (!page.isDone) {

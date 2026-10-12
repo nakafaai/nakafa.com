@@ -68,8 +68,7 @@ export function TryoutSectionRows({
             title: section.title,
             visual: {
               icon: getTryoutSubjectIcon(section.sectionKey),
-              iconKey: section.sectionKey,
-              kind: "icon",
+              seed: section.sectionKey,
             },
           },
         ];

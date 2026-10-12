@@ -253,7 +253,69 @@ failed. Response-level alerts are reserved for admission or generation failure.
 Expected generation failures become typed, stable reason codes. The application
 dictionary owns user-facing copy and recovery guidance. Operational exception
 reports carry bounded routing facts and redacted code frames. Optional product
-analytics remains subject to account consent.
+analytics remains subject to account consent. A stream that stops at the AI
+SDK's own total, step or chunk deadline is stored as a response timeout: the SDK
+reports those deadlines through the abort of the stream, naming a timeout as its
+reason, and never through the error callback.
+
+Every way a turn can stay open ends in a settlement that the learner sees and
+leaves, through the one guarded settlement, so the credits come back once and
+the chat is free:
+
+- Admission schedules one check for the moment the run must have started. It
+  settles a turn whose run never started as a response timeout, and leaves a
+  turn that was claimed or settled alone.
+- The sweep, every five minutes, settles a turn that stays open past its
+  deadline. No live run is open that long, so the run was lost to a crash or a
+  deploy, and the turn is stored as interrupted, never as a timeout.
+- The sweep also schedules the end of that settlement for three of its own runs
+  later. A settlement that failed in every try, as when the Agent journal cannot
+  be read or cut off, ends then without the journal it could not use: the turn
+  fails, or is cancelled when the learner had stopped it, an answer the journal
+  does hold still completes it, and the chat can be deleted. A hold that cannot
+  be paid back is the one thing that ending never drops. When the credit state
+  cannot be read, the ending fails as a whole and changes nothing, and the next
+  sweep tries again.
+- The failed turn stores `unknown`, which the learner reads as a response Nina
+  could not finish, with a way to try again and to ask for help. A reason of its
+  own would be a new value of the stored failure reason. Every web build reads
+  that reason with the values it was built with, `ninaResponseFeedback` words
+  each of them, and Skew Protection keeps a browser on its deployment for 12
+  hours ([ADR 0008](./0008-compute.md)). So the web learns and words the value
+  first, and the ending stores it once the older builds are gone. The log of the
+  ending names the turn until then.
+- A turn the learner stopped settles at their next prompt, in any chat. When its
+  journal cannot be read, that settlement is skipped and logged with the turn,
+  and the others still settle, so the failure of one thread never refuses a
+  prompt in another chat. The stopped turn's own chat stays busy until a later
+  try settles it or the sweep ends it.
+- A stop reaches the provider call even when one check of the halt flag fails,
+  and a failed check never replaces the reason a failed run stores. The stop
+  reaches the repair of a tool call too.
+
+A capability's result is stored in the Agent message row, which nests it below
+the row, `message`, `content`, a part, `output` and `value`. Convex refuses a
+document of more than 16 levels and logs a warning above 12, which is 0.8 of the
+limit by its default ratio. Production logged that warning at 13 levels for a
+math card with one step on 12 October 2026. So no stored result may pass 12
+levels. A test builds the deepest value each capability's schema admits, saves
+it in a message row and in a stream row, and counts it the way Convex does
+(`packages/backend/test/nina/depth.ts` names the source it read, and
+`capability/spec.test.ts` holds each capability to the bound). The message rows
+measure 14 levels for math, 12 for Nakafa retrieval, 11 for research and 7 for
+memory, and the stream rows 12, 10, 9 and 5.
+
+Math is the one capability above the bound: its card nests `data`, `result`,
+`steps`, a step and its `items` below the artifact. Flattening it changes the
+stored shape that the page decodes with `CapabilityOutputSchema`, so it follows
+the rollout rule of `packages/backend/AGENTS.md`: the schema first accepts both
+shapes and ships to the web, and once no older build is served the writer stores
+the flat one. Rows already stored keep their shape, because each was written
+within the limit and none is written again. The schema keeps reading both
+without an end date, and no migration rewrites Agent messages for a log line.
+Until the flatten, the test holds math at the depth its card has: a card that
+grows fails, and so does one that fits the bound, until the exception is
+deleted.
 
 ## Verification
 
