@@ -267,19 +267,6 @@ export const NinaKnown = Schema.Struct({
   profile: NinaLearnerProfile,
 });
 
-/** The settings card of browser tabs opened before October 2026. */
-const RetiredMemoryView = Schema.Struct({
-  facts: Schema.mutable(
-    Schema.Array(
-      Schema.Struct({
-        key: Schema.Int,
-        savedAt: Schema.Finite,
-        text: Schema.String,
-      })
-    )
-  ),
-});
-
 export default GroupSpec.make()
   // One page of the learner's memories, the most recently confirmed first, with
   // their titles and words opened. A memory that "Delete all" took is not
@@ -335,39 +322,6 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "clear",
       returns: () => Schema.Null,
-      error: () => AuthFailure,
-    }).middleware(Session)
-  )
-  // The four functions below are what browser tabs opened before October 2026
-  // still call from the old settings card. The card shows memory as on with no
-  // fact or as off, turns it on, and turns it off with every memory deleted.
-  // They are deleted with the retired model key, after three days without a
-  // call.
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "get",
-      returns: () => Schema.NullOr(RetiredMemoryView),
-    }).middleware(Session)
-  )
-  .addFunction(
-    FunctionSpec.publicMutation({
-      name: "enable",
-      returns: () => RetiredMemoryView,
-      error: () => AuthFailure,
-    }).middleware(Session)
-  )
-  .addFunction(
-    FunctionSpec.publicMutation({
-      name: "disable",
-      returns: () => Schema.Null,
-      error: () => AuthFailure,
-    }).middleware(Session)
-  )
-  .addFunction(
-    FunctionSpec.publicMutation({
-      name: "forget",
-      args: () => ({ key: Schema.Int }),
-      returns: () => Schema.NullOr(RetiredMemoryView),
       error: () => AuthFailure,
     }).middleware(Session)
   )

@@ -12,10 +12,7 @@ import {
   contentTypeValidator,
   localeValidator,
 } from "@repo/backend/confect/lib/validators/contents";
-import {
-  NinaFailureReason,
-  RetiredModelKey,
-} from "@repo/backend/confect/nina/contract/turn";
+import { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/confect/tryouts/access/source";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoreStatusValidator } from "@repo/backend/confect/tryouts/score";
@@ -79,7 +76,6 @@ export const productAnalyticsEventValidator = Schema.Union([
     name: Schema.Literal("chat message sent"),
     properties: Schema.Struct({
       chat_type: chatTypeValidator,
-      model_id: Schema.optionalKey(RetiredModelKey),
     }),
   }),
   Schema.Struct({

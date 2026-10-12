@@ -1,8 +1,8 @@
 # Backend scripts
 
-These scripts verify signed content releases and durable customer state, and
-measure Nina's judgments. Package scripts in `packages/backend/package.json` are
-the command source of truth.
+These scripts verify signed content releases and durable customer state, run
+one real Nina turn, and measure Nina's judgments. Package scripts in
+`packages/backend/package.json` are the command source of truth.
 
 ## Signed content ownership
 
@@ -55,6 +55,25 @@ changing content ownership.
 
 `customers/verify.ts` is a read-only operational integrity check. It does not
 change customer, subscription, or content state.
+
+## Nina release gate
+
+```sh
+pnpm --filter @repo/backend nina:gate
+```
+
+This command runs one real Nina turn through the Convex AI gateway, on the
+deployment that `CONVEX_DEPLOYMENT` names, and prints a table of what the turn
+used. That is the dev deployment in `packages/backend/.env.local`. It runs only
+on a dev deployment, and refuses to run with no deployment named or with a
+deploy key or a deployment token set. The Convex CLI it starts gets exactly the
+deployment it checked, so a `.env` file cannot choose another. It signs in a synthetic learner, asks one question, reads the stored
+turn, and removes the chat and starts the deletion of the learner. It exits with
+0 when the turn passes and with 1 when it does not, and it prints no message
+text.
+
+[ADR 0001](../../../docs/adr/0001-nina-engagement-architecture.md) says when to
+run it and what it proves.
 
 ## Judgment measurement
 

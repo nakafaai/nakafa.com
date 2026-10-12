@@ -2,6 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
+import {
+  languageModelId,
+  providerId,
+} from "@repo/backend/confect/gateway/model";
 import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Result, Schema, Stream } from "effect";
@@ -120,6 +124,9 @@ describe("The production gateway", () => {
       fetch.mockResolvedValue(Response.json(completion));
       return Effect.gen(function* () {
         const handle = (yield* Gateway).language(purpose);
+        // Usage rows store these two ids, and the release gate reads them back.
+        expect(handle.model.provider).toBe(providerId);
+        expect(handle.model.modelId).toBe(languageModelId);
         const result = yield* Effect.promise(() =>
           handle.model.doGenerate({ prompt })
         );

@@ -10,6 +10,12 @@ export const languageModelId = "google/gemini-3.8-flash";
  */
 export const decisionModelId = "typesafe/jev-1.13";
 
+/**
+ * The provider id the AI SDK gives the chat models of `convexGateway`. Every
+ * usage row of a call that went through a gateway handle stores it.
+ */
+export const providerId = "convexGateway.chat";
+
 /** How much a model reasons: deeply for answers, briefly for supporting work. */
 export const Effort = Schema.Literals(["fast", "interactive"]);
 export type Effort = typeof Effort.Type;

@@ -65,7 +65,10 @@ describe("native Nina settlement", () => {
         refs.internal.nina.lifecycle.claim,
         await f.t.mutation(claim, args)
       )
-    ).toMatchObject({ state: { status: "running" } });
+    ).toMatchObject({
+      state: { status: "running" },
+      timing: { claimedMs: expect.any(Number) },
+    });
     expect(
       Ref.decodeReturnsSync(
         refs.internal.nina.lifecycle.claim,
@@ -82,6 +85,8 @@ describe("native Nina settlement", () => {
       reason: "interrupted",
     });
     expect(state.chat?.activeTurnId).toBeUndefined();
+    // A settlement that carries no stages keeps the claim the turn stored.
+    expect(state.turn?.timing).toEqual({ claimedMs: expect.any(Number) });
     expect(
       Arr.filter(state.ledger, (row) => row.type === "refund")
     ).toHaveLength(1);
@@ -112,6 +117,17 @@ describe("native Nina settlement", () => {
         }),
       ],
     ]);
+  });
+
+  it("adds the stages a run reached to its claim when the turn settles", async () => {
+    const f = await fixture();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    const timing = { readyMs: 1500, progressMs: 4000, tokenMs: 4200 };
+    await f.t.mutation(recover, { turnId: f.turnId, timing });
+    expect((await f.inspect()).turn?.timing).toEqual({
+      claimedMs: expect.any(Number),
+      ...timing,
+    });
   });
 
   it("settles an already committed answer before a concurrent cancel without another debit", async () => {

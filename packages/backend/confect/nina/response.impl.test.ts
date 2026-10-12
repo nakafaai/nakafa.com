@@ -5,6 +5,7 @@ import { PostHog } from "@posthog/convex";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
+import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
@@ -13,6 +14,7 @@ import {
   ninaStream,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { args, contextFor, start } from "@repo/backend/test/nina/admission";
 import { createCapturingTest, level } from "@repo/backend/test/nina/capture";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { providerStep } from "@repo/backend/test/nina/specialist";
@@ -35,6 +37,11 @@ vi.mock("@repo/backend/confect/nina/summary", async (load) => {
     await load<typeof import("@repo/backend/confect/nina/summary")>();
   return { ...actual, refreshSummary: vi.fn(actual.refreshSummary) };
 });
+// Admission freezes the page facts of a prompt; the stop and resend test needs
+// no signed content for them.
+vi.mock("@repo/backend/confect/nina/context", () => ({
+  resolveNinaContext: vi.fn(),
+}));
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
@@ -91,16 +98,28 @@ async function fixture() {
         paginationOpts: { cursor: null, numItems: 20 },
       }),
     }));
+  /**
+   * Waits until the run has called the model. A run that ends before it does,
+   * by returning or by failing, ends the test with that outcome, not with a
+   * timeout.
+   */
+  const reachesModel = async (running: Promise<unknown>) => {
+    const called = await Promise.race([
+      silent.started.then(() => true),
+      running.then(() => false),
+    ]);
+    expect(called, "the run ended before it called the model").toBe(true);
+  };
   /** Starts the run and waits until its model call is in flight and its stream is open. */
   const begin = async () => {
     const running = f.t.action(run, { turnId: f.turnId });
-    await silent.started;
+    await reachesModel(running);
     expect((await inspect()).streams).toEqual([
       expect.objectContaining({ status: "streaming" }),
     ]);
     return { running };
   };
-  return { ...f, ...silent, inspect, begin };
+  return { ...f, ...silent, inspect, begin, reachesModel };
 }
 
 /** True when the thread holds an assistant message that counts as an answer. */
@@ -117,6 +136,81 @@ describe("Nina response run", () => {
     vi.restoreAllMocks();
     provider.languageModel.mockReset();
   });
+
+  it("has taken the turn and opened its answer before the model says a word, and stores each stage once it is reached", async () => {
+    const f = await fixture();
+    try {
+      const { running } = await f.begin();
+
+      // The model is called and silent. The learner's page already has what
+      // shows the turn as started: it runs, its claim is stored, and its answer
+      // is open to be filled. No stage that needs the model is stored yet.
+      const waiting = await f.inspect();
+      expect(waiting.turn).toMatchObject({
+        phase: "active",
+        state: { status: "running" },
+        timing: { claimedMs: expect.any(Number) },
+      });
+      expect(waiting.turn?.timing).not.toHaveProperty("progressMs");
+      expect(Arr.map(waiting.messages.page, ({ status }) => status)).toContain(
+        "pending"
+      );
+
+      f.release();
+      await running;
+      const {
+        claimedMs = 0,
+        readyMs = 0,
+        progressMs = 0,
+        tokenMs = 0,
+      } = (await f.inspect()).turn?.timing ?? {};
+      expect(readyMs).toBeGreaterThanOrEqual(claimedMs);
+      expect(progressMs).toBeGreaterThanOrEqual(readyMs);
+      expect(tokenMs).toBeGreaterThanOrEqual(progressMs);
+      expect(tokenMs).toBeGreaterThan(0);
+    } finally {
+      f.release();
+    }
+  }, 30_000);
+
+  it("answers the turn sent right after a stop while the stopped run still winds down, and the late exit changes nothing", async () => {
+    vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
+    const f = await fixture();
+    try {
+      const { running } = await f.begin();
+      await f.owner.mutation(cancel, { chatId: f.chatId });
+
+      // The next prompt settles the stopped turn and queues its own, and that
+      // turn's run needs neither the stopped run to end nor a sweep.
+      provider.languageModel.mockReturnValue(ninaModel());
+      const next = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await f.owner.mutation(start, {
+          ...args,
+          chatId: f.chatId,
+          requestId: "next",
+        })
+      );
+      await f.t.action(run, { turnId: next.turnId });
+      const answered = await f.t.query((ctx) =>
+        ctx.db.get("ninaTurns", next.turnId)
+      );
+      expect(answered?.state.status).toBe("complete");
+
+      // The stopped run exits later and finds its turn settled.
+      f.release();
+      await running;
+      const state = await f.inspect();
+      expect(state.turn?.state.status).toBe("cancelled");
+      expect(state.chat?.activeTurnId).toBeUndefined();
+      expect(state.user?.credits).toBe(5);
+      expect(
+        Arr.filter(state.ledger, (row) => row.type === "refund")
+      ).toHaveLength(1);
+    } finally {
+      f.release();
+    }
+  }, 30_000);
 
   // The run asks about its turn once a second, so these tests wait in real time
   // and get a longer limit than the default.
@@ -146,6 +240,12 @@ describe("Nina response run", () => {
       expect(
         Arr.filter(stopped.ledger, (row) => row.type === "refund")
       ).toHaveLength(1);
+      // It keeps the stages its run reached before the stop: the run took the
+      // turn and was about to call the model, and nothing came back.
+      expect(stopped.turn?.timing).toEqual({
+        claimedMs: expect.any(Number),
+        readyMs: expect.any(Number),
+      });
       expect(hasAnswer(stopped.messages)).toBe(false);
       // A stop the learner asked for is not an operational failure.
       expect(report).not.toHaveBeenCalled();
@@ -161,7 +261,7 @@ describe("Nina response run", () => {
     const f = await fixture();
     try {
       const running = f.t.action(run, { turnId: f.turnId });
-      await f.started;
+      await f.reachesModel(running);
       // The stream is not open yet. Agent finds it stopped when it opens it and
       // ends the generation itself, ahead of the watch's next check.
       await f.owner.mutation(cancel, { chatId: f.chatId });
@@ -304,6 +404,9 @@ describe("The Nina response run when generation fails", () => {
     });
     expect(state.user?.credits).toBe(10);
     expect(provider.languageModel).not.toHaveBeenCalled();
+    // The run took the turn and failed before it had a model to call, so the
+    // turn keeps its claim and holds no readiness.
+    expect(state.turn?.timing).toEqual({ claimedMs: expect.any(Number) });
   });
 
   it.effect("refunds a failure before the Agent stream starts", () =>

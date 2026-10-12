@@ -176,19 +176,25 @@ was 1.66 GB, the daily expiry 1.04 GB and the weekly repair 0.57 GB. Each is
 multiplied by the bytes read after the change over the bytes read before it in
 the ten-lesson rows (18,169 over 115,371, 8,820 over 76,104 and 52,020 over
 621,839), which gives about 0.26 GB, 0.12 GB and 0.05 GB. That leaves about
-0.43 GB, so roughly 2.8 GB a month fewer once the retired rows are gone. The
-estimate assumes the invoice splits the way the fixture does. Retiring the rows
-costs about 11.6 KB per counter once (a page of ten counters read 95 documents
+0.43 GB, so roughly 2.8 GB a month fewer. The estimate assumes the invoice
+splits the way the fixture does. The counters and maintenance rows of the older
+windows and scope are retired: the prune found none left on dev and production
+on 12 October 2026, and the code that retired them is deleted. Retiring them
+cost about 11.6 KB per counter once (a page of ten counters read 95 documents
 and 116,105 bytes in a throwaway fixture).
 
 Compaction no longer writes `contentState`, the row every content query reads,
 so a compaction page stops making Convex run those queries again. That saving
 is in function executions, not in Database I/O.
 
-Three temporary steps of these changes end in later changes, each with its exit
-and cleanup written where it lives: the retirement of the older popularity rows
-and the ignored `windowKey` argument (ADR 0008), and the carry of the
-compaction fields out of `contentState` (`packages/backend/AGENTS.md`).
+One temporary step of these changes ends in a later change, with its exit and
+cleanup written where it lives: the older scope and `applied` windows of daily
+signals, which age out by 20 October 2026 (ADR 0008). The retirement of the
+older popularity rows and the ignored `windowKey` argument are deleted. The
+carry of the compaction fields out of `contentState` ended on 12 October 2026:
+dev and production each held the `contentCompaction` row and no `contentState`
+row held a compaction field, so the carry, its tests and the six fields were
+deleted.
 
 ### Recovery evidence
 

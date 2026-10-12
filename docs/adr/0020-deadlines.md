@@ -80,7 +80,9 @@ of its own, and every model call has a cap on its output.
   cap finishes with `length`, which a chat turn already reads as
   `response-limit`. A specialist whose last step ends at its cap reports its
   result as `partial` and tells Nina that the answer was cut short
-  (`specialistResult`), so a cut answer never reads as a whole one.
+  (`specialistResult`), so a cut answer never reads as a whole one. So does a
+  specialist whose loop ends at its step limit with a tool still called, since
+  it wrote no answer.
 - The cap is shared with the model's reasoning. Google's thinking guide counts
   thinking tokens in the output limit, and a call that reaches the limit while
   it still thinks stops with a cut or an empty answer. So each cap stands well
@@ -117,6 +119,20 @@ of its own, and every model call has a cap on its output.
 - No capability repeats a model call after the SDK rejects its answer. The
   math repair call sends the validation error back, so it is not the same
   prompt.
+- A math run takes at most as many steps as the specialist's step deadline
+  fits in its total deadline (`MATH_STEPS`, four). A step is one call of the
+  specialist's model. The repair of a tool call that came out invalid is one
+  more call inside its step and is not counted, so this number bounds the
+  steps, and the capability's deadline bounds the time of every call. The last
+  step may call no tool, so the run ends with its answer. Its prompt tells the
+  model the number, asks for the fewest tool calls that check what the request
+  asks, and asks it to name any calculation the steps left unchecked. Using
+  every step is no shortfall, since a run that has checked all it needs writes
+  its answer in the last step too, so such a run is reported like any other. A
+  provider that still calls a tool in the last step is cut by the cap and
+  reported as `partial`. Before, the cap was the number of math operations
+  (54). On 11 October a request for a derivative and its value was seen to run
+  five steps on production, one of them an expansion that nobody had asked for.
 
 ## Consequences
 

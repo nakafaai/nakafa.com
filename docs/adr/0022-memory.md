@@ -414,8 +414,8 @@ memories were written after it. Every writer of a memory keeps its keys in step
 with it in the same transaction, the time included: `add`, `edit`, and the
 capture write (a new memory, and a confirmed memory, which gives its keys the
 time of the confirmation and its new words and topics). Every path that deletes
-a memory deletes its keys: `remove`, `clear`, the daily expiry, account
-deletion, and the retired `disable`.
+a memory deletes its keys: `remove`, `clear`, the daily expiry, and account
+deletion.
 
 One function searches: `searchMemories` takes the learner, the text, the
 topics, a limit and the moment the learner last deleted all of it, if ever. It
@@ -637,11 +637,10 @@ decides what a learner meant.
 - The documents of the old model, one per learner with a `facts` array, are
   deleted before this schema deploys. Convex refuses a schema that a stored
   document does not match, so a deploy that succeeds proves that none is left.
-- `get`, `enable`, `disable` and `forget` stay only for browser tabs opened
-  before October 2026, which still show the old settings card. That card shows
-  memory as it is: on with no fact to list, or off. Its "Turn on" button turns
-  memory on, and its "Turn off and forget" button turns memory off and deletes
-  every memory in batches, as `clear` does, as the card says. `forget` changes
-  nothing, because the card has no fact to forget. They are deleted with the
-  retired model key.
+- The old settings card of browser tabs opened before October 2026 called
+  `get`, `enable`, `disable` and `forget`, and they were to stay until three
+  days had passed without a call. The Memory page replaced that card on
+  12 October 2026 and the four functions are deleted without that wait, so a tab
+  that still shows the card meets an error on them until the learner reloads it,
+  and its "Turn off and forget" button deletes nothing.
 - The learner profile derived on read, which ADR 0010 defined, is unchanged.

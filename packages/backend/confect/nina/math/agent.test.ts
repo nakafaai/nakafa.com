@@ -1,6 +1,7 @@
 import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
+import { MATH_STEPS } from "@repo/backend/confect/nina/math/step";
 import { compute } from "@repo/backend/confect/nina/math/tools/compute";
 import { provider } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
@@ -29,6 +30,7 @@ vi.mock("@repo/backend/confect/nina/math/tools/compute", () => ({
 }));
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.mocked(compute).mockReset();
   provider.languageModel.mockReset();
 });
 
@@ -97,6 +99,34 @@ const repairedInput: typeof MathAlgebraInputSchema.Type = {
 };
 /** The cut answer, then the note that tells Nina it was cut short. */
 const cutResult = /^The checked result is 2\n\n.*cut short/su;
+/** The note that tells Nina the run ended at its step limit. */
+const cutAtLimit = /step limit/u;
+
+const derivativeQuestion =
+  "What is the derivative of x^3 sin x, and what is its value at x = pi / 2?";
+/** The check the question asks for, then the one its value needs from it. */
+const derivative: typeof MathCalculusInputSchema.Type = {
+  operation: "differentiate",
+  expression: "x^3 * sin(x)",
+};
+const value: typeof MathArithmeticInputSchema.Type = {
+  operation: "evaluate",
+  expression: "3 * (pi / 2)^2 * sin(pi / 2)",
+};
+/** The check that was seen on production and that nobody had asked for. */
+const expansion: typeof MathSeriesInputSchema.Type = {
+  operation: "series",
+  expression: "x^3 * sin(x)",
+};
+
+/** A model step that calls one tool with `input`, typed by that tool's contract. */
+function callStep(toolName: string, input: object, toolCallId: string) {
+  return providerStep(
+    [{ type: "tool-call", toolCallId, toolName, input: encodeJsonText(input) }],
+    "tool-calls"
+  );
+}
+
 const casConfig = ConfigProvider.fromUnknown({
   NEXT_PUBLIC_CAS_URL: "https://math.example.invalid",
   MATH_CAS_API_KEY: "test",
@@ -228,6 +258,85 @@ describe("math Agent execution", () => {
       );
     }
   );
+
+  it("writes the answer to a derivative and its value in its last step, which may call no tool, although the model went on to an expansion nobody asked for", async () => {
+    // The checks the question needs, then the one it does not.
+    const checks = [
+      callStep("calculus", derivative, "derivative"),
+      callStep("arithmetic", value, "value"),
+      ...Arr.makeBy(MATH_STEPS - 3, (step) =>
+        callStep("series", expansion, `expansion-${step}`)
+      ),
+    ];
+    const model = new MockLanguageModelV4({
+      doGenerate: [
+        ...checks,
+        providerStep([{ type: "text", text: "The value is 3 pi^2 / 4." }]),
+      ],
+    });
+    provider.languageModel.mockReturnValue(model);
+    vi.mocked(compute).mockReturnValue(Effect.succeed("It is checked."));
+    const result = await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        task: derivativeQuestion,
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, casConfig))
+    );
+    // Using every step is no shortfall: the last one is where a run that has
+    // checked all it needs writes its answer too, so the report is a plain one.
+    expect(result).toEqual({ text: "The value is 3 pi^2 / 4." });
+    expect(model.doGenerateCalls).toHaveLength(MATH_STEPS);
+    expect(
+      Arr.map(vi.mocked(compute).mock.calls, ([call]) => call.input)
+    ).toEqual([
+      derivative,
+      value,
+      ...Arr.makeBy(MATH_STEPS - 3, () => expansion),
+    ]);
+    // The first step must call a tool, the last may call none, and the steps
+    // between them choose freely.
+    expect(Arr.map(model.doGenerateCalls, (call) => call.toolChoice)).toEqual([
+      { type: "required" },
+      ...Arr.makeBy(MATH_STEPS - 2, () => ({ type: "auto" })),
+      { type: "none" },
+    ]);
+  });
+
+  it("cuts a model that still asks for a tool in its last step at the step limit, and reports the run as partial", async () => {
+    // One more check than the run has steps for. A provider that ignored the
+    // last step's rule would answer with a tool call, and the loop would go on.
+    const model = new MockLanguageModelV4({
+      doGenerate: [
+        callStep("calculus", derivative, "derivative"),
+        callStep("arithmetic", value, "value"),
+        ...Arr.makeBy(MATH_STEPS - 1, (step) =>
+          callStep("series", expansion, `expansion-${step}`)
+        ),
+      ],
+    });
+    provider.languageModel.mockReturnValue(model);
+    vi.mocked(compute).mockReturnValue(Effect.succeed("It is checked."));
+    const result = await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        task: derivativeQuestion,
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, casConfig))
+    );
+    expect(model.doGenerateCalls).toHaveLength(MATH_STEPS);
+    expect(compute).toHaveBeenCalledTimes(MATH_STEPS);
+    // No answer was written, so Nina is told the run was cut, not handed an
+    // empty result as a whole one.
+    expect(result).toEqual({
+      outcome: "partial",
+      text: expect.stringMatching(cutAtLimit),
+    });
+  });
 
   it("hands Nina a cut answer as partial, and says it was cut short, when its last step ended at the output cap", async () => {
     vi.mocked(compute).mockReturnValue(Effect.succeed("2x"));

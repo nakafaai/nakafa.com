@@ -3,13 +3,9 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/ni
 export const add = registeredFunctions.add;
 export const capture = registeredFunctions.capture;
 export const clear = registeredFunctions.clear;
-export const disable = registeredFunctions.disable;
 export const drain = registeredFunctions.drain;
 export const edit = registeredFunctions.edit;
-export const enable = registeredFunctions.enable;
 export const expire = registeredFunctions.expire;
-export const forget = registeredFunctions.forget;
-export const get = registeredFunctions.get;
 export const known = registeredFunctions.known;
 export const list = registeredFunctions.list;
 export const lookup = registeredFunctions.lookup;

@@ -16,7 +16,8 @@ export default Table.make(() =>
     ...learningGraphIdentityValidator.fields,
     ...learningContextStorageFields,
     // Only the seven-day count is written now. Rows from before that change
-    // still carry the other windows; they are optional until those rows age out.
+    // still carry the other windows; they are optional until those rows age out
+    // (ADR 0008).
     applied: Schema.Struct({
       d1: Schema.optionalKey(Schema.Finite),
       d7: Schema.Finite,

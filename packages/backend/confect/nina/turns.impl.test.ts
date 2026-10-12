@@ -5,7 +5,7 @@ import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { TURN_DEADLINE } from "@repo/backend/confect/nina/sweep";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import {
   seedAnalyticsConsent,
@@ -48,43 +48,32 @@ describe("native Nina admission", () => {
     vi.useRealTimers();
   });
 
-  it.each([
-    ["a current browser tab", args, { chat_type: "study" }],
-    [
-      "an old browser tab that still sends the retired model",
-      { ...args, modelId: "nakafa-lite" as const },
-      { chat_type: "study", model_id: "nakafa-lite" },
-    ],
-  ])(
-    "charges five credits, stores no model, and reports one consented send from %s",
-    async (_tab, request, properties) => {
-      const { t, identity, owner } = await fixture();
-      await t.mutation((ctx) =>
-        seedAnalyticsConsent(ctx, { userId: identity.userId, decidedAt: NOW })
-      );
-      await owner.mutation(start, request);
-      await owner.mutation(start, request);
-      const state = await t.query(async (ctx) => ({
-        user: await ctx.db.get("users", identity.userId),
-        turns: await ctx.db.query("ninaTurns").collect(),
-        jobs: await ctx.db.system.query("_scheduled_functions").collect(),
-      }));
-      expect(state.user?.credits).toBe(5);
-      expect(state.turns).toHaveLength(1);
-      expect(state.turns[0]).not.toHaveProperty("modelId");
-      const events = Arr.filter(state.jobs, (job) =>
-        job.name.includes("deliverProductEvent")
-      );
-      expect(events).toHaveLength(1);
-      expect(events[0]?.args).toEqual([
-        expect.objectContaining({
-          distinctId: identity.userId,
-          event: "chat message sent",
-          properties: encodeJsonText(properties),
-        }),
-      ]);
-    }
-  );
+  it("charges five credits and reports one consented send", async () => {
+    const { t, identity, owner } = await fixture();
+    await t.mutation((ctx) =>
+      seedAnalyticsConsent(ctx, { userId: identity.userId, decidedAt: NOW })
+    );
+    await owner.mutation(start, args);
+    await owner.mutation(start, args);
+    const state = await t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      turns: await ctx.db.query("ninaTurns").collect(),
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+    }));
+    expect(state.user?.credits).toBe(5);
+    expect(state.turns).toHaveLength(1);
+    const events = Arr.filter(state.jobs, (job) =>
+      job.name.includes("deliverProductEvent")
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]?.args).toEqual([
+      expect.objectContaining({
+        distinctId: identity.userId,
+        event: "chat message sent",
+        properties: encodeJsonText({ chat_type: "study" }),
+      }),
+    ]);
+  });
 
   it("atomically saves the prompt, reserves credits, and schedules one response for an idempotent retry", async () => {
     const { t, identity, owner } = await fixture();

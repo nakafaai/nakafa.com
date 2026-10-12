@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { mathPrompt } from "@repo/backend/confect/nina/math/prompt";
+import { MATH_STEPS } from "@repo/backend/confect/nina/math/step";
 import { mathOperations } from "@repo/math/schema/operations";
 
 const base = {
@@ -99,7 +100,6 @@ describe("mathPrompt", () => {
     );
     expect(prompt).toContain("not a guessed final answer");
     expect(prompt).toContain("Natural wording such as");
-    expect(prompt).toContain("Call tools for each distinct calculation");
     expect(prompt).toContain("If evidence is missing and can be checked");
     expect(prompt).toContain(
       "the evidence is incomplete until the substituted original expression is checked"
@@ -123,6 +123,47 @@ describe("mathPrompt", () => {
     expect(prompt).toContain('Avoid contextless labels such as "given"');
     expect(prompt).toContain(
       "Do not say the user provided a formula, method, or calculation"
+    );
+  });
+
+  it("asks for the fewest tool calls that answer the request, and for the answer once its values are checked", () => {
+    const prompt = mathPrompt(base);
+    const scope = prompt.slice(
+      prompt.indexOf("Scope:"),
+      prompt.indexOf("Multi-part requests:")
+    );
+
+    expect(scope).toContain("with the fewest tool calls that do it");
+    expect(scope).toContain(
+      "Do not add a second method, an expansion, a rewrite, or another check"
+    );
+    expect(scope).toContain(`You have ${MATH_STEPS} steps in all.`);
+    expect(scope).toContain("The last step cannot call a tool");
+    expect(scope).toContain(
+      "Write the answer as soon as every value the request asks for has a verified result."
+    );
+    // The bridge a derivation needs comes from checked steps, not from a new call.
+    expect(prompt).toContain(
+      "Write that bridge from the checked steps. It never needs another tool call."
+    );
+  });
+
+  it("asks for a tool only for what the request asks, and for the calculation that the steps left unchecked to be named", () => {
+    const prompt = mathPrompt(base);
+    const multiPart = prompt.slice(
+      prompt.indexOf("Multi-part requests:"),
+      prompt.indexOf("Evidence contract:")
+    );
+
+    expect(multiPart).toContain(
+      "Call a tool for each distinct calculation or verification the request asks for."
+    );
+    expect(multiPart).toContain(
+      "If the steps run out first, or it cannot be checked, say which calculation was not checked."
+    );
+    // A tool for every calculation, with no limit, would argue with the scope.
+    expect(prompt).not.toContain(
+      "Call tools for each distinct calculation or verification."
     );
   });
 
