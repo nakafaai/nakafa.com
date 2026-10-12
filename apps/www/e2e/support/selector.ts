@@ -2,6 +2,8 @@ import type { Page } from "@playwright/test";
 
 /** A content card, which a lesson or a Quran page shows. */
 export const CARD = '[data-slot="card"]';
+/** A message bubble, which holds the words of a prompt or of an answer. */
+export const BUBBLE = '[data-slot="bubble"]';
 /** The popup of a drawer, which a phone opens for the consent and contributor surfaces. */
 export const DRAWER_POPUP = '[data-slot="drawer-popup"]';
 /** The bar at the top of a drawer, which a swipe drags. */
