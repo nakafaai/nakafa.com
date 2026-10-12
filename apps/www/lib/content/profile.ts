@@ -10,9 +10,20 @@
  * the memory of each process (`next/dist/server/lib/cache-handlers/default.js`),
  * so an entry in any other instance ends only with its lifetime. The lifetime is
  * therefore the bound on how long a release can be missed, and an entry may go
- * without it only when its key names the release. Immutable artifacts use
- * Next.js's `max` lifetime because their content hash is already part of the
- * cache key.
+ * without it only when nothing it returns can change while its key stays the
+ * same. Two kinds qualify, and both use Next.js's `max` lifetime:
+ *
+ * - An entry whose key names the release it was read under, so a new release
+ *   is a new key in every instance (`applyReleaseContentCache`).
+ * - An entry whose key holds all the data its output is built from, where the
+ *   rest changes only with a deploy, which starts every cache empty: the
+ *   immutable artifacts, whose key holds their content hash, and the SEO
+ *   metadata, whose key is its context and locale.
+ *
+ * The sitemap entries fit neither kind. Their key is a page id and not the
+ * release, and they keep `max` because a release purges them. That purge
+ * expires them in the instance that ran the activation and clears the CDN, but
+ * not the memory of another instance. See `lib/sitemap/cache.ts`.
  *
  * References:
  * https://vercel.com/docs/incremental-static-regeneration/limits-and-pricing#optimizing-isr-reads-and-writes

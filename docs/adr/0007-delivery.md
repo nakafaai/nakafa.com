@@ -27,20 +27,35 @@ contextual visit cannot first record a canonical view and then a placement view.
 - Content-addressed rendered artifacts use native `cacheLife("max")` and their
   artifact tags. Mutable publication selectors retain scope invalidation and
   the existing bounded freshness profile.
-- A `use cache` entry may go without that profile only when its key names the
-  release. The default handler keeps its entries, and its record of revalidated
-  tags, in the memory of one process, and the activation route revalidates a
-  tag in one instance, so in every other instance the profile's hour is what
-  carries a release. Reading through the content store does not change that,
-  because the store answers only when it is asked. The profile also keeps the
-  `Cache-Control` of each page within the AFDocs check, which reads that header
-  from a local production server: Next.js writes it from the lowest lifetime
-  among the entries that the page used, and the page navigation, which the app
-  layout reads for every page, is the entry that stays at an hour. A longer
-  lifetime on every entry, with the header held at an hour by `headers()` in
-  `next.config.ts`, would stop the hourly regeneration of each page; it needs a
-  release in every entry's key first, and a check on Vercel that the header
-  changes nothing at the CDN.
+- A `use cache` entry may go without that profile only when nothing it returns
+  can change while its key stays the same. The default handler keeps its
+  entries, and its record of revalidated tags, in the memory of one process,
+  and Vercel keeps `use cache` in memory unless it is `use cache: remote`. The
+  activation route revalidates a tag in one instance, so in every other
+  instance the profile's hour is what carries a release. Reading through the
+  content store does not change that, because the store answers only when it is
+  asked. Entry by entry:
+  - The profile, an hour: the publication, catalog, navigation and route
+    readers of articles, material, programs, pages, the Quran and try-out, the
+    RSS feed and the llms.txt section indexes.
+  - `max`, with the release in the key: the reciprocal article category routes,
+    the category page and the llms.txt documents.
+  - `max`, because the key holds what the output is built from: the rendered
+    bodies and the try-out batches, by content hash, the SEO metadata, by its
+    context and locale with translations that change only with a deploy, and
+    the logo of a social image.
+  - `max`, purged by a release only: the sitemap index and pages. They fit no
+    other kind. The purge expires them in the instance that ran the activation
+    and clears the CDN, and another instance keeps its copy until it ends.
+
+  The profile also keeps the `Cache-Control` of each page within the AFDocs
+  check, which reads that header from a local production server: Next.js writes
+  it from the lowest lifetime among the entries that the page used, and the
+  page navigation, which the app layout reads for every page, is the entry that
+  stays at an hour. A longer lifetime on every entry, with the header held at an
+  hour by `headers()` in `next.config.ts`, would stop the hourly regeneration
+  of each page; it needs a release in every entry's key first, and a check on
+  Vercel that the header changes nothing at the CDN.
 - A read that depends only on the active release goes through the content
   store (`apps/www/lib/content/store`), which keeps its answer in the Vercel
   Runtime Cache. That cache is shared by every instance and survives a deploy,

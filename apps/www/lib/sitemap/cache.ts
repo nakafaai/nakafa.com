@@ -21,7 +21,13 @@ export class SitemapCacheInvalidationError extends Schema.TaggedError<SitemapCac
  * every sitemap entry through the single invalidation below. Family tags
  * would not narrow that scope, and mixing them with the hard expiry below
  * would leave stale-versus-expired semantics ambiguous. Entries keep the
- * long built-in profile on purpose because only a release purges them. */
+ * long built-in profile on purpose because only a release purges them.
+ *
+ * That purge hard-expires the entries in the instance that runs the
+ * activation, and the CDN purge clears the responses. The memory of another
+ * instance keeps its copy until that instance ends, because the key is a page
+ * id and does not name the release. This is the one kind of entry that the
+ * rule in `lib/content/profile.ts` does not cover. */
 export function applySitemapCache() {
   cacheTag(CONTENT_SITEMAP_CACHE_TAG);
   cacheLife("max");

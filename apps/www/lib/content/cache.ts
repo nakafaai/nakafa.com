@@ -33,7 +33,8 @@ function tagContentCache(
  * Reading through the content store does not change that: the store answers
  * for a release only when it is asked, and an entry of this kind is asked once
  * an hour. An entry whose key names the release does not need the lifetime; see
- * `applyReleaseContentCache`.
+ * `applyReleaseContentCache`, and `profile.ts` for the other entries that go
+ * without it.
  */
 export function applyContentCache(
   ...scopes: readonly [ContentCacheScope, ...ContentCacheScope[]]
