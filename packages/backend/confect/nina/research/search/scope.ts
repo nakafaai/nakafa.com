@@ -90,7 +90,10 @@ function getPrimarySources({
   return primarySources;
 }
 
-/** Builds compact product keys that can match first-party domains. */
+/**
+ * Builds compact product keys that can match first-party domains. A link to
+ * Nakafa's own site adds none: Nakafa content is not a web source.
+ */
 function getPrimaryDomainKeys(text: string) {
   const domainKeys = Arr.map(getSourceReferences(text), (source) =>
     normalizeSourceKey(extractDomain(source.href))

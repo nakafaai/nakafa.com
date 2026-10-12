@@ -3478,20 +3478,6 @@ export declare const api: {
         { id: Id<"ninaMemories"> },
         null
       >;
-      search: FunctionReference<
-        "query",
-        "public",
-        { query: string },
-        Array<{
-          author: "nina" | "learner";
-          confirmedAt: number;
-          createdAt: number;
-          id: Id<"ninaMemories">;
-          text: string;
-          title?: string;
-          validUntil?: number;
-        }>
-      >;
       state: FunctionReference<
         "query",
         "public",
@@ -6217,24 +6203,6 @@ export declare const internal: {
         any
       >;
     };
-    tokens: {
-      encryptStoredTokens: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: null | string },
-        {
-          continueCursor: string;
-          encrypted: number;
-          isDone: boolean;
-          scanned: number;
-          unreadable: Array<{
-            account: string;
-            field: "accessToken" | "refreshToken";
-            reason: string;
-          }>;
-        }
-      >;
-    };
   };
   classes: {
     forums: {
@@ -8578,6 +8546,7 @@ export declare const internal: {
             promptedAt?: number;
             remembered?: number;
             requestId: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -8737,6 +8706,7 @@ export declare const internal: {
             promptedAt?: number;
             remembered?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -8912,6 +8882,7 @@ export declare const internal: {
             promptedAt?: number;
             remembered?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9085,6 +9056,7 @@ export declare const internal: {
             promptedAt?: number;
             remembered?: number;
             requestId: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9244,6 +9216,7 @@ export declare const internal: {
             promptedAt?: number;
             remembered?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9419,6 +9392,7 @@ export declare const internal: {
             promptedAt?: number;
             remembered?: number;
             requestId?: string;
+            retryOf?: number;
             snapshot?: {
               capturedAt: string;
               learning: {
@@ -9645,31 +9619,18 @@ export declare const internal: {
         null
       >;
     };
-    seal: {
-      sealChats: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null },
-        { next: string | null; sealed: number; skipped: number }
-      >;
-      sealSummaries: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null },
-        {
-          next: string | null;
-          removed: number;
-          sealed: number;
-          skipped: number;
-        }
-      >;
-    };
     summaries: {
       anchor: FunctionReference<
         "query",
         "internal",
         { chatId: Id<"chats">; order: number },
         string | null
+      >;
+      asked: FunctionReference<
+        "query",
+        "internal",
+        { before: number; chatId: Id<"chats">; questions: Array<number> },
+        Array<{ order: number; retryOf?: number }>
       >;
       read: FunctionReference<
         "query",
@@ -9687,6 +9648,12 @@ export declare const internal: {
           usage: { input: number; output: number };
         },
         null
+      >;
+      uncovered: FunctionReference<
+        "query",
+        "internal",
+        { before: number; chatId: Id<"chats">; through: number | null },
+        Array<{ order: number; retryOf?: number }>
       >;
     };
     uploads: {

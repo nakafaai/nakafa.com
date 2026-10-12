@@ -33,6 +33,15 @@ export const TaskAgentDataSchema = Schema.Struct({
   task: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type TaskAgentData = typeof TaskAgentDataSchema.Type;
+/**
+ * Schema-derived data passed to the Nakafa content specialist. `addresses` are
+ * the links to Nakafa's own site that the learner sent, which it must read.
+ */
+const NakafaAgentDataSchema = Schema.Struct({
+  ...TaskAgentDataSchema.fields,
+  addresses: Schema.Array(Schema.String),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+export type NakafaAgentData = typeof NakafaAgentDataSchema.Type;
 /** Schema-derived data passed to the external research specialist. */
 const ResearchAgentDataSchema = Schema.Struct({
   ...TaskAgentDataSchema.fields,

@@ -37,7 +37,11 @@ const referenceLayer = Layer.mergeAll(
   tryoutLayer
 );
 
-/** Freeze authenticated page and learner facts in the admission transaction. */
+/**
+ * Freeze authenticated page and learner facts in the admission transaction.
+ * The page is the one the learner is on now, even when the chat began on
+ * another: the prompt must never name a page the learner has left.
+ */
 export const resolveNinaContext = Effect.fn("nina.context.resolve")(
   function* (
     input: typeof NinaPageInput.Type,
@@ -60,9 +64,6 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
           .pipe(Effect.map(Option.getOrNull), Effect.orDie)
       : null;
     const published = yield* resolvePublishedContext(input, slug, url);
-    const pinned = published.learning.verified
-      ? undefined
-      : (previous?.page?.nina.snapshot ?? previous?.snapshot);
     // A question focus stays with its conversation for follow-up turns.
     const focus = input.focus
       ? yield* resolveQuestionFocus(input.focus, user._id)
@@ -70,11 +71,9 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
     const session = yield* openNinaLearningSession({
       capturedAt,
       ...(focus ? { focus } : {}),
-      learning: pinned?.learning ?? published.learning,
-      ...((pinned?.placement ?? published.placement)
-        ? { placement: pinned?.placement ?? published.placement }
-        : {}),
-      source: pinned ? "pinned-chat" : "current-page",
+      learning: published.learning,
+      ...(published.placement ? { placement: published.placement } : {}),
+      source: "current-page",
     });
     const curriculum = yield* readCurrentCurriculumProgram(locale, user._id);
     const preference = curriculum

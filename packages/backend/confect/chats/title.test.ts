@@ -10,10 +10,7 @@ import {
   sealTitle,
 } from "@repo/backend/confect/chats/title";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
-import {
-  ensureLearnerKeys,
-  readLearnerKeys,
-} from "@repo/backend/confect/vault/keys";
+import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { VaultError } from "@repo/backend/confect/vault/schema";
 import { sealText } from "@repo/backend/confect/vault/text";
 import { showsText } from "@repo/backend/test/seal";
@@ -39,10 +36,10 @@ const learner = Effect.fn("test.chats.title.learner")(function* (name: string) {
   });
 });
 
-/** Stores one chat of a learner with the given stored title, and loads it back. */
+/** Stores one chat of a learner with the given sealed title, and loads it back. */
 const chatOf = Effect.fn("test.chats.title.chat")(function* (
   userId: Docs["users"]["_id"],
-  title?: string | ArrayBuffer
+  title?: ArrayBuffer
 ) {
   const chatId = yield* (yield* DatabaseWriter).table("chats").insert({
     threadId: "thread",
@@ -64,7 +61,6 @@ describe("chat titles", () => {
           const owner = yield* learner("owner");
           const sealed = yield* sealTitle(owner, "Latihan aljabar");
           // The check sees a text where one is stored, so its silence means something.
-          expect(showsText("Latihan aljabar", "Latihan aljabar")).toBe(true);
           expect(
             showsText(
               new TextEncoder().encode("a Latihan aljabar b").buffer,
@@ -83,48 +79,20 @@ describe("chat titles", () => {
   );
 
   it.effect(
-    "opens a plain title and a sealed title to the same text, and a plain title needs no key",
-    () =>
-      scenario(
-        Effect.gen(function* () {
-          const plainOwner = yield* learner("plain");
-          const sealedOwner = yield* learner("sealed");
-          const plain = yield* chatOf(plainOwner, "Same title");
-          const sealed = yield* chatOf(
-            sealedOwner,
-            yield* sealTitle(sealedOwner, "Same title")
-          );
-          expect(
-            Arr.map(yield* openChats(plainOwner, [plain]), (chat) => chat.title)
-          ).toEqual(["Same title"]);
-          expect(
-            Arr.map(
-              yield* openChats(sealedOwner, [sealed]),
-              (chat) => chat.title
-            )
-          ).toEqual(["Same title"]);
-          expect((yield* Effect.flip(readLearnerKeys(plainOwner))).reason).toBe(
-            "key"
-          );
-        })
-      )
-  );
-
-  it.effect(
-    "opens a mixed list in order and leaves a chat without a title without one",
+    "opens a list in order and leaves a chat without a title without one",
     () =>
       scenario(
         Effect.gen(function* () {
           const owner = yield* learner("owner");
           const opened = yield* openChats(owner, [
             yield* chatOf(owner),
-            yield* chatOf(owner, "Plain"),
-            yield* chatOf(owner, yield* sealTitle(owner, "Sealed")),
+            yield* chatOf(owner, yield* sealTitle(owner, "First")),
+            yield* chatOf(owner, yield* sealTitle(owner, "Second")),
           ]);
           expect(Arr.map(opened, (chat) => chat.title)).toEqual([
             undefined,
-            "Plain",
-            "Sealed",
+            "First",
+            "Second",
           ]);
           expect(Arr.map(opened, (chat) => "title" in chat)).toEqual([
             false,
