@@ -13,9 +13,10 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useAutosave } from "@/components/user/settings/memory/autosave.client";
 import { MemoryFacts } from "@/components/user/settings/memory/facts";
-import type {
-  Memory,
-  MemoryDraft,
+import {
+  isBlank,
+  type Memory,
+  type MemoryDraft,
 } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
@@ -31,9 +32,11 @@ const Editor = dynamic(
 /**
  * One opening of the editor, from top to bottom: the title, which the learner
  * writes in place, the text, and a foot with the length of the text and the
- * button that deletes the memory. Everything the learner writes is saved by
- * itself. After a save that failed, the editor opens again with what they
- * wrote.
+ * button that deletes the memory. A new memory has nothing to delete, so the
+ * button waits for the first word. From then on it stays, because a first
+ * save may be on its way even when the learner has erased every word again.
+ * Everything the learner writes is saved by itself. After a save that failed, the editor opens again
+ * with what they wrote.
  */
 export function MemoryDocument({ memory }: { memory: Memory | null }) {
   const t = useTranslations("Memory");
@@ -43,12 +46,14 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
   const restored = useMemoryPage((state) => state.draft);
   const { change, discard, starting } = useAutosave(memory, restored);
   const [draft, setDraft] = useState(starting);
+  const [written, setWritten] = useState(() => !isBlank(starting));
   const body = useRef<HTMLDivElement>(null);
   const length = Str.length(Str.trim(draft.text));
 
   /** Shows what the learner wrote and hands it to the saving. */
   function write(next: MemoryDraft) {
     setDraft(next);
+    setWritten((was) => was || !isBlank(next));
     change(next);
   }
 
@@ -131,6 +136,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
           {t("count", { count: length, limit: MEMORY_TEXT_LIMIT })}
         </p>
         <Button
+          disabled={memory === null && !written}
           onClick={() => {
             discard();
             close();
