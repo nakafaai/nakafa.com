@@ -11,6 +11,8 @@ const PROVIDER =
   "import @convex-dev/ai-sdk-provider only inside packages/backend/confect/gateway/; take model handles from its Gateway service";
 const CLIENT =
   "take model handles from the Gateway service in confect/gateway instead of the AI SDK's gateway client";
+const DECISION =
+  "take decisions from the Gateway service in confect/gateway instead of the AI SDK's decide";
 const MODEL =
   "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK resolves through its default Vercel gateway";
 
@@ -74,6 +76,28 @@ const pro = SDK.createGateway({}).languageModel("google/gemini-3.7-flash");`);
           GATEWAY
         );
         assert.deepStrictEqual(violations, [`${GATEWAY}: ${CLIENT}.`]);
+      })
+  );
+
+  it.effect(
+    "rejects the AI SDK's decide outside the gateway module in every form, and allows it inside",
+    () =>
+      Effect.gen(function* () {
+        const source = `
+import { experimental_decide as decide, generateText } from "ai";
+import { experimental_evaluate } from "ai";
+import * as AI from "ai";
+import SDK from "ai";
+export { experimental_decide } from "ai";
+export { generateText as ask } from "ai";
+const answers = AI.experimental_decide({ model, state, questions });
+const legacy = SDK.experimental_evaluate({ model, state, questions });
+const text = AI.generateText;`;
+        assert.deepStrictEqual(
+          yield* inspect(source),
+          Arr.replicate(`${NINA}: ${DECISION}.`, 5)
+        );
+        assert.deepStrictEqual(yield* inspect(source, GATEWAY), []);
       })
   );
 

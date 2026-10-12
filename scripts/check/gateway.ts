@@ -30,6 +30,11 @@ const PROVIDER_PACKAGE = "@convex-dev/ai-sdk-provider";
 /** The AI SDK's main entry re-exports its gateway client. */
 const SDK_MODULE = "ai";
 const CLIENT_EXPORTS = HashSet.make("createGateway", "gateway");
+/** The AI SDK's decision functions, which only the Gateway service calls. */
+const DECISION_EXPORTS = HashSet.make(
+  "experimental_decide",
+  "experimental_evaluate"
+);
 /** Where the AI SDK and Agent take a model, which they resolve from a string through the default gateway. */
 const MODEL_PROPERTIES = HashSet.make(
   "model",
@@ -45,27 +50,35 @@ const PACKAGE_RULE = `never import ${VERCEL_PACKAGE}; the Convex AI gateway prov
 const PROVIDER_RULE = `import ${PROVIDER_PACKAGE} only inside ${GATEWAY_MODULE}; take model handles from its Gateway service`;
 const CLIENT_RULE =
   "take model handles from the Gateway service in confect/gateway instead of the AI SDK's gateway client";
+const DECISION_RULE =
+  "take decisions from the Gateway service in confect/gateway instead of the AI SDK's decide";
 const MODEL_RULE =
   "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK resolves through its default Vercel gateway";
 
-/** Whether import or export specifiers name the AI SDK's gateway client. */
-function namesClient(
+/** Whether import or export specifiers name one of some AI SDK exports. */
+function names(
+  exports: HashSet.HashSet<string>,
   specifiers: readonly (ExportSpecifier | ImportSpecifier)[]
 ) {
   return Arr.some(specifiers, (specifier) =>
-    HashSet.has(CLIENT_EXPORTS, (specifier.propertyName ?? specifier.name).text)
+    HashSet.has(exports, (specifier.propertyName ?? specifier.name).text)
   );
 }
 
-/** Whether an import or re-export of the AI SDK reaches its gateway client. */
-function reachesClient(declaration: Node) {
+/**
+ * Whether an import or re-export of the AI SDK reaches one of some of its
+ * exports. A re-export of everything reaches them all when `forwarded` says so.
+ */
+function reaches(
+  exports: HashSet.HashSet<string>,
+  declaration: Node,
+  forwarded: boolean
+) {
   if (isExportDeclaration(declaration)) {
     const clause = declaration.exportClause;
-    return (
-      clause === undefined ||
-      !isNamedExports(clause) ||
-      namesClient(clause.elements)
-    );
+    return clause === undefined || !isNamedExports(clause)
+      ? forwarded
+      : names(exports, clause.elements);
   }
   const bindings = isImportDeclaration(declaration)
     ? declaration.importClause?.namedBindings
@@ -73,7 +86,7 @@ function reachesClient(declaration: Node) {
   return (
     bindings !== undefined &&
     isNamedImports(bindings) &&
-    namesClient(bindings.elements)
+    names(exports, bindings.elements)
   );
 }
 
@@ -113,13 +126,17 @@ function accessedName(node: Node) {
   return isPropertyAccessExpression(node) ? node.name.text : nameText(node);
 }
 
-/** `ai.gateway` or `ai.createGateway` through a default or namespace import of the AI SDK. */
-function readsClient(node: Node, namespaces: HashSet.HashSet<string>) {
+/** `ai.gateway` or `ai.experimental_decide` through a default or namespace import of the AI SDK. */
+function reads(
+  exports: HashSet.HashSet<string>,
+  node: Node,
+  namespaces: HashSet.HashSet<string>
+) {
   return (
     isPropertyAccessExpression(node) &&
     isIdentifier(node.expression) &&
     HashSet.has(namespaces, node.expression.text) &&
-    HashSet.has(CLIENT_EXPORTS, node.name.text)
+    HashSet.has(exports, node.name.text)
   );
 }
 
@@ -164,7 +181,7 @@ function writesModelId(node: Node) {
 /**
  * The gateway rules one node breaks. `production` is false in tests, which keep
  * recorded model IDs; `gatewayModule` is true inside confect/gateway, the only
- * module the Convex provider may be imported from.
+ * module the Convex provider and the AI SDK's decide may be reached from.
  */
 function brokenRules(
   node: Node,
@@ -178,23 +195,29 @@ function brokenRules(
       Match.when(PROVIDER_PACKAGE, () =>
         gatewayModule ? [] : [PROVIDER_RULE]
       ),
-      Match.when(SDK_MODULE, () =>
-        reachesClient(node.parent) ? [CLIENT_RULE] : []
-      ),
+      Match.when(SDK_MODULE, () => [
+        ...(reaches(CLIENT_EXPORTS, node.parent, true) ? [CLIENT_RULE] : []),
+        ...(!gatewayModule && reaches(DECISION_EXPORTS, node.parent, false)
+          ? [DECISION_RULE]
+          : []),
+      ]),
       Match.orElse(() => [])
     );
   }
-  if (readsClient(node, namespaces)) {
+  if (reads(CLIENT_EXPORTS, node, namespaces)) {
     return [CLIENT_RULE];
+  }
+  if (!gatewayModule && reads(DECISION_EXPORTS, node, namespaces)) {
+    return [DECISION_RULE];
   }
   return production && writesModelId(node) ? [MODEL_RULE] : [];
 }
 
 /**
  * Reports the gateway rules a module breaks: any import of the Vercel gateway
- * package, the AI SDK's gateway client, the Convex provider outside
- * confect/gateway, and, outside tests, a gateway model ID where the AI SDK
- * takes a model.
+ * package, the AI SDK's gateway client, the Convex provider and the AI SDK's
+ * decide outside confect/gateway, and, outside tests, a gateway model ID where
+ * the AI SDK takes a model.
  */
 export function inspectGatewaySource(file: string, sourceFile: SourceFile) {
   const nodes = descendants(sourceFile, false);
