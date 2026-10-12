@@ -43,8 +43,9 @@ export function formatNinaContextPackPrompt(context: NinaContextPack) {
 
 /**
  * Builds Nina's system prompt from the role, the signed current page, the
- * learner, the question focus, and the summary. The runtime facts of a turn
- * are not part of it: see `formatTurnContext`.
+ * learner, the question focus, the summary, and whether she has the memory
+ * tool. The runtime facts of a turn are not part of it: see
+ * `formatTurnContext`.
  */
 export function createNinaSystemPrompt({
   focus,
@@ -56,7 +57,7 @@ export function createNinaSystemPrompt({
 }: {
   readonly focus?: string;
   readonly learner?: string;
-  readonly memory?: boolean;
+  readonly memory: boolean;
   readonly pageContent?: string;
   readonly summary?: string;
   readonly userRole?: PromptUserRole | undefined;
@@ -64,7 +65,7 @@ export function createNinaSystemPrompt({
   return createNinaPrompt({
     ...(focus === undefined ? {} : { focus }),
     ...(learner === undefined ? {} : { learner }),
-    ...(memory === undefined ? {} : { memory }),
+    memory,
     ...(pageContent === undefined ? {} : { pageContent }),
     ...(summary === undefined ? {} : { summary }),
     ...(userRole === undefined ? {} : { userRole }),

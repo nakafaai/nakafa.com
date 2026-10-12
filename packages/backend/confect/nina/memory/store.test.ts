@@ -114,7 +114,7 @@ describe("Nina memory removal", () => {
     expect(await keyOwners(f)).toEqual([other.userId]);
   });
 
-  it("deletes the learner's portrait with the memories it came from in the same transaction, and no one else's", async () => {
+  it("deletes the learner's portrait when it clears, before the later batches have deleted the memories it came from, and no one else's", async () => {
     const f = await createPortraitTest();
     const other = await f.stranger();
     await f.fill(MEMORY_BATCH + 5);

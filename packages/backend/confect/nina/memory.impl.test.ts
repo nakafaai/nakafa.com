@@ -350,10 +350,15 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
     const f = await createPortraitTest();
     const other = await f.stranger();
     const theirs = await f.seed({ text: "Rahasia", userId: other.userId });
+    const gone = await f.seed({ text: "Sudah hilang" });
+    await f.t.mutation((ctx) => ctx.db.delete(gone));
     await f.seedPortrait({ text: "Kelas 12.", through: 4 });
+    await f.owner.mutation(remove, { id: gone });
     await f.owner.mutation(remove, { id: theirs });
     expect(await f.portrait()).toBe("Kelas 12.");
     expect(await f.scheduled()).toEqual([]);
+    // The other learner's memory is still theirs.
+    expect(await f.texts(other.userId)).toEqual(["Rahasia"]);
   });
 
   it("builds nothing while memory is paused, though a memory the learner changes still takes its text out of the portrait", async () => {
