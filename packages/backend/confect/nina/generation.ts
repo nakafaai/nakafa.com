@@ -45,10 +45,18 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     user: turn.user,
     runtime,
   });
-  const { instructions, summary } = yield* readInstructions(turn, context.url);
+  const { instructions, memories, summary } = yield* readInstructions(
+    turn,
+    context.url
+  );
   // Nina reads its own turns, so the Agent fetches no history and sends this as is.
   const input = yield* readInput(turn, {
-    context: formatTurnContext({ page: turn.page, runtime, user: turn.user }),
+    context: formatTurnContext({
+      memories,
+      page: turn.page,
+      runtime,
+      user: turn.user,
+    }),
     through: summary?.throughOrder ?? null,
   });
   // The chat step's timer covers Nina's own call and the tools it starts, so

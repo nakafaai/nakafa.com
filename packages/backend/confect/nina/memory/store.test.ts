@@ -50,7 +50,7 @@ async function storedIds(f: Awaited<ReturnType<typeof createMemoryTest>>) {
 }
 
 /** The words of each memory a turn tells about, in the order they are told. */
-function words(notes: (typeof NinaLearner.Type)["prompt"]) {
+function words(notes: (typeof NinaLearner.Type)["recalled"]) {
   return Arr.map(notes, (note) => note.text);
 }
 
@@ -67,7 +67,12 @@ async function readers(f: Awaited<ReturnType<typeof createMemoryTest>>) {
       paginationOpts: { cursor: null, numItems: 50 },
     })
   );
-  const turn = await f.t.query(read, { now: NOW, topics: [], userId });
+  const turn = await f.t.query(read, {
+    now: NOW,
+    said: "memory",
+    topics: [],
+    userId,
+  });
   const capture = await f.t.query(known, {
     message: "memory",
     now: NOW,
@@ -78,7 +83,7 @@ async function readers(f: Awaited<ReturnType<typeof createMemoryTest>>) {
     capture: words(capture.known),
     found: await f.find({ limit: 30, text: "memory" }),
     listed: Arr.map(page.page, (item) => item.text),
-    turn: words(turn.prompt),
+    turn: words(turn.recalled),
   };
 }
 
@@ -356,10 +361,11 @@ describe("Nina memory pause", () => {
     expect(
       await f.t.query(read, {
         now: NOW,
+        said: "kept",
         topics: [],
         userId: f.identity.userId,
       })
-    ).toMatchObject({ paused: true, prompt: [] });
+    ).toMatchObject({ paused: true, recalled: [] });
     expect(await f.stored()).toHaveLength(1);
     await f.owner.mutation(pause, { paused: false });
     const [resumed] = await preferences();
@@ -369,12 +375,13 @@ describe("Nina memory pause", () => {
     expect(
       await f.t.query(read, {
         now: NOW,
+        said: "kept",
         topics: [],
         userId: f.identity.userId,
       })
     ).toMatchObject({
       paused: false,
-      prompt: [expect.objectContaining({ text: "Kept" })],
+      recalled: [expect.objectContaining({ text: "Kept" })],
     });
   });
 

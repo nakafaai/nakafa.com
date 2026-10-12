@@ -118,6 +118,17 @@ describe("formatTurnContext", () => {
     expect(countTextTokens(context)).toBeLessThan(400);
   });
 
+  it("follows the runtime facts with the memories the turn recalls, and adds nothing without them", () => {
+    const memories =
+      "# Memories\n<memories>\n- Kelas 12 IPA (2026-10-11)\n</memories>";
+    const bare = formatTurnContext({ page, runtime, user: {} });
+    const recalled = formatTurnContext({ memories, page, runtime, user: {} });
+    expect(recalled).toBe(`${bare}\n\n${memories}`);
+    expect(
+      formatTurnContext({ memories: undefined, page, runtime, user: {} })
+    ).toBe(bare);
+  });
+
   it("says so when the page has no signed content", () => {
     const bare = { ...learning, verified: false };
     const context = formatTurnContext({

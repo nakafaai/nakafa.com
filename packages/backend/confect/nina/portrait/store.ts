@@ -61,8 +61,8 @@ export const readPortrait = Effect.fn("nina.portrait.read")(function* (
     yield* readLearnerKeys(userId),
     PORTRAIT_FIELD,
     row.text
-  ).pipe(Effect.orDie);
-});
+  );
+}, Effect.orDie);
 
 /**
  * Asks for a build of the learner's portrait, in the transaction of the change
