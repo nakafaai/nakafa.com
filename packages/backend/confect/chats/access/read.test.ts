@@ -149,8 +149,10 @@ describe("transcript read authorization", () => {
 
   it("refuses a token that is not the shape of one before it reads a chat", async () => {
     const { t, chatIds } = await fixture();
+    // The refusal names the argument that failed. Without the shape check the
+    // read would go on and answer CHAT_NOT_FOUND, which names no argument.
     await expect(
       t.query(getChat, { chatId: chatIds.shared, shareToken: "short" })
-    ).rejects.toThrow();
+    ).rejects.toThrow('["shareToken"]');
   });
 });

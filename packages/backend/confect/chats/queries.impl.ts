@@ -23,9 +23,14 @@ const getChat = FunctionImpl.make(
 /**
  * Lists nothing. A shared chat is reached by its link alone, so no list of
  * another learner's chats exists, and the lists a learner sees of their own
- * chats come from `getOwnChats`. The function stays only for browser tabs that
- * were opened before share tokens and still ask for the list on a profile
- * page. It is deleted, with its arguments, once no such tab remains.
+ * chats come from `getOwnChats`.
+ *
+ * Temporary compatibility, the expand step of packages/backend/AGENTS.md: a
+ * browser tab that was opened before share tokens still asks for the chats of a
+ * profile and would fail on a missing function. Owner: ADR 0001. Exit: the
+ * per-function call metrics of the production deployment show no call of this
+ * function for 14 days after the release reached production. Cleanup: delete
+ * this function, its entry in `queries.spec.ts` and its test.
  */
 const getChats = FunctionImpl.make(
   databaseSchema,

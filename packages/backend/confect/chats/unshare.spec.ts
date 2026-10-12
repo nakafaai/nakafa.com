@@ -21,9 +21,9 @@ const Cursor = Schema.NullOr(Schema.String);
  * back as the `cursor` of the following call until it is null, which means
  * there are no more chats.
  *
- * It runs on dev and on production, dry first, until a whole pass finds no
- * legacy chat, and it is deleted in the contract change, together with its
- * tests.
+ * Owner: ADR 0001. Exit: it runs on dev and on production, dry first, and a dry
+ * pass over every chat finds no legacy chat. Cleanup: delete this spec, its
+ * implementation and their tests, in the change that also deletes `getChats`.
  */
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalMutation({

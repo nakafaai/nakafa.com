@@ -72,6 +72,17 @@ before the token is read would show the access denied state to a reader whose
 link is right. Convex data does not reach a server render, so before share
 tokens the server rendered the header and an empty conversation too.
 
+Two temporary contract steps remain from the change that introduced share
+tokens. This ADR owns them, and they end together. Until they do,
+`chats/unshare:closeLegacy` sends the public chats that have no token back to
+private, and `getChats` answers an empty page for the browser tabs that were
+opened before share tokens and still ask for the chats of a profile. The exit is
+met when a dry pass of `closeLegacy` over every chat finds no legacy chat on dev
+and on production, and the per-function call metrics of the production
+deployment show no call of `getChats` for 14 days after the release reached
+production. The cleanup is one change: delete `chats/unshare` with its tests,
+and delete `getChats` with its test.
+
 Nina's system prompt leads with stable instructions so provider prompt caching
 reuses them across turns. The current page, which learners share, the learner
 block, a question focus, and the conversation summary follow in that order. The
