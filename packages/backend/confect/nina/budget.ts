@@ -65,7 +65,20 @@ export const NINA_CALL_LIMIT =
 /** Tokens reserved for the truncation note appended to bounded text. */
 const NOTE_TOKENS = 80;
 
-/** Counts model tokens with the shared tokenizer used for every budget. */
+/**
+ * Counts model tokens with the shared tokenizer used for every budget. The
+ * tokenizer is OpenAI's, and the model is Gemini, so a budget is a count that is
+ * close to what the provider bills and not the same. Measured on 12 October
+ * 2026 through the Convex AI gateway with `google/gemini-3.8-flash`, on five
+ * stored sections of 2,751 to 3,684 characters: the provider counted 5.6% more
+ * for German prose, 5.1% more for English, 0.4% fewer for Indonesian, 13.6%
+ * more for an Indonesian lesson full of formulas, and 8.2% fewer for Arabic
+ * verses with their Indonesian translation. A message adds nothing around its
+ * content: 1, 21, 41 and 81 messages of one token each cost 1, 21, 41 and 81
+ * tokens. A tool call with its result costs what `messageTokens` counts for
+ * them: 14 tokens a pair for a short call, by both counts, at 10, 20 and 40
+ * pairs.
+ */
 export function countTextTokens(text: string) {
   return countTokens(text);
 }

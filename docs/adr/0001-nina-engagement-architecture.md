@@ -103,7 +103,14 @@ The learner's own message and its attachments are not evidence and do not count
 against the evidence budget.
 
 One call carries at most `NINA_CALL_LIMIT` tokens by design, the sum of the
-budgets in `confect/nina/budget.ts` that a call holds at once. The model accepts
+budgets in `confect/nina/budget.ts` that a call holds at once. The budgets are
+counted with OpenAI's tokenizer, and the model is Gemini, so the number is close
+to what the provider bills and not the same. Measured on 12 October 2026 through
+the gateway on five stored sections, the provider counted between 8.2% fewer
+tokens (Arabic verses with their translation) and 13.6% more (a lesson full of
+formulas) than the budget's count, and within 6% for German, English and
+Indonesian prose. A message adds no tokens around its content, and a tool call
+with its result costs what the budget counts for them. The model accepts
 far more, 1,048,576 input tokens. Nina stays below because every call bills
 every token it carries, a larger call takes longer to start, and the provider
 keeps a cached prefix for only about five minutes. Three things lie outside the
@@ -118,9 +125,8 @@ completed turn, the follow-up action counts the complete turns the summary does
 not cover in model tokens, as the history would send them. A chat whose turns
 fit in the 32,000 token history budget, and that holds at most 64 of them, is
 never folded. The count is a second, much wider bound: a turn also costs
-documents to read and the framing of its messages, which the tokens of its text
-leave out, so very short turns would otherwise let the history grow to
-thousands of messages. Past 64 turns one fold covers the oldest 16, and the
+documents to read before the call, which no token counts, so very short turns
+would otherwise let the history grow to thousands of messages. Past 64 turns one fold covers the oldest 16, and the
 next waits for 16 new ones. When the turns cost more than the budget, one fold
 summarizes the oldest of them with a fast
 model, as many as it takes for the rest to cost at most 16,000 tokens, half the

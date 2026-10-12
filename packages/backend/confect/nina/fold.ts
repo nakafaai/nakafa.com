@@ -6,10 +6,11 @@ const CostedTurn = Schema.Struct({ order: Schema.Int, tokens: Schema.Int });
 
 /**
  * Turns the history holds at most, whatever they cost: four folds' worth. The
- * token budget bounds what a call costs, but a turn also costs documents to
- * read and the framing of its messages, which the count of its text leaves out.
- * A chat of very short turns would otherwise grow to thousands of messages
- * before it reached the budget.
+ * token budget bounds what a call costs, but each turn also costs documents to
+ * read before the call, which no token counts. A chat of very short turns
+ * would otherwise grow to thousands of messages before it reached the budget.
+ * The messages themselves add no tokens beyond their content (see
+ * `countTextTokens`), so this cap is about reads, not about the prompt.
  */
 export const HISTORY_TURNS = 4 * SUMMARY_FOLD_LIMIT;
 
