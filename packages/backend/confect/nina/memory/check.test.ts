@@ -3,17 +3,17 @@ import {
   checkCandidates,
   endOfDay,
 } from "@repo/backend/confect/nina/memory/check";
-import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryCapture } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Option } from "effect";
+
+type Claim = (typeof NinaMemoryCapture.Type)["memories"][number];
 
 const NOW = Date.UTC(2026, 9, 10, 15);
 const message =
   "Aku kelas 12 dan  mau ikut SNBT\n2027. Ujian kimiaku 20 Oktober.";
 
-/** A candidate that quotes the learner, with any field replaced. */
-function candidate(
-  fields: Partial<typeof NinaMemoryCandidate.Type> = {}
-): typeof NinaMemoryCandidate.Type {
+/** A claim that quotes the learner, with any field replaced. */
+function claim(fields: Partial<Claim> = {}): Claim {
   return {
     kind: "level",
     quote: "aku kelas 12",
@@ -23,11 +23,8 @@ function candidate(
 }
 
 /** The text of each candidate a check keeps. */
-function kept(candidates: (typeof NinaMemoryCandidate.Type)[]) {
-  return Arr.map(
-    checkCandidates(message, candidates, NOW),
-    (item) => item.text
-  );
+function kept(claims: Claim[]) {
+  return Arr.map(checkCandidates(message, claims, NOW), (item) => item.text);
 }
 
 describe("memory end of day", () => {
@@ -55,11 +52,11 @@ describe("memory end of day", () => {
 });
 
 describe("memory candidate check", () => {
-  it("keeps a candidate whose quote the learner said, in any case and spacing", () => {
+  it("keeps a claim whose quote the learner said, in any case and spacing", () => {
     expect(
       kept([
-        candidate(),
-        candidate({
+        claim(),
+        claim({
           kind: "goal",
           quote: "MAU   IKUT snbt 2027",
           text: "Ikut SNBT 2027.",
@@ -68,56 +65,56 @@ describe("memory candidate check", () => {
     ).toEqual(["Kelas 12.", "Ikut SNBT 2027."]);
   });
 
-  it("drops a candidate whose quote is not in the message or is blank", () => {
+  it("drops a claim whose quote is not in the message or is blank", () => {
     expect(
       kept([
-        candidate({ quote: "aku kelas 11" }),
-        candidate({ quote: "   " }),
-        candidate({ quote: "ikut snbt 2028" }),
+        claim({ quote: "aku kelas 11" }),
+        claim({ quote: "   " }),
+        claim({ quote: "ikut snbt 2028" }),
       ])
     ).toEqual([]);
   });
 
-  it("drops a candidate whose text says nothing, because it has no letter and no digit", () => {
+  it("drops a claim whose text says nothing, because it has no letter and no digit", () => {
     expect(
       kept([
-        candidate({ text: "?" }),
-        candidate({ text: "..." }),
-        candidate({ text: "🙂" }),
-        candidate({ text: "12" }),
-        candidate({ text: "Ya." }),
+        claim({ text: "?" }),
+        claim({ text: "..." }),
+        claim({ text: "🙂" }),
+        claim({ text: "12" }),
+        claim({ text: "Ya." }),
       ])
     ).toEqual(["12", "Ya."]);
   });
 
-  it("leaves what a candidate means to the decision model: it keeps a text that names the learner from outside, in any language, and one that holds a link, an address or a long number, and a quote that holds one", () => {
+  it("leaves what a claim means to the decision model: it keeps a text that names the learner from outside, in any language, and one that holds a link, an address or a long number, and a quote that holds one", () => {
     expect(
       kept([
-        candidate({ text: "Learner berada di kelas 12." }),
-        candidate({ text: "Siswa kelas 12." }),
-        candidate({ text: "The learner is in grade 12." }),
-        candidate({ text: "Der Lernende ist in Klasse 12." }),
-        candidate({ text: "学習者は高校三年生です。" }),
-        candidate({ text: "Kontak nama@contoh.com." }),
-        candidate({ text: "Lihat https://contoh.com/saya." }),
-        candidate({ text: "Kontak www.contoh.com." }),
-        candidate({ text: "Nomor 081234567890." }),
-        candidate({ text: "Nomor 12345678." }),
-        candidate({ text: "SNBT 2027, kelas 12." }),
-        candidate({ text: "Ujian 20-10-2026 pukul 14.30." }),
+        claim({ text: "Learner berada di kelas 12." }),
+        claim({ text: "Siswa kelas 12." }),
+        claim({ text: "The learner is in grade 12." }),
+        claim({ text: "Der Lernende ist in Klasse 12." }),
+        claim({ text: "学習者は高校三年生です。" }),
+        claim({ text: "Kontak nama@contoh.com." }),
+        claim({ text: "Lihat https://contoh.com/saya." }),
+        claim({ text: "Kontak www.contoh.com." }),
+        claim({ text: "Nomor 081234567890." }),
+        claim({ text: "Nomor 12345678." }),
+        claim({ text: "SNBT 2027, kelas 12." }),
+        claim({ text: "Ujian 20-10-2026 pukul 14.30." }),
       ])
     ).toHaveLength(12);
     const said = "Aku bisa dihubungi di nama@contoh.com dan 081234567890.";
     expect(
-      checkCandidates(said, [candidate({ quote: "nama@contoh.com" })], NOW)
+      checkCandidates(said, [claim({ quote: "nama@contoh.com" })], NOW)
     ).toHaveLength(1);
     expect(
-      checkCandidates(said, [candidate({ quote: "081234567890" })], NOW)
+      checkCandidates(said, [claim({ quote: "081234567890" })], NOW)
     ).toHaveLength(1);
   });
 
   it("keeps a situation that ends today or later and its date", () => {
-    const today = candidate({
+    const today = claim({
       kind: "situation",
       quote: "ujian kimiaku 20 oktober",
       text: "Ujian kimia.",
@@ -130,8 +127,8 @@ describe("memory candidate check", () => {
     ]);
   });
 
-  it("drops a situation that has ended or has no usable date", () => {
-    const situation = candidate({
+  it("drops a situation that names no day, has ended, or names no usable day", () => {
+    const situation = claim({
       kind: "situation",
       quote: "ujian kimiaku 20 oktober",
       text: "Ujian kimia.",
@@ -146,9 +143,25 @@ describe("memory candidate check", () => {
     ).toEqual([]);
   });
 
-  it("ignores the date of every kind but a situation", () => {
+  it("drops only the claim that is no candidate, and keeps the claims beside it", () => {
+    const situation = claim({
+      kind: "situation",
+      quote: "ujian kimiaku 20 oktober",
+      text: "Ujian kimia.",
+    });
     expect(
-      checkCandidates(message, [candidate({ until: "2020-01-01" })], NOW)
-    ).toEqual([candidate()]);
+      kept([
+        claim(),
+        situation,
+        { ...situation, until: "2026-02-30" },
+        claim({ kind: "goal", quote: "mau ikut snbt", text: "Ikut SNBT." }),
+      ])
+    ).toEqual(["Kelas 12.", "Ikut SNBT."]);
+  });
+
+  it("gives every kind but a situation no date, though the claim names one", () => {
+    expect(
+      checkCandidates(message, [claim({ until: "2020-01-01" })], NOW)
+    ).toEqual([claim()]);
   });
 });

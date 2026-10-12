@@ -87,6 +87,16 @@ describe("memory capture", () => {
     ]);
   });
 
+  it("asks the capture model for one flat claim, not a union, with the end day optional for every kind", async () => {
+    const f = await createCapturingTest();
+    const model = answers(level);
+    await f.capture();
+    const asked = encodeJsonText(model.doGenerateCalls[0]?.responseFormat);
+    expect(asked).toContain('"required":["kind","quote","text"]');
+    expect(asked).not.toContain("anyOf");
+    expect(asked).not.toContain("oneOf");
+  });
+
   it("asks no model about a prompt that holds no words of the learner", async () => {
     const f = await createCapturingTest();
     const model = answers(level);

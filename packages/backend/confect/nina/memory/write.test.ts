@@ -1,7 +1,11 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { candidate, createCaptureTest } from "@repo/backend/test/nina/memory";
+import {
+  candidate,
+  createCaptureTest,
+  situation,
+} from "@repo/backend/test/nina/memory";
 import { Array as Arr } from "effect";
 
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
@@ -55,20 +59,9 @@ describe("memory capture write", () => {
     expect(await f.find({ limit: 5, text: "ipa" })).toEqual(["Kelas 12 IPA."]);
   });
 
-  it("gives a situation the end of its last day and drops one without a usable date", async () => {
+  it("gives a situation the end of its last day", async () => {
     const f = await createCaptureTest();
-    const situation = candidate({
-      kind: "situation",
-      quote: "ulangan kimia",
-      text: "Ulangan kimia.",
-    });
-    expect(
-      await f.run([
-        situation,
-        { ...situation, until: "20 Oktober" },
-        { ...situation, until: "2026-10-20" },
-      ])
-    ).toBe(1);
+    expect(await f.run([situation()])).toBe(1);
     expect(await f.stored()).toEqual([
       expect.objectContaining({
         kind: "situation",
@@ -87,8 +80,7 @@ describe("memory capture write", () => {
     expect(
       await f.run(
         [
-          candidate({
-            kind: "situation",
+          situation({
             known: 1,
             text: "Ulangan kimia diundur",
             until: "2026-10-25",
@@ -214,16 +206,7 @@ describe("memory capture write", () => {
       title: "Ujian UTBK",
     });
     const [before] = await f.stored();
-    expect(
-      await f.run([
-        candidate({
-          kind: "situation",
-          known: 1,
-          text: "Ujian UTBK.",
-          until: "2026-10-20",
-        }),
-      ])
-    ).toBe(1);
+    expect(await f.run([situation({ known: 1, text: "Ujian UTBK." })])).toBe(1);
     const [after] = await f.stored();
     expect(after).toMatchObject({ _id: id, kind: "situation" });
     expect(after?.title).toStrictEqual(before?.title);
@@ -264,16 +247,7 @@ describe("memory capture write", () => {
   it("dates a memory the learner wrote when a chat says it is a situation", async () => {
     const f = await createCaptureTest();
     await f.seed({ author: "learner", text: "Ulangan kimia" });
-    expect(
-      await f.run([
-        candidate({
-          kind: "situation",
-          known: 1,
-          text: "Ulangan kimia.",
-          until: "2026-10-25",
-        }),
-      ])
-    ).toBe(1);
+    expect(await f.run([situation({ known: 1, until: "2026-10-25" })])).toBe(1);
     expect(await f.stored()).toEqual([
       expect.objectContaining({
         author: "learner",
@@ -322,15 +296,10 @@ describe("memory capture write", () => {
 
   it("lets the first candidate of a call settle a memory: a later candidate of the call only confirms it", async () => {
     const f = await createCaptureTest();
-    const situation = candidate({
-      kind: "situation",
-      quote: "ulangan kimia",
-      text: "Ulangan kimia.",
-    });
     expect(
       await f.run([
-        { ...situation, until: "2026-10-20" },
-        { ...situation, until: "2026-10-25" },
+        situation({ until: "2026-10-20" }),
+        situation({ until: "2026-10-25" }),
       ])
     ).toBe(1);
     expect(await f.stored()).toEqual([

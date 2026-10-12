@@ -29,6 +29,7 @@ import { createNinaTest } from "@repo/backend/test/nina";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
 
 type UserId = Docs["users"]["_id"];
+type Candidate = typeof NinaMemoryCandidate.Type;
 
 /** What a visitor meets on a write: the typed failure of a missing session. */
 export const sessionRequired = { data: { _tag: "SessionRequired" } };
@@ -289,14 +290,27 @@ export async function createMemoryTest(
 
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
 
-/** A candidate that states a level, with any field replaced. */
+/** A candidate that states a level, or any other kind that never ends, with any field replaced. */
 export function candidate(
-  fields: Partial<typeof NinaMemoryCandidate.Type> = {}
-): typeof NinaMemoryCandidate.Type {
+  fields: Partial<Exclude<Candidate, { kind: "situation" }>> = {}
+): Candidate {
   return {
     kind: "level",
     quote: "aku kelas 12",
     text: "Kelas 12 IPA.",
+    ...fields,
+  };
+}
+
+/** A candidate that states a situation, which ends on 20 October 2026 unless `until` says another day. */
+export function situation(
+  fields: Partial<Extract<Candidate, { kind: "situation" }>> = {}
+): Candidate {
+  return {
+    kind: "situation",
+    quote: "ulangan kimia",
+    text: "Ulangan kimia.",
+    until: "2026-10-20",
     ...fields,
   };
 }
@@ -321,7 +335,7 @@ export async function createCaptureTest() {
       MEMORY_KNOWN_LIMIT
     );
   const run = async (
-    candidates: (typeof NinaMemoryCandidate.Type)[],
+    candidates: Candidate[],
     {
       seen,
       topics = [],

@@ -44,13 +44,6 @@ function takesKind(memory: Pick<Opened, "kind">, kind: Candidate["kind"]) {
   return memory.kind === undefined || memory.kind === kind;
 }
 
-/** The end of a situation's last day. Any other kind has none. */
-function endOf(candidate: Candidate) {
-  return candidate.kind === "situation"
-    ? Option.fromUndefinedOr(candidate.until).pipe(Option.flatMap(endOfDay))
-    : Option.none();
-}
-
 /**
  * Says a memory again: it was confirmed now. The candidate's words replace the
  * memory's only when Nina wrote the memory, they are not the same words in
@@ -149,18 +142,13 @@ const createMemory = Effect.fn("nina.memory.write.create")(function* ({
 });
 
 /**
- * The candidates a write keeps, in their order. A situation without a usable
- * end day is dropped, and candidates that hold the same words (`sameWords`),
- * the same kind and the same name are one candidate, the first, because a call
- * that settles a memory settles it once.
+ * The candidates a write keeps, in their order. Candidates that hold the same
+ * words (`sameWords`), the same kind and the same name are one candidate, the
+ * first, because a call that settles a memory settles it once.
  */
 function distinct(candidates: readonly Candidate[]) {
   return Arr.dedupeWith(
-    Arr.filter(
-      candidates,
-      (candidate) =>
-        candidate.kind !== "situation" || Option.isSome(endOf(candidate))
-    ),
+    candidates,
     (first: Candidate, second: Candidate) =>
       first.kind === second.kind &&
       first.known === second.known &&
@@ -193,7 +181,9 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   readonly seen: readonly Seen[];
   readonly topics: readonly string[];
 }) {
-  const validUntil = endOf(candidate);
+  // A situation ends at the end of its last day. Any other kind has no end.
+  const validUntil =
+    candidate.kind === "situation" ? endOfDay(candidate.until) : Option.none();
   const named = yield* openWith(
     keys,
     Arr.fromOption(
@@ -224,21 +214,21 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
  * turn. A candidate that names a memory the call read (by its place on the
  * list the call gave the model) and that can take the candidate's kind
  * confirms that memory, and any other candidate is a new memory. The model
- * says which memory a candidate restates: no comparison of words finds one. A
- * situation without a usable end day is dropped, and candidates of one call
- * that hold the same words, the same kind and the same name are one candidate
- * (`distinct`). The model read the message some time ago, so the write first
- * checks what could have changed meanwhile: paused memory, a deleted turn, or a
- * memory the learner removed or deleted with "Delete all" writes nothing, and a
- * memory changed since the call read it keeps its words, its kind and its end
- * date. It looks up the at most 12 memories the call read, so it touches a
- * bounded number of documents whatever the learner keeps (besides the one row
- * of the learner's memory state it reads first): a candidate reads at most one
- * memory to find its target and touches at most 419 to write it (the memory and
- * at most 416 key rows read, deleted, moved or inserted), so three candidates
- * touch at most about 1,260. When it wrote or confirmed a memory it also asks
- * for a build of the learner's portrait, which waits (`requestPortrait`): one
- * row read and written, and one job scheduled.
+ * says which memory a candidate restates: no comparison of words finds one.
+ * Candidates of one call that hold the same words, the same kind and the same
+ * name are one candidate (`distinct`). The model read the message some time
+ * ago, so the write first checks what could have changed meanwhile: paused
+ * memory, a deleted turn, or a memory the learner removed or deleted with
+ * "Delete all" writes nothing, and a memory changed since the call read it
+ * keeps its words, its kind and its end date. It looks up the at most 12
+ * memories the call read, so it touches a bounded number of documents whatever
+ * the learner keeps (besides the one row of the learner's memory state it reads
+ * first): a candidate reads at most one memory to find its target and touches
+ * at most 419 to write it (the memory and at most 416 key rows read, deleted,
+ * moved or inserted), so three candidates touch at most about 1,260. When it
+ * wrote or confirmed a memory it also asks for a build of the learner's
+ * portrait, which waits (`requestPortrait`): one row read and written, and one
+ * job scheduled.
  */
 export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   readonly candidates: readonly Candidate[];
