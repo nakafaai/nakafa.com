@@ -6,9 +6,11 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 // Projects select files by folder path, so a file that repeats a basename
 // never joins a project by accident.
 // Each CI leg pays about ten minutes to prepare and build before its first
-// test, so the suites are balanced by run time. Measured on 12 October: runtime
-// 288 s plus 40 s of site checks, learner 316 s, visual 344 s, navigation 344 s.
-// Marketing and consent run in the visual suite only for that balance.
+// test, so the suites are balanced by run time. Measured on 12 October, before
+// the chat tests existed: runtime 288 s plus 40 s of site checks, learner 316 s,
+// visual 344 s, navigation 344 s. Marketing and consent run in the visual suite
+// only for that balance, and the try-out tests (63 s) run in the runtime suite
+// since the chat tests joined the learner suite.
 const VISUAL_TESTS = [
   "**/visual/**/*.browser.ts",
   "**/scene/**/*.browser.ts",
@@ -17,13 +19,14 @@ const VISUAL_TESTS = [
   "**/content/charts.browser.ts",
 ];
 
-// The account, settings and try-out pages are the slowest files of the shared
-// runtime (316 of its 604 s), and no test of a public page reads what they
+// The pages of a signed-in learner (the account, the settings and Nina's
+// chats) hold the slowest files, and no test of a public page reads what they
 // write, so they run in their own leg.
 const LEARNER_TESTS = [
   "**/account/**/*.browser.ts",
+  "**/chat/**/*.browser.ts",
+  "**/nina/**/*.browser.ts",
   "**/settings/**/*.browser.ts",
-  "**/tryout/**/*.browser.ts",
 ];
 
 // Each project as it runs. No project names its dependency here: the suite
