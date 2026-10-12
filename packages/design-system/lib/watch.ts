@@ -40,15 +40,13 @@ export function gaze(
  * before any is written, so the page lays out once.
  *
  * Nothing listens while the element is far from the screen, because no one
- * can see the eyes, and for a person who asked for less motion nothing follows
- * at all.
+ * can see the eyes. For a person who asks for less motion the eyes hold where
+ * they are: that is asked each time the pointer moves, because a person can
+ * start or stop asking while the page is open.
  *
  * Returns what stops it.
  */
 export function watch(element: HTMLElement) {
-  if (isCalm()) {
-    return () => undefined;
-  }
   // The last place the pointer was seen: a frame is only asked for after it moved.
   const pointer = { x: 0, y: 0 };
   let following = Option.none<AbortController>();
@@ -84,7 +82,7 @@ export function watch(element: HTMLElement) {
       (event) => {
         pointer.x = event.clientX;
         pointer.y = event.clientY;
-        if (frame === 0) {
+        if (frame === 0 && !isCalm()) {
           frame = requestAnimationFrame(aim);
         }
       },

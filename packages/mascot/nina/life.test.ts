@@ -198,13 +198,16 @@ describe("her life", () => {
     expect(press(over, TILE).life.clicks).toBe(4);
   });
 
-  it("ends a face that a press showed when the act that she played is over", () => {
-    const played = press(start(WHOLE, LOWEST), WHOLE).life;
-    const flashed = {
-      ...played,
-      glad: { from: 0, mood: "shy", until: 99 },
-    } as const;
-    expect(wait(flashed, WHOLE, 120).glad).toBeUndefined();
+  it("shows the face of a press for its own time, also when an act that she still played ends before it", () => {
+    // Three quick presses over an edge: she still drums when the third ducks her.
+    const drumming = press(press(start(PEEK, LOWEST), PEEK).life, PEEK).life;
+    const third = press(wait(drumming, PEEK, 18), PEEK);
+    expect(third.duck).toBe(true);
+    // The drumming is over 0.8 seconds after the third press, and she comes up surprised.
+    const up = wait(third.life, PEEK, 60);
+    expect(up.act).toBe("gripping");
+    expect(surprised(up, PEEK)).toBe(true);
+    expect(surprised(wait(third.life, PEEK, 110), PEEK)).toBe(false);
   });
 
   it("does one of her habits by herself now and then, and then goes back", () => {

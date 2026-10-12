@@ -20,7 +20,11 @@ import {
 } from "@repo/mascot/nina/spring";
 import { Array as Arr, Match, Number as Num, Schema } from "effect";
 
-/** A face that a press shows for a moment, and the time it is shown. */
+/**
+ * A face that a press shows for a moment, and the time it is shown. It ends by
+ * its own time and not with an act that she plays, so a press that comes while
+ * she still plays an earlier one shows its face in full.
+ */
 const GladSchema = Schema.Struct({
   from: Schema.Finite,
   mood: MoodSchema,
@@ -127,8 +131,7 @@ function resume(life: Life): Life {
   if (life.until === 0 || life.clock < life.until) {
     return life;
   }
-  const { glad: _glad, ...rest } = life;
-  return { ...rest, act: life.home, clock: 0, until: 0 };
+  return { ...life, act: life.home, clock: 0, until: 0 };
 }
 
 /** Now and then she does one of her habits for a moment, by herself. */

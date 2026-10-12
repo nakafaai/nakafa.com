@@ -165,18 +165,33 @@ describe("eyes that follow the pointer", () => {
     expect(first.style.getPropertyValue("--look-x")).toBe("");
   });
 
-  it("do not follow a person who asked for less motion, and listen to nothing, even when the faces come near", () => {
+  it("do not follow a person who asks for less motion, and ask for no frame", () => {
     world.calm = true;
     const { first, root } = faces(MutableList.make<string>());
-    const listening = vi.spyOn(window, "addEventListener");
     begin(root);
-    // Were the faces watched, they would be near the screen now, and listened to.
     come(true);
-    expect(observers).toHaveLength(0);
     move(1000, 50);
+    expect(vi.getTimerCount()).toBe(0);
     vi.advanceTimersByTime(16);
     expect(first.style.getPropertyValue("--look-x")).toBe("");
-    expect(listening).not.toHaveBeenCalled();
+  });
+
+  it("hold where they are once a person asks for less motion with the page open, and follow again when the person no longer asks", () => {
+    const { first, root } = faces(MutableList.make<string>());
+    begin(root);
+    come(true);
+    move(1000, 50);
+    vi.advanceTimersByTime(16);
+    expect(first.style.getPropertyValue("--look-x")).toBe("3.20");
+    world.calm = true;
+    move(-900, 50);
+    expect(vi.getTimerCount()).toBe(0);
+    vi.advanceTimersByTime(16);
+    expect(first.style.getPropertyValue("--look-x")).toBe("3.20");
+    world.calm = false;
+    move(-900, 50);
+    vi.advanceTimersByTime(16);
+    expect(first.style.getPropertyValue("--look-x")).toBe("-3.20");
   });
 
   it("stop when they are stopped, and drop the frame they asked for", () => {
