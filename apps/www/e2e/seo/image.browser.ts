@@ -31,9 +31,10 @@ test("the image routes render and ship the logo they read", async ({
       yield* Effect.sync(() => {
         expect(response.status()).toBe(200);
         expect(response.headers()["content-type"]).toBe("image/png");
-        // The CDN keeps a known route's image for a day, and the activation of
-        // a release purges the tag.
-        expect(response.headers()["cache-control"]).toContain("s-maxage=86400");
+        // The CDN keeps a known route's image for an hour, as long as the
+        // content it is rendered from, and the activation of a release purges
+        // the tag.
+        expect(response.headers()["cache-control"]).toContain("s-maxage=3600");
         expect(response.headers()["vercel-cache-tag"]).toBe("content-og");
       });
       // A deployed function holds only its traced files, and the tracer

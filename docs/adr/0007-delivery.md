@@ -90,11 +90,15 @@ contextual visit cannot first record a canonical view and then a placement view.
   anything, and a try-out page below the count of its release is the only one
   that is read, so a request can never create a stored or cached entry for an
   id that the release does not list.
-- Social images carry the CDN lifetime of the sitemap, a day and a stale day,
-  and a CDN tag. An image changes only when its route changes, and a route
-  changes only with a release, so the activation of a release purges the tag
-  once, as it purges the sitemap. A purge that fails is logged and never fails
-  the activation, because a stale image is cosmetic and its lifetime bounds it.
+- Social images carry a CDN lifetime of an hour, a stale day, and a CDN tag. An
+  image changes only when its route changes, and a route changes only with a
+  release, so the activation of a release purges the tag once, as it purges the
+  sitemap. The hour is the lifetime of the content entries an image is rendered
+  from: the instance that renders the first image after a purge may still hold
+  the previous release in its memory for up to that hour, and a longer CDN
+  lifetime would keep that render long after its source was fresh again. A
+  purge that fails is logged and never fails the activation, because a stale
+  image is cosmetic and its lifetime bounds it.
   A deployment has its own CDN cache key, so only a release needs the purge.
   The brand image that answers a route inside a content namespace (articles,
   material, the Quran or try-out) that the release does not list is kept for
