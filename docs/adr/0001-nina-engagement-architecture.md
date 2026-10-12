@@ -188,6 +188,38 @@ or word length decides what a learner meant, because a rule built on one
 treats a task in Japanese, Arabic, or Thai differently from the same task in
 English.
 
+A search that names sites is restricted by the search provider's own field. The
+web search tool input has an optional `sites` list of at most five hostnames,
+a bound of Nakafa's own because the provider states none, and every query of the
+call is sent with it as `includeDomains`. A missing or empty list sends no
+field. A site the model writes as an address is reduced to its hostname by the
+platform `URL`, and that hostname must belong to the public web by the public
+suffix list that `domain.ts` also reads for citations and for the links a
+learner writes. A text with a comma, an underscore, a wildcard or a space, an IP
+address, `localhost`, and a single word that is no listed suffix are none of
+them a site. No code reads a `site:` operator out of a query, and no second
+filter runs over the results.
+
+A list of more than five sites, or one text that is no site, refuses the whole
+call, as a call with no query is refused, and the tool description says so.
+Research then goes on with the learner's own links, or ends with the error
+`Research search wrote no usable query.` Nothing drops a site or widens the
+search quietly, because a search that names its sites and runs without them
+brings back the sources of other sites that this field exists to keep out. A
+task that names more than five sites is an open search, and the model leaves
+the field out.
+
+The provider documents `includeDomains` as restricting results to the given
+hostnames and says it adds `site:` operators to the query itself
+(https://docs.firecrawl.dev/api-reference/endpoint/search and
+https://docs.firecrawl.dev/features/search, read on 12 October 2026), but
+neither page says whether that holds for the news source, so it was measured on
+the production plan the same day: the news source answered
+`site:snpmb.bppp.kemdikbud.go.id "2027"` with five results and all five were
+from other sites, while the same words with `includeDomains` returned no result
+from another site. The model guidance therefore says to use the field and not
+to write the operator.
+
 A page longer than its budget keeps the paragraphs that hold the most of the
 words of the tool call: the text of its request, its objective, and each item of
 its lists, one per line with no heading. The words are not taken from the
