@@ -1,6 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { createThread, saveMessage, toUIMessages } from "@convex-dev/agent";
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
+import {
+  NINA_PROMPT_LENGTH,
+  NINA_PROMPT_LENGTH_MESSAGE,
+  NinaPromptError,
+} from "@repo/backend/client/nina/prompt";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
@@ -45,6 +50,16 @@ const start = FunctionImpl.make(
   "start",
   Effect.fn("nina.turns.start")(function* (args) {
     const { appUser } = yield* requireAuth();
+    // A prompt over the limit is refused before it is hashed or held credits.
+    if (
+      args.input.kind === "message" &&
+      args.input.prompt.text.length > NINA_PROMPT_LENGTH
+    ) {
+      return yield* new NinaPromptError({
+        code: "NINA_PROMPT_LENGTH",
+        message: NINA_PROMPT_LENGTH_MESSAGE,
+      });
+    }
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const fingerprintText = yield* Schema.encodeEffect(JsonTextSchema)([

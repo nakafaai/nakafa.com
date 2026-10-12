@@ -8,6 +8,7 @@ import {
   NinaUploadError,
 } from "@repo/backend/client/nina/uploads";
 import { components } from "@repo/backend/confect/_generated/components";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
@@ -36,6 +37,19 @@ const uploadFailure = () =>
     code: "NINA_UPLOAD_FAILED",
     message: "Unable to save this attachment.",
   });
+
+/** Reads one upload row, or null once it is gone. */
+const readUpload = Effect.fn("nina.uploads.read")(function* (
+  uploadId: Docs["ninaUploads"]["_id"]
+) {
+  return yield* (yield* DatabaseReader)
+    .table("ninaUploads")
+    .get(uploadId)
+    .pipe(
+      Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+      Effect.orDie
+    );
+});
 
 const save = FunctionImpl.make(
   schema,
@@ -145,13 +159,7 @@ const complete = FunctionImpl.make(
   Effect.fn("nina.uploads.complete")(function* (args) {
     const { appUser } = yield* requireAuth();
     const now = yield* Clock.currentTimeMillis;
-    const upload = yield* (yield* DatabaseReader)
-      .table("ninaUploads")
-      .get(args.uploadId)
-      .pipe(
-        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
+    const upload = yield* readUpload(args.uploadId);
     if (
       !upload ||
       upload.userId !== appUser._id ||
@@ -178,13 +186,7 @@ const discard = FunctionImpl.make(
   spec,
   "discard",
   Effect.fn("nina.uploads.discard")(function* (args) {
-    const upload = yield* (yield* DatabaseReader)
-      .table("ninaUploads")
-      .get(args.uploadId)
-      .pipe(
-        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
+    const upload = yield* readUpload(args.uploadId);
     if (upload) {
       yield* (yield* DatabaseWriter)
         .table("ninaUploads")
@@ -196,8 +198,37 @@ const discard = FunctionImpl.make(
   })
 );
 
+/**
+ * Gives back the place of an upload the learner will not send, so it stops
+ * counting toward the pending limit. Only the learner's own upload is
+ * released. A message that was sent took its upload, so none is left to
+ * release: that call is refused and the message keeps its file. The file
+ * itself stays under the SDK's 24-hour ownership grace, as for `discard`.
+ */
+const release = FunctionImpl.make(
+  schema,
+  spec,
+  "release",
+  Effect.fn("nina.uploads.release")(function* (args) {
+    const { appUser } = yield* requireAuth();
+    const upload = yield* readUpload(args.uploadId);
+    if (upload?.userId !== appUser._id) {
+      return yield* new NinaUploadError({
+        code: "NINA_UPLOAD_INVALID",
+        message: "This attachment is no longer available.",
+      });
+    }
+    yield* (yield* DatabaseWriter)
+      .table("ninaUploads")
+      .delete(upload._id)
+      .pipe(Effect.orDie);
+    return null;
+  }, Effect.catchDefect(uploadFailure))
+);
+
 export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(save),
+  Layer.provide(release),
   Layer.provide(reserve),
   Layer.provide(complete),
   Layer.provide(discard),

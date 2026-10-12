@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { NinaPromptError } from "@repo/backend/client/nina/prompt";
 import { NinaReceipt } from "@repo/backend/client/nina/receipt";
 import {
   NINA_FILE_COUNT,
@@ -31,8 +32,13 @@ export const NinaPageInput = Schema.Struct({
   focus: Schema.optionalKey(NinaFocusInputSchema),
 });
 
+/**
+ * The prompt limit is not part of this schema. A value the schema refuses
+ * reaches the learner as an untyped server failure, so `start` checks the
+ * length itself and refuses with `NinaPromptError`.
+ */
 export const NinaPrompt = Schema.Struct({
-  text: Schema.NonEmptyString.pipe(Schema.check(Schema.isMaxLength(100_000))),
+  text: Schema.NonEmptyString,
   uploadIds: Schema.optionalKey(
     Schema.mutable(
       Schema.Array(Id("ninaUploads")).check(Schema.isMaxLength(NINA_FILE_COUNT))
@@ -123,6 +129,7 @@ export default GroupSpec.make().addFunction(
         AuthFailure,
         ChatAccessError,
         NinaCreditError,
+        NinaPromptError,
         NinaTurnError,
         NinaUploadError,
       ]),

@@ -1,5 +1,6 @@
 import { Ref } from "@confect/core";
 import { getFile, storeFile, toModelMessage } from "@convex-dev/agent";
+import { MINUTE } from "@convex-dev/rate-limiter";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   NINA_FILE_COUNT,
@@ -29,6 +30,7 @@ vi.mock("@convex-dev/agent", async (load) => {
 });
 const NOW = Date.UTC(2026, 8, 27, 12);
 const save = Ref.getFunctionReference(refs.public.nina.uploads.save);
+const release = Ref.getFunctionReference(refs.public.nina.uploads.release);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const reserve = Ref.getFunctionReference(refs.internal.nina.uploads.reserve);
@@ -399,6 +401,95 @@ describe("native Nina attachment ownership", () => {
         filename: "exam.pdf",
       }),
     ]);
+  });
+
+  it("gives back the place of an upload the learner will not send", async () => {
+    const f = await fixture();
+    const uploadId = Ref.decodeReturnsSync(
+      refs.public.nina.uploads.save,
+      await f.owner.action(save, attachment)
+    );
+    for (let count = 1; count < NINA_FILE_COUNT; count += 1) {
+      await f.owner.mutation(reserve, {});
+    }
+    await expect(f.owner.mutation(reserve, {})).rejects.toMatchObject({
+      data: { code: "NINA_UPLOAD_LIMIT" },
+    });
+
+    await expect(f.owner.mutation(release, { uploadId })).resolves.toBeNull();
+
+    expect(
+      await f.t.query((ctx) => ctx.db.get("ninaUploads", uploadId))
+    ).toBeNull();
+    // The quota gives one place back every MINUTE / NINA_FILE_COUNT, so once it
+    // has, only the pending count is left to refuse the next upload.
+    vi.setSystemTime(NOW + MINUTE / NINA_FILE_COUNT + 1);
+    await expect(f.owner.mutation(reserve, {})).resolves.toBeDefined();
+    await expect(f.owner.mutation(release, { uploadId })).rejects.toMatchObject(
+      { data: { code: "NINA_UPLOAD_INVALID" } }
+    );
+  });
+
+  it("refuses a signed-out caller and another learner's upload, and keeps the upload", async () => {
+    const f = await fixture();
+    const uploadId = Ref.decodeReturnsSync(
+      refs.public.nina.uploads.save,
+      await f.owner.action(save, attachment)
+    );
+    const other = await f.t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "other" })
+    );
+    const stranger = f.t.withIdentity({
+      subject: other.authUserId,
+      sessionId: other.sessionId,
+    });
+
+    await expect(f.t.mutation(release, { uploadId })).rejects.toMatchObject({
+      data: { code: "UNAUTHENTICATED" },
+    });
+    await expect(
+      stranger.mutation(release, { uploadId })
+    ).rejects.toMatchObject({ data: { code: "NINA_UPLOAD_INVALID" } });
+
+    expect(
+      await f.t.query((ctx) => ctx.db.get("ninaUploads", uploadId))
+    ).toMatchObject({ userId: f.identity.userId });
+  });
+
+  it("refuses an upload that a sent message took, and leaves the message with its file", async () => {
+    const f = await fixture();
+    const uploadId = Ref.decodeReturnsSync(
+      refs.public.nina.uploads.save,
+      await f.owner.action(save, attachment)
+    );
+    const grant = await f.t.query((ctx) => ctx.db.get("ninaUploads", uploadId));
+    if (grant?.state.status !== "ready") {
+      throw new Error("Expected ready upload");
+    }
+    const fileId = grant.state.fileId;
+    const sent = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, {
+        ...admission,
+        input: {
+          ...admission.input,
+          prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
+        },
+      })
+    );
+
+    await expect(f.owner.mutation(release, { uploadId })).rejects.toMatchObject(
+      { data: { code: "NINA_UPLOAD_INVALID" } }
+    );
+
+    const state = await f.t.query(async (ctx) => ({
+      file: await ctx.runQuery(components.nina.files.get, { fileId }),
+      prompt: await ctx.runQuery(components.nina.messages.getMessagesByIds, {
+        messageIds: [sent.promptMessageId],
+      }),
+    }));
+    expect(state.file).toMatchObject({ refcount: 1 });
+    expect(state.prompt[0]).toMatchObject({ fileIds: [fileId] });
   });
 
   it("rejects a retry whose original prompt cannot be read instead of sending a new or foreign prompt", async () => {

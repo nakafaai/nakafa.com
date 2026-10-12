@@ -31,6 +31,14 @@ export default GroupSpec.make()
     }).middleware(Session)
   )
   .addFunction(
+    FunctionSpec.publicMutation({
+      name: "release",
+      args: () => ({ uploadId: Id("ninaUploads") }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AuthFailure, NinaUploadError]),
+    }).middleware(Session)
+  )
+  .addFunction(
     FunctionSpec.internalMutation({
       name: "reserve",
       args: () => ({}),

@@ -2,6 +2,7 @@ import { Ref } from "@confect/core";
 import { saveMessage, toUIMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
+import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -160,6 +161,34 @@ describe("native Nina admission", () => {
         chatId: first.chatId,
       })
     ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
+  });
+
+  it("takes a prompt of exactly the limit and refuses a longer one with its own failure, before anything is held", async () => {
+    const { t, owner, identity } = await fixture();
+    const withText = (text: string) => ({
+      ...args,
+      input: { ...args.input, prompt: { text } },
+    });
+
+    await expect(
+      owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH + 1)))
+    ).rejects.toMatchObject({ data: { code: "NINA_PROMPT_LENGTH" } });
+    const refused = await t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      chats: await ctx.db.query("chats").collect(),
+      turns: await ctx.db.query("ninaTurns").collect(),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+    }));
+    expect(refused.user?.credits).toBe(10);
+    expect(refused.chats).toEqual([]);
+    expect(refused.turns).toEqual([]);
+    expect(refused.ledger).toEqual([]);
+
+    const taken = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH)))
+    );
+    expect(taken.prompt.text).toHaveLength(NINA_PROMPT_LENGTH);
   });
 
   it("refuses a third open turn before any credit is held, and frees a place when one settles", async () => {
