@@ -18,10 +18,12 @@ import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
   formatSpecialistToolTask,
   mathToolInputSchema,
+  memoryToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
+import { runMemory } from "@repo/backend/confect/nina/memory/tool";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import {
   decideNinaCapability,
@@ -195,6 +197,34 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
               capability: "math",
               continuation:
                 "Verify fewer expressions per request to get the omitted results.",
+              signal: abortSignal,
+            }
+          ),
+          services
+        ),
+    }),
+    memory: createTool({
+      description:
+        "Search what the learner told Nina before and saved as memories, such as their target, exam date, level, how they like explanations, or what they find hard. Use it when the learner points back to something they told you that is neither in the Learner section nor in the Memories list, or when a good answer depends on a personal fact that is probably saved and is not in front of you. Do not use it for lesson content, for facts in this conversation, or more than twice in one turn.",
+      inputSchema: memoryToolInputSchema,
+      outputSchema,
+      execute: (_ctx, input, { abortSignal }) =>
+        Stream.toAsyncIterableWith(
+          streamCapability(
+            () =>
+              runMemory({ query: input.query, userId }).pipe(
+                Effect.catchDefect(() =>
+                  failed(
+                    "memory",
+                    { phase: "read" },
+                    "Memory could not be read right now. Tell the learner you could not check what they told you before, ask them again, and do not guess it."
+                  )
+                )
+              ),
+            {
+              capability: "memory",
+              continuation:
+                "Ask again with a narrower query to read the memories that were left out.",
               signal: abortSignal,
             }
           ),

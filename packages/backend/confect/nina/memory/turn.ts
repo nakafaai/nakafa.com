@@ -7,6 +7,7 @@ import { searchMemories } from "@repo/backend/confect/nina/memory/search";
 import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
 import spec, {
   MEMORY_KNOWN_LIMIT,
+  MEMORY_LOOKUP_LIMIT,
 } from "@repo/backend/confect/nina/memory.spec";
 import { readPortrait } from "@repo/backend/confect/nina/portrait/store";
 import { Array as Arr, Effect } from "effect";
@@ -37,6 +38,37 @@ export const read = FunctionImpl.make(
         yield* recallMemories({ clearedAt, now, said, topics, userId }),
         toNote
       ),
+    };
+  })
+);
+
+/**
+ * What the memory capability finds for Nina's query: the at most
+ * `MEMORY_LOOKUP_LIMIT` memories that match its words best. It reads no
+ * profile and no portrait. While memory is paused no memory is read and the
+ * answer says so, and a memory that "Delete all" took is never read.
+ */
+export const lookup = FunctionImpl.make(
+  schema,
+  spec,
+  "lookup",
+  Effect.fn("nina.memory.lookup")(function* ({ now, query, userId }) {
+    const { clearedAt, paused } = yield* readMemoryState(userId);
+    if (paused) {
+      return { memories: [], paused: true };
+    }
+    return {
+      memories: Arr.map(
+        yield* searchMemories({
+          clearedAt,
+          limit: MEMORY_LOOKUP_LIMIT,
+          now,
+          text: query,
+          userId,
+        }),
+        toNote
+      ),
+      paused: false,
     };
   })
 );

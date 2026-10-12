@@ -22,6 +22,8 @@ const MEMORY_SENTENCE_LIMIT = 280;
 export const MEMORY_RECALL_LIMIT = 8;
 /** Memories a turn recalls at least, when the learner has them: the most recently confirmed fill the list up to it. */
 export const MEMORY_RECALL_FLOOR = 3;
+/** Memories the memory capability returns in one call: the best matches for Nina's query. */
+export const MEMORY_LOOKUP_LIMIT = 6;
 /** Memories one capture call may propose from a single message. */
 export const MEMORY_CAPTURE_LIMIT = 3;
 /** Memories the capture call reads and may name: the best matches for the message. */
@@ -241,6 +243,18 @@ export const NinaLearner = Schema.Struct({
 });
 
 /**
+ * What the memory capability finds for Nina's query: the memories that match it
+ * best, at most `MEMORY_LOOKUP_LIMIT`. It tells that memory is paused, because
+ * then it finds none and the capability refuses.
+ */
+const NinaLookup = Schema.Struct({
+  memories: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
+    Schema.isMaxLength(MEMORY_LOOKUP_LIMIT)
+  ),
+  paused: Schema.Boolean,
+});
+
+/**
  * What the capture call knows about one learner: `known` holds the memories
  * that match the message best, at most `MEMORY_KNOWN_LIMIT`. It is empty while
  * memory is paused.
@@ -372,6 +386,19 @@ export default GroupSpec.make()
         userId: Id("users"),
       }),
       returns: () => NinaLearner,
+    })
+  )
+  // What the memory capability finds for Nina's query, as the memories are at
+  // the caller's time `now`. It reads the learner's words only, not the page.
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "lookup",
+      args: () => ({
+        now: Schema.Finite,
+        query: Schema.String,
+        userId: Id("users"),
+      }),
+      returns: () => NinaLookup,
     })
   )
   // What the capture call reads: the account facts and the memories that match

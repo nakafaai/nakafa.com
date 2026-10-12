@@ -8,6 +8,10 @@ import {
   ChatStep,
   makeChatStep,
 } from "@repo/backend/confect/nina/capability/deadline";
+import {
+  LearningCapabilityNameSchema,
+  MEMORY_CAPABILITY,
+} from "@repo/backend/confect/nina/capability/spec";
 import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn";
 import {
   generationFailure,
@@ -21,7 +25,7 @@ import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { startNinaStep } from "@repo/backend/confect/nina/step";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
-import { DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect } from "effect";
 
 /**
  * The scheduled Confect action owns generation; Agent owns its persistent
@@ -45,7 +49,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     user: turn.user,
     runtime,
   });
-  const { instructions, memories, summary } = yield* readInstructions(
+  const { instructions, memories, paused, summary } = yield* readInstructions(
     turn,
     context.url
   );
@@ -86,6 +90,16 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
         { threadId: turn.threadId, userId: turn.userId },
         {
           promptMessageId: turn.promptMessageId,
+          // While the learner's memory is paused Nina is not offered the
+          // memory tool, in every step of the turn.
+          ...(paused
+            ? {
+                activeTools: Arr.filter(
+                  LearningCapabilityNameSchema.literals,
+                  (name) => name !== MEMORY_CAPABILITY
+                ),
+              }
+            : {}),
           abortSignal: AbortSignal.any([signal, halt]),
           onError: ({ error }) => {
             streamFailure ??= generationFailure(error);

@@ -9,6 +9,7 @@ import { Array as Arr } from "effect";
 const memory = refs.public.nina.memory;
 const pause = Ref.getFunctionReference(memory.pause);
 const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
+const lookup = Ref.getFunctionReference(refs.internal.nina.memory.lookup);
 const known = Ref.getFunctionReference(refs.internal.nina.memory.known);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
@@ -214,12 +215,47 @@ describe("Nina memory for a turn", () => {
     expect(resumed.portrait).toBe("Kept in the portrait.");
   });
 
-  it("reads a bounded number of memories for 300: eight for the turn, twelve for the capture call, at most 24 for a search that asks for more", async () => {
+  it("finds the memories that match a query best for the memory capability, at most six, and tells nothing of the account or the portrait", async () => {
+    const f = await createMemoryTest();
+    const userId = f.identity.userId;
+    await f.fill(10, { text: "Aku suka limit" });
+    await f.seed({ confirmedAt: 99, text: "Hobi main gitar" });
+    const found = await f.t.query(lookup, { now: NOW, query: "limit", userId });
+    expect(found).toEqual({
+      memories: expect.any(Array),
+      paused: false,
+    });
+    expect(words(found.memories)).toEqual(
+      Arr.makeBy(6, () => "Aku suka limit")
+    );
+    expect(
+      (await f.t.query(lookup, { now: NOW, query: "tanggal ujian", userId }))
+        .memories
+    ).toEqual([]);
+  });
+
+  it("finds nothing for the memory capability while memory is paused, and tells that it is", async () => {
+    const f = await createMemoryTest();
+    const userId = f.identity.userId;
+    await f.seed({ text: "Kept" });
+    await f.owner.mutation(pause, { paused: true });
+    expect(
+      await f.t.query(lookup, { now: NOW, query: "kept", userId })
+    ).toEqual({ memories: [], paused: true });
+  });
+
+  it("reads a bounded number of memories for 300: eight for the turn, six for the memory capability, twelve for the capture call, at most 24 for a search that asks for more", async () => {
     const f = await createMemoryTest();
     const userId = f.identity.userId;
     await f.fill(300);
     const newest = (count: number) =>
       Arr.makeBy(count, (index) => `Memory ${299 - index}`);
+    expect(
+      words(
+        (await f.t.query(lookup, { now: NOW, query: "memory", userId }))
+          .memories
+      )
+    ).toEqual(newest(6));
     expect(
       words(
         (
@@ -258,6 +294,9 @@ describe("Nina memory for a turn after Delete all", () => {
       })
     ).toMatchObject({ paused: false, recalled: [] });
     expect(
+      await f.t.query(lookup, { now: NOW, query: "memory", userId })
+    ).toEqual({ memories: [], paused: false });
+    expect(
       await f.t.query(known, {
         message: "memory",
         now: NOW,
@@ -274,6 +313,12 @@ describe("Nina memory for a turn after Delete all", () => {
     await f.markCleared(3);
     await f.seed({ confirmedAt: 4, text: "Memory four", topics: [LESSON] });
     await f.seed({ confirmedAt: 5, text: "Memory five" });
+    expect(
+      words(
+        (await f.t.query(lookup, { now: NOW, query: "memory", userId }))
+          .memories
+      )
+    ).toEqual(["Memory five", "Memory four"]);
     expect(
       words(
         (

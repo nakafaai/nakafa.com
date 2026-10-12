@@ -49,12 +49,14 @@ export function formatNinaContextPackPrompt(context: NinaContextPack) {
 export function createNinaSystemPrompt({
   focus,
   learner,
+  memory,
   pageContent,
   summary,
   userRole,
 }: {
   readonly focus?: string;
   readonly learner?: string;
+  readonly memory?: boolean;
   readonly pageContent?: string;
   readonly summary?: string;
   readonly userRole?: PromptUserRole | undefined;
@@ -62,6 +64,7 @@ export function createNinaSystemPrompt({
   return createNinaPrompt({
     ...(focus === undefined ? {} : { focus }),
     ...(learner === undefined ? {} : { learner }),
+    ...(memory === undefined ? {} : { memory }),
     ...(pageContent === undefined ? {} : { pageContent }),
     ...(summary === undefined ? {} : { summary }),
     ...(userRole === undefined ? {} : { userRole }),

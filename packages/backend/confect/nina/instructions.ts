@@ -51,7 +51,8 @@ const readLearner = Effect.fn("nina.instructions.learner")(function* (
  * concurrently and assembles Nina's instructions. The summary also returns,
  * since history omits the turns it covers, and so do the memories the learner's
  * words call up, which belong with their message and not in the prompt, whose
- * bytes the provider caches.
+ * bytes the provider caches, and whether the learner paused memory, because
+ * then Nina is not offered the memory tool.
  */
 export const readInstructions = Effect.fn("nina.instructions")(function* (
   turn: Pick<
@@ -82,11 +83,13 @@ export const readInstructions = Effect.fn("nina.instructions")(function* (
     instructions: createNinaSystemPrompt({
       ...(focus === undefined ? {} : { focus }),
       ...(facts === undefined ? {} : { learner: facts }),
+      memory: !learner.paused,
       ...(pageContent === undefined ? {} : { pageContent }),
       ...(summary ? { summary: summary.text } : {}),
       userRole: turn.user.role,
     }),
     memories: formatRecalled(learner.recalled),
+    paused: learner.paused,
     summary,
   };
 });

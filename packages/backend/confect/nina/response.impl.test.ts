@@ -13,6 +13,7 @@ import {
   ninaUsage,
 } from "@repo/backend/test/nina";
 import { createCapturingTest, level } from "@repo/backend/test/nina/capture";
+import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
@@ -31,6 +32,7 @@ vi.mock("@convex-dev/agent", async (load) => {
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
+const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 
 /** A model whose call stays silent until `release` is called, like a long thought. */
 function silentModel() {
@@ -316,6 +318,42 @@ describe("The Nina response run when generation fails", () => {
       ).toHaveLength(1);
     })
   );
+});
+
+describe("The Nina response run and the memory tool", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    provider.languageModel.mockReset();
+    vi.useRealTimers();
+  });
+
+  /** The names of the tools that the model of one whole turn is offered. */
+  async function offered({ paused }: { paused: boolean }) {
+    const model = ninaModel();
+    provider.languageModel.mockReturnValue(model);
+    const f = await createMemoryTest({ prompt: "Explain a function limit." });
+    if (paused) {
+      await f.owner.mutation(pause, { paused: true });
+    }
+    await f.t.action(run, { turnId: f.turnId });
+    expect(model.doStreamCalls).toHaveLength(1);
+    return Arr.map(model.doStreamCalls[0]?.tools ?? [], (tool) => tool.name);
+  }
+
+  it("offers the model the memory tool with the others", async () => {
+    expect(await offered({ paused: false })).toEqual(
+      expect.arrayContaining(["nakafa", "deepResearch", "math", "memory"])
+    );
+  });
+
+  it("leaves the memory tool out for a learner who paused memory, and keeps the others", async () => {
+    const names = await offered({ paused: true });
+    expect(names).not.toContain("memory");
+    expect(names).toEqual(
+      expect.arrayContaining(["nakafa", "deepResearch", "math"])
+    );
+  });
 });
 
 describe("The Nina response among its follow-up work", () => {

@@ -42,9 +42,10 @@ async function instructionsFor(
   return nina.t.action((ctx) =>
     Effect.runPromise(
       readInstructions(turn, url).pipe(
-        Effect.map(({ instructions, memories, summary }) => ({
+        Effect.map(({ instructions, memories, paused, summary }) => ({
           instructions,
           memories: memories ?? null,
+          paused,
           summary: summary?.throughOrder ?? null,
         })),
         Effect.catchTag("NinaGenerationError", (error) =>
@@ -137,10 +138,14 @@ describe("Nina instructions", () => {
     await f.seed({ kind: "struggle", text: "Sulit di peluang." });
     await f.seedPortrait({ text: "Duduk di kelas 12 dan suka contoh soal." });
     const result = await instructionsFor(f);
+    expect(result).toMatchObject({ paused: false });
     for (const expected of [
       "# Learner",
       "- Focus: preparing for try-outs",
       "<portrait>\nDuduk di kelas 12 dan suka contoh soal.\n</portrait>",
+      // Nina has the memory tool, so the policy tells her when to use it.
+      "- memory: what the learner told Nina before, saved as their memories.",
+      "## memory",
     ]) {
       expect(result).toHaveProperty(
         "instructions",
@@ -201,21 +206,24 @@ describe("Nina instructions", () => {
     );
   });
 
-  it("places no portrait and recalls no memory while the learner has paused memory", async () => {
+  it("places no portrait, recalls no memory, and leaves out the memory tool while the learner has paused memory", async () => {
     const f = await createPortraitTest();
     await f.seed({ text: "Sulit di peluang." });
     await f.seedPortrait({ text: "Duduk di kelas 12." });
     await f.owner.mutation(pause, { paused: true });
     const result = await instructionsFor(f);
-    expect(result).toHaveProperty(
-      "instructions",
-      expect.not.stringContaining("Sulit di peluang.")
-    );
-    expect(result).toHaveProperty(
-      "instructions",
-      expect.not.stringContaining("Duduk di kelas 12.")
-    );
-    expect(result).toHaveProperty("memories", null);
+    expect(result).toMatchObject({ memories: null, paused: true });
+    for (const absent of [
+      "Sulit di peluang.",
+      "Duduk di kelas 12.",
+      "- memory: what the learner told Nina before",
+      "## memory",
+    ]) {
+      expect(result).toHaveProperty(
+        "instructions",
+        expect.not.stringContaining(absent)
+      );
+    }
   });
 
   it("recalls nothing for a learner who has no memory, and writes no heading", async () => {

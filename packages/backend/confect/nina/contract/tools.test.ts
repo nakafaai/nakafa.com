@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   formatSpecialistToolTask,
   mathToolInputSchema,
+  memoryToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
@@ -178,6 +179,23 @@ describe("LearningCapability tool schemas", () => {
       - x > 0
     `);
     expect(task).not.toContain("# Requirements");
+  });
+
+  it("takes one query from the memory tool, of 1 to 200 characters", async () => {
+    const schema = asSchema(memoryToolInputSchema);
+    expect(readJsonSchema(schema)).toMatchObject({
+      properties: {
+        query: { maxLength: 200, minLength: 1, type: "string" },
+      },
+      required: ["query"],
+    });
+    const validate = (query: string) =>
+      Promise.resolve(schema.validate?.({ query }));
+    // The test names the numbers, not the constant, so a change of the limit fails it.
+    expect(await validate("x")).toMatchObject({ success: true });
+    expect(await validate("x".repeat(200))).toMatchObject({ success: true });
+    expect(await validate("x".repeat(201))).toMatchObject({ success: false });
+    expect(await validate("")).toMatchObject({ success: false });
   });
 
   it("renders math givens without adding response outcomes", () => {

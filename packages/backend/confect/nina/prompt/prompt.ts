@@ -14,10 +14,14 @@ import { formatTaskPrompt } from "@repo/backend/confect/nina/prompt/task";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { Array as Arr, pipe, Schema } from "effect";
 
-/** Authenticated role, current page, learner, question focus, and summary. */
+/**
+ * Authenticated role, current page, learner, question focus, and summary, and
+ * whether Nina has the memory tool (`memory`, which is absent for none).
+ */
 const SystemPromptPropsSchema = Schema.Struct({
   focus: Schema.optional(Schema.String),
   learner: Schema.optional(Schema.String),
+  memory: Schema.optional(Schema.Boolean),
   pageContent: Schema.optional(Schema.String),
   summary: Schema.optional(Schema.String),
   userRole: Schema.optional(PromptUserRoleSchema),
@@ -36,6 +40,7 @@ type SystemPromptProps = typeof SystemPromptPropsSchema.Type;
 export function createNinaPrompt({
   focus,
   learner,
+  memory = false,
   pageContent,
   summary,
   userRole,
@@ -43,7 +48,7 @@ export function createNinaPrompt({
   const instructions = createPrompt({
     taskContext: formatIdentityPrompt(userRole),
     toneContext: formatTonePrompt(),
-    toolUsageGuidelines: formatToolPolicyPrompt(),
+    toolUsageGuidelines: formatToolPolicyPrompt({ memory }),
     detailedTaskInstructions: focus
       ? Arr.join([formatTaskPrompt(), formatFocusTaskPrompt()], "\n\n")
       : formatTaskPrompt(),

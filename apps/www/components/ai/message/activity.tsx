@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AiBrain01Icon,
   ArrowDown01Icon,
   BookOpen02Icon,
   BrainIcon,
@@ -69,6 +70,7 @@ function ActivityTrigger() {
   const problem = isProblem(state);
   const icon = {
     math: Calculator01Icon,
+    memory: AiBrain01Icon,
     nakafa: BookOpen02Icon,
     deepResearch: Globe02Icon,
     unknown: BrainIcon,

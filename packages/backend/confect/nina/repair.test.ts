@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   mathToolInputSchema,
+  memoryToolInputSchema,
   NakafaToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
@@ -25,6 +26,7 @@ const nakafaInputJsonSchema = Schema.fromJsonString(NakafaToolInputSchema);
 const tools = {
   nakafa: { inputSchema: nakafaToolInputSchema },
   math: { inputSchema: mathToolInputSchema },
+  memory: { inputSchema: memoryToolInputSchema },
   deepResearch: { inputSchema: researchToolInputSchema },
 };
 const toolCall = {
