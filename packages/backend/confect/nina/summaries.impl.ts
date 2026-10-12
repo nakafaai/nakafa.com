@@ -165,49 +165,36 @@ const asked = FunctionImpl.make(
 
 /**
  * Stores a refreshed summary, sealed for the chat owner. Coverage only moves
- * forward, so a slower refresh never replaces a newer one, but its provider
- * usage still counts; a chat deleted meanwhile gets no orphan.
+ * forward, so a slower refresh never replaces a newer one and writes nothing; a
+ * chat deleted meanwhile gets no orphan. The tokens of the refresh's model call
+ * are not kept here: the call recorded them in the usage ledger of its turn.
  */
 const save = FunctionImpl.make(
   schema,
   spec,
   "save",
-  Effect.fn("nina.summaries.save")(function* ({
-    chatId,
-    text,
-    throughOrder,
-    usage: call,
-  }) {
+  Effect.fn("nina.summaries.save")(function* ({ chatId, text, throughOrder }) {
     const chat = yield* findChat(chatId);
     if (!chat) {
       return null;
     }
     const existing = yield* findSummary(chatId);
-    const usage = {
-      calls: (existing?.usage.calls ?? 0) + 1,
-      input: (existing?.usage.input ?? 0) + call.input,
-      output: (existing?.usage.output ?? 0) + call.output,
-    };
-    const writer = yield* DatabaseWriter;
     if (existing && existing.throughOrder >= throughOrder) {
-      yield* writer
-        .table("ninaSummaries")
-        .patch(existing._id, { usage })
-        .pipe(Effect.orDie);
       return null;
     }
     const sealed = yield* sealSummary(chat.userId, text);
     const updatedAt = yield* Clock.currentTimeMillis;
+    const writer = yield* DatabaseWriter;
     if (existing) {
       yield* writer
         .table("ninaSummaries")
-        .patch(existing._id, { text: sealed, throughOrder, updatedAt, usage })
+        .patch(existing._id, { text: sealed, throughOrder, updatedAt })
         .pipe(Effect.orDie);
       return null;
     }
     yield* writer
       .table("ninaSummaries")
-      .insert({ chatId, text: sealed, throughOrder, updatedAt, usage })
+      .insert({ chatId, text: sealed, throughOrder, updatedAt })
       .pipe(Effect.orDie);
     return null;
   })

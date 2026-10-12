@@ -169,7 +169,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       name: "summary" satisfies UsageAgent,
       usageHandler,
     });
-    const { text, usage } = yield* Effect.tryPromise({
+    const { text } = yield* Effect.tryPromise({
       try: (signal) =>
         agent.generateText(
           ctx,
@@ -198,10 +198,6 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
         chatId: turn.chatId,
         text: boundText(summary, NINA_BUDGET.summary, "Summary shortened."),
         throughOrder: target,
-        usage: {
-          input: usage.inputTokens ?? 0,
-          output: usage.outputTokens ?? 0,
-        },
       })
       .pipe(Effect.orDie);
   },

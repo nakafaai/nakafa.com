@@ -118,9 +118,8 @@ summary, at most 1,200
 tokens, sits in the system prompt context and is deleted with its chat. Its
 refreshes are chat upkeep that run after a turn settles. Each refresh records
 its model call in the ledger of that turn as the `summary` agent, like the title
-and the suggestions, and the summary row also keeps a running total of its
-calls. The learner profile
-and learner memory follow [ADR 0022](./0022-memory.md). Old
+and the suggestions, and the summary row keeps no total of its own. The learner
+profile and learner memory follow [ADR 0022](./0022-memory.md). Old
 reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000

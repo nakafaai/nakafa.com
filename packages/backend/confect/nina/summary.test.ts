@@ -127,15 +127,16 @@ describe("Nina rolling summary", () => {
     provider.languageModel.mockReturnValue(model);
     const f = await fixture(9);
     await f.refresh(8);
-    expect(await f.summary()).toEqual([
+    const rows = await f.summary();
+    expect(rows).toEqual([
       expect.objectContaining({
         chatId: f.chatId,
         text: expect.any(ArrayBuffer),
         throughOrder: 4,
-        // The fold's provider usage counts toward the chat's summary upkeep.
-        usage: { calls: 1, input: 12, output: 4 },
       }),
     ]);
+    // The fold's tokens go to the ledger of its turn, so the row keeps no total.
+    expect(rows[0]).not.toHaveProperty("usage");
     expect(await f.text()).toBe("- The learner studied limits.");
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     expect(prompt).toContain("None yet.");
@@ -267,7 +268,8 @@ describe("Nina rolling summary", () => {
       expect.objectContaining({
         text: expect.any(ArrayBuffer),
         throughOrder: 8,
-        usage: { calls: 2, input: 912, output: 124 },
+        // The total that the older row holds stays as it was: a refresh adds none.
+        usage: { calls: 1, input: 900, output: 120 },
       }),
     ]);
     expect(await f.text()).toBe("- Limits, then derivatives.");
@@ -297,41 +299,6 @@ describe("Nina rolling summary", () => {
     expect(await f.summary()).toEqual([
       expect.objectContaining({ throughOrder: 31 }),
     ]);
-  });
-
-  it("records zero tokens when the provider omits usage counters", async () => {
-    provider.languageModel.mockReturnValue(
-      new MockLanguageModelV4({
-        doGenerate: () =>
-          Promise.resolve({
-            content: [{ type: "text", text: "- A counted fold." }],
-            finishReason: { unified: "stop", raw: "stop" },
-            usage: {
-              inputTokens: {
-                total: undefined,
-                noCache: undefined,
-                cacheRead: undefined,
-                cacheWrite: undefined,
-              },
-              outputTokens: {
-                total: undefined,
-                text: undefined,
-                reasoning: undefined,
-              },
-            },
-            warnings: [],
-          }),
-      })
-    );
-    const f = await fixture(9);
-    await f.refresh(8);
-    expect(await f.summary()).toEqual([
-      expect.objectContaining({
-        text: expect.any(ArrayBuffer),
-        usage: { calls: 1, input: 0, output: 0 },
-      }),
-    ]);
-    expect(await f.text()).toBe("- A counted fold.");
   });
 
   it("makes no model call before a fold is due", async () => {
