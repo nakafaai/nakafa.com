@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Option, pipe, Schema } from "effect";
 import { recordLayoutShifts } from "@/e2e/support/layout";
+import { TOASTER } from "@/e2e/support/selector";
 
 const SAMPLES_KEY = "nakafaShellSamples";
 const LAYOUT_SHIFTS_KEY = "nakafaLayoutShifts";
@@ -19,9 +20,13 @@ const ShellSamples = Schema.Struct({
   frames: Schema.mutable(Schema.Array(ShellFrame)),
 });
 
-/** The layout shifts the page recorded, each with the time it started and what moved. */
+/**
+ * The layout shifts the page recorded, each with the time it started, what
+ * moved, and whether only the toasts did.
+ */
 const RecordedShifts = Schema.Array(
   Schema.Struct({
+    overlay: Schema.Boolean,
     sources: Schema.Array(Schema.String),
     time: Schema.Finite,
     value: Schema.Finite,
@@ -37,7 +42,9 @@ const ShellObservation = Schema.Struct({
   hiddenFrames: Schema.Int,
   /**
    * One line per layout shift, shifts right after input included: its value,
-   * its time, and each element that moved. A stable page has none.
+   * its time, and each element that moved. A stable page has none. A shift of
+   * the toasts alone is left out: they stack over the page, and when a second
+   * one arrives the first animates its height to the new one's.
    */
   layoutShifts: Schema.Array(Schema.String),
   /**
@@ -113,7 +120,10 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
     }, SAMPLES_KEY)
   );
   yield* Effect.promise(() =>
-    page.addInitScript(recordLayoutShifts, LAYOUT_SHIFTS_KEY)
+    page.addInitScript(recordLayoutShifts, {
+      key: LAYOUT_SHIFTS_KEY,
+      overlay: TOASTER,
+    })
   );
 });
 
@@ -166,7 +176,7 @@ export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
       hiddenFrames: Arr.countBy(frames, (frame) => !showsShell(frame)),
       layoutShifts: pipe(
         shifts,
-        Arr.filter((shift) => shift.time >= since),
+        Arr.filter((shift) => shift.time >= since && !shift.overlay),
         Arr.map(
           (shift) =>
             `${shift.value} at ${Math.round(shift.time)} ms: ${Arr.join(shift.sources, "; ")}`

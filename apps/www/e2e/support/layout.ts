@@ -5,11 +5,26 @@ import { VISUAL_CARD } from "@/e2e/support/selector";
 /**
  * Records, from the first script on, the start time and value of every layout
  * shift the browser reports, in the page global `key`, with one line per
- * element that moved: what it is, where it was, and where it went. Pass it to
- * `page.addInitScript` before the page loads, with the global's name.
+ * element that moved: what it is, where it was, and where it went. A shift is
+ * marked `overlay` when everything that moved sits inside an element that
+ * matches `overlay`, such as the list that holds the toasts: a toast stacks
+ * over the page and animates its own height, which is not the page moving.
+ * Pass it to `page.addInitScript` before the page loads, with the global's name
+ * and the selector.
  */
-export function recordLayoutShifts(key: string) {
-  const shifts: { sources: string[]; time: number; value: number }[] = [];
+export function recordLayoutShifts({
+  key,
+  overlay,
+}: {
+  key: string;
+  overlay: string;
+}) {
+  const shifts: {
+    overlay: boolean;
+    sources: string[];
+    time: number;
+    value: number;
+  }[] = [];
   Object.defineProperty(window, key, { value: shifts });
   const box = (rect: unknown) =>
     rect instanceof DOMRectReadOnly
@@ -26,6 +41,11 @@ export function recordLayoutShifts(key: string) {
     const classes = owner.getAttribute("class") ?? "";
     return `${owner.tagName.toLowerCase()}${slot ? `[data-slot=${slot}]` : ""} class="${classes.slice(0, 80)}"${element ? "" : " (text)"}`;
   };
+  const insideOverlay = (node: unknown) => {
+    const owner = node instanceof Node ? node : null;
+    const element = owner instanceof Element ? owner : owner?.parentElement;
+    return element?.closest(overlay) instanceof Element;
+  };
   new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       if ("value" in entry && typeof entry.value === "number") {
@@ -35,6 +55,10 @@ export function recordLayoutShifts(key: string) {
           previousRect: unknown;
         }>(Reflect.get(entry, "sources") ?? []);
         shifts.push({
+          // A shift with no source to name counts as the page's.
+          overlay:
+            sources.length > 0 &&
+            sources.every((source) => insideOverlay(source.node)),
           sources: sources.map(
             (source) =>
               `${name(source.node)}: ${box(source.previousRect)} to ${box(source.currentRect)}`
