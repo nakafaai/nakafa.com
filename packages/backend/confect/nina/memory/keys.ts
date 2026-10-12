@@ -23,7 +23,8 @@ type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
  * boundaries of the platform (`Intl.Segmenter`), with no list and no minimum
  * length. Change what a word is, and this number changes with it; a memory is
  * re-keyed the next time it is written (`syncKeys` deletes the keys it should
- * not have), and the temporary `nina/memory/rekey:page` re-keys the rest.
+ * not have). A new version ships with a job that re-keys the memories no write
+ * touches and is deleted once it has run (ADR 0022).
  */
 const WORD_INDEX_VERSION = 2;
 

@@ -9946,14 +9946,6 @@ export declare const internal: {
           }>;
         }
       >;
-      rekey: {
-        page: FunctionReference<
-          "mutation",
-          "internal",
-          { cursor?: string },
-          { checked: number; cursor: string; done: boolean; rekeyed: number }
-        >;
-      };
     };
     portrait: {
       build: {
