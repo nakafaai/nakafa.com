@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   ResearchOutputSchema,
   researchOutputSchema,
-  ScrapeInputSchema,
   WebSearchInputSchema,
   webSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
@@ -10,39 +9,6 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Result, Schema } from "effect";
 
 describe("research schema", () => {
-  it("validates scrape URLs with Effect schema", () => {
-    const valid = Schema.decodeResult(ScrapeInputSchema)({
-      urlToCrawl: "https://nakafa.com",
-    });
-    const invalid = Schema.decodeResult(ScrapeInputSchema)({
-      urlToCrawl: "not-a-url",
-    });
-    expect(Result.isSuccess(valid)).toBe(true);
-    expect(Result.isFailure(invalid)).toBe(true);
-    if (Result.isFailure(invalid)) {
-      expect(invalid.failure.message).toContain(
-        "Expected a public http(s) URL."
-      );
-    }
-  });
-  it("rejects non-public scrape URL targets before tool execution", () => {
-    const localhost = Schema.decodeResult(ScrapeInputSchema)({
-      urlToCrawl: "http://localhost:3000/private",
-    });
-    const privateIp = Schema.decodeResult(ScrapeInputSchema)({
-      urlToCrawl: "http://10.0.0.1/admin",
-    });
-    const mappedPrivateIp = Schema.decodeResult(ScrapeInputSchema)({
-      urlToCrawl: "http://[::ffff:127.0.0.1]/admin",
-    });
-    const unsupportedScheme = Schema.decodeResult(ScrapeInputSchema)({
-      urlToCrawl: "file:///etc/passwd",
-    });
-    expect(Result.isFailure(localhost)).toBe(true);
-    expect(Result.isFailure(privateIp)).toBe(true);
-    expect(Result.isFailure(mappedPrivateIp)).toBe(true);
-    expect(Result.isFailure(unsupportedScheme)).toBe(true);
-  });
   it("validates optimized web-search query arrays", () => {
     const valid = Schema.decodeResult(WebSearchInputSchema)({
       queries: ["AI SDK DevTools official documentation"],

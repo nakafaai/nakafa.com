@@ -2,7 +2,6 @@ import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
-import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
 /**
@@ -34,30 +33,6 @@ export class ResearchSourceLimitError extends Schema.TaggedError<ResearchSourceL
   "ResearchSourceLimitError",
   { maximum: Schema.Literal(researchMaxSources), received: Schema.Int }
 ) {}
-const urlInputSchema = Schema.NonEmptyString.pipe(
-  Schema.check(
-    Schema.makeFilter(isPublicHttpUrlSyntax, {
-      message: "Expected a public http(s) URL.",
-    })
-  )
-).annotate({
-  description: createPrompt({
-    taskContext: `
-      The public http(s) URL to scrape.
-    `,
-  }),
-});
-export const ScrapeInputSchema = Schema.Struct({
-  urlToCrawl: urlInputSchema,
-})
-  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
-  .annotate({
-    description: createPrompt({
-      taskContext: `
-        Get content from one selected public URL.
-      `,
-    }),
-  });
 const ScrapeOutputSchema = Schema.Struct({
   data: Schema.Struct({
     content: Schema.String,
