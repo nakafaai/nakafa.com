@@ -1,10 +1,22 @@
 import type { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { Gateway, make } from "@repo/backend/confect/gateway/handle";
-import { Effect, Layer } from "effect";
+import { Experimental_DecisionMockModelV4 as DecisionMockModel } from "ai/test";
+import {
+  Array as Arr,
+  Effect,
+  Layer,
+  MutableRef,
+  Record as Rec,
+  String as Str,
+} from "effect";
 
-/** The deterministic provider behind the test adapter; each test programs its model. */
+/**
+ * The deterministic provider behind the test adapter; each test programs its
+ * language model and its decision model.
+ */
 export const provider = {
+  decisionModel: vi.fn<Parameters<typeof make>[0]["decisionModel"]>(),
   languageModel: vi.fn<Parameters<typeof make>[0]["languageModel"]>(),
 };
 
@@ -25,6 +37,38 @@ export const GatewayTest = Layer.effect(
   Gateway,
   Effect.as(Effect.suspend(deployment), make(provider))
 );
+
+/**
+ * A deterministic decision model, handed out by `provider` for every decision.
+ * It answers each yes-or-no question with the probability `probabilityOf` gives
+ * for the judgment the question asks (`lasting`) and the position of the text
+ * the question is about (0 for the first), and it records every request it
+ * receives.
+ */
+export function decides(
+  probabilityOf: (judgment: string, index: number) => number
+) {
+  const requests = MutableRef.make<
+    readonly Parameters<DecisionMockModel["doDecide"]>[0][]
+  >([]);
+  const model = new DecisionMockModel({
+    doDecide: (request) => {
+      MutableRef.update(requests, Arr.append(request));
+      return Promise.resolve({
+        answers: Rec.map(request.questions, (_, id) => {
+          const [judgment, position] = Str.split(id, ".");
+          return {
+            probability: probabilityOf(judgment, Number(position)),
+            type: "boolean" as const,
+          };
+        }),
+        warnings: [],
+      });
+    },
+  });
+  provider.decisionModel.mockReturnValue(model);
+  return { model, requests: () => MutableRef.get(requests) };
+}
 
 /**
  * One failure per reason, with the routing facts the classifier keeps. The

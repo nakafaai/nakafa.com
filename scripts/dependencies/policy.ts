@@ -50,7 +50,7 @@ export const VITEST_COHORT_VERSION = "5.0.3";
  * @ai-sdk/provider-utils.
  */
 export const AI_SDK_COHORT = {
-  "@convex-dev/ai-sdk-provider": "0.2.1",
+  "@convex-dev/ai-sdk-provider": "0.3.0",
   ai: "7.0.136",
 } as const;
 

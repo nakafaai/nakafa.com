@@ -10,7 +10,9 @@ import { Effect, Layer } from "effect";
 /**
  * The production adapter: the Convex AI gateway. The deployment's service
  * token is read once per action, before any request; the provider reads it
- * again for each request.
+ * again for each request. A decision model is the provider's evaluation model,
+ * made with the options the handle gives it, among them the zero retention
+ * request that the provider puts in the `provider` field of the request.
  */
 export const GatewayLive = Layer.effect(
   Gateway,
@@ -22,6 +24,10 @@ export const GatewayLive = Layer.effect(
           message: "The AI gateway is not available on this deployment.",
         }),
     }),
-    make({ languageModel: convexGateway })
+    make({
+      decisionModel: (modelId, options) =>
+        convexGateway.evaluationModel(modelId, options),
+      languageModel: convexGateway,
+    })
   )
 );

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { make } from "@repo/backend/confect/gateway/handle";
 import { Purpose, purposes } from "@repo/backend/confect/gateway/purpose";
-import { MockLanguageModelV4 } from "ai/test";
+import {
+  Experimental_DecisionMockModelV4 as DecisionMockModel,
+  MockLanguageModelV4,
+} from "ai/test";
 import { Effect } from "effect";
 
 const prompt = [
@@ -33,7 +36,7 @@ const deadlines = {
   presentation: { stepMs: 15_000, totalMs: 45_000 },
 };
 
-/** A gateway over one recording model. */
+/** A gateway over one recording language model and one deterministic decision model. */
 function serve() {
   const model = new MockLanguageModelV4({
     doGenerate: answer,
@@ -42,7 +45,22 @@ function serve() {
   const languageModel = vi.fn<Parameters<typeof make>[0]["languageModel"]>(
     () => model
   );
-  return { gateway: make({ languageModel }), languageModel, model };
+  const decider = new DecisionMockModel({
+    doDecide: () =>
+      Promise.resolve({
+        answers: { lasting: { type: "boolean", probability: 0.9 } },
+        warnings: [],
+      }),
+  });
+  const decisionModel = vi.fn<Parameters<typeof make>[0]["decisionModel"]>(
+    () => decider
+  );
+  return {
+    decisionModel,
+    gateway: make({ decisionModel, languageModel }),
+    languageModel,
+    model,
+  };
 }
 
 describe("Gateway handles", () => {
@@ -138,6 +156,24 @@ describe("Gateway handles", () => {
         },
       });
     })
+  );
+
+  it.effect(
+    "asks the provider for the decision model with the zero retention request, and answers a decision with it",
+    () =>
+      Effect.gen(function* () {
+        const { decisionModel, gateway } = serve();
+        const answers = yield* gateway.decide("Kelas 12 IPA.", {
+          lasting: { type: "boolean", instructions: "Does it last?" },
+        });
+        expect(decisionModel).toHaveBeenCalledExactlyOnceWith(
+          "typesafe/jev-1.13",
+          { zdr: true }
+        );
+        expect(answers).toEqual({
+          lasting: { type: "boolean", probability: 0.9 },
+        });
+      })
   );
 
   it("keeps the served model's identity for usage accounting", () => {
