@@ -21,12 +21,11 @@ const ShellSamples = Schema.Struct({
 });
 
 /**
- * The layout shifts the page recorded, each with the time it started, what
- * moved, and whether only the toasts did.
+ * The layout shifts the page recorded, each with the time it started and what
+ * moved. The recorder leaves out the shifts of the toasts alone.
  */
 const RecordedShifts = Schema.Array(
   Schema.Struct({
-    overlay: Schema.Boolean,
     sources: Schema.Array(Schema.String),
     time: Schema.Finite,
     value: Schema.Finite,
@@ -176,7 +175,7 @@ export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
       hiddenFrames: Arr.countBy(frames, (frame) => !showsShell(frame)),
       layoutShifts: pipe(
         shifts,
-        Arr.filter((shift) => shift.time >= since && !shift.overlay),
+        Arr.filter((shift) => shift.time >= since),
         Arr.map(
           (shift) =>
             `${shift.value} at ${Math.round(shift.time)} ms: ${Arr.join(shift.sources, "; ")}`
