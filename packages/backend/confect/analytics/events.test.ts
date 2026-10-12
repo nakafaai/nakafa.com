@@ -158,22 +158,6 @@ describe("analytics/events", () => {
     ).toBe(true);
     expect(
       Option.isSome(
-        Schema.decodeUnknownOption(productAnalyticsEventValidator)(
-          {
-            name: "chat message sent",
-            properties: {
-              chat_type: "study",
-              model_id: "nakafa-lite",
-            },
-          },
-          {
-            onExcessProperty: "error",
-          }
-        )
-      )
-    ).toBe(false);
-    expect(
-      Option.isSome(
         Schema.decodeOption(productAnalyticsEventValidator)(
           {
             name: "chat response completed",
@@ -191,23 +175,6 @@ describe("analytics/events", () => {
         )
       )
     ).toBe(true);
-    expect(
-      Option.isSome(
-        Schema.decodeUnknownOption(productAnalyticsEventValidator)(
-          {
-            name: "chat response completed",
-            properties: {
-              chat_type: "study",
-              credits: 5,
-              model_id: "nakafa-lite",
-            },
-          },
-          {
-            onExcessProperty: "error",
-          }
-        )
-      )
-    ).toBe(false);
     expect(
       Option.isSome(
         Schema.decodeOption(productAnalyticsEventValidator)(

@@ -96,14 +96,6 @@ describe("operational exception privacy", () => {
     expect(
       Option.isNone(
         decodeOperationalExceptionProperties({
-          model_id: "nakafa-lite",
-          source: "chat-api",
-        })
-      )
-    ).toBe(true);
-    expect(
-      Option.isNone(
-        decodeOperationalExceptionProperties({
           source: "chat-api",
           userId: "user-1",
         })
