@@ -269,10 +269,11 @@ export function sentTurn(turn: readonly ModelMessage[]) {
  *
  * The summary folds the oldest turns as soon as the turns it does not cover
  * cost more than the budget, so between two folds the history only grows at
- * its end, and its start moves only when a fold covers its oldest turns. The
- * drop above is the exception. It reaches only turns that outgrew the budget
- * before a fold covered them, because the fold was still running, failed, or
- * has a longer backlog than one fold clears.
+ * its end, and its start moves only when a fold covers its oldest turns. Two
+ * things move it otherwise. A retry takes the asking it replaces out of the
+ * history, wherever that asking is. And the drop above reaches turns that
+ * outgrew the budget before a fold covered them, because the fold was still
+ * running, failed, or has a longer backlog than one fold clears.
  */
 export function assembleContext({
   current,

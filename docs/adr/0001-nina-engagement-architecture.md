@@ -106,7 +106,12 @@ One call carries at most `NINA_CALL_LIMIT` tokens by design, the sum of the
 budgets in `confect/nina/budget.ts` that a call holds at once. The model accepts
 far more, 1,048,576 input tokens. Nina stays below because every call bills
 every token it carries, a larger call takes longer to start, and the provider
-keeps a cached prefix for only about five minutes.
+keeps a cached prefix for only about five minutes. Three things lie outside the
+number: the learner's own message and files, which admission checks, a question
+focus, which has no budget, and the words of the newest earlier turn. That turn
+is kept whatever it costs and only its tool results are shortened, never the
+words of the learner or of Nina, so one very long message or answer in it takes
+the history above its part.
 
 The size of the history starts a fold of the conversation summary, never a
 count of turns. After a completed turn, the follow-up action counts the
@@ -117,13 +122,31 @@ model, as many as it takes for the rest to cost at most 16,000 tokens, half the
 budget, so the next fold waits for about half a budget of new turns and the
 cached prefix holds in between. The newest complete turn is never folded, a
 fold covers at most 16 turns, and a longer backlog advances one bounded batch
-per completed turn, reading back only from its last folded turn. Between two
-folds the history only grows at its end. The one exception is a turn that
-outgrew the budget before a fold covered it, because the fold is still running
-or failed: the oldest turns leave that call's input until the rest fits. Turns
-are read newest first, 16 at a time, and the read stops after the page that
-brings them past the history budget. The fold leaves out what the history
-would: a cancelled or failed turn, and an answer that a later retry replaced.
+per completed turn. When the count reached the oldest of the turns, the fold
+summarizes from the messages it read. Otherwise it reads back from its last
+folded turn alone. The fold leaves out what the history would: a cancelled or
+failed turn, and an answer that a later retry replaced.
+
+Between two folds the history only grows at its end, with two exceptions, and
+each changes the cached prefix. A retry takes the asking it replaces out of the
+history, wherever that asking is. And a call whose turns outgrew the budget
+before a fold covered them drops its oldest turns from that call's input until
+the rest fits. That happens while a fold is still running, after one failed, and
+while a backlog longer than one fold, such as a chat from before summaries, is
+folded one batch per turn.
+
+Turns are read newest first, 16 at a time, and the read stops after the page
+that brings them past the history budget. A replaced asking never reaches the
+model, so it does not count toward that budget, and the read also stops once it
+has passed 32 askings it keeps nothing of, so a learner who retries one
+question again and again cannot make every turn read the whole chat. The turns
+behind such a run are in neither the history nor the summary, and the next fold
+takes them first. Counting costs a read: a completed turn reads the turns after
+the summary, as the next generation will, which is about a history budget of
+messages and at most 32 replaced askings. A stored total would avoid that read,
+at the price of a field on every turn that must stay right through retries,
+failures and folds, and Nina has none.
+
 The summary, at most 2,000 tokens, stays in the language of the conversation,
 adds no fact the turns did not state, sits in the system prompt context and is
 deleted with its chat. Its

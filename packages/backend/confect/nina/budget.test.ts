@@ -8,12 +8,14 @@ import {
   NINA_BUDGET,
   NINA_CALL_LIMIT,
 } from "@repo/backend/confect/nina/budget";
+import { assembleContext, sentTurn } from "@repo/backend/confect/nina/history";
 import { createNinaSystemPrompt } from "@repo/backend/confect/nina/prompt/system";
 import { userRoles } from "@repo/backend/confect/users/role";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, filler, ninaModel } from "@repo/backend/test/nina";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
+import type { ModelMessage } from "ai";
 import { Array as Arr, Option } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
@@ -80,6 +82,21 @@ describe("Nina token budgets", () => {
 });
 
 describe("Nina call limit", () => {
+  it("does not shorten the words of an oversized newest earlier turn, which the limit leaves out", () => {
+    // A learner who pasted a long text and got a short reply: that turn alone costs more than the history.
+    const earlier: ModelMessage[] = [
+      { role: "user", content: "word ".repeat(NINA_BUDGET.history + 3000) },
+      { role: "assistant", content: "A short reply." },
+    ];
+    expect(sentTurn(earlier).tokens).toBeGreaterThan(NINA_BUDGET.history);
+    expect(
+      assembleContext({
+        current: [{ role: "user", content: "Follow up" }],
+        history: [earlier],
+      })
+    ).toEqual([...earlier, { role: "user", content: "Follow up" }]);
+  });
+
   it("states the instructions, tool definitions and runtime facts of a call as a part that the real ones fit", async () => {
     const languageModel = ninaModel();
     provider.languageModel.mockReturnValue(languageModel);

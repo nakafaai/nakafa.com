@@ -47,9 +47,12 @@ export const NINA_BUDGET = {
  * keeps a prefix for only about five minutes (`gateway/cache.ts`), so the
  * first call after a pause pays full price for all of it.
  *
- * This is what Nina's own builders hold. The learner's message and files are
- * checked when a turn is admitted, and a question focus has no budget of its
- * own.
+ * This is what Nina's own builders hold, and three things lie outside it. The
+ * learner's message and files are checked when a turn is admitted, and a
+ * question focus has no budget of its own. The newest earlier turn is also kept
+ * whatever it costs: only its tool results are shortened, never the words of
+ * the learner or of Nina, so one very long message or answer in that turn can
+ * take the history above its part.
  */
 export const NINA_CALL_LIMIT =
   NINA_BUDGET.instructions +

@@ -229,16 +229,19 @@ describe("Nina provider context", () => {
   it("keeps whole newest turns within the history budget and drops a turn that does not fit", () => {
     // Each turn holds one result at the evidence cap, so a few turns fit.
     const large = "Long evidence paragraph.\n\n".repeat(1600);
-    const fits = Math.floor(
-      NINA_BUDGET.history / sentTurn(turn("Turn 0", large)).tokens
-    );
+    // The turns differ in one digit of their name, so they all cost the same.
+    const cost = sentTurn(turn("Turn 0", large)).tokens;
+    const fits = Math.floor(NINA_BUDGET.history / cost);
     expect(fits).toBeGreaterThan(1);
+    expect((fits + 1) * cost).toBeGreaterThan(NINA_BUDGET.history);
     const result = assembleContext({
       current: [{ role: "user", content: "Latest" }],
       history: Arr.makeBy(fits + 1, (index) => turn(`Turn ${index}`, large)),
     });
     const history = Arr.dropRight(result, 1);
-    expect(tokens(history)).toBeLessThanOrEqual(NINA_BUDGET.history + 400);
+    expect(Arr.filter(history, ({ role }) => role === "user")).toHaveLength(
+      fits
+    );
     expect(history[0]).toMatchObject({ role: "user" });
     // The oldest turn is dropped whole, and the newer ones stay.
     expect(encodeJsonText(result)).not.toContain('"Answer to Turn 0"');
