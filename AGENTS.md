@@ -19,6 +19,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 | React, state, Tailwind, test, and layout policy | `scripts/check/tests.ts` and the modules it runs |
 | Architecture decisions: client state and hydration, the renderer contract, and the rest | `docs/adr` |
 | Advisories without a patched release | `osv.toml` |
+| Design-system components and their registries | `packages/design-system/components.json`; the upstream `shadcn` skill, and the `shadcn` server in `.mcp.json` that searches those registries |
 | Authored content and its rules | the Aksara repository and its `nakafa-content` skill |
 
 - Read the owner, the touched package's manifest and configuration, and nearby code before changing behavior. Skim recent `git log` before structural work so old patterns are not reintroduced.

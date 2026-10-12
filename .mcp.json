@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "cd packages/design-system && exec pnpm dlx shadcn@latest mcp"
+      ]
+    }
+  }
+}
