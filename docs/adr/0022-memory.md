@@ -216,9 +216,13 @@ and needs no specialist. What it finds is read once, in the step after the
 call, and is never stored: the conversation keeps the call and a note that
 memories matched, not their words. A result that the chat kept would be
 readable in the transcript of a public chat, would be read again by every later
-turn of the chat, and would outlive the memory it came from. The turn holds the
-words while it runs and drops them when it ends, and a later turn that reads
-the call reads the note and searches again when it matters. The tool description
+turn of the chat, and would outlive the memory it came from. So the words never
+sit in the thread, not even for the length of the turn: the answer the tool
+returns, which the Agent component saves, holds the note only. The turn holds
+the words in memory while it runs and gives them to the model's next step in
+place of the note, and drops them when it ends, whether it completes, fails or
+is cancelled. A later turn that reads the call reads the note and searches again
+when it matters. The tool description
 and the tool policy tell Nina when to use it: when the learner points back to
 something they told her that is neither in the Learner section nor in the list
 ("like I said", "my schedule", "what do you remember about me"), or when a good
@@ -230,9 +234,13 @@ after 20 steps. In the chat it is one activity row, "Recalled memories", with no
 count and nothing to open, because a memory's text is not shown in the chat.
 
 While memory is paused none of the three is there: no portrait, no list, and the
-tool is not offered. Its paragraph leaves the tool policy too, and a call that
-still reaches the function, because the learner paused during the turn, gets a
-refusal. Every Nina turn has a signed-in learner, so no other case exists.
+tool is not offered. The turn reads the pause once, at its start, and the
+capability policy follows it like it follows the permissions of the other
+capabilities: it leaves the tool out of what Nina is offered, refuses a call,
+and the tool policy's paragraph about it leaves the prompt too. A call that
+still reaches the function, because the learner paused during the turn, gets
+the same refusal from the function, which reads the pause again. Every Nina
+turn has a signed-in learner, so no other case exists.
 
 **What a learner's delete does to each way.** Recall and the capability read the
 live index and the live rows, so a memory the learner deleted or rewrote is gone
@@ -240,20 +248,25 @@ or new for the next turn and the next call, and "Delete all" hides at once what
 it took (see Implementation Contract). The chat keeps no copy of either: the
 memories a turn recalls travel with the learner's message and are never stored,
 and the words the capability finds are never stored. What Nina says in an answer
-is part of the chat, like anything said in it, and a delete does not take it
-back from an answer already given. The portrait is derived from the memories,
-so a delete or a rewrite on the Memory page takes its text out in the same
-transaction, and no prompt carries a sentence that came from the memory from
-then on. It asks for a build from scratch (no old portrait in the input,
-the newest 40 memories), which is not bound by the day. The worst-case delay is
-therefore not for the sentence, which is gone at once, but for Nina to have a
-portrait again: the quiet of 30 seconds that a build waits for, and one model
-call (at most 45 seconds). When that call fails, the portrait stays absent until
-a later change asks: a delete or a rewrite asks at once, and an added memory
-asks when no build has gone to the model in the last day. "Delete all", the daily
-expiry that leaves a learner with no memory, and account deletion delete the
-portrait with the memories. A portrait is derived data, so deleting it loses
-nothing.
+is part of the chat, like anything said in it: an answer that already holds the
+words of a memory the learner then deletes stays until the learner deletes the
+chat. That is the one copy a delete does not reach. The portrait is derived from
+the memories, so a delete or a rewrite on the Memory page takes its text out in
+the same transaction, and no prompt carries a sentence that came from the
+memory from then on. It asks for a build from scratch (no old portrait in the
+input, every memory the learner has, the oldest first, a page of 40 at a time),
+which is not bound by the day. The worst-case delay is therefore not for the sentence, which
+is gone at once, but for Nina to have a portrait again: the quiet of 30 seconds
+that a build waits for, and one model call (at most 45 seconds), for each page of
+40 memories, one page after another. That is at most 75 seconds for each 40
+memories the learner keeps, and until the last page the portrait holds the
+memories read so far. A delete or a rewrite while the pages are being built
+starts them again from the first memory. When a call fails, the portrait stays
+as it was, and absent after a delete, until a later change asks: a delete or a
+rewrite asks at once, and an added memory asks when no build has gone to the
+model in the last day. "Delete all", the daily expiry that leaves a learner
+with no memory, and account deletion delete the portrait with the memories. A
+portrait is derived data, so deleting it loses nothing.
 
 **Why the portrait is built in the background.** A model call takes seconds and
 costs money that the learner's turn should neither wait for nor pay, and a text
@@ -274,17 +287,25 @@ be over and for a request after it; the portrait may therefore lag the memories
 by more than a day, and the memory stays reachable by recall and the capability
 meanwhile.
 
-The build reads the portrait as it stands and the memories confirmed after what
-it has read, at most 40, each as its title and words cut to 400 characters, and
-writes the whole new text, keeping what the old one says unless a newer memory
-contradicts it. When more than 40 are new, it reads the newest 40 and moves past
-the rest, and no later build reads them: what the portrait has read is one
-moment, and a build reads on from it. They stay stored and recallable, and only
-the portrait leaves them out. A build from scratch reads the 40 newest memories
-the learner has, so a learner with more keeps a portrait of their latest. Reading
-every memory, oldest first, would cost a model call for every 40 a learner
-keeps, on every delete or rewrite. A situation is never handed to it, because it
-has an end date.
+The build reads the portrait as it stands and the next page of memories
+confirmed after what it has read: the oldest first, at most 40, each as its
+title and words cut to 400 characters. It writes the whole new text, keeping
+what the old one says unless a newer memory contradicts it, and a newer memory
+comes after the one it may contradict in what the model reads. What the portrait
+has read is one moment, the confirmation time of the newest memory of the page,
+and the next build reads on from it, so no memory is skipped. A page never ends
+between memories confirmed at the same moment (a capture writes up to three at
+once), so it may hold fewer than 40; only a group of 40 or more at one moment,
+which nothing writes, would lose its rest. When memories remain after a full
+page, storing the page asks for the next build, which waits for the quiet of 30
+seconds and not for the day. A learner with N memories the portrait has not read
+therefore costs one model call for each 40 of them, one after another, and a
+build from scratch costs that for every memory the learner has: 25 calls for
+1,000 memories, at most 32 minutes if each takes its quiet and its whole 45
+seconds. No turn waits for or pays any of it. A series that stops, because the
+learner paused memory or the account is going, goes on from where it stopped at
+the first request after the day, and a delete or a rewrite starts it again. A
+situation is never handed to it, because it has an end date.
 It writes only if the portrait is still the one it read and every memory it fed
 to the model is as it read it, so a build that was running when the learner
 deleted or rewrote a memory, or deleted them all, or paused memory, stores
