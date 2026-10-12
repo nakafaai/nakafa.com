@@ -7,6 +7,7 @@ import {
   MutableHashSet,
   MutableList,
   Option,
+  String as Str,
 } from "effect";
 import {
   decodeGiven,
@@ -46,6 +47,12 @@ export const ANSWER_MILLISECONDS = 15_000;
  * can also fail one change: after `failNext` the next change the page sends
  * never reaches the server, and the page is told the server could not take it.
  * What the tracker knows is what the page was given, never what the server sent.
+ *
+ * It also keeps the frame of every change the server took, so a step can ask
+ * whether the server holds given words (`took`). The count of changes cannot
+ * say that: the editor saves after a pause as well as when it closes, and a
+ * save that waits for the memory to be added goes out a moment after the
+ * server answered the add.
  */
 export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
   page: Page,
@@ -71,6 +78,10 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
   }>();
   /** The functions whose queries the server has answered on this page. */
   const answeredPaths = MutableHashSet.empty<string>();
+  // The frames of the changes on their way, by the id the server answers with.
+  const waiting = MutableHashMap.empty<number, string>();
+  // The frames of the changes the server took.
+  const taken = MutableList.make<string>();
   const delayed = MutableList.make<() => void>();
   /** Gives the page a frame now, or after `release` while the answers are held back. */
   const deliver = (give: () => void) => {
@@ -121,11 +132,18 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
       const noticeGiven = (frame: typeof GivenSchema.Type) =>
         Match.value(frame).pipe(
           Match.discriminators("type")({
-            MutationResponse: ({ ts }) => {
+            MutationResponse: ({ requestId, success, ts }) => {
               changes.answered += 1;
               if (ts) {
                 changes.stored = later(changes.stored, momentOf(ts));
               }
+              if (success) {
+                MutableList.appendAll(
+                  taken,
+                  Option.toArray(MutableHashMap.get(waiting, requestId))
+                );
+              }
+              MutableHashMap.remove(waiting, requestId);
             },
             Transition: ({ endVersion, modifications }) => {
               changes.told = later(changes.told, momentOf(endVersion.ts));
@@ -171,6 +189,13 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
           });
           return;
         }
+        if (Option.isSome(mutation)) {
+          MutableHashMap.set(
+            waiting,
+            mutation.value.requestId,
+            message.toString()
+          );
+        }
         server.send(message);
       });
       server.onMessage((message) => {
@@ -213,6 +238,13 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     /** Keeps what the server answers from the page until `release`. */
     hold() {
       changes.held = true;
+    },
+    /**
+     * Whether the server took a change that carried `text`. The words of a
+     * test are letters, digits and spaces, which a frame holds as they are.
+     */
+    took(text: string) {
+      return Arr.some(MutableList.toArray(taken), Str.includes(text));
     },
     /** Gives the page everything the server answered meanwhile, in order. */
     release() {

@@ -58,6 +58,12 @@ export const writeMemory = Effect.fn("NakafaE2E.writeMemory")(function* (
  * the editor stores the words at once, so a memory never waits for the answer
  * to the one before it, and the step ends when the server has answered all of
  * them. The oldest is written first, so it ends up last on the list.
+ *
+ * The editor also saves after a pause in the writing, and a slow browser
+ * pauses between two keys. Then a memory is added with the words written so
+ * far, and its last words go out as a second change once the server answered
+ * the add. So the step counts no changes: it waits until the server took a
+ * change with the whole words of every memory, which is the last one of each.
  */
 export const writeLongList = Effect.fn("NakafaE2E.writeLongList")(function* (
   page: Page,
@@ -76,8 +82,10 @@ export const writeLongList = Effect.fn("NakafaE2E.writeLongList")(function* (
   yield* Effect.forEach(LONG_LIST, (text) => writeMemory(page, text));
   yield* Effect.promise(async () => {
     await expect
-      .poll(() => changes.sent - before, { timeout: ANSWER_MILLISECONDS })
-      .toBe(MANY);
+      .poll(() => Arr.every(LONG_LIST, (text) => changes.took(text)), {
+        timeout: ANSWER_MILLISECONDS,
+      })
+      .toBe(true);
     await saved(changes, before);
   });
 });
