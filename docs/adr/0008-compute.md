@@ -128,9 +128,12 @@ weekly pass restores its score from the signals. The pipeline writes a signal
 and its counter in one transaction, so a counter missing while its signals are
 live is not a state the pipeline produces.
 
-One hourly cron prunes bounded indexed pages and atomically schedules a next
-page when needed. Each page derives the current day again, so a chain crossing
-midnight waits for the new day's maintenance before deleting daily inputs.
+One hourly cron, at minute 45, prunes bounded indexed pages and atomically
+schedules a next page when needed. The daily expiry and the weekly repair run at
+minute 15 of hour 0 and rewrite the maintenance row that the pass reads, so the
+pass keeps 30 minutes from them and the two never write it together. Each page
+derives the current day again, so a chain crossing midnight waits for the new
+day's maintenance before deleting daily inputs.
 Maintenance rows are read only when an expired daily input exists. Missing or
 incomplete cycles retain those inputs while viewer-key expiration continues.
 The remaining indexed rows are the resume position; there is no separate
@@ -146,22 +149,22 @@ forever. Regression tests verify the transaction, window cutoff, delayed queue,
 restart and midnight behavior rather than treating cycle completion as a claim
 of historical data completeness.
 
-Two temporary contract steps remain from the change that narrowed the pipeline
-to one ranking. This ADR owns them, and they end together. Until they do, the
-same hourly pass retires the counters, ranking entries and maintenance
-watermarks of the windows and the scope that earlier versions kept (its index
-ranges are its resume position, so a pass with nothing left to retire reads no
-document), and `getTrendingSubjects` accepts and ignores the `windowKey`
-argument that an older web deployment still sends. The exit is met when dev and
-production report no retired counter and no retired watermark from the hourly
-pass, and the production deploy is 8 days old (the window plus the day its
-maintenance runs, the longest an older signal lives), with no older web
-deployment taking requests. The cleanup is one change: delete
-`contents/metrics/retire.ts` with its call and tests, drop `retiredCounters` and
-`retiredCycles` from the prune result, narrow the stored window and scope values
-of popularity rows, and the `applied` windows of daily signals, to the
-maintained ones, and delete the `windowKey` argument with its compatibility
-test.
+The change that narrowed the pipeline to one ranking left temporary contract
+steps, and most are done. On 12 October 2026 the prune found no counter and no
+maintenance watermark of another window or scope on dev or production, so the
+step that retired them is deleted, and counters and watermarks are stored under
+the seven-day window alone. `getTrendingSubjects` takes only the locale: a web
+deployment older than the narrowing still sends the deleted `windowKey`
+argument and meets a validation error from the query until it is replaced.
+
+One step remains, which this ADR owns. A daily signal, a viewer key or a queued
+view written before the narrowing may still carry the placement scope, and a
+daily signal written before it carries the other windows in `applied`. The
+longest an older signal lives is 8 days, the window plus the day its
+maintenance runs. Once the narrowing has been in production for 8 days, which is
+20 October 2026, one change narrows the stored scope values and the `applied`
+windows to the maintained ones, together with the placement check of
+`isRankedPopularityView`.
 
 Mutations that write only tables without registered triggers use native Convex
 builders. Mutations that own message, subscription, score, or other registered
