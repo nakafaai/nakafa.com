@@ -2,8 +2,9 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Schema } from "effect";
+import { generateOGImage } from "@/lib/og";
 import { generateFallbackImage } from "@/lib/og/fallback";
-import { OG_FALLBACK_HEADERS } from "@/lib/og/headers";
+import { OG_FALLBACK_HEADERS, OG_IMAGE_HEADERS } from "@/lib/og/headers";
 
 const ImageCallSchema = Schema.Struct({
   element: Schema.Unknown,
@@ -81,5 +82,13 @@ describe("fallback social image", () => {
     expect(response).toBeInstanceOf(Response);
     expect(response.status).toBe(404);
     expect(response.headers.get("content-type")).toBe("image/png");
+  });
+
+  it("gives the image of a known route the CDN headers unless the caller names others", async () => {
+    await generateOGImage({ description: "Lesson", title: "Function" });
+
+    const [{ options }] = mocks.imageCalls;
+    expect(options).toMatchObject({ headers: OG_IMAGE_HEADERS });
+    expect(options).not.toMatchObject({ headers: OG_FALLBACK_HEADERS });
   });
 });
