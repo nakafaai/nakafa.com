@@ -77,9 +77,10 @@ export const NinaUnansweredState = Schema.Struct({
 /**
  * Every state a turn can be in. The order of the members is the order the
  * stored validator lists them in. A phase picks its states by these names, so a
- * new state cannot slip into one by its position.
+ * new state cannot slip into one by its position. The web app reads the type of
+ * its `status`.
  */
-const NinaTurnState = Schema.Union([
+export const NinaTurnState = Schema.Union([
   NinaQueuedState,
   NinaRunningState,
   NinaCompleteState,
