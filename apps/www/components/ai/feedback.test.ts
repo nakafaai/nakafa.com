@@ -1,10 +1,17 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { captureException } from "@repo/analytics/posthog/browser";
+import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
-import { Effect } from "effect";
+import de from "@repo/internationalization/dictionaries/de.json";
+import en from "@repo/internationalization/dictionaries/en.json";
+import id from "@repo/internationalization/dictionaries/id.json";
+import { Effect, Record as Rec } from "effect";
+import { createTranslator } from "next-intl";
 import { toast } from "sonner";
 import {
   NinaConnectionError,
+  ninaFailureFeedback,
+  ninaFailureLimits,
   reportNinaFailure,
 } from "@/components/ai/feedback";
 
@@ -37,7 +44,7 @@ describe("chat runtime feedback", () => {
         );
 
         expect(toast.error).toHaveBeenCalledExactlyOnceWith(message, {
-          position: "bottom-center",
+          position: "top-center",
         });
         expect(captureException).not.toHaveBeenCalled();
       })
@@ -56,7 +63,7 @@ describe("chat runtime feedback", () => {
 
       expect(toast.error).toHaveBeenCalledExactlyOnceWith(
         copy.fallbackMessage,
-        { position: "bottom-center" }
+        { position: "top-center" }
       );
       expect(captureException).not.toHaveBeenCalled();
     })
@@ -76,9 +83,37 @@ describe("chat runtime feedback", () => {
       expect(toast.error).toHaveBeenCalledExactlyOnceWith(
         copy.fallbackMessage,
         {
-          position: "bottom-center",
+          position: "top-center",
         }
       );
     })
   );
+});
+
+describe("the sentences of the failure table", () => {
+  for (const [locale, messages] of [
+    ["en", en],
+    ["de", de],
+    ["id", id],
+  ] as const) {
+    it(`say the limits the code checks, in ${locale}`, () => {
+      const onError = vi.fn();
+      const t = createTranslator({
+        locale,
+        messages,
+        namespace: "Ai",
+        onError,
+      });
+
+      for (const { message } of Rec.values(ninaFailureFeedback)) {
+        // A sentence that needs a number nobody passed fails to format.
+        t(`failures.${message}`, ninaFailureLimits);
+      }
+
+      expect(onError).not.toHaveBeenCalled();
+      expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
+        String(NINA_DOCUMENT_MEBIBYTES)
+      );
+    });
+  }
 });

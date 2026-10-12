@@ -36,10 +36,18 @@ import {
   NinaConnectionError,
   type NinaFailure,
   ninaFailureFeedback,
+  ninaFailureLimits,
   reportNinaFailure,
 } from "@/components/ai/feedback";
 import { optimisticPrompt } from "@/components/ai/optimistic";
+import type { AiStore } from "@/components/ai/store/types";
 import { messageInput, retryInput } from "@/components/ai/turn";
+import {
+  dropUploads,
+  keepUpload,
+  releaseUpload,
+  uploadOf,
+} from "@/components/ai/uploads";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 type Start = typeof nina.turns.start;
@@ -60,14 +68,18 @@ function requireNinaConnection(convex: ConvexReactClient) {
   );
 }
 
+/** The actions that show a chip as uploading or failed, and take that back. */
+type UploadStatus = Pick<AiStore, "clearUpload" | "markUpload">;
+
+/** Uploads one file unless it already holds an upload, and shows how far the upload is. */
 const uploadAttachment = Effect.fn("nina.upload")(function* (
   attachment: NonNullable<NinaDraft["files"]>[number],
   upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
-  uploaded: WeakMap<File, Id<"ninaUploads">>,
   previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>,
-  convex: ConvexReactClient
+  convex: ConvexReactClient,
+  status: UploadStatus
 ) {
-  const cached = uploaded.get(attachment.file);
+  const cached = uploadOf(attachment.file);
   if (cached) {
     return cached;
   }
@@ -91,6 +103,9 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
       }),
   });
   yield* requireNinaConnection(convex);
+  // The file shows as uploading from the moment its bytes go, and as failed if
+  // the upload does not finish. A refusal before that moment is not an upload.
+  yield* Effect.sync(() => status.markUpload(attachment.url, "uploading"));
   const id = yield* Effect.tryPromise({
     try: () => upload({ bytes, mediaType, filename: attachment.file.name }),
     catch: () =>
@@ -98,14 +113,20 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
         code: "NINA_CONNECTION_FAILED",
         message: "Nina upload could not be confirmed.",
       }),
-  }).pipe(Effect.flatMap(Effect.fromResult));
-  uploaded.set(attachment.file, id);
+  }).pipe(
+    Effect.flatMap(Effect.fromResult),
+    Effect.tapError(() =>
+      Effect.sync(() => status.markUpload(attachment.url, "error"))
+    )
+  );
+  keepUpload(attachment.file, id);
   MutableHashMap.set(previews, id, {
     type: "file",
     url: attachment.url,
     mediaType,
     filename: attachment.file.name,
   });
+  yield* Effect.sync(() => status.clearUpload(attachment.url));
   return id;
 });
 
@@ -113,9 +134,9 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
 const uploadAttachments = Effect.fn("nina.uploads")(function* (
   files: NonNullable<NinaDraft["files"]>,
   upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
-  uploaded: WeakMap<File, Id<"ninaUploads">>,
   previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>,
-  convex: ConvexReactClient
+  convex: ConvexReactClient,
+  status: UploadStatus
 ) {
   if (exceedsDocumentLimit(Arr.map(files, (attachment) => attachment.file))) {
     return yield* new NinaUploadError({
@@ -124,20 +145,22 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
     });
   }
   return yield* Effect.forEach(files, (attachment) =>
-    uploadAttachment(attachment, upload, uploaded, previews, convex)
+    uploadAttachment(attachment, upload, previews, convex, status)
   );
 });
 
 /** Native admission with optimistic query updates and idempotent transport retry. */
 export function useNinaSubmission() {
   const upload = useAction(nina.uploads.save);
-  const uploaded = useRef(new WeakMap<File, Id<"ninaUploads">>());
   const [previews] = useState(() =>
     MutableHashMap.empty<Id<"ninaUploads">, FileUIPart>()
   );
   const start = useMutation(nina.turns.start);
+  const release = useMutation(nina.uploads.release);
   const convex = useConvex();
   const addChatDraft = useAi((state) => state.addChatDraft);
+  const clearUpload = useAi((state) => state.clearUpload);
+  const markUpload = useAi((state) => state.markUpload);
   const removeChatDraft = useAi((state) => state.removeChatDraft);
   const resolveChatDraft = useAi((state) => state.resolveChatDraft);
   const [error, setError] = useState<NinaFailure | null>(null);
@@ -147,6 +170,7 @@ export function useNinaSubmission() {
 
   async function perform(
     inputProgram: Effect.Effect<Ref.Args<Start>["input"], NinaFailure>,
+    files: readonly File[],
     chatId?: Id<"chats">
   ) {
     if (inFlight.current) {
@@ -213,7 +237,8 @@ export function useNinaSubmission() {
     );
     if (Result.isSuccess(result)) {
       uncertain.current = null;
-      uploaded.current = new WeakMap();
+      // The send took its uploads, so no file holds one any more.
+      dropUploads(files);
       MutableHashMap.clear(previews);
       return result.success;
     }
@@ -224,37 +249,46 @@ export function useNinaSubmission() {
       result.failure._tag === "NinaUploadError" &&
       result.failure.code === "NINA_UPLOAD_INVALID"
     ) {
-      uploaded.current = new WeakMap();
+      // Every file uploads again on the next send, so the places its earlier
+      // uploads hold go back now instead of when they expire.
+      Effect.runFork(
+        Effect.forEach(files, (file) => releaseUpload(file, release), {
+          concurrency: "unbounded",
+        })
+      );
       MutableHashMap.clear(previews);
     }
     setError(result.failure);
     await Effect.runPromise(
       reportNinaFailure(
         result.failure,
-        t(`failures.${ninaFailureFeedback[result.failure.code].message}`)
+        t(
+          `failures.${ninaFailureFeedback[result.failure.code].message}`,
+          ninaFailureLimits
+        )
       )
     );
   }
 
   function send(prompt: NinaDraft, chatId?: Id<"chats">) {
+    const files = prompt.files ?? [];
     return perform(
-      uploadAttachments(
-        prompt.files ?? [],
-        upload,
-        uploaded.current,
-        previews,
-        convex
-      ).pipe(
+      uploadAttachments(files, upload, previews, convex, {
+        clearUpload,
+        markUpload,
+      }).pipe(
         Effect.map((uploadIds) =>
           messageInput({ focus: prompt.focus, text: prompt.text, uploadIds })
         )
       ),
+      Arr.map(files, (attachment) => attachment.file),
       chatId
     );
   }
   function retry(order: number, chatId: Id<"chats">) {
     return perform(
       Effect.sync(() => retryInput(order)),
+      [],
       chatId
     );
   }

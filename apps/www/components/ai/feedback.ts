@@ -1,5 +1,7 @@
 import type { Ref } from "@confect/core";
 import { captureException } from "@repo/analytics/posthog/browser";
+import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
+import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { Effect, Schema } from "effect";
@@ -124,10 +126,25 @@ export const ninaFailureFeedback = {
     action: "edit",
     report: true,
   },
+  NINA_PROMPT_LENGTH: {
+    message: "prompt-length",
+    action: "edit",
+    report: false,
+  },
 } as const satisfies Record<
   NinaFailure["code"],
   typeof FailureFeedbackRowSchema.Type
 >;
+
+/**
+ * The numbers the sentences of `Ai.failures` name, from the limits the code
+ * checks. Every place that words a failure passes them, so a sentence never
+ * says a limit the code does not check.
+ */
+export const ninaFailureLimits = {
+  count: NINA_PROMPT_LENGTH,
+  size: NINA_DOCUMENT_MEBIBYTES,
+} as const;
 
 /** Persisted failures retain their own recovery policy when history is reopened. */
 export const ninaResponseFeedback = {
@@ -146,6 +163,13 @@ export const ninaResponseFeedback = {
   typeof ResponseFeedbackRowSchema.Type
 >;
 
+/**
+ * Where a notice about the composer shows: at the top, so the text box and the
+ * send button stay in reach while it does. The composer sits at the bottom of
+ * the page and of the sheet, where a notice would cover it on a phone.
+ */
+export const NINA_NOTICE_POSITION = "top-center";
+
 /** Report operational failures and show only the caller's localized message. */
 export const reportNinaFailure = Effect.fn("nina.feedback")(function* (
   error: NinaFailure,
@@ -155,6 +179,6 @@ export const reportNinaFailure = Effect.fn("nina.feedback")(function* (
     if (ninaFailureFeedback[error.code].report) {
       captureException(error, { source: "nina-admission" });
     }
-    toast.error(message, { position: "bottom-center" });
+    toast.error(message, { position: NINA_NOTICE_POSITION });
   });
 });

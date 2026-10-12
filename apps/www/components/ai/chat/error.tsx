@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { useChat } from "@/components/ai/chat/context";
 import {
   ninaFailureFeedback,
+  ninaFailureLimits,
   ninaResponseFeedback,
 } from "@/components/ai/feedback";
 import { useMessage } from "@/components/ai/message/context";
@@ -61,7 +62,7 @@ export function AiChatError({ failed }: { failed: boolean }) {
       <Alert variant="destructive">
         <HugeIcons icon={Alert02Icon} />
         <AlertDescription>
-          <p>{t(`failures.${feedback.message}`)}</p>
+          <p>{t(`failures.${feedback.message}`, ninaFailureLimits)}</p>
           {canWrite && feedback.action === "retry" ? (
             <Button
               disabled={busy}

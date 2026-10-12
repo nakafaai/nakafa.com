@@ -1,6 +1,6 @@
 "use client";
 
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr, DateTime, Record as Rec } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { initialState } from "@/components/ai/store/state";
@@ -16,6 +16,10 @@ export function createAiStore() {
           set((state) => ({
             chatDrafts: Arr.prepend(state.chatDrafts, key),
           })),
+        clearUpload: (url) =>
+          set((state) => ({ uploads: Rec.remove(state.uploads, url) })),
+        markUpload: (url, status) =>
+          set((state) => ({ uploads: Rec.set(state.uploads, url, status) })),
         // One new-chat admission at a time: a pending ask or composer draft
         // owns it, so a second one is refused atomically.
         openAsk: (ask) => {

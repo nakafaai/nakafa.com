@@ -258,6 +258,21 @@ describe("ai/store/create", () => {
     expect(store.getState()).toMatchObject({ open: false, warmed: true });
   });
 
+  it("marks an upload as on its way or failed, and clears it by its file", () => {
+    const store = createAiStore();
+
+    store.getState().markUpload("blob:first", "uploading");
+    store.getState().markUpload("blob:second", "uploading");
+    store.getState().markUpload("blob:first", "error");
+    expect(store.getState().uploads).toEqual({
+      "blob:first": "error",
+      "blob:second": "uploading",
+    });
+
+    store.getState().clearUpload("blob:first");
+    expect(store.getState().uploads).toEqual({ "blob:second": "uploading" });
+  });
+
   it("sets the composer text from a value or from an updater", () => {
     const store = createAiStore();
     store.getState().openAsk({ id: "ask-1", text: "Explain" });

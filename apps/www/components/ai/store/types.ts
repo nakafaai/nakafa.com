@@ -14,6 +14,9 @@ const AiAskSchema = Schema.Struct({
 
 type AiAsk = typeof AiAskSchema.Type;
 
+/** The two states of an upload that a chip shows: on its way, or failed. */
+const AiUploadSchema = Schema.Literals(["uploading", "error"]);
+
 const AiStateSchema = Schema.Struct({
   activeChatId: Schema.NullOr(Id("chats")),
   ask: Schema.NullOr(AiAskSchema),
@@ -28,6 +31,11 @@ const AiStateSchema = Schema.Struct({
     })
   ),
   text: Schema.String,
+  /**
+   * The uploads that are on their way or failed, by the preview address of the
+   * file that holds them. A file with neither has no entry.
+   */
+  uploads: Schema.Record(Schema.String, AiUploadSchema),
   /** Whether the sheet's body may render ahead of the press that opens it. */
   warmed: Schema.Boolean,
 });
@@ -36,6 +44,8 @@ export type AiState = typeof AiStateSchema.Type;
 
 interface AiActions {
   addChatDraft: (key: string) => void;
+  clearUpload: (url: string) => void;
+  markUpload: (url: string, status: typeof AiUploadSchema.Type) => void;
   openAsk: (ask: AiAsk) => boolean;
   removeChatDraft: (key: string) => void;
   resolveAsk: (id: AiAsk["id"], chatId: AiState["activeChatId"]) => void;

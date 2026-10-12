@@ -13,7 +13,7 @@ import {
   decodeSent,
   encodeRefusal,
   type GivenSchema,
-  isMutation,
+  isCall,
   later,
   momentOf,
   type SentSchema,
@@ -43,8 +43,9 @@ export const ANSWER_MILLISECONDS = 15_000;
  * Every frame passes through this route, so a step can also hold the server's
  * answers back: after `hold` the page gets nothing from the server until
  * `release`, and what it shows meanwhile is what it showed on its own. A step
- * can also fail one change: after `failNext` the next change the page sends
- * never reaches the server, and the page is told the server could not take it.
+ * can also fail one call: after `failNext` the next change or action the page
+ * sends never reaches the server, and the page is told the server could not
+ * take it, with the typed failure the step names, if any.
  * What the tracker knows is what the page was given, never what the server sent.
  */
 export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
@@ -54,6 +55,8 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
   const changes = {
     answered: 0,
     failing: false,
+    /** What the next failure carries as the encoded failure of the function, if anything. */
+    failingData: Option.none<unknown>(),
     /** The function the next failure is for; empty for any function. */
     failingPath: "",
     held: false,
@@ -115,6 +118,10 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
               changes.sent += 1;
               MutableList.append(calls, { args, udfPath });
             },
+            // An action is not a change: the page does not wait on its answer to settle.
+            Action: ({ args, udfPath }) => {
+              MutableList.append(calls, { args, udfPath });
+            },
           }),
           Match.exhaustive
         );
@@ -144,30 +151,36 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
 
       socket.onMessage((message) => {
         const frame = decodeSent(message.toString());
-        const mutation = Option.filter(frame, isMutation);
+        const call = Option.filter(frame, isCall);
 
         if (Option.isSome(frame)) {
           noticeSent(frame.value);
         }
         if (
           changes.failing &&
-          Option.isSome(mutation) &&
+          Option.isSome(call) &&
           (changes.failingPath === "" ||
-            changes.failingPath === mutation.value.udfPath)
+            changes.failingPath === call.value.udfPath)
         ) {
           changes.failing = false;
-          // The server never sees the change, and the page is told it failed.
+          const { requestId, type } = call.value;
+          // The server never sees the call, and the page is told it failed.
           deliver(() => {
             socket.send(
               encodeRefusal({
+                ...(Option.isSome(changes.failingData)
+                  ? { errorData: changes.failingData.value }
+                  : {}),
                 logLines: [],
-                requestId: mutation.value.requestId,
+                requestId,
                 result: "Refused by the test",
                 success: false,
-                type: "MutationResponse",
+                type: type === "Action" ? "ActionResponse" : "MutationResponse",
               })
             );
-            changes.answered += 1;
+            if (type === "Mutation") {
+              changes.answered += 1;
+            }
           });
           return;
         }
@@ -202,12 +215,16 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
       );
     },
     /**
-     * Fails the next change the page sends, or the next one to the function
-     * `udfPath`: the server never gets it, and the page is told the server
-     * could not take it.
+     * Fails the next change or action the page sends, or the next one to the
+     * function `udfPath`: the server never gets it, and the page is told the
+     * server could not take it. `failure` is the encoded typed failure of the
+     * function that the page is told of; without it the page is told only that
+     * the call failed.
      */
-    failNext(udfPath = "") {
+    failNext(udfPath = "", failure?: unknown) {
       changes.failing = true;
+      changes.failingData =
+        failure === undefined ? Option.none() : Option.some(failure);
       changes.failingPath = udfPath;
     },
     /** Keeps what the server answers from the page until `release`. */

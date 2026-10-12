@@ -20,3 +20,26 @@ export function exceedsDocumentLimit(
   );
   return bytes > NINA_DOCUMENT_SIZE;
 }
+
+/**
+ * How many characters at the end of a file name always stay in view. Names of
+ * versions and the extension differ at the end, so the start gives way first.
+ */
+export const NAME_TAIL = 12;
+const graphemes = new Intl.Segmenter();
+
+/**
+ * Splits a file name into the start that may give way and the last
+ * `NAME_TAIL` characters that do not. The cut falls between characters a
+ * reader sees as one, so an emoji or an accented letter is never torn.
+ */
+export function splitFileName(name: string) {
+  const characters = Arr.map(
+    Arr.fromIterable(graphemes.segment(name)),
+    ({ segment }) => segment
+  );
+  return {
+    head: Arr.join(Arr.dropRight(characters, NAME_TAIL), ""),
+    tail: Arr.join(Arr.takeRight(characters, NAME_TAIL), ""),
+  };
+}

@@ -10,5 +10,6 @@ export const initialState = {
   open: false,
   openingChat: null,
   text: "",
+  uploads: {},
   warmed: false,
 } satisfies AiState;

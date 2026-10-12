@@ -12,6 +12,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The new chat page of the English site. */
 export const CHAT_PATH = "/en/chat";
+/** What the consent prompt calls its decline button, in each language of the site. */
+const DECLINE_LABELS = { de: "Ablehnen", en: "Decline", id: "Tolak" } as const;
 /** A lesson, where Nina's sheet opens beside the page. */
 export const LESSON_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -184,19 +186,24 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
 /**
  * Signs a synthetic learner in and opens the new chat page, where it waits
  * until the page is signed in. It returns the tracker of the changes the page
- * sends from then on, and the learner as the backend sees them.
+ * sends from then on, and the learner as the backend sees them. The page is
+ * the English one unless `locale` names another language of the site.
  */
 export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
   page: Page,
-  baseURL: string
+  baseURL: string,
+  locale: keyof typeof DECLINE_LABELS = "en"
 ) {
   const changes = yield* trackChanges(page, [LIST_QUERY]);
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
-  yield* Effect.promise(() => page.goto(CHAT_PATH));
+  yield* Effect.promise(() => page.goto(`/${locale}/chat`));
 
   // A signed-in learner decides analytics once for the account.
-  const decline = page.getByRole("button", { exact: true, name: "Decline" });
+  const decline = page.getByRole("button", {
+    exact: true,
+    name: DECLINE_LABELS[locale],
+  });
   yield* Effect.promise(() =>
     expect(decline).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );

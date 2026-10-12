@@ -1,5 +1,5 @@
 import type { JSONValue } from "ai";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Result, Schema } from "effect";
 
 /** JSON value typed exactly as the AI SDK's `JSONValue`. */
 const JsonValueSchema: Schema.Codec<JSONValue> = Schema.suspend(() =>
@@ -36,11 +36,25 @@ export const PromptInputFileSchema = Schema.Struct({
 });
 /** A selected browser file with an input-owned preview. */
 export type PromptInputFile = typeof PromptInputFileSchema.Type;
-/** A local file constraint reported before an attachment is accepted. */
+/**
+ * Why a chosen file is not attached: its type is not accepted, it is empty, it
+ * is larger than the size limit, or the files already attached leave no room.
+ */
+const PromptInputFileConstraintCode = Schema.Literals([
+  "accept",
+  "empty",
+  "max_file_size",
+  "max_files",
+]);
+/**
+ * A local file constraint reported when files are not attached. `files` names
+ * the files that broke it, so one pick reports each reason once.
+ */
 export class PromptInputFileConstraintError extends Schema.TaggedError<PromptInputFileConstraintError>()(
   "PromptInputFileConstraintError",
   {
-    code: Schema.Literals(["max_files", "max_file_size", "accept"]),
+    code: PromptInputFileConstraintCode,
+    files: Schema.Array(Schema.String),
     message: Schema.String,
   }
 ) {}
@@ -56,10 +70,16 @@ type ValidatePromptInputFilesOptions =
   typeof ValidatePromptInputFilesOptionsSchema.Type;
 const PromptInputFileSelectionSchema = Schema.Struct({
   files: Schema.Array(Schema.instanceOf(File)),
-  warning: Schema.optionalKey(PromptInputFileConstraintError),
+  rejections: Schema.Array(PromptInputFileConstraintError),
 });
-/** Files accepted from one picker, paste, or drop operation. */
+/** The files attached from one picker, paste, or drop, and why the others are not. */
 type PromptInputFileSelection = typeof PromptInputFileSelectionSchema.Type;
+const REJECTION_MESSAGES = {
+  accept: "Some files are not of an accepted type.",
+  empty: "Some files are empty.",
+  max_file_size: "Some files exceed the maximum size.",
+  max_files: "Too many files. Some were not added.",
+} as const satisfies Record<typeof PromptInputFileConstraintCode.Type, string>;
 /** Matches HTML accept syntax for extensions, exact MIME types, and MIME wildcards. */
 function matchesAccept(file: File, accept?: string) {
   if (!accept || accept.trim() === "") {
@@ -81,7 +101,36 @@ function matchesAccept(file: File, accept?: string) {
     return mediaType === specifier;
   });
 }
-/** Validates and caps one incoming prompt-file selection. */
+/** Splits files into the ones a check keeps and the ones it drops. */
+function split(files: readonly File[], isKept: (file: File) => boolean) {
+  const [kept, dropped] = Arr.partition(files, (file) =>
+    isKept(file) ? Result.succeed(file) : Result.fail(file)
+  );
+  return { dropped, kept };
+}
+
+/** The one rejection that names the dropped files, or none when no file was dropped. */
+function reject(
+  code: typeof PromptInputFileConstraintCode.Type,
+  dropped: readonly File[]
+) {
+  return Arr.isReadonlyArrayNonEmpty(dropped)
+    ? [
+        new PromptInputFileConstraintError({
+          code,
+          files: Arr.map(dropped, (file) => file.name),
+          message: REJECTION_MESSAGES[code],
+        }),
+      ]
+    : [];
+}
+
+/**
+ * Validates one incoming prompt-file selection. A file is dropped for the
+ * first reason that applies, in this order: its type, an empty file, its size,
+ * then the room the attached files leave. The files that pass are kept, and
+ * each reason names the files it dropped.
+ */
 export const validatePromptInputFiles = Effect.fn(
   "designSystem.promptInput.validateFiles"
 )(function* ({
@@ -91,35 +140,23 @@ export const validatePromptInputFiles = Effect.fn(
   maxFileSize,
   maxFiles,
 }: ValidatePromptInputFilesOptions) {
-  const accepted = Arr.filter(files, (file) => matchesAccept(file, accept));
-  if (files.length > 0 && accepted.length === 0) {
-    return yield* new PromptInputFileConstraintError({
-      code: "accept",
-      message: "No files match the accepted types.",
-    });
-  }
-  const sized = Arr.filter(
-    accepted,
+  const typed = split(files, (file) => matchesAccept(file, accept));
+  const filled = split(typed.kept, (file) => file.size > 0);
+  const sized = split(
+    filled.kept,
     (file) => maxFileSize === undefined || file.size <= maxFileSize
   );
-  if (accepted.length > 0 && sized.length === 0) {
-    return yield* new PromptInputFileConstraintError({
-      code: "max_file_size",
-      message: "All files exceed the maximum size.",
-    });
-  }
   const capacity =
     typeof maxFiles === "number"
       ? Math.max(0, maxFiles - currentFileCount)
-      : undefined;
-  if (capacity === undefined || sized.length <= capacity) {
-    return { files: sized } satisfies PromptInputFileSelection;
-  }
+      : sized.kept.length;
   return {
-    files: Arr.take(sized, capacity),
-    warning: new PromptInputFileConstraintError({
-      code: "max_files",
-      message: "Too many files. Some were not added.",
-    }),
+    files: Arr.take(sized.kept, capacity),
+    rejections: [
+      ...reject("accept", typed.dropped),
+      ...reject("empty", filled.dropped),
+      ...reject("max_file_size", sized.dropped),
+      ...reject("max_files", Arr.drop(sized.kept, capacity)),
+    ],
   } satisfies PromptInputFileSelection;
 });

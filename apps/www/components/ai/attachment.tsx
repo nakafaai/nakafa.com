@@ -1,10 +1,12 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import {
   AttachmentIcon,
   Cancel01Icon,
   FileIcon,
 } from "@hugeicons/core-free-icons";
+import nina from "@repo/backend/confect/_generated/refs/nina";
 import {
   Attachment,
   AttachmentAction,
@@ -18,18 +20,38 @@ import {
 } from "@repo/design-system/components/ui/attachment";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Array as Arr, HashSet } from "effect";
+import { Array as Arr, Effect, HashSet } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { splitFileName } from "@/components/ai/attachments";
+import { useAi } from "@/components/ai/context";
+import { releaseUpload } from "@/components/ai/uploads";
 
 const imageVariants = cva("", {
   variants: { variant: { message: "w-48", preview: "w-24" } },
   defaultVariants: { variant: "message" },
 });
+
+/** A file name whose start gives way first, so its version and extension stay in view. */
+function NinaFileName({ name }: { name: string }) {
+  const { head, tail } = splitFileName(name);
+  return (
+    <AttachmentTitle className="flex" dir="auto">
+      <span className="truncate">{head}</span>
+      <span className="shrink-0 whitespace-pre">{tail}</span>
+    </AttachmentTitle>
+  );
+}
+
+/** The icon of a document, or a spinner while the document uploads. */
+function NinaFileMedia({ uploading }: { uploading: boolean }) {
+  return uploading ? <Spinner /> : <HugeIcons icon={FileIcon} />;
+}
 
 /** Shadcn owns attachment composition; Nina supplies the native Agent file. */
 export function NinaAttachment({
@@ -42,10 +64,13 @@ export function NinaAttachment({
   const t = useTranslations("Ai");
   const name = file.filename ?? t("attachment");
   const isImage = file.mediaType.startsWith("image/");
+  // A file that is neither uploading nor failed has no entry and shows as done.
+  const state = useAi((store) => store.uploads[file.url]) ?? "done";
   return (
     <Attachment
       className={isImage ? imageVariants({ variant }) : "max-w-64"}
       orientation={isImage ? "vertical" : "horizontal"}
+      state={state}
     >
       <AttachmentMedia
         className={isImage && variant === "message" ? "aspect-3/2" : undefined}
@@ -54,19 +79,18 @@ export function NinaAttachment({
         {isImage ? (
           <Image
             alt={name}
-            className="object-contain!"
             fill
             sizes={variant === "preview" ? "96px" : "192px"}
             src={file.url}
             unoptimized
           />
         ) : (
-          <HugeIcons icon={FileIcon} />
+          <NinaFileMedia uploading={state === "uploading"} />
         )}
       </AttachmentMedia>
       {isImage ? null : (
         <AttachmentContent>
-          <AttachmentTitle>{name}</AttachmentTitle>
+          <NinaFileName name={name} />
           <AttachmentDescription>{file.mediaType}</AttachmentDescription>
         </AttachmentContent>
       )}
@@ -78,6 +102,7 @@ export function NinaAttachment({
             href={file.url}
             rel="noopener noreferrer"
             target="_blank"
+            title={name}
           />
         }
       />
@@ -97,6 +122,8 @@ export function NinaAttachments({
   const removeAttachment = usePromptInputAttachments(
     (attachments) => attachments.remove
   );
+  const clearUpload = useAi((state) => state.clearUpload);
+  const release = useMutation(nina.uploads.release);
   const t = useTranslations("Ai");
   const submitted = HashSet.fromIterable(submittedFiles);
   const files = Arr.filter(
@@ -113,7 +140,12 @@ export function NinaAttachments({
           <AttachmentActions>
             <AttachmentAction
               aria-label={t("remove-attachment", { filename: file.file.name })}
-              onClick={() => removeAttachment(file.id)}
+              onClick={() => {
+                removeAttachment(file.id);
+                clearUpload(file.url);
+                // The upload the file holds goes back at once, not at expiry.
+                Effect.runFork(releaseUpload(file.file, release));
+              }}
               type="button"
               variant="secondary"
             >

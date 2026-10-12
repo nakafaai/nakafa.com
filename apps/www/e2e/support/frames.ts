@@ -8,13 +8,26 @@ const MutationSchema = Schema.Struct({
   udfPath: Schema.String,
 });
 
-/** The answer of a server that could not take a change, as the protocol words it. */
+/** A call to an action, which the server answers with an `ActionResponse`. */
+const ActionSchema = Schema.Struct({
+  args: Schema.Array(Schema.Unknown),
+  requestId: Schema.Finite,
+  type: Schema.Literal("Action"),
+  udfPath: Schema.String,
+});
+
+/**
+ * The answer of a server that could not take a change or an action, as the
+ * protocol words it. `errorData` is what a typed failure of the function
+ * carries, such as the encoded error of a Confect function.
+ */
 const RefusalSchema = Schema.Struct({
+  errorData: Schema.optionalKey(Schema.Unknown),
   logLines: Schema.Array(Schema.String),
   requestId: Schema.Finite,
   result: Schema.String,
   success: Schema.Literal(false),
-  type: Schema.Literal("MutationResponse"),
+  type: Schema.Literals(["MutationResponse", "ActionResponse"]),
 });
 
 /** The frames the page sends that a step waits on. Any other frame decodes to none. */
@@ -24,6 +37,7 @@ export const SentSchema = Schema.Union([
     type: Schema.Literal("Authenticate"),
   }),
   MutationSchema,
+  ActionSchema,
   Schema.Struct({
     modifications: Schema.Array(
       Schema.Struct({
@@ -63,7 +77,8 @@ export const decodeGiven = Schema.decodeOption(
 export const encodeRefusal = Schema.encodeSync(
   Schema.fromJsonString(RefusalSchema)
 );
-export const isMutation = Schema.is(MutationSchema);
+/** A call the server answers: a change or an action. */
+export const isCall = Schema.is(Schema.Union([MutationSchema, ActionSchema]));
 
 /** The moment of the database that a `ts` names: eight bytes, the least significant first. */
 export const momentOf = (bytes: Uint8Array) =>

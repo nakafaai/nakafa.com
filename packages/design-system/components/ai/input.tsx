@@ -26,13 +26,20 @@ import {
   useRef,
 } from "react";
 
-/** Props for a prompt form with locally owned attachments. */
-type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, "onSubmit"> & {
+/**
+ * Props for a prompt form with locally owned attachments. `onError` reports
+ * the files that one pick did not attach, a reason at a time, not the form's
+ * own error event.
+ */
+type PromptInputProps = Omit<
+  HTMLAttributes<HTMLFormElement>,
+  "onError" | "onSubmit"
+> & {
   accept?: string;
   maxFiles?: number;
   maxFileSize?: number;
   multiple?: boolean;
-  onError?: (error: PromptInputFileConstraintError) => void;
+  onError?: (rejections: readonly PromptInputFileConstraintError[]) => void;
   onSubmit: (
     message: PromptInputMessage,
     event: FormEvent<HTMLFormElement>
@@ -146,8 +153,10 @@ export function PromptInput({
         title="Upload files"
         type="file"
       />
+      {/* The form is the item of a grid in every composer: without a minimum width of
+          its own, one long word makes the grid track as wide as the word. */}
       <form
-        className={cn("w-full", className)}
+        className={cn("w-full min-w-0", className)}
         onSubmit={handleSubmit}
         ref={formRef}
         {...props}
