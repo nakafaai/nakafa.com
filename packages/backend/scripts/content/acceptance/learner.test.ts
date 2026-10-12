@@ -97,11 +97,11 @@ describe("synthetic acceptance learner", () => {
           Arr.map(calls, (spec) => Arr.dropRight(Arr.drop(spec.args, 1), 1))
         ).toEqual([
           ["run", "--component", "betterAuth", "adapter:create"],
-          ["run", "auth/lifecycle:onCreate"],
-          ["run", "--component", "betterAuth", "adapter:create"],
           ["run", "--component", "betterAuth", "adapter:create"],
           ["run", "auth/lifecycle:onCreate"],
           ["run", "--component", "betterAuth", "adapter:create"],
+          ["run", "--component", "betterAuth", "adapter:create"],
+          ["run", "auth/lifecycle:onCreate"],
         ]);
         for (const spec of calls) {
           expect(spec.args[0]).toBe("node_modules/convex/bin/main.js");
@@ -109,7 +109,7 @@ describe("synthetic acceptance learner", () => {
           expect(spec.env?.TMPDIR).toEqual(expect.any(String));
           expect(spec.env?.CONVEX_DEPLOY_KEY).toBeUndefined();
         }
-        const [account, profile, session, other] = yield* Effect.forEach(
+        const [account, session, profile, other] = yield* Effect.forEach(
           Arr.take(calls, 4),
           readInput
         );
@@ -121,7 +121,7 @@ describe("synthetic acceptance learner", () => {
         expect(session?.input?.data.userId).toBe("user-1");
         const token = session?.input?.data.token ?? "";
         expect(token).toHaveLength(43);
-        expect(calls[2]?.sensitiveValues).toEqual([token]);
+        expect(calls[1]?.sensitiveValues).toEqual([token]);
 
         const cookie = yield* fs
           .readFileString(`${root}/first.json`)
