@@ -82,7 +82,23 @@ export const NinaSettledTurn = Schema.Struct({
   ]),
 });
 
-export const NinaTurn = Schema.Union([NinaActiveTurn, NinaSettledTurn]);
+/**
+ * A saved prompt that no turn answered, as a migration before the turn
+ * lifecycle stored it. No code writes this phase. `nina.unanswered.settle`
+ * ends the stored rows, and the change that deletes that function deletes
+ * this phase with it.
+ */
+const NinaUnansweredTurn = Schema.Struct({
+  ...NinaTurnFacts.fields,
+  phase: Schema.Literal("unanswered"),
+  state: NinaTurnState.members[5],
+});
+
+export const NinaTurn = Schema.Union([
+  NinaActiveTurn,
+  NinaSettledTurn,
+  NinaUnansweredTurn,
+]);
 
 export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
   "NinaTurnError",
