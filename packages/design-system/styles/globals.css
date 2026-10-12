@@ -299,10 +299,10 @@
     scrollbar-gutter: stable both-edges;
   }
 
-  /* Two gutters keep the page centred, and where scrollbars take room, such as
-   * Windows, Linux and a desktop zoomed to 400%, they take 20px of a 320px
-   * page. Under 24rem the page keeps one gutter, so a page that narrow keeps
-   * the room that its content needs. */
+  /* A gutter on both edges keeps the page centred, and where a browser's
+   * scrollbars take room it costs the page two scrollbar widths. Under 24rem
+   * the page keeps one gutter, so a page that narrow keeps the room that its
+   * content needs. */
   @media (width < 24rem) {
     html {
       scrollbar-gutter: stable;

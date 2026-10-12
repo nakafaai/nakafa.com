@@ -760,20 +760,25 @@ nobody tries them again without a new reason.
   fixed to the same edge and drags with the same hook, lands its edge the same
   way. Below 65rem the editor is
   the sheet it is on a phone: the sidebar, the smallest panel and the room of
-  the list need 63rem, and where scrollbars are classic the stable gutter of
-  the page on both edges takes 22px of the window. The head of the list shows
-  the word on its add button and the icon of its search by its own width,
-  because the card beside the panel is as narrow as the card on a phone. Under
-  24rem the page keeps its scrollbar gutter on one edge and not on both
-  (`globals.css`). Where scrollbars take room, as they do in the browsers CI
-  runs and on a desktop zoomed to 400%, two gutters of 10px left a 320px page
-  cards of 252px: the German placeholder of the search needs 140px and the
-  field gave 138px, and a row could not keep the end date of a situation
-  whole. A phone has no gutter and was never short. A search field also keeps
-  a slot of 14px for its clear button while it is empty, and the placeholder
-  cannot use it, so the field hides the button while the placeholder shows.
-  With one gutter and the slot, the German placeholder still lost its last
-  letter, which the width of the field less its padding did not show.
+  the list need 63rem, and where scrollbars take room the stable gutter of the
+  page on both edges takes a scrollbar's width from each side of the window,
+  which the media query does not count, so the 2rem up to 65rem are for them.
+  The head of the list shows the word on its add button and the icon of its
+  search by its own width, because the card beside the panel is as narrow as
+  the card on a phone. Under 24rem the page keeps its scrollbar gutter on one
+  edge and not on both (`globals.css`), on every route: the gutter belongs to
+  the page, and a gutter that changed with the route would move the page when
+  the learner navigates. Where a browser's scrollbars take room, which includes
+  the headless Chromium of CI (it paints no scrollbar and still reserves the
+  gutter), two gutters left a 320px page cards too narrow for the German
+  placeholder of the search and for the end date of a situation in a row, and
+  the 320px browser tests failed in CI until the page kept one gutter. A phone
+  has no gutter and was never short. A search field also keeps a slot for its
+  clear button while it is empty, and the placeholder cannot use it, so the
+  field hides the button while the placeholder shows and gives it back with the
+  first letter. The width of the field less its padding does not show the slot,
+  so the browser test reads the placeholder's own box from the shadow tree that
+  the browser draws the field from (`e2e/support/placeholder.ts`).
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
   because the browser has no page of its own to change until then.

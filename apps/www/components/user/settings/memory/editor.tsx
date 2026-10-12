@@ -27,12 +27,11 @@ import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";
 /**
  * From this width on, the editor is a panel beside the page. Below it, a
  * sheet. The window must hold the sidebar (16rem), the smallest panel (24rem)
- * and the room the list keeps (`LIST_ROOM`, 23rem): 63rem, or 1008px. Where the
- * scrollbar is classic, the page loses its width on one edge, the stable
- * gutter on both edges (`globals.css`) holds the same width on the other, and
- * the media query counts neither. The thin scrollbar of this page is 11px in
- * Chromium, so a window of 64rem leaves the page 1002px, 6px short, and a
- * window of 65rem leaves it 1018px.
+ * and the room the list keeps (`LIST_ROOM`, 23rem): 63rem. Where scrollbars
+ * take room, the page loses a scrollbar's width on one edge, the stable gutter
+ * on both edges (`globals.css`) holds the same width on the other, and the
+ * media query counts neither. So the breakpoint adds 2rem for them, room for
+ * two gutters of 16px: 65rem.
  */
 const WIDE = "(min-width: 65rem)";
 /** How wide the panel starts and how far a drag of its edge takes it. */

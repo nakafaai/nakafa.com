@@ -20,10 +20,10 @@ import { useMemoryPage } from "@/components/user/settings/memory/provider";
  * adds, and the longest placeholder, which is German, still has all its room.
  * From 16rem the search shows its icon. Below that the field has the room alone.
  *
- * A search field keeps a slot for its clear button even while it is empty. The
- * slot is 14px and the placeholder cannot use it: where scrollbars take room,
- * the German placeholder lost its last letter in a card of 261px. The button
- * hides while the placeholder shows and comes back with the first letter.
+ * A search field keeps a slot for its clear button even while it is empty, and
+ * the placeholder cannot use it: in a narrow card the German placeholder lost
+ * its last letter. The button hides while the placeholder shows and comes back
+ * with the first letter.
  */
 export function MemoryToolbar() {
   const t = useTranslations("Memory");
