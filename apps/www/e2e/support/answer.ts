@@ -1,6 +1,12 @@
 import type { Page } from "@playwright/test";
 import { Array as Arr, Effect, MutableHashSet, Option, Schema } from "effect";
-import { CONVEX_SOCKET, decodeSent } from "@/e2e/support/frames";
+import {
+  CONVEX_SOCKET,
+  decodeFrame,
+  decodeSent,
+  encodeFrame,
+  isTransition,
+} from "@/e2e/support/frames";
 import { LIST_QUERY } from "@/e2e/support/memory";
 
 /** The answer of the list: a page of memories. */
@@ -11,34 +17,15 @@ const ListAnswer = Schema.Struct({
 /** A memory as the list's answer holds it, whose fields a test may change. */
 type Row = (typeof ListAnswer.Type)["page"][number];
 
-/**
- * A frame from the server that tells the page what some queries now answer.
- * Only what the rewrite reads is described: every other field of the frame is
- * sent on as it came.
- */
-const Transition = Schema.Struct({
-  modifications: Schema.Array(
-    Schema.Struct({
-      queryId: Schema.Finite,
-      type: Schema.String,
-      value: Schema.optionalKey(Schema.Unknown),
-    })
-  ),
-  type: Schema.Literal("Transition"),
-});
-
-const decodeFrame = Schema.decodeUnknownOption(
-  Schema.fromJsonString(Schema.Unknown)
-);
-const encodeFrame = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
-const isTransition = Schema.is(Transition);
 const isListAnswer = Schema.is(ListAnswer);
 
 /**
  * Changes what the list answers, for the connections the page opens from now
  * on, the way a backend that holds other memories would. `change` gets each
  * memory of a page, newest first, with its place on the page, and returns the
- * memory the page then shows. Everything else passes through as it is.
+ * memory the page then shows. Everything else passes through as it is: a frame
+ * is read as plain JSON, so the fields of a transition that the rewrite does
+ * not read go on as they came.
  */
 export const rewriteList = Effect.fn("NakafaE2E.rewriteList")(function* (
   page: Page,

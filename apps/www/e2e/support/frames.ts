@@ -40,6 +40,22 @@ export const SentSchema = Schema.Union([
 ]);
 
 /**
+ * A frame from the server that tells the page what some queries now answer. A
+ * change of the kind `QueryUpdated` carries the new answer as its `value`. A
+ * decoded frame keeps only the fields described here.
+ */
+const TransitionSchema = Schema.Struct({
+  modifications: Schema.Array(
+    Schema.Struct({
+      queryId: Schema.Finite,
+      type: Schema.String,
+      value: Schema.optionalKey(Schema.Unknown),
+    })
+  ),
+  type: Schema.Literal("Transition"),
+});
+
+/**
  * The frames the server sends that a step waits on. A `ts` is a moment of the
  * database, which the protocol writes as eight bytes in Base64.
  */
@@ -51,11 +67,8 @@ export const GivenSchema = Schema.Union([
     type: Schema.Literal("MutationResponse"),
   }),
   Schema.Struct({
+    ...TransitionSchema.fields,
     endVersion: Schema.Struct({ ts: Schema.Uint8ArrayFromBase64 }),
-    modifications: Schema.Array(
-      Schema.Struct({ queryId: Schema.Finite, type: Schema.String })
-    ),
-    type: Schema.Literal("Transition"),
   }),
 ]);
 
@@ -69,6 +82,19 @@ export const encodeRefusal = Schema.encodeSync(
   Schema.fromJsonString(RefusalSchema)
 );
 export const isMutation = Schema.is(MutationSchema);
+export const isTransition = Schema.is(TransitionSchema);
+
+/**
+ * Reads a frame as plain JSON and writes it back. A step that changes one part
+ * of a frame and sends the rest on as it came uses these, because a decoded
+ * frame keeps only the fields a Schema describes.
+ */
+export const decodeFrame = Schema.decodeOption(
+  Schema.fromJsonString(Schema.Unknown)
+);
+export const encodeFrame = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
 
 /** The moment of the database that a `ts` names: eight bytes, the least significant first. */
 export const momentOf = (bytes: Uint8Array) =>
