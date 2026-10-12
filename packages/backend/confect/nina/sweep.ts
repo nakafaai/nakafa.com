@@ -9,6 +9,7 @@ import {
   TURN_DEADLINE,
 } from "@repo/backend/confect/nina/deadline";
 import type { NinaSweepResume } from "@repo/backend/confect/nina/lifecycle.spec";
+import { sinceAdmission } from "@repo/backend/confect/nina/timing";
 import { Array as Arr, Clock, Duration, Effect } from "effect";
 
 /** How many open turns one sweep call reads before the next call continues. */
@@ -23,7 +24,7 @@ const SWEEP_PAGE = 50;
 export const startsLate = Effect.fn("nina.sweep.late")(function* (
   turn: NinaTurnsDoc
 ) {
-  const waited = (yield* Clock.currentTimeMillis) - turn._creationTime;
+  const waited = sinceAdmission(turn, yield* Clock.currentTimeMillis);
   return waited > Duration.toMillis(START_DEADLINE);
 });
 
