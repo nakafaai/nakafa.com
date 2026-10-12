@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { openMemoryPage } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readPlaceholder } from "@/e2e/support/placeholder";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   controlCard,
@@ -13,6 +14,10 @@ import {
 } from "@/e2e/support/worst";
 
 const WORDS = "Studies after dinner";
+/** The name of the search field on the German page. */
+const SEARCH_LABEL = "Erinnerungen suchen";
+/** The search field, as a reader of the browser's shadow tree names it. */
+const SEARCH = `input[type="search"][aria-label="${SEARCH_LABEL}"]`;
 /** The card of the list is never narrower than 20rem. */
 const LIST_CARD = 320;
 /** What the row keeps for the list: the card and the 1.5rem of padding on each side. */
@@ -225,46 +230,31 @@ test.describe("Memory editor at the width where it changes layout", () => {
 
 /**
  * What the German page shows where the card is narrow: the placeholder of the
- * search is whole and the button that adds a memory is beside it inside the
- * card, and the explanation and the button of the card that deletes every
- * memory wrap, so that the button stays in the card and the text keeps lines
- * of a readable length.
+ * search is whole, the search keeps no slot for a clear button while it is
+ * empty and gives one back with the first letter, and the button that adds a
+ * memory is beside it inside the card. The explanation and the button of the
+ * card that deletes every memory wrap, so that the button stays in the card and
+ * the text keeps lines of a readable length.
  */
 const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
   page: Page,
   baseURL: string
 ) {
   yield* openMemoryPage(page, baseURL);
+  const search = page.getByRole("searchbox", { name: SEARCH_LABEL });
+
   yield* Effect.promise(async () => {
     await page.goto("/de/user/settings/memory");
-    const search = page.getByRole("searchbox", { name: "Erinnerungen suchen" });
-
     await expect(search).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     // Next to the editor's panel the card is as narrow as the page lets it be.
     if ((page.viewportSize()?.width ?? 0) >= WIDE) {
       await page.getByRole("button", { name: "Erinnerung hinzufügen" }).click();
       await expect(page.locator("aside")).toBeVisible();
     }
+  });
+  const placeholder = yield* readPlaceholder(page, SEARCH);
 
-    const text = await search.evaluate((field) => {
-      if (!(field instanceof HTMLInputElement)) {
-        return { needs: 0, room: 0 };
-      }
-      const style = getComputedStyle(field);
-      const context = document.createElement("canvas").getContext("2d");
-
-      if (!context) {
-        return { needs: 0, room: 0 };
-      }
-      context.font = style.font;
-      return {
-        needs: context.measureText(field.placeholder).width,
-        room:
-          field.clientWidth -
-          Number.parseFloat(style.paddingLeft) -
-          Number.parseFloat(style.paddingRight),
-      };
-    });
+  yield* Effect.promise(async () => {
     const card = await controlCard(page).boundingBox();
     const button = await controlCard(page)
       .getByRole("button", { exact: true, name: "Alle löschen" })
@@ -278,13 +268,14 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
       .getByRole("button", { name: "Erinnerung hinzufügen" })
       .boundingBox();
 
-    // The whole placeholder fits the room the field gives it. The field is
-    // empty and hides its clear button then, so no slot takes any of the room.
-    expect(text.needs).toBeGreaterThan(0);
+    // The field is empty, so it hides its clear button and the placeholder has
+    // the whole of the field, and its text is not cut.
+    expect(placeholder.room).toBeGreaterThan(0);
+    expect(placeholder.clear).toBe(0);
     expect(
-      text.needs,
-      `the card is ${card?.width}px wide and the field gives ${text.room}px`
-    ).toBeLessThanOrEqual(text.room);
+      placeholder.overflow,
+      `the card is ${card?.width}px wide and the field gives the placeholder ${placeholder.room}px`
+    ).toBe(0);
     // The button that adds a memory is beside the field, inside the card.
     expect(add).not.toBeNull();
     expect(field).not.toBeNull();
@@ -307,6 +298,10 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
       (explanation?.y ?? 0) + (explanation?.height ?? 0)
     );
   });
+
+  // The first letter brings the clear button back.
+  yield* Effect.promise(() => search.fill("a"));
+  expect((yield* readPlaceholder(page, SEARCH)).clear).toBeGreaterThan(0);
 });
 
 for (const viewport of [

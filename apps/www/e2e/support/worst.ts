@@ -34,10 +34,12 @@ export const widthOf = async (element: Locator) =>
 /**
  * Whether the words of a line that match `words` are shown whole. A line that
  * fits shows them. A line that is cut at its end shows them when they end with
- * room left for the ellipsis that replaces the rest.
+ * room left for the ellipsis that replaces the rest. The line is measured in
+ * the face the learner sees, once the page's fonts have loaded.
  */
 export const wordsShown = (line: Locator, words: RegExp) =>
-  line.evaluate((element, source) => {
+  line.evaluate(async (element, source) => {
+    await document.fonts.ready;
     const text = element.firstChild;
     const found = new RegExp(source, "u").exec(text?.textContent ?? "");
     const context = document.createElement("canvas").getContext("2d");
@@ -150,12 +152,17 @@ export const openedPanel = Effect.fn("NakafaE2E.openedPanel")(function* (
 });
 
 /** Presses a key on the focused element `times` times. */
-export const pressTimes = (page: Page, key: string, times: number) =>
-  Effect.promise(async () => {
+export const pressTimes = Effect.fn("NakafaE2E.pressTimes")(function* (
+  page: Page,
+  key: string,
+  times: number
+) {
+  yield* Effect.promise(async () => {
     for (let press = 0; press < times; press += 1) {
       await page.keyboard.press(key);
     }
   });
+});
 
 /**
  * Loads the Memory page with its scripts held back, so that it shows only what
