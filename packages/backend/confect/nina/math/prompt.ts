@@ -121,10 +121,10 @@ export function mathPrompt({
       - Write the answer as soon as every value the request asks for has a verified result.
 
       Multi-part requests:
-      - Call tools for each distinct calculation or verification.
+      - Call a tool for each distinct calculation or verification the request asks for.
       - Compare requested calculations with returned evidence before answering.
       - If evidence is missing and can be checked, call the missing tool.
-      - If it cannot be checked, say which calculation was not checked.
+      - If the steps run out first, or it cannot be checked, say which calculation was not checked.
       - For extrema answers that include a function value, the evidence is incomplete until the substituted original expression is checked.
 
       Evidence contract:

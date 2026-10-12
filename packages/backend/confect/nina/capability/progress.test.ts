@@ -49,13 +49,17 @@ const options = {
 } as const;
 const cutFirstHalf = /^The first half\n\n.*cut short/su;
 
-it("reports a specialist's answer as partial, and tells Nina it was cut short, only when it ended at the output cap", () => {
+it("reports a specialist's answer as partial, and tells Nina why, only when it ended at the output cap or its loop at the step limit with a tool still called", () => {
   expect(specialistResult("A whole answer.", "stop")).toEqual({
     text: "A whole answer.",
   });
   expect(specialistResult("The first half", "length")).toEqual({
     outcome: "partial",
     text: expect.stringMatching(cutFirstHalf),
+  });
+  expect(specialistResult("The first half", "tool-calls")).toEqual({
+    outcome: "partial",
+    text: expect.stringContaining("step limit"),
   });
 });
 

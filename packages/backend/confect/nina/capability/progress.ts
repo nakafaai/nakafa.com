@@ -37,6 +37,10 @@ const TIMED_OUT =
 const CUT_SHORT =
   "This answer reached its length limit and was cut short. Use only what it states, tell the learner what it could not cover, and do not invent the rest.";
 
+/** What Nina reads when a specialist's loop ended at its step limit, with a tool still called. */
+const STEP_LIMIT =
+  "This run reached its step limit before it finished. Use only what it states, tell the learner what it could not cover, and do not invent the rest.";
+
 /** What a card that never finished shows instead: failed, and why. */
 const ABANDONED = {
   error: "It took too long to finish.",
@@ -44,14 +48,20 @@ const ABANDONED = {
 } as const;
 
 /**
- * What a specialist reports once its model has written its answer. A last step
- * that ended at the output cap left the answer cut short, so the report is
- * `partial` and says so to Nina, as for a run cut at its deadline. Any other
- * ending is a plain answer.
+ * What a specialist reports once its model has finished. A last step that
+ * ended at the output cap left the answer cut short, and a loop that ended at
+ * its step limit while its last step still called a tool never wrote its
+ * answer. Both are `partial` and say so to Nina, as for a run cut at its
+ * deadline. Any other ending is a plain answer. That includes a last step that
+ * was told to call no tool: a run that has checked everything writes its
+ * answer there too, so reaching it does not show that a check was skipped.
  */
 export function specialistResult(text: string, finishReason: FinishReason) {
   if (finishReason === "length") {
     return { outcome: "partial" as const, text: `${text}\n\n${CUT_SHORT}` };
+  }
+  if (finishReason === "tool-calls") {
+    return { outcome: "partial" as const, text: `${text}\n\n${STEP_LIMIT}` };
   }
   return { text };
 }

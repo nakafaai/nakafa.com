@@ -47,8 +47,9 @@ import { Effect } from "effect";
 
 /**
  * Runs deterministic math tools through Agent, within the time the capability
- * has left; its usage handler records provider calls. An answer that ended at
- * the output cap is reported as cut short.
+ * has left and the steps of `MATH_STEPS`; its usage handler records provider
+ * calls. An answer that ended at the output cap, or a loop that ended at its
+ * step limit before an answer, is reported as cut short.
  *
  * References:
  * - AI SDK `prepareStep`: https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback

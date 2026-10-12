@@ -99,6 +99,34 @@ const repairedInput: typeof MathAlgebraInputSchema.Type = {
 };
 /** The cut answer, then the note that tells Nina it was cut short. */
 const cutResult = /^The checked result is 2\n\n.*cut short/su;
+/** The note that tells Nina the run ended at its step limit. */
+const cutAtLimit = /step limit/u;
+
+const derivativeQuestion =
+  "What is the derivative of x^3 sin x, and what is its value at x = pi / 2?";
+/** The check the question asks for, then the one its value needs from it. */
+const derivative: typeof MathCalculusInputSchema.Type = {
+  operation: "differentiate",
+  expression: "x^3 * sin(x)",
+};
+const value: typeof MathArithmeticInputSchema.Type = {
+  operation: "evaluate",
+  expression: "3 * (pi / 2)^2 * sin(pi / 2)",
+};
+/** The check that was seen on production and that nobody had asked for. */
+const expansion: typeof MathSeriesInputSchema.Type = {
+  operation: "series",
+  expression: "x^3 * sin(x)",
+};
+
+/** A model step that calls one tool with `input`, typed by that tool's contract. */
+function callStep(toolName: string, input: object, toolCallId: string) {
+  return providerStep(
+    [{ type: "tool-call", toolCallId, toolName, input: encodeJsonText(input) }],
+    "tool-calls"
+  );
+}
+
 const casConfig = ConfigProvider.fromUnknown({
   NEXT_PUBLIC_CAS_URL: "https://math.example.invalid",
   MATH_CAS_API_KEY: "test",
@@ -231,108 +259,83 @@ describe("math Agent execution", () => {
     }
   );
 
-  it("answers a derivative and its value in three model calls: the derivative, its value, and the answer", async () => {
-    const derivative: typeof MathCalculusInputSchema.Type = {
-      operation: "differentiate",
-      expression: "x^3 * sin(x)",
-    };
-    const value: typeof MathArithmeticInputSchema.Type = {
-      operation: "evaluate",
-      expression: "3 * (pi / 2)^2 * sin(pi / 2)",
-    };
+  it("writes the answer to a derivative and its value in its last step, which may call no tool, although the model went on to an expansion nobody asked for", async () => {
+    // The checks the question needs, then the one it does not.
+    const checks = [
+      callStep("calculus", derivative, "derivative"),
+      callStep("arithmetic", value, "value"),
+      ...Arr.makeBy(MATH_STEPS - 3, (step) =>
+        callStep("series", expansion, `expansion-${step}`)
+      ),
+    ];
     const model = new MockLanguageModelV4({
       doGenerate: [
-        providerStep(
-          [
-            {
-              type: "tool-call",
-              toolCallId: "derivative",
-              toolName: "calculus",
-              input: Schema.encodeSync(
-                Schema.fromJsonString(MathCalculusInputSchema)
-              )(derivative),
-            },
-          ],
-          "tool-calls"
-        ),
-        providerStep(
-          [
-            {
-              type: "tool-call",
-              toolCallId: "value",
-              toolName: "arithmetic",
-              input: Schema.encodeSync(
-                Schema.fromJsonString(MathArithmeticInputSchema)
-              )(value),
-            },
-          ],
-          "tool-calls"
-        ),
+        ...checks,
         providerStep([{ type: "text", text: "The value is 3 pi^2 / 4." }]),
       ],
     });
     provider.languageModel.mockReturnValue(model);
-    vi.mocked(compute)
-      .mockReturnValueOnce(Effect.succeed("The derivative is checked."))
-      .mockReturnValueOnce(Effect.succeed("The value is checked."));
+    vi.mocked(compute).mockReturnValue(Effect.succeed("It is checked."));
     const result = await runSpecialist((userId) =>
       runMathAgent({
         ...specialistRequest,
         userId,
-        task: "What is the derivative of x^3 sin x, and what is its value at x = pi / 2?",
+        task: derivativeQuestion,
         publish: () => Effect.void,
         usageHandler: vi.fn(),
       }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, casConfig))
     );
+    // Using every step is no shortfall: the last one is where a run that has
+    // checked all it needs writes its answer too, so the report is a plain one.
     expect(result).toEqual({ text: "The value is 3 pi^2 / 4." });
-    expect(model.doGenerateCalls).toHaveLength(3);
-    expect(model.doGenerateCalls[0]?.toolChoice).toEqual({ type: "required" });
+    expect(model.doGenerateCalls).toHaveLength(MATH_STEPS);
     expect(
       Arr.map(vi.mocked(compute).mock.calls, ([call]) => call.input)
-    ).toEqual([derivative, value]);
+    ).toEqual([
+      derivative,
+      value,
+      ...Arr.makeBy(MATH_STEPS - 3, () => expansion),
+    ]);
+    // The first step must call a tool, the last may call none, and the steps
+    // between them choose freely.
+    expect(Arr.map(model.doGenerateCalls, (call) => call.toolChoice)).toEqual([
+      { type: "required" },
+      ...Arr.makeBy(MATH_STEPS - 2, () => ({ type: "auto" })),
+      { type: "none" },
+    ]);
   });
 
-  it("ends a run that keeps checking with its answer, since the last step may call no tool", async () => {
-    const expansion: typeof MathSeriesInputSchema.Type = {
-      operation: "series",
-      expression: "x^3 * sin(x)",
-    };
-    const checking = providerStep(
-      [
-        {
-          type: "tool-call",
-          toolCallId: "expansion",
-          toolName: "series",
-          input: Schema.encodeSync(
-            Schema.fromJsonString(MathSeriesInputSchema)
-          )(expansion),
-        },
-      ],
-      "tool-calls"
-    );
+  it("cuts a model that still asks for a tool in its last step at the step limit, and reports the run as partial", async () => {
+    // One more check than the run has steps for. A provider that ignored the
+    // last step's rule would answer with a tool call, and the loop would go on.
     const model = new MockLanguageModelV4({
       doGenerate: [
-        ...Arr.makeBy(MATH_STEPS - 1, () => checking),
-        providerStep([{ type: "text", text: "The checked answer." }]),
+        callStep("calculus", derivative, "derivative"),
+        callStep("arithmetic", value, "value"),
+        ...Arr.makeBy(MATH_STEPS - 1, (step) =>
+          callStep("series", expansion, `expansion-${step}`)
+        ),
       ],
     });
     provider.languageModel.mockReturnValue(model);
-    vi.mocked(compute).mockReturnValue(Effect.succeed("The expansion."));
+    vi.mocked(compute).mockReturnValue(Effect.succeed("It is checked."));
     const result = await runSpecialist((userId) =>
       runMathAgent({
         ...specialistRequest,
         userId,
+        task: derivativeQuestion,
         publish: () => Effect.void,
         usageHandler: vi.fn(),
       }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, casConfig))
     );
-    expect(result).toEqual({ text: "The checked answer." });
     expect(model.doGenerateCalls).toHaveLength(MATH_STEPS);
-    expect(compute).toHaveBeenCalledTimes(MATH_STEPS - 1);
-    // Only the last call is told to write, and it is the only one.
-    expect(
-      Arr.map(model.doGenerateCalls, (call) => call.toolChoice?.type === "none")
-    ).toEqual(Arr.makeBy(MATH_STEPS, (step) => step === MATH_STEPS - 1));
+    expect(compute).toHaveBeenCalledTimes(MATH_STEPS);
+    // No answer was written, so Nina is told the run was cut, not handed an
+    // empty result as a whole one.
+    expect(result).toEqual({
+      outcome: "partial",
+      text: expect.stringMatching(cutAtLimit),
+    });
   });
 
   it("hands Nina a cut answer as partial, and says it was cut short, when its last step ended at the output cap", async () => {

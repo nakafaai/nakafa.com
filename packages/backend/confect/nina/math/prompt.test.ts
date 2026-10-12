@@ -100,7 +100,6 @@ describe("mathPrompt", () => {
     );
     expect(prompt).toContain("not a guessed final answer");
     expect(prompt).toContain("Natural wording such as");
-    expect(prompt).toContain("Call tools for each distinct calculation");
     expect(prompt).toContain("If evidence is missing and can be checked");
     expect(prompt).toContain(
       "the evidence is incomplete until the substituted original expression is checked"
@@ -146,6 +145,25 @@ describe("mathPrompt", () => {
     // The bridge a derivation needs comes from checked steps, not from a new call.
     expect(prompt).toContain(
       "Write that bridge from the checked steps. It never needs another tool call."
+    );
+  });
+
+  it("asks for a tool only for what the request asks, and for the calculation that the steps left unchecked to be named", () => {
+    const prompt = mathPrompt(base);
+    const multiPart = prompt.slice(
+      prompt.indexOf("Multi-part requests:"),
+      prompt.indexOf("Evidence contract:")
+    );
+
+    expect(multiPart).toContain(
+      "Call a tool for each distinct calculation or verification the request asks for."
+    );
+    expect(multiPart).toContain(
+      "If the steps run out first, or it cannot be checked, say which calculation was not checked."
+    );
+    // A tool for every calculation, with no limit, would argue with the scope.
+    expect(prompt).not.toContain(
+      "Call tools for each distinct calculation or verification."
     );
   });
 
