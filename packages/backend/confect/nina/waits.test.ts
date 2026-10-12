@@ -32,7 +32,7 @@ describe("the nearest-rank spread of a wait", () => {
     });
   });
 
-  it("rounds a rank up to the next whole one", () => {
+  it("rounds a rank up to the next whole one, also when its fraction is below a half", () => {
     // 90 percent of eleven waits is rank 9.9, which is the tenth and not the
     // ninth. The median is rank 5.5, the sixth.
     expect(rows(Arr.range(1, 11))).toContainEqual({
@@ -42,6 +42,16 @@ describe("the nearest-rank spread of a wait", () => {
       p90: 10,
       stage: "claimedMs",
       turns: 11,
+    });
+    // 90 percent of six waits is rank 5.4, which is the sixth and not the
+    // fifth that the nearest whole rank would give.
+    expect(rows(Arr.range(1, 6))).toContainEqual({
+      max: 6,
+      median: 3,
+      min: 1,
+      p90: 6,
+      stage: "claimedMs",
+      turns: 6,
     });
   });
 
