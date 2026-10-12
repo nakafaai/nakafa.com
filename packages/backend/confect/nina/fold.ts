@@ -16,14 +16,23 @@ const CostedTurn = Schema.Struct({ order: Schema.Int, tokens: Schema.Int });
  *
  * `turns` may leave out the oldest turns of a backlog, once at least two of the
  * newest already cost more than the budget: the answer does not depend on them.
+ *
+ * `unread` is the highest order that `turns` leaves out because the read gave
+ * up on it, though the turns it did read are no more than the newest one or fit
+ * the budget: a long run of replaced askings hid the turns behind them. Those
+ * turns are in neither the history nor the summary, so the fold takes them
+ * first, one batch at a time.
  */
 export function nextSummaryTarget(
   covered: number | null,
   turns: readonly (typeof CostedTurn.Type)[],
-  budget: number
+  budget: number,
+  unread: Option.Option<number>
 ) {
+  const limit = (covered ?? -1) + SUMMARY_FOLD_LIMIT;
+  const hidden = Option.map(unread, (order) => Math.min(order, limit));
   if (Arr.reduce(turns, 0, (total, { tokens }) => total + tokens) <= budget) {
-    return Option.none();
+    return hidden;
   }
   const newestFirst = Arr.reverse(turns);
   // What the turns cost from the newest back to each one, the newest included.
@@ -35,8 +44,7 @@ export function nextSummaryTarget(
     Arr.zip(newestFirst, costs),
     Arr.drop(1),
     Arr.findFirst(([, cost]) => cost > budget / 2),
-    Option.map(([{ order }]) =>
-      Math.min(order, (covered ?? -1) + SUMMARY_FOLD_LIMIT)
-    )
+    Option.map(([{ order }]) => Math.min(order, limit)),
+    Option.orElse(() => hidden)
   );
 }

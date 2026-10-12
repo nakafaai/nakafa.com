@@ -11,7 +11,7 @@ import {
   turnMessages,
 } from "@repo/backend/confect/nina/uncovered";
 import { createNinaTest } from "@repo/backend/test/nina";
-import { Array as Arr, Effect, Predicate } from "effect";
+import { Array as Arr, Effect, Option, Predicate } from "effect";
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -56,7 +56,7 @@ describe("Nina turns after the summary", () => {
     const f = await createNinaTest({
       history: Arr.makeBy(2 * SUMMARY_FOLD_LIMIT + 4, () => ({})),
     });
-    const { docs, turns, turnPages } = await read(f);
+    const { docs, turns, turnPages, unread } = await read(f);
     expect(Arr.map(turns, ({ order }) => order)).toEqual(
       Arr.range(0, 2 * SUMMARY_FOLD_LIMIT + 3)
     );
@@ -67,6 +67,7 @@ describe("Nina turns after the summary", () => {
     expect(turns[0]?.tokens).toBeGreaterThan(0);
     // Two full pages and a short one, which shows the turns have run out.
     expect(turnPages).toBe(3);
+    expect(unread).toEqual(Option.none());
     // The turn that waits is among the messages read too.
     expect(turnMessages(docs, 2 * SUMMARY_FOLD_LIMIT + 4)[0]?.role).toBe(
       "user"
@@ -78,7 +79,7 @@ describe("Nina turns after the summary", () => {
     const f = await createNinaTest({
       history: Arr.makeBy(40, () => ({ tokens: 3000 })),
     });
-    const { messagePages, turns, turnPages } = await read(f);
+    const { messagePages, turns, turnPages, unread } = await read(f);
     expect(Arr.map(turns, ({ order }) => order)).toEqual(Arr.range(24, 39));
     expect(
       Arr.reduce(turns, 0, (total, { tokens }) => total + tokens)
@@ -86,7 +87,22 @@ describe("Nina turns after the summary", () => {
     expect(turnPages).toBe(1);
     // About 36 messages hold the sixteen turns, where the whole chat needs two pages.
     expect(messagePages).toBe(1);
+    // The turns before order 24 were never listed.
+    expect(unread).toEqual(Option.some(23));
   }, 15_000);
+
+  it("names no unread turn when the page that brings the turns past the history budget reaches the oldest one", async () => {
+    // Sixteen turns of 3,000 tokens are exactly one page, and they cost 48,000.
+    const f = await createNinaTest({
+      history: Arr.makeBy(SUMMARY_FOLD_LIMIT, () => ({ tokens: 3000 })),
+    });
+    const { turns, turnPages, unread } = await read(f);
+    expect(Arr.map(turns, ({ order }) => order)).toEqual(
+      Arr.range(0, SUMMARY_FOLD_LIMIT - 1)
+    );
+    expect(turnPages).toBe(1);
+    expect(unread).toEqual(Option.none());
+  });
 
   it("goes on while the turns fit the history budget, however many pages that takes", async () => {
     const f = await createNinaTest({
@@ -111,6 +127,19 @@ describe("Nina turns after the summary", () => {
     const { turns, turnPages } = await read(f);
     expect(Arr.map(turns, ({ order }) => order)).toEqual([0, 16]);
     expect(turnPages).toBe(2);
+  }, 15_000);
+
+  it("gives up once it has passed 32 replaced askings and names the turns behind them, instead of reading the whole chat", async () => {
+    // Order 10 asks a question and 69 retries ask it again, so only the last is kept.
+    const f = await createNinaTest({
+      history: Arr.makeBy(80, (order) => (order > 10 ? { retryOf: 10 } : {})),
+    });
+    const { messagePages, turns, turnPages, unread } = await read(f);
+    expect(Arr.map(turns, ({ order }) => order)).toEqual([79]);
+    // Three pages pass 15, 31 and then 47 replaced askings. The chat holds 80 turns and 161 messages.
+    expect(turnPages).toBe(3);
+    expect(messagePages).toBe(2);
+    expect(unread).toEqual(Option.some(31));
   }, 15_000);
 
   it("keeps the newest asking of a question that a later page asks again", async () => {

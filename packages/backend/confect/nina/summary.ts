@@ -1,4 +1,4 @@
-import { Agent } from "@convex-dev/agent";
+import { Agent, type MessageDoc } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -12,8 +12,19 @@ import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
 import { nextSummaryTarget } from "@repo/backend/confect/nina/fold";
 import { newestAskings, questionKey } from "@repo/backend/confect/nina/history";
-import { readUncovered } from "@repo/backend/confect/nina/uncovered";
-import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
+import {
+  readUncovered,
+  storedTurn,
+} from "@repo/backend/confect/nina/uncovered";
+import {
+  Array as Arr,
+  Effect,
+  Option,
+  Order,
+  pipe,
+  Result,
+  Schema,
+} from "effect";
 
 /** Text one message contributes to a refresh transcript. */
 const MESSAGE_TOKENS = 1500;
@@ -42,14 +53,14 @@ class NinaSummaryError extends Schema.TaggedError<NinaSummaryError>()(
 ) {}
 
 /**
- * Lists the orders of the turns a fold covers: the complete turns after
- * `covered` through `target`, except one whose question a later complete turn
- * asks again, up to the turn that just settled. The summary then holds the same
- * turns the verbatim history would show: a cancelled or failed turn, or an
- * answer that a retry replaced, never reaches it. A fold spans at most
- * `SUMMARY_FOLD_LIMIT` turns. The later askings are found by their question,
- * not by scanning the turns after the fold, so a retry far ahead of a long
- * backlog counts like one next to it.
+ * Lists the orders of the turns a fold covers, oldest first: the complete
+ * turns after `covered` through `target`, except one whose question a later
+ * complete turn asks again, up to the turn that just settled. The summary then
+ * holds the same turns the verbatim history would show: a cancelled or failed
+ * turn, or an answer that a retry replaced, never reaches it. A fold spans at
+ * most `SUMMARY_FOLD_LIMIT` turns. The later askings are found by their
+ * question, not by scanning the turns after the fold, so a retry far ahead of a
+ * long backlog counts like one next to it.
  */
 const readOrders = Effect.fn("nina.summary.orders")(function* (
   turn: Pick<NinaTurnsDoc, "chatId" | "order">,
@@ -67,24 +78,25 @@ const readOrders = Effect.fn("nina.summary.orders")(function* (
     chatId: turn.chatId,
     questions: Arr.dedupe(Arr.map(folded, questionKey)),
   }).pipe(Effect.orDie);
-  return HashSet.fromIterable(
-    Arr.map(newestAskings(folded, again), ({ order }) => order)
+  return pipe(
+    newestAskings(folded, again),
+    Arr.map(({ order }) => order),
+    Arr.sort(Order.Number)
   );
 });
 
 /**
- * Reads learner and Nina text for the turns at `orders`. Pages run newest
- * first from `anchor`, the prompt of the last turn the fold covers, and stop
- * at turns the summary already covers, so a refresh reads only its batch.
+ * Reads the thread messages around the turns a fold covers. Pages run newest
+ * first from `anchor`, the prompt of the last turn the fold covers, and stop at
+ * turns the summary already covers, so a refresh reads only its batch.
  */
-const readTranscript = Effect.fn("nina.summary.transcript")(function* (
+const readWindow = Effect.fn("nina.summary.window")(function* (
   threadId: string,
   from: number,
-  orders: HashSet.HashSet<number>,
   anchor: string
 ) {
   const ctx = yield* ActionCtx;
-  let lines: string[] = [];
+  let docs: MessageDoc[] = [];
   let cursor: string | null = null;
   let done = false;
   while (!done) {
@@ -100,20 +112,68 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
         }),
       catch: () => new NinaSummaryError({ operation: "read" }),
     });
-    for (const message of page.page) {
-      if (HashSet.has(orders, message.order) && message.text) {
-        const speaker = message.message?.role === "user" ? "Learner" : "Nina";
-        lines = Arr.append(
-          lines,
-          `${speaker}: ${boundText(message.text, MESSAGE_TOKENS, "Message shortened.")}`
-        );
-      }
-    }
+    docs = Arr.appendAll(docs, page.page);
     done =
       page.isDone || Arr.some(page.page, (message) => message.order <= from);
     cursor = page.continueCursor;
   }
-  return Arr.join(Arr.reverse(lines), "\n\n");
+  return docs;
+});
+
+/**
+ * The learner and Nina text of the turns at `orders`, oldest first, from the
+ * messages of a read. A message that holds a tool call or a tool result is
+ * left out, so Nina's words are her answers.
+ */
+function transcriptOf(docs: readonly MessageDoc[], orders: readonly number[]) {
+  return pipe(
+    orders,
+    Arr.flatMap((order) => storedTurn(docs, order)),
+    Arr.filterMap((doc) =>
+      doc.tool || !doc.text
+        ? Result.failVoid
+        : Result.succeed(
+            `${doc.message?.role === "user" ? "Learner" : "Nina"}: ${boundText(doc.text, MESSAGE_TOKENS, "Message shortened.")}`
+          )
+    ),
+    Arr.join("\n\n")
+  );
+}
+
+/**
+ * Reads the text of the turns a fold covers through `target`. When the read of
+ * the uncovered turns reached the oldest of them, it already holds them and its
+ * messages, so nothing is read again. A longer backlog leaves the oldest turns
+ * unread, so their text comes from the thread, starting at the prompt of the
+ * last turn the fold covers.
+ */
+const readTranscript = Effect.fn("nina.summary.transcript")(function* (
+  turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId">,
+  covered: number | null,
+  target: number,
+  uncovered: Effect.Success<ReturnType<typeof readUncovered>>
+) {
+  if (Option.isNone(uncovered.unread)) {
+    return transcriptOf(
+      uncovered.docs,
+      Arr.filterMap(uncovered.turns, ({ order }) =>
+        order <= target ? Result.succeed(order) : Result.failVoid
+      )
+    );
+  }
+  const { runQuery: query } = yield* QueryRunner;
+  const anchor = yield* query(refs.internal.nina.summaries.anchor, {
+    chatId: turn.chatId,
+    order: target,
+  }).pipe(Effect.orDie);
+  if (!anchor) {
+    return yield* new NinaSummaryError({ operation: "read" });
+  }
+  const orders = yield* readOrders(turn, covered, target);
+  return transcriptOf(
+    yield* readWindow(turn.threadId, covered ?? -1, anchor),
+    orders
+  );
 });
 
 /**
@@ -134,31 +194,23 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     }).pipe(Effect.orDie);
     const covered = current?.throughOrder ?? null;
     // The turn that just settled is the newest of the turns to count.
-    const { turns } = yield* readUncovered(
+    const uncovered = yield* readUncovered(
       turn,
       turn.order + 1,
       covered,
       []
     ).pipe(Effect.mapError(() => new NinaSummaryError({ operation: "read" })));
-    const next = nextSummaryTarget(covered, turns, NINA_BUDGET.history);
+    const next = nextSummaryTarget(
+      covered,
+      uncovered.turns,
+      NINA_BUDGET.history,
+      uncovered.unread
+    );
     if (Option.isNone(next)) {
       return;
     }
     const target = next.value;
-    const anchor = yield* query(refs.internal.nina.summaries.anchor, {
-      chatId: turn.chatId,
-      order: target,
-    }).pipe(Effect.orDie);
-    if (!anchor) {
-      return yield* new NinaSummaryError({ operation: "read" });
-    }
-    const orders = yield* readOrders(turn, covered, target);
-    const transcript = yield* readTranscript(
-      turn.threadId,
-      covered ?? -1,
-      orders,
-      anchor
-    );
+    const transcript = yield* readTranscript(turn, covered, target, uncovered);
     const ctx = yield* ActionCtx;
     const handle = (yield* Gateway).language("background");
     const agent = new Agent(components.nina, {

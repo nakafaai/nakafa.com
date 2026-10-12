@@ -16,8 +16,9 @@ const unreadable = () => new NinaGenerationError({ reason: "unknown" });
  * with its question and answer: a cancelled or failed turn leaves no messages
  * behind, and a question the learner asked again shows only its newest
  * asking, whichever of its askings the learner retried. The read stops at the
- * turns the history can hold (`readUncovered`). The learner's message carries
- * the turn's runtime facts, which are not stored.
+ * turns the history can hold, or after a long run of replaced askings, and the
+ * turns behind such a run wait for the next fold (`readUncovered`). The
+ * learner's message carries the turn's runtime facts, which are not stored.
  */
 export const readInput = Effect.fn("nina.input.read")(function* (
   turn: Pick<

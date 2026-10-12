@@ -30,6 +30,15 @@ import {
 /** Messages one query reads from the thread. */
 const PAGE = 50;
 
+/**
+ * Rows the read may pass without keeping a turn from them, which is two pages
+ * of turns. A row it keeps nothing of is an asking that a retry replaced, or a
+ * turn that lost its question. The model never receives one, so it never brings
+ * the turns past the history budget, and a learner who retries one question
+ * again and again would make every read go through the whole chat.
+ */
+const PASSED_LIMIT = 2 * SUMMARY_FOLD_LIMIT;
+
 /** The turn records or the thread could not be read. */
 class NinaUncoveredError extends Schema.TaggedError<NinaUncoveredError>()(
   "NinaUncoveredError",
@@ -37,7 +46,7 @@ class NinaUncoveredError extends Schema.TaggedError<NinaUncoveredError>()(
 ) {}
 
 /** The stored messages of one turn, in the order the model produced them. */
-function storedTurn(docs: readonly MessageDoc[], order: number) {
+export function storedTurn(docs: readonly MessageDoc[], order: number) {
   return pipe(
     docs,
     Arr.filter((doc) => doc.order === order),
@@ -91,10 +100,17 @@ function outweighs(turns: readonly ReturnType<typeof costed>[]) {
  *
  * Turns are read newest first, `SUMMARY_FOLD_LIMIT` at a time with the thread
  * messages they need, and the read stops after the page that brings them past
- * the history budget. It is bounded by the budget, not by the length of the
- * chat: older turns cannot fit beside the ones read, and a fold takes them
- * first. `docs` returns every message read, so a caller finds the turn at
- * `before` in them too.
+ * the history budget: older turns cannot fit beside the ones read, and a fold
+ * takes them first. It also stops once it has passed `PASSED_LIMIT` rows
+ * without keeping a turn, so a chat full of replaced askings cannot make it
+ * read the whole chat. Either way the read is bounded by the budget, not by the
+ * length of the chat.
+ *
+ * `unread` names the highest order the read did not list, when it stopped
+ * before the oldest turn the summary does not cover. The turns up to it are in
+ * neither the history nor the summary until a fold covers them. `docs` returns
+ * every message read: all those of the turns listed, and of the turn at
+ * `before`, so a caller finds that turn in them too.
  */
 export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
   turn: Pick<NinaTurnsDoc, "chatId" | "promptMessageId" | "threadId">,
@@ -133,7 +149,9 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
   let found: ReturnType<typeof costed>[] = [];
   let upTo = before;
   let exhausted = false;
-  while (!(exhausted || outweighs(found))) {
+  // Rows listed that kept no turn, which `PASSED_LIMIT` bounds.
+  let passed = 0;
+  while (!(exhausted || outweighs(found) || passed >= PASSED_LIMIT)) {
     const rows = yield* query(refs.internal.nina.summaries.uncovered, {
       before: upTo,
       chatId: turn.chatId,
@@ -143,18 +161,23 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
     if (Arr.isReadonlyArrayNonEmpty(rows)) {
       const oldest = Arr.lastNonEmpty(rows).order;
       yield* readDown(oldest);
-      found = Arr.appendAll(
-        found,
-        Arr.filterMap(newestAskings(rows, newer), ({ order }) => {
-          const stored = storedTurn(docs, order);
-          return isComplete(stored)
-            ? Result.succeed(costed(order, stored))
-            : Result.failVoid;
-        })
-      );
+      const kept = Arr.filterMap(newestAskings(rows, newer), ({ order }) => {
+        const stored = storedTurn(docs, order);
+        return isComplete(stored)
+          ? Result.succeed(costed(order, stored))
+          : Result.failVoid;
+      });
+      found = Arr.appendAll(found, kept);
+      passed += rows.length - kept.length;
       newer = Arr.appendAll(newer, rows);
       upTo = oldest;
     }
   }
-  return { docs, turns: Arr.reverse(found) };
+  // The oldest turn the summary does not cover is the one after `through`.
+  const listedAll = exhausted || upTo <= (through ?? -1) + 1;
+  return {
+    docs,
+    turns: Arr.reverse(found),
+    unread: listedAll ? Option.none() : Option.some(upTo - 1),
+  };
 });

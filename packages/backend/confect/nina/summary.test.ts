@@ -4,148 +4,79 @@ import { components } from "@repo/backend/confect/_generated/components";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { sentTurn } from "@repo/backend/confect/nina/history";
 import { provider } from "@repo/backend/test/gateway";
-import { providerStep } from "@repo/backend/test/nina/specialist";
-import { createSummaryTest } from "@repo/backend/test/nina/summary";
-import { sealedSummary } from "@repo/backend/test/seal";
+import {
+  createSummaryTest,
+  failingModel,
+  summaryModel,
+} from "@repo/backend/test/nina/summary";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Predicate } from "effect";
 
 /** A turn whose answer costs about 6,000 tokens, so six of them outweigh the history budget. */
 const BIG = { tokens: 6000 } as const;
+/** The summary that a failed fold must leave as it was, covering the turns through order 1. */
+const EARLIER = "- Earlier study.";
+const EARLIER_THROUGH = 1;
+
+type SummaryTest = Awaited<ReturnType<typeof createSummaryTest>>;
 
 afterEach(() => {
   vi.restoreAllMocks();
   provider.languageModel.mockReset();
 });
 
-function summaryModel(text: string) {
-  return new MockLanguageModelV4({
-    doGenerate: providerStep([{ type: "text", text }]),
-  });
+/** Sorts the queries of a refresh by what they read, from the shape of their arguments. */
+function readsOf(queries: readonly unknown[]) {
+  const having = (key: string) =>
+    Arr.filter(queries, (args) => Predicate.hasProperty(args, key));
+  const pages = having("paginationOpts");
+  return {
+    anchors: Arr.filter(
+      having("order"),
+      (args) =>
+        Predicate.hasProperty(args, "order") && Predicate.isNumber(args.order)
+    ),
+    asked: having("questions"),
+    pages,
+    uncovered: having("through"),
+    window: Arr.filter(
+      pages,
+      (args) =>
+        Predicate.hasProperty(args, "excludeToolMessages") &&
+        args.excludeToolMessages === true
+    ),
+  };
+}
+
+/** The summary stays as `seed` stored it: its text, what it covers, and what it cost. */
+async function expectEarlier(f: SummaryTest) {
+  expect(await f.text()).toBe(EARLIER);
+  expect(await f.summary()).toEqual([
+    expect.objectContaining({
+      throughOrder: EARLIER_THROUGH,
+      usage: { calls: 1, input: 900, output: 120 },
+    }),
+  ]);
 }
 
 describe("Nina rolling summary", () => {
-  it("makes no model call while the turns fit, and the model input holds all of them word for word", async () => {
-    provider.languageModel.mockReturnValue(summaryModel("unused"));
-    const f = await createSummaryTest(21);
-    await f.refresh(19);
-    expect(provider.languageModel).not.toHaveBeenCalled();
-    expect(await f.summary()).toEqual([]);
-    // Twenty turns are more than the sixteen one fold covers.
-    const shown = encodeJsonText(await f.input(20));
-    for (const order of Arr.range(0, 19)) {
-      expect(shown).toContain(`"Question ${order}"`);
-      expect(shown).toContain(`"Answer ${order}"`);
-    }
-  }, 15_000);
-
-  it("summarizes the oldest of three large turns, so the newest stays within half the budget and no turn is lost", async () => {
-    const model = summaryModel("- The learner studied limits.");
-    provider.languageModel.mockReturnValue(model);
-    // Three turns of 13,000 tokens cost 39,000, more than the budget of 32,000.
-    // A fourth turn holds the question that is asked next.
-    const f = await createSummaryTest(4, (order) =>
-      order < 3 ? { tokens: 13_000 } : {}
-    );
-    await f.refresh(2);
-    expect(await f.summary()).toEqual([
-      expect.objectContaining({
-        chatId: f.chatId,
-        text: expect.any(ArrayBuffer),
-        throughOrder: 1,
-        // The fold's provider usage counts toward the chat's summary upkeep.
-        usage: { calls: 1, input: 12, output: 4 },
-      }),
-    ]);
-    expect(await f.text()).toBe("- The learner studied limits.");
-    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    expect(prompt).toContain("None yet.");
-    expect(prompt).toContain("Learner: Question 0");
-    expect(prompt).toContain("Nina: Answer 1");
-    expect(prompt).not.toContain("Question 2");
-    // What stays costs at most half the budget, and every turn is in the summary or the input.
-    const shown = await f.input(3);
-    expect(sentTurn(Arr.dropRight(shown, 2)).tokens).toBeLessThanOrEqual(
-      NINA_BUDGET.history / 2
-    );
-    const through = (await f.stored())?.throughOrder ?? -1;
-    for (const order of Arr.range(0, 2)) {
-      expect(
-        order <= through ||
-          encodeJsonText(shown).includes(`"Question ${order}"`)
-      ).toBe(true);
-    }
-  });
-
-  it("grows the history only at its end between two folds", async () => {
-    provider.languageModel.mockReturnValue(summaryModel("unused"));
-    // Six turns of about 5,000 tokens cost 30,000, and the budget is 32,000.
-    const f = await createSummaryTest(7, () => ({ tokens: 5000 }));
-    let before = Arr.dropRight(await f.input(1), 2);
-    for (const settled of Arr.range(1, 5)) {
-      await f.refresh(settled);
-      const history = Arr.dropRight(await f.input(settled + 1), 2);
-      expect(history.length).toBeGreaterThan(before.length);
-      expect(Arr.take(history, before.length)).toEqual(before);
-      before = history;
-    }
-    expect(provider.languageModel).not.toHaveBeenCalled();
-  }, 15_000);
-
-  it("leaves no turn in neither the summary nor the history, after any turn settles", async () => {
-    provider.languageModel.mockReturnValue(summaryModel("- A study session."));
-    // Each turn costs about 9,000 tokens: a fold comes every four or so.
-    const f = await createSummaryTest(14, () => ({ tokens: 9000 }));
-    for (const settled of Arr.range(0, 12)) {
-      await f.refresh(settled);
-      const through = (await f.stored())?.throughOrder ?? -1;
-      const shown = encodeJsonText(await f.input(settled + 1));
-      expect(
-        Arr.filter(
-          Arr.range(0, settled),
-          (order) => order > through && !shown.includes(`"Question ${order}"`)
-        )
-      ).toEqual([]);
-    }
-    // The summary folded more than once, and the history never outgrew the budget.
-    expect((await f.stored())?.throughOrder).toBeGreaterThan(2);
-    // The turn being answered is the last two messages, its question and answer.
-    const history = Arr.dropRight(await f.input(13), 2);
-    expect(sentTurn(history).tokens).toBeLessThanOrEqual(NINA_BUDGET.history);
-  }, 30_000);
-
-  it("does not fold a turn larger than the whole budget while it is the newest, and folds it once another turn follows", async () => {
-    provider.languageModel.mockReturnValue(summaryModel("- One long answer."));
-    const f = await createSummaryTest(2, (order) =>
-      order === 0 ? { tokens: NINA_BUDGET.history + 8000 } : {}
-    );
-    await f.refresh(0);
-    expect(provider.languageModel).not.toHaveBeenCalled();
-    expect(await f.summary()).toEqual([]);
-    await f.refresh(1);
-    expect(await f.summary()).toEqual([
-      expect.objectContaining({ throughOrder: 0 }),
-    ]);
-  });
-
   it("keeps the previous summary when the fold fails, and the next model input stays inside the history budget", async () => {
-    provider.languageModel.mockReturnValue(
-      new MockLanguageModelV4({
-        doGenerate: () => Promise.reject(new Error("Provider down")),
-      })
-    );
-    // Four turns of 12,000 tokens cost more than the budget, and none is folded.
-    const f = await createSummaryTest(5, () => ({ tokens: 12_000 }));
-    await f.refresh(3);
-    expect(await f.summary()).toEqual([]);
-    const shown = await f.input(4);
+    provider.languageModel.mockReturnValue(failingModel());
+    // The summary covers orders 0 and 1. The four turns after it cost 48,000, more than
+    // the budget, so a fold is due, and it fails.
+    const f = await createSummaryTest(7, () => ({ tokens: 12_000 }));
+    await f.seed(EARLIER_THROUGH, EARLIER);
+    await f.refresh(5);
+    await expectEarlier(f);
+    const shown = await f.input(6);
     expect(sentTurn(Arr.dropRight(shown, 2)).tokens).toBeLessThanOrEqual(
       NINA_BUDGET.history
     );
     // The oldest turns that no longer fit leave this input, and the newest stay.
-    expect(encodeJsonText(shown)).not.toContain('"Question 0"');
-    expect(encodeJsonText(shown)).toContain('"Question 3"');
+    expect(encodeJsonText(shown)).not.toContain('"Question 3"');
+    expect(encodeJsonText(shown)).toContain('"Question 4"');
+    expect(encodeJsonText(shown)).toContain('"Question 5"');
   });
 
   it("folds a question the learner asked again once, in its newest asking, and leaves out a cancelled turn", async () => {
@@ -214,19 +145,7 @@ describe("Nina rolling summary", () => {
     const model = summaryModel("- Limits, then derivatives.");
     provider.languageModel.mockReturnValue(model);
     const f = await createSummaryTest(13, () => ({ tokens: 4500 }));
-    await f.t.mutation(async (ctx) =>
-      ctx.db.insert("ninaSummaries", {
-        chatId: f.chatId,
-        text: await sealedSummary(
-          ctx,
-          f.userId,
-          "- The learner studied limits."
-        ),
-        throughOrder: 4,
-        updatedAt: f.now,
-        usage: { calls: 1, input: 900, output: 120 },
-      })
-    );
+    await f.seed(4, "- The learner studied limits.");
     await f.refresh(12);
     expect(await f.summary()).toEqual([
       expect.objectContaining({
@@ -241,6 +160,41 @@ describe("Nina rolling summary", () => {
     expect(prompt).toContain("Question 5");
     expect(prompt).not.toContain("Question 4");
     expect(prompt).not.toContain("Question 10");
+  });
+
+  it("reads nothing again for a fold when the read of the uncovered turns reached the oldest of them", async () => {
+    const model = summaryModel("- The learner studied limits.");
+    provider.languageModel.mockReturnValue(model);
+    // Four turns of 11,000 tokens cost 44,000, and one page lists all of them.
+    const f = await createSummaryTest(5, () => ({ tokens: 11_000 }));
+    const reads = readsOf(await f.refresh(3));
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: 2 }),
+    ]);
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain("Learner: Question 0");
+    expect(prompt).toContain("Nina: Answer 2");
+    expect(prompt).not.toContain("Question 3");
+    // One page of turns and one page of messages decided the fold and fed it.
+    expect(reads.uncovered).toHaveLength(1);
+    expect(reads.pages).toHaveLength(1);
+    expect(reads.anchors).toEqual([]);
+    expect(reads.asked).toEqual([]);
+    expect(reads.window).toEqual([]);
+  });
+
+  it("leaves out the tool steps of the folded turns, as before", async () => {
+    const model = summaryModel("- Tool steps stay out.");
+    provider.languageModel.mockReturnValue(model);
+    const f = await createSummaryTest(5, (order) =>
+      order < 4 ? { steps: 1, tokens: 11_000 } : {}
+    );
+    await f.refresh(3);
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain("Learner: Question 0");
+    expect(prompt).toContain("Nina: Answer 2");
+    expect(prompt).not.toContain("Let me look it up");
+    expect(prompt).not.toContain("Verified evidence");
   });
 
   it("folds a long backlog one bounded batch per refresh, paging to its oldest turns", async () => {
@@ -261,6 +215,25 @@ describe("Nina rolling summary", () => {
     expect(second).not.toContain("Question 32");
     expect(await f.summary()).toEqual([
       expect.objectContaining({ throughOrder: 31 }),
+    ]);
+  }, 15_000);
+
+  it("folds the oldest turns when a long run of replaced askings hides them, though the newest turns fit", async () => {
+    const model = summaryModel("- The first questions.");
+    provider.languageModel.mockReturnValue(model);
+    // Order 10 asks a question and the 69 turns after it ask it again, so only order 79 is kept.
+    const f = await createSummaryTest(80, (order) =>
+      order > 10 ? { retryOf: 10 } : {}
+    );
+    await f.refresh(79);
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    for (const order of Arr.range(0, 9)) {
+      expect(prompt).toContain(`Learner: Question ${order}`);
+    }
+    // Orders 10 to 15 are replaced askings, and the fold covers one batch of 16.
+    expect(prompt).not.toContain("Question 10");
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: 15 }),
     ]);
   }, 15_000);
 
@@ -303,47 +276,35 @@ describe("Nina rolling summary", () => {
     "keeps the previous summary when the %s answer fails",
     async (failure) => {
       provider.languageModel.mockReturnValue(
-        failure === "provider"
-          ? new MockLanguageModelV4({
-              doGenerate: () => Promise.reject(new Error("Provider down")),
-            })
-          : summaryModel("   ")
+        failure === "provider" ? failingModel() : summaryModel("   ")
       );
       const f = await createSummaryTest(9, () => BIG);
+      await f.seed(EARLIER_THROUGH, EARLIER);
       await f.refresh(8);
-      expect(await f.summary()).toEqual([]);
+      await expectEarlier(f);
     }
   );
 
   it("reads back only from the prompt of the last folded turn", async () => {
     provider.languageModel.mockReturnValue(summaryModel("- Folded."));
     const f = await createSummaryTest(56, () => ({ tokens: 2500 }));
-    const queries = await f.refresh(55);
+    const reads = readsOf(await f.refresh(55));
     // The transcript read leaves tool messages out, unlike the read of the turns that decides the fold.
-    const anchors = Arr.flatMap(queries, (args) =>
-      Predicate.hasProperty(args, "excludeToolMessages") &&
-      args.excludeToolMessages === true &&
-      Predicate.hasProperty(args, "upToAndIncludingMessageId")
-        ? [String(args.upToAndIncludingMessageId)]
-        : []
-    );
-    expect(anchors).toEqual([f.prompts[15]]);
+    expect(
+      Arr.map(reads.window, (args) =>
+        Predicate.hasProperty(args, "upToAndIncludingMessageId")
+          ? String(args.upToAndIncludingMessageId)
+          : ""
+      )
+    ).toEqual([f.prompts[15]]);
   }, 15_000);
 
   it("stops reading back once it reaches turns the summary covers", async () => {
     const model = summaryModel("- Later study.");
     provider.languageModel.mockReturnValue(model);
     const f = await createSummaryTest(62, () => ({ tokens: 2500 }));
-    await f.t.mutation(async (ctx) =>
-      ctx.db.insert("ninaSummaries", {
-        chatId: f.chatId,
-        text: await sealedSummary(ctx, f.userId, "- Earlier study."),
-        throughOrder: 40,
-        updatedAt: f.now,
-        usage: { calls: 1, input: 900, output: 120 },
-      })
-    );
-    await f.refresh(61);
+    await f.seed(40, "- Earlier study.");
+    const reads = readsOf(await f.refresh(61));
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     expect(prompt).toContain("Question 41");
     expect(prompt).toContain("Answer 55");
@@ -352,17 +313,20 @@ describe("Nina rolling summary", () => {
     expect(await f.summary()).toEqual([
       expect.objectContaining({ throughOrder: 55 }),
     ]);
+    // The 112 messages up to order 55 need two pages of 100, and the first reaches order 40.
+    expect(reads.window).toHaveLength(1);
   }, 15_000);
 
   it("keeps the previous summary when the last folded turn is missing", async () => {
     provider.languageModel.mockReturnValue(summaryModel("unused"));
     const f = await createSummaryTest(56, () => ({ tokens: 2500 }));
+    await f.seed(EARLIER_THROUGH, EARLIER);
     await f.t.mutation(async (ctx) => {
-      // A chat of 56 turns without a summary folds through order 15 first.
+      // The summary covers order 1, so a fold covers orders 2 to 17 first.
       const turn = await ctx.db
         .query("ninaTurns")
         .withIndex("by_chatId_and_order", (q) =>
-          q.eq("chatId", f.chatId).eq("order", 15)
+          q.eq("chatId", f.chatId).eq("order", 17)
         )
         .unique();
       if (turn) {
@@ -371,14 +335,15 @@ describe("Nina rolling summary", () => {
     });
     await f.refresh(55);
     expect(provider.languageModel).not.toHaveBeenCalled();
-    expect(await f.summary()).toEqual([]);
+    await expectEarlier(f);
   }, 15_000);
 
   it("keeps the previous summary when the prompt of the last folded turn is not in the thread", async () => {
     provider.languageModel.mockReturnValue(summaryModel("unused"));
-    const f = await createSummaryTest(9, () => BIG);
+    const f = await createSummaryTest(56, () => ({ tokens: 2500 }));
+    await f.seed(EARLIER_THROUGH, EARLIER);
     await f.t.mutation(async (ctx) => {
-      // Nine turns of 6,000 tokens fold through order 6.
+      // The summary covers order 1, so a fold covers orders 2 to 17 first.
       const elsewhere = await saveMessage(ctx, components.nina, {
         threadId: await createThread(ctx, components.nina, {
           userId: f.userId,
@@ -388,7 +353,7 @@ describe("Nina rolling summary", () => {
       const turn = await ctx.db
         .query("ninaTurns")
         .withIndex("by_chatId_and_order", (q) =>
-          q.eq("chatId", f.chatId).eq("order", 6)
+          q.eq("chatId", f.chatId).eq("order", 17)
         )
         .unique();
       if (turn) {
@@ -397,15 +362,16 @@ describe("Nina rolling summary", () => {
         });
       }
     });
-    await f.refresh(8);
+    await f.refresh(55);
     expect(provider.languageModel).not.toHaveBeenCalled();
-    expect(await f.summary()).toEqual([]);
-  });
+    await expectEarlier(f);
+  }, 15_000);
 
   it("keeps the previous summary when the thread cannot be read", async () => {
     provider.languageModel.mockReturnValue(summaryModel("unused"));
     const f = await createSummaryTest(9, () => BIG);
+    await f.seed(EARLIER_THROUGH, EARLIER);
     await f.refresh(8, "missing-thread");
-    expect(await f.summary()).toEqual([]);
+    await expectEarlier(f);
   });
 });
