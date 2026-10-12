@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import type { NinaUpkeepCall } from "@repo/backend/confect/nina/contract/usage";
 import type { NinaMemorySeen } from "@repo/backend/confect/nina/memory.spec";
 import { createPortraitTest, save } from "@repo/backend/test/nina/portrait";
 
@@ -26,7 +27,7 @@ async function build(text?: string) {
       memories: (typeof NinaMemorySeen.Type)[];
       reached: number;
       text: string;
-      usage: { input: number; output: number };
+      usage: typeof NinaUpkeepCall.Type;
     }> = {}
   ) =>
     f.t.mutation(save, {
