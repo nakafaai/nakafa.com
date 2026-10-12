@@ -280,7 +280,10 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
 
     // The whole placeholder fits the room the field gives it.
     expect(text.needs).toBeGreaterThan(0);
-    expect(text.needs).toBeLessThanOrEqual(text.room);
+    expect(
+      text.needs,
+      `the card is ${card?.width}px wide and the field gives ${text.room}px`
+    ).toBeLessThanOrEqual(text.room);
     // The button that adds a memory is beside the field, inside the card.
     expect(add).not.toBeNull();
     expect(field).not.toBeNull();

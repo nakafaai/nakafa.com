@@ -12,7 +12,7 @@ import {
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { titleOf, wordsShown, writeWorst } from "@/e2e/support/worst";
+import { titleOf, widthOf, wordsShown, writeWorst } from "@/e2e/support/worst";
 
 const TITLE = "Study habits";
 const WORDS = "Studies after dinner";
@@ -295,7 +295,12 @@ const verifySituations = Effect.fn("NakafaE2E.verifySituations")(function* (
     await expect(factsOf(page, FUTURE)).toHaveText(ENDS_FIRST);
     await expect(factsOf(page, KEPT)).toHaveText(WRITTEN_FIRST);
     // The line is one line cut at its end, and what is cut is not the end date.
-    expect(await wordsShown(factsOf(page, FUTURE), ENDS_WORDS)).toBe(true);
+    const line = factsOf(page, FUTURE);
+
+    expect(
+      await wordsShown(line, ENDS_WORDS),
+      `the line is ${await widthOf(line)}px wide`
+    ).toBe(true);
 
     await memoryRow(page, FUTURE).getByText(FUTURE).click();
     await opened(page, FUTURE);
