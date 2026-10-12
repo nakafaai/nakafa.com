@@ -78,7 +78,9 @@ export const MathExpressionSchema = Schema.Struct({
  * translation key and fails its typecheck for a label that has none. A new
  * label reaches learners in this order: the app that accepts it first, then the
  * CAS that emits it, because an app built before it cannot read a result that
- * holds it.
+ * holds it. A stored result that holds a name no longer on the list does not
+ * decode either: its cards are not shown and the model reads its output as raw
+ * JSON. So a name stays on the list while a stored result may hold it.
  */
 const MathItemLabelSchema = Schema.Literals([
   "algebraic_multiplicity",
