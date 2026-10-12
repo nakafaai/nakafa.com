@@ -35,9 +35,13 @@ export const redirectCases: [
     "/id/try-out/indonesia/snbt/2027/set-1/literasi-dalam-bahasa-inggris",
   ],
 ];
+/** Every file the proxy passes on by name, read from the proxy's own list. */
+const passedOnFiles = Arr.fromIterable(LOCALE_BYPASS_PATHS);
 /**
  * Resource patterns that still require routing checks, and paths that only
- * resemble the analytics path or an icon file, which the proxy does not skip.
+ * resemble the analytics path or a file the proxy passes on by name, such as
+ * its spelling with a trailing slash or in upper case, which the proxy does
+ * not skip.
  */
 export const matched = [
   ...Arr.map(
@@ -50,10 +54,8 @@ export const matched = [
   `/en${POSTHOG_PROXY_PATH}/flags`,
   "/other-logo.svg",
   "/logo.svgx",
-  "/logo.svg/",
+  ...Arr.flatMap(passedOnFiles, (path) => [`${path}/`, path.toUpperCase()]),
 ];
-/** Every file the proxy passes on by name, read from the proxy's own list. */
-export const passedOnFiles = Arr.fromIterable(LOCALE_BYPASS_PATHS);
 /** Resources owned by static serving, the analytics rewrite, or hard not-found routing. */
 export const bypassed = [
   "/.well-known/llms.txt",

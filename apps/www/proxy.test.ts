@@ -10,7 +10,6 @@ import {
   localeHints,
   matched,
   passedOn,
-  passedOnFiles,
   publicRoutes,
   redirectCases,
   representations,
@@ -232,19 +231,6 @@ describe("proxy", () => {
     ).toBe(true);
     expect(Arr.some(bypassed, matchesProxy)).toBe(false);
   });
-  it.each(passedOnFiles)(
-    "leaves %s, which the proxy passes on by name, out of the proxy",
-    (path) => {
-      expect(matchesProxy(path)).toBe(false);
-    }
-  );
-  it.each(passedOnFiles)(
-    "keeps the other spellings of %s in the proxy",
-    (path) => {
-      expect(matchesProxy(`${path}/`)).toBe(true);
-      expect(matchesProxy(path.toUpperCase())).toBe(true);
-    }
-  );
   it.each(["/en/example.og", "/en/example.png", "/og/example/image.png"])(
     "delegates the active OG alias %s before document routing",
     async (path) => {
