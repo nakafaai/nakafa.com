@@ -136,6 +136,50 @@ as a normal-traffic projection.
   entitlements, scoring, and IRT state. It deletes only rebuildable local
   projections.
 
+### 2026-09-12 to 2026-10-12 usage by function group
+
+Read from the Convex Usage page on 2026-10-11 (team Nakafa, Professional plan, all
+projects). Only Database I/O was over what the plan includes.
+
+| Resource | Usage | Included | On demand |
+| --- | ---: | ---: | ---: |
+| Function calls | 2.2M | 25M | 0 |
+| Action compute | 10 GB-hours | 250 GB-hours | 0 |
+| Database storage | 8.52 GB | 50 GB | 0 |
+| Database I/O | 92.9 GB (reads 86.78 GB, writes 6.11 GB) | 50 GB | 42.9 GB |
+| Data egress | 2.31 GB | 50 GB | 0 |
+
+Database I/O by the group of functions that caused it:
+
+| Group | GB | What it is |
+| --- | ---: | --- |
+| Content release pipeline | 36.9 (production 26.95, dev 9.95) | Publishing from Aksara: staging, proof, compaction, heads, rollback preparation |
+| Runtime reads | about 34 | Serving `www`, `api` and `mcp`: lesson, navigation, sitemap, ownership, catalog |
+| Exports and one-off queries | 13.8 | `snapshot_export` 8.92 (dev 0.96), queries run from the dashboard, the CLI or a connector 3.02, the dashboard itself 0.87 |
+| Popularity pipeline | 3.27 | Eight windows in two scopes, of which the homepage read one |
+
+Quiet days used 1.0 to 2.6 GB. The days above that were content releases and
+exports: about 9.5 GB on 13 September, 10.5 GB on 24 September, 9.3 GB on
+27 September.
+
+Four runtime functions ran 200,000 to 250,000 times each in the period
+(`article.categories`, `page.catalog`, `material.sitemapPage`,
+`ownership.resolve`), which is one call for nearly every document request,
+crawlers included, on a site with few learners.
+
+What changed because of these numbers, each in its own section or pull request:
+the reads nobody needed (below, #991), content read once per release through a
+store that a deploy does not empty (#992), content releases that publish to
+production only (Aksara #452), and no production export or one-off production
+query as a working rule. The measured effect belongs in this note after a full
+billing period on the new code.
+
+The Vercel Usage page for the cycle that began on 2026-09-30 showed $11.59 of
+the $20.00 credit used after 12 days: ISR writes $4.43 (1.11M units), Fast
+Origin Transfer $2.34 (37 GB), Fluid active CPU $2.02, provisioned memory
+$1.72. About 7 of 10 requests ran a function, and one invocation moved about
+74 KB. ADR 0007 records what changed on the Vercel side because of them.
+
 ### 2026-10-11 reads nobody needed
 
 The 2026-09-12 to 2026-10-12 usage showed 92.9 GB of Database I/O. Five backend
