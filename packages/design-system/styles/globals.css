@@ -312,14 +312,23 @@
 
 /* A control that can be pressed answers the press by shrinking to 0.96 for
  * press, and its transition names scale. Reduced motion keeps the colour and
- * shadow answers and drops the scale. A control that opens a popup does not
- * shrink: the popup measures the control when it opens and never measures it
- * again, so a popup that opens on a tap or on Space while the control is still
- * shrunk lands narrower and off its trigger. The :not() also lifts the press
- * above any scale a state sets, such as a hover that grows the control. */
+ * shadow answers and drops the scale. Three things stay still. A disabled
+ * control, however it says so. A control that opens a popup: the popup
+ * measures the control when it opens and never measures it again, so a popup
+ * that opens on a tap or on Space while the control is still shrunk lands
+ * narrower and off its trigger. And a label that borrows the look of a
+ * button, such as an answer choice: the control it labels answers the press.
+ * The :not() also lifts the press above any scale a state sets, such as a
+ * hover that grows the control. */
 @utility pressable {
   @media (prefers-reduced-motion: no-preference) {
-    &:active:not(:disabled, [aria-haspopup]) {
+    &:active:not(
+        :disabled,
+        [aria-disabled="true"],
+        [data-disabled],
+        [aria-haspopup],
+        label
+      ) {
       scale: 0.96;
       transition-duration: var(--transition-duration-press);
     }

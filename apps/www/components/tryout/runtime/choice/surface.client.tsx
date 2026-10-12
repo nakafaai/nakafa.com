@@ -132,7 +132,7 @@ function TryoutChoiceFrame({
   return (
     <Label
       className={cn(
-        buttonVariants({ pressable: false, variant }),
+        buttonVariants({ variant }),
         "h-auto min-w-0 whitespace-normal text-left font-normal text-base"
       )}
     >
