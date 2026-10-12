@@ -66,6 +66,13 @@ contextual visit cannot first record a canonical view and then a placement view.
 - Flight requests bypass the Proxy's duplicate publication ownership reads.
   HTML requests retain the early check because streamed `notFound()` can return
   HTTP 200 after a response has started. Markdown negotiation remains explicit.
+- The Proxy runs before the CDN cache as a Node.js function, so every request
+  its matcher lets in costs one run, a cached page included. The matcher keeps
+  out only what the Proxy passes on unchanged: the analytics path, which
+  `next.config.ts` rewrites to PostHog, and the icon and the manifest that every
+  page links. Documents, Flight navigations and prefetches stay in because they
+  can redirect, rewrite or reject a locale, and an unknown root file stays in
+  because the Proxy answers it with a plain 404.
 - The `www` function region is `iad1`, beside the production Convex deployment.
   CDN delivery remains global. The project default region must match the checked
   configuration so the durable ISR cache is created in the intended region.

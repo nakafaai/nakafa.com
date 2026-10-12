@@ -275,11 +275,29 @@ function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
   return response;
 }
 
+/**
+ * The requests that reach the proxy. On Vercel the proxy runs before the CDN
+ * cache as a Node.js function, so every request it lets in costs one run, a
+ * cached page included. A path stays out only when the proxy does nothing for
+ * it:
+ *
+ * - The analytics path `/_nakafa` (`POSTHOG_PROXY_PATH`): the proxy passes it
+ *   on, and `next.config.ts` rewrites it to PostHog. The pattern writes the
+ *   path by hand because a matcher must be a literal.
+ * - The icon and the manifest that every page links, `/logo.svg` and
+ *   `/manifest.webmanifest`: both are in `LOCALE_BYPASS_PATHS`, so the proxy
+ *   passes them on. Any other root file stays in, because the proxy answers an
+ *   unknown one with a plain 404 before it can reach a localized route.
+ *
+ * Everything else the proxy decides: documents, Flight navigations and
+ * prefetches, which may redirect or rewrite, and the localized image aliases,
+ * which reject a locale that the site does not serve.
+ */
 export const config: ProxyConfig = {
   matcher: [
-    "/((?!_next/static|_not-found|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
+    "/((?!_next/static|_not-found|fonts|open-graph|api|_next/image|favicon.ico|_nakafa(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
     "/:locale([A-Za-z]{2})/:path*.png",
-    "/:rootFile([^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
+    "/:rootFile((?!logo\\.svg$|manifest\\.webmanifest$)[^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
     // The pattern above skips `/api`, so the removed finance endpoint names itself.
     "/api/chat/finance",
   ],
