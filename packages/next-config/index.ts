@@ -1,9 +1,6 @@
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Array as Arr, Duration } from "effect";
+import { Array as Arr } from "effect";
 import type { NextConfig } from "next";
-
-/** How long the image optimizer keeps an optimized copy, in seconds. */
-const IMAGE_CACHE_LIFETIME_SECONDS = Duration.toSeconds(Duration.days(7));
 
 const BASE_CONTENT_SECURITY_POLICY = {
   connectSrc: [
@@ -162,16 +159,6 @@ export const config = {
   images: {
     contentDispositionType: "inline",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // The optimizer keeps a copy for the longer of this value and the source's
-    // own Cache-Control, four hours by default. A static import is served with
-    // an immutable year, so it already stays. A file in `public/` is served
-    // with max-age=0 and the remote sources send short lifetimes, so each of
-    // them was optimized again every four hours for the same bytes. Files in
-    // `public/` change with a deploy, an upload in Convex storage has its own
-    // URL, and a favicon rarely changes, so a week loses nothing; the optimizer
-    // has no way to purge a copy before then.
-    // https://nextjs.org/docs/app/api-reference/components/image#minimumcachettl
-    minimumCacheTTL: IMAGE_CACHE_LIFETIME_SECONDS,
     remotePatterns: [
       {
         hostname: "www.google.com",

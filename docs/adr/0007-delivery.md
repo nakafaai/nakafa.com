@@ -82,11 +82,11 @@ contextual visit cannot first record a canonical view and then a placement view.
   the activation, because a stale image is cosmetic and its lifetime bounds it.
   The image for a route the release does not know is kept for five minutes
   only, because the next release may add the route.
-- The image optimizer keeps an optimized copy for a week
-  (`images.minimumCacheTTL` in `@repo/next-config`), not the four hours it
-  defaults to. A static import already stays for a year, but a file in
-  `public/` and a remote image sent short lifetimes and were optimized again
-  every four hours for the same bytes.
+- The image optimizer keeps the default of `images.minimumCacheTTL`. Vercel
+  keys an optimized local image by the hash of its content and keeps it for up
+  to 31 days across deploys, so only a remote image, such as an avatar or a
+  favicon, depends on the value, and a longer one would show a changed remote
+  image late.
 - The trending list on the home page counts the last seven days and drops its
   oldest day once a night, so its snapshot uses the `hours` profile. The
   `minutes` profile refreshed it every minute and regenerated the page that

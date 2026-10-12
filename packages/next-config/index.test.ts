@@ -101,12 +101,3 @@ describe("createSecurityHeaders", () => {
     ]);
   });
 });
-
-describe("image optimizer lifetime", () => {
-  it("keeps an optimized image for a week, well past the four hour default", () => {
-    const fourHours = 4 * 60 * 60;
-
-    expect(config.images.minimumCacheTTL).toBe(7 * 24 * 60 * 60);
-    expect(config.images.minimumCacheTTL).toBeGreaterThan(fourHours);
-  });
-});
