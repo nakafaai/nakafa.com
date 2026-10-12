@@ -26,8 +26,8 @@ import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useTransition } from "react";
 import { toast } from "sonner";
+import { useChange } from "@/components/ai/chat/change.client";
 import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
@@ -198,11 +198,11 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
   const deleteChat = useDeleteChatMutation();
-  const [isPending, startTransition] = useTransition();
+  const { change, isPending } = useChange();
 
   /** Delete this chat through the optimistic list mutation. */
   function handleDelete() {
-    startTransition(async () =>
+    change(() =>
       Effect.runPromise(
         Effect.asVoid(
           Effect.tryPromise(() =>
