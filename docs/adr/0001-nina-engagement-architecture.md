@@ -32,7 +32,8 @@ The completion event records answer-time usage; the durable turn's usage and
 token totals continue to include later presentation calls. The title and the
 summary text are stored sealed for the learner who owns the chat; the migration
 that sealed every row still holding plain text ran on 11 October 2026, on dev
-and production, and was then deleted.
+and production, and was then deleted. Message text is the private text that is
+still stored plain: [ADR 0023](./0023-messages.md) decides how it is sealed.
 
 The Agent component owns threads, messages, tool results, and stream deltas.
 Application tables retain product ownership, visibility, credit transactions,
