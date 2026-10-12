@@ -125,7 +125,10 @@ const edit = FunctionImpl.make(
       return yield* new NinaMemoryRejected({ reason: "missing" });
     }
     const { keys, text, title } = yield* sealDraft(appUser._id, draft);
-    const confirmedAt = yield* Clock.currentTimeMillis;
+    const confirmedAt = confirmedAfterClear(
+      yield* Clock.currentTimeMillis,
+      clearedAt
+    );
     yield* (yield* DatabaseWriter)
       .table("ninaMemories")
       .patch(id, { author: "learner", confirmedAt, text, title })

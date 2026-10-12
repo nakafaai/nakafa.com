@@ -10,7 +10,7 @@ import {
   setNinaMemoryCleared,
 } from "@repo/backend/confect/learningPreferences/impl";
 import { deleteKeys } from "@repo/backend/confect/nina/memory/keys";
-import { Array as Arr, Duration, Effect } from "effect";
+import { Array as Arr, Duration, Effect, Option } from "effect";
 
 type UserId = Docs["users"]["_id"];
 type MemoryId = Docs["ninaMemories"]["_id"];
@@ -193,18 +193,30 @@ export const drainMemories = Effect.fn("nina.memory.store.drain")(function* (
 });
 
 /**
- * Deletes every memory the learner has at `now`, which is what "Delete all"
- * asks. The batches of `drainMemories` run one after another, so the learner's
- * memory state first keeps the moment (`readMemoryState`). From that
- * transaction on, every reader drops those memories, on every device and for
- * Nina's next turn, until the batches have deleted them.
+ * Deletes every memory the learner has, which is what "Delete all" asks. The
+ * batches of `drainMemories` run one after another, so the learner's memory
+ * state first keeps the moment (`readMemoryState`). From that transaction on,
+ * every reader drops those memories, on every device and for Nina's next turn,
+ * until the batches have deleted them.
+ *
+ * The moment kept is `now`, or the confirmation of the learner's newest memory
+ * when that is later. A memory written after an earlier "Delete all" is
+ * confirmed after that request even when the clock had not moved on
+ * (`confirmedAfterClear`), so `now` alone could be earlier than a memory that
+ * exists, and this request would leave it.
  */
 export const clearMemories = Effect.fn("nina.memory.store.clear")(function* (
   userId: UserId,
   now: number
 ) {
-  yield* setNinaMemoryCleared({ now, userId });
-  return yield* drainMemories(userId, now);
+  const { clearedAt } = yield* readMemoryState(userId);
+  const newest = Arr.head(yield* readNewest(userId, 1, clearedAt));
+  const through = Option.match(newest, {
+    onNone: () => now,
+    onSome: (memory) => Math.max(now, memory.confirmedAt),
+  });
+  yield* setNinaMemoryCleared({ now: through, userId });
+  return yield* drainMemories(userId, through);
 });
 
 /** Deletes one batch of the memories whose end date is before `now`, and returns how many. */

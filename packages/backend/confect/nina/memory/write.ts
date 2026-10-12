@@ -17,7 +17,10 @@ import {
   lostSeen,
   readNamed,
 } from "@repo/backend/confect/nina/memory/seen";
-import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
+import {
+  confirmedAfterClear,
+  readMemoryState,
+} from "@repo/backend/confect/nina/memory/store";
 import {
   MEMORY_TOPIC_LIMIT,
   type NinaMemoryCandidate,
@@ -242,7 +245,7 @@ export const writeMemories = Effect.fn("nina.memory.write")(function* (args: {
   if (yield* lostSeen(args.userId, args.seen, clearedAt)) {
     return 0;
   }
-  const now = yield* Clock.currentTimeMillis;
+  const now = confirmedAfterClear(yield* Clock.currentTimeMillis, clearedAt);
   const keys = yield* ensureLearnerKeys(args.userId);
   const written = yield* Effect.forEach(args.candidates, (candidate) =>
     writeCandidate({

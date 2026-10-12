@@ -13,6 +13,7 @@ const remove = Ref.getFunctionReference(memory.remove);
 const pause = Ref.getFunctionReference(memory.pause);
 const clear = Ref.getFunctionReference(memory.clear);
 const add = Ref.getFunctionReference(memory.add);
+const edit = Ref.getFunctionReference(memory.edit);
 const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
 const known = Ref.getFunctionReference(refs.internal.nina.memory.known);
 const drain = Ref.getFunctionReference(refs.internal.nina.memory.drain);
@@ -172,6 +173,37 @@ describe("Nina memory removal", () => {
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     expect(await f.texts()).toEqual(after);
     expect(await keyedMemories(f)).toEqual([kept]);
+  });
+
+  it("takes a memory written after an earlier Delete all when the learner asks again and the clock has not moved", async () => {
+    const f = await createMemoryTest();
+    await f.fill(3);
+    expect(await f.owner.mutation(clear, {})).toBeNull();
+    // The clock still reads the moment of the first deletion, so this memory
+    // is confirmed one millisecond after it.
+    await f.owner.mutation(add, { text: "Written between" });
+    expect(await f.owner.mutation(clear, {})).toBeNull();
+    expect(await readers(f)).toEqual({
+      capture: [],
+      found: [],
+      listed: [],
+      turn: [],
+    });
+    await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    expect(await f.stored()).toEqual([]);
+  });
+
+  it("confirms an edit after Delete all later than it when the clock has not moved, so no reader hides the edited memory", async () => {
+    const f = await createMemoryTest();
+    await f.fill(3);
+    expect(await f.owner.mutation(clear, {})).toBeNull();
+    const kept = await f.owner.mutation(add, { text: "Written after memory" });
+    await f.owner.mutation(edit, { id: kept, text: "Rewritten after memory" });
+    const after = ["Rewritten after memory"];
+    expect(await f.stored()).toContainEqual(
+      expect.objectContaining({ _id: kept, confirmedAt: NOW + 1 })
+    );
+    expect(await readers(f)).toMatchObject({ listed: after, turn: after });
   });
 
   it("hides sixty memories from every reader the moment the learner asks, shows the memory written right after, and leaves only that one when the batches have run", async () => {

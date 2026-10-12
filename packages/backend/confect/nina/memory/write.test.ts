@@ -5,6 +5,7 @@ import { candidate, createCaptureTest } from "@repo/backend/test/nina/memory";
 import { Array as Arr } from "effect";
 
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
+const clear = Ref.getFunctionReference(refs.public.nina.memory.clear);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
@@ -443,6 +444,18 @@ describe("memory capture write without a limit", () => {
     expect(texts).toContain("Memory 0");
     expect(texts).toContain("Kelas 12 IPA.");
     expect(await f.remembered()).toBe(1);
+  });
+});
+
+describe("memory capture write after Delete all", () => {
+  it("confirms what Nina writes later than the deletion when the clock has not moved, so no reader hides it and no batch takes it", async () => {
+    const f = await createCaptureTest();
+    await f.owner.mutation(clear, {});
+    expect(await f.run([candidate()])).toBe(1);
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({ author: "nina", confirmedAt: NOW + 1 }),
+    ]);
+    expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
   });
 });
 
