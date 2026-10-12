@@ -28,6 +28,10 @@ Memory input rules:
 - If memory returns nothing, say you do not know it yet and ask the learner; never guess it.
 `;
 
+/** What Nina reads when the run could not read the memories, whatever the cause. */
+const UNREADABLE =
+  "Memory could not be read right now. Tell the learner you could not check what they told you before, ask them again, and do not guess it.";
+
 /**
  * Searches what the learner told Nina before and saved as memories. The words
  * it finds must never be stored: a result that the chat keeps is readable in the
@@ -36,13 +40,15 @@ Memory input rules:
  * the conversation keeps only this note. A memory it returns is not thereby
  * confirmed. It publishes no card.
  *
- * A search that cannot be read ends as a failed read and keeps nothing of the
- * failure but the phase. What the platform says of it is not kept, because the
- * call was given the learner's query, and the Agent would give the message of a
- * defect to Nina and store it in the thread as the text of a tool error, which
- * a reader of a public chat can open. The failure is told apart at the one call
- * that reads (`MemoryReadError`), so a defect anywhere else in the run is a bug
- * and is not hidden behind it.
+ * Whatever goes wrong in the run ends as a failed read, and keeps nothing of
+ * the failure but its phase. The call was given the learner's query, so what
+ * the platform or a bug says of it may repeat the learner's words, and the Agent
+ * would give the message of a defect to Nina and store it in the thread as the
+ * text of a tool error, which a reader of a public chat can open. A search that
+ * cannot be read ends at the one call that reads as a `MemoryReadError`, phase
+ * `read`. A defect anywhere else in the run ends the same way for Nina and for
+ * the thread, with phase `run`, so the log still tells a bug from a read that
+ * failed.
  */
 export const memoryCapability = defineCapability({
   continuation:
@@ -60,11 +66,9 @@ export const memoryCapability = defineCapability({
   run: ({ query }, { userId }) =>
     runMemory({ query, userId }).pipe(
       Effect.catchTag("MemoryReadError", () =>
-        failed(
-          { phase: "read" },
-          "Memory could not be read right now. Tell the learner you could not check what they told you before, ask them again, and do not guess it."
-        )
-      )
+        failed({ phase: "read" }, UNREADABLE)
+      ),
+      Effect.catchDefect(() => failed({ phase: "run" }, UNREADABLE))
     ),
   textOnly: true,
 });
