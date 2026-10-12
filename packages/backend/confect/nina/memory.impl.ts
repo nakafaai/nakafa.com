@@ -11,12 +11,6 @@ import { setNinaMemoryPaused } from "@repo/backend/confect/learningPreferences/i
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { syncKeys } from "@repo/backend/confect/nina/memory/keys";
 import {
-  disable,
-  enable,
-  forget,
-  get,
-} from "@repo/backend/confect/nina/memory/retired";
-import {
   MEMORY_FIELD,
   TITLE_FIELD,
 } from "@repo/backend/confect/nina/memory/seal";
@@ -235,10 +229,6 @@ export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(remove),
   Layer.provide(pause),
   Layer.provide(clear),
-  Layer.provide(get),
-  Layer.provide(enable),
-  Layer.provide(disable),
-  Layer.provide(forget),
   Layer.provide(read),
   Layer.provide(known),
   Layer.provide(capture),

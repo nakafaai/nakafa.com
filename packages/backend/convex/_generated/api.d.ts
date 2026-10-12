@@ -3123,12 +3123,7 @@ export declare const api: {
         getTrendingSubjects: FunctionReference<
           "query",
           "public",
-          {
-            limit?: number;
-            locale: "en" | "id" | "de";
-            minViews?: number;
-            windowKey?: "7d";
-          },
+          { locale: "en" | "id" | "de" },
           Array<{
             alignmentId: string;
             assetId: string;
@@ -3409,30 +3404,11 @@ export declare const api: {
         Id<"ninaMemories">
       >;
       clear: FunctionReference<"mutation", "public", {}, null>;
-      disable: FunctionReference<"mutation", "public", {}, null>;
       edit: FunctionReference<
         "mutation",
         "public",
         { id: Id<"ninaMemories">; text: string; title?: string },
         null
-      >;
-      enable: FunctionReference<
-        "mutation",
-        "public",
-        {},
-        { facts: Array<{ key: number; savedAt: number; text: string }> }
-      >;
-      forget: FunctionReference<
-        "mutation",
-        "public",
-        { key: number },
-        { facts: Array<{ key: number; savedAt: number; text: string }> } | null
-      >;
-      get: FunctionReference<
-        "query",
-        "public",
-        {},
-        { facts: Array<{ key: number; savedAt: number; text: string }> } | null
       >;
       list: FunctionReference<
         "query",
@@ -7789,8 +7765,6 @@ export declare const internal: {
           {},
           {
             hasMore: boolean;
-            retiredCounters: number;
-            retiredCycles: number;
             signalsDeleted: number;
             viewersDeleted: number;
             waitingForMaintenance: boolean;
