@@ -101,11 +101,12 @@ of its own, and every model call has a cap on its output.
   | Specialist: three checked calculations | low | 904 | 0 |
 
   The first draft of the caps (chat 8,192, background 1,024) would have cut
-  the first chat answer and the summary. A summary may hold 1,200 tokens
-  (`NINA_BUDGET.summary`), and Nina reads at most 6,000 tokens of a
-  specialist's answer (`NINA_BUDGET.evidence`), which is where the background
-  and specialist caps come from. Measure again before a cap is lowered or the
-  model changes.
+  the first chat answer and the summary. A summary could hold 1,200 tokens
+  (`NINA_BUDGET.summary`) when the caps were set, and Nina reads at most 6,000
+  tokens of a specialist's answer (`NINA_BUDGET.evidence`), which is where the
+  background and specialist caps come from. Since 12 October 2026 a summary may
+  hold 2,000 tokens, and the background cap of 2,048 has not been raised with
+  it. Measure again before a cap is lowered or raised, or the model changes.
 - A link to Nakafa's own site goes to the Nakafa capability and never to web
   research. The capability forces the read tool, step after step, until the
   model has asked for every address the learner sent. A message with more

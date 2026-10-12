@@ -13,9 +13,10 @@ busy-chat and model checks, before resolving learning context. Reservation,
 context resolution, the saved prompt, the turn, and its scheduled generation
 commit in one transaction, so a rejected admission leaves no hold to refund.
 
-Nina's provider context follows ADR 0001: the thread read lists the newest 16
-turns after the summary and pages back through the thread, 50 messages at a
-time, only as far as the oldest complete one of them, and the context module
+Nina's provider context follows ADR 0001: the thread read lists the complete
+turns after the summary 16 at a time, newest first, and pages back through the
+thread, 50 messages at a time, only as far as those turns reach. It stops after
+the page that brings the turns past the history budget, and the context module
 keeps whole turns within its token budgets, so a long thread cannot trigger
 unbounded pagination. Whole turns preserve tool-call and tool-result parts
 together. The full transcript remains available for browsing.

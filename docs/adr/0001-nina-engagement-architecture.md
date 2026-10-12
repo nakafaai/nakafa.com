@@ -82,8 +82,8 @@ the learner's language, and the learner's recorded answer through an internal
 query, so question text and answer keys never come from the client. The official
 explanation is the source of truth for the answer.
 
-Provider input keeps whole recent turns that the conversation summary does not
-cover, newest first, within 12,000 tokens, and the current turn's evidence
+Provider input keeps whole turns that the conversation summary does not
+cover, newest first, within 32,000 tokens, and the current turn's evidence
 within 16,000 tokens. The turns come from the chat's turn records, by turn
 order, not from the last messages of the thread: a cancelled or failed turn
 leaves no messages in it, and a question the learner asked again appears once,
@@ -101,14 +101,32 @@ unset, so a few images fill the history budget. A stored message keeps neither
 the size nor the page count of a file, so the rule reads the media type alone.
 The learner's own message and its attachments are not evidence and do not count
 against the evidence budget.
-After a completed turn, the follow-up action
-folds the complete turns beyond the four newest into the chat's conversation
-summary with a fast model once four such turns accumulate, at most 16 turns per
-refresh, so a longer backlog advances one bounded batch per turn and reads back
-only from its last folded turn. The fold leaves out what the history would: a
-cancelled or failed turn, and an answer that a later retry replaced. The
-summary, at most 1,200
-tokens, sits in the system prompt context and is deleted with its chat. Its
+
+One call carries at most `NINA_CALL_LIMIT` tokens by design, the sum of the
+budgets in `confect/nina/budget.ts` that a call holds at once. The model accepts
+far more, 1,048,576 input tokens. Nina stays below because every call bills
+every token it carries, a larger call takes longer to start, and the provider
+keeps a cached prefix for only about five minutes.
+
+The size of the history starts a fold of the conversation summary, never a
+count of turns. After a completed turn, the follow-up action counts the
+complete turns the summary does not cover in model tokens, as the history would
+send them. A chat whose turns fit in the 32,000 token history budget is never
+folded. When they cost more, one fold summarizes the oldest of them with a fast
+model, as many as it takes for the rest to cost at most 16,000 tokens, half the
+budget, so the next fold waits for about half a budget of new turns and the
+cached prefix holds in between. The newest complete turn is never folded, a
+fold covers at most 16 turns, and a longer backlog advances one bounded batch
+per completed turn, reading back only from its last folded turn. Between two
+folds the history only grows at its end. The one exception is a turn that
+outgrew the budget before a fold covered it, because the fold is still running
+or failed: the oldest turns leave that call's input until the rest fits. Turns
+are read newest first, 16 at a time, and the read stops after the page that
+brings them past the history budget. The fold leaves out what the history
+would: a cancelled or failed turn, and an answer that a later retry replaced.
+The summary, at most 2,000 tokens, stays in the language of the conversation,
+adds no fact the turns did not state, sits in the system prompt context and is
+deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
 rather than in a turn's usage ledger, which clients read. The learner profile
 and learner memory follow [ADR 0022](./0022-memory.md). Old
