@@ -3,21 +3,23 @@ import { Array as Arr, Effect } from "effect";
 import { ANSWER_MILLISECONDS } from "@/e2e/support/changes";
 import {
   CHAT_PATH,
-  historyRows,
   LESSON_PATH,
-  markedRows,
-  markRows,
   openChatPage,
   PAGE,
+  runOnPage,
+} from "@/e2e/support/chat";
+import {
+  historyRows,
+  markedRows,
+  markRows,
   pageRows,
   placesOf,
-  runOnPage,
   scrollToEnd,
   settled,
   sidebarRows,
   sidebarScroller,
   sidebarSearch,
-} from "@/e2e/support/chat";
+} from "@/e2e/support/rows";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The chats after the first page, beside the chat that waits at the end. */

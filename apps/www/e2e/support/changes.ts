@@ -7,84 +7,23 @@ import {
   MutableHashSet,
   MutableList,
   Option,
-  Schema,
 } from "effect";
+import {
+  decodeGiven,
+  decodeSent,
+  encodeRefusal,
+  type GivenSchema,
+  isMutation,
+  later,
+  momentOf,
+  type SentSchema,
+} from "@/e2e/support/frames";
 
 /** The realtime connection of the page to the backend. */
 const CONVEX_SOCKET = /\/api\/[^/]+\/sync/;
 
 /** How long a step waits for the server to answer a change. */
 export const ANSWER_MILLISECONDS = 15_000;
-
-/** A change the page sends, which the server answers with the same `requestId`. */
-const MutationSchema = Schema.Struct({
-  args: Schema.Array(Schema.Unknown),
-  requestId: Schema.Finite,
-  type: Schema.Literal("Mutation"),
-  udfPath: Schema.String,
-});
-
-/** The answer of a server that could not take a change, as the protocol words it. */
-const RefusalSchema = Schema.Struct({
-  logLines: Schema.Array(Schema.String),
-  requestId: Schema.Finite,
-  result: Schema.String,
-  success: Schema.Literal(false),
-  type: Schema.Literal("MutationResponse"),
-});
-
-/** The frames the page sends that a step waits on. Any other frame decodes to none. */
-const SentSchema = Schema.Union([
-  Schema.Struct({
-    tokenType: Schema.Literal("User"),
-    type: Schema.Literal("Authenticate"),
-  }),
-  MutationSchema,
-  Schema.Struct({
-    modifications: Schema.Array(
-      Schema.Struct({
-        queryId: Schema.Finite,
-        type: Schema.String,
-        udfPath: Schema.optionalKey(Schema.String),
-      })
-    ),
-    type: Schema.Literal("ModifyQuerySet"),
-  }),
-]);
-
-/**
- * The frames the server sends that a step waits on. A `ts` is a moment of the
- * database, which the protocol writes as eight bytes in Base64.
- */
-const GivenSchema = Schema.Union([
-  Schema.Struct({
-    ts: Schema.optionalKey(Schema.Uint8ArrayFromBase64),
-    type: Schema.Literal("MutationResponse"),
-  }),
-  Schema.Struct({
-    endVersion: Schema.Struct({ ts: Schema.Uint8ArrayFromBase64 }),
-    modifications: Schema.Array(
-      Schema.Struct({ queryId: Schema.Finite, type: Schema.String })
-    ),
-    type: Schema.Literal("Transition"),
-  }),
-]);
-
-const decodeSent = Schema.decodeOption(Schema.fromJsonString(SentSchema));
-const decodeGiven = Schema.decodeOption(Schema.fromJsonString(GivenSchema));
-const encodeRefusal = Schema.encodeSync(Schema.fromJsonString(RefusalSchema));
-const isMutation = Schema.is(MutationSchema);
-
-/** The moment of the database that a `ts` names: eight bytes, the least significant first. */
-const momentOf = (bytes: Uint8Array) =>
-  Arr.reduceRight(
-    Arr.fromIterable(bytes),
-    0n,
-    (moment, byte) => moment * 256n + BigInt(byte)
-  );
-
-/** The later of two moments. */
-const later = (one: bigint, other: bigint) => (one > other ? one : other);
 
 /**
  * Follows the page's realtime connection: the changes it sent and the ones the

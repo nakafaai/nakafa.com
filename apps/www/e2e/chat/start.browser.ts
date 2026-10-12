@@ -28,17 +28,11 @@ const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
 const composerOf = (scope: Locator) =>
   scope.getByRole("textbox", { name: "Ask Nina anything..." });
 
-/**
- * The prompt a surface shows as the learner's message. The composer holds the
- * same words as text, so the bubble is what tells a shown prompt from a typed one.
- */
+/** The prompt a surface shows as a message: the composer holds the same words as text. */
 const promptIn = (scope: Locator) =>
   scope.locator('[data-slot="bubble"]').filter({ hasText: PROMPT });
 
-/**
- * Writes the prompt, and waits until the surface lets it be sent: until the
- * page knows who is signed in, a surface keeps its composer from sending.
- */
+/** Writes the prompt, and waits until the surface knows who is signed in and lets it be sent. */
 const write = async (scope: Locator) => {
   await composerOf(scope).fill(PROMPT);
   await expect(scope.getByRole("button", { name: "Send message" })).toBeEnabled(
@@ -46,10 +40,7 @@ const write = async (scope: Locator) => {
   );
 };
 
-/**
- * The prompt shows at once, with Nina typing after it and an empty composer,
- * before the server has answered anything. Then the chat opens.
- */
+/** The prompt shows at once, Nina types after it and the composer is empty. Then the chat opens. */
 const showsAtOnce = (
   scope: Locator,
   changes: Changes,
