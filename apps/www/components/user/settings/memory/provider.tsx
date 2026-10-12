@@ -4,10 +4,8 @@ import { createContext, type ReactNode, use, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import type { MemoryPage } from "@/components/user/settings/memory/list";
-import {
-  type MemoryReading,
-  useMemoryReading,
-} from "@/components/user/settings/memory/reading.client";
+import type { MemoryReading } from "@/components/user/settings/memory/reading";
+import { useMemoryReading } from "@/components/user/settings/memory/reading.client";
 import {
   createMemoryStore,
   type MemoryStore,
