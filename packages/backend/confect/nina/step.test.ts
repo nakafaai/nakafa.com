@@ -1,13 +1,38 @@
-import { describe, expect, it } from "@effect/vitest";
-import { makeChatStep } from "@repo/backend/confect/nina/capability/deadline";
+import { Ref } from "@confect/core";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  CAPABILITY_BUDGET,
+  makeChatStep,
+  timeLeft,
+} from "@repo/backend/confect/nina/capability/deadline";
+import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import {
   type NinaPrepareStep,
   prepareNinaStep,
   startNinaStep,
 } from "@repo/backend/confect/nina/step";
+import { deployment, provider } from "@repo/backend/test/gateway";
+import {
+  createNinaTest,
+  ninaModel,
+  ninaStream,
+  ninaToolInput,
+  ninaUsage,
+} from "@repo/backend/test/nina";
+import { encodeJsonText } from "@repo/utilities/json";
 import type { ModelMessage } from "ai";
-import { Clock, Effect } from "effect";
+import { Array as Arr, Clock, Duration, Effect, MutableRef } from "effect";
 import { TestClock } from "effect/testing";
+
+vi.mock("@repo/backend/confect/gateway/live", async () => ({
+  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
+}));
+vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
+  runNakafaAgent: vi.fn(),
+}));
+
+const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 
 const externalUrlMessages = [
   {
@@ -137,4 +162,66 @@ describe("nina/runtime/step", () => {
         );
       })
   );
+});
+
+describe("the chat steps of a real Nina run", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    deployment.mockReset();
+    provider.languageModel.mockReset();
+    vi.useRealTimers();
+  });
+
+  it("counts the time a capability has left from the start of the chat step it runs in", async () => {
+    // Only the wall clock is faked, so the model's calls can take time at once.
+    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const lefts = MutableRef.make<readonly number[]>([]);
+    vi.mocked(runNakafaAgent).mockImplementation(() =>
+      Effect.map(timeLeft, (left) => {
+        MutableRef.update(lefts, Arr.append(Duration.toMillis(left)));
+        return { text: "Evidence." };
+      })
+    );
+    const askNakafa = (toolCallId: string) => [
+      { type: "stream-start" as const, warnings: [] },
+      {
+        type: "tool-call" as const,
+        toolCallId,
+        toolName: "nakafa",
+        input: encodeJsonText(ninaToolInput),
+      },
+      {
+        type: "finish" as const,
+        usage: ninaUsage,
+        finishReason: { unified: "tool-calls" as const, raw: "tool-calls" },
+      },
+    ];
+    // Nina's own call takes 40 seconds in the first step and 5 in the second.
+    const languageModel = ninaModel();
+    const answer = languageModel.doStream;
+    let step = 0;
+    languageModel.doStream = (options) => {
+      step += 1;
+      if (step > 2) {
+        return answer.call(languageModel, options);
+      }
+      vi.advanceTimersByTime(step === 1 ? 40_000 : 5000);
+      return Promise.resolve(ninaStream(askNakafa(`read-${step}`)));
+    };
+    provider.languageModel.mockReturnValue(languageModel);
+    const f = await createNinaTest({ prompt: "Explain a function limit." });
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => undefined);
+    expect((await f.inspect()).turn?.state.status).toBe("complete");
+    const [first, second] = MutableRef.get(lefts);
+    // The first run has what its step has left after Nina's call took 40 seconds.
+    expect(first).toBeLessThanOrEqual(
+      Duration.toMillis(CAPABILITY_BUDGET) - 40_000
+    );
+    // The second step began later and its call took 5 seconds, so its run has
+    // more left, not less, than the first run had.
+    expect(second - first).toBe(35_000);
+  });
 });

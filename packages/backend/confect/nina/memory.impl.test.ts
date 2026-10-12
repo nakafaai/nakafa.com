@@ -6,6 +6,7 @@ import {
   createMemoryTest,
   sessionRequired,
 } from "@repo/backend/test/nina/memory";
+import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { Array as Arr } from "effect";
 
 const memory = refs.public.nina.memory;
@@ -283,5 +284,95 @@ describe("Nina memory writes", () => {
       expect.objectContaining({ confirmedAt: 5 }),
       expect.objectContaining({ confirmedAt: NOW }),
     ]);
+  });
+});
+
+describe("Nina memory writes on the Memory page and the portrait", () => {
+  it("asks for a portrait build when the learner adds a memory, but keeps the text the portrait has", async () => {
+    const f = await createPortraitTest();
+    await f.seedPortrait({
+      builtAt: NOW - 25 * 3_600_000,
+      scheduledAt: NOW - 25 * 3_600_000,
+      text: "Kelas 11.",
+      through: 4,
+    });
+    await f.owner.mutation(add, { text: "Mau ikut SNBT 2027" });
+    expect(await f.portrait()).toBe("Kelas 11.");
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ scheduledAt: NOW, through: 4 }),
+    ]);
+    expect(await f.scheduled()).toEqual([{ userId: f.identity.userId }]);
+    // Once that build has gone to the model, a second memory the same day asks
+    // for none.
+    await f.t.mutation(async (ctx) => {
+      const row = await ctx.db.query("ninaMemoryPortraits").first();
+      if (row) {
+        await ctx.db.patch(row._id, { builtAt: NOW });
+      }
+    });
+    await f.owner.mutation(add, { text: "Kelas 12 IPA" });
+    expect(await f.scheduled()).toHaveLength(1);
+  });
+
+  /** A learner with a memory and a portrait that says what the memory says. */
+  async function withPortrait() {
+    const f = await createPortraitTest();
+    const id = await f.seed({ author: "learner", text: "Kelas 11" });
+    await f.seedPortrait({
+      scheduledAt: NOW - 3_600_000,
+      text: "Kelas 11.",
+      through: 4,
+    });
+    return { ...f, id };
+  }
+
+  /** Whether the portrait lost its text and a build from scratch is asked for. */
+  async function expectRebuild(f: Awaited<ReturnType<typeof withPortrait>>) {
+    const [row] = await f.rows();
+    expect(row).toMatchObject({ scheduledAt: NOW, through: 0 });
+    expect(row).not.toHaveProperty("text");
+    expect(await f.scheduled()).toEqual([{ userId: f.identity.userId }]);
+  }
+
+  it("takes the text out of the portrait at once when the learner rewrites a memory, and asks for a build from scratch", async () => {
+    const f = await withPortrait();
+    await f.owner.mutation(edit, { id: f.id, text: "Kelas 12" });
+    await expectRebuild(f);
+  });
+
+  it("takes the text out of the portrait at once when the learner deletes a memory, and asks for a build from scratch", async () => {
+    const f = await withPortrait();
+    await f.owner.mutation(remove, { id: f.id });
+    await expectRebuild(f);
+  });
+
+  it("leaves the portrait alone when the memory to delete is gone or is another learner's", async () => {
+    const f = await createPortraitTest();
+    const other = await f.stranger();
+    const theirs = await f.seed({ text: "Rahasia", userId: other.userId });
+    const gone = await f.seed({ text: "Sudah hilang" });
+    await f.t.mutation((ctx) => ctx.db.delete(gone));
+    await f.seedPortrait({ text: "Kelas 12.", through: 4 });
+    await f.owner.mutation(remove, { id: gone });
+    await f.owner.mutation(remove, { id: theirs });
+    expect(await f.portrait()).toBe("Kelas 12.");
+    expect(await f.scheduled()).toEqual([]);
+    // The other learner's memory is still theirs.
+    expect(await f.texts(other.userId)).toEqual(["Rahasia"]);
+  });
+
+  it("builds nothing while memory is paused, though a memory the learner changes still takes its text out of the portrait", async () => {
+    const f = await createPortraitTest();
+    const id = await f.seed({ author: "learner", text: "Kelas 11" });
+    await f.owner.mutation(pause, { paused: true });
+    await f.owner.mutation(add, { text: "Mau ikut SNBT 2027" });
+    expect(await f.rows()).toEqual([]);
+    await f.seedPortrait({ text: "Kelas 11.", through: 4 });
+    await f.owner.mutation(remove, { id });
+    expect(await f.portrait()).toBeNull();
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ scheduledAt: 0 }),
+    ]);
+    expect(await f.scheduled()).toEqual([]);
   });
 });

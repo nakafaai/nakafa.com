@@ -10,6 +10,7 @@ import {
   setNinaMemoryCleared,
 } from "@repo/backend/confect/learningPreferences/impl";
 import { deleteKeys } from "@repo/backend/confect/nina/memory/keys";
+import { dropPortrait } from "@repo/backend/confect/nina/portrait/store";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 
 type UserId = Docs["users"]["_id"];
@@ -71,14 +72,17 @@ export function confirmedAfterClear(
 
 /**
  * Reads a learner's most recently confirmed memories that "Delete all" did not
- * take (see `readMemoryState`), the newest first, at most `limit`. The newest
- * come first, so what the learner deleted is the tail of the index and the
- * range stops before it. No function reads all the memories of a learner.
+ * take (see `readMemoryState`), the newest first, at most `limit`. `after` is
+ * the moment the learner last asked to delete every memory, or a later one,
+ * such as the confirmation time a portrait has read up to: only the memories
+ * confirmed after it are read. The newest come first, so what the learner
+ * deleted is the tail of the index and the range stops before it. No function
+ * reads all the memories of a learner.
  */
 export const readNewest = Effect.fn("nina.memory.store.newest")(function* (
   userId: UserId,
   limit: number,
-  clearedAt: number | undefined
+  after: number | undefined
 ) {
   return yield* (yield* DatabaseReader)
     .table("ninaMemories")
@@ -86,9 +90,34 @@ export const readNewest = Effect.fn("nina.memory.store.newest")(function* (
       "by_userId_and_confirmedAt",
       (query) => {
         const own = query.eq("userId", userId);
-        return clearedAt === undefined ? own : own.gt("confirmedAt", clearedAt);
+        return after === undefined ? own : own.gt("confirmedAt", after);
       },
       "desc"
+    )
+    .take(limit)
+    .pipe(Effect.orDie);
+});
+
+/**
+ * Reads a learner's memories confirmed after `after`, the oldest first, at most
+ * `limit`: the same index range as `readNewest`, read from its other end, so a
+ * reader that goes on from the last moment it read meets each memory once.
+ * `after` must be the moment the learner last asked to delete every memory
+ * (`readMemoryState`) or a later one, because the range starts there and meets
+ * what that request took if it starts earlier. No function reads all the
+ * memories of a learner.
+ */
+export const readOldest = Effect.fn("nina.memory.store.oldest")(function* (
+  userId: UserId,
+  limit: number,
+  after: number
+) {
+  return yield* (yield* DatabaseReader)
+    .table("ninaMemories")
+    .index(
+      "by_userId_and_confirmedAt",
+      (query) => query.eq("userId", userId).gt("confirmedAt", after),
+      "asc"
     )
     .take(limit)
     .pipe(Effect.orDie);
@@ -204,6 +233,10 @@ export const drainMemories = Effect.fn("nina.memory.store.drain")(function* (
  * confirmed after that request even when the clock had not moved on
  * (`confirmedAfterClear`), so `now` alone could be earlier than a memory that
  * exists, and this request would leave it.
+ *
+ * The learner's portrait goes in the same transaction: it is derived from the
+ * memories and says nothing once they are deleted. A memory written afterwards
+ * asks for a new one.
  */
 export const clearMemories = Effect.fn("nina.memory.store.clear")(function* (
   userId: UserId,
@@ -216,10 +249,16 @@ export const clearMemories = Effect.fn("nina.memory.store.clear")(function* (
     onSome: (memory) => Math.max(now, memory.confirmedAt),
   });
   yield* setNinaMemoryCleared({ now: through, userId });
+  yield* dropPortrait(userId);
   return yield* drainMemories(userId, through);
 });
 
-/** Deletes one batch of the memories whose end date is before `now`, and returns how many. */
+/**
+ * Deletes one batch of the memories whose end date is before `now`, and returns
+ * how many. A learner who is left with no memory at all loses the portrait with
+ * them, because nothing remains to remember. Every other learner keeps theirs: a
+ * portrait holds nothing with an end date.
+ */
 export const expireBatch = Effect.fn("nina.memory.store.expire")(function* (
   now: number
 ) {
@@ -234,6 +273,11 @@ export const expireBatch = Effect.fn("nina.memory.store.expire")(function* (
     .pipe(Effect.orDie);
   for (const memory of ended) {
     yield* deleteMemory(memory._id);
+  }
+  for (const userId of Arr.dedupe(Arr.map(ended, (memory) => memory.userId))) {
+    if (Arr.isReadonlyArrayEmpty(yield* readNewest(userId, 1, undefined))) {
+      yield* dropPortrait(userId);
+    }
   }
   return Arr.length(ended);
 });

@@ -4,6 +4,7 @@ import schema from "@repo/backend/confect/_generated/schema";
 import type {
   ActionCtx,
   QueryRunner,
+  VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
 import type {
@@ -14,6 +15,7 @@ import type {
   ResearchAgentData,
   TaskAgentDataSchema,
 } from "@repo/backend/confect/nina/contract/agent";
+import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -34,6 +36,18 @@ export const specialistRequest = {
   task: "Verify the requested evidence.",
 } satisfies Omit<typeof TaskAgentDataSchema.Type, "userId">;
 
+/** The learning session of the home page, which a scripted turn of a specialist or a capability runs under. */
+export const openHomeSession = openNinaLearningSession({
+  capturedAt: "2026-09-27T12:00:00Z",
+  source: "current-page",
+  learning: {
+    locale: "en",
+    slug: "home",
+    url: "https://nakafa.com/en/home",
+    verified: false,
+  },
+});
+
 /**
  * The data of a research run besides its user, progress and usage: no link from
  * the learner, and words that differ from the task its model reads.
@@ -49,7 +63,7 @@ export const researchRequest = {
 export async function runSpecialist<A, E>(
   program: (
     userId: Docs["users"]["_id"]
-  ) => Effect.Effect<A, E, ActionCtx | Gateway | QueryRunner>
+  ) => Effect.Effect<A, E, ActionCtx | Gateway | QueryRunner | VectorSearch>
 ) {
   const t = createConvexTestWithBetterAuth();
   const { userId } = await t.mutation((ctx) =>

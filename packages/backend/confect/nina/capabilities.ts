@@ -4,6 +4,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type {
   ActionCtx,
   QueryRunner,
+  VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import {
   classify,
@@ -19,10 +20,12 @@ import {
   formatSpecialistToolTask,
   getSpecialistToolWords,
   mathToolInputSchema,
+  memoryToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
+import { type Found, runMemory } from "@repo/backend/confect/nina/memory/tool";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import {
   decideNinaCapability,
@@ -38,15 +41,20 @@ import { Array as Arr, Effect, Stream } from "effect";
 
 const outputSchema = createEffectSchema(CapabilityOutputSchema);
 
-/** Agent tools own progressive evidence; no HTTP writer or persistence adapter. */
+/**
+ * Agent tools own progressive evidence; no HTTP writer or persistence adapter.
+ * `found` is where the memory tool leaves the words it finds, for the turn to
+ * hand to the model's next step, so that no word is stored with the result.
+ */
 export const createCapabilities = Effect.fn("nina.capabilities")(function* (
   userId: Docs["users"]["_id"],
   context: AgentContext,
   locale: Locale,
-  usageHandler: UsageHandler
+  usageHandler: UsageHandler,
+  found: Found
 ) {
   const services = yield* Effect.context<
-    ActionCtx | ChatStep | Gateway | QueryRunner
+    ActionCtx | ChatStep | Gateway | QueryRunner | VectorSearch
   >();
   return {
     nakafa: createTool({
@@ -197,6 +205,51 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
               capability: "math",
               continuation:
                 "Verify fewer expressions per request to get the omitted results.",
+              signal: abortSignal,
+            }
+          ),
+          services
+        ),
+    }),
+    memory: createTool({
+      description:
+        "Search what the learner told Nina before and saved as memories, such as their target, exam date, level, how they like explanations, or what they find hard. Use it when the learner points back to something they told you that is neither in the Learner section nor in the Memories list, or when a good answer depends on a personal fact that is probably saved and is not in front of you. Do not use it for lesson content, for facts in this conversation, or more than twice in one turn.",
+      inputSchema: memoryToolInputSchema,
+      outputSchema,
+      execute: (_ctx, input, { abortSignal, toolCallId }) =>
+        Stream.toAsyncIterableWith(
+          streamCapability(
+            () =>
+              Effect.gen(function* () {
+                const decision = decideNinaCapability({
+                  capability: "memory",
+                  context,
+                });
+                if (decision.state !== "allowed") {
+                  return deniedCapabilityResult({
+                    capability: "memory",
+                    decision,
+                  });
+                }
+                return yield* runMemory({
+                  found,
+                  query: input.query,
+                  toolCallId,
+                  userId,
+                }).pipe(
+                  Effect.catchDefect(() =>
+                    failed(
+                      "memory",
+                      { phase: "read" },
+                      "Memory could not be read right now. Tell the learner you could not check what they told you before, ask them again, and do not guess it."
+                    )
+                  )
+                );
+              }),
+            {
+              capability: "memory",
+              continuation:
+                "Ask again with a narrower query to read the memories that were left out.",
               signal: abortSignal,
             }
           ),

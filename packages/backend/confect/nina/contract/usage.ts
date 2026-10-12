@@ -34,3 +34,16 @@ export const NinaUsageTotal = Schema.Struct({
   ...NinaUsage.fields,
   calls: Schema.Int.check(Schema.isGreaterThan(0)),
 });
+
+/**
+ * The provider tokens of one model call that belongs to no turn's answer, such
+ * as a summary refresh or a portrait build. Such work has no turn ledger, so its
+ * row keeps the total (`NinaUpkeepTotal`).
+ */
+export const NinaUpkeepCall = Schema.Struct({ input: Tokens, output: Tokens });
+
+/** What the calls of one kind of upkeep spent in all: their tokens and how many calls. */
+export const NinaUpkeepTotal = Schema.Struct({
+  ...NinaUpkeepCall.fields,
+  calls: Schema.Int.check(Schema.isGreaterThan(0)),
+});

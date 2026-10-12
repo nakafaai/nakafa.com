@@ -132,6 +132,33 @@ const MathToolInputSchema = Schema.Struct({
       `,
     }),
   });
+/** Characters of what Nina looks for in the learner's memories. */
+const MEMORY_QUERY_LIMIT = 200;
+/**
+ * Input schema for the memory LearningCapability tool: the one thing Nina looks
+ * for, in the learner's words.
+ */
+const MemoryToolInputSchema = Schema.Struct({
+  query: describedNonEmptyString(
+    createPrompt({
+      taskContext: `
+        What to look for in the learner's saved memories, in the learner's own words and language.
+
+        Use the words the learner used, for example "exam date" or "tanggal ujian".
+        Leave out anything that is not about the learner.
+        At most ${MEMORY_QUERY_LIMIT} characters.
+      `,
+    })
+  ).pipe(Schema.check(Schema.isMaxLength(MEMORY_QUERY_LIMIT))),
+})
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({
+    description: createPrompt({
+      taskContext: `
+        Search of the learner's saved memories.
+      `,
+    }),
+  });
 type NakafaToolInput = typeof NakafaToolInputSchema.Type;
 type ResearchToolInput = typeof ResearchToolInputSchema.Type;
 type MathToolInput = typeof MathToolInputSchema.Type;
@@ -227,4 +254,5 @@ export const researchToolInputSchema = createEffectSchema(
   ResearchToolInputSchema
 );
 export const mathToolInputSchema = createEffectSchema(MathToolInputSchema);
+export const memoryToolInputSchema = createEffectSchema(MemoryToolInputSchema);
 export const textOutputSchema = createEffectSchema(Schema.String);

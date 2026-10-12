@@ -15,11 +15,25 @@ type MemoryId = Docs["ninaMemories"]["_id"];
 type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
 
 /**
+ * The version of what a word is (`memory/words`). It is part of the input of
+ * every word key, so a key made under another version can never equal a key
+ * made under this one, and a search never finds a word by a key of a word that
+ * meant something else. Version 1 read words by rules of its own, and its keys
+ * are blinded for the field `words`. Version 2 reads them from the word
+ * boundaries of the platform (`Intl.Segmenter`), with no list and no minimum
+ * length. Change what a word is, and this number changes with it; a memory is
+ * re-keyed the next time it is written (`syncKeys` deletes the keys it should
+ * not have), and the temporary `nina/memory/rekey:page` re-keys the rest.
+ */
+const WORD_INDEX_VERSION = 2;
+
+/**
  * The field every word key is blinded for. The words of a memory's title and
- * its text share one index, so one field names them both.
+ * its text share one index, so one field names them both, and the version of
+ * the index names the field.
  */
 const WORDS_FIELD = {
-  field: "words",
+  field: `words/v${WORD_INDEX_VERSION}`,
   table: "ninaMemories",
 } satisfies typeof VaultField.Type;
 
@@ -70,24 +84,25 @@ const dropKeys = Effect.fn("nina.memory.keys.drop")(function* (
 /**
  * Moves key rows to the time their memory was confirmed, and leaves the rows
  * that hold that time as they are. A row is written back whole with `replace`,
- * which saves the read that a `patch` makes first.
+ * which saves the read that a `patch` makes first. It returns how many rows it
+ * moved.
  */
 const moveKeys = Effect.fn("nina.memory.keys.move")(function* (
   rows: readonly Docs["ninaMemoryKeys"][],
   confirmedAt: number
 ) {
   const writer = yield* DatabaseWriter;
-  for (const row of rows) {
-    if (row.confirmedAt !== confirmedAt) {
-      yield* writer
-        .table("ninaMemoryKeys")
-        .replace(row._id, {
-          ...Struct.omit(row, ["_creationTime", "_id"]),
-          confirmedAt,
-        })
-        .pipe(Effect.orDie);
-    }
+  const behind = Arr.filter(rows, (row) => row.confirmedAt !== confirmedAt);
+  for (const row of behind) {
+    yield* writer
+      .table("ninaMemoryKeys")
+      .replace(row._id, {
+        ...Struct.omit(row, ["_creationTime", "_id"]),
+        confirmedAt,
+      })
+      .pipe(Effect.orDie);
   }
+  return Arr.length(behind);
 });
 
 /**
@@ -98,7 +113,10 @@ const moveKeys = Effect.fn("nina.memory.keys.move")(function* (
  * have, moves the rows it keeps to that time, and inserts the keys it has not
  * got. Every writer of a memory calls it in the same transaction, so a memory
  * and its keys never differ. It reads at most 104 rows and writes at most 208:
- * a write for each row it deletes or moves and for each key it inserts.
+ * a write for each row it deletes or moves and for each key it inserts, and it
+ * returns how many it wrote. A word key of another version of the index
+ * (`WORD_INDEX_VERSION`) is a row the memory should not have, so a memory is
+ * re-keyed by its next sync.
  */
 export const syncKeys = Effect.fn("nina.memory.keys.sync")(function* (
   keys: LearnerKeys,
@@ -124,23 +142,27 @@ export const syncKeys = Effect.fn("nina.memory.keys.sync")(function* (
   );
   const stored = yield* storedKeys(memoryId);
   const current = Arr.filter(stored, (row) => HashSet.has(wanted, row.key));
-  yield* dropKeys(Arr.filter(stored, (row) => !HashSet.has(wanted, row.key)));
-  yield* moveKeys(current, content.confirmedAt);
+  const gone = Arr.filter(stored, (row) => !HashSet.has(wanted, row.key));
+  yield* dropKeys(gone);
+  const moved = yield* moveKeys(current, content.confirmedAt);
   const kept = HashSet.fromIterable(Arr.map(current, (row) => row.key));
+  const missing = Arr.filter(
+    Arr.fromIterable(wanted),
+    (key) => !HashSet.has(kept, key)
+  );
   const writer = yield* DatabaseWriter;
-  for (const key of wanted) {
-    if (!HashSet.has(kept, key)) {
-      yield* writer
-        .table("ninaMemoryKeys")
-        .insert({
-          confirmedAt: content.confirmedAt,
-          key,
-          memoryId,
-          userId: keys.userId,
-        })
-        .pipe(Effect.orDie);
-    }
+  for (const key of missing) {
+    yield* writer
+      .table("ninaMemoryKeys")
+      .insert({
+        confirmedAt: content.confirmedAt,
+        key,
+        memoryId,
+        userId: keys.userId,
+      })
+      .pipe(Effect.orDie);
   }
+  return Arr.length(gone) + moved + Arr.length(missing);
 }, Effect.orDie);
 
 /** Deletes every key row of a memory. Every path that deletes a memory calls it. */

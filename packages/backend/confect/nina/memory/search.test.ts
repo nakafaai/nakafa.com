@@ -1,11 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  candidate,
-  createCaptureTest,
-  createMemoryTest,
-} from "@repo/backend/test/nina/memory";
+import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { Array as Arr, Option } from "effect";
 
 const edit = Ref.getFunctionReference(refs.public.nina.memory.edit);
@@ -55,12 +51,89 @@ describe("memory search", () => {
     }
   });
 
-  it("finds nothing by a stop word, a word of two letters or a single digit, though the memory holds them", async () => {
+  it("finds a memory by a word of any length, common or not, because no list and no minimum length decides what a word is", async () => {
     const f = await createMemoryTest();
     await f.seed({ text: "Kelas yang sulit di 5" });
-    for (const query of ["yang", "the dan und", "di", "5", "yang di 5"]) {
-      expect(await f.find({ limit: 5, text: query })).toEqual([]);
+    for (const query of ["yang", "the yang", "di", "5", "yang di 5"]) {
+      expect(await f.find({ limit: 5, text: query })).toEqual([
+        "Kelas yang sulit di 5",
+      ]);
     }
+  });
+
+  it("finds a memory in a script that puts no space between words, by the words of another sentence", async () => {
+    const f = await createMemoryTest();
+    await f.seed({ text: "高校三年生で、来年は東京大学を目指しています。" });
+    await f.seed({ text: "確率が苦手です。" });
+    expect(await f.find({ limit: 5, text: "東京大学に行きたい" })).toEqual([
+      "高校三年生で、来年は東京大学を目指しています。",
+    ]);
+    expect(await f.find({ limit: 5, text: "確率" })).toEqual([
+      "確率が苦手です。",
+    ]);
+  });
+
+  it("ranks a memory with a rare word above memories with a word that many hold, though they are newer", async () => {
+    const f = await createMemoryTest();
+    await f.seed({ confirmedAt: 1, text: "Turunan fungsi" });
+    // Ten newer memories hold "yang"; with one point for every word they would all outrank the older one.
+    await seedConfirmed(
+      f,
+      "Kelas yang sulit",
+      Arr.makeBy(10, (index) => 10 + index)
+    );
+    const found = await f.find({ limit: 3, text: "yang turunan" });
+    expect(Arr.head(found)).toEqual(Option.some("Turunan fungsi"));
+    expect(found).toHaveLength(3);
+  });
+
+  it("ranks a memory with a word that fewer memories hold above one with a word that more hold, whatever their confirmation", async () => {
+    const f = await createMemoryTest();
+    await f.seed({ confirmedAt: 50, text: "Limit sulit" });
+    await f.seed({ confirmedAt: 40, text: "Limit mudah" });
+    await f.seed({ confirmedAt: 30, text: "Limit dasar" });
+    await f.seed({ confirmedAt: 20, text: "Integral sulit" });
+    // "limit" is held by three memories and "integral" by one, so the older memory ranks first.
+    expect(await f.find({ limit: 5, text: "limit integral" })).toEqual([
+      "Integral sulit",
+      "Limit sulit",
+      "Limit mudah",
+      "Limit dasar",
+    ]);
+  });
+
+  it("looks up the longest words first when the text has more words than keys", async () => {
+    const f = await createMemoryTest();
+    await f.seed({ text: "trigonometri" });
+    // Nineteen short words come first, and the one long word comes last: of sixteen keys, the long word still gets one.
+    const shorts = Arr.makeBy(
+      19,
+      (index) => `x${String(index).padStart(2, "0")}`
+    );
+    expect(
+      await f.find({
+        limit: 5,
+        text: Arr.join(Arr.append(shorts, "trigonometri"), " "),
+      })
+    ).toEqual(["trigonometri"]);
+  });
+
+  it("measures the whole word to look up the longest first, though the index keeps six characters of each", async () => {
+    const f = await createMemoryTest();
+    await f.seed({ text: "trigonometri" });
+    // Sixteen words of six letters come first, and the longest word last. Every
+    // one is six characters once cut, so the length of the whole word is what
+    // gives the long word one of the sixteen keys.
+    const sixes = Arr.makeBy(
+      16,
+      (index) => `limit${String.fromCodePoint(97 + index)}`
+    );
+    expect(
+      await f.find({
+        limit: 5,
+        text: Arr.join(Arr.append(sixes, "trigonometri"), " "),
+      })
+    ).toEqual(["trigonometri"]);
   });
 
   it("finds nothing without a word or a topic", async () => {
@@ -301,31 +374,5 @@ describe("memory search bounds", () => {
     expect(
       await f.find({ limit: 5, text: "alfa", topics: topics(16) })
     ).toEqual([]);
-  });
-});
-
-describe("memory search for the capture write", () => {
-  it("finds the memory that says the same among 300, so the write confirms it and adds no copy", async () => {
-    const f = await createCaptureTest();
-    await f.fill(299, { author: "learner" });
-    // The call read the first twelve memories, and not this one.
-    const id = await f.seed({ kind: "level", text: "Kelas 12 IPA." });
-    expect(await f.run([candidate()])).toBe(1);
-    expect(await f.stored()).toHaveLength(300);
-    expect(await f.stored()).toContainEqual(
-      expect.objectContaining({ _id: id, confirmedAt: NOW })
-    );
-  });
-
-  it("writes a new memory instead of confirming one that Delete all took, which a confirmation would bring back", async () => {
-    const f = await createCaptureTest();
-    await f.seed({ confirmedAt: 1, kind: "level", text: "Kelas 12 IPA." });
-    await f.markCleared(NOW - 1);
-    expect(await f.run([candidate()], { seen: [] })).toBe(1);
-    const rows = await f.stored();
-    expect(rows).toHaveLength(2);
-    // The memory the learner deleted keeps its time, so the batches still reach it.
-    expect(rows[0]).toMatchObject({ confirmedAt: 1 });
-    expect(rows[1]).toMatchObject({ author: "nina", confirmedAt: NOW });
   });
 });

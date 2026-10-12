@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { NinaPortraitText } from "@repo/backend/confect/nina/portrait/schema";
 import {
   onboardingFocusValidator,
   onboardingRegionValidator,
@@ -17,8 +18,12 @@ export const MEMORY_TEXT_LIMIT = 2000;
 export const MEMORY_TITLE_LIMIT = 80;
 /** Characters of one memory Nina writes: one short sentence. */
 const MEMORY_SENTENCE_LIMIT = 280;
-/** Memories a turn starts with: those for the open page first, then the most recent. */
-export const MEMORY_START_LIMIT = 8;
+/** Memories a turn recalls at most: those that fit the learner's message and the open page. */
+export const MEMORY_RECALL_LIMIT = 8;
+/** Memories a turn recalls at least, when the learner has them: the most recently confirmed fill the list up to it. */
+export const MEMORY_RECALL_FLOOR = 3;
+/** Memories the memory capability returns in one call: the best matches for Nina's query. */
+export const MEMORY_LOOKUP_LIMIT = 6;
 /** Memories one capture call may propose from a single message. */
 export const MEMORY_CAPTURE_LIMIT = 3;
 /** Memories the capture call reads and may name: the best matches for the message. */
@@ -153,17 +158,17 @@ export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()
  * one short sentence: never empty, and at most `MEMORY_SENTENCE_LIMIT`
  * characters. `quote` holds the learner's exact words; the write is refused
  * unless the message contains them, and unless the sentence has a letter or a
- * digit. `known` names a stored memory that this one confirms, and a stored
- * memory without a kind takes this one's kind. The words of the stored memory
- * change only when Nina wrote them: when the learner wrote them and this one
- * says something else, the learner's memory stays as it is and this one is
- * matched by its words like one that names no memory, so it confirms a memory
- * that says the same or becomes a new memory. `until` is the day a situation
- * ends, as `YYYY-MM-DD`.
+ * digit. `known` is the place, counted from 1, in the list of known memories
+ * the call was given (`NinaKnown`) of the memory that this one restates. The
+ * model reads the memories and says which one it restates, and no comparison of
+ * words decides it: a place that is not on the list names nothing. A stored
+ * memory without a kind takes this one's kind, and the words of the stored
+ * memory change only when Nina wrote them, so a memory the learner wrote keeps
+ * its words. `until` is the day a situation ends, as `YYYY-MM-DD`.
  */
 export const NinaMemoryCandidate = Schema.Struct({
   kind: NinaMemoryKind,
-  known: Schema.optionalKey(Schema.String),
+  known: Schema.optionalKey(Schema.Int),
   quote: Schema.NonEmptyString,
   text: NinaMemorySentence,
   until: Schema.optionalKey(Schema.String),
@@ -223,28 +228,42 @@ export const NinaMemorySeen = NinaMemoryNote.mapFields(
 );
 
 /**
- * What a turn knows about one learner. `prompt` holds the memories the turn
- * starts with, at most `MEMORY_START_LIMIT`. It is empty while memory is
- * paused.
+ * What a turn knows about one learner: the account `profile`, the `portrait`
+ * when the learner has one, and the memories the learner's message and the open
+ * page call up (`recalled`), at most `MEMORY_RECALL_LIMIT`. While memory is
+ * paused it holds neither the portrait nor a memory.
  */
 export const NinaLearner = Schema.Struct({
   paused: Schema.Boolean,
+  portrait: Schema.optionalKey(NinaPortraitText),
   profile: NinaLearnerProfile,
-  prompt: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
-    Schema.isMaxLength(MEMORY_START_LIMIT)
+  recalled: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
+    Schema.isMaxLength(MEMORY_RECALL_LIMIT)
   ),
 });
 
 /**
+ * What the memory capability finds for Nina's query: the memories that match it
+ * best, at most `MEMORY_LOOKUP_LIMIT`. It tells that memory is paused, because
+ * then it finds none and the capability refuses.
+ */
+const NinaLookup = Schema.Struct({
+  memories: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
+    Schema.isMaxLength(MEMORY_LOOKUP_LIMIT)
+  ),
+  paused: Schema.Boolean,
+});
+
+/**
  * What the capture call knows about one learner: `known` holds the memories
- * that match the message best, at most `MEMORY_KNOWN_LIMIT`. It is empty while
- * memory is paused.
+ * that match the message best, at most `MEMORY_KNOWN_LIMIT`, the best first.
+ * The call lists them in this order and names one by its place in the list. It
+ * is empty while memory is paused.
  */
 export const NinaKnown = Schema.Struct({
   known: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
     Schema.isMaxLength(MEMORY_KNOWN_LIMIT)
   ),
-  paused: Schema.Boolean,
   profile: NinaLearnerProfile,
 });
 
@@ -306,19 +325,43 @@ export default GroupSpec.make()
       error: () => AuthFailure,
     }).middleware(Session)
   )
-  // What a turn starts with: the account facts and the memories for the pages
-  // the learner has open. `now` is the caller's time, which leaves out the
-  // situations that ended: a query never reads the clock, because it is not run
-  // again when time passes.
+  // What a turn knows about the learner: the account facts, the portrait, and
+  // the memories that the learner's words (`said`) and the pages they have open
+  // call up. `now` is the caller's time, which leaves out the situations that
+  // ended: a query never reads the clock, because it is not run again when time
+  // passes.
   .addFunction(
     FunctionSpec.internalQuery({
       name: "read",
       args: () => ({
         now: Schema.Finite,
+        said: Schema.String,
         topics: NinaMemoryTopics,
         userId: Id("users"),
       }),
       returns: () => NinaLearner,
+    })
+  )
+  // What the memory capability finds for Nina's query, as the memories are at
+  // the caller's time `now`. It reads the learner's words only, not the page.
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "lookup",
+      args: () => ({
+        now: Schema.Finite,
+        query: Schema.String,
+        userId: Id("users"),
+      }),
+      returns: () => NinaLookup,
+    })
+  )
+  // Whether the learner paused memory. The capture asks once, before it sends
+  // the learner's message to any model and before it reads a single memory.
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "paused",
+      args: () => ({ userId: Id("users") }),
+      returns: () => Schema.Boolean,
     })
   )
   // What the capture call reads: the account facts and the memories that match
@@ -336,10 +379,11 @@ export default GroupSpec.make()
       returns: () => NinaKnown,
     })
   )
-  // Writes what a capture call found. `seen` is what the call read before the
-  // model read the message: the write changes nothing when the learner removed
-  // one of those memories meanwhile, and leaves the words, the kind and the end
-  // date of one that changed or that the call never read.
+  // Writes what a capture call found. `seen` is the list of memories the call
+  // gave the model before it read the message, in the order of the list: a
+  // candidate names a memory by its place there. The write changes nothing when
+  // the learner removed one of those memories meanwhile, and leaves the words,
+  // the kind and the end date of one that changed.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "capture",

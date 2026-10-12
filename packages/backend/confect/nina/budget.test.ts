@@ -109,6 +109,7 @@ describe("Nina call limit", () => {
         countTextTokens(
           createNinaSystemPrompt({
             focus: "A focused question.",
+            memory: true,
             ...(userRole === undefined ? {} : { userRole }),
           })
         )
@@ -123,6 +124,7 @@ describe("Nina call limit", () => {
       "nakafa",
       "deepResearch",
       "math",
+      "memory",
     ]);
     const measured = instructions + tools + runtime;
     expect(measured).toBeLessThanOrEqual(NINA_BUDGET.instructions);

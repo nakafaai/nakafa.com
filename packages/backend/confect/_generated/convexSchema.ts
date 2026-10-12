@@ -25,6 +25,9 @@ import contentKeys from "./tables/contentKeys";
 import contentModelBuilds from "./tables/contentModelBuilds";
 import contentPaths from "./tables/contentPaths";
 import contentReleases from "./tables/contentReleases";
+import contentSectionSources from "./tables/contentSectionSources";
+import contentSectionState from "./tables/contentSectionState";
+import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
 import creditResetPeriods from "./tables/creditResetPeriods";
@@ -47,6 +50,7 @@ import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
+import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
@@ -116,6 +120,9 @@ export default $defineSchema({
   contentModelBuilds: $Table.tableDefinition(contentModelBuilds),
   contentPaths: $Table.tableDefinition(contentPaths),
   contentReleases: $Table.tableDefinition(contentReleases),
+  contentSectionSources: $Table.tableDefinition(contentSectionSources),
+  contentSectionState: $Table.tableDefinition(contentSectionState),
+  contentSections: $Table.tableDefinition(contentSections),
   contentSnapshots: $Table.tableDefinition(contentSnapshots),
   contentState: $Table.tableDefinition(contentState),
   creditResetPeriods: $Table.tableDefinition(creditResetPeriods),
@@ -138,6 +145,7 @@ export default $defineSchema({
   materialCatalog: $Table.tableDefinition(materialCatalog),
   ninaMemories: $Table.tableDefinition(ninaMemories),
   ninaMemoryKeys: $Table.tableDefinition(ninaMemoryKeys),
+  ninaMemoryPortraits: $Table.tableDefinition(ninaMemoryPortraits),
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),
