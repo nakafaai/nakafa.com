@@ -307,7 +307,9 @@ alone. The Memory page does not use it: its search runs in the browser.
   deleted before this schema deploys. Convex refuses a schema that a stored
   document does not match, so a deploy that succeeds proves that none is left.
 - The old settings card of browser tabs opened before October 2026 called
-  `get`, `enable`, `disable` and `forget`. The Memory page replaced that card on
-  12 October 2026 and the four functions are deleted, so a tab that still shows
-  the card meets an error on them until the learner reloads it.
+  `get`, `enable`, `disable` and `forget`, and they were to stay until three
+  days had passed without a call. The Memory page replaced that card on
+  12 October 2026 and the four functions are deleted without that wait, so a tab
+  that still shows the card meets an error on them until the learner reloads it,
+  and its "Turn off and forget" button deletes nothing.
 - The learner profile derived on read, which ADR 0010 defined, is unchanged.
