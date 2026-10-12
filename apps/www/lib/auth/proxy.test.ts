@@ -14,6 +14,10 @@ import {
 
 const GET_URL = "https://nakafa.com/api/auth/get-session";
 const POST_URL = "https://nakafa.com/api/auth/sign-in/email";
+const SESSION_COOKIE = { cookie: "better-auth.session_token=signed-token" };
+const SECURE_SESSION_COOKIE = {
+  cookie: "__Secure-better-auth.session_token=signed-token",
+};
 const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 const handler = {
@@ -298,13 +302,74 @@ describe("createAuthProxy", () => {
       handler.GET.mockResolvedValueOnce(new Response("session"));
       handler.POST.mockResolvedValueOnce(new Response("signed in"));
 
-      const read = yield* Effect.promise(() => proxy.GET(new Request(GET_URL)));
+      const read = yield* Effect.promise(() =>
+        proxy.GET(new Request(GET_URL, { headers: SESSION_COOKIE }))
+      );
       const write = yield* Effect.promise(() =>
         proxy.POST(new Request(POST_URL, { method: "POST" }))
       );
 
-      expect(read.status).toBe(200);
+      expect(yield* Effect.promise(() => read.text())).toBe("session");
       expect(write.status).toBe(200);
+      expect(handler.GET).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect(
+    "answers the session read of a visitor without a session cookie with null, and never reaches Convex",
+    () =>
+      Effect.gen(function* () {
+        const proxy = createAuthProxy(handler);
+
+        const read = yield* Effect.promise(() =>
+          proxy.GET(
+            new Request(GET_URL, { headers: { cookie: "NEXT_LOCALE=id" } })
+          )
+        );
+
+        expect(read.status).toBe(200);
+        expect(read.headers.get("content-type")).toContain("application/json");
+        expect(read.headers.get("cache-control")).toBe("no-store");
+        expect(read.headers.get("pragma")).toBe("no-cache");
+        expect(
+          yield* Effect.promise(() => read.text()).pipe(
+            Effect.map((text) => Schema.decodeSync(JsonTextSchema)(text))
+          )
+        ).toBeNull();
+        expect(handler.GET).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect.each([
+    { name: "session cookie", headers: SESSION_COOKIE },
+    { name: "secure session cookie", headers: SECURE_SESSION_COOKIE },
+    { name: "bearer token", headers: { authorization: "Bearer token" } },
+  ])("forwards a session read that carries a $name", ({ headers }) =>
+    Effect.gen(function* () {
+      const proxy = createAuthProxy(handler);
+      handler.GET.mockResolvedValueOnce(new Response("session"));
+
+      const read = yield* Effect.promise(() =>
+        proxy.GET(new Request(GET_URL, { headers }))
+      );
+
+      expect(yield* Effect.promise(() => read.text())).toBe("session");
+      expect(handler.GET).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect.each([
+    "https://nakafa.com/api/auth/convex/token",
+    "https://nakafa.com/api/auth/callback/google?code=code&state=state",
+  ])("forwards the read %s even without a session cookie", (url) =>
+    Effect.gen(function* () {
+      const proxy = createAuthProxy(handler);
+      handler.GET.mockResolvedValueOnce(new Response("answer"));
+
+      const read = yield* Effect.promise(() => proxy.GET(new Request(url)));
+
+      expect(yield* Effect.promise(() => read.text())).toBe("answer");
+      expect(handler.GET).toHaveBeenCalledOnce();
     })
   );
 });

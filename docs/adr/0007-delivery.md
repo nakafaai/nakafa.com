@@ -73,6 +73,11 @@ contextual visit cannot first record a canonical view and then a placement view.
   page links. Documents, Flight navigations and prefetches stay in because they
   can redirect, rewrite or reject a locale, and an unknown root file stays in
   because the Proxy answers it with a plain 404.
+- The browser reads its Better Auth session on every page load and every return
+  to the tab, signed in or not. A read that carries no session cookie and no
+  bearer token is answered by the route itself with the `null` that Better Auth
+  would give, and never reaches Convex. The browser cannot skip the request,
+  because the session cookie is HttpOnly and no script sees that it is missing.
 - The `www` function region is `iad1`, beside the production Convex deployment.
   CDN delivery remains global. The project default region must match the checked
   configuration so the durable ISR cache is created in the intended region.
