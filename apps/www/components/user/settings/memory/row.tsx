@@ -22,15 +22,16 @@ import { useMemoryPage } from "@/components/user/settings/memory/provider";
  * it, which has a fixed height, so every row is as tall as the window expects.
  *
  * The list can hold thousands of memories, so a row renders again only when
- * its own memory or whether it is the one in the editor changes: it reads
- * neither the search nor the opening of the editor. Every answer of the server
+ * its own memory or whether it is the one in the editor changes: it subscribes
+ * to nothing else, neither the search nor the count of openings of the editor,
+ * and a press reads the store when it happens. Every answer of the server
  * hands the page new objects for memories that did not change, so rows compare
  * memories by what they say, not by the object that holds it.
  *
- * The window takes a row out of the page when it scrolls far enough, and a
- * row that holds the focus when that happens would drop it on the page. It
- * hands the focus to the list instead, where the next Tab goes on to a row in
- * view.
+ * A row leaves the page when the window scrolls it out or when the learner
+ * deletes it, and a row that holds the focus when that happens would drop it
+ * on the page. It hands the focus to the list instead, where the next Tab goes
+ * on to a row in view.
  */
 export const MemoryRow = memo(
   function MemoryRow({

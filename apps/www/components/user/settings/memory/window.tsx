@@ -2,6 +2,8 @@
 
 import { useCallbackRef } from "@mantine/hooks";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
+import type { CSSProperties } from "react";
 import {
   type CustomContainerComponentProps,
   type CustomItemComponentProps,
@@ -24,20 +26,34 @@ import { MemoryRow } from "@/components/user/settings/memory/row";
 const ROW_SIZE = 72;
 
 /**
- * The rows of the list, of which only those in view are in the page. The page
- * scrolls the window, not a box of its own.
+ * The rows of the list. A list of a page or more is windowed: only the rows in
+ * view are in the page, and the page scrolls the window, not a box of its own.
+ * A shorter list is all in the page, because there is nothing to leave out.
  *
  * The server renders the first page, and the window hands the page the same
  * rows in the same places, so hydration moves nothing. Until the learner first
- * scrolls, the window keeps the rows the server rendered. It must never be told
- * to keep more rows than there are memories, so it starts again, with a key,
- * when the learner has fewer than a page.
+ * scrolls, the window keeps exactly the `MEMORY_PAGE` rows it started with, so
+ * it cannot start with more rows than there are memories, and it would not show
+ * a row that a short list gained. A short list is therefore a plain list: its
+ * rows stay in place while memories come and go around them, where a window
+ * would start again, with every row, each time the count changed.
  */
 export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   const { remove } = useMemoryActions();
   // One function for every row, so a row renders again only when its memory changes.
   const removeRow = useCallbackRef(remove);
-  const kept = Math.min(MEMORY_PAGE, memories.length);
+
+  if (Arr.length(memories) < MEMORY_PAGE) {
+    return (
+      <MemoryItems>
+        {Arr.map(memories, (memory, index) => (
+          <MemoryItem index={index} key={memory.id}>
+            <MemoryRow memory={memory} remove={removeRow} />
+          </MemoryItem>
+        ))}
+      </MemoryItems>
+    );
+  }
 
   return (
     <WindowVirtualizer
@@ -45,8 +61,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
       data={memories}
       item={MemoryItem}
       itemSize={ROW_SIZE}
-      key={kept}
-      ssrCount={kept}
+      ssrCount={MEMORY_PAGE}
     >
       {(memory) => (
         <MemoryRow key={memory.id} memory={memory} remove={removeRow} />
@@ -56,10 +71,21 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
 }
 
 /**
- * The list the window positions its items in. It can take the focus from a row
- * that scrolls out of the page, but no press or Tab stops on it.
+ * What the window gives its list and its items, with the style left out for a
+ * list that has no window to place them.
  */
-function MemoryItems({ children, ref, style }: CustomContainerComponentProps) {
+type Placed<Props extends { style: CSSProperties }> = Omit<Props, "style"> &
+  Partial<Pick<Props, "style">>;
+
+/**
+ * The list the rows stand in. It can take the focus from a row that leaves the
+ * page, but no press or Tab stops on it.
+ */
+function MemoryItems({
+  children,
+  ref,
+  style,
+}: Placed<CustomContainerComponentProps>) {
   return (
     <ul className="outline-none" ref={ref} style={style} tabIndex={-1}>
       {children}
@@ -68,13 +94,18 @@ function MemoryItems({ children, ref, style }: CustomContainerComponentProps) {
 }
 
 /**
- * One item of the window: a list item with the fixed height of a row. The
- * window measures what is inside an item, so the item has no border and no
- * padding of its own, and the divider from the row before sits on the element
- * inside it, within the same height. The first item has none and still stands
- * as tall as the others.
+ * One item of the list: a list item with the fixed height of a row. The window
+ * measures what is inside an item, so the item has no border and no padding of
+ * its own, and the divider from the row before sits on the element inside it,
+ * within the same height. The first item has none and still stands as tall as
+ * the others.
  */
-function MemoryItem({ children, index, ref, style }: CustomItemComponentProps) {
+function MemoryItem({
+  children,
+  index,
+  ref,
+  style,
+}: Placed<CustomItemComponentProps>) {
   return (
     <li ref={ref} style={{ ...style, height: ROW_SIZE }}>
       <div className={cn("h-full", index > 0 && "border-t")}>{children}</div>
