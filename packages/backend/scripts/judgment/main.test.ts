@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
@@ -18,7 +19,9 @@ import {
   Record as Rec,
   Result,
   Schema,
+  Stream,
 } from "effect";
+import { ChildProcess } from "effect/process";
 import { TestClock } from "effect/testing";
 
 /** What the entry program can fail with: a flag the command refuses, and the failures of the deployment check and of a call. */
@@ -180,6 +183,10 @@ const execute = Effect.fn("JudgmentMeasureTest.execute")(function* (
   };
 });
 
+/** Collects one output stream of a child process as text. */
+const collect = <E>(stream: Stream.Stream<Uint8Array, E>) =>
+  stream.pipe(Stream.decodeText(), Stream.mkString);
+
 afterEach(() => {
   process.argv = originalArgv;
   process.exitCode = originalExitCode;
@@ -333,5 +340,46 @@ describe("the judgment measuring command", () => {
         expect(printed).toBe("");
         expect(yield* loggedCalls(prepared.log)).toEqual([]);
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
+    "loads under the script runner and refuses a deploy key before any command",
+    () =>
+      Effect.gen(function* () {
+        // The child is the real script, started with the runner of the package
+        // script, so it proves that every module the script imports loads,
+        // which no double can fake. A deploy key in its environment makes the
+        // check refuse whatever the `.env.local` of this machine holds, because
+        // the check looks at the keys before the deployment, so the child
+        // reaches no deployment and starts no command. The logger of Effect
+        // writes the refusal to the standard output, and a module that the
+        // runner cannot load shows its own error in the output instead.
+        const child = yield* ChildProcess.make(
+          process.execPath,
+          [
+            "--import",
+            "tsx",
+            fileURLToPath(new URL("./main.ts", import.meta.url)),
+          ],
+          {
+            cwd: fileURLToPath(new URL("../..", import.meta.url)),
+            env: { CONVEX_DEPLOY_KEY: "dev:happy-animal-123|top-secret" },
+            extendEnv: true,
+            stdin: "ignore",
+          }
+        );
+        const [stdout, stderr, exitCode] = yield* Effect.all(
+          [collect(child.stdout), collect(child.stderr), child.exitCode],
+          { concurrency: "unbounded" }
+        );
+
+        const output = `${stdout}${stderr}`;
+        expect(output).toContain(
+          "Refusing to run with a deploy key or a deployment token set"
+        );
+        expect(output).not.toContain("top-secret");
+        expect(exitCode).toBe(1);
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
+    60_000
   );
 });
