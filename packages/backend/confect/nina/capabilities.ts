@@ -217,20 +217,32 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
         Stream.toAsyncIterableWith(
           streamCapability(
             () =>
-              runMemory({
-                found,
-                query: input.query,
-                toolCallId,
-                userId,
-              }).pipe(
-                Effect.catchDefect(() =>
-                  failed(
-                    "memory",
-                    { phase: "read" },
-                    "Memory could not be read right now. Tell the learner you could not check what they told you before, ask them again, and do not guess it."
+              Effect.gen(function* () {
+                const decision = decideNinaCapability({
+                  capability: "memory",
+                  context,
+                });
+                if (decision.state !== "allowed") {
+                  return deniedCapabilityResult({
+                    capability: "memory",
+                    decision,
+                  });
+                }
+                return yield* runMemory({
+                  found,
+                  query: input.query,
+                  toolCallId,
+                  userId,
+                }).pipe(
+                  Effect.catchDefect(() =>
+                    failed(
+                      "memory",
+                      { phase: "read" },
+                      "Memory could not be read right now. Tell the learner you could not check what they told you before, ask them again, and do not guess it."
+                    )
                   )
-                )
-              ),
+                );
+              }),
             {
               capability: "memory",
               continuation:

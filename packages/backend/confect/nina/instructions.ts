@@ -48,11 +48,12 @@ const readLearner = Effect.fn("nina.instructions.learner")(function* (
 /**
  * Reads what a turn's system prompt carries (its question focus, the learner's
  * account facts and portrait, the current page, and the conversation summary)
- * concurrently and assembles Nina's instructions. The summary also returns,
- * since history omits the turns it covers, and so do the memories the learner's
- * words call up, which belong with their message and not in the prompt, whose
- * bytes the provider caches, and whether the learner paused memory, because
- * then Nina is not offered the memory tool.
+ * concurrently and assembles Nina's instructions. It also returns what the
+ * prompt must not carry: the summary, since history omits the turns it covers;
+ * the memories the learner's words call up, which belong with their message and
+ * not in the prompt, whose bytes the provider caches; and whether the learner
+ * paused memory. The turn reads the pause here once, and the prompt, the tools
+ * Nina is offered and the policy of each call all follow it.
  */
 export const readInstructions = Effect.fn("nina.instructions")(function* (
   turn: Pick<

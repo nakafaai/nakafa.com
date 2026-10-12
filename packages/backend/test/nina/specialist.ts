@@ -11,6 +11,7 @@ import type {
   CapabilityProgress,
 } from "@repo/backend/confect/nina/capability/progress";
 import type { TaskAgentDataSchema } from "@repo/backend/confect/nina/contract/agent";
+import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -30,6 +31,18 @@ export const specialistRequest = {
   locale: "en",
   task: "Verify the requested evidence.",
 } satisfies Omit<typeof TaskAgentDataSchema.Type, "userId">;
+
+/** The learning session of the home page, which a scripted turn of a specialist or a capability runs under. */
+export const openHomeSession = openNinaLearningSession({
+  capturedAt: "2026-09-27T12:00:00Z",
+  source: "current-page",
+  learning: {
+    locale: "en",
+    slug: "home",
+    url: "https://nakafa.com/en/home",
+    verified: false,
+  },
+});
 
 /** Executes the real Agent component in its native action context over the test gateway. */
 export async function runSpecialist<A, E>(

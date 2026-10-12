@@ -5,7 +5,7 @@ import { getNakafaContent } from "@repo/backend/agent/content";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
-import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn";
+import { readNinaLearningPage } from "@repo/backend/confect/nina/contract/turn";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
@@ -34,11 +34,7 @@ async function instructionsFor(
   if (turn.phase !== "active") {
     throw new Error("Expected one active Nina turn.");
   }
-  const { url } = createNinaAgentContext({
-    page: turn.page,
-    runtime,
-    user: turn.user,
-  });
+  const { url } = readNinaLearningPage(turn.page);
   return nina.t.action((ctx) =>
     Effect.runPromise(
       readInstructions(turn, url).pipe(

@@ -8,11 +8,11 @@ import {
   ChatStep,
   makeChatStep,
 } from "@repo/backend/confect/nina/capability/deadline";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import {
-  LearningCapabilityNameSchema,
-  MEMORY_CAPABILITY,
-} from "@repo/backend/confect/nina/capability/spec";
-import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn";
+  createNinaAgentContext,
+  readNinaLearningPage,
+} from "@repo/backend/confect/nina/contract/turn";
 import {
   generationFailure,
   NinaGenerationError,
@@ -24,6 +24,7 @@ import {
   type Found,
   restoreFound,
 } from "@repo/backend/confect/nina/memory/tool";
+import { decideNinaCapability } from "@repo/backend/confect/nina/policy/capability";
 import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { startNinaStep } from "@repo/backend/confect/nina/step";
@@ -48,15 +49,18 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   const runtime = {
     currentDate: DateTime.formatIso(DateTime.makeUnsafe(turn._creationTime)),
   };
+  const { instructions, memories, paused, summary } = yield* readInstructions(
+    turn,
+    readNinaLearningPage(turn.page).url
+  );
+  // The turn reads once whether the learner paused memory: the prompt, the tools
+  // Nina is offered and the policy of each call all follow it.
   const context = createNinaAgentContext({
+    memory: !paused,
     page: turn.page,
     user: turn.user,
     runtime,
   });
-  const { instructions, memories, paused, summary } = yield* readInstructions(
-    turn,
-    context.url
-  );
   // Nina reads its own turns, so the Agent fetches no history and sends this as is.
   const input = yield* readInput(turn, {
     context: formatTurnContext({
@@ -98,16 +102,14 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
         { threadId: turn.threadId, userId: turn.userId },
         {
           promptMessageId: turn.promptMessageId,
-          // While the learner's memory is paused Nina is not offered the
-          // memory tool, in every step of the turn.
-          ...(paused
-            ? {
-                activeTools: Arr.filter(
-                  LearningCapabilityNameSchema.literals,
-                  (name) => name !== MEMORY_CAPABILITY
-                ),
-              }
-            : {}),
+          // Nina is offered the capabilities the policy allows this turn, in
+          // every step of it: not the memory tool while the learner's memory
+          // is paused.
+          activeTools: Arr.filter(
+            LearningCapabilityNameSchema.literals,
+            (capability) =>
+              decideNinaCapability({ capability, context }).state === "allowed"
+          ),
           abortSignal: AbortSignal.any([signal, halt]),
           onError: ({ error }) => {
             streamFailure ??= generationFailure(error);

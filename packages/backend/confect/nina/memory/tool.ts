@@ -2,6 +2,10 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { MEMORY_CAPABILITY } from "@repo/backend/confect/nina/capability/spec";
+import {
+  deniedCapabilityResult,
+  MEMORY_PAUSED,
+} from "@repo/backend/confect/nina/policy/capability";
 import { formatFound } from "@repo/backend/confect/nina/prompt/recall";
 import type { ModelMessage } from "ai";
 import { Array as Arr, Clock, Effect, MutableHashMap, Option } from "effect";
@@ -14,10 +18,6 @@ import { Array as Arr, Clock, Effect, MutableHashMap, Option } from "effect";
  * came from.
  */
 export type Found = MutableHashMap.MutableHashMap<string, string>;
-
-/** What Nina reads when the learner paused memory while her turn ran. */
-const PAUSED =
-  "The learner paused memory, so what they told Nina before is not available. Use only what is in this conversation, tell the learner you cannot look it up while memory is paused, and do not guess it.";
 
 /** What Nina reads when no saved memory matches her query. */
 const NOTHING =
@@ -35,8 +35,10 @@ const KEPT =
  * query, at most 6, each nearly in full and the whole answer within 1,500
  * tokens, or one line that says nothing was found. It makes no model call and
  * writes nothing, so a memory it returns is not thereby confirmed. It only ever
- * reads the memories of the learner the turn belongs to. While memory is paused
- * it refuses, as a policy does.
+ * reads the memories of the learner the turn belongs to. The capability policy
+ * has allowed the call from the turn's context, but the learner may have paused
+ * memory since the turn began, so a paused memory refuses here too, with the
+ * denial the policy gives (`MEMORY_PAUSED`).
  *
  * What it finds goes into `found` under the id of the call, for the model's
  * next step (`restoreFound`), and the answer it returns, which the conversation
@@ -61,7 +63,10 @@ export const runMemory = Effect.fn("nina.memory.tool")(function* ({
     })
     .pipe(Effect.orDie);
   if (paused) {
-    return { outcome: "denied" as const, text: PAUSED };
+    return deniedCapabilityResult({
+      capability: MEMORY_CAPABILITY,
+      decision: MEMORY_PAUSED,
+    });
   }
   if (!Arr.isReadonlyArrayNonEmpty(memories)) {
     return { outcome: "empty" as const, text: NOTHING };

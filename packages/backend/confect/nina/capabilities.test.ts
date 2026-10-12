@@ -8,12 +8,12 @@ import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { createCapabilities } from "@repo/backend/confect/nina/capabilities";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
 import { MathGenerationError } from "@repo/backend/confect/nina/math/error";
 import { runMemory } from "@repo/backend/confect/nina/memory/tool";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { NakafaGenerationError } from "@repo/backend/confect/nina/nakafa/error";
+import { MEMORY_PAUSED } from "@repo/backend/confect/nina/policy/capability";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import {
   ResearchGenerationError,
@@ -24,6 +24,7 @@ import { type createNinaTest, ninaToolInput } from "@repo/backend/test/nina";
 import { inNewChatStep } from "@repo/backend/test/nina/deadline";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import {
+  openHomeSession,
   providerStep,
   runSpecialist,
   specialistRequest,
@@ -196,16 +197,7 @@ async function runCapability(
   });
   return runSpecialist((userId) =>
     Effect.gen(function* () {
-      const session = yield* openNinaLearningSession({
-        capturedAt: "2026-09-27T12:00:00Z",
-        source: "current-page",
-        learning: {
-          locale: "en",
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-        },
-      });
+      const session = yield* openHomeSession;
       return yield* playTurn({
         context: {
           ...specialistRequest.context,
@@ -393,22 +385,33 @@ describe("Nina memory capability execution", () => {
 
   /**
    * Plays a model that searches the memories of the fixture's learner once, and
-   * answers. It returns what the turn produced and the words the search left
+   * answers, in a turn whose context says that memory is on unless `memory` says
+   * otherwise. It returns what the turn produced and the words the search left
    * for the model's next step.
    */
-  async function search(f: Awaited<ReturnType<typeof createNinaTest>>) {
+  async function search(
+    f: Awaited<ReturnType<typeof createNinaTest>>,
+    { memory = true }: { readonly memory?: boolean } = {}
+  ) {
     const found = MutableHashMap.empty<string, string>();
     const model = new MockLanguageModelV4({
       doGenerate: [toolCall("memory", { query: "snbt" }), request],
     });
     const played = await f.t.action((ctx) =>
       Effect.runPromise(
-        playTurn({
-          context: specialistRequest.context,
-          found,
-          model,
-          prompt: "What do you remember about my exam?",
-          userId: f.identity.userId,
+        Effect.gen(function* () {
+          const session = yield* openHomeSession;
+          return yield* playTurn({
+            context: {
+              ...specialistRequest.context,
+              memory,
+              nina: session.context,
+            },
+            found,
+            model,
+            prompt: "What do you remember about my exam?",
+            userId: f.identity.userId,
+          });
         }).pipe(
           Effect.provide([
             GatewayTest,
@@ -444,12 +447,27 @@ describe("Nina memory capability execution", () => {
     expect(MutableHashMap.size(found)).toBe(0);
   });
 
-  it("refuses to look while the learner has paused memory, and reads none of it", async () => {
+  it("refuses a call under the policy of a turn whose memory is off, without reading any memory", async () => {
+    vi.mocked(runMemory).mockClear();
+    const f = await createMemoryTest();
+    await f.seed({ text: "Mau ikut SNBT 2027" });
+    const { found, logged, result } = await search(f, { memory: false });
+    expect(result).toMatchObject([{ outcome: "denied" }]);
+    expect(encodeJsonText(result)).toContain("Status: denied");
+    expect(encodeJsonText(result)).not.toContain("Mau ikut SNBT 2027");
+    expect(runMemory).not.toHaveBeenCalled();
+    expect(MutableHashMap.size(found)).toBe(0);
+    expect(MutableRef.get(logged)).toEqual([]);
+  });
+
+  it("refuses a call, with the same denial, when the learner paused memory after the turn began", async () => {
     const f = await createMemoryTest();
     await f.seed({ text: "Mau ikut SNBT 2027" });
     await f.owner.mutation(pause, { paused: true });
     const { found, logged, result } = await search(f);
     expect(result).toMatchObject([{ outcome: "denied" }]);
+    expect(encodeJsonText(result)).toContain("Status: denied");
+    expect(encodeJsonText(result)).toContain(MEMORY_PAUSED.reason);
     expect(encodeJsonText(result)).not.toContain("Mau ikut SNBT 2027");
     expect(MutableHashMap.size(found)).toBe(0);
     expect(MutableRef.get(logged)).toEqual([]);
