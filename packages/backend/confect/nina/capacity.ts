@@ -1,7 +1,7 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
-import { TURN_DEADLINE } from "@repo/backend/confect/nina/sweep";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { Array as Arr, Clock, Duration, Effect } from "effect";
 
 /** The most turns one learner may have queued or running at once. */
