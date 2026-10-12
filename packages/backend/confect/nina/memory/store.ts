@@ -123,18 +123,6 @@ export const readKeptMemory = Effect.fn("nina.memory.store.kept")(function* (
   return memory === null || isCleared(memory, clearedAt) ? null : memory;
 });
 
-/** Whether a situation's end date has passed. Other memories never end. */
-export function hasEnded(
-  memory: Pick<Docs["ninaMemories"], "kind" | "validUntil">,
-  now: number
-) {
-  return (
-    memory.kind === "situation" &&
-    memory.validUntil !== undefined &&
-    memory.validUntil < now
-  );
-}
-
 /** Deletes one memory and its key rows. */
 export const deleteMemory = Effect.fn("nina.memory.store.delete")(function* (
   memoryId: MemoryId

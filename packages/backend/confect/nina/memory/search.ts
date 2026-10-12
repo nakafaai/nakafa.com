@@ -1,4 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { hasEnded } from "@repo/backend/confect/nina/memory/ended";
 import {
   readLinked,
   topicKey,
@@ -6,7 +7,6 @@ import {
 } from "@repo/backend/confect/nina/memory/keys";
 import { openWith } from "@repo/backend/confect/nina/memory/seal";
 import {
-  hasEnded,
   readNewest,
   readOwnMemory,
 } from "@repo/backend/confect/nina/memory/store";

@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, QueryResult } from "@confect/react";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
+import { hasEnded } from "@repo/backend/confect/nina/memory/ended";
 import { Array as Arr } from "effect";
 import type {
   Memory,
@@ -25,20 +26,30 @@ type State = QueryResult.QueryResult<
  * stands in until Convex answers with the first page, and `paused` stands in
  * until it answers with the state.
  *
- * It returns `loaded` (every memory the page has loaded, in list order),
+ * It returns `loaded` (every memory the page has loaded, in list order, but not
+ * a situation that had ended when the server read the page, at `now`: search
+ * and a turn leave it out too, and the daily job has not deleted it yet),
  * `whole` (every memory is loaded), `more` (loads the next page of a size the
  * caller names, or none when there is nothing to load or a page is on its way),
- * `empty` (the learner has no memory at all) and `paused`. What the learner
+ * `empty` (the learner has no memory to show) and `paused`. What the learner
  * searches for is not here: the browser's own filter narrows `loaded`.
+ *
+ * `now` is the moment the server read the page, which never changes in the
+ * browser, so a situation never leaves the list while the learner looks at it,
+ * and no query takes a clock.
  */
 export function readingOf(
   pages: Pages,
   state: State,
   first: MemoryPage,
-  paused: boolean
+  paused: boolean,
+  now: number
 ) {
   const starting = PaginatedQueryResult.isLoadingFirstPage(pages);
-  const loaded = starting ? first.page : pages.results;
+  const loaded = Arr.filter(
+    starting ? first.page : pages.results,
+    (memory) => !hasEnded(memory, now)
+  );
   const whole = starting
     ? first.isDone
     : PaginatedQueryResult.isExhausted(pages);

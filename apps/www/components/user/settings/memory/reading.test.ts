@@ -10,14 +10,18 @@ import { readingOf } from "@/components/user/settings/memory/reading";
 
 const memoryId = Schema.decodeUnknownSync(Id("ninaMemories"));
 
+/** The moment the server read the page. */
+const NOW = 5000;
+
 /** A stored memory written by Nina. */
-function stored(name: string): Memory {
+function stored(name: string, change: Partial<Memory> = {}): Memory {
   return {
     author: "nina",
     confirmedAt: 1000,
     createdAt: 500,
     id: memoryId(name),
     text: `Text of ${name}`,
+    ...change,
   };
 }
 
@@ -38,7 +42,7 @@ const waiting = QueryResult.load<{ paused: boolean } | null>(false);
 describe("what the Memory page reads", () => {
   it("reads the page the server read until Convex answers with the first one, and loads nothing", () => {
     expect(
-      readingOf(loading, waiting, served([newest, older], false), true)
+      readingOf(loading, waiting, served([newest, older], false), true, NOW)
     ).toEqual({
       empty: false,
       loaded: [newest, older],
@@ -50,9 +54,11 @@ describe("what the Memory page reads", () => {
 
   it("calls the learner's list whole from the first paint when the server's page ends it, and empty when it holds nothing", () => {
     expect(
-      readingOf(loading, waiting, served([older], true), false)
+      readingOf(loading, waiting, served([older], true), false, NOW)
     ).toMatchObject({ empty: false, whole: true });
-    expect(readingOf(loading, waiting, served([], true), false)).toMatchObject({
+    expect(
+      readingOf(loading, waiting, served([], true), false, NOW)
+    ).toMatchObject({
       empty: true,
       whole: true,
     });
@@ -67,7 +73,8 @@ describe("what the Memory page reads", () => {
       }),
       waiting,
       served([newest], false),
-      false
+      false,
+      NOW
     );
 
     expect(reading).toMatchObject({
@@ -84,7 +91,8 @@ describe("what the Memory page reads", () => {
         PaginatedQueryResult.loadingMore({ results: [newest, older] }),
         waiting,
         served([newest], false),
-        false
+        false,
+        NOW
       )
     ).toMatchObject({
       loaded: [newest, older],
@@ -99,7 +107,8 @@ describe("what the Memory page reads", () => {
         PaginatedQueryResult.exhausted({ results: [newest, older, oldest] }),
         waiting,
         served([newest], false),
-        false
+        false,
+        NOW
       )
     ).toMatchObject({ empty: false, more: null, whole: true });
     expect(
@@ -107,7 +116,8 @@ describe("what the Memory page reads", () => {
         PaginatedQueryResult.exhausted<Memory>({ results: [] }),
         waiting,
         served([newest], false),
-        false
+        false,
+        NOW
       )
     ).toMatchObject({ empty: true, whole: true });
   });
@@ -116,16 +126,61 @@ describe("what the Memory page reads", () => {
     const first = served([], true);
 
     expect(
-      readingOf(loading, QueryResult.succeed({ paused: true }), first, false)
-        .paused
+      readingOf(
+        loading,
+        QueryResult.succeed({ paused: true }),
+        first,
+        false,
+        NOW
+      ).paused
     ).toBe(true);
     expect(
-      readingOf(loading, QueryResult.succeed({ paused: false }), first, true)
-        .paused
+      readingOf(
+        loading,
+        QueryResult.succeed({ paused: false }),
+        first,
+        true,
+        NOW
+      ).paused
     ).toBe(false);
-    expect(readingOf(loading, waiting, first, true).paused).toBe(true);
+    expect(readingOf(loading, waiting, first, true, NOW).paused).toBe(true);
     expect(
-      readingOf(loading, QueryResult.succeed(null), first, true).paused
+      readingOf(loading, QueryResult.succeed(null), first, true, NOW).paused
     ).toBe(true);
+  });
+
+  describe("a situation that has ended", () => {
+    const ended = stored("ended", { validUntil: NOW - 1 });
+    const today = stored("today", { validUntil: NOW });
+    const coming = stored("coming", { validUntil: NOW + 1 });
+
+    it("is not listed, from the first paint and from the pages Convex answered with", () => {
+      expect(
+        readingOf(
+          loading,
+          waiting,
+          served([ended, today, coming, newest], false),
+          false,
+          NOW
+        ).loaded
+      ).toEqual([today, coming, newest]);
+      expect(
+        readingOf(
+          PaginatedQueryResult.exhausted({
+            results: [newest, ended, coming],
+          }),
+          waiting,
+          served([], true),
+          false,
+          NOW
+        ).loaded
+      ).toEqual([newest, coming]);
+    });
+
+    it("leaves the learner with no memory to show when every memory has ended", () => {
+      expect(
+        readingOf(loading, waiting, served([ended], true), false, NOW)
+      ).toMatchObject({ empty: true, loaded: [], whole: true });
+    });
   });
 });

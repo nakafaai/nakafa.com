@@ -11,10 +11,15 @@ import { readingOf } from "@/components/user/settings/memory/reading";
 
 /**
  * Asks Convex for the learner's memories and for whether memory is paused, and
- * hands the answers to `readingOf`. It must run once for the page, because the
- * pages a learner loaded belong to the hook that loaded them.
+ * hands the answers to `readingOf` with the moment the server read the page. It
+ * must run once for the page, because the pages a learner loaded belong to the
+ * hook that loaded them.
  */
-export function useMemoryReading(first: MemoryPage, paused: boolean) {
+export function useMemoryReading(
+  first: MemoryPage,
+  paused: boolean,
+  now: number
+) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const pages = usePaginatedQuery(
     nina.memory.list,
@@ -23,5 +28,5 @@ export function useMemoryReading(first: MemoryPage, paused: boolean) {
   );
   const state = useQuery(nina.memory.state, isAuthenticated ? {} : "skip");
 
-  return readingOf(pages, state, first, paused);
+  return readingOf(pages, state, first, paused, now);
 }

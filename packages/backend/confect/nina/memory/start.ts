@@ -1,7 +1,8 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { hasEnded } from "@repo/backend/confect/nina/memory/ended";
 import { openMemories } from "@repo/backend/confect/nina/memory/seal";
 import { searchMemories } from "@repo/backend/confect/nina/memory/search";
-import { hasEnded, readNewest } from "@repo/backend/confect/nina/memory/store";
+import { readNewest } from "@repo/backend/confect/nina/memory/store";
 import { MEMORY_START_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Effect, HashSet } from "effect";
 
