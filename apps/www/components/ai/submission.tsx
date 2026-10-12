@@ -128,8 +128,14 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
   );
 });
 
-/** Native admission with optimistic query updates and idempotent transport retry. */
-export function useNinaSubmission() {
+/**
+ * Native admission with optimistic query updates and idempotent transport
+ * retry. `onFailure` hears of each failed admission, and of `null` when the
+ * next one starts, so whatever owns the failure decides where it lives.
+ */
+export function useNinaSubmission(
+  onFailure?: (failure: NinaFailure | null) => void
+) {
   const upload = useAction(nina.uploads.save);
   const uploaded = useRef(new WeakMap<File, Id<"ninaUploads">>());
   const [previews] = useState(() =>
@@ -140,12 +146,11 @@ export function useNinaSubmission() {
   const addChatDraft = useAi((state) => state.addChatDraft);
   const removeChatDraft = useAi((state) => state.removeChatDraft);
   const resolveChatDraft = useAi((state) => state.resolveChatDraft);
-  const [error, setError] = useState<NinaFailure | null>(null);
   const inFlight = useRef(false);
   const uncertain = useRef<Ref.Args<Start> | null>(null);
   const t = useTranslations("Ai");
 
-  async function perform(
+  const perform = Effect.fn("nina.submission")(function* (
     inputProgram: Effect.Effect<Ref.Args<Start>["input"], NinaFailure>,
     chatId?: Id<"chats">
   ) {
@@ -153,15 +158,15 @@ export function useNinaSubmission() {
       return;
     }
     inFlight.current = true;
-    setError(null);
-    const draftKey = chatId ? null : Effect.runSync(randomUuid);
+    onFailure?.(null);
+    const draftKey = chatId ? null : yield* randomUuid;
     if (draftKey) {
       addChatDraft(draftKey);
     }
-    const result = await Effect.runPromise(
-      inputProgram.pipe(
-        Effect.tap(() => requireNinaConnection(convex)),
-        Effect.flatMap((input) => {
+    const result = yield* inputProgram.pipe(
+      Effect.tap(() => requireNinaConnection(convex)),
+      Effect.flatMap((input) =>
+        Effect.gen(function* () {
           const payload = {
             ...(chatId ? { chatId } : {}),
             input,
@@ -173,7 +178,7 @@ export function useNinaSubmission() {
               encodeJsonText(payload);
           const args = {
             ...payload,
-            requestId: same ? previous.requestId : Effect.runSync(randomUuid),
+            requestId: same ? previous.requestId : yield* randomUuid,
           };
           uncertain.current = args;
           const submit = start.withOptimisticUpdate(
@@ -182,7 +187,7 @@ export function useNinaSubmission() {
               DateTime.toEpochMillis(DateTime.nowUnsafe())
             )
           );
-          return Effect.tryPromise({
+          return yield* Effect.tryPromise({
             try: () => submit(args),
             catch: () =>
               new NinaConnectionError({
@@ -190,25 +195,25 @@ export function useNinaSubmission() {
                 message: "Nina admission could not be confirmed.",
               }),
           }).pipe(Effect.flatMap(Effect.fromResult));
-        }),
-        Effect.onExit((exit) =>
-          Effect.sync(() => {
-            if (!draftKey) {
-              return;
-            }
-            if (Exit.isSuccess(exit)) {
-              resolveChatDraft(draftKey, exit.value);
-            } else {
-              removeChatDraft(draftKey);
-            }
-          })
-        ),
-        Effect.result,
-        Effect.ensuring(
-          Effect.sync(() => {
-            inFlight.current = false;
-          })
-        )
+        })
+      ),
+      Effect.onExit((exit) =>
+        Effect.sync(() => {
+          if (!draftKey) {
+            return;
+          }
+          if (Exit.isSuccess(exit)) {
+            resolveChatDraft(draftKey, exit.value);
+          } else {
+            removeChatDraft(draftKey);
+          }
+        })
+      ),
+      Effect.result,
+      Effect.ensuring(
+        Effect.sync(() => {
+          inFlight.current = false;
+        })
       )
     );
     if (Result.isSuccess(result)) {
@@ -227,36 +232,38 @@ export function useNinaSubmission() {
       uploaded.current = new WeakMap();
       MutableHashMap.clear(previews);
     }
-    setError(result.failure);
-    await Effect.runPromise(
-      reportNinaFailure(
-        result.failure,
-        t(`failures.${ninaFailureFeedback[result.failure.code].message}`)
+    onFailure?.(result.failure);
+    yield* reportNinaFailure(
+      result.failure,
+      t(`failures.${ninaFailureFeedback[result.failure.code].message}`)
+    );
+  });
+
+  function send(prompt: NinaDraft, chatId?: Id<"chats">) {
+    return Effect.runPromise(
+      perform(
+        uploadAttachments(
+          prompt.files ?? [],
+          upload,
+          uploaded.current,
+          previews,
+          convex
+        ).pipe(
+          Effect.map((uploadIds) =>
+            messageInput({ focus: prompt.focus, text: prompt.text, uploadIds })
+          )
+        ),
+        chatId
       )
     );
   }
-
-  function send(prompt: NinaDraft, chatId?: Id<"chats">) {
-    return perform(
-      uploadAttachments(
-        prompt.files ?? [],
-        upload,
-        uploaded.current,
-        previews,
-        convex
-      ).pipe(
-        Effect.map((uploadIds) =>
-          messageInput({ focus: prompt.focus, text: prompt.text, uploadIds })
-        )
-      ),
-      chatId
-    );
-  }
   function retry(order: number, chatId: Id<"chats">) {
-    return perform(
-      Effect.sync(() => retryInput(order)),
-      chatId
+    return Effect.runPromise(
+      perform(
+        Effect.sync(() => retryInput(order)),
+        chatId
+      )
     );
   }
-  return { send, retry, error };
+  return { send, retry };
 }
