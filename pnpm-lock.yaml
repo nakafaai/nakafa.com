@@ -569,9 +569,6 @@ importers:
       better-auth:
         specifier: 1.6.33
         version: 1.6.33(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(solid-js@1.9.16)(vitest@5.0.3)
-      buffer:
-        specifier: ^6.0.3
-        version: 6.0.3
       convex:
         specifier: 1.46.0
         version: 1.46.0(react@19.3.0)
