@@ -313,7 +313,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
     expect(productPanel).toHaveCSS("animation-name", "accordion-down")
   );
   yield* Effect.promise(() =>
-    expect(productPanel).toHaveCSS("animation-duration", "0.2s")
+    expect(productPanel).toHaveCSS("animation-duration", "0.18s")
   );
   yield* Effect.promise(() =>
     expect(productQuestion.locator("svg")).toHaveCSS("rotate", "180deg")
@@ -321,7 +321,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   yield* Effect.promise(() =>
     expect(productQuestion.locator("svg")).toHaveCSS(
       "transition-duration",
-      "0.2s"
+      "0.18s"
     )
   );
   yield* Effect.promise(() =>

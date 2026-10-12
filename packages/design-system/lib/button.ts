@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority";
 
 /** Shared interaction, semantic, and size variants for every Nakafa button. */
 export const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm outline-none transition ease-out focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex shrink-0 cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm outline-none transition-[scale,color,background-color,border-color,box-shadow,opacity] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -34,8 +34,15 @@ export const buttonVariants = cva(
         "icon-sm": "size-8",
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3.5",
       },
+      // A button answers a press by shrinking. A wide surface that only
+      // borrows the look of a button, such as an answer choice, stays still.
+      pressable: {
+        true: "pressable",
+        false: "",
+      },
     },
     defaultVariants: {
+      pressable: true,
       size: "default",
       variant: "default",
     },
