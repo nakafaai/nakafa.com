@@ -54,13 +54,28 @@ export const opened = async (page: Page, text: string) => {
   await expect(editor).toBeFocused();
 };
 
+/** A change the page sends, which the server answers with the same `requestId`. */
+const MutationSchema = Schema.Struct({
+  requestId: Schema.Finite,
+  type: Schema.Literal("Mutation"),
+});
+
+/** The answer of a server that could not take a change, as the protocol words it. */
+const RefusalSchema = Schema.Struct({
+  logLines: Schema.Array(Schema.String),
+  requestId: Schema.Finite,
+  result: Schema.String,
+  success: Schema.Literal(false),
+  type: Schema.Literal("MutationResponse"),
+});
+
 /** The frames the page sends that a step waits on. Any other frame decodes to none. */
 const SentSchema = Schema.Union([
   Schema.Struct({
     tokenType: Schema.Literal("User"),
     type: Schema.Literal("Authenticate"),
   }),
-  Schema.Struct({ type: Schema.Literal("Mutation") }),
+  MutationSchema,
   Schema.Struct({
     modifications: Schema.Array(
       Schema.Struct({
@@ -93,6 +108,8 @@ const GivenSchema = Schema.Union([
 
 const decodeSent = Schema.decodeOption(Schema.fromJsonString(SentSchema));
 const decodeGiven = Schema.decodeOption(Schema.fromJsonString(GivenSchema));
+const encodeRefusal = Schema.encodeSync(Schema.fromJsonString(RefusalSchema));
+const isMutation = Schema.is(MutationSchema);
 
 /** The moment of the database that a `ts` names: eight bytes, the least significant first. */
 const momentOf = (bytes: Uint8Array) =>
@@ -121,14 +138,17 @@ const later = (one: bigint, other: bigint) => (one > other ? one : other);
  *
  * Every frame passes through this route, so a step can also hold the server's
  * answers back: after `hold` the page gets nothing from the server until
- * `release`, and what it shows meanwhile is what it showed on its own. What
- * the tracker knows is what the page was given, never what the server sent.
+ * `release`, and what it shows meanwhile is what it showed on its own. A step
+ * can also fail one change: after `failNext` the next change the page sends
+ * never reaches the server, and the page is told the server could not take it.
+ * What the tracker knows is what the page was given, never what the server sent.
  */
 const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
   page: Page
 ) {
   const changes = {
     answered: 0,
+    failing: false,
     held: false,
     listed: false,
     sent: 0,
@@ -137,6 +157,14 @@ const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     told: 0n,
   };
   const delayed = MutableList.make<() => void>();
+  /** Gives the page a frame now, or after `release` while the answers are held back. */
+  const deliver = (give: () => void) => {
+    if (changes.held) {
+      MutableList.append(delayed, give);
+      return;
+    }
+    give();
+  };
 
   // A reload ends the connection that had signed in, before the next one opens.
   page.on("framenavigated", (frame) => {
@@ -194,31 +222,51 @@ const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
 
       socket.onMessage((message) => {
         const frame = decodeSent(message.toString());
+        const mutation = Option.filter(frame, isMutation);
 
         if (Option.isSome(frame)) {
           noticeSent(frame.value);
+        }
+        if (changes.failing && Option.isSome(mutation)) {
+          changes.failing = false;
+          // The server never sees the change, and the page is told it failed.
+          deliver(() => {
+            socket.send(
+              encodeRefusal({
+                logLines: [],
+                requestId: mutation.value.requestId,
+                result: "Refused by the test",
+                success: false,
+                type: "MutationResponse",
+              })
+            );
+            changes.answered += 1;
+          });
+          return;
         }
         server.send(message);
       });
       server.onMessage((message) => {
         const frame = decodeGiven(message.toString());
-        const give = () => {
+
+        deliver(() => {
           socket.send(message);
           if (Option.isSome(frame)) {
             noticeGiven(frame.value);
           }
-        };
-
-        if (changes.held) {
-          MutableList.append(delayed, give);
-          return;
-        }
-        give();
+        });
       });
     })
   );
 
   return Object.assign(changes, {
+    /**
+     * Fails the next change the page sends: the server never gets it, and the
+     * page is told the server could not take it.
+     */
+    failNext() {
+      changes.failing = true;
+    },
     /** Keeps what the server answers from the page until `release`. */
     hold() {
       changes.held = true;

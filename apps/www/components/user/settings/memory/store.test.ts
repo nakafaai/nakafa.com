@@ -28,6 +28,7 @@ describe("memory page store", () => {
     const { getState } = createMemoryStore();
 
     expect(getState()).toMatchObject({
+      cleared: 0,
       deleted: null,
       draft: null,
       open: false,
@@ -228,6 +229,59 @@ describe("memory page store", () => {
     fresh.getState().openNew();
     fresh.getState().forget(first.id);
     expect(fresh.getState()).toMatchObject({ deleted: first.id, open: true });
+  });
+
+  it("counts each time the learner deletes every memory, and closes the editor on the memory it holds", () => {
+    const store = createMemoryStore();
+
+    store.getState().openEdit(first);
+    store.getState().forgetAll();
+    expect(store.getState()).toMatchObject({
+      cleared: 1,
+      deleted: first.id,
+      draft: null,
+      open: false,
+      target: first,
+    });
+
+    // A new memory has nothing to close yet: its first save learns of the
+    // deletion from the count.
+    store.getState().openNew();
+    store.getState().forgetAll();
+    expect(store.getState()).toMatchObject({
+      cleared: 2,
+      deleted: first.id,
+      open: true,
+      target: null,
+    });
+  });
+
+  it("gives nothing back on a memory the learner deleted since the failed save, and still gives back a new memory", () => {
+    const store = createMemoryStore();
+
+    store.getState().openEdit(first);
+    store.getState().close();
+    store.getState().forget(first.id);
+    store.getState().reopen(1, grade, first);
+    expect(store.getState()).toMatchObject({
+      draft: null,
+      open: false,
+      session: 1,
+    });
+
+    store.getState().reopen(1, plan, null);
+    expect(store.getState()).toMatchObject({
+      draft: plan,
+      open: true,
+      target: null,
+    });
+
+    const other = createMemoryStore();
+    other.getState().openEdit(first);
+    other.getState().close();
+    other.getState().forget(second.id);
+    other.getState().reopen(1, grade, first);
+    expect(other.getState()).toMatchObject({ draft: grade, open: true });
   });
 
   it("closes the editor of a memory the server no longer has, and leaves an editor opened since", () => {

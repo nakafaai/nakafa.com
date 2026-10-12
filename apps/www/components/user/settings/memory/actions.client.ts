@@ -47,6 +47,7 @@ export function useMemoryActions() {
 
   const latest = useMemoryLatest();
   const forget = useMemoryPage((state) => state.forget);
+  const forgetAll = useMemoryPage((state) => state.forgetAll);
   const reopen = useMemoryPage((state) => state.reopen);
   const rewrite = useMemoryPage((state) => state.rewrite);
 
@@ -187,16 +188,13 @@ export function useMemoryActions() {
   }
 
   /**
-   * Deletes every memory. The editor on one of them closes with it. The server
-   * hides them from every reader the moment it answers, and deletes them in
-   * batches after that.
+   * Deletes every memory. The editor on one of them closes with it, and a first
+   * save that is on its way learns that the server deleted its memory too. The
+   * server hides the memories from every reader the moment it answers, and
+   * deletes them in batches after that.
    */
   function clear() {
-    const { target } = latest();
-
-    if (target) {
-      forget(target.id);
-    }
+    forgetAll();
     settle(() => clearAll());
   }
 

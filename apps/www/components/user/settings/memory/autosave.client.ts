@@ -26,20 +26,26 @@ const LONGEST = Duration.seconds(3);
  * the editor is closed by then, it opens again with what they wrote. A save
  * that finds the memory gone closes the editor.
  *
- * `change` takes what the editor holds now. `discard` stops the saving and
- * deletes the memory, with an Undo when the learner had seen it stored.
+ * `restored` is the words of a save that failed, when the editor opens again
+ * with them, and `starting` is the words the editor opens with. `change` takes
+ * what the editor holds now. `discard` stops the saving and deletes the memory,
+ * with an Undo when the learner had seen it stored.
  */
-export function useAutosave(memory: Memory | null, starting: MemoryDraft) {
+export function useAutosave(
+  memory: Memory | null,
+  restored: MemoryDraft | null
+) {
   const { add, drop, edit, remove } = useMemoryActions();
   const adopt = useMemoryPage((state) => state.adopt);
   const leave = useMemoryPage((state) => state.leave);
   const reopen = useMemoryPage((state) => state.reopen);
   const session = useMemoryPage((state) => state.session);
   const latest = useMemoryLatest();
-  const [saving] = useState(() => createAutosave(memory, starting));
+  const [saving] = useState(() => createAutosave(memory, restored));
   const send = {
     add,
     adopt: (stored: Memory) => adopt(session, stored),
+    cleared: () => latest().cleared,
     drop,
     edit,
     leave: () => leave(session),
@@ -70,5 +76,5 @@ export function useAutosave(memory: Memory | null, starting: MemoryDraft) {
     saving.discard(send, memory);
   }
 
-  return { change, discard };
+  return { change, discard, starting: saving.starting };
 }

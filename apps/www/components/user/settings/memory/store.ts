@@ -11,9 +11,15 @@ import {
 /** What the learner is doing on the Memory page. */
 const MemoryStateSchema = Schema.Struct({
   /**
+   * How many times the learner deleted every memory. A first save that was on
+   * its way when they did learns by it that the server deleted its memory too.
+   */
+  cleared: Schema.Int,
+  /**
    * The memory the learner deleted last, from the list or from the editor. The
    * editor never saves a memory the learner deleted, so a save that was still
-   * waiting for its moment cannot bring the memory back or fail as missing.
+   * waiting for its moment cannot bring the memory back or fail as missing, and
+   * a save that failed never brings its editor back.
    */
   deleted: Schema.NullOr(Id("ninaMemories")),
   /** The title and words of a save that failed, which the editor shows when it opens again. */
@@ -53,6 +59,12 @@ interface MemoryActions {
    */
   forget: (id: Memory["id"]) => void;
   /**
+   * Notes that the learner deleted every memory. The editor on a memory closes
+   * as `forget` does, and a first save that is still on its way finds out by
+   * `cleared`.
+   */
+  forgetAll: () => void;
+  /**
    * Closes the editor of the opening `session`, because the server answered
    * that its memory is missing. It leaves an editor the learner opened since.
    */
@@ -65,7 +77,8 @@ interface MemoryActions {
    * Opens the editor again with the draft of a save that failed, on `memory`,
    * or on a new memory when it is null. `session` is the opening the draft
    * comes from. Nothing opens when the learner opened an editor since, open or
-   * closed again by now, because what they wrote there is newer than the draft.
+   * closed again by now, because what they wrote there is newer than the draft,
+   * or when the learner deleted `memory` since.
    */
   reopen: (session: number, draft: MemoryDraft, memory: Memory | null) => void;
   /** Shows the memory the editor holds as the learner just rewrote it. */
@@ -76,6 +89,14 @@ interface MemoryActions {
 
 export type MemoryStore = MemoryState & MemoryActions;
 
+/** What changes when the learner deletes the memory `id`: the editor on it closes. */
+function forgetting(state: MemoryState, id: Memory["id"]) {
+  return {
+    deleted: id,
+    ...(state.target?.id === id ? { draft: null, open: false } : {}),
+  };
+}
+
 /** Creates the store of one Memory page, so two pages never share their state. */
 export function createMemoryStore() {
   return createStore<MemoryStore>()((set) => ({
@@ -85,13 +106,15 @@ export function createMemoryStore() {
           ? { target: memory }
           : state
       ),
+    cleared: 0,
     close: () => set({ draft: null, open: false }),
     deleted: null,
     draft: null,
-    forget: (id) =>
+    forget: (id) => set((state) => forgetting(state, id)),
+    forgetAll: () =>
       set((state) => ({
-        deleted: id,
-        ...(state.target?.id === id ? { draft: null, open: false } : {}),
+        cleared: state.cleared + 1,
+        ...(state.target ? forgetting(state, state.target.id) : {}),
       })),
     leave: (session) =>
       set((state) =>
@@ -115,7 +138,9 @@ export function createMemoryStore() {
     query: "",
     reopen: (session, draft, memory) =>
       set((state) =>
-        state.open || state.session !== session
+        state.open ||
+        state.session !== session ||
+        (memory !== null && memory.id === state.deleted)
           ? state
           : {
               draft,

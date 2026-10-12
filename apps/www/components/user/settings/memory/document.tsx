@@ -13,10 +13,9 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useAutosave } from "@/components/user/settings/memory/autosave.client";
 import { MemoryFacts } from "@/components/user/settings/memory/facts";
-import {
-  draftOf,
-  type Memory,
-  type MemoryDraft,
+import type {
+  Memory,
+  MemoryDraft,
 } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
@@ -42,9 +41,8 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
   const common = useTranslations("Common");
   const close = useMemoryPage((state) => state.close);
   const restored = useMemoryPage((state) => state.draft);
-  const [starting] = useState(() => restored ?? draftOf(memory));
+  const { change, discard, starting } = useAutosave(memory, restored);
   const [draft, setDraft] = useState(starting);
-  const { change, discard } = useAutosave(memory, starting);
   const body = useRef<HTMLDivElement>(null);
   const length = Str.length(Str.trim(draft.text));
 

@@ -10,7 +10,8 @@ import {
 
 /**
  * What the saving does on the Memory page: the page's own changes, `adopt`,
- * which points the open editor at the memory the first save stored, `leave`,
+ * which points the open editor at the memory the first save stored, `cleared`,
+ * which counts the times the learner deleted every memory so far, `leave`,
  * which closes the editor of a memory the server no longer has, and `reopen`,
  * which gives the words of a failed save back in the editor when the learner
  * closed it meanwhile.
@@ -20,13 +21,15 @@ type Send = Pick<
   "add" | "drop" | "edit" | "remove"
 > & {
   adopt: (memory: Memory) => void;
+  cleared: () => number;
   leave: () => void;
   reopen: (draft: MemoryDraft) => void;
 };
 
 /**
  * The saving of one opening of the editor: with `memory`, or with none for a
- * new memory, and with the draft the editor starts with.
+ * new memory. The editor starts with the words of `memory`, or with `restored`,
+ * the words of a save that failed, which the server does not hold.
  *
  * A write goes out at once, also while an earlier one is on its way: the server
  * takes one learner's writes in the order they were sent, so the last one wins,
@@ -38,22 +41,40 @@ type Send = Pick<
  * words the editor holds now come back in the editor if the learner closed it,
  * though they may be newer than the words that failed, because the server may
  * never have been handed them. After an older write fails, the server still
- * holds a newer draft. A write the server answers with a memory that is gone
- * closes the editor.
+ * holds a newer draft. A memory the server no longer has closes the editor and
+ * stops the saving: the server answered a write with a memory that is gone, or
+ * the learner deleted every memory while the first save was on its way.
  */
-export function createAutosave(memory: Memory | null, starting: MemoryDraft) {
+export function createAutosave(
+  memory: Memory | null,
+  restored: MemoryDraft | null
+) {
+  const starting = restored ?? draftOf(memory);
   const state = MutableRef.make({
     /** The first save of a new memory is on its way. */
     adding: false,
     /** The stored memory, once there is one. */
     id: memory?.id ?? null,
-    /** What the server was last handed, or nothing after a write that failed. */
-    sent: Option.some(draftOf(memory)),
-    /** The learner deleted the memory. */
+    /**
+     * What the server was last handed, or nothing after a write that failed.
+     * The server holds the words of the memory, but not the restored words of a
+     * save that failed, even when the memory shows them.
+     */
+    sent: restored === null ? Option.some(draftOf(memory)) : Option.none(),
+    /** The learner deleted the memory, or the server no longer has it. */
     stopped: false,
     /** What the editor holds. */
     wanted: starting,
   });
+
+  /**
+   * The server no longer has the memory, because it was deleted somewhere else
+   * or with Delete all. Nothing is written for it again, and the editor closes.
+   */
+  function gone(send: Send) {
+    MutableRef.update(state, (current) => ({ ...current, stopped: true }));
+    send.leave();
+  }
 
   /**
    * Takes the failure of the write that handed `draft` over. A memory that is
@@ -75,7 +96,7 @@ export function createAutosave(memory: Memory | null, starting: MemoryDraft) {
       return;
     }
     if (!again) {
-      send.leave();
+      gone(send);
       return;
     }
     if (newest && !isBlank(wanted)) {
@@ -105,6 +126,8 @@ export function createAutosave(memory: Memory | null, starting: MemoryDraft) {
       return;
     }
 
+    const cleared = send.cleared();
+
     send.add(wanted, {
       done: (stored) => {
         MutableRef.update(state, (current) => ({
@@ -116,6 +139,13 @@ export function createAutosave(memory: Memory | null, starting: MemoryDraft) {
         // The learner deleted the memory while the server was storing it.
         if (MutableRef.get(state).stopped) {
           send.drop(stored.id);
+          return;
+        }
+
+        // The learner deleted every memory while the server was storing it,
+        // and the server deleted this one with the others.
+        if (send.cleared() !== cleared) {
+          gone(send);
           return;
         }
 
@@ -153,6 +183,8 @@ export function createAutosave(memory: Memory | null, starting: MemoryDraft) {
         send.drop(id);
       }
     },
+    /** The words the editor starts with. */
+    starting,
     write,
   };
 }
