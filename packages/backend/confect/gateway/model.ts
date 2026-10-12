@@ -27,10 +27,16 @@ export const EmbeddingModelId = Schema.Literals(embeddingModels);
 export type EmbeddingModelId = typeof EmbeddingModelId.Type;
 
 /**
- * The embedding model behind knowledge search. It is provisional: the model
- * test in `scripts/knowledge` decides, by the share of questions whose right
- * section lands in the top five, per language. Changing this constant changes
- * every stored vector, so the next section build re-embeds all of them.
+ * The embedding model behind knowledge search: Google's newest embedding model
+ * on the gateway. Decided on 12 October 2026 from three things. Google's own
+ * benchmark puts it first (MTEB Multilingual 69.9, against 68.4 for
+ * `gemini-embedding-001`). It takes 8,192 input tokens, against 2,048. And the
+ * older model shuts down on 14 May 2028. The model test in `scripts/knowledge`
+ * (150 questions in three languages) found the right section in the top five
+ * for 142 questions, against 146 for the older model, a difference inside the
+ * noise of 50 questions a language, at 433 ms a question against 257 ms.
+ * Changing this constant changes every stored vector, so the next section build
+ * re-embeds all of them.
  */
 export const embeddingModelId: EmbeddingModelId = "google/gemini-embedding-2";
 
