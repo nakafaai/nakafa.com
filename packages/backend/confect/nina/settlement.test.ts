@@ -129,6 +129,17 @@ describe("native Nina stop and resend", () => {
         order: next.order,
       });
       expect(next.order).toBeGreaterThan(0);
+      // The next turn waits for nothing of the stopped one: its run is scheduled
+      // for the moment of the prompt, not behind the stopped run, its refund or
+      // the sweep.
+      expect(
+        Arr.filter(admitted.jobs, (job) => job.name === "nina/response:run")
+      ).toEqual([
+        expect.objectContaining({
+          args: [{ turnId: next.turnId }],
+          scheduledTime: NOW + 1000,
+        }),
+      ]);
       // The old hold came back once and the new prompt took a hold of its own.
       expect(admitted.user?.credits).toBe(credits - 5);
       expect(admitted.ledger).toEqual([
