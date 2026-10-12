@@ -52,56 +52,12 @@ async function seedReleases(
 }
 
 describe("contentRelease/compact/cycle", () => {
-  it("carries a deployment's completed floor and cycle out of the state row", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertTestState(ctx, { nextSequence: 4 });
-      const state = await ctx.db.query("contentState").unique();
-      assert.ok(state);
-      await ctx.db.patch("contentState", state._id, {
-        compactCursor: "resume-here",
-        compactFloor: 3,
-        compactFrom: 2,
-        compactPhase: "bindings",
-        compactStartedAt: 5,
-        compactedFloor: 2,
-      });
-    });
-
-    const carried = await t.mutation((ctx) =>
-      Effect.runPromise(
-        ensureCompactionRow().pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
-    );
-    const stored = await t.run(async (ctx) => ({
-      compaction: await ctx.db.query("contentCompaction").unique(),
-      state: await ctx.db.query("contentState").unique(),
-    }));
-
-    expect(carried).toEqual(stored.compaction);
-    expect(stored.compaction).toMatchObject({
-      compactCursor: "resume-here",
-      compactFloor: 3,
-      compactFrom: 2,
-      compactPhase: "bindings",
-      compactStartedAt: 5,
-      compactedFloor: 2,
-    });
-    expect(stored.state).not.toHaveProperty("compactCursor");
-    expect(stored.state).not.toHaveProperty("compactFloor");
-    expect(stored.state).not.toHaveProperty("compactFrom");
-    expect(stored.state).not.toHaveProperty("compactPhase");
-    expect(stored.state).not.toHaveProperty("compactStartedAt");
-    expect(stored.state).not.toHaveProperty("compactedFloor");
-  });
-  it("leaves a state row that carried no compaction untouched", async () => {
+  it("creates the compaction row with no completed floor the first time, and leaves the state row as it is", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => insertTestState(ctx, { nextSequence: 2 }));
     const before = await t.run((ctx) => ctx.db.query("contentState").unique());
 
-    await t.mutation((ctx) =>
+    const created = await t.mutation((ctx) =>
       Effect.runPromise(
         ensureCompactionRow().pipe(
           Effect.provide(mutationLayer(confectSchema, ctx))
@@ -109,12 +65,13 @@ describe("contentRelease/compact/cycle", () => {
       )
     );
 
+    expect(created).toMatchObject({ compactedFloor: 0, key: "primary" });
+    expect(
+      await t.run((ctx) => ctx.db.query("contentCompaction").unique())
+    ).toEqual(created);
     expect(await t.run((ctx) => ctx.db.query("contentState").unique())).toEqual(
       before
     );
-    expect(
-      await t.run((ctx) => ctx.db.query("contentCompaction").unique())
-    ).toMatchObject({ compactedFloor: 0 });
   });
   it("reads only the compaction row once it exists", async () => {
     const t = convexTest(schema, convexModules);

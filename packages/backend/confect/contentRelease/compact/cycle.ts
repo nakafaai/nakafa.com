@@ -5,12 +5,11 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import contentCompactionTable from "@repo/backend/confect/_generated/tables/contentCompaction";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { ensureState } from "@repo/backend/confect/contentRelease/model";
 import {
   compactionPhaseValidator,
   ROLLBACK_RETENTION_MS,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Array as Arr, Clock, Effect, Option, Schema, Struct } from "effect";
+import { Array as Arr, Clock, Effect, Option, Schema } from "effect";
 
 /** Checks one monotonic release-sequence value before index traversal. */
 export function isSequence(value: number) {
@@ -98,26 +97,7 @@ const loadCompaction = Effect.fn("contentRelease.loadCompaction")(function* () {
     );
 });
 
-/** The compaction fields `contentState` held before the compaction row existed. */
-const stateCompactionFields = [
-  "compactCursor",
-  "compactFloor",
-  "compactFrom",
-  "compactPhase",
-  "compactStartedAt",
-  "compactedFloor",
-] as const;
-
-/**
- * Creates the compaction row exactly once. A deployment that compacted before
- * this row existed keeps its completed floor and its cycle in flight: they move
- * here, and leave `contentState` in the same transaction.
- *
- * The carry is a temporary migration (packages/backend/AGENTS.md). Exit: dev
- * and production each hold the compaction row, and no `contentState` row holds
- * a compaction field. Cleanup: delete `stateCompactionFields`, the carry below
- * with its tests, and the six optional fields of the `contentState` table.
- */
+/** Creates the compaction row the first time compaction runs on a deployment. */
 export const ensureCompactionRow = Effect.fn(
   "contentRelease.ensureCompactionRow"
 )(function* () {
@@ -127,28 +107,10 @@ export const ensureCompactionRow = Effect.fn(
   }
   const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  const state = yield* ensureState();
   const id = yield* writer
     .table("contentCompaction")
-    .insert({
-      ...Struct.pick(state, stateCompactionFields),
-      compactedFloor: state.compactedFloor ?? 0,
-      key: "primary",
-    })
+    .insert({ compactedFloor: 0, key: "primary" })
     .pipe(Effect.orDie);
-  if (Arr.some(stateCompactionFields, (field) => state[field] !== undefined)) {
-    yield* writer
-      .table("contentState")
-      .patch(state._id, {
-        compactCursor: undefined,
-        compactFloor: undefined,
-        compactFrom: undefined,
-        compactPhase: undefined,
-        compactStartedAt: undefined,
-        compactedFloor: undefined,
-      })
-      .pipe(Effect.orDie);
-  }
   return yield* database.table("contentCompaction").get(id).pipe(Effect.orDie);
 });
 
