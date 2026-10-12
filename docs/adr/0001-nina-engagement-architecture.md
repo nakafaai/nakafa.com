@@ -54,23 +54,22 @@ reads the signed page once before the first model step and places it in that
 context within the page token budget. The model spends no forced tool step on
 it and asks Nakafa for other sections.
 
-Nakafa retrieval, external research, deterministic math, and the learner's memory
-are Agent tools implemented as Effect programs. Each is one capability
+Nakafa retrieval, external research, deterministic math, and the learner's
+memory are Agent tools implemented as Effect programs. Each is one capability
 definition in its own folder, listed once in `capability/registry.ts`: its name,
 the Schema of its input, the description and tool policy the model reads, the
 rule that offers it in a turn, and its run. One shared runner
 (`capability/define.ts`) builds every tool from its definition, so the policy
 check, the denial answer, the progress rows, the deadline, the failure
 classification and the settled outcome exist once. Specialist agents use the
-same Convex AI gateway provider and
-Agent usage handler. Tool results retain progressive evidence cards and final
-model-facing evidence, which never exceeds the evidence token budget: a
-truncated output says what it omitted and how to ask for it, and Nakafa reads
-continue by heading section, or by numbered part inside a section too long for
-one read, with the following sections listed first. Context compaction changes
-provider input only; it does
-not discard the stored transcript. Math uses deterministic computation, Nakafa
-uses authenticated signed content, and research admits retrieved sources.
+same Convex AI gateway provider and Agent usage handler. Tool results retain
+progressive evidence cards and final model-facing evidence, which never exceeds
+the evidence token budget: a truncated output says what it omitted and how to
+ask for it, and Nakafa reads continue by heading section, or by numbered part
+inside a section too long for one read, with the following sections listed
+first. Context compaction changes provider input only; it does not discard the
+stored transcript. Math uses deterministic computation, Nakafa uses
+authenticated signed content, and research admits retrieved sources.
 
 One collapsed Activity maps to one native `toolCallId`. Its children are the
 capability's published evidence artifacts, not an exhaustive specialist trace.
@@ -333,13 +332,13 @@ at each and what it leaves to the author.
    and keeps the outcome it states, or none. Enforced: `offered` and `run` have
    no default, so nothing is allowed by omission; the Schema types the input of
    `run`; the typed errors of `run` end as `CapabilityDenied` or `failed`, so
-   none stays unhandled. Left to the author: a defect of `run` is not caught, and
-   its message reaches Nina, the stored thread and the transcript as the text of
-   a tool error. So a capability that handles the learner's private words ends
-   the failure of each platform call it makes as a typed error that holds no
-   message, and answers it with `failed`, as the memory capability does for its
-   search (`MemoryReadError`). A defect anywhere else in a run is a bug and
-   stays visible.
+   none stays unhandled. Left to the author: a defect of `run` is not caught,
+   and its message reaches Nina, the stored thread and the transcript as the
+   text of a tool error. So a capability that handles the learner's private
+   words ends every failure of its run, a defect too, with a fixed line and no
+   message, and logs only the phase, as the memory capability does: its search
+   ends as `MemoryReadError`, and a defect anywhere else in its run ends the
+   same way.
 4. Add its name to `LearningCapabilityNameSchema` in `capability/spec.ts`, and
    its definition to the end of the record in `capability/registry.ts`. The
    order is the order of the tool list and of the tool policy, so it is part of
@@ -359,9 +358,10 @@ at each and what it leaves to the author.
 
 Left to the author, because the compiler cannot judge them: the routing prose
 that combines capabilities in `policy/tool.ts`, `step.ts` when the capability
-should open a turn that names a source, and the tests. No stored flag is added
-for a capability: `offered` reads the turn's context, and the allow flags of a
-turn page stay as they are.
+should open a turn that names a source (the first step forces only a capability
+the turn offers, because the SDK lists no other tool in it), and the tests. No
+stored flag is added for a capability: `offered` reads the turn's context, and
+the allow flags of a turn page stay as they are.
 
 ## Verification
 

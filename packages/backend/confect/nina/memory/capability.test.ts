@@ -165,14 +165,25 @@ describe("the memory capability in a turn", () => {
     expect(encodeJsonText(MutableRef.get(logged))).not.toContain("SNBT");
   });
 
-  it("does not read a defect of the run as a failed read: the call ends as the tool's error, with its message, for someone to see", async () => {
+  it("tells Nina it could not read memory, and keeps the message of a defect out of the thread and the log, when the run dies", async () => {
     vi.mocked(runMemory).mockReturnValueOnce(
-      Effect.die(new Error("Broken formatter"))
+      Effect.die(new Error("Private storage detail"))
     );
     const f = await createMemoryTest();
     const { errors, logged, result } = await search(f);
-    expect(result).toEqual([]);
-    expect(errors).toEqual(["Broken formatter"]);
-    expect(MutableRef.get(logged)).toEqual([]);
+    expect(result).toMatchObject([{ outcome: "failed" }]);
+    // The Agent would store the message of a tool error in the thread.
+    expect(errors).toEqual([]);
+    // The log tells a defect of the run from a read that failed by its phase.
+    expect(MutableRef.get(logged)).toEqual([
+      [
+        "Nina capability failed",
+        expect.objectContaining({ capability: "memory", phase: "run" }),
+      ],
+    ]);
+    expect(encodeJsonText(result)).not.toContain("Private storage detail");
+    expect(encodeJsonText(MutableRef.get(logged))).not.toContain(
+      "Private storage detail"
+    );
   });
 });

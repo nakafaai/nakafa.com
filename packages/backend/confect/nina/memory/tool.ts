@@ -54,8 +54,8 @@ const NOTHING =
  * Confect raises a call that the platform rejected as a defect, because
  * `QueryRunner` passes it no way to map the error, and an answer that does not
  * fit the contract of the search as a `SchemaError`. Both end at that call as a
- * `MemoryReadError`, so the capability can answer a failed read, and any other
- * defect stays a bug that someone sees.
+ * `MemoryReadError`, so the capability can tell a read that failed from a defect
+ * elsewhere in the run. It answers both the same way (`memoryCapability`).
  */
 export const runMemory = Effect.fn("nina.memory.tool")(function* ({
   query,

@@ -116,7 +116,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
           promptMessageId: turn.promptMessageId,
           // Nina is offered the capabilities the policy allows this turn, in
           // every step of it: not the memory tool while the learner's memory
-          // is paused.
+          // is paused. The first step starts only with one of them.
           activeTools: capabilities,
           abortSignal: stop,
           onChunk: ({ chunk }) => timing.observe(chunk),
@@ -129,7 +129,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
           },
           prepareStep: (step) =>
             runPromise(
-              startNinaStep(chatStep.begin, {
+              startNinaStep(chatStep.begin, capabilities, {
                 ...step,
                 messages: boundStep(restoreHeld(step.messages, held)),
               })
