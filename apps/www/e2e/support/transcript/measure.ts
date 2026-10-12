@@ -59,6 +59,17 @@ export function lines(locator: Locator) {
 }
 
 /**
+ * Whether an element holds more text than its box shows: the text that a line
+ * clamp cuts below its last line. `lines` reads the height of the box, which
+ * is the same for a title that fits in two lines and for one that is cut there.
+ */
+export function clamped(locator: Locator) {
+  return locator.evaluate(
+    (element) => element.scrollHeight > element.clientHeight
+  );
+}
+
+/**
  * How many pixels of its text an element of one line clips above and below its
  * own box. The ink of the text is measured on a canvas in the element's font,
  * from its baseline, and set against the box that clips it. The baseline is

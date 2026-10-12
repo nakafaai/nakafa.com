@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  clamped,
   clippedInk,
   cutText,
   lines,
@@ -7,7 +8,9 @@ import {
 } from "@/e2e/support/transcript/measure";
 import { onChat, onSheet } from "@/e2e/support/transcript/open";
 import {
+  EXERCISE_TITLE,
   failedWebSearch,
+  LESSON_TITLE,
   LONG_ADDRESS,
   LONG_HOST,
   legacy,
@@ -27,6 +30,10 @@ const SOURCE = 'a[data-slot="hover-card-trigger"]';
 const TITLE = '[data-slot="source-title"]';
 const HOST = '[data-slot="source-host"]';
 
+/** The ends of the title of 200 characters and of the file name, which a clamp at two lines cuts. */
+const TITLE_END = /Portal Belajar Matematika Daring\./u;
+const FILE_END = /Versi_2026\.pdf/u;
+
 /** The mark of a Thai title's tall vowels and the stacked marks of a Vietnamese one. */
 const TALL_TITLES = ["Đặng Thị Ngọc Hân", "แคลคูลัสเบื้องต้น"];
 
@@ -36,18 +43,23 @@ test.describe("Nina web sources on a phone", () => {
   test(
     "reads two results on one host apart, without a pointer",
     onChat(sameHost, { locale: "id" }, async (page) => {
-      const materi = page.getByRole("link", { name: "Materi Turunan Fungsi" });
-      const latihan = page.getByRole("link", {
-        name: "Latihan Turunan Fungsi",
-      });
+      const lesson = page.getByRole("link", { name: LESSON_TITLE });
+      const exercises = page.getByRole("link", { name: EXERCISE_TITLE });
 
       // A tap never opens the card of a pointer, so each title is on its row.
-      await expect(materi).toBeVisible();
-      await expect(latihan).toBeVisible();
-      await expect(materi).toContainText(LONG_HOST);
-      await expect(latihan).toContainText(LONG_HOST);
-      expect(await cutText(materi)).toEqual([]);
-      expect(await cutText(latihan)).toEqual([]);
+      await expect(lesson).toBeVisible();
+      await expect(exercises).toBeVisible();
+      await expect(lesson).toContainText(LONG_HOST);
+      await expect(exercises).toContainText(LONG_HOST);
+      expect(await cutText(lesson)).toEqual([]);
+      expect(await cutText(exercises)).toEqual([]);
+      // Only the last word tells the two titles apart, so it must show: each
+      // title takes two lines and none of it is cut. A title cut to one line, or
+      // cut after the second, fails here.
+      for (const row of [lesson, exercises]) {
+        expect(await lines(row.locator(TITLE))).toBe(2);
+        expect(await clamped(row.locator(TITLE))).toBe(false);
+      }
       expect(await overflow(page)).toBe(0);
     })
   );
@@ -62,7 +74,7 @@ test.describe("Nina web sources on a phone", () => {
       await expect(description).toHaveCount(0);
       // The card opens when the pointer enters the row, so it comes from outside.
       await page.mouse.move(2, 2);
-      await page.getByRole("link", { name: "Materi Turunan Fungsi" }).hover();
+      await page.getByRole("link", { name: LESSON_TITLE }).hover();
       await expect(description).toBeVisible();
       expect(await cutText(description)).toEqual([]);
     })
@@ -86,22 +98,46 @@ test.describe("Nina web sources on a phone", () => {
   );
 
   test(
-    "wraps a long host, a long title and a file name instead of cutting them",
+    "wraps a long host, a long title and a file name instead of cutting them sideways",
     onChat(sameHost, { locale: "id" }, async (page) => {
       const rows = page.locator(SOURCE);
-      const file = rows.filter({ hasText: "Modul_Matematika" });
-      const stuffed = rows.filter({ hasText: "Portal Belajar Matematika" });
 
-      await expect(file).toBeVisible();
-      await expect(stuffed).toBeVisible();
-      // A title of 200 characters shows two lines, and the row is still a link.
-      expect(await lines(stuffed.locator(TITLE))).toBe(2);
-      expect(await stuffed.getAttribute("href")).toContain(
-        "belajar.example.test"
-      );
+      await expect(rows.filter({ hasText: "Modul_Matematika" })).toBeVisible();
       // Nothing in any row is cut: not the file name, not the host of 33 characters.
       for (const row of await rows.all()) {
         expect(await cutText(row)).toEqual([]);
+      }
+    })
+  );
+
+  test(
+    "cuts a title that runs past two lines, and keeps all of it in the name of the link",
+    onChat(sameHost, { locale: "id" }, async (page) => {
+      const rows = page.locator(SOURCE);
+      // A title of 200 characters, and a file name of 63 that has no place to
+      // break: the end of each is what the cut takes, the extension of the file.
+      const cut = [
+        {
+          end: TITLE_END,
+          host: "belajar.example.test",
+          row: rows.filter({ hasText: "Portal Belajar Matematika" }),
+        },
+        {
+          end: FILE_END,
+          host: LONG_HOST,
+          row: rows.filter({ hasText: "Modul_Matematika" }),
+        },
+      ];
+
+      for (const { end, host, row } of cut) {
+        await expect(row).toBeVisible();
+        // A title shows two lines at most, by decision: the rest of it is cut.
+        // A reader who does not see the end still has it in the name of the
+        // link, and the row is still the link.
+        expect(await lines(row.locator(TITLE))).toBe(2);
+        expect(await clamped(row.locator(TITLE))).toBe(true);
+        await expect(row).toHaveAccessibleName(end);
+        expect(await row.getAttribute("href")).toContain(host);
       }
     })
   );
@@ -300,15 +336,16 @@ test.describe("Nina web sources in the sheet", () => {
   test(
     "reads two results on one host apart in the compact sheet",
     onSheet(sameHost, { locale: "id" }, async (page) => {
-      const materi = page.getByRole("link", { name: "Materi Turunan Fungsi" });
-      const latihan = page.getByRole("link", {
-        name: "Latihan Turunan Fungsi",
-      });
+      const lesson = page.getByRole("link", { name: LESSON_TITLE });
+      const exercises = page.getByRole("link", { name: EXERCISE_TITLE });
 
-      await expect(materi).toBeVisible();
-      await expect(latihan).toBeVisible();
-      expect(await cutText(materi)).toEqual([]);
-      expect(await cutText(latihan)).toEqual([]);
+      await expect(lesson).toBeVisible();
+      await expect(exercises).toBeVisible();
+      expect(await cutText(lesson)).toEqual([]);
+      expect(await cutText(exercises)).toEqual([]);
+      for (const row of [lesson, exercises]) {
+        expect(await clamped(row.locator(TITLE))).toBe(false);
+      }
     })
   );
 });

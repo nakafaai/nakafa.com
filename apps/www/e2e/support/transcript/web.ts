@@ -31,6 +31,16 @@ const LONG_TITLE =
  */
 export const LONG_ADDRESS = `https://${LONG_HOST}/unduhan/matematika/kelas-12/semester-1/bab-3/integral-tak-tentu/modul-pembelajaran-lengkap-contoh-soal-pembahasan-revisi-2026.pdf?unduh=1&sumber=beranda&kelas=12&mapel=matematika`;
 
+/**
+ * Two titles on one host that share all but their last word. Each is long
+ * enough to take two lines at 320 pixels, which the test measures, so a title
+ * cut to one line would hide the word that tells them apart.
+ */
+export const LESSON_TITLE =
+  "Turunan Fungsi Aljabar untuk Kelas 11 SMA - Materi";
+export const EXERCISE_TITLE =
+  "Turunan Fungsi Aljabar untuk Kelas 11 SMA - Latihan";
+
 /** The hosts whose icon the fixtures break or paint black. */
 const BROKEN_HOST = "broken-icon.example.test";
 const BLACK_HOST = "monochrome.example.test";
@@ -97,17 +107,17 @@ function replyOf(
   });
 }
 
-/** Two results on one host whose titles differ only in their last words, and the odd titles around them. */
+/** Two results on one host whose titles differ only in their last word, and the odd titles around them. */
 export const sameHost = replyOf("web-same-host", [
   search("web-same-host-1", "turunan fungsi", [
     found(
       `https://${LONG_HOST}/materi/turunan-fungsi`,
-      "Materi Turunan Fungsi",
+      LESSON_TITLE,
       "Penjelasan turunan fungsi aljabar dengan rumus dasar dan contoh soal."
     ),
     found(
       `https://${LONG_HOST}/latihan/turunan-fungsi`,
-      "Latihan Turunan Fungsi",
+      EXERCISE_TITLE,
       "Kumpulan soal turunan fungsi beserta pembahasannya."
     ),
     found(

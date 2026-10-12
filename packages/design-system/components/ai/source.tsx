@@ -83,9 +83,12 @@ interface SourceTriggerProps {
  * One cited source as a row a learner can read without a pointer: its icon, its
  * title and the host it came from. The whole row is the link, and a pointer
  * also opens the card with the description of the page. A source with no title
- * shows its host in the title's place. The lines of a title are 24 px high:
- * the clip at two lines would cut the tone marks of Thai, which stand about
- * 16 px above the baseline at this size, out of a line of 20 px.
+ * shows its host in the title's place. A title shows two lines at most, by
+ * decision: the rest is cut, and all of it stays in the name of the link. Two
+ * titles on one host that share their first two lines look the same. The lines
+ * of a title are 24 px high: the clip at two lines would cut the tone marks of
+ * Thai, which stand about 16 px above the baseline at this size, out of a line
+ * of 20 px.
  */
 export function SourceTrigger({
   className,
