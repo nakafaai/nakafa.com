@@ -151,7 +151,9 @@ const collect = <E>(stream: Stream.Stream<Uint8Array, E>) =>
 /**
  * Runs the Convex CLI once, with the settings of `ConvexCli` on top of the
  * environment it inherits, and returns what it printed. A failed command
- * reports its error output without any of `sensitiveValues`.
+ * reports the start of its error output without any of `sensitiveValues`,
+ * because `convex run` names the function and the reason first, and a function
+ * it cannot find is followed by the list of every function of the deployment.
  */
 export const runConvex = Effect.fn("development.runConvex")(function* (
   operation: string,
@@ -186,7 +188,11 @@ export const runConvex = Effect.fn("development.runConvex")(function* (
     })
   );
   if (code !== 0) {
-    const detail = sanitizeAcceptanceCommandError(stderr, sensitiveValues);
+    const detail = sanitizeAcceptanceCommandError(
+      stderr,
+      sensitiveValues,
+      "start"
+    );
     return yield* cliError(
       detail.length > 0
         ? `${operation} failed: ${detail}`

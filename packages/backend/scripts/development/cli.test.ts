@@ -19,8 +19,10 @@ import {
 /**
  * A double for the Convex CLI. Its first argument says what it does: print its
  * folder, arguments and three settings of its environment, fail with an error
- * text, never answer, or fail without an error text. A setting that is not set
- * prints as null, and a blank one as an empty text.
+ * text, fail as `convex run` does for a function it cannot find (the reason,
+ * and then a list of 400 functions), never answer, or fail without an error
+ * text. A setting that is not set prints as null, and a blank one as an empty
+ * text.
  */
 const FAKE_CLI = `
 const [mode, ...rest] = process.argv.slice(2);
@@ -41,6 +43,16 @@ if (mode === "echo") {
 } else if (mode === "fail") {
   process.stderr.write("\\u001b[31mboom " + rest.join(" ") + "\\u001b[0m");
   process.exit(3);
+} else if (mode === "list") {
+  const functions = Array.from(
+    { length: 400 },
+    (_, index) => "• module/" + index + ":handler"
+  );
+  process.stderr.write(
+    "✖ Failed to run function \\"" + rest[0] + "\\":\\nError: Could not find function\\n\\nAvailable functions:\\n" +
+      functions.join("\\n")
+  );
+  process.exit(1);
 } else if (mode === "hang") {
   setInterval(() => {}, 1000);
 } else {
@@ -160,6 +172,29 @@ describe("the Convex CLI of the dev deployment", () => {
           _tag: "DevelopmentCliError",
           message: "Secret step failed: boom [redacted] and more",
         });
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
+    "reports the start of a long error output, where the CLI says why, and not the list after it",
+    () =>
+      Effect.gen(function* () {
+        const { cli } = yield* fixture;
+
+        const error = yield* runConvex("Missing function", [
+          "list",
+          "contents/sections/compare:rank",
+        ]).pipe(Effect.provideService(ConvexCli, cli), Effect.flip);
+
+        const prefix = "Missing function failed: ";
+        expect(error._tag).toBe("DevelopmentCliError");
+        expect(
+          error.message.startsWith(
+            `${prefix}✖ Failed to run function "contents/sections/compare:rank": Error: Could not find function Available functions: • module/0:handler`
+          )
+        ).toBe(true);
+        expect(error.message).not.toContain("module/399:handler");
+        expect(error.message).toHaveLength(prefix.length + 2000);
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
