@@ -8,7 +8,7 @@ import {
   MEMORY_CAPTURE_LIMIT,
   type NinaMemoryCandidate,
 } from "@repo/backend/confect/nina/memory.spec";
-import { Effect, String as Str } from "effect";
+import { Array as Arr, Effect, String as Str } from "effect";
 
 /**
  * Whether the capture call is worth making for a message: it has a character
@@ -48,21 +48,30 @@ export const isLasting = Effect.fn("nina.memory.lasting")(function* (
  * model separates notes better when it reads one alone (ADR 0022), and the
  * requests run at the same time. A capture proposes at most
  * `MEMORY_CAPTURE_LIMIT` candidates, which is also the most requests in flight.
- * A decision that cannot be made fails with the typed error, and the requests
- * that are still open end, so that none of the candidates is kept.
+ * The candidates that stay keep the order in which the capture model proposed
+ * them, whichever request answers first, because the write settles a memory with
+ * the first candidate that names it (`memory/write`). A decision that cannot be
+ * made fails with the typed error, and the requests that are still open end, so
+ * that none of the candidates is kept.
  */
 export const judgeCandidates = Effect.fn("nina.memory.judgeCandidates")(
   function* <
     Candidate extends Pick<typeof NinaMemoryCandidate.Type, "quote" | "text">,
   >(candidates: readonly Candidate[]) {
-    return yield* Effect.filter(
+    // `forEach` gives the verdicts in the order of the candidates. `filter` would
+    // keep a candidate when its own request answers, so a faster request would
+    // put its candidate first.
+    const verdicts = yield* Effect.forEach(
       candidates,
-      (candidate) =>
-        Effect.map(
-          judge(["ownNote", "private"], noteText(candidate)),
-          (verdict) => verdict.ownNote && !verdict.private
-        ),
+      (candidate) => judge(["ownNote", "private"], noteText(candidate)),
       { concurrency: MEMORY_CAPTURE_LIMIT }
     ).pipe(Effect.mapError(judgmentFailure));
+    return Arr.map(
+      Arr.filter(
+        Arr.zip(candidates, verdicts),
+        ([, verdict]) => verdict.ownNote && !verdict.private
+      ),
+      ([candidate]) => candidate
+    );
   }
 );

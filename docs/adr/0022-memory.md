@@ -107,9 +107,12 @@ the learner can read, edit and delete every one. After a complete turn:
    address, an identity or account number, a password, or information about
    health, religion, ethnicity, political views or money. A candidate that is
    not the learner's own note, or is private, is dropped, and it is not
-   rewritten, because a rewrite could say something the learner did not.
-   Memories saved before this rule keep their words until the learner says them
-   again, which replaces the words of a memory Nina wrote, or edits them.
+   rewritten, because a rewrite could say something the learner did not. The
+   candidates that stay keep the order in which the capture model proposed
+   them, whichever request is answered first, because the write takes the first
+   of the candidates that settle one memory. Memories saved before this rule
+   keep their words until the learner says them again, which replaces the words
+   of a memory Nina wrote, or edits them.
 4. The write first checks what could have changed while the model read the
    message. Paused memory, a deleted turn, and a memory that the call read and
    that is gone now (the learner removed it, or it ended) each stop it. It looks

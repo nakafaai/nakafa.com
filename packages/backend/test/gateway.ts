@@ -152,6 +152,38 @@ export function decidesTogether(count: number, probabilityOf: ProbabilityOf) {
 }
 
 /**
+ * A decision model like `decides` that answers the request about `text` only
+ * after the other `count - 1` requests are answered, so that the requests finish
+ * in another order than they start. A program that does not have all `count`
+ * requests open at once waits for ever. It returns a reference to the requests
+ * in the order they were answered.
+ */
+export function decidesLast(
+  text: string,
+  count: number,
+  probabilityOf: ProbabilityOf
+) {
+  const finished = MutableRef.make<readonly DecisionRequest[]>([]);
+  // With one request there are no others to wait for.
+  const othersFinished = Latch.makeUnsafe(count < 2);
+  provider.decisionModel.mockReturnValue(
+    new DecisionMockModel({
+      doDecide: async (request) => {
+        if (textOf(request) === text) {
+          await Effect.runPromise(othersFinished.await);
+        }
+        MutableRef.update(finished, Arr.append(request));
+        if (Arr.length(MutableRef.get(finished)) === count - 1) {
+          othersFinished.openUnsafe();
+        }
+        return answered(request, probabilityOf);
+      },
+    })
+  );
+  return finished;
+}
+
+/**
  * A decision model like `decides` that keeps every request open for a moment,
  * so that the requests a program asks at once are open together. It returns a
  * reference to the most requests that were open at once.
