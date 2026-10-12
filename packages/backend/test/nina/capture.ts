@@ -11,7 +11,14 @@ import { memoryTools } from "@repo/backend/test/nina/memory";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Logger, MutableRef, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Logger,
+  Match,
+  MutableRef,
+  Schema,
+} from "effect";
 
 /** What the learner says in a capture test, unless the test says something else. */
 export const MESSAGE = "Aku kelas 12 dan mau ikut SNBT 2027.";
@@ -30,18 +37,26 @@ export const unavailable = (fact: object) => [
 
 /**
  * A decision model that finds the message lasting or not, and each candidate,
- * in the order they come, private or not. Its probabilities are far from every
- * threshold, so a test never depends on the number a threshold has.
+ * in the order they come, private or not and the learner's own note or not.
+ * Its probabilities are far from every threshold, so a test never depends on
+ * the number a threshold has. A candidate is the learner's own note and holds
+ * nothing private, unless the test says otherwise.
  */
 export function judges({
   lasting = true,
+  notOwn = [],
   privates = [],
 }: {
   readonly lasting?: boolean;
+  readonly notOwn?: readonly boolean[];
   readonly privates?: readonly boolean[];
 } = {}) {
   return decides((judgment, index) => {
-    const yes = judgment === "lasting" ? lasting : privates[index] === true;
+    const yes = Match.value(judgment).pipe(
+      Match.when("lasting", () => lasting),
+      Match.when("ownNote", () => notOwn[index] !== true),
+      Match.orElse(() => privates[index] === true)
+    );
     return yes ? 0.99 : 0.01;
   });
 }

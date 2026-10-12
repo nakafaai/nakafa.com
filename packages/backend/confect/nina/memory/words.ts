@@ -31,11 +31,27 @@ function stem(word: string) {
 }
 
 /**
+ * The whole words of a text, each once, in the order it first appears. The text
+ * is normalized (Unicode NFKC, lower case) and split at the word boundaries of
+ * the platform; a segment that is a word or a number stays, and punctuation,
+ * spaces and emoji go.
+ */
+function wholeWordsOf(text: string) {
+  return pipe(
+    text,
+    Str.normalize("NFKC"),
+    Str.toLowerCase,
+    (normalized) => Arr.fromIterable(segmenter.segment(normalized)),
+    Arr.filter((part) => part.isWordLike === true),
+    Arr.map((part) => part.segment),
+    Arr.dedupe
+  );
+}
+
+/**
  * The words a text is found by. Both sides use this one function, the writer
- * that indexes a memory and every search, so they agree on what a word is.
- * The text is normalized (Unicode NFKC, lower case) and split at the word
- * boundaries of the platform; a segment that is a word or a number stays, and
- * punctuation, spaces and emoji go. Each word stays as its first six
+ * that indexes a memory and every search, so they agree on what a word is: the
+ * whole words of the text (`wholeWordsOf`), each cut to its first six
  * characters, once, in the order it first appears. No list of words and no
  * minimum length decides what a word is, because both would hold for some
  * languages and not for others: how much a word says about a memory is the
@@ -46,27 +62,24 @@ function stem(word: string) {
  * index (`WORD_INDEX_VERSION` in `memory/keys`).
  */
 export function wordsOf(text: string) {
-  return pipe(
-    text,
-    Str.normalize("NFKC"),
-    Str.toLowerCase,
-    (normalized) => Arr.fromIterable(segmenter.segment(normalized)),
-    Arr.filter((part) => part.isWordLike === true),
-    Arr.map((part) => stem(part.segment)),
-    Arr.dedupe
-  );
+  return pipe(wholeWordsOf(text), Arr.map(stem), Arr.dedupe);
 }
 
 /**
- * The `limit` longest of some words, the longest first; words of one length
- * stay in the order they came in. A search looks up only so many keys. A word
- * that is frequent in a language is short in it (articles, particles,
- * pronouns), so the long words say the most about a text, in every language.
+ * The words a search looks up first: those of the `limit` longest whole words
+ * of a text, the longest first, and words of one length in the order they came
+ * in. A search looks up only so many keys. A word that is frequent in a
+ * language is short in it (articles, particles, pronouns), so the long words
+ * say the most about a text, in every language. The whole word is measured,
+ * not the six characters the index keeps of it, because every long word is six
+ * characters once cut and none would be longer than another.
  */
-export function longest(words: readonly string[], limit: number) {
+export function longestWords(text: string, limit: number) {
   return pipe(
-    words,
+    wholeWordsOf(text),
     Arr.sort(Order.flip(Order.mapInput(Order.Number, sizeOf))),
+    Arr.map(stem),
+    Arr.dedupe,
     Arr.take(limit)
   );
 }

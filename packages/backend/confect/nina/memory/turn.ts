@@ -37,9 +37,10 @@ export const read = FunctionImpl.make(
 );
 
 /**
- * Whether the learner paused memory. The capture asks before it sends the
- * learner's message to any model, and before it searches a single memory, so a
- * paused learner's message goes nowhere.
+ * Whether the learner paused memory. The capture asks it once, before it sends
+ * the learner's message to any model and before it reads a single memory, so a
+ * paused learner's message goes nowhere. The capture write reads it again as
+ * the authority, for a learner who pauses while the models read.
  */
 export const paused = FunctionImpl.make(
   schema,
@@ -53,8 +54,9 @@ export const paused = FunctionImpl.make(
 /**
  * What the capture call reads: the account profile and the at most
  * `MEMORY_KNOWN_LIMIT` memories that match the learner's message and the open
- * page best. While memory is paused, no memory is read, and a memory that
- * "Delete all" took is never read.
+ * page best, the best first. While memory is paused, no memory is read, and a
+ * memory that "Delete all" took is never read. The caller asks `paused` before
+ * it calls this, so the answer carries no pause flag.
  */
 export const known = FunctionImpl.make(
   schema,
@@ -64,7 +66,7 @@ export const known = FunctionImpl.make(
     const profile = yield* readLearnerProfile(userId);
     const { clearedAt, paused } = yield* readMemoryState(userId);
     if (paused) {
-      return { known: [], paused: true, profile };
+      return { known: [], profile };
     }
     return {
       known: Arr.map(
@@ -78,7 +80,6 @@ export const known = FunctionImpl.make(
         }),
         toNote
       ),
-      paused: false,
       profile,
     };
   })

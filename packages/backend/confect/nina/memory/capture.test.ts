@@ -3,7 +3,6 @@ import { saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
 import { provider } from "@repo/backend/test/gateway";
 import {
   answers,
@@ -16,7 +15,7 @@ import {
 } from "@repo/backend/test/nina/capture";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Experimental_DecisionMockModelV4 as DecisionMockModel } from "ai/test";
-import { Array as Arr, MutableRef, String as Str } from "effect";
+import { Array as Arr, MutableRef, Record as Rec, String as Str } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -40,11 +39,9 @@ afterEach(() => {
   provider.languageModel.mockReset();
 });
 
-/** How many known memories a prompt lists, one line each. */
-function listed(prompt: string) {
-  return Arr.length(
-    Arr.filter(Str.split(prompt, "\\n"), Str.startsWith("- ["))
-  );
+/** The lines of a prompt that list a known memory, one line each. */
+function lines(prompt: string) {
+  return Arr.filter(Str.split(prompt, "\\n"), Str.startsWith("- ["));
 }
 
 describe("memory capture", () => {
@@ -62,19 +59,25 @@ describe("memory capture", () => {
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
-  it("asks the capture model about a message in a script without spaces, because the decision model reads every language", async () => {
-    const f = await createCapturingTest(
-      "高校三年生で、来年は東京大学を目指しています。確率が苦手です。"
-    );
+  it("asks the capture model about a message in a script without spaces, because the decision model reads every language, and sends that decision the message alone", async () => {
+    const message =
+      "高校三年生で、来年は東京大学を目指しています。確率が苦手です。";
+    const f = await createCapturingTest(message);
     const model = answers({
       kind: "level",
       quote: "高校三年生",
       text: "高校三年生。",
     });
+    const { requests } = judges();
     await f.capture();
     expect(model.doGenerateCalls).toHaveLength(1);
     expect(await f.texts()).toEqual(["高校三年生。"]);
     expect((await f.turn())?.remembered).toBe(1);
+    // The first request judged the message, the second judged the candidate.
+    expect(Arr.map(requests(), (request) => request.state)).toEqual([
+      [{ text: message, type: "text" }],
+      [{ text: "Note: 高校三年生。\nQuote: 高校三年生", type: "text" }],
+    ]);
   });
 
   it("asks no model about a prompt that holds no words of the learner", async () => {
@@ -114,23 +117,28 @@ describe("memory capture", () => {
     expect(await f.stored()).toEqual([]);
   });
 
-  it("asks the capture model nothing when the learner pauses memory while the decision is made", async () => {
+  it("reads the pause once before any model, and saves nothing when the learner pauses memory while the models read, because the write reads it again as the authority", async () => {
     const f = await createCapturingTest();
     const model = answers(level);
     provider.decisionModel.mockReturnValue(
       new DecisionMockModel({
-        doDecide: async () => {
+        doDecide: async ({ questions }) => {
           await f.owner.mutation(pause, { paused: true });
           return {
-            answers: { "lasting.0": { probability: 0.99, type: "boolean" } },
+            // Lasting and the learner's own note, and nothing private.
+            answers: Rec.map(questions, (_, id) => ({
+              probability: Str.startsWith("private")(id) ? 0.01 : 0.99,
+              type: "boolean" as const,
+            })),
             warnings: [],
           };
         },
       })
     );
     await f.capture();
-    expect(model.doGenerateCalls).toHaveLength(0);
+    expect(model.doGenerateCalls).toHaveLength(1);
     expect(await f.stored()).toEqual([]);
+    expect((await f.turn())?.remembered).toBeUndefined();
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
@@ -168,59 +176,55 @@ describe("memory capture", () => {
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
-  it("shows the model the memories it knows and lets it rewrite one by its id", async () => {
+  it("shows the model the memories it knows by their place on the list and lets it restate one by its number", async () => {
     const f = await createCapturingTest();
     answers(level);
     await f.capture();
-    const [stored] = await f.stored();
-    const model = answers({
-      ...level,
-      known: stored?._id ?? "missing",
-      text: "Kelas 12 IPA.",
-    });
+    const model = answers({ ...level, known: 1, text: "Kelas 12 IPA." });
     await f.capture();
     expect(encodeJsonText(model.doGenerateCalls[0]?.prompt)).toContain(
-      `- [${stored?._id}] (level) Kelas 12.`
+      "- [1] (level) Kelas 12."
     );
     expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
     expect(await f.stored()).toHaveLength(1);
   });
 
-  it("shows the model the twelve memories that match the message best, not every memory", async () => {
+  it("shows the model the twelve memories that match the message best, the best first and numbered, not every memory", async () => {
     const f = await createCapturingTest();
-    await f.fill(30, {
-      author: "learner",
-      text: "Aku belajar kelas dua belas",
-    });
+    const said = (index: number) => `Aku belajar kelas ${index.toString(36)}`;
+    for (const index of Arr.range(0, 29)) {
+      await f.seed({
+        author: "learner",
+        confirmedAt: index + 1,
+        text: said(index),
+      });
+    }
     await f.seed({ confirmedAt: 99, text: "Hobi saya main gitar" });
-    const [hobby, ...newest] = Arr.reverse(await f.stored());
     const model = answers(level);
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    // The newest twelve of the thirty that hold a word of the message.
-    expect(listed(prompt)).toBe(12);
-    for (const row of Arr.take(newest, 12)) {
-      expect(prompt).toContain(`- [${row._id}]`);
-    }
-    expect(prompt).not.toContain(`- [${newest[12]?._id}]`);
-    expect(prompt).not.toContain(`- [${hobby?._id}]`);
+    // The newest twelve of the thirty that hold a word of the message, the
+    // newest first: the hobby holds none.
+    expect(lines(prompt)).toEqual(
+      Arr.makeBy(12, (place) => `- [${place + 1}] ${said(29 - place)}`)
+    );
   });
 
   it("shows the model the memory linked to the open page, though its words match nothing", async () => {
     const f = await createCapturingTest();
     await f.openLesson(`asset:en:${LESSON}`, SLUG);
-    const id = await f.seed({
+    await f.seed({
       text: "Hobi saya main gitar",
       topics: [`lesson:${LESSON}`],
     });
     const model = answers(level);
     await f.capture();
     expect(encodeJsonText(model.doGenerateCalls[0]?.prompt)).toContain(
-      `- [${id}] (goal) Hobi saya main gitar`
+      "- [1] (goal) Hobi saya main gitar"
     );
   });
 
-  it("cuts the list of known memories at its token budget and says that others are left out", async () => {
+  it("cuts the list of known memories at its token budget, says that others are left out, and lets no number name one the model could not read", async () => {
     const f = await createCapturingTest();
     // Twelve memories of 236 rare characters each are more than the model reads.
     const rare = Arr.join(
@@ -228,11 +232,18 @@ describe("memory capture", () => {
       ""
     );
     await f.fill(12, { author: "learner", text: `kelas ${rare}` });
-    const model = answers(level);
+    // The model names the twelfth place, which the cut list does not reach.
+    const model = answers({ ...level, known: 12 });
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     expect(prompt).toContain("Other memories are not listed.");
-    expect(listed(prompt)).toBeLessThan(12);
+    expect(Arr.length(lines(prompt))).toBeLessThan(12);
+    // It names nothing, so the candidate is a new memory and no memory is confirmed.
+    expect(await f.stored()).toHaveLength(13);
+    expect(Arr.map(await f.stored(), (row) => row.confirmedAt)).toEqual([
+      ...Arr.makeBy(12, (index) => index + 1),
+      NOW,
+    ]);
   });
 
   it("saves nothing when the learner removes a memory while the model reads the message", async () => {
@@ -240,7 +251,7 @@ describe("memory capture", () => {
     const id = await f.seed({ kind: "level", text: "Kelas 11." });
     answersAfter(() => f.owner.mutation(remove, { id }), {
       ...level,
-      known: id,
+      known: 1,
     });
     await f.capture();
     expect(await f.stored()).toEqual([]);
@@ -267,26 +278,28 @@ describe("memory capture", () => {
     expect(await f.stored()).toHaveLength(14);
   });
 
-  it("shows the model a memory with its title and its first 240 characters, and keeps what the learner wrote when the model names it and says something else", async () => {
+  it("shows the model a memory with its title and its first 240 characters, and keeps the words of a memory the learner wrote when the model names it", async () => {
     const f = await createCapturingTest();
-    const id = await f.seed({
+    await f.seed({
       author: "learner",
       text: `Kelas 11.${"x".repeat(1991)}`,
       title: "Sekolah",
     });
     const [before] = await f.stored();
-    const model = answers({ ...level, known: id, text: "Kelas 12 IPA." });
+    const model = answers({ ...level, known: 1, text: "Kelas 12 IPA." });
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     // The title with its colon and the first words take 18 of the 240.
-    expect(prompt).toContain(
-      `- [${id}] Sekolah: Kelas 11.${"x".repeat(222)}...`
-    );
+    expect(prompt).toContain(`- [1] Sekolah: Kelas 11.${"x".repeat(222)}...`);
     expect(prompt).not.toContain("x".repeat(223));
-    const [learners, written] = await f.stored();
-    // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
-    expect(learners).toStrictEqual(before);
-    expect(written).toMatchObject({ author: "nina", kind: "level" });
+    const [after, ...others] = await f.stored();
+    expect(others).toEqual([]);
+    // The model said the new sentence restates the memory, so the memory is
+    // confirmed and keeps its words. `toStrictEqual` compares the sealed bytes;
+    // `toEqual` takes any two buffers for equal.
+    expect(after).toMatchObject({ author: "learner", confirmedAt: NOW });
+    expect(after?.text).toStrictEqual(before?.text);
+    expect(after?.title).toStrictEqual(before?.title);
   });
 
   it("saves a situation with the end of its last day and links a memory to the lesson and the paths of the open page", async () => {
@@ -379,13 +392,39 @@ describe("memory capture", () => {
         },
       ],
       [
-        { text: "Text 1:\nKelas 12.\nAku kelas 12", type: "text" },
+        { text: "Text 1:\nNote: Kelas 12.\nQuote: Aku kelas 12", type: "text" },
         {
-          text: "Text 2:\nNomor telepon 0812 3456 7890.\nnomor teleponku 0812 3456 7890",
+          text: "Text 2:\nNote: Nomor telepon 0812 3456 7890.\nQuote: nomor teleponku 0812 3456 7890",
           type: "text",
         },
       ],
     ]);
+    // Both judgments of both candidates were asked in that one request.
+    expect(
+      Arr.map(requests(), (request) => Rec.keys(request.questions))
+    ).toEqual([
+      ["lasting.0"],
+      ["ownNote.0", "ownNote.1", "private.0", "private.1"],
+    ]);
+    expect(MutableRef.get(f.logged)).toEqual([]);
+  });
+
+  it("drops a candidate that the decision model finds is not the learner's own note and keeps the clean one beside it, in any language", async () => {
+    const f = await createCapturingTest(
+      "高校三年生で、確率が苦手です。来年は東京大学を目指しています。"
+    );
+    answers(
+      {
+        kind: "level",
+        quote: "高校三年生",
+        text: "学習者は高校三年生です。",
+      },
+      { kind: "struggle", quote: "確率が苦手です", text: "確率が苦手です。" }
+    );
+    judges({ notOwn: [true, false] });
+    await f.capture();
+    expect(await f.texts()).toEqual(["確率が苦手です。"]);
+    expect((await f.turn())?.remembered).toBe(1);
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
@@ -400,58 +439,35 @@ describe("memory capture", () => {
 });
 
 describe("memory capture wording", () => {
-  /** Three candidates that quote the same words of the learner. */
-  const candidates = (
-    quote: string,
-    ...texts: readonly [string, string, string]
-  ) =>
-    Arr.map(texts, (text): typeof NinaMemoryCandidate.Type => ({
-      kind: "level",
-      quote,
-      text,
-    }));
+  it("saves the fact of a message and drops the sentences that the decision model finds describe the learner from outside, whatever their words", async () => {
+    const f = await createCapturingTest(
+      "Aku kelas 12 IPA dan lebih suka belajar dengan contoh soal dulu sebelum rumus."
+    );
+    const quote = "aku kelas 12 ipa";
+    answers(
+      { kind: "level", quote, text: "Learner berada di kelas 12 IPA." },
+      { kind: "level", quote, text: "Siswa kelas 12 IPA." },
+      { kind: "level", quote, text: "Kelas 12 IPA." }
+    );
+    // The verdicts are the model's alone: no word of a sentence decides them.
+    judges({ notOwn: [true, true, false] });
+    await f.capture();
+    expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
+    expect(MutableRef.get(f.logged)).toEqual([]);
+  });
 
-  it.each([
-    [
-      "Indonesian",
-      "Aku kelas 12 IPA dan lebih suka belajar dengan contoh soal dulu sebelum rumus.",
-      "aku kelas 12 ipa",
-      [
-        "Learner berada di kelas 12 IPA.",
-        "Siswa lebih suka contoh soal dulu sebelum rumus.",
-        "Kelas 12 IPA.",
-      ],
-    ],
-    [
-      "English",
-      "I'm in grade 12 and I prefer worked examples before formulas.",
-      "i'm in grade 12",
-      [
-        "The learner is in grade 12.",
-        "Student prefers worked examples before formulas.",
-        "In grade 12.",
-      ],
-    ],
-    [
-      "German",
-      "Ich bin in Klasse 12 und lerne lieber erst mit Beispielaufgaben.",
-      "ich bin in klasse 12",
-      [
-        "Der Lernende ist in Klasse 12.",
-        "Schüler lernt lieber erst mit Beispielaufgaben.",
-        "Klasse 12.",
-      ],
-    ],
-  ] as const)(
-    "saves the fact of an %s message and drops the sentences that label the learner",
-    async (_language, message, quote, [first, second, clean]) => {
-      const f = await createCapturingTest(message);
-      answers(...candidates(quote, first, second, clean));
-      await f.capture();
-      expect(await f.texts()).toEqual([clean]);
-      expect(MutableRef.get(f.logged)).toEqual([]);
-    }
-  );
+  it("keeps a sentence that starts with a word that names the learner when the decision model finds it is the learner's own note", async () => {
+    const f = await createCapturingTest(
+      "User experience design is hard for me."
+    );
+    answers({
+      kind: "struggle",
+      quote: "User experience design is hard",
+      text: "User experience design is hard.",
+    });
+    await f.capture();
+    expect(await f.texts()).toEqual(["User experience design is hard."]);
+  });
 
   it("tells the model to state the fact without naming the learner, with a good and a bad example in each language", async () => {
     const f = await createCapturingTest();

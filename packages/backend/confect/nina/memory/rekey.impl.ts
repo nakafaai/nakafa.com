@@ -42,13 +42,17 @@ const rekeyMemory = Effect.fn("nina.memory.rekey.memory")(function* (
  *
  * Temporary migration (ADR 0022). Version 2 of the word index changed what a
  * word is, so a memory written before it holds word keys that no search finds.
- * A memory is also re-keyed by its next write or confirmation, and this
- * function re-keys the others. The operator runs it with the Convex CLI against
- * dev and then production, one call after another with the cursor of the call
- * before, until `done` is true, and once more to see `rekeyed` at 0 over the
- * whole table. Cleanup: when dev and production both show that, delete this
- * file, `rekey.spec.ts`, `rekey.impl.test.ts` and their generated functions.
- * The version in `memory/keys` stays: it is part of every key.
+ * A memory is re-keyed by its next write (the learner's edit, or a capture that
+ * names it), and this function re-keys the others. Deploy first, and then run
+ * it at once on that deployment: until it is `done`, a memory that holds only
+ * version 1 keys is found through its topics and not through its words, and a
+ * capture that restates it, because the model never saw it, adds a copy. The
+ * operator runs it with the Convex CLI against dev and then production, one
+ * call after another with the cursor of the call before, until `done` is true,
+ * and once more to see `rekeyed` at 0 over the whole table. Cleanup: when dev
+ * and production both show that, delete this file, `rekey.spec.ts`,
+ * `rekey.impl.test.ts` and their generated functions. The version in
+ * `memory/keys` stays: it is part of every key.
  */
 const page = FunctionImpl.make(
   schema,

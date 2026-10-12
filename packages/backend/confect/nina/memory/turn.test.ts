@@ -116,7 +116,6 @@ describe("Nina memory for a turn", () => {
       topics: [LESSON],
       userId,
     });
-    expect(capture.paused).toBe(false);
     expect(capture.profile).toEqual({});
     expect(Arr.length(capture.known)).toBe(12);
     // The memory linked to the page ranks first, though it is the oldest.
@@ -152,7 +151,7 @@ describe("Nina memory for a turn", () => {
         topics: [LESSON],
         userId,
       })
-    ).toEqual({ known: [], paused: true, profile: { focus: "tryout" } });
+    ).toEqual({ known: [], profile: { focus: "tryout" } });
     await f.owner.mutation(pause, { paused: false });
     expect(
       words((await f.t.query(read, { now: NOW, topics: [], userId })).prompt)
@@ -197,7 +196,7 @@ describe("Nina memory for a turn after Delete all", () => {
         topics: [LESSON],
         userId,
       })
-    ).toMatchObject({ known: [], paused: false });
+    ).toMatchObject({ known: [] });
   });
 
   it("reads the memories confirmed after the request, and only those", async () => {

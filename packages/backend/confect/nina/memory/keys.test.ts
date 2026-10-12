@@ -258,7 +258,10 @@ describe("memory keys over time", () => {
       text: "Saya belajar matematika",
       topics: [LESSON],
     });
+    // The memory was stored first, so it is the first the capture call lists,
+    // and the candidate that restates it names that place.
     const again = candidate({
+      known: 1,
       quote: "saya belajar matematika",
       text: "Saya belajar matematika",
     });

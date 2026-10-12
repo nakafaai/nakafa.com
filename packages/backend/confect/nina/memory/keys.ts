@@ -22,8 +22,8 @@ type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
  * are blinded for the field `words`. Version 2 reads them from the word
  * boundaries of the platform (`Intl.Segmenter`), with no list and no minimum
  * length. Change what a word is, and this number changes with it; a memory is
- * re-keyed the next time it is written or confirmed (`syncKeys` deletes the keys
- * it should not have).
+ * re-keyed the next time it is written (`syncKeys` deletes the keys it should
+ * not have), and the temporary `nina/memory/rekey:page` re-keys the rest.
  */
 const WORD_INDEX_VERSION = 2;
 

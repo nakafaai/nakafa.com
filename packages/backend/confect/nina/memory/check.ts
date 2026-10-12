@@ -1,4 +1,3 @@
-import { labelsLearner } from "@repo/backend/confect/nina/memory/label";
 import { hasWords } from "@repo/backend/confect/nina/memory/match";
 import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
 import {
@@ -45,7 +44,6 @@ function isSupported(candidate: Candidate, said: string, now: number) {
   return (
     quote !== "" &&
     hasWords(candidate.text) &&
-    !labelsLearner(candidate.text, said) &&
     Str.includes(quote)(said) &&
     (candidate.kind !== "situation" || endsInTime(candidate.until, now))
   );
@@ -54,10 +52,10 @@ function isSupported(candidate: Candidate, said: string, now: number) {
 /**
  * Keeps the candidates the learner's own words support. A candidate stays only
  * when its quote is in the message, its text says something (it has a letter or
- * a digit) and does not label the learner (`labelsLearner`), and a situation
- * ends today or later. Only a situation keeps its end date. Whether a candidate
- * holds something private is not decided here: the decision model says so
- * (`judgment/catalog`).
+ * a digit), and a situation ends today or later. Only a situation keeps its end
+ * date. This reads structure and never meaning: whether a candidate is the
+ * learner's own note, or holds something private, is for the decision model to
+ * say (`judgment/catalog`).
  */
 export function checkCandidates(
   message: string,

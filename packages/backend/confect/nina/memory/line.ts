@@ -68,10 +68,13 @@ export function memoryLine(note: Pick<Note, "kind" | "text" | "title">) {
 }
 
 /**
- * One memory as the capture call reads it, with the id it can name:
- * `- [id] (level) Kelas 12`. A long memory shows its first `KNOWN_LENGTH`
- * characters.
+ * One memory as the capture call reads it, with the place it can name, counted
+ * from 1 in the list: `- [1] (level) Kelas 12`. A long memory shows its first
+ * `KNOWN_LENGTH` characters.
  */
-export function knownLine(note: Pick<Note, "id" | "kind" | "text" | "title">) {
-  return `- [${note.id}] ${label(note.kind)}${textLine(note, KNOWN_LENGTH)}`;
+export function knownLine(
+  note: Pick<Note, "kind" | "text" | "title">,
+  place: number
+) {
+  return `- [${place}] ${label(note.kind)}${textLine(note, KNOWN_LENGTH)}`;
 }

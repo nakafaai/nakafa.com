@@ -12,8 +12,7 @@ import {
 } from "@repo/backend/confect/nina/memory/store";
 import { isLesson } from "@repo/backend/confect/nina/memory/topics";
 import {
-  longest,
-  wordsOf,
+  longestWords,
   wordWorth,
 } from "@repo/backend/confect/nina/memory/words";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
@@ -55,9 +54,9 @@ const bestFirst = Order.Tuple([
  * (`memory/words`), and a word is looked up by its blind hash, so the database
  * never reads it. At most 16 keys are looked up, the topics first, and a key
  * finds the 24 memories confirmed last that are linked to it. When the text has
- * more words than the keys that are left, the longest words are looked up
+ * more words than the keys that are left, the longest whole words are looked up
  * first, because the words that are frequent in a language are short in it
- * (`longest`). A memory scores what its matched keys are worth: 3 for the
+ * (`longestWords`). A memory scores what its matched keys are worth: 3 for the
  * lesson that is open, 2 for a path above it, and for a word `wordWorth` of how
  * many memories the read of its key found: 1 when one memory holds the word,
  * and less as more do, so that a word most of the learner's memories hold
@@ -103,8 +102,8 @@ export const searchMemories = Effect.fn("nina.memory.find")(function* ({
     key: topicKey(topic),
     worth: () => (isLesson(topic) ? LESSON_WORTH : PATH_WORTH),
   }));
-  const words = longest(
-    wordsOf(Str.slice(0, TEXT_LIMIT)(text)),
+  const words = longestWords(
+    Str.slice(0, TEXT_LIMIT)(text),
     KEY_LIMIT - Arr.length(topicLookups)
   );
   // A learner who has no memory has no key to read and nothing to find.

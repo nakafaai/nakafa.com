@@ -1,11 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  candidate,
-  createCaptureTest,
-  createMemoryTest,
-} from "@repo/backend/test/nina/memory";
+import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { Array as Arr, Option } from "effect";
 
 const edit = Ref.getFunctionReference(refs.public.nina.memory.edit);
@@ -118,6 +114,24 @@ describe("memory search", () => {
       await f.find({
         limit: 5,
         text: Arr.join(Arr.append(shorts, "trigonometri"), " "),
+      })
+    ).toEqual(["trigonometri"]);
+  });
+
+  it("measures the whole word to look up the longest first, though the index keeps six characters of each", async () => {
+    const f = await createMemoryTest();
+    await f.seed({ text: "trigonometri" });
+    // Sixteen words of six letters come first, and the longest word last. Every
+    // one is six characters once cut, so the length of the whole word is what
+    // gives the long word one of the sixteen keys.
+    const sixes = Arr.makeBy(
+      16,
+      (index) => `limit${String.fromCodePoint(97 + index)}`
+    );
+    expect(
+      await f.find({
+        limit: 5,
+        text: Arr.join(Arr.append(sixes, "trigonometri"), " "),
       })
     ).toEqual(["trigonometri"]);
   });
@@ -360,31 +374,5 @@ describe("memory search bounds", () => {
     expect(
       await f.find({ limit: 5, text: "alfa", topics: topics(16) })
     ).toEqual([]);
-  });
-});
-
-describe("memory search for the capture write", () => {
-  it("finds the memory that says the same among 300, so the write confirms it and adds no copy", async () => {
-    const f = await createCaptureTest();
-    await f.fill(299, { author: "learner" });
-    // The call read the first twelve memories, and not this one.
-    const id = await f.seed({ kind: "level", text: "Kelas 12 IPA." });
-    expect(await f.run([candidate()])).toBe(1);
-    expect(await f.stored()).toHaveLength(300);
-    expect(await f.stored()).toContainEqual(
-      expect.objectContaining({ _id: id, confirmedAt: NOW })
-    );
-  });
-
-  it("writes a new memory instead of confirming one that Delete all took, which a confirmation would bring back", async () => {
-    const f = await createCaptureTest();
-    await f.seed({ confirmedAt: 1, kind: "level", text: "Kelas 12 IPA." });
-    await f.markCleared(NOW - 1);
-    expect(await f.run([candidate()], { seen: [] })).toBe(1);
-    const rows = await f.stored();
-    expect(rows).toHaveLength(2);
-    // The memory the learner deleted keeps its time, so the batches still reach it.
-    expect(rows[0]).toMatchObject({ confirmedAt: 1 });
-    expect(rows[1]).toMatchObject({ author: "nina", confirmedAt: NOW });
   });
 });

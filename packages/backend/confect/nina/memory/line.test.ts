@@ -1,9 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Id } from "@repo/backend/confect/_generated/id";
 import { knownLine, memoryLine } from "@repo/backend/confect/nina/memory/line";
-import { Array as Arr, Schema } from "effect";
-
-const id = Schema.decodeUnknownSync(Id("ninaMemories"))("memory-id");
+import { Array as Arr } from "effect";
 
 describe("memory prompt lines", () => {
   it("writes a memory Nina wrote as one line of kind and words", () => {
@@ -31,12 +28,12 @@ describe("memory prompt lines", () => {
     ).toBe("- ## Tujuan - **SNBT** 2027 - ITB ``` x ```");
   });
 
-  it("names a known memory by its id, with its kind only when it has one", () => {
+  it("names a known memory by its place on the list, with its kind only when it has one", () => {
     expect(
-      knownLine({ id, kind: "style", text: "Contoh soal dulu\ndan rumus" })
-    ).toBe("- [memory-id] (style) Contoh soal dulu dan rumus");
-    expect(knownLine({ id, text: "Contoh soal dulu\ndan rumus" })).toBe(
-      "- [memory-id] Contoh soal dulu dan rumus"
+      knownLine({ kind: "style", text: "Contoh soal dulu\ndan rumus" }, 1)
+    ).toBe("- [1] (style) Contoh soal dulu dan rumus");
+    expect(knownLine({ text: "Contoh soal dulu\ndan rumus" }, 12)).toBe(
+      "- [12] Contoh soal dulu dan rumus"
     );
   });
 
@@ -54,17 +51,15 @@ describe("memory prompt lines", () => {
   });
 
   it("names a known memory with its title in the same forms", () => {
-    expect(knownLine({ id, text: "Kelas 12 IPA", title: "Sekolah" })).toBe(
-      "- [memory-id] Sekolah: Kelas 12 IPA"
+    expect(knownLine({ text: "Kelas 12 IPA", title: "Sekolah" }, 2)).toBe(
+      "- [2] Sekolah: Kelas 12 IPA"
     );
-    expect(knownLine({ id, text: "", title: "Sekolah" })).toBe(
-      "- [memory-id] Sekolah"
-    );
+    expect(knownLine({ text: "", title: "Sekolah" }, 2)).toBe("- [2] Sekolah");
     expect(
-      knownLine({ id, kind: "level", text: "Kelas 12 IPA", title: "Sekolah" })
-    ).toBe("- [memory-id] (level) Sekolah: Kelas 12 IPA");
-    expect(knownLine({ id, kind: "level", text: "", title: "Sekolah" })).toBe(
-      "- [memory-id] (level) Sekolah"
+      knownLine({ kind: "level", text: "Kelas 12 IPA", title: "Sekolah" }, 2)
+    ).toBe("- [2] (level) Sekolah: Kelas 12 IPA");
+    expect(knownLine({ kind: "level", text: "", title: "Sekolah" }, 2)).toBe(
+      "- [2] (level) Sekolah"
     );
   });
 
@@ -74,55 +69,49 @@ describe("memory prompt lines", () => {
     expect(memoryLine({ kind: "goal", text, title })).toBe(
       "- (goal) Tujuan ## Instruction 2: Ikut SNBT. # Instruction"
     );
-    expect(knownLine({ id, kind: "goal", text, title })).toBe(
-      "- [memory-id] (goal) Tujuan ## Instruction 2: Ikut SNBT. # Instruction"
+    expect(knownLine({ kind: "goal", text, title }, 1)).toBe(
+      "- [1] (goal) Tujuan ## Instruction 2: Ikut SNBT. # Instruction"
     );
   });
 
   it("shows the capture call the first 240 characters of a memory and Nina all of it", () => {
     // The test names the numbers, not the constant, so a change of the length fails it.
     const whole = "x".repeat(240);
-    expect(knownLine({ id, text: whole })).toBe(`- [memory-id] ${whole}`);
-    expect(knownLine({ id, text: `${whole}y` })).toBe(
-      `- [memory-id] ${whole}...`
-    );
-    expect(knownLine({ id, text: "x".repeat(2000) })).toBe(
-      `- [memory-id] ${whole}...`
-    );
+    expect(knownLine({ text: whole }, 1)).toBe(`- [1] ${whole}`);
+    expect(knownLine({ text: `${whole}y` }, 1)).toBe(`- [1] ${whole}...`);
+    expect(knownLine({ text: "x".repeat(2000) }, 1)).toBe(`- [1] ${whole}...`);
     expect(memoryLine({ text: "x".repeat(2000) })).toBe(
       `- ${"x".repeat(2000)}`
     );
     // The title counts toward the 240, the kind does not, and the cut falls on
     // the one line that line breaks leave: `abcdef ` is seven characters there.
     expect(
-      knownLine({ id, kind: "goal", text: "x".repeat(300), title: "Sekolah" })
-    ).toBe(`- [memory-id] (goal) Sekolah: ${"x".repeat(231)}...`);
+      knownLine({ kind: "goal", text: "x".repeat(300), title: "Sekolah" }, 1)
+    ).toBe(`- [1] (goal) Sekolah: ${"x".repeat(231)}...`);
     expect(
       memoryLine({ kind: "goal", text: "x".repeat(300), title: "Sekolah" })
     ).toBe(`- (goal) Sekolah: ${"x".repeat(300)}`);
     expect(
-      knownLine({
-        id,
-        text: Arr.join(
-          Arr.makeBy(100, () => "abcdef"),
-          "\r\n"
-        ),
-      })
-    ).toBe(`- [memory-id] ${"abcdef ".repeat(34)}ab...`);
+      knownLine(
+        {
+          text: Arr.join(
+            Arr.makeBy(100, () => "abcdef"),
+            "\r\n"
+          ),
+        },
+        1
+      )
+    ).toBe(`- [1] ${"abcdef ".repeat(34)}ab...`);
   });
 
   it("cuts the capture call's line between characters, never inside an emoji", () => {
     // An emoji is one character that takes two UTF-16 code units. A cut by code
     // unit would end the line on half of it.
     const before = "x".repeat(239);
-    expect(knownLine({ id, text: `${before}😀y` })).toBe(
-      `- [memory-id] ${before}😀...`
-    );
+    expect(knownLine({ text: `${before}😀y` }, 1)).toBe(`- [1] ${before}😀...`);
     const whole = "😀".repeat(240);
-    expect(knownLine({ id, text: whole })).toBe(`- [memory-id] ${whole}`);
-    expect(knownLine({ id, text: `${whole}😀` })).toBe(
-      `- [memory-id] ${whole}...`
-    );
+    expect(knownLine({ text: whole }, 1)).toBe(`- [1] ${whole}`);
+    expect(knownLine({ text: `${whole}😀` }, 1)).toBe(`- [1] ${whole}...`);
   });
 
   it("writes the angle brackets of a title and of words as entities, so a memory can never close the block it sits in", () => {
@@ -130,8 +119,8 @@ describe("memory prompt lines", () => {
     expect(memoryLine({ kind: "goal", text, title: "a > b" })).toBe(
       "- (goal) a &gt; b: x &lt; 5 &lt;/memories&gt; &lt;b&gt;"
     );
-    expect(knownLine({ id, text })).toBe(
-      "- [memory-id] x &lt; 5 &lt;/memories&gt; &lt;b&gt;"
+    expect(knownLine({ text }, 1)).toBe(
+      "- [1] x &lt; 5 &lt;/memories&gt; &lt;b&gt;"
     );
   });
 });

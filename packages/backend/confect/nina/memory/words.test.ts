@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  longest,
+  longestWords,
   WORD_WORTH,
   wordsOf,
   wordWorth,
@@ -106,22 +106,46 @@ describe("memory words", () => {
 
 describe("memory words looked up first", () => {
   it("takes the longest words first, and words of one length in the order they came", () => {
-    expect(
-      longest(["di", "trigon", "ke", "limit", "turuna", "yang", "ipa"], 4)
-    ).toEqual(["trigon", "turuna", "limit", "yang"]);
-    expect(longest(["bb", "aa", "cc", "dd"], 3)).toEqual(["bb", "aa", "cc"]);
+    expect(longestWords("di trigon ke limit turuna yang ipa", 4)).toEqual([
+      "trigon",
+      "turuna",
+      "limit",
+      "yang",
+    ]);
+    expect(longestWords("bb aa cc dd", 3)).toEqual(["bb", "aa", "cc"]);
   });
 
   it("takes all of them when there are no more than the limit, still longest first, and none for a limit of zero", () => {
-    expect(longest(["di", "limit"], 5)).toEqual(["limit", "di"]);
-    expect(longest(["di", "limit"], 0)).toEqual([]);
-    expect(longest([], 3)).toEqual([]);
+    expect(longestWords("di limit", 5)).toEqual(["limit", "di"]);
+    expect(longestWords("di limit", 0)).toEqual([]);
+    expect(longestWords("", 3)).toEqual([]);
+  });
+
+  it("measures the whole word, not the six characters the index keeps of it, so a long word is looked up before a shorter one that is cut to as many", () => {
+    // Sixteen words of six letters come first in the text, and the longest word last.
+    const six = Arr.makeBy(
+      16,
+      (index) => `limit${String.fromCodePoint(97 + index)}`
+    );
+    const text = `${Arr.join(six, " ")} trigonometri`;
+    // Every word is six characters once cut, so only the whole word tells them apart.
+    const looked = longestWords(text, 16);
+    expect(looked).toHaveLength(16);
+    expect(looked[0]).toBe("trigon");
+    expect(looked).toEqual(["trigon", ...Arr.take(six, 15)]);
+  });
+
+  it("looks up a stem once when two long words are cut to the same", () => {
+    expect(longestWords("trigonometri trigonometry ab", 3)).toEqual([
+      "trigon",
+      "ab",
+    ]);
   });
 
   it("counts a word by character, so that an emoji letter counts once", () => {
     const two = "\u{10428}\u{10429}";
-    expect(longest(["abc", two], 1)).toEqual(["abc"]);
-    expect(longest(["ab", two, "a"], 3)).toEqual(["ab", two, "a"]);
+    expect(longestWords(`abc ${two}`, 1)).toEqual(["abc"]);
+    expect(longestWords(`ab ${two} a`, 3)).toEqual(["ab", two, "a"]);
   });
 });
 

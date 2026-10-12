@@ -153,17 +153,17 @@ export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()
  * one short sentence: never empty, and at most `MEMORY_SENTENCE_LIMIT`
  * characters. `quote` holds the learner's exact words; the write is refused
  * unless the message contains them, and unless the sentence has a letter or a
- * digit. `known` names a stored memory that this one confirms, and a stored
- * memory without a kind takes this one's kind. The words of the stored memory
- * change only when Nina wrote them: when the learner wrote them and this one
- * says something else, the learner's memory stays as it is and this one is
- * matched by its words like one that names no memory, so it confirms a memory
- * that says the same or becomes a new memory. `until` is the day a situation
- * ends, as `YYYY-MM-DD`.
+ * digit. `known` is the place, counted from 1, in the list of known memories
+ * the call was given (`NinaKnown`) of the memory that this one restates. The
+ * model reads the memories and says which one it restates, and no comparison of
+ * words decides it: a place that is not on the list names nothing. A stored
+ * memory without a kind takes this one's kind, and the words of the stored
+ * memory change only when Nina wrote them, so a memory the learner wrote keeps
+ * its words. `until` is the day a situation ends, as `YYYY-MM-DD`.
  */
 export const NinaMemoryCandidate = Schema.Struct({
   kind: NinaMemoryKind,
-  known: Schema.optionalKey(Schema.String),
+  known: Schema.optionalKey(Schema.Int),
   quote: Schema.NonEmptyString,
   text: NinaMemorySentence,
   until: Schema.optionalKey(Schema.String),
@@ -237,14 +237,14 @@ export const NinaLearner = Schema.Struct({
 
 /**
  * What the capture call knows about one learner: `known` holds the memories
- * that match the message best, at most `MEMORY_KNOWN_LIMIT`. It is empty while
- * memory is paused.
+ * that match the message best, at most `MEMORY_KNOWN_LIMIT`, the best first.
+ * The call lists them in this order and names one by its place in the list. It
+ * is empty while memory is paused.
  */
 export const NinaKnown = Schema.Struct({
   known: Schema.mutable(Schema.Array(NinaMemoryNote)).check(
     Schema.isMaxLength(MEMORY_KNOWN_LIMIT)
   ),
-  paused: Schema.Boolean,
   profile: NinaLearnerProfile,
 });
 
@@ -367,8 +367,8 @@ export default GroupSpec.make()
       returns: () => NinaLearner,
     })
   )
-  // Whether the learner paused memory. The capture asks before it sends the
-  // learner's message to any model, and before it searches a single memory.
+  // Whether the learner paused memory. The capture asks once, before it sends
+  // the learner's message to any model and before it reads a single memory.
   .addFunction(
     FunctionSpec.internalQuery({
       name: "paused",
@@ -391,10 +391,11 @@ export default GroupSpec.make()
       returns: () => NinaKnown,
     })
   )
-  // Writes what a capture call found. `seen` is what the call read before the
-  // model read the message: the write changes nothing when the learner removed
-  // one of those memories meanwhile, and leaves the words, the kind and the end
-  // date of one that changed or that the call never read.
+  // Writes what a capture call found. `seen` is the list of memories the call
+  // gave the model before it read the message, in the order of the list: a
+  // candidate names a memory by its place there. The write changes nothing when
+  // the learner removed one of those memories meanwhile, and leaves the words,
+  // the kind and the end date of one that changed.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "capture",
