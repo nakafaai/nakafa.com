@@ -2,6 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** A file for the picker, in the form Playwright hands to a file chooser. */
 const UploadSchema = Schema.Struct({
@@ -110,6 +111,28 @@ export const runPage = <E>(page: Page, program: Effect.Effect<void, E>) =>
 export function chipsIn(scope: Locator) {
   return scope.locator('[data-slot="attachment"]');
 }
+
+/** The chips of the messages on the page, which are not the chips of the composer. */
+export function chipsOfMessages(page: Page) {
+  return chipsIn(page.locator('[data-slot="message"]'));
+}
+
+/** The names of the composer's controls in English and in German. */
+export const ENGLISH = { input: "Ask Nina anything...", send: "Send message" };
+export const GERMAN = { input: "Frag Nina etwas...", send: "Nachricht senden" };
+
+/** The box where the learner writes to Nina, in the language of the page. */
+export const composerOf = (scope: Locator, labels = ENGLISH) =>
+  scope.getByRole("textbox", { name: labels.input });
+
+/** Writes the prompt and waits until the page lets it be sent. */
+export const write = (scope: Locator, text: string, labels = ENGLISH) =>
+  Effect.promise(async () => {
+    await composerOf(scope, labels).fill(text);
+    await expect(scope.getByRole("button", { name: labels.send })).toBeEnabled({
+      timeout: readinessTimeoutMilliseconds,
+    });
+  });
 
 /** The notices on the page that contain `text`. */
 export function noticeWith(page: Page, text: string) {

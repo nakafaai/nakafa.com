@@ -3,6 +3,7 @@ import {
   NINA_FILE_COUNT,
   NINA_FILE_MEBIBYTES,
   NINA_FILE_SIZE,
+  NINA_FILENAME_LENGTH,
 } from "@repo/backend/client/nina/uploads";
 import { Array as Arr, Effect } from "effect";
 import {
@@ -14,6 +15,7 @@ import {
   runPage,
   WORD_TYPE,
 } from "@/e2e/support/attachment";
+import { waitForSlide } from "@/e2e/support/layout";
 
 /** The sentence that says which files Nina reads. */
 const TYPES = "Nina reads PNG, JPEG, WebP, GIF, PDF, and text files.";
@@ -21,6 +23,18 @@ const TYPES = "Nina reads PNG, JPEG, WebP, GIF, PDF, and text files.";
 /** The part of a notice that gives one reason, with the files it dropped. */
 const reasonIn = (notice: Locator, sentence: string) =>
   notice.getByRole("listitem").filter({ hasText: sentence });
+
+/** Whether a notice lies inside the page and every name in it fits its line, read in the page. */
+const readNotice = (notice: HTMLElement) => {
+  const box = notice.getBoundingClientRect();
+  // The reasons are the items of a list, and each reason lists its names.
+  const names = Array.from(notice.querySelectorAll("ul > li > ul > li"));
+  return {
+    inside: box.left >= 0 && box.right <= innerWidth,
+    namesFit: names.every((name) => name.scrollWidth <= name.clientWidth),
+    namesShown: names.length,
+  };
+};
 
 const photo = (name: string) => fileOf(name, "image/png", 1);
 
@@ -85,6 +99,34 @@ for (const width of [320, 1440]) {
             );
             await expect(reason).toContainText("last-1.png");
             await expect(reason).toContainText("last-2.png");
+          });
+        })
+      );
+    });
+
+    test("keeps a notice inside the page when a name is the longest the backend stores", async ({
+      page,
+    }) => {
+      await runPage(
+        page,
+        Effect.gen(function* () {
+          const composer = yield* openComposer(page);
+          const name = `${"a".repeat(NINA_FILENAME_LENGTH - ".docx".length)}.docx`;
+          yield* pickFiles(composer, [fileOf(name, WORD_TYPE, 20)]);
+          const notice = noticeWith(page, "not attached");
+          // The notice slides into place; its place is read once it stopped.
+          yield* Effect.promise(() =>
+            expect(notice).toHaveAttribute("data-mounted", "true")
+          );
+          yield* waitForSlide(notice);
+          const read = yield* Effect.promise(() => notice.evaluate(readNotice));
+
+          yield* Effect.sync(() => {
+            expect(read).toEqual({
+              inside: true,
+              namesFit: true,
+              namesShown: 1,
+            });
           });
         })
       );

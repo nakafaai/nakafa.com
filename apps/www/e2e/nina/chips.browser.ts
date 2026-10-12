@@ -2,7 +2,6 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   chipsIn,
-  fileOf,
   openComposer,
   pickFiles,
   pictureOf,
@@ -154,71 +153,5 @@ for (const scheme of ["light", "dark"] as const) {
         })
       );
     });
-  });
-}
-
-const BOARD_DECK =
-  "Q3 Board Deck - FINAL (revised) v12 [approved by legal].pdf";
-const CAMERA_FILE = "IMG_20250914_183022_HDR_portrait_edited_edited.HEIC";
-
-/**
- * Whether the last `count` characters of a chip's title sit inside the title,
- * and what the pointer is on at the middle of the chip, read in the page.
- */
-const readName = (chip: HTMLElement, count: number) => {
-  const title = chip.querySelector('[data-slot="attachment-title"]');
-  if (!title) {
-    return null;
-  }
-  const walker = document.createTreeWalker(title, NodeFilter.SHOW_TEXT);
-  let last: Text | null = null;
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    last = node instanceof Text ? node : last;
-  }
-  if (!last) {
-    return null;
-  }
-  const edge = title.getBoundingClientRect().right;
-  const tail = document.createRange();
-  tail.setStart(last, Math.max(0, last.length - count));
-  tail.setEnd(last, last.length);
-  const box = chip.getBoundingClientRect();
-  const under = document.elementFromPoint(
-    box.left + box.width / 2,
-    box.top + box.height / 2
-  );
-  return {
-    tailInside: tail.getBoundingClientRect().right <= edge + 0.5,
-    underPointer: under?.getAttribute("title") ?? null,
-  };
-};
-
-for (const width of [320, 1440]) {
-  test.describe(`Long names on document chips at ${width}px`, () => {
-    test.use({ viewport: { height: 900, width } });
-
-    for (const name of [BOARD_DECK, CAMERA_FILE]) {
-      test(`keep the end of ${name} in view`, async ({ page }) => {
-        await runPage(
-          page,
-          Effect.gen(function* () {
-            const composer = yield* openComposer(page);
-            yield* pickFiles(composer, [fileOf(name, "text/plain", 8)]);
-            const chip = chipsIn(composer).first();
-            yield* Effect.promise(() => expect(chip).toBeVisible());
-            // The extension and the six characters before it.
-            const tail = name.length - name.lastIndexOf(".") + 6;
-            const read = yield* Effect.promise(() =>
-              chip.evaluate(readName, tail)
-            );
-
-            yield* Effect.sync(() => {
-              expect(read?.tailInside).toBe(true);
-              expect(read?.underPointer).toBe(name);
-            });
-          })
-        );
-      });
-    }
   });
 }

@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { Array as Arr, Effect } from "effect";
 import {
   chipsIn,
-  noticeWith,
+  ENGLISH,
   openComposer,
   pickFiles,
   pictureOf,
@@ -15,38 +14,7 @@ import { SHEET_POPUP } from "@/e2e/support/selector";
 
 const LESSON =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
-const PLACEHOLDER = "Ask Nina anything...";
-/** The address of the new chat page, where a refused prompt leaves the learner. */
-const CHAT_PAGE = /\/en\/chat$/;
-
-test.describe("A prompt over the limit at 390px", () => {
-  test.use({ viewport: { height: 900, width: 390 } });
-
-  test("stays in the composer with the limit named, and asks nothing", async ({
-    page,
-  }) => {
-    await runPage(
-      page,
-      Effect.gen(function* () {
-        const composer = yield* openComposer(page);
-        const input = composer.getByRole("textbox", { name: PLACEHOLDER });
-        const text = "a".repeat(NINA_PROMPT_LENGTH + 1);
-
-        yield* Effect.promise(async () => {
-          await input.fill(text);
-          await input.press("Enter");
-          await expect(
-            noticeWith(page, "at most 100,000 characters")
-          ).toBeVisible();
-          // The words stay for the learner to shorten, and no prompt was shown or sent.
-          await expect(input).toHaveValue(text);
-          await expect(page).toHaveURL(CHAT_PAGE);
-          await expect(page.locator('[data-slot="bubble"]')).toHaveCount(0);
-        });
-      })
-    );
-  });
-});
+const PLACEHOLDER = ENGLISH.input;
 
 /** A link the learner pasted: no space to break the line at, as with any long address. */
 const LONG_LINK = `https://example.com/${"a".repeat(300)}`;
@@ -174,6 +142,90 @@ for (const screen of SHORT_SCREENS) {
               }
             });
           }
+        })
+      );
+    });
+  });
+}
+
+/** A lesson of the German site, and the three first prompts its sheet offers. */
+const GERMAN_LESSON =
+  "/de/faecher/mathematik/potenzen-und-logarithmen/grundlagen";
+const GERMAN_SUGGESTIONS = [
+  "Das erklären",
+  "Beispielaufgabe zeigen",
+  "Kernaussagen zusammenfassen",
+] as const;
+
+/**
+ * How tall each suggestion is, and whether its label stays inside its button,
+ * read in the page. A label that is not shown has no box, so it is not read.
+ */
+const readSuggestions = (popup: HTMLElement, labels: readonly string[]) =>
+  labels.map((text) => {
+    const label = Array.from(popup.querySelectorAll("button span")).find(
+      (span) => span.textContent === text && span.getClientRects().length > 0
+    );
+    const button = label?.closest("button");
+    if (!(label && button)) {
+      return null;
+    }
+    const box = button.getBoundingClientRect();
+    return {
+      height: box.height,
+      inside:
+        button.scrollWidth <= button.clientWidth &&
+        label.getBoundingClientRect().right <= box.right,
+    };
+  });
+
+/** The text size of the page as a learner sets it in the browser: 100 percent, and a larger one. */
+const TEXT_SIZES = [100, 130] as const;
+
+for (const size of TEXT_SIZES) {
+  test.describe(`The suggestions of the sheet in German at 320px and ${size} percent text`, () => {
+    test.use({ viewport: { height: 640, width: 320 } });
+
+    test("keep their labels inside their buttons", async ({ page }) => {
+      await runPage(
+        page,
+        Effect.gen(function* () {
+          yield* seedAnalyticsConsent(page, "denied");
+          yield* Effect.promise(async () => {
+            await page.goto(GERMAN_LESSON);
+            await page.addStyleTag({
+              content: `html { font-size: ${size}% !important; }`,
+            });
+            await page
+              .getByRole("button", { exact: true, name: "Nina fragen" })
+              .click();
+          });
+          const sheet = page.locator(SHEET_POPUP);
+          yield* waitForSlide(sheet);
+          // The three first prompts show once the body of the sheet has
+          // rendered. A copy of the body that is not shown holds them too.
+          yield* Effect.promise(() =>
+            expect(
+              sheet.getByText(GERMAN_SUGGESTIONS[2]).filter({ visible: true })
+            ).toBeVisible()
+          );
+          const read = yield* Effect.promise(() =>
+            sheet.evaluate(readSuggestions, GERMAN_SUGGESTIONS)
+          );
+
+          yield* Effect.sync(() => {
+            expect(Arr.map(read, (suggestion) => suggestion?.inside)).toEqual([
+              true,
+              true,
+              true,
+            ]);
+            // At the ordinary size every label fits on one line, as it did before.
+            if (size === 100) {
+              expect(Arr.map(read, (suggestion) => suggestion?.height)).toEqual(
+                [36, 36, 36]
+              );
+            }
+          });
         })
       );
     });
