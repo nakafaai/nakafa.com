@@ -61,7 +61,9 @@ function CommandDialogBackdrop({
   return (
     <CommandDialogPrimitive.Backdrop
       className={cn(
-        "fixed inset-0 z-50 bg-black/32 backdrop-blur-sm transition-all duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0",
+        // The palette opens from the keyboard, so it appears and leaves at
+        // once: an action from the keyboard is never animated.
+        "fixed inset-0 z-50 bg-black/32 backdrop-blur-sm",
         className
       )}
       data-slot="command-dialog-backdrop"
@@ -104,7 +106,7 @@ function CommandDialogPopup({
       <CommandDialogViewport>
         <CommandDialogPrimitive.Popup
           className={cn(
-            "relative isolate row-start-2 flex h-[min(40rem,calc(100dvh-2rem))] min-h-0 w-full min-w-0 max-w-xl translate-y-[calc(-1.25rem*var(--nested-dialogs))] scale-[calc(1-0.1*var(--nested-dialogs))] flex-col overflow-hidden rounded-2xl border bg-popover not-dark:bg-clip-padding text-popover-foreground opacity-[calc(1-0.1*var(--nested-dialogs))] shadow-lg/5 outline-none transition-[scale,opacity,translate] duration-200 ease-in-out will-change-transform *:relative *:z-10 before:pointer-events-none before:absolute before:inset-0 before:z-0 before:rounded-[calc(var(--radius-2xl)-1px)] before:bg-muted/72 before:shadow-[0_1px_--theme(--color-black/4%)] data-nested:data-ending-style:translate-y-8 data-nested:data-starting-style:translate-y-8 data-nested-dialog-open:origin-top data-ending-style:scale-98 data-starting-style:scale-98 data-ending-style:opacity-0 data-starting-style:opacity-0 **:data-[slot=scroll-area-viewport]:data-has-overflow-y:pe-1 sm:h-[min(40rem,80dvh)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
+            "relative isolate row-start-2 flex h-[min(40rem,calc(100dvh-2rem))] min-h-0 w-full min-w-0 max-w-xl translate-y-[calc(-1.25rem*var(--nested-dialogs))] scale-[calc(1-0.1*var(--nested-dialogs))] flex-col overflow-hidden rounded-2xl border bg-popover not-dark:bg-clip-padding text-popover-foreground opacity-[calc(1-0.1*var(--nested-dialogs))] shadow-lg/5 outline-none transition-[scale,opacity,translate] duration-surface *:relative *:z-10 before:pointer-events-none before:absolute before:inset-0 before:z-0 before:rounded-[calc(var(--radius-2xl)-1px)] before:bg-muted/72 before:shadow-[0_1px_--theme(--color-black/4%)] data-nested:data-ending-style:translate-y-8 data-nested:data-starting-style:translate-y-8 data-nested-dialog-open:origin-top **:data-[slot=scroll-area-viewport]:data-has-overflow-y:pe-1 sm:h-[min(40rem,80dvh)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
             className
           )}
           data-slot="command-dialog-popup"
