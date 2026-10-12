@@ -1,49 +1,97 @@
 import { describe, expect, it } from "@effect/vitest";
-import { percentile } from "@repo/backend/confect/nina/waits";
+import { summarizeWaits } from "@repo/backend/confect/nina/waits";
 import { Array as Arr } from "effect";
 
-/** Ten different values out of order, so a rank only means something after a sort. */
-const TEN = [40, 10, 90, 20, 70, 30, 100, 60, 50, 80] as const;
+type Turn = Parameters<typeof summarizeWaits>[0][number];
 
-describe("nearest-rank percentile", () => {
-  it("takes the value at rank ceil(percent / 100 * count) of the sorted values", () => {
-    expect(percentile(TEN, 50)).toBe(50);
-    expect(percentile(TEN, 90)).toBe(90);
-    // 91 percent of ten values is rank 9.1, which rounds up to the tenth.
-    expect(percentile(TEN, 91)).toBe(100);
-    // 21 percent is rank 2.1, which rounds up to the third and not down to the second.
-    expect(percentile(TEN, 21)).toBe(30);
+/** A turn that settled, with `wait` stored for the first stage it reaches. */
+function waited(wait: number, index: number): Turn {
+  return {
+    _creationTime: index,
+    phase: "settled",
+    state: { status: "complete", finishedAt: index },
+    timing: { claimedMs: wait },
+  };
+}
+
+/** The row of every stage that `summarizeWaits` reports for turns that each waited one of `waits`. */
+function rows(waits: readonly number[]) {
+  return summarizeWaits(Arr.map(waits, waited)).waits;
+}
+
+describe("the nearest-rank spread of a wait", () => {
+  it("takes the wait at rank ceil(percent / 100 * count) of the sorted waits", () => {
+    // Ten different waits out of order, so a rank only means something after a sort.
+    expect(rows([40, 10, 90, 20, 70, 30, 100, 60, 50, 80])).toContainEqual({
+      max: 100,
+      median: 50,
+      min: 10,
+      p90: 90,
+      stage: "claimedMs",
+      turns: 10,
+    });
   });
 
-  it("gives a value that occurred, the lower of the two in the middle for an even count", () => {
+  it("rounds a rank up to the next whole one", () => {
+    // 90 percent of eleven waits is rank 9.9, which is the tenth and not the
+    // ninth. The median is rank 5.5, the sixth.
+    expect(rows(Arr.range(1, 11))).toContainEqual({
+      max: 11,
+      median: 6,
+      min: 1,
+      p90: 10,
+      stage: "claimedMs",
+      turns: 11,
+    });
+  });
+
+  it("gives a wait that occurred, the lower of the two in the middle for an even count", () => {
     // Interpolating between 10 and 20 would give 15, which no one waited.
-    expect(percentile([20, 10], 50)).toBe(10);
-    expect(percentile([4, 1, 3, 2], 50)).toBe(2);
-    expect(percentile([30, 10, 20], 50)).toBe(20);
+    expect(rows([20, 10])).toContainEqual({
+      max: 20,
+      median: 10,
+      min: 10,
+      p90: 20,
+      stage: "claimedMs",
+      turns: 2,
+    });
+    expect(rows([4, 1, 3, 2])).toContainEqual({
+      max: 4,
+      median: 2,
+      min: 1,
+      p90: 4,
+      stage: "claimedMs",
+      turns: 4,
+    });
+    expect(rows([30, 10, 20])).toContainEqual({
+      max: 30,
+      median: 20,
+      min: 10,
+      p90: 30,
+      stage: "claimedMs",
+      turns: 3,
+    });
   });
 
-  it("gives the smallest value at 0 and the largest at 100", () => {
-    expect(percentile(TEN, 0)).toBe(10);
-    expect(percentile(TEN, 100)).toBe(100);
+  it("gives the only wait of a single turn for every figure", () => {
+    expect(rows([7])).toContainEqual({
+      max: 7,
+      median: 7,
+      min: 7,
+      p90: 7,
+      stage: "claimedMs",
+      turns: 1,
+    });
   });
 
-  it("gives the only value of a single value at any percent", () => {
-    expect(
-      Arr.map([0, 50, 90, 100], (percent) => percentile([7], percent))
-    ).toEqual([7, 7, 7, 7]);
-  });
-
-  it("multiplies before it divides, so rounding error never lifts a rank", () => {
-    // 14 / 100 * 50 is 7.000000000000001 in floating point, and its ceiling is 8.
-    expect(percentile(Arr.range(1, 50), 14)).toBe(7);
-    // 28 / 100 * 25 is 7.000000000000001 too.
-    expect(percentile(Arr.range(1, 25), 28)).toBe(7);
-  });
-
-  it("keeps repeated values and leaves its input as it was", () => {
-    const values = [3, 1, 3, 2] as const;
-    expect(percentile(values, 75)).toBe(3);
-    expect(percentile(values, 50)).toBe(2);
-    expect(values).toEqual([3, 1, 3, 2]);
+  it("keeps repeated waits", () => {
+    expect(rows([3, 1, 3, 2])).toContainEqual({
+      max: 3,
+      median: 2,
+      min: 1,
+      p90: 3,
+      stage: "claimedMs",
+      turns: 4,
+    });
   });
 });
