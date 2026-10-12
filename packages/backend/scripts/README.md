@@ -88,41 +88,53 @@ run it and what it proves.
 
 ```sh
 pnpm --filter @repo/backend judgment:measure
-pnpm --filter @repo/backend judgment:measure --together=3
 ```
 
 This command sets the thresholds of Nina's judgments (`confect/nina/judgment`)
 from a labelled set (`test/judgment/message.ts` and `test/judgment/note.ts`),
-never from taste. It spends model calls, so it runs only on the dev deployment
-that `packages/backend/.env.local` names, refuses any other, and needs no other
-setting. It starts the internal action `nina/judgment:measure` with
-`convex run`, which asks the decision model about every text, and reads the
-answer from what the CLI prints. One call holds at most `MEASURE_TEXT_LIMIT`
-texts (30), which is less than the set, so the set goes up in several calls,
-one after another. A call gets the five minutes that the request of the CLI can
-wait, and a call that needs more ends the command with an error that says it
-did not answer. When the deployment cannot reach the gateway, the action
-answers with that failure instead of failing the call, because the CLI prints a
-failed call as text and drops the typed data of its error; the command then
-stops at the first call and fails with that reason. When the deployment does
-not have the action yet, the CLI cannot run it, and the command fails with the
-start of what the CLI printed. Each judgment is measured on the form of text and
-the grouping that production asks it: `lasting` on a whole message, alone, and
+never from taste. It takes no argument, and any argument is refused before a
+command starts, with a message that names it. It spends model calls, so it runs
+only on the dev deployment that `CONVEX_DEPLOYMENT` names, read from the
+environment and then from `packages/backend/.env.local`, where the CLI looks
+for it too. It refuses any other deployment, and it needs no other setting. It
+starts the internal action `nina/judgment:measure` with `convex run`, which
+asks the decision model about every text, and reads the answer from what the
+CLI prints. Each text is a request of its own, as production asks it, and the
+action keeps only a few of them open at a time (`REQUESTS_IN_FLIGHT` of
+`confect/nina/judgment/measure.ts`). One call holds at most
+`MEASURE_TEXT_LIMIT` texts (30), which is less than the set, so the set goes up
+in several calls, one after another. A call gets the five minutes that the
+request of the CLI can wait, and a call that needs more ends the command with an
+error that says it did not answer. When the deployment cannot reach the
+gateway, the action answers with that failure instead of failing the call,
+because the CLI prints a failed call as text and drops the typed data of its
+error; the command then stops at the first call and fails with that reason. When
+the deployment does not have the action yet, the CLI cannot run it, and the
+command fails with the start of what the CLI printed. Each judgment is measured
+on the form of text that production asks it: `lasting` on a whole message, and
 `ownNote` and `private` on a note, which is the sentence the capture model
-proposes with the words of the learner it quotes (`noteText`), both judgments
-in one request about the notes together. For each judgment the command prints
-the probabilities by label, the counts at the threshold the deployment holds,
-the threshold that separates best, and the texts the held threshold judges
-wrongly. A text is named by its number among the messages or the notes and
-described by its language and form, and is never quoted. `--together=N` sends N
-notes in one request, from 1 to 3, because the capture asks about up to three
-candidates of a turn together; run it with 1 and with 3 and set a threshold
-that holds for both. The command exits with 1 when the deployment could not
-measure a text, and it fails, naming the judgment, when the deployment reports
-no threshold for one or answers a different number of rows than the texts it
-was sent. Run it again whenever a judgment's instructions or the decision model
-change, and set the new thresholds in `confect/nina/judgment/catalog.ts` from
-what it prints.
+proposes with the words of the learner it quotes (`noteText`), both judgments in
+the one request about the note. For each judgment the command prints the
+probabilities by label, the counts at the threshold the deployment holds, the
+threshold that separates best, and the texts the held threshold judges wrongly.
+The report names a text by its number among the messages or the notes and
+describes it by its language and form, and never quotes it. The labelled texts
+are invented and hold no real person's data, and an error that the CLI printed
+is shown as the CLI worded it, so when a deployment refuses the arguments of a
+call, the error can quote them.
+
+The action answers with the entry of the catalog that each asked judgment holds
+on the deployment, its instructions and its threshold, and the command compares
+them across the calls of a run. The command exits with 1 when the deployment
+could not measure a text. It fails, naming the judgment, when the deployment
+reports no threshold for one, or answers with other instructions or another
+threshold in a later call than in the first, which means that the deployment
+changed while the command ran, and it fails with the numbers of rows and texts
+when the deployment answers a different number of rows than the texts it was
+sent. Run it again whenever a judgment's instructions, the decision model or the
+labelled set change, and set the new thresholds in
+`confect/nina/judgment/catalog.ts` from what it prints. [ADR
+0022](../../../docs/adr/0022-memory.md) holds the tables of 12 October 2026.
 
 ## Knowledge search model test
 
