@@ -35,6 +35,14 @@ Memory input rules:
  * the memory it came from. So the turn holds them for the model's next step and
  * the conversation keeps only this note. A memory it returns is not thereby
  * confirmed. It publishes no card.
+ *
+ * A search that cannot be read ends as a failed read and keeps nothing of the
+ * failure but the phase. What the platform says of it is not kept, because the
+ * call was given the learner's query, and the Agent would give the message of a
+ * defect to Nina and store it in the thread as the text of a tool error, which
+ * a reader of a public chat can open. The failure is told apart at the one call
+ * that reads (`MemoryReadError`), so a defect anywhere else in the run is a bug
+ * and is not hidden behind it.
  */
 export const memoryCapability = defineCapability({
   continuation:
@@ -51,7 +59,7 @@ export const memoryCapability = defineCapability({
   offered: ({ memory }) => (memory === true ? ALLOWED : MEMORY_PAUSED),
   run: ({ query }, { userId }) =>
     runMemory({ query, userId }).pipe(
-      Effect.catchDefect(() =>
+      Effect.catchTag("MemoryReadError", () =>
         failed(
           { phase: "read" },
           "Memory could not be read right now. Tell the learner you could not check what they told you before, ask them again, and do not guess it."

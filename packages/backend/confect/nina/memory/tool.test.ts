@@ -1,5 +1,5 @@
 import { Ref } from "@confect/core";
-import { RegisteredFunction } from "@confect/server";
+import { QueryRunner, RegisteredFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -71,12 +71,33 @@ function refusal(f: Awaited<ReturnType<typeof createNinaTest>>, query: string) {
   return f.t.action((ctx) =>
     Effect.runPromise(
       runMemory({ query, userId: f.identity.userId }).pipe(
+        // This search reads without failure, so only the refusal is left to flip.
+        Effect.catchTag("MemoryReadError", Effect.die),
         Effect.flip,
         // Only plain data leaves an action.
         Effect.map(({ _tag, reason }) => ({ _tag, reason })),
         Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
       )
     )
+  );
+}
+
+/**
+ * What the capability fails with, as plain data, when the platform answers its
+ * search as `lookup` says: the kind of failure, and everything it shows of
+ * itself.
+ */
+function readFailure(
+  f: Awaited<ReturnType<typeof createNinaTest>>,
+  lookup: () => Promise<unknown>
+) {
+  return runMemory({ query: "snbt", userId: f.identity.userId }).pipe(
+    Effect.flip,
+    Effect.map(({ _tag, message, stack }) => ({
+      _tag,
+      shown: Arr.join([message, stack ?? ""], "\n"),
+    })),
+    Effect.provide(QueryRunner.layer(lookup))
   );
 }
 
@@ -198,6 +219,32 @@ describe("the memory capability", () => {
       reason: MEMORY_PAUSED.reason,
     });
   });
+
+  it.effect(
+    "fails as an unreadable search, and shows nothing of the platform's message, when the call is rejected",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* Effect.promise(() => createMemoryTest());
+        const error = yield* readFailure(f, () =>
+          // The fixture's message holds the learner's words, to show that none survive.
+          Promise.reject(new Error("Lookup failed for Mau ikut SNBT 2027"))
+        );
+        expect(error._tag).toBe("MemoryReadError");
+        expect(error.shown).not.toContain("SNBT");
+      })
+  );
+
+  it.effect(
+    "fails the same way when the platform answers what the search does not describe",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* Effect.promise(() => createMemoryTest());
+        const error = yield* readFailure(f, () =>
+          Promise.resolve({ memories: [], paused: "no" })
+        );
+        expect(error._tag).toBe("MemoryReadError");
+      })
+  );
 
   it("writes nothing: a memory it returns is not thereby confirmed", async () => {
     const f = await createMemoryTest();

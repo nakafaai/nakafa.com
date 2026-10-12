@@ -108,9 +108,9 @@ function turnOf({
 
 /**
  * Plays a scripted model through the real Agent, with the tools that a registry
- * builds for one learner, and returns what its tool calls produced and what the
- * turn logged. `chatStep` is the chat step the tools run in: a new one, by
- * default.
+ * builds for one learner, and returns what its tool calls produced, the errors
+ * of the calls that ended in one, and what the turn logged. `chatStep` is the
+ * chat step the tools run in: a new one, by default.
  */
 export function playTurn({
   chatStep = inNewChatStep,
@@ -139,6 +139,16 @@ export function playTurn({
       }).generateText(ctx, { userId: turn.userId }, { prompt })
     );
     return {
+      // Only plain data leaves an action, so an error is its message.
+      errors: Arr.filterMap(generated.content, (part) =>
+        part.type === "tool-error"
+          ? Result.succeed(
+              part.error instanceof Error
+                ? part.error.message
+                : encodeJsonText(part.error)
+            )
+          : Result.failVoid
+      ),
       logged,
       result: Arr.map(generated.toolResults, ({ output }) => output),
     };
