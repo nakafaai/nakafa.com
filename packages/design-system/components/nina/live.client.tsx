@@ -4,35 +4,35 @@ import {
   useEventListener,
   useInViewport,
   useMergedRef,
-  usePrevious,
   useReducedMotion,
   useTimeout,
   useWindowEvent,
 } from "@mantine/hooks";
-import { Picture } from "@repo/design-system/components/nina/draw";
-import type { MoodSchema } from "@repo/design-system/components/nina/face";
-import {
-  type Options,
-  scene,
-} from "@repo/design-system/components/nina/figure";
 import { Frame } from "@repo/design-system/components/nina/frame";
+import { paint, sameFigure } from "@repo/design-system/components/nina/paint";
+import { Picture } from "@repo/design-system/components/nina/picture";
+import type { MoodSchema } from "@repo/mascot/nina/face";
+import { type Options, scene } from "@repo/mascot/nina/figure";
 import {
   gazeAt,
-  holding,
+  type Life,
+  press,
+  retarget,
+  start,
+  step,
   view,
-} from "@repo/design-system/components/nina/live";
-import { homeOf, modeOf } from "@repo/design-system/components/nina/mode";
-import { createLifeStore } from "@repo/design-system/components/nina/store";
+} from "@repo/mascot/nina/life";
+import { homeOf, modeOf } from "@repo/mascot/nina/mode";
 import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import { useStore } from "zustand";
+import { flushSync } from "react-dom";
 
-type LiveProps = {
+interface LiveProps {
   label: string;
   options: Options;
   size: number;
-};
+}
 
 /** A thing that she picks up arrives with a small pop, not from nowhere. */
 const POP: Keyframe[] = [
@@ -93,14 +93,14 @@ function draw() {
  */
 function Calm({ label, options, size }: LiveProps) {
   const [glad, setGlad] = useState<typeof MoodSchema.Type>();
-  const { clear, start } = useTimeout(() => setGlad(undefined), 1100);
-  const press = useEventListener("click", () => {
+  const { clear, start: wait } = useTimeout(() => setGlad(undefined), 1100);
+  const pressed = useEventListener("click", () => {
     clear();
-    setGlad("senang");
-    start();
+    setGlad("happy");
+    wait();
   });
   return (
-    <Frame edge={modeOf(options) === "peek"} ref={press}>
+    <Frame edge={modeOf(options) === "peek"} ref={pressed}>
       <Picture
         {...scene(glad === undefined ? options : { ...options, mood: glad })}
         label={label}
@@ -114,26 +114,42 @@ function Calm({ label, options, size }: LiveProps) {
  * Her life. One clock moves all of the Ninas of a page, and only while they can
  * be seen. Her limbs follow the act through springs, her eyes follow the
  * pointer, she blinks, and a press is a small surprise.
+ *
+ * A frame does not make React draw her again. Her picture is drawn with React
+ * once, and every frame after it writes the numbers that changed straight onto
+ * the elements that React made (`paint`). Only when she changes what she is
+ * made of, such as a new face or a thing in her arms, is she drawn with React
+ * again, in the same frame, as a new figure.
  */
 function Alive({ label, options, size }: LiveProps) {
-  const [store] = useState(() => createLifeStore(draw));
-  const live = useStore(store, (state) => state.live);
+  const [figure, setFigure] = useState(() => ({
+    ...scene(options),
+    version: 0,
+  }));
   const root = useRef<HTMLSpanElement>(null);
   const stage = useRef<HTMLSpanElement>(null);
+  const svg = useRef<SVGSVGElement>(null);
+  const life = useRef<Life>(undefined);
+  const shown = useRef(figure.shapes);
+  const holding = useRef(false);
   const pointer = useRef<readonly [number, number]>(undefined);
+  const where = useRef<DOMRect>(undefined);
   const ducking = useRef<Animation>(undefined);
   const { inViewport, ref: watch } = useInViewport<HTMLSpanElement>();
-  const press = useEventListener("click", () => {
-    if (store.getState().press(options)) {
+  const pressed = useEventListener("click", () => {
+    if (life.current === undefined) {
+      return;
+    }
+    const reaction = press(life.current, options);
+    life.current = reaction.life;
+    if (reaction.duck) {
       ducking.current?.cancel();
       ducking.current = stage.current?.animate(DUCK, { duration: 980 });
     }
   });
-  const place = useMergedRef(root, watch, press);
+  const place = useMergedRef(root, watch, pressed);
   const latest = useEffectEvent(() => options);
   const home = homeOf(options);
-  const holds = live !== undefined && holding(live);
-  const held = usePrevious(holds);
 
   useWindowEvent(
     "pointermove",
@@ -144,33 +160,69 @@ function Alive({ label, options, size }: LiveProps) {
   );
 
   useEffect(() => {
-    store.getState().begin(latest());
-  }, [store]);
-
-  useEffect(() => {
-    store.getState().retarget(home);
-  }, [home, store]);
+    if (life.current) {
+      life.current = retarget(life.current, home);
+    }
+  }, [home]);
 
   useEffect(() => {
     if (!inViewport) {
       return;
     }
-    let before = performance.now();
-    const tick = ({ timestamp }: FrameData) => {
-      const box = root.current?.getBoundingClientRect();
-      const at = pointer.current;
-      store
-        .getState()
-        .tick(
-          latest(),
-          Math.min(0.05, (timestamp - before) / 1000 || 0.016),
-          at !== undefined && box !== undefined ? gazeAt(at, box) : [0, 0]
-        );
-      before = timestamp;
+    if (life.current === undefined) {
+      // What she holds when her life begins is already in her picture, and
+      // does not arrive with a pop.
+      life.current = start(latest(), draw);
+      holding.current = view(life.current, latest()).holds;
+    }
+    const measure = () => {
+      where.current = root.current?.getBoundingClientRect();
     };
-    frame.update(tick, true);
-    return () => cancelFrame(tick);
-  }, [inViewport, store]);
+    const advance = ({ delta }: FrameData) => {
+      const current = life.current;
+      const at = pointer.current;
+      if (current === undefined) {
+        return;
+      }
+      const asked = latest();
+      const next = step(
+        current,
+        asked,
+        Math.min(0.05, delta / 1000 || 0.016),
+        at !== undefined && where.current !== undefined
+          ? gazeAt(at, where.current)
+          : [0, 0],
+        draw
+      );
+      life.current = next;
+      const seen = view(next, asked);
+      if (sameFigure(shown.current, seen.picture.shapes)) {
+        if (svg.current) {
+          paint(svg.current, shown.current, seen.picture.shapes);
+        }
+      } else {
+        flushSync(() => {
+          setFigure((before) => ({
+            ...seen.picture,
+            version: before.version + 1,
+          }));
+        });
+      }
+      shown.current = seen.picture.shapes;
+      if (seen.holds && !holding.current) {
+        svg.current
+          ?.querySelector('[data-part="held"]')
+          ?.animate(POP, { duration: 180, easing: POP_EASE });
+      }
+      holding.current = seen.holds;
+    };
+    frame.read(measure, true);
+    frame.render(advance, true);
+    return () => {
+      cancelFrame(measure);
+      cancelFrame(advance);
+    };
+  }, [inViewport]);
 
   useEffect(() => {
     if (!inViewport) {
@@ -179,7 +231,7 @@ function Alive({ label, options, size }: LiveProps) {
     let timer = 0;
     const blink = () => {
       for (const eye of Arr.fromIterable(
-        root.current?.querySelectorAll("[data-eye]") ?? []
+        svg.current?.querySelectorAll("[data-eye]") ?? []
       )) {
         eye.animate(BLINK, { duration: 160, easing: "ease-out" });
       }
@@ -189,22 +241,17 @@ function Alive({ label, options, size }: LiveProps) {
     return () => window.clearTimeout(timer);
   }, [inViewport]);
 
-  useEffect(() => {
-    if (holds && held === false) {
-      root.current
-        ?.querySelector('[data-part="held"]')
-        ?.animate(POP, { duration: 180, easing: POP_EASE });
-    }
-  }, [held, holds]);
-
   useEffect(() => () => ducking.current?.cancel(), []);
 
   return (
     <Frame edge={modeOf(options) === "peek"} ref={place}>
       <span className="block" ref={stage}>
         <Picture
-          {...(live === undefined ? scene(options) : view(live, options))}
+          box={figure.box}
+          key={figure.version}
           label={label}
+          ref={svg}
+          shapes={figure.shapes}
           size={size}
         />
       </span>

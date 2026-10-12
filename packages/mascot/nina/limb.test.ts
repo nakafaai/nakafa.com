@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { ARM, n1 } from "@repo/design-system/components/nina/body";
+import { ARM } from "@repo/mascot/nina/body";
 import {
   type Curve,
   exit,
@@ -7,7 +7,8 @@ import {
   limb,
   onBody,
   wide,
-} from "@repo/design-system/components/nina/limb";
+} from "@repo/mascot/nina/limb";
+import { tenth } from "@repo/mascot/nina/point";
 import { Array as Arr, String as Str } from "effect";
 
 /** An arm that hangs from her shoulder and curls out at its tip. */
@@ -16,6 +17,11 @@ const HANGING: Curve = [80, 146, 38, 166, 36, 204, 12, 200];
 const STRAIGHT: Curve = [0, 0, 20, 0, 40, 0, 60, 0];
 /** An arm so short that all of it stays inside her body. */
 const HIDDEN: Curve = [80, 146, 84, 150, 88, 154, 92, 158];
+
+/** An outline that starts on the left edge of a limb and runs along it. */
+const STARTS_ALONG = /^M[\d.,-]+ L[\d.,-]+ Q/u;
+/** An outline that is closed. */
+const ENDS_CLOSED = / Z$/u;
 
 /** How many curved segments an outline draws. */
 function curves(outline: string) {
@@ -43,15 +49,15 @@ describe("a limb", () => {
   it("is round at both ends when it is whole, and cut straight when it is a part", () => {
     expect(curves(limb(HANGING, ARM))).toBe(2 * 15 + 2);
     expect(curves(limb(HANGING, ARM, 0.4))).toBe(2 * 15 + 1);
-    expect(limb(HANGING, ARM)).toMatch(/^M[\d.,-]+ L[\d.,-]+ Q/u);
-    expect(limb(HANGING, ARM)).toMatch(/ Z$/u);
+    expect(limb(HANGING, ARM)).toMatch(STARTS_ALONG);
+    expect(limb(HANGING, ARM)).toMatch(ENDS_CLOSED);
   });
 
   it("is as wide as its law says along a middle line that does not bend", () => {
     // Its outline starts on the left edge of the root, half a width above the line.
-    expect(Str.startsWith(`M0,${n1(wide(0, ARM))} `)(limb(STRAIGHT, ARM))).toBe(
-      true
-    );
+    expect(
+      Str.startsWith(`M0,${tenth(wide(0, ARM))} `)(limb(STRAIGHT, ARM))
+    ).toBe(true);
   });
 
   it("is drawn even when its middle line has not moved", () => {

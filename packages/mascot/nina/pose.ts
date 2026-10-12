@@ -1,15 +1,9 @@
-import { SHOULDER } from "@repo/design-system/components/nina/body";
-import {
-  LookSchema,
-  MoodSchema,
-} from "@repo/design-system/components/nina/face";
-import {
-  type Curve,
-  CurveSchema,
-  flip,
-} from "@repo/design-system/components/nina/limb";
-import { ShapeSchema } from "@repo/design-system/components/nina/shape";
-import { Array as Arr, Schema } from "effect";
+import { SHOULDER } from "@repo/mascot/nina/body";
+import { LookSchema, MoodSchema } from "@repo/mascot/nina/face";
+import { type Curve, CurveSchema, flip } from "@repo/mascot/nina/limb";
+import type { Mark } from "@repo/mascot/nina/mark";
+import type { Shape } from "@repo/mascot/shape";
+import { Array as Arr, Predicate, Schema } from "effect";
 
 /**
  * Where an arm is drawn: "back" behind her body, or "front" over her body and
@@ -19,11 +13,19 @@ import { Array as Arr, Schema } from "effect";
 const LayerSchema = Schema.Literals(["back", "front"]);
 
 /**
+ * One shape of her picture. The kernel types a shape by its mark and no Schema
+ * describes it, so this checks only that it names what it draws.
+ */
+const ShapeSchema = Schema.declare((input: unknown): input is Shape<Mark> =>
+  Predicate.hasProperty(input, "_tag")
+);
+
+/**
  * The numbers that describe her: how her body sits, where every arm and leg
  * bends, what her face does and what she holds. An act answers them for every
  * moment.
  */
-const PoseSchema = Schema.Struct({
+export const PoseSchema = Schema.Struct({
   above: Schema.Array(ShapeSchema),
   armL: CurveSchema,
   armR: CurveSchema,

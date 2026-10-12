@@ -1,0 +1,12 @@
+/* The colors of Nina and of what she holds. They look the same in every theme. */
+@theme static {
+  --color-nina-body: oklch(0.77498 0.1318 224.26);
+  --color-nina-face: #e3f6fe;
+  --color-nina-ink: oklch(0.28693 0.0744 261.92);
+  --color-pop-yellow: #f1cd1f;
+  --color-pop-blue: #2878b1;
+  --color-pop-orange: #fa6707;
+  --color-pop-green: #58904d;
+  --color-pop-red: #dc3437;
+  --color-pop-cream: #fff4cc;
+}

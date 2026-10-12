@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { ACTS } from "@repo/design-system/components/nina/act";
-import { EDGES } from "@repo/design-system/components/nina/edge";
+import { ACTS } from "@repo/mascot/nina/act";
+import { EDGES } from "@repo/mascot/nina/edge";
 import {
   followPeek,
   followWhole,
@@ -9,11 +9,11 @@ import {
   settle,
   wholeNumbers,
   wholeSprung,
-} from "@repo/design-system/components/nina/spring";
+} from "@repo/mascot/nina/spring";
 import { Array as Arr } from "effect";
 
-const WAVE = ACTS.melambai.pose(1.3);
-const STILL = ACTS.santai.pose(0.4);
+const WAVE = ACTS.waving.pose(1.3);
+const STILL = ACTS.relaxed.pose(0.4);
 /** The tip of her right arm, where it waves. */
 const TIP = 17;
 
@@ -54,8 +54,8 @@ describe("her springs", () => {
   });
 
   it("follow only her two arms over an edge", () => {
-    const edge = EDGES.lambai.pose(0.2);
-    const held = settle(peekNumbers(EDGES.pegang.pose(0.3)));
+    const edge = EDGES.greeting.pose(0.2);
+    const held = settle(peekNumbers(EDGES.gripping.pose(0.3)));
     expect(followPeek(held, edge, 0.01).x).toHaveLength(16);
     expect(peekSprung(settle(peekNumbers(edge)), edge)).toEqual(edge);
   });

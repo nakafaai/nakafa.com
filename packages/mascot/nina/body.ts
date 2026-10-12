@@ -37,10 +37,10 @@ export const ARM = { thick: 25, thin: 10 };
 export const LEG = { thick: 32, thin: 12 };
 
 /** The ways she stands in a tile, and the one in which she looks over an edge. */
-export const LeanSchema = Schema.Literals(["kanan", "kiri", "tengah", "intip"]);
+export const LeanSchema = Schema.Literals(["right", "left", "center", "peek"]);
 
-/** Which way she faces: `kiri` mirrors her, fin and all. */
-export const SideSchema = Schema.Literals(["kanan", "kiri"]);
+/** Which way she faces: `left` mirrors her, fin and all. */
+export const SideSchema = Schema.Literals(["right", "left"]);
 
 /** How much of her a window shows: all of her, a tile, or what is over an edge. */
 export const CutSchema = Schema.Literals(["whole", "bust", "peek"]);
@@ -52,10 +52,10 @@ export const CutSchema = Schema.Literals(["whole", "bust", "peek"]);
  * higher, with room beside her for the two arm tips that hold on.
  */
 export const LEANS = {
-  kanan: { turn: -9, size: 0.86, x: 8, y: 10 },
-  kiri: { turn: 9, size: 0.86, x: -8, y: 10 },
-  tengah: { turn: 0, size: 0.9, x: 0, y: 6 },
-  intip: { turn: 0, size: 1, x: 0, y: 30 },
+  right: { turn: -9, size: 0.86, x: 8, y: 10 },
+  left: { turn: 9, size: 0.86, x: -8, y: 10 },
+  center: { turn: 0, size: 0.9, x: 0, y: 6 },
+  peek: { turn: 0, size: 1, x: 0, y: 30 },
 } satisfies Record<typeof LeanSchema.Type, unknown>;
 
 /** The window on her whole figure: room for raised arms and for what she holds. */
@@ -63,8 +63,3 @@ export const WHOLE_BOX = [-48, -20, 300, 310] as const;
 
 /** The window on her half figure. */
 export const HALF_BOX = [0, 0, 200, 200] as const;
-
-/** Rounds to one decimal, the precision her drawing is written in. */
-export function n1(value: number) {
-  return Math.round(value * 10) / 10;
-}

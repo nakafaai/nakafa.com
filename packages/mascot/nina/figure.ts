@@ -1,4 +1,5 @@
-import { ACTS, ActSchema } from "@repo/design-system/components/nina/act";
+import { NINA, POP } from "@repo/mascot/color";
+import { ACTS, ActSchema } from "@repo/mascot/nina/act";
 import {
   ARM,
   type CutSchema,
@@ -8,44 +9,32 @@ import {
   LEANS,
   LEG,
   LeanSchema,
-  n1,
   PALE,
   SideSchema,
   TORSO,
   WHOLE_BOX,
-} from "@repo/design-system/components/nina/body";
-import { BODY, FACE } from "@repo/design-system/components/nina/color";
-import { EDGES, EdgeSchema } from "@repo/design-system/components/nina/edge";
+} from "@repo/mascot/nina/body";
+import { EDGES, EdgeSchema } from "@repo/mascot/nina/edge";
 import {
   face,
   type Look,
   LookSchema,
   MoodSchema,
-} from "@repo/design-system/components/nina/face";
+} from "@repo/mascot/nina/face";
+import { type Curve, exit, limb } from "@repo/mascot/nina/limb";
 import {
-  type Curve,
-  exit,
-  limb,
-} from "@repo/design-system/components/nina/limb";
-import { type Pose, REST } from "@repo/design-system/components/nina/pose";
-import {
-  group,
   type LimbName,
-  path,
-  rect,
-  type Shape,
-} from "@repo/design-system/components/nina/shape";
-import { Array as Arr, Schema } from "effect";
+  limbOf,
+  type Mark,
+  partOf,
+} from "@repo/mascot/nina/mark";
+import { tenth } from "@repo/mascot/nina/point";
+import { type Pose, REST } from "@repo/mascot/nina/pose";
+import { group, path, rect, type Shape } from "@repo/mascot/shape";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 
-/** The colors a tile can have behind her. */
-const GroundSchema = Schema.Literals([
-  "pop-blue",
-  "pop-cream",
-  "pop-green",
-  "pop-orange",
-  "pop-red",
-  "pop-yellow",
-]);
+/** The colors that can lie behind her in a tile. */
+const GroundSchema = Schema.Literals(Rec.keys(POP));
 
 /** The limbs below her body, left to right. */
 const LEG_NAMES = ["leg0", "leg1", "leg2", "leg3"] as const;
@@ -61,9 +50,9 @@ const Shared = {
  * What the drawing needs to know. Whole, she is drawn doing `act`. Otherwise
  * she is the same figure seen through a smaller window, the way the profile
  * animals are: she rises from the bottom of the frame, standing in the middle
- * or leaning in from a lower corner (`lean`: kanan, kiri), and the frame cuts
- * her body, never her head. `lean: "intip"` is her looking over the bottom edge
- * with the tips of her arms resting on it. `side: "kiri"` mirrors her, fin and
+ * or leaning in from a lower corner (`lean`: right, left), and the frame cuts
+ * her body, never her head. `lean: "peek"` is her looking over the bottom edge
+ * with the tips of her arms resting on it. `side: "left"` mirrors her, fin and
  * all. `t` picks the moment of the act; left out, it is the moment that shows
  * the act best. `fidget` lists the acts that she may do for a moment by
  * herself, now and then, when she is alive.
@@ -88,7 +77,7 @@ const OptionsSchema = Schema.Union([
 export type Options = typeof OptionsSchema.Type;
 
 /** Where a point of her upper body is once she has shifted, lifted and tilted. */
-function place(
+export function place(
   { lift, shift, tilt }: Pick<Pose, "lift" | "shift" | "tilt">,
   x: number,
   y: number
@@ -104,7 +93,7 @@ function place(
 
 /** Moves her upper body: shifted, lifted and tilted about her feet. */
 function upper({ lift, shift, tilt }: Pick<Pose, "lift" | "shift" | "tilt">) {
-  return `translate(${n1(shift)} ${n1(lift)}) rotate(${n1(tilt)} 102 210)`;
+  return `translate(${tenth(shift)} ${tenth(lift)}) rotate(${tenth(tilt)} 102 210)`;
 }
 
 /** A leg in the room she stands in: its root moves with her body, its tip stays on the floor. */
@@ -128,12 +117,16 @@ export function legCurve(
 
 /** One tentacle, drawn whole. */
 function tentacle(name: LimbName, c: Curve, girth: typeof ARM) {
-  return path({ d: limb(c, girth), fill: BODY, limb: name });
+  return path({ d: limb(c, girth), fill: NINA.body, mark: limbOf(name) });
 }
 
 /** The part of an arm that is drawn on top, from where it has left her body. */
 function over(name: LimbName, c: Curve) {
-  return path({ d: limb(c, ARM, exit(c, ARM)), fill: BODY, limb: name });
+  return path({
+    d: limb(c, ARM, exit(c, ARM)),
+    fill: NINA.body,
+    mark: limbOf(name),
+  });
 }
 
 /**
@@ -151,7 +144,7 @@ function figure(
   mood: typeof MoodSchema.Type,
   look: Look,
   cut: typeof CutSchema.Type
-): readonly Shape[] {
+): readonly Shape<Mark>[] {
   const arms = cut !== "bust";
   return [
     group(
@@ -160,11 +153,11 @@ function figure(
             tentacle(name, legCurve(pose, i), LEG)
           )
         : [],
-      { part: "legs" }
+      { mark: partOf("legs") }
     ),
     group(
       [
-        ...(cut === "peek" ? [] : [path({ d: FIN, fill: BODY })]),
+        ...(cut === "peek" ? [] : [path({ d: FIN, fill: NINA.body })]),
         group(
           arms
             ? [
@@ -172,13 +165,13 @@ function figure(
                 tentacle("armR", pose.armR, ARM),
               ]
             : [],
-          { part: "back" }
+          { mark: partOf("back") }
         ),
-        path({ d: TORSO, fill: BODY }),
-        path({ d: HEAD, fill: BODY }),
-        path({ d: PALE, fill: FACE }),
-        group(face(mood, look), { part: "face" }),
-        group(pose.held, { part: "held" }),
+        path({ d: TORSO, fill: NINA.body }),
+        path({ d: HEAD, fill: NINA.body }),
+        path({ d: PALE, fill: NINA.face }),
+        group(face(mood, look), { mark: partOf("face") }),
+        group(pose.held, { mark: partOf("held") }),
         group(
           arms
             ? [
@@ -190,12 +183,12 @@ function figure(
                   : []),
               ]
             : [],
-          { part: "front" }
+          { mark: partOf("front") }
         ),
       ],
-      { part: "upper", transform: upper(pose) }
+      { mark: partOf("upper"), transform: upper(pose) }
     ),
-    group(pose.above, { part: "above" }),
+    group(pose.above, { mark: partOf("above") }),
   ];
 }
 
@@ -204,7 +197,7 @@ export function viewed(
   side: typeof SideSchema.Type | undefined,
   look: Look
 ): Look {
-  return side === "kiri" ? [-look[0], look[1]] : look;
+  return side === "left" ? [-look[0], look[1]] : look;
 }
 
 /**
@@ -218,8 +211,8 @@ export function compose(
   mood: typeof MoodSchema.Type,
   look: Look
 ) {
-  const mirrored = options.side === "kiri";
-  const mirror = (shapes: readonly Shape[]) =>
+  const mirrored = options.side === "left";
+  const mirror = (shapes: readonly Shape<Mark>[]) =>
     mirrored
       ? [group(shapes, { transform: "translate(204 0) scale(-1 1)" })]
       : shapes;
@@ -229,11 +222,9 @@ export function compose(
       shapes: mirror(figure(pose, mood, look, "whole")),
     };
   }
-  const lean = LEANS[options.lean ?? "tengah"];
+  const lean = LEANS[options.lean ?? "center"];
   const placed = group(
-    mirror(
-      figure(pose, mood, look, options.lean === "intip" ? "peek" : "bust")
-    ),
+    mirror(figure(pose, mood, look, options.lean === "peek" ? "peek" : "bust")),
     {
       transform: `translate(${100 + lean.x} ${200 + lean.y}) rotate(${lean.turn}) scale(${lean.size}) translate(-102 -200)`,
     }
@@ -243,10 +234,7 @@ export function compose(
     shapes:
       options.tile === undefined
         ? [placed]
-        : [
-            rect({ fill: `var(--${options.tile})`, height: 200, width: 200 }),
-            placed,
-          ],
+        : [rect({ fill: POP[options.tile], height: 200, width: 200 }), placed],
   };
 }
 
@@ -254,17 +242,17 @@ export function compose(
 export function scene(options: Options) {
   const look = viewed(options.side, options.look ?? [0, 0]);
   if (options.whole === true) {
-    const act = ACTS[options.act ?? "santai"];
+    const act = ACTS[options.act ?? "relaxed"];
     const pose = act.pose(options.t ?? act.still);
     return compose(
       options,
       pose,
-      options.mood ?? pose.mood ?? "halo",
+      options.mood ?? pose.mood ?? "hello",
       pose.look ?? look
     );
   }
-  const edge = EDGES[options.act ?? "pegang"];
+  const edge = EDGES[options.act ?? "gripping"];
   const pose =
-    options.lean === "intip" ? edge.pose(options.t ?? edge.still) : REST;
-  return compose(options, pose, options.mood ?? "halo", look);
+    options.lean === "peek" ? edge.pose(options.t ?? edge.still) : REST;
+  return compose(options, pose, options.mood ?? "hello", look);
 }

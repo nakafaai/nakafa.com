@@ -1,29 +1,19 @@
-import { n1 } from "@repo/design-system/components/nina/body";
 import {
   BASE,
   BOARD,
-  BODY,
-  FACE,
-  INK,
   LID,
+  NINA,
   PAGE,
   PAPER,
   PINK,
   POP,
-} from "@repo/design-system/components/nina/color";
-import { sparkle } from "@repo/design-system/components/nina/mark";
-import {
-  circle,
-  group,
-  path,
-  rect,
-} from "@repo/design-system/components/nina/shape";
+} from "@repo/mascot/color";
+import { at, type Place, tenth } from "@repo/mascot/nina/point";
+import { circle, group, path, rect } from "@repo/mascot/shape";
+import { sparkle } from "@repo/mascot/sparkle";
 import { Array as Arr } from "effect";
 
-/** A place in her figure, as x and y. */
-type Place = readonly [number, number];
-
-/** The notepad she writes on leans a little. Points on it are turned with it. */
+/** The notepad she writes on leans a little. Places on it are turned with it. */
 const PAD_TURN = -4;
 
 /**
@@ -38,7 +28,7 @@ export function book(turn: number) {
     turn > 0 && turn < 1
       ? [
           path({
-            d: `M102,163 Q${n1(102 + 30 * swing)},${n1(162 - 34 * rise)} ${n1(102 + 46 * swing)},${n1(158 - 30 * rise)}`,
+            d: `M102,163 Q${at(102 + 30 * swing, 162 - 34 * rise)} ${at(102 + 46 * swing, 158 - 30 * rise)}`,
             fill: "none",
             stroke: PAPER,
             strokeLinecap: "round",
@@ -56,7 +46,7 @@ export function book(turn: number) {
     path({ d: "M154,158 L102,164 L102,214 L154,206 Z", fill: POP.orange }),
     path({
       d: "M102,165 L102,213",
-      stroke: INK,
+      stroke: NINA.ink,
       strokeLinecap: "round",
       strokeOpacity: 0.28,
       strokeWidth: 3,
@@ -70,17 +60,17 @@ export function lock(open: number) {
   const up = open * 11;
   return [
     path({
-      d: `M82,${n1(176 - up)} V${n1(160 - up)} C82,136 122,136 122,${n1(160 - up)}${open > 0.5 ? "" : ` V${n1(176 - up)}`}`,
+      d: `M82,${tenth(176 - up)} V${tenth(160 - up)} C82,136 122,136 122,${tenth(160 - up)}${open > 0.5 ? "" : ` V${tenth(176 - up)}`}`,
       fill: "none",
       stroke: BASE,
       strokeLinecap: "round",
       strokeWidth: 9,
     }),
     rect({ fill: POP.yellow, height: 50, rx: 12, width: 76, x: 64, y: 170 }),
-    circle({ cx: 102, cy: 190, fill: INK, r: 6.5 }),
+    circle({ cx: 102, cy: 190, fill: NINA.ink, r: 6.5 }),
     path({
       d: "M102,190 L102,204",
-      stroke: INK,
+      stroke: NINA.ink,
       strokeLinecap: "round",
       strokeWidth: 6,
     }),
@@ -109,7 +99,7 @@ export function keyboard(down: readonly Place[]) {
   ];
 }
 
-/** Where a point on the notepad is once the notepad leans. */
+/** Where a place on the notepad is once the notepad leans. */
 export function onPad(x: number, y: number): Place {
   const a = (PAD_TURN * Math.PI) / 180;
   const dx = x - 90;
@@ -120,15 +110,15 @@ export function onPad(x: number, y: number): Place {
   ];
 }
 
-/** A notepad with the lines she has written so far. `ink` counts lines, with a fraction for the one in progress. */
+/** A notepad with the lines she has written so far. `written` counts lines, with a fraction for the one in progress. */
 export function pad(written: number) {
   const lines = Arr.flatMap(Arr.range(0, 2), (i) => {
     const part = Math.max(0, Math.min(1, written - i));
     return part > 0
       ? [
           path({
-            d: `M70,${176 + i * 13} L${n1(70 + 40 * part)},${176 + i * 13}`,
-            stroke: INK,
+            d: `M70,${176 + i * 13} L${at(70 + 40 * part, 176 + i * 13)}`,
+            stroke: NINA.ink,
             strokeLinecap: "round",
             strokeWidth: 4,
           }),
@@ -153,11 +143,11 @@ export function pencil(x: number, y: number) {
   return [
     group(
       [
-        path({ d: "M0,0 L4,-9 L-4,-9 Z", fill: INK }),
+        path({ d: "M0,0 L4,-9 L-4,-9 Z", fill: NINA.ink }),
         rect({ fill: POP.yellow, height: 29, width: 8, x: -4, y: -38 }),
         rect({ fill: PINK, height: 7, rx: 2, width: 8, x: -4, y: -44 }),
       ],
-      { transform: `translate(${n1(x)} ${n1(y)}) rotate(40) scale(1.3)` }
+      { transform: `translate(${tenth(x)} ${tenth(y)}) rotate(40) scale(1.3)` }
     ),
   ];
 }
@@ -166,18 +156,18 @@ export function pencil(x: number, y: number) {
 export function lens(x: number, y: number) {
   return [
     path({
-      d: `M${n1(x + 13)},${n1(y + 15)} L${n1(x + 27)},${n1(y + 36)}`,
+      d: `M${at(x + 13, y + 15)} L${at(x + 27, y + 36)}`,
       stroke: POP.orange,
       strokeLinecap: "round",
       strokeWidth: 10,
     }),
     circle({
-      cx: n1(x),
-      cy: n1(y),
-      fill: FACE,
+      cx: tenth(x),
+      cy: tenth(y),
+      fill: NINA.face,
       fillOpacity: 0.7,
       r: 19,
-      stroke: INK,
+      stroke: NINA.ink,
       strokeWidth: 6,
     }),
   ];
@@ -186,19 +176,19 @@ export function lens(x: number, y: number) {
 /** A thought: two small circles rising from her head to a cloud, and in the cloud three dots lit one after another. */
 export function dots(t: number) {
   return [
-    circle({ cx: 170, cy: 40, fill: BODY, r: 5 }),
-    circle({ cx: 184, cy: 24, fill: BODY, r: 7 }),
+    circle({ cx: 170, cy: 40, fill: NINA.body, r: 5 }),
+    circle({ cx: 184, cy: 24, fill: NINA.body, r: 7 }),
     path({
       d: "M176,-2 C170,-14 186,-22 196,-15 C204,-25 224,-22 226,-10 C240,-10 242,6 230,10 C226,18 210,18 204,12 C194,18 174,12 176,-2 Z",
-      fill: BODY,
+      fill: NINA.body,
     }),
     ...Arr.map(Arr.range(0, 2), (i) => {
       const lit = Math.max(0, Math.sin((t * 1.5 - i * 0.22) * Math.PI * 2));
       return circle({
         cx: 192 + i * 13,
-        cy: n1(-3 - lit * 3),
-        fill: FACE,
-        r: n1(3.4 + lit * 1.2),
+        cy: tenth(-3 - lit * 3),
+        fill: NINA.face,
+        r: tenth(3.4 + lit * 1.2),
       });
     }),
   ];
@@ -212,18 +202,18 @@ export function confetti(t: number) {
     const x = -30 + ((i * 53) % 264) + Math.sin(life * 7 + i) * 12;
     const y = -24 + life * 250;
     const fill = colors[i % 5];
-    const opacity = n1(life < 0.8 ? 1 : (1 - life) / 0.2);
+    const opacity = tenth(life < 0.8 ? 1 : (1 - life) / 0.2);
     return i % 3 === 0
-      ? circle({ cx: n1(x), cy: n1(y), fill, opacity, r: 4.5 })
+      ? circle({ cx: tenth(x), cy: tenth(y), fill, opacity, r: 4.5 })
       : rect({
           fill,
           height: 8,
           opacity,
           rx: 2,
-          transform: `rotate(${n1(life * 540 + i * 40)} ${n1(x)} ${n1(y)})`,
+          transform: `rotate(${tenth(life * 540 + i * 40)} ${tenth(x)} ${tenth(y)})`,
           width: 8,
-          x: n1(x - 4),
-          y: n1(y - 4),
+          x: tenth(x - 4),
+          y: tenth(y - 4),
         });
   });
 }
@@ -236,10 +226,10 @@ export function sleep(t: number) {
     const x = 190 + life * 34;
     const y = 46 - life * 62;
     return path({
-      d: `M${n1(x - size)},${n1(y - size)} H${n1(x + size)} L${n1(x - size)},${n1(y + size)} H${n1(x + size)}`,
+      d: `M${at(x - size, y - size)} H${tenth(x + size)} L${at(x - size, y + size)} H${tenth(x + size)}`,
       fill: "none",
-      opacity: n1(Math.sin(life * Math.PI)),
-      stroke: BODY,
+      opacity: tenth(Math.sin(life * Math.PI)),
+      stroke: NINA.body,
       strokeLinecap: "round",
       strokeLinejoin: "round",
       strokeWidth: 4.5,
@@ -272,16 +262,16 @@ export function balls(t: number, left: Place, right: Place) {
     // The way the balls go, as a dotted line from one arm over her head to the other.
     shapes: [
       path({
-        d: `M${n1(left[0])},${n1(left[1] - 14)} Q102,-128 ${n1(right[0])},${n1(right[1] - 14)}`,
+        d: `M${at(left[0], left[1] - 14)} Q102,-128 ${at(right[0], right[1] - 14)}`,
         fill: "none",
-        stroke: INK,
+        stroke: NINA.ink,
         strokeDasharray: "1 9",
         strokeLinecap: "round",
         strokeOpacity: 0.22,
         strokeWidth: 3,
       }),
       ...Arr.map(flights, ({ fill, x, y }) =>
-        circle({ cx: n1(x), cy: n1(y), fill, r: 11.5 })
+        circle({ cx: tenth(x), cy: tenth(y), fill, r: 11.5 })
       ),
     ],
   };

@@ -1,25 +1,21 @@
-// @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type Options,
-  scene,
-} from "@repo/design-system/components/nina/figure";
+import { type Options, scene } from "@repo/mascot/nina/figure";
 import {
   gazeAt,
-  holding,
-  type Live,
+  type Life,
   press,
   retarget,
   start,
   step,
   view,
-} from "@repo/design-system/components/nina/live";
-import type { Shape } from "@repo/design-system/components/nina/shape";
+} from "@repo/mascot/nina/life";
+import type { Mark } from "@repo/mascot/nina/mark";
+import type { Shape } from "@repo/mascot/shape";
 import { Array as Arr } from "effect";
 
-const WHOLE: Options = { act: "santai", whole: true };
-const PEEK: Options = { act: "pegang", lean: "intip" };
-const TILE: Options = { lean: "kanan", mood: "halo", tile: "pop-cream" };
+const WHOLE: Options = { act: "relaxed", whole: true };
+const PEEK: Options = { act: "gripping", lean: "peek" };
+const TILE: Options = { lean: "right", mood: "hello", tile: "cream" };
 const FRAME = 1 / 60;
 const STILL: readonly [number, number] = [0, 0];
 /** The stroke that only a surprised face draws. */
@@ -31,12 +27,12 @@ const LOWEST = () => 0;
 
 /** Lets `frames` frames of a sixtieth of a second go by. */
 function wait(
-  live: Live,
+  life: Life,
   options: Options,
   frames: number,
   draw: () => number = LOWEST
 ) {
-  return Arr.reduce(Arr.range(1, frames), live, (held) =>
+  return Arr.reduce(Arr.range(1, frames), life, (held) =>
     step(held, options, FRAME, STILL, draw)
   );
 }
@@ -52,7 +48,7 @@ function sequence(numbers: readonly number[]) {
 }
 
 /** The path of every line of ink in a list of shapes, also inside groups. */
-function paths(shapes: readonly Shape[]): readonly string[] {
+function paths(shapes: readonly Shape<Mark>[]): readonly string[] {
   return Arr.flatMap(shapes, (shape) => {
     if (shape._tag === "g") {
       return paths(shape.children);
@@ -62,14 +58,16 @@ function paths(shapes: readonly Shape[]): readonly string[] {
 }
 
 /** Whether her face shows surprise. */
-function surprised(live: Live, options: Options) {
-  return Arr.contains(paths(view(live, options).shapes), SURPRISE);
+function surprised(life: Life, options: Options) {
+  return Arr.contains(paths(view(life, options).picture.shapes), SURPRISE);
 }
 
 describe("her life", () => {
   it("takes over from the still picture without a jump, in all three windows", () => {
     for (const options of [WHOLE, PEEK, TILE]) {
-      expect(view(start(options, LOWEST), options)).toEqual(scene(options));
+      expect(view(start(options, LOWEST), options).picture).toEqual(
+        scene(options)
+      );
     }
   });
 
@@ -79,25 +77,27 @@ describe("her life", () => {
   });
 
   it("stands at ease when all of her shows and holds the edge when she looks over it", () => {
-    expect(start({ whole: true }, LOWEST).act).toBe("santai");
-    expect(start({ lean: "intip" }, LOWEST).act).toBe("pegang");
+    expect(start({ whole: true }, LOWEST).act).toBe("relaxed");
+    expect(start({ lean: "peek" }, LOWEST).act).toBe("gripping");
   });
 
   it("knows when she holds something, which then arrives with a pop", () => {
-    expect(holding(start({ act: "membaca", whole: true }, LOWEST))).toBe(true);
-    expect(holding(start(WHOLE, LOWEST))).toBe(false);
-    expect(holding(press(start(WHOLE, LOWEST), WHOLE).live)).toBe(false);
+    const reading: Options = { act: "reading", whole: true };
+    expect(view(start(reading, LOWEST), reading).holds).toBe(true);
+    expect(view(start(WHOLE, LOWEST), WHOLE).holds).toBe(false);
+    const waving = press(start(WHOLE, LOWEST), WHOLE).life;
+    expect(view(waving, WHOLE).holds).toBe(false);
   });
 
   it("goes on doing her act with every frame", () => {
     const begun = start(WHOLE, LOWEST);
-    const live = wait(begun, WHOLE, 60);
-    expect(live.clock).toBeCloseTo(begun.clock + 1, 9);
-    expect(live.act).toBe("santai");
+    const life = wait(begun, WHOLE, 60);
+    expect(life.clock).toBeCloseTo(begun.clock + 1, 9);
+    expect(life.act).toBe("relaxed");
   });
 
   it("moves her limbs after the act without throwing one, even when frames take long", () => {
-    const options: Options = { act: "melambai", whole: true };
+    const options: Options = { act: "waving", whole: true };
     const slow = Arr.reduce(Arr.range(1, 200), start(options, LOWEST), (held) =>
       step(held, options, 0.05, STILL, LOWEST)
     );
@@ -106,8 +106,8 @@ describe("her life", () => {
 
   it("changes what she does without a jump", () => {
     const before = wait(start(WHOLE, LOWEST), WHOLE, 30);
-    const changed = retarget(before, "melambai");
-    expect(changed.act).toBe("melambai");
+    const changed = retarget(before, "waving");
+    expect(changed.act).toBe("waving");
     expect(changed.clock).toBe(0);
     const next = step(changed, WHOLE, FRAME, STILL, LOWEST);
     expect(Math.abs(next.springs.x[TIP] - before.springs.x[TIP])).toBeLessThan(
@@ -116,96 +116,104 @@ describe("her life", () => {
   });
 
   it("leaves her as she is when she is asked to do what she already does", () => {
-    const live = start(WHOLE, LOWEST);
-    expect(retarget(live, "santai")).toBe(live);
+    const life = start(WHOLE, LOWEST);
+    expect(retarget(life, "relaxed")).toBe(life);
   });
 
   it("keeps the act that she goes back to while she plays another", () => {
-    const playing = press(start(WHOLE, LOWEST), WHOLE).live;
-    const changed = retarget(playing, "tidur");
-    expect(changed.act).toBe("melambai");
-    expect(changed.home).toBe("tidur");
-    expect(wait(changed, WHOLE, 120).act).toBe("tidur");
+    const playing = press(start(WHOLE, LOWEST), WHOLE).life;
+    const changed = retarget(playing, "sleeping");
+    expect(changed.act).toBe("waving");
+    expect(changed.home).toBe("sleeping");
+    expect(wait(changed, WHOLE, 120).act).toBe("sleeping");
   });
 
   it("waves, juggles and cheers on three presses, and goes back to what she was doing", () => {
-    const presses = Arr.scan(Arr.range(1, 4), start(WHOLE, LOWEST), (live) =>
-      wait(press(live, WHOLE).live, WHOLE, 1)
+    const presses = Arr.scan(Arr.range(1, 4), start(WHOLE, LOWEST), (life) =>
+      wait(press(life, WHOLE).life, WHOLE, 1)
     );
     expect(Arr.map(Arr.drop(presses, 1), ({ act }) => act)).toEqual([
-      "melambai",
-      "main",
-      "merayakan",
-      "melambai",
+      "waving",
+      "juggling",
+      "cheering",
+      "waving",
     ]);
-    const wave = press(start(WHOLE, LOWEST), WHOLE).live;
-    expect(wait(wave, WHOLE, 90).act).toBe("melambai");
-    expect(wait(wave, WHOLE, 110).act).toBe("santai");
+    const wave = press(start(WHOLE, LOWEST), WHOLE).life;
+    expect(wait(wave, WHOLE, 90).act).toBe("waving");
+    expect(wait(wave, WHOLE, 110).act).toBe("relaxed");
   });
 
   it("waves, drums, and ducks behind the edge on three presses over an edge", () => {
     const first = press(start(PEEK, LOWEST), PEEK);
-    const second = press(first.live, PEEK);
-    const rested = wait(second.live, PEEK, 100);
+    const second = press(first.life, PEEK);
+    const rested = wait(second.life, PEEK, 100);
     const third = press(rested, PEEK);
     expect([first.duck, second.duck, third.duck]).toEqual([false, false, true]);
-    expect([first.live.act, second.live.act]).toEqual(["lambai", "ketuk"]);
-    expect(press(third.live, PEEK).live.act).toBe("lambai");
+    expect([first.life.act, second.life.act]).toEqual(["greeting", "drumming"]);
+    expect(press(third.life, PEEK).life.act).toBe("greeting");
     // Down behind the edge she is not yet surprised; she shows it when she comes up again.
-    expect(surprised(third.live, PEEK)).toBe(false);
-    expect(surprised(wait(third.live, PEEK, 30), PEEK)).toBe(true);
-    expect(surprised(wait(third.live, PEEK, 110), PEEK)).toBe(false);
+    expect(surprised(third.life, PEEK)).toBe(false);
+    expect(surprised(wait(third.life, PEEK, 30), PEEK)).toBe(true);
+    expect(surprised(wait(third.life, PEEK, 110), PEEK)).toBe(false);
   });
 
   it("shows another face in a tile each time, for a moment", () => {
-    const first = press(start(TILE, LOWEST), TILE).live;
-    expect(view(first, TILE)).toEqual(scene({ ...TILE, mood: "tertawa" }));
-    const second = press(wait(first, TILE, 70), TILE).live;
-    expect(view(second, TILE)).toEqual(scene({ ...TILE, mood: "kedip" }));
-    const third = press(wait(second, TILE, 70), TILE).live;
-    expect(view(third, TILE)).toEqual(scene({ ...TILE, mood: "bangga" }));
+    const first = press(start(TILE, LOWEST), TILE).life;
+    expect(view(first, TILE).picture).toEqual(
+      scene({ ...TILE, mood: "laughing" })
+    );
+    const second = press(wait(first, TILE, 70), TILE).life;
+    expect(view(second, TILE).picture).toEqual(
+      scene({ ...TILE, mood: "winking" })
+    );
+    const third = press(wait(second, TILE, 70), TILE).life;
+    expect(view(third, TILE).picture).toEqual(
+      scene({ ...TILE, mood: "proud" })
+    );
     const over = wait(third, TILE, 70);
-    expect(view(over, TILE)).toEqual(scene(TILE));
-    expect(press(over, TILE).live.clicks).toBe(4);
+    expect(view(over, TILE).picture).toEqual(scene(TILE));
+    expect(press(over, TILE).life.clicks).toBe(4);
   });
 
   it("ends a face that a press showed when the act that she played is over", () => {
-    const played = press(start(WHOLE, LOWEST), WHOLE).live;
+    const played = press(start(WHOLE, LOWEST), WHOLE).life;
     const flashed = {
       ...played,
-      glad: { from: 0, mood: "malu", until: 99 },
+      glad: { from: 0, mood: "shy", until: 99 },
     } as const;
     expect(wait(flashed, WHOLE, 120).glad).toBeUndefined();
   });
 
   it("does one of her habits by herself now and then, and then goes back", () => {
     const options: Options = {
-      act: "santai",
-      fidget: ["melambai", "main"],
+      act: "relaxed",
+      fidget: ["waving", "juggling"],
       whole: true,
     };
     const waiting = wait(start(options, LOWEST), options, 170);
-    expect(waiting.act).toBe("santai");
+    expect(waiting.act).toBe("relaxed");
     const habit = wait(waiting, options, 20);
-    expect(habit.act).toBe("melambai");
+    expect(habit.act).toBe("waving");
     expect(habit.until).toBe(2.2);
     // The next one comes five seconds after she has gone back, and the draw picks it.
     const rested = wait(habit, options, 140);
-    expect(rested.act).toBe("santai");
-    expect(wait(rested, options, 330, sequence([0, 0.99])).act).toBe("main");
+    expect(rested.act).toBe("relaxed");
+    expect(wait(rested, options, 330, sequence([0, 0.99])).act).toBe(
+      "juggling"
+    );
   });
 
   it("keeps her habits short over an edge", () => {
-    const options: Options = { fidget: ["ketuk"], lean: "intip" };
+    const options: Options = { fidget: ["drumming"], lean: "peek" };
     const habit = wait(start(options, LOWEST), options, 200);
-    expect(habit.act).toBe("ketuk");
+    expect(habit.act).toBe("drumming");
     expect(habit.until).toBe(1.3);
   });
 
   it("has no habits unless she is given some", () => {
-    const live = wait(start(WHOLE, LOWEST), WHOLE, 700);
-    expect(live.act).toBe("santai");
-    expect(live.until).toBe(0);
+    const life = wait(start(WHOLE, LOWEST), WHOLE, 700);
+    expect(life.act).toBe("relaxed");
+    expect(life.until).toBe(0);
   });
 
   it("looks toward the pointer, a little more with every frame", () => {
@@ -218,7 +226,7 @@ describe("her life", () => {
   });
 
   it("shows her eyes where they look, also when she is mirrored", () => {
-    const mirrored: Options = { ...TILE, side: "kiri" };
+    const mirrored: Options = { ...TILE, side: "left" };
     for (const options of [TILE, mirrored]) {
       const looking = step(
         start(options, LOWEST),
@@ -227,7 +235,7 @@ describe("her life", () => {
         [4, 0],
         LOWEST
       );
-      expect(view(looking, options)).toEqual(
+      expect(view(looking, options).picture).toEqual(
         scene({ ...options, look: looking.gaze })
       );
     }

@@ -1,4 +1,5 @@
-import { type ARM, n1, TORSO } from "@repo/design-system/components/nina/body";
+import { type ARM, TORSO } from "@repo/mascot/nina/body";
+import { at, type Place } from "@repo/mascot/nina/point";
 import { Array as Arr, Schema } from "effect";
 
 /** How thick a limb is at its root and at its tip. */
@@ -66,7 +67,7 @@ const TORSO_NUMBERS = Arr.map(
 const TORSO_POINTS = Arr.flatMap(
   Arr.makeBy((TORSO_NUMBERS.length - 2) / 6, (curve) => 2 + 6 * curve),
   (k) =>
-    Arr.makeBy(12, (i) => {
+    Arr.makeBy(12, (i): Place => {
       const t = i / 12;
       return [
         cubic(
@@ -83,28 +84,24 @@ const TORSO_POINTS = Arr.flatMap(
           TORSO_NUMBERS[k + 5],
           t
         ),
-      ] as const;
+      ];
     })
 );
 
+/** Each point of the outline with the one before it, the first with the last. */
+const TORSO_EDGES = Arr.zip(TORSO_POINTS, Arr.rotate(TORSO_POINTS, 1));
+
 /** Whether a place is on her body. */
 export function onBody(x: number, y: number) {
-  return Arr.reduce(
-    TORSO_POINTS,
-    { inside: false, previous: TORSO_POINTS[TORSO_POINTS.length - 1] },
-    (state, current) => {
-      const crosses =
-        current[1] > y !== state.previous[1] > y &&
-        x <
-          ((state.previous[0] - current[0]) * (y - current[1])) /
-            (state.previous[1] - current[1]) +
-            current[0];
-      return {
-        inside: crosses ? !state.inside : state.inside,
-        previous: current,
-      };
-    }
-  ).inside;
+  return Arr.reduce(TORSO_EDGES, false, (inside, [current, previous]) => {
+    const crosses =
+      current[1] > y !== previous[1] > y &&
+      x <
+        ((previous[0] - current[0]) * (y - current[1])) /
+          (previous[1] - current[1]) +
+          current[0];
+    return crosses ? !inside : inside;
+  });
 }
 
 /** Where on the middle line of a limb, and which way it runs there. */
@@ -142,17 +139,12 @@ export function exit(c: Curve, girth: Girth): number {
   return search(0.12);
 }
 
-/** The middle of two points, written the way the outline is. */
-function middle(a: readonly [number, number], b: readonly [number, number]) {
-  return `${n1((a[0] + b[0]) / 2)},${n1((a[1] + b[1]) / 2)}`;
+/** The middle of two places, written the way the outline is. */
+function middle(a: Place, b: Place) {
+  return at((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
 }
 
-/** A point, written the way the outline is. */
-function at(p: readonly [number, number]) {
-  return `${n1(p[0])},${n1(p[1])}`;
-}
-
-/** Both edges of a limb and the points that round its two ends. */
+/** Both edges of a limb and the places that round its two ends. */
 function edges(c: Curve, girth: Girth, start: number) {
   const sides = Arr.makeBy(STEPS + 1, (i) => {
     const t = start + ((1 - start) * i) / STEPS;
@@ -202,17 +194,20 @@ export function limb(c: Curve, girth: Girth, from = 0) {
   const { left, right, root, tip } = edges(c, girth, from);
   const inner = Arr.range(1, STEPS - 1);
   const leftSide = Arr.join(
-    Arr.map(inner, (a) => ` Q${at(left[a])} ${middle(left[a], left[a + 1])}`),
+    Arr.map(
+      inner,
+      (a) => ` Q${at(...left[a])} ${middle(left[a], left[a + 1])}`
+    ),
     ""
   );
   const rightSide = Arr.join(
     Arr.map(
       Arr.reverse(inner),
-      (b) => ` Q${at(right[b])} ${middle(right[b], right[b - 1])}`
+      (b) => ` Q${at(...right[b])} ${middle(right[b], right[b - 1])}`
     ),
     ""
   );
   // A whole limb is round at its root too. A part of one is cut straight.
-  const rounded = from === 0 ? ` Q${at(root)} ${at(left[0])}` : "";
-  return `M${at(left[0])} L${middle(left[0], left[1])}${leftSide} L${at(left[STEPS])} Q${at(tip)} ${at(right[STEPS])} L${middle(right[STEPS], right[STEPS - 1])}${rightSide} L${at(right[0])}${rounded} Z`;
+  const rounded = from === 0 ? ` Q${at(...root)} ${at(...left[0])}` : "";
+  return `M${at(...left[0])} L${middle(left[0], left[1])}${leftSide} L${at(...left[STEPS])} Q${at(...tip)} ${at(...right[STEPS])} L${middle(right[STEPS], right[STEPS - 1])}${rightSide} L${at(...right[0])}${rounded} Z`;
 }

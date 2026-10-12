@@ -1,5 +1,5 @@
-import type { Curve } from "@repo/design-system/components/nina/limb";
-import type { Pose } from "@repo/design-system/components/nina/pose";
+import type { Curve } from "@repo/mascot/nina/limb";
+import type { Pose } from "@repo/mascot/nina/pose";
 import { Array as Arr, Schema } from "effect";
 
 /**

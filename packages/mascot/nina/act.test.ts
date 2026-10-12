@@ -1,19 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
-import { ACTS } from "@repo/design-system/components/nina/act";
-import { ARM, LEG, WHOLE_BOX } from "@repo/design-system/components/nina/body";
-import { EDGES } from "@repo/design-system/components/nina/edge";
-import { legCurve } from "@repo/design-system/components/nina/figure";
-import {
-  bend,
-  type Curve,
-  cubic,
-  slope,
-  wide,
-} from "@repo/design-system/components/nina/limb";
-import { type Pose, REST } from "@repo/design-system/components/nina/pose";
-import { Array as Arr, Record as Rec } from "effect";
+import { ACTS } from "@repo/mascot/nina/act";
+import { ARM, LEG, WHOLE_BOX } from "@repo/mascot/nina/body";
+import { EDGES } from "@repo/mascot/nina/edge";
+import { legCurve } from "@repo/mascot/nina/figure";
+import { bend, type Curve, cubic, slope, wide } from "@repo/mascot/nina/limb";
+import type { Place } from "@repo/mascot/nina/point";
+import { type Pose, PoseSchema, REST } from "@repo/mascot/nina/pose";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 
-type Place = readonly [number, number];
 type Girth = typeof ARM;
 
 /** Twelve seconds in steps of a twenty-fifth of a second: longer than any act takes to come round. */
@@ -110,6 +104,21 @@ function problems(pose: Pose) {
 }
 
 describe("her shape", () => {
+  it("answers a whole pose with finite numbers, in any act at any moment", () => {
+    for (const [name, act] of Rec.toEntries({ ...ACTS, ...EDGES })) {
+      for (const t of MOMENTS) {
+        expect(Schema.is(PoseSchema)(act.pose(t)), `${name} at ${t}`).toBe(
+          true
+        );
+      }
+    }
+  });
+
+  it("does not take a pose with a number that is not finite for a pose", () => {
+    expect(Schema.is(PoseSchema)({ ...REST, lift: Number.NaN })).toBe(false);
+    expect(Schema.is(PoseSchema)({ ...REST, held: [1] })).toBe(false);
+  });
+
   it("folds no limb, crosses no arms or legs and leaves no window, in any act at any moment", () => {
     for (const [name, act] of Rec.toEntries(ACTS)) {
       for (const t of MOMENTS) {

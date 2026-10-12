@@ -1,5 +1,5 @@
-import { Nina } from "@repo/design-system/components/nina/still";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
@@ -15,10 +15,10 @@ export default async function NotFound() {
       <div className="relative mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
         <div className="absolute inset-x-0 bottom-full mx-auto mb-px w-fit">
           <Nina
-            fidget={["lambai", "ketuk"]}
+            fidget={["greeting", "drumming"]}
             label=""
-            lean="intip"
-            mood="bingung"
+            lean="peek"
+            mood="confused"
             size={120}
           />
         </div>
