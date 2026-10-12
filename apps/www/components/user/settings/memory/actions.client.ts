@@ -3,7 +3,14 @@
 import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { randomUuid } from "@repo/utilities/uuid";
-import { DateTime, Duration, Effect, type Result } from "effect";
+import {
+  DateTime,
+  Duration,
+  Effect,
+  Option,
+  Record as Rec,
+  type Result,
+} from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
@@ -191,9 +198,10 @@ export function useMemoryActions() {
      * the deletion closed it, or `restore` when it held nothing more.
      */
     function words() {
-      const held = latest().withheld;
-
-      return held?.id === memory.id ? held.draft : restore;
+      return Option.getOrElse(
+        Rec.get(latest().withheld, memory.id),
+        () => restore
+      );
     }
 
     const undo = createUndo(() => add(words()));
@@ -245,8 +253,6 @@ export function useMemoryActions() {
       // learner's again with the words the editor held, and a first save on
       // its way keeps its editor.
       failed: () => {
-        const held = latest().withheld;
-
         recallAll();
         if (before.target) {
           recall(before.target.id);
@@ -254,7 +260,9 @@ export function useMemoryActions() {
         if (editing) {
           reopen(
             session,
-            held?.id === editing.id ? held.draft : draftOf(editing),
+            Option.getOrElse(Rec.get(latest().withheld, editing.id), () =>
+              draftOf(editing)
+            ),
             editing
           );
         }
