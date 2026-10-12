@@ -17,6 +17,7 @@ import {
   MessageScrollerItem,
   MessageScrollerViewport,
 } from "@repo/design-system/components/ui/scroller";
+import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
 import { useTranslations } from "next-intl";
 import { useChatAdmission } from "@/components/ai/chat/admission";
@@ -48,13 +49,21 @@ export function SheetNew() {
           <MessageScrollerViewport aria-label={t("messages")}>
             <MessageScrollerContent className="p-6">
               {prompt ? (
-                <MessageScrollerItem messageId={prompt.id} scrollAnchor>
-                  <Message align="end">
-                    <NinaPrompt files={prompt.files}>
-                      <Response id={prompt.id}>{prompt.text}</Response>
-                    </NinaPrompt>
-                  </Message>
-                </MessageScrollerItem>
+                <>
+                  <MessageScrollerItem messageId={prompt.id} scrollAnchor>
+                    <Message align="end">
+                      <NinaPrompt files={prompt.files}>
+                        <Response id={prompt.id}>{prompt.text}</Response>
+                      </NinaPrompt>
+                    </Message>
+                  </MessageScrollerItem>
+                  {/* The prompt is on its way: show the turn as started, as the page's new chat does. */}
+                  <MessageScrollerItem messageId="pending">
+                    <Message>
+                      <TypingLoader />
+                    </Message>
+                  </MessageScrollerItem>
+                </>
               ) : (
                 <MessageScrollerItem
                   className="flex flex-1"
