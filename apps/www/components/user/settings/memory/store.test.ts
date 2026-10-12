@@ -231,16 +231,42 @@ describe("memory page store", () => {
     expect(fresh.getState()).toMatchObject({ deleted: first.id, open: true });
   });
 
-  it("keeps the words an editor held when its memory was deleted, and drops them with the next deletion", () => {
+  it("keeps the words an editor held for each deleted memory, so deleting another memory takes nothing from an Undo still offered", () => {
     const store = createMemoryStore();
 
     store.getState().openEdit(first);
     store.getState().forget(first.id);
     store.getState().withhold(first.id, grade);
-    expect(store.getState().withheld).toEqual({ draft: grade, id: first.id });
-
     store.getState().forget(second.id);
-    expect(store.getState().withheld).toBeNull();
+    expect(store.getState().withheld).toEqual({ [first.id]: grade });
+  });
+
+  it("lets go of the words kept for one memory when its Undo took them or its offer ended, and keeps the others", () => {
+    const store = createMemoryStore();
+
+    store.getState().withhold(first.id, grade);
+    store.getState().withhold(second.id, plan);
+    store.getState().release(first.id);
+    expect(store.getState().withheld).toEqual({ [second.id]: plan });
+  });
+
+  it("drops the words kept for a memory when an editor opens on it again, by the learner or after a refused deletion", () => {
+    const opened = createMemoryStore();
+    opened.getState().withhold(first.id, grade);
+    opened.getState().withhold(second.id, plan);
+    opened.getState().openEdit(first);
+    expect(opened.getState().withheld).toEqual({ [second.id]: plan });
+
+    const given = createMemoryStore();
+    given.getState().withhold(first.id, grade);
+    given.getState().reopen(0, grade, first);
+    expect(given.getState().withheld).toEqual({});
+
+    // A new memory's editor has no memory to drop words for.
+    const fresh = createMemoryStore();
+    fresh.getState().withhold(first.id, grade);
+    fresh.getState().reopen(0, plan, null);
+    expect(fresh.getState().withheld).toEqual({ [first.id]: grade });
   });
 
   it("takes back the note of a memory the server did not delete, and keeps the note of any other", () => {

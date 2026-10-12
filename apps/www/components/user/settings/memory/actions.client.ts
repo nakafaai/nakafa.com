@@ -3,7 +3,15 @@
 import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { randomUuid } from "@repo/utilities/uuid";
-import { DateTime, Duration, Effect, type Result } from "effect";
+import {
+  DateTime,
+  Duration,
+  Effect,
+  MutableRef,
+  Option,
+  Record as Rec,
+  type Result,
+} from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
@@ -52,6 +60,7 @@ export function useMemoryActions() {
   const recall = useMemoryPage((state) => state.recall);
   const recallAll = useMemoryPage((state) => state.recallAll);
   const withhold = useMemoryPage((state) => state.withhold);
+  const release = useMemoryPage((state) => state.release);
   const reopen = useMemoryPage((state) => state.reopen);
   const rewrite = useMemoryPage((state) => state.rewrite);
 
@@ -174,8 +183,9 @@ export function useMemoryActions() {
   /**
    * Deletes a memory at once, on the page and on the server, so that closing
    * the page can never leave it stored. The toast offers an Undo, which writes
-   * `restore` back as the learner's own memory, the words of the memory unless
-   * the caller names others: the end date of a situation does not come back.
+   * the memory back as the learner's own: the words an open editor on it still
+   * held, else `restore`, which is the words of the memory unless the caller
+   * names others. The end date of a situation does not come back.
    *
    * When the server does not delete the memory, everything the deletion took
    * comes back: the memory in the list, and the editor that was on it with the
@@ -184,30 +194,57 @@ export function useMemoryActions() {
   function remove(memory: Memory, restore: MemoryDraft = draftOf(memory)) {
     const before = latest();
     const editing = before.open && before.target?.id === memory.id;
-    const undo = createUndo(() => add(restore));
+
+    const taken = MutableRef.make(Option.none<MemoryDraft>());
+
+    /**
+     * Takes the words to bring back, once: what the editor on the memory still
+     * held when the deletion closed it, or `restore` when it held nothing more.
+     * The page store then lets them go, so nothing of a deleted memory stays
+     * for the life of the page.
+     */
+    function take() {
+      const words = Option.getOrElse(MutableRef.get(taken), () =>
+        Option.getOrElse(Rec.get(latest().withheld, memory.id), () => restore)
+      );
+
+      MutableRef.set(taken, Option.some(words));
+      release(memory.id);
+      return words;
+    }
+
+    const undo = createUndo(
+      () => add(take()),
+      () => release(memory.id)
+    );
 
     forget(memory.id);
 
     const { session } = latest();
     const shown = toast(t("deleted"), {
-      action: { label: t("undo"), onClick: undo.press },
+      action: {
+        label: t("undo"),
+        // The words are taken at the press, because the toast leaves with it.
+        onClick: () => {
+          take();
+          undo.press();
+        },
+      },
       duration: Duration.toMillis(UNDO),
+      onAutoClose: undo.closed,
+      onDismiss: undo.closed,
     });
 
     settle(() => removeById({ id: memory.id }), {
       done: undo.deleted,
       failed: () => {
-        const held = latest().withheld;
+        const held = take();
 
         undo.kept();
         toast.dismiss(shown);
         recall(memory.id);
         if (editing) {
-          reopen(
-            session,
-            held?.id === memory.id ? held.draft : restore,
-            memory
-          );
+          reopen(session, held, memory);
         }
       },
     });
@@ -233,22 +270,31 @@ export function useMemoryActions() {
     const { session } = latest();
 
     settle(() => clearAll(), {
+      // The server deleted everything: the words the editor still held on its
+      // memory have nothing to come back to.
+      done: () => {
+        if (editing) {
+          release(editing.id);
+        }
+      },
       // The server deleted nothing: the memory the editor was on is the
       // learner's again with the words the editor held, and a first save on
       // its way keeps its editor.
       failed: () => {
-        const held = latest().withheld;
-
         recallAll();
         if (before.target) {
           recall(before.target.id);
         }
         if (editing) {
-          reopen(
-            session,
-            held?.id === editing.id ? held.draft : draftOf(editing),
-            editing
+          const held = Option.getOrElse(
+            Rec.get(latest().withheld, editing.id),
+            () => draftOf(editing)
           );
+
+          // An editor the learner opened since keeps its place, so the words
+          // are let go here whether or not the old editor comes back.
+          release(editing.id);
+          reopen(session, held, editing);
         }
       },
     });

@@ -1,6 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { NinaMemoryView } from "@repo/backend/confect/nina/memory.spec";
-import { Schema } from "effect";
+import { Record as Rec, Schema } from "effect";
 import { createStore } from "zustand";
 import {
   editedMemory,
@@ -45,13 +45,14 @@ const MemoryStateSchema = Schema.Struct({
    */
   target: Schema.NullOr(NinaMemoryView),
   /**
-   * The words an editor still held when the learner deleted its memory. The
-   * editor does not save them, and they come back with the editor when the
-   * server does not delete the memory.
+   * The words an editor still held when the learner deleted its memory, by the
+   * id of the memory. The editor does not save them. They come back when the
+   * learner undoes the deletion or the server does not delete the memory, and
+   * each deletion keeps its own, so deleting another memory meanwhile takes
+   * nothing from an Undo that is still offered. They go when the Undo takes
+   * them, when its offer ends, or when an editor opens on the memory again.
    */
-  withheld: Schema.NullOr(
-    Schema.Struct({ draft: DraftSchema, id: Id("ninaMemories") })
-  ),
+  withheld: Schema.Record(Schema.String, DraftSchema),
 });
 
 type MemoryState = typeof MemoryStateSchema.Type;
@@ -98,6 +99,11 @@ interface MemoryActions {
    */
   recallAll: () => void;
   /**
+   * Lets go of the words kept for the deleted memory `id`: its Undo took them,
+   * or its offer ended.
+   */
+  release: (id: Memory["id"]) => void;
+  /**
    * Opens the editor again with the draft of a save that failed, on `memory`,
    * or on a new memory when it is null. `session` is the opening the draft
    * comes from. Nothing opens when the learner opened an editor since, open or
@@ -127,7 +133,6 @@ export type MemoryStore = MemoryState & MemoryActions;
 function forgetting(state: MemoryState, id: Memory["id"]) {
   return {
     deleted: id,
-    withheld: null,
     ...(state.target?.id === id
       ? { draft: null, open: false, session: state.session + 1 }
       : {}),
@@ -167,6 +172,7 @@ export function createMemoryStore() {
         open: true,
         session: state.session + 1,
         target: memory,
+        withheld: Rec.remove(state.withheld, memory.id),
       })),
     openNew: () =>
       set((state) => ({
@@ -187,8 +193,14 @@ export function createMemoryStore() {
               open: true,
               session: state.session + 1,
               target: memory,
+              withheld:
+                memory === null
+                  ? state.withheld
+                  : Rec.remove(state.withheld, memory.id),
             }
       ),
+    release: (id) =>
+      set((state) => ({ withheld: Rec.remove(state.withheld, id) })),
     rewrite: (id, draft, now) =>
       set((state) =>
         state.target?.id === id
@@ -198,8 +210,9 @@ export function createMemoryStore() {
     search: (query) => set({ query }),
     session: 0,
     target: null,
-    withheld: null,
-    withhold: (id, draft) => set({ withheld: { draft, id } }),
+    withheld: {},
+    withhold: (id, draft) =>
+      set((state) => ({ withheld: Rec.set(state.withheld, id, draft) })),
   }));
 }
 
