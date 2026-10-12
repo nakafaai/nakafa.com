@@ -20,39 +20,39 @@ import { Effect } from "effect";
 type ModelBuild = Docs["contentModelBuilds"];
 
 /** Loads the signed artifact selected by one candidate public projection. */
-const loadSearchArtifact = Effect.fn("contentRelease.loadSearchArtifact")(
-  function* (
-    head: Pick<Docs["contentHeads"], "contentKey" | "artifactLocale">,
-    artifactHash: string
-  ) {
-    const database = yield* DatabaseReader;
-    const row = yield* database
-      .table("contentArtifacts")
-      .get("by_artifactHash", artifactHash)
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
-    if (!row) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_MISSING",
-        `Search artifact ${artifactHash} does not exist.`
-      );
-    }
-    const artifact = yield* decodeArtifactJson(row.artifactJson);
-    if (
-      artifact.artifactHash !== artifactHash ||
-      artifact.payload.contentKey !== head.contentKey ||
-      artifact.payload.artifactLocale !== head.artifactLocale
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Search artifact ${artifactHash} changed identity.`
-      );
-    }
-    return artifact;
+export const loadSearchArtifact = Effect.fn(
+  "contentRelease.loadSearchArtifact"
+)(function* (
+  head: Pick<Docs["contentHeads"], "contentKey" | "artifactLocale">,
+  artifactHash: string
+) {
+  const database = yield* DatabaseReader;
+  const row = yield* database
+    .table("contentArtifacts")
+    .get("by_artifactHash", artifactHash)
+    .pipe(
+      Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+      Effect.orDie
+    );
+  if (!row) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_MISSING",
+      `Search artifact ${artifactHash} does not exist.`
+    );
   }
-);
+  const artifact = yield* decodeArtifactJson(row.artifactJson);
+  if (
+    artifact.artifactHash !== artifactHash ||
+    artifact.payload.contentKey !== head.contentKey ||
+    artifact.payload.artifactLocale !== head.artifactLocale
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Search artifact ${artifactHash} changed identity.`
+    );
+  }
+  return artifact;
+});
 
 /** Applies one release identity to the inactive search buffer. */
 const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (

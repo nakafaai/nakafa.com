@@ -24,7 +24,7 @@ import {
 } from "@repo/backend/test/content/state";
 import { storeRuntimeFixture } from "@repo/backend/test/runtime/bundle";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
 const activateRecovery = internal.contentRelease.activate.activateRecovery;
@@ -113,6 +113,42 @@ async function recoverCandidate(t: ReturnType<typeof convexTest>) {
 describe("contentRelease/recovery", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
+  it.effect(
+    "queues the build of the section index once, in the transaction that makes the recovery active",
+    () =>
+      Effect.gen(function* () {
+        const { t } = yield* seedRuntimePair();
+        /** The releases that section builds were queued for, in order. */
+        const queued = () =>
+          t.run(async (ctx) =>
+            Arr.map(
+              Arr.filter(
+                await ctx.db.system.query("_scheduled_functions").collect(),
+                ({ name }) => name === "contents/sections/build:run"
+              ),
+              ({ args }) => args
+            )
+          );
+        yield* Effect.promise(() => activateCandidate(t));
+        yield* Effect.promise(() => recoverCandidate(t));
+        assert.deepStrictEqual(yield* Effect.promise(queued), [
+          [{ releaseId: CANDIDATE.releaseId }],
+          [{ releaseId: RECOVERY.releaseId }],
+        ]);
+        // Activating the same recovery again finds it completed and queues nothing.
+        yield* Effect.promise(() =>
+          t.mutation(activateRecovery, {
+            manifestHash: RECOVERY.manifestHash,
+            releaseId: RECOVERY.releaseId,
+            rendererJson: testRendererJson(),
+          })
+        );
+        assert.deepStrictEqual(yield* Effect.promise(queued), [
+          [{ releaseId: CANDIDATE.releaseId }],
+          [{ releaseId: RECOVERY.releaseId }],
+        ]);
+      })
+  );
   it.effect("activates the retained base with the current renderer", () =>
     Effect.gen(function* () {
       const { retainedBase, snapshots, t } = yield* seedRuntimePair();

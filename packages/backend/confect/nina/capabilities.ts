@@ -4,6 +4,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type {
   ActionCtx,
   QueryRunner,
+  VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import {
   classify,
@@ -17,6 +18,7 @@ import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
   formatSpecialistToolTask,
+  getSpecialistToolWords,
   mathToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
@@ -45,7 +47,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
   usageHandler: UsageHandler
 ) {
   const services = yield* Effect.context<
-    ActionCtx | ChatStep | Gateway | QueryRunner
+    ActionCtx | ChatStep | Gateway | QueryRunner | VectorSearch
   >();
   return {
     nakafa: createTool({
@@ -124,6 +126,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                   context,
                   locale,
                   task: formatSpecialistToolTask(input),
+                  words: getSpecialistToolWords(input),
                   sourceReferences: getSourceReferencesFromMessages(messages),
                   toolCallId,
                   publish,

@@ -256,7 +256,10 @@ export async function insertRuntimeArticles(
   count: number,
   projectionAt: (
     index: number
-  ) => ReturnType<typeof testArticleProjection> = testArticleProjection
+  ) => ReturnType<typeof testArticleProjection> = testArticleProjection,
+  rawMdx: (
+    projection: ReturnType<typeof testArticleProjection>
+  ) => string | undefined = () => undefined
 ) {
   await insertRuntimeRelease(ctx);
   const state = await ctx.db.query("contentState").unique();
@@ -269,6 +272,7 @@ export async function insertRuntimeArticles(
   for (let index = 0; index < count; index += 1) {
     const projection = projectionAt(index);
     const projectionJson = canonicalizeArticleProjection(projection);
+    const source = rawMdx(projection);
     await insertRuntimeKey(ctx, projection.contentKey, {
       projectionJson,
     });
@@ -279,6 +283,7 @@ export async function insertRuntimeArticles(
       artifactLocale: projection.artifactLocale,
       projectionJson,
       publicPath: projection.publicPath,
+      ...(source === undefined ? {} : { rawMdx: source }),
       rendererDomain: "politics",
       sourcePath: `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`,
     });

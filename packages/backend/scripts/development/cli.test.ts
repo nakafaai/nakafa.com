@@ -5,7 +5,7 @@ import {
   ConvexCli,
   requireDevelopment,
   runConvex,
-} from "@repo/backend/scripts/nina/convex";
+} from "@repo/backend/scripts/development/cli";
 import {
   Array as Arr,
   ConfigProvider,
@@ -19,8 +19,10 @@ import {
 /**
  * A double for the Convex CLI. Its first argument says what it does: print its
  * folder, arguments and three settings of its environment, fail with an error
- * text, never answer, or fail without an error text. A setting that is not set
- * prints as null, and a blank one as an empty text.
+ * text, fail as `convex run` does for a function it cannot find (the reason,
+ * and then a list of 400 functions), never answer, or fail without an error
+ * text. A setting that is not set prints as null, and a blank one as an empty
+ * text.
  */
 const FAKE_CLI = `
 const [mode, ...rest] = process.argv.slice(2);
@@ -32,15 +34,25 @@ if (mode === "echo") {
       args: rest,
       cwd: process.cwd(),
       env: {
-        absent: setting("NINA_GATE_ABSENT"),
-        blank: setting("NINA_GATE_BLANK"),
-        named: setting("NINA_GATE_NAMED"),
+        absent: setting("DEVELOPMENT_CLI_ABSENT"),
+        blank: setting("DEVELOPMENT_CLI_BLANK"),
+        named: setting("DEVELOPMENT_CLI_NAMED"),
       },
     })
   );
 } else if (mode === "fail") {
   process.stderr.write("\\u001b[31mboom " + rest.join(" ") + "\\u001b[0m");
   process.exit(3);
+} else if (mode === "list") {
+  const functions = Array.from(
+    { length: 400 },
+    (_, index) => "• module/" + index + ":handler"
+  );
+  process.stderr.write(
+    "✖ Failed to run function \\"" + rest[0] + "\\":\\nError: Could not find function\\n\\nAvailable functions:\\n" +
+      functions.join("\\n")
+  );
+  process.exit(1);
 } else if (mode === "hang") {
   setInterval(() => {}, 1000);
 } else {
@@ -64,7 +76,7 @@ const Echo = Schema.fromJsonString(
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.realPath(
-    yield* fs.makeTempDirectoryScoped({ prefix: "nina-gate-cli-test-" })
+    yield* fs.makeTempDirectoryScoped({ prefix: "development-cli-test-" })
   );
   const script = `${directory}/cli.mjs`;
   yield* fs.writeFileString(script, FAKE_CLI);
@@ -87,7 +99,24 @@ const settings = (env: Record<string, string>) =>
     ConfigProvider.fromEnv({ env })
   );
 
-describe("the Convex CLI of the release gate", () => {
+/**
+ * Runs the deployment check for a caller whose environment holds these
+ * settings and whose CLI folder holds this `.env.local`, when it has one.
+ */
+const check = (environment: Record<string, string>, local?: string) =>
+  Effect.gen(function* () {
+    const { cli, directory } = yield* fixture;
+    if (local !== undefined) {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString(`${directory}/.env.local`, local);
+    }
+    return yield* requireDevelopment().pipe(
+      settings(environment),
+      Effect.provideService(ConvexCli, cli)
+    );
+  }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer));
+
+describe("the Convex CLI of the dev deployment", () => {
   it.live(
     "runs in the folder it is given and returns what the CLI printed",
     () =>
@@ -111,7 +140,10 @@ describe("the Convex CLI of the release gate", () => {
       const printed = yield* runConvex("Echo", ["echo"]).pipe(
         Effect.provideService(ConvexCli, {
           ...cli,
-          env: { NINA_GATE_BLANK: "", NINA_GATE_NAMED: "dev:happy-animal-123" },
+          env: {
+            DEVELOPMENT_CLI_BLANK: "",
+            DEVELOPMENT_CLI_NAMED: "dev:happy-animal-123",
+          },
         })
       );
 
@@ -137,9 +169,32 @@ describe("the Convex CLI of the release gate", () => {
         ).pipe(Effect.provideService(ConvexCli, cli), Effect.flip);
 
         expect(error).toMatchObject({
-          _tag: "NinaGateError",
+          _tag: "DevelopmentCliError",
           message: "Secret step failed: boom [redacted] and more",
         });
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
+    "reports the start of a long error output, where the CLI says why, and not the list after it",
+    () =>
+      Effect.gen(function* () {
+        const { cli } = yield* fixture;
+
+        const error = yield* runConvex("Missing function", [
+          "list",
+          "contents/sections/compare:rank",
+        ]).pipe(Effect.provideService(ConvexCli, cli), Effect.flip);
+
+        const prefix = "Missing function failed: ";
+        expect(error._tag).toBe("DevelopmentCliError");
+        expect(
+          error.message.startsWith(
+            `${prefix}✖ Failed to run function "contents/sections/compare:rank": Error: Could not find function Available functions: • module/0:handler`
+          )
+        ).toBe(true);
+        expect(error.message).not.toContain("module/399:handler");
+        expect(error.message).toHaveLength(prefix.length + 2000);
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
@@ -153,7 +208,7 @@ describe("the Convex CLI of the release gate", () => {
       );
 
       expect(error).toMatchObject({
-        _tag: "NinaGateError",
+        _tag: "DevelopmentCliError",
         message: "Silent step failed.",
       });
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
@@ -172,7 +227,7 @@ describe("the Convex CLI of the release gate", () => {
         Effect.flip
       );
 
-      expect(error._tag).toBe("NinaGateError");
+      expect(error._tag).toBe("DevelopmentCliError");
       expect(error.message).toContain(
         "Missing step could not run the Convex CLI"
       );
@@ -192,7 +247,7 @@ describe("the Convex CLI of the release gate", () => {
       );
 
       expect(error).toMatchObject({
-        _tag: "NinaGateError",
+        _tag: "DevelopmentCliError",
         message: `Slow step did not answer within ${Duration.format(Duration.millis(200))}.`,
       });
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
@@ -209,14 +264,14 @@ describe("the Convex CLI of the release gate", () => {
   );
 });
 
-describe("the deployment check of the release gate", () => {
+describe("the deployment check of the dev deployment", () => {
   it.effect(
     "goes on with a dev deployment and blanks the key and the token the CLI reads",
     () =>
       Effect.gen(function* () {
-        const returned = yield* requireDevelopment().pipe(
-          settings({ CONVEX_DEPLOYMENT: "dev:happy-animal-123" })
-        );
+        const returned = yield* check({
+          CONVEX_DEPLOYMENT: "dev:happy-animal-123",
+        });
 
         expect(returned).toEqual({
           CONVEX_DEPLOYMENT: "dev:happy-animal-123",
@@ -228,10 +283,60 @@ describe("the deployment check of the release gate", () => {
 
   it.effect("refuses when nothing names a deployment", () =>
     Effect.gen(function* () {
-      const error = yield* requireDevelopment().pipe(settings({}), Effect.flip);
+      const error = yield* Effect.flip(check({}));
 
       expect(error.message).toContain("No deployment is configured");
     })
+  );
+
+  it.effect(
+    "reads the deployment from the .env.local of the CLI folder, as the CLI does",
+    () =>
+      Effect.gen(function* () {
+        const returned = yield* check(
+          {},
+          "# Deployment used by `npx convex dev`\nCONVEX_DEPLOYMENT=dev:happy-animal-123 # team: nakafa, project: nakafa\n\nVITE_CONVEX_URL=https://happy-animal-123.convex.cloud\n"
+        );
+
+        expect(returned.CONVEX_DEPLOYMENT).toBe("dev:happy-animal-123");
+      })
+  );
+
+  it.effect("lets the environment win over the .env.local", () =>
+    Effect.gen(function* () {
+      const returned = yield* check(
+        { CONVEX_DEPLOYMENT: "dev:happy-animal-123" },
+        "CONVEX_DEPLOYMENT=prod:other-name-1\n"
+      );
+      const error = yield* Effect.flip(
+        check(
+          { CONVEX_DEPLOYMENT: "prod:other-name-1" },
+          "CONVEX_DEPLOYMENT=dev:happy-animal-123\n"
+        )
+      );
+
+      expect(returned.CONVEX_DEPLOYMENT).toBe("dev:happy-animal-123");
+      expect(error.message).toContain(
+        "Refusing to run against a deployment that is not a dev deployment"
+      );
+    })
+  );
+
+  it.effect("refuses a .env.local that it cannot read", () =>
+    Effect.gen(function* () {
+      const { cli, directory } = yield* fixture;
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory(`${directory}/.env.local`);
+
+      const error = yield* requireDevelopment().pipe(
+        settings({ CONVEX_DEPLOYMENT: "dev:happy-animal-123" }),
+        Effect.provideService(ConvexCli, cli),
+        Effect.flip
+      );
+
+      expect(error._tag).toBe("DevelopmentCliError");
+      expect(error.message).toContain(".env.local could not be read");
+    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
   it.effect.each([
@@ -273,9 +378,22 @@ describe("the deployment check of the release gate", () => {
     ],
   ] as const)("refuses %s and never repeats the setting", ([, env]) =>
     Effect.gen(function* () {
-      const error = yield* requireDevelopment().pipe(
-        settings(env),
-        Effect.flip
+      const error = yield* Effect.flip(check(env));
+
+      expect(error.message).toContain(
+        "Refusing to run with a deploy key or a deployment token set"
+      );
+      expect(error.message).not.toContain("top-secret");
+    })
+  );
+
+  it.effect("refuses a deploy key that only the .env.local holds", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        check(
+          { CONVEX_DEPLOYMENT: "dev:happy-animal-123" },
+          "CONVEX_DEPLOY_KEY=prod:other-name-1|top-secret\n"
+        )
       );
 
       expect(error.message).toContain(
@@ -299,9 +417,8 @@ describe("the deployment check of the release gate", () => {
     ["a name with no type", "happy-animal-123"],
   ] as const)("refuses %s and never repeats the setting", ([, deployment]) =>
     Effect.gen(function* () {
-      const error = yield* requireDevelopment().pipe(
-        settings({ CONVEX_DEPLOYMENT: deployment }),
-        Effect.flip
+      const error = yield* Effect.flip(
+        check({ CONVEX_DEPLOYMENT: deployment })
       );
 
       expect(error.message).toContain(
