@@ -21,9 +21,9 @@ import { Schema } from "effect";
  * What a section build reads from the active release and writes to the index.
  * The reads return the source of the documents whose sections the index lacks
  * or holds at another version; the writes keep the index equal to the active
- * release, a document or a bounded batch of rows at a time, and the last one
- * records that the index is complete. One more read gives back the stored
- * sections of a language for the model test.
+ * release, one document at a time, or a bounded number of whole documents in
+ * the clean up, and the last one records that the index is complete. One more
+ * read gives back the stored sections of a language for the model test.
  */
 export default GroupSpec.make()
   .addFunction(

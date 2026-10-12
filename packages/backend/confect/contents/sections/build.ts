@@ -102,9 +102,10 @@ const quranStep = Effect.fn("contents.sections.quranStep")(function* (
 
 /**
  * Deletes the documents that the active release does not publish any more,
- * with their sections, a bounded batch at a time. When none are left to check,
- * the index holds exactly the sections of the release, and the step records
- * that, which is when search starts to trust it.
+ * with their sections, each document whole and a bounded number of rows at a
+ * time. When none are left to check, the index holds exactly the sections of
+ * the release, and the step records that, which is when search starts to trust
+ * it.
  */
 const pruneStep = Effect.fn("contents.sections.pruneStep")(function* (
   cursor: string | null,

@@ -376,26 +376,35 @@ describe("section build", () => {
   it("deletes the documents that no release publishes any more in bounded batches, and records the build after the last", async () => {
     embedWithKnowledge();
     const { run, rows, sources, t } = setup();
+    // Two documents of a little more than half a batch each: the second does
+    // not fit what the first leaves, so it goes with the next step.
+    const rowsOfEach = PRUNE_BATCH_SIZE / 2 + 1;
     await t.mutation(async (ctx) => {
       await seedKnowledge(ctx);
-      await leaveDocument(
-        ctx,
-        { ...knowledgeSource(1, "id"), contentKey: "material/lesson/removed" },
-        Arr.range(0, PRUNE_BATCH_SIZE + 5)
-      );
+      for (const contentKey of [
+        "material/lesson/removed",
+        "material/lesson/removed-too",
+      ]) {
+        await leaveDocument(
+          ctx,
+          { ...knowledgeSource(1, "id"), contentKey },
+          Arr.range(1, rowsOfEach)
+        );
+      }
     });
     const position = { cursor: null, phase: "prune" } as const;
     const releaseId = KNOWLEDGE_RELEASE.releaseId;
     const first = await run({ position, releaseId });
-    expect(first).toMatchObject({ removed: PRUNE_BATCH_SIZE, stale: false });
+    expect(first).toMatchObject({ removed: rowsOfEach, stale: false });
     expect(first.next).toEqual({ position, releaseId });
-    expect(await rows()).toHaveLength(6);
+    expect(await rows()).toHaveLength(rowsOfEach);
+    expect(await sources()).toHaveLength(1);
     expect(
       await t.query((ctx) => ctx.db.query("contentSectionState").collect())
     ).toEqual([]);
     expect(await run({ position, releaseId })).toMatchObject({
       next: null,
-      removed: 6,
+      removed: rowsOfEach,
       stale: false,
     });
     expect(await rows()).toHaveLength(0);

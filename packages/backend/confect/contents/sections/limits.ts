@@ -43,8 +43,13 @@ export const EMBED_RETRY_DELAY_MS = 5000;
  */
 export const SECTIONS_PER_DOCUMENT = 128;
 
-/** Rows one clean-up mutation deletes. */
-export const PRUNE_BATCH_SIZE = 64;
+/**
+ * Rows one clean-up mutation deletes. It is the most rows a document may hold,
+ * so that a document always fits an empty batch and goes whole: its rows and
+ * its record are deleted in one transaction, and the record never names a
+ * version that its sections lack.
+ */
+export const PRUNE_BATCH_SIZE = SECTIONS_PER_DOCUMENT;
 
 /** Documents one clean-up mutation checks for being published still. */
 export const PRUNE_SOURCES_PER_PAGE = 64;

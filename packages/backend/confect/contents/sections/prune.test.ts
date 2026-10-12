@@ -33,6 +33,15 @@ const removed: Source = {
   version: "left",
 };
 
+/** Another lesson that no release publishes, which the index lists after the first. */
+const removedToo: Source = {
+  ...removed,
+  contentKey: "material/lesson/removed-too",
+};
+
+/** Rows of a document that fills a little more than half of a batch, so that two of them do not fit one. */
+const OVER_HALF = PRUNE_BATCH_SIZE / 2 + 1;
+
 /** The first surah of the Quran, as the index names its document. */
 const fatiha: Source = {
   appLocale: "id",
@@ -53,11 +62,23 @@ function against(t: ReturnType<typeof createConvexTestWithBetterAuth>) {
         )
       )
     );
+  const fail = (releaseId: string) =>
+    t.mutation((ctx) =>
+      Effect.runPromise(
+        Effect.flip(pruneSections({ cursor: null, releaseId })).pipe(
+          // A mutation returns Convex values, which an error is not.
+          Effect.map(({ _tag, code }) => ({ _tag, code })),
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
   const rows = () =>
     t.query((ctx) => ctx.db.query("contentSections").collect());
   const sources = () =>
     t.query((ctx) => ctx.db.query("contentSectionSources").collect());
-  return { prune, rows, sources, t };
+  return { fail, prune, rows, sources, t };
 }
 
 /** A deployment whose active release is the one of the knowledge fixture. */
@@ -124,36 +145,59 @@ describe("section prune", () => {
     expect(await rows()).toEqual([]);
   });
 
-  it("deletes a bounded batch of rows and goes on in the same place", async () => {
+  it("deletes a document that fills the whole batch in one call, with its record", async () => {
     const { prune, rows, sources, t } = await setup();
     await t.mutation((ctx) =>
-      leaveDocument(ctx, removed, Arr.range(0, PRUNE_BATCH_SIZE + 5))
+      leaveDocument(ctx, removed, Arr.range(1, PRUNE_BATCH_SIZE))
     );
-    expect(await prune(ACTIVE)).toEqual({
-      cursor: null,
+    expect(await prune(ACTIVE)).toMatchObject({
       deleted: PRUNE_BATCH_SIZE,
-      done: false,
-      stale: false,
+      done: true,
     });
-    expect(await rows()).toHaveLength(6);
-    expect(await sources()).toHaveLength(1);
-    expect(await prune(ACTIVE)).toMatchObject({ deleted: 6, done: true });
     expect(await rows()).toEqual([]);
     expect(await sources()).toEqual([]);
   });
 
-  it("deletes the record of a document whose rows used the whole batch on the next call", async () => {
+  it("stops before a document that does not fit what is left of the batch, and leaves it whole", async () => {
     const { prune, rows, sources, t } = await setup();
-    await t.mutation((ctx) =>
-      leaveDocument(ctx, removed, Arr.range(0, PRUNE_BATCH_SIZE - 1))
-    );
-    expect(await prune(ACTIVE)).toMatchObject({
-      deleted: PRUNE_BATCH_SIZE,
+    await t.mutation(async (ctx) => {
+      await leaveDocument(ctx, removed, Arr.range(1, OVER_HALF));
+      await leaveDocument(ctx, removedToo, Arr.range(1, OVER_HALF));
+    });
+    expect(await prune(ACTIVE)).toEqual({
+      cursor: null,
+      deleted: OVER_HALF,
       done: false,
+      stale: false,
+    });
+    // The second document has all its rows, so its record does not name a
+    // version that some of its sections lack, and a build would not trust it
+    // wrongly if the release published it again.
+    expect(Arr.map(await rows(), ({ contentKey }) => contentKey)).toEqual(
+      Arr.makeBy(OVER_HALF, () => removedToo.contentKey)
+    );
+    expect(Arr.map(await sources(), ({ contentKey }) => contentKey)).toEqual([
+      removedToo.contentKey,
+    ]);
+    expect(await prune(ACTIVE)).toMatchObject({
+      deleted: OVER_HALF,
+      done: true,
     });
     expect(await rows()).toEqual([]);
-    expect(await prune(ACTIVE)).toMatchObject({ deleted: 0, done: true });
     expect(await sources()).toEqual([]);
+  });
+
+  it("fails, and deletes nothing, for a document that holds more sections than a document may have", async () => {
+    const { fail, rows, sources, t } = await setup();
+    await t.mutation((ctx) =>
+      leaveDocument(ctx, removed, Arr.range(1, PRUNE_BATCH_SIZE + 1))
+    );
+    expect(await fail(ACTIVE)).toEqual({
+      _tag: "ReleaseError",
+      code: "CONTENT_RELEASE_LIMIT",
+    });
+    expect(await rows()).toHaveLength(PRUNE_BATCH_SIZE + 1);
+    expect(await sources()).toHaveLength(1);
   });
 
   it("checks a page of documents at a time and says where the next page begins", async () => {
