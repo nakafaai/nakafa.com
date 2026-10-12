@@ -3,7 +3,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { endOfDay } from "@repo/backend/confect/nina/memory/check";
+import { endOfDay } from "@repo/backend/confect/nina/memory/day";
 import { syncKeys } from "@repo/backend/confect/nina/memory/keys";
 import { sameWords } from "@repo/backend/confect/nina/memory/match";
 import {
@@ -181,7 +181,8 @@ const writeCandidate = Effect.fn("nina.memory.write.candidate")(function* ({
   readonly seen: readonly Seen[];
   readonly topics: readonly string[];
 }) {
-  // A situation ends at the end of its last day. Any other kind has no end.
+  // A situation ends at the end of its last day, which its Schema says is a
+  // real day (`NinaMemoryDay`). Any other kind has no end.
   const validUntil =
     candidate.kind === "situation" ? endOfDay(candidate.until) : Option.none();
   const named = yield* openWith(

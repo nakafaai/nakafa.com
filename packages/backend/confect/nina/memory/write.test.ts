@@ -70,6 +70,18 @@ describe("memory capture write", () => {
     ]);
   });
 
+  it.each(["20 Oktober", "2026-02-30"])(
+    "refuses a situation that ends on %j, which is no real day, and writes nothing",
+    async (until) => {
+      const f = await createCaptureTest();
+      await expect(f.run([situation({ until })])).rejects.toThrow(
+        "Expected a real UTC day written YYYY-MM-DD."
+      );
+      expect(await f.stored()).toEqual([]);
+      expect(await f.remembered()).toBeUndefined();
+    }
+  );
+
   it("moves the end of a situation that the learner says again with a new day", async () => {
     const f = await createCaptureTest();
     const id = await f.seed({

@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { NinaMemoryDay } from "@repo/backend/confect/nina/memory/day";
 import { NinaPortraitText } from "@repo/backend/confect/nina/portrait/schema";
 import {
   onboardingFocusValidator,
@@ -195,17 +196,18 @@ export const NinaMemoryCapture = Schema.Struct({
 });
 
 /**
- * A claim that can be written. A situation names the day it ends, as
- * `YYYY-MM-DD`, and a memory of any other kind has no end, so the shape of a
- * candidate says which it is. The check makes a claim into a candidate: a
- * situation without its day is no candidate, and any other kind drops the day it
- * was given.
+ * A claim that can be written. A situation names the real day it ends
+ * (`NinaMemoryDay`), and a memory of any other kind has no end, so the shape of
+ * a candidate says which it is. The check makes a claim into a candidate: a
+ * situation without a real day is no candidate, and any other kind drops the
+ * day it was given. The write takes this same Schema as its argument, so it
+ * refuses a situation whose day is not real, and none is stored without an end.
  */
 export const NinaMemoryCandidate = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("situation"),
     ...NinaMemoryStatement,
-    until: Schema.String,
+    until: NinaMemoryDay,
   }),
   Schema.Struct({ kind: NinaLastingKind, ...NinaMemoryStatement }),
 ]);

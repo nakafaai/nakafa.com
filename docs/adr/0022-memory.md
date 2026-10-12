@@ -98,9 +98,12 @@ the learner can read, edit and delete every one. After a complete turn:
    it only when its quote is in the message once lower-cased and with
    whitespace collapsed, its text has a letter or a digit, and a situation has
    an end day of today or later. A claim is a candidate when it fits one of two
-   shapes: a situation names its end day and any other kind has none, so a
-   situation without a day is dropped, and any other kind loses a day it was
-   given. The model is asked for one flat claim, not for the two shapes,
+   shapes: a situation names a real end day (`YYYY-MM-DD`, and not a day that a
+   calendar rolls over, such as February 30) and any other kind has none, so a
+   situation without a real day is dropped, and any other kind loses a day it
+   was given. The write takes the same two shapes as its argument, so it
+   refuses a situation that has no real end day. The model is asked for one
+   flat claim, not for the two shapes,
    because a union in a structured output is not known to pass the gateway
    (Gemini's structured output page lists no `anyOf`, read on 12 October
    2026). The check reads structure and never meaning. The candidates that stay

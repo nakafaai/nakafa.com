@@ -1,10 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  checkCandidates,
-  endOfDay,
-} from "@repo/backend/confect/nina/memory/check";
+import { checkCandidates } from "@repo/backend/confect/nina/memory/check";
 import type { NinaMemoryClaim } from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 
 type Claim = typeof NinaMemoryClaim.Type;
 
@@ -26,30 +23,6 @@ function claim(fields: Partial<Claim> = {}): Claim {
 function kept(claims: Claim[]) {
   return Arr.map(checkCandidates(message, claims, NOW), (item) => item.text);
 }
-
-describe("memory end of day", () => {
-  it("names the last millisecond of a real UTC day", () => {
-    expect(endOfDay("2026-10-20")).toEqual(
-      Option.some(Date.UTC(2026, 9, 20, 23, 59, 59, 999))
-    );
-    expect(endOfDay("2028-02-29")).toEqual(
-      Option.some(Date.UTC(2028, 1, 29, 23, 59, 59, 999))
-    );
-  });
-
-  it.each([
-    "2026-02-30",
-    "2026-13-01",
-    "2027-02-29",
-    "20 Oktober",
-    "tomorrow",
-    "2026-10-20T10:00:00Z",
-    "2026-1-5",
-    "",
-  ])("names nothing for %j", (text) => {
-    expect(endOfDay(text)).toEqual(Option.none());
-  });
-});
 
 describe("memory candidate check", () => {
   it("keeps a claim whose quote the learner said, in any case and spacing", () => {
