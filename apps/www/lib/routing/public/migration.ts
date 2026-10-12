@@ -1,11 +1,10 @@
-import { HttpClient } from "@confect/js";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Array as Arr, Effect, HashSet, Match, Option, Schema } from "effect";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
 import { readTryoutRedirect } from "@/lib/routing/public/tryout";
 
@@ -183,9 +182,12 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   if (Option.isNone(identity)) {
     return null;
   }
-  const redirect = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.material.identity, identity.value)
-  ).pipe(Effect.provide(httpLayer()));
+  // The content store keeps the answer, a missing successor included, for the
+  // release that gave it, so a later release can still add the successor.
+  const redirect = yield* queryContentStore(
+    contentRelease.material.identity,
+    identity.value
+  );
   if (!(redirect.activeReleaseId && redirect.managed && redirect.publicPath)) {
     return null;
   }

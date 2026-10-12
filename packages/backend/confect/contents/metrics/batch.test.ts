@@ -3,10 +3,7 @@ import {
   buildMetricsBatch,
   groupMetricsQueueItems,
 } from "@repo/backend/confect/contents/metrics/batch";
-import {
-  learningPopularityWindowValues,
-  POPULARITY_DAY_MS,
-} from "@repo/backend/confect/contents/popularity";
+import { POPULARITY_DAY_MS } from "@repo/backend/confect/contents/popularity";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
@@ -25,6 +22,8 @@ async function insertQueueItem(
     readonly contentId: string;
     readonly contextKey: string;
     readonly index: number;
+    readonly scopeMode?: "global" | "placement";
+    readonly section?: "articles" | "material";
     readonly viewedAt?: number;
   }
 ) {
@@ -40,8 +39,8 @@ async function insertQueueItem(
     materialDomain: "mathematics",
     partition: 0,
     route: `material/vector/${input.index}`,
-    section: "material",
-    scopeMode: "global",
+    section: input.section ?? "material",
+    scopeMode: input.scopeMode ?? "global",
     sourcePath: "material/lesson/mathematics/vector/addition",
     title: `Vector ${input.index}`,
     viewerKey: `device:${input.index}`,
@@ -83,9 +82,7 @@ describe("contents/metrics/batch", () => {
 
     expect(Arr.map(groups, (group) => group.length)).toEqual([2, 1, 1]);
     expect(MutableHashMap.size(batch.signals)).toBe(2);
-    expect(MutableHashMap.size(batch.counters)).toBe(
-      2 * learningPopularityWindowValues.length
-    );
+    expect(MutableHashMap.size(batch.counters)).toBe(2);
     expect(
       pipe(
         Arr.map(
@@ -103,20 +100,20 @@ describe("contents/metrics/batch", () => {
     ]);
   });
 
-  it("retains the repair boundary and applies older events only to lifetime", async () => {
+  it("keeps the window boundary and drops views older than the window", async () => {
     const target = convexTest(schema, convexModules);
     await target.mutation(async (ctx) => {
       await insertQueueItem(ctx, {
         contentId: "retained",
         contextKey: "canonical",
         index: 0,
-        viewedAt: NOW - 364 * POPULARITY_DAY_MS,
+        viewedAt: NOW - 6 * POPULARITY_DAY_MS,
       });
       await insertQueueItem(ctx, {
         contentId: "expired",
         contextKey: "canonical",
         index: 1,
-        viewedAt: NOW - 365 * POPULARITY_DAY_MS,
+        viewedAt: NOW - 7 * POPULARITY_DAY_MS,
       });
     });
 
@@ -139,10 +136,42 @@ describe("contents/metrics/batch", () => {
           windowKey,
         })
       )
-    ).toEqual([
-      { contentId: "retained", windowKey: "365d" },
-      { contentId: "retained", windowKey: "lifetime" },
-      { contentId: "expired", windowKey: "lifetime" },
-    ]);
+    ).toEqual([{ contentId: "retained", windowKey: "7d" }]);
+  });
+
+  it("counts only global material views", async () => {
+    const target = convexTest(schema, convexModules);
+    await target.mutation(async (ctx) => {
+      await insertQueueItem(ctx, {
+        contentId: "article",
+        contextKey: "canonical",
+        index: 0,
+        section: "articles",
+      });
+      await insertQueueItem(ctx, {
+        contentId: "placement",
+        contextKey: "placement:program:node",
+        index: 1,
+        scopeMode: "placement",
+      });
+      await insertQueueItem(ctx, {
+        contentId: "ranked",
+        contextKey: "canonical",
+        index: 2,
+      });
+    });
+
+    const queueItems = await target.query(
+      async (ctx) => await ctx.db.query("learningEngagementQueue").collect()
+    );
+    const batch = buildMetricsBatch({ queueItems, updatedAt: NOW });
+
+    expect(
+      Arr.map(
+        [...MutableHashMap.values(batch.counters)],
+        ({ ref }) => ref.content_id
+      )
+    ).toEqual(["ranked"]);
+    expect(MutableHashMap.size(batch.signals)).toBe(1);
   });
 });

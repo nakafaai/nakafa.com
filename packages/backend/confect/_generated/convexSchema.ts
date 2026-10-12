@@ -17,6 +17,7 @@ import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
 import contentBindings from "./tables/contentBindings";
+import contentCompaction from "./tables/contentCompaction";
 import contentHeads from "./tables/contentHeads";
 import contentIndex from "./tables/contentIndex";
 import contentItems from "./tables/contentItems";
@@ -47,6 +48,7 @@ import learningViews from "./tables/learningViews";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
+import ninaMemoryKeys from "./tables/ninaMemoryKeys";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
@@ -108,6 +110,7 @@ export default $defineSchema({
   contentArtifactFacts: $Table.tableDefinition(contentArtifactFacts),
   contentArtifacts: $Table.tableDefinition(contentArtifacts),
   contentBindings: $Table.tableDefinition(contentBindings),
+  contentCompaction: $Table.tableDefinition(contentCompaction),
   contentHeads: $Table.tableDefinition(contentHeads),
   contentIndex: $Table.tableDefinition(contentIndex),
   contentItems: $Table.tableDefinition(contentItems),
@@ -138,6 +141,7 @@ export default $defineSchema({
   materialBuckets: $Table.tableDefinition(materialBuckets),
   materialCatalog: $Table.tableDefinition(materialCatalog),
   ninaMemories: $Table.tableDefinition(ninaMemories),
+  ninaMemoryKeys: $Table.tableDefinition(ninaMemoryKeys),
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),

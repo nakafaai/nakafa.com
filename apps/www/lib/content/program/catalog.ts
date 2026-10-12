@@ -1,4 +1,3 @@
-import { HttpClient } from "@confect/js";
 import "server-only";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
@@ -18,18 +17,19 @@ import {
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 
-/** Reads and validates the bounded published program catalog. */
+/**
+ * Reads and validates the bounded published program catalog. The content store
+ * holds the query result once for each release and locale.
+ */
 export const readPublishedProgramCatalog = Effect.fn(
   "NakafaProgram.readPublishedCatalog"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.program.catalog, {
-      appLocale,
-    })
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(contentRelease.program.catalog, {
+    appLocale,
+  });
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
     publicPath: "curricula",
@@ -114,16 +114,18 @@ export const readPublishedProgramPrerenderRoute = Effect.fn(
   return entry.value.route;
 });
 
-/** Reads the authenticated featured subjects, one route per subject, for the About feature list. */
+/**
+ * Reads the authenticated featured subjects, one route per subject, for the
+ * About feature list. The content store holds the query result once for each
+ * release and locale.
+ */
 export const readPublishedProgramSubjects = Effect.fn(
   "NakafaProgram.readPublishedSubjects"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.program.subjects, {
-      appLocale,
-    })
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(contentRelease.program.subjects, {
+    appLocale,
+  });
   if (
     !result.managed ||
     result.routeJson.length > PROGRAM_FEATURED_SUBJECT_LIMIT
@@ -151,7 +153,11 @@ export const readPublishedProgramSubjects = Effect.fn(
   );
 });
 
-/** Caches the featured subjects, one per subject, under current publication invalidation. */
+/**
+ * Caches the featured subjects, one per subject, under current publication
+ * invalidation. The `use cache` boundary stays so that the About page
+ * prerenders and the program tag still expires it.
+ */
 export async function getPublishedProgramSubjects(locale: Locale) {
   "use cache";
 
@@ -162,7 +168,11 @@ export async function getPublishedProgramSubjects(locale: Locale) {
   return subjects;
 }
 
-/** Caches the bounded program catalog under program publication invalidation. */
+/**
+ * Caches the bounded program catalog under program publication invalidation.
+ * The `use cache` boundary stays so that the curriculum pages prerender and the
+ * program tag still expires them.
+ */
 export async function getPublishedProgramCatalog(locale: Locale) {
   "use cache";
 

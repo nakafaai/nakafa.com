@@ -1,20 +1,14 @@
 import "server-only";
 
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   ArticleCategorySchema,
   ArticleCategoryTitleSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import { Array as Arr, Effect, MutableList, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import {
-  type ArticlePageCursor,
-  type PublishedCategoryPage,
-  readPublishedCategories,
-} from "@/lib/content/article/catalog";
+import { readPublishedArticleCategories } from "@/lib/content/article/category";
 import { applyContentCache } from "@/lib/content/cache";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
-import { PublishedProjectionError } from "@/lib/content/published/errors";
 
 const ArticleNavigationItemSchema = Schema.Struct({
   category: ArticleCategorySchema,
@@ -28,47 +22,20 @@ export type ArticleNavigationItem = typeof ArticleNavigationItemSchema.Type;
 /** Reads every signed article category under one immutable release identity. */
 export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
   function* (locale: Locale) {
-    const navigation = MutableList.make<ArticleNavigationItem>();
-    let cursor: ArticlePageCursor = {
-      cursor: null,
-      expectedManifestHash: null,
-      expectedReleaseId: null,
-    };
-
-    while (true) {
-      const page: PublishedCategoryPage = yield* readPublishedCategories({
-        ...cursor,
-        locale,
-      });
-      if (page.stale) {
-        return yield* new PublishedProjectionError({
-          appLocale: AppLocaleSchema.make(locale),
-          publicPath: "articles",
-        });
-      }
-
-      MutableList.appendAll(
-        navigation,
-        Arr.map(page.categories, ({ category, route, title }) => ({
-          category,
-          href: `/articles/${route}`,
-          title,
-        }))
-      );
-      if (page.done) {
-        return MutableList.toArray(navigation);
-      }
-
-      cursor = {
-        cursor: page.nextCursor,
-        expectedManifestHash: page.activeManifestHash,
-        expectedReleaseId: page.activeReleaseId,
-      };
-    }
+    const { categories } = yield* readPublishedArticleCategories(locale);
+    return Arr.map(categories, ({ category, route, title }) => ({
+      category,
+      href: `/articles/${route}`,
+      title,
+    }));
   }
 );
 
-/** Caches complete article navigation under exact article release tags. */
+/**
+ * Caches complete article navigation under exact article release tags. The `use
+ * cache` boundary stays so that the shells still prerender and the article tag
+ * still expires them; behind it the category list comes from the content store.
+ */
 async function getArticleNavigation(locale: Locale) {
   "use cache";
 

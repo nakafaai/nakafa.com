@@ -4,6 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { sealedTitle } from "@repo/backend/test/seal";
 import { Array as Arr, Order } from "effect";
 
 const NOW = Date.UTC(2026, 4, 13, 12, 0, 0);
@@ -16,7 +17,7 @@ describe("chats/queries", () => {
 
       return ctx.db.insert("chats", {
         threadId: "fixture-thread",
-        title: "Public transcript",
+        title: await sealedTitle(ctx, user.userId, "Public transcript"),
         type: "study",
         updatedAt: NOW,
         userId: user.userId,
@@ -42,7 +43,6 @@ describe("chats/queries", () => {
 
       await ctx.db.insert("chats", {
         threadId: "fixture-thread",
-        title: "Public one",
         type: "study",
         updatedAt: NOW + 3,
         userId: user.userId,
@@ -50,7 +50,6 @@ describe("chats/queries", () => {
       });
       await ctx.db.insert("chats", {
         threadId: "fixture-thread",
-        title: "Public two",
         type: "study",
         updatedAt: NOW + 2,
         userId: user.userId,
@@ -58,7 +57,6 @@ describe("chats/queries", () => {
       });
       await ctx.db.insert("chats", {
         threadId: "fixture-thread",
-        title: "Private one",
         type: "study",
         updatedAt: NOW + 1,
         userId: user.userId,
@@ -107,7 +105,6 @@ describe("chats/queries", () => {
 
       await ctx.db.insert("chats", {
         threadId: "fixture-thread",
-        title: "Public",
         type: "study",
         updatedAt: NOW + 2,
         userId: user.userId,
@@ -115,7 +112,6 @@ describe("chats/queries", () => {
       });
       await ctx.db.insert("chats", {
         threadId: "fixture-thread",
-        title: "Private",
         type: "study",
         updatedAt: NOW + 1,
         userId: user.userId,
@@ -164,7 +160,6 @@ describe("chats/queries", () => {
 
       await ctx.db.insert("chats", {
         threadId: "fixture-thread",
-        title: "Private owner chat",
         type: "study",
         updatedAt: NOW + 1,
         userId: owner.userId,
@@ -172,7 +167,7 @@ describe("chats/queries", () => {
       });
       await ctx.db.insert("chats", {
         threadId: "fixture-thread",
-        title: "Viewer chat",
+        title: await sealedTitle(ctx, viewer.userId, "Viewer chat"),
         type: "study",
         updatedAt: NOW + 2,
         userId: viewer.userId,
@@ -219,7 +214,7 @@ it("keeps search and every optional list filter scoped to the right owner and vi
       for (const visibility of ["public", "private"] as const) {
         await ctx.db.insert("chats", {
           threadId: "fixture-thread",
-          title: "Algebra practice",
+          title: await sealedTitle(ctx, userId, "Algebra practice"),
           userId,
           visibility,
           type: "study",
@@ -285,13 +280,13 @@ it("protects titles when chats are private, missing, or untitled", async () => {
       threadId: "fixture-thread",
       ...base,
       visibility: "private",
-      title: "Secret",
+      title: await sealedTitle(ctx, owner.userId, "Secret"),
     });
     const publicId = await ctx.db.insert("chats", {
       threadId: "fixture-thread",
       ...base,
       visibility: "public",
-      title: "Shared",
+      title: await sealedTitle(ctx, owner.userId, "Shared"),
     });
     const emptyPublic = await ctx.db.insert("chats", {
       threadId: "fixture-thread",

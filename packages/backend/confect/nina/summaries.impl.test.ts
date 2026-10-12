@@ -72,31 +72,17 @@ describe("Nina summary storage", () => {
     ]);
   });
 
-  it("stores the text sealed and reads a plain and a sealed row back as text", async () => {
+  it("stores the text sealed, so a table export shows no text, and reads it back as text", async () => {
     const { t, chatId } = await createNinaTest();
-    const stored = () =>
-      t.query((ctx) => ctx.db.query("ninaSummaries").collect());
-    // A summary written before October 2026 holds its text as a string.
-    await t.mutation((ctx) =>
-      ctx.db.insert("ninaSummaries", {
-        chatId,
-        text: "- Plain row.",
-        throughOrder: 3,
-        updatedAt: Date.UTC(2026, 8, 1),
-        usage: { calls: 1, ...call },
-      })
-    );
-    expect(await t.query(read, { chatId })).toEqual({
-      text: "- Plain row.",
-      throughOrder: 3,
-    });
     await t.mutation(save, {
       chatId,
       text: "- Sealed row about limits.",
       throughOrder: 7,
       usage: call,
     });
-    const [row] = await stored();
+    const [row] = await t.query((ctx) =>
+      ctx.db.query("ninaSummaries").collect()
+    );
     expect(row?.text).toBeInstanceOf(ArrayBuffer);
     expect(showsText(row?.text, "- Sealed row about limits.")).toBe(false);
     expect(await t.query(read, { chatId })).toEqual({

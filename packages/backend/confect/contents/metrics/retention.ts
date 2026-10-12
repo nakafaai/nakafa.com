@@ -5,42 +5,39 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
+import { retireObsoletePopularity } from "@repo/backend/confect/contents/metrics/retire";
 import {
-  getFinitePopularityWindows,
   getPopularitySignalDay,
   getPopularityWindowStartDay,
-  learningPopularityScopeValues,
+  POPULARITY_SCOPE,
+  POPULARITY_WINDOW,
 } from "@repo/backend/confect/contents/popularity";
 import { Clock, Duration, Effect, flow, Option } from "effect";
 
 const PAGE_SIZE = 128;
-/** Every finite window must have consumed its outgoing day before deletion. */
-const hasCompletedWindows = Effect.fn("contents.metrics.hasCompletedWindows")(
+/** The maintained window must have consumed its outgoing day before deletion. */
+const hasCompletedWindow = Effect.fn("contents.metrics.hasCompletedWindow")(
   function* (day: number) {
     const database = yield* DatabaseReader;
-    for (const scopeMode of learningPopularityScopeValues) {
-      for (const windowKey of getFinitePopularityWindows()) {
-        const cycle = yield* database
-          .table("learningPopularityCycles")
-          .get("by_scopeMode_and_windowKey", scopeMode, windowKey)
-          .pipe(
-            Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-            Effect.orDie
-          );
-        if (cycle?.completedDay !== day) {
-          return false;
-        }
-      }
-    }
-    return true;
+    const cycle = yield* database
+      .table("learningPopularityCycles")
+      .get("by_scopeMode_and_windowKey", POPULARITY_SCOPE, POPULARITY_WINDOW)
+      .pipe(
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    return cycle?.completedDay === day;
   },
   Effect.catchDefect(flow(toContentAnalyticsIoError, Effect.fail))
 );
 
 /**
- * Expires deduplication keys and finite-window inputs in bounded transactions.
- * Queue payloads own pending work; lifetime counters own processed totals.
- * The earliest indexed rows are the cursor, so retries need no checkpoint.
+ * Expires deduplication keys and window inputs in bounded transactions. Queue
+ * payloads own pending work. A daily signal is kept only while the window can
+ * still expire it, so the window start is the retention cutoff once the
+ * window's own maintenance has completed the day. Until nothing is left, the
+ * same hourly pass also retires what earlier versions kept (`retire.ts`). The
+ * earliest indexed rows are the cursor, so retries need no checkpoint.
  */
 export const pruneLearningPopularity = Effect.fn(
   "contents.metrics.pruneLearningPopularity"
@@ -55,7 +52,7 @@ export const pruneLearningPopularity = Effect.fn(
       .index("by_signalDay", (query) => query.lt("signalDay", day))
       .take(PAGE_SIZE)
       .pipe(Effect.orDie);
-    const signalCutoff = getPopularityWindowStartDay("365d", day);
+    const signalCutoff = getPopularityWindowStartDay(POPULARITY_WINDOW, day);
     const expiredSignal = yield* database
       .table("learningPopularitySignals")
       .index("by_signalDay", (query) => query.lt("signalDay", signalCutoff))
@@ -63,7 +60,7 @@ export const pruneLearningPopularity = Effect.fn(
       .pipe(Effect.map(Option.getOrNull), Effect.orDie);
     // Do not read maintenance rows when there are no expired daily inputs.
     const waitingForMaintenance =
-      expiredSignal !== null && !(yield* hasCompletedWindows(day));
+      expiredSignal !== null && !(yield* hasCompletedWindow(day));
     for (const viewer of viewers) {
       yield* writer.table("learningPopularityViewerSignals").delete(viewer._id);
     }
@@ -79,8 +76,12 @@ export const pruneLearningPopularity = Effect.fn(
         signalsDeleted += 1;
       }
     }
+    const { retiredCounters, retiredCycles } =
+      yield* retireObsoletePopularity();
     const hasMore =
-      viewers.length === PAGE_SIZE || signalsDeleted === PAGE_SIZE;
+      viewers.length === PAGE_SIZE ||
+      signalsDeleted === PAGE_SIZE ||
+      retiredCounters + retiredCycles > 0;
     if (hasMore) {
       // Native scheduling and these deletions commit together. A failed page
       // rolls back; the hourly cron also recovers a terminated chain.
@@ -94,6 +95,8 @@ export const pruneLearningPopularity = Effect.fn(
     }
     return {
       hasMore,
+      retiredCounters,
+      retiredCycles,
       signalsDeleted,
       viewersDeleted: viewers.length,
       waitingForMaintenance,

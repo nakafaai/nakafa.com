@@ -4,6 +4,7 @@ import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.j
 import { NextRequest } from "next/server";
 import type { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
 import { config, proxy } from "@/proxy";
+import { activateTestRelease } from "@/test/active";
 import {
   bypassed,
   localeHints,
@@ -11,8 +12,10 @@ import {
   publicRoutes,
   redirectCases,
   representations,
+  routeAnswer,
   snbtExam,
 } from "@/test/proxy";
+import { resetTestRuntimeCache } from "@/test/store";
 
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
 const MARKDOWN_SUFFIX_PATTERN = /\.mdx?$/;
@@ -113,6 +116,14 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
 vi.mock("@/lib/llms/content/markdown", () => ({
   hasLlmsMarkdownSource: (input: Parameters<typeof hasLlmsMarkdownSource>[0]) =>
     Effect.succeed(input.cleanSlug === "terms-of-service"),
@@ -131,9 +142,9 @@ vi.mock("@/lib/routing/public/migration", () => ({
 }));
 describe("proxy", () => {
   beforeEach(() => {
-    runtimeMocks.readTryout
-      .mockReset()
-      .mockReturnValue(Effect.succeed({ exists: false }));
+    resetTestRuntimeCache();
+    activateTestRelease("release-active");
+    runtimeMocks.readTryout.mockReset().mockReturnValue(routeAnswer);
     runtimeMocks.readProgramPath
       .mockReset()
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
@@ -329,6 +340,11 @@ describe("proxy", () => {
     runtimeMocks.readTryout.mockReturnValueOnce(Effect.succeed(null));
     const response = await requestProxy(path);
     expectHardNotFound(response, "en");
+  });
+  it("keeps the reference of a public try-out route for its release", async () => {
+    await requestProxy("/en/try-out/indonesia/snbt/2027/set-1");
+    await requestProxy("/en/try-out/indonesia/snbt/2027/set-1");
+    expect(runtimeMocks.readTryout).toHaveBeenCalledTimes(1);
   });
   it("matches the removed finance endpoint only as its exact path", () => {
     expect(matchesProxy("/api/chat/finance")).toBe(true);

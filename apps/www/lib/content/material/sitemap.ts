@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
@@ -10,18 +9,17 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 
 /** Reads non-empty material sitemap partitions for one localized catalog. */
 export const readPublishedMaterialBuckets = Effect.fn(
   "www.materials.readSitemapBuckets"
 )(function* (locale: Locale, expectedActiveReleaseId?: ContentReleasePin) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.material.sitemapBuckets, {
-      appLocale,
-    })
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(
+    contentRelease.material.sitemapBuckets,
+    { appLocale }
+  );
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,
@@ -51,10 +49,8 @@ export const readPublishedMaterialSitemap = Effect.fn(
   bucket: Ref.Args<typeof contentRelease.material.sitemapPage>["bucket"]
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.material.sitemapPage, {
-      appLocale,
-      bucket,
-    })
-  ).pipe(Effect.provide(httpLayer()));
+  return yield* queryContentStore(contentRelease.material.sitemapPage, {
+    appLocale,
+    bucket,
+  });
 });

@@ -16,6 +16,8 @@ import {
   ContentCacheInvalidationError,
   type invalidateContentCache,
 } from "@/lib/content/cache";
+import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
+import { ContentStoreUnavailableError } from "@/lib/content/store/entry";
 import {
   type invalidateSitemapCache,
   SitemapCacheInvalidationError,
@@ -32,7 +34,9 @@ const encodeCacheRequest = Schema.encodeSync(
   Schema.fromJsonString(ContentCacheRequestSchema)
 );
 
-const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
+const loadActiveContentIdentityMock = vi.hoisted(() => vi.fn());
+const expireActiveContentIdentityMock = vi.hoisted(() => vi.fn());
+const confirmActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const invalidateContentCacheMock = vi.hoisted(() =>
   vi.fn<typeof invalidateContentCache>()
 );
@@ -58,17 +62,24 @@ vi.mock("@/lib/sitemap/cache", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: readActiveContentIdentityMock,
+  /** Answers whether the stored release pointer names the activated release. */
+  confirmActiveContentIdentity: confirmActiveContentIdentityMock,
+  /** Records the expiry of the stored release pointer. */
+  expireActiveContentIdentity: expireActiveContentIdentityMock,
+  /** Answers the release that Convex holds right now. */
+  loadActiveContentIdentity: loadActiveContentIdentityMock,
 }));
 
 beforeEach(() => {
-  readActiveContentIdentityMock.mockReset().mockReturnValue(
+  loadActiveContentIdentityMock.mockReset().mockReturnValue(
     Effect.succeed({
       manifestHash: `sha256:${"a".repeat(64)}`,
       releaseId,
       sequence: 1,
     })
   );
+  expireActiveContentIdentityMock.mockReset().mockReturnValue(Effect.void);
+  confirmActiveContentIdentityMock.mockReset().mockReturnValue(Effect.void);
   invalidateContentCacheMock
     .mockReset()
     .mockImplementation((tags) => Effect.succeed(tags));
@@ -148,7 +159,7 @@ describe("content runtime cache revalidation route", () => {
     });
     expect(response.status).toBe(400);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
-    expect(readActiveContentIdentityMock).not.toHaveBeenCalled();
+    expect(loadActiveContentIdentityMock).not.toHaveBeenCalled();
     expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 
@@ -163,7 +174,7 @@ describe("content runtime cache revalidation route", () => {
     ],
     ["environment without an active release", null],
   ])("rejects a release from a %s", async (_kind, active) => {
-    readActiveContentIdentityMock.mockReturnValueOnce(Effect.succeed(active));
+    loadActiveContentIdentityMock.mockReturnValueOnce(Effect.succeed(active));
     const { POST } = await import("@/app/api/internal/content/cache/route");
     const response = await POST(
       createBodyRequest(
@@ -178,7 +189,8 @@ describe("content runtime cache revalidation route", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Content release is not active.",
     });
-    expect(readActiveContentIdentityMock).toHaveBeenCalledTimes(1);
+    expect(loadActiveContentIdentityMock).toHaveBeenCalledTimes(1);
+    expect(expireActiveContentIdentityMock).not.toHaveBeenCalled();
     expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 
@@ -211,8 +223,112 @@ describe("content runtime cache revalidation route", () => {
       revalidated: true,
     });
     expect(response.status).toBe(200);
-    expect(readActiveContentIdentityMock).toHaveBeenCalledTimes(1);
+    expect(loadActiveContentIdentityMock).toHaveBeenCalledTimes(1);
     expect(invalidateContentCacheMock).toHaveBeenCalledWith("material");
+  });
+
+  it("expires the stored release pointer and proves it before it revalidates anything", async () => {
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(200);
+    expect(confirmActiveContentIdentityMock).toHaveBeenCalledExactlyOnceWith(
+      releaseId
+    );
+    const [firstExpiry] =
+      expireActiveContentIdentityMock.mock.invocationCallOrder;
+    expect(firstExpiry).toBeLessThan(
+      confirmActiveContentIdentityMock.mock.invocationCallOrder[0] ?? 0
+    );
+    expect(
+      confirmActiveContentIdentityMock.mock.invocationCallOrder[0]
+    ).toBeLessThan(invalidateContentCacheMock.mock.invocationCallOrder[0] ?? 0);
+    expect(
+      confirmActiveContentIdentityMock.mock.invocationCallOrder[0]
+    ).toBeLessThan(invalidateSitemapCacheMock.mock.invocationCallOrder[0] ?? 0);
+  });
+
+  it("expires the pointer again after the sitemap purge, for a read that began before the activation", async () => {
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(200);
+    expect(expireActiveContentIdentityMock).toHaveBeenCalledTimes(2);
+    expect(invalidateSitemapCacheMock.mock.invocationCallOrder[0]).toBeLessThan(
+      expireActiveContentIdentityMock.mock.invocationCallOrder[1] ?? 0
+    );
+  });
+
+  it("reports a last expiry that failed without a false receipt", async () => {
+    expireActiveContentIdentityMock
+      .mockReturnValueOnce(Effect.void)
+      .mockReturnValueOnce(
+        Effect.fail(
+          new ContentStoreUnavailableError({
+            cause: "offline",
+            operation: "expire",
+          })
+        )
+      );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      error: "Content cache invalidation failed.",
+    });
+  });
+
+  it("answers 503 and revalidates nothing when the expiry did not reach the pointer", async () => {
+    // The Runtime Cache client resolves an expiry that failed, so the pointer
+    // still names the previous release and only the read back can tell.
+    confirmActiveContentIdentityMock.mockReturnValueOnce(
+      Effect.fail(
+        new PublishedReleaseMismatchError({
+          actualReleaseId: ReleaseIdSchema.make("release-previous"),
+          expectedReleaseId: releaseId,
+        })
+      )
+    );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      error: "Content cache invalidation failed.",
+    });
+    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
+    expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
+  });
+
+  it("reports a pointer that could not be expired without a false receipt", async () => {
+    expireActiveContentIdentityMock.mockReturnValueOnce(
+      Effect.fail(
+        new ContentStoreUnavailableError({
+          cause: "offline",
+          operation: "expire",
+        })
+      )
+    );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      error: "Content cache invalidation failed.",
+    });
+    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
+    expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
   });
 
   it("reports a typed cache invalidation failure without a false receipt", async () => {
@@ -238,7 +354,9 @@ describe("content runtime cache revalidation route", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(invalidateSitemapCacheMock).toHaveBeenCalledOnce();
+    expect(invalidateSitemapCacheMock).toHaveBeenCalledExactlyOnceWith(
+      releaseId
+    );
   });
 
   it("reports a failed sitemap invalidation without a false receipt", async () => {

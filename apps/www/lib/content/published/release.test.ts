@@ -10,7 +10,8 @@ import {
   verifyContentReleasePin,
 } from "@/lib/content/published/release";
 
-const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
+const loadActiveContentIdentityMock = vi.hoisted(() => vi.fn());
+const expireActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-active");
 const nextReleaseId = ReleaseIdSchema.make("release-next");
 const identity = {
@@ -20,11 +21,13 @@ const identity = {
 } satisfies PublishedProjectionIdentity;
 
 vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: readActiveContentIdentityMock,
+  expireActiveContentIdentity: expireActiveContentIdentityMock,
+  loadActiveContentIdentity: loadActiveContentIdentityMock,
 }));
 
 beforeEach(() => {
-  readActiveContentIdentityMock.mockReset();
+  loadActiveContentIdentityMock.mockReset();
+  expireActiveContentIdentityMock.mockReset().mockReturnValue(Effect.void);
 });
 
 describe("content release pin", () => {
@@ -66,9 +69,86 @@ describe("content release pin", () => {
     )
   );
 
+  it.effect(
+    "drops the stored release pointer when a read names another release",
+    () =>
+      Effect.gen(function* () {
+        yield* decodeContentReleasePin(
+          nextReleaseId,
+          activeReleaseId,
+          identity
+        ).pipe(Effect.flip);
+
+        expect(expireActiveContentIdentityMock).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect(
+    "still reports the mismatch when the pointer cannot be dropped",
+    () =>
+      Effect.gen(function* () {
+        expireActiveContentIdentityMock.mockReturnValueOnce(
+          Effect.fail("offline")
+        );
+
+        const error = yield* decodeContentReleasePin(
+          nextReleaseId,
+          activeReleaseId,
+          identity
+        ).pipe(Effect.flip);
+
+        expect(error).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: nextReleaseId,
+          expectedReleaseId: activeReleaseId,
+        });
+      })
+  );
+
+  it.effect(
+    "keeps the stored release pointer when the read agrees with the pin",
+    () =>
+      Effect.gen(function* () {
+        yield* decodeContentReleasePin(
+          activeReleaseId,
+          activeReleaseId,
+          identity
+        );
+        yield* decodeContentReleasePin(
+          "invalid release",
+          undefined,
+          identity
+        ).pipe(Effect.flip);
+
+        expect(expireActiveContentIdentityMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "drops the stored release pointer when the recheck finds another release",
+    () =>
+      Effect.gen(function* () {
+        loadActiveContentIdentityMock.mockReturnValueOnce(
+          Effect.succeed({
+            manifestHash: `sha256:${"a".repeat(64)}`,
+            releaseId: nextReleaseId,
+            sequence: 4,
+          })
+        );
+
+        const error = yield* verifyContentReleasePin(
+          activeReleaseId,
+          identity
+        ).pipe(Effect.flip);
+
+        expect(error).toMatchObject({ _tag: "PublishedReleaseMismatchError" });
+        expect(expireActiveContentIdentityMock).toHaveBeenCalledOnce();
+      })
+  );
+
   it.effect("rechecks the latest active release identity", () =>
     Effect.gen(function* () {
-      readActiveContentIdentityMock.mockReturnValueOnce(
+      loadActiveContentIdentityMock.mockReturnValueOnce(
         Effect.succeed({
           manifestHash: `sha256:${"a".repeat(64)}`,
           releaseId: activeReleaseId,
@@ -79,13 +159,13 @@ describe("content release pin", () => {
       expect(yield* verifyContentReleasePin(activeReleaseId, identity)).toBe(
         activeReleaseId
       );
-      expect(readActiveContentIdentityMock).toHaveBeenCalledOnce();
+      expect(loadActiveContentIdentityMock).toHaveBeenCalledOnce();
     })
   );
 
   it.effect("preserves an absent active release identity", () =>
     Effect.gen(function* () {
-      readActiveContentIdentityMock.mockReturnValueOnce(Effect.succeed(null));
+      loadActiveContentIdentityMock.mockReturnValueOnce(Effect.succeed(null));
 
       expect(yield* verifyContentReleasePin(null, identity)).toBeNull();
     })

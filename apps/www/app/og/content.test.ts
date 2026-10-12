@@ -3,6 +3,8 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { readOgMetadata } from "@/app/og/content";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const mocks = vi.hoisted(() => ({
   getCachedMetadataFromSlug: vi.fn(),
@@ -63,8 +65,18 @@ vi.mock("@confect/js", async (importOriginal) => {
 vi.mock("@repo/backend/confect/contentRelease/reference/input", () => ({
   resolveReferenceInput: mocks.resolveReferenceInput,
 }));
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 beforeEach(() => {
   vi.clearAllMocks();
+  resetTestRuntimeCache();
+  activateTestRelease("release-og");
   mocks.readArticleOgMetadata.mockResolvedValue(null);
   mocks.resolveReferenceInput.mockReturnValue(Effect.succeed(null));
   mocks.readNakafaRuntimeQuery.mockReturnValue(Effect.succeed(null));

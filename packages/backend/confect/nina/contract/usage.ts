@@ -16,6 +16,7 @@ export const NinaUsage = Schema.Struct({
     "suggestions",
     "title",
     "nina-repair",
+    "memory",
   ]),
   model: Schema.NonEmptyString,
   provider: Schema.NonEmptyString,

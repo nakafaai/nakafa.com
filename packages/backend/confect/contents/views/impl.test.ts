@@ -6,13 +6,16 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content/material";
 import {
   ARTICLE_VIEW_ID as ARTICLE_CONTENT_ID,
   ARTICLE_VIEW_ROUTE as ARTICLE_ROUTE,
   canonicalViewContext as canonicalContext,
   getContentViewPartition as getSignalPartition,
   insertContentViewArticle as insertArticle,
+  insertContentViewMaterial as insertMaterial,
   makeArticleViewArgs,
+  makeMaterialViewArgs,
   CONTENT_VIEW_NOW as NOW,
   readContentViewState as readViewState,
 } from "@repo/backend/test/content/view";
@@ -28,19 +31,76 @@ describe("contents/views/impl", () => {
     vi.useRealTimers();
   });
 
-  it("records a first anonymous article view and schedules analytics", async () => {
+  it("records a first anonymous material view and schedules analytics", async () => {
     const t = createConvexTestWithBetterAuth();
-    const article = await t.mutation((ctx) => insertArticle(ctx));
+    const material = await t.mutation((ctx) => insertMaterial(ctx));
     await expect(
       t.mutation(api.contents.mutations.views.recordContentView, {
-        ...makeArticleViewArgs(article.contentId, "missing"),
-        publicPath: "articles/missing",
+        ...makeMaterialViewArgs("missing"),
+        publicPath: "subjects/mathematics/missing",
       })
     ).resolves.toEqual({
       success: false,
       isNewView: false,
       alreadyViewed: false,
     });
+
+    const result = await t.mutation(
+      api.contents.mutations.views.recordContentView,
+      makeMaterialViewArgs("device-1")
+    );
+
+    const state = await readViewState(t);
+    expect(result).toEqual({
+      alreadyViewed: false,
+      isNewView: true,
+      success: true,
+    });
+    expect(state.views).toMatchObject([
+      {
+        assetId: material.contentId,
+        content_id: material.contentId,
+        contextKey: "canonical",
+        contextMode: "canonical",
+        deviceId: "device-1",
+        firstViewedAt: NOW,
+        lastViewedAt: NOW,
+        locale: "en",
+        route: FUNCTION_MATERIAL.publicPath,
+        section: "material",
+      },
+    ]);
+    expect(state.engagementQueue).toMatchObject([
+      {
+        assetId: material.contentId,
+        content_id: material.contentId,
+        contextKey: "canonical",
+        contextMode: "canonical",
+        locale: "en",
+        partition: getSignalPartition(material.contentId),
+        route: FUNCTION_MATERIAL.publicPath,
+        section: "material",
+        scopeMode: "global",
+        viewerKey: "device:device-1",
+        viewedAt: NOW,
+      },
+    ]);
+    expect(state.viewerSignals).toMatchObject([
+      {
+        ...canonicalContext,
+        content_id: material.contentId,
+        scopeMode: "global",
+        viewerKey: "device:device-1",
+      },
+    ]);
+    expect(Arr.map(state.scheduledJobs, (job) => job.args[0])).toEqual([
+      { partition: getSignalPartition(material.contentId) },
+    ]);
+  });
+
+  it("records an article view without any popularity work", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const article = await t.mutation((ctx) => insertArticle(ctx));
 
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
@@ -55,59 +115,31 @@ describe("contents/views/impl", () => {
     });
     expect(state.views).toMatchObject([
       {
-        assetId: article.contentId,
         content_id: article.contentId,
-        contextKey: "canonical",
-        contextMode: "canonical",
         deviceId: "device-1",
-        firstViewedAt: NOW,
-        lastViewedAt: NOW,
-        locale: "en",
         route: ARTICLE_ROUTE,
         section: "articles",
       },
     ]);
-    expect(state.engagementQueue).toMatchObject([
-      {
-        assetId: article.contentId,
-        content_id: article.contentId,
-        contextKey: "canonical",
-        contextMode: "canonical",
-        locale: "en",
-        partition: getSignalPartition(article.contentId),
-        route: ARTICLE_ROUTE,
-        section: "articles",
-        scopeMode: "global",
-        viewerKey: "device:device-1",
-        viewedAt: NOW,
-      },
-    ]);
-    expect(state.viewerSignals).toMatchObject([
-      {
-        ...canonicalContext,
-        content_id: article.contentId,
-        scopeMode: "global",
-        viewerKey: "device:device-1",
-      },
-    ]);
-    expect(Arr.map(state.scheduledJobs, (job) => job.args[0])).toEqual([
-      { partition: getSignalPartition(article.contentId) },
-    ]);
+    // No homepage ranking reads an article, so nothing is queued for one.
+    expect(state.engagementQueue).toEqual([]);
+    expect(state.viewerSignals).toEqual([]);
+    expect(state.scheduledJobs).toEqual([]);
   });
 
   it("updates an existing device view without queuing duplicate analytics", async () => {
     const t = createConvexTestWithBetterAuth();
-    const article = await t.mutation((ctx) => insertArticle(ctx));
+    await t.mutation((ctx) => insertMaterial(ctx));
     await t.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(article.contentId, "device-1")
+      makeMaterialViewArgs("device-1")
     );
 
     vi.setSystemTime(NOW + 1000);
 
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(article.contentId, "device-1")
+      makeMaterialViewArgs("device-1")
     );
 
     const state = await readViewState(t);
@@ -129,11 +161,11 @@ describe("contents/views/impl", () => {
 
   it("records nothing for a signed-out view without a device identifier", async () => {
     const t = createConvexTestWithBetterAuth();
-    const article = await t.mutation((ctx) => insertArticle(ctx));
+    await t.mutation((ctx) => insertMaterial(ctx));
 
     const result = await t.mutation(
       api.contents.mutations.views.recordContentView,
-      makeArticleViewArgs(article.contentId)
+      makeMaterialViewArgs()
     );
 
     const state = await readViewState(t);
@@ -151,7 +183,7 @@ describe("contents/views/impl", () => {
   it("does not treat a prepared signed-in viewer as anonymous", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
-      const article = await insertArticle(ctx);
+      const material = await insertMaterial(ctx);
       const user = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "prepared-viewer",
@@ -160,7 +192,7 @@ describe("contents/views/impl", () => {
         deletionPreparedAt: NOW,
       });
 
-      return { ...user, contentId: article.contentId };
+      return { ...user, contentId: material.contentId };
     });
 
     await expect(
@@ -171,7 +203,7 @@ describe("contents/views/impl", () => {
         })
         .mutation(
           api.contents.mutations.views.recordContentView,
-          makeArticleViewArgs(identity.contentId, "prepared-device")
+          makeMaterialViewArgs("prepared-device")
         )
     ).rejects.toMatchObject({
       data: {

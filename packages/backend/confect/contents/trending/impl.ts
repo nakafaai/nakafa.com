@@ -5,8 +5,9 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { toLearningContextQuery } from "@repo/backend/confect/contents/context";
 import {
-  getDefaultPopularityWindow,
-  type LearningPopularityWindow,
+  POPULARITY_SCOPE,
+  POPULARITY_SECTION,
+  POPULARITY_WINDOW,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { buildContentSearchRef } from "@repo/backend/confect/contents/search/documents";
@@ -40,11 +41,9 @@ function getTrendingSettings(args: GetTrendingSubjectsArgs) {
   const rawMinViews = args.minViews ?? defaultTrendingMinViews;
   const limit = Math.min(Math.max(rawLimit, 0), maxTrendingSubjectsLimit);
   const minViews = Math.max(rawMinViews, 0);
-  const windowKey = args.windowKey ?? getDefaultPopularityWindow();
   return {
     limit,
     minViews,
-    windowKey,
   };
 }
 
@@ -56,7 +55,6 @@ const loadRankedPopularityCounterIds = Effect.fn(
   settings: {
     readonly limit: number;
     readonly minViews: number;
-    readonly windowKey: LearningPopularityWindow;
   }
 ) {
   const ctx = yield* QueryCtxService;
@@ -67,7 +65,12 @@ const loadRankedPopularityCounterIds = Effect.fn(
     const result = yield* Effect.tryPromise({
       try: () =>
         learningPopularityRankings.paginate(ctx, {
-          namespace: ["material", args.locale, "global", settings.windowKey],
+          namespace: [
+            POPULARITY_SECTION,
+            args.locale,
+            POPULARITY_SCOPE,
+            POPULARITY_WINDOW,
+          ],
           order: "asc",
           pageSize: settings.limit,
           ...(cursor

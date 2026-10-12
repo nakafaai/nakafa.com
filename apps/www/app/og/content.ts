@@ -1,4 +1,3 @@
-import { HttpClient } from "@confect/js";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { Array as Arr, Effect, Schema } from "effect";
@@ -8,7 +7,7 @@ import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(le
 import { resolveMaterialOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
 import { readArticleOgMetadata } from "@/app/og/article";
 import { getMaterialModel } from "@/lib/content/material/publication";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 import { getCachedMetadataFromSlug } from "@/lib/og/metadata";
 
 const OgCopySchema = Schema.Struct({
@@ -55,15 +54,13 @@ export async function readOgMetadata(
       return await readDefaultOgCopy(locale, slug);
     }
     const reference = await Effect.runPromise(
-      Effect.flatMap(HttpClient.HttpClient, (client) =>
-        client.query(contentRelease.reference.read, {
-          input: {
-            appLocale: locale,
-            kind: "route",
-            publicPath: Arr.join(slug, "/"),
-          },
-        })
-      ).pipe(Effect.provide(httpLayer()))
+      queryContentStore(contentRelease.reference.read, {
+        input: {
+          appLocale: locale,
+          kind: "route",
+          publicPath: Arr.join(slug, "/"),
+        },
+      })
     );
     if (!reference) {
       return null;

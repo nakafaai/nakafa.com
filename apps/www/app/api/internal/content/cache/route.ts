@@ -11,7 +11,12 @@ import { NextResponse } from "next/server";
 import { env } from "@/env";
 import { invalidateContentCache } from "@/lib/content/cache";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
-import { readActiveContentIdentity } from "@/lib/content/published/active";
+import {
+  type ActiveContentReleaseId,
+  confirmActiveContentIdentity,
+  expireActiveContentIdentity,
+  loadActiveContentIdentity,
+} from "@/lib/content/published/active";
 import { invalidateSitemapCache } from "@/lib/sitemap/cache";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
@@ -72,11 +77,25 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
     Effect.mapError(() => new CacheRequestError({ reason: "body" }))
   );
 });
-/** Revalidates one Next content tag, then purges the shared sitemap response. */
+/**
+ * Expires the stored release pointer and proves the expiry, then revalidates
+ * one Next content tag, then purges the shared sitemap response once for the
+ * release, then expires the pointer again. The pointer goes first: a page that
+ * refills after the revalidation must read the release that this call
+ * activates and not the one it replaces. The Runtime Cache client resolves even
+ * when an expiry failed, so the call reads the pointer back and stops before it
+ * revalidates anything when the pointer still names the previous release. The
+ * last expiry drops a pointer that a read which began before the activation
+ * wrote after the first one, so a sitemap that regenerates after the purge
+ * asks Convex. The publisher repeats a call that answers 503.
+ */
 const invalidateContentRuntime = Effect.fn("NakafaContent.invalidateRuntime")(
-  function* (scope: ContentCacheScope) {
+  function* (scope: ContentCacheScope, releaseId: ActiveContentReleaseId) {
+    yield* expireActiveContentIdentity();
+    yield* confirmActiveContentIdentity(releaseId);
     yield* invalidateContentCache(scope);
-    yield* invalidateSitemapCache();
+    yield* invalidateSitemapCache(releaseId);
+    yield* expireActiveContentIdentity();
   }
 );
 
@@ -106,7 +125,9 @@ export const POST = (request: NextRequest) =>
           }
         );
       }
-      const active = yield* readActiveContentIdentity();
+      // The stored pointer may still name the previous release, so the check
+      // asks Convex.
+      const active = yield* loadActiveContentIdentity();
       if (active?.releaseId !== decoded.success.releaseId) {
         return NextResponse.json(
           { error: "Content release is not active." },
@@ -114,7 +135,8 @@ export const POST = (request: NextRequest) =>
         );
       }
       const invalidation = yield* invalidateContentRuntime(
-        decoded.success.scope
+        decoded.success.scope,
+        decoded.success.releaseId
       ).pipe(Effect.result);
       if (invalidation._tag === "Failure") {
         return NextResponse.json(

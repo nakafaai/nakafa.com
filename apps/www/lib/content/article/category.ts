@@ -9,8 +9,13 @@ import {
   ActiveAppLocaleCodeSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import {
+  ArticleCategorySchema,
+  ArticleCategoryTitleSchema,
+  ArticleRouteSlugSchema,
+} from "@nakafa/aksara-contracts/projection/article";
+import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
+import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   type ArticlePageCursor,
@@ -21,6 +26,7 @@ import {
 } from "@/lib/content/article/catalog";
 import { applyContentCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
+import { readContentStore } from "@/lib/content/store/read";
 
 type CategoryMatch = (category: PublishedArticleCategory) => boolean;
 
@@ -28,6 +34,20 @@ const PublishedArticleCategoryGenerationSchema = Schema.Struct({
   activeManifestHash: Sha256HashSchema,
   activeReleaseId: ReleaseIdSchema,
   appLocale: ActiveAppLocaleCodeSchema,
+});
+
+/** Every localized category of one release with the generation that it came from. */
+const PublishedArticleCategoriesSchema = Schema.Struct({
+  activeManifestHash: Sha256HashSchema,
+  activeReleaseId: ReleaseIdSchema,
+  categories: Schema.Array(
+    Schema.Struct({
+      category: ArticleCategorySchema,
+      rendererDomain: RendererDomainSchema,
+      route: ArticleRouteSlugSchema,
+      title: ArticleCategoryTitleSchema,
+    })
+  ),
 });
 
 /** One localized category with the generation observed during its catalog read. */
@@ -42,45 +62,76 @@ function categoryError(locale: Locale, route = "articles") {
   });
 }
 
-/** Finds one category across a stable sequence of bounded catalog pages. */
+/** Walks every bounded page of the category catalog under one pinned generation. */
+const walkPublishedCategories = Effect.fn("www.articles.walkCategories")(
+  function* (locale: Locale) {
+    const categories = MutableList.make<PublishedArticleCategory>();
+    let cursor: ArticlePageCursor = {
+      cursor: null,
+      expectedManifestHash: null,
+      expectedReleaseId: null,
+    };
+
+    while (true) {
+      const page = yield* readPublishedCategories({ ...cursor, locale });
+      if (page.stale) {
+        return yield* categoryError(locale);
+      }
+
+      MutableList.appendAll(categories, page.categories);
+      if (page.done) {
+        return {
+          activeManifestHash: page.activeManifestHash,
+          activeReleaseId: page.activeReleaseId,
+          categories: MutableList.toArray(categories),
+        };
+      }
+      if (page.nextCursor === null) {
+        return yield* categoryError(locale);
+      }
+
+      cursor = {
+        cursor: page.nextCursor,
+        expectedManifestHash: page.activeManifestHash,
+        expectedReleaseId: page.activeReleaseId,
+      };
+    }
+  }
+);
+
+/**
+ * Reads every localized category of the active release, with the generation it
+ * came from. The shells, the proxy and the category pages all read this one
+ * list, which the content store holds once for each release and locale.
+ */
+export const readPublishedArticleCategories = Effect.fn(
+  "www.articles.readCategories"
+)((locale: Locale) =>
+  readContentStore({
+    kind: "article.categories",
+    load: walkPublishedCategories(locale),
+    parts: [locale],
+    schema: PublishedArticleCategoriesSchema,
+  })
+);
+
+/** Finds one category in the list of the active release. */
 const findPublishedCategory = Effect.fn("www.articles.findCategory")(function* (
   locale: Locale,
   matches: CategoryMatch
 ) {
-  let cursor: ArticlePageCursor = {
-    cursor: null,
-    expectedManifestHash: null,
-    expectedReleaseId: null,
-  };
-
-  while (true) {
-    const page = yield* readPublishedCategories({ ...cursor, locale });
-    if (page.stale) {
-      return yield* categoryError(locale);
-    }
-
-    const category = Arr.findFirst(page.categories, matches);
-    if (Option.isSome(category)) {
-      return Option.some({
-        ...category.value,
-        activeManifestHash: page.activeManifestHash,
-        activeReleaseId: page.activeReleaseId,
+  const { activeManifestHash, activeReleaseId, categories } =
+    yield* readPublishedArticleCategories(locale);
+  return Option.map(
+    Arr.findFirst(categories, matches),
+    (category) =>
+      ({
+        ...category,
+        activeManifestHash,
+        activeReleaseId,
         appLocale: locale,
-      } satisfies PublishedArticleCategoryModel);
-    }
-    if (page.done) {
-      return Option.none<PublishedArticleCategoryModel>();
-    }
-    if (page.nextCursor === null) {
-      return yield* categoryError(locale);
-    }
-
-    cursor = {
-      cursor: page.nextCursor,
-      expectedManifestHash: page.activeManifestHash,
-      expectedReleaseId: page.activeReleaseId,
-    };
-  }
+      }) satisfies PublishedArticleCategoryModel
+  );
 });
 
 /** Resolves one localized route segment to its stable article category. */
@@ -180,7 +231,11 @@ export const hasPublishedArticleCategory = Effect.fn(
   readPublishedArticleCategory(route, locale).pipe(Effect.map(Option.isSome))
 );
 
-/** Caches one localized category resolution under article release tags. */
+/**
+ * Caches one localized category resolution under article release tags. The `use
+ * cache` boundary stays so that the category pages prerender and the article
+ * tag still expires them; behind it the category list comes from the store.
+ */
 export async function getPublishedArticleCategory(
   route: string,
   locale: Locale
@@ -196,7 +251,11 @@ export async function getPublishedArticleCategory(
   return Option.getOrNull(category);
 }
 
-/** Caches reciprocal localized category routes under article release tags. */
+/**
+ * Caches reciprocal localized category routes under article release tags. The
+ * `use cache` boundary stays for prerendering and the article tag; behind it
+ * the category lists come from the store.
+ */
 export async function getPublishedCategoryAlternates(
   current: PublishedArticleCategoryModel
 ) {

@@ -1,4 +1,3 @@
-import { HttpClient } from "@confect/js";
 import {
   APP_LOCALE_CODES,
   type AppLocale,
@@ -12,7 +11,7 @@ import { hasLocale } from "next-intl";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 
 const ProjectedHtmlRouteInputSchema = Schema.Struct({
   hasAttemptCapability: Schema.Boolean,
@@ -102,14 +101,12 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   ) {
     return null;
   }
-  const reference = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.reference.read, {
-      input: {
-        appLocale,
-        kind: "route",
-        publicPath,
-      },
-    })
-  ).pipe(Effect.provide(httpLayer()));
+  const reference = yield* queryContentStore(contentRelease.reference.read, {
+    input: {
+      appLocale,
+      kind: "route",
+      publicPath,
+    },
+  });
   return reference ? null : locale;
 });

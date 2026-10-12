@@ -52,16 +52,6 @@ describe("summary text", () => {
       )
   );
 
-  it.effect("opens a plain text as it is without reading any key", () =>
-    scenario(
-      Effect.gen(function* () {
-        // This learner has no key: reading it would fail.
-        const keyless = yield* learner("keyless");
-        expect(yield* openSummary(keyless, SUMMARY)).toBe(SUMMARY);
-      })
-    )
-  );
-
   it.effect(
     "refuses to open a text with the keys of another learner or for another field",
     () =>

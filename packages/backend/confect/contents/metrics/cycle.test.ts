@@ -11,7 +11,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Option, pipe } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const DAY = Date.parse("2026-01-08T00:00:00.000Z");
 
@@ -88,12 +88,12 @@ describe("contents/metrics/cycle", () => {
     );
     expect(rollout).toEqual({
       expiryWindows: 0,
-      repairWindows: 14,
+      repairWindows: 1,
       skippedWindows: 0,
     });
     expect(duplicate).toEqual({
       expiryWindows: 0,
-      repairWindows: 14,
+      repairWindows: 1,
       skippedWindows: 0,
     });
     await target.finishAllScheduledFunctions(vi.runAllTimers);
@@ -103,7 +103,7 @@ describe("contents/metrics/cycle", () => {
       {}
     );
     expect(daily).toEqual({
-      expiryWindows: 14,
+      expiryWindows: 1,
       repairWindows: 0,
       skippedWindows: 0,
     });
@@ -112,7 +112,7 @@ describe("contents/metrics/cycle", () => {
       {}
     );
     expect(duplicateDaily).toEqual({
-      expiryWindows: 14,
+      expiryWindows: 1,
       repairWindows: 0,
       skippedWindows: 0,
     });
@@ -129,10 +129,10 @@ describe("contents/metrics/cycle", () => {
       {}
     );
     expect(weekly).toEqual({
-      scheduledWindows: 14,
+      scheduledWindows: 1,
     });
     expect(duplicateWeekly).toEqual({
-      scheduledWindows: 14,
+      scheduledWindows: 1,
     });
     await target.finishAllScheduledFunctions(vi.runAllTimers);
     await expect(
@@ -153,7 +153,7 @@ describe("contents/metrics/cycle", () => {
     ).resolves.toEqual({
       expiryWindows: 0,
       repairWindows: 0,
-      skippedWindows: 14,
+      skippedWindows: 1,
     });
   });
   it("rejects pages superseded by a newer cycle", async () => {
@@ -229,7 +229,7 @@ describe("contents/metrics/cycle", () => {
         {
           day: DAY,
           scopeMode: "global",
-          windowKey: "1d",
+          windowKey: "7d",
         }
       );
       return {
@@ -238,19 +238,8 @@ describe("contents/metrics/cycle", () => {
       };
     });
     const pending = await target.query(async (ctx) => ({
-      counter: await ctx.db
-        .query("learningPopularityCounters")
-        .withIndex(
-          "by_windowKey_and_scopeMode_and_content_id_and_contextKey",
-          (q) => q.eq("windowKey", "1d")
-        )
-        .unique(),
-      cycle: await ctx.db
-        .query("learningPopularityCycles")
-        .withIndex("by_scopeMode_and_windowKey", (q) =>
-          q.eq("scopeMode", "global").eq("windowKey", "1d")
-        )
-        .unique(),
+      counter: await ctx.db.query("learningPopularityCounters").unique(),
+      cycle: await ctx.db.query("learningPopularityCycles").unique(),
     }));
     expect(delayed.result).toMatchObject({
       skipped: true,
@@ -264,44 +253,21 @@ describe("contents/metrics/cycle", () => {
     );
     expect(recovery).toEqual({
       expiryWindows: 0,
-      repairWindows: 14,
+      repairWindows: 1,
       skippedWindows: 0,
     });
     await target.finishAllScheduledFunctions(vi.runAllTimers);
     const completed = await target.query(async (ctx) => ({
       counters: await ctx.db.query("learningPopularityCounters").collect(),
       ranking: await learningPopularityRankings.paginate(ctx, {
-        namespace: ["material", "en", "global", "1d"],
+        namespace: ["material", "en", "global", "7d"],
         order: "asc",
         pageSize: 10,
       }),
-      cycle: await ctx.db
-        .query("learningPopularityCycles")
-        .withIndex("by_scopeMode_and_windowKey", (q) =>
-          q.eq("scopeMode", "global").eq("windowKey", "1d")
-        )
-        .unique(),
+      cycle: await ctx.db.query("learningPopularityCycles").unique(),
     }));
-    expect(
-      Option.getOrUndefined(
-        Arr.findFirst(completed.counters, ({ windowKey }) => windowKey === "1d")
-      )?.score
-    ).toBe(1);
-    expect(
-      pipe(
-        completed.counters,
-        Arr.filter(({ windowKey }) => windowKey !== "1d"),
-        Arr.map(({ score }) => score)
-      )
-    ).toEqual(
-      Array.from(
-        {
-          length: 7,
-        },
-        () => 2
-      )
-    );
-    expect(Arr.map(completed.ranking.page, ({ key }) => key[0])).toEqual([-1]);
+    expect(Arr.map(completed.counters, ({ score }) => score)).toEqual([2]);
+    expect(Arr.map(completed.ranking.page, ({ key }) => key[0])).toEqual([-2]);
     expect(completed.cycle).toMatchObject({
       completedDay: nextDay,
       mode: "repair",

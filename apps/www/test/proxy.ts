@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { NextRequest } from "next/server";
 /** Public redirect examples cover renderer URLs, locale spelling and suffixes. */
 export const redirectCases: [
@@ -116,6 +116,29 @@ export const representations: [
     null,
   ],
 ];
+
+/**
+ * The signed reference that Convex answers for a route that exists. The proxy
+ * only asks whether the route is there, and the content store keeps the answer
+ * only when it fits the result schema of the query, so every field is real.
+ */
+const routeReference = {
+  alignmentId: "alignment:test:route",
+  assetId: "asset:test:route",
+  conceptId: "concept:test:route",
+  content_id: "content:test:route",
+  description: "A published route.",
+  learningObjectId: "lo:test:route",
+  lensId: "lens:test:route",
+  locale: "en",
+  route: "try-out/indonesia/snbt/2027/set-1",
+  section: "tryout",
+  title: "Set 1",
+  url: "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-1",
+};
+
+/** What a test hands to the mocked Convex query so that a route exists. */
+export const routeAnswer = Effect.succeed(routeReference);
 
 /** The published SNBT exam with its one live year track. */
 export const snbtExam = {

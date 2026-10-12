@@ -29,7 +29,10 @@ through Confect's Scheduler. That action rechecks the retained conversation and 
 and anchors its Agent context to the completed prompt so a newer turn cannot
 change its suggestions. Optional generation never reserves or refunds credits.
 The completion event records answer-time usage; the durable turn's usage and
-token totals continue to include later presentation calls.
+token totals continue to include later presentation calls. The title and the
+summary text are stored sealed for the learner who owns the chat; the migration
+that sealed every row still holding plain text ran on 11 October 2026, on dev
+and production, and was then deleted.
 
 The Agent component owns threads, messages, tool results, and stream deltas.
 Application tables retain product ownership, visibility, credit transactions,
@@ -108,7 +111,7 @@ summary, at most 1,200
 tokens, sits in the system prompt context and is deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
 rather than in a turn's usage ledger, which clients read. The learner profile
-and opt-in learner memory follow [ADR 0010](./0010-memory.md). Old
+and learner memory follow [ADR 0022](./0022-memory.md). Old
 reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000
@@ -148,9 +151,9 @@ separately from deterministic tests.
 ## Learning engagement
 
 Continue Learning and popularity use durable read models with bounded reads.
-Daily viewer keys expire after their UTC day. Daily signals remain through their
-finite consumer windows, while lifetime counters remain durable. Retention
-follows ADR 0008 and does not reconstruct lifetime totals from expired inputs.
+Daily viewer keys expire after their UTC day. Daily signals remain through the
+seven-day window the homepage ranks by, and no total outlives it. Retention
+follows ADR 0008.
 
 ## References
 

@@ -10,10 +10,8 @@ export const chatValidator = Schema.Struct({
   threadId: Schema.String,
   activeTurnId: Schema.optionalKey(Id("ninaTurns")),
   updatedAt: Schema.Finite,
-  // A new title is stored sealed. The string form is what rows written before
-  // October 2026 hold, and it leaves with the contract change that follows the
-  // sealing migration.
-  title: Schema.optionalKey(Schema.Union([Schema.String, Sealed])),
+  // Sealed for the learner who owns the chat (`chats/title`).
+  title: Schema.optionalKey(Sealed),
   userId: Id("users"),
   visibility: chatVisibilityValidator,
   type: chatTypeValidator,

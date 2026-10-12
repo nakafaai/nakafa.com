@@ -92,7 +92,6 @@ it("stores a renamed title sealed and reads it back as the new title", async () 
   const chatId = await t.mutation((ctx) =>
     ctx.db.insert("chats", {
       threadId: "fixture-thread",
-      title: "Written before October",
       type: "study",
       updatedAt: NOW,
       userId: identity.userId,
@@ -101,7 +100,7 @@ it("stores a renamed title sealed and reads it back as the new title", async () 
   );
   const storedTitle = async () =>
     (await t.query((ctx) => ctx.db.get("chats", chatId)))?.title;
-  expect(await storedTitle()).toBe("Written before October");
+  expect(await storedTitle()).toBeUndefined();
   for (const title of ["Pecahan dan desimal", "Persamaan kuadrat"]) {
     await owner.mutation(api.chats.mutations.updateChatTitle, {
       chatId,

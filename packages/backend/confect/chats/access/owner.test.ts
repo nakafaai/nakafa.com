@@ -25,7 +25,6 @@ describe("private chat ownership", () => {
       });
       const chatId = await ctx.db.insert("chats", {
         threadId: "fixture-thread",
-        title: "Private study",
         userId: owner.userId,
         type: "study",
         visibility: "private",
