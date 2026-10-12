@@ -22,7 +22,7 @@ it("rejects a malformed search response instead of presenting unverified results
   });
 });
 
-it("refuses a query of one character more than the search reads, before the read model", async () => {
+it("refuses a query of one character more than the limit, before the read model", async () => {
   await createConvexTestWithBetterAuth().action(async (ctx) => {
     const runQuery = vi.spyOn(ctx, "runQuery").mockResolvedValue(false);
     const search = (length: number) =>

@@ -103,7 +103,7 @@ describe("persisted search queries", () => {
     // The recorded input decodes with no limit on the text a query was written in.
     expect(
       Result.isSuccess(
-        Schema.decodeUnknownResult(NakafaDataSchema)({
+        Schema.decodeResult(NakafaDataSchema)({
           input: { limit: 10, locale: "en", offset: 0, queries: [nakafa] },
           kind: "search",
           status: "loading",
@@ -112,7 +112,7 @@ describe("persisted search queries", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        Schema.decodeUnknownResult(DataPartSchema.fields["web-search"])({
+        Schema.decodeResult(DataPartSchema.fields["web-search"])({
           provider: "firecrawl",
           queries: [web],
           sources: [],

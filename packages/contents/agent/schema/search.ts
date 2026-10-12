@@ -25,6 +25,16 @@ const NakafaAgentSearchItemSchema = NakafaAgentContentSummarySchema.mapFields(
 )
   .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
   .annotate({ description: "Searchable Nakafa content result item." });
+/**
+ * One search query. The length is checked on the text as it is written, before
+ * it is trimmed, so the JSON schema that the MCP tool, the public API and
+ * Nina's tool carry states the limit, and it counts characters by code point,
+ * as that schema's `maxLength` does. The query is then trimmed and must not be
+ * blank.
+ */
+const NakafaAgentSearchQuerySchema = Schema.String.check(
+  Schema.isMaxCodePoints(NAKAFA_AGENT_MAX_QUERY_LENGTH)
+).pipe(Schema.decodeTo(Schema.Trim), Schema.check(Schema.isMinLength(1)));
 /** Runtime schema for content search input. */
 export const NakafaAgentSearchOptionsSchema = Schema.Struct({
   limit: Schema.Finite.pipe(
@@ -64,14 +74,7 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
     description: "Zero-based result offset for pagination.",
   }),
   queries: Schema.optionalKey(
-    Schema.Array(
-      Schema.Trim.pipe(
-        Schema.check(
-          Schema.isMinLength(1),
-          Schema.isMaxLength(NAKAFA_AGENT_MAX_QUERY_LENGTH)
-        )
-      )
-    )
+    Schema.Array(NakafaAgentSearchQuerySchema)
       .pipe(
         Schema.mutable,
         Schema.check(Schema.isMaxLength(NAKAFA_AGENT_MAX_QUERIES))

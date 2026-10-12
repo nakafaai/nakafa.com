@@ -3,8 +3,11 @@ import {
   NakafaAgentSearchFactsSchema,
   NakafaAgentSearchOptionsSchema,
 } from "@repo/contents/agent/schema/search";
-import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
-import { Array as Arr, Schema } from "effect";
+import {
+  NAKAFA_AGENT_MAX_QUERY_LENGTH,
+  NAKAFA_AGENT_SEARCH_WINDOW,
+} from "@repo/contents/agent/search";
+import { Array as Arr, Result, Schema } from "effect";
 
 describe("NakafaAgentSearchOptionsSchema", () => {
   it("preserves executed searches without admitting requests beyond today's limits", () => {
@@ -28,7 +31,7 @@ describe("NakafaAgentSearchOptionsSchema", () => {
       Schema.is(NakafaAgentSearchFactsSchema)({ ...executed, limit: -1 })
     ).toBe(false);
   });
-  it("refuses a query longer than the search can use, and still reads a recorded one", () => {
+  it("tells clients the longest query the search can use, refuses a longer one, and still reads a recorded one", () => {
     // The longest query that the 16 terms Convex reads can fill: each term is
     // 31 bytes, the most it keeps, with one space between each two.
     const atLimit = Arr.join(Arr.replicate("a".repeat(31), 16), " ");
@@ -38,17 +41,37 @@ describe("NakafaAgentSearchOptionsSchema", () => {
       offset: 0,
       queries: [query],
     });
+    const decode = (query: string) =>
+      Schema.decodeUnknownResult(NakafaAgentSearchOptionsSchema)(search(query));
 
-    expect(Schema.is(NakafaAgentSearchOptionsSchema)(search(atLimit))).toBe(
-      true
-    );
+    expect(Result.isSuccess(decode(atLimit))).toBe(true);
+    expect(Result.isFailure(decode(`${atLimit}a`))).toBe(true);
+    // The length is measured as written, before the query is trimmed.
+    expect(Result.isFailure(decode(`${atLimit} `))).toBe(true);
+    // Characters count by code point, as the JSON schema counts them: 𠮷 is
+    // one, though JavaScript stores it as two units.
     expect(
-      Schema.is(NakafaAgentSearchOptionsSchema)(search(`${atLimit}a`))
-    ).toBe(false);
+      Result.isSuccess(decode("𠮷".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH)))
+    ).toBe(true);
+    expect(
+      Result.isFailure(decode("𠮷".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH + 1)))
+    ).toBe(true);
+    // The schema that the MCP tool, the public API and Nina's tool carry says it.
+    expect(
+      Schema.toJsonSchemaDocument(NakafaAgentSearchOptionsSchema).schema
+    ).toMatchObject({
+      properties: {
+        queries: { items: { maxLength: NAKAFA_AGENT_MAX_QUERY_LENGTH } },
+      },
+    });
     // A search recorded with a longer query before the limit still decodes.
-    expect(Schema.is(NakafaAgentSearchFactsSchema)(search(`${atLimit}a`))).toBe(
-      true
-    );
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(NakafaAgentSearchFactsSchema)(
+          search(`${atLimit}a`)
+        )
+      )
+    ).toBe(true);
   });
   it("applies the documented search defaults", () => {
     expect(Schema.decodeSync(NakafaAgentSearchOptionsSchema)({})).toEqual({
