@@ -23,13 +23,14 @@ import { Array as Arr, Clock, Duration, Effect, Option } from "effect";
  * Claims the portrait build that is due and reads what it works from, or
  * returns nothing when no build is due. A build is due when the request that
  * scheduled it has had its quiet (`PORTRAIT_DELAY`, counted from the last
- * request), memory is not paused, and the account is not going. Claiming moves
- * the time of the request to now, so a build due at the same moment, or
- * scheduled by an earlier request and running a moment later, finds that its
- * quiet has not come: however many builds are scheduled, one reads and asks the
- * model. When there are memories to hand on, so that the build goes to the
- * model, claiming also stamps `builtAt`, which closes the day for memories that
- * are only added. A build that hands on nothing leaves the day open.
+ * request), memory is not paused, and the account is not going. A later request
+ * moves the time of the request, so a build that an earlier request scheduled
+ * finds that its quiet has not come, and claiming moves it to now, so a build
+ * due at the same moment finds the same: however many builds are scheduled, one
+ * reads and asks the model. When there are memories to hand on, so that the
+ * build goes to the model, claiming also stamps `builtAt`, which closes the day
+ * for memories that are only added. A build that hands on nothing leaves the
+ * day open.
  *
  * The memories are the learner's newest, at most `PORTRAIT_MEMORY_LIMIT`,
  * confirmed after what the portrait has read and after the moment the learner
