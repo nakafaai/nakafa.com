@@ -1,0 +1,163 @@
+// @vitest-environment node
+import { describe, expect, it } from "@effect/vitest";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Option, Record as Rec } from "effect";
+import {
+  learnsNothingOfWhoOwnsTheChat,
+  learnsOnlyWhereTurnsStand,
+  learnsWhatTurnsCost,
+  learnsWhoOwnsTheChat,
+} from "@/e2e/support/told";
+
+const CONVERSATION = "nina/conversation:get";
+const MESSAGES = "nina/messages:list";
+const OWNER = "user-of-the-owner";
+/** What the check of a reader's page says when it was told an account. */
+const ACCOUNTS = "the accounts that the reader's page was told";
+
+/** Where a turn stands, which is all a reader is told of it. */
+const standing = {
+  order: 0,
+  promptMessageId: "message-1",
+  promptedAt: 1,
+  state: { status: "queued" },
+  usage: [],
+};
+/** What the same turn cost the owner. */
+const cost = { credits: 5, tokens: { input: 1, output: 2, total: 3 } };
+
+/** The answer to the query for the conversation of a chat. */
+const conversationOf = (
+  chat: Record<string, string>,
+  turn: Record<string, unknown> | null
+) => encodeJsonText({ chat: { _id: "chat-1", ...chat }, turn });
+
+/** The answer to the query for a page of messages. */
+const messagesOf = (...page: Record<string, unknown>[]) =>
+  encodeJsonText({
+    continueCursor: "",
+    isDone: true,
+    page,
+    streams: { kind: "list", messages: [] },
+  });
+
+/** A page of the browser that was given these answers, by the query that answered them. */
+const given = (answers: Readonly<Record<string, string[]>>) => ({
+  answersTo: (udfPath: string) =>
+    Option.getOrElse(Rec.get(answers, udfPath), () => []),
+});
+
+/**
+ * The owner's page: the chat names the owner and the turn that runs, and the
+ * turn shows what it cost. The page is told the conversation again whenever
+ * the turn moves, so it holds more than one.
+ */
+const owner = {
+  [CONVERSATION]: Arr.map(
+    [{ status: "queued" }, { finishedAt: 2, status: "failed" }],
+    (state) =>
+      conversationOf(
+        { activeTurnId: "turn-1", userId: OWNER },
+        { ...standing, ...cost, state }
+      )
+  ),
+  [MESSAGES]: [
+    messagesOf({
+      id: "message-1",
+      metadata: { ...standing, ...cost },
+      userId: OWNER,
+    }),
+  ],
+};
+
+/** A reader's page, loaded the way the browser test loads it: the chat three times, and its messages. */
+const reader = {
+  [CONVERSATION]: Arr.replicate(conversationOf({}, standing), 3),
+  [MESSAGES]: [messagesOf({ id: "message-1", metadata: standing })],
+};
+
+describe("the checks of what a page was told of a chat", () => {
+  it("pass for the owner's page and a reader's page that were told what each is meant to be told", () => {
+    learnsWhatTurnsCost(given(owner));
+    learnsWhoOwnsTheChat(given(owner));
+    learnsOnlyWhereTurnsStand(given(reader));
+    learnsNothingOfWhoOwnsTheChat(given(reader));
+  });
+
+  it("fail for a reader's page that was told what only the owner is told", () => {
+    expect(() =>
+      learnsOnlyWhereTurnsStand(
+        given({
+          ...reader,
+          [CONVERSATION]: [conversationOf({}, { ...standing, ...cost })],
+        })
+      )
+    ).toThrow("beyond where it stands");
+    expect(() =>
+      learnsNothingOfWhoOwnsTheChat(
+        given({
+          ...reader,
+          [CONVERSATION]: [conversationOf({ userId: OWNER }, standing)],
+        })
+      )
+    ).toThrow(ACCOUNTS);
+    expect(() =>
+      learnsNothingOfWhoOwnsTheChat(
+        given({
+          ...reader,
+          [MESSAGES]: [
+            messagesOf({ id: "message-1", metadata: standing, userId: OWNER }),
+          ],
+        })
+      )
+    ).toThrow(ACCOUNTS);
+    expect(() =>
+      learnsNothingOfWhoOwnsTheChat(
+        given({
+          ...reader,
+          [CONVERSATION]: [
+            conversationOf({ activeTurnId: "turn-1" }, standing),
+          ],
+        })
+      )
+    ).toThrow("the turns that the reader's page was told run in the chat");
+  });
+
+  it("fail for an owner's page that was told neither what the turn cost nor who owns the chat", () => {
+    expect(() => learnsWhatTurnsCost(given(reader))).toThrow(
+      "what the owner's page was told of the turns"
+    );
+    expect(() => learnsWhoOwnsTheChat(given(reader))).toThrow("name the owner");
+  });
+
+  it.each([
+    ["learnsWhatTurnsCost", learnsWhatTurnsCost, owner],
+    ["learnsWhoOwnsTheChat", learnsWhoOwnsTheChat, owner],
+    ["learnsOnlyWhereTurnsStand", learnsOnlyWhereTurnsStand, reader],
+    ["learnsNothingOfWhoOwnsTheChat", learnsNothingOfWhoOwnsTheChat, reader],
+  ] as const)(
+    "%s reads every answer it names, and no other answer stands in for one it cannot",
+    (_name, check, page) => {
+      // The messages answer lost the key that holds the messages. The answers
+      // about the chat, which the page is given again with every load, must not
+      // carry the check.
+      expect(() =>
+        check(
+          given({ ...page, [MESSAGES]: [encodeJsonText({ isDone: true })] })
+        )
+      ).toThrow(`the answers to ${MESSAGES} that the check cannot read`);
+      expect(() =>
+        check(
+          given({ ...page, [CONVERSATION]: [encodeJsonText({ chat: {} })] })
+        )
+      ).toThrow(`the answers to ${CONVERSATION} that the check cannot read`);
+      // A page that was told no message, or no chat.
+      expect(() => check(given({ ...page, [MESSAGES]: [] }))).toThrow(
+        "the messages the page was told"
+      );
+      expect(() => check(given({ ...page, [CONVERSATION]: [] }))).toThrow(
+        "the conversations the page was told"
+      );
+    }
+  );
+});
