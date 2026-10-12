@@ -380,6 +380,21 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
     ]);
   });
 
+  it("asks again on the return for the build from scratch that a pause swallowed, though a build went to the model that day", async () => {
+    const f = await createPortraitTest();
+    const id = await f.seed({ author: "learner", text: "Kelas 11" });
+    await f.seedPortrait({ builtAt: NOW, text: "Kelas 11.", through: 4 });
+    // The rewrite takes the text out and asks for a build from scratch. The
+    // learner pauses inside its quiet, so that build will build nothing.
+    await f.owner.mutation(edit, { id, text: "Kelas 12" });
+    await f.owner.mutation(pause, { paused: true });
+    expect(await f.scheduled()).toHaveLength(1);
+    const [cleared] = await f.rows();
+    expect(cleared).not.toHaveProperty("builtAt");
+    await f.owner.mutation(pause, { paused: false });
+    expect(await f.scheduled()).toHaveLength(2);
+  });
+
   it("builds nothing while memory is paused, though a memory the learner changes still takes its text out of the portrait", async () => {
     const f = await createPortraitTest();
     const id = await f.seed({ author: "learner", text: "Kelas 11" });
