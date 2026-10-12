@@ -15,11 +15,13 @@ export const webSearchMaxQueries = 4;
 const webSearchQueryMaxLength = 500;
 /**
  * One search query. The limit is checked on the text the model writes, so the
- * JSON schema it reads holds it. The query is then trimmed and must not be
+ * JSON schema it reads holds it, and it counts characters as that schema's
+ * `maxLength` does: by code point, so an emoji or a rare Han character is one
+ * character here as it is there. The query is then trimmed and must not be
  * blank.
  */
 const queryInputSchema = Schema.String.check(
-  Schema.isMaxLength(webSearchQueryMaxLength)
+  Schema.isMaxCodePoints(webSearchQueryMaxLength)
 ).pipe(Schema.decodeTo(Schema.Trim), Schema.check(Schema.isMinLength(1)));
 /**
  * Requests the search provider's plan serves at once, measured on 10 October

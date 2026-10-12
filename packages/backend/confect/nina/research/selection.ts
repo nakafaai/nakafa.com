@@ -2,6 +2,7 @@ import {
   Array as Arr,
   HashMap,
   HashSet,
+  Iterable as Iter,
   Option,
   Order,
   pipe,
@@ -140,20 +141,23 @@ function analyzeParagraphs(
 }
 
 /**
- * Finds where the last whole sentence of a cut text ends, by the platform's own
- * sentence rules, so it holds for the full stop of every script. The last part
- * is the sentence the cut may have broken, so it never counts. Returns 0 when
- * the text holds no whole sentence.
+ * Finds where the last sentence that fits in `maxLength` characters ends, by
+ * the platform's own sentence rules, so it holds for the full stop of every
+ * script. The sentences are read from the whole text and the read stops at the
+ * first one that does not fit, so a sentence that ends exactly at the limit
+ * counts, and a long text is not read to its end. Returns 0 when no whole
+ * sentence fits.
  */
-function findSentenceEnd(text: string) {
+function findSentenceEnd(text: string, maxLength: number) {
   const segmenter = new Intl.Segmenter(undefined, { granularity: "sentence" });
-  const ends = Arr.flatMap(
-    Arr.dropRight(Arr.fromIterable(segmenter.segment(text)), 1),
-    ({ index, segment }) => {
-      const sentence = segment.trimEnd();
-
-      return sentence ? [index + sentence.length] : [];
-    }
+  const ends = pipe(
+    segmenter.segment(text),
+    // A blank part, such as the second line break between two paragraphs, is
+    // no sentence and ends nothing.
+    Iter.filter(({ segment }) => segment.trim().length > 0),
+    Iter.map(({ index, segment }) => index + segment.trimEnd().length),
+    Iter.takeWhile((end) => end <= maxLength),
+    Arr.fromIterable
   );
 
   return Option.getOrElse(Arr.last(ends), () => 0);
@@ -168,7 +172,7 @@ function truncateAtBoundary(text: string, maxLength: number): string {
   }
 
   const truncated = text.slice(0, maxLength);
-  const sentenceEnd = findSentenceEnd(truncated);
+  const sentenceEnd = findSentenceEnd(text, maxLength);
 
   if (sentenceEnd > maxLength * TRUNCATION_THRESHOLDS.sentence) {
     return truncated.slice(0, sentenceEnd);

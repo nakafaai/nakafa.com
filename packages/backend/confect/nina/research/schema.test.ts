@@ -67,6 +67,10 @@ describe("research schema", () => {
 
     expect(Result.isSuccess(decode("a".repeat(500)))).toBe(true);
     expect(Result.isFailure(decode("a".repeat(501)))).toBe(true);
+    // The limit counts characters as the JSON schema does: 𠮷 is one, though
+    // JavaScript stores it as two units.
+    expect(Result.isSuccess(decode("𠮷".repeat(500)))).toBe(true);
+    expect(Result.isFailure(decode("𠮷".repeat(501)))).toBe(true);
     expect(await webSearchInputSchema.jsonSchema).toMatchObject({
       properties: { queries: { items: { maxLength: 500 } } },
     });

@@ -169,6 +169,14 @@ describe("selectRelevantContent", () => {
     ).toBe("aaaaaaaaaaaaaaaaaaaaaaaaa.");
   });
 
+  it("keeps a sentence that ends exactly at the limit", () => {
+    // The second sentence ends at character 40, which is the limit. The third does not fit.
+    const content = `${"a".repeat(29)}. B${"b".repeat(7)}. C${"c".repeat(29)}.`;
+    expect(selectRelevantContent({ content, maxLength: 40 })).toBe(
+      `${"a".repeat(29)}. B${"b".repeat(7)}.`
+    );
+  });
+
   it("ends at a line break, which the platform counts as the end of a sentence", () => {
     expect(
       selectRelevantContent({
