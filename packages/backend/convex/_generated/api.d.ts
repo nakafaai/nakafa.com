@@ -8722,15 +8722,17 @@ export declare const internal: {
         {
           names: Array<"lasting" | "ownNote" | "private">;
           texts: Array<string>;
-          together: number;
         },
         | {
+            judgments: Record<
+              string,
+              { instructions: string; threshold: number }
+            >;
             kind: "measured";
             rows: Array<
               | { probabilities: Record<string, number> }
               | { failure: { reason: string; status?: number; type?: string } }
             >;
-            thresholds: Record<string, number>;
           }
         | {
             failure: { _tag: "GatewayConfigurationError"; message: string };
