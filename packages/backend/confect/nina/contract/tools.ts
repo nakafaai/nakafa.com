@@ -1,7 +1,7 @@
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { describedNonEmptyString } from "@repo/math/schema/shared";
-import { Array as Arr, pipe, Schema, Struct } from "effect";
+import { Array as Arr, pipe, Record as Rec, Schema, Struct } from "effect";
 
 const SpecialistToolInputFields = {
   request: describedNonEmptyString(
@@ -136,31 +136,64 @@ type NakafaToolInput = typeof NakafaToolInputSchema.Type;
 type ResearchToolInput = typeof ResearchToolInputSchema.Type;
 type MathToolInput = typeof MathToolInputSchema.Type;
 type SpecialistToolInput = MathToolInput | NakafaToolInput | ResearchToolInput;
+/** Every field that any specialist tool takes. A call holds only its own tool's. */
+type SpecialistToolFields = Partial<
+  MathToolInput & NakafaToolInput & ResearchToolInput
+>;
+/**
+ * The heading of each section of a specialist task. The order of the keys is
+ * the order of the sections, in the task and in its words alike, and the
+ * compiler asks for a heading when a tool gains a field.
+ */
+const SECTION_HEADINGS = {
+  request: "Request",
+  objective: "Objective",
+  requirements: "Requirements",
+  sourceRequirements: "Source Requirements",
+  deliverables: "Deliverables",
+  given: "Given",
+} satisfies Record<keyof SpecialistToolFields, string>;
+/**
+ * Reads the sections that one tool call holds, in the order of the task: the
+ * heading of each with its text or its list of items. A field that the tool
+ * does not take, or that the call left out, has no section.
+ */
+function readSections(input: SpecialistToolInput) {
+  const fields: SpecialistToolFields = input;
+  return Arr.flatMap(Rec.toEntries(SECTION_HEADINGS), ([field, heading]) => {
+    const value = fields[field];
+    return value === undefined ? [] : [{ heading, value }];
+  });
+}
 /**
  * Builds the internal Markdown task after the public tool input has separated
  * routing concerns from answer wording.
  */
 export function formatSpecialistToolTask(input: SpecialistToolInput) {
   const sections = Arr.filter(
-    [
-      formatTextSection("Request", input.request),
-      formatTextSection("Objective", input.objective),
-      formatListSection("Requirements", input.requirements ?? []),
-      formatListSection(
-        "Source Requirements",
-        "sourceRequirements" in input ? input.sourceRequirements : []
-      ),
-      formatListSection(
-        "Deliverables",
-        "deliverables" in input ? input.deliverables : []
-      ),
-      formatListSection("Given", "given" in input ? input.given : []),
-    ],
+    Arr.map(readSections(input), ({ heading, value }) =>
+      Arr.isArray(value)
+        ? formatListSection(heading, value)
+        : formatTextSection(heading, value)
+    ),
     Boolean
   );
   return createPrompt({
     taskContext: Arr.join(sections, "\n\n"),
   });
+}
+/**
+ * Gives the words of a tool call, for the code that looks for them in a page:
+ * the text of the same fields as the task, in the same order, one item per
+ * line and with no heading. A heading belongs to the task, not to the tool
+ * call, and no line is left out for how it starts.
+ */
+export function getSpecialistToolWords(input: SpecialistToolInput) {
+  return pipe(
+    readSections(input),
+    Arr.flatMap(({ value }) => Arr.ensure(value)),
+    Arr.join("\n")
+  );
 }
 /** Formats a single prose section for the internal specialist task. */
 function formatTextSection(heading: string, text: string) {

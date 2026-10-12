@@ -13,8 +13,8 @@ import { neverAnswering, withTimeLeft } from "@repo/backend/test/nina/deadline";
 import {
   providerStep,
   recordProgress,
+  researchRequest,
   runSpecialist,
-  specialistRequest,
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
@@ -74,10 +74,7 @@ const searchCall = providerStep(
       type: "tool-call",
       toolCallId: "search",
       toolName: "webSearch",
-      input: encodeSearchInput({
-        queries: ["official agents"],
-        sourcePreference: "primary",
-      }),
+      input: encodeSearchInput({ queries: ["official agents"] }),
     },
   ],
   "tool-calls"
@@ -97,7 +94,7 @@ const noQuery = providerStep(
       type: "tool-call",
       toolCallId: "search",
       toolName: "webSearch",
-      input: encodeJsonText({ queries: [], sourcePreference: "primary" }),
+      input: encodeJsonText({ queries: [] }),
     },
   ],
   "tool-calls"
@@ -145,10 +142,9 @@ async function research(
   const logged = MutableRef.make<readonly unknown[]>([]);
   const result = await runSpecialist((userId) =>
     runResearchAgent({
-      ...specialistRequest,
+      ...researchRequest,
       userId,
       sourceReferences,
-      toolCallId: "research",
       publish: () => Effect.void,
       usageHandler: vi.fn(),
     }).pipe(
@@ -190,7 +186,7 @@ describe("research Agent evidence boundary", () => {
     const { artifacts, publish } = recordProgress();
     const result = await runSpecialist((userId) =>
       runResearchAgent({
-        ...specialistRequest,
+        ...researchRequest,
         userId,
         task: `Verify ${url}`,
         sourceReferences: Array.from(
@@ -200,7 +196,6 @@ describe("research Agent evidence boundary", () => {
             href: i === 0 ? url : `${url}/${i}`,
           })
         ),
-        toolCallId: "research",
         publish,
         usageHandler,
       })
@@ -209,12 +204,16 @@ describe("research Agent evidence boundary", () => {
       text: `- Verified finding. [Official source](${url})`,
     });
     expect(scrapeUrl).toHaveBeenCalledTimes(researchMaxSources);
+    // The words choose the paragraphs of a page, in the search and in a link.
+    expect(scrapeUrl).toHaveBeenCalledWith(
+      expect.objectContaining({ selectionQuery: researchRequest.words })
+    );
     expect(searchWeb).toHaveBeenCalledTimes(1);
     expect(searchWeb).toHaveBeenCalledWith(
       expect.objectContaining({
         queries: ["official agents"],
-        sourcePreference: "primary",
         toolCallId: "search",
+        words: researchRequest.words,
       })
     );
     expect(usageHandler).toHaveBeenCalledTimes(2);
@@ -241,10 +240,8 @@ describe("research Agent evidence boundary", () => {
     const generate = vi.spyOn(Agent.prototype, "generateText");
     await runSpecialist((userId) =>
       runResearchAgent({
-        ...specialistRequest,
+        ...researchRequest,
         userId,
-        sourceReferences: [],
-        toolCallId: "research",
         publish: () => Effect.void,
         usageHandler: vi.fn(),
       }).pipe(withTimeLeft("7 seconds"))
@@ -263,11 +260,9 @@ describe("research Agent evidence boundary", () => {
     );
     await runSpecialist((userId) =>
       runResearchAgent({
-        ...specialistRequest,
+        ...researchRequest,
         userId,
         task: `Cari di kemdikbud.go.id dan baca ${url} dan https://nakafa.com/en/articles/politics/example tentang kurikulum.`,
-        sourceReferences: [],
-        toolCallId: "research",
         publish: () => Effect.void,
         usageHandler: vi.fn(),
       })
@@ -284,10 +279,9 @@ describe("research Agent evidence boundary", () => {
     }));
     const failure = await runSpecialist((userId) =>
       runResearchAgent({
-        ...specialistRequest,
+        ...researchRequest,
         userId,
         sourceReferences: sources,
-        toolCallId: "research",
         publish: () => Effect.void,
         usageHandler: vi.fn(),
       }).pipe(

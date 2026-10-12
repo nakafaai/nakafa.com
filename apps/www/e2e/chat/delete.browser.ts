@@ -2,7 +2,11 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { live, reloadUntil, saved } from "@/e2e/support/changes";
 import { DELETE, FAILED, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { shownTexts, watchTexts } from "@/e2e/support/shown";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+
+/** What a chat page says of a chat that is not the viewer's. */
+const NOT_YOURS = "Access denied";
 
 /** A chat's row on the learner's chats page, which holds a link over the whole row. */
 const rowOf = (page: Page, chatId: string) =>
@@ -131,7 +135,9 @@ const inAnOpenChat = Effect.fn("NakafaE2E.inAnOpenChat")(function* (
 
 /**
  * The learner deletes the chat they are in. Its row leaves the sidebar at once,
- * and they go to their chats once the server has deleted it.
+ * and they go to their chats once the server has deleted it. The chat is
+ * theirs, so the page never says it is not, not even for the moment between
+ * the server deleting it and the page moving on.
  */
 const movesOnWhenDeleted = Effect.fn("NakafaE2E.deleteMovesOn")(function* (
   page: Page,
@@ -143,6 +149,7 @@ const movesOnWhenDeleted = Effect.fn("NakafaE2E.deleteMovesOn")(function* (
   );
   const before = changes.sent;
 
+  yield* Effect.promise(() => watchTexts(page, [NOT_YOURS]));
   changes.hold();
   yield* confirmDelete();
   yield* Effect.promise(async () => {
@@ -154,12 +161,14 @@ const movesOnWhenDeleted = Effect.fn("NakafaE2E.deleteMovesOn")(function* (
     );
     await saved(changes, before);
     await expect(rowOf(page, oldest.chatId)).toHaveCount(0);
+    expect(await shownTexts(page)).toEqual([]);
   });
 });
 
 /**
  * A delete the server refuses: the dialog is gone, the chat is back in the
- * sidebar, the learner is told, and they are still in the chat.
+ * sidebar, the learner is told, and they are still in the chat, which shows
+ * its messages and its menu as before.
  */
 const staysWhenRefused = Effect.fn("NakafaE2E.deleteStaysWhenRefused")(
   function* (page: Page, baseURL: string) {
@@ -179,6 +188,14 @@ const staysWhenRefused = Effect.fn("NakafaE2E.deleteStaysWhenRefused")(
       await expect(page.getByText(FAILED).first()).toBeVisible();
       await expect(sidebarRowOf(page, oldest.chatId)).toHaveText("Oldest chat");
       await expect(page).toHaveURL(new RegExp(`/en/chat/${oldest.chatId}$`));
+      await expect(chatMenuOf(page)).toBeVisible({
+        timeout: readinessTimeoutMilliseconds,
+      });
+      await expect(
+        page.locator('main main [data-slot="bubble"]').filter({
+          hasText: "The oldest",
+        })
+      ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
       await saved(changes, before);
     });
   }
