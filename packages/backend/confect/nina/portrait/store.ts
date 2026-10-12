@@ -76,7 +76,7 @@ export const readPortrait = Effect.fn("nina.portrait.read")(function* (
  * not stay, and then asks for a build from scratch whatever the last build was.
  * While memory is paused nothing is asked, so a learner who paused is never
  * built for, but a reset still takes the text out and lets the next request
- * ask.
+ * ask. The learner who lets Nina use memory again asks too (`memory.pause`).
  *
  * The request writes its time into the portrait row, creating the row for a
  * learner who has none, and schedules the build after `PORTRAIT_DELAY`. Every
