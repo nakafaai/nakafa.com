@@ -1,3 +1,4 @@
+import { toUIMessages } from "@convex-dev/agent";
 import { describe, expect, it } from "@effect/vitest";
 import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import { components } from "@repo/backend/confect/_generated/components";
@@ -20,6 +21,7 @@ import {
   total,
   turn,
 } from "@repo/backend/test/nina/outcome";
+import { isToolUIPart } from "ai";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 
 const loaded = {
@@ -123,6 +125,27 @@ describe("nina/outcome", () => {
       expect(Schema.is(CapabilityOutputSchema)(output)).toBe(true);
     }
   );
+
+  it("makes the chat read the outcome of an old output", async () => {
+    const f = await fixture(
+      turn("deepResearch", json(oldOutput("failed", [loaded])))
+    );
+    const [threadId = ""] = f.threadIds;
+    const outcomes = async () =>
+      Arr.flatMap(toUIMessages(await stored(f.t, threadId)), ({ parts }) =>
+        Arr.flatMap(parts, (part) =>
+          isToolUIPart(part) &&
+          part.state === "output-available" &&
+          Schema.is(CapabilityOutputSchema)(part.output)
+            ? [part.output.outcome ?? "done"]
+            : []
+        )
+      );
+    // The chat reads the output of the Agent as it is, so the old one reads as done.
+    expect(await outcomes()).toEqual(["done"]);
+    await pass(f.t, null);
+    expect(await outcomes()).toEqual(["partial"]);
+  });
 
   it("weighs only the cards that read as cards", async () => {
     // A card that says it is done, but lacks the content and the address of one.
