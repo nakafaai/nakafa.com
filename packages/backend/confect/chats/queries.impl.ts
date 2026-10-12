@@ -28,8 +28,8 @@ const getChat = FunctionImpl.make(
  * Temporary compatibility, the expand step of packages/backend/AGENTS.md: a
  * browser tab that was opened before share tokens still asks for the chats of a
  * profile and would fail on a missing function. Owner: ADR 0001. Exit: the
- * per-function call metrics of the production deployment show no call of this
- * function for 14 days after the release reached production. Cleanup: delete
+ * release has been on production for 12 hours, the time the project's skew
+ * protection keeps a browser on the web deployment it loaded. Cleanup: delete
  * this function, its entry in `queries.spec.ts` and its test.
  */
 const getChats = FunctionImpl.make(

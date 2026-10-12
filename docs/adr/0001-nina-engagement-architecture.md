@@ -78,10 +78,12 @@ tokens. This ADR owns them, and they end together. Until they do,
 private, and `getChats` answers an empty page for the browser tabs that were
 opened before share tokens and still ask for the chats of a profile. The exit is
 met when a dry pass of `closeLegacy` over every chat finds no legacy chat on dev
-and on production, and the per-function call metrics of the production
-deployment show no call of `getChats` for 14 days after the release reached
-production. The cleanup is one change: delete `chats/unshare` with its tests,
-and delete `getChats` with its test.
+and on production, and the release has been on production for 12 hours. That is
+how long the project's skew protection keeps a browser on the web deployment it
+loaded (`skewProtectionMaxAge` 43,200 seconds, read from the Vercel project on
+12 October 2026): after it, a navigation in an older tab loads the build that
+no longer calls `getChats`. The cleanup is one change: delete `chats/unshare`
+with its tests, and delete `getChats` with its test.
 
 Nina's system prompt leads with stable instructions so provider prompt caching
 reuses them across turns. The current page, which learners share, the learner

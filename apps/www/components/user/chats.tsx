@@ -43,7 +43,20 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
   if (user?.appUser._id === userId) {
     return <OwnChatsList />;
   }
-  return <ChatList canDelete={false} isLoading={isPending} results={[]} />;
+  if (isPending) {
+    return <ChatList canDelete={false} isLoading results={[]} />;
+  }
+  return <ChatsByLink />;
+}
+
+/** What another learner's profile says in place of a list: a chat opens by its link. */
+function ChatsByLink() {
+  const t = useTranslations("Common");
+  return (
+    <p className="text-center text-muted-foreground text-sm">
+      {t("chats-by-link")}
+    </p>
+  );
 }
 
 /** Subscribe to all study chats owned by the current viewer. */
