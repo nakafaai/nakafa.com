@@ -11,6 +11,7 @@ import {
   scheduledBuilds,
   writes,
   writesAfter,
+  writesUncounted,
 } from "@repo/backend/test/nina/portrait";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
@@ -86,6 +87,16 @@ describe("a portrait build", () => {
       prompt.indexOf("Mau ikut SNBT 2027.")
     );
     expect(MutableRef.get(f.logged)).toEqual([]);
+  });
+
+  it("counts the tokens of a call as none when the provider reports none, and still counts the call", async () => {
+    const f = await requested();
+    await f.seed({ text: "Mau ikut SNBT 2027." });
+    writesUncounted("Mau ikut SNBT 2027.");
+    await f.build();
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ usage: { calls: 1, input: 0, output: 0 } }),
+    ]);
   });
 
   it("reads only the memories newer than the portrait and hands it the portrait it has", async () => {

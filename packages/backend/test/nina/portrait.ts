@@ -47,6 +47,33 @@ export function writes(portrait: string) {
 }
 
 /**
+ * A model that answers every portrait build with this text, but reports no
+ * token counters, as a provider may leave them out.
+ */
+export function writesUncounted(portrait: string) {
+  const model = new MockLanguageModelV4({
+    doGenerate: {
+      ...providerStep([{ type: "text", text: encodeJsonText({ portrait }) }]),
+      usage: {
+        inputTokens: {
+          cacheRead: undefined,
+          cacheWrite: undefined,
+          noCache: undefined,
+          total: undefined,
+        },
+        outputTokens: {
+          reasoning: undefined,
+          text: undefined,
+          total: undefined,
+        },
+      },
+    },
+  });
+  provider.languageModel.mockReturnValue(model);
+  return model;
+}
+
+/**
  * A model that answers every portrait build with this text, but only after
  * `meanwhile` ran: the learner doing something while the model writes.
  */
