@@ -241,6 +241,16 @@ describe("memory page store", () => {
     expect(store.getState().deleted).toBeNull();
   });
 
+  it("takes back the count of a Delete all the server refused, so a first save on its way finds the count it started with", () => {
+    const store = createMemoryStore();
+    const before = store.getState().cleared;
+
+    store.getState().forgetAll();
+    expect(store.getState().cleared).toBe(before + 1);
+    store.getState().recallAll();
+    expect(store.getState().cleared).toBe(before);
+  });
+
   it("counts each time the learner deletes every memory, and closes the editor on the memory it holds", () => {
     const store = createMemoryStore();
 

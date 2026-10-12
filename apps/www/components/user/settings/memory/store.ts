@@ -80,6 +80,12 @@ interface MemoryActions {
    */
   recall: (id: Memory["id"]) => void;
   /**
+   * Takes back one count of `forgetAll`, because the server deleted nothing. A
+   * first save that was on its way then finds the count it started with, and
+   * keeps its editor.
+   */
+  recallAll: () => void;
+  /**
    * Opens the editor again with the draft of a save that failed, on `memory`,
    * or on a new memory when it is null. `session` is the opening the draft
    * comes from. Nothing opens when the learner opened an editor since, open or
@@ -124,6 +130,7 @@ export function createMemoryStore() {
       })),
     recall: (id) =>
       set((state) => (state.deleted === id ? { deleted: null } : state)),
+    recallAll: () => set((state) => ({ cleared: state.cleared - 1 })),
     leave: (session) =>
       set((state) =>
         state.session === session ? { draft: null, open: false } : state

@@ -233,6 +233,8 @@ const verifyFailedDelete = Effect.fn("NakafaE2E.verifyFailedDelete")(function* (
     await row.getByRole("button", { name: "Delete memory" }).click();
     await expect(page.getByText(FAILED).first()).toBeVisible();
     await expect(row).toBeVisible();
+    // Nothing was deleted, so nothing is left to undo.
+    await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
 
     // The editor on the memory that came back saves again.
     const before = changes.sent;

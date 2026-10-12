@@ -3,7 +3,7 @@
 import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { randomUuid } from "@repo/utilities/uuid";
-import { DateTime, Duration, Effect, type Result } from "effect";
+import { DateTime, Duration, Effect, MutableRef, type Result } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
@@ -49,6 +49,7 @@ export function useMemoryActions() {
   const forget = useMemoryPage((state) => state.forget);
   const forgetAll = useMemoryPage((state) => state.forgetAll);
   const recall = useMemoryPage((state) => state.recall);
+  const recallAll = useMemoryPage((state) => state.recallAll);
   const reopen = useMemoryPage((state) => state.reopen);
   const rewrite = useMemoryPage((state) => state.rewrite);
 
@@ -162,9 +163,14 @@ export function useMemoryActions() {
    * server does not delete it, the memory is in the list again, so the note
    * that it was deleted is taken back and the editor saves it again.
    */
-  function drop(id: Memory["id"]) {
+  function drop(id: Memory["id"], after: { failed?: () => void } = {}) {
     forget(id);
-    settle(() => removeById({ id }), { failed: () => recall(id) });
+    settle(() => removeById({ id }), {
+      failed: () => {
+        recall(id);
+        after.failed?.();
+      },
+    });
   }
 
   /**
@@ -172,16 +178,29 @@ export function useMemoryActions() {
    * the page can never leave it stored. The toast offers an Undo, which writes
    * `restore` back as the learner's own memory, the words of the memory unless
    * the caller names others: the end date of a situation does not come back.
+   * When the server does not delete the memory, the offer goes with it.
    */
   function remove(memory: Memory, restore: MemoryDraft = draftOf(memory)) {
-    drop(memory.id);
-
-    toast(t("deleted"), {
+    const kept = MutableRef.make(false);
+    const shown = toast(t("deleted"), {
       action: {
         label: t("undo"),
-        onClick: () => add(restore),
+        // A memory the server did not delete is in the list again, so an Undo
+        // would write a second copy of it.
+        onClick: () => {
+          if (!MutableRef.get(kept)) {
+            add(restore);
+          }
+        },
       },
       duration: Duration.toMillis(UNDO),
+    });
+
+    drop(memory.id, {
+      failed: () => {
+        MutableRef.set(kept, true);
+        toast.dismiss(shown);
+      },
     });
   }
 
@@ -201,9 +220,10 @@ export function useMemoryActions() {
 
     forgetAll();
     settle(() => clearAll(), {
-      // The server deleted nothing, so the memory the editor was on is the
-      // learner's again.
+      // The server deleted nothing: the memory the editor was on is the
+      // learner's again, and a first save on its way keeps its editor.
       failed: () => {
+        recallAll();
         if (open) {
           recall(open.id);
         }
