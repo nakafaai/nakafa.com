@@ -150,119 +150,138 @@ export function useNinaSubmission(
   const uncertain = useRef<Ref.Args<Start> | null>(null);
   const t = useTranslations("Ai");
 
-  const perform = Effect.fn("nina.submission")(function* (
+  /**
+   * Admits one message or retry as one Effect, started now. It settles with
+   * the receipt, or with nothing when the admission was refused or another
+   * one is still in flight.
+   */
+  function perform(
     inputProgram: Effect.Effect<Ref.Args<Start>["input"], NinaFailure>,
     chatId?: Id<"chats">
-  ) {
+  ): Promise<Ref.Returns<Start> | undefined> {
     if (inFlight.current) {
-      return;
+      return Promise.resolve(undefined);
     }
     inFlight.current = true;
     onFailure?.(null);
-    const draftKey = chatId ? null : yield* randomUuid;
-    if (draftKey) {
-      addChatDraft(draftKey);
-    }
-    const result = yield* inputProgram.pipe(
-      Effect.tap(() => requireNinaConnection(convex)),
-      Effect.flatMap((input) =>
-        Effect.gen(function* () {
-          const payload = {
-            ...(chatId ? { chatId } : {}),
-            input,
-          };
-          const previous = uncertain.current;
-          const same =
-            previous &&
-            encodeJsonText({ ...previous, requestId: undefined }) ===
-              encodeJsonText(payload);
-          const args = {
-            ...payload,
-            requestId: same ? previous.requestId : yield* randomUuid,
-          };
-          uncertain.current = args;
-          const submit = start.withOptimisticUpdate(
-            optimisticPrompt(
-              HashMap.fromIterable(previews),
-              DateTime.toEpochMillis(DateTime.nowUnsafe())
-            )
-          );
-          return yield* Effect.tryPromise({
-            try: () => submit(args),
-            catch: () =>
-              new NinaConnectionError({
-                code: "NINA_CONNECTION_FAILED",
-                message: "Nina admission could not be confirmed.",
-              }),
-          }).pipe(Effect.flatMap(Effect.fromResult));
-        })
-      ),
-      Effect.onExit((exit) =>
-        Effect.sync(() => {
-          if (!draftKey) {
-            return;
-          }
-          if (Exit.isSuccess(exit)) {
-            resolveChatDraft(draftKey, exit.value);
-          } else {
-            removeChatDraft(draftKey);
-          }
-        })
-      ),
-      Effect.result,
-      Effect.ensuring(
-        Effect.sync(() => {
-          inFlight.current = false;
-        })
-      )
-    );
-    if (Result.isSuccess(result)) {
-      uncertain.current = null;
-      uploaded.current = new WeakMap();
-      MutableHashMap.clear(previews);
-      return result.success;
-    }
-    if (result.failure._tag !== "NinaConnectionError") {
-      uncertain.current = null;
-    }
-    if (
-      result.failure._tag === "NinaUploadError" &&
-      result.failure.code === "NINA_UPLOAD_INVALID"
-    ) {
-      uploaded.current = new WeakMap();
-      MutableHashMap.clear(previews);
-    }
-    onFailure?.(result.failure);
-    yield* reportNinaFailure(
-      result.failure,
-      t(`failures.${ninaFailureFeedback[result.failure.code].message}`)
-    );
-  });
-
-  function send(prompt: NinaDraft, chatId?: Id<"chats">) {
+    const draftKey: Effect.Effect<string | null> = chatId
+      ? Effect.succeed(null)
+      : randomUuid;
     return Effect.runPromise(
-      perform(
-        uploadAttachments(
-          prompt.files ?? [],
-          upload,
-          uploaded.current,
-          previews,
-          convex
-        ).pipe(
-          Effect.map((uploadIds) =>
-            messageInput({ focus: prompt.focus, text: prompt.text, uploadIds })
+      draftKey.pipe(
+        Effect.tap((key) =>
+          Effect.sync(() => {
+            if (key) {
+              addChatDraft(key);
+            }
+          })
+        ),
+        Effect.flatMap((key) =>
+          inputProgram.pipe(
+            Effect.tap(() => requireNinaConnection(convex)),
+            Effect.flatMap((input) => {
+              const payload = {
+                ...(chatId ? { chatId } : {}),
+                input,
+              };
+              const previous = uncertain.current;
+              const same =
+                previous &&
+                encodeJsonText({ ...previous, requestId: undefined }) ===
+                  encodeJsonText(payload);
+              const requestId: Effect.Effect<string> = same
+                ? Effect.succeed(previous.requestId)
+                : randomUuid;
+              return requestId.pipe(
+                Effect.flatMap((id) => {
+                  const args = { ...payload, requestId: id };
+                  uncertain.current = args;
+                  const submit = start.withOptimisticUpdate(
+                    optimisticPrompt(
+                      HashMap.fromIterable(previews),
+                      DateTime.toEpochMillis(DateTime.nowUnsafe())
+                    )
+                  );
+                  return Effect.tryPromise({
+                    try: () => submit(args),
+                    catch: () =>
+                      new NinaConnectionError({
+                        code: "NINA_CONNECTION_FAILED",
+                        message: "Nina admission could not be confirmed.",
+                      }),
+                  }).pipe(Effect.flatMap(Effect.fromResult));
+                })
+              );
+            }),
+            Effect.onExit((exit) =>
+              Effect.sync(() => {
+                if (!key) {
+                  return;
+                }
+                if (Exit.isSuccess(exit)) {
+                  resolveChatDraft(key, exit.value);
+                } else {
+                  removeChatDraft(key);
+                }
+              })
+            ),
+            Effect.result,
+            Effect.ensuring(
+              Effect.sync(() => {
+                inFlight.current = false;
+              })
+            )
           )
         ),
-        chatId
+        Effect.flatMap(
+          (result): Effect.Effect<Ref.Returns<Start> | undefined> => {
+            if (Result.isSuccess(result)) {
+              uncertain.current = null;
+              uploaded.current = new WeakMap();
+              MutableHashMap.clear(previews);
+              return Effect.succeed(result.success);
+            }
+            if (result.failure._tag !== "NinaConnectionError") {
+              uncertain.current = null;
+            }
+            if (
+              result.failure._tag === "NinaUploadError" &&
+              result.failure.code === "NINA_UPLOAD_INVALID"
+            ) {
+              uploaded.current = new WeakMap();
+              MutableHashMap.clear(previews);
+            }
+            onFailure?.(result.failure);
+            return reportNinaFailure(
+              result.failure,
+              t(`failures.${ninaFailureFeedback[result.failure.code].message}`)
+            ).pipe(Effect.as(undefined));
+          }
+        )
       )
     );
   }
+
+  function send(prompt: NinaDraft, chatId?: Id<"chats">) {
+    return perform(
+      uploadAttachments(
+        prompt.files ?? [],
+        upload,
+        uploaded.current,
+        previews,
+        convex
+      ).pipe(
+        Effect.map((uploadIds) =>
+          messageInput({ focus: prompt.focus, text: prompt.text, uploadIds })
+        )
+      ),
+      chatId
+    );
+  }
   function retry(order: number, chatId: Id<"chats">) {
-    return Effect.runPromise(
-      perform(
-        Effect.sync(() => retryInput(order)),
-        chatId
-      )
+    return perform(
+      Effect.sync(() => retryInput(order)),
+      chatId
     );
   }
   return { send, retry };
