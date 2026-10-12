@@ -278,7 +278,8 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
       .getByRole("button", { name: "Erinnerung hinzufügen" })
       .boundingBox();
 
-    // The whole placeholder fits the room the field gives it.
+    // The whole placeholder fits the room the field gives it. The field is
+    // empty and hides its clear button then, so no slot takes any of the room.
     expect(text.needs).toBeGreaterThan(0);
     expect(
       text.needs,

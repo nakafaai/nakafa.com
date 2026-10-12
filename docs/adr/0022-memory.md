@@ -769,7 +769,11 @@ nobody tries them again without a new reason.
   runs and on a desktop zoomed to 400%, two gutters of 10px left a 320px page
   cards of 252px: the German placeholder of the search needs 140px and the
   field gave 138px, and a row could not keep the end date of a situation
-  whole. A phone has no gutter and was never short.
+  whole. A phone has no gutter and was never short. A search field also keeps
+  a slot of 14px for its clear button while it is empty, and the placeholder
+  cannot use it, so the field hides the button while the placeholder shows.
+  With one gutter and the slot, the German placeholder still lost its last
+  letter, which the width of the field less its padding did not show.
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
   because the browser has no page of its own to change until then.

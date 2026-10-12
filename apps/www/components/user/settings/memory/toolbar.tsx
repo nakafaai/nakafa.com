@@ -19,6 +19,11 @@ import { useMemoryPage } from "@/components/user/settings/memory/provider";
  * panel is as narrow as the card on a phone. From 24rem the button says what it
  * adds, and the longest placeholder, which is German, still has all its room.
  * From 16rem the search shows its icon. Below that the field has the room alone.
+ *
+ * A search field keeps a slot for its clear button even while it is empty. The
+ * slot is 14px and the placeholder cannot use it: where scrollbars take room,
+ * the German placeholder lost its last letter in a card of 261px. The button
+ * hides while the placeholder shows and comes back with the first letter.
  */
 export function MemoryToolbar() {
   const t = useTranslations("Memory");
@@ -32,6 +37,7 @@ export function MemoryToolbar() {
         <InputGroup>
           <InputGroupInput
             aria-label={t("search")}
+            className="[&:placeholder-shown::-webkit-search-cancel-button]:hidden"
             onChange={(event) => search(event.target.value)}
             placeholder={t("search")}
             type="search"
