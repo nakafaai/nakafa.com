@@ -185,7 +185,7 @@ describe("Nina turns after the summary", () => {
     ).toEqual([{ order: 0 }]);
   });
 
-  it("reads at most the newest sixteen, the most one summary refresh folds", async () => {
+  it("lists at most the newest sixteen, one page of turns and the most one fold covers", async () => {
     const { t, chatId } = await createNinaTest({
       history: Arr.makeBy(18, () => ({})),
     });

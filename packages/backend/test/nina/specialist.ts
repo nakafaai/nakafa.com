@@ -4,13 +4,17 @@ import schema from "@repo/backend/confect/_generated/schema";
 import type {
   ActionCtx,
   QueryRunner,
+  VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
 import type {
   CapabilityArtifact,
   CapabilityProgress,
 } from "@repo/backend/confect/nina/capability/progress";
-import type { TaskAgentDataSchema } from "@repo/backend/confect/nina/contract/agent";
+import type {
+  ResearchAgentData,
+  TaskAgentDataSchema,
+} from "@repo/backend/confect/nina/contract/agent";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   createConvexTestWithBetterAuth,
@@ -44,11 +48,22 @@ export const openHomeSession = openNinaLearningSession({
   },
 });
 
+/**
+ * The data of a research run besides its user, progress and usage: no link from
+ * the learner, and words that differ from the task its model reads.
+ */
+export const researchRequest = {
+  ...specialistRequest,
+  sourceReferences: [],
+  toolCallId: "research",
+  words: "requested evidence",
+} satisfies Omit<ResearchAgentData, "userId">;
+
 /** Executes the real Agent component in its native action context over the test gateway. */
 export async function runSpecialist<A, E>(
   program: (
     userId: Docs["users"]["_id"]
-  ) => Effect.Effect<A, E, ActionCtx | Gateway | QueryRunner>
+  ) => Effect.Effect<A, E, ActionCtx | Gateway | QueryRunner | VectorSearch>
 ) {
   const t = createConvexTestWithBetterAuth();
   const { userId } = await t.mutation((ctx) =>

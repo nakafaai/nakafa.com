@@ -112,6 +112,21 @@ describe("contentRelease/activate", () => {
       kind: "completed",
       receipt: expectedReceipt(CANDIDATE),
     });
+    // The activation queued the build of the section index in its own
+    // transaction, and the repeated activation queued nothing more.
+    expect(
+      Arr.filter(
+        await t.run((ctx) =>
+          ctx.db.system.query("_scheduled_functions").collect()
+        ),
+        ({ name }) => name === "contents/sections/build:run"
+      )
+    ).toMatchObject([
+      {
+        args: [{ releaseId: CANDIDATE.releaseId }],
+        state: { kind: "pending" },
+      },
+    ]);
     expect(completed.build).toBeNull();
     expect(completed.state).toMatchObject({
       activeManifestHash: CANDIDATE.manifestHash,

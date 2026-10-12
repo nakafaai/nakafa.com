@@ -1,22 +1,11 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { BrowserContext } from "@playwright/test";
-import { Effect, FileSystem, Path, Schema } from "effect";
-import { ChildProcess } from "effect/process";
+import { Effect, FileSystem, Schema } from "effect";
+import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 
-/** The acceptance command line, which owns the local runtime's learners. */
-const acceptanceCli = new URL(
-  "../../../../packages/backend/scripts/content/acceptance/main.ts",
-  import.meta.url
-);
 const SessionCookie = Schema.fromJsonString(
   Schema.Struct({ name: Schema.String, value: Schema.String })
 );
-
-/** Expected failure while signing a synthetic learner in. */
-class LearnerSignInError extends Schema.TaggedError<LearnerSignInError>()(
-  "LearnerSignInError",
-  { exitCode: Schema.Finite }
-) {}
 
 /**
  * Signs a new synthetic learner into one browser context. The running local
@@ -27,22 +16,22 @@ class LearnerSignInError extends Schema.TaggedError<LearnerSignInError>()(
 export const signInLearner = Effect.fn("NakafaE2E.signInLearner")(
   function* (context: BrowserContext, baseURL: string) {
     const fs = yield* FileSystem.FileSystem;
-    const cli = yield* Path.Path.pipe(
-      Effect.flatMap((path) => path.fromFileUrl(acceptanceCli))
-    );
     const directory = yield* fs.makeTempDirectoryScoped({
       prefix: "nakafa-learner-",
     });
     const output = `${directory}/cookie.json`;
-    const child = yield* ChildProcess.make(
-      process.execPath,
-      [cli, "learner", output],
-      { stderr: "inherit", stdin: "ignore", stdout: "inherit" }
+    // Convex stops a query or mutation after one second of its own code
+    // (https://docs.convex.dev/production/state/limits), and the local backend
+    // has no setting to raise that. A machine busy with other work stretches
+    // the functions this command calls past it now and then ("Function
+    // execution timed out (maximum duration: 1s)"), and the command only exits
+    // with a code, so any failure is tried again. The command writes the
+    // cookie file last, so a run that failed leaves no cookie and the next one
+    // signs in a new learner. The account of the failed run may stay in the
+    // local database, which is thrown away with the runtime.
+    yield* runAcceptanceCommand("learner", output).pipe(
+      Effect.retry({ times: 2 })
     );
-    const exitCode = yield* child.exitCode;
-    if (exitCode !== 0) {
-      return yield* new LearnerSignInError({ exitCode });
-    }
     const cookie = yield* fs
       .readFileString(output)
       .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));

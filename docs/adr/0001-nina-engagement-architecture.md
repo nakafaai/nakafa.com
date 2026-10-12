@@ -89,8 +89,8 @@ the learner's language, and the learner's recorded answer through an internal
 query, so question text and answer keys never come from the client. The official
 explanation is the source of truth for the answer.
 
-Provider input keeps whole recent turns that the conversation summary does not
-cover, newest first, within 12,000 tokens, and the current turn's evidence
+Provider input keeps whole turns that the conversation summary does not
+cover, newest first, within 32,000 tokens, and the current turn's evidence
 within 16,000 tokens. The turns come from the chat's turn records, by turn
 order, not from the last messages of the thread: a cancelled or failed turn
 leaves no messages in it, and a question the learner asked again appears once,
@@ -108,14 +108,67 @@ unset, so a few images fill the history budget. A stored message keeps neither
 the size nor the page count of a file, so the rule reads the media type alone.
 The learner's own message and its attachments are not evidence and do not count
 against the evidence budget.
-After a completed turn, the follow-up action
-folds the complete turns beyond the four newest into the chat's conversation
-summary with a fast model once four such turns accumulate, at most 16 turns per
-refresh, so a longer backlog advances one bounded batch per turn and reads back
-only from its last folded turn. The fold leaves out what the history would: a
-cancelled or failed turn, and an answer that a later retry replaced. The
-summary, at most 1,200
-tokens, sits in the system prompt context and is deleted with its chat. Its
+
+One call carries at most `NINA_CALL_LIMIT` tokens by design, the sum of the
+budgets in `confect/nina/budget.ts` that a call holds at once. The budgets are
+counted with OpenAI's tokenizer, and the model is Gemini, so the number is close
+to what the provider bills and not the same. Measured on 12 October 2026 through
+the gateway on five stored sections, the provider counted between 8.2% fewer
+tokens (Arabic verses with their translation) and 13.6% more (a lesson full of
+formulas) than the budget's count, and within 6% for German, English and
+Indonesian prose. A message adds no tokens around its content, and a tool call
+with its result costs what the budget counts for them. The model accepts
+far more, 1,048,576 input tokens. Nina stays below because every call bills
+every token it carries, a larger call takes longer to start, and the provider
+keeps a cached prefix for only about five minutes. Three things lie outside the
+number: the learner's own message and files, which admission checks, a question
+focus, which has no budget, and the words of the newest earlier turn. That turn
+is kept whatever it costs and only its tool results are shortened, never the
+words of the learner or of Nina, so one very long message or answer in it takes
+the history above its part.
+
+The size of the history starts a fold of the conversation summary. After a
+completed turn, the follow-up action counts the complete turns the summary does
+not cover in model tokens, as the history would send them. A chat whose turns
+fit in the 32,000 token history budget, and that holds at most 64 of them, is
+never folded. The count is a second, much wider bound: a turn also costs
+documents to read before the call, which no token counts, so very short turns
+would otherwise let the history grow to thousands of messages. Past 64 turns one fold covers the oldest 16, and the
+next waits for 16 new ones. When the turns cost more than the budget, one fold
+summarizes the oldest of them with a fast
+model, as many as it takes for the rest to cost at most 16,000 tokens, half the
+budget, so the next fold waits for about half a budget of new turns and the
+cached prefix holds in between. The newest complete turn is never folded, a
+fold covers at most 16 turns, and a longer backlog advances one bounded batch
+per completed turn. When the count reached the oldest of the turns, the fold
+summarizes from the messages it read. Otherwise it reads back from its last
+folded turn alone. The fold leaves out what the history would: a cancelled or
+failed turn, and an answer that a later retry replaced.
+
+Between two folds the history only grows at its end, with two exceptions, and
+each changes the cached prefix. A retry takes the asking it replaces out of the
+history, wherever that asking is. And a call whose turns outgrew the budget
+before a fold covered them drops its oldest turns from that call's input until
+the rest fits. That happens while a fold is still running, after one failed, and
+while a backlog longer than one fold, such as a chat from before summaries, is
+folded one batch per turn.
+
+Turns are read newest first, 16 at a time, and the read stops after the page
+that brings them past the history budget. A replaced asking never reaches the
+model, so it does not count toward that budget. The read also stops once it
+holds 64 turns, and once it has passed 32 askings it keeps nothing of, so a
+learner who retries one
+question again and again cannot make every turn read the whole chat. The turns
+behind such a run are in neither the history nor the summary, and the next fold
+takes them first. Counting costs a read: a completed turn reads the turns after
+the summary, as the next generation will, which is about a history budget of
+messages and at most 32 replaced askings. A stored total would avoid that read,
+at the price of a field on every turn that must stay right through retries,
+failures and folds, and Nina has none.
+
+The summary, at most 2,000 tokens, stays in the language of the conversation,
+adds no fact the turns did not state, sits in the system prompt context and is
+deleted with its chat. Its
 refreshes are chat upkeep that run after a turn settles. Each refresh records
 its model call in the ledger of that turn as the `summary` agent, like the title
 and the suggestions, and the summary row keeps no total of its own. The learner
@@ -125,6 +178,35 @@ Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000
 selected characters per source. Excess requests receive an explicit limit;
 sources are never silently omitted.
+
+The research model writes the search queries and reads the results, so code
+only trims, deduplicates, and bounds the queries and never filters a result by
+its words. The tool input tells the model the 500 characters that the search
+provider accepts for a query, so no query is cut. No letter case, word shape,
+or word length decides what a learner meant, because a rule built on one
+treats a task in Japanese, Arabic, or Thai differently from the same task in
+English.
+
+A page longer than its budget keeps the paragraphs that hold the most of the
+words of the tool call: the text of its request, its objective, and each item of
+its lists, one per line with no heading. The words are not taken from the
+Markdown task that the research model reads, so a heading that the task writes
+never scores a paragraph, and a line of the request that starts with `#`, such
+as a pasted heading or a hashtag, is looked for like any other. The platform's
+`Intl.Segmenter` finds the words of every script, also of those written without
+spaces. A word counts once for a paragraph, however often the paragraph repeats
+it, and it weighs less the more paragraphs of the page hold it, so the words
+that fill every paragraph, such as particles and prepositions, weigh little
+without any list of words to skip. A word matches only as a whole word: an
+inflected form of a word of the tool call, such as `cats` for `cat`, does not
+match it, because no stemmer covers every language and a wrong stem is worse
+than a miss.
+
+A cut ends where `Intl.Segmenter` ends a sentence: after a full stop, a
+question mark, an exclamation mark, a Japanese `。`, or a line break. A script
+that marks no sentence end, such as Thai, which separates its sentences with a
+space, is one sentence to the segmenter, so a cut in it falls back to the end
+of a paragraph, a line, or a word.
 
 Convex deployments own `FIRECRAWL_API_KEY`, `MATH_CAS_API_KEY`, and
 `NEXT_PUBLIC_CAS_URL`. The CAS key must match the
@@ -233,7 +315,9 @@ name, and a key with no type means production. So with a key set nothing could
 say where the gate would run. The CLI also loads `.env` and `.env.local` into
 the settings that are not set, so the command starts it with the deployment the
 check read and with the key and the token blank, and a file cannot send a
-command to a deployment that the check did not see.
+command to a deployment that the check did not see. The check and the start of
+the CLI live in `scripts/development/cli.ts`, and the model test of knowledge
+search (ADR 0023) runs behind the same check.
 
 The command signs in a synthetic learner with the rows the acceptance runtime
 creates. A sign-in that fails part way removes the rows it wrote. The command

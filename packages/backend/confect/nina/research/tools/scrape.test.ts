@@ -1,8 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import type {
-  CapabilityArtifact,
-  CapabilityProgress,
-} from "@repo/backend/confect/nina/capability/progress";
 import {
   formatScrapeOutput,
   isSuccessfulScrapeOutput,
@@ -10,7 +6,8 @@ import {
   scrapeUrl,
 } from "@repo/backend/confect/nina/research/tools/scrape";
 import { withTimeLeft } from "@repo/backend/test/nina/deadline";
-import { Array as Arr, Effect, Fiber, MutableRef, Option } from "effect";
+import { createProgress } from "@repo/backend/test/nina/progress";
+import { Array as Arr, Effect, Fiber, Option } from "effect";
 import { TestClock } from "effect/testing";
 
 const firecrawlApp = vi.hoisted(() => ({
@@ -32,20 +29,6 @@ vi.mock("node:dns/promises", () => ({
 vi.mock("@repo/backend/confect/nina/research/selection", () => ({
   selectRelevantContent,
 }));
-
-type WrittenPart = CapabilityArtifact;
-
-/** Creates a stream publish harness that records scrape data parts for assertions. */
-function createProgress() {
-  const written = MutableRef.make<readonly WrittenPart[]>([]);
-  const publish: CapabilityProgress = Effect.fn("test.publish")((part) =>
-    Effect.sync(() => {
-      MutableRef.update(written, Arr.append(part));
-    })
-  );
-
-  return { parts: () => MutableRef.get(written), publish };
-}
 
 /**
  * One fetch for the whole file: the tool provides its own HTTP client, so the

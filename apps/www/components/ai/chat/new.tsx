@@ -1,24 +1,12 @@
 "use client";
 
-import { Response } from "@repo/design-system/components/ai/response";
-import { Message } from "@repo/design-system/components/ui/message";
 import { Particles } from "@repo/design-system/components/ui/particles";
-import {
-  MessageScroller,
-  MessageScrollerContent,
-  MessageScrollerItem,
-  MessageScrollerViewport,
-} from "@repo/design-system/components/ui/scroller";
-import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { useChatAdmission } from "@/components/ai/chat/admission";
 import { ChatHeader } from "@/components/ai/chat/header";
+import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
 import { NinaInput } from "@/components/ai/input";
-import { NinaPrompt } from "@/components/ai/message/prompt";
 
 /** Moves directly from the welcome screen into the final conversation layout. */
 export function ChatNew({
@@ -29,8 +17,7 @@ export function ChatNew({
   title: ReactNode;
 }) {
   const router = useRouter();
-  const t = useTranslations("Ai");
-  const { prompt, promptId, submit, disabled } = useChatAdmission({
+  const { disabled, prompt, submit } = useStartChat({
     onComplete: (chatId) => router.push(`/chat/${chatId}`),
   });
 
@@ -52,26 +39,7 @@ export function ChatNew({
         </>
       )}
       {prompt ? (
-        <Primitive.Provider autoScroll defaultScrollPosition="last-anchor">
-          <MessageScroller className="flex-1">
-            <MessageScrollerViewport aria-label={t("messages")}>
-              <MessageScrollerContent className="mx-auto w-full max-w-3xl p-6">
-                <MessageScrollerItem messageId={promptId} scrollAnchor>
-                  <Message align="end">
-                    <NinaPrompt files={prompt.files}>
-                      <Response id={promptId}>{prompt.text}</Response>
-                    </NinaPrompt>
-                  </Message>
-                </MessageScrollerItem>
-                <MessageScrollerItem messageId="pending">
-                  <Message>
-                    <TypingLoader />
-                  </Message>
-                </MessageScrollerItem>
-              </MessageScrollerContent>
-            </MessageScrollerViewport>
-          </MessageScroller>
-        </Primitive.Provider>
+        <StartPrompt className="mx-auto w-full max-w-3xl p-6" prompt={prompt} />
       ) : (
         <div className="relative mx-auto w-full max-w-xl px-6">{title}</div>
       )}

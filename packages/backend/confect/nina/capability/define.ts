@@ -4,6 +4,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type {
   ActionCtx,
   QueryRunner,
+  VectorSearch,
 } from "@repo/backend/confect/_generated/services";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import type { Gateway } from "@repo/backend/confect/gateway/handle";
@@ -53,7 +54,7 @@ export class CapabilityTurn extends Context.Service<
 >()("@repo/backend/confect/nina/capability/define/CapabilityTurn") {}
 
 /** The services that a capability's run may use. */
-type RunServices = ActionCtx | Gateway | QueryRunner;
+type RunServices = ActionCtx | Gateway | QueryRunner | VectorSearch;
 
 /** The services a tool runs in: those of its run, the turn, and the chat step that holds it. */
 type ToolServices = RunServices | CapabilityTurn | ChatStep;

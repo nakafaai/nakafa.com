@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import {
-  judge,
-  noteText,
-  probabilities,
-} from "@repo/backend/confect/nina/judgment/ask";
+import { judge, probabilities } from "@repo/backend/confect/nina/judgment/ask";
 import { judgments } from "@repo/backend/confect/nina/judgment/catalog";
-import { decides, GatewayTest, provider } from "@repo/backend/test/gateway";
+import { noteText } from "@repo/backend/confect/nina/judgment/note";
+import {
+  askedOf,
+  decides,
+  GatewayTest,
+  provider,
+} from "@repo/backend/test/gateway";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { Experimental_DecisionMockModelV4 as DecisionMockModel } from "ai/test";
@@ -31,17 +33,17 @@ describe("judgment", () => {
         const { requests } = decides((judgment) =>
           judgment === "lasting" ? SURE : UNLIKELY
         );
-        const verdicts = yield* judge(["lasting", "private"], [text]);
-        expect(verdicts).toEqual([{ lasting: true, private: false }]);
+        const verdicts = yield* judge(["lasting", "private"], text);
+        expect(verdicts).toEqual({ lasting: true, private: false });
         const [request, ...others] = requests();
         expect(others).toEqual([]);
         expect(request?.state).toEqual([{ text, type: "text" }]);
         expect(request?.questions).toEqual({
-          "lasting.0": {
+          lasting: {
             instructions: judgments.lasting.instructions,
             type: "boolean",
           },
-          "private.0": {
+          private: {
             instructions: judgments.private.instructions,
             type: "boolean",
           },
@@ -49,89 +51,43 @@ describe("judgment", () => {
       }).pipe(Effect.provide(GatewayTest))
   );
 
-  it.effect.each(Rec.keys(judgments))(
-    "counts %s as yes from the probability its entry names, that probability included",
-    (name) =>
-      Effect.gen(function* () {
-        const { threshold } = judgments[name];
-        decides(() => threshold);
-        const [at] = yield* judge([name], [text]);
-        decides(() => threshold - 0.01);
-        const [below] = yield* judge([name], [text]);
-        expect(at).toEqual({ [name]: true });
-        expect(below).toEqual({ [name]: false });
-      }).pipe(Effect.provide(GatewayTest))
-  );
-
   it.effect(
-    "asks about several texts in one request, numbers them, and gives each its own verdict in the order given",
+    "counts each judgment as yes from the probability of its own entry, that probability included, when all of them are asked together",
     () =>
       Effect.gen(function* () {
-        const { requests } = decides((_, index) =>
-          index === 1 ? UNLIKELY : SURE
+        const thresholds: Record<string, number> = Rec.map(
+          judgments,
+          ({ threshold }) => threshold
         );
-        const verdicts = yield* judge(
-          ["private"],
-          ["nama@contoh.com", "Kelas 12 IPA.", "0812 3456 7890"]
-        );
-        expect(verdicts).toEqual([
-          { private: true },
-          { private: false },
-          { private: true },
-        ]);
-        const [request, ...others] = requests();
-        expect(others).toEqual([]);
-        expect(request?.state).toEqual([
-          { text: "Text 1:\nnama@contoh.com", type: "text" },
-          { text: "Text 2:\nKelas 12 IPA.", type: "text" },
-          { text: "Text 3:\n0812 3456 7890", type: "text" },
-        ]);
-        expect(request?.questions).toEqual({
-          "private.0": {
-            instructions: `About text 1 only: ${judgments.private.instructions}`,
-            type: "boolean",
-          },
-          "private.1": {
-            instructions: `About text 2 only: ${judgments.private.instructions}`,
-            type: "boolean",
-          },
-          "private.2": {
-            instructions: `About text 3 only: ${judgments.private.instructions}`,
-            type: "boolean",
-          },
+        const names = ["lasting", "ownNote", "private"] as const;
+        decides((judgment) => thresholds[judgment]);
+        const at = yield* judge(names, text);
+        decides((judgment) => thresholds[judgment] - 0.01);
+        const below = yield* judge(names, text);
+        expect(at).toEqual({ lasting: true, ownNote: true, private: true });
+        expect(below).toEqual({
+          lasting: false,
+          ownNote: false,
+          private: false,
         });
       }).pipe(Effect.provide(GatewayTest))
   );
 
   it.effect(
-    "asks the judgments of a note about its sentence and its quote in one form, and gives each its own verdict",
+    "asks the judgments of a note about the note in one request, and gives each its own verdict",
     () =>
       Effect.gen(function* () {
         const { requests } = decides((judgment) =>
           judgment === "ownNote" ? SURE : UNLIKELY
         );
-        const note = { quote: "aku kelas 12", text: "Kelas 12." };
-        expect(noteText(note)).toBe("Note: Kelas 12.\nQuote: aku kelas 12");
-        const verdicts = yield* judge(["ownNote", "private"], [noteText(note)]);
-        expect(verdicts).toEqual([{ ownNote: true, private: false }]);
+        const note = noteText({ quote: "aku kelas 12", text: "Kelas 12." });
+        const verdicts = yield* judge(["ownNote", "private"], note);
+        expect(verdicts).toEqual({ ownNote: true, private: false });
         const [request, ...others] = requests();
         expect(others).toEqual([]);
-        expect(request?.state).toEqual([
-          { text: "Note: Kelas 12.\nQuote: aku kelas 12", type: "text" },
-        ]);
-        expect(Rec.keys(request?.questions ?? {})).toEqual([
-          "ownNote.0",
-          "private.0",
-        ]);
+        expect(request?.state).toEqual([{ text: note, type: "text" }]);
+        expect(request && askedOf(request)).toEqual(["ownNote", "private"]);
       }).pipe(Effect.provide(GatewayTest))
-  );
-
-  it.effect("asks no request about no text", () =>
-    Effect.gen(function* () {
-      expect(yield* judge(["lasting", "private"], [])).toEqual([]);
-      expect(yield* probabilities(["lasting"], [])).toEqual([]);
-      expect(provider.decisionModel).not.toHaveBeenCalled();
-    }).pipe(Effect.provide(GatewayTest))
   );
 
   it.effect(
@@ -139,8 +95,8 @@ describe("judgment", () => {
     () =>
       Effect.gen(function* () {
         const { requests } = decides(() => SURE);
-        const verdicts = yield* judge(["lasting"], [japanese]);
-        expect(verdicts).toEqual([{ lasting: true }]);
+        const verdicts = yield* judge(["lasting"], japanese);
+        expect(verdicts).toEqual({ lasting: true });
         expect(Arr.map(requests(), (request) => request.state)).toEqual([
           [{ text: japanese, type: "text" }],
         ]);
@@ -150,7 +106,7 @@ describe("judgment", () => {
   it.effect("cuts a text to what the model reads", () =>
     Effect.gen(function* () {
       const { requests } = decides(() => UNLIKELY);
-      yield* judge(["lasting"], [long]);
+      yield* judge(["lasting"], long);
       const [request] = requests();
       const [part] = request?.state ?? [];
       expect(part).toMatchObject({ type: "text" });
@@ -160,20 +116,14 @@ describe("judgment", () => {
     }).pipe(Effect.provide(GatewayTest))
   );
 
-  it.effect(
-    "gives the probability of each judgment for each text, in the order of the texts",
-    () =>
-      Effect.gen(function* () {
-        decides((judgment, index) =>
-          judgment === "lasting" ? 0.9 - index / 10 : 0.1 + index / 10
-        );
-        expect(
-          yield* probabilities(["lasting", "private"], [text, text])
-        ).toEqual([
-          { lasting: 0.9, private: 0.1 },
-          { lasting: 0.8, private: 0.2 },
-        ]);
-      }).pipe(Effect.provide(GatewayTest))
+  it.effect("gives the probability of each judgment for the text", () =>
+    Effect.gen(function* () {
+      decides((judgment) => (judgment === "lasting" ? 0.9 : 0.1));
+      expect(yield* probabilities(["lasting", "private"], text)).toEqual({
+        lasting: 0.9,
+        private: 0.1,
+      });
+    }).pipe(Effect.provide(GatewayTest))
   );
 
   it.effect(
@@ -194,7 +144,7 @@ describe("judgment", () => {
               ),
           })
         );
-        const failure = yield* Effect.flip(judge(["lasting"], [text]));
+        const failure = yield* Effect.flip(judge(["lasting"], text));
         expect(failure).toMatchObject({
           _tag: "GatewayFailure",
           reason: "unavailable",

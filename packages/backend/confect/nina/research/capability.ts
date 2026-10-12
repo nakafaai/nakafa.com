@@ -4,6 +4,7 @@ import {
 } from "@repo/backend/confect/nina/capability/define";
 import {
   formatSpecialistToolTask,
+  getSpecialistToolWords,
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
 import { ALLOWED, denied } from "@repo/backend/confect/nina/policy/capability";
@@ -61,6 +62,7 @@ export const researchCapability = defineCapability({
       context,
       locale,
       task: formatSpecialistToolTask(input),
+      words: getSpecialistToolWords(input),
       sourceReferences: getSourceReferencesFromMessages(messages),
       toolCallId,
       publish,

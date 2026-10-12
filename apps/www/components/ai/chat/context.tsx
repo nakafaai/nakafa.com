@@ -1,336 +1,224 @@
 "use client";
 
-import { Ref } from "@confect/core";
-import {
-  type OptimisticUpdate,
-  QueryResult,
-  useMutation,
-  useQuery,
-} from "@confect/react";
-import { type UIMessagesQuery, useUIMessages } from "@convex-dev/agent/react";
-import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import type { ChatView } from "@repo/backend/confect/chats/view";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  FunctionArgs,
-  FunctionReference,
-  FunctionReturnType,
-} from "convex/server";
-import { Array as Arr, DateTime, Effect, Option, Result } from "effect";
+import { DateTime, Effect, Fiber } from "effect";
 import {
   createContext,
   type PropsWithChildren,
   use,
-  useEffect,
   useLayoutEffect,
   useOptimistic,
   useRef,
   useState,
   useTransition,
 } from "react";
+import { useStore } from "zustand";
+import { readChatAccess } from "@/components/ai/chat/access";
+import { isChatBusy } from "@/components/ai/chat/busy";
+import { optimisticCancel } from "@/components/ai/chat/cancel";
+import { draftMessage } from "@/components/ai/chat/messages";
+import {
+  type ChatStoreApi,
+  ChatStoreContext,
+  createChatStore,
+} from "@/components/ai/chat/store.client";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 import { useConvexAuth } from "@/components/providers/convex";
 import { useViewer } from "@/lib/identity/client";
 
-// Agent owns delta decoding, reconnection and pagination. Confect registers
-// and authorizes the query; the streaming hook uses the SDK reference boundary.
-type MessageFeed = UIMessagesQuery<
-  Pick<Ref.Args<typeof nina.messages.list>, "chatId">,
-  NinaMessage
->;
-type MessagesQuery = FunctionReference<
-  "query",
-  "public",
-  FunctionArgs<MessageFeed>,
-  FunctionReturnType<MessageFeed> &
-    Required<Pick<FunctionReturnType<MessageFeed>, "streams">>
->;
-const messagesQuery: MessagesQuery = Ref.getFunctionReference(
-  nina.messages.list
-);
-// Declared outside the provider: a type query naming `cancel` inside it
-// stops the React Compiler from memoizing the provider's `cancel` action.
-type CancelError = Ref.Error<typeof nina.lifecycle.cancel>;
-
 const ChatContext = createContext<ChatContextValue | null>(null);
-const ChatMessagesContext = createContext<ChatMessagesValue | null>(null);
 
-const optimisticCancel: OptimisticUpdate<typeof nina.lifecycle.cancel> = (
-  store,
-  args
-) => {
-  const current = store.getQuery(nina.conversation.get, args);
-  if (Option.isNone(current) || !current.value.turn) {
-    return;
-  }
-  const turn = current.value.turn;
-  if (turn.state.status !== "running" && turn.state.status !== "queued") {
-    return;
-  }
-  store.setQuery(
-    nina.conversation.get,
-    args,
-    Option.some({
-      ...current.value,
-      turn: {
-        ...turn,
-        state: {
-          status: "cancelled",
-          finishedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
-        },
-      },
-    })
-  );
-};
-
-/** Keeps admitted and optimistic prompts stable until the Agent feed catches up. */
-function useMessages(
-  chatId: Id<"chats">,
-  chat: ChatView | undefined,
-  pagination: ReturnType<typeof useUIMessages<MessagesQuery>>
-) {
-  const openingChat = useAi((state) => state.openingChat);
-  const setOpeningChat = useAi((state) => state.setOpeningChat);
-  const [draft, showDraft] = useOptimistic<{
-    prompt: NinaDraft;
-    order: number;
-    createdAt: number;
-  } | null>(null);
-  const isLoading = !chat || pagination.status === "LoadingFirstPage";
-  const opening = openingChat?.receipt.chatId === chatId ? openingChat : null;
-  useEffect(() => {
-    if (opening && !isLoading) {
-      setOpeningChat(null);
-    }
-  }, [opening, isLoading, setOpeningChat]);
-
-  // Carry the committed first prompt across navigation until the Agent query
-  // arrives. It is scoped to this chat and never persisted in browser storage.
-  const committed: NinaMessage[] =
-    opening && isLoading
-      ? [
-          {
-            id: opening.receipt.promptMessageId,
-            key: `${opening.receipt.threadId}-${opening.receipt.order}-0`,
-            order: opening.receipt.order,
-            stepOrder: 0,
-            role: "user",
-            status: "success",
-            text: opening.prompt.text,
-            parts: [
-              { type: "text", text: opening.prompt.text },
-              ...Arr.map(opening.prompt.files, ({ filename, ...file }) => ({
-                ...file,
-                ...(filename === undefined ? {} : { filename }),
-                type: "file" as const,
-              })),
-            ],
-            _creationTime: opening.submittedAt,
-          },
-        ]
-      : pagination.results;
-  const messages: NinaMessage[] =
-    draft &&
-    !Arr.some(
-      committed,
-      (message) => message.role === "user" && message.order >= draft.order
-    )
-      ? [
-          ...committed,
-          {
-            id: `draft-${chatId}`,
-            key: `${chat?.threadId}-${draft.order}-0`,
-            order: draft.order,
-            stepOrder: 0,
-            role: "user",
-            status: "pending",
-            text: draft.prompt.text,
-            parts: [
-              { type: "text", text: draft.prompt.text },
-              ...Arr.map(draft.prompt.files ?? [], ({ file, url }) => ({
-                type: "file" as const,
-                url,
-                filename: file.name,
-                mediaType: file.type,
-              })),
-            ],
-            _creationTime: draft.createdAt,
-          },
-        ]
-      : committed;
-  return { messages, showDraft, opening, isLoading };
-}
-
-/** Combines authorized conversation facts with the official Agent stream. */
-function useConversation(chatId: Id<"chats">) {
+/**
+ * Reads the authorized facts of one conversation: its chat and latest turn.
+ * A chat its learner is deleting is not read: the server is about to delete
+ * it, and a read that finds it gone fails the page.
+ */
+function useConversation(chatId: Id<"chats">, leaving: boolean) {
   const authenticating = useConvexAuth((auth) => auth.isLoading);
   const result = useQuery(
     nina.conversation.get,
-    authenticating ? "skip" : { chatId }
-  );
-  const chat = QueryResult.isSuccess(result) ? result.value.chat : undefined;
-  const turn = QueryResult.isSuccess(result) ? result.value.turn : null;
-  const pagination = useUIMessages(
-    messagesQuery,
-    chat?.threadId ? { chatId, threadId: chat.threadId } : "skip",
-    { initialNumItems: NINA_MESSAGES_PAGE_SIZE, stream: true }
+    authenticating || leaving ? "skip" : { chatId }
   );
   if (QueryResult.isFailure(result)) {
     throw result.error;
   }
-  return { chat, turn, pagination };
+  return {
+    chat: QueryResult.isSuccess(result) ? result.value.chat : undefined,
+    turn: QueryResult.isSuccess(result) ? result.value.turn : null,
+  };
 }
 
-/** Owns one conversation's reactive state and actions for ChatProvider. */
-function useChatState(chatId: Id<"chats">) {
-  const { chat, turn, pagination } = useConversation(chatId);
-  const submission = useNinaSubmission();
+/**
+ * Owns one conversation's state and actions. It never reads the streamed
+ * messages, which only the transcript does, so it does not render while text
+ * streams. Each action is one function for the life of the provider and
+ * reads the latest render when it runs.
+ */
+function useChatState(chatId: Id<"chats">, store: ChatStoreApi) {
+  const leaving = useStore(store, (state) => state.leaving);
+  const { chat, turn } = useConversation(chatId, leaving);
+  const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
+  const [draft, showDraft] = useOptimistic<NinaMessage | null>(null);
   const setText = useAi((state) => state.setText);
-  const viewer = useViewer((state) => state.viewer);
-  const cancelTurn = useMutation(nina.lifecycle.cancel).withOptimisticUpdate(
-    optimisticCancel
+  const opening = useAi(
+    (state) => state.openingChat?.receipt.chatId === chatId
   );
-  const [cancelError, setCancelError] = useState<
-    CancelError | NinaConnectionError | null
-  >(null);
+  const viewerId = useViewer((state) => state.viewer?.id);
+  const cancelChat = useMutation(nina.lifecycle.cancel);
 
-  const { messages, showDraft, opening, isLoading } = useMessages(
-    chatId,
-    chat,
-    pagination
-  );
-  const lastMessage = Arr.last(messages);
-  const busy =
-    !cancelling &&
-    (isPending ||
-      (!!opening && isLoading) ||
-      (turn?.state.status !== "cancelled" &&
-        Option.exists(
-          lastMessage,
-          (message) => message.status === "pending"
-        )) ||
-      turn?.state.status === "queued" ||
-      turn?.state.status === "running");
-  // Actions read the transcript when they run, so they stay the same functions
-  // while tokens stream instead of re-rendering every control that holds one.
-  const latestMessages = useRef(messages);
-  const latestPagination = useRef(pagination);
-  useLayoutEffect(() => {
-    latestMessages.current = messages;
-    latestPagination.current = pagination;
+  const loading = !chat;
+  const busy = isChatBusy({
+    cancelling,
+    loading,
+    opening,
+    pending: isPending,
+    status: turn?.state.status,
+  });
+  const { canWrite, owner } = readChatAccess({
+    chatUserId: chat?.userId,
+    loading,
+    opening,
+    viewerId,
   });
 
-  function loadMore() {
-    latestPagination.current.loadMore(NINA_MESSAGES_PAGE_SIZE);
-  }
+  // The actions below read this when they run, so they never go stale.
+  const snapshot = {
+    busy,
+    cancelChat,
+    chat,
+    chatId,
+    isPending,
+    optimisticallyCancel,
+    setText,
+    showDraft,
+    startTransition,
+    submission,
+    turn,
+  };
+  const latest = useRef(snapshot);
+  useLayoutEffect(() => {
+    latest.current = snapshot;
+  });
 
-  function send(prompt: NinaDraft) {
-    if (busy || isLoading || isPending) {
-      return Promise.resolve(false);
-    }
-    setCancelError(null);
-    setText((previous) =>
-      previous.trim() === prompt.text.trim() ? "" : previous
-    );
-    const admission = submission.send(prompt, chatId);
-    startTransition(async () => {
-      showDraft({
-        prompt,
-        order:
-          1 +
-          Math.max(
-            -1,
-            ...Arr.map(latestMessages.current, (message) => message.order)
-          ),
-        createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
-      });
-      const receipt = await admission;
-      if (!receipt) {
-        setText((previous) => previous || prompt.text);
+  const [actions] = useState(() => ({
+    cancel() {
+      const now = latest.current;
+      if (now.isPending) {
+        return;
       }
-    });
-    return admission.then((receipt) => receipt !== undefined);
-  }
-
-  function cancel() {
-    if (isPending) {
-      return;
-    }
-    setCancelError(null);
-    startTransition(async () => {
-      optimisticallyCancel(true);
-      const cancelled = await Effect.runPromise(
+      const { setStopFailure } = store.getState();
+      setStopFailure(null);
+      const stoppedOrder = now.turn?.order;
+      const cancelTurn = now.cancelChat.withOptimisticUpdate(
+        optimisticCancel(DateTime.toEpochMillis(DateTime.nowUnsafe()))
+      );
+      // The stop starts before the transition, so Convex shows the cancelled
+      // turn at once: an update made inside a transition waits for its end.
+      const stopping = Effect.runPromise(
         Effect.tryPromise({
-          try: () => cancelTurn({ chatId }),
+          try: () => cancelTurn({ chatId: now.chatId }),
           catch: () =>
             new NinaConnectionError({
               code: "NINA_CONNECTION_FAILED",
               message: "Nina cancellation could not be confirmed.",
             }),
-        }).pipe(Effect.flatMap(Effect.fromResult), Effect.result)
+        }).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.matchEffect({
+            onFailure: (failure) =>
+              Effect.sync(() =>
+                setStopFailure({ failure, order: stoppedOrder })
+              ),
+            onSuccess: () => Effect.void,
+          })
+        )
       );
-      if (Result.isFailure(cancelled)) {
-        setCancelError(cancelled.failure);
+      now.startTransition(() => {
+        now.optimisticallyCancel(true);
+        return stopping;
+      });
+    },
+    /** Sends the same prompt again, or the latest one when no turn is named. */
+    retry(order?: number) {
+      const now = latest.current;
+      const target = order ?? now.turn?.order;
+      if (target === undefined || !now.chat || now.busy || now.isPending) {
+        return;
       }
-    });
-  }
+      // The retry starts before the transition, for the same reason as a stop.
+      const retrying = now.submission.retry(target, now.chatId);
+      now.startTransition(() =>
+        Effect.runPromise(Effect.asVoid(Effect.promise(() => retrying)))
+      );
+    },
+    /**
+     * Sends a prompt. The send starts at once and its one outcome has two
+     * readers: the transition that holds the optimistic prompt, and the
+     * composer, which keeps the learner's text and files until it knows the
+     * prompt was admitted. A prompt that was not admitted returns to the
+     * composer, unless the learner has typed something else since. The text
+     * is one draft for every chat, so a prompt that fails after the learner
+     * opened another chat returns to the composer open then, and its files
+     * stay with the composer they were added in.
+     */
+    send(prompt: NinaDraft) {
+      const now = latest.current;
+      const chat = now.chat;
+      if (!chat || now.busy || now.isPending) {
+        return false;
+      }
+      now.setText((previous) =>
+        previous.trim() === prompt.text.trim() ? "" : previous
+      );
+      const admission = Effect.runFork(
+        Effect.promise(() => now.submission.send(prompt, now.chatId)).pipe(
+          Effect.map((receipt) => receipt !== undefined),
+          Effect.tap((admitted) =>
+            admitted
+              ? Effect.void
+              : Effect.sync(() =>
+                  now.setText((previous) => previous || prompt.text)
+                )
+          )
+        )
+      );
+      now.startTransition(() => {
+        now.showDraft(
+          draftMessage({
+            chatId: now.chatId,
+            createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+            prompt,
+            threadId: chat.threadId,
+            turnOrder: now.turn?.order,
+          })
+        );
+        return Effect.runPromise(Effect.asVoid(Fiber.join(admission)));
+      });
+      return Effect.runPromise(Fiber.join(admission));
+    },
+  }));
 
-  function retry(order?: number) {
-    const prompt = Arr.findFirst(
-      Arr.reverse(latestMessages.current),
-      (message) =>
-        message.role === "user" &&
-        (order === undefined || message.order === order)
-    );
-    if (Option.isNone(prompt)) {
-      return;
-    }
-    if (busy || isLoading || isPending) {
-      return;
-    }
-    startTransition(async () => {
-      await submission.retry(prompt.value.order, chatId);
-    });
-  }
-
-  const value = {
-    canWrite: !!viewer && (chat ? chat.userId === viewer.id : opening !== null),
-    chat,
-    turn,
+  return {
     busy,
-    isLoading,
+    cancel: actions.cancel,
+    canWrite,
+    chat,
+    chatId,
+    draft,
+    isLoading: loading,
     isPending,
-    error: submission.error ?? cancelError,
-    /** Whether the assistant's reply to the current turn failed in the transcript. */
-    hasTurnFailure: Arr.some(
-      messages,
-      (message) =>
-        message.role === "assistant" &&
-        message.order === turn?.order &&
-        message.status === "failed"
-    ),
-    /** Whether the transcript already ends with the reply to the current turn. */
-    hasTurnResponse: Option.exists(
-      lastMessage,
-      (message) => message.role === "assistant" && message.order === turn?.order
-    ),
-    lastMessageId: Option.getOrUndefined(
-      Option.map(lastMessage, (message) => message.id)
-    ),
-    canLoadMore: pagination.status === "CanLoadMore",
-    loadMore,
-    send,
-    cancel,
-    retry,
+    owner,
+    retry: actions.retry,
+    send: actions.send,
+    turn,
   };
-  const feed = { messages };
-  return { feed, value };
 }
 
 /**
@@ -338,21 +226,40 @@ function useChatState(chatId: Id<"chats">) {
  * or fails, never with a streamed token, so the controls that read it stay
  * still while Nina writes.
  */
-type ChatContextValue = ReturnType<typeof useChatState>["value"];
+type ChatContextValue = ReturnType<typeof useChatState>;
 
-/** The transcript itself, which changes with every streamed token. */
-type ChatMessagesValue = ReturnType<typeof useChatState>["feed"];
-
-/** One reactive conversation shared by the route, sheet and message controls. */
+/**
+ * One reactive conversation shared by the route, sheet and message controls.
+ * Each chat gets its own state and its own subtree, so choosing another chat
+ * starts with none of the previous chat's error, stop, send or pending prompt,
+ * whichever surface renders the provider. The text the learner is typing is
+ * not part of it: that draft is one for every chat.
+ */
 export function ChatProvider({
   chatId,
   children,
 }: PropsWithChildren<{ chatId: Id<"chats"> }>) {
-  const { feed, value } = useChatState(chatId);
   return (
-    <ChatContext value={value}>
-      <ChatMessagesContext value={feed}>{children}</ChatMessagesContext>
-    </ChatContext>
+    <ChatConversation chatId={chatId} key={chatId}>
+      {children}
+    </ChatConversation>
+  );
+}
+
+/**
+ * The state of one chat, which lives and ends with its key: the context its
+ * readers use, and the store of what its own actions write.
+ */
+function ChatConversation({
+  chatId,
+  children,
+}: PropsWithChildren<{ chatId: Id<"chats"> }>) {
+  const [store] = useState(createChatStore);
+  const value = useChatState(chatId, store);
+  return (
+    <ChatStoreContext value={store}>
+      <ChatContext value={value}>{children}</ChatContext>
+    </ChatStoreContext>
   );
 }
 
@@ -363,13 +270,4 @@ export function useChat<T>(selector: (state: ChatContextValue) => T) {
     throw new Error("useChat must be used within ChatProvider");
   }
   return selector(value);
-}
-
-/** Selects one part of the streamed transcript; readers re-render per token. */
-export function useChatMessages<T>(selector: (feed: ChatMessagesValue) => T) {
-  const feed = use(ChatMessagesContext);
-  if (!feed) {
-    throw new Error("useChatMessages must be used within ChatProvider");
-  }
-  return selector(feed);
 }

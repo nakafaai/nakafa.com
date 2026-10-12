@@ -9,7 +9,7 @@ import {
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { useTimeout } from "@mantine/hooks";
+import { MAX_TITLE_LENGTH } from "@repo/backend/client/nina/presentation";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -35,18 +35,18 @@ import {
   Activity,
   type PropsWithChildren,
   type ReactNode,
+  useEffect,
   useRef,
   useState,
-  useTransition,
 } from "react";
 import { toast } from "sonner";
+import { useChange } from "@/components/ai/chat/change.client";
 import { useChat } from "@/components/ai/chat/context";
 import { ChatDeletion } from "@/components/ai/chat/deletion";
 import { useUpdateChatTitleMutation } from "@/components/ai/chat/mutation.client";
 import { ChatSharing } from "@/components/ai/chat/sharing";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { reportClientException } from "@/lib/analytics/client";
-import { useViewer } from "@/lib/identity/client";
 
 /** Render the current chat header or its stable empty placeholder. */
 export function AiChatHeader() {
@@ -67,20 +67,23 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const [isEditing, setIsEditing] = useState(false);
   const [chatTitle, setChatTitle] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const user = useViewer((s) => s.account);
-  const isOwner = user?.appUser._id === chat.userId;
+  const isOwner = useChat((state) => state.owner);
   const updateChatTitle = useUpdateChatTitleMutation();
-  const [isPending, startTransition] = useTransition();
+  const { change, isPending } = useChange();
 
-  const { start: focusTitleInput } = useTimeout(() => {
-    inputRef.current?.focus();
-  }, 0);
+  // The box takes the focus when it opens, and again when a refused rename
+  // brings it back, as soon as it can take input: it stays disabled while the
+  // rename is pending.
+  useEffect(() => {
+    if (isEditing && !isPending) {
+      inputRef.current?.focus();
+    }
+  }, [isEditing, isPending]);
 
   /** Enter title editing with the current title selected for input. */
   const handleEdit = () => {
     setChatTitle(chat.title ?? "");
     setIsEditing(true);
-    focusTitleInput();
   };
 
   /** Persist a non-empty edited chat title. */
@@ -90,7 +93,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
       return;
     }
     setIsEditing(false);
-    startTransition(async () =>
+    change(() =>
       Effect.runPromise(
         Effect.tryPromise(() =>
           updateChatTitle({
@@ -107,6 +110,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
+                    // The box comes back with the words the learner wrote.
                     setIsEditing(true);
                     toast.error(actionErrorMessage);
                   })
@@ -202,6 +206,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
           <Input
             className="h-8 border-none px-2 py-0 shadow-none focus-visible:ring-0"
             disabled={isPending}
+            maxLength={MAX_TITLE_LENGTH}
             onChange={(e) => setChatTitle(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {

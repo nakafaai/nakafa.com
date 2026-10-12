@@ -10,7 +10,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
 import { useTranslations } from "next-intl";
+import { readStopFailure } from "@/components/ai/chat/cancel";
 import { useChat } from "@/components/ai/chat/context";
+import { useChatStore } from "@/components/ai/chat/store.client";
 import {
   ninaFailureFeedback,
   ninaResponseFeedback,
@@ -34,17 +36,21 @@ export function AiChatPersistedError() {
   );
 }
 
-/** Admission failures and failed turns without an Agent assistant message. */
-export function AiChatError() {
+/**
+ * Admission failures and failed turns without an Agent assistant message.
+ * The transcript says whether the failed turn already shows its own error.
+ */
+export function AiChatError({ failed }: { failed: boolean }) {
   const t = useTranslations("Ai");
   const authNavigation = useCurrentAuthNavigation();
-  const error = useChat((state) => state.error);
+  const submissionFailure = useChatStore((state) => state.submissionFailure);
+  const stopFailure = useChatStore((state) => state.stopFailure);
   const turn = useChat((state) => state.turn);
-  const hasTurnFailure = useChat((state) => state.hasTurnFailure);
+  const error = submissionFailure ?? readStopFailure(stopFailure, turn);
   const retry = useChat((state) => state.retry);
   const canWrite = useChat((state) => state.canWrite);
   const busy = useChat((state) => state.busy);
-  if (!error && (turn?.state.status !== "failed" || hasTurnFailure)) {
+  if (!error && (turn?.state.status !== "failed" || failed)) {
     return null;
   }
   const feedback = error
@@ -60,7 +66,7 @@ export function AiChatError() {
         <HugeIcons icon={Alert02Icon} />
         <AlertDescription>
           <p>{t(`failures.${feedback.message}`)}</p>
-          {!error && canWrite && feedback.action === "retry" ? (
+          {canWrite && feedback.action === "retry" ? (
             <Button
               disabled={busy}
               onClick={() => retry()}

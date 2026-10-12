@@ -7,7 +7,7 @@ import { Schema } from "effect";
  * describing the learner from the outside, and `private`, whether the sentence
  * with its quote holds something private. `text` is the sentence and `quote`
  * the learner's words it rests on, which the decision model reads as they are
- * (`noteText` of `judgment/ask`). `languages` holds the ISO 639 code of the
+ * (`noteText` of `judgment/note`). `languages` holds the ISO 639 code of the
  * language of the quote, or two codes joined by `+` when the note mixes two.
  * `script` is the ISO 15924 code of its script. `form` describes a note that is
  * private or not the learner's own, without quoting it: the kind of private

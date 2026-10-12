@@ -3,7 +3,8 @@ import { saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { provider } from "@repo/backend/test/gateway";
+import { noteText } from "@repo/backend/confect/nina/judgment/note";
+import { askedOf, provider, textOf } from "@repo/backend/test/gateway";
 import {
   answers,
   answersAfter,
@@ -15,7 +16,13 @@ import {
 } from "@repo/backend/test/nina/capture";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Experimental_DecisionMockModelV4 as DecisionMockModel } from "ai/test";
-import { Array as Arr, MutableRef, Record as Rec, String as Str } from "effect";
+import {
+  Array as Arr,
+  MutableRef,
+  Order,
+  Record as Rec,
+  String as Str,
+} from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -349,18 +356,15 @@ describe("memory capture", () => {
 
   it("saves nothing the learner's words do not support, or in which the decision model finds something private, but still counts the call", async () => {
     const f = await createCapturingTest();
-    answers(
-      { ...level, quote: "Aku kelas 11" },
-      { ...level, text: "Kontak: nama@contoh.com" },
-      {
-        kind: "situation",
-        quote: "kelas 12",
-        text: "Ujian yang sudah lewat.",
-        until: "2026-10-09",
-      }
-    );
+    const contact = { ...level, text: "Kontak: nama@contoh.com" };
+    answers({ ...level, quote: "Aku kelas 11" }, contact, {
+      kind: "situation",
+      quote: "kelas 12",
+      text: "Ujian yang sudah lewat.",
+      until: "2026-10-09",
+    });
     // Only the second candidate passes the structure checks, so it is the one the decision model judges.
-    judges({ privates: [true] });
+    judges({ privates: [contact] });
     await f.capture();
     expect(await f.stored()).toEqual([]);
     expect((await f.turn())?.remembered).toBeUndefined();
@@ -370,42 +374,37 @@ describe("memory capture", () => {
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
-  it("drops a candidate in which the decision model finds something private and keeps the clean one beside it, from one decision request", async () => {
+  it("drops a candidate in which the decision model finds something private and keeps the clean one beside it, with a decision request for each candidate", async () => {
     const f = await createCapturingTest(
       "Aku kelas 12 dan nomor teleponku 0812 3456 7890."
     );
-    answers(level, {
+    const phone = {
       kind: "goal",
       quote: "nomor teleponku 0812 3456 7890",
       text: "Nomor telepon 0812 3456 7890.",
-    });
-    const { requests } = judges({ privates: [false, true] });
+    } as const;
+    answers(level, phone);
+    const { requests } = judges({ privates: [phone] });
     await f.capture();
     expect(await f.texts()).toEqual(["Kelas 12."]);
     expect((await f.turn())?.remembered).toBe(1);
-    // One request judged the message, one judged both candidates together, each as its sentence and its quote.
-    expect(Arr.map(requests(), (request) => request.state)).toEqual([
-      [
-        {
-          text: "Aku kelas 12 dan nomor teleponku 0812 3456 7890.",
-          type: "text",
-        },
-      ],
-      [
-        { text: "Text 1:\nNote: Kelas 12.\nQuote: Aku kelas 12", type: "text" },
-        {
-          text: "Text 2:\nNote: Nomor telepon 0812 3456 7890.\nQuote: nomor teleponku 0812 3456 7890",
-          type: "text",
-        },
-      ],
+    // One request judged the message. Then each candidate had a request of
+    // its own, as its sentence and its quote, which run at the same time.
+    const [message, ...candidates] = requests();
+    expect(message?.state).toEqual([
+      {
+        text: "Aku kelas 12 dan nomor teleponku 0812 3456 7890.",
+        type: "text",
+      },
     ]);
-    // Both judgments of both candidates were asked in that one request.
-    expect(
-      Arr.map(requests(), (request) => Rec.keys(request.questions))
-    ).toEqual([
-      ["lasting.0"],
-      ["ownNote.0", "ownNote.1", "private.0", "private.1"],
-    ]);
+    expect(message && askedOf(message)).toEqual(["lasting"]);
+    expect(Arr.sort(Arr.map(candidates, textOf), Order.String)).toEqual(
+      Arr.sort([noteText(level), noteText(phone)], Order.String)
+    );
+    // Both judgments of a candidate were asked in its one request.
+    for (const candidate of candidates) {
+      expect(askedOf(candidate)).toEqual(["ownNote", "private"]);
+    }
     expect(MutableRef.get(f.logged)).toEqual([]);
   });
 
@@ -413,15 +412,17 @@ describe("memory capture", () => {
     const f = await createCapturingTest(
       "高校三年生で、確率が苦手です。来年は東京大学を目指しています。"
     );
-    answers(
-      {
-        kind: "level",
-        quote: "高校三年生",
-        text: "学習者は高校三年生です。",
-      },
-      { kind: "struggle", quote: "確率が苦手です", text: "確率が苦手です。" }
-    );
-    judges({ notOwn: [true, false] });
+    const outside = {
+      kind: "level",
+      quote: "高校三年生",
+      text: "学習者は高校三年生です。",
+    } as const;
+    answers(outside, {
+      kind: "struggle",
+      quote: "確率が苦手です",
+      text: "確率が苦手です。",
+    });
+    judges({ notOwn: [outside] });
     await f.capture();
     expect(await f.texts()).toEqual(["確率が苦手です。"]);
     expect((await f.turn())?.remembered).toBe(1);
@@ -444,13 +445,23 @@ describe("memory capture wording", () => {
       "Aku kelas 12 IPA dan lebih suka belajar dengan contoh soal dulu sebelum rumus."
     );
     const quote = "aku kelas 12 ipa";
-    answers(
-      { kind: "level", quote, text: "Learner berada di kelas 12 IPA." },
-      { kind: "level", quote, text: "Siswa kelas 12 IPA." },
-      { kind: "level", quote, text: "Kelas 12 IPA." }
-    );
+    const learner = {
+      kind: "level",
+      quote,
+      text: "Learner berada di kelas 12 IPA.",
+    } as const;
+    const student = {
+      kind: "level",
+      quote,
+      text: "Siswa kelas 12 IPA.",
+    } as const;
+    answers(learner, student, {
+      kind: "level",
+      quote,
+      text: "Kelas 12 IPA.",
+    });
     // The verdicts are the model's alone: no word of a sentence decides them.
-    judges({ notOwn: [true, true, false] });
+    judges({ notOwn: [learner, student] });
     await f.capture();
     expect(await f.texts()).toEqual(["Kelas 12 IPA."]);
     expect(MutableRef.get(f.logged)).toEqual([]);

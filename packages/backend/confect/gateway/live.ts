@@ -27,6 +27,7 @@ export const GatewayLive = Layer.effect(
     make({
       decisionModel: (modelId, options) =>
         convexGateway.evaluationModel(modelId, options),
+      embeddingModel: convexGateway.embeddingModel,
       languageModel: convexGateway,
     })
   )

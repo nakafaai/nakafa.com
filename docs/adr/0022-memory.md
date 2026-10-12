@@ -97,19 +97,22 @@ the learner can read, edit and delete every one. After a complete turn:
 3. The check keeps a candidate only when its quote is in the message once
    lower-cased and with whitespace collapsed, its text has a letter or a digit,
    and a situation has an end day of today or later. It reads structure and
-   never meaning. The candidates that stay then go to the decision model, all of
-   them in one request, each as its note: the sentence followed by its quote
-   (`Note: ...`, `Quote: ...`). It judges each one twice. `ownNote` asks whether
-   the sentence reads as the learner's own note, written in the language of the
-   quote, stating the fact itself and not describing the learner from the
-   outside as a third person would. `private` asks whether the note holds
-   contact details, a home address, an identity or account number, a password,
-   or information about health, religion, ethnicity, political views or money.
-   A candidate that is not the learner's own note, or is private, is dropped,
-   and it is not rewritten, because a rewrite could say something the learner
-   did not. Memories saved before this rule keep their words until the learner
-   says them again, which replaces the words of a memory Nina wrote, or edits
-   them.
+   never meaning. The candidates that stay then go to the decision model, each
+   in a request of its own and all at the same time, each as its note: the
+   sentence followed by its quote (`Note: ...`, `Quote: ...`). A request asks
+   two questions about its note. `ownNote` asks whether the sentence reads as
+   the learner's own note, written in the language of the quote, stating the
+   fact itself and not describing the learner from the outside as a third
+   person would. `private` asks whether the note holds contact details, a home
+   address, an identity or account number, a password, or information about
+   health, religion, ethnicity, political views or money. A candidate that is
+   not the learner's own note, or is private, is dropped, and it is not
+   rewritten, because a rewrite could say something the learner did not. The
+   candidates that stay keep the order in which the capture model proposed
+   them, whichever request is answered first, because the write takes the first
+   of the candidates that settle one memory. Memories saved before this rule
+   keep their words until the learner says them again, which replaces the words
+   of a memory Nina wrote, or edits them.
 4. The write first checks what could have changed while the model read the
    message. Paused memory, a deleted turn, and a memory that the call read and
    that is gone now (the learner removed it, or it ended) each stop it. It looks
@@ -153,8 +156,9 @@ together once all have ended. A decision that cannot be made, because the
 gateway fails or the deadline passes, is such a failure: nothing is stored for
 that turn, the capture model is not asked when it was the first decision that
 failed, and the warning names the operation (`judge`), the gateway's reason,
-status and type, and never the message, a candidate or a quote. No pattern or
-list takes the place of the decision model.
+status and type, and never the message, a candidate or a quote. A request about
+one candidate that fails ends the requests about the others and keeps none of
+the candidates. No pattern or list takes the place of the decision model.
 
 Nina reads memory in three ways, described under Three Ways To Read Memory
 below. A memory is one line wherever a prompt carries it. Its whitespace is
@@ -448,12 +452,12 @@ Nina asks every question about a learner's words through one module,
 `confect/nina/judgment`. A judgment is an entry of data in its catalog: its
 name, the kind of its question (yes or no), the instructions the decision model
 reads, and the probability from which its answer counts as yes. The interface of
-the module is small: `judge(names, texts)` asks the judgments it names about
-each text, all of them in one request to the Convex AI gateway (ADR 0019), and
-answers with one record of verdicts for each text, true or false for each name.
-A caller never sees a probability, a threshold or a model, and adding a
-judgment is adding an entry. The instructions of an entry hold in any language
-and name no language, no word and no pattern. Three judgments exist:
+the module is small: `judge(names, text)` asks the judgments it names about one
+text, all of them in one request to the Convex AI gateway (ADR 0019), and
+answers with one record of verdicts, true or false for each name. A caller
+never sees a probability, a threshold or a model, and adding a judgment is
+adding an entry. The instructions of an entry hold in any language and name no
+language, no word and no pattern. Three judgments exist:
 
 - `lasting` decides whether the capture model runs for a message.
 - `ownNote` is asked of each candidate the capture model proposes, and a
@@ -465,17 +469,49 @@ and name no language, no word and no pattern. Three judgments exist:
 What is sent to the decision model is the least text that answers the question:
 the learner's message for `lasting`, and the sentence of each candidate with its
 quote for `ownNote` and `private`, written by one function (`noteText`) that
-production and the measuring command share. Each text is cut to 1,000 tokens.
-When a decision covers several texts, they go numbered and each question names
-its text. A name, an id and the conversation are never sent, and a decision
-asks for zero retention.
+production and the measuring command share. A request holds one text, cut to
+1,000 tokens. A capture with several candidates asks about each candidate in a
+request of its own, all at the same time. So a capture makes one request for the
+message and one for each candidate that passes the structure checks, at most
+four in all, and the requests about candidates are at most three open at once
+(`MEMORY_CAPTURE_LIMIT`). A name, an id and the conversation are never sent, and
+a decision asks for zero retention.
 
 When a decision cannot be made, nothing is stored for the turn and a warning
-logs the operation and the gateway's routing facts, never a text. There is no
-fallback to a pattern or a list.
+logs the operation and the gateway's routing facts, never a text. One request
+that fails fails all the candidates of the turn. There is no fallback to a
+pattern or a list.
 
-The thresholds are not taste. All start at 0.5, and they are set from a
-labelled set of two kinds of text, each measured the way production asks it.
+Plain code in the memory pipeline reads structure and identity only: that a
+quote is in the message, that a sentence has a letter or a digit, that a date is
+a date, and that two stored sentences are the same up to case, punctuation and
+spacing. It holds no list of words in any language and no comparison that
+decides what a learner meant.
+
+### One text to a request
+
+`ownNote` separates the notes better when the model reads one note than when it
+reads three, and a message was always asked alone. Measured on 12 October 2026
+on the dev deployment, with the 85 notes of the labelled set below, a request
+that held one note gave `ownNote` a balance of 0.942 at its best threshold, and
+a request that held three gave 0.878. Balance is the mean of the share of yes
+texts judged yes and the share of no texts judged no. A decision request cost
+$0.0000164 and took 140 to 310 ms (15 messages, same day), so asking alone costs
+more requests and no more time:
+
+| How a capture with three candidates asks | Requests | Cost | Time | `ownNote` balance at its best threshold |
+| --- | --- | --- | --- | --- |
+| All three in one request | 1 | $0.0000164 | one request | 0.878 |
+| Each in its own request, at the same time | 3 | $0.0000492 | one request, since they run together | 0.942 |
+
+Most turns propose no candidate or one, and then both ways are the same
+request. The three requests run together, so the capture waits for the slowest
+of them and not for the sum.
+
+### The labelled set
+
+The thresholds are not taste. They are set from a labelled set of two kinds of
+text, each measured the way production asks it, one text to a request.
 `test/judgment/message.ts` holds 124 whole messages for `lasting`, in 17
 languages and 8 scripts, among them Indonesian, Javanese, Sundanese, English,
 German, Arabic, Japanese, Chinese, Hindi and Spanish. About half state
@@ -488,26 +524,71 @@ the learner's own voice, sentences that describe the learner from the outside
 quote), and sentences that hold private data of a dozen forms, among them a
 phone number written with spaces, a street address, an illness, a religion and
 a salary. Each carries its expected labels.
-`pnpm --filter @repo/backend judgment:measure` runs the set through the
-deployment the caller's environment configures (the development deployment
-unless it is given `--prod`): a message alone for `lasting`, and the notes for
-`ownNote` and `private`, both in one request, `--together=N` of them to a
-request, from 1 to the 3 candidates one capture proposes. It prints, for each
-judgment, the probabilities by label, the counts at the threshold the
-deployment reports, the threshold that separates best and the texts that
-threshold judges wrongly, by number and never by text. It never prints a
-threshold the deployment did not report, and it fails when a deployment answers
-a different number of rows than the texts it was sent. The thresholds in the
-catalog follow what it prints, and it runs again whenever instructions or the
-decision model change. The instructions of `lasting` and `private` were first
-measured on 15 messages in seven languages (ADR 0019), and those of `ownNote`
-have not been measured yet.
+`pnpm --filter @repo/backend judgment:measure` runs the set through the dev
+deployment that `CONVEX_DEPLOYMENT` names, read from the environment and then
+from `packages/backend/.env.local`, and refuses any other, because it spends
+model calls: a message for `lasting`, and a note for `ownNote` and `private`,
+both in one request, each text a request of its own. It takes no argument. It
+prints, for each judgment, the probabilities by label, the counts at the
+threshold the deployment reports, the threshold that separates best and the
+texts that threshold judges wrongly, by number, language and form and never by
+text. It never prints a threshold the deployment did not report. It fails when
+a deployment answers a different number of rows than the texts it was sent, and
+when two calls of one run are answered with other instructions or another
+threshold for a judgment, because the deployment then changed while the command
+ran. The thresholds in the catalog follow what it prints, and it runs again
+whenever the instructions, the decision model or the set change.
 
-Plain code in the memory pipeline reads structure and identity only: that a
-quote is in the message, that a sentence has a letter or a digit, that a date is
-a date, and that two stored sentences are the same up to case, punctuation and
-spacing. It holds no list of words in any language and no comparison that
-decides what a learner meant.
+### Measured, and the thresholds
+
+The instructions of `lasting` and `private` were first measured on 15 messages
+in seven languages (ADR 0019). The command then ran on the dev deployment on 12
+October 2026 with the 124 messages and the 85 notes. The counts are yes judged
+yes, no judged yes, yes judged no, and no judged no, and balance is as above.
+The rows with three notes to a request are the way that is not used, kept to
+show why.
+
+| Judgment | How it was asked | Counts at 0.50 | Balance at 0.50 | Best threshold on this set | Balance there |
+| --- | --- | --- | --- | --- | --- |
+| `lasting` | one message to a request | 56 / 2 / 0 / 66 | 0.985 | 0.62 | 0.993 (56 / 1 / 0 / 67) |
+| `ownNote` | one note to a request | 54 / 12 / 0 / 19 | 0.806 | 0.59 | 0.942 (53 / 3 / 1 / 28) |
+| `ownNote` | three notes to a request | 47 / 6 / 7 / 25 | 0.838 | 0.53 | 0.878 (46 / 3 / 8 / 28) |
+| `private` | one note to a request | 30 / 0 / 0 / 55 | 1.000 | 0.65 | 1.000 |
+| `private` | three notes to a request | 30 / 0 / 0 / 55 | 1.000 | 0.58 | 1.000 |
+
+Where the probabilities lie. `ownNote`, one note to a request: every yes note is
+at 0.5 or more (1 in 0.5 to 0.6, 10 in 0.6 to 0.7, 43 above), and the no notes
+are spread from 0.2 to 0.8 (19 below 0.5, 9 in 0.5 to 0.6, 3 above). With three
+notes to a request the yes notes fall as low as 0.2 (12 of 54 below 0.6).
+`private`: every yes note is at 0.8 or more and every no note below 0.5, both
+ways. `lasting`: 55 of 56 yes messages are at 0.8 or more and one is in 0.6 to
+0.7; 66 of 68 no messages are below 0.5, one is at 0.55 and one at 0.84.
+
+The thresholds, and why each is where it is:
+
+| Judgment | Threshold | Why |
+| --- | --- | --- |
+| `lasting` | 0.5 | A memory that is missed is lost, and a message judged yes by mistake costs one capture call that then saves nothing. At 0.5 no yes message is missed. |
+| `ownNote` | 0.6 | At 0.6, 53 of 54 own notes are kept and 28 of 31 notes that are not the learner's own are dropped. At 0.5, 12 of those 31 are kept. |
+| `private` | 0.5 | Every private note is at 0.8 or more and every other note is below 0.5, so 0.5 and the best threshold, 0.65, both separate the set. The lower of the two is the safer, because keeping a private note is the worse mistake. |
+
+The thresholds were chosen on the same set they are measured on, so the numbers
+describe this set and are not a forecast of how the judgments do on what
+learners write. The command is what to run again when the instructions, the
+model or the set change.
+
+### Wordings measured and not adopted
+
+Three other wordings of the `ownNote` instructions were measured the same day,
+one note to a request, and none separated the notes better than the
+instructions that stay (0.942 at the best threshold). They are recorded so that
+nobody tries them again without a new reason.
+
+| Wording | Result |
+| --- | --- |
+| "written from the learner's own point of view, in the first person or with no subject, and in the same language as the quote; never refers to the learner in the third person" | 0.861 at 0.50 (39 / 0 / 15 / 31); best 0.919 at 0.25. The no notes fall below 0.2, but 15 of 54 yes notes fall below 0.5. |
+| The fault instead of the virtue: "describes the learner in the third person, as another person would write about them, or is written in a different language than the quote" | 45 of 54 yes notes below 0.5 and 29 of 31 no notes at 0.5 or more: 0.884. |
+| Two questions: "refers to the learner in the third person, as someone else would write about them" and "is written in a different language than the quote" | Third person: all 29 label and pronoun notes at 0.62 or more, and 8 of 54 yes notes at 0.6 or more (two of them English notes whose verb is in the third person, "Prefers worked examples before formulas"). Language: the 2 notes in another language at 0.73 and 0.75, one more no note at 0.64 (an English word in an Indonesian note), every yes note below 0.5. Together 31 of 31 no notes found and 46 of 54 yes notes kept: 0.926. |
 
 ## Implementation Contract
 

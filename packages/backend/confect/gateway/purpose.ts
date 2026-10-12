@@ -47,9 +47,10 @@ const Budget = Schema.Struct({
  * The caps stand well above what a real call wrote when they were measured on
  * Gemini 3.8 Flash through the gateway (11 October 2026, ADR 0020). A chat
  * answer the learner asked to be very long wrote 9,593 tokens, 2,055 of them
- * reasoning, and a proof reasoned for 4,366. A summary wrote 1,042 and may
- * hold 1,200. A specialist's answer is read up to 6,000 tokens, so its cap
- * sits just above that.
+ * reasoning, and a proof reasoned for 4,366. A summary wrote 1,042 when it
+ * could hold 1,200. It may now hold 2,000, and the reasoning of its call counts
+ * against the same cap, so the background cap is twice that. A specialist's
+ * answer is read up to 6,000 tokens, so its cap sits just above that.
  */
 export const purposes = {
   chat: {
@@ -64,7 +65,7 @@ export const purposes = {
   },
   background: {
     effort: "fast",
-    maxOutputTokens: 2048,
+    maxOutputTokens: 4096,
     timeout: { stepMs: 15_000, totalMs: 45_000 },
   },
   suggestion: {
