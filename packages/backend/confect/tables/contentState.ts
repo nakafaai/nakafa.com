@@ -14,6 +14,8 @@ export default Table.make(() =>
     candidateManifestHash: Schema.optionalKey(Schema.String),
     candidateReleaseId: Schema.optionalKey(Schema.String),
     candidateSequence: Schema.optionalKey(Schema.Finite),
+    // The six compact* fields below moved to `contentCompaction`. They stay
+    // only until `ensureCompactionRow` has carried every deployment's values.
     compactCursor: Schema.optionalKey(Schema.String),
     compactFloor: Schema.optionalKey(Schema.Finite),
     compactFrom: Schema.optionalKey(Schema.Finite),

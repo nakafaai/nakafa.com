@@ -1,4 +1,6 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { assert, expect } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
 import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
@@ -8,11 +10,13 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
-import { Array as Arr, Predicate } from "effect";
+import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
+import { Array as Arr, Effect, Predicate } from "effect";
 
 const ARTICLE_VIEW_PROJECTION = testArticleProjection(0);
 
@@ -54,9 +58,30 @@ export async function insertContentViewArticle(ctx: MutationCtx) {
   return { contentId: ARTICLE_VIEW_ID, id: row._id };
 }
 
-/** Seeds one article and consented viewer for content-view behavior tests. */
-export async function seedArticleViewer(ctx: MutationCtx, suffix: string) {
-  const article = await insertContentViewArticle(ctx);
+/** Builds one canonical material-view mutation input, with a device only after consent. */
+export function makeMaterialViewArgs(deviceId?: string): RecordContentViewArgs {
+  return {
+    contentId: FUNCTION_MATERIAL.graph.assetId,
+    ...(deviceId === undefined ? {} : { deviceId }),
+    locale: "en",
+    publicPath: FUNCTION_MATERIAL.publicPath,
+    section: "material",
+  };
+}
+
+/** Activates one current signed material lesson for content-view behavior tests. */
+export async function insertContentViewMaterial(ctx: MutationCtx) {
+  await Effect.runPromise(
+    activateMaterialCatalog([FUNCTION_MATERIAL]).pipe(
+      Effect.provide(mutationLayer(confectSchema, ctx))
+    )
+  );
+  return { contentId: FUNCTION_MATERIAL.graph.assetId };
+}
+
+/** Seeds one material lesson and consented viewer for content-view behavior tests. */
+export async function seedMaterialViewer(ctx: MutationCtx, suffix: string) {
+  const material = await insertContentViewMaterial(ctx);
   const user = await seedAuthenticatedUser(ctx, {
     now: CONTENT_VIEW_NOW,
     suffix,
@@ -65,7 +90,7 @@ export async function seedArticleViewer(ctx: MutationCtx, suffix: string) {
     decidedAt: CONTENT_VIEW_NOW,
     userId: user.userId,
   });
-  return { ...user, contentId: article.contentId };
+  return { ...user, contentId: material.contentId };
 }
 
 /** Returns the analytics partition for one popularity signal scope. */

@@ -17,6 +17,7 @@ import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
 import contentBindings from "./tables/contentBindings";
+import contentCompaction from "./tables/contentCompaction";
 import contentHeads from "./tables/contentHeads";
 import contentIndex from "./tables/contentIndex";
 import contentItems from "./tables/contentItems";
@@ -107,6 +108,7 @@ export default $defineSchema({
   contentArtifactFacts: $Table.tableDefinition(contentArtifactFacts),
   contentArtifacts: $Table.tableDefinition(contentArtifacts),
   contentBindings: $Table.tableDefinition(contentBindings),
+  contentCompaction: $Table.tableDefinition(contentCompaction),
   contentHeads: $Table.tableDefinition(contentHeads),
   contentIndex: $Table.tableDefinition(contentIndex),
   contentItems: $Table.tableDefinition(contentItems),

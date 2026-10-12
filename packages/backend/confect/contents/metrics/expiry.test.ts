@@ -68,15 +68,7 @@ async function insertSignal(
 ) {
   await ctx.db.insert("learningPopularitySignals", {
     ...graph(),
-    applied: {
-      d1: 0,
-      d7: input.applied,
-      d14: input.applied,
-      d30: input.applied,
-      d90: input.applied,
-      d180: input.applied,
-      d365: input.applied,
-    },
+    applied: { d7: input.applied },
     contextKey: input.contextKey,
     contextMode: "canonical",
     description: "Signal description",
@@ -185,6 +177,35 @@ describe("contents/metrics/expiry", () => {
     ]);
   });
 
+  it("claims and schedules one daily page for the maintained ranking", async () => {
+    const target = createTarget();
+
+    const run = await target.mutation(async (ctx) => ({
+      receipt: await ctx.runMutation(
+        internal.contents.mutations.popularity
+          .scheduleLearningPopularityExpiries,
+        {}
+      ),
+      metrics: await ctx.meta.getTransactionMetrics(),
+    }));
+    const jobs = await target.query(
+      async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
+    );
+
+    // The daily job used to claim fourteen cycles and schedule fourteen pages:
+    // seven windows for each of two scopes.
+    expect(run.receipt).toEqual({
+      expiryWindows: 0,
+      repairWindows: 1,
+      skippedWindows: 0,
+    });
+    expect(run.metrics.functionsScheduled.used).toBe(1);
+    expect(run.metrics.documentsWritten.used).toBe(1);
+    expect(Arr.map(jobs, (job) => job.args)).toEqual([
+      [{ day: DAY, scopeMode: "global", windowKey: "7d" }],
+    ]);
+  });
+
   it("rejects active page replays and resumes from its durable cursor", async () => {
     const target = createTarget();
     const outgoingDay = DAY - 7 * POPULARITY_DAY_MS;
@@ -243,7 +264,7 @@ describe("contents/metrics/expiry", () => {
     expect(afterReplay).toHaveLength(1);
     expect(recovery).toEqual({
       expiryWindows: 1,
-      repairWindows: 13,
+      repairWindows: 0,
       skippedWindows: 0,
     });
 
@@ -282,20 +303,6 @@ describe("contents/metrics/expiry", () => {
     await target.mutation(async (ctx) => {
       await insertCycle(ctx);
       await insertCounter(ctx, { contextKey: "repair-override", score: 5 });
-      const counter = await ctx.db.query("learningPopularityCounters").unique();
-      if (!counter) {
-        throw new Error("Expected the popularity repair fixture.");
-      }
-      const { _id, _creationTime, ...value } = counter;
-      const lifetimeId = await ctx.db.insert("learningPopularityCounters", {
-        ...value,
-        windowKey: "lifetime",
-      });
-      const lifetime = await ctx.db.get(lifetimeId);
-      if (!lifetime) {
-        throw new Error("Expected the durable popularity identity fixture.");
-      }
-      await learningPopularityRankings.insert(ctx, lifetime);
       await insertSignal(ctx, {
         applied: 2,
         contextKey: "repair-override",
@@ -360,7 +367,7 @@ describe("contents/metrics/expiry", () => {
 
     expect(expired).toMatchObject({ expiredCounters: 1, skipped: false });
     expect(drifted?.score).toBe(3);
-    expect(override).toEqual({ scheduledWindows: 14 });
+    expect(override).toEqual({ scheduledWindows: 1 });
     expect(state.counter?.score).toBe(4);
     expect(state.cycle).toMatchObject({
       completedDay: DAY,
