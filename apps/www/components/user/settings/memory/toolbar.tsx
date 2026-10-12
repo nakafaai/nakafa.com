@@ -14,7 +14,8 @@ import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
 /**
  * The head of the list: the search that narrows it as the learner types, and
- * the button that opens the editor with a new memory.
+ * the button that opens the editor with a new memory. The button says what it
+ * adds where there is room for a word, and is the plus alone on a phone.
  */
 export function MemoryToolbar() {
   const t = useTranslations("Memory");
@@ -39,11 +40,12 @@ export function MemoryToolbar() {
         </InputGroup>
         <Button
           aria-label={t("add")}
+          className="w-9 sm:w-auto"
           onClick={openNew}
-          size="icon"
           title={t("add")}
         >
           <HugeIcons icon={Add01Icon} />
+          <span className="hidden sm:inline">{t("memory")}</span>
         </Button>
       </div>
     </CardHeader>

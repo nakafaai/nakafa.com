@@ -18,6 +18,8 @@ const WRITTEN = "Prefers worked examples before the formula";
 const REWRITTEN = "Prefers a short summary before the examples";
 const NAMED = "Study habits";
 const LINKED = "https://nakafa.com/en";
+/** From this width on, the button that adds a memory shows its word. */
+const LABEL_WIDTH = 640;
 
 /** The title of a memory in its editor. */
 const titleOf = (page: Page) =>
@@ -53,17 +55,27 @@ const addMemory = Effect.fn("NakafaE2E.addMemory")(function* (
     await expect(page.getByText(EMPTY)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
-    await page.getByRole("button", { name: "Add memory" }).click();
+    // Where there is room for a word the button says what it adds. On a phone
+    // it is the plus alone.
+    const add = page.getByRole("button", { name: "Add memory" });
+    await expect(add.getByText("Memory", { exact: true })).toBeVisible({
+      visible: (page.viewportSize()?.width ?? 0) >= LABEL_WIDTH,
+    });
+    await add.click();
 
     const editor = editorOf(page);
     const row = memoryRow(page, WRITTEN);
+    const remove = page.getByRole("button", { exact: true, name: "Delete" });
     await opened(page, "");
     await expect(page.getByText("0 / 2,000")).toBeVisible();
+    // A new memory with no words yet has nothing to delete.
+    await expect(remove).toBeDisabled();
 
     // The editor has no Save: the words are stored a moment after the last key.
     const before = changes.sent;
     await page.keyboard.type(WRITTEN);
     await expect(page.getByText(`${WRITTEN.length} / 2,000`)).toBeVisible();
+    await expect(remove).toBeEnabled();
     await saved(changes, before);
 
     // The editor stays on the memory it just stored, and Escape closes it.

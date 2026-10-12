@@ -185,10 +185,12 @@ Compaction no longer writes `contentState`, the row every content query reads,
 so a compaction page stops making Convex run those queries again. That saving
 is in function executions, not in Database I/O.
 
-Three temporary steps of these changes end in later changes, each with its exit
-and cleanup written where it lives: the retirement of the older popularity rows
-and the ignored `windowKey` argument (ADR 0008), and the carry of the
-compaction fields out of `contentState` (`packages/backend/AGENTS.md`).
+Two temporary steps of these changes end in a later change, with their exit and
+cleanup written where they live: the retirement of the older popularity rows
+and the ignored `windowKey` argument (ADR 0008). The third, the carry of the
+compaction fields out of `contentState`, ended on 12 October 2026: dev and
+production each held the `contentCompaction` row and no `contentState` row held
+a compaction field, so the carry, its tests and the six fields were deleted.
 
 ### Recovery evidence
 
