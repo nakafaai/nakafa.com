@@ -1,43 +1,13 @@
-import { HttpClient } from "@confect/js";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr } from "effect";
 import "server-only";
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
-import contents from "@repo/backend/confect/_generated/refs/contents";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { MaterialRow } from "@/components/home/material";
-import { httpLayer } from "@/lib/convex/http";
+import { getHomeTrendingSubjects } from "@/lib/content/trending";
 import { isActiveLocale } from "@/lib/i18n/active";
-
-/**
- * Reads one point-in-time homepage popularity snapshot.
- *
- * Trending is a low-freshness aggregate, so keeping one live subscription per
- * homepage visitor would amplify every popularity-counter update. Popularity
- * is live analytics rather than signed content, so it stays on the production
- * deployment while authored content builds from the isolated snapshot. The
- * Native Confect reads disable trace timestamps until the network suspends,
- * because Cache Components reject implicit clock access during prerendering.
- *
- * @see https://nextjs.org/docs/messages/next-prerender-current-time
- * @see https://confect.dev/v10/clients/js/http
- */
-async function getHomeTrendingSubjects(locale: PublicAppLocale) {
-  "use cache";
-
-  cacheLife("minutes");
-  return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(contents.queries.trending.getTrendingSubjects, {
-        locale,
-      })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
-  );
-}
 
 /** Renders the home-screen trending learning objects for the current locale. */
 export async function HomeTrending({ locale }: { locale: Locale }) {

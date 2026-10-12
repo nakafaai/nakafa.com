@@ -73,6 +73,10 @@ contextual visit cannot first record a canonical view and then a placement view.
   defaults to. A static import already stays for a year, but a file in
   `public/` and a remote image sent short lifetimes and were optimized again
   every four hours for the same bytes.
+- The trending list on the home page counts the last seven days and drops its
+  oldest day once a night, so its snapshot uses the `hours` profile. The
+  `minutes` profile refreshed it every minute and regenerated the page that
+  shows it each time.
 - RSS caches the completed XML. Its update timestamp comes from authored
   publication dates, so another request does not manufacture changed output.
 - Flight requests bypass the Proxy's duplicate publication ownership reads.
