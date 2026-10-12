@@ -9,11 +9,13 @@ import {
 import {
   Array as Arr,
   Effect,
+  Latch,
   Layer,
   MutableRef,
   Option,
+  Order,
   Record as Rec,
-  String as Str,
+  Result,
 } from "effect";
 
 const WORD = /\p{L}+/gu;
@@ -74,36 +76,102 @@ export const GatewayTest = Layer.effect(
   Effect.as(Effect.suspend(deployment), make(provider))
 );
 
+/** What a decision model receives for one request. */
+type DecisionRequest = Parameters<DecisionMockModel["doDecide"]>[0];
+
+/** The words of a decision request: the text parts of its state, one to a line. */
+export function textOf({ state }: DecisionRequest) {
+  return Arr.join(
+    Arr.filterMap(state, (part) =>
+      part.type === "text" ? Result.succeed(part.text) : Result.failVoid
+    ),
+    "\n"
+  );
+}
+
+/** The names of the judgments that a decision request asks, in alphabetical order. */
+export function askedOf({ questions }: DecisionRequest) {
+  return Arr.sort(Rec.keys(questions), Order.String);
+}
+
+/** The probability a test gives for a judgment and the one text of a request. */
+type ProbabilityOf = (judgment: string, text: string) => number;
+
+/** The answer to a decision request: a probability for each yes-or-no question it asks. */
+function answered(request: DecisionRequest, probabilityOf: ProbabilityOf) {
+  const text = textOf(request);
+  return {
+    answers: Rec.map(request.questions, (_, judgment) => ({
+      probability: probabilityOf(judgment, text),
+      type: "boolean" as const,
+    })),
+    warnings: [],
+  };
+}
+
 /**
  * A deterministic decision model, handed out by `provider` for every decision.
  * It answers each yes-or-no question with the probability `probabilityOf` gives
- * for the judgment the question asks (`lasting`) and the position of the text
- * the question is about (0 for the first), and it records every request it
- * receives.
+ * for the judgment the question asks (`lasting`) and the text of the request
+ * (`textOf`), which is the one text the request is about, and it records every
+ * request it receives.
  */
-export function decides(
-  probabilityOf: (judgment: string, index: number) => number
-) {
-  const requests = MutableRef.make<
-    readonly Parameters<DecisionMockModel["doDecide"]>[0][]
-  >([]);
+export function decides(probabilityOf: ProbabilityOf) {
+  const requests = MutableRef.make<readonly DecisionRequest[]>([]);
   const model = new DecisionMockModel({
     doDecide: (request) => {
       MutableRef.update(requests, Arr.append(request));
-      return Promise.resolve({
-        answers: Rec.map(request.questions, (_, id) => {
-          const [judgment, position] = Str.split(id, ".");
-          return {
-            probability: probabilityOf(judgment, Number(position)),
-            type: "boolean" as const,
-          };
-        }),
-        warnings: [],
-      });
+      return Promise.resolve(answered(request, probabilityOf));
     },
   });
   provider.decisionModel.mockReturnValue(model);
   return { model, requests: () => MutableRef.get(requests) };
+}
+
+/**
+ * A decision model like `decides` that answers no request before `count`
+ * requests are open at once, so that a program which asks one request after
+ * another waits for ever. It returns a reference to how many requests were
+ * opened.
+ */
+export function decidesTogether(count: number, probabilityOf: ProbabilityOf) {
+  const opened = MutableRef.make(0);
+  const together = Latch.makeUnsafe(false);
+  provider.decisionModel.mockReturnValue(
+    new DecisionMockModel({
+      doDecide: async (request) => {
+        if (MutableRef.incrementAndGet(opened) === count) {
+          together.openUnsafe();
+        }
+        await Effect.runPromise(together.await);
+        return answered(request, probabilityOf);
+      },
+    })
+  );
+  return opened;
+}
+
+/**
+ * A decision model like `decides` that keeps every request open for a moment,
+ * so that the requests a program asks at once are open together. It returns a
+ * reference to the most requests that were open at once.
+ */
+export function decidesSlowly(probabilityOf: ProbabilityOf) {
+  const open = MutableRef.make(0);
+  const mostOpen = MutableRef.make(0);
+  provider.decisionModel.mockReturnValue(
+    new DecisionMockModel({
+      doDecide: async (request) => {
+        MutableRef.update(mostOpen, (most) =>
+          Math.max(most, MutableRef.incrementAndGet(open))
+        );
+        await Effect.runPromise(Effect.sleep("5 millis"));
+        MutableRef.decrement(open);
+        return answered(request, probabilityOf);
+      },
+    })
+  );
+  return mostOpen;
 }
 
 /**

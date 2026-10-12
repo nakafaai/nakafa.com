@@ -111,10 +111,11 @@ languages and on texts that sit near it, so the thresholds in
 `nina/judgment/catalog.ts` are not set from this table.
 `pnpm --filter @repo/backend judgment:measure` runs a labelled set of 124
 messages and 85 notes in 17 languages and 8 scripts through the deployment,
-each judgment on the form of text and the grouping that production asks it (ADR
-0022), and prints the probabilities by label, the counts at the threshold the
-deployment reports and the threshold that separates best. The thresholds start
-at 0.5 and are set from what that command prints.
+each judgment on the form of text that production asks it, one text to a
+request (ADR 0022), and prints the probabilities by label, the counts at the
+threshold the deployment reports and the threshold that separates best. The
+thresholds in the catalog were set from what that command printed on 12 October
+2026, and ADR 0022 holds the tables.
 
 ## Decision
 

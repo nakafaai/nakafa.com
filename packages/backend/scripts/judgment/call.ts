@@ -18,7 +18,7 @@ const MEASURE_PATH = "nina/judgment:measure";
 /**
  * The arguments of the action as the CLI takes them, one JSON text in one
  * command line argument. The largest call of the labelled set, 30 notes, is
- * 3,635 bytes (measured on 12 October 2026), far below the limit of one
+ * 3,622 bytes (measured on 12 October 2026), far below the limit of one
  * argument (128 KiB on Linux, and 1 MiB for all arguments and the environment
  * on macOS), so no other way to hand them over is needed.
  */
@@ -49,6 +49,15 @@ export class JudgmentCallError extends Schema.TaggedError<JudgmentCallError>()(
  * `runConvex` reports with the start of what the CLI printed. An answer that
  * holds more or fewer rows than the texts it was given is refused, because a
  * row that matched no text would be matched with the wrong one.
+ *
+ * The arguments hold the texts of the labelled set, and `runConvex` takes out
+ * only the values it is told are sensitive. A deployment that refuses the
+ * arguments of a call, because it holds another version of the action, can word
+ * its error with the arguments it received, and the CLI prints that error. The
+ * form is the deployment's own, so no exact match of a text finds it. The
+ * command therefore promises that its report quotes no text, and not that an
+ * error of the CLI never does. The texts are invented, and none holds the data
+ * of a real person.
  */
 export const callMeasure = Effect.fn("judgment.callMeasure")(function* (
   input: typeof measureInputValidator.Type

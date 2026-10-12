@@ -14,17 +14,19 @@ const input = {
     "Note: Kelas 12\nQuote: Aku kelas 12",
     "Note: Terima kasih\nQuote: Makasih",
   ],
-  together: 2,
 } satisfies Parameters<typeof callMeasure>[0];
 
 /** What the action answers for those two texts: one measured, and one that the gateway refused. */
 const measured = {
+  judgments: {
+    ownNote: { instructions: "The note is the learner's own.", threshold: 0.6 },
+    private: { instructions: "The text holds private data.", threshold: 0.5 },
+  },
   kind: "measured",
   rows: [
     { probabilities: { ownNote: 0.95, private: 0.02 } },
     { failure: { reason: "invalid", status: 400 } },
   ],
-  thresholds: { ownNote: 0.5, private: 0.5 },
 };
 
 /** What the action answers when the deployment cannot reach the gateway. */
@@ -43,8 +45,14 @@ const unreachable = {
  * package). No server was asked for this test, so that message is made up: the
  * test needs only that what the CLI printed reaches the report.
  */
-const FAILED_CALL = `✖ Failed to run function "nina/judgment:measure":
+const FAILED_CALL = `✖ Failed to run function "${Ref.getConvexFunctionName(refs.internal.nina.judgment.measure)}":
 Error: the server message, made up for this test`;
+
+/**
+ * Every test here starts a Node process for the CLI double, and on a machine
+ * that is busy a process takes longer than the five seconds a test gets.
+ */
+const TIMEOUT = 30_000;
 
 /** The arguments of a call, as JSON text that the function declares. */
 const Arguments = Schema.fromJsonString(measureInputValidator);
@@ -128,7 +136,8 @@ describe("judgment measuring call", () => {
         expect(yield* Schema.decodeEffect(Arguments)(text ?? "")).toEqual(
           input
         );
-      })
+      }),
+    TIMEOUT
   );
 
   it.live(
@@ -145,7 +154,8 @@ describe("judgment measuring call", () => {
               "Judgment measure failed: The AI gateway is not available on this deployment.",
           },
         });
-      })
+      }),
+    TIMEOUT
   );
 
   it.live.each([0, 1, 3])(
@@ -166,39 +176,46 @@ describe("judgment measuring call", () => {
             message: `Judgment measure: the deployment measured ${count} of 2 texts`,
           },
         });
-      })
+      }),
+    TIMEOUT
   );
 
-  it.live("reports an action that cannot run with what the CLI printed", () =>
-    Effect.gen(function* () {
-      const { answer } = yield* ask({ code: "1", stderr: FAILED_CALL });
+  it.live(
+    "reports an action that cannot run with what the CLI printed",
+    () =>
+      Effect.gen(function* () {
+        const { answer } = yield* ask({ code: "1", stderr: FAILED_CALL });
 
-      expect(answer).toMatchObject({
-        _tag: "Failure",
-        failure: {
-          _tag: "DevelopmentCliError",
-          message: `Judgment measure failed: ${Arr.join(FAILED_CALL.split("\n"), " ")}`,
-        },
-      });
-    })
+        expect(answer).toMatchObject({
+          _tag: "Failure",
+          failure: {
+            _tag: "DevelopmentCliError",
+            message: `Judgment measure failed: ${Arr.join(FAILED_CALL.split("\n"), " ")}`,
+          },
+        });
+      }),
+    TIMEOUT
   );
 
   it.live.each([
     ["a value the action does not declare", '{"kind":"measured"}'],
     ["text that is not JSON", "a line the CLI printed"],
-  ])("rejects %s", ([, stdout]) =>
-    Effect.gen(function* () {
-      const { answer } = yield* ask({ stdout });
+  ])(
+    "rejects %s",
+    ([, stdout]) =>
+      Effect.gen(function* () {
+        const { answer } = yield* ask({ stdout });
 
-      expect(answer).toMatchObject({
-        _tag: "Failure",
-        failure: {
-          _tag: "JudgmentCallError",
-          message: expect.stringContaining(
-            "Judgment measure printed an answer that the action does not declare"
-          ),
-        },
-      });
-    })
+        expect(answer).toMatchObject({
+          _tag: "Failure",
+          failure: {
+            _tag: "JudgmentCallError",
+            message: expect.stringContaining(
+              "Judgment measure printed an answer that the action does not declare"
+            ),
+          },
+        });
+      }),
+    TIMEOUT
   );
 });

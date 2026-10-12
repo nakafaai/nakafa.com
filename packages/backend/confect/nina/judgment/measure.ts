@@ -1,10 +1,10 @@
 import type { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { probabilities } from "@repo/backend/confect/nina/judgment/ask";
 import type { JudgmentName } from "@repo/backend/confect/nina/judgment/catalog";
-import { Array as Arr, Effect, Result } from "effect";
+import { Effect, Result } from "effect";
 
-/** Groups of texts asked about at once, so that a measuring run is gentle on the gateway. */
-const GROUPS_IN_FLIGHT = 4;
+/** Requests asked at once, so that a measuring run is gentle on the gateway. */
+export const REQUESTS_IN_FLIGHT = 4;
 
 /** What a failed request tells: its routing facts, and never a text. */
 function failed({ reason, status, type }: GatewayFailure) {
@@ -18,41 +18,34 @@ function failed({ reason, status, type }: GatewayFailure) {
 }
 
 /**
- * The probability of every named judgment for each text of one group, or, for
- * each of them, the failure of the request. The group is one request, as
- * production asks it: the named judgments about each of its texts together.
+ * The probability of every named judgment for one text, or the failure of its
+ * request. The text is one request, as production asks it: the named judgments
+ * about it together.
  */
-const measureGroup = Effect.fn("nina.judgment.measureGroup")(function* (
+const measureText = Effect.fn("nina.judgment.measureText")(function* (
   names: readonly [JudgmentName, ...JudgmentName[]],
-  group: readonly string[]
+  text: string
 ) {
-  const asked = yield* Effect.result(probabilities(names, group));
+  const asked = yield* Effect.result(probabilities(names, text));
   return Result.match(asked, {
-    onFailure: (failure) => Arr.map(group, () => failed(failure)),
-    onSuccess: (rows) => Arr.map(rows, (row) => ({ probabilities: row })),
+    onFailure: failed,
+    onSuccess: (row) => ({ probabilities: row }),
   });
 });
 
 /**
  * Measures the named judgments on some texts: for each text, in the order
  * given, the probability that every named judgment gives, or the routing facts
- * of the failure that kept it from giving one. `together` texts share a
- * request, and all the named judgments are asked about them in that request, as
- * production does: one message at a time for `lasting`, and the candidates of a
- * turn together for the judgments of a note. This is how the thresholds of
- * `judgment/catalog` are set from a labelled set (`judgment:measure`); no
- * production path reads these numbers.
+ * of the failure that kept it from giving one. Each text is a request of its
+ * own, as production asks it, and `REQUESTS_IN_FLIGHT` of them run at a time.
+ * This is how the thresholds of `judgment/catalog` are set from a labelled set
+ * (`judgment:measure`); no production path reads these numbers.
  */
 export const measureTexts = Effect.fn("nina.judgment.measureTexts")(function* (
   names: readonly [JudgmentName, ...JudgmentName[]],
-  texts: readonly string[],
-  together: number
+  texts: readonly string[]
 ) {
-  return Arr.flatten(
-    yield* Effect.forEach(
-      Arr.chunksOf(texts, together),
-      (group) => measureGroup(names, group),
-      { concurrency: GROUPS_IN_FLIGHT }
-    )
-  );
+  return yield* Effect.forEach(texts, (text) => measureText(names, text), {
+    concurrency: REQUESTS_IN_FLIGHT,
+  });
 });

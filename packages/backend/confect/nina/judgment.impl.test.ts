@@ -19,25 +19,30 @@ afterEach(() => {
 });
 
 describe("the measuring of the judgments", () => {
-  it("measures the texts it is given with the judgments it is given, and reports the thresholds the deployment holds for those", async () => {
+  it("measures the texts it is given with the judgments it is given, and names the entry of the catalog the deployment holds for each of those", async () => {
     const t = createConvexTestWithBetterAuth();
     decides((judgment) => (judgment === "private" ? 0.77 : 0.23));
     expect(
       await t.action(measure, {
         names: ["private", "ownNote"],
         texts: ["Kelas 12", "Terima kasih"],
-        together: 1,
       })
     ).toEqual({
+      judgments: {
+        ownNote: {
+          instructions: judgments.ownNote.instructions,
+          threshold: judgments.ownNote.threshold,
+        },
+        private: {
+          instructions: judgments.private.instructions,
+          threshold: judgments.private.threshold,
+        },
+      },
       kind: "measured",
       rows: [
         { probabilities: { ownNote: 0.23, private: 0.77 } },
         { probabilities: { ownNote: 0.23, private: 0.77 } },
       ],
-      thresholds: {
-        ownNote: judgments.ownNote.threshold,
-        private: judgments.private.threshold,
-      },
     });
   });
 
@@ -51,11 +56,7 @@ describe("the measuring of the judgments", () => {
       )
     );
     expect(
-      await t.action(measure, {
-        names: ["lasting"],
-        texts: ["Kelas 12"],
-        together: 1,
-      })
+      await t.action(measure, { names: ["lasting"], texts: ["Kelas 12"] })
     ).toEqual({
       failure: {
         _tag: "GatewayConfigurationError",
