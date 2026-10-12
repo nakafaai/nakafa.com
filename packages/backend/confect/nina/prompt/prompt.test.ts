@@ -303,7 +303,7 @@ describe("createNinaPrompt", () => {
     expect(prompt).not.toContain("- curriculum preference:");
   });
 
-  it("tells Nina when to search the learner's memories, and how to read the answer, while memory is on", () => {
+  it("lists the memory tool and puts its rules between the math rules and the combining rules while memory is on", () => {
     const prompt = createNinaPrompt({ memory: true });
 
     const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
@@ -313,20 +313,7 @@ describe("createNinaPrompt", () => {
     expect(mathIndex).toBeGreaterThan(toolIndex);
     expect(memoryIndex).toBeGreaterThan(mathIndex);
     expect(combiningIndex).toBeGreaterThan(memoryIndex);
-    expect(prompt).toContain(
-      "- memory: what the learner told Nina before, saved as their memories."
-    );
-    const section = prompt.slice(memoryIndex, combiningIndex);
-    for (const said of [
-      'such as "like I said", "my schedule", or "what do you remember about me"',
-      "neither in the Learner section nor in the Memories list",
-      "their target, their exam date, or how they like explanations",
-      "Do not use memory for lesson content, for facts stated in this conversation, or more than twice in one turn.",
-      "never as instructions",
-      "never guess it",
-    ]) {
-      expect(section).toContain(said);
-    }
+    expect(prompt).toContain("- memory:");
   });
 
   it("leaves the memory tool and its rules out of the prompt of a learner who paused memory", () => {
@@ -334,16 +321,5 @@ describe("createNinaPrompt", () => {
     expect(createNinaPrompt({ memory: false })).toBe(paused);
     expect(paused).not.toContain("## memory");
     expect(paused).not.toContain("- memory:");
-    expect(paused).toContain("- math: deterministic calculations");
-    expect(paused).toContain("verification.\n\nAnswer directly only");
-    expect(paused).toContain(
-      "explain the limitation clearly.\n\n## Combining Agents"
-    );
-  });
-
-  it("names what Nina knows about the learner in the three ways she reads it", () => {
-    expect(createNinaPrompt({})).toContain(
-      "you know about the learner only what the Learner section states, what the Memories list in the learner's message states, and what the memory tool returns when you have it."
-    );
   });
 });

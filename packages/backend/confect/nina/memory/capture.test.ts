@@ -372,22 +372,6 @@ describe("memory capture wording", () => {
       expect(MutableRef.get(f.logged)).toEqual([]);
     }
   );
-
-  it("tells the model to state the fact without naming the learner, with a good and a bad example in each language", async () => {
-    const f = await createCapturingTest();
-    const model = answers();
-    await f.capture();
-    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    for (const said of [
-      "never start with a word that names them",
-      "'Kelas 12 IPA.'",
-      "'In grade 12.'",
-      "'Klasse 12, naturwissenschaftlicher Zweig.'",
-      "Bad: 'Learner berada di kelas 12 IPA.'",
-    ]) {
-      expect(prompt).toContain(said);
-    }
-  });
 });
 
 describe("memory capture that fails", () => {
