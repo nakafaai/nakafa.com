@@ -182,11 +182,7 @@ const start = FunctionImpl.make(
       distinctId: appUser._id,
       event: {
         name: "chat message sent",
-        properties: {
-          chat_type: chat?.type ?? "study",
-          // Only an old browser tab still sends the retired model key.
-          ...(args.modelId ? { model_id: args.modelId } : {}),
-        },
+        properties: { chat_type: chat?.type ?? "study" },
       },
       timestamp: now,
     });

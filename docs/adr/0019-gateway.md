@@ -74,8 +74,11 @@ tools with a warning.
 - **Model.** Every call runs `google/gemini-3.8-flash`, the one model that
   `gateway/model.ts` names. Learners cannot choose a model, so
   `Gateway.language(purpose)` takes only the purpose, and every Nina answer
-  costs 5 credits. The model keys learners chose before October 2026 are retired:
-  stored rows keep them until a later contract change unsets them.
+  costs 5 credits. The model keys learners chose before October 2026 are
+  retired. `nina.turns.start` no longer takes one, and the temporary
+  `nina/unset:modelKey` unsets it on the stored turns and credit transactions
+  that still hold one. A later change deletes the key's schema, the stored
+  field and that function.
 - **Routing and retention.** No routing choice is sent: Convex rejects
   `provider.only` and the other routing fields. Every call does send
   `provider: { zdr: true, data_collection: "deny" }`, which the gateway accepts

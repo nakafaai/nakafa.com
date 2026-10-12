@@ -71,9 +71,11 @@ export const NinaRequestId = Schema.NonEmptyString.check(
   Schema.isMaxLength(128)
 );
 /**
- * The model key learners chose before October 2026. Old turns still store
- * it and old browser tabs still send it. Nothing reads it; the contract
- * change unsets the stored values and deletes this schema.
+ * The model key learners chose before October 2026. `nina.turns.start` no
+ * longer takes it and nothing reads it, but turns and credit transactions
+ * written before then still hold it until `nina/unset:modelKey` has walked
+ * both tables on every deployment. The next change deletes this schema, the
+ * stored field and that function.
  */
 export const RetiredModelKey = Schema.Literals(["nakafa-lite", "nakafa-pro"]);
 
