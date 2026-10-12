@@ -1,11 +1,8 @@
 import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { timeLeft } from "@repo/backend/confect/nina/capability/deadline";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
-import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
-import {
-  ResearchScrapeError,
-  type ScrapeOutput,
-} from "@repo/backend/confect/nina/research/schema";
+import { requestScrape } from "@repo/backend/confect/nina/research/provider";
+import type { ScrapeOutput } from "@repo/backend/confect/nina/research/schema";
 import { selectRelevantContent } from "@repo/backend/confect/nina/research/selection";
 import { fetchSourceMarkdown } from "@repo/backend/confect/nina/research/tools/markdown";
 import { getDocumentMetadata } from "@repo/backend/confect/nina/research/tools/metadata";
@@ -15,10 +12,10 @@ import { Duration, Effect, Result, Schema } from "effect";
 
 /**
  * How long one page read may take, in milliseconds. `timeoutMs` is the
- * provider's own limit. With `autoResume: false` the Firecrawl SDK surfaces
- * that limit at once, and it retries a 502 up to two more times, so
- * `deadlineMs` is the backstop for the whole read. Both are cut to the time the
- * running capability has left.
+ * provider's own limit: when the page takes longer, the provider answers with a
+ * refusal at once and the read does not ask again. The read asks again only
+ * after a 502, up to two more times, so `deadlineMs` is the backstop for the
+ * whole read. Both are cut to the time the running capability has left.
  */
 const PageLimits = Schema.Struct({
   deadlineMs: Schema.Finite,
@@ -34,11 +31,6 @@ const LEARNER_LINK = {
   deadlineMs: purposes.specialist.timeout.stepMs,
   timeoutMs: 15_000,
 };
-
-const scrapeFailure = () =>
-  new ResearchScrapeError({
-    message: "The page could not be retrieved. Please try again.",
-  });
 
 /**
  * Reads one page as markdown without telling the learner: the page's own
@@ -66,23 +58,11 @@ export const readPage = Effect.fn("research.readPage")(function* (
             })
           )
         : Effect.as(Effect.void, undefined),
-      scrapeResult: readFirecrawlApp().pipe(
-        Effect.flatMap((client) =>
-          Effect.tryPromise({
-            try: () =>
-              client.scrape(publicUrl, {
-                autoResume: false,
-                formats: ["markdown"],
-                timeout: Math.min(limits.timeoutMs, Duration.toMillis(left)),
-              }),
-            catch: scrapeFailure,
-          }).pipe(
-            Effect.timeoutOrElse({
-              duration: Duration.min(Duration.millis(limits.deadlineMs), left),
-              orElse: () => Effect.fail(scrapeFailure()),
-            })
-          )
-        ),
+      scrapeResult: requestScrape({
+        deadline: Duration.min(Duration.millis(limits.deadlineMs), left),
+        timeoutMs: Math.min(limits.timeoutMs, Duration.toMillis(left)),
+        url: publicUrl,
+      }).pipe(
         Effect.match({
           onFailure: (error) => ({ error: error.message }),
           onSuccess: (response) => ({ response }),
@@ -97,9 +77,7 @@ export const readPage = Effect.fn("research.readPage")(function* (
       : { error: scrapeResult.error, metadata: {}, url: publicUrl };
   }
   const metadata = getDocumentMetadata({
-    ...(scrapeResult.response.metadata === undefined
-      ? {}
-      : { metadata: scrapeResult.response.metadata }),
+    metadata: scrapeResult.response.metadata,
   });
   const markdown = nativeMarkdown ?? scrapeResult.response.markdown;
   return markdown

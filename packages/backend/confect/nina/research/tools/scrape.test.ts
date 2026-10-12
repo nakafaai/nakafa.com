@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   formatScrapeOutput,
   isSuccessfulScrapeOutput,
@@ -7,20 +7,21 @@ import {
 } from "@repo/backend/confect/nina/research/tools/scrape";
 import { withTimeLeft } from "@repo/backend/test/nina/deadline";
 import { createProgress } from "@repo/backend/test/nina/progress";
+import {
+  inBackground,
+  overProvider,
+  providerScrapeUrl,
+  scrapeAnswer,
+  sentBodies,
+} from "@repo/backend/test/nina/provider";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Fiber, Option } from "effect";
 import { TestClock } from "effect/testing";
 
-const firecrawlApp = vi.hoisted(() => ({
-  scrape: vi.fn(),
-}));
 const lookup = vi.hoisted(() => vi.fn());
 const selectRelevantContent = vi.hoisted(() =>
   vi.fn(({ content }: { content: string; query?: string }) => content)
 );
-
-vi.mock("@repo/backend/confect/nina/research/provider", () => ({
-  readFirecrawlApp: () => Effect.succeed(firecrawlApp),
-}));
 
 vi.mock("node:dns/promises", () => ({
   lookup,
@@ -31,31 +32,72 @@ vi.mock("@repo/backend/confect/nina/research/selection", () => ({
 }));
 
 /**
- * One fetch for the whole file: the tool provides its own HTTP client, so the
- * double is global, and Effect's client keeps the first global fetch it reads.
+ * The fetch that Effect's client calls in place of the global one. A page read
+ * makes two kinds of request through it: the provider's POST, and a GET for the
+ * page's own markdown when the page has a public IP address.
  */
 const fetcher = vi.fn<typeof fetch>();
+const overFetch = overProvider(fetcher);
+
+const notFound = () => Promise.resolve(new Response("", { status: 404 }));
+
+/** A request that nothing answers. */
+const never = () => new Promise<Response>(() => undefined);
+
+/** Markdown that a page serves for itself. */
+const markdownResponse = (text: string) =>
+  Promise.resolve(
+    new Response(text, { headers: { "content-type": "text/markdown" } })
+  );
+
+/**
+ * Answers the provider's scrape endpoint with `answer`, and the address of any
+ * other request with `others`, which is a 404 unless a test says otherwise.
+ */
+function route(
+  answer: () => Promise<Response>,
+  others: (url: string) => Promise<Response> = notFound
+) {
+  fetcher.mockImplementation((input) =>
+    String(input) === providerScrapeUrl.href ? answer() : others(String(input))
+  );
+}
+
+/** Makes the provider read this page. */
+function readsPage(data: object, others?: (url: string) => Promise<Response>) {
+  route(() => Promise.resolve(scrapeAnswer(data)), others);
+}
+
+/** The address of every request the fetch double was given, in order. */
+const requested = () => Arr.map(fetcher.mock.calls, ([input]) => String(input));
+
+/** Reads a link the learner gave, and keeps the cards it published. */
+function readLink(
+  url: string,
+  options: Pick<
+    Parameters<typeof scrapeUrl>[0],
+    "maxLength" | "selectionQuery"
+  > = {}
+) {
+  const { parts, publish } = createProgress();
+  return scrapeUrl({ ...options, toolCallId: "scrape", url, publish }).pipe(
+    overFetch,
+    Effect.map((output) => ({ output, parts }))
+  );
+}
 
 describe("research scrape tool", () => {
   beforeEach(() => {
-    firecrawlApp.scrape.mockReset();
     lookup.mockReset();
     lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
     selectRelevantContent.mockClear();
     fetcher.mockReset();
-    fetcher.mockImplementation(() =>
-      Promise.resolve(new Response("", { status: 404 }))
-    );
-    vi.stubGlobal("fetch", fetcher);
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
+    fetcher.mockImplementation(notFound);
   });
 
   it.effect("keeps Firecrawl metadata in tool text and UI data", () =>
     Effect.gen(function* () {
-      firecrawlApp.scrape.mockResolvedValue({
+      readsPage({
         markdown: "# DevTools",
         metadata: {
           description: "Debug and inspect AI SDK applications with DevTools",
@@ -63,24 +105,24 @@ describe("research scrape tool", () => {
           title: "AI SDK Core: DevTools",
         },
       });
-      const { parts, publish } = createProgress();
 
-      const output = yield* scrapeUrl({
-        toolCallId: "scrape-1",
-        url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
-        publish,
-      });
+      const { output, parts } = yield* readLink(
+        "https://ai-sdk.dev/docs/ai-sdk-core/devtools"
+      );
       const text = formatScrapeOutput(output);
 
       expect(text).toContain("- Title: AI SDK Core: DevTools");
       expect(text).toContain(
         "- Description: Debug and inspect AI SDK applications with DevTools"
       );
-      expect(fetch).not.toHaveBeenCalled();
-      expect(firecrawlApp.scrape).toHaveBeenCalledWith(
-        "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
-        expect.objectContaining({ formats: ["markdown"] })
-      );
+      // A page with a host name is read by the provider alone.
+      expect(requested()).toEqual([providerScrapeUrl.href]);
+      expect(yield* sentBodies(fetcher)).toMatchObject([
+        {
+          formats: ["markdown"],
+          url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        },
+      ]);
       expect(parts()).toEqual([
         expect.objectContaining({
           type: "data-scrape-url",
@@ -104,28 +146,22 @@ describe("research scrape tool", () => {
     "ends a scrape that never answers at the specialist step deadline",
     () =>
       Effect.gen(function* () {
-        const url = "https://ai-sdk.dev/docs/ai-sdk-core/devtools";
-        firecrawlApp.scrape.mockImplementation(
-          () => new Promise(() => undefined)
-        );
-        const { parts, publish } = createProgress();
-        const fiber = yield* Effect.forkChild(
-          scrapeUrl({ toolCallId: "scrape-hung", url, publish })
+        route(never);
+        const fiber = yield* inBackground(
+          readLink("https://ai-sdk.dev/docs/ai-sdk-core/devtools")
         );
 
         // The specialist step allows 30 seconds, and the scrape waits for all of it.
         yield* TestClock.adjust("29999 millis");
-        expect(parts()).toHaveLength(1);
+        expect(fiber.pollUnsafe()).toBeUndefined();
         yield* TestClock.adjust("1 millis");
 
-        const output = yield* Fiber.join(fiber);
+        const { output, parts } = yield* Fiber.join(fiber);
+        expect(parts()).toHaveLength(2);
         expect(output.error).toBe(
           "The page could not be retrieved. Please try again."
         );
-        expect(firecrawlApp.scrape).toHaveBeenCalledWith(
-          url,
-          expect.objectContaining({ autoResume: false })
-        );
+        expect(fetcher.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
       })
   );
 
@@ -133,12 +169,12 @@ describe("research scrape tool", () => {
     "gives a result page its own shorter limits and reports an unread page without a card",
     () =>
       Effect.gen(function* () {
-        firecrawlApp.scrape.mockReturnValue(new Promise(() => undefined));
-        const fiber = yield* Effect.forkChild(
+        route(never);
+        const fiber = yield* inBackground(
           readPage("https://example.com/slow", {
             deadlineMs: 10_000,
             timeoutMs: 8000,
-          })
+          }).pipe(overFetch)
         );
         yield* TestClock.adjust("9999 millis");
         expect(fiber.pollUnsafe()).toBeUndefined();
@@ -148,10 +184,13 @@ describe("research scrape tool", () => {
           metadata: {},
           url: "https://example.com/slow",
         });
-        expect(firecrawlApp.scrape).toHaveBeenLastCalledWith(
-          "https://example.com/slow",
-          { autoResume: false, formats: ["markdown"], timeout: 8000 }
-        );
+        expect(yield* sentBodies(fetcher)).toEqual([
+          {
+            url: "https://example.com/slow",
+            formats: ["markdown"],
+            timeout: 8000,
+          },
+        ]);
       })
   );
 
@@ -159,10 +198,10 @@ describe("research scrape tool", () => {
     Effect.gen(function* () {
       // Both ways of reading hang, so only the time left can end the read.
       const url = "https://93.184.216.34/docs/current";
-      fetcher.mockImplementation(() => new Promise(() => undefined));
-      firecrawlApp.scrape.mockReturnValue(new Promise(() => undefined));
-      const fiber = yield* Effect.forkChild(
+      fetcher.mockImplementation(never);
+      const fiber = yield* inBackground(
         readPage(url, { deadlineMs: 30_000, timeoutMs: 15_000 }).pipe(
+          overFetch,
           withTimeLeft("4 seconds")
         )
       );
@@ -174,27 +213,18 @@ describe("research scrape tool", () => {
         metadata: {},
         url,
       });
-      expect(firecrawlApp.scrape).toHaveBeenLastCalledWith(
-        url,
-        expect.objectContaining({ timeout: 4000 })
-      );
+      expect(requested()).toContain(providerScrapeUrl.href);
+      expect(yield* sentBodies(fetcher)).toMatchObject([{ timeout: 4000 }]);
     })
   );
 
   it.effect("rejects private scrape targets before fetching or crawling", () =>
     Effect.gen(function* () {
-      const { parts, publish } = createProgress();
-
-      const output = yield* scrapeUrl({
-        toolCallId: "scrape-localhost",
-        url: "http://localhost:3000/admin",
-        publish,
-      });
+      const { output, parts } = yield* readLink("http://localhost:3000/admin");
       const text = formatScrapeOutput(output);
 
       expect(text).toContain("Only public http(s) URLs can be scraped");
-      expect(fetch).not.toHaveBeenCalled();
-      expect(firecrawlApp.scrape).not.toHaveBeenCalled();
+      expect(fetcher).not.toHaveBeenCalled();
       expect(parts()).toEqual([
         expect.objectContaining({
           type: "data-scrape-url",
@@ -215,62 +245,38 @@ describe("research scrape tool", () => {
   it.effect("rejects public hostnames that resolve to private addresses", () =>
     Effect.gen(function* () {
       lookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
-      const { publish } = createProgress();
 
-      yield* scrapeUrl({
-        toolCallId: "scrape-rebound",
-        url: "https://example.com/internal",
-        publish,
-      });
+      yield* readLink("https://example.com/internal");
 
-      expect(fetch).not.toHaveBeenCalled();
-      expect(firecrawlApp.scrape).not.toHaveBeenCalled();
+      expect(fetcher).not.toHaveBeenCalled();
     })
   );
 
   it.effect("prefers source-native markdown for IP-literal URLs", () =>
     Effect.gen(function* () {
-      fetcher.mockImplementation((input: Parameters<typeof fetch>[0]) => {
-        if (
-          String(input) === "https://93.184.216.34/docs/ai-sdk-core/devtools.md"
-        ) {
-          return Promise.resolve(
-            new Response(
-              Arr.join(
-                [
-                  "# DevTools",
-                  "",
-                  "AI SDK DevTools gives you full visibility over your AI SDK calls with generateText, streamText, and ToolLoopAgent.",
-                ],
-                "\n"
-              ),
-              {
-                headers: { "content-type": "text/markdown" },
-              }
-            )
-          );
-        }
-
-        return Promise.resolve(
-          new Response("<html>docs shell</html>", {
-            headers: { "content-type": "text/html" },
-          })
-        );
-      });
-      firecrawlApp.scrape.mockResolvedValue({
-        markdown: "Search...\n\n# DevTools\n\n[Sign Up](https://vercel.com)",
-        metadata: {
-          description: "Debug and inspect AI SDK applications with DevTools",
-          title: "AI SDK Core: DevTools",
+      readsPage(
+        {
+          markdown: "Search...\n\n# DevTools\n\n[Sign Up](https://vercel.com)",
+          metadata: {
+            description: "Debug and inspect AI SDK applications with DevTools",
+            title: "AI SDK Core: DevTools",
+          },
         },
-      });
-      const { parts, publish } = createProgress();
+        (url) =>
+          url === "https://93.184.216.34/docs/ai-sdk-core/devtools.md"
+            ? markdownResponse(
+                "# DevTools\n\nAI SDK DevTools gives you full visibility over your AI SDK calls with generateText, streamText, and ToolLoopAgent."
+              )
+            : Promise.resolve(
+                new Response("<html>docs shell</html>", {
+                  headers: { "content-type": "text/html" },
+                })
+              )
+      );
 
-      const output = yield* scrapeUrl({
-        toolCallId: "scrape-native",
-        url: "https://93.184.216.34/docs/ai-sdk-core/devtools",
-        publish,
-      });
+      const { output, parts } = yield* readLink(
+        "https://93.184.216.34/docs/ai-sdk-core/devtools"
+      );
       const text = formatScrapeOutput(output);
 
       expect(text).toContain("full visibility over your AI SDK calls");
@@ -293,21 +299,14 @@ describe("research scrape tool", () => {
 
   it.effect("keeps source-native markdown when Firecrawl scrape fails", () =>
     Effect.gen(function* () {
-      fetcher.mockImplementation(() =>
-        Promise.resolve(
-          new Response("# Native source\n\nDirect markdown evidence.", {
-            headers: { "content-type": "text/markdown" },
-          })
-        )
+      route(
+        () => Promise.reject(new Error("offline")),
+        () => markdownResponse("# Native source\n\nDirect markdown evidence.")
       );
-      firecrawlApp.scrape.mockRejectedValue(new Error("offline"));
-      const { parts, publish } = createProgress();
 
-      const output = yield* scrapeUrl({
-        toolCallId: "scrape-native-fallback",
-        url: "https://93.184.216.34/docs/current",
-        publish,
-      });
+      const { output, parts } = yield* readLink(
+        "https://93.184.216.34/docs/current"
+      );
 
       expect(output.error).toBeUndefined();
       expect(output.data.content).toContain("Direct markdown evidence.");
@@ -327,19 +326,16 @@ describe("research scrape tool", () => {
     "falls back to alternate metadata fields when markdown is missing",
     () =>
       Effect.gen(function* () {
-        firecrawlApp.scrape.mockResolvedValue({
+        readsPage({
           metadata: {
             dcDescription: "Fallback description",
             ogTitle: "Fallback title",
           },
         });
-        const { parts, publish } = createProgress();
 
-        const output = yield* scrapeUrl({
-          toolCallId: "scrape-2",
-          url: "https://example.com/missing-markdown",
-          publish,
-        });
+        const { output, parts } = yield* readLink(
+          "https://example.com/missing-markdown"
+        );
         const text = formatScrapeOutput(output);
 
         expect(text).toContain("- Title: Fallback title");
@@ -361,16 +357,9 @@ describe("research scrape tool", () => {
 
   it.effect("keeps scrape output valid when metadata is unavailable", () =>
     Effect.gen(function* () {
-      firecrawlApp.scrape.mockResolvedValue({
-        markdown: "# Plain source",
-      });
-      const { parts, publish } = createProgress();
+      readsPage({ markdown: "# Plain source" });
 
-      const output = yield* scrapeUrl({
-        toolCallId: "scrape-no-metadata",
-        url: "https://example.com/plain",
-        publish,
-      });
+      const { output, parts } = yield* readLink("https://example.com/plain");
       const text = formatScrapeOutput(output);
 
       expect(text).not.toContain("- Title:");
@@ -390,16 +379,12 @@ describe("research scrape tool", () => {
 
   it.effect("passes the selection query to relevant content selection", () =>
     Effect.gen(function* () {
-      firecrawlApp.scrape.mockResolvedValue({
+      readsPage({
         markdown: "# DevTools\n\nUse AI SDK DevTools for local debugging.",
       });
-      const { publish } = createProgress();
 
-      yield* scrapeUrl({
+      yield* readLink("https://ai-sdk.dev/docs/ai-sdk-core/devtools", {
         selectionQuery: "AI SDK DevTools local debugging",
-        toolCallId: "scrape-query",
-        url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
-        publish,
       });
 
       expect(selectRelevantContent).toHaveBeenCalledWith(
@@ -413,17 +398,13 @@ describe("research scrape tool", () => {
 
   it.effect("allows exact-source callers to keep more source evidence", () =>
     Effect.gen(function* () {
-      firecrawlApp.scrape.mockResolvedValue({
+      readsPage({
         markdown: "# DevTools\n\nUse AI SDK DevTools for local debugging.",
       });
-      const { publish } = createProgress();
 
-      yield* scrapeUrl({
+      yield* readLink("https://ai-sdk.dev/docs/ai-sdk-core/devtools", {
         maxLength: 8000,
         selectionQuery: "AI SDK DevTools local debugging",
-        toolCallId: "scrape-long-source",
-        url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
-        publish,
       });
 
       expect(selectRelevantContent).toHaveBeenCalledWith(
@@ -437,14 +418,9 @@ describe("research scrape tool", () => {
 
   it.effect("writes an error part when Firecrawl scrape fails", () =>
     Effect.gen(function* () {
-      firecrawlApp.scrape.mockRejectedValue(new Error("offline"));
-      const { parts, publish } = createProgress();
+      route(() => Promise.reject(new Error("offline")));
 
-      const output = yield* scrapeUrl({
-        toolCallId: "scrape-3",
-        url: "https://example.com/offline",
-        publish,
-      });
+      const { output, parts } = yield* readLink("https://example.com/offline");
       const text = formatScrapeOutput(output);
 
       expect(text).toContain(
@@ -458,6 +434,36 @@ describe("research scrape tool", () => {
         })
       );
     })
+  );
+
+  it.effect(
+    "does not wait for a page that the provider says it is still processing",
+    () =>
+      Effect.gen(function* () {
+        route(() =>
+          Promise.resolve(
+            new Response(
+              encodeJsonText({
+                code: "SCRAPE_TIMEOUT",
+                details: {
+                  retryAfterSeconds: 30,
+                  state: "processing_continues",
+                },
+                error: "Scrape timed out",
+                success: false,
+              }),
+              { headers: { "retry-after": "30" }, status: 408 }
+            )
+          )
+        );
+
+        const { output } = yield* readLink("https://example.com/large.pdf");
+
+        expect(output.error).toBe(
+          "The page could not be retrieved. Please try again."
+        );
+        expect(fetcher).toHaveBeenCalledOnce();
+      })
   );
 
   it("recognizes successful scrape evidence", () => {
