@@ -7,6 +7,7 @@ import {
   DateTime,
   Duration,
   Effect,
+  MutableRef,
   Option,
   Record as Rec,
   type Result,
@@ -59,6 +60,7 @@ export function useMemoryActions() {
   const recall = useMemoryPage((state) => state.recall);
   const recallAll = useMemoryPage((state) => state.recallAll);
   const withhold = useMemoryPage((state) => state.withhold);
+  const release = useMemoryPage((state) => state.release);
   const reopen = useMemoryPage((state) => state.reopen);
   const rewrite = useMemoryPage((state) => state.rewrite);
 
@@ -193,31 +195,48 @@ export function useMemoryActions() {
     const before = latest();
     const editing = before.open && before.target?.id === memory.id;
 
+    const taken = MutableRef.make(Option.none<MemoryDraft>());
+
     /**
-     * The words to bring back: what the editor on the memory still held when
-     * the deletion closed it, or `restore` when it held nothing more.
+     * Takes the words to bring back, once: what the editor on the memory still
+     * held when the deletion closed it, or `restore` when it held nothing more.
+     * The page store then lets them go, so nothing of a deleted memory stays
+     * for the life of the page.
      */
-    function words() {
-      return Option.getOrElse(
-        Rec.get(latest().withheld, memory.id),
-        () => restore
+    function take() {
+      const words = Option.getOrElse(MutableRef.get(taken), () =>
+        Option.getOrElse(Rec.get(latest().withheld, memory.id), () => restore)
       );
+
+      MutableRef.set(taken, Option.some(words));
+      release(memory.id);
+      return words;
     }
 
-    const undo = createUndo(() => add(words()));
+    const undo = createUndo(() => add(take()));
 
     forget(memory.id);
 
     const { session } = latest();
     const shown = toast(t("deleted"), {
-      action: { label: t("undo"), onClick: undo.press },
+      action: {
+        label: t("undo"),
+        // The words are taken at the press, because the toast leaves with it.
+        onClick: () => {
+          take();
+          undo.press();
+        },
+      },
       duration: Duration.toMillis(UNDO),
+      // An offer nobody took needs its words no more.
+      onAutoClose: () => release(memory.id),
+      onDismiss: () => release(memory.id),
     });
 
     settle(() => removeById({ id: memory.id }), {
       done: undo.deleted,
       failed: () => {
-        const held = words();
+        const held = take();
 
         undo.kept();
         toast.dismiss(shown);

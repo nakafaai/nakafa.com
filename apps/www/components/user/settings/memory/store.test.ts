@@ -241,6 +241,15 @@ describe("memory page store", () => {
     expect(store.getState().withheld).toEqual({ [first.id]: grade });
   });
 
+  it("lets go of the words kept for one memory when its Undo took them or its offer ended, and keeps the others", () => {
+    const store = createMemoryStore();
+
+    store.getState().withhold(first.id, grade);
+    store.getState().withhold(second.id, plan);
+    store.getState().release(first.id);
+    expect(store.getState().withheld).toEqual({ [second.id]: plan });
+  });
+
   it("drops the words kept for a memory when an editor opens on it again, by the learner or after a refused deletion", () => {
     const opened = createMemoryStore();
     opened.getState().withhold(first.id, grade);

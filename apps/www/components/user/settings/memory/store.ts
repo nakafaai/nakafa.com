@@ -49,8 +49,8 @@ const MemoryStateSchema = Schema.Struct({
    * id of the memory. The editor does not save them. They come back when the
    * learner undoes the deletion or the server does not delete the memory, and
    * each deletion keeps its own, so deleting another memory meanwhile takes
-   * nothing from an Undo that is still offered. They go when an editor opens on
-   * the memory again.
+   * nothing from an Undo that is still offered. They go when the Undo takes
+   * them, when its offer ends, or when an editor opens on the memory again.
    */
   withheld: Schema.Record(Schema.String, DraftSchema),
 });
@@ -98,6 +98,11 @@ interface MemoryActions {
    * keeps its editor.
    */
   recallAll: () => void;
+  /**
+   * Lets go of the words kept for the deleted memory `id`: its Undo took them,
+   * or its offer ended.
+   */
+  release: (id: Memory["id"]) => void;
   /**
    * Opens the editor again with the draft of a save that failed, on `memory`,
    * or on a new memory when it is null. `session` is the opening the draft
@@ -194,6 +199,8 @@ export function createMemoryStore() {
                   : Rec.remove(state.withheld, memory.id),
             }
       ),
+    release: (id) =>
+      set((state) => ({ withheld: Rec.remove(state.withheld, id) })),
     rewrite: (id, draft, now) =>
       set((state) =>
         state.target?.id === id
