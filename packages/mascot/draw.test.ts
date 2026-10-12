@@ -21,6 +21,14 @@ const CAT = "cat.0.243e66.right.open";
 /** How many hexadecimal digits of the SHA-256 a pinned digest keeps. */
 const DIGEST_LENGTH = 8;
 
+/**
+ * Drawing, writing, and hashing all 3,672 pictures takes a fraction of a second
+ * alone, and several seconds on a busy runner that also measures coverage. The
+ * default five seconds is not a fact about the pictures, so this test names
+ * its own limit.
+ */
+const PINNED_TIMEOUT = 60_000;
+
 /** The mascot of a code that is known to be good. */
 function mascotOf(code: string) {
   return Result.getOrThrow(decode(code));
@@ -172,6 +180,7 @@ describe("mascot/draw", () => {
           concurrency: 8,
         });
         expect(Arr.flatten(changed)).toEqual([]);
-      })
+      }),
+    PINNED_TIMEOUT
   );
 });
