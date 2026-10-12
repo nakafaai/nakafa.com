@@ -8,8 +8,9 @@ const SHARE_ENTRY = "share";
 
 /**
  * The link a learner gives out for a shared chat. The token rides in the
- * fragment, which a browser never sends: it reaches no server, no log and no
- * analytics event that keeps the path, and the chat id alone opens nothing.
+ * fragment, which a browser sends to no server, so opening the link leaves it in
+ * no request log, and the analytics client drops fragments from the URLs it
+ * reports. The chat id alone opens nothing.
  */
 export function shareLink(chatId: Id<"chats">, token: string) {
   const link = new URL(`/chat/${chatId}`, getAppUrl());

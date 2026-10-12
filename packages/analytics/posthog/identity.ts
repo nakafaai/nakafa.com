@@ -26,7 +26,9 @@ export type AnalyticsIdentityAuthorization =
  * Minimizes one baseline event URL to origin plus pathname.
  *
  * Query strings and fragments can carry user-entered text, so the always-on
- * tier never sends them. Granted-tier events keep full URLs under consent.
+ * tier never sends them. Granted-tier events keep query strings under consent.
+ * The client drops fragments from the URLs of both tiers, because a share link
+ * carries its token there (`disable_capture_url_hashes` in `browser.ts`).
  */
 function minimizeBaselineEventUrl(event: CaptureResult): CaptureResult {
   const currentUrl = event.properties.$current_url;

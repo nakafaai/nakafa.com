@@ -171,6 +171,9 @@ export const enableBaselineAnalytics = Effect.fn(
           capture_pageview: false,
           cookieless_mode: "on_reject",
           defaults: "2026-01-30",
+          // A share link carries its token in the URL fragment, so no event
+          // reports a fragment. Later `defaults` turn this on themselves.
+          disable_capture_url_hashes: true,
           // Plain JSON bodies keep ingestion inspectable in tests and
           // debugging; pageview payloads are too small to need gzip.
           disable_compression: true,
