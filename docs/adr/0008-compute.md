@@ -156,9 +156,13 @@ The change that narrowed the pipeline to one ranking left temporary contract
 steps, and most are done. On 12 October 2026 the prune found no counter and no
 maintenance watermark of another window or scope on dev or production, so the
 step that retired them is deleted, and counters and watermarks are stored under
-the seven-day window alone. `getTrendingSubjects` takes only the locale: a web
-deployment older than the narrowing still sends the deleted `windowKey`
-argument and meets a validation error from the query until it is replaced.
+the seven-day window alone. `getTrendingSubjects` takes only the locale. Only
+the web server calls it, from the cached home page, and the last web deployment
+that sent the deleted `windowKey` argument was created on 11 October 2026 at
+18:23 UTC. The project keeps a browser on its own deployment for 12 hours after
+that deployment was created (`skewProtectionMaxAge` 43,200 seconds, read from
+the Vercel project on 12 October 2026), so since 12 October 06:23 UTC no
+deployment that sends the argument takes requests.
 
 One step remains, which this ADR owns. A daily signal, a viewer key or a queued
 view written before the narrowing may still carry the placement scope, and a
