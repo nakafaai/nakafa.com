@@ -56,7 +56,7 @@ function words(notes: (typeof NinaLearner.Type)["recalled"]) {
 
 /**
  * What every reader of a learner's memories returns, as the words of the
- * memories: the Memory page's list, the memories a turn starts with, the ones
+ * memories: the Memory page's list, the memories a turn recalls, the ones
  * the capture call reads, and the search they use.
  */
 async function readers(f: Awaited<ReturnType<typeof createMemoryTest>>) {
