@@ -10,6 +10,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useTimeout } from "@mantine/hooks";
+import { MAX_TITLE_LENGTH } from "@repo/backend/client/nina/presentation";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -200,6 +201,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
           <Input
             className="h-8 border-none px-2 py-0 shadow-none focus-visible:ring-0"
             disabled={isPending}
+            maxLength={MAX_TITLE_LENGTH}
             onChange={(e) => setChatTitle(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {

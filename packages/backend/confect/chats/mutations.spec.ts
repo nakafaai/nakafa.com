@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { NinaTitle } from "@repo/backend/client/nina/presentation";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
@@ -13,7 +14,9 @@ export default GroupSpec.make()
       name: "updateChatTitle",
       args: () => ({
         chatId: IdSchema("chats"),
-        title: Schema.String,
+        // The same rule as a title Nina writes: trimmed, not empty, at most
+        // 80 characters.
+        title: NinaTitle,
       }),
       returns: () => IdSchema("chats"),
       error: () => Schema.Union([AuthFailure, ChatAccessError]),

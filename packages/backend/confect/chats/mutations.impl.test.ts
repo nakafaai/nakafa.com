@@ -80,6 +80,39 @@ it("enforces chat ownership for title, visibility, and deletion mutations", asyn
   }
 });
 
+it("trims a renamed title, and refuses one that is empty or longer than 80 characters before it writes anything", async () => {
+  const t = createConvexTestWithBetterAuth();
+  const identity = await t.mutation((ctx) =>
+    seedAuthenticatedUser(ctx, { now: NOW, suffix: "chat-rename-bound" })
+  );
+  const owner = t.withIdentity({
+    subject: identity.authUserId,
+    sessionId: identity.sessionId,
+  });
+  const chatId = await t.mutation((ctx) =>
+    ctx.db.insert("chats", {
+      threadId: "fixture-thread",
+      type: "study",
+      updatedAt: NOW,
+      userId: identity.userId,
+      visibility: "private",
+    })
+  );
+  const rename = (title: string) =>
+    owner.mutation(api.chats.mutations.updateChatTitle, { chatId, title });
+
+  await expect(rename("x".repeat(81))).rejects.toThrow();
+  await expect(rename("   ")).rejects.toThrow();
+  expect(
+    (await t.query((ctx) => ctx.db.get("chats", chatId)))?.title
+  ).toBeUndefined();
+
+  await rename(`  ${"x".repeat(80)}  `);
+  expect(
+    await owner.query(api.chats.queries.getChat, { chatId })
+  ).toMatchObject({ title: "x".repeat(80) });
+});
+
 it("stores a renamed title sealed and reads it back as the new title", async () => {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation((ctx) =>
