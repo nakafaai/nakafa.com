@@ -10,16 +10,10 @@ import { createStableId } from "@repo/utilities/id";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Effect, Fiber } from "effect";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
 
-/** Converts unknown Mermaid renderer failures into a user-visible message. */
-function getMermaidRenderErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "Failed to render Mermaid chart";
-}
 /**
  * How a rendered diagram sits in its box. Auto margins center a smaller
  * diagram and let a larger one start at the edge, where it stays scrollable.
@@ -53,6 +47,7 @@ export function Mermaid({
   fit = "contain",
   label,
 }: MermaidProps) {
+  const t = useTranslations("Ai");
   const componentId = useId();
   const { resolvedTheme } = useTheme();
   const renderId = createStableId(
@@ -64,7 +59,8 @@ export function Mermaid({
     (getThemeAppearance(resolvedTheme) === "dark" ? "dark" : "default");
   const renderKey = `${renderId}-${theme}`;
   const [renderState, setRenderState] = useState({
-    errorMessage: "",
+    detail: "",
+    failed: false,
     renderKey: "",
     svg: "",
   });
@@ -87,9 +83,13 @@ export function Mermaid({
                 source: "mermaid-render",
               });
               return {
-                errorMessage: svg
-                  ? ""
-                  : getMermaidRenderErrorMessage(error.cause),
+                // The parser's own words are shown only when no earlier
+                // render can stand in for this one.
+                detail:
+                  svg || !(error.cause instanceof Error)
+                    ? ""
+                    : error.cause.message,
+                failed: !svg,
                 renderKey,
                 svg,
               };
@@ -98,7 +98,8 @@ export function Mermaid({
             Effect.sync(() => {
               lastValidSvg.current = svg;
               return {
-                errorMessage: "",
+                detail: "",
+                failed: false,
                 renderKey,
                 svg,
               };
@@ -123,15 +124,20 @@ export function Mermaid({
     );
   }
   // Only show error if we have no valid SVG to display
-  if (hasCurrentRender && renderState.errorMessage && !renderState.svg) {
+  if (hasCurrentRender && renderState.failed && !renderState.svg) {
     return (
       <div className={cn("flex overflow-auto", className)}>
         <div className="m-auto w-full border border-destructive bg-card p-4 text-destructive">
-          <p className="font-mono text-sm">
-            Mermaid Error: {renderState.errorMessage}
-          </p>
+          <p className="text-sm">{t("diagram-error")}</p>
           <details className="mt-2">
-            <summary className="cursor-pointer text-xs">Show Code</summary>
+            <summary className="cursor-pointer text-xs">
+              {t("show-code")}
+            </summary>
+            {renderState.detail ? (
+              <pre className="mt-2 overflow-x-auto rounded border bg-background p-2 text-destructive text-xs">
+                {renderState.detail}
+              </pre>
+            ) : null}
             <pre className="mt-2 overflow-x-auto rounded border bg-background p-2 text-foreground text-xs">
               {chart}
             </pre>

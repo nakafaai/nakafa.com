@@ -1,7 +1,5 @@
 import { Array as Arr, MutableHashMap, Option } from "effect";
 
-const MERMAID_DEFAULT_DESCRIPTION = "Key ideas shown visually.";
-const MERMAID_DEFAULT_TITLE = "Diagram";
 const MERMAID_META_REGEX = /\b(title|description)=("[^"]*"|'[^']*'|[^\s]+)/g;
 const MERMAID_SQUARE_LABEL_REGEX =
   /(^|[^\w])([A-Za-z_][\w-]*)(\[)(?!\[|\(|\/|\\)([^\]\n]+)(\])/g;
@@ -21,15 +19,14 @@ const MATH_OPERATOR_PATTERN = /(?:\d|\p{L})\s*(?:[+\-*/=<>])\s*(?:\d|\p{L})/u;
 const SINGLE_VARIABLE_PATTERN = /^[A-Za-z](?:[_^][A-Za-z0-9{}]+)?$/;
 const MERMAID_FLOWCHART_DECLARATION_REGEX = /^(flowchart|graph)\b/;
 
-/** Reads diagram copy from a markdown code fence info string. */
+/**
+ * Reads diagram copy from a markdown code fence info string. A field the fence
+ * leaves out is `undefined`: the words that stand in for it are the reader's
+ * language, so the renderer that knows the language chooses them.
+ */
 export function readMermaidMetadata(meta?: string | null) {
-  const fallback = {
-    description: MERMAID_DEFAULT_DESCRIPTION,
-    title: MERMAID_DEFAULT_TITLE,
-  };
-
   if (!meta) {
-    return fallback;
+    return { description: undefined, title: undefined };
   }
 
   const values = MutableHashMap.empty<string, string>();
@@ -50,8 +47,8 @@ export function readMermaidMetadata(meta?: string | null) {
   );
 
   return {
-    description: description || fallback.description,
-    title: title || fallback.title,
+    description: description || undefined,
+    title: title || undefined,
   };
 }
 

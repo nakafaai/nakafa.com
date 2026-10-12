@@ -28,6 +28,7 @@ export const reactTableComponents: ReactMarkdownComponents = {
     <TableCell
       className="border-r last:border-r-0"
       data-nakafa="table-cell"
+      dir="auto"
       {...props}
     >
       {filterWhitespaceNodes(children)}
@@ -37,6 +38,7 @@ export const reactTableComponents: ReactMarkdownComponents = {
     <TableHead
       className="border-r font-medium last:border-r-0"
       data-nakafa="table-head"
+      dir="auto"
       {...props}
     >
       {filterWhitespaceNodes(children)}

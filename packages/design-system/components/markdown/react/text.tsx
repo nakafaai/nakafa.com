@@ -6,6 +6,18 @@ import type { ReactMarkdownComponents } from "@repo/design-system/components/mar
 import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import { cn } from "cn";
 
+/**
+ * The block elements of a Markdown response take the direction of their own
+ * content (`dir="auto"`), so an Arabic paragraph, list, heading or cell starts
+ * at its own side and its markers and punctuation follow, in an answer that
+ * mixes scripts as much as in one that is wholly Arabic. The lesson renderer
+ * does not map these elements here, so its text is unchanged.
+ *
+ * A list sets its direction and its items inherit it. An element reads its
+ * direction from its text and passes over any child that has a `dir` of its
+ * own, so a list whose items had one would find no text and stay as the page
+ * is, and its marker room would stay on the wrong side.
+ */
 export const reactTextComponents: ReactMarkdownComponents = {
   a: ({ node: _node, ...props }) => <Anchor data-nakafa="anchor" {...props} />,
   blockquote: ({ node: _node, ...props }) => (
@@ -20,6 +32,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
     <Heading
       className="mt-6 mb-4 text-2xl"
       data-nakafa="heading-1"
+      dir="auto"
       Tag="h1"
       {...props}
       enableLink={false}
@@ -29,6 +42,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
     <Heading
       className="mt-6 mb-4 text-xl"
       data-nakafa="heading-2"
+      dir="auto"
       Tag="h2"
       {...props}
       enableLink={false}
@@ -38,6 +52,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
     <Heading
       className="mt-6 mb-4 text-lg"
       data-nakafa="heading-3"
+      dir="auto"
       Tag="h3"
       {...props}
       enableLink={false}
@@ -47,6 +62,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
     <Heading
       className="mt-6 mb-4 text-base"
       data-nakafa="heading-4"
+      dir="auto"
       Tag="h4"
       {...props}
       enableLink={false}
@@ -56,6 +72,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
     <Heading
       className="mt-6 mb-4 text-base"
       data-nakafa="heading-5"
+      dir="auto"
       Tag="h5"
       {...props}
       enableLink={false}
@@ -65,6 +82,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
     <Heading
       className="mt-6 mb-4 text-base"
       data-nakafa="heading-6"
+      dir="auto"
       Tag="h6"
       {...props}
       enableLink={false}
@@ -78,7 +96,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
   ),
   li: ({ node: _node, ...props }) => (
     <li
-      className="text-pretty pl-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
+      className="text-pretty ps-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
       data-nakafa="list-item"
       {...props}
     />
@@ -87,11 +105,12 @@ export const reactTextComponents: ReactMarkdownComponents = {
     <ol
       className="my-4 list-decimal space-y-4 ps-8 last:mb-0"
       data-nakafa="ordered-list"
+      dir="auto"
       {...props}
     />
   ),
   p: ({ node: _node, ...props }) => (
-    <Paragraph data-nakafa="paragraph" {...props} />
+    <Paragraph data-nakafa="paragraph" dir="auto" {...props} />
   ),
   strong: ({ className, node: _node, ...props }) => (
     <strong
@@ -122,6 +141,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
     <ul
       className="my-4 list-disc space-y-4 ps-8 last:mb-0"
       data-nakafa="unordered-list"
+      dir="auto"
       {...props}
     />
   ),
