@@ -28,7 +28,7 @@ export const RENAME = "chats/mutations:updateChatTitle";
 export const DELETE = "chats/mutations:deleteChat";
 /** The mutation the share dialog calls to turn sharing on, and the query it reads the token with. */
 const SHARE = "chats/mutations:updateChatVisibility";
-const SHARE_TOKEN = "chats/queries:getShareToken";
+export const SHARE_TOKEN_QUERY = "chats/queries:getShareToken";
 /** What the pages say when a change fails. */
 export const FAILED = "We could not complete this action. Please try again.";
 
@@ -167,7 +167,7 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
      */
     share: Effect.fn("NakafaE2E.share")(function* (chatId: string) {
       yield* call("mutation", SHARE, { chatId, visibility: "public" });
-      return yield* call("query", SHARE_TOKEN, { chatId }).pipe(
+      return yield* call("query", SHARE_TOKEN_QUERY, { chatId }).pipe(
         Effect.flatMap(Schema.decodeUnknownEffect(Schema.String))
       );
     }),

@@ -1,16 +1,12 @@
 import { expect, type Page, type Request } from "@playwright/test";
-import {
-  Array as Arr,
-  MutableList,
-  Option,
-  Record as Rec,
-  Schema,
-} from "effect";
+import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import {
   ANSWER_MILLISECONDS,
   type Changes,
+  live,
   saved,
 } from "@/e2e/support/changes";
+import { openChatPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 
@@ -65,7 +61,7 @@ export function linkOn(origin: string, link: string) {
 }
 
 /** Opens the share dialog of the open chat, from the menu of the chat. */
-const openShareDialog = async (page: Page) => {
+export const openShareDialog = async (page: Page) => {
   await chatMenu(page).click();
   await page.getByRole("menuitem", { name: "Share chat" }).click();
   const dialog = page.getByRole("dialog");
@@ -130,7 +126,7 @@ export const readsChat = async (page: Page, title: string, prompt: string) => {
  * What the owner's page offers: to write to the chat, to manage it, and to
  * send a message again. A reader's page leaves all of them out.
  */
-export const offersWriting = async (page: Page) => {
+const offersWriting = async (page: Page) => {
   await expect(composer(page)).toBeVisible();
   await expect(chatMenu(page)).toBeVisible();
   await expect(retryButtons(page).first()).toBeVisible();
@@ -147,86 +143,30 @@ export const offersNoWriting = async (page: Page) => {
   await expect(retryButtons(page)).toHaveCount(0);
 };
 
-/** The queries that tell a page of a chat: its conversation with the latest turn, and its messages. */
-const CONVERSATION = "nina/conversation:get";
-const MESSAGES = "nina/messages:list";
-/** The facts a reader's page is told of a turn: where it stands, and which prompt it answers. */
-const READER_FACTS = [
-  "order",
-  "promptMessageId",
-  "promptedAt",
-  "state",
-  "usage",
-];
-/** What a turn cost the owner, which only the owner's page is told. */
-const COST_FACTS = ["credits", "tokens"];
-
-/** A turn summary as a page was told it: its keys are the facts the page was given. */
-const TurnSummary = Schema.Record(Schema.String, Schema.Unknown);
-const ToldConversation = Schema.fromJsonString(
-  Schema.Struct({ turn: Schema.NullOr(TurnSummary) })
-);
-const ToldMessages = Schema.fromJsonString(
-  Schema.Struct({
-    page: Schema.Array(
-      Schema.Struct({ metadata: Schema.optionalKey(TurnSummary) })
-    ),
-  })
-);
-
-/** Every turn summary a page was told, in its conversation and in its messages. */
-const summariesTold = (changes: Changes) =>
-  Arr.appendAll(
-    Arr.flatMap(changes.answersTo(CONVERSATION), (text) =>
-      Option.match(Schema.decodeOption(ToldConversation)(text), {
-        onNone: () => [],
-        onSome: ({ turn }) => Option.toArray(Option.fromNullishOr(turn)),
-      })
-    ),
-    Arr.flatMap(changes.answersTo(MESSAGES), (text) =>
-      Option.match(Schema.decodeOption(ToldMessages)(text), {
-        onNone: () => [],
-        onSome: ({ page }) =>
-          Arr.flatMap(page, ({ metadata }) =>
-            Option.toArray(Option.fromNullishOr(metadata))
-          ),
-      })
-    )
-  );
-
 /**
- * What the owner's page was told of the turns of its chat: where each stands,
- * and what each cost. The reader's page is checked against this.
+ * A learner with a chat, open on its page, where the learner sees every
+ * control of the owner. The page can read the clipboard, for the link.
  */
-export const learnsWhatTurnsCost = (changes: Changes) => {
-  const facts = Arr.flatMap(summariesTold(changes), Rec.keys);
-
-  expect(facts, "what the owner's page was told of the turns").toEqual(
-    expect.arrayContaining(COST_FACTS)
+export const ownedChat = Effect.fn("NakafaE2E.ownedChat")(function* (
+  page: Page,
+  baseURL: string,
+  words: { prompt: string; title: string }
+) {
+  yield* Effect.promise(() =>
+    page.context().grantPermissions(["clipboard-read", "clipboard-write"])
   );
-};
+  const { changes, learner } = yield* openChatPage(page, baseURL);
+  const chat = yield* learner.startChat(words.prompt);
+  yield* learner.titleNewest([words.title]);
 
-/**
- * What a reader's page was told of the turns of a shared chat: where each
- * stands and which prompt it answers, with an empty list of usage. None of
- * what a turn cost the owner, what Nina kept from it or what she suggests next
- * belongs to a reader.
- */
-export const learnsOnlyWhereTurnsStand = (changes: Changes) => {
-  const summaries = summariesTold(changes);
-
-  expect(
-    summaries.length,
-    "the turns the reader's page was told"
-  ).toBeGreaterThan(0);
-  for (const summary of summaries) {
-    expect(
-      Arr.difference(Rec.keys(summary), READER_FACTS),
-      "the facts of a turn that the reader's page was told beyond where it stands"
-    ).toEqual([]);
-    expect(summary.usage).toEqual([]);
-  }
-};
+  yield* Effect.promise(async () => {
+    await page.goto(`/en/chat/${chat.chatId}`);
+    await readsChat(page, words.title, words.prompt);
+    await offersWriting(page);
+    await live(changes);
+  });
+  return { changes, chat, learner };
+});
 
 /** One analytics event, as the proxy forwards it to PostHog. */
 const AnalyticsEvent = Schema.Struct({

@@ -1,23 +1,14 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import {
-  ANSWER_MILLISECONDS,
-  type Changes,
-  live,
-  trackChanges,
-} from "@/e2e/support/changes";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withBrowserContext } from "@/e2e/support/context";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+import { ANSWER_MILLISECONDS, type Changes } from "@/e2e/support/changes";
+import { runOnPage } from "@/e2e/support/chat";
+import { withLearner, withReader } from "@/e2e/support/reader";
 import { pageRows } from "@/e2e/support/rows";
 import {
-  learnsOnlyWhereTurnsStand,
-  learnsWhatTurnsCost,
   linkOn,
   notAvailable,
   offersNoWriting,
-  offersWriting,
+  ownedChat,
   promptOf,
   readLink,
   readsChat,
@@ -27,78 +18,17 @@ import {
   watchRequests,
 } from "@/e2e/support/share";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import {
+  learnsNothingOfWhoOwnsTheChat,
+  learnsOnlyWhereTurnsStand,
+  learnsWhatTurnsCost,
+  learnsWhoOwnsTheChat,
+} from "@/e2e/support/told";
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";
 /** What another learner's profile says in place of a list of chats. */
 const BY_LINK = "A shared chat opens with its link";
-
-/** The browser of a reader: a window of its own, with no session of the owner's. */
-const readerOptions = (baseURL: string) =>
-  ({
-    baseURL,
-    serviceWorkers: "block",
-    viewport: { height: 900, width: 1440 },
-  }) as const;
-
-/**
- * A page in a browser with no session, the way a reader without an account has
- * it, with the tracker of the changes it sends.
- */
-const withReader = <A, E, R>(
-  browser: Browser,
-  baseURL: string,
-  use: (page: Page, changes: Changes) => Effect.Effect<A, E, R>
-) =>
-  withBrowserContext(browser, readerOptions(baseURL), (context) =>
-    Effect.gen(function* () {
-      const page = yield* Effect.promise(() => context.newPage());
-      const changes = yield* trackChanges(page, []);
-      yield* seedAnalyticsConsent(page, "denied");
-      return yield* withObservedPageErrors(page, use(page, changes));
-    })
-  );
-
-/**
- * A page in a browser signed in as another learner, who owns none of the
- * owner's chats, with the tracker of the changes it sends.
- */
-const withLearner = <A, E, R>(
-  browser: Browser,
-  baseURL: string,
-  use: (page: Page, changes: Changes) => Effect.Effect<A, E, R>
-) =>
-  withBrowserContext(browser, readerOptions(baseURL), (context) =>
-    Effect.gen(function* () {
-      const page = yield* Effect.promise(() => context.newPage());
-      const { changes } = yield* openChatPage(page, baseURL);
-      return yield* withObservedPageErrors(page, use(page, changes));
-    })
-  );
-
-/**
- * A learner with a chat, open on its page, where the learner sees every
- * control of the owner. The page can read the clipboard, for the link.
- */
-const ownedChat = Effect.fn("NakafaE2E.ownedChat")(function* (
-  page: Page,
-  baseURL: string
-) {
-  yield* Effect.promise(() =>
-    page.context().grantPermissions(["clipboard-read", "clipboard-write"])
-  );
-  const { changes, learner } = yield* openChatPage(page, baseURL);
-  const chat = yield* learner.startChat(PROMPT);
-  yield* learner.titleNewest([TITLE]);
-
-  yield* Effect.promise(async () => {
-    await page.goto(`/en/chat/${chat.chatId}`);
-    await readsChat(page, TITLE, PROMPT);
-    await offersWriting(page);
-    await live(changes);
-  });
-  return { changes, chat, learner };
-});
 
 /** The link the dialog copies: the chat id alone in the path, and a token of 43 characters in the fragment. */
 const copiesALink = Effect.fn("NakafaE2E.copiesALink")(function* (
@@ -190,7 +120,10 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
   page: Page,
   origin: string
 ) {
-  const owner = yield* ownedChat(page, origin);
+  const owner = yield* ownedChat(page, origin, {
+    prompt: PROMPT,
+    title: TITLE,
+  });
   const { chatId } = owner.chat;
   // A chat that existed once, for the page that a chat that is not there gets.
   const gone = yield* owner.learner.startChat("A chat to delete");
@@ -231,15 +164,19 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
         yield* meetsNothing(reader, linkOn(origin, first.link));
         yield* readsByLink(reader, origin, second.link, chatId);
 
-        // No reader sent a mutation or an action to the server, and the pages
-        // of both were told where each turn stands and nothing of what it
-        // cost the owner, whose own page was told that as well.
+        // No reader sent a mutation or an action to the server. The pages of
+        // both were told where each turn stands and nothing of what it cost the
+        // owner, and nothing of the account that owns the chat. The owner's own
+        // page was told all of it.
         yield* Effect.sync(() => {
           expect(readerChanges.sent).toBe(0);
           expect(memberChanges.sent).toBe(memberSent);
           learnsWhatTurnsCost(owner.changes);
-          learnsOnlyWhereTurnsStand(readerChanges);
-          learnsOnlyWhereTurnsStand(memberChanges);
+          learnsWhoOwnsTheChat(owner.changes);
+          for (const readerSide of [readerChanges, memberChanges]) {
+            learnsOnlyWhereTurnsStand(readerSide);
+            learnsNothingOfWhoOwnsTheChat(readerSide);
+          }
         });
 
         // 7. No request of the reader's page holds a token, to any host, and the

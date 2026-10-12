@@ -5,6 +5,7 @@ import {
   Copy01Icon,
   Globe02Icon,
   Link04Icon,
+  Refresh03Icon,
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
@@ -13,6 +14,7 @@ import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { cn } from "cn";
@@ -25,11 +27,71 @@ import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.c
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
- * Owns sharing state and visibility admission independently of title editing.
- * The link carries a token the server draws when the chat is shared, so the
- * link can be copied once the token arrives.
+ * The share dialog of one chat. A link the server could not load shows in the
+ * dialog, which offers to load it again, and never takes the chat page with it.
  */
 export function ChatSharing({
+  chat,
+  open,
+  onOpenChange,
+}: {
+  chat: ChatView;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <ErrorBoundary
+      fallbackRender={({ resetErrorBoundary }) => (
+        <ChatSharingError
+          onOpenChange={onOpenChange}
+          onRetry={resetErrorBoundary}
+          open={open}
+        />
+      )}
+    >
+      <ChatSharingDialog chat={chat} onOpenChange={onOpenChange} open={open} />
+    </ErrorBoundary>
+  );
+}
+
+/**
+ * The share dialog while the link could not be loaded. It says so in one
+ * sentence and offers to load the link again, which asks the server anew.
+ */
+function ChatSharingError({
+  open,
+  onOpenChange,
+  onRetry,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onRetry: () => void;
+}) {
+  const t = useTranslations("Ai");
+
+  return (
+    <ResponsiveDialog
+      description={t("share-link-error")}
+      footer={
+        <Button onClick={onRetry}>
+          <HugeIcons icon={Refresh03Icon} />
+          {t("retry")}
+        </Button>
+      }
+      open={open}
+      setOpen={onOpenChange}
+      title={t("share-chat")}
+    />
+  );
+}
+
+/**
+ * Owns sharing state and visibility admission independently of title editing.
+ * The link carries a token the server draws when the chat is shared, so the
+ * link can be copied once the token arrives. A token the server fails to read
+ * fails the dialog, which its boundary shows.
+ */
+function ChatSharingDialog({
   chat,
   open,
   onOpenChange,
@@ -48,6 +110,9 @@ export function ChatSharing({
     chats.queries.getShareToken,
     isPrivate ? "skip" : { chatId: chat._id }
   );
+  if (QueryResult.isFailure(tokenResult)) {
+    throw tokenResult.error;
+  }
   const token = QueryResult.isSuccess(tokenResult) ? tokenResult.value : null;
   /** Persist the selected chat visibility. */
   const handleUpdateVisibility = (visibility: ChatVisibility) => {

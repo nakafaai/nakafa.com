@@ -704,6 +704,7 @@
     "create-link": "Create link",
     "copy-link": "Copy link",
     "link-copied": "Link copied!",
+    "share-link-error": "We could not load the link",
     "private-chat-error": "Access denied",
     "private-chat-error-description": "This isn't your chat. Ask the owner for access.",
     "credits-label": "Credits",

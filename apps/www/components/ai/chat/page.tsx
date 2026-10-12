@@ -18,6 +18,12 @@ import { AiChat } from "@/components/ai/chat/view";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
 
+/**
+ * The page of one chat. A link can arrive after the address, as a change of its
+ * fragment in the same page, so the boundary that shows a chat the viewer may
+ * not read tries again when the token changes. The token is compared here and
+ * goes nowhere else.
+ */
 export function AiChatPage({
   chatId,
   shareToken,
@@ -26,7 +32,10 @@ export function AiChatPage({
   shareToken?: string | undefined;
 }) {
   return (
-    <ErrorBoundary fallback={<AiChatPageError chatId={chatId} />}>
+    <ErrorBoundary
+      fallback={<AiChatPageError chatId={chatId} />}
+      resetKeys={[shareToken]}
+    >
       <ChatProvider chatId={chatId} shareToken={shareToken}>
         <AiChatMain />
       </ChatProvider>

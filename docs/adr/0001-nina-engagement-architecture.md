@@ -63,6 +63,15 @@ whether the chat is private, shared or gone. A reader is told where each turn
 stands and which prompt it answers, and never what it cost, what Nina kept from
 it or what she suggests next, because those belong to the owner's account: the
 owner, who opens a chat by its id or through their own link, is told all of it.
+The same holds for the account itself. The chat a reader is sent names neither
+the account that owns it (`userId`) nor the turn that runs in it
+(`activeTurnId`), and no message or live stream a reader is sent names an
+account. What a page needs of a chat is its id, its thread to list the messages,
+its title and its visibility, and it takes a chat that names no owner as not its
+own, so `readChatAccess` gives a reader nothing to write. The owner is told every
+field the chat had, so an older page decodes the owner's chat as it always did,
+and an older page is never a reader of a link, because only a page that sends
+the token reads by one.
 Turning sharing off, or deleting the chat, deletes the token, so every link
 stops at once, and turning sharing on again draws a new one. One thing outlives
 a link: the address of a file attached to a message. The link guards the chat,
@@ -88,14 +97,15 @@ chat lose it without a reload when sharing stops, sharing again makes a
 different link while the first stays dead, and no request of the reader's page
 holds the token, the analytics it reported included. The turn summaries those
 pages were told hold no cost, token count, memory count or suggestion of the
-owner's, while the owner's own page was told the credits and tokens of its
-turn. The local runtime has no model, so each of its turns ends with the
-failure that offers no retry, and the browser test reaches no answer with
-follow-up suggestions, no completed turn that shows the credits control, and no
-failure that can be retried. A reader is sent no suggestions, a reader's turn
-carries no credits for that control to show, and the Retry of a failed answer
-reads the same access as the composer, `readChatAccess`, which a unit test pins
-for a reader.
+owner's, and the chat and the messages they were told name no account, while
+the owner's own page was told the credits and tokens of its turn and the account
+in its chat and in each message. The local runtime has no model, so each of its
+turns ends with the failure that offers no retry, and the browser test reaches
+no answer with follow-up suggestions, no completed turn that shows the credits
+control, and no failure that can be retried. A reader is sent no suggestions, a
+reader's turn carries no credits for that control to show, and the Retry of a
+failed answer reads the same access as the composer, `readChatAccess`, which a
+unit test pins for a reader.
 
 Nina's sheet reads a chat by its id and never holds a share token: a link opens
 the chat page, and the chat the sheet shows comes from the learner's own list,
@@ -116,7 +126,22 @@ The chat route renders its header on the server and the conversation after
 hydration, because a server never sees the fragment, and asking for the chat
 before the token is read would show the access denied state to a reader whose
 link is right. Convex data does not reach a server render, so before share
-tokens the server rendered the header and an empty conversation too.
+tokens the server rendered the header and an empty conversation too. The same
+reader can meet the page the other way round: the address without its fragment,
+and then the link in the same page, which a browser opens as a change of the
+fragment and not as a load. The error boundary of the page shows access denied
+for the first, so it resets when the token changes, and the page reads the chat
+without a reload. The token is only compared there and goes nowhere else.
+
+The share dialog reads the token of the link with a query, which can fail: with
+a typed failure when the server cannot read the account, and with a defect when
+it cannot open the sealed token. A failure shows in the dialog, as one sentence
+and a button to load the link again, which asks the server anew, and it never
+takes the chat page with it: the dialog has an error boundary of its own, so the
+owner of a chat is not told that it is not their chat because a link did not
+load. `apps/www/e2e/chat/link.browser.ts` proves the late link, and the dialog
+that says so when the query fails with the typed failure and loads the link
+again on Retry, in the production build.
 
 Two temporary contract steps remain from the change that introduced share
 tokens. This ADR owns them, and they end together. Until they do,

@@ -8,12 +8,14 @@ import {
   MutableHashSet,
   MutableList,
   Option,
+  Result,
   String as Str,
 } from "effect";
 import {
   decodeGiven,
   decodeSent,
   encodeRefusal,
+  failQueriesIn,
   type GivenSchema,
   isMutation,
   later,
@@ -49,7 +51,10 @@ export const ANSWER_MILLISECONDS = 15_000;
  * `release`, and what it shows meanwhile is what it showed on its own. A step
  * can also fail one mutation: after `failNext` the next mutation the page sends
  * never reaches the server, and the page is told the server could not take it.
- * What the tracker knows is what the page was given, never what the server sent.
+ * It can fail the answers of a query too: after `failQuery` every answer of
+ * that function reaches the page as the failure the server sends when the
+ * function throws, until `recoverQuery`. What the tracker knows is what the
+ * page was given, never what the server sent.
  *
  * It also keeps the frame of every change the server took, so a step can ask
  * whether the server holds given words (`took`). The count of changes cannot
@@ -67,6 +72,8 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     failing: false,
     /** The function the next failure is for; empty for any function. */
     failingPath: "",
+    /** The query whose answers fail, and what the page is told of why. */
+    failingQuery: Option.none<{ data: unknown; path: string }>(),
     held: false,
     listed: false,
     /** The HTTP origin of the backend the page talks to; empty until its connection opened. */
@@ -114,6 +121,11 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
       changes.origin = address.origin;
       // The function that each query of this connection runs, by its id.
       const queries = MutableHashMap.empty<number, string>();
+      /** The ids of the queries of this connection that run `udfPath`. */
+      const queriesOf = (udfPath: string) =>
+        Arr.filterMap(Arr.fromIterable(queries), ([queryId, path]) =>
+          path === udfPath ? Result.succeed(queryId) : Result.failVoid
+        );
 
       /** A mutation and an action are both changes the page asks the server to make. */
       const noticeChange = ({
@@ -218,10 +230,16 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
         server.send(message);
       });
       server.onMessage((message) => {
-        const frame = decodeGiven(message.toString());
+        // While a query is armed to fail, its answers reach the page as
+        // failures, and the tracker notes what the page was given.
+        const refused = Option.flatMap(changes.failingQuery, ({ data, path }) =>
+          failQueriesIn(message.toString(), queriesOf(path), data)
+        );
+        const given = Option.getOrElse(refused, () => message);
+        const frame = decodeGiven(given.toString());
 
         deliver(() => {
-          socket.send(message);
+          socket.send(given);
           if (Option.isSome(frame)) {
             noticeGiven(frame.value);
           }
@@ -263,6 +281,19 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     failNext(udfPath = "") {
       changes.failing = true;
       changes.failingPath = udfPath;
+    },
+    /**
+     * Fails every answer of a query of the function `udfPath` until
+     * `recoverQuery`: the page is told the function threw `data`, which it
+     * decodes as the typed failure of that function. A server that fails keeps
+     * failing, so a later answer of the same query fails too.
+     */
+    failQuery(udfPath: string, data: unknown) {
+      changes.failingQuery = Option.some({ data, path: udfPath });
+    },
+    /** Gives the page the server's own answers to the queries again. */
+    recoverQuery() {
+      changes.failingQuery = Option.none();
     },
     /** Keeps what the server answers from the page until `release`. */
     hold() {
