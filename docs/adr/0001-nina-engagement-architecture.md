@@ -113,11 +113,16 @@ is kept whatever it costs and only its tool results are shortened, never the
 words of the learner or of Nina, so one very long message or answer in it takes
 the history above its part.
 
-The size of the history starts a fold of the conversation summary, never a
-count of turns. After a completed turn, the follow-up action counts the
-complete turns the summary does not cover in model tokens, as the history would
-send them. A chat whose turns fit in the 32,000 token history budget is never
-folded. When they cost more, one fold summarizes the oldest of them with a fast
+The size of the history starts a fold of the conversation summary. After a
+completed turn, the follow-up action counts the complete turns the summary does
+not cover in model tokens, as the history would send them. A chat whose turns
+fit in the 32,000 token history budget, and that holds at most 64 of them, is
+never folded. The count is a second, much wider bound: a turn also costs
+documents to read and the framing of its messages, which the tokens of its text
+leave out, so very short turns would otherwise let the history grow to
+thousands of messages. Past 64 turns one fold covers the oldest 16, and the
+next waits for 16 new ones. When the turns cost more than the budget, one fold
+summarizes the oldest of them with a fast
 model, as many as it takes for the rest to cost at most 16,000 tokens, half the
 budget, so the next fold waits for about half a budget of new turns and the
 cached prefix holds in between. The newest complete turn is never folded, a
@@ -137,8 +142,9 @@ folded one batch per turn.
 
 Turns are read newest first, 16 at a time, and the read stops after the page
 that brings them past the history budget. A replaced asking never reaches the
-model, so it does not count toward that budget, and the read also stops once it
-has passed 32 askings it keeps nothing of, so a learner who retries one
+model, so it does not count toward that budget. The read also stops once it
+holds 64 turns, and once it has passed 32 askings it keeps nothing of, so a
+learner who retries one
 question again and again cannot make every turn read the whole chat. The turns
 behind such a run are in neither the history nor the summary, and the next fold
 takes them first. Counting costs a read: a completed turn reads the turns after

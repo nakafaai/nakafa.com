@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import { nextSummaryTarget } from "@repo/backend/confect/nina/fold";
+import {
+  HISTORY_TURNS,
+  nextSummaryTarget,
+} from "@repo/backend/confect/nina/fold";
 import { sentTurn } from "@repo/backend/confect/nina/history";
 import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
 import { provider } from "@repo/backend/test/gateway";
@@ -152,6 +155,27 @@ describe("Nina summary fold", () => {
     );
   });
 
+  it("folds a whole batch once the read holds the most turns the history takes, so the next fold waits for a batch of new turns", () => {
+    // Seventy turns of one token fit any budget. The read stopped at the newest sixty-four.
+    const first = costs(6, 5 + HISTORY_TURNS, 1);
+    expect(nextSummaryTarget(null, first, budget, Option.some(5))).toEqual(
+      Option.some(SUMMARY_FOLD_LIMIT - 1)
+    );
+    // After that fold, sixty-four uncovered turns wait and none is left out.
+    expect(
+      nextSummaryTarget(15, costs(16, 15 + HISTORY_TURNS, 1), budget, nothing)
+    ).toEqual(Option.none());
+    // One more turn leaves one out again, and the fold takes the next batch.
+    expect(
+      nextSummaryTarget(
+        15,
+        costs(17, 16 + HISTORY_TURNS, 1),
+        budget,
+        Option.some(16)
+      )
+    ).toEqual(Option.some(15 + SUMMARY_FOLD_LIMIT));
+  });
+
   it("folds the turns a read gave up on when it read only one turn, which alone outweighs the budget", () => {
     expect(
       nextSummaryTarget(
@@ -270,6 +294,26 @@ describe("Nina fold by size", () => {
     expect(growths).toBe(10);
     expect(model.doGenerateCalls).toHaveLength(2);
   }, 30_000);
+
+  it("folds one batch once a chat of short turns holds more turns than the history takes, and then waits for a batch of new turns", async () => {
+    const model = summaryModel("- The first sixteen turns.");
+    provider.languageModel.mockReturnValue(model);
+    const f = await createSummaryTest(HISTORY_TURNS + 3);
+    // Sixty-four short turns fit the budget and the count, so nothing folds.
+    await f.refresh(HISTORY_TURNS - 1);
+    expect(provider.languageModel).not.toHaveBeenCalled();
+    // The sixty-fifth is one too many: the fold covers the oldest batch.
+    await f.refresh(HISTORY_TURNS);
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: SUMMARY_FOLD_LIMIT - 1 }),
+    ]);
+    const shown = encodeJsonText(await f.input(HISTORY_TURNS + 1));
+    expect(shown).not.toContain(`"Question ${SUMMARY_FOLD_LIMIT - 1}"`);
+    expect(shown).toContain(`"Question ${SUMMARY_FOLD_LIMIT}"`);
+    // The next turn leaves forty-nine uncovered, so no second fold follows.
+    await f.refresh(HISTORY_TURNS + 1);
+    expect(model.doGenerateCalls).toHaveLength(1);
+  }, 60_000);
 
   it("takes the asking that a retry replaces out of the history, wherever it is, without a fold", async () => {
     provider.languageModel.mockReturnValue(summaryModel("unused"));

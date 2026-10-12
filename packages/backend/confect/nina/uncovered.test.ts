@@ -2,6 +2,7 @@ import { RegisteredFunction } from "@confect/server";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
+import { HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
 import {
   type NinaUncoveredTurn,
   SUMMARY_FOLD_LIMIT,
@@ -112,6 +113,18 @@ describe("Nina turns after the summary", () => {
     expect(Arr.map(turns, ({ order }) => order)).toEqual(Arr.range(0, 39));
     expect(turnPages).toBe(3);
   }, 15_000);
+
+  it("stops at the most turns the history takes, though they fit the budget, and names the turns it left out", async () => {
+    const f = await createNinaTest({
+      history: Arr.makeBy(HISTORY_TURNS + 6, () => ({})),
+    });
+    const { turns, turnPages, unread } = await read(f);
+    expect(Arr.map(turns, ({ order }) => order)).toEqual(
+      Arr.range(6, HISTORY_TURNS + 5)
+    );
+    expect(turnPages).toBe(HISTORY_TURNS / SUMMARY_FOLD_LIMIT);
+    expect(unread).toEqual(Option.some(5));
+  }, 30_000);
 
   it("goes on past a page of retries of one huge turn to the older turn that a fold would take", async () => {
     // Order 16 retries a question 15 times over and costs more than the whole budget.

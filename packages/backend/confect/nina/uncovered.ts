@@ -11,6 +11,7 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
+import { HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
 import {
   type Asking,
   newestAskings,
@@ -101,10 +102,11 @@ function outweighs(turns: readonly ReturnType<typeof costed>[]) {
  * Turns are read newest first, `SUMMARY_FOLD_LIMIT` at a time with the thread
  * messages they need, and the read stops after the page that brings them past
  * the history budget: older turns cannot fit beside the ones read, and a fold
- * takes them first. It also stops once it has passed `PASSED_LIMIT` rows
- * without keeping a turn, so a chat full of replaced askings cannot make it
- * read the whole chat. Either way the read is bounded by the budget, not by the
- * length of the chat.
+ * takes them first. It also stops once it holds `HISTORY_TURNS` turns, however
+ * little they cost, and once it has passed `PASSED_LIMIT` rows without keeping
+ * a turn, so neither a chat of very short turns nor one full of replaced
+ * askings can make it read the whole chat. The read is bounded by the budget
+ * and by those two counts, not by the length of the chat.
  *
  * `unread` names the highest order the read did not list, when it stopped
  * before the oldest turn the summary does not cover. The turns up to it are in
@@ -151,7 +153,14 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
   let exhausted = false;
   // Rows listed that kept no turn, which `PASSED_LIMIT` bounds.
   let passed = 0;
-  while (!(exhausted || outweighs(found) || passed >= PASSED_LIMIT)) {
+  while (
+    !(
+      exhausted ||
+      outweighs(found) ||
+      found.length >= HISTORY_TURNS ||
+      passed >= PASSED_LIMIT
+    )
+  ) {
     const rows = yield* query(refs.internal.nina.summaries.uncovered, {
       before: upTo,
       chatId: turn.chatId,

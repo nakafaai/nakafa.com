@@ -5,6 +5,15 @@ import { Array as Arr, Option, pipe, Schema } from "effect";
 const CostedTurn = Schema.Struct({ order: Schema.Int, tokens: Schema.Int });
 
 /**
+ * Turns the history holds at most, whatever they cost: four folds' worth. The
+ * token budget bounds what a call costs, but a turn also costs documents to
+ * read and the framing of its messages, which the count of its text leaves out.
+ * A chat of very short turns would otherwise grow to thousands of messages
+ * before it reached the budget.
+ */
+export const HISTORY_TURNS = 4 * SUMMARY_FOLD_LIMIT;
+
+/**
  * Returns the order a fold should summarize through, or none while the turns
  * the summary does not cover fit in the history `budget`. `turns` lists them
  * oldest first with what each costs as the model receives it. Past the budget,
@@ -19,9 +28,12 @@ const CostedTurn = Schema.Struct({ order: Schema.Int, tokens: Schema.Int });
  *
  * `unread` is the highest order that `turns` leaves out because the read gave
  * up on it, though the turns it did read are no more than the newest one or fit
- * the budget: a long run of replaced askings hid the turns behind them. Those
- * turns are in neither the history nor the summary, so the fold takes them
- * first, one batch at a time.
+ * the budget. Those turns are in neither the history nor the summary, so the
+ * fold takes them first. Two things end a read early. A long run of replaced
+ * askings hid the turns behind them: the fold covers those, one batch at a
+ * time. Or the read holds `HISTORY_TURNS` turns already: then the fold covers a
+ * whole batch from the oldest turn on, some of the turns it read included, so
+ * the next fold waits for a batch of new turns and not for the next one.
  */
 export function nextSummaryTarget(
   covered: number | null,
@@ -30,7 +42,9 @@ export function nextSummaryTarget(
   unread: Option.Option<number>
 ) {
   const limit = (covered ?? -1) + SUMMARY_FOLD_LIMIT;
-  const hidden = Option.map(unread, (order) => Math.min(order, limit));
+  const hidden = Option.map(unread, (order) =>
+    turns.length >= HISTORY_TURNS ? limit : Math.min(order, limit)
+  );
   if (Arr.reduce(turns, 0, (total, { tokens }) => total + tokens) <= budget) {
     return hidden;
   }
