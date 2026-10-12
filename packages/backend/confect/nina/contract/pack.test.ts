@@ -1,7 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
-import { Effect, Exit } from "effect";
+import {
+  NinaContextPackSchema,
+  openNinaLearningSession,
+} from "@repo/backend/confect/nina/contract/pack";
+import { Effect, Exit, Schema } from "effect";
 
 const learning = {
   assetId: "asset:id:material:mathematics:vector:addition",
@@ -86,6 +89,9 @@ describe("nina/contract/pack", () => {
 
         expect(session.context).not.toHaveProperty("placement");
         expect(session.context).not.toHaveProperty("focus");
+        expect(
+          yield* Schema.decodeEffect(NinaContextPackSchema)(session.context)
+        ).toEqual(session.context);
         expect(session.context.snapshot.tools).toMatchObject({
           allowPageFetch: false,
           evidenceScope: "general-learning",
