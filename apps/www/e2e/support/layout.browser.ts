@@ -30,7 +30,6 @@ const nextFrame = (page: Page) =>
 test("the layout shift recorder marks a shift of the toasts and keeps one of the page", async ({
   page,
 }) => {
-  await page.addInitScript(recordLayoutShifts, { key: KEY, overlay: TOASTER });
   // A blank document: the recorder is under test, not a product page.
   await page.setContent(
     `<!doctype html><title>recorder</title>
@@ -43,6 +42,10 @@ test("the layout shift recorder marks a shift of the toasts and keeps one of the
      <div id="page">page</div>
      <ol data-sonner-toaster><li data-sonner-toast>toast</li></ol>`
   );
+  // The content replaces the blank document without a navigation, so an init
+  // script would not run for it. The recorder starts from here, as the shell
+  // starts it, and the page has not shifted before.
+  await page.evaluate(recordLayoutShifts, { key: KEY, overlay: TOASTER });
   await nextFrame(page);
   expect(await readShifts(page)).toEqual([]);
 
