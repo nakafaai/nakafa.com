@@ -49,6 +49,7 @@ import {
   readTryoutSetPage,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/server";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());
 const transportMock = vi.hoisted(() => vi.fn<typeof fetch>());
@@ -73,6 +74,10 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
   Link: vi.fn(),
@@ -124,12 +129,99 @@ const TRACK = `${EXAM}/matematika-wajib`;
 const SET = `${TRACK}/set-1`;
 const SECTION = `${SET}/matematika-wajib`;
 beforeEach(() => {
+  resetTestRuntimeCache();
   fetchQueryMock.mockReset();
   transportMock.mockReset();
   vi.stubGlobal("fetch", transportMock);
 });
 
+/**
+ * Publishes the landing question and makes the runtime endpoint answer its
+ * signed artifact. Each call gets a fresh response, because a body is read
+ * once.
+ */
+const serveFeaturedQuestion = Effect.fn("www.tryout.test.featured")(
+  function* () {
+    const fixture = yield* makeTryoutRuntimeSource(
+      undefined,
+      makeLandingSource()
+    );
+    const context = yield* createTestPublication(fixture.source);
+    fetchQueryMock.mockImplementation(context.query);
+    const selected = yield* context.query(
+      refs.public.tryouts.queries.catalog.getFeaturedQuestion,
+      {
+        appLocale: "id",
+      }
+    );
+    const request = yield* makeTryoutRuntimeRequest([selected.question]);
+    const row = yield* context.query(
+      refs.internal.contentRelease.runtime.tryout.internal.read,
+      request
+    );
+    const found = yield* decodeProtectedRuntimeRow(
+      row,
+      yield* decodeProtectedContentRuntimeRequest(request)
+    ).pipe(
+      Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
+    );
+    assert.isNotNull(found);
+    const body = yield* Schema.encodeEffect(JsonTextSchema)(found);
+    transportMock.mockImplementation(() => {
+      const response = new Response(body, {
+        headers: {
+          "content-type": "application/json",
+          [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
+        },
+      });
+      Object.defineProperty(response, "url", {
+        value: `https://runtime.example.test${PROTECTED_CONTENT_RUNTIME_PATH}`,
+      });
+      return Promise.resolve(response);
+    });
+  }
+);
+
 describe("immutable try-out application catalog", () => {
+  it.effect(
+    "reaches Convex once for the hub, track and metadata of each release",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeTryoutRuntimeSource();
+        const context = yield* createTestPublication(fixture.source);
+        fetchQueryMock.mockImplementation(context.query);
+        const metadataArgs = {
+          appLocale: AppLocaleSchema.make("en"),
+          kind: "track",
+          publicPath: TRACK,
+        } as const;
+        const readAll = () =>
+          Effect.promise(() =>
+            Promise.all([
+              readTryoutHubPage("en"),
+              readTryoutTrackPage("en", TRACK),
+              readTryoutMetadata(metadataArgs),
+            ])
+          );
+
+        const first = yield* readAll();
+        const second = yield* readAll();
+
+        expect(second).toEqual(first);
+        for (const ref of [
+          refs.public.tryouts.queries.catalog.getHubPage,
+          refs.public.tryouts.queries.catalog.getTrackPage,
+          refs.public.tryouts.queries.catalog.getMetadata,
+        ]) {
+          expect(
+            Arr.filter(
+              fetchQueryMock.mock.calls,
+              ([called]) => called.convexFunctionName === ref.convexFunctionName
+            )
+          ).toHaveLength(1);
+        }
+      })
+  );
   it.effect.each(APP_LOCALE_CODES)(
     "serves the complete signed %s hierarchy and route metadata",
     (locale) =>
@@ -281,44 +373,7 @@ describe("immutable try-out application catalog", () => {
     "authenticates and renders the real featured question artifact",
     () =>
       Effect.gen(function* () {
-        const fixture = yield* makeTryoutRuntimeSource(
-          undefined,
-          makeLandingSource()
-        );
-        const context = yield* createTestPublication(fixture.source);
-        fetchQueryMock.mockImplementation(context.query);
-        const selected = yield* context.query(
-          refs.public.tryouts.queries.catalog.getFeaturedQuestion,
-          {
-            appLocale: "id",
-          }
-        );
-        const request = yield* makeTryoutRuntimeRequest([selected.question]);
-        const row = yield* context.query(
-          refs.internal.contentRelease.runtime.tryout.internal.read,
-          request
-        );
-        const found = yield* decodeProtectedRuntimeRow(
-          row,
-          yield* decodeProtectedContentRuntimeRequest(request)
-        ).pipe(
-          Effect.provideService(
-            ContentVerificationKeyResolver,
-            TEST_KEY_RESOLVER
-          )
-        );
-        assert.isNotNull(found);
-        const body = yield* Schema.encodeEffect(JsonTextSchema)(found);
-        const response = new Response(body, {
-          headers: {
-            "content-type": "application/json",
-            [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
-          },
-        });
-        Object.defineProperty(response, "url", {
-          value: `https://runtime.example.test${PROTECTED_CONTENT_RUNTIME_PATH}`,
-        });
-        transportMock.mockResolvedValueOnce(response);
+        yield* serveFeaturedQuestion();
         const featured = yield* Effect.promise(() => readFeaturedTryout("id"));
         expect(renderToStaticMarkup(featured.question)).toBe(
           "Technical question"
@@ -335,6 +390,27 @@ describe("immutable try-out application catalog", () => {
           ],
         });
       })
+  );
+  it.effect("asks Convex for the featured question once for each release", () =>
+    Effect.gen(function* () {
+      yield* serveFeaturedQuestion();
+
+      const first = yield* Effect.promise(() => readFeaturedTryout("id"));
+      const second = yield* Effect.promise(() => readFeaturedTryout("id"));
+
+      expect(renderToStaticMarkup(second.question)).toBe(
+        renderToStaticMarkup(first.question)
+      );
+      expect(
+        Arr.filter(
+          fetchQueryMock.mock.calls,
+          ([called]) =>
+            called.convexFunctionName ===
+            refs.public.tryouts.queries.catalog.getFeaturedQuestion
+              .convexFunctionName
+        )
+      ).toHaveLength(1);
+    })
   );
   it.effect(
     "preserves unavailable publication failures at Promise page boundaries",

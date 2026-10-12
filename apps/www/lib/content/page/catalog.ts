@@ -1,4 +1,3 @@
-import { HttpClient } from "@confect/js";
 import "server-only";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
@@ -16,7 +15,7 @@ import { applyContentCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
 import { decodeContentReleasePin } from "@/lib/content/published/release";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 import { isReservedPagePath } from "@/lib/ownership/route";
 
 const PublishedPageCatalogSchema = Schema.Struct({
@@ -45,7 +44,11 @@ const PublishedPageLocalePathSchema = Schema.Union([
 /** Result of resolving one Page identity into another active locale. */
 type PublishedPageLocalePath = typeof PublishedPageLocalePathSchema.Type;
 
-/** Reads and strictly decodes every locale-equivalent Page projection. */
+/**
+ * Reads and strictly decodes every locale-equivalent Page projection. The
+ * shells, the sitemap, the locale switch and the legal pages all read the
+ * catalog here, and the content store holds it once for each release.
+ */
 export const readPublishedPageCatalog = Effect.fn(
   "NakafaContent.readPublishedPageCatalog"
 )(function* () {
@@ -53,9 +56,7 @@ export const readPublishedPageCatalog = Effect.fn(
     appLocale: AppLocaleSchema.make(routing.defaultLocale),
     publicPath: "pages",
   };
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.page.catalog, {})
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(contentRelease.page.catalog, {});
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     undefined,
@@ -82,7 +83,11 @@ export const readPublishedPageCatalog = Effect.fn(
   } satisfies PublishedPageCatalog;
 });
 
-/** Caches the complete Page catalog under its signed family owner. */
+/**
+ * Caches the complete Page catalog under its signed family owner. The `use
+ * cache` boundary stays so that the legal pages prerender and the page tag
+ * still expires them.
+ */
 export async function getPublishedPageCatalog() {
   "use cache";
 

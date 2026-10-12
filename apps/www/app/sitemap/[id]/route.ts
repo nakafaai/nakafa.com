@@ -1,5 +1,6 @@
-import { Effect, Match } from "effect";
+import { Array as Arr, Effect, Match } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
+import { getCachedSitemapDescriptors } from "@/lib/sitemap/catalog";
 import { getCachedSitemapEntries } from "@/lib/sitemap/entries";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 import { buildSitemapUrlSetXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
@@ -59,9 +60,22 @@ function parseSitemapPageId(segment: string) {
   return pageId;
 }
 
-/** Builds one sitemap page response from bounded sitemap entries. */
+/**
+ * Builds one sitemap page response from bounded sitemap entries.
+ *
+ * The id comes from the request and its format admits any page number, so it is
+ * checked against the pages that the release lists in its sitemap index before
+ * anything is read, stored or cached for it. An id outside the list is a plain
+ * 404 that costs no Convex read and leaves no entry behind.
+ */
 const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
   function* (pageId: string) {
+    const descriptors = yield* Effect.tryPromise(() =>
+      getCachedSitemapDescriptors()
+    );
+    if (!Arr.some(descriptors, ({ id }) => id === pageId)) {
+      return createNotFoundResponse();
+    }
     const page = yield* Effect.tryPromise(() =>
       getCachedSitemapEntries({ pageId })
     );

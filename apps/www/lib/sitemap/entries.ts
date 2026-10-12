@@ -108,10 +108,15 @@ function getSitemapEntryLocales(pageId: string) {
 /** Reads one bounded sitemap page inside the sitemap origin cache.
  *
  * The cache key is the page id, which already encodes family, locale, and
- * partition. Entries keep the long built-in profile on purpose because only
- * publication purges them through the shared sitemap tag. The outcome is
- * built through `SitemapPageRead`, so only plain, serializable data is
- * cached. */
+ * partition. The `use cache` boundary stays so that the route still prerenders
+ * and the sitemap tag still expires it, and entries keep the long built-in
+ * profile on purpose because only a release purges them through that tag.
+ * Every Convex read behind the boundary goes through the content store, so a
+ * page is built from Convex only once for each release. The page itself, with
+ * its URLs, is derived on every fill, so a deploy that changes the routing or
+ * the origin takes effect at once, and the release check at the end of the
+ * route read runs on every fill. The outcome is built through
+ * `SitemapPageRead`, so only plain, serializable data is cached. */
 async function readCachedSitemapEntries(
   options: SitemapPageEntryOptions
 ): Promise<typeof SitemapPageRead.Type> {

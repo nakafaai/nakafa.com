@@ -13,6 +13,7 @@ import {
   getCachedPublishedText,
   type PublishedMarkdownInput,
 } from "@/lib/llms/published";
+import { activateTestRelease } from "@/test/active";
 import {
   testArticleArtifact,
   testArticleProjection,
@@ -25,10 +26,12 @@ import {
   previewSourcePath,
   previewWireArtifact,
 } from "@/test/content-preview";
+import { resetTestRuntimeCache, testRuntimeCache } from "@/test/store";
 
 const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
 const readContentMock = vi.hoisted(() => vi.fn());
+const derivation = vi.hoisted(() => ({ baseUrl: "" }));
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
 
 /** Test-only typed failure for the cached Promise boundary. */
@@ -97,10 +100,31 @@ vi.mock("next/cache", () => ({
   cacheLife: cacheLifeMock,
   cacheTag: cacheTagMock,
 }));
+/** Lets a test change what code derives from a stored answer, as a deploy does. */
+vi.mock("@/lib/llms/constants", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("@/lib/llms/constants")>();
+  derivation.baseUrl = original.BASE_URL;
+  return {
+    ...original,
+    get BASE_URL() {
+      return derivation.baseUrl;
+    },
+  };
+});
 vi.mock("@/lib/content/published/exchange", () => ({
   readPublishedContent: readContentMock,
 }));
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 beforeEach(() => {
+  resetTestRuntimeCache();
   cacheLifeMock.mockReset();
   cacheTagMock.mockReset();
   readContentMock.mockReset();
@@ -112,6 +136,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { materialData } = yield* preparePublishedFixtures();
+        activateTestRelease(materialData.activeReleaseId);
         const text = yield* Effect.tryPromise(() =>
           getCachedPublishedText({
             activeReleaseId: materialData.activeReleaseId,
@@ -133,7 +158,9 @@ describe("published llms markdown", () => {
           family: "material",
           publicPath: previewProjection.publicPath,
         });
-        expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
+        // The key names the release, so the entry has no timer and only its
+        // scope tag expires it.
+        expect(cacheLifeMock).toHaveBeenCalledExactlyOnceWith("max");
         expect(cacheTagMock).toHaveBeenCalledExactlyOnceWith(
           "content-scope:material"
         );
@@ -145,6 +172,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { articleData } = yield* preparePublishedFixtures();
+        activateTestRelease(articleData.activeReleaseId);
         const text = yield* Effect.tryPromise(() =>
           getCachedPublishedText({
             activeReleaseId: articleData.activeReleaseId,
@@ -173,6 +201,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { pageData } = yield* preparePublishedFixtures();
+        activateTestRelease(pageData.activeReleaseId);
         const text = yield* Effect.tryPromise(() =>
           getCachedPublishedText({
             activeReleaseId: pageData.activeReleaseId,
@@ -201,6 +230,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { materialData } = yield* preparePublishedFixtures();
+        activateTestRelease(materialData.activeReleaseId);
         readContentMock.mockReturnValueOnce(
           Effect.succeed({ ...materialData, sourceRevision: null })
         );
@@ -222,6 +252,7 @@ describe("published llms markdown", () => {
     () =>
       Effect.gen(function* () {
         const { materialData } = yield* preparePublishedFixtures();
+        activateTestRelease(materialData.activeReleaseId);
         const incompleteMdx = `${rawMdx}\n{`;
         readContentMock.mockReturnValueOnce(
           Effect.succeed({
@@ -256,9 +287,99 @@ describe("published llms markdown", () => {
   );
 });
 
+it.effect("reads and projects one body once for each release", () =>
+  Effect.gen(function* () {
+    const { materialData } = yield* preparePublishedFixtures();
+    activateTestRelease(materialData.activeReleaseId);
+    const input = {
+      activeReleaseId: materialData.activeReleaseId,
+      appLocale: previewProjection.appLocale,
+      family: "material",
+      publicPath: previewProjection.publicPath,
+    } as const;
+
+    const first = yield* Effect.tryPromise(() => getCachedPublishedText(input));
+    const second = yield* Effect.tryPromise(() =>
+      getCachedPublishedText(input)
+    );
+
+    expect(second).toBe(first);
+    expect(readContentMock).toHaveBeenCalledTimes(1);
+
+    // The next release names itself, and the text is read and projected again.
+    const nextInput = {
+      ...input,
+      activeReleaseId: ReleaseIdSchema.make("release-function-concept-next"),
+    };
+    activateTestRelease(nextInput.activeReleaseId);
+    yield* Effect.tryPromise(() => getCachedPublishedText(nextInput));
+    expect(readContentMock).toHaveBeenCalledTimes(2);
+  })
+);
+
+it.effect("keeps the signed source in the store and no derived text", () =>
+  Effect.gen(function* () {
+    const { materialData } = yield* preparePublishedFixtures();
+    activateTestRelease(materialData.activeReleaseId);
+
+    yield* Effect.tryPromise(() =>
+      getCachedPublishedText({
+        activeReleaseId: materialData.activeReleaseId,
+        appLocale: previewProjection.appLocale,
+        family: "material",
+        publicPath: previewProjection.publicPath,
+      })
+    );
+
+    // The stored value has exactly these four fields: the signed projection,
+    // the raw source and its provenance. The header and the projected Markdown
+    // are not in it.
+    expect(testRuntimeCache.set).toHaveBeenCalledExactlyOnceWith(
+      expect.any(String),
+      {
+        value: {
+          projection: expect.anything(),
+          rawMdx,
+          sourcePath: previewSourcePath,
+          sourceRevision,
+        },
+      },
+      expect.objectContaining({ name: "markdown.source" })
+    );
+  })
+);
+
+it.effect("derives the text from the stored source on every build", () =>
+  Effect.gen(function* () {
+    const { materialData } = yield* preparePublishedFixtures();
+    activateTestRelease(materialData.activeReleaseId);
+    const input = {
+      activeReleaseId: materialData.activeReleaseId,
+      appLocale: previewProjection.appLocale,
+      family: "material",
+      publicPath: previewProjection.publicPath,
+    } as const;
+
+    const before = yield* Effect.tryPromise(() =>
+      getCachedPublishedText(input)
+    );
+    // A deploy changes what code derives, while the release and the answers
+    // that Convex gave for it stay the same.
+    const original = derivation.baseUrl;
+    derivation.baseUrl = "https://deployed.example";
+    const after = yield* Effect.tryPromise(() => getCachedPublishedText(input));
+    derivation.baseUrl = original;
+
+    expect(before).toContain(`URL: ${original}/`);
+    expect(after).toContain("URL: https://deployed.example/");
+    expect(readContentMock).toHaveBeenCalledTimes(1);
+  })
+);
+
 it.effect("rejects a signed projection from a different family", () =>
   Effect.gen(function* () {
     const { materialData } = yield* preparePublishedFixtures();
+    activateTestRelease(materialData.activeReleaseId);
     readContentMock.mockReturnValueOnce(Effect.succeed(materialData));
     const failure = yield* Effect.tryPromise({
       catch: (cause) => new TestPublishedTextError({ cause }),

@@ -12,6 +12,8 @@ import {
   getShellArticleNavigation,
   readArticleNavigation,
 } from "@/lib/content/article/navigation";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const categoryReaderMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
@@ -28,6 +30,14 @@ vi.mock("@/lib/content/cache", () => ({
 vi.mock("@/lib/content/preview/config", () => ({
   hasPreviewConfig: previewConfigMock,
 }));
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 
 /** Builds one release-bound signed category page. */
 function categoryPage({
@@ -63,11 +73,35 @@ function categoryPage({
 
 describe("article navigation", () => {
   beforeEach(() => {
+    resetTestRuntimeCache();
+    activateTestRelease(releaseId);
     categoryReaderMock.mockReset();
     cacheMock.mockReset();
     previewConfigMock.mockReset();
     previewConfigMock.mockReturnValue(false);
   });
+
+  it.effect("reaches Convex once for each release and locale", () =>
+    Effect.gen(function* () {
+      categoryReaderMock.mockReturnValue(
+        Effect.succeed(
+          categoryPage({ category: "politics", done: true, title: "Politics" })
+        )
+      );
+
+      yield* readArticleNavigation("en");
+      yield* readArticleNavigation("en");
+      yield* Effect.tryPromise(() => getShellArticleNavigation("en"));
+      expect(categoryReaderMock).toHaveBeenCalledTimes(1);
+
+      yield* readArticleNavigation("id");
+      expect(categoryReaderMock).toHaveBeenCalledTimes(2);
+
+      activateTestRelease("release-article-next");
+      yield* readArticleNavigation("en");
+      expect(categoryReaderMock).toHaveBeenCalledTimes(3);
+    })
+  );
 
   it.effect("builds navigation from every signed category page", () =>
     Effect.gen(function* () {

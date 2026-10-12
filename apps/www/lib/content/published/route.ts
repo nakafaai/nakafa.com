@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { HttpClient } from "@confect/js";
 import "server-only";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
@@ -14,7 +13,7 @@ import {
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import { httpLayer } from "@/lib/convex/http";
+import { queryContentStore } from "@/lib/content/store/query";
 
 type ContentRouteArgs = Ref.Args<typeof contentRelease.ownership.resolve>;
 type ContentRouteResult = Ref.Returns<typeof contentRelease.ownership.resolve>;
@@ -65,7 +64,11 @@ const decodeActiveProjection = Effect.fn(
   }
   return projection;
 });
-/** Resolves ownership and its active release identity in one Convex query. */
+/**
+ * Resolves ownership and its active release identity in one Convex query. The
+ * proxy asks for every document request, so the content store keeps each
+ * answer, found or missing, for the release that gave it.
+ */
 export const readActiveContentRoute = Effect.fn(
   "NakafaContent.readActiveContentRoute"
 )(function* (input: ContentRouteArgs) {
@@ -75,9 +78,10 @@ export const readActiveContentRoute = Effect.fn(
     family: input.family,
     publicPath: input.publicPath,
   };
-  const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(contentRelease.ownership.resolve, args)
-  ).pipe(Effect.provide(httpLayer()));
+  const result = yield* queryContentStore(
+    contentRelease.ownership.resolve,
+    args
+  );
   if (result.kind === "unmanaged") {
     const activeReleaseId = yield* Schema.decodeEffect(
       Schema.NullOr(ReleaseIdSchema)

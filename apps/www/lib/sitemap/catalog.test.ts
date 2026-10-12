@@ -13,6 +13,8 @@ class MissingSignedMaterialInventory extends Schema.TaggedError<MissingSignedMat
 ) {}
 
 const activeMocks = vi.hoisted(() => ({
+  expireActiveContentIdentity: vi.fn(),
+  loadActiveContentIdentity: vi.fn(),
   readActiveContentIdentity: vi.fn(),
 }));
 const articleMocks = vi.hoisted(() => ({
@@ -53,9 +55,7 @@ vi.mock("@/lib/content/program/sitemap", () => ({
 vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
 
-vi.mock("@/lib/content/published/active", () => ({
-  readActiveContentIdentity: activeMocks.readActiveContentIdentity,
-}));
+vi.mock("@/lib/content/published/active", () => activeMocks);
 
 vi.mock("next/cache", () => ({
   /** Records sitemap origin-cache usage without touching Next internals. */
@@ -79,8 +79,15 @@ vi.mock("@repo/internationalization/src/routing", async () => {
 beforeEach(() => {
   nextCacheMocks.cacheLife.mockClear();
   nextCacheMocks.cacheTag.mockClear();
+  activeMocks.expireActiveContentIdentity
+    .mockReset()
+    .mockReturnValue(Effect.void);
   activeMocks.readActiveContentIdentity.mockReset();
   activeMocks.readActiveContentIdentity.mockReturnValue(
+    Effect.succeed({ releaseId: "release-material" })
+  );
+  activeMocks.loadActiveContentIdentity.mockReset();
+  activeMocks.loadActiveContentIdentity.mockReturnValue(
     Effect.succeed({ releaseId: "release-material" })
   );
   articleMocks.readPublishedArticleBuckets.mockReset();
@@ -267,9 +274,9 @@ describe("sitemap page catalog", () => {
 
   it.effect("rejects descriptors assembled across publication releases", () =>
     Effect.gen(function* () {
-      activeMocks.readActiveContentIdentity
-        .mockReturnValueOnce(Effect.succeed({ releaseId: "release-material" }))
-        .mockReturnValueOnce(Effect.succeed({ releaseId: "release-next" }));
+      activeMocks.loadActiveContentIdentity.mockReturnValueOnce(
+        Effect.succeed({ releaseId: "release-next" })
+      );
       materialMocks.readPublishedMaterialBuckets.mockReturnValue(
         Effect.succeed({
           activeReleaseId: "release-material",
@@ -285,6 +292,7 @@ describe("sitemap page catalog", () => {
         actualReleaseId: "release-next",
         expectedReleaseId: "release-material",
       });
+      expect(activeMocks.expireActiveContentIdentity).toHaveBeenCalledOnce();
     })
   );
 
@@ -360,5 +368,29 @@ describe("sitemap page catalog", () => {
     expect(descriptors).toContainEqual({ id: "base" });
     expect(nextCacheMocks.cacheTag).toHaveBeenCalledWith("content-sitemap");
     expect(nextCacheMocks.cacheLife).toHaveBeenCalledWith("max");
+  });
+
+  it("checks the release with Convex on every fill and never caches a stale index", async () => {
+    // The stored pointer still names the previous release while Convex names
+    // the next one, so a hit for the previous index must not be possible: the
+    // fill rebuilds the index and its final check fails.
+    activeMocks.loadActiveContentIdentity.mockReturnValue(
+      Effect.succeed({ releaseId: "release-next" })
+    );
+
+    await expect(getCachedSitemapDescriptors()).rejects.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      actualReleaseId: "release-next",
+      expectedReleaseId: "release-material",
+    });
+    expect(activeMocks.expireActiveContentIdentity).toHaveBeenCalledOnce();
+  });
+
+  it("derives the index from the stored answers on every fill", async () => {
+    await getCachedSitemapDescriptors();
+    await getCachedSitemapDescriptors();
+
+    expect(pageMocks.readPublishedPageCatalog).toHaveBeenCalledTimes(2);
+    expect(activeMocks.loadActiveContentIdentity).toHaveBeenCalledTimes(2);
   });
 });
