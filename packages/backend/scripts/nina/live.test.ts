@@ -205,7 +205,9 @@ describe("the deployment of the release gate over the Convex CLI", () => {
         Effect.flip
       );
 
-      expect(error.message).toContain("Refusing to run against the production");
+      expect(error.message).toContain(
+        "Refusing to run against a deployment that is not a dev deployment"
+      );
       expect(yield* fs.exists(log)).toBe(false);
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );

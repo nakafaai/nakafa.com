@@ -210,53 +210,19 @@ describe("the Convex CLI of the release gate", () => {
 });
 
 describe("the deployment check of the release gate", () => {
-  it.effect.each([
-    [
-      "a dev deployment",
-      { CONVEX_DEPLOYMENT: "dev:happy-animal-123" },
-      {
-        CONVEX_DEPLOYMENT: "dev:happy-animal-123",
-        CONVEX_DEPLOYMENT_TOKEN: "",
-        CONVEX_DEPLOY_KEY: "",
-      },
-    ],
-    [
-      "a dev deployment and a dev deploy key",
-      {
-        CONVEX_DEPLOYMENT: "dev:happy-animal-123",
-        CONVEX_DEPLOY_KEY: "dev:happy-animal-123|secret",
-      },
-      {
-        CONVEX_DEPLOYMENT: "dev:happy-animal-123",
-        CONVEX_DEPLOYMENT_TOKEN: "",
-        CONVEX_DEPLOY_KEY: "dev:happy-animal-123|secret",
-      },
-    ],
-    [
-      "only a dev deploy key",
-      { CONVEX_DEPLOY_KEY: "dev:happy-animal-123|key" },
-      {
-        CONVEX_DEPLOYMENT: "",
-        CONVEX_DEPLOYMENT_TOKEN: "",
-        CONVEX_DEPLOY_KEY: "dev:happy-animal-123|key",
-      },
-    ],
-    [
-      "only a dev deployment token",
-      { CONVEX_DEPLOYMENT_TOKEN: "dev:happy-animal-123|token" },
-      {
-        CONVEX_DEPLOYMENT: "",
-        CONVEX_DEPLOYMENT_TOKEN: "dev:happy-animal-123|token",
-        CONVEX_DEPLOY_KEY: "",
-      },
-    ],
-  ] as const)(
-    "goes on with %s and blanks every other setting the CLI reads",
-    ([, env, pinned]) =>
+  it.effect(
+    "goes on with a dev deployment and blanks the key and the token the CLI reads",
+    () =>
       Effect.gen(function* () {
-        const returned = yield* requireDevelopment().pipe(settings(env));
+        const returned = yield* requireDevelopment().pipe(
+          settings({ CONVEX_DEPLOYMENT: "dev:happy-animal-123" })
+        );
 
-        expect(returned).toEqual(pinned);
+        expect(returned).toEqual({
+          CONVEX_DEPLOYMENT: "dev:happy-animal-123",
+          CONVEX_DEPLOYMENT_TOKEN: "",
+          CONVEX_DEPLOY_KEY: "",
+        });
       })
   );
 
@@ -269,32 +235,41 @@ describe("the deployment check of the release gate", () => {
   );
 
   it.effect.each([
-    ["a production deployment", { CONVEX_DEPLOYMENT: "prod:other-name-1" }],
     [
-      "a production deploy key",
-      { CONVEX_DEPLOY_KEY: "prod:other-name-1|top-secret" },
-    ],
-    [
-      "a production deployment token",
-      { CONVEX_DEPLOYMENT_TOKEN: "prod:other-name-1|top-secret" },
-    ],
-    [
-      "the production name without its type",
-      { CONVEX_DEPLOYMENT: CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT },
-    ],
-    [
-      "production behind a dev deployment",
+      "a dev deploy key beside a dev deployment",
       {
         CONVEX_DEPLOYMENT: "dev:happy-animal-123",
-        CONVEX_DEPLOY_KEY: `dev:${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}|top-secret`,
+        CONVEX_DEPLOY_KEY: "dev:happy-animal-123|top-secret",
       },
     ],
     [
-      "a production token behind a dev deployment",
+      "a project key, which ignores the deployment that is named",
+      {
+        CONVEX_DEPLOYMENT: "dev:happy-animal-123",
+        CONVEX_DEPLOY_KEY: "project:team:name|top-secret",
+      },
+    ],
+    [
+      "a key with no type, which the CLI reads as production",
+      {
+        CONVEX_DEPLOYMENT: "dev:happy-animal-123",
+        CONVEX_DEPLOY_KEY: "top-secret",
+      },
+    ],
+    [
+      "a deployment token beside a dev deployment",
       {
         CONVEX_DEPLOYMENT: "dev:happy-animal-123",
         CONVEX_DEPLOYMENT_TOKEN: "prod:other-name-1|top-secret",
       },
+    ],
+    [
+      "only a deploy key",
+      { CONVEX_DEPLOY_KEY: "dev:happy-animal-123|top-secret" },
+    ],
+    [
+      "only a deployment token",
+      { CONVEX_DEPLOYMENT_TOKEN: "dev:happy-animal-123|top-secret" },
     ],
   ] as const)("refuses %s and never repeats the setting", ([, env]) =>
     Effect.gen(function* () {
@@ -304,12 +279,35 @@ describe("the deployment check of the release gate", () => {
       );
 
       expect(error.message).toContain(
-        "Refusing to run against the production deployment"
+        "Refusing to run with a deploy key or a deployment token set"
       );
       expect(error.message).not.toContain("top-secret");
-      expect(error.message).not.toContain(
-        CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT
+    })
+  );
+
+  it.effect.each([
+    ["a production deployment", "prod:other-name-1"],
+    ["a preview deployment", "preview:other-name-1"],
+    [
+      "the production name without its type",
+      CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
+    ],
+    [
+      "the production name behind the dev type",
+      `dev:${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}`,
+    ],
+    ["a name with no type", "happy-animal-123"],
+  ] as const)("refuses %s and never repeats the setting", ([, deployment]) =>
+    Effect.gen(function* () {
+      const error = yield* requireDevelopment().pipe(
+        settings({ CONVEX_DEPLOYMENT: deployment }),
+        Effect.flip
       );
+
+      expect(error.message).toContain(
+        "Refusing to run against a deployment that is not a dev deployment"
+      );
+      expect(error.message).not.toContain(deployment);
     })
   );
 });

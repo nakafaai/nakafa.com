@@ -38,56 +38,67 @@ export const ConvexCli = Context.Reference(
   }
 );
 
+/** The setting that names the deployment the gate runs on. */
+const DEPLOYMENT_SETTING = "CONVEX_DEPLOYMENT";
+
 /**
- * The settings the CLI reads to pick a deployment. A deploy key and a
- * deployment token each pick one before `CONVEX_DEPLOYMENT` does.
+ * The settings that pick a deployment before `CONVEX_DEPLOYMENT` does. A
+ * project key among them even ignores `CONVEX_DEPLOYMENT`, so the gate runs
+ * with neither.
  */
-const DEPLOYMENT_SETTINGS = [
-  "CONVEX_DEPLOYMENT",
-  "CONVEX_DEPLOY_KEY",
-  "CONVEX_DEPLOYMENT_TOKEN",
-];
+const KEY_SETTINGS = ["CONVEX_DEPLOY_KEY", "CONVEX_DEPLOYMENT_TOKEN"];
 
-/** Whether a deployment name or a deploy key belongs to the production deployment. */
-function namesProduction(setting: string) {
-  return (
-    setting.startsWith("prod:") ||
-    setting.includes(CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT)
+/** The type the Convex CLI writes in front of the name of a dev deployment. */
+const DEVELOPMENT = "dev:";
+
+/** Reads one setting of the caller's configuration, blank when it is not set. */
+const readSetting = (name: string) =>
+  Config.option(Config.NonEmptyString(name)).pipe(
+    Effect.map(Option.getOrElse(() => "")),
+    Effect.orDie
   );
-}
 
 /**
- * Refuses to go on unless the caller's configuration names a deployment, and
- * refuses the production deployment whatever the way it is named. The gate
- * creates a learner and spends credits, so it runs where the caller already
- * develops, which is the dev deployment in `packages/backend/.env.local`. The
- * messages never repeat a setting, which may hold a key.
+ * Lets the gate go on only when the caller's configuration names a dev
+ * deployment and holds no deploy key and no deployment token. The gate creates
+ * a learner and spends credits, so it runs where the caller already develops,
+ * which is the dev deployment in `packages/backend/.env.local`. A key or a
+ * token picks the deployment before the name does, and one kind of key ignores
+ * the name, so with either set nothing here could say where the gate would
+ * run. The messages never repeat a setting, which may hold a key.
  *
- * It returns the settings the CLI must run with: each one the caller named, and
- * every other setting that picks a deployment, blank. After it starts, the CLI
- * loads `.env.local` and `.env` into the settings that are not set, and a file
- * the check did not read could name a production deploy key. A blank setting is
- * set, so no file can fill it in, and the CLI goes where the check looked.
+ * It returns the settings the CLI must run with: the deployment it checked, and
+ * the key and the token blank. After it starts, the CLI loads `.env.local` and
+ * `.env` into the settings that are not set, and a file the check did not read
+ * could name a production deploy key. A blank setting is set, so no file can
+ * fill it in, and the CLI goes where the check looked.
  */
 export const requireDevelopment = Effect.fn("ninaGate.requireDevelopment")(
   function* () {
-    const values = yield* Effect.forEach(DEPLOYMENT_SETTINGS, (name) =>
-      Config.option(Config.NonEmptyString(name)).pipe(
-        Effect.map(Option.getOrElse(() => ""))
-      )
-    ).pipe(Effect.orDie);
-    const named = Arr.filter(values, Str.isNonEmpty);
-    if (Arr.isReadonlyArrayEmpty(named)) {
+    const deployment = yield* readSetting(DEPLOYMENT_SETTING);
+    const keys = yield* Effect.forEach(KEY_SETTINGS, readSetting);
+    if (Arr.some(keys, Str.isNonEmpty)) {
+      return yield* gateError(
+        "Refusing to run with a deploy key or a deployment token set. Unset CONVEX_DEPLOY_KEY and CONVEX_DEPLOYMENT_TOKEN, so that CONVEX_DEPLOYMENT alone names the deployment."
+      );
+    }
+    if (Str.isEmpty(deployment)) {
       return yield* gateError(
         "No deployment is configured. Set CONVEX_DEPLOYMENT, as packages/backend/.env.local does for the dev deployment."
       );
     }
-    if (Arr.some(named, namesProduction)) {
+    if (
+      !deployment.startsWith(DEVELOPMENT) ||
+      deployment.includes(CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT)
+    ) {
       return yield* gateError(
-        "Refusing to run against the production deployment. The gate creates a learner and spends credits, so it runs on the dev deployment."
+        "Refusing to run against a deployment that is not a dev deployment. The gate creates a learner and spends credits, so CONVEX_DEPLOYMENT must name a dev deployment."
       );
     }
-    return Rec.fromEntries(Arr.zip(DEPLOYMENT_SETTINGS, values));
+    return {
+      [DEPLOYMENT_SETTING]: deployment,
+      ...Rec.fromEntries(Arr.map(KEY_SETTINGS, (name) => [name, ""] as const)),
+    };
   }
 );
 

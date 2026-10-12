@@ -165,12 +165,14 @@ pnpm --filter @repo/backend nina:gate
 ```
 
 The command reads the deployment from the caller's own configuration:
-`CONVEX_DEPLOYMENT` in the shell or in `packages/backend/.env.local`. It refuses
-production, and it refuses to run when no deployment is named. The Convex CLI
-picks its deployment from three settings, the deployment, a deploy key and a
-deployment token, and loads `.env` and `.env.local` into the ones that are not
-set. The check reads all three, and the command starts the CLI with exactly what
-the check read, the settings it did not find blank, so a file cannot send a
+`CONVEX_DEPLOYMENT` in the shell or in `packages/backend/.env.local`. It runs
+only when that names a dev deployment, and it refuses to run when a deploy key
+or a deployment token is set. The Convex CLI picks its deployment from all
+three settings: a key or a token wins over the name, a project key ignores the
+name, and a key with no type means production. So with a key set nothing could
+say where the gate would run. The CLI also loads `.env` and `.env.local` into
+the settings that are not set, so the command starts it with the deployment the
+check read and with the key and the token blank, and a file cannot send a
 command to a deployment that the check did not see.
 
 The command signs in a synthetic learner with the rows the acceptance runtime

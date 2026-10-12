@@ -82,7 +82,7 @@ describe("the release gate command", () => {
         }).pipe(Effect.flip);
 
         expect(error.message).toContain(
-          "Refusing to run against the production deployment"
+          "Refusing to run against a deployment that is not a dev deployment"
         );
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
     60_000
