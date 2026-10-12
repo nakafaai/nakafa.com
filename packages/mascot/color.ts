@@ -19,7 +19,11 @@ export const POP = {
   yellow: "var(--color-pop-yellow)",
 };
 
-/** The colours of paper, metal, and wood that only her things use. */
+/**
+ * The colours of paper, metal, and wood that only her things use. `TEXT` is
+ * the colour of the text around a picture, so a line that stands free shows on
+ * every ground.
+ */
 export const PAGE = "#fff7e6";
 export const PAPER = "#ffe2a8";
 export const LID = "#c9d4ea";
@@ -27,3 +31,4 @@ export const BASE = "#9fb0d0";
 export const BOARD = "#d9a441";
 export const PINK = "#ff8fa3";
 export const WHITE = "#ffffff";
+export const TEXT = "currentColor";
