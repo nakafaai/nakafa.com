@@ -44,8 +44,9 @@ export const hitsResultValidator = Schema.Union([
 
 /**
  * Finishes a search: it adds the sections found by words to those found by
- * meaning, merges the two lists into one ranking, gives each section in the
- * language of the learner, and keeps those whose document is still published.
+ * meaning, merges the two lists into one ranking, keeps the best section of
+ * each document, gives each in the language of the learner, and keeps those
+ * whose document is still published.
  */
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalQuery({

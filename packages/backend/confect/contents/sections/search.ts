@@ -19,7 +19,8 @@ import { Array as Arr, Duration, Effect } from "effect";
 
 /**
  * Finds the sections that answer a question, by meaning and by words, merged
- * into one ranking and given in the language of the learner. The index is
+ * into one ranking, the best section of each document, given in the language
+ * of the learner. The index is
  * asked first whether it may answer. While it may not, because its build for
  * the active release has not finished, the answer is `empty` and the question
  * goes neither to the embedder nor to the vector search. Otherwise the

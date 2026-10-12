@@ -91,7 +91,9 @@ describe("section hits", () => {
         locale: "id",
         query: "kuadrat",
       })
-    ).toEqual(["id:determinan", "id:top", "id:rumus-kuadrat"]);
+      // The words find two sections of the second lesson, and the better one
+      // stands for it.
+    ).toEqual(["id:determinan", "id:top"]);
   });
 
   it("gives a section found in another language in the language of the learner", async () => {
@@ -193,14 +195,20 @@ describe("section hits", () => {
     ]);
   });
 
-  it("reads the reference of a document once, however many of its sections rank", async () => {
-    const { idOf, measure } = await indexed();
+  it("returns one section for a document, the best of those that rank, so that its other sections take no place", async () => {
+    const { idOf, measure, places } = await indexed();
     const determinant = await idOf("id", "determinan", "section-1");
     const square = await idOf("id", "matriks-persegi", "section-1");
     const input = { limit: 5, locale: "id", query: "?!" } as const;
+    expect(await places({ ...input, ids: [square, determinant] })).toEqual([
+      "id:matriks-persegi",
+    ]);
+    expect(await places({ ...input, ids: [determinant, square] })).toEqual([
+      "id:determinan",
+    ]);
     const one = await measure({ ...input, ids: [determinant] });
     const two = await measure({ ...input, ids: [determinant, square] });
-    expect(two.hits).toBe(2);
+    expect(two.hits).toBe(1);
     // The second section costs its own row and nothing more.
     expect(two.documentsRead - one.documentsRead).toBe(1);
   });
