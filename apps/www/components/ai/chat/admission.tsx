@@ -15,6 +15,7 @@ import {
 import { useAi } from "@/components/ai/context";
 import type { NinaPrompt } from "@/components/ai/message/prompt";
 import { useNinaSubmission } from "@/components/ai/submission";
+import { useAuthSessionStore } from "@/components/auth/session";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
 
@@ -50,6 +51,7 @@ export function useChatAdmission({
   onSignIn?: () => void;
 }) {
   const gate = useAdmissionGate(onSignIn);
+  const session = useAuthSessionStore();
   const setText = useAi((state) => state.setText);
   const { send } = useNinaSubmission();
   const [isPending, startTransition] = useTransition();
@@ -63,6 +65,10 @@ export function useChatAdmission({
   const activation = useRef(0);
   const viewerId = gate.viewerId;
 
+  // Leaving, hiding or changing viewer ends this activation, so a prompt that
+  // is still being admitted opens no chat over the one the learner picked
+  // meanwhile. A hidden Activity runs this cleanup, as the sheet's new-chat
+  // body is hidden once a chat is open.
   useEffect(() => {
     if (!viewerId) {
       return;
@@ -79,16 +85,22 @@ export function useChatAdmission({
     }
     const draft = { ...message, text: query };
     const submittedFrom = activation.current;
+    const submittedBy = session.getState().userId;
     const admission = send(draft);
     startTransition(async () => {
       showPrompt({ text: draft.text, files: draft.files ?? [] });
       setText("");
       const receipt = await admission;
-      if (activation.current !== submittedFrom) {
+      if (!receipt) {
+        // The words go back to the composer wherever the learner has gone
+        // meanwhile, so a refusal never loses them. Another account that has
+        // signed in since does not get them.
+        if (session.getState().userId === submittedBy) {
+          setText((previous) => previous || query);
+        }
         return;
       }
-      if (!receipt) {
-        setText((previous) => previous || query);
+      if (activation.current !== submittedFrom) {
         return;
       }
       startTransition(() => {

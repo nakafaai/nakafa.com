@@ -17,6 +17,7 @@ import {
   expireActiveContentIdentity,
   loadActiveContentIdentity,
 } from "@/lib/content/published/active";
+import { invalidateOgCache } from "@/lib/og/cache";
 import { invalidateSitemapCache } from "@/lib/sitemap/cache";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
@@ -79,15 +80,18 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
 });
 /**
  * Expires the stored release pointer and proves the expiry, then revalidates
- * one Next content tag, then purges the shared sitemap response once for the
- * release, then expires the pointer again. The pointer goes first: a page that
- * refills after the revalidation must read the release that this call
- * activates and not the one it replaces. The Runtime Cache client resolves even
- * when an expiry failed, so the call reads the pointer back and stops before it
- * revalidates anything when the pointer still names the previous release. The
- * last expiry drops a pointer that a read which began before the activation
- * wrote after the first one, so a sitemap that regenerates after the purge
- * asks Convex. The publisher repeats a call that answers 503.
+ * one Next content tag, then purges the shared sitemap response and the social
+ * images once for the release, then expires the pointer again. The pointer goes
+ * first: a page that refills after the revalidation must read the release that
+ * this call activates and not the one it replaces. The Runtime Cache client
+ * resolves even when an expiry failed, so the call reads the pointer back and
+ * stops before it revalidates anything when the pointer still names the
+ * previous release. The last expiry drops a pointer that a read which began
+ * before the activation wrote after the first one, so a sitemap that
+ * regenerates after the purge asks Convex. The publisher repeats a call that
+ * answers 503. A social image that stays at the CDN is stale for at most its
+ * lifetime and is cosmetic, so a purge of the images that fails is logged and
+ * never fails the activation.
  */
 const invalidateContentRuntime = Effect.fn("NakafaContent.invalidateRuntime")(
   function* (scope: ContentCacheScope, releaseId: ActiveContentReleaseId) {
@@ -95,6 +99,7 @@ const invalidateContentRuntime = Effect.fn("NakafaContent.invalidateRuntime")(
     yield* confirmActiveContentIdentity(releaseId);
     yield* invalidateContentCache(scope);
     yield* invalidateSitemapCache(releaseId);
+    yield* invalidateOgCache(releaseId).pipe(Effect.ignore({ log: "Warn" }));
     yield* expireActiveContentIdentity();
   }
 );

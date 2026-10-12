@@ -27,6 +27,35 @@ contextual visit cannot first record a canonical view and then a placement view.
 - Content-addressed rendered artifacts use native `cacheLife("max")` and their
   artifact tags. Mutable publication selectors retain scope invalidation and
   the existing bounded freshness profile.
+- A `use cache` entry may go without that profile only when nothing it returns
+  can change while its key stays the same. The default handler keeps its
+  entries, and its record of revalidated tags, in the memory of one process,
+  and Vercel keeps `use cache` in memory unless it is `use cache: remote`. The
+  activation route revalidates a tag in one instance, so in every other
+  instance the profile's hour is what carries a release. Reading through the
+  content store does not change that, because the store answers only when it is
+  asked. Entry by entry:
+  - The profile, an hour: the publication, catalog, navigation and route
+    readers of articles, material, programs, pages, the Quran and try-out, the
+    RSS feed and the llms.txt section indexes.
+  - `max`, with the release in the key: the reciprocal article category routes,
+    the category page and the llms.txt documents.
+  - `max`, because the key holds what the output is built from: the rendered
+    bodies, by content hash, the try-out batches, by immutable selector, the SEO
+    metadata, by its context and locale with translations that change only with
+    a deploy, and the logo of a social image.
+  - `max`, purged by a release only: the sitemap index and pages. They fit no
+    other kind. The purge expires them in the instance that ran the activation
+    and clears the CDN, and another instance keeps its copy until it ends.
+
+  The profile also keeps the `Cache-Control` of each page within the AFDocs
+  check, which reads that header from a local production server: Next.js writes
+  it from the lowest lifetime among the entries that the page used, and the
+  page navigation, which the app layout reads for every page, is the entry that
+  stays at an hour. A longer lifetime on every entry, with the header held at an
+  hour by `headers()` in `next.config.ts`, would stop the hourly regeneration
+  of each page; it needs a release in every entry's key first, and a check on
+  Vercel that the header changes nothing at the CDN.
 - A read that depends only on the active release goes through the content
   store (`apps/www/lib/content/store`), which keeps its answer in the Vercel
   Runtime Cache. That cache is shared by every instance and survives a deploy,
@@ -61,11 +90,63 @@ contextual visit cannot first record a canonical view and then a placement view.
   anything, and a try-out page below the count of its release is the only one
   that is read, so a request can never create a stored or cached entry for an
   id that the release does not list.
+- Social images carry a CDN lifetime of an hour, a stale day, and a CDN tag. An
+  image changes only when its route changes, and a route changes only with a
+  release, so the activation of a release purges the tag once, as it purges the
+  sitemap. The hour is the lifetime of the content entries an image is rendered
+  from: the instance that renders the first image after a purge may still hold
+  the previous release in its memory for up to that hour, and a longer CDN
+  lifetime would keep that render long after its source was fresh again. A
+  purge that fails is logged and never fails the activation, because a stale
+  image is cosmetic and its lifetime bounds it.
+  A deployment has its own CDN cache key, so only a release needs the purge.
+  The brand image that answers a route inside a content namespace (articles,
+  material, the Quran or try-out) that the release does not list is kept for
+  five minutes only, because the next release may add the route. A page outside
+  those namespaces has no signed owner and shows the generic copy of the site,
+  so its image keeps the full lifetime.
+- The image optimizer keeps the default of `images.minimumCacheTTL`. Vercel
+  keys an optimized local image by the hash of its content and keeps it for up
+  to 31 days across deploys, so only a remote image, such as an avatar or a
+  favicon, depends on the value, and a longer one would show a changed remote
+  image late.
+- The trending list on the home page counts the last seven days and drops its
+  oldest day once a night, so its snapshot uses the `hours` profile. The
+  `minutes` profile refreshed it every minute and regenerated the page that
+  shows it each time.
+- No project has an Ignored Build Step. A merge to main creates a new deployment
+  of every project, and every deployment starts with empty caches, so skipping
+  the build of a commit that changes nothing a project is built from was
+  measured on 12 October 2026: replayed over the 347 commits on main since
+  12 September, the rule would have skipped 30 builds of `www`, because its
+  build deploys the Convex functions and so builds whenever `packages/backend`
+  changes. That saving does not pay for a second decision on the deploy path.
+  Vercel documents `npx turbo-ignore` for this, and that is the tool to use if
+  the share of skippable commits grows.
 - RSS caches the completed XML. Its update timestamp comes from authored
   publication dates, so another request does not manufacture changed output.
 - Flight requests bypass the Proxy's duplicate publication ownership reads.
   HTML requests retain the early check because streamed `notFound()` can return
   HTTP 200 after a response has started. Markdown negotiation remains explicit.
+- The Proxy runs before the CDN cache as a Node.js function, so every request
+  its matcher lets in costs one run, a cached page included. The matcher keeps
+  out only what the Proxy passes on unchanged: the analytics path, which
+  `next.config.ts` rewrites to PostHog, and every path in `LOCALE_BYPASS_PATHS`
+  (the icon, the manifest, `llms.txt`, `robots.txt`, `rss.xml`, the sitemaps,
+  `skill.md`, the IndexNow key and the agent skill files). The Proxy test reads
+  that list to keep the matcher equal to it. Documents, Flight navigations and
+  prefetches stay in because they can redirect, rewrite or reject a locale, an
+  unknown root file stays in because the Proxy answers it with a plain 404, and
+  the localized image aliases stay in because the Proxy rejects a locale that
+  the site does not serve. A social image therefore costs one Proxy run on every
+  request, cached or not; the CDN saves its render.
+- The browser reads its Better Auth session on every page load and every return
+  to the tab, signed in or not. A read that carries no session cookie and no
+  bearer token is answered by the route itself with the `null` that Better Auth
+  would give, and never reaches Convex, where it would be one HTTP action: a
+  function call with its action compute, and no table read. The browser cannot
+  skip the request, because the session cookie is HttpOnly and no script sees
+  that it is missing.
 - The `www` function region is `iad1`, beside the production Convex deployment.
   CDN delivery remains global. The project default region must match the checked
   configuration so the durable ISR cache is created in the intended region.

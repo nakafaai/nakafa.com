@@ -1,16 +1,9 @@
 import { createHmac } from "node:crypto";
 import { createLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
-import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import {
-  type LocalRuntime,
-  readLocalRuntime,
-} from "@repo/backend/scripts/content/acceptance/local";
-import {
-  localConvexEnvironment,
-  makeConvexTemporaryRoot,
-} from "@repo/backend/scripts/content/acceptance/process";
+import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { Duration, Effect, FileSystem, Schema } from "effect";
 
 /** Better Auth's session cookie under its default name on plain HTTP. */
@@ -21,30 +14,6 @@ const SESSION_LIFETIME = Duration.hours(24);
 const SessionCookie = Schema.fromJsonString(
   Schema.Struct({ name: Schema.String, value: Schema.String })
 );
-
-/** Runs one Convex CLI command against the running local backend. */
-const runLocalConvex = Effect.fn("contentAcceptance.runLocalConvex")(function* (
-  runtime: LocalRuntime,
-  operation: string,
-  args: readonly string[],
-  sensitiveValues: readonly string[] = []
-) {
-  const fs = yield* FileSystem.FileSystem;
-  const temporaryRoot = yield* makeConvexTemporaryRoot();
-  const output = `${temporaryRoot}/output.json`;
-  yield* runAcceptanceCommand({
-    args: ["node_modules/convex/bin/main.js", ...args],
-    command: process.execPath,
-    cwd: runtime.backend,
-    env: { ...localConvexEnvironment, TMPDIR: temporaryRoot },
-    operation,
-    reportStderr: true,
-    sensitiveValues,
-    stderrPath: `${temporaryRoot}/error.log`,
-    stdoutPath: output,
-  });
-  return yield* fs.readFileString(output);
-}, Effect.scoped);
 
 /**
  * Signs one synthetic learner into the running local acceptance backend and

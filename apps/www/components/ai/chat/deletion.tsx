@@ -9,8 +9,8 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
 import { toast } from "sonner";
+import { useChange } from "@/components/ai/chat/change.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import { requireConvexOnline } from "@/lib/convex/online";
@@ -30,7 +30,7 @@ export function ChatDeletion({
   const actionErrorMessage = useTranslations("Common")("action-error");
   const router = useRouter();
   const user = useViewer((s) => s.account);
-  const [isPending, startTransition] = useTransition();
+  const { change, isPending } = useChange();
   const deleteChat = useDeleteChatMutation();
   const convex = useConvex();
   /** Leave the current route and delete the owned chat. */
@@ -38,7 +38,7 @@ export function ChatDeletion({
     if (!user || isPending) {
       return;
     }
-    startTransition(async () =>
+    change(() =>
       Effect.runPromise(
         requireConvexOnline(convex).pipe(
           Effect.tap(() => Effect.sync(() => onOpenChange(false))),

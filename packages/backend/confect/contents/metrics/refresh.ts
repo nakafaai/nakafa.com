@@ -106,7 +106,6 @@ export const refreshLearningPopularityWindowPage = Effect.fn(
     for (const counter of page.page) {
       const result = yield* repairPopularityCounter(
         counter,
-        args.windowKey,
         args.day,
         timestamp
       );

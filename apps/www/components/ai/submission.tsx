@@ -1,7 +1,7 @@
 "use client";
 
 import type { Ref } from "@confect/core";
-import { type OptimisticUpdate, useAction, useMutation } from "@confect/react";
+import { useAction, useMutation } from "@confect/react";
 import {
   NINA_DOCUMENT_SIZE_MESSAGE,
   NinaFileType,
@@ -25,14 +25,12 @@ import {
   Exit,
   HashMap,
   MutableHashMap,
-  Option,
   Result,
   Schema,
 } from "effect";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { exceedsDocumentLimit } from "@/components/ai/attachments";
-import { loadedForChat } from "@/components/ai/chat/state";
 import { useAi } from "@/components/ai/context";
 import {
   NinaConnectionError,
@@ -40,102 +38,14 @@ import {
   ninaFailureFeedback,
   reportNinaFailure,
 } from "@/components/ai/feedback";
+import { optimisticPrompt } from "@/components/ai/optimistic";
+import { messageInput, retryInput } from "@/components/ai/turn";
 import { requireConvexOnline } from "@/lib/convex/online";
-import {
-  getLocale,
-  getMaterialContextHint,
-  getPathname,
-} from "@/lib/routing/location";
 
 type Start = typeof nina.turns.start;
 export type NinaDraft = PromptInputMessage &
   Pick<typeof NinaPageInput.Type, "focus"> &
   Pick<typeof NinaPrompt.Type, "text">;
-
-/** Confect replays this callback until the authoritative message arrives. */
-function optimisticPrompt(
-  previews: HashMap.HashMap<Id<"ninaUploads">, FileUIPart>,
-  createdAt: number
-): OptimisticUpdate<Start> {
-  return (store, args) => {
-    if (!args.chatId) {
-      return;
-    }
-    const [conversation] = loadedForChat(
-      store.getAllQueries(nina.conversation.get),
-      args.chatId
-    );
-    if (!conversation) {
-      return;
-    }
-    const threadId = conversation.value.chat.threadId;
-    const pages = Arr.filter(
-      store.getAllQueries(nina.messages.list),
-      (page) =>
-        page.args.chatId === args.chatId &&
-        page.args.threadId === threadId &&
-        !page.args.streamArgs
-    );
-    const messages = Arr.flatMap(pages, (page) =>
-      Option.isSome(page.value) ? page.value.value.page : []
-    );
-    const order =
-      1 + Math.max(-1, ...Arr.map(messages, (message) => message.order));
-    const input = args.input;
-    const prompt: Option.Option<
-      Pick<(typeof messages)[number], "parts" | "text">
-    > =
-      input.kind === "message"
-        ? Option.some({
-            text: input.prompt.text,
-            parts: [
-              { type: "text", text: input.prompt.text },
-              ...Arr.flatMap(input.prompt.uploadIds ?? [], (id) => {
-                const file = Option.getOrUndefined(HashMap.get(previews, id));
-                return file ? [file] : [];
-              }),
-            ],
-          })
-        : Arr.findFirst(
-            messages,
-            (message) =>
-              message.order === input.order && message.role === "user"
-          );
-    if (Option.isNone(prompt)) {
-      return;
-    }
-    const { text, parts } = prompt.value;
-    for (const page of pages) {
-      if (
-        page.args.paginationOpts.cursor !== null ||
-        Option.isNone(page.value)
-      ) {
-        continue;
-      }
-      store.setQuery(
-        nina.messages.list,
-        page.args,
-        Option.some({
-          ...page.value.value,
-          page: [
-            {
-              id: args.requestId,
-              key: `${threadId}-${order}-0`,
-              order,
-              stepOrder: 0,
-              status: "pending",
-              role: "user",
-              text,
-              parts,
-              _creationTime: createdAt,
-            },
-            ...page.value.value.page,
-          ],
-        })
-      );
-    }
-  };
-}
 
 /** A call refused while offline shows the connection failure and its retry, without a report. */
 function requireNinaConnection(convex: ConvexReactClient) {
@@ -327,7 +237,6 @@ export function useNinaSubmission() {
   }
 
   function send(prompt: NinaDraft, chatId?: Id<"chats">) {
-    const hint = getMaterialContextHint();
     return perform(
       uploadAttachments(
         prompt.files ?? [],
@@ -336,27 +245,16 @@ export function useNinaSubmission() {
         previews,
         convex
       ).pipe(
-        Effect.map((uploadIds) => ({
-          kind: "message" as const,
-          prompt: { text: prompt.text, uploadIds },
-          page: {
-            locale: getLocale(),
-            slug: getPathname(),
-            ...(hint ? { materialContextHint: hint } : {}),
-            ...(prompt.focus ? { focus: prompt.focus } : {}),
-          },
-        }))
+        Effect.map((uploadIds) =>
+          messageInput({ focus: prompt.focus, text: prompt.text, uploadIds })
+        )
       ),
       chatId
     );
   }
   function retry(order: number, chatId: Id<"chats">) {
     return perform(
-      Effect.succeed({
-        kind: "retry",
-        order,
-        page: { locale: getLocale(), slug: getPathname() },
-      }),
+      Effect.sync(() => retryInput(order)),
       chatId
     );
   }

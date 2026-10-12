@@ -1,5 +1,7 @@
 "use client";
 
+import type { NinaMessage } from "@repo/backend/confect/nina/schema";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Message } from "@repo/design-system/components/ui/message";
 import {
   MessageScroller,
@@ -13,16 +15,22 @@ import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
 import { Array as Arr, Effect, Fiber } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
-import { useChat, useChatMessages } from "@/components/ai/chat/context";
+import { useChat } from "@/components/ai/chat/context";
 import { AiChatError } from "@/components/ai/chat/error";
-import { AiChatPaginationTrigger } from "@/components/ai/chat/pagination";
+import { useChatFeed } from "@/components/ai/chat/feed.client";
+import { hasFailedReply, hasReply } from "@/components/ai/chat/messages";
 import { AiChatPending } from "@/components/ai/chat/pending";
 import { AiChatMessage } from "@/components/ai/message/view";
 
-/** Agent supplies messages; shadcn preserves the reader's position. */
+/**
+ * Agent supplies messages; shadcn preserves the reader's position. This is the
+ * one place that reads the streamed messages, so a streamed batch renders it
+ * and its rows, and nothing else in the chat.
+ */
 export function NinaTranscript() {
-  const messages = useChatMessages((feed) => feed.messages);
   const busy = useChat((state) => state.busy);
+  const order = useChat((state) => state.turn?.order);
+  const { canLoadMore, loadMore, messages } = useChatFeed();
   const t = useTranslations("Ai");
 
   // Answers render after the transcript, so their math would otherwise find
@@ -48,23 +56,45 @@ export function NinaTranscript() {
             className="mx-auto w-full max-w-3xl p-6"
           >
             {Arr.map(messages, (message, index) => (
-              <MessageScrollerItem
+              <TranscriptRow
                 key={message.key}
-                messageId={message.key}
-                scrollAnchor={message.role === "user"}
-              >
-                {index === 0 ? <AiChatPaginationTrigger /> : null}
-                <Message align={message.role === "user" ? "end" : "start"}>
-                  <AiChatMessage message={message} />
-                </Message>
-              </MessageScrollerItem>
+                last={index === messages.length - 1}
+                loadMore={index === 0 && canLoadMore ? loadMore : undefined}
+                message={message}
+              />
             ))}
-            <AiChatPending />
-            <AiChatError />
+            <AiChatPending replied={hasReply(messages, order)} />
+            <AiChatError failed={hasFailedReply(messages, order)} />
           </MessageScrollerContent>
         </MessageScrollerViewport>
         <MessageScrollerButton aria-label={t("scroll-to-latest")} />
       </MessageScroller>
     </Primitive.Provider>
+  );
+}
+
+/**
+ * One message of the transcript. The first row loads older messages when it
+ * comes near the reader, while more are there to load.
+ */
+function TranscriptRow({
+  last,
+  loadMore,
+  message,
+}: {
+  last: boolean;
+  loadMore: (() => void) | undefined;
+  message: NinaMessage;
+}) {
+  return (
+    <MessageScrollerItem
+      messageId={message.key}
+      scrollAnchor={message.role === "user"}
+    >
+      {loadMore ? <Intersection onIntersect={loadMore} /> : null}
+      <Message align={message.role === "user" ? "end" : "start"}>
+        <AiChatMessage last={last} message={message} />
+      </Message>
+    </MessageScrollerItem>
   );
 }

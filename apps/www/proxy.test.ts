@@ -9,6 +9,7 @@ import {
   bypassed,
   localeHints,
   matched,
+  passedOn,
   publicRoutes,
   redirectCases,
   representations,
@@ -162,10 +163,7 @@ describe("proxy", () => {
     mockLocaleRouting.activeMiddleware.mockClear();
     mockLocaleRouting.previewMiddleware.mockClear();
   });
-  it.each([
-    ["/_nakafa/i/v0/e/", { method: "POST" }],
-    ["/llms.txt", undefined],
-  ])("bypasses locale routing for %s", async (path, init) => {
+  it.each(passedOn)("bypasses locale routing for %s", async (path, init) => {
     const response = await requestProxy(path, init);
     expect(response.headers.get("x-middleware-next")).toBe("1");
     expectNoLocaleProxy();
@@ -218,9 +216,7 @@ describe("proxy", () => {
     });
   });
   it("matches localized PNG aliases without intercepting static assets", () => {
-    expect(
-      Arr.every([...matched, "/MISSING.XML", "/llms.txt"], matchesProxy)
-    ).toBe(true);
+    expect(Arr.every([...matched, "/MISSING.XML"], matchesProxy)).toBe(true);
     expect(
       Arr.every(
         [
@@ -228,6 +224,7 @@ describe("proxy", () => {
           "/fr/example.png",
           "/FR/example.png",
           "/EN/example.png",
+          "/en/og/example/image.png",
         ],
         matchesProxy
       )

@@ -1,5 +1,6 @@
 import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
+import { MATH_STEPS } from "@repo/backend/confect/nina/math/step";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 
 /** Builds the system prompt for Nina's deterministic math agent. */
@@ -113,11 +114,17 @@ export function mathPrompt({
       The first tool must check the user's original target operation, not a guessed final answer.
       Natural wording such as "is this correct", "check this", "prove this", or "I am unsure" still needs tool evidence.
 
+      Scope:
+      - Check what the request asks for and nothing else, with the fewest tool calls that do it.
+      - Do not add a second method, an expansion, a rewrite, or another check of a result that a tool already marked verified.
+      - You have ${MATH_STEPS} steps in all. The last step cannot call a tool, so write the answer in the step after the last tool result.
+      - Write the answer as soon as every value the request asks for has a verified result.
+
       Multi-part requests:
-      - Call tools for each distinct calculation or verification.
+      - Call a tool for each distinct calculation or verification the request asks for.
       - Compare requested calculations with returned evidence before answering.
       - If evidence is missing and can be checked, call the missing tool.
-      - If it cannot be checked, say which calculation was not checked.
+      - If the steps run out first, or it cannot be checked, say which calculation was not checked.
       - For extrema answers that include a function value, the evidence is incomplete until the substituted original expression is checked.
 
       Evidence contract:
@@ -139,6 +146,7 @@ export function mathPrompt({
       - Teach from checked work as a short worked example.
       - Make clear what we are finding, why the next step is valid, and what result follows.
       - When the user asks to derive, prove, or explain why, include the conceptual bridge between evidence and conclusion.
+      - Write that bridge from the checked steps. It never needs another tool call.
       - Avoid contextless labels such as "given" when the user needs to learn why a result follows.
       - Do not say the user provided a formula, method, or calculation unless it appears in their request.
       - If the user did not show work, do not imply their work was reviewed.

@@ -1,6 +1,5 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
 import {
   Copy01Icon,
   Globe02Icon,
@@ -9,26 +8,21 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
-import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { getAppUrl } from "@repo/next-config/app";
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { useTransition } from "react";
 import { toast } from "sonner";
-import { shareLink } from "@/components/ai/chat/link";
+import { useChange } from "@/components/ai/chat/change.client";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 
-/**
- * Owns sharing state and visibility admission independently of title editing.
- * The link carries a token the server draws when the chat is shared, so the
- * link can be copied once the token arrives.
- */
+/** Owns sharing state and visibility admission independently of title editing. */
 export function ChatSharing({
   chat,
   open,
@@ -40,18 +34,14 @@ export function ChatSharing({
 }) {
   const t = useTranslations("Ai");
   const actionErrorMessage = useTranslations("Common")("action-error");
-  const [isPending, startTransition] = useTransition();
+  const { change, isPending } = useChange();
   const clipboard = useClipboard({ timeout: 500 });
   const updateChatVisibility = useUpdateChatVisibilityMutation();
   const isPrivate = chat.visibility === "private";
-  const tokenResult = useQuery(
-    chats.queries.getShareToken,
-    isPrivate ? "skip" : { chatId: chat._id }
-  );
-  const token = QueryResult.isSuccess(tokenResult) ? tokenResult.value : null;
+  const link = `${getAppUrl()}/chat/${chat._id}`;
   /** Persist the selected chat visibility. */
   const handleUpdateVisibility = (visibility: ChatVisibility) => {
-    startTransition(async () =>
+    change(() =>
       Effect.runPromise(
         Effect.asVoid(
           Effect.tryPromise(() =>
@@ -78,16 +68,6 @@ export function ChatSharing({
       )
     );
   };
-  /** Copy the link once the server has drawn its token. */
-  const handleCopy = () => {
-    if (token === null) {
-      return;
-    }
-    clipboard.copy(shareLink(chat._id, token));
-    toast.success(t("link-copied"), {
-      position: "bottom-center",
-    });
-  };
 
   return (
     <ResponsiveDialog
@@ -102,7 +82,15 @@ export function ChatSharing({
             {t("create-link")}
           </Button>
         ) : (
-          <Button disabled={isPending || token === null} onClick={handleCopy}>
+          <Button
+            disabled={isPending}
+            onClick={() => {
+              clipboard.copy(link);
+              toast.success(t("link-copied"), {
+                position: "bottom-center",
+              });
+            }}
+          >
             <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
             {t("copy-link")}
           </Button>

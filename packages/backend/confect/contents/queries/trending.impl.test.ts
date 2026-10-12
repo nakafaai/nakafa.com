@@ -30,7 +30,7 @@ import {
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import type { Locale } from "@repo/contents/content";
 import { convexTest } from "convex-test";
-import { Data, Effect } from "effect";
+import { Array as Arr, Data, Effect } from "effect";
 
 class TrendingStorageUnavailable extends Data.TaggedError(
   "TrendingStorageUnavailable"
@@ -188,8 +188,6 @@ describe("contents/queries/trending", () => {
     });
     const results = await target.query(getTrendingSubjects, {
       locale: "en",
-      limit: 2,
-      minViews: 5,
     });
     expect(results).toEqual([
       expect.objectContaining({
@@ -218,9 +216,40 @@ describe("contents/queries/trending", () => {
     expect(results[0]).not.toHaveProperty("id");
     expect(results[0]).not.toHaveProperty("slug");
   });
-  it("pages past a missing ranking and preserves a renamed material", async () => {
-    const missing = makeMaterialProjection("en", 1, 30);
-    const previous = makeMaterialProjection("en", 2, 31);
+  it("returns at most six cards, the most viewed first", async () => {
+    const projections = Arr.makeBy(7, (index) =>
+      makeMaterialProjection("en", index + 1, 50 + index)
+    );
+    const target = createTrendingConvexTest();
+    await target.mutation((ctx) =>
+      Effect.runPromise(
+        activateMaterialCatalog(projections).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      )
+    );
+    await target.mutation(async (ctx) => {
+      let views = 20;
+      for (const projection of projections) {
+        await insertMaterialCounter(ctx, projection, "en", views);
+        views -= 1;
+      }
+    });
+    const results = await target.query(getTrendingSubjects, {
+      locale: "en",
+    });
+    expect(Arr.map(results, ({ viewCount }) => viewCount)).toEqual([
+      20, 19, 18, 17, 16, 15,
+    ]);
+  });
+  it("pages past a full page of missing rankings and preserves a renamed material", async () => {
+    // One more ranking than a page holds, so the renamed material is on page two.
+    const missing = Arr.makeBy(6, (index) =>
+      makeMaterialProjection("en", 1, 30 + index)
+    );
+    const previous = makeMaterialProjection("en", 2, 40);
     const current = MaterialLessonProjectionSchema.make({
       ...previous,
       parentPath: PublicPathSchema.make(
@@ -241,13 +270,15 @@ describe("contents/queries/trending", () => {
       )
     );
     await target.mutation(async (ctx) => {
-      await insertMaterialCounter(ctx, missing, "en", 100);
+      let views = 100;
+      for (const projection of missing) {
+        await insertMaterialCounter(ctx, projection, "en", views);
+        views -= 1;
+      }
       await insertMaterialCounter(ctx, previous, "en", 10);
     });
     const results = await target.query(getTrendingSubjects, {
       locale: "en",
-      limit: 1,
-      minViews: 5,
     });
     expect(results).toEqual([
       expect.objectContaining({
@@ -257,21 +288,18 @@ describe("contents/queries/trending", () => {
       }),
     ]);
   });
-  it("returns no cards for a zero result limit", async () => {
-    const target = createTrendingConvexTest();
-    await expect(
-      target.query(getTrendingSubjects, {
-        locale: "en",
-        limit: 0,
-      })
-    ).resolves.toEqual([]);
-  });
   it("ranks a lesson from the views the pipeline recorded", async () => {
     vi.useFakeTimers({ now: CONTENT_VIEW_NOW });
     try {
       const target = createConvexTestWithBetterAuth();
       const material = await target.mutation((ctx) => insertMaterial(ctx));
-      for (const deviceId of ["device-1", "device-2", "device-3"]) {
+      for (const deviceId of [
+        "device-1",
+        "device-2",
+        "device-3",
+        "device-4",
+        "device-5",
+      ]) {
         await target.mutation(
           api.contents.mutations.views.recordContentView,
           makeMaterialViewArgs(deviceId)
@@ -280,43 +308,15 @@ describe("contents/queries/trending", () => {
       await target.finishAllScheduledFunctions(vi.runAllTimers);
 
       await expect(
-        target.query(getTrendingSubjects, { locale: "en", minViews: 1 })
+        target.query(getTrendingSubjects, { locale: "en" })
       ).resolves.toEqual([
         expect.objectContaining({
           assetId: material.contentId,
-          viewCount: 3,
+          viewCount: 5,
         }),
       ]);
     } finally {
       vi.useRealTimers();
     }
-  });
-  // Temporary compatibility with an older web deployment. Delete this test
-  // with the `windowKey` argument (see the validator in trending/spec.ts).
-  it("still accepts the retired window argument an older web deployment sends", async () => {
-    const target = createTrendingConvexTest();
-    const projection = makeMaterialProjection("en", 1, 30);
-    await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog([projection]).pipe(
-          Effect.provide(
-            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-          )
-        )
-      )
-    );
-    await target.mutation((ctx) =>
-      insertMaterialCounter(ctx, projection, "en", 10)
-    );
-
-    const named = await target.query(getTrendingSubjects, {
-      locale: "en",
-      windowKey: POPULARITY_WINDOW,
-    });
-
-    expect(named).toHaveLength(1);
-    expect(named).toEqual(
-      await target.query(getTrendingSubjects, { locale: "en" })
-    );
   });
 });

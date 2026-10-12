@@ -9,6 +9,7 @@ import {
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
 import chats from "@repo/backend/confect/_generated/refs/chats";
+import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -19,44 +20,51 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useTransition } from "react";
 import { toast } from "sonner";
+import { useChange } from "@/components/ai/chat/change.client";
+import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
+import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import { getLocale } from "@/lib/i18n/date";
 import { useViewer } from "@/lib/identity/client";
 
-/**
- * Render the chats of a profile. A learner sees their own chats, private and
- * shared. A shared chat is reached by its link alone, so a profile lists no
- * chat of anyone else.
- */
+/** Render the correct owned or public chat list for a profile viewer. */
 export function UserChats({ userId }: { userId: Id<"users"> }) {
   const user = useViewer((state) => state.account);
-  const isPending = useViewer((state) => state.isPending);
 
-  if (user?.appUser._id === userId) {
-    return <OwnChatsList />;
-  }
-  if (isPending) {
-    return <ChatList canDelete={false} isLoading results={[]} />;
-  }
-  return <ChatsByLink />;
+  // Determine if viewing own profile or someone else's
+  const isOwnProfile = user?.appUser._id === userId;
+  return (
+    <UserChatsList
+      canDelete={isOwnProfile}
+      userId={userId}
+      // If viewing own profile, show all chats; otherwise only public ones
+      visibility={isOwnProfile ? undefined : "public"}
+    />
+  );
 }
 
-/** What another learner's profile says in place of a list: a chat opens by its link. */
-function ChatsByLink() {
-  const t = useTranslations("Common");
-  return (
-    <p className="text-center text-muted-foreground text-sm">
-      {t("chats-by-link")}
-    </p>
-  );
+/** Select the owned or public query contract for a profile chat list. */
+function UserChatsList({
+  canDelete,
+  userId,
+  visibility,
+}: {
+  canDelete: boolean;
+  userId: Id<"users">;
+  visibility?: ChatVisibility | undefined;
+}) {
+  if (canDelete) {
+    return <OwnChatsList />;
+  }
+  return <PublicChatsList userId={userId} visibility={visibility} />;
 }
 
 /** Subscribe to all study chats owned by the current viewer. */
@@ -67,10 +75,10 @@ function OwnChatsList() {
       type: "study",
     },
     {
-      initialNumItems: 50,
+      initialNumItems: CHAT_LIST_PAGE_SIZE,
     }
   );
-  const { results } = pagination;
+  const { loadMore, results } = useChatList(pagination);
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
   }
@@ -78,6 +86,40 @@ function OwnChatsList() {
     <ChatList
       canDelete={true}
       isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
+      loadMore={loadMore}
+      results={results}
+    />
+  );
+}
+
+/** Subscribe to public study chats for the selected profile. */
+function PublicChatsList({
+  userId,
+  visibility,
+}: {
+  userId: Id<"users">;
+  visibility?: ChatVisibility | undefined;
+}) {
+  const type = "study" as const;
+  const queryArgs = visibility
+    ? {
+        type,
+        userId,
+        visibility,
+      }
+    : {
+        type,
+        userId,
+      };
+  const pagination = usePaginatedQuery(chats.queries.getChats, queryArgs, {
+    initialNumItems: CHAT_LIST_PAGE_SIZE,
+  });
+  const { loadMore, results } = useChatList(pagination);
+  return (
+    <ChatList
+      canDelete={false}
+      isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
+      loadMore={loadMore}
       results={results}
     />
   );
@@ -86,10 +128,12 @@ function OwnChatsList() {
 /** Render a resolved chat page with optional owner controls. */
 function ChatList({
   canDelete,
+  loadMore,
   results,
   isLoading,
 }: {
   canDelete: boolean;
+  loadMore: (() => void) | undefined;
   results: readonly ChatView[];
   isLoading: boolean;
 }) {
@@ -106,43 +150,46 @@ function ChatList({
     );
   }
   return (
-    <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-      {Arr.map(results, (chat) => {
-        const isPrivate = chat.visibility === "private";
-        return (
-          <div
-            className="group relative flex flex-col justify-between gap-2 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground sm:flex-row sm:items-center"
-            key={chat._id}
-          >
-            <NavigationLink
-              className="absolute inset-0 z-1"
-              href={`/chat/${chat._id}`}
-            />
-            <div className="flex flex-1 items-center gap-2">
-              <HugeIcons
-                className="size-4 shrink-0"
-                icon={isPrivate ? SquareLock01Icon : Globe02Icon}
+    <>
+      <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+        {Arr.map(results, (chat) => {
+          const isPrivate = chat.visibility === "private";
+          return (
+            <div
+              className="group relative flex flex-col justify-between gap-2 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground sm:flex-row sm:items-center"
+              key={chat._id}
+            >
+              <NavigationLink
+                className="absolute inset-0 z-1"
+                href={`/chat/${chat._id}`}
               />
-              <span className="truncate text-sm">{chat.title}</span>
-              <HugeIcons
-                className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100"
-                icon={ArrowDown02Icon}
-              />
-            </div>
+              <div className="flex flex-1 items-center gap-2">
+                <HugeIcons
+                  className="size-4 shrink-0"
+                  icon={isPrivate ? SquareLock01Icon : Globe02Icon}
+                />
+                <span className="truncate text-sm">{chat.title}</span>
+                <HugeIcons
+                  className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100"
+                  icon={ArrowDown02Icon}
+                />
+              </div>
 
-            <div className="flex shrink-0 items-center justify-between gap-2">
-              <time className="truncate text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground">
-                {formatDistanceToNow(chat.updatedAt, {
-                  locale: getLocale(locale),
-                  addSuffix: true,
-                })}
-              </time>
-              {canDelete ? <UserChatsListActions chat={chat} /> : null}
+              <div className="flex shrink-0 items-center justify-between gap-2">
+                <time className="truncate text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground">
+                  {formatDistanceToNow(chat.updatedAt, {
+                    locale: getLocale(locale),
+                    addSuffix: true,
+                  })}
+                </time>
+                {canDelete ? <UserChatsListActions chat={chat} /> : null}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+      {loadMore ? <Intersection onIntersect={loadMore} /> : null}
+    </>
   );
 }
 
@@ -151,11 +198,11 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
   const deleteChat = useDeleteChatMutation();
-  const [isPending, startTransition] = useTransition();
+  const { change, isPending } = useChange();
 
   /** Delete this chat through the optimistic list mutation. */
   function handleDelete() {
-    startTransition(async () =>
+    change(() =>
       Effect.runPromise(
         Effect.asVoid(
           Effect.tryPromise(() =>

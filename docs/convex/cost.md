@@ -136,6 +136,50 @@ as a normal-traffic projection.
   entitlements, scoring, and IRT state. It deletes only rebuildable local
   projections.
 
+### 2026-09-12 to 2026-10-12 usage by function group
+
+Read from the Convex Usage page on 2026-10-11 (team Nakafa, Professional plan, all
+projects). Only Database I/O was over what the plan includes.
+
+| Resource | Usage | Included | On demand |
+| --- | ---: | ---: | ---: |
+| Function calls | 2.2M | 25M | 0 |
+| Action compute | 10 GB-hours | 250 GB-hours | 0 |
+| Database storage | 8.52 GB | 50 GB | 0 |
+| Database I/O | 92.9 GB (reads 86.78 GB, writes 6.11 GB) | 50 GB | 42.9 GB |
+| Data egress | 2.31 GB | 50 GB | 0 |
+
+Database I/O by the group of functions that caused it:
+
+| Group | GB | What it is |
+| --- | ---: | --- |
+| Content release pipeline | 36.9 (production 26.95, dev 9.95) | Publishing from Aksara: staging, proof, compaction, heads, rollback preparation |
+| Runtime reads | about 34 | Serving `www`, `api` and `mcp`: lesson, navigation, sitemap, ownership, catalog |
+| Exports and one-off queries | 13.8 | `snapshot_export` 8.92 (dev 0.96), queries run from the dashboard, the CLI or a connector 3.02, the dashboard itself 0.87 |
+| Popularity pipeline | 3.27 | Eight windows in two scopes, of which the homepage read one |
+
+Quiet days used 1.0 to 2.6 GB. The days above that were content releases and
+exports: about 9.5 GB on 13 September, 10.5 GB on 24 September, 9.3 GB on
+27 September.
+
+Four runtime functions ran 200,000 to 250,000 times each in the period
+(`article.categories`, `page.catalog`, `material.sitemapPage`,
+`ownership.resolve`), which is one call for nearly every document request,
+crawlers included, on a site with few learners.
+
+What changed because of these numbers, each in its own section or pull request:
+the reads nobody needed (below, #991), content read once per release through a
+store that a deploy does not empty (#992), content releases that publish to
+production only (Aksara #452), and no production export or one-off production
+query as a working rule. The measured effect belongs in this note after a full
+billing period on the new code.
+
+The Vercel Usage page for the cycle that began on 2026-09-30 showed $11.59 of
+the $20.00 credit used after 12 days: ISR writes $4.43 (1.11M units), Fast
+Origin Transfer $2.34 (37 GB), Fluid active CPU $2.02, provisioned memory
+$1.72. About 7 of 10 requests ran a function, and one invocation moved about
+74 KB. ADR 0007 records what changed on the Vercel side because of them.
+
 ### 2026-10-11 reads nobody needed
 
 The 2026-09-12 to 2026-10-12 usage showed 92.9 GB of Database I/O. Five backend
@@ -176,21 +220,25 @@ was 1.66 GB, the daily expiry 1.04 GB and the weekly repair 0.57 GB. Each is
 multiplied by the bytes read after the change over the bytes read before it in
 the ten-lesson rows (18,169 over 115,371, 8,820 over 76,104 and 52,020 over
 621,839), which gives about 0.26 GB, 0.12 GB and 0.05 GB. That leaves about
-0.43 GB, so roughly 2.8 GB a month fewer once the retired rows are gone. The
-estimate assumes the invoice splits the way the fixture does. Retiring the rows
-costs about 11.6 KB per counter once (a page of ten counters read 95 documents
+0.43 GB, so roughly 2.8 GB a month fewer. The estimate assumes the invoice
+splits the way the fixture does. The counters and maintenance rows of the older
+windows and scope are retired: the prune found none left on dev and production
+on 12 October 2026, and the code that retired them is deleted. Retiring them
+cost about 11.6 KB per counter once (a page of ten counters read 95 documents
 and 116,105 bytes in a throwaway fixture).
 
 Compaction no longer writes `contentState`, the row every content query reads,
 so a compaction page stops making Convex run those queries again. That saving
 is in function executions, not in Database I/O.
 
-Two temporary steps of these changes end in a later change, with their exit and
-cleanup written where they live: the retirement of the older popularity rows
-and the ignored `windowKey` argument (ADR 0008). The third, the carry of the
-compaction fields out of `contentState`, ended on 12 October 2026: dev and
-production each held the `contentCompaction` row and no `contentState` row held
-a compaction field, so the carry, its tests and the six fields were deleted.
+One temporary step of these changes ends in a later change, with its exit and
+cleanup written where it lives: the older scope and `applied` windows of daily
+signals, which age out by 20 October 2026 (ADR 0008). The retirement of the
+older popularity rows and the ignored `windowKey` argument are deleted. The
+carry of the compaction fields out of `contentState` ended on 12 October 2026:
+dev and production each held the `contentCompaction` row and no `contentState`
+row held a compaction field, so the carry, its tests and the six fields were
+deleted.
 
 ### Recovery evidence
 

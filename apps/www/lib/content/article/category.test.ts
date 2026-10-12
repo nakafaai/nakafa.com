@@ -27,6 +27,7 @@ import { resetTestRuntimeCache } from "@/test/store";
 const categoryReaderMock = vi.hoisted(() => vi.fn());
 const articleReaderMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
+const releaseCacheMock = vi.hoisted(() => vi.fn());
 const manifestHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const releaseId = ReleaseIdSchema.make("release-article");
 
@@ -40,6 +41,7 @@ vi.mock("@/lib/content/article/catalog", () => ({
 }));
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,
+  applyReleaseContentCache: releaseCacheMock,
 }));
 vi.mock(
   "@/lib/content/published/active",
@@ -110,6 +112,7 @@ describe("published article category", () => {
     categoryReaderMock.mockReset();
     articleReaderMock.mockReset();
     cacheMock.mockReset();
+    releaseCacheMock.mockReset();
   });
 
   it.effect(
@@ -210,7 +213,8 @@ describe("published article category", () => {
         { appLocale: "id", publicPath: "articles/politics" },
         { appLocale: "de", publicPath: "articles/politik" },
       ]);
-      expect(cacheMock).toHaveBeenCalledWith("article");
+      expect(releaseCacheMock).toHaveBeenCalledWith("article");
+      expect(cacheMock).not.toHaveBeenCalled();
     })
   );
 
@@ -358,7 +362,8 @@ describe("published article category", () => {
           })
         );
         expect(category).toEqual(page);
-        expect(cacheMock).toHaveBeenCalledWith("article");
+        expect(releaseCacheMock).toHaveBeenCalledWith("article");
+        expect(cacheMock).not.toHaveBeenCalled();
 
         const stalePage = { ...page, stale: true };
         articleReaderMock.mockReturnValueOnce(Effect.succeed(stalePage));

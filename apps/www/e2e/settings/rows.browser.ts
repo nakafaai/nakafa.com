@@ -1,13 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { live, saved } from "@/e2e/support/changes";
 import { writeMemory } from "@/e2e/support/list";
-import {
-  EMPTY,
-  live,
-  memoryRow,
-  openMemoryPage,
-  saved,
-} from "@/e2e/support/memory";
+import { EMPTY, memoryRow, openMemoryPage } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
