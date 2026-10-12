@@ -56,21 +56,29 @@ changing content ownership.
 `customers/verify.ts` is a read-only operational integrity check. It does not
 change customer, subscription, or content state.
 
+## Dev deployment scripts
+
+The release gate and the model test of knowledge search run the Convex CLI on
+the dev deployment of this checkout, through `development/cli.ts`. That module
+reads `CONVEX_DEPLOYMENT` from the environment and then from
+`packages/backend/.env.local`, where the CLI looks for it too. A script goes on
+only when that names a dev deployment, and it refuses to run with no
+deployment named, with a production deployment, or with a deploy key or a
+deployment token set. The CLI gets exactly the deployment that was checked, so
+a `.env` file cannot choose another, and it holds its own login, so the scripts
+read no credential.
+
 ## Nina release gate
 
 ```sh
 pnpm --filter @repo/backend nina:gate
 ```
 
-This command runs one real Nina turn through the Convex AI gateway, on the
-deployment that `CONVEX_DEPLOYMENT` names, and prints a table of what the turn
-used. That is the dev deployment in `packages/backend/.env.local`. It runs only
-on a dev deployment, and refuses to run with no deployment named or with a
-deploy key or a deployment token set. The Convex CLI it starts gets exactly the
-deployment it checked, so a `.env` file cannot choose another. It signs in a synthetic learner, asks one question, reads the stored
-turn, and removes the chat and starts the deletion of the learner. It exits with
-0 when the turn passes and with 1 when it does not, and it prints no message
-text.
+This command runs one real Nina turn through the Convex AI gateway, on the dev
+deployment, and prints a table of what the turn used. It signs in a synthetic
+learner, asks one question, reads the stored turn, and removes the chat and
+starts the deletion of the learner. It exits with 0 when the turn passes and
+with 1 when it does not, and it prints no message text.
 
 [ADR 0001](../../../docs/adr/0001-nina-engagement-architecture.md) says when to
 run it and what it proves.
@@ -82,13 +90,12 @@ pnpm --filter @repo/backend knowledge:compare
 pnpm --filter @repo/backend knowledge:compare --model=qwen/qwen3-embedding-8b --locale=id
 ```
 
-The test decides which embedding model knowledge search uses. It runs against
-the deployment that `packages/backend/.env.local` names, which must run the
-current functions and hold the section index of its active release (the build
-is `contents/sections/build:run`, started by hand with no arguments). The test
-calls the internal function `contents/sections/compare:rank` through the
-any-type endpoint `/api/run` of Convex's HTTP API, with the admin credential
-that the checkout holds.
+The test decides which embedding model knowledge search uses. It runs on the
+dev deployment, which must run the current functions and hold the section index
+of its active release (the build is `contents/sections/build:run`, started by
+hand with no arguments), and it needs no other setting. The test starts the
+internal function `contents/sections/compare:rank` with `convex run`, and reads
+its answer from what the CLI prints.
 
 For every embedding model of the gateway and every language, the deployment
 embeds the stored sections of that language and each question of
@@ -99,9 +106,15 @@ long a question took to embed. The sections are embedded as the build embeds
 them: a section whose text a model refuses is left out of the ranking and
 counted, and a question about it counts as missed, because a build with that
 model would leave the section out of the index. A model that refuses every text
-of a batch is not scored, and its run fails with the refusal. The questions are
+of a batch is not scored, and its run gives no answer. The questions are
 labeled with the Aksara corpus; a lesson that was edited since leaves its
 questions out, with the reason. `--model` and `--locale` narrow the test to one
-model or one language. Each run is one request that the runtime of Node ends
-after five minutes. The test changes no stored section: the vectors of a
-candidate model are made for the run and kept nowhere.
+model or one language. A run is one call of the function, which the CLI waits
+for in one request, and Node ends a request that gets no answer after five
+minutes, so a run that takes longer fails with the error of the CLI. A run that
+gets no answer is printed with an `error`, and the other runs still count. The
+`error` holds what the CLI printed when the function or the CLI failed, such as
+when the gateway refused a request, and says to build the index when it holds no
+section of the language. The command exits with 1 when any run gave no answer.
+The test changes no stored section: the vectors of a candidate model are made
+for the run and kept nowhere.

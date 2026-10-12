@@ -2,23 +2,8 @@ import {
   compareInputValidator,
   compareResultValidator,
 } from "@repo/backend/confect/contents/sections/compare.spec";
-import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
-import type { getCustomerConvexConfig } from "@repo/backend/scripts/customers/convex";
-import { FetchClient } from "@repo/utilities/http/client";
-import { encodeJsonText } from "@repo/utilities/json";
-import { Duration, Effect, Schema, String as Str } from "effect";
-import {
-  HttpClient,
-  type HttpClientError,
-  HttpClientRequest,
-} from "effect/http";
-
-/**
- * The longest a deployment may take to embed the stored sections of one
- * language and the questions with one model. The runtime of Node, which makes
- * the request, gives up on a request that gets no answer after five minutes.
- */
-const RANK_DEADLINE_MINUTES = 5;
+import { runConvex } from "@repo/backend/scripts/development/cli";
+import { Effect, Schema } from "effect";
 
 /**
  * Where the model comparison lives in a deployment: its module and its export.
@@ -30,97 +15,41 @@ const RANK_DEADLINE_MINUTES = 5;
 const RANK_PATH = "contents/sections/compare:rank";
 
 /**
- * The function is internal. The typed endpoints of Convex's HTTP API, such as
- * `/api/action`, are for public functions; `/api/run/{functionIdentifier}`
- * calls a function of any type, which is how the Convex command line runs an
- * internal function with an admin credential. Its identifier is the name with
- * a `/` in place of the `:`.
+ * The arguments of the function as the CLI takes them, one JSON text in one
+ * command line argument. A run of about 50 questions is about 9 KB, far below
+ * the limit of one argument (128 KiB on Linux, and 1 MiB for all arguments and
+ * the environment on macOS), so no other way to hand them over is needed.
  */
-const RANK_RUN_PATH = `/api/run/${Str.replace(":", "/")(RANK_PATH)}`;
+const Arguments = Schema.fromJsonString(compareInputValidator);
 
-/** Why a call to the deployment did not give an answer, in the words of its cause. */
+/** What the CLI prints when the function returns: its result, as the function declares it. */
+const Answer = Schema.fromJsonString(compareResultValidator);
+
+/** Why the CLI printed something other than the answer that the function declares. */
 class KnowledgeConvexError extends Schema.TaggedError<KnowledgeConvexError>()(
   "KnowledgeConvexError",
   { message: Schema.String }
 ) {}
 
 /**
- * The envelope in which Convex's HTTP API answers a function call. A typed
- * failure of the function, such as the gateway refusing a request, comes as
- * `errorData`.
+ * Runs the model comparison of the dev deployment for one model and one
+ * language with the Convex CLI, and gives back its answer as the function
+ * declares it. The function is internal, and the CLI holds the credential that
+ * reaches it. A failure of the function, such as the gateway refusing a
+ * request, makes the CLI exit with an error, which `runConvex` reports with
+ * what the CLI printed.
  */
-const AnswerSchema = Schema.Struct({
-  errorData: Schema.optional(Schema.Unknown),
-  errorMessage: Schema.optional(Schema.String),
-  status: Schema.Literals(["success", "error"]),
-  value: Schema.optional(Schema.Unknown),
-});
-
-const failed = (cause: unknown) =>
-  new KnowledgeConvexError({ message: getUnknownErrorMessage(cause) });
-
-/** The failure of the HTTP client to send the request or to read the answer. */
-const unreadable = (error: HttpClientError.HttpClientError) =>
-  failed(error.reason.cause);
-
-/**
- * Runs the model comparison of a deployment for one model and one language,
- * through Convex's admin HTTP API, and gives back its answer as the function
- * declares it. The function is internal, so only an admin credential reaches
- * it.
- */
-export const rankModel = Effect.fn("knowledge.rankModel")(
-  function* (
-    config: Effect.Success<ReturnType<typeof getCustomerConvexConfig>>,
-    input: typeof compareInputValidator.Type
-  ) {
-    const client = yield* HttpClient.HttpClient;
-    const args = yield* Schema.encodeEffect(compareInputValidator)(input).pipe(
-      Effect.orDie
-    );
-    const response = yield* HttpClientRequest.post(
-      `${config.url}${RANK_RUN_PATH}`
-    ).pipe(
-      HttpClientRequest.setHeader(
-        "Authorization",
-        `Convex ${config.accessToken}`
-      ),
-      HttpClientRequest.bodyJsonUnsafe({ args, format: "json" }),
-      client.execute,
-      Effect.mapError(unreadable)
-    );
-    if (response.status < 200 || response.status >= 300) {
-      const body = yield* response.text.pipe(Effect.mapError(unreadable));
-      return yield* new KnowledgeConvexError({
-        message: `HTTP ${response.status} ${body}`,
-      });
-    }
-    const body = yield* response.json.pipe(Effect.mapError(unreadable));
-    const answer = yield* Schema.decodeUnknownEffect(AnswerSchema)(body).pipe(
-      Effect.mapError(failed)
-    );
-    if (answer.status === "error") {
-      const reason = answer.errorMessage ?? "Unknown Convex error";
-      return yield* new KnowledgeConvexError({
-        message:
-          answer.errorData === undefined
-            ? reason
-            : `${reason} ${encodeJsonText(answer.errorData)}`,
-      });
-    }
-    return yield* Schema.decodeUnknownEffect(compareResultValidator)(
-      answer.value
-    ).pipe(Effect.mapError(failed));
-  },
-  // The deadline covers the send and the JSON read, so a stalled answer ends.
-  Effect.timeoutOrElse({
-    duration: Duration.minutes(RANK_DEADLINE_MINUTES),
-    orElse: () =>
-      Effect.fail(
+export const rankModel = Effect.fn("knowledge.rankModel")(function* (
+  input: typeof compareInputValidator.Type
+) {
+  const args = yield* Schema.encodeEffect(Arguments)(input).pipe(Effect.orDie);
+  const printed = yield* runConvex("Model test", ["run", RANK_PATH, args]);
+  return yield* Schema.decodeEffect(Answer)(printed).pipe(
+    Effect.mapError(
+      (error) =>
         new KnowledgeConvexError({
-          message: `The deployment did not answer within ${RANK_DEADLINE_MINUTES} minutes.`,
+          message: `Model test printed an answer that the function does not declare: ${error.message}`,
         })
-      ),
-  }),
-  Effect.provide(FetchClient)
-);
+    )
+  );
+});

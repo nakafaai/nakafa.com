@@ -10,16 +10,16 @@ import {
   embeddingModels,
 } from "@repo/backend/confect/gateway/model";
 import {
-  getCustomerConvexConfig,
-  loadCustomerEnvProvider,
-} from "@repo/backend/scripts/customers/convex";
+  ConvexCli,
+  requireDevelopment,
+} from "@repo/backend/scripts/development/cli";
 import { rankModel } from "@repo/backend/scripts/knowledge/convex";
 import { questionsFor } from "@repo/backend/scripts/knowledge/questions";
 import { summarize } from "@repo/backend/scripts/knowledge/report";
 import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
-  ConfigProvider,
+  Duration,
   Effect,
   Option,
   Result,
@@ -32,6 +32,14 @@ export class KnowledgeCompareError extends Schema.TaggedError<KnowledgeCompareEr
   "KnowledgeCompareError",
   { message: Schema.String }
 ) {}
+
+/**
+ * How long the CLI may take for one run: the 10 minutes that an action of the
+ * Node runtime may run, because a run is one such action. The CLI makes one
+ * request for it, and Node ends a request that gets no answer after five
+ * minutes, so a run that takes longer fails sooner, with the error of the CLI.
+ */
+const RUN_DEADLINE = Duration.minutes(10);
 
 /** The value of a `--name=value` flag, when the command line has one. */
 function flag(args: readonly string[], name: string) {
@@ -59,13 +67,12 @@ function chosen<A>(
  * that gets no answer is reported, so that the others still count.
  */
 const compareRun = Effect.fn("knowledge.compareRun")(function* (
-  config: Effect.Success<ReturnType<typeof getCustomerConvexConfig>>,
   model: EmbeddingModelId,
   locale: ActiveAppLocaleCode
 ) {
   const questions = questionsFor(locale);
   const found = yield* Effect.result(
-    rankModel(config, {
+    rankModel({
       locale,
       model,
       questions: Arr.map(questions, ({ contentKey, ordinal, question }) => ({
@@ -93,7 +100,8 @@ const compareRun = Effect.fn("knowledge.compareRun")(function* (
  * questions of `questions/`, against the dev deployment of this checkout, and
  * prints for each pair how many right sections landed in the top five and how
  * long a question took to embed. `--model=<id>` and `--locale=<code>` narrow
- * the test to one model or one language.
+ * the test to one model or one language. It runs only when the deployment check
+ * allows it, and the CLI then goes to the deployment that the check looked at.
  */
 const compare = Effect.gen(function* () {
   const args = yield* Effect.sync(() => Arr.drop(process.argv, 2));
@@ -109,10 +117,8 @@ const compare = Effect.gen(function* () {
     ActiveAppLocaleCodeSchema,
     ACTIVE_APP_LOCALE_CODES
   );
-  const provider = yield* loadCustomerEnvProvider();
-  const config = yield* getCustomerConvexConfig(false).pipe(
-    Effect.provideService(ConfigProvider.ConfigProvider, provider)
-  );
+  const settings = yield* requireDevelopment();
+  const cli = yield* ConvexCli;
   // One run after another, so that the gateway embeds for one run at a time,
   // and each result is logged as soon as it is known, because the test takes
   // minutes per run.
@@ -121,9 +127,15 @@ const compare = Effect.gen(function* () {
       Arr.map(locales, (locale) => [model, locale] as const)
     ),
     ([model, locale]) =>
-      Effect.tap(compareRun(config, model, locale), (row) =>
+      Effect.tap(compareRun(model, locale), (row) =>
         Effect.logInfo(encodeJsonText(row))
       )
+  ).pipe(
+    Effect.provideService(ConvexCli, {
+      ...cli,
+      deadline: RUN_DEADLINE,
+      env: { ...cli.env, ...settings },
+    })
   );
   yield* Effect.sync(() =>
     process.stdout.write(`${encodePrettyJsonText(rows)}\n`)

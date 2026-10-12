@@ -90,7 +90,9 @@ that the read tool opens the document at that section.
 against each embedding model of the gateway and reports how often the right
 section is among the first five in each language. It embeds the stored sections
 as the build does: a section that a model refuses is counted and ranks last, as
-a build with that model would leave it out of the index. The constant follows
+a build with that model would leave it out of the index. The test costs money
+and minutes, so it runs only on the dev deployment of the checkout, through the
+Convex CLI and the deployment check of the release gate. The constant follows
 its result.
 
 ## Cost
