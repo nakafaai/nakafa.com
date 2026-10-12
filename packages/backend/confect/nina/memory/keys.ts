@@ -18,12 +18,12 @@ type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
  * The version of what a word is (`memory/words`). It is part of the input of
  * every word key, so a key made under another version can never equal a key
  * made under this one, and a search never finds a word by a key of a word that
- * meant something else. Version 1 read a word as a run of letters or digits of
- * three characters or more that is no stop word of Indonesian, English or
- * German. Version 2 reads it from the word boundaries of the platform
- * (`Intl.Segmenter`), with no list and no minimum length. Change what a word
- * is, and this number changes with it; a memory is re-keyed the next time it is
- * written or confirmed (`syncKeys` deletes the keys it should not have).
+ * meant something else. Version 1 read words by rules of its own, and its keys
+ * are blinded for the field `words`. Version 2 reads them from the word
+ * boundaries of the platform (`Intl.Segmenter`), with no list and no minimum
+ * length. Change what a word is, and this number changes with it; a memory is
+ * re-keyed the next time it is written or confirmed (`syncKeys` deletes the keys
+ * it should not have).
  */
 const WORD_INDEX_VERSION = 2;
 

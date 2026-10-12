@@ -47,8 +47,8 @@ const rekeyMemory = Effect.fn("nina.memory.rekey.memory")(function* (
  * dev and then production, one call after another with the cursor of the call
  * before, until `done` is true, and once more to see `rekeyed` at 0 over the
  * whole table. Cleanup: when dev and production both show that, delete this
- * file, `rekey.spec.ts`, `rekey.test.ts` and their generated functions. The
- * version in `memory/keys` stays: it is part of every key.
+ * file, `rekey.spec.ts`, `rekey.impl.test.ts` and their generated functions.
+ * The version in `memory/keys` stays: it is part of every key.
  */
 const page = FunctionImpl.make(
   schema,

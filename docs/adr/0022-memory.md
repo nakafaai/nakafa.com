@@ -53,14 +53,23 @@ learner with the vault, in the fields `ninaMemories.text` and
 `ninaMemories.title`, so a value sealed for one field does not open as the
 other. A row without its learner key is a defect. A row names no chat.
 
-Memory is written only when the learner's own words support it, and plain code
-decides. The model words each statement, and plain code proves that the learner
-said something to support it, not that the statement restates it faithfully.
-That is why Nina reads the statements as data, and why the learner can read,
-edit and delete every one. After a complete turn:
+Memory is written only when the learner's own words support it. A learner
+writes anything, in any language and script, so no list of words and no pattern
+decides whether a message states something lasting or holds something private:
+a decision model does (see Judgments). The capture model words each statement,
+and plain code proves that the learner said something to support it, not that
+the statement restates it faithfully. That is why Nina reads the statements as
+data, and why the learner can read, edit and delete every one. After a complete
+turn:
 
-1. The gate asks for a message of at least 12 characters with a first-person
-   word in Indonesian, English or German. Any other message makes no model call.
+1. The decision model judges the learner's message `lasting`: whether it states
+   something that will still matter in later study sessions, such as their
+   grade or level, a goal, how they like to learn, something they find hard, or
+   a situation with a date. It is sent that message alone, cut to 1,000 tokens,
+   and never a name, an id or the conversation. A message it judges not lasting,
+   in any language, makes no capture call, and so does a message of only
+   whitespace and the message of a learner who paused memory, which is sent to
+   no model at all.
 2. One call on the background purpose returns at most three candidates, each
    with a verbatim quote and one sentence that is never empty and at most 280
    characters. The sentence states the fact in the language the learner wrote,
@@ -76,17 +85,20 @@ edit and delete every one. After a complete turn:
    recorded as agent `memory` in the turn's ledger.
 3. The check keeps a candidate only when its quote is in the message once
    lower-cased and with whitespace collapsed, its text has a letter or a digit,
-   its text does not label the learner, neither its text nor its quote holds an
-   email address, a link or eight digits in a row, and a situation has an end
-   day of today or later. A dash, a dot or a space ends a run of digits, so a
-   date such as 20-10-2026 stays. A text labels the learner when it starts with
+   its text does not label the learner, and a situation has an end day of today
+   or later. A text labels the learner when it starts with
    a word that names them (Learner, Student, Pupil, User, Siswa, Murid,
    Pelajar, Pembelajar, Pengguna, Lernende, Schüler, Nutzer, Benutzer, with the
    article that may lead it) or holds an English label that the learner's own
    words do not hold. The check drops such a candidate and does not rewrite it,
    because a rewrite could say something the learner did not. Memories saved
    before this rule keep their words until the learner says them again, which
-   replaces the words of a memory Nina wrote, or edits them.
+   replaces the words of a memory Nina wrote, or edits them. The candidates
+   that stay then go to the decision model, all of them in one request, each as
+   its sentence followed by its quote, and it judges each one `private`: whether
+   it holds contact details, a home address, an identity or account number, a
+   password, or information about health, religion, ethnicity, political views
+   or money. A candidate it judges private is dropped.
 4. The write first checks what could have changed while the model read the
    message. Paused memory, a deleted turn, and a memory that the call read and
    that is gone now (the learner removed it, or it ended) each stop it. It looks
@@ -125,7 +137,12 @@ punctuation or spacing, and only when nobody changed the memory since the call
 read it.
 
 A capture that fails logs one warning with routing facts and changes nothing. It
-never cancels the title, the suggestions or the summary.
+never cancels the title, the suggestions or the summary. A decision that cannot
+be made, because the gateway fails or the deadline passes, is such a failure:
+nothing is stored for that turn, the capture model is not asked when it was the
+first decision that failed, and the warning names the operation (`judge`), the
+gateway's reason, status and type, and never the message, a candidate or a
+quote. No pattern or list takes the place of the decision model.
 
 A turn starts with at most 8 memories: first those linked to the topics of the
 open page, the best first, and then, to fill the places that are left, the most
@@ -174,16 +191,36 @@ one of two kinds:
   which every page shares and which says nothing. A page has at most 8 topics.
 - A word key, `w:<hash>`, which is blind. One function turns the words of the
   title, and then the words of the text, into the words that are indexed, and
-  the writer and every search use it: Unicode NFKC, lower case, runs of letters
-  or digits. A run shorter than 3 characters is dropped unless it is a number of
-  at least 2 digits, and so is every stop word of Indonesian, English and
-  German in a short fixed list. Each run is cut to its first 6 characters, so
+  the writer and every search use it: Unicode NFKC, lower case, and then the
+  word boundaries of the platform (`Intl.Segmenter`, UAX 29), which keep a word
+  or a number and drop punctuation, spaces and emoji. The platform's
+  dictionaries split Japanese, Chinese and Thai, which put no space between
+  words, so a learner's words in any script have words. No list of words and no
+  minimum length decides what a word is, because each would hold for some
+  languages and not for others. Each word is cut to its first 6 characters, so
   that trigonometri, trigonometry and Trigonometrie are one word. A memory
   indexes at most 96 words. The key is an HMAC-SHA-256 of the word, cut to 16
   bytes, under a third key of the learner's vault key that is used for nothing
-  else, and bound to the table and the field. The database can match a word
-  again without reading it, and the same word is another key for another
-  learner.
+  else, and bound to the table, the field and the version of the index
+  (`words/v2`). The database can match a word again without reading it, and the
+  same word is another key for another learner.
+
+The version of the index says what a word is. Version 1, whose keys were blinded
+for the field `words`, read words by rules that version 2 replaced, and version
+2 reads them from the word boundaries of the platform. The version is part of
+every word key, so a key of one version never equals a key of another, and a
+search never finds a memory by a key of a word that meant something else. A
+change in what a word is, including a change in the platform's dictionaries, is
+a new version. A memory that was written under an older version is re-keyed by
+its next write or confirmation, because the sync of its keys deletes the keys it
+should not have. The temporary internal function `nina/memory/rekey:page`
+re-keys the others, 25 memories to a call: it takes the cursor of the call
+before, reads the next page of memories, gives each the keys of the current
+version from its own words, title and topics, returns how many it looked at and
+how many it changed together with the next cursor, and never schedules itself.
+The operator runs it on dev and then on production until `done`, and once more
+to see that no memory changes. When both show that, the function and its tests
+are deleted; the version stays.
 
 The index uses no embeddings. A vector index holds its vectors in plain form,
 and an embedding can be turned back into the text it stands for, so it would
@@ -203,16 +240,74 @@ deletion, and the retired `disable`.
 One function searches: `searchMemories` takes the learner, the text, the
 topics, a limit and the moment the learner last deleted all of it, if ever. It
 looks up at most 16 keys, the topics first, and reads the 24 memories confirmed
-last for each. A memory scores 3 for the lesson that is open, 2 for a path
-above it, and 1 for each word. The memories go by score and then by the time
-they were last confirmed, the newest first, and the best three times the limit,
-at most 48, are loaded. Those that are gone or are situations that ended drop
-out, and the first of the rest, as many as the limit, are the result. It reads
-at most 434 documents of the 32,000 that one transaction may read, whatever the
-learner keeps: a word that many memories hold finds the ones confirmed last
-that hold it, not every one. The capture call asks for 12 memories, the write
-for 8 for each candidate, and a turn start searches by the topics of the page
-alone. The Memory page does not use it: its search runs in the browser.
+last for each. When the text has more words than the keys that are left, it
+looks up the longest words first, because a word that is frequent in a language
+is short in it, in every language. A memory scores 3 for the lesson that is
+open, 2 for a path above it, and for each word 1 divided by the number of
+memories the read of the word's key found: a word that only one of the learner's
+memories holds is worth 1, a word that two hold 1/2, and a word that most of
+their memories hold, such as an article or a particle in any language, is worth
+little. The read finds 24 memories at most, so a word that 24 or more memories
+hold is worth 1/24, which is less than any word that fewer hold. That is how
+the search ignores the words that say nothing, with no list of them. The
+memories go by score and then by the time they were last confirmed, the newest
+first, and the best three times the limit, at most 48, are loaded. Those that
+are gone or are situations that ended drop out, and the first of the rest, as
+many as the limit, are the result. It reads at most 434 documents of the 32,000
+that one transaction may read, whatever the learner keeps: a word that many
+memories hold finds the ones confirmed last that hold it, not every one. The
+capture call asks for 12 memories, the write for 8 for each candidate, and a
+turn start searches by the topics of the page alone. The Memory page does not
+use it: its search runs in the browser.
+
+## Judgments
+
+Nina asks every question about a learner's words through one module,
+`confect/nina/judgment`. A judgment is an entry of data in its catalog: its
+name, the kind of its question (yes or no), the instructions the decision model
+reads, and the probability from which its answer counts as yes. The interface of
+the module is small: `judge(names, texts)` asks the judgments it names about
+each text, all of them in one request to the Convex AI gateway (ADR 0019), and
+answers with one record of verdicts for each text, true or false for each name.
+A caller never sees a probability, a threshold or a model, and adding a
+judgment is adding an entry. The instructions of an entry hold in any language
+and name no language, no word and no pattern. Two judgments exist:
+
+- `lasting` decides whether the capture model runs for a message.
+- `private` is asked of each candidate the capture model proposes, and a
+  candidate it judges private is dropped.
+
+What is sent to the decision model is the least text that answers the question:
+the learner's message for `lasting`, and the sentence of each candidate with its
+quote for `private`. Each text is cut to 1,000 tokens. When a decision covers
+several texts, they go numbered and each question names its text. A name, an id
+and the conversation are never sent, and a decision asks for zero retention.
+
+When a decision cannot be made, nothing is stored for the turn and a warning
+logs the operation and the gateway's routing facts, never a text. There is no
+fallback to a pattern or a list.
+
+The thresholds are not taste. Both start at 0.5, and they are set from a
+labelled set: `test/judgment/set.ts` holds 124 short messages written for the
+purpose in 17 languages and 8 scripts, among them Indonesian, Javanese,
+Sundanese, English, German, Arabic, Japanese, Chinese, Hindi and Spanish. About
+half state something lasting and a quarter hold private data of a dozen forms,
+among them a phone number written with spaces, a street address, an illness, a
+religion and a salary, and mixed-language and very short messages are in it.
+Each carries its two expected labels.
+`pnpm --filter @repo/backend judgment:measure` runs the set through the
+deployment the caller's environment configures (the development deployment
+unless it is given `--prod`) and prints, for each judgment, the probabilities by
+label, the counts at the held threshold, the threshold that separates best and
+the messages the held threshold judges wrongly, by number and never by text. The
+thresholds in the catalog follow what it prints, and it runs again whenever
+instructions or the decision model change. The first measurements, of 15
+messages in seven languages, are in ADR 0019.
+
+Two checks still read words by rule, and neither is a judgment yet: the labels
+that name the learner (a list in three languages, step 3 above), and the
+comparison of two sentences for whether they say the same, which splits words at
+spaces.
 
 ## Implementation Contract
 
@@ -228,8 +323,10 @@ alone. The Memory page does not use it: its search runs in the browser.
   `empty` and `missing`. `empty` means the write holds neither a title nor
   words, and it is checked first, before the memory is read. A title of more
   than 80 characters, or of only spaces, never reaches the function: its
-  arguments refuse it. `read`, `known`, `capture`, `drain` and `expire` are
-  internal.
+  arguments refuse it. `read`, `paused`, `known`, `capture`, `drain` and
+  `expire` are internal. `paused` tells whether the learner paused memory, and
+  the capture asks it before it sends the learner's message to any model and
+  before it searches a memory.
 - `clear` stores the moment the learner asked, as `ninaMemoryClearedAt` on
   their learning preference, and in the same transaction deletes a batch of 25
   memories with their keys. `drain` deletes the next batch, again and again,
