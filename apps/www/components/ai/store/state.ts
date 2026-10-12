@@ -7,6 +7,7 @@ export const initialState = {
   ask: null,
   chatDrafts: [],
   contextTitle: null,
+  held: {},
   open: false,
   openingChat: null,
   text: "",

@@ -4,7 +4,7 @@ import type { Ref } from "@confect/core";
 import { NinaReceipt } from "@repo/backend/client/nina/receipt";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
-import { Schema } from "effect";
+import { type Option, Schema } from "effect";
 
 /** A prompt Nina is admitting for the learner, shown before its chat exists. */
 const AiAskSchema = Schema.Struct({
@@ -17,11 +17,22 @@ type AiAsk = typeof AiAskSchema.Type;
 /** The two states of an upload that a chip shows: on its way, or failed. */
 const AiUploadSchema = Schema.Literals(["uploading", "error"]);
 
+/** The upload that holds one chosen file on the server. */
+const AiUploadIdSchema = Id("ninaUploads");
+
 const AiStateSchema = Schema.Struct({
   activeChatId: Schema.NullOr(Id("chats")),
   ask: Schema.NullOr(AiAskSchema),
   chatDrafts: Schema.Array(Schema.String),
   contextTitle: Schema.NullOr(Schema.String),
+  /**
+   * The upload that holds each chosen file on the server, by the id the
+   * composer gave the file. It is kept so a second send does not upload the
+   * file again, and so the upload goes back when the learner removes the file.
+   * The preview address of a file changes when a hidden composer shows again,
+   * and its id does not, so the id is the key.
+   */
+  held: Schema.Record(Schema.String, AiUploadIdSchema),
   open: Schema.Boolean,
   openingChat: Schema.NullOr(
     Schema.Struct({
@@ -45,6 +56,8 @@ export type AiState = typeof AiStateSchema.Type;
 interface AiActions {
   addChatDraft: (key: string) => void;
   clearUpload: (url: string) => void;
+  /** Remembers the upload that now holds this file on the server. */
+  keepUpload: (fileId: string, uploadId: typeof AiUploadIdSchema.Type) => void;
   markUpload: (url: string, status: typeof AiUploadSchema.Type) => void;
   openAsk: (ask: AiAsk) => boolean;
   removeChatDraft: (key: string) => void;
@@ -58,6 +71,15 @@ interface AiActions {
   setOpen: (open: AiState["open"]) => void;
   setOpeningChat: (openingChat: AiState["openingChat"]) => void;
   setText: (text: AiState["text"] | ((previous: string) => string)) => void;
+  /**
+   * Forgets the uploads that hold these files and returns them, so the caller
+   * can give them back to the server. A file that holds none returns nothing.
+   */
+  takeUploads: (
+    fileIds: readonly string[]
+  ) => readonly (typeof AiUploadIdSchema.Type)[];
+  /** The upload that holds this file on the server, once it has uploaded. */
+  uploadOf: (fileId: string) => Option.Option<typeof AiUploadIdSchema.Type>;
   warm: () => void;
 }
 

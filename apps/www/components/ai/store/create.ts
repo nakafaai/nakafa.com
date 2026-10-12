@@ -18,6 +18,8 @@ export function createAiStore() {
           })),
         clearUpload: (url) =>
           set((state) => ({ uploads: Rec.remove(state.uploads, url) })),
+        keepUpload: (fileId, uploadId) =>
+          set((state) => ({ held: Rec.set(state.held, fileId, uploadId) })),
         markUpload: (url, status) =>
           set((state) => ({ uploads: Rec.set(state.uploads, url, status) })),
         // One new-chat admission at a time: a pending ask or composer draft
@@ -85,6 +87,22 @@ export function createAiStore() {
           set((state) => ({
             text: typeof text === "function" ? text(state.text) : text,
           })),
+        // A file that holds no upload changes nothing, so nobody re-renders.
+        takeUploads: (fileIds) => {
+          const { held } = get();
+          const taken = Arr.getSomes(
+            Arr.map(fileIds, (fileId) => Rec.get(held, fileId))
+          );
+          if (Arr.isReadonlyArrayNonEmpty(taken)) {
+            set({
+              held: Arr.reduce(fileIds, held, (rest, fileId) =>
+                Rec.remove(rest, fileId)
+              ),
+            });
+          }
+          return taken;
+        },
+        uploadOf: (fileId) => Rec.get(get().held, fileId),
         // The reader showed intent: the sheet's body renders hidden from now
         // on, so the press that opens it usually finds it ready.
         warm: () => set({ warmed: true }),

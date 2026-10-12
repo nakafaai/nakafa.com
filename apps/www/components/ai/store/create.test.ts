@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { encodeJsonText } from "@repo/utilities/json";
-import { DateTime, Record as Rec, Schema } from "effect";
+import { DateTime, Option, Record as Rec, Schema } from "effect";
 import { createAiStore } from "@/components/ai/store/create";
 
 const STORAGE_KEY = "nakafa-ai";
@@ -13,6 +13,8 @@ const StoredAiState = Schema.fromJsonString(
 );
 const chatId = Schema.decodeUnknownSync(Id("chats"))("chat_1");
 const otherChatId = Schema.decodeUnknownSync(Id("chats"))("chat_2");
+const firstUpload = Schema.decodeUnknownSync(Id("ninaUploads"))("upload_1");
+const secondUpload = Schema.decodeUnknownSync(Id("ninaUploads"))("upload_2");
 const receipt = {
   chatId,
   order: 0,
@@ -271,6 +273,40 @@ describe("ai/store/create", () => {
 
     store.getState().clearUpload("blob:first");
     expect(store.getState().uploads).toEqual({ "blob:second": "uploading" });
+  });
+
+  it("remembers the upload that holds a file, by the id of the file", () => {
+    const store = createAiStore();
+
+    expect(store.getState().uploadOf("file-1")).toEqual(Option.none());
+
+    store.getState().keepUpload("file-1", firstUpload);
+    store.getState().keepUpload("file-2", secondUpload);
+    expect(store.getState().uploadOf("file-1")).toEqual(
+      Option.some(firstUpload)
+    );
+    expect(store.getState().uploadOf("file-2")).toEqual(
+      Option.some(secondUpload)
+    );
+  });
+
+  it("gives up the uploads of the files it is asked for, once, and nothing else", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload);
+    store.getState().keepUpload("file-2", secondUpload);
+
+    expect(store.getState().takeUploads(["file-1", "file-3"])).toEqual([
+      firstUpload,
+    ]);
+    expect(store.getState().held).toEqual({ "file-2": secondUpload });
+
+    // A file that holds no upload changes nothing, so no reader runs again.
+    const before = store.getState();
+    const listener = vi.fn();
+    store.subscribe(listener);
+    expect(store.getState().takeUploads(["file-1", "file-3"])).toEqual([]);
+    expect(store.getState()).toBe(before);
+    expect(listener).not.toHaveBeenCalled();
   });
 
   it("sets the composer text from a value or from an updater", () => {

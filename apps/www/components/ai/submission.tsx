@@ -25,6 +25,7 @@ import {
   Exit,
   HashMap,
   MutableHashMap,
+  Option,
   Result,
   Schema,
 } from "effect";
@@ -42,12 +43,7 @@ import {
 import { optimisticPrompt } from "@/components/ai/optimistic";
 import type { AiStore } from "@/components/ai/store/types";
 import { messageInput, retryInput } from "@/components/ai/turn";
-import {
-  dropUploads,
-  keepUpload,
-  releaseUpload,
-  uploadOf,
-} from "@/components/ai/uploads";
+import { releaseUploads } from "@/components/ai/uploads";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 type Start = typeof nina.turns.start;
@@ -68,8 +64,14 @@ function requireNinaConnection(convex: ConvexReactClient) {
   );
 }
 
-/** The actions that show a chip as uploading or failed, and take that back. */
-type UploadStatus = Pick<AiStore, "clearUpload" | "markUpload">;
+/**
+ * What the uploads of a send need from the store: to show a chip as uploading
+ * or failed, and to know which upload already holds a file.
+ */
+type UploadStore = Pick<
+  AiStore,
+  "clearUpload" | "keepUpload" | "markUpload" | "uploadOf"
+>;
 
 /** Uploads one file unless it already holds an upload, and shows how far the upload is. */
 const uploadAttachment = Effect.fn("nina.upload")(function* (
@@ -77,11 +79,11 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
   previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>,
   convex: ConvexReactClient,
-  status: UploadStatus
+  status: UploadStore
 ) {
-  const cached = uploadOf(attachment.file);
-  if (cached) {
-    return cached;
+  const cached = status.uploadOf(attachment.id);
+  if (Option.isSome(cached)) {
+    return cached.value;
   }
   const mediaType = yield* Schema.decodeUnknownEffect(NinaFileType)(
     attachment.file.type
@@ -119,7 +121,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
       Effect.sync(() => status.markUpload(attachment.url, "error"))
     )
   );
-  keepUpload(attachment.file, id);
+  yield* Effect.sync(() => status.keepUpload(attachment.id, id));
   MutableHashMap.set(previews, id, {
     type: "file",
     url: attachment.url,
@@ -136,7 +138,7 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
   upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
   previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>,
   convex: ConvexReactClient,
-  status: UploadStatus
+  status: UploadStore
 ) {
   if (exceedsDocumentLimit(Arr.map(files, (attachment) => attachment.file))) {
     return yield* new NinaUploadError({
@@ -160,9 +162,12 @@ export function useNinaSubmission() {
   const convex = useConvex();
   const addChatDraft = useAi((state) => state.addChatDraft);
   const clearUpload = useAi((state) => state.clearUpload);
+  const keepUpload = useAi((state) => state.keepUpload);
   const markUpload = useAi((state) => state.markUpload);
   const removeChatDraft = useAi((state) => state.removeChatDraft);
   const resolveChatDraft = useAi((state) => state.resolveChatDraft);
+  const takeUploads = useAi((state) => state.takeUploads);
+  const uploadOf = useAi((state) => state.uploadOf);
   const [error, setError] = useState<NinaFailure | null>(null);
   const inFlight = useRef(false);
   const uncertain = useRef<Ref.Args<Start> | null>(null);
@@ -170,7 +175,7 @@ export function useNinaSubmission() {
 
   async function perform(
     inputProgram: Effect.Effect<Ref.Args<Start>["input"], NinaFailure>,
-    files: readonly File[],
+    fileIds: readonly string[],
     chatId?: Id<"chats">
   ) {
     if (inFlight.current) {
@@ -238,7 +243,7 @@ export function useNinaSubmission() {
     if (Result.isSuccess(result)) {
       uncertain.current = null;
       // The send took its uploads, so no file holds one any more.
-      dropUploads(files);
+      takeUploads(fileIds);
       MutableHashMap.clear(previews);
       return result.success;
     }
@@ -251,11 +256,7 @@ export function useNinaSubmission() {
     ) {
       // Every file uploads again on the next send, so the places its earlier
       // uploads hold go back now instead of when they expire.
-      Effect.runFork(
-        Effect.forEach(files, (file) => releaseUpload(file, release), {
-          concurrency: "unbounded",
-        })
-      );
+      Effect.runFork(releaseUploads(takeUploads(fileIds), release));
       MutableHashMap.clear(previews);
     }
     setError(result.failure);
@@ -275,13 +276,15 @@ export function useNinaSubmission() {
     return perform(
       uploadAttachments(files, upload, previews, convex, {
         clearUpload,
+        keepUpload,
         markUpload,
+        uploadOf,
       }).pipe(
         Effect.map((uploadIds) =>
           messageInput({ focus: prompt.focus, text: prompt.text, uploadIds })
         )
       ),
-      Arr.map(files, (attachment) => attachment.file),
+      Arr.map(files, (attachment) => attachment.id),
       chatId
     );
   }

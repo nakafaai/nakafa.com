@@ -30,20 +30,26 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { splitFileName } from "@/components/ai/attachments";
 import { useAi } from "@/components/ai/context";
-import { releaseUpload } from "@/components/ai/uploads";
+import { releaseUploads } from "@/components/ai/uploads";
 
 const imageVariants = cva("", {
   variants: { variant: { message: "w-48", preview: "w-24" } },
   defaultVariants: { variant: "message" },
 });
 
-/** A file name whose start gives way first, so its version and extension stay in view. */
+/**
+ * A file name whose start gives way first, so its version and extension stay
+ * in view. The end never takes more than the title: where the characters at
+ * the end are wider than the title, it shortens with an ellipsis.
+ */
 function NinaFileName({ name }: { name: string }) {
   const { head, tail } = splitFileName(name);
   return (
     <AttachmentTitle className="flex" dir="auto">
       <span className="truncate">{head}</span>
-      <span className="shrink-0 whitespace-pre">{tail}</span>
+      <span className="max-w-full shrink-0 overflow-hidden text-ellipsis whitespace-pre">
+        {tail}
+      </span>
     </AttachmentTitle>
   );
 }
@@ -155,6 +161,7 @@ export function NinaAttachments({
     (attachments) => attachments.remove
   );
   const clearUpload = useAi((state) => state.clearUpload);
+  const takeUploads = useAi((state) => state.takeUploads);
   const release = useMutation(nina.uploads.release);
   const t = useTranslations("Ai");
   const submitted = HashSet.fromIterable(submittedFiles);
@@ -176,7 +183,7 @@ export function NinaAttachments({
                 removeAttachment(file.id);
                 clearUpload(file.url);
                 // The upload the file holds goes back at once, not at expiry.
-                Effect.runFork(releaseUpload(file.file, release));
+                Effect.runFork(releaseUploads(takeUploads([file.id]), release));
               }}
               type="button"
               variant="secondary"
