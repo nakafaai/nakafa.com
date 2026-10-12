@@ -149,7 +149,11 @@ test.describe("Uploads of a composer at 390px", () => {
         changes.failNext(START);
         yield* Effect.promise(async () => {
           await composerOf(composer).press("Enter");
-          await expect.poll(() => changes.argumentsOf(START).length).toBe(2);
+          await expect
+            .poll(() => changes.argumentsOf(START).length, {
+              timeout: readinessTimeoutMilliseconds,
+            })
+            .toBe(2);
           await saved(changes, before);
         });
         const named = yield* uploadsNamedBy(changes);
@@ -185,32 +189,38 @@ test.describe("Uploads of a composer at 390px", () => {
           await expect(noticeWith(page, INVALID)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
-          await expect.poll(() => changes.argumentsOf(RELEASE).length).toBe(2);
+          await expect
+            .poll(() => changes.argumentsOf(RELEASE).length, {
+              timeout: readinessTimeoutMilliseconds,
+            })
+            .toBe(2);
           await saved(changes, before);
           await expect(chipsIn(composer)).toHaveCount(2);
         });
         const [named] = yield* uploadsNamedBy(changes);
         const released = yield* uploadsReleasedBy(changes);
 
-        // The uploads the refused send named are the ones given back.
-        yield* Effect.sync(() => {
-          expect(Arr.sort(released, Order.String)).toEqual(
-            Arr.sort(named ?? [], Order.String)
-          );
-        });
-
-        // Nothing holds an upload for the files now, so the next send makes
-        // two new ones.
+        // No upload is held for the files now, so the next send makes two new ones.
         const resent = changes.sent;
         changes.failNext(START);
         yield* Effect.promise(async () => {
           await composerOf(composer).press("Enter");
-          await expect.poll(() => changes.argumentsOf(START).length).toBe(2);
+          // Both files upload again before the server is asked.
+          await expect
+            .poll(() => changes.argumentsOf(START).length, {
+              timeout: readinessTimeoutMilliseconds,
+            })
+            .toBe(2);
           await saved(changes, resent);
         });
         const [, again] = yield* uploadsNamedBy(changes);
 
         yield* Effect.sync(() => {
+          // The uploads the refused send named are the ones given back, and
+          // the next send uploaded both files again.
+          expect(Arr.sort(released, Order.String)).toEqual(
+            Arr.sort(named ?? [], Order.String)
+          );
           expect(changes.argumentsOf(SAVE)).toHaveLength(4);
           expect(Arr.intersection(named ?? [], again ?? [])).toEqual([]);
         });
