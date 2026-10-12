@@ -5,16 +5,13 @@ import {
   createTool,
   saveMessages,
 } from "@convex-dev/agent";
-import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import type {
   OutcomeCursor,
   OutcomeReport,
 } from "@repo/backend/confect/nina/outcome.spec";
-import { webSearchMaxQueries } from "@repo/backend/confect/nina/research/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -27,7 +24,7 @@ import {
   type ToolResultPart,
 } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Stream } from "effect";
+import { Array as Arr, Record as Rec, Stream } from "effect";
 
 const NOW = Date.UTC(2026, 9, 12, 8);
 
@@ -44,7 +41,7 @@ type JsonValue = Extract<ToolResultPart["output"], { type: "json" }>["value"];
 /** A JSON tool output, the form a capability output is stored in. */
 export const json = (value: JsonValue) => ({ type: "json" as const, value });
 
-/** An output as a capability stored it before 10 October 2026. */
+/** An output as a capability stored it before 10 October 2026 when its run failed. */
 export function oldOutput(
   failure: string,
   artifacts: readonly JsonValue[] = []
@@ -56,6 +53,23 @@ export function oldOutput(
   };
 }
 
+/** An output as a capability stored it before 10 October 2026 when its run lost a card: no key marks it. */
+export function unmarkedOutput(artifacts: readonly JsonValue[]) {
+  return {
+    artifacts: Arr.fromIterable(artifacts),
+    text: "Evidence of an unmarked run.",
+  };
+}
+
+/** One tool result. */
+export function partOf(
+  toolName: string,
+  output: ToolResultPart["output"],
+  toolCallId = "call-1"
+) {
+  return { type: "tool-result" as const, toolCallId, toolName, output };
+}
+
 /** The tool message that holds one result. */
 export function resultOf(
   toolName: string,
@@ -64,7 +78,15 @@ export function resultOf(
 ) {
   return {
     role: "tool" as const,
-    content: [{ type: "tool-result" as const, toolCallId, toolName, output }],
+    content: [partOf(toolName, output, toolCallId)],
+  };
+}
+
+/** The assistant message that calls one tool. */
+function callOf(toolName: string, toolCallId: string): ModelMessage {
+  return {
+    role: "assistant",
+    content: [{ type: "tool-call", toolCallId, toolName, input: {} }],
   };
 }
 
@@ -76,11 +98,26 @@ export function turn(
 ): ModelMessage[] {
   return [
     { role: "user", content: "Question" },
-    {
-      role: "assistant",
-      content: [{ type: "tool-call", toolCallId, toolName, input: {} }],
-    },
+    callOf(toolName, toolCallId),
     resultOf(toolName, output, toolCallId),
+    { role: "assistant", content: "Answer" },
+  ];
+}
+
+/** One turn of `count` tool steps, a call and its result each, in which `outputOf` gives the output of a step. */
+export function stepsOf(
+  count: number,
+  outputOf: (index: number) => JsonValue
+): ModelMessage[] {
+  return [
+    { role: "user", content: "Question" },
+    ...Arr.flatMap(
+      Arr.makeBy(count, (index) => index),
+      (index): ModelMessage[] => [
+        callOf("deepResearch", `call-${index}`),
+        resultOf("deepResearch", json(outputOf(index)), `call-${index}`),
+      ]
+    ),
     { role: "assistant", content: "Answer" },
   ];
 }
@@ -98,6 +135,18 @@ export function chatOf(count: number, marked: readonly number[] = []) {
   );
 }
 
+/** A question or an answer, by the place of the message in a chat. */
+function plainMessage(index: number): ModelMessage {
+  return index % 2 === 0
+    ? { role: "user", content: `Question ${index}` }
+    : { role: "assistant", content: `Answer ${index}` };
+}
+
+/** `count` messages that hold no tool result. */
+export function idle(count: number) {
+  return Arr.makeBy(count, plainMessage);
+}
+
 /** A chat of 130 messages in which the messages at `marked` are old outputs. */
 export function longChat(marked: readonly number[]) {
   return Arr.makeBy(130, (index): ModelMessage => {
@@ -108,61 +157,23 @@ export function longChat(marked: readonly number[]) {
         `call-${index}`
       );
     }
-    return index % 2 === 0
-      ? { role: "user", content: `Question ${index}` }
-      : { role: "assistant", content: `Answer ${index}` };
+    return plainMessage(index);
   });
 }
 
-/**
- * The largest output research can store: the most searches, each with the most
- * sources and a full page of content, the most pages read in full, and the
- * longest text one output may carry.
- */
-function heaviest(failure?: string) {
-  const searches = Arr.makeBy(webSearchMaxQueries, (query) => ({
-    type: "data-web-search" as const,
-    id: `search-${query}`,
-    data: {
-      provider: "firecrawl" as const,
-      queries: [`Query ${query}`],
-      sources: Arr.makeBy(5, (source) => ({
-        citation: `[${source + 1}]`,
-        content: "x".repeat(3000),
-        description: "A description of the page.",
-        title: `Source ${source}`,
-        url: `https://example.com/${query}/${source}`,
-      })),
-      status: "done" as const,
+/** An old output whose one card holds `bytes` characters, so that its message weighs about as much. */
+export function bulkyOutput(bytes: number) {
+  return oldOutput("failed", [
+    {
+      type: "data-scrape-url",
+      id: "scrape-1",
+      data: {
+        content: "x".repeat(bytes),
+        status: "done",
+        url: "https://example.com/page",
+      },
     },
-  }));
-  const pages = Arr.makeBy(researchMaxSources, (page) => ({
-    type: "data-scrape-url" as const,
-    id: `scrape-${page}`,
-    data: {
-      content: "y".repeat(3000),
-      status: "done" as const,
-      url: `https://example.com/page/${page}`,
-    },
-  }));
-  return {
-    artifacts: Arr.appendAll(searches, pages),
-    ...(failure === undefined ? {} : { failure }),
-    text: "z".repeat(NINA_BUDGET.evidence * 4),
-  };
-}
-
-/** 25 turns of the heaviest outputs, all of them old or none of them. */
-export function heaviestChat(old: boolean) {
-  return Arr.flatMap(
-    Arr.makeBy(25, (index) => index),
-    (index) =>
-      turn(
-        "deepResearch",
-        json(heaviest(old ? "failed" : undefined)),
-        `call-${index}`
-      )
-  );
+  ]);
 }
 
 /** One chat for each list of messages, created in order, each with its own Agent thread. */
@@ -253,19 +264,57 @@ export async function agentChat(output: JsonValue) {
   return { chatIds: [chatId], t, threadIds: [threadId] };
 }
 
-/** Calls the function until its cursor is null, as a pass is run, and returns every report. */
-export async function pass(
+const MiB = 1024 * 1024;
+
+/** Convex's limits for one transaction, enforced on every call of a pass. */
+const LIMITS = {
+  bytesRead: 16 * MiB,
+  bytesWritten: 16 * MiB,
+  databaseQueries: 4096,
+  documentsRead: 32_000,
+  documentsWritten: 16_000,
+};
+
+/**
+ * Calls the function until its cursor is null, as a pass is run, with Convex's
+ * limits for one transaction enforced on every call. It returns every report
+ * and the largest share of any limit that a call used.
+ */
+export async function measuredPass(
   t: Fixture["t"],
   from: typeof OutcomeCursor.Type | null
 ) {
   let reports: (typeof OutcomeReport.Type)[] = [];
+  let peak = 0;
   let cursor = from;
   do {
-    const report = await t.mutation(rewrite, { cursor });
-    reports = Arr.append(reports, report);
-    cursor = report.cursor;
+    const call = await t.mutation(async (ctx) => {
+      const report = await ctx.runMutation(
+        rewrite,
+        { cursor },
+        { transactionLimits: LIMITS }
+      );
+      return { metrics: await ctx.meta.getTransactionMetrics(), report };
+    });
+    peak = Math.max(
+      peak,
+      ...Arr.map(
+        Rec.values(call.metrics),
+        ({ remaining, used }) => used / (used + remaining)
+      )
+    );
+    reports = Arr.append(reports, call.report);
+    cursor = call.report.cursor;
   } while (cursor !== null);
-  return reports;
+  return { peak, reports };
+}
+
+/** The reports of a pass, as `measuredPass` returns them. */
+export async function pass(
+  t: Fixture["t"],
+  from: typeof OutcomeCursor.Type | null
+) {
+  return (await measuredPass(t, from)).reports;
 }
 
 /** Every stored message of a thread, oldest first, as the Agent component keeps it. */
