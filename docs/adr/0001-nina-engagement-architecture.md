@@ -139,7 +139,29 @@ failed. Response-level alerts are reserved for admission or generation failure.
 Expected generation failures become typed, stable reason codes. The application
 dictionary owns user-facing copy and recovery guidance. Operational exception
 reports carry bounded routing facts and redacted code frames. Optional product
-analytics remains subject to account consent.
+analytics remains subject to account consent. A stream that stops at the AI
+SDK's own total, step or chunk deadline is stored as a response timeout: the SDK
+reports those deadlines through the abort of the stream, naming a timeout as its
+reason, and never through the error callback.
+
+Every way a turn can stay open ends in a settlement that the learner sees and
+leaves, through the one guarded settlement, so the credits come back once and
+the chat is free:
+
+- Admission schedules one check for the moment the run must have started. It
+  settles a turn whose run never started as a response timeout, and leaves a
+  turn that was claimed or settled alone.
+- The sweep, every five minutes, settles a turn that stays open past its
+  deadline. No live run is open that long, so the run was lost to a crash or a
+  deploy, and the turn is stored as interrupted, never as a timeout.
+- The sweep also schedules the end of that settlement for three of its own runs
+  later. A settlement that failed in every try, as when the Agent journal cannot
+  be read or cut off, ends then without the journal it could not use: the turn
+  fails for a reason the learner reads as unknown, or is cancelled when the
+  learner had stopped it, an answer the journal does hold still completes it,
+  and the chat can be deleted.
+- A stop reaches the provider call even when one check of the halt flag fails,
+  and it reaches the repair of a tool call too.
 
 ## Verification
 
