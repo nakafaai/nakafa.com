@@ -126,6 +126,29 @@ describe("Nina turns after the summary", () => {
     expect(unread).toEqual(Option.some(5));
   }, 30_000);
 
+  it("takes only the newest turns of the page that reaches the most turns, when every page lost a replaced asking", async () => {
+    // Orders 19, 35, 51, 67 and 83 each ask the question before them again, so
+    // every page of 16 rows keeps 15 turns. Four pages give 60 turns, and the
+    // fifth holds 15 more: the history takes its newest 4.
+    const f = await createNinaTest({
+      history: Arr.makeBy(85, (order) =>
+        order % SUMMARY_FOLD_LIMIT === 3 && order > 3
+          ? { retryOf: order - 1 }
+          : {}
+      ),
+    });
+    const { turns, turnPages, unread } = await read(f);
+    expect(turns).toHaveLength(HISTORY_TURNS);
+    expect(Arr.map(turns, ({ order }) => order)).toEqual(
+      Arr.filter(
+        Arr.range(16, 84),
+        (order) => order % SUMMARY_FOLD_LIMIT !== 2 || order === 2
+      )
+    );
+    expect(turnPages).toBe(5);
+    expect(unread).toEqual(Option.some(15));
+  }, 30_000);
+
   it("goes on past a page of retries of one huge turn to the older turn that a fold would take", async () => {
     // Order 16 retries a question 15 times over and costs more than the whole budget.
     // The first page holds it and the 15 askings it replaced, and order 0 waits behind.

@@ -103,10 +103,12 @@ function outweighs(turns: readonly ReturnType<typeof costed>[]) {
  * messages they need, and the read stops after the page that brings them past
  * the history budget: older turns cannot fit beside the ones read, and a fold
  * takes them first. It also stops once it holds `HISTORY_TURNS` turns, however
- * little they cost, and once it has passed `PASSED_LIMIT` rows without keeping
- * a turn, so neither a chat of very short turns nor one full of replaced
- * askings can make it read the whole chat. The read is bounded by the budget
- * and by those two counts, not by the length of the chat.
+ * little they cost, and takes only the newest turns of the page that reaches
+ * that count, so it never returns more. And it stops once it has passed
+ * `PASSED_LIMIT` rows without keeping a turn. So neither a chat of very short
+ * turns nor one full of replaced askings can make it read the whole chat. The
+ * read is bounded by the budget and by those two counts, not by the length of
+ * the chat.
  *
  * `unread` names the highest order the read did not list, when it stopped
  * before the oldest turn the summary does not cover. The turns up to it are in
@@ -176,10 +178,20 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
           ? Result.succeed(costed(order, stored))
           : Result.failVoid;
       });
-      found = Arr.appendAll(found, kept);
+      // The history takes `HISTORY_TURNS` turns and no more, so the page that
+      // reaches that count gives only its newest turns, and the read ends at
+      // the last one taken: the rest of the page is left for a fold.
+      const taken = Arr.take(kept, HISTORY_TURNS - found.length);
+      const cut = taken.length < kept.length;
+      found = Arr.appendAll(found, taken);
       passed += rows.length - kept.length;
       newer = Arr.appendAll(newer, rows);
-      upTo = oldest;
+      exhausted = exhausted && !cut;
+      upTo = cut
+        ? Arr.reduce(taken, upTo, (lowest, { order }) =>
+            Math.min(lowest, order)
+          )
+        : oldest;
     }
   }
   // The oldest turn the summary does not cover is the one after `through`.
