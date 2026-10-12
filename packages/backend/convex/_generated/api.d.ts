@@ -3374,7 +3374,8 @@ export declare const api: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory";
+                | "memory"
+                | "summary";
               cached?: number;
               calls: number;
               cost?: number;
@@ -3522,7 +3523,8 @@ export declare const api: {
                   | "suggestions"
                   | "title"
                   | "nina-repair"
-                  | "memory";
+                  | "memory"
+                  | "summary";
                 cached?: number;
                 calls: number;
                 cost?: number;
@@ -8895,7 +8897,8 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory";
+                | "memory"
+                | "summary";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9076,7 +9079,8 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory";
+                | "memory"
+                | "summary";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9240,7 +9244,8 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory";
+                | "memory"
+                | "summary";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9420,7 +9425,8 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory";
+                | "memory"
+                | "summary";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9601,7 +9607,8 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory";
+                | "memory"
+                | "summary";
               cached?: number;
               calls: number;
               cost?: number;
@@ -9765,7 +9772,8 @@ export declare const internal: {
                 | "suggestions"
                 | "title"
                 | "nina-repair"
-                | "memory";
+                | "memory"
+                | "summary";
               cached?: number;
               calls: number;
               cost?: number;
@@ -10045,12 +10053,7 @@ export declare const internal: {
       save: FunctionReference<
         "mutation",
         "internal",
-        {
-          chatId: Id<"chats">;
-          text: string;
-          throughOrder: number;
-          usage: { input: number; output: number };
-        },
+        { chatId: Id<"chats">; text: string; throughOrder: number },
         null
       >;
       uncovered: FunctionReference<
@@ -10091,7 +10094,8 @@ export declare const internal: {
               | "suggestions"
               | "title"
               | "nina-repair"
-              | "memory";
+              | "memory"
+              | "summary";
             cached?: number;
             cost?: number;
             input: number;
