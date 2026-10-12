@@ -6,13 +6,13 @@ import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
 /**
- * The most characters one web-search query holds. The search provider refuses a
- * longer one: its search API gives `query` a `maxLength` of 500
- * (https://docs.firecrawl.dev/api-reference/endpoint/search). Like a fifth
- * query, a longer one makes the model's call invalid, and an invalid call
- * plans no search: the run reads the links the learner sent, if any, and ends
- * partial, or it fails when there are none. A stored search keeps whatever
- * query it ran with.
+ * The most characters one web-search query holds. The search provider's API
+ * gives `query` a `maxLength` of 500, and its page documents no answer to a
+ * longer one (https://docs.firecrawl.dev/api-reference/endpoint/search). Like
+ * a fifth query, a longer one makes the model's call invalid, and
+ * `runResearchAgent` drops an invalid call: no search is planned, the run reads
+ * the links the learner sent, if any, and ends partial, or it fails when there
+ * are none. A stored search keeps whatever query it ran with.
  */
 export const webSearchMaxQueryLength = 500;
 /**

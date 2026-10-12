@@ -3,11 +3,8 @@ import {
   NakafaAgentSearchFactsSchema,
   NakafaAgentSearchOptionsSchema,
 } from "@repo/contents/agent/schema/search";
-import {
-  NAKAFA_AGENT_MAX_QUERY_LENGTH,
-  NAKAFA_AGENT_SEARCH_WINDOW,
-} from "@repo/contents/agent/search";
-import { Schema } from "effect";
+import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
+import { Array as Arr, Schema } from "effect";
 
 describe("NakafaAgentSearchOptionsSchema", () => {
   it("preserves executed searches without admitting requests beyond today's limits", () => {
@@ -32,7 +29,9 @@ describe("NakafaAgentSearchOptionsSchema", () => {
     ).toBe(false);
   });
   it("refuses a query longer than the search can use, and still reads a recorded one", () => {
-    const atLimit = "a".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH);
+    // The longest query that the 16 terms Convex reads can fill: each term is
+    // 31 bytes, the most it keeps, with one space between each two.
+    const atLimit = Arr.join(Arr.replicate("a".repeat(31), 16), " ");
     const search = (query: string) => ({
       limit: 10,
       locale: "en",

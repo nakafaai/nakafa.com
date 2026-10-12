@@ -21,10 +21,15 @@ export const NAKAFA_AGENT_MAX_QUERIES = 4;
 
 /**
  * Maximum length of one search query, in characters. Convex full-text search
- * reads up to 16 terms of fewer than 32 bytes from one search expression
- * (https://docs.convex.dev/search/text-search), so a query holds no more than
- * 16 terms of 31 characters with a space between each two: 511 characters. A
- * longer one is invalid, like a fifth query. A search already recorded keeps
- * whatever query it ran with.
+ * reads the first 16 terms of an expression and drops the rest, and it drops
+ * any term of 32 bytes or more, with no error for either (`MAX_QUERY_TERMS` and
+ * `MAX_TEXT_TERM_LENGTH` in convex-backend crates/search, and
+ * https://docs.convex.dev/search/text-search, which says characters where the
+ * tokenizer filter counts UTF-8 bytes). 16 terms of 31 bytes with one
+ * character between each two take 511 characters, so that is the longest text
+ * 16 such terms fill. The limit is a length, not a term count: Convex counts
+ * the terms, and a query of 17 short words passes here and loses its last word
+ * there. A longer query is invalid, like a fifth query. A search already
+ * recorded keeps whatever query it ran with.
  */
 export const NAKAFA_AGENT_MAX_QUERY_LENGTH = 16 * 31 + 15;
