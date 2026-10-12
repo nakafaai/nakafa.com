@@ -9583,6 +9583,26 @@ export declare const internal: {
         }
       >;
     };
+    outcome: {
+      rewriteFailures: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: {
+            chats: string | null;
+            messages: { cursor: string; threadId: string } | null;
+          } | null;
+        },
+        {
+          cursor: {
+            chats: string | null;
+            messages: { cursor: string; threadId: string } | null;
+          } | null;
+          rewritten: number;
+          scanned: number;
+        }
+      >;
+    };
     presentation: {
       save: FunctionReference<
         "mutation",
