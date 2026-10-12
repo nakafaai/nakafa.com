@@ -38,12 +38,15 @@ async function instructionsFor(
   return nina.t.action((ctx) =>
     Effect.runPromise(
       readInstructions(turn, url).pipe(
-        Effect.map(({ instructions, memories, paused, summary }) => ({
-          instructions,
-          memories: memories ?? null,
-          paused,
-          summary: summary?.throughOrder ?? null,
-        })),
+        Effect.map(
+          ({ capabilities, instructions, memories, paused, summary }) => ({
+            capabilities,
+            instructions,
+            memories: memories ?? null,
+            paused,
+            summary: summary?.throughOrder ?? null,
+          })
+        ),
         Effect.catchTag("NinaGenerationError", (error) =>
           Effect.succeed({ failure: error.reason })
         ),
@@ -134,7 +137,10 @@ describe("Nina instructions", () => {
     await f.seed({ kind: "struggle", text: "Sulit di peluang." });
     await f.seedPortrait({ text: "Duduk di kelas 12 dan suka contoh soal." });
     const result = await instructionsFor(f);
-    expect(result).toMatchObject({ paused: false });
+    expect(result).toMatchObject({
+      capabilities: ["nakafa", "deepResearch", "math", "memory"],
+      paused: false,
+    });
     for (const expected of [
       "# Learner",
       "- Focus: preparing for try-outs",
@@ -208,7 +214,12 @@ describe("Nina instructions", () => {
     await f.seedPortrait({ text: "Duduk di kelas 12." });
     await f.owner.mutation(pause, { paused: true });
     const result = await instructionsFor(f);
-    expect(result).toMatchObject({ memories: null, paused: true });
+    // The prompt and the tools Nina is offered follow the one pause the turn read.
+    expect(result).toMatchObject({
+      capabilities: ["nakafa", "deepResearch", "math"],
+      memories: null,
+      paused: true,
+    });
     for (const absent of [
       "Sulit di peluang.",
       "Duduk di kelas 12.",

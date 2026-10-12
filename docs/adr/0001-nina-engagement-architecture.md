@@ -54,8 +54,15 @@ reads the signed page once before the first model step and places it in that
 context within the page token budget. The model spends no forced tool step on
 it and asks Nakafa for other sections.
 
-Math, Nakafa retrieval, and external research are Agent tools implemented as
-Effect programs. Specialist agents use the same Convex AI gateway provider and
+Nakafa retrieval, external research, deterministic math, and the learner's memory
+are Agent tools implemented as Effect programs. Each is one capability
+definition in its own folder, listed once in `capability/registry.ts`: its name,
+the Schema of its input, the description and tool policy the model reads, the
+rule that offers it in a turn, and its run. One shared runner
+(`capability/define.ts`) builds every tool from its definition, so the policy
+check, the denial answer, the progress rows, the deadline, the failure
+classification and the settled outcome exist once. Specialist agents use the
+same Convex AI gateway provider and
 Agent usage handler. Tool results retain progressive evidence cards and final
 model-facing evidence, which never exceeds the evidence token budget: a
 truncated output says what it omitted and how to ask for it, and Nakafa reads
@@ -109,8 +116,10 @@ only from its last folded turn. The fold leaves out what the history would: a
 cancelled or failed turn, and an answer that a later retry replaced. The
 summary, at most 1,200
 tokens, sits in the system prompt context and is deleted with its chat. Its
-refreshes are chat upkeep, so their provider usage accumulates on the summary
-rather than in a turn's usage ledger, which clients read. The learner profile
+refreshes are chat upkeep that run after a turn settles. Each refresh records
+its model call in the ledger of that turn as the `summary` agent, like the title
+and the suggestions, and the summary row also keeps a running total of its
+calls. The learner profile
 and learner memory follow [ADR 0022](./0022-memory.md). Old
 reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
@@ -140,6 +149,51 @@ Expected generation failures become typed, stable reason codes. The application
 dictionary owns user-facing copy and recovery guidance. Operational exception
 reports carry bounded routing facts and redacted code frames. Optional product
 analytics remains subject to account consent.
+
+## Adding a capability
+
+A new capability is one definition and one entry. In order:
+
+1. Write the run, an Effect program in the capability's own folder. It takes its
+   input and the facts of the turn, publishes its cards through `publish`, and
+   ends with `{ text, outcome? }`. A model call inside it cuts its limits to the
+   time left with `limitDeadline`. Left to the author: what the run does.
+2. If the run calls a model, add its Agent to the usage ledger: one line in
+   `AGENT_PURPOSES` of `contract/usage.ts`, with the purpose its calls run
+   under. Enforced: the ledger accepts no other name, and the output caps of
+   the release gate follow the table. Left to the author: the Agent's `name` is
+   a string, so write it `satisfies UsageAgent` and the compiler checks it.
+3. Define it in `<folder>/capability.ts` with `defineCapability`: the
+   description the model reads, the Schema of its input, its guideline for the
+   tool policy (`entry`, `field` when its input has a field of its own,
+   `section`), the `continuation` that tells the model how to ask for what a
+   truncation omitted, `offered`, and `run`. Add `note` when its answer must
+   stay out of the conversation, and `textOnly` when it publishes no card.
+   Enforced: `offered` and `run` have no default, so nothing is allowed by
+   omission; the Schema types the input of `run`; the typed errors of `run` end
+   as `CapabilityDenied` or `failed`, so none stays unhandled.
+4. Add its name to `LearningCapabilityNameSchema` in `capability/spec.ts`, and
+   its definition to the end of the record in `capability/registry.ts`. The
+   order is the order of the tool list and of the tool policy, so it is part of
+   the prompt prefix that the provider caches. Enforced: the record is
+   `satisfies Record<LearningCapabilityName, Capability>`, so a name without a
+   definition and a definition without a name do not compile. The tools Nina is
+   offered, the policy of each call, the tool section of the prompt, and the
+   tool names that history and the web recognize follow from these two.
+5. In the web app, give the name an icon in the activity row and the keys
+   `Ai.activity.<name>` and `Ai.tool-failures.<name>` in the en, id and de
+   dictionaries. Enforced: the icon record is indexed by the name, the keys are
+   typed by the English dictionary, and a test lists every name in all three.
+6. If it publishes a new kind of card, add the card to the card schemas
+   (`client/nina/capability.ts`, `contract/data.ts`) and its renderer to
+   `evidence/list.tsx`. Enforced: that renderer matches the card type
+   exhaustively.
+
+Left to the author, because the compiler cannot judge them: the routing prose
+that combines capabilities in `policy/tool.ts`, `step.ts` when the capability
+should open a turn that names a source, and the tests. No stored flag is added
+for a capability: `offered` reads the turn's context, and the allow flags of a
+turn page stay as they are.
 
 ## Verification
 

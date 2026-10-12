@@ -1,8 +1,4 @@
-import {
-  type LearningCapabilityName,
-  NAKAFA_CAPABILITY,
-  RESEARCH_CAPABILITY,
-} from "@repo/backend/confect/nina/capability/spec";
+import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
 import {
   getNakafaReferencesFromMessages,
   getSourceReferencesFromMessages,
@@ -11,6 +7,12 @@ import type { ModelMessage, Tool, ToolLoopAgentSettings } from "ai";
 import { Effect } from "effect";
 
 const firstStepNumber = 0;
+
+/** The capability that reads the links to Nakafa's own site. */
+const NAKAFA_CAPABILITY = "nakafa" satisfies LearningCapabilityName;
+
+/** The capability that reads the links to outside sites. */
+const RESEARCH_CAPABILITY = "deepResearch" satisfies LearningCapabilityName;
 
 export type NinaToolSet = Record<LearningCapabilityName, Tool>;
 

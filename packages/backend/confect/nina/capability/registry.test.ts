@@ -1,19 +1,20 @@
 import { Ref } from "@confect/core";
 import { RegisteredFunction } from "@confect/server";
-import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
-import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
-import { ActionCtx } from "@repo/backend/confect/_generated/services";
-import { createCapabilities } from "@repo/backend/confect/nina/capabilities";
+import type { Held } from "@repo/backend/confect/nina/capability/held";
+import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
+import { registry } from "@repo/backend/confect/nina/capability/registry";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
 import { MathGenerationError } from "@repo/backend/confect/nina/math/error";
-import { runMemory } from "@repo/backend/confect/nina/memory/tool";
+import {
+  MEMORY_PAUSED,
+  runMemory,
+} from "@repo/backend/confect/nina/memory/tool";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { NakafaGenerationError } from "@repo/backend/confect/nina/nakafa/error";
-import { MEMORY_PAUSED } from "@repo/backend/confect/nina/policy/capability";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import {
   ResearchGenerationError,
@@ -21,25 +22,21 @@ import {
 } from "@repo/backend/confect/nina/research/schema";
 import { GatewayTest } from "@repo/backend/test/gateway";
 import { type createNinaTest, ninaToolInput } from "@repo/backend/test/nina";
-import { inNewChatStep } from "@repo/backend/test/nina/deadline";
+import { done } from "@repo/backend/test/nina/artifact";
+import {
+  finalAnswer,
+  playTurn,
+  toolCall,
+} from "@repo/backend/test/nina/capability";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import {
   openHomeSession,
-  providerStep,
   runSpecialist,
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
-import { isStepCount } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import {
-  Array as Arr,
-  Effect,
-  Logger,
-  MutableHashMap,
-  MutableRef,
-  Option,
-} from "effect";
+import { Effect, MutableHashMap, MutableRef, Option, Record } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -57,9 +54,6 @@ vi.mock("@repo/backend/confect/nina/research/agent", () => ({
 }));
 afterEach(() => vi.restoreAllMocks());
 
-const request = providerStep([
-  { type: "text", text: "Answer from tool evidence." },
-]);
 const toolInputs = {
   nakafa: ninaToolInput,
   math: {
@@ -73,73 +67,6 @@ const toolInputs = {
     sourceRequirements: ["primary sources"],
   },
 };
-function toolCall(toolName: string, input: object, toolCallId = "capability") {
-  return providerStep(
-    [
-      {
-        type: "tool-call",
-        toolName,
-        toolCallId,
-        input: encodeJsonText(input),
-      },
-    ],
-    "tool-calls"
-  );
-}
-
-/**
- * Plays a scripted model through the real Agent, with the capability tools of
- * one learner, and returns what its tool calls produced and what the turn
- * logged. The memory tool leaves the words it finds in `found`, as in a turn.
- */
-function playTurn({
-  context,
-  found = MutableHashMap.empty<string, string>(),
-  model,
-  prompt,
-  userId,
-}: {
-  readonly context: Parameters<typeof createCapabilities>[1];
-  readonly found?: Parameters<typeof createCapabilities>[4];
-  readonly model: MockLanguageModelV4;
-  readonly prompt: string;
-  readonly userId: Parameters<typeof createCapabilities>[0];
-}) {
-  const logged = MutableRef.make<readonly unknown[]>([]);
-  return Effect.gen(function* () {
-    const tools = yield* createCapabilities(
-      userId,
-      context,
-      "en",
-      vi.fn(),
-      found
-    );
-    const ctx = yield* ActionCtx;
-    const generated = yield* Effect.promise(() =>
-      new Agent(components.nina, {
-        name: "test",
-        languageModel: model,
-        tools,
-        stopWhen: isStepCount(3),
-      }).generateText(ctx, { userId }, { prompt })
-    );
-    return {
-      logged,
-      result: Arr.map(generated.toolResults, ({ output }) => output),
-    };
-  }).pipe(
-    inNewChatStep,
-    Effect.provide(
-      Logger.layer([
-        Logger.formatStructured.pipe(
-          Logger.map(({ message }) =>
-            MutableRef.update(logged, Arr.append(message))
-          )
-        ),
-      ])
-    )
-  );
-}
 
 /**
  * Runs one capability through a scripted turn in one state and returns what
@@ -147,28 +74,44 @@ function playTurn({
  */
 async function runCapability(
   capability: keyof typeof toolInputs,
-  state: "allowed" | "denied" | "failed" | "missing" | "sourceLimit",
+  state:
+    | "allowed"
+    | "cardless"
+    | "denied"
+    | "failed"
+    | "missing"
+    | "sourceLimit",
   prompt = "Use the requested capability."
 ) {
-  vi.mocked(runNakafaAgent).mockReturnValue(
+  // A run that is allowed gathers a card and ends with its text, so it reads as
+  // done. A `cardless` run ends with its text alone, so it found nothing.
+  const finishing =
+    (text: string) =>
+    ({ publish }: { readonly publish: CapabilityProgress }) =>
+      state === "cardless"
+        ? Effect.succeed({ text })
+        : Effect.as(publish(done), { text });
+  vi.mocked(runNakafaAgent).mockImplementation(
     state === "failed"
-      ? Effect.fail(
-          new NakafaGenerationError({
-            cause: undefined,
-            message: "Private provider detail",
-          })
-        )
-      : Effect.succeed({ text: "Verified content." })
+      ? () =>
+          Effect.fail(
+            new NakafaGenerationError({
+              cause: undefined,
+              message: "Private provider detail",
+            })
+          )
+      : finishing("Verified content.")
   );
-  vi.mocked(runMathAgent).mockReturnValue(
+  vi.mocked(runMathAgent).mockImplementation(
     state === "failed"
-      ? Effect.fail(
-          new MathGenerationError({
-            cause: undefined,
-            message: "Private provider detail",
-          })
-        )
-      : Effect.succeed({ text: "Verified calculation." })
+      ? () =>
+          Effect.fail(
+            new MathGenerationError({
+              cause: undefined,
+              message: "Private provider detail",
+            })
+          )
+      : finishing("Verified calculation.")
   );
   if (state === "sourceLimit") {
     vi.mocked(runResearchAgent).mockReturnValue(
@@ -180,20 +123,21 @@ async function runCapability(
       )
     );
   } else {
-    vi.mocked(runResearchAgent).mockReturnValue(
+    vi.mocked(runResearchAgent).mockImplementation(
       state === "failed"
-        ? Effect.fail(
-            new ResearchGenerationError({
-              phase: "search",
-              message: "Private provider detail",
-              rejected: false,
-            })
-          )
-        : Effect.succeed({ text: "Verified source." })
+        ? () =>
+            Effect.fail(
+              new ResearchGenerationError({
+                phase: "search",
+                message: "Private provider detail",
+                rejected: false,
+              })
+            )
+        : finishing("Verified source.")
     );
   }
   const model = new MockLanguageModelV4({
-    doGenerate: [toolCall(capability, toolInputs[capability]), request],
+    doGenerate: [toolCall(capability, toolInputs[capability]), finalAnswer],
   });
   return runSpecialist((userId) =>
     Effect.gen(function* () {
@@ -216,11 +160,23 @@ async function runCapability(
         },
         model,
         prompt,
+        registry,
         userId,
       });
     })
   );
 }
+
+describe("the registry of Nina's capabilities", () => {
+  it("lists them in the order of Nina's tool list, which the provider caches with the prompt", () => {
+    expect(Record.keys(registry)).toEqual([
+      "nakafa",
+      "deepResearch",
+      "math",
+      "memory",
+    ]);
+  });
+});
 
 describe("Nina capability execution policy", () => {
   for (const capability of ["nakafa", "math", "deepResearch"] as const) {
@@ -287,6 +243,19 @@ describe("Nina capability execution policy", () => {
       }
     );
   }
+
+  it.each(["nakafa", "math", "deepResearch"] as const)(
+    "reads %s as empty when its run gathers no card and states no outcome",
+    async (capability) => {
+      const { result } = await runCapability(capability, "cardless");
+
+      expect(result[0]).toMatchObject({
+        artifacts: [],
+        outcome: "empty",
+        text: expect.stringContaining("Verified"),
+      });
+    }
+  );
 
   describe("a learner's links", () => {
     const lesson =
@@ -393,9 +362,9 @@ describe("Nina memory capability execution", () => {
     f: Awaited<ReturnType<typeof createNinaTest>>,
     { memory = true }: { readonly memory?: boolean } = {}
   ) {
-    const found = MutableHashMap.empty<string, string>();
+    const found: Held = MutableHashMap.empty();
     const model = new MockLanguageModelV4({
-      doGenerate: [toolCall("memory", { query: "snbt" }), request],
+      doGenerate: [toolCall("memory", { query: "snbt" }), finalAnswer],
     });
     const played = await f.t.action((ctx) =>
       Effect.runPromise(
@@ -407,9 +376,10 @@ describe("Nina memory capability execution", () => {
               memory,
               nina: session.context,
             },
-            found,
+            held: found,
             model,
             prompt: "What do you remember about my exam?",
+            registry,
             userId: f.identity.userId,
           });
         }).pipe(
@@ -433,8 +403,18 @@ describe("Nina memory capability execution", () => {
     const { found, logged, result } = await search(f);
     expect(result).toHaveLength(1);
     expect(result[0]).not.toHaveProperty("outcome");
+    // The conversation stores one line, the note, and none of the words.
+    expect(result[0]).toMatchObject({
+      artifacts: [],
+      text: expect.not.stringContaining("\n"),
+    });
     expect(encodeJsonText(result)).not.toContain("SNBT");
-    const words = Option.getOrThrow(MutableHashMap.get(found, "capability"));
+    const words = Option.getOrThrow(
+      MutableHashMap.get(found, {
+        toolCallId: "capability",
+        toolName: "memory",
+      })
+    );
     expect(words).toContain("- Mau ikut SNBT 2027 (2026-09-01)");
     expect(words).not.toContain("Hobi main gitar");
     expect(MutableRef.get(logged)).toEqual([]);

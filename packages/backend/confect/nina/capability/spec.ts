@@ -6,13 +6,13 @@ const LEARNING_CAPABILITY_NAME_VALUES = [
   "math",
   "memory",
 ] as const;
-/** Schema-owned names for Nina's internal education capabilities. */
+/**
+ * Schema-owned names for Nina's internal education capabilities. The browser
+ * reads this list to name an activity, so the module holds no runner. The
+ * registry (`registry.ts`) lists the capability behind each name, and the
+ * compiler rejects a name without one.
+ */
 export const LearningCapabilityNameSchema = Schema.Literals(
   LEARNING_CAPABILITY_NAME_VALUES
 );
 export type LearningCapabilityName = typeof LearningCapabilityNameSchema.Type;
-export const NAKAFA_CAPABILITY = "nakafa" satisfies LearningCapabilityName;
-export const RESEARCH_CAPABILITY =
-  "deepResearch" satisfies LearningCapabilityName;
-export const MATH_CAPABILITY = "math" satisfies LearningCapabilityName;
-export const MEMORY_CAPABILITY = "memory" satisfies LearningCapabilityName;

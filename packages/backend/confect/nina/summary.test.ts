@@ -10,6 +10,7 @@ import {
   RECENT_TURNS,
   refreshSummary,
 } from "@repo/backend/confect/nina/summary";
+import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -85,10 +86,11 @@ async function fixture(
     }
     return { chatId, prompts, threadId, userId };
   });
+  const usageHandler = vi.fn();
   const refresh = (order: number) =>
     t.action((ctx) =>
       Effect.runPromise(
-        refreshSummary({ ...setup, order }).pipe(
+        refreshSummary({ ...setup, order }, usageHandler).pipe(
           Effect.provide([
             GatewayTest,
             RegisteredFunction.actionLayer(schema, ctx),
@@ -101,7 +103,7 @@ async function fixture(
   // The stored text is sealed, so the tests read it the way generation does.
   const text = async () =>
     (await t.query(read, { chatId: setup.chatId }))?.text;
-  return { ...setup, refresh, summary, t, text };
+  return { ...setup, refresh, summary, t, text, usageHandler };
 }
 
 function summaryModel(text: string) {
@@ -140,6 +142,48 @@ describe("Nina rolling summary", () => {
     expect(prompt).toContain("Learner: Question 0");
     expect(prompt).toContain("Nina: Answer 4");
     expect(prompt).not.toContain("Question 5");
+  });
+
+  it("records the fold's model call in the ledger of the turn that settled, as the summary agent", async () => {
+    provider.languageModel.mockReturnValue(
+      summaryModel("- The learner studied limits.")
+    );
+    const f = await fixture(9);
+    const turn = await f.t.query((ctx) =>
+      ctx.db
+        .query("ninaTurns")
+        .withIndex("by_chatId_and_order", (q) =>
+          q.eq("chatId", f.chatId).eq("order", 8)
+        )
+        .unique()
+    );
+    if (!turn) {
+      throw new Error("Expected the newest turn of the fixture.");
+    }
+    await f.t.action((ctx) =>
+      Effect.runPromise(
+        createUsageHandler(turn._id).pipe(
+          Effect.flatMap((usageHandler) =>
+            refreshSummary({ ...f, order: 8 }, usageHandler)
+          ),
+          Effect.provide([
+            GatewayTest,
+            RegisteredFunction.actionLayer(schema, ctx),
+          ])
+        )
+      )
+    );
+    const settled = await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id));
+    expect(settled?.usage).toEqual([
+      expect.objectContaining({
+        agent: "summary",
+        calls: 1,
+        input: 12,
+        output: 4,
+      }),
+    ]);
+    // The turn is settled, so its token totals follow its ledger.
+    expect(settled?.tokens).toEqual({ input: 12, output: 4, total: 16 });
   });
 
   it("folds a question the learner asked again once, in its newest asking, and leaves out a cancelled turn", async () => {
@@ -320,7 +364,7 @@ describe("Nina rolling summary", () => {
     const anchors = await f.t.action(async (ctx) => {
       const runQuery = vi.spyOn(ctx, "runQuery");
       await Effect.runPromise(
-        refreshSummary({ ...f, order: 55 }).pipe(
+        refreshSummary({ ...f, order: 55 }, f.usageHandler).pipe(
           Effect.provide([
             GatewayTest,
             RegisteredFunction.actionLayer(schema, ctx),
@@ -384,12 +428,15 @@ describe("Nina rolling summary", () => {
     const f = await fixture(9);
     await f.t.action((ctx) =>
       Effect.runPromise(
-        refreshSummary({
-          chatId: f.chatId,
-          order: 8,
-          threadId: "missing-thread",
-          userId: f.userId,
-        }).pipe(
+        refreshSummary(
+          {
+            chatId: f.chatId,
+            order: 8,
+            threadId: "missing-thread",
+            userId: f.userId,
+          },
+          f.usageHandler
+        ).pipe(
           Effect.provide([
             GatewayTest,
             RegisteredFunction.actionLayer(schema, ctx),

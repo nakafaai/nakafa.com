@@ -15,6 +15,7 @@ import type { NakafaAgentData } from "@repo/backend/confect/nina/contract/agent"
 import { NinaReadOptionsSchema } from "@repo/backend/confect/nina/contract/data";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
+import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import {
   nakafaQuran,
   nakafaRead,
@@ -87,7 +88,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   const ctx = yield* ActionCtx;
   const { model, timeout } = (yield* Gateway).language("specialist");
   const agent = new Agent(components.nina, {
-    name: "nakafa",
+    name: "nakafa" satisfies UsageAgent,
     languageModel: model,
     usageHandler,
   });

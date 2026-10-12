@@ -1,9 +1,20 @@
 import { describe, expect, it } from "@effect/vitest";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { createNinaPrompt } from "@repo/backend/confect/nina/prompt/prompt";
+import { Array as Arr } from "effect";
+
+/** Every capability Nina has. */
+const everything = LearningCapabilityNameSchema.literals;
+
+/** The capabilities of a learner who paused memory. */
+const withoutMemory = Arr.filter(everything, (name) => name !== "memory");
 
 describe("createNinaPrompt", () => {
   it("keeps prompt responsibilities in clean sections", () => {
-    const prompt = createNinaPrompt({ memory: false, userRole: "student" });
+    const prompt = createNinaPrompt({
+      capabilities: withoutMemory,
+      userRole: "student",
+    });
 
     const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
     const taskIndex = prompt.indexOf("# Task Instructions");
@@ -38,7 +49,10 @@ describe("createNinaPrompt", () => {
   });
 
   it("keeps one stable Nina persona without conflicting harsh-advisor rules", () => {
-    const prompt = createNinaPrompt({ memory: false, userRole: "student" });
+    const prompt = createNinaPrompt({
+      capabilities: withoutMemory,
+      userRole: "student",
+    });
 
     expect(prompt).toContain(
       "Be friendly, direct, source-grounded, concise, and age-appropriate."
@@ -49,7 +63,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("defines compact specialist inputs without the old task blob", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
     const toolSection = prompt.slice(
       prompt.indexOf("# Tool Usage Guidelines"),
       prompt.indexOf("# Task Instructions")
@@ -84,7 +98,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("routes evidence through the right specialist before final claims", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
 
     expect(prompt).toContain(
       "Use the smallest reliable evidence path before the final answer"
@@ -103,7 +117,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("keeps Nakafa practice selection separate from math verification", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
 
     expect(prompt).toContain("Practice includes warmups");
     expect(prompt).toContain(
@@ -123,7 +137,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("keeps failed external research from becoming generic Nakafa fallback", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
 
     expect(prompt).toContain(
       "Do not use Nakafa to fill missing evidence for external, current, official-source, or source-owned verification questions."
@@ -137,7 +151,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("answers with the findings and their citations when research returns findings", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
     const taskSection = prompt.slice(
       prompt.indexOf("# Task Instructions"),
       prompt.indexOf("# Specialist Input Examples")
@@ -152,7 +166,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("says what findings that cover less than asked do cover, and where to check the rest, even when research returns no limitation", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
     const taskSection = prompt.slice(
       prompt.indexOf("# Task Instructions"),
       prompt.indexOf("# Specialist Input Examples")
@@ -171,7 +185,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("tells the learner what could not be verified and to name a direct channel when research returns no finding", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
     const taskSection = prompt.slice(
       prompt.indexOf("# Task Instructions"),
       prompt.indexOf("# Specialist Input Examples")
@@ -186,7 +200,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("bars greetings, advice, filler and extra bullets around a no-finding answer, except the direct channel it requires", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
     const taskSection = prompt.slice(
       prompt.indexOf("# Task Instructions"),
       prompt.indexOf("# Specialist Input Examples")
@@ -200,7 +214,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("writes a research limitation in the words of the limitation, with one or two natural sentences as enough rather than required, and no found or not-found wording", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
     const outputSection = prompt.slice(
       prompt.indexOf("## Research limitations"),
       prompt.indexOf("## Mathematical format")
@@ -217,7 +231,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("makes saying what the sources cover and do not state the one exception to the found and not-found ban, stated after it", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
     const outputSection = prompt.slice(
       prompt.indexOf("## Research limitations"),
       prompt.indexOf("## Mathematical format")
@@ -232,7 +246,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("says what could not be verified, never to answer with the limitation, when evidence cannot be gathered or a specialist errors", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
 
     expect(prompt).toContain(
       "If evidence still cannot be gathered, say what could not be verified instead of guessing."
@@ -245,7 +259,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("has no rule that makes a lone limitation sentence the whole answer", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
 
     expect(prompt).not.toContain("single limitation sentence");
     expect(prompt).not.toContain("Limitation-only research answers");
@@ -255,7 +269,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("keeps final answer formatting explicit but compact", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
 
     expect(prompt).toContain("Always use the user's language.");
     expect(prompt).toContain(
@@ -285,20 +299,20 @@ describe("createNinaPrompt", () => {
   it.each(["teacher", "student", "parent", "administrator"] as const)(
     "includes compact role guidance for %s",
     (userRole) => {
-      expect(createNinaPrompt({ memory: false, userRole })).toContain(
-        "User is"
-      );
+      expect(
+        createNinaPrompt({ capabilities: withoutMemory, userRole })
+      ).toContain("User is");
     }
   );
 
   it("includes default role guidance when the role is unknown", () => {
-    expect(createNinaPrompt({ memory: false })).toContain(
+    expect(createNinaPrompt({ capabilities: withoutMemory })).toContain(
       "User identity is unknown."
     );
   });
 
   it("carries no fact of one turn, so its bytes repeat from turn to turn", () => {
-    const prompt = createNinaPrompt({ memory: false });
+    const prompt = createNinaPrompt({ capabilities: withoutMemory });
 
     expect(prompt).not.toContain("# Runtime Context");
     expect(prompt).not.toContain("- date:");
@@ -308,7 +322,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("lists the memory tool and puts its rules between the math rules and the combining rules while memory is on", () => {
-    const prompt = createNinaPrompt({ memory: true });
+    const prompt = createNinaPrompt({ capabilities: everything });
 
     const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
     const mathIndex = prompt.indexOf("## math");
@@ -321,7 +335,7 @@ describe("createNinaPrompt", () => {
   });
 
   it("leaves the memory tool and its rules out of the prompt of a learner who paused memory", () => {
-    const paused = createNinaPrompt({ memory: false });
+    const paused = createNinaPrompt({ capabilities: withoutMemory });
     expect(paused).not.toContain("## memory");
     expect(paused).not.toContain("- memory:");
   });

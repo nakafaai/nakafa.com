@@ -1,4 +1,4 @@
-import { Agent } from "@convex-dev/agent";
+import { Agent, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
+import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
 import { newestAskings, questionKey } from "@repo/backend/confect/nina/history";
 import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
@@ -128,11 +129,14 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
 
 /**
  * Folds settled turns into the chat's rolling summary once a fold is due. A
- * failure keeps the previous summary; generation still bounds its history.
+ * failure keeps the previous summary; generation still bounds its history. The
+ * model call records its usage in the ledger of the turn that settled, as the
+ * title and the follow-up suggestions do.
  */
 export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (
-    turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId" | "userId">
+    turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId" | "userId">,
+    usageHandler: UsageHandler
   ) {
     const { runQuery: query } = yield* QueryRunner;
     const current = yield* query(refs.internal.nina.summaries.read, {
@@ -162,7 +166,8 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     const agent = new Agent(components.nina, {
       instructions: INSTRUCTIONS,
       languageModel: handle.model,
-      name: "summary",
+      name: "summary" satisfies UsageAgent,
+      usageHandler,
     });
     const { text, usage } = yield* Effect.tryPromise({
       try: (signal) =>

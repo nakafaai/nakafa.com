@@ -90,7 +90,7 @@ const present = FunctionImpl.make(
     yield* Effect.all(
       [
         Effect.exit(generatePresentation(turn, usageHandler)),
-        Effect.exit(refreshSummary(turn)),
+        Effect.exit(refreshSummary(turn, usageHandler)),
         Effect.exit(captureMemory(turn, usageHandler)),
       ],
       { concurrency: "unbounded" }

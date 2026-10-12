@@ -275,6 +275,7 @@ describe("release gate verdict", () => {
     ["math-repair", purposes.background.maxOutputTokens],
     ["memory", purposes.background.maxOutputTokens],
     ["nina-repair", purposes.background.maxOutputTokens],
+    ["summary", purposes.background.maxOutputTokens],
     ["suggestions", purposes.suggestion.maxOutputTokens],
     ["title", purposes.presentation.maxOutputTokens],
   ] as const)(

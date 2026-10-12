@@ -1,11 +1,18 @@
 import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import type { NinaContextPack } from "@repo/backend/confect/nina/contract/pack";
 import {
   createNinaSystemPrompt,
   formatNinaContextPackPrompt,
 } from "@repo/backend/confect/nina/prompt/system";
 import { Array as Arr, Order } from "effect";
+
+/** The capabilities of a learner who paused memory. */
+const withoutMemory = Arr.filter(
+  LearningCapabilityNameSchema.literals,
+  (name) => name !== "memory"
+);
 
 const placementProgramKey = LearningProgramKeySchema.make(
   "cambridge-lower-secondary"
@@ -138,10 +145,10 @@ describe("formatNinaContextPackPrompt", () => {
 
 describe("createNinaSystemPrompt", () => {
   it("adds a focused question and its teaching rules only when present", () => {
-    const plain = createNinaSystemPrompt({ memory: false });
+    const plain = createNinaSystemPrompt({ capabilities: withoutMemory });
     const focused = createNinaSystemPrompt({
       focus: "# Focused Try-out Question\n\n## Question\n\nWhat is 2 + 2?",
-      memory: false,
+      capabilities: withoutMemory,
     });
 
     expect(plain).not.toContain("Focused Try-out Question");
@@ -157,7 +164,7 @@ describe("createNinaSystemPrompt", () => {
     const prompt = createNinaSystemPrompt({
       focus: "# Focused Try-out Question\n\n## Question\n\nWhat is 2 + 2?",
       learner: "# Learner\n\n- Focus: preparing for try-outs",
-      memory: false,
+      capabilities: withoutMemory,
       pageContent: "# Current Page\n\nThe learner is viewing a lesson.",
       summary: "- The learner practiced limits.",
       userRole: "student",
