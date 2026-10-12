@@ -1,11 +1,8 @@
-import { abortStream, listMessages } from "@convex-dev/agent";
-import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs, NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
-  MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
@@ -15,96 +12,24 @@ import type {
   NinaTurnTiming,
 } from "@repo/backend/confect/nina/contract/turn";
 import { refundCredits } from "@repo/backend/confect/nina/credits/ledger";
-import {
-  NinaSettledTurn,
-  NinaTurnError,
-} from "@repo/backend/confect/nina/turns.spec";
+import { answered, cutOff } from "@repo/backend/confect/nina/journal";
+import { NinaSettledTurn } from "@repo/backend/confect/nina/turns.spec";
 import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
 
-const settlementFailure = () =>
-  new NinaTurnError({
-    code: "NINA_WRITE_FAILED",
-    message: "Unable to settle this Nina response.",
-  });
-
-/** True once the Agent journal holds this turn's final answer. */
-const answered = Effect.fn("nina.settlement.answered")(function* (
-  turn: NinaTurnsDoc
-) {
-  const ctx = yield* MutationCtx;
-  const messages = yield* Effect.tryPromise({
-    try: () =>
-      listMessages(ctx, components.nina, {
-        threadId: turn.threadId,
-        paginationOpts: { cursor: null, numItems: 1 },
-      }),
-    catch: settlementFailure,
-  });
-  const final = messages.page[0];
-  return (
-    final?.order === turn.order &&
-    final.status === "success" &&
-    final.message?.role === "assistant" &&
-    final.finishReason === "stop" &&
-    (typeof final.message.content === "string"
-      ? final.message.content.trim().length > 0
-      : Arr.some(
-          final.message.content,
-          (part) => part.type === "text" && part.text.trim().length > 0
-        ))
-  );
-});
-
 /**
- * Cuts the turn off in the Agent journal: its stream stops taking output and
- * its prompt is marked failed. Agent propagates a failed prompt to any output
- * committed afterwards, so a late provider result can never become success
- * while the user's text stays.
+ * Writes the end of an active turn in the transaction that decided it: an
+ * unanswered turn gets its hold back, its chat is freed, and the turn is
+ * replaced by its settled form. `failure` is the reason a failed turn stores.
  */
-const cutOff = Effect.fn("nina.settlement.cutOff")(function* (
-  turn: NinaTurnsDoc,
-  reason: "failed" | "cancelled"
-) {
-  const ctx = yield* MutationCtx;
-  yield* Effect.tryPromise({
-    try: () =>
-      abortStream(ctx, components.nina, {
-        threadId: turn.threadId,
-        order: turn.order,
-        reason,
-      }),
-    catch: settlementFailure,
-  });
-  yield* Effect.tryPromise({
-    try: () =>
-      ctx.runMutation(components.nina.messages.updateMessage, {
-        messageId: turn.promptMessageId,
-        patch: { status: "failed", error: reason },
-      }),
-    catch: settlementFailure,
-  });
-});
-
-/**
- * Inspect the Agent journal and settle its existing hold in the same
- * transaction. Only an active turn settles, so a second settlement of the same
- * turn changes nothing and never refunds twice.
- */
-export const settleTurn = Effect.fn("nina.settlement")(function* (
-  turn: NinaTurnsDoc,
-  interrupted: "failed" | "cancelled",
+export const closeTurn = Effect.fn("nina.settlement.close")(function* (
+  turn: Extract<NinaTurnsDoc, { phase: "active" }>,
+  status: "complete" | "failed" | "cancelled",
   failure?: typeof NinaFailureReason.Type,
   timing?: typeof NinaTurnTiming.Type
 ) {
-  if (turn.phase !== "active") {
-    return;
-  }
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  const completed = yield* answered(turn);
-  const status = completed ? "complete" : interrupted;
-  if (!completed) {
-    yield* cutOff(turn, interrupted);
+  if (status !== "complete") {
     yield* refundCredits(turn, turn._id);
   }
   yield* writer
@@ -160,7 +85,7 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
     .table("ninaTurns")
     .replace(turn._id, settled)
     .pipe(Effect.orDie);
-  if (completed) {
+  if (status === "complete") {
     // Settlement schedules this once, including recovery after an interrupted action.
     yield* (yield* Scheduler).runAfter(
       Duration.zero,
@@ -193,6 +118,27 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
       timestamp: finishedAt,
     });
   }
+});
+
+/**
+ * Inspect the Agent journal and settle its existing hold in the same
+ * transaction. Only an active turn settles, so a second settlement of the same
+ * turn changes nothing and never refunds twice.
+ */
+export const settleTurn = Effect.fn("nina.settlement")(function* (
+  turn: NinaTurnsDoc,
+  interrupted: "failed" | "cancelled",
+  failure?: typeof NinaFailureReason.Type,
+  timing?: typeof NinaTurnTiming.Type
+) {
+  if (turn.phase !== "active") {
+    return;
+  }
+  const completed = yield* answered(turn);
+  if (!completed) {
+    yield* cutOff(turn, interrupted);
+  }
+  yield* closeTurn(turn, completed ? "complete" : interrupted, failure, timing);
 });
 
 /**

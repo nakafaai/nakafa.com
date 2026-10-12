@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
+  SETTLE_GRACE,
   START_DEADLINE,
   TURN_DEADLINE,
 } from "@repo/backend/confect/nina/deadline";
@@ -20,10 +21,12 @@ vi.mock("@convex-dev/agent", async (load) => {
 const NOW = Date.UTC(2026, 8, 27, 12);
 const DEADLINE = Duration.toMillis(TURN_DEADLINE);
 const START = Duration.toMillis(START_DEADLINE);
+const GRACE = Duration.toMillis(SETTLE_GRACE);
 const PAGE = 50;
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const sweep = Ref.getFunctionReference(refs.internal.nina.lifecycle.sweep);
+const expire = Ref.getFunctionReference(refs.internal.nina.lifecycle.expire);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 
 async function fixture() {
@@ -68,7 +71,7 @@ describe("Nina turn sweep", () => {
     vi.useRealTimers();
   });
 
-  it("fails, refunds and unlocks a turn left running past the deadline", async () => {
+  it("ends a turn whose run was lost as interrupted, refunds it and unlocks its chat", async () => {
     const f = await fixture();
     await f.t.mutation((ctx) =>
       seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
@@ -78,8 +81,10 @@ describe("Nina turn sweep", () => {
     vi.setSystemTime(overdue);
 
     await f.t.mutation(sweep, {});
+    // No run is alive past the deadline, so the turn was not too slow: its run
+    // was lost, and the sweep does not call that a timeout.
     expect(await f.queued("nina/lifecycle:recover")).toEqual([
-      { turnId: f.turnId, failure: "response-timeout" },
+      { turnId: f.turnId },
     ]);
     await f.settle();
 
@@ -87,7 +92,7 @@ describe("Nina turn sweep", () => {
     expect(state.turn?.state).toEqual({
       status: "failed",
       finishedAt: overdue,
-      reason: "response-timeout",
+      reason: "interrupted",
     });
     expect(state.user?.credits).toBe(10);
     expect(
@@ -111,14 +116,14 @@ describe("Nina turn sweep", () => {
           event: "chat response failed",
           properties: encodeJsonText({
             chat_type: "study",
-            error_code: "response-timeout",
+            error_code: "interrupted",
           }),
         }),
       ],
     ]);
   });
 
-  it("settles a turn whose run never started", async () => {
+  it("settles a queued turn that no run claimed when its start check was lost", async () => {
     const f = await fixture();
     vi.setSystemTime(NOW + DEADLINE + 1);
     await f.t.mutation(sweep, {});
@@ -126,7 +131,7 @@ describe("Nina turn sweep", () => {
     const state = await f.inspect();
     expect(state.turn?.state).toMatchObject({
       status: "failed",
-      reason: "response-timeout",
+      reason: "interrupted",
     });
     expect(state.user?.credits).toBe(10);
     expect(state.chat?.activeTurnId).toBeUndefined();
@@ -196,6 +201,32 @@ describe("Nina turn sweep", () => {
     expect(await f.queued("nina/response:present")).toEqual([
       { turnId: f.turnId },
     ]);
+  });
+
+  it("schedules the end of a settlement for one grace after each sweep that finds the turn", async () => {
+    const f = await fixture();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    const found = NOW + DEADLINE + 1;
+    vi.setSystemTime(found);
+    await f.t.mutation(sweep, {});
+    vi.setSystemTime(found + GRACE / 3);
+    await f.t.mutation(sweep, {});
+
+    const jobs = await f.t.query((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(
+      pipe(
+        jobs,
+        Arr.filter((job) => job.name === "nina/lifecycle:abandon"),
+        Arr.map((job) => [job.args[0], job.scheduledTime])
+      )
+    ).toEqual([
+      [{ turnId: f.turnId }, found + GRACE],
+      [{ turnId: f.turnId }, found + GRACE / 3 + GRACE],
+    ]);
+    // The sweep only schedules it. The turn is still open until a try works.
+    expect((await f.inspect()).turn?.phase).toBe("active");
   });
 
   it("reads one page of overdue turns at a time and hands the rest on", async () => {
@@ -309,7 +340,7 @@ describe("Nina turn sweep", () => {
     const state = await f.inspect();
     expect(state.turn?.state).toMatchObject({
       status: "failed",
-      reason: "response-timeout",
+      reason: "interrupted",
     });
     expect(state.user?.credits).toBe(10);
     expect(
@@ -322,5 +353,65 @@ describe("Nina turn sweep", () => {
       (job) => job.name.includes("deliverProductEvent")
     );
     expect(events).toHaveLength(1);
+  });
+});
+
+describe("Nina turn start check", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it("settles a turn whose run never started as timed out, with its credits back, and unlocks its chat", async () => {
+    const f = await fixture();
+    await f.t.mutation((ctx) =>
+      seedAnalyticsConsent(ctx, { userId: f.identity.userId, decidedAt: NOW })
+    );
+    const checked = NOW + START;
+    vi.setSystemTime(checked);
+    await f.t.mutation(expire, { turnId: f.turnId });
+
+    const state = await f.inspect();
+    expect(state.turn?.state).toEqual({
+      status: "failed",
+      finishedAt: checked,
+      reason: "response-timeout",
+    });
+    expect(state.user?.credits).toBe(10);
+    expect(
+      Arr.filter(state.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
+    expect(state.chat?.activeTurnId).toBeUndefined();
+    expect(state.messages.page[0]).toMatchObject({ status: "failed" });
+  });
+
+  it("leaves a turn alone whose run started in time", async () => {
+    const f = await fixture();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    vi.setSystemTime(NOW + START);
+    await f.t.mutation(expire, { turnId: f.turnId });
+
+    const state = await f.inspect();
+    expect(state.turn?.state).toMatchObject({ status: "running" });
+    expect(state.user?.credits).toBe(5);
+    expect(state.chat?.activeTurnId).toBe(f.turnId);
+  });
+
+  it("leaves a turn alone that settled before the check, and pays nothing back twice", async () => {
+    const f = await fixture();
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    vi.setSystemTime(NOW + START);
+    await f.t.mutation(expire, { turnId: f.turnId });
+
+    const state = await f.inspect();
+    expect(state.turn?.state).toMatchObject({ status: "cancelled" });
+    expect(state.user?.credits).toBe(10);
+    expect(
+      Arr.filter(state.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
   });
 });
