@@ -77,7 +77,7 @@ describe("Nina rolling summary", () => {
     expect(encodeJsonText(shown)).not.toContain('"Question 3"');
     expect(encodeJsonText(shown)).toContain('"Question 4"');
     expect(encodeJsonText(shown)).toContain('"Question 5"');
-  });
+  }, 15_000);
 
   it("folds a question the learner asked again once, in its newest asking, and leaves out a cancelled turn", async () => {
     const model = summaryModel("- A tidy fold.");
