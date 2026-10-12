@@ -15,6 +15,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { useStore } from "zustand";
 import { readChatAccess } from "@/components/ai/chat/access";
 import { isChatBusy } from "@/components/ai/chat/busy";
 import { optimisticCancel } from "@/components/ai/chat/cancel";
@@ -32,12 +33,16 @@ import { useViewer } from "@/lib/identity/client";
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 
-/** Reads the authorized facts of one conversation: its chat and latest turn. */
-function useConversation(chatId: Id<"chats">) {
+/**
+ * Reads the authorized facts of one conversation: its chat and latest turn.
+ * A chat its learner is deleting is not read: the server is about to delete
+ * it, and a read that finds it gone fails the page.
+ */
+function useConversation(chatId: Id<"chats">, leaving: boolean) {
   const authenticating = useConvexAuth((auth) => auth.isLoading);
   const result = useQuery(
     nina.conversation.get,
-    authenticating ? "skip" : { chatId }
+    authenticating || leaving ? "skip" : { chatId }
   );
   if (QueryResult.isFailure(result)) {
     throw result.error;
@@ -55,7 +60,8 @@ function useConversation(chatId: Id<"chats">) {
  * reads the latest render when it runs.
  */
 function useChatState(chatId: Id<"chats">, store: ChatStoreApi) {
-  const { chat, turn } = useConversation(chatId);
+  const leaving = useStore(store, (state) => state.leaving);
+  const { chat, turn } = useConversation(chatId, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
