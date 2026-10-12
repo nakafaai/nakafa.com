@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { NinaUpkeepCall } from "@repo/backend/confect/nina/contract/usage";
 import {
   NinaMemoryNote,
   NinaMemorySeen,
@@ -47,6 +48,8 @@ export default GroupSpec.make()
   // answer is false, when the portrait changed meanwhile, or when the learner
   // paused memory, deleted or rewrote one of those memories, or deleted them
   // all. A missing `text` keeps the current text, and an empty one removes it.
+  // `usage` is the tokens of the model call the build made, if it made one,
+  // and they count whether or not the text is stored.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "save",
@@ -57,6 +60,7 @@ export default GroupSpec.make()
         ),
         reached: Schema.Finite,
         text: Schema.optionalKey(NinaPortraitText),
+        usage: Schema.optionalKey(NinaUpkeepCall),
         userId: Id("users"),
       }),
       returns: () => Schema.Boolean,

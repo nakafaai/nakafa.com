@@ -1,5 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import type { NinaUpkeepCall } from "@repo/backend/confect/nina/contract/usage";
 import { isUnchanged } from "@repo/backend/confect/nina/memory/seen";
 import {
   readKeptMemory,
@@ -16,6 +17,7 @@ import { sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Effect } from "effect";
 
 type Seen = typeof NinaMemorySeen.Type;
+type Call = typeof NinaUpkeepCall.Type;
 type Portrait = Docs["ninaMemoryPortraits"];
 
 /**
@@ -79,25 +81,46 @@ const nextText = Effect.fn("nina.portrait.next")(function* (
  * Otherwise it moves `through` to `reached` and replaces the text with the new
  * one (an empty one removes it), or keeps it when the build wrote none. A
  * portrait left with no text for a learner with no memory at all is deleted:
- * nothing remains to remember. It reads at most 44 documents and writes one.
+ * nothing remains to remember.
+ *
+ * The tokens of the model call the build made (`usage`) are added to the row
+ * first, so they count whether or not the text is stored. A portrait that is
+ * gone has no row to count them in. It reads at most 44 documents and writes
+ * two.
  */
 export const savePortrait = Effect.fn("nina.portrait.keep")(function* (args: {
   readonly expected: number;
   readonly memories: readonly Seen[];
   readonly reached: number;
   readonly text?: string | undefined;
+  readonly usage?: Call | undefined;
   readonly userId: Docs["users"]["_id"];
 }) {
   const { userId } = args;
   const row = yield* readPortraitRow(userId);
-  if (row === null || row.through !== args.expected) {
+  if (row === null) {
+    return false;
+  }
+  const writer = yield* DatabaseWriter;
+  if (args.usage !== undefined) {
+    yield* writer
+      .table("ninaMemoryPortraits")
+      .patch(row._id, {
+        usage: {
+          calls: (row.usage?.calls ?? 0) + 1,
+          input: (row.usage?.input ?? 0) + args.usage.input,
+          output: (row.usage?.output ?? 0) + args.usage.output,
+        },
+      })
+      .pipe(Effect.orDie);
+  }
+  if (row.through !== args.expected) {
     return false;
   }
   const { clearedAt, paused } = yield* readMemoryState(userId);
   if (paused || !(yield* isUnaltered(userId, args.memories, clearedAt))) {
     return false;
   }
-  const writer = yield* DatabaseWriter;
   const text = yield* nextText(userId, args.text, row.text);
   if (
     text === undefined &&

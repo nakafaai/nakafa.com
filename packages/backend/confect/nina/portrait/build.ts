@@ -23,10 +23,11 @@ import { Array as Arr, Effect, Struct } from "effect";
 
 /**
  * Asks the model for the new portrait text from the portrait as it stands and
- * the memories it has not read. The call is on the background purpose, so it
- * carries the retention flags of every language model call, and it saves no
- * message. An answer that does not fit the portrait object, such as one over
- * the length limit, is rejected and nothing is saved.
+ * the memories it has not read, and returns it with the tokens the call spent.
+ * The call is on the background purpose, so it carries the retention flags of
+ * every language model call, and it saves no message. An answer that does not
+ * fit the portrait object, such as one over the length limit, is rejected and
+ * nothing is saved.
  */
 const writePortrait = Effect.fn("nina.portrait.write")(function* (
   userId: Docs["users"]["_id"],
@@ -39,7 +40,7 @@ const writePortrait = Effect.fn("nina.portrait.write")(function* (
     languageModel: handle.model,
     name: "portrait",
   });
-  const { portrait } = yield* Effect.tryPromise({
+  return yield* Effect.tryPromise({
     try: (signal) =>
       agent
         .generateText(
@@ -55,10 +56,15 @@ const writePortrait = Effect.fn("nina.portrait.write")(function* (
           },
           { storageOptions: { saveMessages: "none" } }
         )
-        .then((result) => result.output),
+        .then(({ output, usage }) => ({
+          text: output.portrait,
+          usage: {
+            input: usage.inputTokens ?? 0,
+            output: usage.outputTokens ?? 0,
+          },
+        })),
     catch: generationFailure,
   });
-  return portrait;
 });
 
 /**
@@ -87,7 +93,7 @@ export const buildPortrait = Effect.fn("nina.portrait.build")(
     ) {
       return;
     }
-    const text = Arr.isReadonlyArrayNonEmpty(memories)
+    const written = Arr.isReadonlyArrayNonEmpty(memories)
       ? yield* writePortrait(userId, formatPortraitPrompt(portrait, memories))
       : undefined;
     yield* (yield* MutationRunner)
@@ -95,7 +101,7 @@ export const buildPortrait = Effect.fn("nina.portrait.build")(
         expected: through,
         memories: Arr.map(memories, Struct.pick(["confirmedAt", "id"])),
         reached,
-        ...(text === undefined ? {} : { text }),
+        ...(written === undefined ? {} : written),
         userId,
       })
       .pipe(Effect.orDie);

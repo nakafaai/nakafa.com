@@ -26,6 +26,7 @@ async function build(text?: string) {
       memories: (typeof NinaMemorySeen.Type)[];
       reached: number;
       text: string;
+      usage: { input: number; output: number };
     }> = {}
   ) =>
     f.t.mutation(save, {
@@ -54,11 +55,54 @@ describe("storing a portrait build", () => {
     expect(await f.portrait()).toBe("Kelas 12 IPA.");
   });
 
+  it("adds the tokens of each call to the row, and counts the calls", async () => {
+    const f = await build("Kelas 11.");
+    expect(
+      await f.store({
+        text: "Kelas 12 IPA.",
+        usage: { input: 900, output: 70 },
+      })
+    ).toBe(true);
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ usage: { calls: 1, input: 900, output: 70 } }),
+    ]);
+    expect(
+      await f.store({
+        expected: 6,
+        memories: [],
+        reached: 6,
+        text: "Kelas 12 IPA, suka contoh soal.",
+        usage: { input: 1100, output: 90 },
+      })
+    ).toBe(true);
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({
+        usage: { calls: 2, input: 2000, output: 160 },
+      }),
+    ]);
+  });
+
+  it("counts the tokens of a call whose text it does not store", async () => {
+    const f = await build("Kelas 11.");
+    await f.owner.mutation(pause, { paused: true });
+    expect(
+      await f.store({
+        text: "Kelas 12 IPA.",
+        usage: { input: 900, output: 70 },
+      })
+    ).toBe(false);
+    expect(await f.portrait()).toBe("Kelas 11.");
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ usage: { calls: 1, input: 900, output: 70 } }),
+    ]);
+  });
+
   it("keeps the text when the build wrote none, and moves on only what it has read", async () => {
     const f = await build("Kelas 11.");
     const before = await f.rows();
     expect(await f.store({ memories: [], reached: 8 })).toBe(true);
     expect(await f.portrait()).toBe("Kelas 11.");
+    expect((await f.rows())[0]).not.toHaveProperty("usage");
     expect(await f.rows()).toEqual([expect.objectContaining({ through: 8 })]);
     expect(await f.store({ expected: 8, memories: [], reached: 8 })).toBe(true);
     expect(await f.rows()).toEqual([

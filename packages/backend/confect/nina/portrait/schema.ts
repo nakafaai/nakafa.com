@@ -1,4 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { NinaUpkeepTotal } from "@repo/backend/confect/nina/contract/usage";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema } from "effect";
 
@@ -26,12 +27,15 @@ export const NinaPortraitDraft = Schema.Struct({ portrait: NinaPortraitText });
  * was last requested, and a build waits for the quiet after it. `builtAt` is
  * when a build last went to the model, absent for none: a request within a day
  * of it asks for no build. The two are apart because a request that no build
- * has answered yet must not close the day.
+ * has answered yet must not close the day. A build belongs to no turn, so its
+ * provider tokens accumulate in `usage` instead of in a turn's usage ledger, as
+ * a summary's do; the field is absent until a build has called the model.
  */
 export const NinaMemoryPortrait = Schema.Struct({
   builtAt: Schema.optionalKey(Schema.Finite),
   scheduledAt: Schema.Finite,
   text: Schema.optionalKey(Sealed),
   through: Schema.Finite,
+  usage: Schema.optionalKey(NinaUpkeepTotal),
   userId: Id("users"),
 });

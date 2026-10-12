@@ -285,7 +285,11 @@ has an end date.
 It writes only if the portrait is still the one it read and every memory it fed
 to the model is as it read it, so a build that was running when the learner
 deleted or rewrote a memory, or deleted them all, or paused memory, stores
-nothing. A build with no memory newer than the portrait asks no model.
+nothing. A build with no memory newer than the portrait asks no model. The
+tokens of its one call are added to the portrait row (`usage`: the calls and
+their input and output tokens), as a summary's are to its row, because a build
+belongs to no turn and so to no turn's usage ledger. They count when the text is
+not stored too.
 
 A memory is independent of chats. Deleting a chat deletes no memory, not even
 one Nina wrote from that chat. Only three things delete a memory, and each
@@ -378,8 +382,9 @@ page does not use it: its search runs in the browser.
   asked for a portrait: its sealed `text`, absent until a build has written
   one and after a memory was deleted or rewritten; `through`, the newest
   confirmation time the text has read, zero for none; `scheduledAt`, the time
-  of the last request; and `builtAt`, the time the last build went to the
-  model, absent for none. The text is sealed for the learner in its own
+  of the last request; `builtAt`, the time the last build went to the model,
+  absent for none; and `usage`, the tokens of the model calls of its builds,
+  absent for none. The text is sealed for the learner in its own
   field, like a memory. `nina/portrait:claim` and `save` are internal, and so
   is the scheduled node action `nina/portrait/build:run`.
 - `clear` stores the moment the learner asked, as `ninaMemoryClearedAt` on

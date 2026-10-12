@@ -72,7 +72,13 @@ describe("a portrait build", () => {
     expect(await f.portrait()).toBe(
       "Mau ikut SNBT 2027 dan lebih suka contoh soal dulu."
     );
-    expect(await f.rows()).toEqual([expect.objectContaining({ through: 2 })]);
+    // The model reported 12 input and 4 output tokens for its one call.
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({
+        through: 2,
+        usage: { calls: 1, input: 12, output: 4 },
+      }),
+    ]);
     const prompt = promptOf(model);
     expect(prompt).toContain("# Current Portrait\\n\\nNone yet.");
     expect(prompt).toContain("- Gaya belajar: Lebih suka contoh soal dulu.");
