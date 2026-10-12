@@ -129,11 +129,14 @@ and its counter in one transaction, so a counter missing while its signals are
 live is not a state the pipeline produces.
 
 One hourly cron, at minute 45, prunes bounded indexed pages and atomically
-schedules a next page when needed. The daily expiry and the weekly repair run at
-minute 15 of hour 0 and rewrite the maintenance row that the pass reads, so the
-pass keeps 30 minutes from them and the two never write it together. Each page
-derives the current day again, so a chain crossing midnight waits for the new
-day's maintenance before deleting daily inputs.
+schedules a next page when needed. The pass only reads the maintenance row. The
+daily expiry and the weekly repair start at minute 15 of hour 0 and rewrite that
+row on every page of their chain, and Convex runs the pass again when its read
+overlaps such a write. Starting 30 minutes from them keeps the pass out of any
+chain that ends within 30 minutes. A longer chain costs a retried pass, and the
+next hourly pass recovers one that fails. Each page derives the current day
+again, so a chain crossing midnight waits for the new day's maintenance before
+deleting daily inputs.
 Maintenance rows are read only when an expired daily input exists. Missing or
 incomplete cycles retain those inputs while viewer-key expiration continues.
 The remaining indexed rows are the resume position; there is no separate

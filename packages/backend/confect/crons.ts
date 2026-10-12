@@ -167,9 +167,12 @@ export default CronJobs.make()
   .add(
     /**
      * Prunes expired popularity inputs in bounded pages, at minute 45 of every
-     * hour. The daily expiry and the weekly repair of the popularity window
-     * start at minute 15 of hour 0 and rewrite the maintenance row this pass
-     * reads, so the pass keeps 30 minutes from them on both sides.
+     * hour. The pass reads the maintenance row, when an expired daily signal
+     * exists, and never writes it. The daily expiry and the weekly repair start
+     * at minute 15 of hour 0 and rewrite that row on every page of their chain,
+     * and Convex runs the pass again when its read overlaps such a write.
+     * Starting 30 minutes from them keeps the pass out of any chain that ends
+     * within 30 minutes.
      */
     CronJob.make(
       "prune expired popularity inputs",
