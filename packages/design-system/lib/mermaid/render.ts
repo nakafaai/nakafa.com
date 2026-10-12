@@ -16,8 +16,14 @@ export class MermaidRenderError extends Schema.TaggedError<MermaidRenderError>()
   "MermaidRenderError",
   {
     cause: Schema.Unknown,
-    operation: Schema.Literals(["initialize", "render"]),
+    operation: Schema.Literals(["initialize", "parse", "render"]),
   }
+) {}
+
+/** Chart text that Mermaid rejects, such as text that names no diagram type. */
+export class MermaidSyntaxError extends Schema.TaggedError<MermaidSyntaxError>()(
+  "MermaidSyntaxError",
+  {}
 ) {}
 
 /** Loads Mermaid and prevents callers or chart directives from weakening strict SVG rendering. */
@@ -52,10 +58,21 @@ const initializeMermaid = Effect.fn("designSystem.mermaid.initialize")(
   }
 );
 
-/** Renders one chart with enforced strict sanitization and typed failure context. */
+/**
+ * Renders one chart with enforced strict sanitization and typed failure
+ * context. It parses the chart first, so text that Mermaid rejects fails as a
+ * syntax error and never reaches the renderer.
+ */
 export const renderMermaid = Effect.fn("designSystem.mermaid.render")(
   function* (renderId: string, chart: string, config: MermaidRenderConfig) {
     const mermaid = yield* initializeMermaid(config);
+    const parsed = yield* Effect.tryPromise({
+      try: () => mermaid.parse(chart, { suppressErrors: true }),
+      catch: (cause) => new MermaidRenderError({ cause, operation: "parse" }),
+    });
+    if (!parsed) {
+      return yield* new MermaidSyntaxError();
+    }
     return yield* Effect.tryPromise({
       try: () => mermaid.render(renderId, chart),
       catch: (cause) => new MermaidRenderError({ cause, operation: "render" }),

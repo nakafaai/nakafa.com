@@ -11,15 +11,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Effect, Fiber } from "effect";
 import { useTheme } from "next-themes";
-import { useEffect, useId, useRef, useState } from "react";
+import { type RefObject, useEffect, useId, useRef, useState } from "react";
 
-/** Converts unknown Mermaid renderer failures into a user-visible message. */
-function getMermaidRenderErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "Failed to render Mermaid chart";
-}
 /**
  * How a rendered diagram sits in its box. Auto margins center a smaller
  * diagram and let a larger one start at the edge, where it stays scrollable.
@@ -34,6 +27,43 @@ const diagramVariants = cva("flex [&>svg]:m-auto", {
     },
   },
 });
+
+/**
+ * Renders one attempt. A failed attempt keeps the last good SVG when one
+ * exists, and only a failure other than rejected chart text is reported.
+ */
+function renderAttempt(
+  attemptId: string,
+  chart: string,
+  config: MermaidRenderConfig,
+  renderKey: string,
+  lastValidSvg: RefObject<string>
+) {
+  const failedState = () => {
+    const svg = lastValidSvg.current;
+    return { failed: !svg, renderKey, svg };
+  };
+  return renderMermaid(attemptId, chart, config).pipe(
+    Effect.tap(({ svg }) =>
+      Effect.sync(() => {
+        lastValidSvg.current = svg;
+      })
+    ),
+    Effect.map(({ svg }) => ({ failed: false, renderKey, svg })),
+    Effect.catchTags({
+      MermaidSyntaxError: () => Effect.sync(failedState),
+      MermaidRenderError: (error) =>
+        Effect.sync(() => {
+          captureException(error.cause, {
+            has_cached_svg: !!lastValidSvg.current,
+            operation: error.operation,
+            source: "mermaid-render",
+          });
+          return failedState();
+        }),
+    })
+  );
+}
 
 type MermaidProps = VariantProps<typeof diagramVariants> & {
   chart: string;
@@ -64,7 +94,7 @@ export function Mermaid({
     (getThemeAppearance(resolvedTheme) === "dark" ? "dark" : "default");
   const renderKey = `${renderId}-${theme}`;
   const [renderState, setRenderState] = useState({
-    errorMessage: "",
+    failed: false,
     renderKey: "",
     svg: "",
   });
@@ -76,34 +106,13 @@ export function Mermaid({
     renderSequence.current += 1;
     const attemptId = `${renderId}-${renderSequence.current}`;
     const renderFiber = Effect.runFork(
-      renderMermaid(attemptId, chart, { ...config, theme }).pipe(
-        Effect.matchEffect({
-          onFailure: (error) =>
-            Effect.sync(() => {
-              const svg = lastValidSvg.current;
-              captureException(error.cause, {
-                has_cached_svg: !!svg,
-                operation: error.operation,
-                source: "mermaid-render",
-              });
-              return {
-                errorMessage: svg
-                  ? ""
-                  : getMermaidRenderErrorMessage(error.cause),
-                renderKey,
-                svg,
-              };
-            }),
-          onSuccess: ({ svg }) =>
-            Effect.sync(() => {
-              lastValidSvg.current = svg;
-              return {
-                errorMessage: "",
-                renderKey,
-                svg,
-              };
-            }),
-        }),
+      renderAttempt(
+        attemptId,
+        chart,
+        { ...config, theme },
+        renderKey,
+        lastValidSvg
+      ).pipe(
         Effect.tap((nextRenderState) =>
           Effect.sync(() => setRenderState(nextRenderState))
         )
@@ -122,21 +131,16 @@ export function Mermaid({
       </div>
     );
   }
-  // Only show error if we have no valid SVG to display
-  if (hasCurrentRender && renderState.errorMessage && !renderState.svg) {
+  // With no SVG to show, the chart text stays readable instead of an error.
+  if (hasCurrentRender && renderState.failed) {
     return (
-      <div className={cn("flex overflow-auto", className)}>
-        <div className="m-auto w-full border border-destructive bg-card p-4 text-destructive">
-          <p className="font-mono text-sm">
-            Mermaid Error: {renderState.errorMessage}
-          </p>
-          <details className="mt-2">
-            <summary className="cursor-pointer text-xs">Show Code</summary>
-            <pre className="mt-2 overflow-x-auto rounded border bg-background p-2 text-foreground text-xs">
-              {chart}
-            </pre>
-          </details>
-        </div>
+      <div className={cn("flex flex-col gap-2 overflow-auto", className)}>
+        <p className="text-muted-foreground text-sm">
+          This diagram could not be drawn. Its source is below.
+        </p>
+        <pre className="overflow-x-auto rounded border bg-background p-2 text-foreground text-xs">
+          {chart}
+        </pre>
       </div>
     );
   }
