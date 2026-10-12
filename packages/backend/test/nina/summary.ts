@@ -21,10 +21,13 @@ import { Array as Arr, Effect } from "effect";
 const NOW = Date.UTC(2026, 8, 27, 12);
 const read = Ref.getFunctionReference(refs.internal.nina.summaries.read);
 
-/** A model that answers the summary writer with `text`. */
-export function summaryModel(text: string) {
+/** A model that answers the summary writer with `text`, and ends the way `finish` says. */
+export function summaryModel(
+  text: string,
+  finish: Parameters<typeof providerStep>[1] = "stop"
+) {
   return new MockLanguageModelV4({
-    doGenerate: providerStep([{ type: "text", text }]),
+    doGenerate: providerStep([{ type: "text", text }], finish),
   });
 }
 

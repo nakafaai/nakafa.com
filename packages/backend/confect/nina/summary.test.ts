@@ -272,18 +272,17 @@ describe("Nina rolling summary", () => {
     expect(await f.text()).toBe("- A counted fold.");
   });
 
-  it.each(["provider", "empty"] as const)(
-    "keeps the previous summary when the %s answer fails",
-    async (failure) => {
-      provider.languageModel.mockReturnValue(
-        failure === "provider" ? failingModel() : summaryModel("   ")
-      );
-      const f = await createSummaryTest(9, () => BIG);
-      await f.seed(EARLIER_THROUGH, EARLIER);
-      await f.refresh(8);
-      await expectEarlier(f);
-    }
-  );
+  it.each([
+    ["the provider fails", failingModel()],
+    ["the answer is empty", summaryModel("   ")],
+    ["the answer is cut at the output cap", summaryModel("- Cut", "length")],
+  ])("keeps the previous summary when %s", async (_failure, model) => {
+    provider.languageModel.mockReturnValue(model);
+    const f = await createSummaryTest(9, () => BIG);
+    await f.seed(EARLIER_THROUGH, EARLIER);
+    await f.refresh(8);
+    await expectEarlier(f);
+  });
 
   it("reads back only from the prompt of the last folded turn", async () => {
     provider.languageModel.mockReturnValue(summaryModel("- Folded."));

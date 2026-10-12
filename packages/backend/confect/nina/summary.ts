@@ -218,7 +218,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       languageModel: handle.model,
       name: "summary",
     });
-    const { text, usage } = yield* Effect.tryPromise({
+    const { finishReason, text, usage } = yield* Effect.tryPromise({
       try: (signal) =>
         agent.generateText(
           ctx,
@@ -239,7 +239,9 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       catch: () => new NinaSummaryError({ operation: "generate" }),
     });
     const summary = text.trim();
-    if (!summary) {
+    // An answer cut at the output cap lost its last points, and saving it would
+    // drop them from every later summary too.
+    if (!summary || finishReason === "length") {
       return yield* new NinaSummaryError({ operation: "generate" });
     }
     yield* (yield* MutationRunner)

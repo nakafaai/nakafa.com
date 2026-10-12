@@ -76,7 +76,7 @@ of its own, and every model call has a cap on its output.
   it gathered. A call outside a capability run has only its own budget.
 - Each purpose in `gateway/purpose.ts` sets the most one call may write, sent
   to the provider as `maxOutputTokens`: chat 16,384 tokens, specialist 6,144,
-  background 2,048, suggestion 512, presentation 512. A call that ends at its
+  background 4,096, suggestion 512, presentation 512. A call that ends at its
   cap finishes with `length`, which a chat turn already reads as
   `response-limit`. A specialist whose last step ends at its cap reports its
   result as `partial` and tells Nina that the answer was cut short
@@ -105,8 +105,10 @@ of its own, and every model call has a cap on its output.
   (`NINA_BUDGET.summary`) when the caps were set, and Nina reads at most 6,000
   tokens of a specialist's answer (`NINA_BUDGET.evidence`), which is where the
   background and specialist caps come from. Since 12 October 2026 a summary may
-  hold 2,000 tokens, and the background cap of 2,048 has not been raised with
-  it. Measure again before a cap is lowered or raised, or the model changes.
+  hold 2,000 tokens, and the reasoning of its call counts against the same cap,
+  so the background cap is 4,096. A summary that still ends at the cap is not
+  saved: the previous summary stays and the next settled turn folds again.
+  Measure again before a cap is lowered or raised, or the model changes.
 - A link to Nakafa's own site goes to the Nakafa capability and never to web
   research. The capability forces the read tool, step after step, until the
   model has asked for every address the learner sent. A message with more
