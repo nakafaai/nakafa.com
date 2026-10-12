@@ -11,12 +11,7 @@ const idle = {
 
 describe("chat/busy", () => {
   it("is idle when nothing is in flight and the turn is settled", () => {
-    for (const status of [
-      "complete",
-      "failed",
-      "cancelled",
-      "unanswered",
-    ] as const) {
+    for (const status of ["complete", "failed", "cancelled"] as const) {
       expect(isChatBusy({ ...idle, status })).toBe(false);
     }
     expect(isChatBusy({ ...idle, status: undefined })).toBe(false);

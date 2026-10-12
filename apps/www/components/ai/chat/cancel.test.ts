@@ -97,7 +97,6 @@ describe("chat/cancel stop failure", () => {
       { finishedAt: 5, status: "complete" },
       { finishedAt: 5, reason: "unknown", status: "failed" },
       { finishedAt: 5, status: "cancelled" },
-      { status: "unanswered" },
     ] as const) {
       expect(readStopFailure(stop, { order: 3, state })).toBeNull();
     }

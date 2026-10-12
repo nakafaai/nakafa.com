@@ -361,6 +361,40 @@ describe("Nina memory writes on the Memory page and the portrait", () => {
     expect(await f.texts(other.userId)).toEqual(["Rahasia"]);
   });
 
+  it("asks for a build of the portrait when the learner lets Nina use memory again, and for none when they pause", async () => {
+    const f = await createPortraitTest();
+    await f.owner.mutation(add, { text: "Kelas 11" });
+    expect(await f.scheduled()).toHaveLength(1);
+    // The pause comes inside the quiet of that request, so its build will find
+    // memory paused and build nothing. Nothing asks while memory is paused.
+    await f.owner.mutation(pause, { paused: true });
+    await f.owner.mutation(add, { text: "Mau ikut SNBT 2027" });
+    expect(await f.scheduled()).toHaveLength(1);
+    await f.owner.mutation(pause, { paused: false });
+    expect(await f.scheduled()).toEqual([
+      { userId: f.identity.userId },
+      { userId: f.identity.userId },
+    ]);
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ scheduledAt: NOW, through: 0 }),
+    ]);
+  });
+
+  it("asks again on the return for the build from scratch that a pause swallowed, though a build went to the model that day", async () => {
+    const f = await createPortraitTest();
+    const id = await f.seed({ author: "learner", text: "Kelas 11" });
+    await f.seedPortrait({ builtAt: NOW, text: "Kelas 11.", through: 4 });
+    // The rewrite takes the text out and asks for a build from scratch. The
+    // learner pauses inside its quiet, so that build will build nothing.
+    await f.owner.mutation(edit, { id, text: "Kelas 12" });
+    await f.owner.mutation(pause, { paused: true });
+    expect(await f.scheduled()).toHaveLength(1);
+    const [cleared] = await f.rows();
+    expect(cleared).not.toHaveProperty("builtAt");
+    await f.owner.mutation(pause, { paused: false });
+    expect(await f.scheduled()).toHaveLength(2);
+  });
+
   it("builds nothing while memory is paused, though a memory the learner changes still takes its text out of the portrait", async () => {
     const f = await createPortraitTest();
     const id = await f.seed({ author: "learner", text: "Kelas 11" });

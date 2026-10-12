@@ -8747,6 +8747,12 @@ export declare const internal: {
       >;
     };
     lifecycle: {
+      abandon: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
+      >;
       claim: FunctionReference<
         "mutation",
         "internal",
@@ -9265,6 +9271,12 @@ export declare const internal: {
             userId: Id<"users">;
           }
         | null
+      >;
+      expire: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
       >;
       halted: FunctionReference<
         "query",
@@ -10056,6 +10068,14 @@ export declare const internal: {
         "internal",
         { before: number; chatId: Id<"chats">; through: number | null },
         Array<{ order: number; retryOf?: number }>
+      >;
+    };
+    unanswered: {
+      settle: FunctionReference<
+        "mutation",
+        "internal",
+        { numItems: number },
+        { settled: number }
       >;
     };
     uploads: {

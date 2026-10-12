@@ -23,6 +23,7 @@ import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { requireOpenCapacity } from "@repo/backend/confect/nina/capacity";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
+import { START_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
 import { settleStopped } from "@repo/backend/confect/nina/settlement";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
@@ -188,11 +189,17 @@ const start = FunctionImpl.make(
       .patch(chatId, { threadId, activeTurnId: turnId, updatedAt: now })
       .pipe(Effect.orDie);
     const scheduler = yield* Scheduler;
-    // No per-turn check follows the run: the recovery sweep settles a turn that
-    // stays open past its deadline.
     yield* scheduler.runAfter(Duration.zero, refs.internal.nina.response.run, {
       turnId,
     });
+    // The one check that follows a run, for the moment it must have started. A
+    // run that started settles itself, and the recovery sweep settles a turn
+    // that stays open past its deadline.
+    yield* scheduler.runAfter(
+      START_DEADLINE,
+      refs.internal.nina.lifecycle.expire,
+      { turnId }
+    );
     yield* captureProductEvent({
       distinctId: appUser._id,
       event: {

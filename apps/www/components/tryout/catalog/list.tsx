@@ -1,8 +1,8 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -11,7 +11,7 @@ import {
   type TryoutStatusValue,
 } from "@/components/tryout/status";
 
-/** Props of the divided try-out row list; each row carries its own visual and status. */
+/** Props of the divided try-out row list; each row carries its own tile and status. */
 interface TryoutListProps {
   emptyLabel: string;
   rows: readonly {
@@ -22,23 +22,16 @@ interface TryoutListProps {
     meta?: ReactNode;
     status?: TryoutStatusValue;
     title: string;
-    visual:
-      | Readonly<{
-          icon: IconSvgElement;
-          iconKey: string;
-          kind: "icon";
-        }>
-      | Readonly<{
-          keyString: string;
-          kind: "gradient";
-        }>;
+    visual: Readonly<{
+      icon: IconSvgElement;
+      seed: string;
+    }>;
   }[];
 }
 
 type TryoutListRow = TryoutListProps["rows"][number];
-type TryoutListRowVisual = TryoutListRow["visual"];
 
-/** Renders the established divided try-out row list with gradient icons. */
+/** Renders the established divided try-out row list, each row led by its tile. */
 export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
   if (rows.length === 0) {
     return (
@@ -70,7 +63,9 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
     >
       <div className="grid w-full gap-4">
         <div className="flex flex-1 items-start gap-3">
-          <TryoutRowVisual visual={row.visual} />
+          <Tile seed={row.visual.seed}>
+            <TileIcon icon={row.visual.icon} />
+          </Tile>
 
           <div className="-mt-1 flex flex-1 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-2">
@@ -131,38 +126,5 @@ function TryoutRowDescription({
     <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
       {description}
     </span>
-  );
-}
-
-/** Renders the configured row visual without branching at call sites. */
-function TryoutRowVisual({ visual }: { visual: TryoutListRowVisual }) {
-  const keyString = visual.kind === "icon" ? visual.iconKey : visual.keyString;
-
-  return (
-    <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
-      <GradientBlock
-        className="absolute inset-0"
-        colorScheme="vibrant"
-        intensity="medium"
-        keyString={keyString}
-      />
-      <TryoutRowIcon visual={visual} />
-    </div>
-  );
-}
-
-/** Renders an icon overlay only for icon-backed row visuals. */
-function TryoutRowIcon({ visual }: { visual: TryoutListRowVisual }) {
-  if (visual.kind !== "icon") {
-    return null;
-  }
-
-  return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <HugeIcons
-        className="size-4 text-background drop-shadow-md"
-        icon={visual.icon}
-      />
-    </div>
   );
 }

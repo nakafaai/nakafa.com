@@ -168,7 +168,14 @@ const remove = FunctionImpl.make(
   })
 );
 
-/** Stops Nina from saving or reading memory, or lets her again. Nothing is deleted. */
+/**
+ * Stops Nina from saving or reading memory, or lets her again. Nothing is
+ * deleted. Letting her again asks for a build of the portrait, by the rule of
+ * a memory that is added (`requestPortrait`): while memory was paused nothing
+ * asked for one, and a build that came due during the pause built nothing, so
+ * what the learner wrote before and during the pause would otherwise wait for
+ * the next memory.
+ */
 const pause = FunctionImpl.make(
   schema,
   spec,
@@ -180,6 +187,9 @@ const pause = FunctionImpl.make(
       paused,
       userId: appUser._id,
     });
+    if (!paused) {
+      yield* requestPortrait({ paused, reset: false, userId: appUser._id });
+    }
     return null;
   })
 );
