@@ -6,12 +6,20 @@ import { PostHog } from "@posthog/convex";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { watchHalt } from "@repo/backend/confect/nina/halt";
+import { turnHalted, watchHalt } from "@repo/backend/confect/nina/halt";
 import { provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
 import { createSilentTest, hasAnswer } from "@repo/backend/test/nina/silent";
-import { Array as Arr, Effect, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import {
+  Array as Arr,
+  Effect,
+  Layer,
+  Logger,
+  MutableRef,
+  Schema,
+} from "effect";
 import { TestClock } from "effect/testing";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
@@ -254,6 +262,41 @@ describe("The halt watch of a running turn", () => {
         expect(halt.aborted).toBe(true);
         expect(runQuery).toHaveBeenCalledTimes(3);
         expect(runQuery).toHaveBeenLastCalledWith(halted, { turnId });
+      })
+  );
+
+  it.effect(
+    "counts a read that fails as not halted, and logs the turn and nothing of the failure",
+    () =>
+      Effect.gen(function* () {
+        const logged = MutableRef.make<readonly unknown[]>([]);
+        const runQuery = vi
+          .fn()
+          .mockRejectedValue(new Error("Private connection failure"));
+        // The run asks the same question when its generation fails. A read that
+        // dies there would replace the failure that the run has to store.
+        const isHalted = yield* turnHalted(turnId).pipe(
+          Effect.provide(
+            Layer.merge(
+              QueryRunner.layer(runQuery),
+              Logger.layer([
+                Logger.formatStructured.pipe(
+                  Logger.map(({ message }) =>
+                    MutableRef.update(logged, Arr.append(message))
+                  )
+                ),
+              ])
+            )
+          )
+        );
+
+        expect(isHalted).toBe(false);
+        expect(MutableRef.get(logged)).toEqual([
+          ["Nina halt check failed", { turnId }],
+        ]);
+        expect(encodeJsonText(MutableRef.get(logged))).not.toContain(
+          "Private connection failure"
+        );
       })
   );
 });

@@ -1,9 +1,11 @@
 import { Ref } from "@confect/core";
+import { QueryRunner } from "@confect/server";
 import { Agent } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { purposes } from "@repo/backend/confect/gateway/purpose";
+import { turnHalted } from "@repo/backend/confect/nina/halt";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel, ninaStream } from "@repo/backend/test/nina";
@@ -24,6 +26,11 @@ vi.mock("@repo/backend/confect/nina/summary", async (load) => {
   const actual =
     await load<typeof import("@repo/backend/confect/nina/summary")>();
   return { ...actual, refreshSummary: vi.fn(actual.refreshSummary) };
+});
+
+vi.mock("@repo/backend/confect/nina/halt", async (load) => {
+  const actual = await load<typeof import("@repo/backend/confect/nina/halt")>();
+  return { ...actual, turnHalted: vi.fn(actual.turnHalted) };
 });
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
@@ -83,6 +90,7 @@ describe("The Nina response run when generation fails", () => {
     vi.restoreAllMocks();
     deployment.mockReset();
     provider.languageModel.mockReset();
+    vi.mocked(turnHalted).mockReset();
     vi.useRealTimers();
   });
 
@@ -193,6 +201,40 @@ describe("The Nina response run when generation fails", () => {
     });
     expect(state.user?.credits).toBe(10);
   }, 30_000);
+
+  it("stores the reason the generation failed with when the read that asks whether its turn was halted fails too", async () => {
+    const halt = await vi.importActual<
+      typeof import("@repo/backend/confect/nina/halt")
+    >("@repo/backend/confect/nina/halt");
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doStream: ninaStream([
+          { type: "error", error: failures["rate-limit"] },
+        ]),
+      })
+    );
+    // The failure handler asks once whether the turn was halted, and that read
+    // fails. The watch keeps its own copy of the question and is not affected.
+    vi.mocked(turnHalted).mockImplementationOnce((turnId) =>
+      halt
+        .turnHalted(turnId)
+        .pipe(
+          Effect.provide(
+            QueryRunner.layer(
+              vi.fn().mockRejectedValue(new Error("Private connection failure"))
+            )
+          )
+        )
+    );
+    const f = await failing();
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.inspect();
+    expect(state.turn?.state).toMatchObject({
+      status: "failed",
+      reason: "provider-busy",
+    });
+    expect(state.user?.credits).toBe(10);
+  });
 
   it("identifies missing Gateway configuration before a provider request", async () => {
     deployment.mockReturnValue(
