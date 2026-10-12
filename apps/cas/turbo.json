@@ -5,6 +5,12 @@
   "tasks": {
     "build": {
       "outputs": []
+    },
+    "test": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/math/schema/shared.ts"
+      ]
     }
   }
 }

@@ -90,8 +90,9 @@ export default GroupSpec.make()
       args: () => ({
         ...NinaSummary.mapFields(Struct.pick(["chatId", "throughOrder"]))
           .fields,
-        // The caller sends plain text and the mutation seals it.
-        text: Schema.String,
+        // The caller sends plain text and the mutation seals it. A refresh whose
+        // answer was rejected sends none, and only its tokens count.
+        text: Schema.optionalKey(Schema.String),
         usage: NinaUpkeepCall,
       }),
       returns: () => Schema.Null,

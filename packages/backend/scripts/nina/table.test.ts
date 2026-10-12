@@ -80,7 +80,7 @@ describe("the table of the release gate", () => {
     );
   });
 
-  it("prints zero for counts a row stored before October 2026 lacks, and a dash for a missing cost", () => {
+  it("prints zero for the cached and reasoning counts an old row lacks, and a dash for a missing cost", () => {
     const old = usage("nina", { calls: 2, input: 800, output: 40 });
 
     expect(

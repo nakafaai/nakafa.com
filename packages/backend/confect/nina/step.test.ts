@@ -11,11 +11,7 @@ import {
   LearningCapabilityNameSchema,
 } from "@repo/backend/confect/nina/capability/spec";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
-import {
-  type NinaPrepareStep,
-  prepareNinaStep,
-  startNinaStep,
-} from "@repo/backend/confect/nina/step";
+import { startNinaStep } from "@repo/backend/confect/nina/step";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
@@ -64,7 +60,7 @@ const instructions = "Base system prompt";
 const everything = LearningCapabilityNameSchema.literals;
 
 /**
- * Runs Nina's deterministic step policy through the AI SDK callback contract.
+ * Builds the input of Nina's step callback as the AI SDK calls it.
  *
  * Tests exercise the public SDK-derived callback shape so package behavior
  * stays aligned with `ToolLoopAgentSettings["prepareStep"]` instead of a local
@@ -88,63 +84,78 @@ function stepInput({
     stepNumber,
     steps: [],
     toolsContext: {},
-  } satisfies Parameters<NinaPrepareStep>[0];
+  } satisfies Parameters<typeof startNinaStep>[2];
 }
 
+/** Starts a step of a turn that offers `capabilities`, whose timer needs no mark. */
 function readPreparedStep(
   options: Parameters<typeof stepInput>[0],
   capabilities: readonly LearningCapabilityName[] = everything
 ) {
-  return prepareNinaStep(stepInput(options), capabilities);
+  return startNinaStep(Effect.void, capabilities, stepInput(options));
 }
 
 describe("nina/runtime/step", () => {
-  it("leaves low-risk first prompts to Nina's system prompt", () => {
-    const greetingMessages = [
-      { content: "hi", role: "user" },
-    ] satisfies ModelMessage[];
+  it.effect("leaves low-risk first prompts to Nina's system prompt", () =>
+    Effect.gen(function* () {
+      const greetingMessages = [
+        { content: "hi", role: "user" },
+      ] satisfies ModelMessage[];
 
-    expect(
-      readPreparedStep({ messages: greetingMessages, stepNumber: 0 })
-    ).toEqual({ messages: greetingMessages });
-  });
+      expect(
+        yield* readPreparedStep({ messages: greetingMessages, stepNumber: 0 })
+      ).toEqual({ messages: greetingMessages });
+    })
+  );
 
-  it("starts with research when the first prompt names a source, with every tool still listed", () => {
-    const step = readPreparedStep({
-      messages: externalUrlMessages,
-      stepNumber: 0,
-    });
+  it.effect(
+    "starts with research when the first prompt names a source, with every tool still listed",
+    () =>
+      Effect.gen(function* () {
+        const step = yield* readPreparedStep({
+          messages: externalUrlMessages,
+          stepNumber: 0,
+        });
 
-    expect(step).toEqual({
-      messages: externalUrlMessages,
-      toolChoice: { type: "tool", toolName: "deepResearch" },
-    });
-    expect(step).not.toHaveProperty("activeTools");
-  });
+        expect(step).toEqual({
+          messages: externalUrlMessages,
+          toolChoice: { type: "tool", toolName: "deepResearch" },
+        });
+        expect(step).not.toHaveProperty("activeTools");
+      })
+  );
 
-  it("starts with Nakafa, not research, when the first prompt links to Nakafa's own site", () => {
-    const step = readPreparedStep({
-      messages: nakafaUrlMessages,
-      stepNumber: 0,
-    });
+  it.effect(
+    "starts with Nakafa, not research, when the first prompt links to Nakafa's own site",
+    () =>
+      Effect.gen(function* () {
+        const step = yield* readPreparedStep({
+          messages: nakafaUrlMessages,
+          stepNumber: 0,
+        });
 
-    expect(step).toEqual({
-      messages: nakafaUrlMessages,
-      toolChoice: { type: "tool", toolName: "nakafa" },
-    });
-    expect(step).not.toHaveProperty("activeTools");
-  });
+        expect(step).toEqual({
+          messages: nakafaUrlMessages,
+          toolChoice: { type: "tool", toolName: "nakafa" },
+        });
+        expect(step).not.toHaveProperty("activeTools");
+      })
+  );
 
-  it("starts with research when the first prompt links to Nakafa and to an outside site", () => {
-    expect(
-      readPreparedStep({ messages: mixedUrlMessages, stepNumber: 0 })
-    ).toEqual({
-      messages: mixedUrlMessages,
-      toolChoice: { type: "tool", toolName: "deepResearch" },
-    });
-  });
+  it.effect(
+    "starts with research when the first prompt links to Nakafa and to an outside site",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* readPreparedStep({ messages: mixedUrlMessages, stepNumber: 0 })
+        ).toEqual({
+          messages: mixedUrlMessages,
+          toolChoice: { type: "tool", toolName: "deepResearch" },
+        });
+      })
+  );
 
-  it.each([
+  it.effect.each([
     [
       "an outside link when research is not offered",
       externalUrlMessages,
@@ -162,36 +173,48 @@ describe("nina/runtime/step", () => {
     ],
   ] as const)(
     "forces no tool for %s, because the SDK lists only the tools the turn offers",
-    (_prompt, messages, offered) => {
-      expect(readPreparedStep({ messages, stepNumber: 0 }, offered)).toEqual({
-        messages,
-      });
-    }
+    ([, messages, offered]) =>
+      Effect.gen(function* () {
+        expect(
+          yield* readPreparedStep({ messages, stepNumber: 0 }, offered)
+        ).toEqual({ messages });
+      })
   );
 
-  it("starts with Nakafa when the first prompt links to both and the turn offers no research", () => {
-    expect(
-      readPreparedStep({ messages: mixedUrlMessages, stepNumber: 0 }, [
-        "nakafa",
-        "math",
-      ])
-    ).toEqual({
-      messages: mixedUrlMessages,
-      toolChoice: { type: "tool", toolName: "nakafa" },
-    });
-  });
+  it.effect(
+    "starts with Nakafa when the first prompt links to both and the turn offers no research",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* readPreparedStep(
+            { messages: mixedUrlMessages, stepNumber: 0 },
+            ["nakafa", "math"]
+          )
+        ).toEqual({
+          messages: mixedUrlMessages,
+          toolChoice: { type: "tool", toolName: "nakafa" },
+        });
+      })
+  );
 
-  it("changes neither the instructions nor the tools after the first step, so the cached prefix holds", () => {
-    const step = readPreparedStep({
-      messages: externalUrlMessages,
-      stepNumber: 1,
-    });
+  it.effect(
+    "changes neither the instructions nor the tools after the first step, so the cached prefix holds",
+    () =>
+      Effect.gen(function* () {
+        const step = yield* readPreparedStep({
+          messages: externalUrlMessages,
+          stepNumber: 1,
+        });
 
-    expect(step).toEqual({ messages: externalUrlMessages });
-    expect(
-      readPreparedStep({ messages: nakafaUrlMessages, stepNumber: 1 })
-    ).toEqual({ messages: nakafaUrlMessages });
-  });
+        expect(step).toEqual({ messages: externalUrlMessages });
+        expect(
+          yield* readPreparedStep({
+            messages: nakafaUrlMessages,
+            stepNumber: 1,
+          })
+        ).toEqual({ messages: nakafaUrlMessages });
+      })
+  );
 
   it.effect(
     "marks when every step began, before it prepares the step, so the tools it runs count from there",
@@ -206,7 +229,10 @@ describe("nina/runtime/step", () => {
         );
         expect(yield* chatStep.startedAt).toBe(yield* Clock.currentTimeMillis);
         expect(prepared).toEqual(
-          readPreparedStep({ messages: externalUrlMessages, stepNumber: 0 })
+          yield* readPreparedStep({
+            messages: externalUrlMessages,
+            stepNumber: 0,
+          })
         );
       })
   );

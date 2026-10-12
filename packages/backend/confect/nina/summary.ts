@@ -26,8 +26,6 @@ import {
   Schema,
 } from "effect";
 
-/** Text one message contributes to a refresh transcript. */
-const MESSAGE_TOKENS = 1500;
 const MESSAGE_PAGE = 100;
 
 /**
@@ -133,7 +131,7 @@ function transcriptOf(docs: readonly MessageDoc[], orders: readonly number[]) {
       doc.tool || !doc.text
         ? Result.failVoid
         : Result.succeed(
-            `${doc.message?.role === "user" ? "Learner" : "Nina"}: ${boundText(doc.text, MESSAGE_TOKENS, "Message shortened.")}`
+            `${doc.message?.role === "user" ? "Learner" : "Nina"}: ${boundText(doc.text, NINA_BUDGET.foldMessage, "Message shortened.")}`
           )
     ),
     Arr.join("\n\n")
@@ -240,14 +238,21 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     });
     const summary = text.trim();
     // An answer cut at the output cap lost its last points, and saving it would
-    // drop them from every later summary too.
-    if (!summary || finishReason === "length") {
-      return yield* new NinaSummaryError({ operation: "generate" });
-    }
+    // drop them from every later summary too. Its text is not stored, but the
+    // call spent its tokens, and they count on the summary all the same.
+    const stored = summary !== "" && finishReason !== "length";
     yield* (yield* MutationRunner)
       .runMutation(refs.internal.nina.summaries.save, {
         chatId: turn.chatId,
-        text: boundText(summary, NINA_BUDGET.summary, "Summary shortened."),
+        ...(stored
+          ? {
+              text: boundText(
+                summary,
+                NINA_BUDGET.summary,
+                "Summary shortened."
+              ),
+            }
+          : {}),
         throughOrder: target,
         usage: {
           input: usage.inputTokens ?? 0,
@@ -255,6 +260,9 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
         },
       })
       .pipe(Effect.orDie);
+    if (!stored) {
+      return yield* new NinaSummaryError({ operation: "generate" });
+    }
   },
   Effect.catchTag("NinaSummaryError", (error) =>
     Effect.logWarning("Nina summary unavailable", {

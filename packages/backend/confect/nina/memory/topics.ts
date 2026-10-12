@@ -23,7 +23,7 @@ const SHALLOWEST_PATH = 2;
  * names the lesson for all of its translations. A page with no asset id, such
  * as the home page, shows no lesson.
  */
-export function lessonOf(page: NinaPage | undefined) {
+function lessonOf(page: NinaPage | undefined) {
   return Option.fromUndefinedOr(page?.nina.learning.assetId).pipe(
     Option.flatMap(Schema.decodeUnknownOption(LearningGraphAssetIdSchema)),
     Option.map((assetId) =>

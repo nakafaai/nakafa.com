@@ -1,7 +1,7 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { Config, Effect, Redacted, Schema } from "effect";
 
-export class ResearchProviderError extends Schema.TaggedError<ResearchProviderError>()(
+class ResearchProviderError extends Schema.TaggedError<ResearchProviderError>()(
   "ResearchProviderError",
   { message: Schema.String }
 ) {}

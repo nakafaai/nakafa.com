@@ -44,7 +44,7 @@ export function getSourceReferences(text: string) {
  * the address Nakafa reads: the same page on the production origin over https,
  * whichever scheme or `www` alias the learner wrote.
  */
-export function getNakafaReferences(text: string) {
+function getNakafaReferences(text: string) {
   const addresses = Arr.map(
     Arr.filter(getLinks(text), (link) => isNakafaHostname(link.hostname)),
     toNakafaAddress
