@@ -37,6 +37,11 @@ vi.mock("@convex-dev/agent", async (load) => {
 });
 
 const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
+/** The admission of a prompt with this text. */
+const withText = (text: string) => ({
+  ...args,
+  input: { ...args.input, prompt: { text } },
+});
 
 describe("native Nina admission", () => {
   beforeEach(() => {
@@ -165,10 +170,6 @@ describe("native Nina admission", () => {
 
   it("takes a prompt of exactly the limit and refuses a longer one with its own failure, before anything is held", async () => {
     const { t, owner, identity } = await fixture();
-    const withText = (text: string) => ({
-      ...args,
-      input: { ...args.input, prompt: { text } },
-    });
 
     await expect(
       owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH + 1)))
@@ -189,6 +190,23 @@ describe("native Nina admission", () => {
       await owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH)))
     );
     expect(taken.prompt.text).toHaveLength(NINA_PROMPT_LENGTH);
+  });
+
+  it("counts a character once however many code units it takes", async () => {
+    const { owner } = await fixture();
+    const emoji = "😀";
+
+    await expect(
+      owner.mutation(start, withText(emoji.repeat(NINA_PROMPT_LENGTH + 1)))
+    ).rejects.toMatchObject({ data: { code: "NINA_PROMPT_LENGTH" } });
+
+    const taken = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, withText(emoji.repeat(NINA_PROMPT_LENGTH)))
+    );
+    expect(Arr.fromIterable(taken.prompt.text)).toHaveLength(
+      NINA_PROMPT_LENGTH
+    );
   });
 
   it("refuses a third open turn before any credit is held, and frees a place when one settles", async () => {

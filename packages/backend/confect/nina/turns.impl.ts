@@ -2,7 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import { createThread, saveMessage, toUIMessages } from "@convex-dev/agent";
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import {
-  NINA_PROMPT_LENGTH,
+  isPromptWithinLimit,
   NINA_PROMPT_LENGTH_MESSAGE,
   NinaPromptError,
 } from "@repo/backend/client/nina/prompt";
@@ -53,7 +53,7 @@ const start = FunctionImpl.make(
     // A prompt over the limit is refused before it is hashed or held credits.
     if (
       args.input.kind === "message" &&
-      args.input.prompt.text.length > NINA_PROMPT_LENGTH
+      !isPromptWithinLimit(args.input.prompt.text)
     ) {
       return yield* new NinaPromptError({
         code: "NINA_PROMPT_LENGTH",

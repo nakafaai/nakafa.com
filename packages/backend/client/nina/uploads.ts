@@ -6,6 +6,8 @@ const MEBIBYTE = 1024 * 1024;
 export const NINA_FILE_MEBIBYTES = 8;
 export const NINA_FILE_SIZE = NINA_FILE_MEBIBYTES * MEBIBYTE;
 export const NINA_FILE_COUNT = 10;
+/** The most characters the name of one file can hold. A longer name is refused. */
+export const NINA_FILENAME_LENGTH = 255;
 /**
  * Documents travel inside the request body: the gateway accepts 16 MiB and
  * base64 adds a third, so one message keeps its documents to this many MiB in
