@@ -1,4 +1,4 @@
-# ADR 0023: Nina Messages Are Sealed By Replacing The Rows Of A Settled Turn
+# ADR 0024: Nina Messages Are Sealed By Replacing The Rows Of A Settled Turn
 
 ## Status
 
