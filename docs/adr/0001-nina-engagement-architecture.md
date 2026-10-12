@@ -124,8 +124,10 @@ production CAS service, and its URL is `https://cas.nakafa.com`. These are
 backend action configuration, not Next.js environment inputs. Resolve CAS
 configuration before asking the math specialist to generate tool calls, so a
 missing service cannot consume generation tokens or masquerade as checked work.
-Release acceptance must run a real Agent math request and verify the stored
-deterministic artifact, not only the answer's text.
+No release check runs a real Agent math request yet, so the stored
+deterministic artifact of a math request is verified only against controlled
+models. The release gate under Verification asks about a Nakafa page, not for a
+calculation.
 
 Provider history includes calls only for currently registered capabilities.
 The AI SDK prunes unavailable call/result pairs; validated evidence remains in
@@ -142,11 +144,70 @@ analytics remains subject to account consent.
 ## Verification
 
 Contract tests cover typed failures, credit reservation and settlement,
-idempotency, ownership, uploads, context, and retained conversation history. Agent integration
-tests use the real component with controlled provider models. Local production
-browser acceptance checks optimistic sending, reconnects, attachments, scrolling,
-and stable layout. Provider-backed acceptance verifies the configured Gateway
-separately from deterministic tests.
+idempotency, ownership, uploads, context, and retained conversation history.
+Agent integration tests use the real component with controlled provider models.
+Local production browser acceptance opens the composer on the home page, the
+chat page, and the lesson sheet at two widths. It checks the geometry of the
+controls and the preview and removal of an attachment. No browser test sends a
+message, reconnects a stream, or scrolls a thread: the local backend runs no
+model, because a local deployment cannot reach the gateway.
+
+### Release gate
+
+Every check above uses a controlled model. The release gate runs one real turn
+through the Convex AI gateway and judges the turn that Nina stored. Run it before
+a release of anything under `packages/backend/confect/nina` or
+`packages/backend/confect/gateway`, on a deployment that already runs the
+change. It is not part of CI.
+
+```sh
+pnpm --filter @repo/backend nina:gate
+```
+
+The command reads the deployment from the caller's own configuration:
+`CONVEX_DEPLOYMENT` in the shell or in `packages/backend/.env.local`. It refuses
+production, and it refuses to run when no deployment is named. It signs in a
+synthetic learner with the rows the acceptance runtime creates, asks one question
+about a lesson with a link to that lesson's own page, and reads the stored turn
+through `nina/conversation:get` once the turn has settled and, for a short while
+longer, until its suggestions are saved. It reads the steps of the chat agent
+from the Agent journal of the thread, because the usage record sums the steps of
+an agent and cannot show which step read the cache. A link to Nakafa's own site
+starts Nina's first step with the Nakafa capability, so the answer always has a
+second step. The deployment must hold the signed release of that lesson.
+
+The command prints one table: the steps, input, cached, output and reasoning
+tokens, the cost in US dollars, and the seconds the turn took, for each agent and
+in total. A line under it shows the cached input tokens of each chat step. The
+command prints no message text. Then it removes the chat and starts the app's own
+deletion of the learner, which the account recovery sweep finishes in about
+twenty minutes. A removal that fails is logged with the learner or chat it left
+behind, and it does not change the verdict.
+
+The gate passes only when:
+
+- the turn is complete, which the settlement allows only once the Agent journal
+  holds a final answer with text;
+- every call of the usage record ran on the gateway's model with the gateway's
+  provider id, as the usage rows store them;
+- the chat agent took at least two steps and each step after the first read
+  input tokens from the provider's cache, which the first step wrote;
+- no chat step ended at its output cap, and no other agent wrote as many tokens
+  as its steps would write at the cap of their purpose;
+- the turn ended inside the total budget of the chat call, counted from its
+  admission.
+
+It proves that a real provider run through the production adapter ends in an
+answer, records its tokens and its cost, and reads its prompt cache at every
+step after the first. A first step that already read the cache means that an
+earlier turn with the same prompt prefix warmed it, which the provider allows for
+about five minutes, so the later reads then do not prove that this turn wrote the
+cache. The line under the table says so, and the gate is run again after five
+minutes. The gate does not prove that a specialist step stayed under its cap,
+because the usage record sums the steps of those agents. It does not prove the
+quality of an answer, because it reads no message text. It does not cover the
+math, research, and Quran capabilities, memory capture, the conversation summary,
+attachments, or a turn on production, where a real turn is checked by hand.
 
 ## Learning engagement
 

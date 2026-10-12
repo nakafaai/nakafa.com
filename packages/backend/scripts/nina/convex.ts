@@ -1,0 +1,120 @@
+import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
+import { sanitizeAcceptanceCommandError } from "@repo/backend/scripts/content/acceptance/error";
+import { gateError } from "@repo/backend/scripts/nina/error";
+import {
+  Array as Arr,
+  Config,
+  Context,
+  Duration,
+  Effect,
+  Stream,
+} from "effect";
+import { ChildProcess } from "effect/process";
+
+/**
+ * How to start the Convex CLI: the program, its first arguments, the folder it
+ * runs in, and how long one command may take. The package's own folder holds
+ * the CLI, and the `.env.local` that names the dev deployment. The deadline is
+ * generous for one call to a function and stops a CLI that hangs. A test points
+ * the CLI at a double.
+ */
+export const ConvexCli = Context.Reference(
+  "@repo/backend/scripts/nina/convex/ConvexCli",
+  {
+    defaultValue: () => ({
+      args: ["node_modules/convex/bin/main.js"],
+      command: process.execPath,
+      cwd: `${import.meta.dirname}/../..`,
+      deadline: Duration.minutes(2),
+    }),
+  }
+);
+
+/** The two settings the CLI reads to pick a deployment. */
+const DEPLOYMENT_SETTINGS = ["CONVEX_DEPLOYMENT", "CONVEX_DEPLOY_KEY"];
+
+/** Whether a deployment name or a deploy key belongs to the production deployment. */
+function namesProduction(setting: string) {
+  return (
+    setting.startsWith("prod:") ||
+    setting.includes(CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT)
+  );
+}
+
+/**
+ * Refuses to go on unless the caller's configuration names a deployment, and
+ * refuses the production deployment whatever the way it is named. The gate
+ * creates a learner and spends credits, so it runs where the caller already
+ * develops, which is the dev deployment in `packages/backend/.env.local`. The
+ * messages never repeat a setting, which may hold a key.
+ */
+export const requireDevelopment = Effect.fn("ninaGate.requireDevelopment")(
+  function* () {
+    const named = yield* Effect.forEach(DEPLOYMENT_SETTINGS, (name) =>
+      Config.option(Config.NonEmptyString(name))
+    ).pipe(Effect.orDie);
+    const settings = Arr.getSomes(named);
+    if (Arr.isReadonlyArrayEmpty(settings)) {
+      return yield* gateError(
+        "No deployment is configured. Set CONVEX_DEPLOYMENT, as packages/backend/.env.local does for the dev deployment."
+      );
+    }
+    if (Arr.some(settings, namesProduction)) {
+      return yield* gateError(
+        "Refusing to run against the production deployment. The gate creates a learner and spends credits, so it runs on the dev deployment."
+      );
+    }
+  }
+);
+
+/** Collects one output stream of a child process as text. */
+const collect = <E>(stream: Stream.Stream<Uint8Array, E>) =>
+  stream.pipe(Stream.decodeText(), Stream.mkString);
+
+/**
+ * Runs the Convex CLI once, in the deployment the caller's configuration
+ * names, and returns what it printed. A failed command reports its error
+ * output without any of `sensitiveValues`.
+ */
+export const runConvex = Effect.fn("ninaGate.runConvex")(function* (
+  operation: string,
+  args: readonly string[],
+  sensitiveValues: readonly string[] = []
+) {
+  const cli = yield* ConvexCli;
+  const [stdout, stderr, code] = yield* Effect.gen(function* () {
+    const child = yield* ChildProcess.make(
+      cli.command,
+      [...cli.args, ...args],
+      { cwd: cli.cwd, extendEnv: true, stdin: "ignore" }
+    );
+    return yield* Effect.all(
+      [collect(child.stdout), collect(child.stderr), child.exitCode],
+      { concurrency: "unbounded" }
+    );
+  }).pipe(
+    Effect.scoped,
+    Effect.mapError((error) =>
+      gateError(`${operation} could not run the Convex CLI: ${error.message}`)
+    ),
+    // A command that times out is interrupted, which stops its process.
+    Effect.timeoutOrElse({
+      duration: cli.deadline,
+      orElse: () =>
+        Effect.fail(
+          gateError(
+            `${operation} did not answer within ${Duration.format(cli.deadline)}.`
+          )
+        ),
+    })
+  );
+  if (code !== 0) {
+    const detail = sanitizeAcceptanceCommandError(stderr, sensitiveValues);
+    return yield* gateError(
+      detail.length > 0
+        ? `${operation} failed: ${detail}`
+        : `${operation} failed.`
+    );
+  }
+  return stdout;
+});
