@@ -16,7 +16,7 @@ export const webSearchMaxQueries = 4;
  * names more is refused, as a call with more queries than
  * `webSearchMaxQueries` is, and runs no search.
  */
-export const webSearchMaxSites = 5;
+const webSearchMaxSites = 5;
 /**
  * The most characters one search query may have. The search provider documents
  * its `query` with `maxLength: 500` (Firecrawl search endpoint,
@@ -56,7 +56,7 @@ const ScrapeOutputSchema = Schema.Struct({
   }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
   error: Schema.optional(Schema.String),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export const WebSearchInputSchema = Schema.Struct({
+const WebSearchInputSchema = Schema.Struct({
   queries: Schema.Array(queryInputSchema)
     .pipe(
       Schema.mutable,
@@ -174,7 +174,7 @@ const ResearchFindingSchema = Schema.Struct({
  * decides which findings count, so a stray URL or an unsupported finding drops
  * that finding instead of rejecting the whole answer.
  */
-export const ResearchOutputSchema = Schema.Struct({
+const ResearchOutputSchema = Schema.Struct({
   findings: Schema.Array(ResearchFindingSchema)
     .pipe(Schema.mutable)
     .annotate({
