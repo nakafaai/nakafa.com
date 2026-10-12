@@ -117,6 +117,13 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
  * Caches complete Page navigation under the exact signed family owner. The
  * `use cache` boundary stays so that the shells still prerender and the page
  * tag still expires them; behind it the catalog comes from the content store.
+ *
+ * This entry keeps the hourly lifetime on purpose. The app layout reads it for
+ * every page, so it is the one entry of a page that stays at or below 3600
+ * seconds, and Next.js writes the `Cache-Control` of a page from the lowest
+ * lifetime that the page used. Without it, a page would answer the AFDocs
+ * `cache-header-hygiene` check with the long lifetime of its content entries.
+ * See `profile.ts`.
  */
 async function getPageNavigation(locale: Locale) {
   "use cache";
