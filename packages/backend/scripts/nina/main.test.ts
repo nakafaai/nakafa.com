@@ -19,13 +19,6 @@ const mocks = vi.hoisted(() => {
 vi.mock("@effect/platform-node/NodeRuntime", () => ({
   runMain: mocks.runMain,
 }));
-vi.mock("@repo/backend/scripts/customers/convex", async () => {
-  const { ConfigProvider } = await import("effect");
-  return {
-    loadCustomerEnvProvider: () =>
-      Effect.succeed(ConfigProvider.fromEnv({ env: {} })),
-  };
-});
 vi.mock("@repo/backend/scripts/nina/live", async () => {
   const { Layer } = await import("effect");
   return { DeploymentLive: Layer.empty };

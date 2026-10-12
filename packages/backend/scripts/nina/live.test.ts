@@ -1,7 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { ConvexCli } from "@repo/backend/scripts/nina/convex";
+import { ConvexCli } from "@repo/backend/scripts/development/cli";
 import {
   Deployment,
   type Question,
@@ -34,7 +34,8 @@ const JOURNAL =
  * A double for the Convex CLI that logs each call, with the settings that pick
  * its deployment, and answers the functions of the gate the way the deployment
  * does. Like the real CLI, it loads the \`.env\` file of its folder first, and
- * that fills in only the settings that are not set.
+ * that fills in only the settings that are not set. It fails the function that
+ * LIVE_TEST_FAILS names, after it logs the call.
  */
 const FAKE_CLI = `
 import { appendFileSync, existsSync } from "node:fs";
@@ -51,6 +52,10 @@ const env = {
 };
 const fn = args.find((arg) => /^[A-Za-z][\\w/-]*:[A-Za-z]\\w*$/.test(arg));
 appendFileSync(log, JSON.stringify({ args, env, fn }) + "\\n");
+if (fn !== undefined && process.env.LIVE_TEST_FAILS === fn) {
+  process.stderr.write("boom");
+  process.exit(1);
+}
 const last = args[args.length - 1];
 const answers = {
   "adapter:create": () =>
@@ -210,5 +215,31 @@ describe("the deployment of the release gate over the Convex CLI", () => {
       );
       expect(yield* fs.exists(log)).toBe(false);
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
+    "reports a command that fails as a failure of the gate, with the message of the command",
+    () =>
+      Effect.gen(function* () {
+        const { cli } = yield* fixture;
+
+        const error = yield* Effect.gen(function* () {
+          const deployment = yield* Deployment;
+          return yield* deployment.signIn;
+        }).pipe(
+          Effect.provide(DeploymentLive),
+          settings({ CONVEX_DEPLOYMENT: "dev:happy-animal-123" }),
+          Effect.provideService(ConvexCli, {
+            ...cli,
+            env: { LIVE_TEST_FAILS: "adapter:create" },
+          }),
+          Effect.flip
+        );
+
+        expect(error).toMatchObject({
+          _tag: "NinaGateError",
+          message: "Learner account failed: boom",
+        });
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 });
