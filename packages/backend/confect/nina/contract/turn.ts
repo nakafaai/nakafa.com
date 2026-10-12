@@ -64,10 +64,6 @@ export const NinaTurnState = Schema.Union([
     status: Schema.Literal("cancelled"),
     finishedAt: Schema.Finite,
   }),
-  // Rows stored before the turn lifecycle hold this state, and no code writes
-  // it. `nina.unanswered.settle` ends them, and the change that deletes that
-  // function deletes this member with it.
-  Schema.Struct({ status: Schema.Literal("unanswered") }),
 ]);
 /**
  * Milliseconds counted from the admission of a turn, never below zero. A
