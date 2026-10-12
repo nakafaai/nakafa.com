@@ -31,6 +31,15 @@ const NO_CREDITS = {
 /** The new chat page, where the first prompt of a chat is written. */
 const onThePage = (page: Page) => page.locator("main main");
 
+/** Waits until the page has painted twice, so what a press queued is on the page. */
+const afterPaint = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      )
+  );
+
 /** The arguments of a call that starts a chat: the words of the prompt. */
 const StartArguments = Schema.Tuple([
   Schema.Struct({
@@ -56,6 +65,12 @@ test.describe("A prompt over the limit at 390px", () => {
           await expect(noticeWith(page, LIMIT)).toBeVisible();
           // The words stay for the learner to shorten.
           await expect(composerOf(composer)).toHaveValue(tooLong);
+          // Enter pressed again says it in the same notice, not in a stack of
+          // copies beside it.
+          await composerOf(composer).press("Enter");
+          await composerOf(composer).press("Enter");
+          await afterPaint(page);
+          await expect(noticeWith(page, LIMIT)).toHaveCount(1);
         });
 
         // The prompt that fits is the first the server hears of: the calls
@@ -140,45 +155,58 @@ const readCover = (notice: HTMLElement, names: readonly string[]) => {
 const GERMAN_LESSON =
   "/de/faecher/mathematik/potenzen-und-logarithmen/grundlagen";
 
-test.describe("A refused prompt in German at 320px", () => {
-  test.use({ viewport: { height: 640, width: 320 } });
-  test.describe.configure({ timeout: 180_000 });
+/** The refusals whose German sentence the sheet places, as the server names them. */
+const GERMAN_REFUSALS = [
+  { failure: NO_CREDITS, reason: "credits", sentence: "Deine Credits reichen" },
+  {
+    failure: TOO_LONG,
+    reason: "its length",
+    // German writes 100,000 as 100.000.
+    sentence: `Kürze die Nachricht auf höchstens ${new Intl.NumberFormat("de").format(NINA_PROMPT_LENGTH)} Zeichen`,
+  },
+] as const;
 
-  test("tells the learner without covering the text box or the send button", async ({
-    baseURL,
-    page,
-  }) => {
-    await runOnPage(page, baseURL, (origin) =>
-      Effect.gen(function* () {
-        const { changes } = yield* openChatPage(page, origin, "de");
-        yield* Effect.promise(async () => {
-          await page.goto(GERMAN_LESSON);
-          await page
-            .getByRole("button", { exact: true, name: "Nina fragen" })
-            .click();
-        });
-        const composer = page.locator(SHEET_POPUP);
-        yield* waitForSlide(composer);
-        yield* write(composer, "Erkläre mir die Ableitung", GERMAN);
-        changes.failNext(START, NO_CREDITS);
-        yield* Effect.promise(() =>
-          composerOf(composer, GERMAN).press("Enter")
-        );
-        const notice = noticeWith(page, "Deine Credits reichen");
-        // The notice slides into place; its place is read once it stopped.
-        yield* Effect.promise(async () => {
-          await expect(notice).toBeVisible();
-          await expect(notice).toHaveAttribute("data-mounted", "true");
-        });
-        yield* waitForSlide(notice);
+for (const { failure, reason, sentence } of GERMAN_REFUSALS) {
+  test.describe(`A prompt refused for ${reason} in German at 320px`, () => {
+    test.use({ viewport: { height: 640, width: 320 } });
+    test.describe.configure({ timeout: 180_000 });
 
-        const cover = yield* Effect.promise(() =>
-          notice.evaluate(readCover, [GERMAN.input, GERMAN.send])
-        );
-        yield* Effect.sync(() => {
-          expect(cover).toEqual({ send: 0, text: 0 });
-        });
-      })
-    );
+    test("tells the learner without covering the text box or the send button", async ({
+      baseURL,
+      page,
+    }) => {
+      await runOnPage(page, baseURL, (origin) =>
+        Effect.gen(function* () {
+          const { changes } = yield* openChatPage(page, origin, "de");
+          yield* Effect.promise(async () => {
+            await page.goto(GERMAN_LESSON);
+            await page
+              .getByRole("button", { exact: true, name: "Nina fragen" })
+              .click();
+          });
+          const composer = page.locator(SHEET_POPUP);
+          yield* waitForSlide(composer);
+          yield* write(composer, "Erkläre mir die Ableitung", GERMAN);
+          changes.failNext(START, failure);
+          yield* Effect.promise(() =>
+            composerOf(composer, GERMAN).press("Enter")
+          );
+          const notice = noticeWith(page, sentence);
+          // The notice slides into place; its place is read once it stopped.
+          yield* Effect.promise(async () => {
+            await expect(notice).toBeVisible();
+            await expect(notice).toHaveAttribute("data-mounted", "true");
+          });
+          yield* waitForSlide(notice);
+
+          const cover = yield* Effect.promise(() =>
+            notice.evaluate(readCover, [GERMAN.input, GERMAN.send])
+          );
+          yield* Effect.sync(() => {
+            expect(cover).toEqual({ send: 0, text: 0 });
+          });
+        })
+      );
+    });
   });
-});
+}

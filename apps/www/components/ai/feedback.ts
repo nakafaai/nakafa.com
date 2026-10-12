@@ -170,15 +170,24 @@ export const ninaResponseFeedback = {
  */
 export const NINA_NOTICE_POSITION = "top-center";
 
-/** Report operational failures and show only the caller's localized message. */
+/**
+ * Report operational failures and show only the caller's localized message.
+ * A sentence has one notice: a failure that says the same thing again, such as
+ * Enter pressed again on a prompt that is too long, updates the notice in
+ * place instead of stacking a copy of it.
+ */
 export const reportNinaFailure = Effect.fn("nina.feedback")(function* (
   error: NinaFailure,
   message: string
 ) {
   yield* Effect.sync(() => {
-    if (ninaFailureFeedback[error.code].report) {
+    const feedback = ninaFailureFeedback[error.code];
+    if (feedback.report) {
       captureException(error, { source: "nina-admission" });
     }
-    toast.error(message, { position: NINA_NOTICE_POSITION });
+    toast.error(message, {
+      id: `nina-failure-${feedback.message}`,
+      position: NINA_NOTICE_POSITION,
+    });
   });
 });

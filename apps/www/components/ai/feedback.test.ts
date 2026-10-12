@@ -6,7 +6,7 @@ import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
 import de from "@repo/internationalization/dictionaries/de.json";
 import en from "@repo/internationalization/dictionaries/en.json";
 import id from "@repo/internationalization/dictionaries/id.json";
-import { Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Record as Rec } from "effect";
 import { createTranslator } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -45,6 +45,7 @@ describe("chat runtime feedback", () => {
         );
 
         expect(toast.error).toHaveBeenCalledExactlyOnceWith(message, {
+          id: expect.any(String),
           position: "top-center",
         });
         expect(captureException).not.toHaveBeenCalled();
@@ -64,10 +65,46 @@ describe("chat runtime feedback", () => {
 
       expect(toast.error).toHaveBeenCalledExactlyOnceWith(
         copy.fallbackMessage,
-        { position: "top-center" }
+        { id: expect.any(String), position: "top-center" }
       );
       expect(captureException).not.toHaveBeenCalled();
     })
+  );
+
+  it.effect(
+    "shows a sentence in one notice however often it is said, and another sentence in its own",
+    () =>
+      Effect.gen(function* () {
+        const lost = new NinaConnectionError({
+          code: "NINA_CONNECTION_FAILED",
+          message: "Private transport diagnostic",
+        });
+        const offline = new NinaConnectionError({
+          code: "NINA_OFFLINE",
+          message: "Convex is offline, so the request was not started.",
+        });
+        const credits = new NinaCreditError({
+          code: "INSUFFICIENT_CREDITS",
+          message: "The request could not be admitted.",
+        });
+
+        yield* reportNinaFailure(lost, copy.fallbackMessage);
+        yield* reportNinaFailure(lost, copy.fallbackMessage);
+        // A lost connection and an offline call say the same sentence.
+        yield* reportNinaFailure(offline, copy.fallbackMessage);
+        yield* reportNinaFailure(credits, copy.insufficientCreditsMessage);
+
+        const [first, again, other, apart] = Arr.map(
+          vi.mocked(toast.error).mock.calls,
+          ([, options]) => options?.id
+        );
+        // A notice without an id is a new notice each time, so the id must be set.
+        expect(first).toBeTypeOf("string");
+        expect(again).toBe(first);
+        expect(other).toBe(first);
+        expect(apart).toBeTypeOf("string");
+        expect(apart).not.toBe(first);
+      })
   );
 
   it.effect("reports an unexpected failure with generic user copy", () =>
@@ -84,6 +121,7 @@ describe("chat runtime feedback", () => {
       expect(toast.error).toHaveBeenCalledExactlyOnceWith(
         copy.fallbackMessage,
         {
+          id: expect.any(String),
           position: "top-center",
         }
       );
