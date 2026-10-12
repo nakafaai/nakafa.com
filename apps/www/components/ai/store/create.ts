@@ -6,6 +6,9 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
 
+/** The browser storage key under which the store remembers the chat the sheet has open. */
+export const AI_STORAGE_KEY = "nakafa-ai";
+
 /** Creates one scoped Zustand store for Nina UI state. */
 export function createAiStore() {
   return createStore<AiStore>()(
@@ -108,7 +111,7 @@ export function createAiStore() {
         warm: () => set({ warmed: true }),
       }),
       {
-        name: "nakafa-ai",
+        name: AI_STORAGE_KEY,
         partialize: (state) => ({ activeChatId: state.activeChatId }),
         storage: createJSONStorage(() => localStorage),
         version: 1,

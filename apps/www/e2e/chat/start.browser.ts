@@ -7,16 +7,17 @@ import {
   runOnPage,
   START,
 } from "@/e2e/support/chat";
-import { SHEET_POPUP } from "@/e2e/support/selector";
+import {
+  composerOf,
+  inTheSheet,
+  openSheet,
+  promptWith,
+  UNAVAILABLE,
+  UNCONFIRMED,
+} from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const PROMPT = "Why is the derivative of sine the cosine?";
-/** What the pages tell the learner when a prompt could not be confirmed. */
-const UNCONFIRMED =
-  "We could not confirm the request. Check your connection and try again.";
-/** What a chat says when Nina's answer failed, which the local backend cannot avoid. */
-const UNAVAILABLE =
-  "Nina cannot access the AI service right now. Please try again later. If this continues, contact Nakafa support.";
 /** The curriculum context a lesson link carries. */
 const CONTEXT = "high-school~functions";
 /** The Convex name of `nina.messages.list`, the query that reads the messages of a chat. */
@@ -24,13 +25,8 @@ const MESSAGES = "nina/messages:list";
 /** The address of a chat that the page moves to once its first prompt is admitted. */
 const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
 
-/** The box where the learner writes to Nina, inside a surface. */
-const composerOf = (scope: Locator) =>
-  scope.getByRole("textbox", { name: "Ask Nina anything..." });
-
 /** The prompt a surface shows as a message: the composer holds the same words as text. */
-const promptIn = (scope: Locator) =>
-  scope.locator('[data-slot="bubble"]').filter({ hasText: PROMPT });
+const promptIn = (scope: Locator) => promptWith(scope, PROMPT);
 
 /** Writes the prompt, and waits until the surface knows who is signed in and lets it be sent. */
 const write = async (scope: Locator) => {
@@ -76,8 +72,13 @@ const givesBackWhenRefused = (page: Page, scope: Locator, changes: Changes) =>
     await expect(page).not.toHaveURL(OPENED_CHAT);
   });
 
-/** The new chat page, where an admitted prompt moves to its own chat. */
-const onThePage = (page: Page) => page.locator("main main");
+/**
+ * The new chat page, where an admitted prompt moves to its own chat. The page
+ * the learner left stays in the document, hidden, for a moment after the chat
+ * opens, so only the page a learner can see counts.
+ */
+const onThePage = (page: Page) =>
+  page.locator("main main").filter({ visible: true });
 
 /** Waits until the page of the chat that the new chat page moved to holds the prompt. */
 const pageOpensChat = (page: Page) => async () => {
@@ -88,16 +89,6 @@ const pageOpensChat = (page: Page) => async () => {
     timeout: readinessTimeoutMilliseconds,
   });
 };
-
-/** Nina's sheet on a lesson, where an admitted prompt opens its chat inside the sheet. */
-const inTheSheet = (page: Page) => page.locator(SHEET_POPUP);
-
-/** Opens the sheet on a lesson, once the learner is signed in. */
-const openSheet = (page: Page) =>
-  Effect.promise(async () => {
-    await page.goto(LESSON_PATH);
-    await page.getByRole("button", { exact: true, name: "Ask Nina" }).click();
-  });
 
 /** Waits until the sheet shows the chat its prompt opened, with the answer that failed. */
 const sheetOpensChat = (page: Page) => async () => {

@@ -28,6 +28,7 @@ const LIST_QUERY = "chats/queries:getOwnChats";
 export const START = "nina/turns:start";
 export const RENAME = "chats/mutations:updateChatTitle";
 export const DELETE = "chats/mutations:deleteChat";
+const VISIBILITY = "chats/mutations:updateChatVisibility";
 /** What the pages say when a change fails. */
 export const FAILED = "We could not complete this action. Please try again.";
 
@@ -86,9 +87,13 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
 
   /**
    * Calls one function of the backend as the learner and returns the value it
-   * answered. The local backend stops a function after one second, which a busy
-   * machine can exceed now and then, so a call that timed out is made again:
-   * every call here gives the same answer when it runs twice.
+   * answered. Convex stops a query or mutation after one second of its own
+   * code (https://docs.convex.dev/production/state/limits), and the local
+   * backend has no setting to raise that. A machine busy with other work
+   * stretches a call past it now and then, and the backend answers "Function
+   * execution timed out (maximum duration: 1s)". Such a call is made again, and
+   * only such a call: a function that timed out stored nothing, and every call
+   * here gives the same answer when it runs twice.
    */
   const call = (kind: "mutation" | "query", path: string, args: object) =>
     Effect.promise(async () =>
@@ -150,6 +155,10 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
       Effect.scoped,
       Effect.provide(nodeServicesLayer)
     ),
+    /** Makes a chat of the learner readable by anyone who has its link. */
+    share: Effect.fn("NakafaE2E.share")(function* (chatId: string) {
+      yield* call("mutation", VISIBILITY, { chatId, visibility: "public" });
+    }),
     /** Starts a chat the way the new chat page does, and returns where it lives. */
     startChat: Effect.fn("NakafaE2E.startChat")(function* (text: string) {
       const now = yield* Clock.currentTimeMillis;

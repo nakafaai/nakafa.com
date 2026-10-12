@@ -20,9 +20,15 @@ export const signInLearner = Effect.fn("NakafaE2E.signInLearner")(
       prefix: "nakafa-learner-",
     });
     const output = `${directory}/cookie.json`;
-    // The local backend stops a function after one second, which a busy machine
-    // can exceed now and then. The command writes the cookie file last, so a
-    // run that failed leaves nothing behind, and the next one makes a new learner.
+    // Convex stops a query or mutation after one second of its own code
+    // (https://docs.convex.dev/production/state/limits), and the local backend
+    // has no setting to raise that. A machine busy with other work stretches
+    // the functions this command calls past it now and then ("Function
+    // execution timed out (maximum duration: 1s)"), and the command only exits
+    // with a code, so any failure is tried again. The command writes the
+    // cookie file last, so a run that failed leaves no cookie and the next one
+    // signs in a new learner. The account of the failed run may stay in the
+    // local database, which is thrown away with the runtime.
     yield* runAcceptanceCommand("learner", output).pipe(
       Effect.retry({ times: 2 })
     );

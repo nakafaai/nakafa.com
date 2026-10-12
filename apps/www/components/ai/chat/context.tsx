@@ -1,6 +1,5 @@
 "use client";
 
-import type { Ref } from "@confect/core";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
@@ -16,27 +15,34 @@ import {
   useState,
   useTransition,
 } from "react";
+import { useStore } from "zustand";
 import { readChatAccess } from "@/components/ai/chat/access";
 import { isChatBusy } from "@/components/ai/chat/busy";
-import { optimisticCancel, readStopFailure } from "@/components/ai/chat/cancel";
+import { optimisticCancel } from "@/components/ai/chat/cancel";
 import { draftMessage } from "@/components/ai/chat/messages";
+import {
+  type ChatStoreApi,
+  ChatStoreContext,
+  createChatStore,
+} from "@/components/ai/chat/store.client";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 import { useConvexAuth } from "@/components/providers/convex";
 import { useViewer } from "@/lib/identity/client";
 
-/** The failures a stop can end with, besides a lost connection. */
-type CancelError = Ref.Error<typeof nina.lifecycle.cancel>;
-
 const ChatContext = createContext<ChatContextValue | null>(null);
 
-/** Reads the authorized facts of one conversation: its chat and latest turn. */
-function useConversation(chatId: Id<"chats">) {
+/**
+ * Reads the authorized facts of one conversation: its chat and latest turn.
+ * A chat its learner is deleting is not read: the server is about to delete
+ * it, and a read that finds it gone fails the page.
+ */
+function useConversation(chatId: Id<"chats">, leaving: boolean) {
   const authenticating = useConvexAuth((auth) => auth.isLoading);
   const result = useQuery(
     nina.conversation.get,
-    authenticating ? "skip" : { chatId }
+    authenticating || leaving ? "skip" : { chatId }
   );
   if (QueryResult.isFailure(result)) {
     throw result.error;
@@ -53,16 +59,13 @@ function useConversation(chatId: Id<"chats">) {
  * streams. Each action is one function for the life of the provider and
  * reads the latest render when it runs.
  */
-function useChatState(chatId: Id<"chats">) {
-  const { chat, turn } = useConversation(chatId);
-  const submission = useNinaSubmission();
+function useChatState(chatId: Id<"chats">, store: ChatStoreApi) {
+  const leaving = useStore(store, (state) => state.leaving);
+  const { chat, turn } = useConversation(chatId, leaving);
+  const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
   const [draft, showDraft] = useOptimistic<NinaMessage | null>(null);
-  const [stopFailure, setStopFailure] = useState<{
-    failure: CancelError | NinaConnectionError;
-    order: number | undefined;
-  } | null>(null);
   const setText = useAi((state) => state.setText);
   const opening = useAi(
     (state) => state.openingChat?.receipt.chatId === chatId
@@ -93,7 +96,6 @@ function useChatState(chatId: Id<"chats">) {
     chatId,
     isPending,
     optimisticallyCancel,
-    setStopFailure,
     setText,
     showDraft,
     startTransition,
@@ -111,7 +113,8 @@ function useChatState(chatId: Id<"chats">) {
       if (now.isPending) {
         return;
       }
-      now.setStopFailure(null);
+      const { setStopFailure } = store.getState();
+      setStopFailure(null);
       const stoppedOrder = now.turn?.order;
       const cancelTurn = now.cancelChat.withOptimisticUpdate(
         optimisticCancel(DateTime.toEpochMillis(DateTime.nowUnsafe()))
@@ -131,7 +134,7 @@ function useChatState(chatId: Id<"chats">) {
           Effect.matchEffect({
             onFailure: (failure) =>
               Effect.sync(() =>
-                now.setStopFailure({ failure, order: stoppedOrder })
+                setStopFailure({ failure, order: stoppedOrder })
               ),
             onSuccess: () => Effect.void,
           })
@@ -209,7 +212,6 @@ function useChatState(chatId: Id<"chats">) {
     chat,
     chatId,
     draft,
-    error: submission.error ?? readStopFailure(stopFailure, turn),
     isLoading: loading,
     isPending,
     owner,
@@ -244,13 +246,21 @@ export function ChatProvider({
   );
 }
 
-/** The state of one chat, which lives and ends with its key. */
+/**
+ * The state of one chat, which lives and ends with its key: the context its
+ * readers use, and the store of what its own actions write.
+ */
 function ChatConversation({
   chatId,
   children,
 }: PropsWithChildren<{ chatId: Id<"chats"> }>) {
-  const value = useChatState(chatId);
-  return <ChatContext value={value}>{children}</ChatContext>;
+  const [store] = useState(createChatStore);
+  const value = useChatState(chatId, store);
+  return (
+    <ChatStoreContext value={store}>
+      <ChatContext value={value}>{children}</ChatContext>
+    </ChatStoreContext>
+  );
 }
 
 /** Selects one part of the conversation's state and actions. */

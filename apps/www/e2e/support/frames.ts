@@ -56,6 +56,8 @@ export const SentSchema = Schema.Union([
  */
 export const GivenSchema = Schema.Union([
   Schema.Struct({
+    requestId: Schema.Finite,
+    success: Schema.Boolean,
     ts: Schema.optionalKey(Schema.Uint8ArrayFromBase64),
     type: Schema.Literal("MutationResponse"),
   }),

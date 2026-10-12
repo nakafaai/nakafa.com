@@ -22,7 +22,7 @@ describe("research prompt", () => {
       "Call webSearch once with every query the task needs."
     );
     expect(prompt).toContain("Search rules:");
-    expect(prompt).toContain("Every webSearch call must set sourcePreference");
+    expect(prompt).not.toContain("sourcePreference");
     expect(prompt).not.toContain("evidence notes");
     expect(prompt).not.toContain("# Evidence Output");
   });
@@ -48,6 +48,18 @@ describe("research prompt", () => {
       "Do not rewrite a specific source request into a generic trends query."
     );
     expect(prompt).toContain("Avoid YouTube, social posts, and listicles");
+  });
+
+  it("asks for queries that reach an official, first-party, or primary source, and for its results when answering", () => {
+    const search = researchSearchPrompt({ context, locale: "id" });
+    const synthesis = researchPrompt({ context, locale: "id" });
+
+    expect(search).toContain(
+      "When the task asks for an official, first-party, or primary source, write queries that reach it and name its site in the query."
+    );
+    expect(synthesis).toContain(
+      "When the task asks for an official, first-party, or primary source, prefer the results from that source for findings and citations."
+    );
   });
 
   it("includes runtime context with unknown role fallback", () => {
@@ -80,7 +92,10 @@ describe("research prompt", () => {
     expect(nakafaWebSearch).toContain(
       "named products, APIs, libraries, and features"
     );
-    expect(nakafaWebSearch).toContain("Always set sourcePreference");
+    expect(nakafaWebSearch).toContain(
+      "write queries that reach it: include the exact named source and its official domain."
+    );
+    expect(nakafaWebSearch).not.toContain("sourcePreference");
     expect(nakafaWebSearch).toContain(
       "Use returned titles and URLs as citation data"
     );

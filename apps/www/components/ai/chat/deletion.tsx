@@ -12,11 +12,17 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useChange } from "@/components/ai/chat/change.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
+import { useChatStore } from "@/components/ai/chat/store.client";
 import { reportClientException } from "@/lib/analytics/client";
 import { requireConvexOnline } from "@/lib/convex/online";
 import { useViewer } from "@/lib/identity/client";
 
-/** Owns destructive confirmation and routes away only after confirmed deletion. */
+/**
+ * Owns destructive confirmation and routes away only after confirmed deletion.
+ * The press hides the chat from the page at once, because the server's delete
+ * makes every read of it fail, and the page must not show that as an error.
+ * A refused delete shows the chat again.
+ */
 export function ChatDeletion({
   chat,
   open,
@@ -32,6 +38,8 @@ export function ChatDeletion({
   const user = useViewer((s) => s.account);
   const { change, isPending } = useChange();
   const deleteChat = useDeleteChatMutation();
+  const leave = useChatStore((state) => state.leave);
+  const stay = useChatStore((state) => state.stay);
   const convex = useConvex();
   /** Leave the current route and delete the owned chat. */
   const handleDelete = () => {
@@ -41,7 +49,12 @@ export function ChatDeletion({
     change(() =>
       Effect.runPromise(
         requireConvexOnline(convex).pipe(
-          Effect.tap(() => Effect.sync(() => onOpenChange(false))),
+          Effect.tap(() =>
+            Effect.sync(() => {
+              onOpenChange(false);
+              leave();
+            })
+          ),
           Effect.andThen(
             Effect.tryPromise(() => deleteChat({ chatId: chat._id })).pipe(
               Effect.flatMap(Effect.fromResult),
@@ -59,6 +72,7 @@ export function ChatDeletion({
             onSuccess: () => Effect.void,
             onFailure: () =>
               Effect.sync(() => {
+                stay();
                 toast.error(actionErrorMessage);
               }),
           })

@@ -183,7 +183,8 @@ export function splitTurns(
   });
 }
 
-type Asking = typeof NinaUncoveredTurn.Type;
+/** A complete turn by its order, and the order of the turn that first asked its question. */
+export type Asking = typeof NinaUncoveredTurn.Type;
 
 /** Names the question of a turn by the order of the turn that first asked it. */
 export function questionKey({ order, retryOf }: Asking) {
@@ -241,15 +242,38 @@ export function boundStep(messages: readonly ModelMessage[]) {
 }
 
 /**
+ * What the model receives of one earlier complete turn, and what that costs:
+ * its tool results become bounded text, an earlier document becomes a note,
+ * and a turn that alone costs more than the history budget keeps every message
+ * with its tool results shortened to excerpts. The summary's fold counts a
+ * turn through this function, so it counts what the model would receive.
+ */
+export function sentTurn(turn: readonly ModelMessage[]) {
+  const whole = Arr.map(projectMessages(turn), noteDocuments);
+  const cost = turnTokens(whole);
+  if (cost <= NINA_BUDGET.history) {
+    return { messages: whole, tokens: cost };
+  }
+  const messages = Arr.map(whole, excerptMessage);
+  return { messages, tokens: turnTokens(messages) };
+}
+
+/**
  * Assembles provider input for one Nina generation. `history` holds the
  * complete earlier turns the rolling summary does not cover, oldest first,
  * each with its question and answer. They are kept newest first within the
  * history budget and trimmed only at a turn boundary: a turn that does not fit
- * is dropped whole, and a single oversized turn keeps its messages with
- * shortened evidence. The current turn always follows. Once the turns fill the
- * budget, each new turn pushes the oldest out, so the start of the history
- * moves, as it does when the summary folds turns: these are the only times the
- * history before the newest message does not repeat.
+ * is dropped whole, and the newest turn is always kept, with shortened
+ * evidence when it alone costs more than the budget. The current turn always
+ * follows.
+ *
+ * The summary folds the oldest turns as soon as the turns it does not cover
+ * cost more than the budget, so between two folds the history only grows at
+ * its end, and its start moves only when a fold covers its oldest turns. Two
+ * things move it otherwise. A retry takes the asking it replaces out of the
+ * history, wherever that asking is. And the drop above reaches turns that
+ * outgrew the budget before a fold covered them, because the fold was still
+ * running, failed, or has a longer backlog than one fold clears.
  */
 export function assembleContext({
   current,
@@ -258,31 +282,20 @@ export function assembleContext({
   readonly current: readonly ModelMessage[];
   readonly history: readonly (readonly ModelMessage[])[];
 }) {
-  const newestFirst = Arr.reverse(
-    Arr.map(history, (turn) => Arr.map(projectMessages(turn), noteDocuments))
-  );
   const [, candidates] = Arr.mapAccum(
-    newestFirst,
+    Arr.reverse(Arr.map(history, sentTurn)),
     0,
-    (usedBefore, turn, offset) => {
-      const cost = turnTokens(turn);
-      const kept =
-        cost > NINA_BUDGET.history ? Arr.map(turn, excerptMessage) : turn;
-      return [
-        usedBefore + turnTokens(kept),
-        { cost, kept, offset, usedBefore },
-      ];
-    }
+    (used, { messages, tokens }, offset) => [
+      used + tokens,
+      { messages, offset, total: used + tokens },
+    ]
   );
   const selected = Arr.takeWhile(
     candidates,
-    ({ cost, offset, usedBefore }) =>
-      offset === 0 || usedBefore + cost <= NINA_BUDGET.history
+    ({ offset, total }) => offset === 0 || total <= NINA_BUDGET.history
   );
   return [
-    ...Arr.flatten(
-      Arr.reverse(Arr.map(selected, (candidate) => candidate.kept))
-    ),
+    ...Arr.flatten(Arr.reverse(Arr.map(selected, ({ messages }) => messages))),
     ...boundStep(current),
   ];
 }
