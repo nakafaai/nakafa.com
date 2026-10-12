@@ -234,7 +234,9 @@ const verifyFailedDelete = Effect.fn("NakafaE2E.verifyFailedDelete")(function* (
     await expect(page.getByText(FAILED).first()).toBeVisible();
     await expect(row).toBeVisible();
     // Nothing was deleted, so nothing is left to undo.
-    await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
+    await expect(
+      page.locator("[data-sonner-toast]").getByRole("button", { name: "Undo" })
+    ).toHaveCount(0);
 
     // The editor on the memory that came back saves again.
     const before = changes.sent;
@@ -263,6 +265,64 @@ test.describe("Memory that the server cannot delete at 1440px", () => {
         page,
         Effect.fromNullishOr(baseURL).pipe(
           Effect.flatMap((origin) => verifyFailedDelete(page, origin))
+        )
+      )
+    );
+  });
+});
+
+/**
+ * The learner deletes a memory from its editor and the server cannot delete it.
+ * Everything the deletion took comes back: the memory in the list, and the
+ * editor on it with its words. No Undo is offered, because nothing was deleted.
+ */
+const verifyFailedEditorDelete = Effect.fn(
+  "NakafaE2E.verifyFailedEditorDelete"
+)(function* (page: Page, baseURL: string) {
+  const changes = yield* openMemoryPage(page, baseURL);
+
+  yield* startsEmpty(page, changes);
+  yield* writeMemory(page, KEPT);
+  yield* Effect.promise(async () => {
+    const row = memoryRow(page, KEPT);
+
+    await saved(changes, 0);
+    await row.getByText(KEPT).click();
+    await opened(page, KEPT);
+    changes.failNext();
+    await page.getByRole("button", { exact: true, name: "Delete" }).click();
+    await expect(page.getByText(FAILED).first()).toBeVisible();
+    await opened(page, KEPT);
+    await expect(row).toBeVisible();
+    await expect(
+      page.locator("[data-sonner-toast]").getByRole("button", { name: "Undo" })
+    ).toHaveCount(0);
+
+    // The editor that came back still saves.
+    const before = changes.sent;
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.type(AGAIN);
+    await editorOf(page).press("Escape");
+    await expect(editorOf(page)).toHaveCount(0);
+    await saved(changes, before);
+    await reloadUntil(page, () =>
+      expect(memoryRow(page, AGAIN)).toBeVisible({ timeout: 3000 })
+    );
+  });
+});
+
+test.describe("Memory that the server cannot delete from its editor at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("comes back with its editor and its words", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.fromNullishOr(baseURL).pipe(
+          Effect.flatMap((origin) => verifyFailedEditorDelete(page, origin))
         )
       )
     );

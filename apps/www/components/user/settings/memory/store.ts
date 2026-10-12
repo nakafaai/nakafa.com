@@ -8,6 +8,12 @@ import {
   type MemoryDraft,
 } from "@/components/user/settings/memory/list";
 
+/** The title and words an editor holds. */
+const DraftSchema = Schema.Struct({
+  text: Schema.String,
+  title: Schema.String,
+});
+
 /** What the learner is doing on the Memory page. */
 const MemoryStateSchema = Schema.Struct({
   /**
@@ -23,9 +29,7 @@ const MemoryStateSchema = Schema.Struct({
    */
   deleted: Schema.NullOr(Id("ninaMemories")),
   /** The title and words of a save that failed, which the editor shows when it opens again. */
-  draft: Schema.NullOr(
-    Schema.Struct({ text: Schema.String, title: Schema.String })
-  ),
+  draft: Schema.NullOr(DraftSchema),
   /** Whether the editor panel is open. */
   open: Schema.Boolean,
   /** The words the learner typed to search. */
@@ -40,6 +44,14 @@ const MemoryStateSchema = Schema.Struct({
    * panel closes, so the panel does not empty before it is gone.
    */
   target: Schema.NullOr(NinaMemoryView),
+  /**
+   * The words an editor still held when the learner deleted its memory. The
+   * editor does not save them, and they come back with the editor when the
+   * server does not delete the memory.
+   */
+  withheld: Schema.NullOr(
+    Schema.Struct({ draft: DraftSchema, id: Id("ninaMemories") })
+  ),
 });
 
 type MemoryState = typeof MemoryStateSchema.Type;
@@ -97,6 +109,11 @@ interface MemoryActions {
   rewrite: (id: Memory["id"], draft: MemoryDraft, now: number) => void;
   /** Sets the words the learner searches for. */
   search: (query: string) => void;
+  /**
+   * Keeps the words the editor on the deleted memory `id` still held, in case
+   * the server does not delete it.
+   */
+  withhold: (id: Memory["id"], draft: MemoryDraft) => void;
 }
 
 export type MemoryStore = MemoryState & MemoryActions;
@@ -110,6 +127,7 @@ export type MemoryStore = MemoryState & MemoryActions;
 function forgetting(state: MemoryState, id: Memory["id"]) {
   return {
     deleted: id,
+    withheld: null,
     ...(state.target?.id === id
       ? { draft: null, open: false, session: state.session + 1 }
       : {}),
@@ -180,6 +198,8 @@ export function createMemoryStore() {
     search: (query) => set({ query }),
     session: 0,
     target: null,
+    withheld: null,
+    withhold: (id, draft) => set({ withheld: { draft, id } }),
   }));
 }
 

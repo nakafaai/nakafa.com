@@ -231,6 +231,18 @@ describe("memory page store", () => {
     expect(fresh.getState()).toMatchObject({ deleted: first.id, open: true });
   });
 
+  it("keeps the words an editor held when its memory was deleted, and drops them with the next deletion", () => {
+    const store = createMemoryStore();
+
+    store.getState().openEdit(first);
+    store.getState().forget(first.id);
+    store.getState().withhold(first.id, grade);
+    expect(store.getState().withheld).toEqual({ draft: grade, id: first.id });
+
+    store.getState().forget(second.id);
+    expect(store.getState().withheld).toBeNull();
+  });
+
   it("takes back the note of a memory the server did not delete, and keeps the note of any other", () => {
     const store = createMemoryStore();
 
