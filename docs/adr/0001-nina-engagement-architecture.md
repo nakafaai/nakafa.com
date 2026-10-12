@@ -65,6 +65,13 @@ again draws a new one. No list of another learner's chats exists, so a profile
 lists chats for its owner alone. A chat that was public before share tokens had
 only its id for a link: that link stops working when share tokens go live, the
 chat goes back to private, and its owner shares it again to get a link.
+`apps/www/e2e/chat/share.browser.ts` proves the whole life of a link in the
+production build: a reader with no session and a learner signed in as someone
+else read the chat and are offered nothing that writes, the address without the
+fragment opens what a chat that is not there opens, the pages that hold the chat
+lose it without a reload when sharing stops, sharing again makes a different
+link while the first stays dead, and no request of the reader's page holds the
+token, the analytics it reported included.
 
 The chat route renders its header on the server and the conversation after
 hydration, because a server never sees the fragment, and asking for the chat

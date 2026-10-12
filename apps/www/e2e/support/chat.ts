@@ -3,7 +3,7 @@ import { expect, type Page } from "@playwright/test";
 import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
 import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
-import { trackChanges } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS, trackChanges } from "@/e2e/support/changes";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
@@ -120,6 +120,10 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
   ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(CurrentUser)));
 
   return {
+    /** Deletes a chat of the learner, as the menu of the chat does. */
+    deleteChat: Effect.fn("NakafaE2E.deleteChat")(function* (chatId: string) {
+      yield* call("mutation", DELETE, { chatId });
+    }),
     /**
      * Adds `count` chats to the list, after the chats it has. They share the
      * thread of a chat that was started, so each can be opened and deleted,
@@ -206,6 +210,17 @@ export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
     await expect
       .poll(() => changes.signedIn && changes.origin !== "", {
         timeout: readinessTimeoutMilliseconds,
+      })
+      .toBe(true);
+    // The page hides its card at once, before the server has stored the
+    // decision. A page that goes elsewhere while the change is on its way drops
+    // it, so the card comes back and the tracker never sees its answer. A
+    // decision that fails to save is tried again after 10 seconds
+    // (`lib/analytics/consent/signal.ts`), so only a stored one counts, and the
+    // wait covers that retry.
+    await expect
+      .poll(() => changes.stored > 0n && changes.told >= changes.stored, {
+        timeout: ANSWER_MILLISECONDS * 2,
       })
       .toBe(true);
   });
