@@ -14,21 +14,21 @@ type Failed = Extract<typeof measureResultValidator.Type, { kind: "failed" }>;
 const failed = (failure: Failed["failure"]) =>
   Effect.succeed<Failed>({ failure, kind: "failed" });
 
-/** Measures the named judgments on some texts, with the thresholds this deployment holds for them. */
+/** Measures the named judgments on some texts, and names the entries of the catalog it measured them with. */
 const measure = FunctionImpl.make(
   schema,
   spec,
   "measure",
-  Effect.fn("nina.judgment.measure")(function* ({ names, texts, together }) {
-    return yield* measureTexts(names, texts, together).pipe(
+  Effect.fn("nina.judgment.measure")(function* ({ names, texts }) {
+    return yield* measureTexts(names, texts).pipe(
       Effect.provide(GatewayLive),
       Effect.map((rows) => ({
+        judgments: Rec.map(
+          Struct.pick(judgments, names),
+          Struct.pick(["instructions", "threshold"])
+        ),
         kind: "measured" as const,
         rows,
-        thresholds: Rec.map(
-          Struct.pick(judgments, names),
-          ({ threshold }) => threshold
-        ),
       })),
       Effect.catchTag("GatewayConfigurationError", failed)
     );

@@ -2,6 +2,7 @@ import { RegisteredFunction } from "@confect/server";
 import { expect } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
+import { noteText } from "@repo/backend/confect/nina/judgment/note";
 import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
 import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
@@ -35,12 +36,18 @@ export const unavailable = (fact: object) => [
   ["Nina memory unavailable", expect.objectContaining(fact)],
 ];
 
+/** The sentence of a candidate and the learner's words it quotes. */
+type Note = Pick<typeof NinaMemoryCandidate.Type, "quote" | "text">;
+
 /**
- * A decision model that finds the message lasting or not, and each candidate,
- * in the order they come, private or not and the learner's own note or not.
- * Its probabilities are far from every threshold, so a test never depends on
- * the number a threshold has. A candidate is the learner's own note and holds
- * nothing private, unless the test says otherwise.
+ * A decision model that finds the message lasting or not, and each candidate
+ * private or not and the learner's own note or not. A candidate is a request of
+ * its own, so the model knows it by the note it reads (`noteText`), and a test
+ * names the candidates that are not the learner's own note (`notOwn`) and those
+ * that hold something private (`privates`). Its probabilities are far from
+ * every threshold, so a test never depends on the number a threshold has. A
+ * candidate is the learner's own note and holds nothing private, unless the
+ * test says otherwise.
  */
 export function judges({
   lasting = true,
@@ -48,14 +55,16 @@ export function judges({
   privates = [],
 }: {
   readonly lasting?: boolean;
-  readonly notOwn?: readonly boolean[];
-  readonly privates?: readonly boolean[];
+  readonly notOwn?: readonly Note[];
+  readonly privates?: readonly Note[];
 } = {}) {
-  return decides((judgment, index) => {
+  const notOwnNotes = Arr.map(notOwn, noteText);
+  const privateNotes = Arr.map(privates, noteText);
+  return decides((judgment, text) => {
     const yes = Match.value(judgment).pipe(
       Match.when("lasting", () => lasting),
-      Match.when("ownNote", () => notOwn[index] !== true),
-      Match.orElse(() => privates[index] === true)
+      Match.when("ownNote", () => !Arr.contains(notOwnNotes, text)),
+      Match.orElse(() => Arr.contains(privateNotes, text))
     );
     return yes ? 0.99 : 0.01;
   });

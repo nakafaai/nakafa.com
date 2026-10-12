@@ -1,12 +1,15 @@
 import { fileURLToPath } from "node:url";
+import { Ref } from "@confect/core";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import {
   ConvexCli,
   type DevelopmentCliError,
 } from "@repo/backend/scripts/development/cli";
 import type { JudgmentCallError } from "@repo/backend/scripts/judgment/call";
+import { loggedCalls, prepare } from "@repo/backend/test/judgment/cli";
 import { messages } from "@repo/backend/test/judgment/message";
 import { notes } from "@repo/backend/test/judgment/note";
 import {
@@ -15,16 +18,14 @@ import {
   Duration,
   Effect,
   Fiber,
-  FileSystem,
   Record as Rec,
   Result,
-  Schema,
   Stream,
 } from "effect";
 import { ChildProcess } from "effect/process";
 import { TestClock } from "effect/testing";
 
-/** What the entry program can fail with: a flag the command refuses, and the failures of the deployment check and of a call. */
+/** What the entry program can fail with: an argument the command refuses, and the failures of the deployment check and of a call. */
 type EntryError = JudgmentCallError | DevelopmentCliError;
 
 const mocks = vi.hoisted(() => {
@@ -43,112 +44,11 @@ vi.mock("@effect/platform-node/NodeRuntime", () => ({
 /** The environment of a caller whose dev deployment is named. */
 const DEV = { CONVEX_DEPLOYMENT: "dev:happy-animal-123" };
 
+/** The folder of this package, where the package script runs. */
+const PACKAGE = fileURLToPath(new URL("../..", import.meta.url));
+
 const originalArgv = process.argv;
 const originalExitCode = process.exitCode;
-
-/** What the CLI double logged about one call: the function, the settings that pick the deployment, and the names, size and grouping of the call. */
-const Call = Schema.fromJsonString(
-  Schema.Struct({
-    command: Schema.String,
-    env: Schema.Struct({
-      CONVEX_DEPLOYMENT: Schema.NullOr(Schema.String),
-      CONVEX_DEPLOYMENT_TOKEN: Schema.NullOr(Schema.String),
-      CONVEX_DEPLOY_KEY: Schema.NullOr(Schema.String),
-    }),
-    name: Schema.String,
-    names: Schema.Array(Schema.String),
-    size: Schema.Int,
-    together: Schema.Int,
-  })
-);
-
-/**
- * A CLI double that logs each call, and then measures every text of the call
- * with a probability of 0.9 for each judgment (`measure`), refuses every text at
- * the gateway (`broken`), or never answers (`hang`), as its second argument
- * says.
- */
-const FAKE_CLI = `
-import { appendFileSync } from "node:fs";
-const [log, mode, command, name, json] = process.argv.slice(2);
-const input = JSON.parse(json);
-const setting = (key) =>
-  Object.hasOwn(process.env, key) ? process.env[key] : null;
-appendFileSync(
-  log,
-  JSON.stringify({
-    command,
-    env: {
-      CONVEX_DEPLOYMENT: setting("CONVEX_DEPLOYMENT"),
-      CONVEX_DEPLOYMENT_TOKEN: setting("CONVEX_DEPLOYMENT_TOKEN"),
-      CONVEX_DEPLOY_KEY: setting("CONVEX_DEPLOY_KEY"),
-    },
-    name,
-    names: input.names,
-    size: input.texts.length,
-    together: input.together,
-  }) + "\\n"
-);
-if (mode === "hang") {
-  setInterval(() => {}, 1000);
-} else {
-  process.stdout.write(
-    JSON.stringify({
-      kind: "measured",
-      rows: input.texts.map(() =>
-        mode === "broken"
-          ? { failure: { reason: "invalid", status: 400 } }
-          : {
-              probabilities: Object.fromEntries(
-                input.names.map((judgment) => [judgment, 0.9])
-              ),
-            }
-      ),
-      thresholds: Object.fromEntries(
-        input.names.map((judgment) => [judgment, 0.5])
-      ),
-    })
-  );
-}
-`;
-
-/** A folder with the CLI double in it, the log it writes, and the way to start it. */
-const prepare = (mode: "broken" | "hang" | "measure") =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.realPath(
-      yield* fs.makeTempDirectoryScoped({ prefix: "judgment-main-test-" })
-    );
-    const script = `${directory}/cli.mjs`;
-    const log = `${directory}/calls.log`;
-    yield* fs.writeFileString(script, FAKE_CLI);
-    return {
-      cli: {
-        args: [script, log, mode],
-        command: process.execPath,
-        cwd: directory,
-        deadline: Duration.seconds(30),
-        env: {},
-      },
-      log,
-    };
-  });
-
-/** The calls that the CLI double logged, in order, none when it was never started. */
-const loggedCalls = (log: string) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    if (!(yield* fs.exists(log))) {
-      return [];
-    }
-    const lines = Arr.filter(
-      (yield* fs.readFileString(log)).split("\n"),
-      (line) => line !== ""
-    );
-    return yield* Effect.forEach(lines, (line) =>
-      Schema.decodeEffect(Call)(line)
-    );
-  });
 
 /**
  * Runs the entry program of the command with a command line and a caller whose
@@ -198,14 +98,14 @@ describe("the judgment measuring command", () => {
     "measures the labelled set on the dev deployment that the check allowed, prints the report, and exits with 0",
     () =>
       Effect.gen(function* () {
-        const prepared = yield* prepare("measure");
+        const prepared = yield* prepare();
 
         const { exitCode, failure, printed } = yield* execute(prepared, DEV);
 
         expect(failure).toBeUndefined();
         expect(exitCode).toBe(0);
         expect(printed).toContain(
-          `${Arr.length(messages)} messages, one to a request, and ${Arr.length(notes)} notes, 1 to a request, measured on the development deployment.`
+          `${Arr.length(messages)} messages and ${Arr.length(notes)} notes, one text to a request, measured on the development deployment.`
         );
         // Every call starts the CLI with the deployment that the check looked at, and a blank key and token.
         const calls = yield* loggedCalls(prepared.log);
@@ -218,27 +118,10 @@ describe("the judgment measuring command", () => {
               CONVEX_DEPLOYMENT_TOKEN: "",
               CONVEX_DEPLOY_KEY: "",
             },
-            name: "nina/judgment:measure",
+            name: Ref.getConvexFunctionName(
+              refs.internal.nina.judgment.measure
+            ),
           });
-        }
-      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
-    30_000
-  );
-
-  it.effect(
-    "asks the notes together when the command line names it",
-    () =>
-      Effect.gen(function* () {
-        const prepared = yield* prepare("measure");
-
-        const { printed } = yield* execute(prepared, DEV, "--together=3");
-
-        expect(printed).toContain("notes, 3 to a request");
-        // A message is asked alone, and the notes in threes.
-        const calls = yield* loggedCalls(prepared.log);
-        expect(calls).not.toEqual([]);
-        for (const { names, together } of calls) {
-          expect(together).toBe(Arr.contains(names, "lasting") ? 1 : 3);
         }
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer)),
     30_000
@@ -248,7 +131,7 @@ describe("the judgment measuring command", () => {
     "exits with 1 when the deployment could not measure some text",
     () =>
       Effect.gen(function* () {
-        const prepared = yield* prepare("broken");
+        const prepared = yield* prepare({ broken: true });
 
         const { exitCode, failure, printed } = yield* execute(prepared, DEV);
 
@@ -261,25 +144,38 @@ describe("the judgment measuring command", () => {
     30_000
   );
 
-  it.effect("refuses a flag it does not accept, and starts no command", () =>
-    Effect.gen(function* () {
-      const prepared = yield* prepare("measure");
+  it.effect.each([
+    [["--together=3"]],
+    [["--together", "3"]],
+    [["--prod"]],
+    [["extra", "--prod"]],
+  ] as const)(
+    "refuses the command line %j, which names the argument, and starts no command",
+    ([args]) =>
+      Effect.gen(function* () {
+        const prepared = yield* prepare();
 
-      const { failure } = yield* execute(prepared, DEV, "--together=4");
+        const { exitCode, failure, printed } = yield* execute(
+          prepared,
+          DEV,
+          ...args
+        );
 
-      expect(failure).toMatchObject({
-        _tag: "JudgmentCallError",
-        message: "--together=N takes a whole number from 1 to 3.",
-      });
-      expect(yield* loggedCalls(prepared.log)).toEqual([]);
-    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+        expect(failure).toMatchObject({
+          _tag: "JudgmentCallError",
+          message: `Judgment measure takes no argument, and was given "${Arr.join(args, " ")}".`,
+        });
+        expect(exitCode).toBe(originalExitCode);
+        expect(printed).toBe("");
+        expect(yield* loggedCalls(prepared.log)).toEqual([]);
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
   it.effect(
     "ends a call that passes its deadline of five minutes, with the error of the command",
     () =>
       Effect.gen(function* () {
-        const prepared = yield* prepare("hang");
+        const prepared = yield* prepare({ hang: true });
         const fiber = yield* Effect.forkChild(execute(prepared, DEV));
         // The first call is the one that hangs. Real time passes until its
         // command has started, because the test clock stands still.
@@ -334,7 +230,7 @@ describe("the judgment measuring command", () => {
     "refuses to run when %s, and starts no command",
     ([, environment]) =>
       Effect.gen(function* () {
-        const prepared = yield* prepare("measure");
+        const prepared = yield* prepare();
 
         const { failure, printed } = yield* execute(prepared, environment);
 
@@ -351,23 +247,22 @@ describe("the judgment measuring command", () => {
     "loads under the script runner and refuses a deploy key before any command",
     () =>
       Effect.gen(function* () {
-        // The child is the real script, started with the runner of the package
-        // script, so it proves that every module the script imports loads,
-        // which no double can fake. A deploy key in its environment makes the
-        // check refuse whatever the `.env.local` of this machine holds, because
-        // the check looks at the keys before the deployment, so the child
+        // The child is the real script, started as the package script starts
+        // it (`tsx scripts/judgment/main.ts` in the folder of the package), so
+        // it proves that every module the script imports loads, which no
+        // double can fake. The check reads the environment before it reads the
+        // `.env.local` of the package, and it looks at the keys before it looks
+        // at the deployment, so a deploy key in the environment of the child
+        // makes it refuse whatever deployment the `.env.local` of this machine
+        // names (`development/cli.test.ts` proves that order). The child
         // reaches no deployment and starts no command. The logger of Effect
-        // writes the refusal to the standard output, and a module that the
-        // runner cannot load shows its own error in the output instead.
+        // writes the refusal to the output, and a module that the runner
+        // cannot load shows its own error there instead.
         const child = yield* ChildProcess.make(
           process.execPath,
-          [
-            "--import",
-            "tsx",
-            fileURLToPath(new URL("./main.ts", import.meta.url)),
-          ],
+          ["node_modules/tsx/dist/cli.mjs", "scripts/judgment/main.ts"],
           {
-            cwd: fileURLToPath(new URL("../..", import.meta.url)),
+            cwd: PACKAGE,
             env: { CONVEX_DEPLOY_KEY: "dev:happy-animal-123|top-secret" },
             extendEnv: true,
             stdin: "ignore",

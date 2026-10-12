@@ -18,7 +18,7 @@ const Judgment = Schema.Struct({
  *
  * `lasting` is asked about a whole message. `ownNote` and `private` are asked
  * about a note, the sentence the capture model proposes with the words of the
- * learner it quotes (`judgment/ask`, `noteText`). The thresholds come from a
+ * learner it quotes (`judgment/note`, `noteText`). The thresholds come from a
  * labelled set of messages and notes in many languages and scripts, measured
  * with the `judgment:measure` command, not from taste (ADR 0022). The starting
  * instructions of `lasting` and `private` were measured on 12 October 2026 on
