@@ -389,7 +389,7 @@ describe("model test entry", () => {
   );
 
   it.effect(
-    "ends a run that passes its deadline of ten minutes, with a row that says so",
+    "ends a run that passes its deadline of five minutes, with a row that says so",
     () =>
       Effect.gen(function* () {
         const prepared = yield* prepare({ ...everywhere, de: { hang: true } });
@@ -406,7 +406,7 @@ describe("model test entry", () => {
             ),
         });
 
-        yield* TestClock.adjust("9 minutes");
+        yield* TestClock.adjust("4 minutes");
         expect(fiber.pollUnsafe()).toBeUndefined();
         yield* TestClock.adjust("1 minute");
         const { failure, rows } = yield* Fiber.join(fiber);
@@ -415,7 +415,7 @@ describe("model test entry", () => {
           { locale: "en", top5Share: 1 },
           { locale: "id", top5Share: 1 },
           {
-            error: `Model test did not answer within ${Duration.format(Duration.minutes(10))}.`,
+            error: `Model test did not answer within ${Duration.format(Duration.minutes(5))}.`,
             locale: "de",
             model: "google/gemini-embedding-2",
           },

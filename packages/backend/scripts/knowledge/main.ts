@@ -35,12 +35,16 @@ export class KnowledgeCompareError extends Schema.TaggedError<KnowledgeCompareEr
 ) {}
 
 /**
- * How long the CLI may take for one run: the 10 minutes that an action of the
- * Node runtime may run, because a run is one such action. The CLI makes one
- * request for it, and Node ends a request that gets no answer after five
- * minutes, so a run that takes longer fails sooner, with the error of the CLI.
+ * How long the CLI may take for one run, which is one call of the function. The
+ * CLI waits for the answer in one request, and Node's `fetch` gives up on a
+ * request that gets no answer after five minutes: a request to a local server
+ * that would answer after 330 seconds ended with a `HeadersTimeoutError` after
+ * 301 seconds on Node 24.21. A Node action may run for ten minutes, but the CLI
+ * cannot wait that long. So a run gets the five minutes its request can wait,
+ * and a run that needs more ends with a row that says it did not answer, and
+ * not with the error of the CLI.
  */
-const RUN_DEADLINE = Duration.minutes(10);
+const RUN_DEADLINE = Duration.minutes(5);
 
 /** A failure of the gateway as JSON text, with the facts it carries as the data of an error. */
 const failureText = Schema.encodeSync(

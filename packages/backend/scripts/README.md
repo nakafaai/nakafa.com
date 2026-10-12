@@ -111,12 +111,13 @@ labeled with the Aksara corpus; a lesson that was edited since leaves its
 questions out, with the reason. `--model` and `--locale` narrow the test to one
 model or one language. A run is one call of the function, which the CLI waits
 for in one request, and Node ends a request that gets no answer after five
-minutes, so a run that takes longer fails with the error of the CLI. A run that
-gets no answer is printed with an `error`, and the other runs still count. The
-`error` holds the facts of the failure when the gateway refused a request, which
-the function answers instead of failing because the CLI drops the data of the
-error it prints, says to build the index when it holds no section of the
-language, and holds the start of what the CLI printed when the CLI could not run
-the function, such as when the dev deployment does not have it yet. The command
-exits with 1 when any run gave no answer. The test changes no stored section:
-the vectors of a candidate model are made for the run and kept nowhere.
+minutes, so a run gets five minutes and a run that needs more is printed with an
+`error` that says it did not answer. A run that gets no answer is printed with
+an `error`, and the other runs still count. The `error` holds the facts of the
+failure when the gateway refused a request, which the function answers instead
+of failing because the CLI drops the data of the error it prints, says to build
+the index when it holds no section of the language, and holds the start of what
+the CLI printed when the CLI could not run the function, such as when the dev
+deployment does not have it yet. The command exits with 1 when any run gave no
+answer. The test changes no stored section: the vectors of a candidate model are
+made for the run and kept nowhere.
