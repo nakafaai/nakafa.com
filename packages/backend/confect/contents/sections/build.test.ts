@@ -10,6 +10,7 @@ import type { runStep } from "@repo/backend/confect/contents/sections/build";
 import { PRUNE_BATCH_SIZE } from "@repo/backend/confect/contents/sections/limits";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { provider } from "@repo/backend/test/gateway";
 import {
   editKnowledgeLesson,
@@ -35,6 +36,15 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => provider.embeddingModel.mockReset());
 
 type Input = Parameters<typeof runStep>[0];
+
+/** Makes the record of the finished build name an earlier release, as it does after an activation. */
+async function finishedEarlierRelease(ctx: MutationCtx) {
+  for (const record of await ctx.db.query("contentSectionState").collect()) {
+    await ctx.db.patch("contentSectionState", record._id, {
+      releaseId: "release-earlier",
+    });
+  }
+}
 
 function setup() {
   const t = createConvexTestWithBetterAuth();
@@ -121,8 +131,9 @@ describe("section build", () => {
     await t.mutation(seedKnowledge);
     const { total } = await measuredBuild(t);
     // 27 sections, 9 documents, and the record that the build finished. The
-    // reads are the lessons (40), the documents it checked before it stored
-    // them (9), the Quran (2), the clean up (19), and the record (1).
+    // reads are the lessons (40), the state that each of the 9 stores reads
+    // (the checks of an empty index read nothing), the Quran (2), the clean up
+    // (19), and the record (1).
     expect(total.documentsWritten).toBe(37);
     expect(total.documentsRead).toBe(71);
   });
@@ -148,7 +159,7 @@ describe("section build", () => {
     expect(total.documentsWritten).toBe(0);
   });
 
-  it("writes the changed section and the record of its document, and nothing else", async () => {
+  it("writes the changed section, the record of its document, and the record of the build, when a new release edits one section", async () => {
     const model = embedWithKnowledge();
     const { t } = setup();
     await t.mutation(seedKnowledge);
@@ -172,35 +183,75 @@ describe("section build", () => {
         )
       )
     );
+    // An edit comes with a new release, so the index was last completed for
+    // the release before it.
+    await t.mutation(finishedEarlierRelease);
     model.doEmbedCalls.length = 0;
     const { steps, total } = await measuredBuild(t);
     expect(embeddedBy(steps)).toBe(1);
     expect(Arr.flatMap(model.doEmbedCalls, ({ values }) => values)).toEqual([
       expect.stringContaining("Matriks berubah di satu kalimat."),
     ]);
-    // The 63 documents that a build of nothing new reads, and 13 more for the
-    // edited lesson: its artifact, the 4 stored sections that the build asks
-    // about, and the 8 documents that its store reads.
-    expect(total.documentsRead).toBe(76);
-    expect(total.documentsWritten).toBe(2);
+    // The 64 documents that a build of a new release with nothing new reads,
+    // and 13 more for the edited lesson: its artifact, the 4 stored sections
+    // that the check reads, and the 8 documents that its store reads. It
+    // writes the section, the record of its document, and the record of the
+    // build.
+    expect(total.documentsRead).toBe(77);
+    expect(total.documentsWritten).toBe(3);
   });
 
-  it("writes only the record of the build when the release it finished is a new one", async () => {
-    embedWithKnowledge();
+  it("embeds one text and writes the rows of the lesson when a new release inserts a section", async () => {
+    const model = embedWithKnowledge();
+    const { t } = setup();
+    await t.mutation(seedKnowledge);
+    await measuredBuild(t);
+    await t.mutation((ctx) =>
+      editKnowledgeLesson(
+        ctx,
+        1,
+        "id",
+        Arr.join(
+          [
+            "Matriks menyusun bilangan.",
+            "## Bentuk Matriks",
+            "Matriks menyusun bilangan dalam baris dan kolom.",
+            "### Matriks Persegi",
+            "Matriks persegi memiliki baris dan kolom yang sama banyak.",
+            "## Bagian Baru",
+            "Isi bagian baru.",
+            "## Determinan",
+            "Determinan matriks dua kali dua adalah ad dikurangi bc.",
+          ],
+          "\n\n"
+        )
+      )
+    );
+    await t.mutation(finishedEarlierRelease);
+    model.doEmbedCalls.length = 0;
+    const { steps, total } = await measuredBuild(t);
+    // The last section stands a place further, with the same text and so the
+    // same vector.
+    expect(embeddedBy(steps)).toBe(1);
+    expect(Arr.flatMap(model.doEmbedCalls, ({ values }) => values)).toEqual([
+      expect.stringContaining("Isi bagian baru."),
+    ]);
+    // Each row of the lesson says how many sections it has, so all 5 are
+    // written, with the record of the document and the record of the build.
+    expect(total.documentsRead).toBe(80);
+    expect(total.documentsWritten).toBe(7);
+  });
+
+  it("embeds nothing and writes only the record of the build when the release it finished is a new one", async () => {
+    const model = embedWithKnowledge();
     const { build, t } = setup();
     await t.mutation(seedKnowledge);
     await build();
     // The index was last completed for an earlier release, as after an activation.
-    await t.mutation(async (ctx) => {
-      for (const record of await ctx.db
-        .query("contentSectionState")
-        .collect()) {
-        await ctx.db.patch("contentSectionState", record._id, {
-          releaseId: "release-earlier",
-        });
-      }
-    });
+    await t.mutation(finishedEarlierRelease);
+    model.doEmbedCalls.length = 0;
     const { total } = await measuredBuild(t);
+    expect(model.doEmbedCalls).toHaveLength(0);
     // The 63 documents that a build of nothing new reads, and the record of the
     // earlier release, which replacing it reads.
     expect(total.documentsRead).toBe(64);
