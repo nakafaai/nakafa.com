@@ -247,7 +247,7 @@ therefore not for the sentence, which is gone at once, but for Nina to have a
 portrait again: the quiet of 30 seconds that a build waits for, and one model
 call (at most 45 seconds). When that call fails, the portrait stays absent until
 a later change asks: a delete or a rewrite asks at once, and an added memory
-asks when the last request or build is a day old. "Delete all", the daily
+asks when no build has gone to the model in the last day. "Delete all", the daily
 expiry that leaves a learner with no memory, and account deletion delete the
 portrait with the memories. A portrait is derived data, so deleting it loses
 nothing.
@@ -255,14 +255,24 @@ nothing.
 **Why the portrait is built in the background.** A model call takes seconds and
 costs money that the learner's turn should neither wait for nor pay, and a text
 that changed with every question would break the cached prefix. So no turn
-builds it. A memory that Nina saves, or the learner adds, asks for a build at
-most once a day. A request writes its time into the portrait row and schedules
-the build after 30 seconds; a build claims the work first, which moves the time
-of the request to now, so of the builds that earlier requests scheduled only the
-first to run finds its quiet over, and a learner who writes a memory and saves
-it every few seconds makes one model call, not one for each save. The build
-reads the portrait as it stands and the memories confirmed after what it has
-read, at most 40, each as its title and words cut to 400 characters, and writes
+builds it. A memory that Nina saves, or the learner adds, asks for a build
+unless one went to the model in the last day. The day is counted from that
+build (`builtAt`), not from the last request, so a request that no build
+answered, such as one whose build found memory paused, does not close it, and a
+build that had no lasting memory to hand on does not either. A request writes
+its time into the portrait row and schedules the build after 30 seconds. Every
+request that comes before a build has gone to the model does this, so the quiet
+counts from the last of them and only the last of the builds scheduled finds it
+over: a learner who adds three memories within a minute, or writes a memory and
+saves it every few seconds, makes one model call. A build claims the work
+first, which moves the time of the request to now, so two builds due at the same
+moment cannot both go on. A memory added after that build waits for the day to
+be over and for a request after it; the portrait may therefore lag the memories
+by more than a day, and the memory stays reachable by recall and the capability
+meanwhile.
+
+The build reads the portrait as it stands and the memories confirmed after what
+it has read, at most 40, each as its title and words cut to 400 characters, and writes
 the whole new text, keeping what the old one says unless a newer memory
 contradicts it. A situation is never handed to it, because it has an end date.
 It writes only if the portrait is still the one it read and every memory it fed
@@ -360,8 +370,9 @@ page does not use it: its search runs in the browser.
 - `ninaMemoryPortraits` (index by user) holds one row for a learner who has
   asked for a portrait: its sealed `text`, absent until a build has written
   one and after a memory was deleted or rewritten; `through`, the newest
-  confirmation time the text has read, zero for none; and `scheduledAt`, the
-  time of the last request. The text is sealed for the learner in its own
+  confirmation time the text has read, zero for none; `scheduledAt`, the time
+  of the last request; and `builtAt`, the time the last build went to the
+  model, absent for none. The text is sealed for the learner in its own
   field, like a memory. `nina/portrait:claim` and `save` are internal, and so
   is the scheduled node action `nina/portrait/build:run`.
 - `clear` stores the moment the learner asked, as `ninaMemoryClearedAt` on

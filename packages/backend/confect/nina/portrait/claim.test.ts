@@ -63,6 +63,26 @@ describe("claiming a portrait build", () => {
     expect(await claimAt(f, NOW + QUIET + QUIET)).not.toBeNull();
   });
 
+  it("stamps the build that goes to the model, and not one that hands it nothing", async () => {
+    const f = await createPortraitTest();
+    await f.seedPortrait({ scheduledAt: NOW, through: 5 });
+    await f.seed({
+      confirmedAt: 9,
+      kind: "situation",
+      text: "Ujian kimia 20 Oktober",
+      validUntil: NOW + 86_400_000,
+    });
+    expect(await claimAt(f)).toMatchObject({ memories: [], reached: 9 });
+    const [open] = await f.rows();
+    expect(open).toMatchObject({ scheduledAt: NOW + QUIET });
+    expect(open).not.toHaveProperty("builtAt");
+    await f.seed({ confirmedAt: 10, text: "Mau ikut SNBT 2027" });
+    await claimAt(f, NOW + 2 * QUIET);
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({ builtAt: NOW + 2 * QUIET }),
+    ]);
+  });
+
   it("claims nothing while memory is paused, and leaves the request as it was", async () => {
     const f = await createPortraitTest();
     await f.seed({ confirmedAt: 5, text: "Kelas 12 IPA" });

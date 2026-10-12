@@ -422,15 +422,50 @@ describe("the scheduled portrait build", () => {
     expect(await f.portrait()).toBe("Mau ikut SNBT 2027.");
   });
 
-  it("is asked for when a capture stores or confirms a memory, once a day, and not when the capture stores none", async () => {
+  it("is asked for when a capture stores or confirms a memory, unless a build went to the model in the last day, and not when the capture stores none", async () => {
     const f = await createCaptureTest();
     expect(await f.run([])).toBe(0);
     expect(await scheduledBuilds(f)).toEqual([]);
     expect(await f.run([candidate()])).toBe(1);
     expect(await scheduledBuilds(f)).toEqual([{ userId: f.identity.userId }]);
-    // The same memory said again is confirmed, and the day's request stands.
+    // A build went to the model. The same memory said again is confirmed, and
+    // the day's build stands.
+    await f.t.mutation(async (ctx) => {
+      const row = await ctx.db.query("ninaMemoryPortraits").first();
+      if (row) {
+        await ctx.db.patch(row._id, { builtAt: NOW });
+      }
+    });
     expect(await f.run([candidate()])).toBe(1);
     expect(await scheduledBuilds(f)).toHaveLength(1);
+  });
+
+  it("makes one model call with every memory the learner adds within the quiet, and asks for none after the build went to the model", async () => {
+    const f = await createPortraitTest();
+    const model = writes("Ikut SNBT 2027, kelas 12 IPA, suka contoh soal.");
+    for (const [seconds, text] of [
+      [0, "Ikut SNBT 2027"],
+      [20, "Kelas 12 IPA"],
+      [40, "Suka contoh soal"],
+    ] as const) {
+      vi.setSystemTime(NOW + seconds * 1000);
+      await f.owner.mutation(add, { text });
+    }
+    expect(await f.scheduled()).toHaveLength(3);
+    await f.t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(model.doGenerateCalls).toHaveLength(1);
+    const prompt = promptOf(model);
+    for (const text of ["Ikut SNBT 2027", "Kelas 12 IPA", "Suka contoh soal"]) {
+      expect(prompt).toContain(`- ${text}`);
+    }
+    expect(await f.portrait()).toBe(
+      "Ikut SNBT 2027, kelas 12 IPA, suka contoh soal."
+    );
+    // A memory added once the build has gone to the model waits for the day to
+    // be over.
+    const scheduled = (await f.scheduled()).length;
+    await f.owner.mutation(add, { text: "Hobi main gitar" });
+    expect(await f.scheduled()).toHaveLength(scheduled);
   });
 
   it("is not asked for by a capture while memory is paused", async () => {

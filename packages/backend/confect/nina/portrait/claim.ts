@@ -24,9 +24,12 @@ import { Array as Arr, Clock, Duration, Effect, Option } from "effect";
  * returns nothing when no build is due. A build is due when the request that
  * scheduled it has had its quiet (`PORTRAIT_DELAY`, counted from the last
  * request), memory is not paused, and the account is not going. Claiming moves
- * the time of the request to now, so a build scheduled by an earlier request,
- * which runs a moment later, finds that its quiet has not come: however many
- * builds are scheduled, one reads and asks the model.
+ * the time of the request to now, so a build due at the same moment, or
+ * scheduled by an earlier request and running a moment later, finds that its
+ * quiet has not come: however many builds are scheduled, one reads and asks the
+ * model. When there are memories to hand on, so that the build goes to the
+ * model, claiming also stamps `builtAt`, which closes the day for memories that
+ * are only added. A build that hands on nothing leaves the day open.
  *
  * The memories are the learner's newest, at most `PORTRAIT_MEMORY_LIMIT`,
  * confirmed after what the portrait has read and after the moment the learner
@@ -58,10 +61,6 @@ export const claimPortrait = Effect.fn("nina.portrait.claim")(function* (
   if (paused || !user || isAccountDeletionPending(user)) {
     return null;
   }
-  yield* (yield* DatabaseWriter)
-    .table("ninaMemoryPortraits")
-    .patch(row._id, { scheduledAt: now })
-    .pipe(Effect.orDie);
   const newest = yield* readNewest(
     userId,
     PORTRAIT_MEMORY_LIMIT,
@@ -72,6 +71,13 @@ export const claimPortrait = Effect.fn("nina.portrait.claim")(function* (
     Option.map((memory) => memory.confirmedAt),
     Option.getOrElse(() => row.through)
   );
+  yield* (yield* DatabaseWriter)
+    .table("ninaMemoryPortraits")
+    .patch(row._id, {
+      scheduledAt: now,
+      ...(Arr.isReadonlyArrayEmpty(lasting) ? {} : { builtAt: now }),
+    })
+    .pipe(Effect.orDie);
   if (Arr.isReadonlyArrayEmpty(lasting) && row.text === undefined) {
     return { memories: [], reached, through: row.through };
   }

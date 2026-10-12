@@ -99,14 +99,16 @@ export async function createPortraitTest() {
   /**
    * Inserts the portrait row of a learner, with its text sealed as the product
    * seals it when `text` is given. A request is waiting from the beginning of
-   * time unless the row says otherwise.
+   * time, and no build has gone to the model, unless the row says otherwise.
    */
   const seedPortrait = ({
+    builtAt,
     scheduledAt = 0,
     text,
     through = 0,
     userId = f.identity.userId,
   }: {
+    readonly builtAt?: number;
     readonly scheduledAt?: number;
     readonly text?: string;
     readonly through?: number;
@@ -116,6 +118,7 @@ export async function createPortraitTest() {
       Effect.gen(function* () {
         const keys = yield* ensureLearnerKeys(userId);
         yield* (yield* DatabaseWriter).table("ninaMemoryPortraits").insert({
+          ...(builtAt === undefined ? {} : { builtAt }),
           scheduledAt,
           through,
           userId,
