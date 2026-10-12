@@ -74,6 +74,12 @@ interface MemoryActions {
   /** Opens the editor for a new memory. */
   openNew: () => void;
   /**
+   * Takes back the note that the learner deleted the memory `id`, because the
+   * server did not delete it. The memory is in the list again, and the editor
+   * saves it again.
+   */
+  recall: (id: Memory["id"]) => void;
+  /**
    * Opens the editor again with the draft of a save that failed, on `memory`,
    * or on a new memory when it is null. `session` is the opening the draft
    * comes from. Nothing opens when the learner opened an editor since, open or
@@ -116,6 +122,8 @@ export function createMemoryStore() {
         cleared: state.cleared + 1,
         ...(state.target ? forgetting(state, state.target.id) : {}),
       })),
+    recall: (id) =>
+      set((state) => (state.deleted === id ? { deleted: null } : state)),
     leave: (session) =>
       set((state) =>
         state.session === session ? { draft: null, open: false } : state

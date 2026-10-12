@@ -48,6 +48,7 @@ export function useMemoryActions() {
   const latest = useMemoryLatest();
   const forget = useMemoryPage((state) => state.forget);
   const forgetAll = useMemoryPage((state) => state.forgetAll);
+  const recall = useMemoryPage((state) => state.recall);
   const reopen = useMemoryPage((state) => state.reopen);
   const rewrite = useMemoryPage((state) => state.rewrite);
 
@@ -157,11 +158,13 @@ export function useMemoryActions() {
 
   /**
    * Deletes a memory without a word, for one the learner never saw stored. The
-   * editor on it closes, and nothing it still had to save is saved.
+   * editor on it closes, and nothing it still had to save is saved. When the
+   * server does not delete it, the memory is in the list again, so the note
+   * that it was deleted is taken back and the editor saves it again.
    */
   function drop(id: Memory["id"]) {
     forget(id);
-    settle(() => removeById({ id }));
+    settle(() => removeById({ id }), { failed: () => recall(id) });
   }
 
   /**
@@ -194,8 +197,18 @@ export function useMemoryActions() {
    * deletes them in batches after that.
    */
   function clear() {
+    const open = latest().target;
+
     forgetAll();
-    settle(() => clearAll());
+    settle(() => clearAll(), {
+      // The server deleted nothing, so the memory the editor was on is the
+      // learner's again.
+      failed: () => {
+        if (open) {
+          recall(open.id);
+        }
+      },
+    });
   }
 
   return { add, clear, drop, edit, pause, remove };

@@ -231,6 +231,16 @@ describe("memory page store", () => {
     expect(fresh.getState()).toMatchObject({ deleted: first.id, open: true });
   });
 
+  it("takes back the note of a memory the server did not delete, and keeps the note of any other", () => {
+    const store = createMemoryStore();
+
+    store.getState().forget(first.id);
+    store.getState().recall(second.id);
+    expect(store.getState().deleted).toBe(first.id);
+    store.getState().recall(first.id);
+    expect(store.getState().deleted).toBeNull();
+  });
+
   it("counts each time the learner deletes every memory, and closes the editor on the memory it holds", () => {
     const store = createMemoryStore();
 

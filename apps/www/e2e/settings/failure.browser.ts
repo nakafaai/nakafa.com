@@ -18,6 +18,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const KEPT = "Studies after dinner";
 const MORE = " and on Sundays";
+const AGAIN = "Studies before breakfast";
 const ADDED = "Prefers short answers";
 /** What the page tells the learner when a change fails. */
 const FAILED = "We could not complete this action. Please try again.";
@@ -204,6 +205,62 @@ test.describe("Memory editor beside the list when everything is deleted at 1440p
         page,
         Effect.fromNullishOr(baseURL).pipe(
           Effect.flatMap((origin) => verifyClearWhileAdding(page, origin))
+        )
+      )
+    );
+  });
+});
+
+/**
+ * The learner deletes a memory from its row and the server cannot delete it.
+ * The page tells them and the memory is in the list again. It is still the
+ * learner's: the editor on it saves what they write.
+ */
+const verifyFailedDelete = Effect.fn("NakafaE2E.verifyFailedDelete")(function* (
+  page: Page,
+  baseURL: string
+) {
+  const changes = yield* openMemoryPage(page, baseURL);
+
+  yield* startsEmpty(page, changes);
+  yield* writeMemory(page, KEPT);
+  yield* Effect.promise(async () => {
+    const row = memoryRow(page, KEPT);
+
+    await saved(changes, 0);
+    changes.failNext();
+    await row.hover();
+    await row.getByRole("button", { name: "Delete memory" }).click();
+    await expect(page.getByText(FAILED).first()).toBeVisible();
+    await expect(row).toBeVisible();
+
+    // The editor on the memory that came back saves again.
+    const before = changes.sent;
+    await row.getByText(KEPT).click();
+    await opened(page, KEPT);
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.type(AGAIN);
+    await editorOf(page).press("Escape");
+    await expect(editorOf(page)).toHaveCount(0);
+    await saved(changes, before);
+    await reloadUntil(page, () =>
+      expect(memoryRow(page, AGAIN)).toBeVisible({ timeout: 3000 })
+    );
+  });
+});
+
+test.describe("Memory that the server cannot delete at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("comes back to the list, and its editor still saves", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.fromNullishOr(baseURL).pipe(
+          Effect.flatMap((origin) => verifyFailedDelete(page, origin))
         )
       )
     );
