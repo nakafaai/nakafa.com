@@ -113,7 +113,6 @@ describe("persisted search queries", () => {
     expect(
       Result.isSuccess(
         Schema.decodeResult(DataPartSchema.fields["web-search"])({
-          provider: "firecrawl",
           queries: [web],
           sources: [],
           status: "done",

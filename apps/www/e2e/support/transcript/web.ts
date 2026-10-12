@@ -78,7 +78,6 @@ function search(
 ): Card {
   return {
     data: {
-      provider: "firecrawl",
       queries: [query],
       ...(sites.length === 0 ? {} : { sites: [...sites] }),
       sources: [...sources],
@@ -194,7 +193,6 @@ export const noResults = replyOf(
 export const webSearchFailed: Card = {
   data: {
     error: "Failed to search the web. Please try again.",
-    provider: "firecrawl",
     queries: ["integral tak tentu"],
     sources: [],
     status: "error",
@@ -262,7 +260,6 @@ export const limited = replyOf(
     {
       data: {
         error: "Failed to search the web. Please try again.",
-        provider: "firecrawl",
         queries: ["asesmen nasional"],
         sites: [SITE_LONG_LABEL, PUNYCODE_SITE],
         sources: [],
