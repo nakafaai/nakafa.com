@@ -166,7 +166,7 @@ export default CronJobs.make()
     )
   )
   .add(
-    /** Prunes expired popularity inputs in bounded pages and, until none is left, retires the rows earlier versions kept. */ CronJob.make(
+    /** Prunes expired popularity inputs in bounded pages. */ CronJob.make(
       "prune expired popularity inputs",
       Duration.hours(POPULARITY_RETENTION_INTERVAL_HOURS),
       internal.contents.mutations.popularity.pruneLearningPopularity,

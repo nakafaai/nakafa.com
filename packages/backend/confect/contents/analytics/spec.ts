@@ -51,8 +51,6 @@ export const scheduleLearningPopularityExpiriesResultValidator = Schema.Struct({
 });
 export const pruneLearningPopularityResultValidator = Schema.Struct({
   hasMore: Schema.Boolean,
-  retiredCounters: Schema.Finite,
-  retiredCycles: Schema.Finite,
   signalsDeleted: Schema.Finite,
   viewersDeleted: Schema.Finite,
   waitingForMaintenance: Schema.Boolean,
