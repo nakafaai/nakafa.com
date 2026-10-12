@@ -127,19 +127,19 @@ treats a task in Japanese, Arabic, or Thai differently from the same task in
 English.
 
 A page longer than its budget keeps the paragraphs that hold the most of the
-task's words. The platform's `Intl.Segmenter` finds the words of every script,
-also of those written without spaces. A task word counts once for a paragraph,
-however often the paragraph repeats it, and it weighs less the more paragraphs
-of the page hold it, so the words that fill every paragraph, such as particles
-and prepositions, weigh little without any list of words to skip. A word
-matches only as a whole word: an inflected form of a task word, such as `cats`
-for `cat`, does not match it, because no stemmer covers every language and a
-wrong stem is worse than a miss. The words come from the fields of the tool
-call (the request, the objective, and each item of the lists), one per line with
-no heading, and not from the Markdown task that the research model reads. So a
-heading that the task writes never scores a paragraph, and a line of the request
-that starts with `#`, such as a pasted heading or a hashtag, is looked for like
-any other.
+words of the tool call: the text of its request, its objective, and each item of
+its lists, one per line with no heading. The words are not taken from the
+Markdown task that the research model reads, so a heading that the task writes
+never scores a paragraph, and a line of the request that starts with `#`, such
+as a pasted heading or a hashtag, is looked for like any other. The platform's
+`Intl.Segmenter` finds the words of every script, also of those written without
+spaces. A word counts once for a paragraph, however often the paragraph repeats
+it, and it weighs less the more paragraphs of the page hold it, so the words
+that fill every paragraph, such as particles and prepositions, weigh little
+without any list of words to skip. A word matches only as a whole word: an
+inflected form of a word of the tool call, such as `cats` for `cat`, does not
+match it, because no stemmer covers every language and a wrong stem is worse
+than a miss.
 
 A cut ends where `Intl.Segmenter` ends a sentence: after a full stop, a
 question mark, an exclamation mark, a Japanese `。`, or a line break. A script

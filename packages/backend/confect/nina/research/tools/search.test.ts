@@ -314,7 +314,7 @@ describe("research web search tool", () => {
   );
 
   it.effect.each(askedInOwnLanguage)(
-    "sends the provider every query the model wrote as written, also one that holds none of the task's names, and shows each query its own results ($language)",
+    "sends the provider every query the model wrote as written, also one that holds none of the request's names, and shows each query its own results ($language)",
     ({ named, own, request }) =>
       Effect.gen(function* () {
         const urlOf = (query: string) =>

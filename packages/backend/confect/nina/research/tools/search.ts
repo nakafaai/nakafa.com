@@ -19,8 +19,9 @@ import { Array as Arr, Effect, HashMap, Option } from "effect";
  * Searches the web and writes the web search UI data part. The model wrote the
  * queries, so each runs as written, and every result the provider returns with
  * an address is kept once, in the provider's order, web results first and then
- * news: no word of the task or the query decides which result a learner sees.
- * The task's words only decide which paragraphs of a result page are read.
+ * news: no word of the tool call or the query decides which result a learner
+ * sees. The words of the tool call only decide which paragraphs of a result
+ * page are read.
  */
 export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   queries,

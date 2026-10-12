@@ -185,8 +185,8 @@ export function formatSpecialistToolTask(input: SpecialistToolInput) {
 /**
  * Gives the words of a tool call, for the code that looks for them in a page:
  * the text of the same fields as the task, in the same order, one item per
- * line and with no heading. A heading is not the learner's word, and no line is
- * left out for how it starts.
+ * line and with no heading. A heading belongs to the task, not to the tool
+ * call, and no line is left out for how it starts.
  */
 export function getSpecialistToolWords(input: SpecialistToolInput) {
   return pipe(

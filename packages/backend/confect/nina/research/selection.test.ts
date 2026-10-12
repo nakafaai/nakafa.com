@@ -3,18 +3,18 @@ import { selectRelevantContent } from "@repo/backend/confect/nina/research/selec
 import { Array as Arr } from "effect";
 
 /**
- * One page per case, with the task a learner writes about it as a single
- * sentence. Only the `relevant` paragraph answers the task; the others share at
- * most a few words with it. Japanese and Thai are written without spaces, so
+ * One page per case, with the query for it as a single sentence in the words of
+ * a learner. Only the `relevant` paragraph answers the query; the others share
+ * at most a few words with it. Japanese and Thai are written without spaces, so
  * only the platform can tell where their words end. In the last two pages the
- * task is made of common words (the particles の and と, or "I", "do" and "my"):
- * the other paragraphs are full of them, and only the answer holds the rare
- * ones. `maxLength` is shorter than the page and longer than the answer.
+ * query is made of common words (the particles の and と, or "I", "do" and
+ * "my"): the other paragraphs are full of them, and only the answer holds the
+ * rare ones. `maxLength` is shorter than the page and longer than the answer.
  */
 const pages = [
   {
     language: "Japanese",
-    task: "微分方程式の安定性とリャプノフ関数について知りたい",
+    query: "微分方程式の安定性とリャプノフ関数について知りたい",
     before: [
       "この記事では、学校の理科と数学で使う基本的な考え方を短く紹介します。",
       "料理では、材料を切る順番と火を通す時間が大切です。",
@@ -30,7 +30,7 @@ const pages = [
   },
   {
     language: "Thai",
-    task: "วิธีเลี้ยงปลาทองให้อยู่ได้นาน",
+    query: "วิธีเลี้ยงปลาทองให้อยู่ได้นาน",
     before: [
       "บทความนี้รวบรวมเรื่องน่ารู้เกี่ยวกับสัตว์เลี้ยงในบ้านสำหรับผู้เริ่มต้น",
       "การเดินทางไปเชียงใหม่ด้วยรถไฟใช้เวลานานมาก แต่ผู้โดยสารได้ชมวิวสวยงามอยู่นานตลอดทาง",
@@ -46,7 +46,8 @@ const pages = [
   },
   {
     language: "English",
-    task: "How does the stability of a differential equation depend on a Lyapunov function?",
+    query:
+      "How does the stability of a differential equation depend on a Lyapunov function?",
     before: [
       "This guide introduces the basic ideas that students meet in school science and mathematics.",
       "Cooking depends on preparing the ingredients and watching the time that each dish needs.",
@@ -61,8 +62,8 @@ const pages = [
     maxLength: 300,
   },
   {
-    language: "Japanese, task of particles",
-    task: "微分方程式の安定性とリャプノフ関数について知りたい",
+    language: "Japanese, query of particles",
+    query: "微分方程式の安定性とリャプノフ関数について知りたい",
     before: [
       "私の家の近くにある古い店では、毎朝、近所の人が犬と散歩をして、季節の花を眺めています。",
       "友達の家で開かれた夕食会では、母の作った料理と、父の好きな酒が並びました。",
@@ -73,8 +74,8 @@ const pages = [
     maxLength: 140,
   },
   {
-    language: "English, task of common words",
-    task: "How do I reset my password?",
+    language: "English, query of common words",
+    query: "How do I reset my password?",
     before: [
       "I do not know my plan, and I think I will do it later.",
       "I do my homework after school, and my brother helps me when I get stuck.",
@@ -254,14 +255,14 @@ describe("selectRelevantContent", () => {
   });
 
   it.each(pages)(
-    "keeps the paragraph that holds the task's words ($language)",
+    "keeps the paragraph that holds the words of the query ($language)",
     (page) => {
-      const { maxLength, relevant, task } = page;
+      const { maxLength, query, relevant } = page;
       const options = {
         content: writePage(page),
         maxLength,
         preserveStructure: false,
-        query: task,
+        query,
       };
 
       expect(
@@ -300,7 +301,7 @@ describe("selectRelevantContent", () => {
     ).toBe("The cat sleeps on the sofa all afternoon.");
   });
 
-  it("counts a task word once for a paragraph, however often the paragraph repeats it", () => {
+  it("counts a query word once for a paragraph, however often the paragraph repeats it", () => {
     const winner =
       "The domain of a rational expression excludes every zero of its denominator.";
 
@@ -318,7 +319,7 @@ describe("selectRelevantContent", () => {
     ).toBe(winner);
   });
 
-  it("keeps the long paragraph that holds the most of the task's words over a short heading that holds fewer", () => {
+  it("keeps the long paragraph that holds the most of the query's words over a short heading that holds fewer", () => {
     const relevant = Arr.join(
       [
         "A Lyapunov function shows the stability of an equilibrium without solving the equation.",
@@ -370,7 +371,7 @@ describe("selectRelevantContent", () => {
       content: writePage(page),
       maxLength: page.maxLength,
       preserveStructure: false,
-      query: page.task,
+      query: page.query,
     });
 
     expect(segmenter).toHaveBeenCalledTimes(1);

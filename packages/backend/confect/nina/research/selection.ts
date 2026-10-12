@@ -58,7 +58,7 @@ function readWords(segmenter: Intl.Segmenter, text: string) {
 }
 
 /**
- * Weighs a task word by how few paragraphs of the page hold it, with the
+ * Weighs a query word by how few paragraphs of the page hold it, with the
  * inverse document frequency of the Okapi BM25 ranking, where the paragraphs
  * play the part of the documents. A word that most paragraphs hold, such as a
  * particle or a preposition, tells them little apart and weighs little. A word
@@ -80,10 +80,10 @@ function weighWord(
 }
 
 /**
- * Scores one paragraph by the task words it holds. Each different task word
+ * Scores one paragraph by the query words it holds. Each different query word
  * counts once, however often the paragraph repeats it, and counts for as much
  * as the page makes that word weigh. Repeating a word adds nothing, so length
- * alone wins nothing, and a long paragraph that holds more of the task's words
+ * alone wins nothing, and a long paragraph that holds more of the query's words
  * is not held back for being long.
  */
 function scoreParagraph(
@@ -96,8 +96,8 @@ function scoreParagraph(
 }
 
 /**
- * Scores each paragraph of a page by the task words it holds. The words of
- * every paragraph are read once: they give the weight of each task word first,
+ * Scores each paragraph of a page by the query words it holds. The words of
+ * every paragraph are read once: they give the weight of each query word first,
  * and then the score of each paragraph.
  */
 function analyzeParagraphs(
