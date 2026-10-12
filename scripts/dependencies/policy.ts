@@ -160,6 +160,14 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   { approved: "0.22.2", dependency: "afdocs", minimumDeclarations: 1 },
+  // The marked that @tiptap/markdown lexes with. The Memory page reads stored
+  // Markdown with the same lexer, so a row says what the editor shows; it moves
+  // with the editor's lexer, which plain.test.ts checks, never with the latest.
+  {
+    approved: "npm:marked@^17.0.1",
+    dependency: "marked-tiptap",
+    minimumDeclarations: 1,
+  },
 ];
 
 export const REGISTRY_REVIEWS = [

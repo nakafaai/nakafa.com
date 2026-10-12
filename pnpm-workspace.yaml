@@ -33,6 +33,7 @@ update:
     - better-auth
     - convex
     - effect
+    - marked-tiptap
     - next
     - node
     - pnpm

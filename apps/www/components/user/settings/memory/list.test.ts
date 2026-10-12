@@ -17,7 +17,6 @@ import {
   pageWith,
   pageWithout,
   pendingId,
-  previewText,
   removeMemory,
   sameDraft,
   shownMemories,
@@ -197,37 +196,47 @@ describe("memory list", () => {
     });
   });
 
-  describe("previewText", () => {
-    it("reads formatted text as one line of plain words", () => {
-      expect(previewText("Kelas **12** IPA, ikut *SNBT* 2027")).toBe(
-        "Kelas 12 IPA, ikut SNBT 2027"
+  describe("what the list calls a memory", () => {
+    it("calls a memory by its title, or by its words as the editor shows them when it has none", () => {
+      expect(memoryName(stored("a", { title: "School" }))).toBe("School");
+      expect(memoryName(stored("a", { text: "Kelas **12** IPA" }))).toBe(
+        "Kelas 12 IPA"
       );
-      expect(previewText("- Limit\n- Turunan\n\n1. Integral")).toBe(
-        "Limit Turunan Integral"
-      );
-    });
-
-    it("drops headings, tasks, quotes, links, code fences and dividers and keeps their words", () => {
       expect(
-        previewText(
-          "# Plan\n\n- [ ] Read ++chapter 3++\n- [x] ==Limits== done\n\n> Ask about [the syllabus](https://example.com/s)\n\n---\n\n```ts\nconst x = 1\n```"
+        memoryName(stored("a", { text: "- Limit\n- Turunan\n\n1. Integral" }))
+      ).toBe("Limit Turunan Integral");
+    });
+
+    it("says the words a learner wrote, not the Markdown that stores them", () => {
+      const nameOf = (text: string) => memoryName(stored("a", { text }));
+
+      expect(nameOf("I study C++ at university")).toBe(
+        "I study C++ at university"
+      );
+      expect(nameOf("a == b")).toBe("a == b");
+      expect(nameOf("Q&amp;A")).toBe("Q&A");
+      expect(nameOf("a &lt; b &gt; c")).toBe("a < b > c");
+      expect(nameOf("==")).toBe("==");
+      expect(nameOf("\\*\\*bold\\*\\* typed as text")).toBe(
+        "**bold** typed as text"
+      );
+      expect(
+        nameOf(
+          "[https://example.com/a?x=1&amp;y=2](https://example.com/a?x=1&y=2)"
         )
-      ).toBe(
-        "Plan Read chapter 3 Limits done Ask about the syllabus const x = 1"
-      );
+      ).toBe("https://example.com/a?x=1&y=2");
     });
 
-    it("keeps a star that is part of the words and drops the writer's escapes", () => {
-      expect(previewText("2 * 3 = 6")).toBe("2 * 3 = 6");
-      expect(previewText("Nilai 9\\.5 dan 2 \\* 3")).toBe(
-        "Nilai 9.5 dan 2 * 3"
-      );
+    it("gives no name to words that show nothing, such as a divider alone", () => {
+      expect(memoryName(stored("a", { text: "---" }))).toBe("");
     });
-  });
 
-  it("calls a memory by its title, or by its words when it has none", () => {
-    expect(memoryName(stored("a", { title: "School" }))).toBe("School");
-    expect(memoryName(stored("a", { text: "Kelas **12**" }))).toBe("Kelas 12");
+    it("reads the words of one memory object once", () => {
+      const memory = stored("a", { text: "Kelas **12**" });
+
+      expect(memoryName(memory)).toBe("Kelas 12");
+      expect(memoryName(memory)).toBe("Kelas 12");
+    });
   });
 
   describe("the search", () => {
@@ -258,6 +267,25 @@ describe("memory list", () => {
 
     it("shows nothing when no memory matches", () => {
       expect(shownMemories(memories, "biology")).toEqual([]);
+    });
+
+    it("finds the words a learner wrote, as the editor shows them", () => {
+      const written = [
+        stored("a", { text: "I study C++ at university" }),
+        stored("b", { text: "Q&amp;A on Friday" }),
+        stored("c", { text: "a &lt; b" }),
+        stored("d", { text: "==" }),
+        stored("e", { text: "a == b" }),
+      ];
+      const found = (query: string) => ids(shownMemories(written, query));
+
+      expect(found("C++")).toEqual([memoryId("a")]);
+      expect(found("q&a")).toEqual([memoryId("b")]);
+      expect(found("a < b")).toEqual([memoryId("c")]);
+      expect(found("==")).toEqual([memoryId("d"), memoryId("e")]);
+      // The Markdown that stores a character is not a word of the memory.
+      expect(found("&amp;")).toEqual([]);
+      expect(found("&lt;")).toEqual([]);
     });
 
     it("finds any part of a word, which a search of whole words cannot", () => {

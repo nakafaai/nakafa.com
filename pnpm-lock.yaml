@@ -859,6 +859,9 @@ importers:
       marked:
         specifier: ^18.1.0
         version: 18.1.0
+      marked-tiptap:
+        specifier: npm:marked@^17.0.1
+        version: marked@17.0.6
       mermaid:
         specifier: 11.17.2
         version: 11.17.2
