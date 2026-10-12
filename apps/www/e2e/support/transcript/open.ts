@@ -6,6 +6,7 @@ import {
 } from "@playwright/test";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { Effect, MutableRef, Option, Schedule, Schema } from "effect";
+import { AI_STORAGE_KEY } from "@/components/ai/store/create";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
@@ -141,12 +142,12 @@ const showSheet = Effect.fn("NakafaE2E.showSheet")(function* (
   MutableRef.set(shown, messages);
   yield* Effect.promise(() =>
     page.addInitScript(
-      ({ chat }) =>
+      ({ chat, key }) =>
         localStorage.setItem(
-          "nakafa-ai",
+          key,
           JSON.stringify({ state: { activeChatId: chat }, version: 1 })
         ),
-      { chat: CHAT }
+      { chat: CHAT, key: AI_STORAGE_KEY }
     )
   );
   yield* Effect.promise(() => page.goto(`/${locale}/${SHEET_PAGE}`));
