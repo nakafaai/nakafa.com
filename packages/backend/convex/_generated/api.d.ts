@@ -3630,7 +3630,6 @@ export declare const api: {
                   slug: string;
                 };
               };
-          modelId?: "nakafa-lite" | "nakafa-pro";
           requestId: string;
         },
         {
@@ -7841,7 +7840,7 @@ export declare const internal: {
             position?:
               | { cursor: string | null; phase: "lessons" }
               | { phase: "quran"; surah: number }
-              | { phase: "prune" };
+              | { cursor: string | null; phase: "prune" };
             releaseId?: string;
           },
           {
@@ -7852,13 +7851,15 @@ export declare const internal: {
               position:
                 | { cursor: string | null; phase: "lessons" }
                 | { phase: "quran"; surah: number }
-                | { phase: "prune" };
+                | { cursor: string | null; phase: "prune" };
               releaseId: string;
             } | null;
             position:
               | { cursor: string | null; phase: "lessons" }
               | { phase: "quran"; surah: number }
-              | { phase: "prune" };
+              | { cursor: string | null; phase: "prune" };
+            removed: number;
+            skipped: number;
             stale: boolean;
             written: number;
           }
@@ -7887,6 +7888,7 @@ export declare const internal: {
           | {
               kind: "ranked";
               pool: number;
+              refused: number;
               verdicts: Array<{
                 milliseconds: number;
                 section: { heading: string; rank: number } | null;
@@ -7955,9 +7957,11 @@ export declare const internal: {
                 rawMdx: string;
                 section: "articles" | "material" | "tryout" | "quran";
                 title: string;
+                version: string;
               }>;
               next: string | null;
               releaseId: string;
+              unchanged: number;
             }
         >;
         page: FunctionReference<
@@ -7977,8 +7981,13 @@ export declare const internal: {
         prune: FunctionReference<
           "mutation",
           "internal",
-          { releaseId: string },
-          { deleted: number; done: boolean }
+          { cursor: string | null; releaseId: string },
+          {
+            cursor: string | null;
+            deleted: number;
+            done: boolean;
+            stale: boolean;
+          }
         >;
         save: FunctionReference<
           "mutation",
@@ -8000,20 +8009,29 @@ export declare const internal: {
               section: "articles" | "material" | "tryout" | "quran";
               text: string;
             }>;
+            source: {
+              appLocale: "en" | "id" | "de";
+              contentKey: string;
+              section: "articles" | "material" | "tryout" | "quran";
+              version: string;
+            };
           },
-          { kept: number; missing: number; stale: boolean; written: number }
+          {
+            kept: number;
+            missing: number;
+            removed: number;
+            stale: boolean;
+            written: number;
+          }
         >;
         stored: FunctionReference<
           "query",
           "internal",
           {
+            appLocale: "en" | "id" | "de";
+            contentKey: string;
+            hashes: Array<string>;
             model: string;
-            sections: Array<{
-              appLocale: "en" | "id" | "de";
-              contentKey: string;
-              hash: string;
-              ordinal: number;
-            }>;
           },
           Array<boolean>
         >;
@@ -8022,22 +8040,30 @@ export declare const internal: {
           "internal",
           { releaseId?: string; surah: number },
           | { kind: "stale" }
-          | { kind: "none"; releaseId: string }
+          | { kind: "done"; releaseId: string; unchanged: number }
           | {
-              kind: "surah";
-              releaseId: string;
-              sections: Array<{
-                anchor: string;
+              documents: Array<{
                 appLocale: "en" | "id" | "de";
                 contentKey: string;
-                count: number;
-                excerpt: string;
-                headingPath: Array<string>;
-                ordinal: number;
-                publicPath: string;
                 section: "articles" | "material" | "tryout" | "quran";
-                text: string;
+                sections: Array<{
+                  anchor: string;
+                  appLocale: "en" | "id" | "de";
+                  contentKey: string;
+                  count: number;
+                  excerpt: string;
+                  headingPath: Array<string>;
+                  ordinal: number;
+                  publicPath: string;
+                  section: "articles" | "material" | "tryout" | "quran";
+                  text: string;
+                }>;
+                version: string;
               }>;
+              kind: "surah";
+              releaseId: string;
+              surah: number;
+              unchanged: number;
             }
         >;
       };
@@ -8079,6 +8105,9 @@ export declare const internal: {
               kind: "hits";
             }
         >;
+      };
+      state: {
+        ready: FunctionReference<"query", "internal", {}, boolean>;
       };
     };
   };
@@ -8169,10 +8198,7 @@ export declare const internal: {
                 }
               | {
                   name: "chat message sent";
-                  properties: {
-                    chat_type: "study";
-                    model_id?: "nakafa-lite" | "nakafa-pro";
-                  };
+                  properties: { chat_type: "study" };
                 }
               | {
                   name: "chat response completed";
@@ -9836,6 +9862,26 @@ export declare const internal: {
         }
       >;
     };
+    outcome: {
+      rewriteFailures: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: {
+            chats: string | null;
+            messages: { cursor: string; threadId: string } | null;
+          } | null;
+        },
+        {
+          cursor: {
+            chats: string | null;
+            messages: { cursor: string; threadId: string } | null;
+          } | null;
+          rewritten: number;
+          scanned: number;
+        }
+      >;
+    };
     presentation: {
       save: FunctionReference<
         "mutation",
@@ -9897,6 +9943,23 @@ export declare const internal: {
         "internal",
         { before: number; chatId: Id<"chats">; through: number | null },
         Array<{ order: number; retryOf?: number }>
+      >;
+    };
+    unset: {
+      modelKey: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: string | null;
+          numItems: number;
+          table: "ninaTurns" | "creditTransactions";
+        },
+        {
+          changed: number;
+          continueCursor: string;
+          isDone: boolean;
+          scanned: number;
+        }
       >;
     };
     uploads: {

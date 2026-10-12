@@ -4,6 +4,12 @@ import { Schema } from "effect";
 export const languageModelId = "google/gemini-3.8-flash";
 
 /**
+ * The provider id the AI SDK gives the chat models of `convexGateway`. Every
+ * usage row of a call that went through a gateway handle stores it.
+ */
+export const providerId = "convexGateway.chat";
+
+/**
  * The embedding models that the model test compares, as the Convex AI gateway
  * names them: the current multilingual models of Google, OpenAI, and Qwen out
  * of the many that the gateway lists. A model joins the shortlist with one

@@ -33,7 +33,7 @@ path `convexGateway` uses.
 
 | Probe | Result |
 | --- | --- |
-| `GET /models` | 200. `google/gemini-3.5-flash-lite` and `google/gemini-3.7-flash` are listed, so stored model keys and ids stay as they are. |
+| `GET /models` | 200. `google/gemini-3.5-flash-lite` and `google/gemini-3.7-flash` are listed. |
 | Plain chat on `google/gemini-3.5-flash-lite` | 200 in 722 ms. `usage.cost` holds the US dollar cost of the call. |
 | Plain chat on `google/gemini-3.7-flash` | 200 in 2312 ms. |
 | `reasoning_effort: "high"` on `gemini-3.7-flash` | 200. 357 reasoning tokens, and the reasoning summary comes back in `message.reasoning` without asking for it. `"low"` gives 189 reasoning tokens, no setting gives 377. |
@@ -74,8 +74,11 @@ tools with a warning.
 - **Model.** Every call runs `google/gemini-3.8-flash`, the one model that
   `gateway/model.ts` names. Learners cannot choose a model, so
   `Gateway.language(purpose)` takes only the purpose, and every Nina answer
-  costs 5 credits. The model keys learners chose before October 2026 are retired:
-  stored rows keep them until a later contract change unsets them.
+  costs 5 credits. The model keys learners chose before October 2026 are
+  retired. `nina.turns.start` no longer takes one, and the temporary
+  `nina/unset:modelKey` unsets it on the stored turns and credit transactions
+  that still hold one. A later change deletes the key's schema, the stored
+  field and that function.
 - **Routing and retention.** No routing choice is sent: Convex rejects
   `provider.only` and the other routing fields. Every language model call does
   send `provider: { zdr: true, data_collection: "deny" }`, which the gateway
@@ -256,8 +259,10 @@ Not yet established:
 
 ## Implementation Contract
 
-- `gateway/model.ts` owns the gateway model id and the reasoning effort of each
-  effort.
+- `gateway/model.ts` owns the gateway model id, the provider id that usage rows
+  store for a call through the gateway, and the reasoning effort of each effort.
+  The release gate in [ADR 0001](./0001-nina-engagement-architecture.md) reads
+  the first two back from a real turn.
 - `gateway/handle.ts` builds every handle over one AI SDK provider, so the
   production adapter and tests set the same defaults.
 - `gateway/live.ts` holds the production layer and the one service token read.
