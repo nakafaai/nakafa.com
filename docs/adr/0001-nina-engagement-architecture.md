@@ -89,6 +89,30 @@ pending when a turn begins (`saveInputMessages.ts` in the installed Agent), whic
 the page shows as Nina typing while the turn runs (`isAnswerWaiting`) and as an
 empty answer once the turn has ended.
 
+What a turn cost rides in the messages too. The Convex gateway reports the cost
+of a call in the metadata of the provider (`convexGateway.cost`, written by
+`@convex-dev/ai-sdk-provider`), Agent stores the report of a step on the
+messages it writes from the step (`serializeStepMessages`), and `toUIMessages`
+copies it onto the parts it builds from them: `providerMetadata` on a text or
+reasoning part, and `callProviderMetadata` on a tool part. So the same
+projection leaves out of every part the three keys under which the AI SDK
+declares such a report on a part (`PROVIDER_METADATA` in `nina/reader.ts`), as
+the turn summary leaves out the credits and the usage. The owner, who is told the
+credits of a turn, is told the report too. `nina/messages.impl.test.ts` proves it
+with a turn that ran: the owner's page holds the cost the model reported, and a
+reader's page holds it nowhere, under any key.
+
+What Nina wrote herself is not a fact of the account. A reader is sent her
+reasoning and her answer as the owner reads them, even when they name a search:
+a reasoning that says what she is about to look up, an answer that uses what she
+found. The answer is what the owner shared, and no rule could cut the words of a
+search out of it. The parts do not say which reasoning or text belongs to the
+step of a call either, because Agent writes a step marker in front of a tool
+call only, so a rule that cut the words around a call would cut by position and
+still leave the answer. The rule is about the call, a fact the system records,
+and not about what the model chooses to write. `nina/reader.test.ts` pins both:
+the call goes, and the words around it stay.
+
 A reader is sent no live stream either. After its first chunk, the chunks of a
 tool call name only the call (`tool-input-delta`, `tool-output-available`,
 `tool-output-error` and `tool-output-denied` hold a call id and no tool name), so
@@ -134,18 +158,20 @@ holds the token, the analytics it reported included. The turn summaries those
 pages were told hold no cost, token count, memory count or suggestion of the
 owner's, and the chat and the messages they were told name no account, while
 the owner's own page was told the credits and tokens of its turn and the account
-in its chat and in each message. They were told no live stream and no part of a
-memory call either (`apps/www/e2e/support/told.ts`, whose own tests show that
-the checks fail for a page that was told one). The local runtime has no model, so
-each of its turns ends with the failure that offers no retry, and the browser
-test reaches no answer with follow-up suggestions, no completed turn that shows
-the credits control, no failure that can be retried, no memory call and no live
-stream: for the last two it shows only that the production build answers a
-reader's requests with no stream. The server tests above are what fail when a
-reader is sent a stream or a memory call. A reader is sent no suggestions, a
-reader's turn carries no credits for that control to show, and the Retry of a
-failed answer reads the same access as the composer, `readChatAccess`, which a
-unit test pins for a reader.
+in its chat and in each message. They were told no live stream, no part of a
+memory call and no part with what the provider reported for a call either
+(`apps/www/e2e/support/told.ts`, whose own tests show that the checks fail for a
+page that was told one). The local runtime has no model, so each of its turns
+ends with the failure that offers no retry, and the browser test reaches no
+answer with follow-up suggestions, no completed turn that shows the credits
+control, no failure that can be retried, no part that a call wrote (a memory
+call, the provider's report) and no live stream: for those it shows only what the
+production build answers a reader's requests with, which holds none. The server
+tests above are what fail when a reader is sent a stream, a memory call or the
+provider's report, and one of them runs a real turn. A reader is sent no
+suggestions, a reader's turn carries no credits for that control to show, and
+the Retry of a failed answer reads the same access as the composer,
+`readChatAccess`, which a unit test pins for a reader.
 
 Nina's sheet reads a chat by its id and never holds a share token: a link opens
 the chat page, and the chat the sheet shows comes from the learner's own list,

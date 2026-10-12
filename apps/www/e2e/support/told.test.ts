@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { PROVIDER_METADATA } from "@repo/backend/confect/nina/reader";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import {
@@ -196,6 +197,28 @@ describe("the checks of what a page was told of a chat", () => {
       )
     ).toThrow("the turns that the reader's page was told run in the chat");
   });
+
+  it.each(PROVIDER_METADATA)(
+    "fail for a reader's page that was told a part with what the provider reported for a call, under %s",
+    (key) => {
+      const reported = { convexGateway: { cost: 0.25 } };
+
+      expect(() =>
+        learnsOnlyWhereTurnsStand(
+          given({
+            ...reader,
+            [MESSAGES]: [
+              messagesOf({
+                id: "message-1",
+                metadata: standing,
+                parts: [...answered, { [key]: reported, type: "text" }],
+              }),
+            ],
+          })
+        )
+      ).toThrow("with what the provider reported for a call");
+    }
+  );
 
   it("fail for an owner's page that was told neither what the turn cost nor who owns the chat", () => {
     expect(() => learnsWhatTurnsCost(given(reader))).toThrow(

@@ -8,6 +8,13 @@ import {
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { provider } from "@repo/backend/test/gateway";
+import {
+  createNinaTest,
+  ninaModel,
+  ninaStream,
+  ninaUsage,
+} from "@repo/backend/test/nina";
 import {
   createThreadTest,
   MEMORY_TURN,
@@ -18,6 +25,9 @@ import { encodeJsonText } from "@repo/utilities/json";
 import type { FunctionArgs } from "convex/server";
 import { Array as Arr, Option, Schema } from "effect";
 
+vi.mock("@repo/backend/confect/gateway/live", async () => ({
+  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
+}));
 vi.mock("@convex-dev/agent", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@convex-dev/agent")>();
   return {
@@ -29,6 +39,7 @@ vi.mock("@convex-dev/agent", async (importOriginal) => {
 });
 
 const query = Ref.getFunctionReference(refs.public.nina.messages.list);
+const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const share = Ref.getFunctionReference(
   refs.public.chats.mutations.updateChatVisibility
 );
@@ -36,13 +47,16 @@ const token = Ref.getFunctionReference(refs.public.chats.queries.getShareToken);
 
 type Fixture = Awaited<ReturnType<typeof createThreadTest>>;
 
-/** Shares the chat, and returns the token of its link. */
-async function shareChat(f: Fixture) {
-  await f.owner.mutation(share, {
-    chatId: f.args.chatId,
-    visibility: "public",
-  });
-  const shareToken = await f.owner.query(token, { chatId: f.args.chatId });
+/** The keys under which a part holds what the provider reported for a call, and the report's own key. */
+const REPORTED = /[pP]roviderMetadata|convexGateway/;
+
+/** Shares the chat of an owner, and returns the token of its link. */
+async function shareChat(
+  owner: Fixture["owner"],
+  chatId: Fixture["args"]["chatId"]
+) {
+  await owner.mutation(share, { chatId, visibility: "public" });
+  const shareToken = await owner.query(token, { chatId });
   assert(shareToken !== null);
   return shareToken;
 }
@@ -112,7 +126,10 @@ function kindsOf(told: Awaited<ReturnType<typeof tell>>) {
 }
 
 describe("Nina message boundary", () => {
-  afterEach(() => vi.clearAllMocks());
+  afterEach(() => {
+    vi.clearAllMocks();
+    provider.languageModel.mockReset();
+  });
 
   it("reads the component transcript with reasoning and tool artifacts intact", async () => {
     const { owner, args } = await createThreadTest();
@@ -283,7 +300,7 @@ describe("Nina message boundary", () => {
   it("tells a reader who holds the share link no live stream whatever it asks, reads none for it, and still lists the messages", async () => {
     const f = await createThreadTest();
     const streamId = await startStream(f);
-    const shareToken = await shareChat(f);
+    const shareToken = await shareChat(f.owner, f.args.chatId);
     vi.clearAllMocks();
 
     const [messages, streams, deltas] = await askAll(f.t, f, streamId, {
@@ -319,7 +336,7 @@ describe("Nina message boundary", () => {
 
   it("tells a reader no part of a search of the owner's memory, and the owner all of it", async () => {
     const f = await createThreadTest(MEMORY_TURN);
-    const shareToken = await shareChat(f);
+    const shareToken = await shareChat(f.owner, f.args.chatId);
     const ownerTold = await tell(f.owner, { ...f.args });
     const ownerByLink = await tell(f.owner, { ...f.args, shareToken });
     const readerTold = await tell(f.t, { ...f.args, shareToken });
@@ -354,7 +371,7 @@ describe("Nina message boundary", () => {
 
   it("keeps the message of a turn that has only searched the memory, with no part, for a reader", async () => {
     const f = await createThreadTest(SEARCHING_TURN);
-    const shareToken = await shareChat(f);
+    const shareToken = await shareChat(f.owner, f.args.chatId);
     const ownerTold = await tell(f.owner, { ...f.args });
     const readerTold = await tell(f.t, { ...f.args, shareToken });
 
@@ -367,6 +384,51 @@ describe("Nina message boundary", () => {
     ]);
     expect(kindsOf(readerTold)).toEqual([]);
     expect(encodeJsonText(readerTold)).not.toContain(SEARCH.query);
+  });
+
+  it("tells a reader nothing of what the gateway reported for the calls of a turn that ran, under any key, and tells the owner all of it", async () => {
+    // A cost that no other number of a page holds.
+    const cost = 0.123_456;
+    const languageModel = ninaModel();
+    languageModel.doStream = () =>
+      Promise.resolve(
+        ninaStream([
+          { type: "stream-start", warnings: [] },
+          { type: "reasoning-start", id: "reason" },
+          { type: "reasoning-delta", id: "reason", delta: "Check it." },
+          { type: "reasoning-end", id: "reason" },
+          { type: "text-start", id: "answer" },
+          { type: "text-delta", id: "answer", delta: "An answer." },
+          { type: "text-end", id: "answer" },
+          {
+            type: "finish",
+            finishReason: { unified: "stop", raw: "stop" },
+            providerMetadata: { convexGateway: { cost } },
+            usage: ninaUsage,
+          },
+        ])
+      );
+    provider.languageModel.mockReturnValue(languageModel);
+    const f = await createNinaTest({ prompt: "Explain a function limit." });
+    await f.t.action(run, { turnId: f.turnId });
+    const shareToken = await shareChat(f.owner, f.chatId);
+    const args = {
+      chatId: f.chatId,
+      paginationOpts: { cursor: null, numItems: 20 },
+      threadId: f.threadId,
+    };
+
+    const ownerTold = await tell(f.owner, args);
+    const readerTold = await tell(f.t, { ...args, shareToken });
+
+    // The turn ran and Agent stored the report on what it wrote: the owner is
+    // told it. A reader is told the reasoning and the answer, and the report
+    // under no key.
+    expect(encodeJsonText(ownerTold)).toContain(String(cost));
+    expect(kindsOf(readerTold)).toEqual(["reasoning", "text"]);
+    expect(encodeJsonText(readerTold)).toContain("An answer.");
+    expect(encodeJsonText(readerTold)).not.toContain(String(cost));
+    expect(encodeJsonText(readerTold)).not.toMatch(REPORTED);
   });
 
   it.each([

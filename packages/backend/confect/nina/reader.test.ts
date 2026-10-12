@@ -27,13 +27,25 @@ function message(role: UIMessage["role"], parts: Part[]): UIMessage {
 
 const step: Part = { type: "step-start" };
 const words: Part = { text: "The value is 2.", type: "text" };
-const math: Part = {
+const thought: Part = {
+  state: "done",
+  text: "Check the expression.",
+  type: "reasoning",
+};
+const source: Part = {
+  sourceId: "source-1",
+  type: "source-url",
+  url: "https://example.com/limits",
+};
+const math: ToolUIPart = {
   input: { expression: "1+1" },
   output: { text: "2" },
   state: "output-available",
   toolCallId: "math-1",
   type: "tool-math",
 };
+/** What the provider reported for a call. The gateway reports there what the call cost. */
+const reported = { convexGateway: { cost: 0.25 } };
 
 const input = { query: "when is my exam" };
 const search = { toolCallId: "recall-1", type: "tool-memory" } as const;
@@ -129,5 +141,38 @@ describe("what a reader of a shared chat is told", () => {
       role: "assistant",
       text: "The value is 2.",
     });
+  });
+
+  it("keeps what Nina wrote around a search, which is the conversation and not the search", () => {
+    const looking: Part = {
+      state: "done",
+      text: `I will look for "${input.query}" in what you told me.`,
+      type: "reasoning",
+    };
+    const said: Part = {
+      text: `You told me about "${input.query}".`,
+      type: "text",
+    };
+
+    expect(
+      readerMessage(message("assistant", [looking, step, found, said])).parts
+    ).toStrictEqual([looking, said]);
+  });
+
+  it("leaves out what the provider reported for a call from every part that holds it, and changes nothing else of a part", () => {
+    const reportedParts: Part[] = [
+      { ...thought, providerMetadata: reported },
+      { ...words, providerMetadata: reported },
+      { ...source, providerMetadata: reported },
+      {
+        ...math,
+        callProviderMetadata: reported,
+        resultProviderMetadata: reported,
+      },
+    ];
+
+    expect(
+      readerMessage(message("assistant", reportedParts)).parts
+    ).toStrictEqual([thought, words, source, math]);
   });
 });

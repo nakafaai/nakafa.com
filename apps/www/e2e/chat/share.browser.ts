@@ -167,9 +167,9 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
 
         // No reader sent a mutation or an action to the server. The pages of
         // both were told where each turn stands and nothing of what it cost the
-        // owner, nothing of the account that owns the chat, no live stream and
-        // no part of a memory call. The owner's own page was told what the turn
-        // cost and which account owns the chat.
+        // owner, nothing of the account that owns the chat, no live stream, no
+        // part of a memory call and no report of the provider. The owner's own
+        // page was told what the turn cost and which account owns the chat.
         yield* Effect.sync(() => {
           expect(readerChanges.sent).toBe(0);
           expect(memberChanges.sent).toBe(memberSent);

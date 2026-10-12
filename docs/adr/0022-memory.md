@@ -261,7 +261,9 @@ count and nothing to open, because a memory's text is not shown in the chat. The
 row is the owner's alone. The call tells what Nina looked for in the owner's
 memories, in the owner's words, whether something matched and whether memory is
 paused, so a reader of a shared chat is sent no part of it, and no live stream
-in which its chunks could travel (ADR 0001).
+in which its chunks could travel (ADR 0001). The words Nina writes around the
+call, her reasoning and her answer, are the conversation: a reader is sent them
+like the rest of her words (ADR 0001).
 
 While memory is paused none of the three is there: no portrait, no list, and the
 tool is not offered. The turn reads the pause once, at its start, and the

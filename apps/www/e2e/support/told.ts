@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { MEMORY_CAPABILITY } from "@repo/backend/confect/nina/capability/spec";
+import { PROVIDER_METADATA } from "@repo/backend/confect/nina/reader";
 import {
   Array as Arr,
   Option,
@@ -49,12 +50,16 @@ const ToldStreams = Schema.Union([
     deltas: Schema.Array(Schema.Unknown),
   }),
 ]);
+/** A part of a message as a page was told it: its type, and every other key it was given. */
+const ToldPart = Schema.StructWithRest(Schema.Struct({ type: Schema.String }), [
+  Schema.Record(Schema.String, Schema.Unknown),
+]);
 const ToldMessages = Schema.fromJsonString(
   Schema.Struct({
     page: Schema.Array(
       Schema.Struct({
         metadata: Schema.optionalKey(TurnSummary),
-        parts: Schema.Array(Schema.Struct({ type: Schema.String })),
+        parts: Schema.Array(ToldPart),
         ...Owned,
       })
     ),
@@ -147,10 +152,17 @@ export const learnsWhatTurnsCost = (page: Answered) => {
  * What a reader's page was told of the turns of a shared chat: where each
  * stands and which prompt it answers, with an empty list of usage. None of
  * what a turn cost the owner, what Nina kept from it or what she suggests next
- * belongs to a reader.
+ * belongs to a reader, and no part of a message holds what the provider
+ * reported for the call that wrote it, which is where the gateway reports what
+ * the call cost. The local runtime has no model, so no part of a chat of a
+ * browser test was written by a call: the last check shows only what the
+ * production build answers with, and the tests of this module show that it
+ * fails for a page that was told such a part. `nina/messages.impl.test.ts` runs
+ * a real turn and reads it as a reader.
  */
 export const learnsOnlyWhereTurnsStand = (page: Answered) => {
-  const summaries = summariesOf(told(page));
+  const answered = told(page);
+  const summaries = summariesOf(answered);
 
   expect(
     summaries.length,
@@ -163,6 +175,13 @@ export const learnsOnlyWhereTurnsStand = (page: Answered) => {
     ).toEqual([]);
     expect(summary.usage).toEqual([]);
   }
+  expect(
+    Arr.filter(
+      Arr.flatMap(answered.messages, ({ parts }) => parts),
+      (part) => Arr.some(PROVIDER_METADATA, (key) => Rec.has(part, key))
+    ),
+    "the parts that the reader's page was told with what the provider reported for a call"
+  ).toEqual([]);
 };
 
 /**
