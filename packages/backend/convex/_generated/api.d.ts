@@ -8468,7 +8468,6 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -8629,7 +8628,6 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -8805,7 +8803,6 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -8978,7 +8975,6 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -9139,7 +9135,6 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9315,7 +9310,6 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9600,26 +9594,6 @@ export declare const internal: {
         }
       >;
     };
-    outcome: {
-      rewriteFailures: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          cursor: {
-            chats: string | null;
-            messages: { cursor: string; threadId: string } | null;
-          } | null;
-        },
-        {
-          cursor: {
-            chats: string | null;
-            messages: { cursor: string; threadId: string } | null;
-          } | null;
-          rewritten: number;
-          scanned: number;
-        }
-      >;
-    };
     presentation: {
       save: FunctionReference<
         "mutation",
@@ -9681,23 +9655,6 @@ export declare const internal: {
         "internal",
         { before: number; chatId: Id<"chats">; through: number | null },
         Array<{ order: number; retryOf?: number }>
-      >;
-    };
-    unset: {
-      modelKey: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          cursor: string | null;
-          numItems: number;
-          table: "ninaTurns" | "creditTransactions";
-        },
-        {
-          changed: number;
-          continueCursor: string;
-          isDone: boolean;
-          scanned: number;
-        }
       >;
     };
     uploads: {

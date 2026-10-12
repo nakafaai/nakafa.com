@@ -70,15 +70,6 @@ export const NinaTurnState = Schema.Union([
 export const NinaRequestId = Schema.NonEmptyString.check(
   Schema.isMaxLength(128)
 );
-/**
- * The model key learners chose before October 2026. `nina.turns.start` no
- * longer takes it and nothing reads it, but turns and credit transactions
- * written before then still hold it until `nina/unset:modelKey` has walked
- * both tables on every deployment. The next change deletes this schema, the
- * stored field and that function.
- */
-export const RetiredModelKey = Schema.Literals(["nakafa-lite", "nakafa-pro"]);
-
 /** Recorded response facts never invent an unknown model, charge or token count. */
 export const NinaTurnFacts = Schema.Struct({
   userId: Id("users"),
@@ -94,7 +85,6 @@ export const NinaTurnFacts = Schema.Struct({
    * and history shows only the newest complete one.
    */
   retryOf: Schema.optionalKey(Schema.Finite),
-  modelId: Schema.optionalKey(RetiredModelKey),
   credits: Schema.optionalKey(Schema.Finite),
   requestId: Schema.optionalKey(NinaRequestId),
   fingerprint: Schema.optionalKey(Schema.String),
