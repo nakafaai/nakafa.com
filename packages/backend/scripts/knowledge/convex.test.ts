@@ -29,9 +29,27 @@ const ranked = {
   ],
 };
 
-/** What the CLI prints when the function throws, as its `run` command words it. */
+/**
+ * A stand-in for what the CLI prints when it cannot run the function. The CLI
+ * words the first line itself, and then prints the error of the call as its
+ * name and the message the server sent (`run.ts` of the installed `convex`
+ * package). No server was asked for this test, so that message is made up: the
+ * test needs only that what the CLI printed reaches the report.
+ */
 const FAILED_CALL = `✖ Failed to run function "contents/sections/compare:rank":
-ConvexError: Server Error`;
+Error: the server message, made up for this test`;
+
+/** What the function answers when the gateway refuses a request of the run. */
+const refused = {
+  failure: {
+    _tag: "GatewayFailure",
+    reason: "rate-limit",
+    retryAfter: 2,
+    retryable: true,
+    status: 429,
+  },
+  kind: "failed",
+};
 
 /** The arguments of a call, as JSON text that the function declares. */
 const Arguments = Schema.fromJsonString(compareInputValidator);
@@ -131,7 +149,25 @@ describe("model test deployment boundary", () => {
     })
   );
 
-  it.live("reports a failure of the function with what the CLI printed", () =>
+  it.live("decodes a request that the gateway refused as an answer", () =>
+    Effect.gen(function* () {
+      const { answer } = yield* ask({ stdout: encodeJsonText(refused) });
+
+      expect(answer).toMatchObject({
+        _tag: "Success",
+        success: {
+          failure: {
+            _tag: "GatewayFailure",
+            reason: "rate-limit",
+            status: 429,
+          },
+          kind: "failed",
+        },
+      });
+    })
+  );
+
+  it.live("reports a function that cannot run with what the CLI printed", () =>
     Effect.gen(function* () {
       const { answer } = yield* ask({ code: "1", stderr: FAILED_CALL });
 

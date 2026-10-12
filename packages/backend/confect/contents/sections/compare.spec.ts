@@ -34,10 +34,21 @@ const verdictValidator = Schema.Struct({
   ),
 });
 
+/** What ends a run without verdicts: the deployment cannot reach the gateway, or the gateway refuses a request. */
+export const compareFailureValidator = Schema.Union([
+  GatewayConfigurationError,
+  GatewayFailure,
+]);
+
 /**
  * The verdicts, in the order of the questions, with the number of sections that
  * were embedded and ranked (`pool`) and the number that the model would not
- * take (`refused`); or `empty` when no section of the language is stored.
+ * take (`refused`); `empty` when no section of the language is stored; or
+ * `failed` with the failure that ended the run.
+ *
+ * A failure is an answer and not a failure of the call, because the Convex CLI
+ * that runs the model test prints a failed call as text and drops the typed data
+ * of its error, so the reason would not reach the report.
  */
 export const compareResultValidator = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("empty") }),
@@ -46,6 +57,10 @@ export const compareResultValidator = Schema.Union([
     pool: Schema.Finite,
     refused: Schema.Finite,
     verdicts: Schema.Array(verdictValidator),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("failed"),
+    failure: compareFailureValidator,
   }),
 ]);
 
@@ -62,6 +77,5 @@ export default GroupSpec.makeNode().addFunction(
     name: "rank",
     args: () => compareInputValidator.fields,
     returns: () => compareResultValidator,
-    error: () => Schema.Union([GatewayConfigurationError, GatewayFailure]),
   })
 );

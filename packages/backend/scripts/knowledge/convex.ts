@@ -35,9 +35,11 @@ class KnowledgeConvexError extends Schema.TaggedError<KnowledgeConvexError>()(
  * Runs the model comparison of the dev deployment for one model and one
  * language with the Convex CLI, and gives back its answer as the function
  * declares it. The function is internal, and the CLI holds the credential that
- * reaches it. A failure of the function, such as the gateway refusing a
- * request, makes the CLI exit with an error, which `runConvex` reports with
- * what the CLI printed.
+ * reaches it. A request that the gateway refuses is an answer of the function
+ * (`failed`), because the CLI prints a failed call as text and drops the typed
+ * data of its error. When the function cannot run at all, such as when the
+ * deployment does not have it yet, the CLI exits with an error, which
+ * `runConvex` reports with the start of what the CLI printed.
  */
 export const rankModel = Effect.fn("knowledge.rankModel")(function* (
   input: typeof compareInputValidator.Type

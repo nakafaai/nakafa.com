@@ -49,9 +49,13 @@ vi.mock("@effect/platform-node/NodeRuntime", () => ({
 /** The environment of a caller whose dev deployment is named. */
 const DEV = { CONVEX_DEPLOYMENT: "dev:happy-animal-123" };
 
-/** What the CLI prints when the function throws, as its `run` command words it. */
+/**
+ * A stand-in for what the CLI prints when it cannot run the function: its own
+ * first line, and then the error of the call with a server message that is made
+ * up for this test, because no server was asked.
+ */
 const FAILED_CALL = `✖ Failed to run function "contents/sections/compare:rank":
-ConvexError: Server Error`;
+Error: the server message, made up for this test`;
 
 const originalArgv = process.argv;
 
@@ -282,7 +286,54 @@ describe("model test entry", () => {
   );
 
   it.effect(
-    "reports a run that gets no answer and still counts the others",
+    "reports a run that the gateway refused with the facts of the failure and still counts the others",
+    () =>
+      Effect.gen(function* () {
+        const prepared = yield* prepare({
+          ...everywhere,
+          de: {
+            answer: {
+              failure: {
+                _tag: "GatewayFailure",
+                reason: "rate-limit",
+                retryAfter: 2,
+                retryable: true,
+                status: 429,
+              },
+              kind: "failed",
+            },
+          },
+        });
+
+        const { failure, rows } = yield* execute(
+          prepared,
+          DEV,
+          "--model=google/gemini-embedding-2"
+        );
+
+        expect(rows).toMatchObject([
+          { locale: "en", top5Share: 1 },
+          { locale: "id", top5Share: 1 },
+          {
+            error: expect.toSatisfy(
+              (text: string) =>
+                text.startsWith("The run ended with a gateway failure: ") &&
+                text.includes('"reason":"rate-limit"') &&
+                text.includes('"status":429')
+            ),
+            locale: "de",
+            model: "google/gemini-embedding-2",
+          },
+        ]);
+        expect(failure).toMatchObject({
+          _tag: "KnowledgeCompareError",
+          message: "1 of 3 runs gave no answer.",
+        });
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "reports a run whose function could not run with what the CLI printed and still counts the others",
     () =>
       Effect.gen(function* () {
         const prepared = yield* prepare({

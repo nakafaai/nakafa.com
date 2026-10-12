@@ -5,6 +5,7 @@ import {
   type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
+import { compareFailureValidator } from "@repo/backend/confect/contents/sections/compare.spec";
 import {
   EmbeddingModelId,
   embeddingModels,
@@ -40,6 +41,11 @@ export class KnowledgeCompareError extends Schema.TaggedError<KnowledgeCompareEr
  * minutes, so a run that takes longer fails sooner, with the error of the CLI.
  */
 const RUN_DEADLINE = Duration.minutes(10);
+
+/** A failure of the gateway as JSON text, with the facts it carries as the data of an error. */
+const failureText = Schema.encodeSync(
+  Schema.fromJsonString(compareFailureValidator)
+);
 
 /** The value of a `--name=value` flag, when the command line has one. */
 function flag(args: readonly string[], name: string) {
@@ -84,6 +90,13 @@ const compareRun = Effect.fn("knowledge.compareRun")(function* (
   );
   if (Result.isFailure(found)) {
     return { error: found.failure.message, locale, model };
+  }
+  if (found.success.kind === "failed") {
+    return {
+      error: `The run ended with a gateway failure: ${failureText(found.success.failure)}`,
+      locale,
+      model,
+    };
   }
   if (found.success.kind === "empty") {
     return {
