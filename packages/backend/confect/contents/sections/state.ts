@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { loadState } from "@repo/backend/confect/contentRelease/model";
 import type { finishInputValidator } from "@repo/backend/confect/contents/sections/schema";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /** Reads the one record of the last build that finished. */
 const findBuild = Effect.fn("contents.sections.findBuild")(function* () {
@@ -17,12 +17,21 @@ const findBuild = Effect.fn("contents.sections.findBuild")(function* () {
     );
 });
 
+/** The sequence of `releaseId` when it is the release that is active now, and none when it is not. */
+export const activeSequence = Effect.fn("contents.sections.activeSequence")(
+  function* (releaseId: string) {
+    const state = yield* loadState();
+    return state?.activeReleaseId === releaseId
+      ? Option.fromNullishOr(state.activeSequence)
+      : Option.none<number>();
+  }
+);
+
 /** Whether `releaseId` is the release that is active now. */
 export const isActive = Effect.fn("contents.sections.isActive")(function* (
   releaseId: string
 ) {
-  const state = yield* loadState();
-  return state?.activeReleaseId === releaseId;
+  return Option.isSome(yield* activeSequence(releaseId));
 });
 
 /**
@@ -49,7 +58,7 @@ export const isReady = Effect.fn("contents.sections.isReady")(function* (
  * Records that the index holds every section of `releaseId`, made by
  * `model`, which is when search may trust it. Nothing is recorded once the
  * release is no longer the active one, because the build of the newer release
- * records its own.
+ * records its own, and a record that says it already is not written again.
  */
 export const finishBuild = Effect.fn("contents.sections.finish")(function* (
   input: typeof finishInputValidator.Type
@@ -57,8 +66,11 @@ export const finishBuild = Effect.fn("contents.sections.finish")(function* (
   if (!(yield* isActive(input.releaseId))) {
     return { recorded: false };
   }
-  const table = (yield* DatabaseWriter).table("contentSectionState");
   const build = yield* findBuild();
+  if (build?.releaseId === input.releaseId && build.model === input.model) {
+    return { recorded: true };
+  }
+  const table = (yield* DatabaseWriter).table("contentSectionState");
   const record = { key: "primary" as const, ...input };
   yield* (
     build === null

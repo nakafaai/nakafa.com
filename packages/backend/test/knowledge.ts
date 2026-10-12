@@ -6,6 +6,14 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { runStep } from "@repo/backend/confect/contents/sections/build";
+import {
+  type Source,
+  sectionScope,
+} from "@repo/backend/confect/contents/sections/schema";
+import {
+  embeddingDimensions,
+  embeddingModelId,
+} from "@repo/backend/confect/gateway/model";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import type {
   ActionCtx,
@@ -25,6 +33,10 @@ import {
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
+import { sha256Hex } from "@repo/utilities/digest";
+import { APICallError } from "ai";
+import { MockEmbeddingModelV4 } from "ai/test";
+import { getFunctionName } from "convex/server";
 import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /** The release that the knowledge fixture makes active. */
@@ -124,12 +136,58 @@ export function knowledgeLesson(
   return joined(LESSONS[order][appLocale]);
 }
 
-/** Replaces the source of one lesson of the fixture in one language, as an author's edit does. */
-export async function editKnowledgeLesson(
-  ctx: MutationCtx,
+/**
+ * Names one lesson of the fixture in one language as the section index names
+ * its document, at the version a test chooses.
+ */
+export function knowledgeSource(
   order: (typeof LESSON_ORDERS)[number],
   appLocale: ActiveAppLocaleCode,
-  rawMdx: string
+  version = "left"
+): Source {
+  return {
+    appLocale,
+    contentKey: makeMaterialProjection(appLocale, order).contentKey,
+    section: "material",
+    version,
+  };
+}
+
+/**
+ * Leaves a document in the section index as an earlier build made it: its
+ * record, and one row for each of its ordinals.
+ */
+export async function leaveDocument(
+  ctx: MutationCtx,
+  source: Source,
+  ordinals: readonly number[]
+) {
+  await ctx.db.insert("contentSectionSources", source);
+  for (const ordinal of ordinals) {
+    await ctx.db.insert("contentSections", {
+      anchor: `bagian-${ordinal}`,
+      appLocale: source.appLocale,
+      contentKey: source.contentKey,
+      count: ordinals.length,
+      embedding: Arr.makeBy(embeddingDimensions, () => 0),
+      excerpt: "Bagian.",
+      hash: `sha256:${ordinal}`,
+      headingPath: [],
+      model: embeddingModelId,
+      ordinal,
+      publicPath: "materi/lama",
+      scope: sectionScope(source.appLocale, source.section),
+      section: source.section,
+      text: "Bagian",
+    });
+  }
+}
+
+/** Finds the head of one lesson of the fixture in one language. */
+async function knowledgeHead(
+  ctx: MutationCtx,
+  order: (typeof LESSON_ORDERS)[number],
+  appLocale: ActiveAppLocaleCode
 ) {
   const { artifactLocale, contentKey } = makeMaterialProjection(
     appLocale,
@@ -144,16 +202,45 @@ export async function editKnowledgeLesson(
         .eq("sequence", KNOWLEDGE_RELEASE.sequence)
     )
     .unique();
-  assert.ok(head?.artifactHash, "Expected the head of the fixture lesson.");
-  const { artifactHash } = head;
+  assert.ok(head, "Expected the head of the fixture lesson.");
+  return head;
+}
+
+/** Retires one lesson of the fixture in one language, as a release that deletes it does. */
+export async function retireKnowledgeLesson(
+  ctx: MutationCtx,
+  order: (typeof LESSON_ORDERS)[number],
+  appLocale: ActiveAppLocaleCode
+) {
+  const head = await knowledgeHead(ctx, order, appLocale);
+  await ctx.db.patch("contentHeads", head._id, { operation: "delete" });
+}
+
+/** Replaces the source of one lesson of the fixture in one language, as an author's edit does. */
+export async function editKnowledgeLesson(
+  ctx: MutationCtx,
+  order: (typeof LESSON_ORDERS)[number],
+  appLocale: ActiveAppLocaleCode,
+  rawMdx: string
+) {
+  const { artifactLocale, contentKey } = makeMaterialProjection(
+    appLocale,
+    order
+  );
+  const head = await knowledgeHead(ctx, order, appLocale);
+  assert.ok(head.artifactHash, "Expected the artifact of the fixture lesson.");
+  const { artifactHash: previousHash } = head;
   const artifact = await ctx.db
     .query("contentArtifacts")
     .withIndex("by_artifactHash", (index) =>
-      index.eq("artifactHash", artifactHash)
+      index.eq("artifactHash", previousHash)
     )
     .unique();
   assert.ok(artifact, "Expected the artifact of the fixture lesson.");
+  // The artifact is named by its content, so an edit gives it a new name.
+  const artifactHash = `sha256:${await Effect.runPromise(sha256Hex(rawMdx))}`;
   await ctx.db.patch("contentArtifacts", artifact._id, {
+    artifactHash,
     artifactJson: testArtifactJson({
       artifactHash,
       artifactLocale,
@@ -162,6 +249,7 @@ export async function editKnowledgeLesson(
       rendererDomain: "mathematics",
     }),
   });
+  await ctx.db.patch("contentHeads", head._id, { artifactHash });
 }
 
 /**
@@ -224,6 +312,24 @@ export async function seedKnowledge(ctx: MutationCtx) {
   });
 }
 
+/** A request that the gateway refuses for what it holds, as it refuses a text that no model can take. */
+export const refusal = () =>
+  Promise.reject(
+    new APICallError({
+      message: "private provider response",
+      requestBodyValues: {},
+      statusCode: 400,
+      url: "https://provider.example.invalid",
+    })
+  );
+
+/** Lets the test gateway refuse every request to embed. */
+export function embedWithRefusal() {
+  provider.embeddingModel.mockReturnValue(
+    new MockEmbeddingModelV4({ doEmbed: refusal })
+  );
+}
+
 /** Lets the test gateway embed with the concept model, and returns that model for inspection. */
 export function embedWithKnowledge() {
   const model = conceptEmbedder(KNOWLEDGE_CONCEPTS);
@@ -232,20 +338,119 @@ export function embedWithKnowledge() {
 }
 
 type KnowledgeInput = Parameters<typeof runStep>[0];
+type KnowledgeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+
+/** What one transaction read and wrote, with the name of the function that ran it. */
+function sampleOf(
+  name: string,
+  metrics: Awaited<ReturnType<MutationCtx["meta"]["getTransactionMetrics"]>>
+) {
+  return {
+    bytesRead: metrics.bytesRead.used,
+    bytesWritten: metrics.bytesWritten.used,
+    documentsRead: metrics.documentsRead.used,
+    documentsWritten: metrics.documentsWritten.used,
+    name,
+  };
+}
+type Sample = ReturnType<typeof sampleOf>;
+
+/** Adds the reads and writes of samples up. */
+function totalOf(samples: readonly Sample[]) {
+  return Arr.reduce(
+    samples,
+    { bytesRead: 0, bytesWritten: 0, documentsRead: 0, documentsWritten: 0 },
+    (total, sample) => ({
+      bytesRead: total.bytesRead + sample.bytesRead,
+      bytesWritten: total.bytesWritten + sample.bytesWritten,
+      documentsRead: total.documentsRead + sample.documentsRead,
+      documentsWritten: total.documentsWritten + sample.documentsWritten,
+    })
+  );
+}
+
+/**
+ * Gives an action the means to run its queries and mutations as separate
+ * transactions of a test deployment, each measured, as the deployment runs
+ * them, and hands each measure to `observe`.
+ */
+function measured(
+  t: KnowledgeTest,
+  ctx: ActionCtx,
+  observe: (sample: Sample) => void
+): ActionCtx {
+  return {
+    ...ctx,
+    runMutation: (mutation, ...args) =>
+      t.mutation(async (mutationCtx) => {
+        const value = await mutationCtx.runMutation(mutation, ...args);
+        observe(
+          sampleOf(
+            getFunctionName(mutation),
+            await mutationCtx.meta.getTransactionMetrics()
+          )
+        );
+        return value;
+      }),
+    runQuery: (query, ...args) =>
+      t.query(async (queryCtx) => {
+        const value = await queryCtx.runQuery(query, ...args);
+        observe(
+          sampleOf(
+            getFunctionName(query),
+            await queryCtx.meta.getTransactionMetrics()
+          )
+        );
+        return value;
+      }),
+  };
+}
+
+/**
+ * Embeds like a gateway that is slow enough for another release to become the
+ * active one while a step waits for its vectors.
+ */
+export function embedWhileAnotherReleaseActivates(t: KnowledgeTest) {
+  provider.embeddingModel.mockReturnValue(
+    new MockEmbeddingModelV4({
+      doEmbed: async ({ values }) => {
+        await t.mutation(async (ctx) => {
+          const state = await ctx.db.query("contentState").unique();
+          assert.ok(state, "Expected one active content state.");
+          await ctx.db.patch("contentState", state._id, {
+            activeReleaseId: "release-later",
+          });
+        });
+        return {
+          embeddings: Arr.map(values, () =>
+            Arr.makeBy(embeddingDimensions, () => 0)
+          ),
+          warnings: [],
+        };
+      },
+    })
+  );
+}
 
 /**
  * Runs the steps of the section build against a test deployment, one at a time
  * as the scheduler would: `run` runs one, `failure` runs one that is expected
  * to fail and returns the tag and the message of its failure, and `build` runs
- * the steps from the first until none follows and returns them all.
+ * the steps from the first until none follows and returns them all. With
+ * `observe`, every query and mutation of a step runs as its own measured
+ * transaction, and `observe` receives each measure.
  */
 export function knowledgeBuild(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>
+  t: KnowledgeTest,
+  observe?: (sample: Sample) => void
 ) {
   const layer = (ctx: ActionCtx) =>
     Layer.mergeAll(
       GatewayTest,
-      RegisteredFunction.actionLayer(confectSchema, ctx)
+      RegisteredFunction.actionLayer(
+        confectSchema,
+        observe === undefined ? ctx : measured(t, ctx, observe)
+      )
     );
   const run = (input: KnowledgeInput = {}) =>
     t.action((ctx) =>
@@ -272,4 +477,13 @@ export function knowledgeBuild(
     return steps;
   };
   return { build, failure, run };
+}
+
+/** Builds with every query and mutation measured, and gives the steps and what the transactions read and wrote in all. */
+export async function measuredBuild(t: KnowledgeTest) {
+  let samples: readonly Sample[] = [];
+  const steps = await knowledgeBuild(t, (sample) => {
+    samples = Arr.append(samples, sample);
+  }).build();
+  return { steps, total: totalOf(samples) };
 }

@@ -32,7 +32,7 @@ export const embeddingModelId: EmbeddingModelId = "google/gemini-embedding-2";
  * The length of every stored and every query vector, requested from the model
  * with `dimensions`. The vector index of `contentSections` has the same length,
  * so one length for all candidate models keeps a model change from changing the
- * index. A section takes 768 numbers of 8 bytes.
+ * index. Convex counts a vector of 768 numbers as 6,914 bytes.
  */
 export const embeddingDimensions = 768;
 

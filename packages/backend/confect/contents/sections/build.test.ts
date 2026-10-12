@@ -7,16 +7,24 @@ import {
   it,
 } from "@effect/vitest";
 import type { runStep } from "@repo/backend/confect/contents/sections/build";
-import { EMBED_BATCH_SIZE } from "@repo/backend/confect/contents/sections/limits";
+import {
+  EMBED_BATCH_SIZE,
+  PRUNE_BATCH_SIZE,
+} from "@repo/backend/confect/contents/sections/limits";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import { provider } from "@repo/backend/test/gateway";
 import {
   editKnowledgeLesson,
+  embedWhileAnotherReleaseActivates,
   embedWithKnowledge,
+  embedWithRefusal,
   KNOWLEDGE_RELEASE,
   knowledgeBuild,
+  knowledgeSource,
+  leaveDocument,
+  measuredBuild,
   seedKnowledge,
 } from "@repo/backend/test/knowledge";
 import { makeQuranChunk, makeQuranSurah } from "@repo/backend/test/quran/rows";
@@ -24,8 +32,6 @@ import {
   activateQuranSnapshot,
   activateQuranSource,
 } from "@repo/backend/test/quran/snapshot";
-import { APICallError } from "ai";
-import { MockEmbeddingModelV4 } from "ai/test";
 import { Array as Arr, Number as Num, Order, String as Str } from "effect";
 
 beforeEach(() => vi.useFakeTimers());
@@ -37,7 +43,9 @@ function setup() {
   const t = createConvexTestWithBetterAuth();
   const rows = () =>
     t.query((ctx) => ctx.db.query("contentSections").collect());
-  return { ...knowledgeBuild(t), rows, t };
+  const sources = () =>
+    t.query((ctx) => ctx.db.query("contentSectionSources").collect());
+  return { ...knowledgeBuild(t), rows, sources, t };
 }
 
 /** The texts that the steps sent to the embedder. */
@@ -45,38 +53,15 @@ const embeddedBy = (
   steps: Awaited<ReturnType<ReturnType<typeof setup>["build"]>>
 ) => Num.sumAll(Arr.map(steps, ({ embedded }) => embedded));
 
-/**
- * Embeds like a gateway that is slow enough for another release to become the
- * active one while a step waits for its vectors.
- */
-function embedWhileAnotherReleaseActivates(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>
-) {
-  provider.embeddingModel.mockReturnValue(
-    new MockEmbeddingModelV4({
-      doEmbed: async ({ values }) => {
-        await t.mutation(async (ctx) => {
-          const state = await ctx.db.query("contentState").unique();
-          assert.ok(state, "Expected one active content state.");
-          await ctx.db.patch("contentState", state._id, {
-            activeReleaseId: "release-later",
-          });
-        });
-        return {
-          embeddings: Arr.map(values, () =>
-            Arr.makeBy(embeddingDimensions, () => 0)
-          ),
-          warnings: [],
-        };
-      },
-    })
-  );
-}
+/** The documents that the steps passed over because the index held them. */
+const skippedBy = (
+  steps: Awaited<ReturnType<ReturnType<typeof setup>["build"]>>
+) => Num.sumAll(Arr.map(steps, ({ skipped }) => skipped));
 
 describe("section build", () => {
   it("indexes the active release: its lessons, then its Quran, then a clean up", async () => {
     const model = embedWithKnowledge();
-    const { build, rows, t } = setup();
+    const { build, rows, sources, t } = setup();
     await t.mutation(seedKnowledge);
     const steps = await build();
     expect(Arr.map(steps, ({ position }) => position.phase)).toEqual([
@@ -86,6 +71,7 @@ describe("section build", () => {
       "prune",
     ]);
     expect(embeddedBy(steps)).toBe(27);
+    expect(skippedBy(steps)).toBe(0);
     expect(
       Arr.flatMap(model.doEmbedCalls, ({ values }) => values)
     ).toHaveLength(27);
@@ -94,39 +80,12 @@ describe("section build", () => {
     expect(
       Arr.every(stored, (row) => row.embedding.length === embeddingDimensions)
     ).toBe(true);
+    expect(await sources()).toHaveLength(9);
     expect(
-      Arr.every(stored, (row) => row.releaseId === KNOWLEDGE_RELEASE.releaseId)
-    ).toBe(true);
-    expect(
-      Arr.map(
-        Arr.filter(
-          stored,
-          ({ appLocale, contentKey }) =>
-            appLocale === "id" && contentKey.endsWith("section-1")
-        ),
-        ({ anchor, headingPath, ordinal, scope }) => ({
-          anchor,
-          headingPath,
-          ordinal,
-          scope,
-        })
+      Arr.every(await sources(), ({ version }) =>
+        Str.startsWith("1:google/gemini-embedding-2:sha256:")(version)
       )
-    ).toEqual(
-      expect.arrayContaining([
-        {
-          anchor: "bentuk-matriks",
-          headingPath: ["Bentuk Matriks"],
-          ordinal: 1,
-          scope: "id:material",
-        },
-        {
-          anchor: "matriks-persegi",
-          headingPath: ["Bentuk Matriks", "Matriks Persegi"],
-          ordinal: 2,
-          scope: "id:material",
-        },
-      ])
-    );
+    ).toBe(true);
   });
 
   it("schedules the step that follows a step", async () => {
@@ -144,33 +103,107 @@ describe("section build", () => {
     });
   });
 
-  it("embeds nothing a second time", async () => {
+  it("writes a row for each section it embedded, a record for each document, and the record of the build, and nothing else", async () => {
+    embedWithKnowledge();
+    const { t } = setup();
+    await t.mutation(seedKnowledge);
+    const { total } = await measuredBuild(t);
+    // 27 sections, 9 documents, and the record that the build finished. The
+    // reads are the lessons (40), the documents it checked before it stored
+    // them (9), the Quran (2), the clean up (19), and the record (1).
+    expect(total.documentsWritten).toBe(37);
+    expect(total.documentsRead).toBe(71);
+  });
+
+  it("passes over every document it holds, embeds nothing, and writes nothing", async () => {
     const model = embedWithKnowledge();
-    const { build, rows, t } = setup();
+    const { build, rows, sources, t } = setup();
     await t.mutation(seedKnowledge);
     await build();
-    const before = await rows();
+    const before = { rows: await rows(), sources: await sources() };
     model.doEmbedCalls.length = 0;
-    const again = await build();
-    expect(embeddedBy(again)).toBe(0);
+    const { steps, total } = await measuredBuild(t);
+    expect(embeddedBy(steps)).toBe(0);
+    expect(skippedBy(steps)).toBe(9);
     expect(model.doEmbedCalls).toHaveLength(0);
-    expect(await rows()).toEqual(before);
+    expect(await rows()).toEqual(before.rows);
+    expect(await sources()).toEqual(before.sources);
+    // Four documents for each lesson it passes over (its search row, its head,
+    // its route, and its record), two for each of the two pages that load the
+    // active release, two for the Quran, two for each document the clean up
+    // checks (its record and its head) and one more, and two for the record.
+    expect(total.documentsRead).toBe(63);
+    expect(total.documentsWritten).toBe(0);
+  });
+
+  it("writes the changed section and the record of its document, and nothing else", async () => {
+    const model = embedWithKnowledge();
+    const { t } = setup();
+    await t.mutation(seedKnowledge);
+    await measuredBuild(t);
+    await t.mutation((ctx) =>
+      editKnowledgeLesson(
+        ctx,
+        1,
+        "id",
+        Arr.join(
+          [
+            "Matriks menyusun bilangan.",
+            "## Bentuk Matriks",
+            "Matriks berubah di satu kalimat.",
+            "### Matriks Persegi",
+            "Matriks persegi memiliki baris dan kolom yang sama banyak.",
+            "## Determinan",
+            "Determinan matriks dua kali dua adalah ad dikurangi bc.",
+          ],
+          "\n\n"
+        )
+      )
+    );
+    model.doEmbedCalls.length = 0;
+    const { steps, total } = await measuredBuild(t);
+    expect(embeddedBy(steps)).toBe(1);
+    expect(Arr.flatMap(model.doEmbedCalls, ({ values }) => values)).toEqual([
+      expect.stringContaining("Matriks berubah di satu kalimat."),
+    ]);
+    // The 63 documents that a build of nothing new reads, and 13 more for the
+    // edited lesson: its artifact, the 4 stored sections that the build asks
+    // about, and the 8 documents that its store reads.
+    expect(total.documentsRead).toBe(76);
+    expect(total.documentsWritten).toBe(2);
+  });
+
+  it("writes only the record of the build when the release it finished is a new one", async () => {
+    embedWithKnowledge();
+    const { build, t } = setup();
+    await t.mutation(seedKnowledge);
+    await build();
+    // The index was last completed for an earlier release, as after an activation.
+    await t.mutation(async (ctx) => {
+      for (const record of await ctx.db
+        .query("contentSectionState")
+        .collect()) {
+        await ctx.db.patch("contentSectionState", record._id, {
+          releaseId: "release-earlier",
+        });
+      }
+    });
+    const { total } = await measuredBuild(t);
+    expect(total.documentsRead).toBe(63);
+    expect(total.documentsWritten).toBe(1);
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toMatchObject([{ releaseId: KNOWLEDGE_RELEASE.releaseId }]);
   });
 
   it("embeds only the sections that changed and removes those that vanished", async () => {
     const model = embedWithKnowledge();
-    const { build, rows, t } = setup();
+    const { build, rows, sources, t } = setup();
     await t.mutation(seedKnowledge);
     await build();
     await t.mutation(async (ctx) => {
-      // The index was built for an earlier release. In the active release one
-      // section of the Indonesian lesson is gone, and a lesson that no release
-      // holds any more still has a row.
-      for (const row of await ctx.db.query("contentSections").collect()) {
-        await ctx.db.patch("contentSections", row._id, {
-          releaseId: "release-earlier",
-        });
-      }
+      // In the active release one section of the Indonesian lesson is gone,
+      // and a lesson that no release holds any more still has rows.
       await editKnowledgeLesson(
         ctx,
         1,
@@ -186,20 +219,16 @@ describe("section build", () => {
           "\n\n"
         )
       );
-      const [row] = await ctx.db.query("contentSections").take(1);
-      if (!row) {
-        throw new Error("Expected a stored section.");
-      }
-      const { _creationTime, _id, ...fields } = row;
-      await ctx.db.insert("contentSections", {
-        ...fields,
-        contentKey: "material/lesson/removed",
-        releaseId: "release-earlier",
-      });
+      await leaveDocument(
+        ctx,
+        { ...knowledgeSource(1, "id"), contentKey: "material/lesson/removed" },
+        [0]
+      );
     });
     model.doEmbedCalls.length = 0;
     const steps = await build();
     expect(embeddedBy(steps)).toBe(1);
+    expect(skippedBy(steps)).toBe(8);
     expect(Arr.flatMap(model.doEmbedCalls, ({ values }) => values)).toEqual([
       expect.stringContaining("Determinan matriks dua kali dua"),
     ]);
@@ -224,6 +253,7 @@ describe("section build", () => {
         ({ contentKey }) => contentKey === "material/lesson/removed"
       )
     ).toBe(false);
+    expect(await sources()).toHaveLength(9);
   });
 
   it("fails at a lesson whose source cannot be split, names it, and stores nothing of its page", async () => {
@@ -281,7 +311,11 @@ describe("section build", () => {
     for (const input of [
       { releaseId: "release-earlier" },
       { position: { phase: "quran", surah: 1 }, releaseId: "release-earlier" },
-      { position: { phase: "prune" } },
+      {
+        position: { cursor: null, phase: "prune" },
+        releaseId: "release-earlier",
+      },
+      { position: { cursor: null, phase: "prune" } },
     ] satisfies Input[]) {
       expect(await run(input)).toMatchObject({ next: null, stale: true });
     }
@@ -294,7 +328,7 @@ describe("section build", () => {
   });
 
   it("stores nothing and stops when another release becomes active while a page is embedded", async () => {
-    const { rows, run, t } = setup();
+    const { rows, run, sources, t } = setup();
     await t.mutation(seedKnowledge);
     embedWhileAnotherReleaseActivates(t);
     expect(await run()).toMatchObject({
@@ -304,6 +338,7 @@ describe("section build", () => {
       written: 0,
     });
     expect(await rows()).toEqual([]);
+    expect(await sources()).toEqual([]);
     expect(
       await t.run((ctx) =>
         ctx.db.system.query("_scheduled_functions").collect()
@@ -312,7 +347,7 @@ describe("section build", () => {
   });
 
   it("stores nothing and stops when another release becomes active while a surah is embedded", async () => {
-    const { rows, run, t } = setup();
+    const { rows, run, sources, t } = setup();
     await t.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
         makeQuranSurah(1, 6),
@@ -332,68 +367,53 @@ describe("section build", () => {
       })
     ).toMatchObject({ next: null, stale: true, written: 0 });
     expect(await rows()).toEqual([]);
+    expect(await sources()).toEqual([]);
   });
 
   it("fails with the failure of the embedder and stores nothing of the page", async () => {
-    const { failure, rows, t } = setup();
+    const { failure, rows, sources, t } = setup();
     await t.mutation(seedKnowledge);
-    provider.embeddingModel.mockReturnValue(
-      new MockEmbeddingModelV4({
-        doEmbed: () =>
-          Promise.reject(
-            new APICallError({
-              message: "private provider response",
-              requestBodyValues: {},
-              statusCode: 400,
-              url: "https://provider.example.invalid",
-            })
-          ),
-      })
-    );
+    embedWithRefusal();
     expect(await failure()).toMatchObject({ _tag: "GatewayFailure" });
     expect(await rows()).toEqual([]);
+    expect(await sources()).toEqual([]);
   });
 
-  it("deletes the rows of earlier releases in bounded batches", async () => {
+  it("deletes the documents that no release publishes any more in bounded batches, and records the build after the last", async () => {
     embedWithKnowledge();
-    const { run, rows, t } = setup();
+    const { run, rows, sources, t } = setup();
     await t.mutation(async (ctx) => {
       await seedKnowledge(ctx);
-      for (const ordinal of Arr.range(0, 64)) {
-        await ctx.db.insert("contentSections", {
-          anchor: `bagian-${ordinal}`,
-          appLocale: "id",
-          contentKey: "material/lesson/removed",
-          count: 65,
-          embedding: Arr.makeBy(embeddingDimensions, () => 0),
-          excerpt: "Bagian.",
-          hash: "sha256:old",
-          headingPath: [],
-          model: "google/gemini-embedding-2",
-          ordinal,
-          publicPath: "materi/removed",
-          releaseId: "release-earlier",
-          scope: "id:material",
-          section: "material",
-          text: "Bagian",
-        });
-      }
+      await leaveDocument(
+        ctx,
+        { ...knowledgeSource(1, "id"), contentKey: "material/lesson/removed" },
+        Arr.range(0, PRUNE_BATCH_SIZE + 5)
+      );
     });
-    const position = { phase: "prune" } as const;
+    const position = { cursor: null, phase: "prune" } as const;
     const releaseId = KNOWLEDGE_RELEASE.releaseId;
     const first = await run({ position, releaseId });
+    expect(first).toMatchObject({ removed: PRUNE_BATCH_SIZE, stale: false });
     expect(first.next).toEqual({ position, releaseId });
-    expect(await rows()).toHaveLength(1);
+    expect(await rows()).toHaveLength(6);
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toEqual([]);
     expect(await run({ position, releaseId })).toMatchObject({
       next: null,
+      removed: 6,
       stale: false,
     });
     expect(await rows()).toHaveLength(0);
+    expect(await sources()).toHaveLength(0);
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toHaveLength(1);
   });
 
   it("indexes the Quran a surah at a time, in bounded batches", async () => {
     const model = embedWithKnowledge();
-    const { rows, run, t } = setup();
+    const { rows, run, sources, t } = setup();
     const verses = 300;
     const chunk = 6;
     await t.mutation((ctx) =>
@@ -420,12 +440,14 @@ describe("section build", () => {
         position: { phase: "quran", surah: 3 },
         releaseId: TEST_RELEASE_ID,
       },
+      skipped: 0,
       written: passages,
     });
     expect(model.doEmbedCalls).toHaveLength(
       Math.ceil(passages / EMBED_BATCH_SIZE)
     );
     expect(await rows()).toHaveLength(passages);
+    expect(await sources()).toHaveLength(3);
   });
 
   it("builds the active release when a manual start names no release", async () => {
@@ -434,7 +456,10 @@ describe("section build", () => {
     await t.mutation(activateQuranSource);
     expect(await run({ position: { phase: "quran", surah: 1 } })).toMatchObject(
       {
-        next: { position: { phase: "prune" }, releaseId: TEST_RELEASE_ID },
+        next: {
+          position: { cursor: null, phase: "prune" },
+          releaseId: TEST_RELEASE_ID,
+        },
         stale: false,
       }
     );
@@ -460,7 +485,10 @@ describe("section build", () => {
         releaseId: TEST_RELEASE_ID,
       })
     ).toMatchObject({
-      next: { position: { phase: "prune" }, releaseId: TEST_RELEASE_ID },
+      next: {
+        position: { cursor: null, phase: "prune" },
+        releaseId: TEST_RELEASE_ID,
+      },
     });
   });
 });

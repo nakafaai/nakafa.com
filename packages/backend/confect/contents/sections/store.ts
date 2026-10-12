@@ -5,18 +5,21 @@ import {
 import {
   COMPARE_PAGE_BYTES,
   COMPARE_PAGE_ROWS,
-  PRUNE_BATCH_SIZE,
+  SECTIONS_PER_DOCUMENT,
 } from "@repo/backend/confect/contents/sections/limits";
 import {
   type knownInputValidator,
   type pageInputValidator,
-  type pruneInputValidator,
   type SectionDraft,
+  sectionHeadValidator,
   sectionScope,
   type storeInputValidator,
 } from "@repo/backend/confect/contents/sections/schema";
+import { findSource } from "@repo/backend/confect/contents/sections/source";
 import { isActive } from "@repo/backend/confect/contents/sections/state";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
+
+const sameHead = Schema.toEquivalence(sectionHeadValidator);
 
 /** Finds the stored row of a section by its language, its document, and its place in it. */
 const findSection = Effect.fn("contents.sections.findSection")(function* (
@@ -52,96 +55,98 @@ export const knownSections = Effect.fn("contents.sections.known")(function* (
 });
 
 /**
- * Stores sections for one release. A section that matches the stored one in
- * text and model keeps its vector and takes the new release, so an unchanged
- * section is never embedded again; a changed or new section needs its vector
- * with it. Storing the same sections again changes nothing. Nothing is stored
- * once the release is no longer the active one, because the build of the
- * newer release stores its sections and a late write would overwrite them.
+ * Makes the index hold exactly the given sections of one document, and records
+ * the version they were made from, in one transaction. A section that matches
+ * the stored one in text and model keeps its vector, and is written again only
+ * when something else about it changed, such as its place or its heading; a
+ * changed or new section needs its vector with it. A stored row that no given
+ * section matches is deleted, and so is the row of a section that came without
+ * a vector and matches nothing, because the text that row holds is outdated.
+ * Storing the same document again changes nothing. Nothing is stored once the
+ * release is no longer the active one, because the build of the newer release
+ * stores its documents and a late write would overwrite them.
  */
-export const storeSections = Effect.fn("contents.sections.store")(function* (
+export const storeDocument = Effect.fn("contents.sections.store")(function* (
   input: typeof storeInputValidator.Type
 ) {
   if (!(yield* isActive(input.releaseId))) {
-    return { kept: 0, missing: 0, stale: true, written: 0 };
+    return { kept: 0, missing: 0, removed: 0, stale: true, written: 0 };
   }
+  const { appLocale, contentKey } = input.source;
+  const stored = yield* (yield* DatabaseReader)
+    .table("contentSections")
+    .index("by_appLocale_and_contentKey_and_ordinal", (index) =>
+      index.eq("appLocale", appLocale).eq("contentKey", contentKey)
+    )
+    .take(SECTIONS_PER_DOCUMENT)
+    .pipe(Effect.orDie);
   const writer = yield* DatabaseWriter;
   const table = writer.table("contentSections");
   const outcomes = yield* Effect.forEach(
     input.sections,
     ({ embedding, ...draft }) =>
       Effect.gen(function* () {
-        const stored = yield* findSection(draft);
-        const base = {
+        const current = Arr.findFirst(
+          stored,
+          ({ ordinal }) => ordinal === draft.ordinal
+        );
+        const head = {
           ...draft,
           model: input.model,
-          releaseId: input.releaseId,
           scope: sectionScope(draft.appLocale, draft.section),
         };
-        if (
-          stored !== null &&
-          stored.hash === draft.hash &&
-          stored.model === input.model
-        ) {
-          if (stored.releaseId === input.releaseId) {
-            return "kept" as const;
-          }
-          yield* table
-            .replace(stored._id, { ...base, embedding: stored.embedding })
-            .pipe(Effect.orDie);
-          return "written" as const;
+        const reusable = Option.filter(
+          current,
+          (row) => row.hash === draft.hash && row.model === input.model
+        );
+        const vector = Option.match(reusable, {
+          onNone: () => embedding,
+          onSome: (row) => row.embedding,
+        });
+        if (vector === undefined) {
+          return { ordinal: draft.ordinal, outcome: "missing" as const };
         }
-        if (embedding === undefined) {
-          return "missing" as const;
+        if (Option.exists(reusable, (row) => sameHead(row, head))) {
+          return { ordinal: draft.ordinal, outcome: "kept" as const };
         }
-        yield* (
-          stored === null
-            ? Effect.asVoid(table.insert({ ...base, embedding }))
-            : table.replace(stored._id, { ...base, embedding })
-        ).pipe(Effect.orDie);
-        return "written" as const;
+        yield* Option.match(current, {
+          onNone: () =>
+            Effect.asVoid(table.insert({ ...head, embedding: vector })),
+          onSome: ({ _id }) =>
+            table.replace(_id, { ...head, embedding: vector }),
+        }).pipe(Effect.orDie);
+        return { ordinal: draft.ordinal, outcome: "written" as const };
       })
   );
-  const count = (outcome: (typeof outcomes)[number]) =>
-    Arr.length(Arr.filter(outcomes, (found) => found === outcome));
+  const present = Arr.map(
+    Arr.filter(outcomes, ({ outcome }) => outcome !== "missing"),
+    ({ ordinal }) => ordinal
+  );
+  const extras = Arr.filter(
+    stored,
+    ({ ordinal }) => !Arr.contains(present, ordinal)
+  );
+  yield* Effect.forEach(extras, ({ _id }) => table.delete(_id), {
+    discard: true,
+  });
+  const known = yield* findSource(input.source);
+  if (known?.version !== input.source.version) {
+    const sources = writer.table("contentSectionSources");
+    yield* (
+      known === null
+        ? Effect.asVoid(sources.insert(input.source))
+        : sources.replace(known._id, input.source)
+    ).pipe(Effect.orDie);
+  }
+  const count = (outcome: (typeof outcomes)[number]["outcome"]) =>
+    Arr.length(Arr.filter(outcomes, (found) => found.outcome === outcome));
   return {
     kept: count("kept"),
     missing: count("missing"),
+    removed: Arr.length(extras),
     stale: false,
     written: count("written"),
   };
-});
-
-/**
- * Deletes rows built from other releases than `releaseId`, a bounded batch at
- * a time. It deletes nothing when `releaseId` is no longer the active release,
- * because the rows of the newer release would be the ones to keep.
- */
-export const pruneSections = Effect.fn("contents.sections.prune")(function* (
-  input: typeof pruneInputValidator.Type
-) {
-  if (!(yield* isActive(input.releaseId))) {
-    return { deleted: 0, done: true };
-  }
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const earlier = yield* reader
-    .table("contentSections")
-    .index("by_releaseId", (index) => index.lt("releaseId", input.releaseId))
-    .take(PRUNE_BATCH_SIZE)
-    .pipe(Effect.orDie);
-  const later = yield* reader
-    .table("contentSections")
-    .index("by_releaseId", (index) => index.gt("releaseId", input.releaseId))
-    .take(PRUNE_BATCH_SIZE - earlier.length)
-    .pipe(Effect.orDie);
-  const doomed = Arr.appendAll(earlier, later);
-  yield* Effect.forEach(
-    doomed,
-    ({ _id }) => writer.table("contentSections").delete(_id),
-    { discard: true }
-  );
-  return { deleted: doomed.length, done: doomed.length < PRUNE_BATCH_SIZE };
 });
 
 /**

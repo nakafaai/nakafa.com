@@ -13,7 +13,6 @@ export default Table.make(() => sectionRowValidator)
     "contentKey",
     "ordinal",
   ])
-  .index("by_releaseId", ["releaseId"])
   .searchIndex("search_text", {
     searchField: "text",
     filterFields: ["section"],

@@ -3,8 +3,10 @@ import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { readLessons } from "@repo/backend/confect/contents/sections/lessons";
 import { LESSONS_PER_STEP } from "@repo/backend/confect/contents/sections/limits";
+import type { lessonValidator } from "@repo/backend/confect/contents/sections/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
+  editKnowledgeLesson,
   KNOWLEDGE_RELEASE,
   knowledgeLesson,
   seedKnowledge,
@@ -35,7 +37,23 @@ function setup() {
         )
       )
     );
-  return { fail, read, t };
+  /** Reads every page of lessons, and gives the lessons and the number passed over. */
+  const readAll = async () => {
+    let cursor: string | null = null;
+    let lessons: readonly (typeof lessonValidator.Type)[] = [];
+    let unchanged = 0;
+    do {
+      const page = await read({ cursor });
+      if (page.kind !== "page") {
+        throw new Error("Expected a page of lessons.");
+      }
+      lessons = Arr.appendAll(lessons, page.lessons);
+      unchanged += page.unchanged;
+      cursor = page.next;
+    } while (cursor !== null);
+    return { lessons, unchanged };
+  };
+  return { fail, read, readAll, t };
 }
 
 describe("section lessons", () => {
@@ -47,6 +65,7 @@ describe("section lessons", () => {
       throw new Error("Expected a first page with a page after it.");
     }
     expect(first.lessons).toHaveLength(LESSONS_PER_STEP);
+    expect(first.unchanged).toBe(0);
     expect(first.releaseId).toBe(KNOWLEDGE_RELEASE.releaseId);
     const second = await read({
       cursor: first.next,
@@ -81,7 +100,77 @@ describe("section lessons", () => {
       rawMdx: knowledgeLesson(1, "id"),
       section: "material",
       title: "ID Section 1",
+      version: expect.stringContaining("1:google/gemini-embedding-2:sha256:"),
     });
+  });
+
+  it("names the version of a lesson by the signed facts of its source", async () => {
+    const { readAll, t } = setup();
+    await t.mutation(seedKnowledge);
+    const before = await readAll();
+    const versions = Arr.map(before.lessons, ({ version }) => version);
+    expect(Arr.dedupe(versions)).toHaveLength(versions.length);
+    await t.mutation((ctx) => editKnowledgeLesson(ctx, 1, "id", "Teks baru."));
+    const after = await readAll();
+    expect(
+      Arr.map(
+        Arr.filter(
+          after.lessons,
+          ({ version }) => !Arr.contains(versions, version)
+        ),
+        ({ appLocale, rawMdx }) => [appLocale, rawMdx]
+      )
+    ).toEqual([["id", "Teks baru."]]);
+  });
+
+  it("passes over a lesson whose sections the index holds at its version, without reading its artifact", async () => {
+    const { readAll, t } = setup();
+    await t.mutation(seedKnowledge);
+    const { lessons } = await readAll();
+    await t.mutation(async (ctx) => {
+      for (const { appLocale, contentKey, section, version } of lessons) {
+        await ctx.db.insert("contentSectionSources", {
+          appLocale,
+          contentKey,
+          section,
+          version,
+        });
+      }
+    });
+    // The artifact of a lesson that is passed over is never read, so it may be gone.
+    await t.mutation(async (ctx) => {
+      for (const artifact of await ctx.db.query("contentArtifacts").collect()) {
+        await ctx.db.delete("contentArtifacts", artifact._id);
+      }
+    });
+    expect(await readAll()).toEqual({ lessons: [], unchanged: 9 });
+  });
+
+  it("reads again the lesson whose source changed or whose sections were made at another version", async () => {
+    const { readAll, t } = setup();
+    await t.mutation(seedKnowledge);
+    const { lessons } = await readAll();
+    await t.mutation(async (ctx) => {
+      for (const { appLocale, contentKey, section, version } of lessons) {
+        await ctx.db.insert("contentSectionSources", {
+          appLocale,
+          contentKey,
+          section,
+          version: appLocale === "de" ? "1:an-older-model:x" : version,
+        });
+      }
+    });
+    await t.mutation((ctx) => editKnowledgeLesson(ctx, 2, "en", "Neu."));
+    const again = await readAll();
+    expect(again.unchanged).toBe(5);
+    expect(
+      Arr.sort(
+        Arr.map(again.lessons, ({ appLocale, rawMdx }) =>
+          appLocale === "en" ? rawMdx : appLocale
+        ),
+        Order.String
+      )
+    ).toEqual(["Neu.", "de", "de", "de"]);
   });
 
   it("is stale when the build began for another release", async () => {

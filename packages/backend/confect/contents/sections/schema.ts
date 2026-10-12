@@ -50,14 +50,44 @@ export function sectionScope(
   return `${appLocale}:${section}`;
 }
 
-/** A stored section: its draft, the vector of its text, and the release it was built from. */
-export const sectionRowValidator = Schema.Struct({
+/** A stored section without its vector: everything that tells what it says, where it is, and which model embedded it. */
+export const sectionHeadValidator = Schema.Struct({
   ...sectionDraftValidator.fields,
-  embedding: Schema.Array(Schema.Finite),
   model: Schema.String,
-  releaseId: Schema.String,
   scope: Schema.String,
 });
+
+/**
+ * A stored section: its head and the vector of its text. A row does not say
+ * which release it was built from, because an unchanged section is not written
+ * again when a release changes; `contentSectionState` names the release the
+ * whole index was last completed for.
+ */
+export const sectionRowValidator = Schema.Struct({
+  ...sectionHeadValidator.fields,
+  embedding: Schema.Array(Schema.Finite),
+});
+
+/**
+ * Names a document in the index and the version its sections were made from.
+ * The version covers the signed facts of the source, the embedding model, and
+ * the format of a section, so a build skips a document whose version it holds
+ * and splits and embeds again one whose version differs.
+ */
+export const sourceValidator = Schema.Struct({
+  appLocale: localeValidator,
+  contentKey: Schema.String,
+  section: nakafaSectionValidator,
+  version: Schema.String,
+});
+export type Source = typeof sourceValidator.Type;
+
+/** A document ready to be indexed: its source and the sections it holds. */
+const documentValidator = Schema.Struct({
+  ...sourceValidator.fields,
+  sections: Schema.Array(sectionFieldsValidator),
+});
+export type SectionDocument = typeof documentValidator.Type;
 
 /**
  * The record of the last build that finished: the release whose sections the
@@ -69,7 +99,10 @@ export const sectionStateValidator = Schema.Struct({
   releaseId: Schema.String,
 });
 
-/** One lesson or article of the active release, with the authored source its sections come from. */
+/**
+ * One lesson or article of the active release that a build has to split: the
+ * authored source its sections come from, and the version it is made at.
+ */
 export const lessonValidator = Schema.Struct({
   appLocale: localeValidator,
   contentKey: Schema.String,
@@ -77,6 +110,7 @@ export const lessonValidator = Schema.Struct({
   rawMdx: Schema.String,
   section: nakafaSectionValidator,
   title: Schema.String,
+  version: Schema.String,
 });
 
 /** Where to read lessons from: after the lesson a cursor follows, in the release a build began for. */
@@ -85,7 +119,11 @@ export const lessonsInputValidator = Schema.Struct({
   releaseId: Schema.optionalKey(Schema.String),
 });
 
-/** A page of lessons, or the news that the release a build began for is no longer active. */
+/**
+ * A page of the lessons whose sections the index lacks or holds at another
+ * version, with the number of lessons of the page it holds at the right version
+ * already, or the news that the release a build began for is no longer active.
+ */
 export const lessonsResultValidator = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("stale") }),
   Schema.Struct({
@@ -93,23 +131,35 @@ export const lessonsResultValidator = Schema.Union([
     lessons: Schema.Array(lessonValidator),
     next: Schema.NullOr(Schema.String),
     releaseId: Schema.String,
+    unchanged: Schema.Finite,
   }),
 ]);
 
-/** Which surah of the Quran to read, in the release a build began for. */
+/** Which surah of the Quran to start at, in the release a build began for. */
 export const surahInputValidator = Schema.Struct({
   releaseId: Schema.optionalKey(Schema.String),
   surah: Schema.Finite,
 });
 
-/** The passages of a surah, none when the release has no Quran, or stale. */
+/**
+ * The first surah at or after the one asked for whose passages the index lacks
+ * or holds at another version, as one document for each language, with the
+ * number of documents it passed over; `done` when none is left, which is also
+ * the answer for a release that has no Quran.
+ */
 export const surahResultValidator = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("stale") }),
-  Schema.Struct({ kind: Schema.Literal("none"), releaseId: Schema.String }),
   Schema.Struct({
+    kind: Schema.Literal("done"),
+    releaseId: Schema.String,
+    unchanged: Schema.Finite,
+  }),
+  Schema.Struct({
+    documents: Schema.Array(documentValidator),
     kind: Schema.Literal("surah"),
     releaseId: Schema.String,
-    sections: Schema.Array(sectionFieldsValidator),
+    surah: Schema.Finite,
+    unchanged: Schema.Finite,
   }),
 ]);
 
@@ -133,33 +183,45 @@ export const storedSectionValidator = Schema.Struct({
   embedding: Schema.optionalKey(Schema.Array(Schema.Finite)),
 });
 
-/** Sections to store for one release. */
+/** The sections of one document to store for one release, and the source they were made from. */
 export const storeInputValidator = Schema.Struct({
   model: Schema.String,
   releaseId: Schema.String,
   sections: Schema.Array(storedSectionValidator),
+  source: sourceValidator,
 });
 
 /**
- * What a store did: sections written, sections found as they were, and
- * sections it could not keep because they came without a vector and nothing
- * stored matched them. `stale` says the release was no longer the active one,
- * so that nothing was stored.
+ * What a store did: sections written, sections found as they were, sections it
+ * could not keep because they came without a vector and nothing stored matched
+ * them, and rows it deleted because the document no longer has them. `stale`
+ * says the release was no longer the active one, so that nothing was stored.
  */
 export const storeResultValidator = Schema.Struct({
   kept: Schema.Finite,
   missing: Schema.Finite,
+  removed: Schema.Finite,
   stale: Schema.Boolean,
   written: Schema.Finite,
 });
 
-/** Names the release whose rows stay when the others are deleted. */
-export const pruneInputValidator = Schema.Struct({ releaseId: Schema.String });
+/** Names the release whose build is cleaning up, and where in the stored documents it stopped. */
+export const pruneInputValidator = Schema.Struct({
+  cursor: Schema.NullOr(Schema.String),
+  releaseId: Schema.String,
+});
 
-/** How many rows a prune deleted, and whether none are left to delete. */
+/**
+ * How many rows a clean-up deleted, whether the last page of documents is done,
+ * where the next call continues if it is not (the same place when the budget of
+ * rows ran out inside a page), and whether the release stopped being the active
+ * one, in which case it did nothing.
+ */
 export const pruneResultValidator = Schema.Struct({
+  cursor: Schema.NullOr(Schema.String),
   deleted: Schema.Finite,
   done: Schema.Boolean,
+  stale: Schema.Boolean,
 });
 
 /** Names the release a finished build indexed and the model that embedded it. */
@@ -190,45 +252,4 @@ export const pageResultValidator = Schema.Struct({
       text: Schema.String,
     })
   ),
-});
-
-/**
- * Where a build step works: the lessons after a cursor, one surah of the
- * Quran, or the deletion of rows that earlier releases left behind. A build
- * walks them in this order, and a position is all it needs to resume.
- */
-const positionValidator = Schema.Union([
-  Schema.Struct({
-    cursor: Schema.NullOr(Schema.String),
-    phase: Schema.Literal("lessons"),
-  }),
-  Schema.Struct({ phase: Schema.Literal("quran"), surah: Schema.Finite }),
-  Schema.Struct({ phase: Schema.Literal("prune") }),
-]);
-export type Position = typeof positionValidator.Type;
-
-/** One build step: the release it is for, if known, and where it works. */
-export const stepInputValidator = Schema.Struct({
-  position: Schema.optionalKey(positionValidator),
-  releaseId: Schema.optionalKey(Schema.String),
-});
-
-/** The step that follows another: the release is known by then. */
-const nextStepValidator = Schema.Struct({
-  position: positionValidator,
-  releaseId: Schema.String,
-});
-
-/**
- * What one build step did and the step that follows it: `next` is null when
- * the build is complete or `stale` says that the release changed under it.
- */
-export const stepResultValidator = Schema.Struct({
-  embedded: Schema.Finite,
-  kept: Schema.Finite,
-  missing: Schema.Finite,
-  next: Schema.NullOr(nextStepValidator),
-  position: positionValidator,
-  stale: Schema.Boolean,
-  written: Schema.Finite,
 });

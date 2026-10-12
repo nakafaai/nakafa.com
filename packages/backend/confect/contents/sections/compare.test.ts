@@ -190,7 +190,6 @@ describe("model comparison", () => {
           model: "google/gemini-embedding-2",
           ordinal,
           publicPath: "materi/many",
-          releaseId: "release-1",
           scope: "id:material",
           section: "material",
           text: `Matriks ${ordinal}`,

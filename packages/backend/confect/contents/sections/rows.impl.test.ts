@@ -30,12 +30,24 @@ const section = {
   text: "Matriks\nBentuk Matriks\nMatriks menyusun bilangan.",
 } as const;
 
+const source = {
+  appLocale: section.appLocale,
+  contentKey: section.contentKey,
+  section: section.section,
+  version: "1:google/gemini-embedding-2:first",
+} as const;
+
 const key = {
   appLocale: section.appLocale,
   contentKey: section.contentKey,
   hash: section.hash,
   ordinal: section.ordinal,
 };
+
+const model = "google/gemini-embedding-2";
+const sections = [
+  { ...section, embedding: Arr.makeBy(embeddingDimensions, () => 0.5) },
+];
 
 describe("section rows", () => {
   it("reads the lessons of the active release", async () => {
@@ -53,51 +65,42 @@ describe("section rows", () => {
   it("reads the Quran of the active release", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(activateQuranSource);
-    expect(await t.query(surah, { surah: 1 })).toMatchObject({ kind: "none" });
+    expect(await t.query(surah, { surah: 1 })).toMatchObject({ kind: "done" });
   });
 
-  it("stores sections, tells which are stored, and deletes those of other releases", async () => {
+  it("stores a document, tells which sections are stored, and deletes a document that is not published", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(seedKnowledge);
-    const model = "google/gemini-embedding-2";
-    const sections = [
-      { ...section, embedding: Arr.makeBy(embeddingDimensions, () => 0.5) },
-    ];
     expect(
       await t.mutation(save, {
         model,
         releaseId: "release-earlier",
         sections,
+        source,
       })
-    ).toEqual({ kept: 0, missing: 0, stale: true, written: 0 });
+    ).toEqual({ kept: 0, missing: 0, removed: 0, stale: true, written: 0 });
     expect(
       await t.mutation(save, {
         model,
         releaseId: KNOWLEDGE_RELEASE.releaseId,
         sections,
+        source,
       })
-    ).toEqual({ kept: 0, missing: 0, stale: false, written: 1 });
+    ).toEqual({ kept: 0, missing: 0, removed: 0, stale: false, written: 1 });
     expect(await t.query(stored, { model, sections: [key] })).toEqual([true]);
+    // The fixture publishes no lesson with this identity.
     expect(
-      await t.mutation(prune, { releaseId: KNOWLEDGE_RELEASE.releaseId })
-    ).toEqual({ deleted: 0, done: true });
-    await t.mutation(async (ctx) => {
-      for (const row of await ctx.db.query("contentSections").collect()) {
-        await ctx.db.patch("contentSections", row._id, {
-          releaseId: "release-earlier",
-        });
-      }
-    });
-    expect(
-      await t.mutation(prune, { releaseId: KNOWLEDGE_RELEASE.releaseId })
-    ).toEqual({ deleted: 1, done: true });
+      await t.mutation(prune, {
+        cursor: null,
+        releaseId: KNOWLEDGE_RELEASE.releaseId,
+      })
+    ).toMatchObject({ deleted: 1, done: true, stale: false });
     expect(await t.query(stored, { model, sections: [key] })).toEqual([false]);
   });
 
   it("records a finished build for the active release only", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(seedKnowledge);
-    const model = "google/gemini-embedding-2";
     expect(
       await t.mutation(finish, { model, releaseId: "release-earlier" })
     ).toEqual({ recorded: false });
@@ -118,11 +121,10 @@ describe("section rows", () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(seedKnowledge);
     await t.mutation(save, {
-      model: "google/gemini-embedding-2",
+      model,
       releaseId: KNOWLEDGE_RELEASE.releaseId,
-      sections: [
-        { ...section, embedding: Arr.makeBy(embeddingDimensions, () => 0.5) },
-      ],
+      sections,
+      source,
     });
     expect(await t.query(page, { appLocale: "id", cursor: null })).toEqual({
       next: null,

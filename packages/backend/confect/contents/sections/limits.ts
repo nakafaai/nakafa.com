@@ -29,24 +29,39 @@ export const EMBED_RETRIES = 4;
 export const EMBED_RETRY_DELAY_MS = 5000;
 
 /**
- * Sections one stored check reads. A stored section is a vector of 6 KB and up
- * to 12,000 characters of text, so a check stays far below the 16 MiB read
- * limit however many sections a step finds in its lessons.
+ * Sections one stored check reads. Convex counts a vector of 768 numbers as
+ * 6,914 bytes, and a section keeps up to 12,000 characters of text beside it,
+ * 24,000 bytes when they are Arabic, so a full check reads about 2 MB, far
+ * below the 16 MiB read limit however many sections a step finds in its
+ * lessons.
  */
 export const SECTIONS_PER_CHECK = 64;
 
-/** Sections one store mutation writes, with their vectors. */
-export const SECTIONS_PER_MUTATION = 24;
+/**
+ * Sections one document may have. One store mutation replaces all the sections
+ * of a document, so that the stored sections and the version recorded for them
+ * are never apart. It reads this many rows of about 31 KB at the most, a
+ * vector and a longest text, and may read each of them twice more when it
+ * replaces or deletes them, about 12 MB in all, below the 16 MiB limits. The
+ * longest lesson of the corpus has 19 sections and the longest surah 48
+ * passages, so a document over the limit is a source to fix, and the build
+ * fails and names it.
+ */
+export const SECTIONS_PER_DOCUMENT = 128;
 
-/** Rows one prune mutation deletes. */
+/** Rows one clean-up mutation deletes. */
 export const PRUNE_BATCH_SIZE = 64;
+
+/** Documents one clean-up mutation checks for being published still. */
+export const PRUNE_SOURCES_PER_PAGE = 64;
 
 /** Stored sections one page of the model test reads back. */
 export const COMPARE_PAGE_ROWS = 64;
 
 /**
- * Bytes one page of the model test may read. A stored section is a vector of
- * 6 KB and up to 12,000 characters of text, so a full page stays below 3 MiB.
+ * Bytes one page of the model test may read. A stored section takes at most
+ * about 31 KB, a vector of 6,914 bytes and 12,000 characters of Arabic, so a
+ * full page stays below 2 MB.
  */
 export const COMPARE_PAGE_BYTES = 4 * 1024 * 1024;
 

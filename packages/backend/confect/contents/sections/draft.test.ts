@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   documentSections,
   embedInput,
+  sourceVersion,
 } from "@repo/backend/confect/contents/sections/draft";
 import {
   EMBED_TEXT_CHARS,
@@ -33,6 +34,9 @@ const markdown = Arr.join(
   "\n"
 );
 
+// A change that makes a test of this block fail changes the sections that a
+// document gives. When that is meant, raise SECTION_FORMAT in draft.ts, so that
+// the next build makes the sections of every document again.
 describe("section drafts", () => {
   it("lists the sections of a document in reading order", () => {
     const drafts = documentSections(source, "Matriks", markdown);
@@ -110,5 +114,48 @@ describe("section drafts", () => {
     expect(embedInput("a".repeat(EMBED_TEXT_CHARS + 50))).toHaveLength(
       EMBED_TEXT_CHARS
     );
+  });
+
+  it("never ends a text with half of a character when it cuts one", () => {
+    // A character outside the basic plane takes two places, and the cut falls between them.
+    const around = (before: number) =>
+      `${"a".repeat(before)}\u{1F600}${"b".repeat(50)}`;
+    expect(embedInput(around(EMBED_TEXT_CHARS - 1))).toBe(
+      "a".repeat(EMBED_TEXT_CHARS - 1)
+    );
+    const [opening] = documentSections(
+      source,
+      "Matriks",
+      `# Matriks\n\n${around(SECTION_TEXT_CHARS - "Matriks\n".length - 1)}`
+    );
+    expect(opening?.text).toHaveLength(SECTION_TEXT_CHARS - 1);
+    expect(opening?.text.endsWith("a")).toBe(true);
+    // The excerpt is cut too, by the search module that builds it.
+    const [excerpted] = documentSections(
+      source,
+      "Matriks",
+      `# Matriks\n\n${around(219)}`
+    );
+    expect(excerpted?.excerpt).toBe(`${"a".repeat(219)}...`);
+    // A character that fits whole stays.
+    expect(embedInput(around(EMBED_TEXT_CHARS - 2))).toBe(
+      `${"a".repeat(EMBED_TEXT_CHARS - 2)}\u{1F600}`
+    );
+  });
+});
+
+describe("section versions", () => {
+  it("names the format, the model, and the facts of the source", () => {
+    expect(sourceVersion("sha256:a", "sha256:b")).toBe(
+      "1:google/gemini-embedding-2:sha256:a:sha256:b"
+    );
+    expect(sourceVersion("sha256:a")).toBe(
+      "1:google/gemini-embedding-2:sha256:a"
+    );
+  });
+
+  it("gives the same facts the same name and other facts another", () => {
+    expect(sourceVersion("x", "y")).toBe(sourceVersion("x", "y"));
+    expect(sourceVersion("x", "y")).not.toBe(sourceVersion("x", "z"));
   });
 });

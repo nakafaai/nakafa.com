@@ -1,15 +1,14 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { PRUNE_BATCH_SIZE } from "@repo/backend/confect/contents/sections/limits";
 import type {
   SectionDraft,
+  Source,
   storedSectionValidator,
 } from "@repo/backend/confect/contents/sections/schema";
 import {
   knownSections,
-  pruneSections,
-  storeSections,
+  storeDocument,
 } from "@repo/backend/confect/contents/sections/store";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
@@ -26,12 +25,19 @@ const otherVector = Arr.makeBy(embeddingDimensions, (index) =>
   index === 1 ? 1 : 0
 );
 
+const matrix: Source = {
+  appLocale: "id",
+  contentKey: "material/lesson/matematika/matriks",
+  section: "material",
+  version: "first",
+};
+
 /** A section in the Indonesian lesson of the fixture, told apart by its place. */
 function draft(ordinal: number, hash = "sha256:first"): SectionDraft {
   return {
     anchor: `bagian-${ordinal}`,
     appLocale: "id",
-    contentKey: "material/lesson/matematika/matriks",
+    contentKey: matrix.contentKey,
     count: 4,
     excerpt: `Bagian ${ordinal}.`,
     hash,
@@ -54,22 +60,34 @@ function toStore(
 async function setup() {
   const t = createConvexTestWithBetterAuth();
   await t.mutation(seedKnowledge);
-  const store = (
+  const run = (
     releaseId: string,
     sections: readonly (typeof storedSectionValidator.Type)[],
-    model = MODEL
+    options: { model?: string; source?: Source } = {}
   ) =>
-    t.mutation((ctx) =>
-      Effect.runPromise(
-        storeSections({ model, releaseId, sections }).pipe(
+    t.mutation(async (ctx) => {
+      const result = await Effect.runPromise(
+        storeDocument({
+          model: options.model ?? MODEL,
+          releaseId,
+          sections,
+          source: options.source ?? matrix,
+        }).pipe(
           Effect.provide(
             RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
           )
         )
-      )
-    );
+      );
+      return { metrics: await ctx.meta.getTransactionMetrics(), result };
+    });
+  const store = async (
+    ...args: Parameters<typeof run>
+  ): Promise<Awaited<ReturnType<typeof run>>["result"]> =>
+    (await run(...args)).result;
   const rows = () =>
     t.query((ctx) => ctx.db.query("contentSections").collect());
+  const sources = () =>
+    t.query((ctx) => ctx.db.query("contentSectionSources").collect());
   /** Makes another release the active one, as an activation does. */
   const activate = (releaseId: string) =>
     t.mutation(async (ctx) => {
@@ -79,75 +97,68 @@ async function setup() {
         activeReleaseId: releaseId,
       });
     });
-  /** Leaves a row that an earlier build made for any release. */
-  const leave = (releaseId: string, section: SectionDraft) =>
-    t.mutation((ctx) =>
-      ctx.db.insert("contentSections", {
-        ...section,
-        embedding: vector,
-        headingPath: Arr.fromIterable(section.headingPath),
-        model: MODEL,
-        releaseId,
-        scope: "id:material",
-      })
-    );
-  return { activate, leave, rows, store, t };
+  return { activate, rows, run, sources, store, t };
 }
 
 describe("section store", () => {
-  it("stores a new section with its vector, its model, its release, and its scope", async () => {
-    const { rows, store } = await setup();
-    expect(await store(ACTIVE, [toStore(draft(0), vector)])).toEqual({
-      kept: 0,
+  it("stores a new document with the vector, the model, and the scope of each section, and the version it was made from", async () => {
+    const { rows, sources, store } = await setup();
+    expect(
+      await store(ACTIVE, [
+        toStore(draft(0), vector),
+        toStore(draft(1), otherVector),
+      ])
+    ).toEqual({ kept: 0, missing: 0, removed: 0, stale: false, written: 2 });
+    expect(await rows()).toMatchObject([
+      { embedding: vector, model: MODEL, ordinal: 0, scope: "id:material" },
+      { embedding: otherVector, model: MODEL, ordinal: 1 },
+    ]);
+    expect(await sources()).toMatchObject([matrix]);
+  });
+
+  it("changes nothing, and writes nothing, when it stores the same document again", async () => {
+    const { rows, run } = await setup();
+    await run(ACTIVE, [toStore(draft(0), vector), toStore(draft(1), vector)]);
+    const before = await rows();
+    const again = await run(ACTIVE, [
+      toStore(draft(0), otherVector),
+      toStore(draft(1)),
+    ]);
+    expect(again.result).toEqual({
+      kept: 2,
       missing: 0,
+      removed: 0,
       stale: false,
-      written: 1,
+      written: 0,
     });
+    expect(again.metrics.documentsWritten.used).toBe(0);
+    expect(await rows()).toEqual(before);
+  });
+
+  it("keeps the vector of a section whose text is the same but whose place or heading changed", async () => {
+    const { rows, store } = await setup();
+    await store(ACTIVE, [toStore(draft(0), vector)]);
+    const [first] = await rows();
+    expect(
+      await store(ACTIVE, [
+        toStore({ ...draft(0), count: 5, headingPath: ["Bab baru"] }),
+      ])
+    ).toEqual({ kept: 0, missing: 0, removed: 0, stale: false, written: 1 });
     expect(await rows()).toMatchObject([
       {
+        _id: first?._id,
+        count: 5,
         embedding: vector,
-        model: MODEL,
-        ordinal: 0,
-        releaseId: ACTIVE,
-        scope: "id:material",
+        headingPath: ["Bab baru"],
       },
     ]);
   });
 
-  it("changes nothing when it stores the same sections again", async () => {
+  it("replaces a section whose text changed, in the place it had", async () => {
     const { rows, store } = await setup();
     await store(ACTIVE, [toStore(draft(0), vector)]);
-    const before = await rows();
-    expect(await store(ACTIVE, [toStore(draft(0), otherVector)])).toEqual({
-      kept: 1,
-      missing: 0,
-      stale: false,
-      written: 0,
-    });
-    expect(await rows()).toEqual(before);
-  });
-
-  it("moves an unchanged section to a new release and keeps its vector", async () => {
-    const { activate, rows, store } = await setup();
-    await store(ACTIVE, [toStore(draft(0), vector)]);
-    await activate("release-2");
-    expect(await store("release-2", [toStore(draft(0))])).toEqual({
-      kept: 0,
-      missing: 0,
-      stale: false,
-      written: 1,
-    });
-    expect(await rows()).toMatchObject([
-      { embedding: vector, releaseId: "release-2" },
-    ]);
-  });
-
-  it("replaces a section whose text changed, in the place it had", async () => {
-    const { activate, rows, store } = await setup();
-    await store(ACTIVE, [toStore(draft(0), vector)]);
     const [first] = await rows();
-    await activate("release-2");
-    await store("release-2", [
+    await store(ACTIVE, [
       toStore({ ...draft(0, "sha256:second"), text: "Teks baru" }, otherVector),
     ]);
     const stored = await rows();
@@ -156,7 +167,6 @@ describe("section store", () => {
       _id: first?._id,
       embedding: otherVector,
       hash: "sha256:second",
-      releaseId: "release-2",
       text: "Teks baru",
     });
   });
@@ -164,51 +174,101 @@ describe("section store", () => {
   it("replaces a section made by another model", async () => {
     const { rows, store } = await setup();
     await store(ACTIVE, [toStore(draft(0), vector)]);
-    await store(ACTIVE, [toStore(draft(0), otherVector)], OTHER_MODEL);
+    await store(ACTIVE, [toStore(draft(0), otherVector)], {
+      model: OTHER_MODEL,
+    });
     expect(await rows()).toMatchObject([
       { embedding: otherVector, model: OTHER_MODEL },
     ]);
   });
 
-  it("cannot keep a section that comes without a vector and matches nothing stored", async () => {
-    const { activate, rows, store } = await setup();
-    await store(ACTIVE, [toStore(draft(0), vector)]);
-    await activate("release-2");
+  it("leaves out a section that comes without a vector and matches nothing, and deletes the outdated row it had", async () => {
+    const { rows, store } = await setup();
+    await store(ACTIVE, [toStore(draft(0), vector), toStore(draft(1), vector)]);
     expect(
-      await store("release-2", [
-        toStore(draft(1)),
-        toStore(draft(0, "sha256:second")),
+      await store(ACTIVE, [
+        toStore(draft(0)),
+        toStore(draft(1, "sha256:second")),
+        toStore(draft(2)),
       ])
-    ).toEqual({ kept: 0, missing: 2, stale: false, written: 0 });
-    expect(await store("release-2", [toStore(draft(0))], OTHER_MODEL)).toEqual({
-      kept: 0,
-      missing: 1,
-      stale: false,
-      written: 0,
+    ).toEqual({ kept: 1, missing: 2, removed: 1, stale: false, written: 0 });
+    expect(await rows()).toMatchObject([{ hash: "sha256:first", ordinal: 0 }]);
+  });
+
+  it("deletes the rows of sections that the document no longer has, and only those of the document", async () => {
+    const { rows, store } = await setup();
+    await store(ACTIVE, [
+      toStore(draft(0), vector),
+      toStore(draft(1), vector),
+      toStore(draft(2), vector),
+    ]);
+    await store(
+      ACTIVE,
+      [toStore({ ...draft(0), contentKey: "material/lesson/lain" }, vector)],
+      {
+        source: {
+          ...matrix,
+          contentKey: "material/lesson/lain",
+        },
+      }
+    );
+    expect(await store(ACTIVE, [toStore(draft(0)), toStore(draft(2))])).toEqual(
+      { kept: 2, missing: 0, removed: 1, stale: false, written: 0 }
+    );
+    expect(
+      Arr.map(await rows(), ({ contentKey, ordinal }) => [contentKey, ordinal])
+    ).toEqual([
+      [matrix.contentKey, 0],
+      [matrix.contentKey, 2],
+      ["material/lesson/lain", 0],
+    ]);
+  });
+
+  it("empties a document that has no sections left, and records its version", async () => {
+    const { rows, sources, store } = await setup();
+    await store(ACTIVE, [toStore(draft(0), vector)]);
+    expect(
+      await store(ACTIVE, [], { source: { ...matrix, version: "second" } })
+    ).toEqual({ kept: 0, missing: 0, removed: 1, stale: false, written: 0 });
+    expect(await rows()).toEqual([]);
+    expect(await sources()).toMatchObject([{ version: "second" }]);
+  });
+
+  it("records a new version in the place of the old one", async () => {
+    const { sources, store } = await setup();
+    await store(ACTIVE, [toStore(draft(0), vector)]);
+    const [first] = await sources();
+    await store(ACTIVE, [toStore(draft(0))], {
+      source: { ...matrix, version: "second" },
     });
-    expect(await rows()).toMatchObject([{ releaseId: ACTIVE }]);
+    expect(await sources()).toMatchObject([
+      { _id: first?._id, version: "second" },
+    ]);
   });
 
   it("stores nothing for a release that is not the active one", async () => {
-    const { activate, rows, store } = await setup();
+    const { activate, rows, sources, store } = await setup();
     await activate("release-2");
     expect(await store(ACTIVE, [toStore(draft(0), vector)])).toEqual({
       kept: 0,
       missing: 0,
+      removed: 0,
       stale: true,
       written: 0,
     });
     expect(await rows()).toEqual([]);
+    expect(await sources()).toEqual([]);
   });
 
   it("stores nothing while no release is active", async () => {
     const t = createConvexTestWithBetterAuth();
     const result = await t.mutation((ctx) =>
       Effect.runPromise(
-        storeSections({
+        storeDocument({
           model: MODEL,
           releaseId: ACTIVE,
           sections: [toStore(draft(0), vector)],
+          source: matrix,
         }).pipe(
           Effect.provide(
             RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
@@ -237,58 +297,5 @@ describe("section store", () => {
       );
     expect(await ask(MODEL)).toEqual([true, false, false]);
     expect(await ask(OTHER_MODEL)).toEqual([false, false, false]);
-  });
-});
-
-describe("section prune", () => {
-  function prune(
-    t: ReturnType<typeof createConvexTestWithBetterAuth>,
-    releaseId: string
-  ) {
-    return t.mutation((ctx) =>
-      Effect.runPromise(
-        pruneSections({ releaseId }).pipe(
-          Effect.provide(
-            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-          )
-        )
-      )
-    );
-  }
-
-  it("deletes the rows of earlier and later releases and keeps those of the active one", async () => {
-    const { leave, rows, t } = await setup();
-    await leave("release-0", draft(0));
-    await leave(ACTIVE, draft(1));
-    await leave("zzz-later", draft(2));
-    expect(await prune(t, ACTIVE)).toEqual({ deleted: 2, done: true });
-    expect(await rows()).toMatchObject([{ releaseId: ACTIVE }]);
-  });
-
-  it("deletes a bounded batch and reports when more are left", async () => {
-    const { leave, rows, t } = await setup();
-    for (const ordinal of Arr.range(0, PRUNE_BATCH_SIZE)) {
-      await leave("release-0", draft(ordinal));
-    }
-    await leave(ACTIVE, draft(PRUNE_BATCH_SIZE + 1));
-    expect(await prune(t, ACTIVE)).toEqual({
-      deleted: PRUNE_BATCH_SIZE,
-      done: false,
-    });
-    expect(await rows()).toHaveLength(2);
-    expect(await prune(t, ACTIVE)).toEqual({ deleted: 1, done: true });
-    expect(await rows()).toMatchObject([{ releaseId: ACTIVE }]);
-  });
-
-  it("deletes nothing for a release that is not the active one", async () => {
-    const { leave, rows, t } = await setup();
-    await leave("release-0", draft(0));
-    expect(await prune(t, "release-0")).toEqual({ deleted: 0, done: true });
-    expect(await rows()).toHaveLength(1);
-  });
-
-  it("deletes nothing while no release is active", async () => {
-    const t = createConvexTestWithBetterAuth();
-    expect(await prune(t, "release-0")).toEqual({ deleted: 0, done: true });
   });
 });
