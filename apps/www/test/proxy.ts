@@ -1,5 +1,7 @@
+import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import { Array as Arr, Effect } from "effect";
 import type { NextRequest } from "next/server";
+import { LOCALE_BYPASS_PATHS } from "@/lib/routing/bypass";
 /** Public redirect examples cover renderer URLs, locale spelling and suffixes. */
 export const redirectCases: [
   string,
@@ -33,14 +35,28 @@ export const redirectCases: [
     "/id/try-out/indonesia/snbt/2027/set-1/literasi-dalam-bahasa-inggris",
   ],
 ];
-/** Resource patterns that still require routing checks. */
-export const matched = Arr.map(
-  "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt".split(
-    " "
+/** Every file the proxy passes on by name, read from the proxy's own list. */
+const passedOnFiles = Arr.fromIterable(LOCALE_BYPASS_PATHS);
+/**
+ * Resource patterns that still require routing checks, and paths that only
+ * resemble the analytics path or a file the proxy passes on by name, such as
+ * its spelling with a trailing slash or in upper case, which the proxy does
+ * not skip.
+ */
+export const matched = [
+  ...Arr.map(
+    "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt".split(
+      " "
+    ),
+    (extension) => `/missing.${extension}`
   ),
-  (extension) => `/missing.${extension}`
-);
-/** Resources owned by static serving or hard not-found routing. */
+  `${POSTHOG_PROXY_PATH}x`,
+  `/en${POSTHOG_PROXY_PATH}/flags`,
+  "/other-logo.svg",
+  "/logo.svgx",
+  ...Arr.flatMap(passedOnFiles, (path) => [`${path}/`, path.toUpperCase()]),
+];
+/** Resources owned by static serving, the analytics rewrite, or hard not-found routing. */
 export const bypassed = [
   "/.well-known/llms.txt",
   "/sitemap/base.xml",
@@ -51,6 +67,19 @@ export const bypassed = [
   "/open-graph/curriculum/en-merdeka.png",
   "/missing.png",
   "/_not-found/id",
+  POSTHOG_PROXY_PATH,
+  `${POSTHOG_PROXY_PATH}/i/v0/e/`,
+  `${POSTHOG_PROXY_PATH}/flags`,
+  ...passedOnFiles,
+];
+
+/** Paths that the proxy passes on without locale routing, whatever its matcher does with them. */
+export const passedOn: [
+  string,
+  ConstructorParameters<typeof NextRequest>[1]?,
+][] = [
+  [`${POSTHOG_PROXY_PATH}/i/v0/e/`, { method: "POST" }],
+  ...Arr.map(passedOnFiles, (path): [string] => [path]),
 ];
 
 /** Locale hints cannot authorize access to internal route spellings. */

@@ -10,7 +10,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { activeTurns } from "@repo/backend/confect/nina/capacity";
-import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
+import type {
+  NinaFailureReason,
+  NinaTurnTiming,
+} from "@repo/backend/confect/nina/contract/turn";
 import { refundCredits } from "@repo/backend/confect/nina/credits/ledger";
 import {
   NinaSettledTurn,
@@ -90,7 +93,8 @@ const cutOff = Effect.fn("nina.settlement.cutOff")(function* (
 export const settleTurn = Effect.fn("nina.settlement")(function* (
   turn: NinaTurnsDoc,
   interrupted: "failed" | "cancelled",
-  failure?: typeof NinaFailureReason.Type
+  failure?: typeof NinaFailureReason.Type,
+  timing?: typeof NinaTurnTiming.Type
 ) {
   if (turn.phase !== "active") {
     return;
@@ -145,6 +149,8 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
     ...turn,
     phase: "settled",
     tokens: { input, output, total: input + output },
+    // The stages the run reached join the claim the turn already stores.
+    ...(timing ? { timing: { ...turn.timing, ...timing } } : {}),
     state:
       status === "failed"
         ? { status, finishedAt, reason: failure ?? "interrupted" }

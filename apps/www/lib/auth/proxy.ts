@@ -5,6 +5,7 @@ import {
   type NetworkRequestError,
   type NetworkRetryCodeSchema,
 } from "@repo/backend/client/network";
+import { getSessionCookie } from "better-auth/cookies";
 import {
   Array as Arr,
   Duration,
@@ -152,16 +153,54 @@ export const answerAuthDeadline = (
     )
   );
 
+/** The Better Auth route that reports the session of the cookie it receives. */
+const SESSION_PATH = "/api/auth/get-session";
+
+/**
+ * Whether a request asks Better Auth for the session of a visitor who sent
+ * nothing that could prove one: no session cookie and no bearer token.
+ *
+ * Better Auth answers such a request with `null` before it reads a table, so
+ * Convex has nothing to add. Without this answer each read is still one HTTP
+ * action on the Convex site, because `handler.GET` fetches it: a function call
+ * and its action compute, though no database I/O. Every page load and every
+ * return to the tab makes this read, signed in or not, and most visitors are
+ * not. The browser cannot skip the request itself, because the session cookie
+ * is HttpOnly and no script can see that it is missing; only the server can.
+ */
+function isSignedOutSessionRead(request: Request) {
+  return (
+    new URL(request.url).pathname === SESSION_PATH &&
+    getSessionCookie(request) === null &&
+    !request.headers.has("authorization")
+  );
+}
+
+/**
+ * The answer Better Auth gives a session read that has no session cookie: a
+ * JSON `null` that no cache may keep. Its own answer also clears a Convex JWT
+ * cookie, which nothing here reads, because the Better Auth helper that does is
+ * used without its JWT cache.
+ */
+function answerSignedOutSession() {
+  return Response.json(null, {
+    headers: { "Cache-Control": "no-store", Pragma: "no-cache" },
+  });
+}
+
 /**
  * Builds the Next.js route methods for the Better Auth handler. A network
  * failure that is not repeated rejects the route, and Next.js answers 500, as it
- * did before the proxy existed.
+ * did before the proxy existed. A session read from a visitor without a session
+ * cookie is answered here and never reaches Convex.
  */
 export function createAuthProxy(handler: AuthRouteHandler) {
   return {
     GET: (request: Request) =>
       Effect.runPromise(
-        readAuthResponse(handler, request).pipe(answerAuthDeadline)
+        isSignedOutSessionRead(request)
+          ? Effect.succeed(answerSignedOutSession())
+          : readAuthResponse(handler, request).pipe(answerAuthDeadline)
       ),
     POST: (request: Request) =>
       Effect.runPromise(

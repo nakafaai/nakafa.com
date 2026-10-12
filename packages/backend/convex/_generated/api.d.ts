@@ -3123,12 +3123,7 @@ export declare const api: {
         getTrendingSubjects: FunctionReference<
           "query",
           "public",
-          {
-            limit?: number;
-            locale: "en" | "id" | "de";
-            minViews?: number;
-            windowKey?: "7d";
-          },
+          { locale: "en" | "id" | "de" },
           Array<{
             alignmentId: string;
             assetId: string;
@@ -3409,30 +3404,11 @@ export declare const api: {
         Id<"ninaMemories">
       >;
       clear: FunctionReference<"mutation", "public", {}, null>;
-      disable: FunctionReference<"mutation", "public", {}, null>;
       edit: FunctionReference<
         "mutation",
         "public",
         { id: Id<"ninaMemories">; text: string; title?: string },
         null
-      >;
-      enable: FunctionReference<
-        "mutation",
-        "public",
-        {},
-        { facts: Array<{ key: number; savedAt: number; text: string }> }
-      >;
-      forget: FunctionReference<
-        "mutation",
-        "public",
-        { key: number },
-        { facts: Array<{ key: number; savedAt: number; text: string }> } | null
-      >;
-      get: FunctionReference<
-        "query",
-        "public",
-        {},
-        { facts: Array<{ key: number; savedAt: number; text: string }> } | null
       >;
       list: FunctionReference<
         "query",
@@ -7789,8 +7765,6 @@ export declare const internal: {
           {},
           {
             hasMore: boolean;
-            retiredCounters: number;
-            retiredCycles: number;
             signalsDeleted: number;
             viewersDeleted: number;
             waitingForMaintenance: boolean;
@@ -7893,6 +7867,30 @@ export declare const internal: {
                 milliseconds: number;
                 section: { heading: string; rank: number } | null;
               }>;
+            }
+          | {
+              failure:
+                | { _tag: "GatewayConfigurationError"; message: string }
+                | {
+                    _tag: "GatewayFailure";
+                    reason:
+                      | "rate-limit"
+                      | "quota"
+                      | "auth"
+                      | "configuration"
+                      | "invalid"
+                      | "too-large"
+                      | "timeout"
+                      | "unavailable"
+                      | "network"
+                      | "interrupted"
+                      | "unknown";
+                    retryAfter?: number;
+                    retryable?: boolean;
+                    status?: number;
+                    type?: string;
+                  };
+              kind: "failed";
             }
         >;
       };
@@ -8730,7 +8728,6 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -8850,6 +8847,12 @@ export declare const internal: {
               { status: "queued" } | { startedAt: number; status: "running" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId: Id<"creditTransactions">;
             transition?: {
@@ -8891,7 +8894,6 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9026,6 +9028,12 @@ export declare const internal: {
               | { finishedAt: number; status: "cancelled" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
             transition?: {
@@ -9067,7 +9075,6 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9185,6 +9192,12 @@ export declare const internal: {
             state: { status: "unanswered" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
             transition?: {
@@ -9240,7 +9253,6 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -9360,6 +9372,12 @@ export declare const internal: {
               { status: "queued" } | { startedAt: number; status: "running" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId: Id<"creditTransactions">;
             transition?: {
@@ -9401,7 +9419,6 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9536,6 +9553,12 @@ export declare const internal: {
               | { finishedAt: number; status: "cancelled" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
             transition?: {
@@ -9577,7 +9600,6 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
-            modelId?: "nakafa-lite" | "nakafa-pro";
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9695,6 +9717,12 @@ export declare const internal: {
             state: { status: "unanswered" };
             suggestions?: Array<string>;
             threadId: string;
+            timing?: {
+              claimedMs?: number;
+              progressMs?: number;
+              readyMs?: number;
+              tokenMs?: number;
+            };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
             transition?: {
@@ -9747,6 +9775,12 @@ export declare const internal: {
             | "response-limit"
             | "interrupted"
             | "unknown";
+          timing?: {
+            claimedMs?: number;
+            progressMs?: number;
+            readyMs?: number;
+            tokenMs?: number;
+          };
           turnId: Id<"ninaTurns">;
         },
         null
@@ -9862,26 +9896,6 @@ export declare const internal: {
         }
       >;
     };
-    outcome: {
-      rewriteFailures: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          cursor: {
-            chats: string | null;
-            messages: { cursor: string; threadId: string } | null;
-          } | null;
-        },
-        {
-          cursor: {
-            chats: string | null;
-            messages: { cursor: string; threadId: string } | null;
-          } | null;
-          rewritten: number;
-          scanned: number;
-        }
-      >;
-    };
     presentation: {
       save: FunctionReference<
         "mutation",
@@ -9943,23 +9957,6 @@ export declare const internal: {
         "internal",
         { before: number; chatId: Id<"chats">; through: number | null },
         Array<{ order: number; retryOf?: number }>
-      >;
-    };
-    unset: {
-      modelKey: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          cursor: string | null;
-          numItems: number;
-          table: "ninaTurns" | "creditTransactions";
-        },
-        {
-          changed: number;
-          continueCursor: string;
-          isDone: boolean;
-          scanned: number;
-        }
       >;
     };
     uploads: {

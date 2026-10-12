@@ -275,11 +275,41 @@ function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
   return response;
 }
 
+/**
+ * The requests that reach the proxy. On Vercel the proxy runs before the CDN
+ * cache as a Node.js function, so every request it lets in costs one run, a
+ * cached page included. A path stays out only when the proxy does nothing for
+ * it. The patterns write those paths by hand because a matcher must be a
+ * literal, and the proxy test reads the real lists to keep them equal:
+ *
+ * - The analytics path `/_nakafa` (`POSTHOG_PROXY_PATH`): the proxy passes it
+ *   on, and `next.config.ts` rewrites it to PostHog.
+ * - Every path in `LOCALE_BYPASS_PATHS`: the icon, the manifest, `/llms.txt`,
+ *   `/robots.txt`, `/rss.xml`, the sitemaps, `/skill.md`, the IndexNow key and
+ *   the agent skill files. The proxy passes each of them on by name. The first
+ *   pattern holds the ones that end in `.md` or `.json`, and the root file
+ *   pattern the others.
+ *
+ * What stays in, and what the proxy does with it:
+ *
+ * - Documents, Flight navigations and prefetches: it may redirect, rewrite,
+ *   answer 410 for a removed route, or reject a locale.
+ * - Any other root file, such as `/missing.xml`, and any other path under
+ *   `/.well-known`: a plain 404, before the path can reach a localized route.
+ * - Any other spelling of a bypass path, such as one with a trailing slash,
+ *   which it redirects.
+ * - The localized image aliases, such as `/en/og/example/image.png`: it passes
+ *   a served locale on and rejects an unserved one. The pattern cannot leave
+ *   the served locales out, because it would then leave out their upper-case
+ *   spellings too wherever the platform matches case-insensitively, and those
+ *   must be rejected. So each social image request costs one proxy run, whether
+ *   the CDN holds the image or not.
+ */
 export const config: ProxyConfig = {
   matcher: [
-    "/((?!_next/static|_not-found|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
+    "/((?!_next/static|_not-found|fonts|open-graph|api|_next/image|favicon.ico|_nakafa(?:/|$)|skill\\.md$|\\.well-known/agent-skills/(?:index\\.json|nakafa/SKILL\\.md)$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
     "/:locale([A-Za-z]{2})/:path*.png",
-    "/:rootFile([^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
+    "/:rootFile((?!logo\\.svg$|manifest\\.webmanifest$|llms\\.txt$|robots\\.txt$|rss\\.xml$|sitemap\\.txt$|sitemap\\.xml$|e22d548f7fd2482a9022e3b84e944901\\.txt$)[^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
     // The pattern above skips `/api`, so the removed finance endpoint names itself.
     "/api/chat/finance",
   ],
