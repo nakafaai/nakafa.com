@@ -1,5 +1,12 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { resolveHits } from "@repo/backend/confect/contents/sections/hits";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
@@ -224,10 +231,11 @@ describe("section hits", () => {
     });
   });
 
-  it("reads one section and the reference of its document for one hit, and nothing of the state of the index", async () => {
+  it("reads the two records of the state of the index, one section and the reference of its document for one hit", async () => {
     const { idOf, measure } = await indexed();
     const determinant = await idOf("id", "determinan", "section-1");
-    // The row of the section and the five documents of the reference.
+    // The active release and the last build, the row of the section, and the
+    // five documents of the reference.
     expect(
       await measure({
         ids: [determinant],
@@ -235,7 +243,28 @@ describe("section hits", () => {
         locale: "id",
         query: "?!",
       })
-    ).toEqual({ documentsRead: 6, hits: 1 });
+    ).toEqual({ documentsRead: 8, hits: 1 });
+  });
+
+  it("says the index is empty when another release became active after the vector search found its sections", async () => {
+    const { idOf, resolve, t } = await indexed();
+    const input = {
+      ids: [await idOf("id", "determinan", "section-1")],
+      limit: 5,
+      locale: "id",
+      query: "determinan",
+    } as const;
+    expect((await resolve(input)).kind).toBe("hits");
+    // An activation commits between the readiness answer and this query: the
+    // sections found are those of a release that is gone.
+    await t.mutation(async (ctx) => {
+      const state = await ctx.db.query("contentState").unique();
+      assert.ok(state, "Expected one active content state.");
+      await ctx.db.patch("contentState", state._id, {
+        activeReleaseId: "release-2",
+      });
+    });
+    expect(await resolve(input)).toEqual({ kind: "empty" });
   });
 
   it("returns a place once when the words find it in several languages", async () => {

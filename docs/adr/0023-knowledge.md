@@ -77,8 +77,10 @@ next build finishes.
 **The search.** `contents/sections/search` first asks `state.ready` whether the
 index may answer, and gives no answer, without embedding the question, while it
 may not. Then it embeds the question once, asks the vector index for the nearest
-32 sections of the learner's language and kind, and `hits.resolve` adds the 32
-best matches by words, merges the two lists by reciprocal rank fusion with
+32 sections of the learner's language and kind, and `hits.resolve` reads the
+state again in the transaction that reads the sections, because a release can
+become active between the first answer and this query, adds the 32 best matches
+by words, merges the two lists by reciprocal rank fusion with
 k = 60, gives each section in the learner's language when the document has the
 same sections there, and keeps those whose document is still published. Nina's
 Nakafa search keeps its tool contract and its data parts; it adds the try-outs
