@@ -29,10 +29,13 @@ type State = QueryResult.QueryResult<
  * It returns `loaded` (every memory the page has loaded, in list order, but not
  * a situation that had ended when the server read the page, at `now`: search
  * and a turn leave it out too, and the daily job has not deleted it yet),
- * `whole` (every memory is loaded), `more` (loads the next page of a size the
- * caller names, or none when there is nothing to load or a page is on its way),
- * `empty` (the learner has no memory to show) and `paused`. What the learner
- * searches for is not here: the browser's own filter narrows `loaded`.
+ * `fetched` (how many memories have arrived, ended situations too: a page of
+ * only ended situations adds nothing to `loaded`, and whoever asks for the next
+ * page must still see that one arrived), `whole` (every memory is loaded),
+ * `more` (loads the next page of a size the caller names, or none when there is
+ * nothing to load or a page is on its way), `empty` (the learner has no memory
+ * to show) and `paused`. What the learner searches for is not here: the
+ * browser's own filter narrows `loaded`.
  *
  * `now` is the moment the server read the page, which never changes in the
  * browser, so a situation never leaves the list while the learner looks at it,
@@ -46,16 +49,15 @@ export function readingOf(
   now: number
 ) {
   const starting = PaginatedQueryResult.isLoadingFirstPage(pages);
-  const loaded = Arr.filter(
-    starting ? first.page : pages.results,
-    (memory) => !hasEnded(memory, now)
-  );
+  const arrived = starting ? first.page : pages.results;
+  const loaded = Arr.filter(arrived, (memory) => !hasEnded(memory, now));
   const whole = starting
     ? first.isDone
     : PaginatedQueryResult.isExhausted(pages);
 
   return {
     empty: Arr.isReadonlyArrayEmpty(loaded) && whole,
+    fetched: Arr.length(arrived),
     loaded,
     more: PaginatedQueryResult.isCanLoadMore(pages) ? pages.loadMore : null,
     paused:

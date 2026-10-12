@@ -45,6 +45,7 @@ describe("what the Memory page reads", () => {
       readingOf(loading, waiting, served([newest, older], false), true, NOW)
     ).toEqual({
       empty: false,
+      fetched: 2,
       loaded: [newest, older],
       more: null,
       paused: true,
@@ -181,6 +182,34 @@ describe("what the Memory page reads", () => {
       expect(
         readingOf(loading, waiting, served([ended], true), false, NOW)
       ).toMatchObject({ empty: true, loaded: [], whole: true });
+    });
+
+    it("counts a page of only ended situations as arrived, so the page after it is still asked for", () => {
+      const loadMore = vi.fn();
+      const before = readingOf(
+        PaginatedQueryResult.canLoadMore({ loadMore, results: [newest] }),
+        waiting,
+        served([], false),
+        false,
+        NOW
+      );
+      const after = readingOf(
+        PaginatedQueryResult.canLoadMore({
+          loadMore,
+          results: [newest, ended, stored("ended too", { validUntil: 1 })],
+        }),
+        waiting,
+        served([], false),
+        false,
+        NOW
+      );
+
+      // The list shows the same rows, and more can still load.
+      expect(after.loaded).toEqual(before.loaded);
+      expect(after.more).toBe(loadMore);
+      // What arrived moved, which is what starts the next request.
+      expect(before.fetched).toBe(1);
+      expect(after.fetched).toBe(3);
     });
   });
 });
