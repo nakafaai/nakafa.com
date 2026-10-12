@@ -68,17 +68,19 @@ function found(url: string, title: string, description: string) {
   };
 }
 
-/** The card of one executed web search. */
+/** The card of one executed web search, with the sites it was limited to, if any. */
 function search(
   id: string,
   query: string,
   sources: readonly ReturnType<typeof found>[],
-  status: SearchCard["status"] = "done"
+  status: SearchCard["status"] = "done",
+  sites: readonly string[] = []
 ): Card {
   return {
     data: {
       provider: "firecrawl",
       queries: [query],
+      ...(sites.length === 0 ? {} : { sites: [...sites] }),
       sources: [...sources],
       status,
     },
@@ -216,6 +218,79 @@ export const failedWebSearch = replyOf(
   ],
   "partial"
 );
+
+/** The first of the sites below, whose results the fixture shows. */
+const SITE_DATA =
+  "pusat-data-dan-teknologi-informasi-pendidikan.kemendikdasmen.example.test";
+
+/** A site whose first label has 63 characters, the most a label allows (RFC 1035, section 2.3.4). */
+export const SITE_LONG_LABEL =
+  "pusat-layanan-pendidikan-dan-kebudayaan-wilayah-timur-indonesia.example.test";
+
+/**
+ * The hostnames a search is limited to. One call names five at most
+ * (`webSearchMaxSites`), and these are as long as real ones get.
+ */
+export const LIMIT_SITES = [
+  SITE_DATA,
+  "perpustakaan-digital-universitas-negeri-yogyakarta.repository.example.test",
+  SITE_LONG_LABEL,
+  "badan-standar-kurikulum-dan-asesmen-pendidikan.regional-timur.example.test",
+  "dinas-pendidikan-provinsi-nusa-tenggara-timur.kupang.example.test",
+];
+
+/** A name that is not ASCII, as `URL` gives it and the contract holds it: in punycode. */
+export const PUNYCODE_SITE = "xn--mnchen-3ya.example.test";
+
+/** A search limited to five long sites, and one that the provider failed, limited to a long site and a punycode one. */
+export const limited = replyOf(
+  "web-limited",
+  [
+    search(
+      "web-limited-1",
+      "kurikulum merdeka",
+      [
+        found(
+          `https://${SITE_DATA}/kurikulum-merdeka`,
+          "Kurikulum Merdeka",
+          "Panduan penerapan kurikulum merdeka di satuan pendidikan."
+        ),
+      ],
+      "done",
+      LIMIT_SITES
+    ),
+    {
+      data: {
+        error: "Failed to search the web. Please try again.",
+        provider: "firecrawl",
+        queries: ["asesmen nasional"],
+        sites: [SITE_LONG_LABEL, PUNYCODE_SITE],
+        sources: [],
+        status: "error",
+      },
+      id: "web-limited-2",
+      type: "data-web-search",
+    },
+  ],
+  "partial"
+);
+
+/** A search limited to the same five sites that still runs. */
+export const limitedLoading = [
+  working(
+    "deepResearch",
+    "web-limited-loading",
+    stored([
+      search(
+        "limited-loading",
+        "kurikulum merdeka",
+        [],
+        "loading",
+        LIMIT_SITES
+      ),
+    ])
+  ),
+] satisfies readonly Part[];
 
 /** An address of 220 characters and a name in Arabic script, each as the query of a search. */
 export const queries = replyOf("web-queries", [
