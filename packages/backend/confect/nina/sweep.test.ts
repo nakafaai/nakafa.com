@@ -6,7 +6,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import {
   START_DEADLINE,
   TURN_DEADLINE,
-} from "@repo/backend/confect/nina/sweep";
+} from "@repo/backend/confect/nina/deadline";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { encodeJsonText } from "@repo/utilities/json";

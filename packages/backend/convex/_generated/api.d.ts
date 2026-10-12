@@ -3630,7 +3630,6 @@ export declare const api: {
                   slug: string;
                 };
               };
-          modelId?: "nakafa-lite" | "nakafa-pro";
           requestId: string;
         },
         {
@@ -7920,10 +7919,7 @@ export declare const internal: {
                 }
               | {
                   name: "chat message sent";
-                  properties: {
-                    chat_type: "study";
-                    model_id?: "nakafa-lite" | "nakafa-pro";
-                  };
+                  properties: { chat_type: "study" };
                 }
               | {
                   name: "chat response completed";
@@ -9587,6 +9583,26 @@ export declare const internal: {
         }
       >;
     };
+    outcome: {
+      rewriteFailures: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: {
+            chats: string | null;
+            messages: { cursor: string; threadId: string } | null;
+          } | null;
+        },
+        {
+          cursor: {
+            chats: string | null;
+            messages: { cursor: string; threadId: string } | null;
+          } | null;
+          rewritten: number;
+          scanned: number;
+        }
+      >;
+    };
     presentation: {
       save: FunctionReference<
         "mutation",
@@ -9648,6 +9664,23 @@ export declare const internal: {
         "internal",
         { before: number; chatId: Id<"chats">; through: number | null },
         Array<{ order: number; retryOf?: number }>
+      >;
+    };
+    unset: {
+      modelKey: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          cursor: string | null;
+          numItems: number;
+          table: "ninaTurns" | "creditTransactions";
+        },
+        {
+          changed: number;
+          continueCursor: string;
+          isDone: boolean;
+          scanned: number;
+        }
       >;
     };
     uploads: {
