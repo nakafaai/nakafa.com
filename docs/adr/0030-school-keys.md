@@ -153,10 +153,11 @@ sits on an account, and ADR 0015 decides how connectors behave.
 | The account of the member who made a school connection is deleted | The connection stays and enters the reconnect state. It does not vanish, and it does not work until someone reconnects it. |
 | The school is deleted | Every school connection is disconnected before the school key is deleted, and the school is given a deletion record. |
 
-A connection belongs to the Google account of the member who made it, so in the
-first row the learner who chooses is that member. In the second row, deleting
-the account shreds only the learner key, so the secret under the school key
-stays readable. ADR 0015 decides the rest of the connector flow.
+The Google grant behind a school connection belongs to the Google account of the
+member who made it, so in the first row the learner who chooses is that member.
+In the second row, deleting the account shreds only the learner key, so the
+secret under the school key stays readable. ADR 0015 decides the rest of the
+connector flow.
 
 The test for the second row: delete the account of the teacher who made the
 connection, and the connection must be in the reconnect state, never gone and
