@@ -48,8 +48,9 @@ const verifiedEmail = Effect.fn("tenancy.claims.email")(function* (
 /**
  * Binds the invited Person to the account and accepts the invite, unless the
  * Person is not waiting any more, the account already holds a Person in the
- * tenant, or the tenant's email domains do not admit the address: then the
- * invite stays pending for the school to resolve.
+ * tenant, the tenant is suspended, which refuses every write, or the tenant's
+ * email domains do not admit the address: then the invite stays pending for
+ * the school to resolve.
  */
 const claim = Effect.fn("tenancy.claims.claim")(function* (
   invite: TenantInvitesDoc,
@@ -74,6 +75,7 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
       Effect.orDie
     );
   if (
+    tenant.status !== "active" ||
     person.status !== "active" ||
     person.account.state !== "unclaimed" ||
     Option.isSome(held) ||

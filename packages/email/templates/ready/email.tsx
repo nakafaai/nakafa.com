@@ -9,14 +9,14 @@ import {
   AccountReadyEmailInputError,
   AccountReadyEmailRenderError,
 } from "@repo/email/templates/ready/contract";
-import { getPublicEmailUrl } from "@repo/email/url";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect, Schema } from "effect";
 
 const accountReadyEmailPreviewInput = {
-  continueUrl: getPublicEmailUrl("/en/home"),
+  continueUrl: new URL("/en/home", SITE_ORIGIN).href,
   locale: "en",
-  privacyPolicyUrl: getPublicEmailUrl("/en/privacy-policy"),
-  termsOfServiceUrl: getPublicEmailUrl("/en/terms-of-service"),
+  privacyPolicyUrl: new URL("/en/privacy-policy", SITE_ORIGIN).href,
+  termsOfServiceUrl: new URL("/en/terms-of-service", SITE_ORIGIN).href,
 } satisfies AccountReadyEmailInput;
 
 /** Renders the privacy-safe account-ready message for one supported locale. */

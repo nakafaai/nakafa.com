@@ -201,6 +201,31 @@ describe("tenancy/claims run", () => {
     })
   );
 
+  it.effect("never claims an invite while its organisation is suspended", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const account = yield* fixture.account("guru", address, true);
+      const { inviteId, personId } = yield* fixture.run(
+        invitePerson(fixture.tenants.nf, address)
+      );
+      yield* fixture.run(
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer
+            .table("tenants")
+            .patch(fixture.tenants.nf, { status: "suspended" })
+        )
+      );
+      yield* fixture.internal.mutation(run, {
+        cursor: null,
+        userId: account.userId,
+      });
+      const after = yield* fixture.run(stored(personId, inviteId));
+      expect(after.person.account).toEqual({ state: "unclaimed" });
+      expect(after.invite.state).toEqual({ status: "pending" });
+      expect(after.entries).toEqual([]);
+    })
+  );
+
   it.effect(
     "keeps a claimed Person with the first account that claimed it",
     () =>

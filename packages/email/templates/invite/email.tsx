@@ -9,15 +9,15 @@ import {
   InviteEmailInputError,
   InviteEmailRenderError,
 } from "@repo/email/templates/invite/contract";
-import { getPublicEmailUrl } from "@repo/email/url";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect, Schema } from "effect";
 
 const inviteEmailPreviewInput = {
   locale: "en",
   organisation: "Harapan Bangsa Foundation",
-  privacyPolicyUrl: getPublicEmailUrl("/en/privacy-policy"),
-  signInUrl: getPublicEmailUrl("/en/auth"),
-  termsOfServiceUrl: getPublicEmailUrl("/en/terms-of-service"),
+  privacyPolicyUrl: new URL("/en/privacy-policy", SITE_ORIGIN).href,
+  signInUrl: new URL("/en/auth", SITE_ORIGIN).href,
+  termsOfServiceUrl: new URL("/en/terms-of-service", SITE_ORIGIN).href,
 } satisfies InviteEmailInput;
 
 /** Renders the invitation to open one organisation on Nakafa for one supported locale. */

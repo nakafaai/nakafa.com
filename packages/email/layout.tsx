@@ -1,10 +1,10 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Tailwind } from "@repo/email/tailwind";
-import { getPublicEmailUrl } from "@repo/email/url";
 import {
   COMPANY_IDENTITY,
   COMPANY_REGISTERED_ADDRESS,
 } from "@repo/seo/company";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   Body,
   Button,
@@ -20,7 +20,7 @@ import {
   Text,
 } from "react-email";
 
-const EMAIL_LOGO_URL = getPublicEmailUrl("/logo.png");
+const EMAIL_LOGO_URL = new URL("/logo.png", SITE_ORIGIN).href;
 
 /**
  * The house layout of a Nakafa email: the logo, one message with one button,

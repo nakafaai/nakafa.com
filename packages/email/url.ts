@@ -1,4 +1,3 @@
-import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { HashSet, Schema } from "effect";
 
 const loopbackHostnames = HashSet.make("127.0.0.1", "[::1]", "localhost");
@@ -19,9 +18,3 @@ export const EmailUrlSchema = Schema.String.check(
     message: "Expected HTTPS or a loopback HTTP URL.",
   })
 );
-const canonicalSiteUrl = new URL(COMPANY_IDENTITY.url);
-
-/** Resolves a canonical public Nakafa URL for email assets and previews. */
-export function getPublicEmailUrl(pathname: string) {
-  return new URL(pathname, canonicalSiteUrl).href;
-}
