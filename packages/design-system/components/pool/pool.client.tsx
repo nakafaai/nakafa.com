@@ -24,15 +24,18 @@ import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
 import { useEffect, useEffectEvent, useRef } from "react";
 
-/** A frame moves the pool for at most this many seconds, so a slow frame moves it in small pieces. */
-const LONGEST_FRAME = 0.032;
 /** The time of a frame that has none before it, in seconds. */
 const FIRST_FRAME = 0.016;
 /** The loop sleeps once the pile has rested for this many frames, with nobody holding or pointing. */
 const REST_FRAMES = 20;
-/** Reduced motion settles the pile this many steps on its first size, and this many on each resize. */
-const FIRST_SETTLE = 900;
-const RESIZE_SETTLE = 300;
+/**
+ * Reduced motion settles the pile this many steps in a box. Measured on the 30
+ * members, the loop would sleep at once after this many steps in every box size
+ * tried (see the step in physics.ts).
+ */
+const SETTLE_STEPS = 3840;
+/** Reduced motion settles a box again once it has been still this many milliseconds, so one drag costs one settle. */
+const RESIZE_QUIET = 150;
 /** The first hop comes this many milliseconds after the pool starts. */
 const FIRST_HOP = 3600;
 /** Each hop waits this many milliseconds, plus up to the spread. */
@@ -121,6 +124,7 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
   let running = false;
   let still = 0;
   let hopping: number | undefined;
+  let quiet: number | undefined;
 
   /** Writes where each member is and how it leans, straight onto its element. */
   function paint(current: World) {
@@ -136,7 +140,7 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
       node.style.width = `${ball.r * 2}px`;
       node.style.height = `${ball.r * 2}px`;
     });
-    world = calm ? settle(first, FIRST_SETTLE) : first;
+    world = calm ? settle(first, SETTLE_STEPS) : first;
     paint(world);
     wake();
   }
@@ -162,7 +166,7 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
     if (world === undefined) {
       return;
     }
-    world = tick(world, Math.min(LONGEST_FRAME, delta / 1000 || FIRST_FRAME));
+    world = tick(world, delta / 1000 || FIRST_FRAME);
     paint(world);
     still = isResting(world) ? still + 1 : 0;
     if (still >= REST_FRAMES && world.held === null && !world.pointer.active) {
@@ -247,13 +251,16 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
       start(width, height);
       return;
     }
-    world = resize(world, width, height);
     if (calm) {
-      world = settle(world, RESIZE_SETTLE);
-      paint(world);
-    } else {
-      wake();
+      window.clearTimeout(quiet);
+      quiet = window.setTimeout(
+        () => start(element.clientWidth, element.clientHeight),
+        RESIZE_QUIET
+      );
+      return;
     }
+    world = resize(world, width, height);
+    wake();
   });
   resizing.observe(element);
 
@@ -275,6 +282,7 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
       resizing.disconnect();
       pointers.abort();
       window.clearTimeout(hopping);
+      window.clearTimeout(quiet);
       sleep();
     },
     setVisible,

@@ -33,8 +33,16 @@ const DAMPING = 0.95;
 const HOLD_SHARE = 0.35;
 /** The pile is at rest when no ball traveled this far in the last step, in pixels. */
 const REST_TRAVEL = 0.05;
-/** The step of a settle, in seconds: 120 steps make a second. */
-const SETTLE_STEP = 1 / 120;
+/**
+ * The fixed step of the pool, in seconds: 480 steps make a second, and a frame at
+ * 60 frames a second runs eight of them. Measured on the 30 members at 60 frames a
+ * second: two half steps a frame never let the loop sleep in 3600 frames, while
+ * steps of this length let it sleep within 433 frames in every column size tried
+ * (184 frames in a box of 1200 by 640).
+ */
+export const STEP = 1 / 480;
+/** The most time one frame may move the pool, in seconds: a slow frame moves it in small steps, not in one jump. */
+export const LONGEST_FRAME = 0.032;
 /** How far above the box a ball may start, in box heights. */
 const DROP_SPAN = 1.2;
 /** The upward speed that a hop adds, in pixels per second, before its draw. */
@@ -44,9 +52,10 @@ const HOP_LIFT_SPREAD = 180;
 /** The sideways speed that a hop adds across its draw, in pixels per second. */
 const HOP_SIDE = 90;
 
-/** The whole pool: the box, its balls, the pointer, the ball that is held and the grip where it was taken, and the farthest that a ball moved in the last step. */
+/** The whole pool: the box, its balls, the time that the last frame left over, the pointer, the ball that is held and the grip where it was taken, and the farthest that a ball moved in the last step. */
 const WorldSchema = Schema.Struct({
   balls: Schema.Array(BallSchema),
+  carry: Schema.Finite,
   grip: PointSchema,
   height: Schema.Finite,
   held: Schema.NullOr(Schema.Int),
@@ -85,6 +94,7 @@ export function createWorld(
       x: start.r + start.fx * Math.max(1, width - start.r * 2),
       y: -start.r - start.fy * height * DROP_SPAN,
     })),
+    carry: 0,
     grip: { x: 0, y: 0 },
     height,
     held: null,
@@ -95,18 +105,26 @@ export function createWorld(
 }
 
 /**
- * Moves the pool for one frame of `dt` seconds: two half steps, then the lean of
- * every ball and the fade of the pointer's speed, as a frame of the pool shows.
+ * Moves the pool for one frame that took `seconds`. The frame runs as many whole
+ * steps as its time holds, and keeps the rest for the next frame. The lean of
+ * every ball and the fade of the pointer's speed change once per frame, as the
+ * pool is drawn once per frame.
  */
-export function tick(world: World, dt: number): World {
-  const half = dt / 2;
-  const walked = step(step(world, half), half);
+export function tick(world: World, seconds: number): World {
+  const owed = world.carry + Math.min(seconds, LONGEST_FRAME);
+  const count = Math.floor(owed / STEP);
+  let walked = world;
+  for (let index = 0; index < count; index += 1) {
+    walked = step(walked, STEP);
+  }
+  const resting = isResting(walked);
   return {
     ...walked,
     balls: Arr.map(walked.balls, (ball) => ({
       ...ball,
-      tilt: tiltOf(ball, isResting(walked)),
+      tilt: tiltOf(ball, resting),
     })),
+    carry: owed - count * STEP,
     pointer: fadePointer(walked.pointer),
   };
 }
@@ -126,13 +144,13 @@ export function step(world: World, dt: number): World {
 }
 
 /**
- * Moves the pool `steps` times at a fixed step, then stops the sideways speed and
+ * Moves the pool `steps` times at the fixed step, then stops the sideways speed and
  * the lean of every ball, so the pile stands still on its first paint.
  */
 export function settle(world: World, steps: number): World {
   let walked = world;
   for (let count = 0; count < steps; count += 1) {
-    walked = step(walked, SETTLE_STEP);
+    walked = step(walked, STEP);
   }
   return {
     ...walked,

@@ -5,11 +5,13 @@ import {
   createWorld,
   hop,
   isResting,
+  LONGEST_FRAME,
   leave,
   move,
   press,
   release,
   resize,
+  STEP,
   settle,
   step,
   tick,
@@ -23,6 +25,8 @@ import { Array as Arr } from "effect";
 
 /** A frame of the pool at 60 frames a second. */
 const FRAME = 1 / 60;
+/** The steps in one frame at 60 frames a second. */
+const STEPS_IN_FRAME = Math.round(FRAME / STEP);
 /** A step short enough that gravity and damping barely change a speed. */
 const SHORT = 0.0001;
 /** Float noise that a wall may leave behind, in pixels or pixels per second. */
@@ -78,9 +82,13 @@ function checkedStep(world: World, dt: number): World {
   return next;
 }
 
-/** One frame of the pool, as two checked half steps. */
+/** One frame of the pool at 60 frames a second, as checked steps. */
 function checkedFrame(world: World): World {
-  return checkedStep(checkedStep(world, FRAME / 2), FRAME / 2);
+  return Arr.reduce(
+    Arr.makeBy(STEPS_IN_FRAME, () => STEP),
+    world,
+    (current, dt) => checkedStep(current, dt)
+  );
 }
 
 /** Moves the pointer from `from` to `to` in `steps` parts, with a checked frame after each part. */
@@ -201,6 +209,33 @@ describe("the pile", () => {
     );
     expect(next.pointer.vx).toBeCloseTo(80, 10);
     expect(next.pointer.vy).toBeCloseTo(-40, 10);
+  });
+});
+
+describe("the frames and their steps", () => {
+  it("runs eight steps of the fixed step in a frame at 60 frames a second", () => {
+    const world = boxWith([ballAt({ y: 100 })]);
+    const eight = Arr.reduce(
+      Arr.makeBy(STEPS_IN_FRAME, () => STEP),
+      world,
+      (current, dt) => step(current, dt)
+    );
+    expect(tick(world, FRAME).balls).toEqual(eight.balls);
+  });
+
+  it("keeps the time that does not fill a whole step for the next frame", () => {
+    const world = boxWith([ballAt({ y: 100 })]);
+    const short = tick(world, STEP * 0.6);
+    expect(short.balls).toEqual(world.balls);
+    expect(short.carry).toBeCloseTo(STEP * 0.6, 12);
+    const rest = tick(short, STEP * 0.6);
+    expect(rest.balls).toEqual(step(world, STEP).balls);
+    expect(rest.carry).toBeCloseTo(STEP * 0.2, 12);
+  });
+
+  it("moves the pool no further than the longest frame, however long the frame took", () => {
+    const world = boxWith([ballAt({ y: 100 })]);
+    expect(tick(world, 10)).toEqual(tick(world, LONGEST_FRAME));
   });
 });
 
