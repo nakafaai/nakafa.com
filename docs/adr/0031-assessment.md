@@ -271,8 +271,12 @@ has exactly one owner.
   and scored first, so it is converted as a finished one.
 - A finished attempt keeps its review (ADR 0003). The conversion writes into the
   result what that review reads today: the learner's responses with their
-  outcomes, the placements the attempt ran, and the identity of the signed
-  content it ran on. The signed snapshot and its artifacts stay for as long as a
+  outcomes, the placements the attempt ran, the scores of the attempt and of each
+  section as `tryoutScores` holds them (the raw and the published score, the
+  score's status, theta, and its standard error,
+  `packages/backend/confect/tryouts/score/result.ts`), and the identity of the
+  signed content it ran on. The old tables are dropped only after every result
+  holds its scores. The signed snapshot and its artifacts stay for as long as a
   result names them: snapshot retention counts a result as a reference to its
   snapshot, and the artifact check counts the artifacts of its placements, as
   they count an attempt and a placement today

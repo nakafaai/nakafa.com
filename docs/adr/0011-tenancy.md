@@ -91,22 +91,25 @@ Person and any change reruns that caller's subscriptions. Persons of kind
 An invite names a Person and an email address. A claim binds the Person to the
 account that controls the address: an invite is claimed automatically when an
 account whose Better Auth email is verified and equal to the invite address
-exists. An invite claim is the one place where an account is matched by its
-verified email, and ADR 0009 names it as the exception to its rule that a school
-account is never matched by its email address. An invite expires 14 days after it
-is created if nobody has claimed it, and an expired invite is never claimed: the
-school invites again. Claims run in a scheduled mutation after sign-up, after
-Better Auth verifies an address, and after an invite is created for an existing
-account, never inside the sign-in transaction. The claim writes `person.claimed`
-with the claim method (ADR 0016). An account that already holds a Person in the
-tenant leaves the invite pending for the school to resolve. A tenant's allowed
-email domains, one of its settings (see Tenant settings), limit the addresses its
-invites may name. Later channels extend the invite channel and the claim method
-values: a belajar.id match, and a login card, which is an invite on the card
-channel with the claim method `card` (ADR 0009). A claim hands the claimant the
-Person's standing grants, so creating an invite, or printing a login card, for a
-Person that holds the Owner or Admin role needs the right to give that role,
-`owner.manage` (ADR 0012).
+exists, the tenant is active, and the tenant's allowed email domains, one of its
+policies, admit the address (an empty list admits every address). An invite claim
+is the one place where an account is matched by its verified email, and ADR 0009
+names it as the exception to its rule that a school account is never matched by
+its email address. An invite expires 14 days after it is created if nobody has
+claimed it, and an expired invite is never claimed: the school invites again.
+Claims run in a scheduled mutation after sign-up, after Better Auth verifies an
+address, and after an invite is created for an existing account, never inside
+the sign-in transaction. The claim writes `person.claimed` with the claim method
+(ADR 0016). An account that already holds a Person in the tenant, an address the
+allowed email domains do not admit, and a suspended tenant leave the invite
+pending for the school to resolve. The functions that create invites refuse an
+address outside the list too, once people management exists; today only `open`
+creates an invite, and a new tenant starts with an empty list. Later channels
+extend the invite channel and the claim method values: a belajar.id match, and
+a login card, which is an invite on the card channel with the claim method
+`card` (ADR 0009). A claim hands the claimant the Person's standing grants, so
+creating an invite, or printing a login card, for a Person that holds the Owner
+or Admin role needs the right to give that role, `owner.manage` (ADR 0012).
 
 Account deletion releases the account's Persons instead of deleting them: the
 school controls its records, so each Person and its standing grants stay,
@@ -117,17 +120,19 @@ tenant ownership; an operator of the tenant's cell restores an Owner when needed
 
 ### Tenant settings
 
-A tenant has one settings record, `tenantSettings`. It holds the country (the
-profile of ADR 0032), the contract currency, whether students may open forum
-threads, whether Nina is on, and the allowed email domains. Provisioning writes
-every field: the operator gives the country and the contract currency, and sets
-the two switches. Only the allowed email domains have a default, an empty list,
-and an empty list means no restriction. A tenant that sets domains keeps its
-invites and its Google sign-in on them (ADR 0009). An Admin changes the settings
-with `tenant.manage`, and each change of a policy (the two switches and the
-domains) writes `tenant.policy.set`, a change type declared on the tenant kind,
+A tenant holds its settings on its own row: the country (the profile of ADR
+0032), the contract currency, and its `policies`, which are whether students may
+open forum threads, whether Nina is on, and the allowed email domains. Each
+school holds its time zone and its content language. Provisioning writes every
+field: the operator gives the country and the contract currency, and sets the
+two switches. Only the allowed email domains have a default, an empty list, and
+an empty list means no restriction. A tenant that sets domains keeps the claims
+of its invites, and later its Google sign-in, on them (ADR 0009). An Owner or a
+tenant-wide Admin changes the organisation's settings with `tenant.manage`, and
+a school's Admin changes that school's with `unit.manage`. Each change of a
+policy writes `tenant.policy.set`, a change type declared on the tenant kind,
 because each authority accepts only the change types of its own kind (ADR 0016).
-The change names the setting and holds no domain, because a change holds IDs,
+The change names the policy and holds no domain, because a change holds IDs,
 enums, and reason codes only.
 
 ### Operators
@@ -142,13 +147,14 @@ would match emails instead of accounts and keep no history; the Better Auth admi
 plugin would move platform privilege into the auth component's schema.
 
 Operators provision tenants (the tenant with the journal retention that its data
-processing agreement states, its settings record, its units, and the first Owner
+processing agreement states, its settings, its units, and the first Owner
 invite in one mutation), replace a tenant's unclaimed Owners as an audited
 break-glass, and suspend or reactivate a tenant. A suspended tenant stays
-readable and refuses every member write. Four transitions still run in it,
-because they end access or restore the tenant: a visit end, a grant expiry, an
-account release, and the operator's reactivation of the tenant (ADR 0012,
-Decisions). Operators enter a tenant only
+readable and refuses every member write. The system transitions that time or
+an operator starts still run in it, because they end access, keep a deadline, or
+restore the tenant: a visit end, a grant expiry, an invite expiry, an account
+release, the close and the reconciliation of an attempt, and the operator's
+reactivation of the tenant (ADR 0012, Decisions). Operators enter a tenant only
 through an audited visit: a temporary Auditor grant of at most 24 hours. A visit
 grant is always the Auditor role, so approving a visit never mints an Admin. The
 school's Owner or Admin approves each visit, and a scheduled mutation ends the
@@ -209,14 +215,46 @@ beside the old School. Four steps follow, in this order, and the first is merged
   (`by_channel_email_and_state_status`, `by_personId_and_state_status`),
   `tenantGrants` (ADR 0012), and `journalEntries` (ADR 0016).
 - Public: `tenancy/profile:get`, `tenancy/viewer:get` (the School shell for one
-  slug: tenant, active units, the caller's Person and grants, and the tenant
-  capabilities `can`), `tenancy/memberships:list` (the caller's own active
-  member Persons, identity scoped), `journal/audit:list`, and the grant
-  functions of ADR 0012.
-- Operators, provisioning, the tenant settings record, claims, invite expiry,
-  visits, grant expiry, and the account deletion release step follow as one
-  change that extends this contract.
-- A tenant holds at most 24 units and at most 8 Owners.
+  slug: the tenant with its settings, its units with theirs, archived units
+  last, the caller's Person and grants, and the tenant capabilities `can`),
+  `tenancy/memberships:list` (the caller's own active member Persons, identity
+  scoped), `journal/audit:list`, and the grant functions of ADR 0012.
+- Settings, public mutations that answer with the value now stored and that
+  write and record nothing for a value already stored: `tenancy/settings`
+  (`setLocale` for the country and the contract currency, `setPolicy` for one
+  policy) and `tenancy/units` (`setLocale` for a school's time zone and content
+  language, `archive`, and `unarchive`). Organisation settings, archiving, and
+  restoring are `tenant.manage`, held by Owners and tenant-wide Admins. A
+  school's own settings are `unit.manage`, so an Admin of one school changes
+  that school only and an archived school refuses them. Restoring is decided on
+  the tenant because an archived school refuses every write.
+- Internal: `tenancy/provision:open` opens an organisation (the tenant, its
+  schools, its first Owner as an unclaimed Person with the Owner role, the
+  invite, and the journal) in one transaction, and starts the invitation email
+  through `emails/invite`, since `emails` is the only sender. Nakafa staff run
+  it with the deployment's key. `tenancy/claims:run` claims the pending invites of one
+  account whose address Better Auth has verified and the tenant admits, a page
+  at a time. It is scheduled by the Better Auth user triggers after sign-up and
+  after verification, only when an invite waits for the address, and for an
+  account that already holds the address of a new invite by
+  `tenancy/holders:schedule`, which `open` starts and which pages through those
+  accounts, so no number of them is assumed.
+- The organisation holds `country`, `currency`, and `policies` (students may
+  open threads, Nina, and the allowed email domains; an empty list admits every
+  address, and a claim checks a longer one), and each unit holds `timeZone` and
+  `contentLanguage`. They are required fields, because no code wrote a tenant
+  before this change. Nina and student threads are stored until the School
+  features they switch exist. The country is checked for its shape only, two
+  uppercase letters: ADR 0032 moves the countries Nakafa serves to the signed
+  country profile, so no list of countries is kept in code. A tenant's, a
+  school's, and a Person's name are one line: names fill list rows, and the
+  tenant's name goes in the subject of its invitation email. `tenant.provisioned`
+  records the contract (plan, modules, data processing agreement version, and
+  content licence version); the entitlements it grants are built later.
+- Operators, invite expiry, visits, grant expiry, and the account deletion
+  release step follow as one change that extends this contract.
+- A tenant holds at most 24 units, at most 8 Owners, and at most 16 allowed
+  email domains.
 
 ## Consequences
 
@@ -226,9 +264,9 @@ beside the old School. Four steps follow, in this order, and the first is merged
 - An invite address works like a credential: whoever holds a verified account
   with that address claims the Person, an Owner invite included, until the
   invite expires after 14 days. Schools invite only addresses they or the
-  invitee control. A tenant that sets allowed email domains keeps its invites and
-  its Google sign-in on them, and a tenant with an empty list has no domain
-  restriction.
+  invitee control. A tenant that sets allowed email domains keeps the claims of
+  its invites, and later its Google sign-in, on them, and a tenant with an empty
+  list has no domain restriction.
 - A tenant whose only Owner deleted their account has no Owner until an operator
   of its cell replaces it.
 

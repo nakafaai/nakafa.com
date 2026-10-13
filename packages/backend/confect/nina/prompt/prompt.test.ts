@@ -76,6 +76,11 @@ describe("createNinaPrompt", () => {
       "requirements: real retrieval or verification constraints only; omit when none exist."
     );
     expect(toolSection).toContain("deepResearch.sourceRequirements");
+    // The research model reads only this task, so Nina never writes a site the
+    // learner did not give: a remembered one can be wrong or gone.
+    expect(toolSection).toContain(
+      "Write a domain or URL only when the user wrote it. Never add one from memory, also not for an official source: name the source instead."
+    );
     expect(toolSection).toContain("nakafa.deliverables");
     expect(toolSection).toContain("math.given");
     expect(toolSection).toContain(

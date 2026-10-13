@@ -13,6 +13,7 @@
     "@react-email/render": "catalog:",
     "@repo/design-system": "workspace:*",
     "@repo/seo": "workspace:*",
+    "@repo/utilities": "workspace:*",
     "effect": "catalog:",
     "react": "19.3.0",
     "react-dom": "19.3.0",

@@ -32,7 +32,9 @@ export function DiagramFrame({
       <div className="flex items-center justify-between gap-2 bg-muted/80 p-1 text-muted-foreground text-sm">
         <div className="flex min-w-0 items-center gap-2 px-4 py-1.5">
           <HugeIcons className="size-4" icon={FlowchartIcon} />
-          <span className="ml-1 truncate text-foreground">{title}</span>
+          <span className="ml-1 truncate text-foreground" title={title}>
+            {title}
+          </span>
         </div>
         {/* Reserves the three icon buttons' space before the actions load, so
             neither the header nor the title changes size when they arrive. */}

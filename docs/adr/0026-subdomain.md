@@ -138,9 +138,9 @@ A move runs in this order:
 
 1. An operator suspends the tenant from the start of the export to the cutover.
    A suspended tenant refuses every member write (ADR 0011), so no member
-   changes the data while it is copied. Four system transitions still run in it
-   (ADR 0011, ADR 0012), and the table below says why none of them leaves a wrong
-   row in the target.
+   changes the data while it is copied. The system transitions of ADR 0012
+   (Decisions, rule 1) still run in it, and the table below says why none of them
+   leaves a wrong row in the target.
 2. The export reads every table the tenant owns, the tenant's journal entries
    (ADR 0016), and its stored files.
 3. The import writes them into the target cell. It gives every row a new ID there
@@ -150,8 +150,11 @@ A move runs in this order:
    members again. The import also writes every operator Person suspended and every
    grant of one ended. Before the tenant becomes active in the target cell, the
    expiry sweep of ADR 0011 (Time) runs for it there.
-4. The host switches to the target cell's domain at a dated cutover, and the
-   tenant becomes active again in the target cell.
+4. At a dated cutover the move reads the tenant's journal entries that the
+   source wrote after the export, rewrites their references as the import does,
+   and writes them into the target, so no journal entry exists only in the
+   source. Then the host switches to the target cell's domain, and the tenant
+   becomes active again in the target cell.
 5. The source rows are deleted through a reviewed batched deletion, run dry and
    then for real until every count is zero, the pattern that ADR 0011 uses to
    retire the old School. Nothing of the school stays in the source cell: not its
@@ -162,6 +165,9 @@ A move runs in this order:
 | A visit end | A visit belongs to the operators of its cell (ADR 0011), so the import ends every operator grant and suspends every operator Person (step 3). |
 | A grant expiry | The target ends every grant and invite whose time has passed before the tenant becomes active there (step 3). |
 | An account release | Accounts stay in their home cell, so every Person arrives unclaimed (step 3). |
+| An invite expiry | Every accepted invite arrives revoked and the target ends every invite whose time has passed before the tenant becomes active (step 3). |
+| The close or the reconciliation of an attempt | The source writes them while the tenant is suspended, and the export and the journal entries copied at cutover carry them (steps 2 and 4); the target's sweep closes any attempt whose deadline passed in between (step 3). |
+| Any journal entry of these | Copied with the rest at cutover (step 4). |
 | The operator's reactivation of the tenant | Only the move reactivates the tenant, and only in the target cell (step 4). The source tenant stays suspended until step 5 deletes its rows. |
 
 ## Consequences

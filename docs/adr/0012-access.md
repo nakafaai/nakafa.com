@@ -96,10 +96,13 @@ reads neither the clock nor the database except through the subject's
 memoized relation checks:
 
 1. A write in a suspended tenant, or on a locked subject (ended, archived, or
-   closed), is refused as `condition`, even for Owners. Four system transitions
-   are exempt and run in a suspended tenant, because they end access or restore
-   the tenant: a visit end, a grant expiry, an account release, and the
-   operator's reactivation of the tenant. Member writes stay refused. A decision
+   closed), is refused as `condition`, even for Owners. The system transitions
+   that time or an operator starts are exempt and run in a suspended tenant,
+   because they end access, keep a deadline, or restore the tenant: a visit end,
+   a grant expiry, an invite expiry, an account release, the close and the
+   reconciliation of an attempt at its deadline (ADR 0013), the sweeps that run
+   them, and the operator's reactivation of the tenant. Member writes stay
+   refused. A decision
    on a late record (ADR 0013) is an action on the attempt, not on the closed
    sitting. An attempt with undecided late records is in review and not ended,
    so this rule does not refuse the decision.
