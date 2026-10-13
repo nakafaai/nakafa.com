@@ -430,10 +430,6 @@ describe("math Agent execution", () => {
   it("ends a repair call that is in flight when the run is stopped, so a stopped turn spends no more on the background model", async () => {
     let calls = 0;
     let repairSignal: AbortSignal | undefined;
-    let started: () => void = () => undefined;
-    const repairing = new Promise<void>((resolve) => {
-      started = resolve;
-    });
     // The first call writes a tool call that fails its schema, so the SDK asks
     // for a repair. The repair call never answers: only its signal can end it.
     const model = new MockLanguageModelV4({
@@ -441,21 +437,10 @@ describe("math Agent execution", () => {
         calls += 1;
         if (calls === 1) {
           return Promise.resolve(
-            providerStep(
-              [
-                {
-                  type: "tool-call",
-                  toolCallId: "repair",
-                  toolName: "algebra",
-                  input: '{"operation":"simplify"}',
-                },
-              ],
-              "tool-calls"
-            )
+            callStep("algebra", { operation: "simplify" }, "repair")
           );
         }
         repairSignal = abortSignal;
-        started();
         return new Promise<never>((_resolve, reject) => {
           abortSignal?.addEventListener("abort", () =>
             reject(abortSignal.reason)
@@ -476,7 +461,9 @@ describe("math Agent execution", () => {
           Effect.provideService(ConfigProvider.ConfigProvider, casConfig),
           Effect.forkChild
         );
-        yield* Effect.promise(() => repairing);
+        yield* Effect.promise(() =>
+          vi.waitFor(() => expect(repairSignal).toBeDefined())
+        );
         // A stop interrupts the run, as the capability stream does when its turn
         // is stopped.
         yield* Fiber.interrupt(running);
