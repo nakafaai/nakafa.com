@@ -7,10 +7,11 @@
 Run every try-out section in one player. The header stays one row, with a back
 link, the title, the timer, and Finish. A learner reads the questions as a list
 or one at a time, and moves between them with a numbered navigator, a sidebar
-from the large breakpoint and a sheet below it, that marks the current question
-and the answered ones with a fill and a ring. Left and Right move between
-questions, 1 to 5 pick an option of a single-choice question, and G opens and
-closes the navigator. Confirming a finish lists the questions still open, and a
+from the large breakpoint and a sheet below it, that fills the answered
+questions and rings the current one. Left and Right move between questions and
+1 to 5 pick an option of a single-choice question. G opens and closes the
+sheet, and from the large breakpoint it moves focus into the sidebar and back
+to the question. Confirming a finish lists the questions still open, and a
 number there leads back to one.
 
 The server resolves the view before it sends the page, so the first render

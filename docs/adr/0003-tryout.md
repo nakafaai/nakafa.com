@@ -201,13 +201,15 @@ sets the `player_view` cookie, because a cookie is written on the server and
 the codebase does not write `document.cookie`. The page shows the chosen view
 at once and takes it back, with a toast, when the save fails.
 
-A navigator of question numbers marks the current question and the answered
-ones with a fill and a ring, so no state relies on color alone. It is a sidebar
-from the large breakpoint and a sheet below it, and it always shows the
-current number. Left and Right move between questions, `1` to `5` pick an
-option of a single-choice question, and `G` opens and closes the navigator.
-Confirming a finish lists the questions still open. A flag key and a flag state
-ship with the engine's single flags table, not with the player.
+A navigator of question numbers fills the answered ones and rings the current
+one, so no state relies on color alone. It is a sidebar from the large
+breakpoint and a sheet below it, and it always shows the current number. Left
+and Right move between questions and `1` to `5` pick an option of a
+single-choice question. `G` opens and closes the sheet, and from the large
+breakpoint, where the sidebar is always open, it moves focus into the sidebar
+and back to the question. Confirming a finish lists the questions still open.
+A flag key and a flag state ship with the engine's single flags table, not with
+the player.
 
 ### Freemium Access
 
