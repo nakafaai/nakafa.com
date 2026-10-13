@@ -1,7 +1,4 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
-import en from "@repo/internationalization/dictionaries/standalone/en.json" with {
-  type: "json",
-};
 import { Array as Arr, Effect } from "effect";
 import { ANSWER_MILLISECONDS, type Changes } from "@/e2e/support/changes";
 import { runOnPage } from "@/e2e/support/chat";
@@ -106,10 +103,11 @@ const profilesShowOnlyTheOwn = (
   ownerUsername: string
 ) =>
   Effect.promise(async () => {
-    await member.goto(`/en/@${ownerUsername}/chat`);
-    await expect(
-      member.getByRole("heading", { level: 1, name: en.NotFound.title })
-    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    // The proxy answers it as a real 404 before the page renders. `next start`
+    // draws the framework's own 404 for a rewritten address, where Vercel
+    // draws the app's page, so only the status is the contract here.
+    const answer = await member.goto(`/en/@${ownerUsername}/chat`);
+    expect(answer?.status()).toBe(404);
     await expect(pageRows(member)).toHaveCount(0);
     await owner.goto(`/en/@${ownerUsername}/chat`);
     // A row is the link that covers it and its words beside it, so the test reads their parent.
