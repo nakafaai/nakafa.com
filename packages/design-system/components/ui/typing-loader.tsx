@@ -1,6 +1,7 @@
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 
 const DOT_DELAYS = [0, 250, 500];
 
@@ -36,6 +37,8 @@ export function TypingLoader({
   className?: string;
   size?: "sm" | "md" | "lg";
 }) {
+  const t = useTranslations("Ai");
+
   return (
     <div className={cn(containerVariants({ size }), className)}>
       {Arr.map(DOT_DELAYS, (delay) => (
@@ -47,7 +50,7 @@ export function TypingLoader({
           }}
         />
       ))}
-      <span className="sr-only">Loading</span>
+      <span className="sr-only">{t("loading")}</span>
     </div>
   );
 }

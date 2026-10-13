@@ -16,6 +16,7 @@ import { useChatStore } from "@/components/ai/chat/store.client";
 import { reportClientException } from "@/lib/analytics/client";
 import { requireConvexOnline } from "@/lib/convex/online";
 import { useViewer } from "@/lib/identity/client";
+import { ownChatsHref } from "@/lib/profile/href";
 
 /**
  * Owns destructive confirmation and routes away only after confirmed deletion.
@@ -46,6 +47,7 @@ export function ChatDeletion({
     if (!user || isPending) {
       return;
     }
+    const { username } = user.appUser;
     change(() =>
       Effect.runPromise(
         requireConvexOnline(convex).pipe(
@@ -66,7 +68,7 @@ export function ChatDeletion({
             )
           ),
           Effect.tap(() =>
-            Effect.sync(() => router.replace(`/user/${user.appUser._id}/chat`))
+            Effect.sync(() => router.replace(ownChatsHref(username)))
           ),
           Effect.matchEffect({
             onSuccess: () => Effect.void,

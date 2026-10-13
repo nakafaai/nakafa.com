@@ -13,6 +13,7 @@ import { getCodeFileExtension } from "@repo/design-system/lib/code-block/languag
 import { downloadFile } from "@repo/design-system/lib/files/download";
 import { cn } from "cn";
 import { Effect, Schema } from "effect";
+import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
   createContext,
@@ -77,6 +78,7 @@ export function CodeBlockDownloadButton({
   className,
   ...props
 }: CodeBlockDownloadButtonProps) {
+  const t = useTranslations("Ai");
   const code = useCodeSource((source) => source.code);
   const language = useCodeSource((source) => source.language);
   const extension = getCodeFileExtension(language);
@@ -102,10 +104,11 @@ export function CodeBlockDownloadButton({
 
   return (
     <Button
+      aria-label={t("download-file")}
       className={cn("shrink-0", className)}
       onClick={downloadCode}
       size="icon"
-      title="Download file"
+      title={t("download-file")}
       variant="ghost"
       {...props}
     >
@@ -125,6 +128,7 @@ export function CodeBlockCopyButton({
   className,
   ...props
 }: CodeBlockCopyButtonProps) {
+  const t = useTranslations("Ai");
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
   const code = useCodeSource((source) => source.code);
@@ -173,9 +177,11 @@ export function CodeBlockCopyButton({
 
   return (
     <Button
+      aria-label={t("copy-code")}
       className={cn("shrink-0", className)}
       onClick={copyToClipboard}
       size="icon"
+      title={t("copy-code")}
       variant="ghost"
       {...props}
     >

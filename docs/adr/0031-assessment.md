@@ -59,11 +59,13 @@ that the model must change:
 ### 1. One item model for Nakafa content and school items
 
 - `ItemFamily` holds a language-neutral identifier.
-- `ItemVersion` holds one language's document, interactions, scoring rules,
-  explanation, and a content hash. A version never changes after it is used.
+- `ItemVersion` holds one language's document, interactions, scoring rules, and a
+  content hash. A version never changes after it is used.
 - The answer key of a version is its own record, named by the version's hash and
   delivered only to an entitled reader. A prompt, a paper, and a paper bundle
-  never carry a key.
+  carry prompts and stimuli only: never a key and never an explanation. An
+  explanation is its own artifact, delivered after release under the release
+  policy.
 - `Placement` only points to a version in a frozen manuscript.
 - `Stimulus` stands alone, and one group of items shares it.
 - A teacher's question is school data in the school's own cell. The Aksara
@@ -71,9 +73,9 @@ that the model must change:
   catalogue, and each row records the contract version it was written with (K1).
   That version is migration bookkeeping only: an index lets a contract release
   find the rows it has not rewritten yet. No reader dispatches on it and no
-  renderer keeps an older shape (ADR 0018): a major contract release migrates
-  every school item row in its own release train, and readers decode only the
-  current shape.
+  renderer keeps an older shape (ADR 0018): readers decode only the current
+  shape, and a major contract release migrates the school item rows of every cell
+  in the order of section 10.
 
 ### 2. The item body is a structured document, not code
 
@@ -113,27 +115,30 @@ that the model must change:
 - File upload and audio are planned.
 - Every interaction works with a keyboard and a screen reader (WCAG 2.2 AA).
 
-Math entry is accepted automatically only when a deterministic check proves the
-answer: the canonical forms of both expressions are the same under `isSame`, or,
-for expressions without free variables, `isEqual` returns true (exact numbers
-compare exactly; a float compares within the interaction's stated tolerance).
-Any other `true` about expressions with free variables comes from sampling and is
-treated as a sample. The engine is Cortex Compute Engine
-(`@cortex-js/compute-engine`, planned: it is not in the backend manifest today).
-In the pinned version (0.152.0, read in its `compare.ts` at the release commit)
-`isEqual` runs with the prover off and never samples; a contract test pins that
-(`(x+1)^2` against `x^2+2x+1` stays undefined under `isEqual`), so an upgrade
-that adds a sampling path to `isEqual` fails the test before it can grade.
-Three facts about that engine shape the rule. `isSame` checks structure only.
+A math entry gets one outcome, by how the check reached its verdict. Each outcome
+is recorded under its own name, and what it scores depends on the exam profile:
+
+| Outcome | How the engine reaches it | Practice and consumer try-out | School exam |
+| --- | --- | --- | --- |
+| Proven | The canonical forms of both expressions are the same under `isSame`, or, for expressions without free variables, `isEqual` returns true (exact numbers compare exactly) | Correct | Correct |
+| Within tolerance (`withinTolerance`) | A number matches within the interaction's stated tolerance. This is an approximation, not a proof | Correct | Correct |
+| Sampled | A `true` about expressions with free variables that comes from sampling (`isIdenticallyEqual`) | Correct | The teacher's review queue |
+| None of these | No outcome above applies | Incorrect | Incorrect |
+
+Consumer try-outs always auto-score. An answer that is neither proven, sampled,
+nor within tolerance is incorrect in every profile.
+
+The engine is Cortex Compute Engine (`@cortex-js/compute-engine`, planned: it is
+not in the backend manifest today). In the pinned version (0.152.0, read in its
+`compare.ts` at the release commit) `isEqual` runs with the prover off and never
+samples; a contract test pins that (`(x+1)^2` against `x^2+2x+1` stays undefined
+under `isEqual`), so an upgrade that adds a sampling path to `isEqual` fails the
+test before it can grade. The test lands before any math entry grades. Three
+facts about that engine shape the rule. `isSame` checks structure only.
 `isEqual` checks value, and it can return `undefined` for two expressions that
 are equal. `isIdenticallyEqual` samples random values, so `true` is strong
 evidence and not a formal proof. The engine version is pinned, because issue
 #326 appeared in 0.98.0.
-
-A sampled verdict from `isIdenticallyEqual` is not a proof. It is accepted only
-where the exam profile allows it, which means practice and consumer try-outs,
-and it is recorded as sampled. In a school exam, sampled verdicts and unproven
-answers go to the teacher.
 
 ### 4. Scoring rules are data
 
@@ -180,8 +185,9 @@ Decided, not live:
 - An exam profile holds the official name per language, the section template,
   the time per section and in total, the navigation, the allowed interactions,
   the tools per section, the accommodation catalogue, the scoring strategy and
-  scale, the report form, and the write allowance and reconciliation grace period
-  that ADR 0013 reads at the deadline.
+  scale, the report form, and the write allowance and reconciliation grace
+  period. ADR 0032 lists these fields, and ADR 0013 reads the allowance and the
+  grace period at the deadline.
 - Try-outs and school exams use the same profile type (ADR 0032, K17).
 - Aksara signs the profile, and Nakafa checks the signature before it uses the
   profile.
@@ -203,12 +209,20 @@ Decided, not live:
 
 ### 8. Runtime for scale and cost
 
-- A frozen manuscript becomes a signed bundle without answer keys. The bundle is
-  a static file with a long cache, named by its hash, so viewing an item reads no
-  database.
+- A frozen manuscript becomes a bundle of prompts and stimuli, without answer
+  keys and without explanations. The bundle is a static file with a long cache,
+  named by its hash, so viewing an item reads no database. A school exam's bundle
+  is encrypted with a per-sitting key that the gate hands out when the token
+  admits the student (ADR 0013), so a cached file is useless without admission. A
+  consumer try-out bundle holds only what a learner may see before answering. A
+  bundle is never revoked once it is cached: a correction is a new version with a
+  new hash.
+- A school manuscript is frozen and named by its content hash, and it is not
+  signed. Signing applies to Aksara publications only.
 - An attempt has one row, and each item has one response row. Writes are delayed
   and versioned.
-- The offline queue is encrypted per sitting (ADR 0013).
+- The offline queue is encrypted per attempt, with a key that the server issues to
+  the device session (ADR 0013).
 - Deadlines move by scheduled transitions. Submit is idempotent.
 - Presence for a proctored sitting uses `@convex-dev/presence`, the one presence
   mechanism that ADR 0013 decides.
@@ -222,11 +236,11 @@ has exactly one owner.
 
 | Module | Owns | Status | Replaces |
 | --- | --- | --- | --- |
-| `catalog` | Profiles, frozen manuscripts, and signed bundles | Planned | The catalog and the runtime bundle of `confect/tryouts`, wave B |
-| `gate` | The attempt cycle, sittings, tokens, devices, deadlines, and answer writes | Planned, wave B | `confect/tryouts/start` and `confect/tryouts/mutations`, wave B |
+| `catalog` | Profiles, frozen manuscripts, and bundles | Planned | The catalog and the runtime bundle of `confect/tryouts`, wave B |
+| `gate` | The attempt cycle, sittings, tokens, devices, deadlines, and answer writes | The admission of try-out answers and section finishes is live (#1040). The rest is planned, wave B | `confect/tryouts/start`, `confect/tryouts/mutations`, and the try-out store `confect/tryouts/gate.ts`, wave B |
 | `response` | Answer evaluation as pure functions, shared by the client and the server | Live as `confect/response` (#792) | `confect/response` and `confect/tryouts/response`, across waves A and B |
 | `scoring` | Raw, penalized, IRT, composite, and report scores | The estimator is live in `confect/tryouts/runtime`. The module is planned. | `confect/tryouts/score` and the estimator, wave B |
-| `grading` | The teacher's queue, Nina's suggestions (K6 and K7), and grade release | Planned, new | Nothing |
+| `grading` | The teacher's queue, Nina's suggestions (K6 and K7), grade release, and the frozen results of finished attempts (`assessmentResults`) | Planned, new | The finished rows of the nine `tryout*` tables, converted once (section 10) |
 | `calibration` | Offline IRT, DIF, and scale versions | Planned, wave C. Nothing is stored yet | Keeps and extends the `irtScaleVersions`, `irtScaleItems`, and `irtCalibrationRuns` tables, wave C |
 | `analysis` | Item difficulty and discrimination | Planned, new | Nothing |
 
@@ -234,16 +248,63 @@ has exactly one owner.
 
 - One major Aksara contract release replaces the 0.x schema. The corpus is
   rewritten or migrated in the same release.
+- School item rows are not in the corpus. A major contract release migrates them
+  before any reader switches, in the order of the rule for public functions
+  (expand, switch, observe, contract, `packages/backend/AGENTS.md`). In each cell
+  the migration rewrites that cell's rows, counted by the contract-version index
+  and run dry first, the way ADR 0011 counts the rows of the old School. The
+  reader that decodes only the new shape ships last, after the observation:
+  production function logs show no write of the old shape for at least 12 hours
+  (the skew window, ADR 0011) and across one later production deploy, because a
+  tab left open on an older build calls Convex directly, and the count of rows of
+  the old shape then reads zero in every cell. The count follows the observation
+  and never replaces it, because a hold alone does not stop a tab on an older
+  build from writing the old shape.
 - Nakafa's engine replaces `confect/tryouts` and `confect/response` in one release
   path. No adapter, dual read, or compatibility code sits between the steps.
-- A finished attempt is converted once into a frozen result. A running attempt is
-  closed and scored first.
-- The old try-out functions and the nine `tryout*` tables go in the contract
-  step of the rule for public functions (expand, switch, observe, contract,
-  `packages/backend/AGENTS.md`): only after production function logs show no
-  call to an old try-out function across a window that spans at least one
-  production deploy, the check ADR 0011 records for the old School. The 12-hour
-  skew window is only a minimum, and a dev dry run comes first.
+- The engine cutover converts every finished try-out attempt once, in a counted
+  and idempotent batch, into result rows that the `grading` module owns
+  (`assessmentResults`). The batch counts the attempts it reads, the rows it
+  writes, and the rows that already exist, and it writes a row only when none
+  exists for the attempt, so a rerun changes nothing. A running attempt is closed
+  and scored first, so it is converted as a finished one.
+- A finished attempt keeps its review (ADR 0003). The conversion writes into the
+  result what that review reads today: the learner's responses with their
+  outcomes, the placements the attempt ran, the scores of the attempt and of each
+  section as `tryoutScores` holds them (the raw and the published score, the
+  score's status, theta, and its standard error,
+  `packages/backend/confect/tryouts/score/result.ts`), and the identity of the
+  signed content it ran on. The old tables are dropped only after every result
+  holds its scores. The signed snapshot and its artifacts stay for as long as a
+  result names them: snapshot retention counts a result as a reference to its
+  snapshot, and the artifact check counts the artifacts of its placements, as
+  they count an attempt and a placement today
+  (`packages/backend/confect/contentRelease/snapshot/retention.ts`).
+- The old try-out functions and the nine `tryout*` tables (`tryoutAttempts`,
+  `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`,
+  `tryoutScores`, `tryoutPlacements`, `tryoutCatalog`, `tryoutRuntimeBundles`,
+  and `tryoutSetProgress`) go in the contract step of the rule for public
+  functions (expand, switch, observe, contract, `packages/backend/AGENTS.md`).
+  The tables are dropped only after the counts of the conversion match,
+  acceptance shows the review of a converted attempt reading from its result and
+  the retained signed content alone, and production function logs show no call to
+  an old try-out function across a window that spans at least one production
+  deploy, the check ADR 0011 records for the old School. The 12-hour skew window
+  is only a minimum, and a dev dry run comes first. A reviewed batched deletion
+  then empties the tables, run dry and then for real until every count is zero,
+  and a last release drops the tables, the conversion, and the deletion.
+- The Convex reset rule of ADR 0003 stays in force, because this ADR supersedes
+  ADR 0003 and the rule must not lapse with it. A content reset deletes only
+  rebuildable Nakafa read models. It preserves signed snapshot state, attempts,
+  results, progress, placements, responses, scores, access state, entitlements,
+  calibration runs, and IRT scales, and each attempt, result, and scale keeps the
+  exact signed snapshot that its historical review and scoring need. No table is
+  reset while it holds data. A retired table goes only when no schema or code refers to
+  it and the replacement runtime has passed acceptance, and its rows are none, or
+  verified in the replacement store by the counts above, or approved for disposal
+  by the owner. No export is taken from production, by the working rule of
+  `docs/convex/cost.md`: the conversion is the recoverable copy, because the old
+  tables keep their rows until every count matches.
 - One flag table, `assessmentFlags`, holds every assessment flag. No
   `tryoutFlags` table ships.
 - Nina reads each question's raw MDX (`packages/backend/confect/nina/focus.ts`).
@@ -261,8 +322,8 @@ has exactly one owner.
   exams.
 - Sampled math verdicts reach a teacher in a school exam, never a student's grade
   on their own.
-- Finished try-out attempts keep their results as frozen records. They are not
-  re-scored.
+- Finished try-out attempts keep their results and their review as frozen
+  records. They are not re-scored.
 
 ## Rejected Alternatives
 
@@ -284,11 +345,12 @@ has exactly one owner.
 | --- | --- |
 | `packages/backend/confect/tryouts/runtime/estimate.ts` (2PL with maximum likelihood) | Live |
 | `packages/backend/confect/response` (#792) | Live |
-| The nine `tryout*` tables in `packages/backend/confect/tables` | Live, dropped in wave B |
+| `packages/backend/confect/assessment/gate` (admission of try-out answers and section finishes, #1040) | Live. Sittings, tokens, devices, and the offline queue are planned, wave B (ADR 0013) |
+| The nine `tryout*` tables in `packages/backend/confect/tables` | Live. Finished attempts convert to `assessmentResults` and the tables drop in wave B (section 10) |
 | The three `irt*` tables in `packages/backend/confect/tables` | Live, extended in wave C |
 | `@cortex-js/compute-engine` and `mathlive` | Not installed |
 | `@convex-dev/presence` | Not installed. Planned for wave B. |
-| `confect/assessment` modules | Planned |
+| The other `confect/assessment` modules | Planned |
 | Assessment document and its compiler | Planned, program wave A |
 | `apps/www/components/player` (list or one item, navigator, keys), bound to try-outs | Live. A School binding is planned for wave B. |
 | Player tool registry | Planned, program wave B |

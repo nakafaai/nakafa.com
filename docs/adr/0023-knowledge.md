@@ -15,8 +15,8 @@ passages. That is 12,822 rows, and the index holds and embeds only published
 lesson and Quran text. No stored learner message is ever embedded. A search
 embeds one thing from a learner: the short search phrase that the specialist
 writes from a question, which it compares with the sections and keeps nowhere.
-That request cannot carry the zero retention flags that every language model
-call sends (ADR 0019), so it relies on the statement of the gateway.
+That request asks for zero retention with `zdr`, the one retention flag an
+embedding request can carry (ADR 0019, Routing and retention).
 
 ## Decision
 
