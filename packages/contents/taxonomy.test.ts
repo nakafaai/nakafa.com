@@ -1,5 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { GradeSchema, MaterialSchema } from "@repo/contents/taxonomy";
+import {
+  GradeSchema,
+  isPresentedMaterialDomain,
+  MaterialSchema,
+} from "@repo/contents/taxonomy";
 import { Schema } from "effect";
 
 describe("content taxonomy", () => {
@@ -8,6 +12,11 @@ describe("content taxonomy", () => {
     expect(Schema.decodeSync(MaterialSchema)("mathematics")).toBe(
       "mathematics"
     );
+  });
+
+  it("tells a presented material domain from any other key", () => {
+    expect(isPresentedMaterialDomain("mathematics")).toBe(true);
+    expect(isPresentedMaterialDomain("astrology")).toBe(false);
   });
 
   it("rejects values outside the owned taxonomy", () => {

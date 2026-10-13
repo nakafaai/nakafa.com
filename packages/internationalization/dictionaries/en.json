@@ -280,7 +280,6 @@
     "metadata-description": "Choose a country, exam, and tryout set from Nakafa.",
     "country-selector-label": "Country",
     "exam-selector-label": "Exam",
-    "set-count": "{count, plural, =0 {No sets yet} =1 {# set} other {# sets}}",
     "open-country-cta": "View exams",
     "open-exam-cta": "View options",
     "open-set-cta": "View sets",

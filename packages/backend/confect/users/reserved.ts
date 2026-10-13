@@ -1,0 +1,47 @@
+import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
+import { Array as Arr, HashSet, Record as Rec } from "effect";
+
+/** Names that could pass for Nakafa itself, its people, or its help. */
+const MISLEADING_USERNAMES = [
+  "nakafa",
+  "nina",
+  "admin",
+  "support",
+  "help",
+  "official",
+  "school",
+  "sekolah",
+  "settings",
+  "api",
+];
+
+/**
+ * Roots that answer without being an application route root: the sitemaps,
+ * which live outside the locale tree, and the retired pages that
+ * `next.config.ts` redirects to the home page or to the community.
+ */
+const OUTSIDE_ROUTE_ROOTS = ["about", "community", "discord", "sitemap"];
+
+/**
+ * Every name that no account takes: the misleading ones, each root of an
+ * application route, each namespace a public route surface owns in any
+ * language, and the roots that answer outside the route roots.
+ */
+const RESERVED_USERNAMES = HashSet.fromIterable<string>(
+  Arr.flatten([
+    MISLEADING_USERNAMES,
+    OUTSIDE_ROUTE_ROOTS,
+    Arr.fromIterable(APPLICATION_ROUTE_ROOTS),
+    Arr.flatMap(PUBLIC_ROUTE_SURFACES, (surface) => [
+      surface.appSegment,
+      surface.key,
+      ...Rec.values(surface.routeSlugs),
+    ]),
+  ])
+);
+
+/** Whether a username is a route or could pass for Nakafa, so no account takes it. */
+export function isReservedUsername(username: string) {
+  return HashSet.has(RESERVED_USERNAMES, username);
+}

@@ -1,8 +1,9 @@
 "use client";
 
-import { Array as Arr, HashSet } from "effect";
+import { getTileLooks } from "@repo/design-system/lib/look";
+import { Array as Arr, HashSet, Tuple } from "effect";
 import { useTranslations } from "next-intl";
-import { getTryoutSubjectIcon } from "@/components/tryout/catalog/icons";
+import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { TryoutList } from "@/components/tryout/catalog/list";
 import {
   getTryoutAttemptHref,
@@ -40,37 +41,36 @@ export function TryoutSectionRows({
     runningAttempt?.completedSectionKeys ?? []
   );
   const currentSectionKey = runningAttempt?.resumeSectionKey ?? null;
+  const shown = Arr.flatMap(sections, (section) =>
+    section.publicPath ? [{ publicPath: section.publicPath, section }] : []
+  );
+  const looks = getTileLooks(
+    Arr.map(shown, ({ section }) =>
+      Tuple.make(getTryoutSubjectIcons(section.sectionKey), section.sectionKey)
+    )
+  );
   return (
     <TryoutList
       emptyLabel={tTryouts("list-empty")}
-      rows={Arr.flatMap(sections, (section) => {
-        const publicPath = section.publicPath;
-        if (!publicPath) {
-          return [];
-        }
+      rows={Arr.zipWith(shown, looks, ({ publicPath, section }, look) => {
         const status = getSectionStatus({
           activeSectionKey: runningAttempt?.activeSectionKey ?? null,
           completedSections,
           sectionKey: section.sectionKey,
         });
-        return [
-          {
-            current: section.sectionKey === currentSectionKey,
-            description: tTryouts("set-duration-minutes", {
-              minutes: section.timeLimitSeconds / 60,
-            }),
-            href: attempt
-              ? getTryoutAttemptHref(publicPath, attempt.attemptId)
-              : getTryoutPublicPathHref(publicPath),
-            key: section.sectionKey,
-            ...(status === undefined ? {} : { status }),
-            title: section.title,
-            visual: {
-              icon: getTryoutSubjectIcon(section.sectionKey),
-              seed: section.sectionKey,
-            },
-          },
-        ];
+        return {
+          current: section.sectionKey === currentSectionKey,
+          description: tTryouts("set-duration-minutes", {
+            minutes: section.timeLimitSeconds / 60,
+          }),
+          href: attempt
+            ? getTryoutAttemptHref(publicPath, attempt.attemptId)
+            : getTryoutPublicPathHref(publicPath),
+          key: section.sectionKey,
+          ...(status === undefined ? {} : { status }),
+          title: section.title,
+          visual: look,
+        };
       })}
     />
   );

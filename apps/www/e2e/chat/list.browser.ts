@@ -84,7 +84,7 @@ const chatsPage = Effect.fn("NakafaE2E.chatsPageLoadsMore")(function* (
 ) {
   const { learner } = yield* seedLongList(page, baseURL);
 
-  yield* Effect.promise(() => page.goto(`/en/user/${learner.userId}/chat`));
+  yield* Effect.promise(() => page.goto(`/en/@${learner.username}/chat`));
   yield* loadsNextPageAtItsEnd(page, pageRows(page), undefined);
 });
 

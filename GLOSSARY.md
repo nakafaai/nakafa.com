@@ -86,6 +86,31 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Section index**: The derived rows of every Section of the active release, with its text for search by words and a vector for search by meaning. A build makes it from the active release, and Nina's Nakafa search trusts it only while its record names the active release and the embedding model; otherwise Nina searches by words.
 - **Section version**: What a document's Sections were made from: the section format, the embedding model, and the signed facts of the source. A build passes over a document whose version the index holds, a Section whose text its document holds is never embedded again, wherever it stands now, and an unchanged Section is not written again either.
 
+## Classroom
+
+- **Channel**: A named place in a class forum. A class has a general channel for all its members, and a teacher adds topic channels.
+- **Discussion**: A thread that starts with a titled message in a channel. Its number counts per class, like the number of an issue, and its title is the same wherever it shows.
+- **Mention**: A reference to a person inside a message. It writes one inbox row in the transaction of the message, and the journal does not record it.
+- **Class library index**: The derived rows that let Nina search the files a teacher published in a class library. It holds no text that a learner wrote.
+
+## Notifications
+
+- **Inbox**: The one list of an account's notifications across Nakafa. It is the source of truth, and push and email only point to it.
+- **Notification**: One inbox row: a recipient, a kind, the object it points to, and a time. It holds no text, and its title is read from the object when it is opened.
+- **Reminder**: A notification that the scheduler sends at a time that follows from a task or a sitting, such as the day before a deadline.
+- **Quiet hours**: The hours, 21:00 to 06:00 in the school's time zone, in which push is skipped. The inbox still holds the notification.
+
+## Collaborative Documents
+
+- **Document step**: One ProseMirror step that a client sends with the version it is based on. The server accepts it only at the current version.
+- **Document version**: The number of steps a collaborative document has accepted.
+
+## School Keys
+
+- **Key owner**: Whom a vault key belongs to: the root, a learner, a school, or a connection.
+- **School key**: The 32-byte key of a tenant that seals the free text of the school. A root key wraps it, as it wraps a learner key.
+- **Blind word**: The keyed hash of one word of a text, made with the key of its owner. The database matches the same word again without reading it.
+
 ## Evaluation
 
 - **EvalCase**: A schema-derived test input with deterministic expected evidence, routing, or trace assertions.
@@ -104,6 +129,13 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 ## Billing
 
 - **Checkout admission**: The account-lifecycle revalidation performed after a checkout is created and before its link is released. Its result is Admitted or Unavailable; integration failures remain distinct.
+
+## Connectors And Integrations
+
+- **Connector**: An adapter in `confect/connectors` that brings one external source into Nakafa, such as Google Drive, Forms, Classroom, Calendar, or Gmail, or a file such as Dapodik XLSX. It writes nothing to Google. Data that leaves Nakafa (webhooks, exports, grades sent to a learning system) is not a Connector, except the Dapodik export, which the Dapodik adapter owns.
+- **Connection**: One Connector authorized by one owner, a learner for a personal connection or a school for a school connection. Its tokens are sealed in the vault under the owner's key. It enters the reconnect state when Google refuses its token or, for a school connection, when the account of the member who made it is deleted.
+- **Integration client**: An app that calls a school's REST API or MCP server with OAuth 2.0 client credentials. It holds the Integration role over its tenant or one unit, limited to the actions on its list.
+- **Webhook**: A signed HTTP callback of one Integration client, fed from the Journal. It delivers only published changes that the client could read, and one row for each attempt records the delivery.
 
 ## Forum Conversation
 

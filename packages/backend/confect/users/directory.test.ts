@@ -3,6 +3,7 @@ import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   getAppUserByAuthId,
+  getAppUserByUsername,
   getUserMap,
 } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -100,6 +101,34 @@ describe("users/directory", () => {
               name: "Known user",
             });
             expect(yield* getAppUserByAuthId("auth-missing")).toBeNull();
+          })
+        );
+      })
+  );
+  it.effect(
+    "looks up the app user that holds a username and returns null when no account holds it",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect.pipe(Effect.provide(confectLayer));
+        yield* t.run(
+          Effect.gen(function* () {
+            const tCtx = yield* MutationCtx;
+            const userId = yield* Effect.promise(() =>
+              tCtx.db.insert("users", {
+                authId: "auth-handle",
+                credits: 100,
+                creditsResetAt: 0,
+                email: "handle@example.com",
+                name: "Handle user",
+                plan: "free",
+                username: "handle",
+              })
+            );
+            expect(yield* getAppUserByUsername("handle")).toMatchObject({
+              _id: userId,
+              username: "handle",
+            });
+            expect(yield* getAppUserByUsername("nobody")).toBeNull();
           })
         );
       })
