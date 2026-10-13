@@ -124,6 +124,7 @@
     "see": "Ansehen",
     "chat": "Chat",
     "no-chats": "Noch keine Chats.",
+    "chats-by-link": "Ein geteilter Chat öffnet sich über seinen Link",
     "try-out": "Probetest",
     "try-out-short": "Probetest",
     "search-country-placeholder": "Land suchen...",
@@ -405,18 +406,6 @@
   "Videos": {
     "discover": "Videos entdecken"
   },
-  "NotFound": {
-    "title": "Seite nicht gefunden",
-    "description": "Diese Seite existiert nicht oder ist noch nicht verfügbar.",
-    "home-button": "Startseite",
-    "contribute-button": "Mitwirken"
-  },
-  "Error": {
-    "title": "Etwas ist schiefgegangen!",
-    "description": "Hilf uns bitte, indem du das Problem auf GitHub meldest.",
-    "retry": "Erneut versuchen",
-    "report": "Melden"
-  },
   "Contributor": {
     "title": "Mitwirkende",
     "description": "Lerne die Menschen kennen, die Nakafa möglich machen."
@@ -430,9 +419,6 @@
     "continue-with-google": "Mit Google fortfahren",
     "opening-google": "Google wird geöffnet...",
     "provider-error": "Mit Google konnte nicht fortgefahren werden. Bitte versuche es erneut.",
-    "entry-error-title": "Diese Seite konnte nicht vorbereitet werden",
-    "entry-error-description": "Versuche es erneut, um sicher fortzufahren.",
-    "retry": "Erneut versuchen",
     "logout": "Abmelden",
     "login": "Anmelden",
     "login-cta-title": "Weiterlernen",
@@ -699,10 +685,11 @@
     "private": "Privat",
     "private-description": "Nur du kannst den Chat sehen.",
     "public": "Öffentlich",
-    "public-description": "Alle können den Chat sehen.",
+    "public-description": "Alle mit dem Link können den Chat sehen.",
     "create-link": "Link erstellen",
     "copy-link": "Link kopieren",
     "link-copied": "Link kopiert!",
+    "share-link-error": "Der Link konnte nicht geladen werden",
     "private-chat-error": "Zugriff verweigert",
     "private-chat-error-description": "Dieser Chat gehört dir nicht. Bitte die besitzende Person um Zugriff.",
     "credits-label": "Credits",
@@ -939,6 +926,11 @@
       "classes": "Klassen",
       "nakafa-materials": "Nakafa-Lernmaterialien",
       "yours": "Für dich"
+    },
+    "Missing": {
+      "title": "Diese Schule oder Klasse finden wir nicht",
+      "description": "Vielleicht stimmt der Link nicht, oder du bist noch nicht beigetreten",
+      "back-button": "Zu Nakafa School gehen"
     },
     "Classes": {
       "classes": "Klassen",

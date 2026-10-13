@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ACTS } from "@repo/mascot/nina/act";
-import { ARM, LEG, WHOLE_BOX } from "@repo/mascot/nina/body";
+import { ARM, LEG } from "@repo/mascot/nina/body";
+import { WHOLE_BOX } from "@repo/mascot/nina/box";
 import { EDGES } from "@repo/mascot/nina/edge";
 import { legCurve } from "@repo/mascot/nina/figure";
 import { bend, type Curve, cubic, slope, wide } from "@repo/mascot/nina/limb";

@@ -114,6 +114,7 @@ describe("two-tier PostHog browser runtime", () => {
           before_send: expect.any(Function),
           capture_pageview: false,
           cookieless_mode: "on_reject",
+          disable_capture_url_hashes: true,
           disable_compression: true,
           opt_out_capturing_by_default: true,
           person_profiles: "identified_only",

@@ -4,20 +4,35 @@ import "@/styles/globals.css";
 
 import { captureException } from "@repo/analytics/posthog/browser";
 import { DesignSystemProvider } from "@repo/design-system";
-import { Button } from "@repo/design-system/components/ui/button";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
-import { cn } from "cn";
+import de from "@repo/internationalization/dictionaries/standalone/de.json";
+import en from "@repo/internationalization/dictionaries/standalone/en.json";
+import id from "@repo/internationalization/dictionaries/standalone/id.json";
+import { splitLocalePathname } from "@repo/internationalization/src/href";
+import { routing } from "@repo/internationalization/src/routing";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { DeferredParticles } from "@/components/shared/particles";
+import { Broken } from "@/components/state/broken";
+import { Stage } from "@/components/state/stage";
 
+const dictionaries = { de, en, id };
+
+/**
+ * Replaces the root layout, so it renders its own document with only the
+ * design system's provider: none of the app's providers and none of its
+ * messages. It speaks the language of the address it was reached on, from the
+ * small dictionary of the standalone pages, and falls back to the default
+ * locale.
+ */
 export default function GlobalError({
   error,
-  retry,
 }: {
   error: Error & { digest?: string };
-  retry: () => void;
 }) {
+  const { locale } = splitLocalePathname(usePathname(), routing.locales);
+  const language = locale ?? routing.defaultLocale;
+  const messages = dictionaries[language];
+
   useEffect(() => {
     captureException(error, {
       source: "next-global-error",
@@ -30,46 +45,20 @@ export default function GlobalError({
     <html
       className={fonts}
       data-scroll-behavior="smooth"
-      lang="en"
+      lang={language}
       suppressHydrationWarning
     >
       <body>
         <DesignSystemProvider>
-          <div className="relative">
-            <div className="relative flex h-svh items-center justify-center">
-              <DeferredParticles className="pointer-events-none absolute inset-0 opacity-80" />
-              <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
-                <div className="space-y-4 text-center">
-                  <h1 className="font-bold font-mono text-6xl text-destructive">
-                    5XX
-                  </h1>
-
-                  <div className="space-y-2">
-                    <h2 className="font-medium text-lg tracking-tight">
-                      Something went wrong!
-                    </h2>
-
-                    <p className="mx-auto max-w-md text-muted-foreground text-sm">
-                      Please report the issue on GitHub.
-                    </p>
-                  </div>
-
-                  <div className="mx-auto grid w-fit grid-cols-2 gap-2">
-                    <Button onClick={retry}>Retry</Button>
-                    <a
-                      className={cn(buttonVariants({ variant: "secondary" }))}
-                      href="https://github.com/nakafaai/nakafa.com/issues"
-                      rel="noopener noreferrer"
-                      target="_blank"
-                      title="Report"
-                    >
-                      Report
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Stage>
+            <Broken
+              description={messages.Error.description}
+              home={messages.State["home-button"]}
+              homeHref={`/${language}`}
+              retry={messages.Error.retry}
+              title={messages.Error.title}
+            />
+          </Stage>
         </DesignSystemProvider>
       </body>
     </html>

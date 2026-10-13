@@ -169,7 +169,7 @@ export declare const api: {
       getChat: FunctionReference<
         "query",
         "public",
-        { chatId: Id<"chats"> },
+        { chatId: Id<"chats">; shareToken?: string },
         {
           _creationTime: number;
           _id: Id<"chats">;
@@ -178,7 +178,7 @@ export declare const api: {
           title?: string;
           type: "study";
           updatedAt: number;
-          userId: Id<"users">;
+          userId?: Id<"users">;
           visibility: "private" | "public";
         }
       >;
@@ -210,7 +210,7 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
@@ -250,12 +250,18 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      getShareToken: FunctionReference<
+        "query",
+        "public",
+        { chatId: Id<"chats"> },
+        string | null
       >;
     };
   };
@@ -3322,7 +3328,7 @@ export declare const api: {
       get: FunctionReference<
         "query",
         "public",
-        { chatId: Id<"chats"> },
+        { chatId: Id<"chats">; shareToken?: string },
         {
           chat: {
             _creationTime: number;
@@ -3332,7 +3338,7 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           };
           turn: {
@@ -3466,6 +3472,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          shareToken?: string;
           streamArgs?:
             | { kind: "list"; startOrder?: number }
             | {
@@ -6166,6 +6173,16 @@ export declare const internal: {
         "internal",
         { model: string; newDoc: any; oldDoc: any },
         any
+      >;
+    };
+  };
+  chats: {
+    unshare: {
+      closeLegacy: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; dry: boolean },
+        { closed: number; legacy: number; next: string | null; shared: number }
       >;
     };
   };

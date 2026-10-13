@@ -116,7 +116,12 @@ export function AiSheet() {
 
 /**
  * The new-chat body, or the open chat once the learner has one. A chat that
- * could not open is forgotten when the learner picks another, which opens.
+ * could not open is forgotten, and the sheet shows a new chat. Each chat gets
+ * a boundary of its own, because `resetKeys` cannot reset this one: a boundary
+ * reads them in `componentDidUpdate`, and React runs no `componentDidUpdate`
+ * in an update that hides its Activity, which is the update that forgets the
+ * chat. The boundary kept its error, and the sheet showed nothing for every
+ * chat after it.
  */
 function SheetBody() {
   const activeChatId = useAi((state) => state.activeChatId);
@@ -135,8 +140,8 @@ function SheetBody() {
       <Activity mode={activeChatId ? "visible" : "hidden"}>
         <ErrorBoundary
           fallback={<SheetError />}
+          key={activeChatId}
           onError={handlePrivateChatError}
-          resetKeys={[activeChatId]}
         >
           <Authenticated>
             {!!activeChatId && <SheetConversation chatId={activeChatId} />}

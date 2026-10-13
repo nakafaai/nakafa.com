@@ -1,21 +1,21 @@
 "use client";
 
 import { captureException } from "@repo/analytics/posthog/browser";
-import { Button } from "@repo/design-system/components/ui/button";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { Theme } from "@/components/marketing/shared/footer/action";
+import { Broken } from "@/components/state/broken";
 
 /** Keeps entry failures on a localized, recoverable Nakafa surface. */
 export default function EntryError({
   error,
-  retry,
 }: {
   error: Error & { digest?: string };
-  retry: () => void;
 }) {
-  const t = useTranslations("Auth");
+  const t = useTranslations("Error");
+  const tState = useTranslations("State");
+  const locale = useLocale();
 
   useEffect(() => {
     captureException(error, {
@@ -32,15 +32,13 @@ export default function EntryError({
         </div>
       </EntryShellHeader>
       <EntryShellBody>
-        <div className="flex max-w-sm flex-col items-center gap-4 text-center">
-          <div className="space-y-2">
-            <h1 className="font-semibold text-xl">{t("entry-error-title")}</h1>
-            <p className="text-muted-foreground text-sm">
-              {t("entry-error-description")}
-            </p>
-          </div>
-          <Button onClick={retry}>{t("retry")}</Button>
-        </div>
+        <Broken
+          description={t("description")}
+          home={tState("home-button")}
+          homeHref={`/${locale}`}
+          retry={t("retry")}
+          title={t("title")}
+        />
       </EntryShellBody>
     </>
   );

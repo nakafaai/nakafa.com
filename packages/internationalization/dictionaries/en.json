@@ -124,6 +124,7 @@
     "see": "See",
     "chat": "Chat",
     "no-chats": "No chats yet.",
+    "chats-by-link": "A shared chat opens with its link",
     "try-out": "Try out",
     "try-out-short": "Tryout",
     "search-country-placeholder": "Search country...",
@@ -405,18 +406,6 @@
   "Videos": {
     "discover": "Discover videos"
   },
-  "NotFound": {
-    "title": "Page Not Found",
-    "description": "Oops! That page doesn't exist or isn't ready yet.",
-    "home-button": "Home",
-    "contribute-button": "Contribute"
-  },
-  "Error": {
-    "title": "Oops, something went wrong!",
-    "description": "Please help us by reporting this on GitHub.",
-    "retry": "Retry",
-    "report": "Report"
-  },
   "Contributor": {
     "title": "Contributor",
     "description": "Meet the people who made Nakafa possible."
@@ -430,9 +419,6 @@
     "continue-with-google": "Continue with Google",
     "opening-google": "Opening Google...",
     "provider-error": "We couldn't continue with Google. Please try again.",
-    "entry-error-title": "We couldn't prepare this page",
-    "entry-error-description": "Try again to continue securely.",
-    "retry": "Retry",
     "logout": "Logout",
     "login": "Login",
     "login-cta-title": "Continue learning",
@@ -699,10 +685,11 @@
     "private": "Private",
     "private-description": "Only you can view the chat.",
     "public": "Public",
-    "public-description": "Everyone can view the chat.",
+    "public-description": "Anyone with the link can view the chat.",
     "create-link": "Create link",
     "copy-link": "Copy link",
     "link-copied": "Link copied!",
+    "share-link-error": "We could not load the link",
     "private-chat-error": "Access denied",
     "private-chat-error-description": "This isn't your chat. Ask the owner for access.",
     "credits-label": "Credits",
@@ -939,6 +926,11 @@
       "classes": "Classes",
       "nakafa-materials": "Nakafa Materials",
       "yours": "For you"
+    },
+    "Missing": {
+      "title": "We can't find this school or class",
+      "description": "Maybe the link is wrong, or you haven't joined yet",
+      "back-button": "Go to Nakafa School"
     },
     "Classes": {
       "classes": "Classes",
