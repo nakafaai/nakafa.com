@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
@@ -12,7 +13,7 @@ import {
   readerTurn,
 } from "@repo/backend/confect/nina/contract/turn";
 import spec from "@repo/backend/confect/nina/conversation.spec";
-import { Effect, Layer, Option, Schema } from "effect";
+import { Effect, Layer, Number as Num, Option, Schema, Struct } from "effect";
 
 /**
  * The turn as the page shows it. A turn the learner stopped is cancelled for
@@ -62,8 +63,54 @@ const get = FunctionImpl.make(
   })
 );
 
+/**
+ * One page of the turns of a conversation that ended, newest first, each as the
+ * viewer is told of it (see `get`). The index range holds the turns that
+ * ended and not the one that runs, so a write to the running turn does not run
+ * this query again, and the query for the messages of the chat does not read a
+ * turn at all.
+ */
+const turns = FunctionImpl.make(
+  schema,
+  spec,
+  "turns",
+  Effect.fn("nina.conversation.turns")(function* ({
+    chatId,
+    paginationOpts,
+    shareToken,
+  }) {
+    const viewer = yield* getOptionalAppUserForRead();
+    const viewerId = viewer?.appUser._id ?? null;
+    const chat = yield* readChat(chatId, viewerId, shareToken);
+    const page = yield* (yield* DatabaseReader)
+      .table("ninaTurns")
+      .index(
+        "by_chatId_and_phase_and_order",
+        (index) => index.eq("chatId", chatId).eq("phase", "settled"),
+        "desc"
+      )
+      .paginate(
+        Struct.assign(paginationOpts, {
+          numItems: Num.min(paginationOpts.numItems, NINA_MESSAGES_PAGE_SIZE),
+        })
+      )
+      .pipe(Effect.orDie);
+    const owner = chat.userId === viewerId;
+    return {
+      ...page,
+      page: yield* Effect.forEach(page.page, (turn) =>
+        Schema.decodeEffect(NinaTurnSummary)(turn).pipe(
+          Effect.map((summary) => (owner ? summary : readerTurn(summary))),
+          Effect.orDie
+        )
+      ),
+    };
+  })
+);
+
 export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(get),
+  Layer.provide(turns),
   Layer.provide(session),
   GroupImpl.finalize
 );

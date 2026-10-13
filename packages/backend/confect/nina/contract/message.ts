@@ -1,5 +1,4 @@
 import { PaginationResult } from "@confect/core";
-import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import { Schema } from "effect";
 
 /**
@@ -20,7 +19,11 @@ const StreamStatus = Schema.Literals(["streaming", "finished", "aborted"]);
 /** Stream formats stored by the Agent component. */
 const StreamFormat = Schema.Literals(["UIMessageChunk", "TextStreamPart"]);
 
-/** Agent owns part decoding and delta assembly; Confect validates its envelope. */
+/**
+ * Agent owns part decoding and delta assembly; Confect validates its envelope.
+ * A message holds nothing of its turn: `conversation.turns` tells where a turn
+ * stands and what it cost.
+ */
 const AgentMessage = Schema.Struct({
   id: Schema.String,
   key: Schema.String,
@@ -30,7 +33,6 @@ const AgentMessage = Schema.Struct({
   role: Schema.Literals(["user", "assistant", "system"]),
   text: Schema.String,
   parts: Schema.mutable(Schema.Array(Schema.Unknown)),
-  metadata: Schema.optional(NinaTurnSummary),
   agentName: Schema.optional(Schema.String),
   userId: Schema.optional(Schema.String),
   _creationTime: Schema.Finite,

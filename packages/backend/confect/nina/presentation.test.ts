@@ -120,6 +120,21 @@ describe("Nina presentation after an answer", () => {
     ).toEqual(["How does this relate to continuity?"]);
   });
 
+  it("gives the follow-up suggestions the latest exchanges of a long chat and no older one", async () => {
+    const f = await createNinaTest({ history: 30 });
+    const model = ninaModel();
+    provider.languageModel.mockReturnValue(model);
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    const prompt = model.doGenerateCalls[0]?.prompt ?? [];
+    // Sixteen messages are eight exchanges, the one just answered included,
+    // and the request for suggestions is one more message of the learner. The
+    // call read all 50 messages it was allowed before, which made 26.
+    expect(Arr.filter(prompt, ({ role }) => role === "user")).toHaveLength(9);
+    expect(encodeJsonText(prompt)).toContain("Earlier question 23");
+    expect(encodeJsonText(prompt)).not.toContain("Earlier question 22");
+  });
+
   it("releases the chat before metadata, anchors its context and accounts for late usage", async () => {
     const f = await createNinaTest();
     const model = ninaModel();

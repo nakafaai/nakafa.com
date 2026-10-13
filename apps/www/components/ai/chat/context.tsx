@@ -25,6 +25,8 @@ import {
   ChatStoreContext,
   createChatStore,
 } from "@/components/ai/chat/store.client";
+import { turnOf } from "@/components/ai/chat/turns";
+import { useChatTurns } from "@/components/ai/chat/turns.client";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
@@ -34,10 +36,13 @@ import { useViewer } from "@/lib/identity/client";
 const ChatContext = createContext<ChatContextValue | null>(null);
 
 /**
- * Reads the authorized facts of one conversation: its chat and latest turn. A
- * reader who is not the owner proves access with the share token of the link.
- * A chat its learner is deleting is not read: the server is about to delete
- * it, and a read that finds it gone fails the page.
+ * Reads the authorized facts of one conversation: its chat, its latest turn,
+ * and the turns that ended. `turnAt` tells the facts of the turn that answers
+ * the prompt at an order, and `turnsLoading` is true until the first page of
+ * the turns that ended is there, so the transcript shows no answer without
+ * its facts. A reader who is not the owner proves access with the share token
+ * of the link. A chat its learner is deleting is not read: the server is about
+ * to delete it, and a read that finds it gone fails the page.
  */
 function useConversation(
   chatId: Id<"chats">,
@@ -45,16 +50,22 @@ function useConversation(
   leaving: boolean
 ) {
   const authenticating = useConvexAuth((auth) => auth.isLoading);
+  const skip = authenticating || leaving;
   const result = useQuery(
     nina.conversation.get,
-    authenticating || leaving ? "skip" : readChatArgs(chatId, shareToken)
+    skip ? "skip" : readChatArgs(chatId, shareToken)
   );
+  const ended = useChatTurns(chatId, shareToken, skip);
   if (QueryResult.isFailure(result)) {
     throw result.error;
   }
+  const turn = QueryResult.isSuccess(result) ? result.value.turn : null;
   return {
     chat: QueryResult.isSuccess(result) ? result.value.chat : undefined,
-    turn: QueryResult.isSuccess(result) ? result.value.turn : null,
+    loadMoreTurns: ended.loadMore,
+    turn,
+    turnAt: (order: number) => turnOf(turn, ended.ended, order),
+    turnsLoading: ended.loading,
   };
 }
 
@@ -70,7 +81,11 @@ function useChatState(
   store: ChatStoreApi
 ) {
   const leaving = useStore(store, (state) => state.leaving);
-  const { chat, turn } = useConversation(chatId, shareToken, leaving);
+  const { chat, loadMoreTurns, turn, turnAt, turnsLoading } = useConversation(
+    chatId,
+    shareToken,
+    leaving
+  );
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
@@ -223,11 +238,14 @@ function useChatState(
     draft,
     isLoading: loading,
     isPending,
+    loadMoreTurns,
     owner,
     retry: actions.retry,
     send: actions.send,
     shareToken,
     turn,
+    turnAt,
+    turnsLoading,
   };
 }
 

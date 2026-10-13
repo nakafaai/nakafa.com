@@ -25,22 +25,29 @@ type MemoryId = Docs["ninaMemories"]["_id"];
 export const MEMORY_BATCH = 25;
 
 /**
- * What the learner decided about their memories. `paused` is whether memory is
- * paused, and memory is on until the learner says otherwise. `clearedAt` is the
- * moment they last asked to delete every memory, or nothing when they never
- * did: the memories confirmed at or before it are gone for every reader, though
- * the batches that delete them may still run.
+ * What the learner decided about their memories, as their preference row holds
+ * it. `paused` is whether memory is paused, and memory is on until the learner
+ * says otherwise. `clearedAt` is the moment they last asked to delete every
+ * memory, or nothing when they never did: the memories confirmed at or before
+ * it are gone for every reader, though the batches that delete them may still
+ * run. A learner without a row decided nothing. A caller that has the row
+ * already reads the state from it, and does not read the row again
+ * (`readMemoryState`).
  */
-export const readMemoryState = Effect.fn("nina.memory.store.state")(function* (
-  userId: UserId
-) {
-  const preference = yield* readLearningPreferenceByUserId(userId).pipe(
-    Effect.orDie
-  );
+export function memoryStateOf(preference: Docs["learningPreferences"] | null) {
   return {
     clearedAt: preference?.ninaMemoryClearedAt,
     paused: preference?.ninaMemoryPaused === true,
   };
+}
+
+/** Reads what the learner decided about their memories (`memoryStateOf`). */
+export const readMemoryState = Effect.fn("nina.memory.store.state")(function* (
+  userId: UserId
+) {
+  return memoryStateOf(
+    yield* readLearningPreferenceByUserId(userId).pipe(Effect.orDie)
+  );
 });
 
 /**

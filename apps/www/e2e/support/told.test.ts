@@ -12,6 +12,7 @@ import {
 } from "@/e2e/support/told";
 
 const CONVERSATION = "nina/conversation:get";
+const TURNS = "nina/conversation:turns";
 const MESSAGES = "nina/messages:list";
 const OWNER = "user-of-the-owner";
 /** What the check of a reader's page says when it was told an account. */
@@ -33,6 +34,10 @@ const conversationOf = (
   chat: Record<string, string>,
   turn: Record<string, unknown> | null
 ) => encodeJsonText({ chat: { _id: "chat-1", ...chat }, turn });
+
+/** The answer to the query for a page of the turns that ended. */
+const turnsOf = (...page: Record<string, unknown>[]) =>
+  encodeJsonText({ continueCursor: "", isDone: true, page });
 
 /** The answer to the query for a page of messages. */
 const messagesOf = (...page: Record<string, unknown>[]) =>
@@ -79,10 +84,16 @@ const owner = {
         { ...standing, ...cost, state }
       )
   ),
+  [TURNS]: [
+    turnsOf({
+      ...standing,
+      ...cost,
+      state: { finishedAt: 2, status: "failed" },
+    }),
+  ],
   [MESSAGES]: [
     messagesOf({
       id: "message-1",
-      metadata: { ...standing, ...cost },
       parts: [...searched, ...answered],
       userId: OWNER,
     }),
@@ -91,13 +102,14 @@ const owner = {
 
 /**
  * A reader's page, loaded the way the browser test loads it: the chat three
- * times, its messages, and the answers to the requests for streams, which list
- * none and hold no delta.
+ * times, the turns that ended, its messages, and the answers to the requests
+ * for streams, which list none and hold no delta.
  */
 const reader = {
   [CONVERSATION]: Arr.replicate(conversationOf({}, standing), 3),
+  [TURNS]: [turnsOf(standing)],
   [MESSAGES]: [
-    messagesOf({ id: "message-1", metadata: standing, parts: answered }),
+    messagesOf({ id: "message-1", parts: answered }),
     streamsOf({ kind: "list", messages: [] }),
     streamsOf({ kind: "deltas", deltas: [] }),
   ],
@@ -145,7 +157,6 @@ describe("the checks of what a page was told of a chat", () => {
           [MESSAGES]: [
             messagesOf({
               id: "message-1",
-              metadata: standing,
               parts: [...searched, ...answered],
             }),
           ],
@@ -164,6 +175,11 @@ describe("the checks of what a page was told of a chat", () => {
       )
     ).toThrow("beyond where it stands");
     expect(() =>
+      learnsOnlyWhereTurnsStand(
+        given({ ...reader, [TURNS]: [turnsOf({ ...standing, ...cost })] })
+      )
+    ).toThrow("beyond where it stands");
+    expect(() =>
       learnsNothingOfWhoOwnsTheChat(
         given({
           ...reader,
@@ -178,7 +194,6 @@ describe("the checks of what a page was told of a chat", () => {
           [MESSAGES]: [
             messagesOf({
               id: "message-1",
-              metadata: standing,
               parts: answered,
               userId: OWNER,
             }),
@@ -210,7 +225,6 @@ describe("the checks of what a page was told of a chat", () => {
             [MESSAGES]: [
               messagesOf({
                 id: "message-1",
-                metadata: standing,
                 parts: [...answered, { [key]: reported, type: "text" }],
               }),
             ],
@@ -249,9 +263,15 @@ describe("the checks of what a page was told of a chat", () => {
           given({ ...page, [CONVERSATION]: [encodeJsonText({ chat: {} })] })
         )
       ).toThrow(`the answers to ${CONVERSATION} that the check cannot read`);
-      // A page that was told no message, or no chat.
+      expect(() =>
+        check(given({ ...page, [TURNS]: [encodeJsonText({ isDone: true })] }))
+      ).toThrow(`the answers to ${TURNS} that the check cannot read`);
+      // A page that was told no message, or no chat, or no answer about turns.
       expect(() => check(given({ ...page, [MESSAGES]: [] }))).toThrow(
         "the messages the page was told"
+      );
+      expect(() => check(given({ ...page, [TURNS]: [] }))).toThrow(
+        "the answers about the turns that ended"
       );
       expect(() => check(given({ ...page, [CONVERSATION]: [] }))).toThrow(
         "the conversations the page was told"

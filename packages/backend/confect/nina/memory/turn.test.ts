@@ -43,6 +43,27 @@ describe("Nina memory for a turn", () => {
     expect(await f.t.query(paused, { userId })).toBe(false);
   });
 
+  it("reads the learner's preferences once for the profile and the pause, in a turn and in a capture", async () => {
+    const f = await createMemoryTest();
+    const userId = f.identity.userId;
+    const turn = { now: NOW, said: "", topics: [], userId };
+    const capture = { message: "", now: NOW, topics: [], userId };
+    const documentsRead = (call: typeof read | typeof known) =>
+      f.t.query(async (ctx) => {
+        await ctx.runQuery(call, call === read ? turn : capture);
+        return (await ctx.meta.getTransactionMetrics()).documentsRead.used;
+      });
+    const before = [await documentsRead(read), await documentsRead(known)];
+    await f.t.mutation((ctx) =>
+      ctx.db.insert("learningPreferences", { updatedAt: 1, userId })
+    );
+    // The row is one document more. Read for the profile and again for the
+    // pause, it was two.
+    expect([await documentsRead(read), await documentsRead(known)]).toEqual(
+      Arr.map(before, (count) => count + 1)
+    );
+  });
+
   it("tells a turn the memories that fit the learner's words and the open page first, then fills up to three with the most recent", async () => {
     const f = await createMemoryTest();
     const userId = f.identity.userId;

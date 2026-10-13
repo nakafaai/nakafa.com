@@ -60,8 +60,10 @@ stopped, in any chat, in the same transaction that admits it, before the busy
 check, the open-turn count and the credit hold. The cut-off stream can no longer
 save output, so that refund is the one the run's exit would give a moment later,
 and a prompt in a chat whose turn was not stopped is still refused as busy. The
-run checks its turn every second and aborts its generation when the turn was
-stopped or settled elsewhere, which also stops a silent provider call.
+run checks its turn every two seconds and aborts its generation when the turn
+was stopped or settled elsewhere, which also stops a silent provider call. Each
+check is a function call, so the interval halves the calls of a run, and a stop
+reaches the provider call at most two seconds later.
 Whichever settlement comes first, the turn ends as cancelled at the time of the
 stop, and the later ones find it settled and change nothing. A saved answer wins
 a race with a cancel and settles as complete.

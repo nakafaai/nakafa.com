@@ -26,8 +26,7 @@ interface Props {
 }
 
 export function AiChatMessage({ last, message }: Props) {
-  const latest = useChat((state) => state.turn);
-  const turn = latest?.order === message.order ? latest : message.metadata;
+  const turn = useChat((state) => state.turnAt(message.order));
   if (message.role === "user") {
     return (
       <MessageProvider last={last} message={message} turn={turn}>

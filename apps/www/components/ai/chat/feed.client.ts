@@ -39,13 +39,18 @@ const messagesQuery: MessagesQuery = Ref.getFunctionReference(
  * reads the chat's state. A chat the learner just started shows its first
  * prompt from the receipt, and a prompt they just sent shows at once, until
  * the feed carries the saved ones. A reader who came by a share link proves
- * access with its token, as the conversation does.
+ * access with its token, as the conversation does. The messages carry nothing
+ * of their turns, which the conversation tells, so the transcript waits for
+ * the first page of those too, and an older page of messages loads with an
+ * older page of turns.
  */
 export function useChatFeed() {
   const chatId = useChat((state) => state.chatId);
   const shareToken = useChat((state) => state.shareToken);
   const chat = useChat((state) => state.chat);
   const draft = useChat((state) => state.draft);
+  const loadMoreTurns = useChat((state) => state.loadMoreTurns);
+  const turnsLoading = useChat((state) => state.turnsLoading);
   const openingChat = useAi((state) => state.openingChat);
   const setOpeningChat = useAi((state) => state.setOpeningChat);
   const feed = useUIMessages(
@@ -55,7 +60,7 @@ export function useChatFeed() {
       : "skip",
     { initialNumItems: NINA_MESSAGES_PAGE_SIZE, stream: true }
   );
-  const loading = !chat || feed.status === "LoadingFirstPage";
+  const loading = !chat || turnsLoading || feed.status === "LoadingFirstPage";
   const opening = openingChat?.receipt.chatId === chatId ? openingChat : null;
 
   // The receipt is only a stand-in until the feed loads.
@@ -67,13 +72,14 @@ export function useChatFeed() {
 
   // Older messages load through one function that reads the latest feed, so
   // the row that holds it renders when a page is there to load, not per batch.
-  const latest = useRef(feed);
+  const latest = useRef({ feed, loadMoreTurns });
   useLayoutEffect(() => {
-    latest.current = feed;
+    latest.current = { feed, loadMoreTurns };
   });
-  const [loadMore] = useState(
-    () => () => latest.current.loadMore(NINA_MESSAGES_PAGE_SIZE)
-  );
+  const [loadMore] = useState(() => () => {
+    latest.current.feed.loadMore(NINA_MESSAGES_PAGE_SIZE);
+    latest.current.loadMoreTurns?.();
+  });
 
   return {
     canLoadMore: feed.status === "CanLoadMore",

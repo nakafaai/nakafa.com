@@ -134,29 +134,34 @@ describe("The Nina response run when generation fails", () => {
         const state = yield* Effect.promise(f.inspect);
         expect(state.turn?.state).toMatchObject({ status: "failed", reason });
         expect(state.user?.credits).toBe(10);
+        const paginationOpts = { cursor: null, numItems: 20 };
         const page = yield* Effect.promise(() =>
           f.owner.query(
             Ref.getFunctionReference(refs.public.nina.messages.list),
-            {
-              chatId: f.chatId,
-              threadId: f.threadId,
-              paginationOpts: { cursor: null, numItems: 20 },
-            }
+            { chatId: f.chatId, paginationOpts, threadId: f.threadId }
           )
         ).pipe(
           Effect.flatMap((value) =>
             Ref.decodeReturns(refs.public.nina.messages.list, value)
           )
         );
+        const turns = yield* Effect.promise(() =>
+          f.owner.query(
+            Ref.getFunctionReference(refs.public.nina.conversation.turns),
+            { chatId: f.chatId, paginationOpts }
+          )
+        ).pipe(
+          Effect.flatMap((value) =>
+            Ref.decodeReturns(refs.public.nina.conversation.turns, value)
+          )
+        );
         expect(
           Arr.some(
-            page.page,
-            (message) =>
-              message.metadata?.state.status === "failed" &&
-              message.metadata.state.reason === reason
+            turns.page,
+            ({ state }) => state.status === "failed" && state.reason === reason
           )
         ).toBe(true);
-        expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
+        expect(encodeJsonText({ page, turns })).not.toMatch(PRIVATE_DIAGNOSTIC);
       })
   );
 

@@ -271,10 +271,10 @@ describe("The halt watch of a running turn", () => {
           Effect.provide(QueryRunner.layer(runQuery))
         );
 
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("2 seconds");
         expect(halt.aborted).toBe(false);
 
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("2 seconds");
         expect(halt.aborted).toBe(true);
         expect(runQuery).toHaveBeenCalledTimes(3);
         expect(runQuery).toHaveBeenLastCalledWith(halted, { turnId });

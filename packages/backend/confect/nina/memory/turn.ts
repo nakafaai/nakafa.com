@@ -1,10 +1,14 @@
 import { FunctionImpl } from "@confect/server";
 import schema from "@repo/backend/confect/_generated/schema";
+import { readLearningPreferenceByUserId } from "@repo/backend/confect/learningPreferences/impl";
 import { readLearnerProfile } from "@repo/backend/confect/nina/memory/profile";
 import { recallMemories } from "@repo/backend/confect/nina/memory/recall";
 import { toNote } from "@repo/backend/confect/nina/memory/seal";
 import { searchMemories } from "@repo/backend/confect/nina/memory/search";
-import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
+import {
+  memoryStateOf,
+  readMemoryState,
+} from "@repo/backend/confect/nina/memory/store";
 import spec, {
   MEMORY_KNOWN_LIMIT,
   MEMORY_LOOKUP_LIMIT,
@@ -24,8 +28,11 @@ export const read = FunctionImpl.make(
   spec,
   "read",
   Effect.fn("nina.memory.read")(function* ({ now, said, topics, userId }) {
-    const profile = yield* readLearnerProfile(userId);
-    const { clearedAt, paused } = yield* readMemoryState(userId);
+    const preference = yield* readLearningPreferenceByUserId(userId).pipe(
+      Effect.orDie
+    );
+    const profile = yield* readLearnerProfile(userId, preference);
+    const { clearedAt, paused } = memoryStateOf(preference);
     if (paused) {
       return { paused: true, profile, recalled: [] };
     }
@@ -100,8 +107,11 @@ export const known = FunctionImpl.make(
   spec,
   "known",
   Effect.fn("nina.memory.known")(function* ({ message, now, topics, userId }) {
-    const profile = yield* readLearnerProfile(userId);
-    const { clearedAt, paused } = yield* readMemoryState(userId);
+    const preference = yield* readLearningPreferenceByUserId(userId).pipe(
+      Effect.orDie
+    );
+    const profile = yield* readLearnerProfile(userId, preference);
+    const { clearedAt, paused } = memoryStateOf(preference);
     if (paused) {
       return { known: [], profile };
     }

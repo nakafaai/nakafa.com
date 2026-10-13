@@ -143,9 +143,9 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
 
 /**
  * How long a stopped turn waits for its run to exit before it settles anyway.
- * A live run checks its turn every second and ends its generation when it finds
- * the turn stopped, so a turn that is still open long after the stop has no run
- * left to wait for.
+ * A live run checks its turn every two seconds (`HALT_POLL`) and ends its
+ * generation when it finds the turn stopped, so a turn that is still open long
+ * after the stop has no run left to wait for.
  */
 export const STOP_GRACE = Duration.seconds(30);
 

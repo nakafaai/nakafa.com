@@ -3,19 +3,12 @@ import { listStreams, listUIMessages, syncStreams } from "@convex-dev/agent";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  QueryCtx,
-} from "@repo/backend/confect/_generated/services";
+import { QueryCtx } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import type { StreamRequest } from "@repo/backend/confect/nina/contract/message";
-import {
-  NinaTurnSummary,
-  readerTurn,
-} from "@repo/backend/confect/nina/contract/turn";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
 import {
   readerMessage,
@@ -24,14 +17,11 @@ import {
 import {
   Array as Arr,
   Effect,
-  HashMap,
   HashSet,
   Layer,
   MutableHashMap,
   Number as Num,
-  Option,
   pipe,
-  Schema,
   Struct,
 } from "effect";
 
@@ -122,53 +112,13 @@ const list = FunctionImpl.make(
       catch: () =>
         new NinaReadError({ message: "Unable to read Nina messages." }),
     });
-    const reader = yield* DatabaseReader;
-    // Hydrate only the orders present in this bounded message page. Agent keeps
-    // ownership of parts and stream cursors; app facts come from their own turn.
-    // A reader is told where a turn stands, not what it cost the owner, and a
-    // message names no account and holds nothing of the owner's memory.
-    const turns = HashMap.fromIterable(
-      yield* Effect.forEach(
-        Arr.dedupe(Arr.map(page.page, (message) => message.order)),
-        Effect.fn(function* (order) {
-          const turn = yield* reader
-            .table("ninaTurns")
-            .get("by_chatId_and_order", args.chatId, order)
-            .pipe(
-              Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null))
-            );
-          const summary = turn
-            ? yield* Schema.decodeEffect(NinaTurnSummary)(turn)
-            : undefined;
-          return [
-            order,
-            summary && !owner ? readerTurn(summary) : summary,
-          ] as const;
-        }, Effect.orDie)
-      )
-    );
+    // The page reads the messages and nothing of a turn: where a turn stands
+    // and what it cost is told by `conversation.get` and `conversation.turns`,
+    // so a write to a turn does not run this query again. A message names no
+    // account to a reader and holds nothing of the owner's memory.
     return {
       ...page,
-      page: Arr.map(page.page, (message) => {
-        const metadata = Option.getOrUndefined(
-          HashMap.get(turns, message.order)
-        );
-        let createdAt = message._creationTime;
-        if (message.role === "user" && metadata?.promptedAt !== undefined) {
-          createdAt = metadata.promptedAt;
-        } else if (
-          message.role === "assistant" &&
-          metadata &&
-          "finishedAt" in metadata.state
-        ) {
-          createdAt = metadata.state.finishedAt;
-        }
-        return {
-          ...(owner ? message : readerMessage(message)),
-          _creationTime: createdAt,
-          metadata,
-        };
-      }),
+      page: owner ? page.page : Arr.map(page.page, (m) => readerMessage(m)),
       streams: { kind: "list" as const, messages: [] },
     };
   })
