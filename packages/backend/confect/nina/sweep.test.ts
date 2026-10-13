@@ -10,6 +10,7 @@ import {
 } from "@repo/backend/confect/nina/deadline";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
+import { stubReport } from "@repo/backend/test/nina/report";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Duration, pipe, Struct } from "effect";
 
@@ -62,9 +63,13 @@ async function fixture() {
 }
 
 describe("Nina turn sweep", () => {
+  /** The queue that carries an exception to error tracking. */
+  let report: ReturnType<typeof stubReport>;
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
+    report = stubReport();
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -86,6 +91,8 @@ describe("Nina turn sweep", () => {
     expect(await f.queued("nina/lifecycle:recover")).toEqual([
       { turnId: f.turnId },
     ]);
+    // The sweep only finds the turn. The report comes with its ending.
+    expect(report).not.toHaveBeenCalled();
     await f.settle();
 
     const state = await f.inspect();
@@ -121,6 +128,8 @@ describe("Nina turn sweep", () => {
         }),
       ],
     ]);
+    // No run is left to report the loss, so its ending reports it, once.
+    expect(report).toHaveBeenCalledOnce();
   });
 
   it("settles a queued turn that no run claimed when its start check was lost", async () => {
@@ -201,6 +210,8 @@ describe("Nina turn sweep", () => {
     expect(await f.queued("nina/response:present")).toEqual([
       { turnId: f.turnId },
     ]);
+    // The journal held the answer, so nothing was lost and nothing is reported.
+    expect(report).not.toHaveBeenCalled();
   });
 
   it("schedules the end of a settlement for one grace after each sweep that finds the turn", async () => {
@@ -318,6 +329,8 @@ describe("Nina turn sweep", () => {
       (job) => job.name.includes("deliverProductEvent")
     );
     expect(events).toEqual([]);
+    // A stop the learner asked for is not a loss to report.
+    expect(report).not.toHaveBeenCalled();
   });
 
   it("settles once however many sweeps and late results reach the turn", async () => {
@@ -353,6 +366,7 @@ describe("Nina turn sweep", () => {
       (job) => job.name.includes("deliverProductEvent")
     );
     expect(events).toHaveLength(1);
+    expect(report).toHaveBeenCalledOnce();
   });
 });
 

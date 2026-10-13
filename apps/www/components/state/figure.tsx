@@ -11,7 +11,6 @@ import { FIGURE_GAP, NINA_SIZE, THING_SIZE } from "@/components/state/size";
 const SCENES = {
   broken: { act: "typing", things: ["coffee", "bulb"] },
   missing: { act: "searching", things: ["letter", "plane"] },
-  school: { act: "searching", things: ["backpack", "board"] },
 } as const;
 
 /**

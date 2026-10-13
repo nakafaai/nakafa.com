@@ -12,7 +12,8 @@ to make attempts and scores free with Pro access to worked solutions. Amended on
 2026-09-27 to separate exam language from the application locale and retire the
 unused access-campaign storage. Amended on 2026-10-02 to give responses one
 module outside try-out, with short answers, rubrics, stored outcomes, question
-worth, and penalized scoring.
+worth, and penalized scoring. Amended on 2026-10-13 to admit answers and
+section finishes through the live-attempt gate (ADR 0013).
 
 ## Context
 
@@ -85,6 +86,23 @@ to the placement's frozen `responseSpec`. The server derives elapsed time from t
 evaluates correctness from that immutable specification. The transaction
 validates attempt, section, placement, response kind, and response ownership
 before it updates the response and parent activity counters.
+
+Answers and section finishes pass the live-attempt gate (ADR 0013), which
+checks the learner, the attempt, the section, and its deadlines in one order. A
+finish checks the attempt deadline before it reads the section, and an answer
+checks the earlier of the attempt and section deadlines after the section's
+integrity, and reads the question's stored answer only after that, as each
+write did before the gate. Each answer carries a version that grows with every
+write of its question, a clear included: deleting an answer deletes its
+version, so the question's placement keeps the version of the clear. The gate
+refuses an answer that is not newer than the latest write of its question
+(`TRYOUT_RESPONSE_STALE`). A page opened before versions sends none, and the
+gate writes its answer as the next version until that temporary compatibility
+goes (owner, exit, and cleanup are in `confect/tryouts/response/spec.ts`). A
+question of another learner reports `TRYOUT_PLACEMENT_NOT_FOUND`, like a
+question that does not exist. The try-out store lives in
+`confect/tryouts/gate.ts` and goes with the rest of the try-out runtime at the
+engine cutover.
 
 The structured-response rollout completed on 2026-09-01 after production data
 contained only canonical rows. Placements persist one required `responseSpec`,
