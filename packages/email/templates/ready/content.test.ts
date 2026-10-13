@@ -2,7 +2,6 @@ import { assert, describe, it } from "@effect/vitest";
 import {
   AccountReadyEmailInputSchema,
   getAccountReadyEmailCopy,
-  getPublicEmailUrl,
 } from "@repo/email/templates/ready/content";
 import { Effect, Schema } from "effect";
 
@@ -37,13 +36,6 @@ describe("account-ready content", () => {
       assert.ok(copy.termsOfService.length > 0);
     });
   }
-
-  it("derives canonical public URLs from the company identity", () => {
-    assert.strictEqual(
-      getPublicEmailUrl("/logo.png"),
-      "https://nakafa.com/logo.png"
-    );
-  });
 
   it.effect("accepts HTTPS and local preview URLs", () =>
     Effect.gen(function* () {
