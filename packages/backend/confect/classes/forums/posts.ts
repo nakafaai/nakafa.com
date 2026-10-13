@@ -9,12 +9,9 @@ import {
   getMyPostReactions,
   getPostReactionPreviews,
 } from "@repo/backend/confect/classes/forums/postReactions";
-import type { forumPostAttachmentValidator } from "@repo/backend/confect/classes/forums/validators";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-
-export type PostAttachment = typeof forumPostAttachmentValidator.Type;
 
 /**
  * Enrich forum posts with user data, reactions, and attachments.

@@ -6,7 +6,6 @@ const APP_ARTWORK_IDENTITIES = {
   home: undefined,
   pricing: "app/pricing",
   quran: "quran/index",
-  school: "app/school",
   "try-out": "tryout/index",
 } as const satisfies Readonly<Record<string, ArtworkIdentity | undefined>>;
 

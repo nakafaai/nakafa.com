@@ -17,8 +17,8 @@ describe("public artwork", () => {
     expect(resolveStaticArtwork("subject/physics", "de")).toBe(
       "/open-graph/subject/de-physics.png"
     );
-    expect(resolveStaticArtwork("app/school", "de")).toBe(
-      "/open-graph/app/en-school.png"
+    expect(resolveStaticArtwork("curriculum/singapore-moe", "de")).toBe(
+      "/open-graph/curriculum/en-singapore-moe.png"
     );
   });
 
@@ -37,9 +37,6 @@ describe("public artwork", () => {
     expect(
       getAppSocialArtwork({ key: "quran", locale: "de", publicPath: "quran" })
     ).toBe("/open-graph/quran/de-index.png");
-    expect(
-      getAppSocialArtwork({ key: "school", locale: "id", publicPath: "school" })
-    ).toBe("/open-graph/app/en-school.png");
     expect(
       getAppSocialArtwork({
         key: "pricing",
@@ -67,8 +64,8 @@ describe("public artwork", () => {
         (entry) => `/open-graph/${entry}`
       );
 
-      expect(manifestPaths).toHaveLength(101);
-      expect(Arr.dedupe(manifestPaths)).toHaveLength(101);
+      expect(manifestPaths).toHaveLength(100);
+      expect(Arr.dedupe(manifestPaths)).toHaveLength(100);
       expect(Arr.sort(publicFilesystemPaths, Order.String)).toEqual(
         Arr.sort(manifestPaths, Order.String)
       );

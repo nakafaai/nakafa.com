@@ -1,4 +1,3 @@
-import { SCHOOL_ROUTE_SLUGS } from "@repo/backend/confect/schools/slug";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, HashSet, Option } from "effect";
@@ -14,7 +13,6 @@ const APPLICATION_ROUTE_ROOTS = HashSet.make(
   "onboarding",
   "pricing",
   "quran",
-  "school",
   "search",
   "user"
 );
@@ -63,47 +61,6 @@ function isUserPath(segments: readonly string[]) {
   }
 
   return segments.length === 1 || (segments.length === 2 && child === "chat");
-}
-
-function isSchoolPath(segments: readonly string[]) {
-  const [school, section, , child] = segments;
-
-  if (!school) {
-    return true;
-  }
-
-  if (school === SCHOOL_ROUTE_SLUGS.select) {
-    return segments.length === 1;
-  }
-
-  if (school === SCHOOL_ROUTE_SLUGS.onboarding) {
-    return (
-      segments.length === 1 ||
-      (segments.length === 2 && Arr.contains(["create", "join"], section))
-    );
-  }
-
-  if (segments.length === 1) {
-    return true;
-  }
-
-  if (section === "home") {
-    return segments.length === 2;
-  }
-
-  if (section !== "classes") {
-    return false;
-  }
-
-  if (segments.length === 2 || segments.length === 3) {
-    return true;
-  }
-
-  if (Arr.contains(["materials", "people"], child)) {
-    return segments.length === 4;
-  }
-
-  return child === "forum" && Arr.contains([4, 5], segments.length);
 }
 
 /** Checks whether one root belongs to a concrete application route. */
@@ -159,10 +116,6 @@ export function isApplicationRoutePath(
 
   if (root === "user") {
     return isUserPath(segments);
-  }
-
-  if (root === "school") {
-    return isSchoolPath(segments);
   }
 
   return false;

@@ -12,6 +12,7 @@ import {
 } from "@repo/backend/confect/nina/deadline";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
+import { stubReport } from "@repo/backend/test/nina/report";
 import { Array as Arr, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
@@ -59,12 +60,17 @@ async function fixture() {
 }
 
 describe("A Nina turn that cannot be settled", () => {
+  /** The queue that carries an exception to error tracking. */
+  let report: ReturnType<typeof stubReport>;
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
     vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
+    report = stubReport();
   });
   afterEach(() => {
+    report.mockRestore();
     vi.mocked(listMessages).mockReset();
     vi.mocked(abortStream).mockReset();
     vi.mocked(resolveEffectiveCreditState).mockReset();
@@ -88,18 +94,16 @@ describe("A Nina turn that cannot be settled", () => {
   it("ends after the grace without its journal, so the chat is free again and the hold comes back once", async () => {
     const f = await stranded();
 
-    // The settlement fails each time it is tried. Until then the chat is busy
-    // and cannot be deleted, as before the grace existed.
+    // The settlement fails each time it is tried. Until then the chat is busy.
     await expect(
       f.t.mutation(recover, { turnId: f.turnId })
     ).rejects.toMatchObject({ data: { code: "NINA_WRITE_FAILED" } });
     await expect(
       f.owner.mutation(start, { ...args, chatId: f.chatId })
     ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
-    await expect(
-      f.owner.mutation(remove, { chatId: f.chatId })
-    ).rejects.toThrow();
     expect((await f.inspect()).chats).toHaveLength(1);
+    // A try that fails changes nothing, and reports nothing.
+    expect(report).not.toHaveBeenCalled();
 
     vi.setSystemTime(f.found + GRACE);
     await f.t.mutation(abandon, { turnId: f.turnId });
@@ -117,6 +121,13 @@ describe("A Nina turn that cannot be settled", () => {
       Arr.filter(ended.ledger, (row) => row.type === "refund")
     ).toHaveLength(1);
     expect(ended.chats[0]?.activeTurnId).toBeUndefined();
+    // The run was lost, so the ending reports it, with the reason it stored.
+    expect(report).toHaveBeenCalledOnce();
+    expect(report.mock.calls[0]?.[1].additionalProperties).toEqual({
+      source: "nina-response",
+      operation: "unknown",
+      error_location: "settlement",
+    });
 
     // The learner can send in the same chat again, still without the journal.
     const next = Ref.decodeReturnsSync(
@@ -169,6 +180,8 @@ describe("A Nina turn that cannot be settled", () => {
     });
     expect(state.user?.credits).toBe(10);
     expect(state.chats[0]?.activeTurnId).toBeUndefined();
+    // A stop the learner asked for is not a loss to report.
+    expect(report).not.toHaveBeenCalled();
   });
 
   it("still completes a turn whose answer the journal holds", async () => {
@@ -191,6 +204,8 @@ describe("A Nina turn that cannot be settled", () => {
     expect(Arr.filter(state.ledger, (row) => row.type === "refund")).toEqual(
       []
     );
+    // The learner got the answer, so nothing was lost.
+    expect(report).not.toHaveBeenCalled();
   });
 
   it("ends a turn that the journal cannot cut off, and pays the hold back", async () => {
@@ -247,6 +262,8 @@ describe("A Nina turn that cannot be settled", () => {
     expect(kept.chats[0]?.activeTurnId).toBe(f.turnId);
     expect(Arr.filter(kept.ledger, (row) => row.type === "refund")).toEqual([]);
     expect(await promptStatus()).toBe(before);
+    // An ending that changed nothing reported nothing.
+    expect(report).not.toHaveBeenCalled();
 
     // The next try, which the next sweep schedules, ends the turn and pays the
     // hold back once.
@@ -261,6 +278,8 @@ describe("A Nina turn that cannot be settled", () => {
       Arr.filter(ended.ledger, (row) => row.type === "refund")
     ).toHaveLength(1);
     expect(ended.chats[0]?.activeTurnId).toBeUndefined();
+    // Only the ending that worked reported the loss.
+    expect(report).toHaveBeenCalledOnce();
   });
 
   it("leaves a turn alone that a try settled meanwhile, and pays nothing back twice", async () => {
@@ -279,5 +298,8 @@ describe("A Nina turn that cannot be settled", () => {
     expect(
       Arr.filter(state.ledger, (row) => row.type === "refund")
     ).toHaveLength(1);
+    // The try that settled the turn reported the loss, and the one after it
+    // found nothing to end.
+    expect(report).toHaveBeenCalledOnce();
   });
 });

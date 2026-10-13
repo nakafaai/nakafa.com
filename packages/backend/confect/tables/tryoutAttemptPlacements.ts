@@ -1,6 +1,7 @@
 import { Table } from "@confect/core";
 import { AuthoredQuestionPointsSchema } from "@nakafa/aksara-contracts/question/points";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { rendererDomainValidator } from "@repo/backend/confect/contentRelease/spec";
 import { ResponseSpec } from "@repo/backend/confect/response/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
@@ -24,6 +25,12 @@ export default Table.make(() =>
     points: Schema.optionalKey(AuthoredQuestionPointsSchema),
     sourceRevision: Schema.String,
     contentHash: Schema.String,
+    /**
+     * The version of the write that cleared the question's answer. Deleting the
+     * answer deletes the version it carried, so the placement keeps the number
+     * that the next write of the question must exceed.
+     */
+    clearedVersion: Schema.optionalKey(Version),
   })
 )
   .index("by_tryoutAttemptId_and_questionOrder", [

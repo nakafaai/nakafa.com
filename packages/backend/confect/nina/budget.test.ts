@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { purposes } from "@repo/backend/confect/gateway/purpose";
 import {
   boundText,
   countFileTokens,
@@ -29,6 +30,8 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const SHORTENED_NOTE =
   /\n\n\[Shortened to about 200 of \d+ tokens\. Read the next section\.\]$/;
+/** The unit that the large output caps of `purposes` are whole multiples of. */
+const CAP_UNIT = 1024;
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -79,6 +82,20 @@ describe("Nina token budgets", () => {
     const bounded = boundText(text, 150, "Narrow the request.");
     expect(countTextTokens(bounded)).toBeLessThanOrEqual(150);
     expect(bounded).toContain("Narrow the request.");
+  });
+});
+
+describe("Nina output caps", () => {
+  it("keeps the output cap of a specialist just above the evidence that Nina reads of its answer", () => {
+    const cap = purposes.specialist.maxOutputTokens;
+    // Nina reads at most the evidence budget of a specialist's answer. A cap at
+    // or below it would end an answer before Nina had read all it may, so the
+    // cap stands above it. It stays within one unit of it, so that it follows
+    // the budget and does not drift to a number of its own. The reasoning of the
+    // call counts against the cap too, so the room above the budget is all it
+    // has when an answer fills the budget.
+    expect(cap).toBeGreaterThan(NINA_BUDGET.evidence);
+    expect(cap - NINA_BUDGET.evidence).toBeLessThan(CAP_UNIT);
   });
 });
 

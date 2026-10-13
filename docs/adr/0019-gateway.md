@@ -3,7 +3,9 @@
 ## Status
 
 Accepted. Supersedes ADR 0014, which routed every model call through the
-Vercel AI Gateway.
+Vercel AI Gateway. The Jev decision route is alpha: no school grade uses a Jev
+judgment until the zero-retention test in Decisions passes on the dev
+deployment.
 
 ## Context
 
@@ -20,10 +22,11 @@ Nina keeps the Convex Agent component (`@convex-dev/agent`), which takes its
 model from that provider. Effect AI is not used for the agent.
 
 Convex rejects the routing options, documents no provider pinning or Google-only
-controls, and states that zero data retention is enforced on every request, with
-requests routed only to providers under a zero data retention agreement. Convex
-does not pass provider-executed tools such as Google Search grounding through
-its OpenAI-compatible endpoint.
+controls, and offers zero data retention per request: `provider.zdr: true`
+restricts a request to endpoints with a zero data retention policy, and the
+request fails when none matches (`docs.convex.dev/ai-gateway/api`, read on 13
+October 2026). Convex does not pass provider-executed tools such as Google Search
+grounding through its OpenAI-compatible endpoint.
 
 ## Probe Results
 
@@ -133,14 +136,18 @@ thresholds in the catalog were set from what that command printed on 12 October
 - **Routing and retention.** No routing choice is sent: Convex rejects
   `provider.only` and the other routing fields. Every language model call does
   send `provider: { zdr: true, data_collection: "deny" }`, which the gateway
-  accepts (measured 10 October 2026), so each such request asks for the zero
-  data retention that Convex states for the gateway as a whole. An embedding
-  request cannot ask: `@ai-sdk/openai-compatible` 3.0.14 builds its body from
+  accepts (measured 10 October 2026). `zdr: true` asks for endpoints with a zero
+  data retention policy, and `data_collection: "deny"` excludes providers that
+  collect data (`docs.convex.dev/ai-gateway/api`, read on 13 October 2026). No
+  Convex page states zero data retention for every request. An embedding request
+  cannot send the field: `@ai-sdk/openai-compatible` 3.0.14 builds its body from
   the model, the texts, the encoding format, `dimensions`, and `user` alone, and
-  `convexGateway.embeddingModel` offers no way to add a field. Embedding
-  requests therefore rely on the gateway's own statement. They carry published
-  lesson and Quran text and the short search phrase that the specialist writes
-  from a learner's question, never a stored learner message.
+  `convexGateway.embeddingModel` offers no way to add a field. The gateway's API
+  accepts `provider` on Embeddings, so the limit sits in the adapter. Until the
+  adapter can send the field, embedding requests carry no retention request, and
+  no Convex statement covers how long they are kept. They carry published lesson
+  and Quran text and the short search phrase that the specialist writes from a
+  learner's question, never a stored learner message.
   `gateway/route.ts` is deleted.
 - **Embeddings.** `Gateway.embed(texts, model)` returns one vector of
   `embeddingDimensions` numbers per text, from `embeddingModelId` in
@@ -283,6 +290,17 @@ thresholds in the catalog were set from what that command printed on 12 October
     the production adapter sends. That the gateway serves a decision that asks
     for `zdr` is not yet proven (see Not yet established), and this ADR claims
     nothing more about it until it has been run against a deployment.
+  - School grading (K6). A Jev judgment may inform a school grade only after the
+    zero-retention test passes on the dev deployment: one decision request that
+    asks for `zdr` is served by the gateway and returns an answer. Until then the
+    decision route is alpha, and no code path that grades uses it. After the
+    test passes, a Jev judgment is a suggestion that the teacher confirms, never
+    a grade. It is one input to the teacher's grading queue, next to the answer
+    key's own verdicts (K6, K7). A second opinion is a second Jev request, shown
+    to the teacher only. If the test fails, teachers grade alone.
+  - Name. The Jev call is `Gateway.decide` in code. `decide` also names the
+    authorization check of ADR 0012, so the Jev call takes another name in a
+    later change. This ADR does not choose that name.
   - One retry policy and one deadline. The AI SDK retries a failure the
     provider marks as retryable twice, after 2 and 4 seconds, and honors
     `Retry-After`. The whole call, retries included, ends after ten seconds
@@ -326,6 +344,12 @@ thresholds in the catalog were set from what that command printed on 12 October
 - **Dependencies.** `@convex-dev/ai-sdk-provider` joins the AI SDK cohort in
   `scripts/dependencies/policy.ts`. `@ai-sdk/gateway` and `@ai-sdk/google` leave
   the backend.
+- **Package boundary (planned).** `ai` leaves the `apps/www` and
+  `packages/design-system` manifests. The backend keeps `ai` in its own manifest,
+  because the gateway seam imports it directly, and `@convex-dev/agent` lists `ai`
+  only as a peer dependency. The backend's direct imports of `ai` move behind
+  `confect/gateway` or another Confect seam, and a check rejects a new one. The
+  change belongs to the first delivery wave of the School program.
 
 ## Consequences
 
@@ -393,14 +417,18 @@ Stored data:
 
 Not yet established:
 
-- Convex's public pages state zero data retention on every request and routing
-  only to providers under a zero data retention agreement. Its subprocessor
-  list names OpenRouter, Inc. for AI model routing in the United States
-  (`convex.dev/legal/subprocessors`, read on 8 October 2026). No Convex page
-  states a no-training commitment in those words, and none names which provider
-  serves a Gemini request. The privacy, terms, and security pages state exactly
-  these published facts and no more. They live in the Aksara repository and
-  changed in nakafaai/aksara#403.
+- Convex's public pages do not state zero data retention on every request. The
+  gateway API page makes it a per-request option (`provider.zdr`), and it says
+  that `zdr: false` cannot disable a stricter gateway policy, which the page does
+  not describe (`docs.convex.dev/ai-gateway/api`, read on 13 October 2026). Its
+  subprocessor list names OpenRouter, Inc. for AI model routing in the United
+  States (`convex.dev/legal/subprocessors`, read on 8 October 2026). No Convex
+  page states a no-training commitment in those words, and none names which
+  provider serves a Gemini request. The privacy policy of the Aksara repository
+  (`packages/corpus/pages/privacy-policy/en.mdx`, lines 126 and 164) says that
+  Convex enforces zero data retention on every gateway request. The Convex pages
+  read for this record do not say that, so the sentence must be corrected in
+  Aksara before a school signs.
 - Cost and latency figures, bundle size, and whether the dev and production
   teams have the paid plan that the gateway requires were not measured here.
 - Whether the gateway serves `typesafe/jev-1.13` to a request that asks for
