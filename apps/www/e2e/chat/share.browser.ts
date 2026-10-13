@@ -28,8 +28,6 @@ import {
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";
-/** What another learner's profile says in place of a list of chats. */
-const BY_LINK = "A shared chat opens with its link";
 
 /** The link the dialog copies: the chat id alone in the path, and a token of 43 characters in the fragment. */
 const copiesALink = Effect.fn("NakafaE2E.copiesALink")(function* (
@@ -95,15 +93,23 @@ const losesTheChat = (reader: Page) =>
     expect(await reader.evaluate(() => Reflect.get(window, "kept"))).toBe(true);
   });
 
-/** The learners' chats pages: another learner's lists nothing, and the owner's lists the shared chat. */
-const profilesShowOnlyTheOwn = (owner: Page, member: Page, ownerId: string) =>
+/**
+ * The learners' chats pages: no profile is public, so another learner finds
+ * the page not there, and the owner's lists the shared chat.
+ */
+const profilesShowOnlyTheOwn = (
+  owner: Page,
+  member: Page,
+  ownerUsername: string
+) =>
   Effect.promise(async () => {
-    await member.goto(`/en/user/${ownerId}/chat`);
-    await expect(member.getByText(BY_LINK)).toBeVisible({
-      timeout: readinessTimeoutMilliseconds,
-    });
+    // The proxy answers it as a real 404 before the page renders. `next start`
+    // draws the framework's own 404 for a rewritten address, where Vercel
+    // draws the app's page, so only the status is the contract here.
+    const answer = await member.goto(`/en/@${ownerUsername}/chat`);
+    expect(answer?.status()).toBe(404);
     await expect(pageRows(member)).toHaveCount(0);
-    await owner.goto(`/en/user/${ownerId}/chat`);
+    await owner.goto(`/en/@${ownerUsername}/chat`);
     // A row is the link that covers it and its words beside it, so the test reads their parent.
     const rows = pageRows(owner).locator("xpath=..");
     await expect(rows).toHaveCount(1, {
@@ -212,7 +218,7 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
           ).toBe(false);
         });
 
-        yield* profilesShowOnlyTheOwn(page, member, owner.learner.userId);
+        yield* profilesShowOnlyTheOwn(page, member, owner.learner.username);
       })
     )
   );

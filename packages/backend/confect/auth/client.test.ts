@@ -118,10 +118,33 @@ describe("auth/client", () => {
       email: "learner@example.com",
       image: "https://example.com/learner.png",
       name: "Synthetic learner",
+      username: "syntheticlearner",
     });
     const jobNames = Arr.map(stored.jobs, ({ name }) => name);
     expect(jobNames).toEqual([
       getFunctionName(internal.customers.actions.internal.syncCustomer),
+    ]);
+  });
+  it("gives a new account the username of its name, numbered when another account holds it", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation((ctx) =>
+      ctx.db.insert("users", {
+        authId: "auth-holder",
+        credits: 0,
+        creditsResetAt: 0,
+        email: "holder@example.com",
+        name: "Holder",
+        plan: "free",
+        username: "syntheticlearner",
+      })
+    );
+
+    await signInWithGoogle(test, "learner", NOW);
+
+    const users = await test.query((ctx) => ctx.db.query("users").collect());
+    expect(Arr.map(users, ({ username }) => username)).toEqual([
+      "syntheticlearner",
+      "syntheticlearner2",
     ]);
   });
   it("projects each Better Auth profile field without scheduling unchanged writes", async () => {

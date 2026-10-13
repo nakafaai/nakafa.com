@@ -128,6 +128,100 @@ signs in with the username and that password. The status name that Google shows
 for that block comes from third-party documentation and is not yet tested on a
 Workspace account.
 
+## Usernames And Profiles
+
+A profile lives at `/{locale}/@username`. The username belongs to the app user
+row (`users.username`, with the index `by_username`), not to Better Auth,
+because sign-in is Google only and a username is no credential. It is the only
+namespace of profile names. If the Better Auth username plugin is ever enabled,
+for School accounts, it must hold this value and never a second one.
+
+- A live account holds exactly one username. A deleted account keeps none: the
+  tombstone removes the username and the bio, which frees the name at once, so
+  the field is optional in the schema. A rename frees the old name the moment
+  the new one is stored.
+- The text is three to twenty characters of lowercase letters, digits, and
+  underscores, and starts with a letter. A dot is not allowed, because the site
+  answers addresses that end in `.md`, `.png`, or `.og` for the Markdown and
+  image versions of a page. Capitals are accepted and stored as lowercase.
+- A bio is one line of at most 160 characters: every run of white space becomes
+  one space and the ends are trimmed. A character is a Unicode code point, so an
+  emoji counts once, and whatever shows a count beside the field counts the
+  same way.
+- A name is refused when it is a route (every root in
+  `@repo/contents/route/root`, every namespace of a public route surface, and
+  the few roots that answer outside the route tree) or could pass for Nakafa,
+  its people, or its help (`users/reserved.ts`). A test reads the route tree of
+  `apps/www/app` and fails when a root that could be a username is not
+  reserved.
+- A new account gets its username in the transaction that makes the row: the
+  letters and digits of its name, then the name with 2 up to 9, then the name
+  with a random number from `Random` that has two digits and gains a digit
+  after two collisions, up to eight digits. A name with no Latin letter becomes
+  `teman`. Each try is one indexed read, and the write follows inside one
+  Convex transaction, so two accounts that ask for the same name cannot both
+  win. The tries are a fixed list, so one allocation reads at most
+  `MAX_ALLOCATION_TRIES` rows however many accounts share a name. An
+  allocation that finds every try taken dies with `UsernameExhausted`. A rename
+  uses the same check, and the same check answers while a person types.
+- A folder named `@username` would be a parallel route slot and not an address,
+  so `next.config.ts` rewrites `/{locale}/@username` (and its `chat` tab) to
+  the route file `user/[username]`. Route ownership accepts nothing else below
+  `user` than the settings pages.
+- A profile is `noindex, nofollow`. It shows a name, a bio, and comments, and
+  many learners are minors. It stays reachable by link, and `robots.txt` does
+  not block it, so a crawler can read the rule.
+
+### Who Opens A Profile
+
+A profile is public only for an adult who belongs to no school (owner decision
+K15 of 13 October 2026). The product stores no age: no field, consent, or
+sign-in step records one, and age capture is not built. School membership is
+stored (a claimed person in `tenantPeople`), but without an age it decides
+nothing. So no profile is public yet.
+
+- The account itself opens its profile, because that page holds its own chats
+  and comments. Every other request, signed in or not, ends as not found, the
+  same as for a username nobody holds, so the profile address never tells
+  whether a username exists. (The availability check and a refused rename do,
+  because a person who picks a name must be told that it is taken, so both
+  answer only a signed-in account: a visitor's check is refused with
+  `SessionRequired`.)
+  The proxy decides before the page renders (`readProfileRefusal` in
+  `apps/www/lib/routing/public/profile.ts`): it reads the signed-in account and
+  answers any other request with the app's not-found page and a 404 status, so
+  no stream starts that would have to end as not found. `readProfile` in
+  `apps/www/lib/profile/server.ts` reads the same account for the page and
+  repeats the rule. The backend holds no public lookup of a profile by username.
+- A comment shows no link to the profile of its author.
+- The retired address `/{locale}/user/{id}` and its `chat` tab answer 308 to the
+  username address, and only to the account that holds the id: the proxy reads
+  the session of the request, and any other request falls to route ownership
+  and is not found, so the redirect never shows the username of an account to
+  someone else. The id address is retired for good. The answer is permanent
+  even though the username it names can change, so a browser that kept it after
+  a rename lands on the old name, which is not found (or is the page of the
+  account that holds the name now). A profile has no Markdown version, so a
+  request for the retired address with `.md` or `.mdx` is not redirected and
+  ends as not found, as it does for anyone else.
+- When an age is stored, the rule becomes: the account is of age and holds no
+  claimed person in `tenantPeople` (read through
+  `by_account_userId_and_kind_and_status`). The profile then becomes a public
+  query by username in the backend, the comment link and the retired address
+  follow it, and this section changes with it.
+
+### Naming The Accounts Made Before
+
+Accounts made before this decision got their usernames from a temporary
+migration (`users/migration:allocateUsernames`), the expand step. It reads one
+page of accounts at a time after a cursor, oldest first, and a dry pass counts
+the accounts that wait and writes nothing. Exit: it runs on dev and on
+production, dry first, until a dry pass over every account finds none waiting.
+Cleanup: delete the migration with its tests and bindings. The schema keeps
+`username` optional, because a deleted account holds none, so the cleanup
+changes no stored shape. Until a live account has its username, the account
+menu shows no profile entry for it and its profile address is not found.
+
 ## Rejected Alternatives
 
 Validating the session inside every query closes the read window after
@@ -139,9 +233,18 @@ Confirming a write through `safeGetAuthUser` gives the same answer as
 `session.live` for a token Better Auth issued, at the cost above. It also does
 not compare the session's user with the token's, which `session.live` does.
 
+A public query of a profile by username, closed by a rule, was rejected until an
+age is stored. With no age, the rule would answer not found for every account
+but the caller's own, which `getCurrentUser` already gives, so the query would
+repeat it.
+
 ## References
 
 - https://docs.convex.dev/auth/functions-auth
+- https://nextjs.org/docs/app/api-reference/file-conventions/parallel-routes
+  and https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites:
+  why a folder named `@username` is not an address, and the rewrite that serves
+  it.
 - `@convex-dev/better-auth` `plugins/convex`: the default token lifetime of
   15 minutes (`jwtExpirationSeconds`), which Nakafa does not override.
 - `better-auth` `oauth2/utils` (`setTokenUtil`, `decryptOAuthToken`) and

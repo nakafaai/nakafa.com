@@ -116,6 +116,7 @@ export declare const api: {
             _id: Id<"users">;
             authId: string;
             authVerificationCleanupCursor?: string;
+            bio?: string;
             credits: number;
             creditsResetAt: number;
             deletedAt?: number;
@@ -127,6 +128,7 @@ export declare const api: {
             plan: "free" | "pro";
             planCreditGrantId?: Id<"creditTransactions">;
             role?: "teacher" | "student" | "parent" | "administrator";
+            username?: string;
           };
           authUser: {
             _id: string;
@@ -6012,6 +6014,13 @@ export declare const api: {
           userId: Id<"users">;
         }
       >;
+      updateBio: FunctionReference<"mutation", "public", { bio: string }, null>;
+      updateUsername: FunctionReference<
+        "mutation",
+        "public",
+        { username: string },
+        null
+      >;
       updateUserName: FunctionReference<
         "mutation",
         "public",
@@ -6023,6 +6032,19 @@ export declare const api: {
         "public",
         { role: "teacher" | "student" | "parent" },
         null
+      >;
+    };
+    queries: {
+      checkUsername: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        | "available"
+        | "characters"
+        | "letterFirst"
+        | "tooShort"
+        | "notAllowed"
+        | "taken"
       >;
     };
   };
@@ -10222,6 +10244,14 @@ export declare const internal: {
     };
   };
   users: {
+    migration: {
+      allocateUsernames: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; dry: boolean },
+        { allocated: number; next: string | null; waiting: number }
+      >;
+    };
     queries: {
       getUserByAuthId: FunctionReference<
         "query",
@@ -10232,6 +10262,7 @@ export declare const internal: {
           _id: Id<"users">;
           authId: string;
           authVerificationCleanupCursor?: string;
+          bio?: string;
           credits: number;
           creditsResetAt: number;
           deletedAt?: number;
@@ -10243,6 +10274,7 @@ export declare const internal: {
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
+          username?: string;
         } | null
       >;
       getUserById: FunctionReference<
@@ -10254,6 +10286,7 @@ export declare const internal: {
           _id: Id<"users">;
           authId: string;
           authVerificationCleanupCursor?: string;
+          bio?: string;
           credits: number;
           creditsResetAt: number;
           deletedAt?: number;
@@ -10265,6 +10298,7 @@ export declare const internal: {
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
+          username?: string;
         } | null
       >;
     };
