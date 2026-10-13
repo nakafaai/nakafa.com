@@ -8,6 +8,7 @@ import {
   GERMAN_SUGGESTIONS,
 } from "@/e2e/support/prose";
 import { drawnRow, openServedChat } from "@/e2e/support/serve";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** Answers with a code block, a long link, a list four levels deep and a wide table. */
 const CODE = answerTurn({ markdown: ANSWER.code, order: 1 });
@@ -34,7 +35,13 @@ const reachBeyond = (row: Locator, selector: string) =>
 
 /** The header of a code block holds a language of eighteen characters and both controls. */
 const keepsCodeControlsInside = async (page: Page) => {
-  const facts = await (await drawnRow(page, CODE.answer)).evaluate((row) => {
+  const code = await drawnRow(page, CODE.answer);
+
+  // The controls come with the code, which loads a moment after the block shows.
+  await expect(code.locator("[data-code-block-header] button")).toHaveCount(2, {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  const facts = await code.evaluate((row) => {
     const block = row.querySelector("[data-code-block-container]");
     const edge = block?.getBoundingClientRect().right ?? 0;
     const buttons = Array.from(

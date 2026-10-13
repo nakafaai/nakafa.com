@@ -105,14 +105,13 @@ const picture = (number: number) =>
 export const pictures = (count: number) =>
   Arr.makeBy(count, (index) => picture(index + 1));
 
-/** The document with the longest realistic name. */
+/** A document of the longest realistic name, and one of a short name. */
 export const WORKSHEET_NAME =
   "Lembar kerja limit fungsi trigonometri (revisi) v12 FINAL.pdf";
-export const worksheet = attached(
-  WORKSHEET_NAME,
-  "application/pdf",
-  "data:application/pdf;base64,JVBERi0xLjQK"
-);
+const PDF = "data:application/pdf;base64,JVBERi0xLjQK";
+export const worksheet = attached(WORKSHEET_NAME, "application/pdf", PDF);
+export const NOTE_NAME = "Soal.pdf";
+export const note = attached(NOTE_NAME, "application/pdf", PDF);
 
 /** A pasted set of ninety exercises, one per line, of more than ten thousand characters. */
 export const PASTED = Arr.join(

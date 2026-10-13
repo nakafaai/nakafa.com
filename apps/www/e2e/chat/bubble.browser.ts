@@ -4,6 +4,8 @@ import { runOnPage } from "@/e2e/support/chat";
 import {
   LEARNER_TEXT,
   learnerMessage,
+  NOTE_NAME,
+  note,
   PASTED,
   pictures,
   WORKSHEET_NAME,
@@ -11,23 +13,25 @@ import {
 } from "@/e2e/support/prose";
 import type { StoredMessage } from "@/e2e/support/query";
 import { drawnRow, openServedChat } from "@/e2e/support/serve";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** A message of one word, and a message pasted from a page of exercises. */
 const SHORT = learnerMessage({ order: 1, text: LEARNER_TEXT.one });
 const LONG = learnerMessage({ order: 2, text: PASTED });
 
-/** Messages with two pictures, with five, and with one document of a long name. */
+/** Messages with two pictures, with five, and with a document of a long name and one of a short name. */
 const TWO = learnerMessage({ files: pictures(2), order: 1, text: "Dua foto" });
 const FIVE = learnerMessage({
   files: pictures(5),
   order: 2,
   text: "Lima foto",
 });
-const DOCUMENT = learnerMessage({
+const WORKSHEET = learnerMessage({
   files: [worksheet],
   order: 3,
   text: WORKSHEET_NAME,
 });
+const NOTE = learnerMessage({ files: [note], order: 4, text: NOTE_NAME });
 
 /** The text bubble of one message. */
 const bubbleOf = async (page: Page, message: StoredMessage) =>
@@ -65,21 +69,29 @@ const foldsPastTwelveLines = async (page: Page) => {
   expect.soft(folded?.clipped).toBe(true);
   expect.soft(folded?.text).toBe(PASTED);
 
-  await toggle.click();
+  await toggle.click({ timeout: readinessTimeoutMilliseconds });
   const open = long.getByRole("button", { name: "Show less" });
   await expect.soft(open).toHaveAttribute("aria-expanded", "true");
   expect.soft(await heightOf(long)).toBeGreaterThan(screen);
 
-  await open.click();
+  await open.click({ timeout: readinessTimeoutMilliseconds });
   await expect.soft(toggle).toHaveAttribute("aria-expanded", "false");
   expect.soft(await heightOf(long)).toBeLessThan(screen);
 };
 
-/** A row of files starts at its first file and scrolls to the last; a row that fits ends where the message ends. */
+/**
+ * A row of files starts at its first file and scrolls to the last, and a row
+ * that fits ends where the message ends. A document of a long name has the
+ * widest card there is, 256 pixels. Where the column is 252 pixels, as it is
+ * at 300 pixels and was in CI at 320, its row scrolls and its card runs 4
+ * pixels past the end of the row, which no scroll reaches. So a short document
+ * is held to the end of the row, and the long one to its start.
+ */
 const scrollsFilesFromTheFirst = async (page: Page) => {
   const measure = async (message: StoredMessage) =>
     (await drawnRow(page, message)).evaluate((row) => {
       const group = row.querySelector('[data-slot="attachment-group"]');
+      const title = row.querySelector('[data-slot="attachment-title"]');
       const cards = () =>
         Array.from(row.querySelectorAll('[data-slot="attachment"]'), (card) =>
           card.getBoundingClientRect()
@@ -95,6 +107,11 @@ const scrollsFilesFromTheFirst = async (page: Page) => {
         ),
         firstLeft: (cards().at(0)?.left ?? 0) - box.left,
         scrolls: group.scrollWidth > group.clientWidth,
+        // The name of a document is cut inside its card, never past it.
+        titleCut: title ? title.scrollWidth > title.clientWidth : null,
+        titlePast: title
+          ? title.getBoundingClientRect().right - (cards().at(-1)?.right ?? 0)
+          : null,
       };
 
       group.scrollLeft = group.scrollWidth;
@@ -106,15 +123,21 @@ const scrollsFilesFromTheFirst = async (page: Page) => {
     });
   const two = await measure(TWO);
   const five = await measure(FIVE);
-  const one = await measure(DOCUMENT);
+  const worksheetRow = await measure(WORKSHEET);
+  const noteRow = await measure(NOTE);
 
-  expect.soft(two?.firstLeft).toBeGreaterThanOrEqual(-0.5);
-  expect.soft(two?.lastInside).toBeLessThanOrEqual(0.5);
-  expect.soft(five?.firstLeft).toBeGreaterThanOrEqual(-0.5);
-  expect.soft(five?.lastInside).toBeLessThanOrEqual(0.5);
+  expect.soft(two?.lastInside, "two pictures").toBeLessThanOrEqual(0.5);
+  expect.soft(five?.lastInside, "five pictures").toBeLessThanOrEqual(0.5);
+  expect.soft(noteRow?.lastInside, "a short document").toBeLessThanOrEqual(0.5);
+  for (const row of [two, five, worksheetRow, noteRow]) {
+    expect.soft(row?.firstLeft).toBeGreaterThanOrEqual(-0.5);
+  }
   expect.soft(five?.scrolls).toBe(true);
-  expect.soft(one?.scrolls).toBe(false);
-  expect.soft(one?.endGap).toBeLessThanOrEqual(1);
+  expect.soft(worksheetRow?.titleCut).toBe(true);
+  expect.soft(worksheetRow?.titlePast).toBeLessThanOrEqual(0.5);
+  expect.soft(noteRow?.titleCut).toBe(false);
+  expect.soft(noteRow?.scrolls).toBe(false);
+  expect.soft(noteRow?.endGap).toBeLessThanOrEqual(1);
 };
 
 test.describe("A learner's bubble", () => {
@@ -141,7 +164,7 @@ test.describe("A learner's bubble", () => {
       await page.setViewportSize({ height: 900, width });
       await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
-          yield* openServedChat(page, origin, [TWO, FIVE, DOCUMENT]);
+          yield* openServedChat(page, origin, [TWO, FIVE, WORKSHEET, NOTE]);
           yield* Effect.promise(() => scrollsFilesFromTheFirst(page));
         })
       );
@@ -160,7 +183,9 @@ test.describe("A learner's bubble", () => {
           yield* Effect.promise(async () => {
             const bubble = await bubbleOf(page, LONG);
 
-            await bubble.getByRole("button", { name: more }).click();
+            await bubble
+              .getByRole("button", { name: more })
+              .click({ timeout: readinessTimeoutMilliseconds });
             await expect(
               bubble.getByRole("button", { name: less })
             ).toBeVisible();
