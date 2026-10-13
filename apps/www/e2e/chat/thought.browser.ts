@@ -1,5 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { expect, test } from "@playwright/test";
+import { Clock, Effect } from "effect";
 import { CHAT_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { answerMessage, learnerMessage } from "@/e2e/support/prose";
 import { openServedChat } from "@/e2e/support/serve";
@@ -28,25 +28,13 @@ const LANGUAGES = [
     thinking: "Berpikir...",
     two: "Berpikir selama 2 detik",
   },
-] as const;
+];
 
 /** Chunks that open a thought, as the model writes them. */
 const startThinking = (id: string) => [
   { id, type: "reasoning-start" },
   { delta: "Aku pikir dulu.", id, type: "reasoning-delta" },
 ];
-
-/**
- * Waits until the page shows that Nina is thinking, noticing it in the frame
- * that draws it: the thought is timed from that frame, and a slower look would
- * add its own delay to the seconds a test counts.
- */
-const thinking = (page: Page, words: string) =>
-  page.waitForFunction(
-    (text) => document.body.innerText.includes(text),
-    words,
-    { polling: "raf", timeout: readinessTimeoutMilliseconds }
-  );
 
 test.describe("A thought in the language of the page", () => {
   test.use({ viewport: { height: 900, width: 390 } });
@@ -59,6 +47,7 @@ test.describe("A thought in the language of the page", () => {
     }) => {
       await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
+          yield* Effect.promise(() => page.clock.install());
           const served = yield* openServedChat(
             page,
             origin,
@@ -73,25 +62,35 @@ test.describe("A thought in the language of the page", () => {
             ],
             language.locale
           );
+          const start = yield* Clock.currentTimeMillis;
+
           yield* Effect.promise(async () => {
             // A thought that was saved has no clock, and says so.
             await expect.soft(page.getByText(language.saved)).toBeVisible();
 
+            // The page counts a thought by its own clock, which stands still
+            // at each step here: the seconds are the ones the test sets,
+            // however long the page takes to draw.
+            const thinksFor = async (id: string, begin: number, ms: number) => {
+              await page.clock.setFixedTime(begin);
+              served.push(startThinking(id));
+              await expect(
+                page.getByText(language.thinking, { exact: true })
+              ).toBeVisible();
+              await page.clock.setFixedTime(begin + ms);
+              served.push([{ id, type: "reasoning-end" }]);
+            };
+
             // A thought that ends within the second is one second long, not "1 seconds".
             served.begin(2);
             served.push([{ type: "start" }, { type: "start-step" }]);
-            served.push(startThinking("first"));
-            await thinking(page, language.thinking);
-            served.push([{ id: "first", type: "reasoning-end" }]);
+            await thinksFor("first", start, 500);
             await expect
               .soft(page.getByText(language.one, { exact: true }))
               .toBeVisible();
 
             // A thought of more than a second and less than two lasts two.
-            served.push(startThinking("second"));
-            await thinking(page, language.thinking);
-            await page.waitForTimeout(1200);
-            served.push([{ id: "second", type: "reasoning-end" }]);
+            await thinksFor("second", start + 1000, 1200);
             await expect
               .soft(page.getByText(language.two, { exact: true }))
               .toBeVisible();
