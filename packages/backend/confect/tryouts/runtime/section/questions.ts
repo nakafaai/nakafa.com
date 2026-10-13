@@ -15,7 +15,7 @@ import {
 import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
 import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
-import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Option, Struct } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
@@ -135,6 +135,7 @@ function projectRuntimeQuestion(
         ...(access.answers ? { outcome: readOutcome(response) } : {}),
         selection: projectSelection(response.selection, access.answers),
         updatedAt: response.updatedAt,
+        ...Struct.pick(response, ["version"]),
       }
     : null;
   return {

@@ -26,6 +26,18 @@ type TryoutResponseState = Pick<
   "responseSpec" | "selection"
 >;
 
+/**
+ * Returns the version of the next write of one question: the first for a
+ * question without a stored answer, otherwise the one after the version it
+ * shows, which is the server's stored version or the optimistic one of the
+ * latest write that is still on its way. Convex keeps both in the same cached
+ * query, so the number survives a re-render, and a reload starts from the
+ * stored version.
+ */
+export function nextTryoutResponseVersion(question: TryoutRuntimeQuestion) {
+  return (question.response?.version ?? 0) + 1;
+}
+
 /** Applies one local response while Convex remains authoritative for time. */
 export function applyOptimisticTryoutResponse(
   runtime: TryoutSectionRuntime,
@@ -59,6 +71,7 @@ export function applyOptimisticTryoutResponse(
         isComplete,
         selection,
         updatedAt: selectedAt,
+        version: args.version,
       },
     };
   });

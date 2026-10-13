@@ -1,4 +1,5 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { publicFailure } from "@repo/backend/confect/failure";
 import {
   type ResponseRejected,
@@ -8,6 +9,8 @@ import { Schema } from "effect";
 export const saveTryoutResponseArgsValidator = Schema.Struct({
   placementId: IdSchema("tryoutAttemptPlacements"),
   selection: Schema.Union([Selection, Schema.Null]),
+  /** Numbers the writes of one question, so a write another one overtook is refused. */
+  version: Version,
 });
 export type SaveTryoutResponseArgs =
   typeof saveTryoutResponseArgsValidator.Type;
@@ -22,6 +25,7 @@ export class TryoutResponseError extends Schema.TaggedError<TryoutResponseError>
       "TRYOUT_RESPONSE_FAILED",
       "TRYOUT_PLACEMENT_NOT_FOUND",
       "TRYOUT_EXPIRED",
+      "TRYOUT_RESPONSE_STALE",
     ]),
     message: Schema.String,
   }

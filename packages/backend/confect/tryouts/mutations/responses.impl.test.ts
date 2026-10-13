@@ -20,11 +20,16 @@ import {
 import { Array as Arr, Effect, Option } from "effect";
 
 const saveAnswer = Effect.fn("test.tryout.response.saveAnswer")(
-  (fixture: ResponseFixture, selection: Doc<"tryoutResponses">["selection"]) =>
+  (
+    fixture: ResponseFixture,
+    selection: Doc<"tryoutResponses">["selection"],
+    version: number
+  ) =>
     Effect.promise(() =>
       fixture.client.mutation(api.tryouts.mutations.responses.save, {
         placementId: fixture.placementId,
         selection,
+        version,
       })
     )
 );
@@ -52,8 +57,8 @@ it.each([
   },
   {
     scenario: "ownership",
-    tag: "TryoutAttemptStateError",
-    code: "TRYOUT_ATTEMPT_NOT_FOUND",
+    tag: "TryoutResponseError",
+    code: "TRYOUT_PLACEMENT_NOT_FOUND",
   },
   {
     scenario: "terminal",
@@ -103,6 +108,7 @@ it.each([
           kind: "single-choice",
           optionKey: "outside-the-frozen-options",
         },
+        version: 1,
       })
       .catch((error: unknown) => error);
     expect(rejected).toMatchObject({
@@ -161,14 +167,19 @@ describe("tryouts/mutations/responses outcomes", () => {
           })
         );
         yield* setResponseClock(5000);
-        yield* saveAnswer(seeded, {
-          kind: "single-choice",
-          optionKey: "option-2",
-        });
+        yield* saveAnswer(
+          seeded,
+          {
+            kind: "single-choice",
+            optionKey: "option-2",
+          },
+          1
+        );
         const stored = yield* readResponseState(t, seeded);
         expect(stored.responses[0]).toMatchObject({
           isCorrect: false,
           outcome: { status: "incorrect" },
+          version: 1,
         });
         expect(stored.section).toMatchObject({
           answeredCount: 1,
@@ -193,7 +204,7 @@ describe("tryouts/mutations/responses outcomes", () => {
           language: "id",
         });
         yield* setResponseClock(5000);
-        yield* saveAnswer(seeded, { kind: "short-answer", text: "Bandung" });
+        yield* saveAnswer(seeded, { kind: "short-answer", text: "Bandung" }, 1);
         const pending = yield* readResponseState(t, seeded);
         expect(pending.responses[0]).toMatchObject({
           isComplete: true,
@@ -205,7 +216,11 @@ describe("tryouts/mutations/responses outcomes", () => {
           answeredCount: 1,
           correctAnswers: 0,
         });
-        yield* saveAnswer(seeded, { kind: "short-answer", text: " jakarta" });
+        yield* saveAnswer(
+          seeded,
+          { kind: "short-answer", text: " jakarta" },
+          2
+        );
         const matched = yield* readResponseState(t, seeded);
         expect(matched.responses[0]?.outcome).toEqual({ status: "correct" });
         expect(matched.section).toMatchObject({
@@ -226,11 +241,15 @@ describe("tryouts/mutations/responses outcomes", () => {
           language: "id",
         });
         yield* setResponseClock(5000);
-        yield* saveAnswer(seeded, {
-          kind: "short-answer",
-          number: "9",
-          text: "0,50",
-        });
+        yield* saveAnswer(
+          seeded,
+          {
+            kind: "short-answer",
+            number: "9",
+            text: "0,50",
+          },
+          1
+        );
         const stored = yield* readResponseState(t, seeded);
         expect(stored.responses[0]).toMatchObject({
           isCorrect: true,
@@ -259,9 +278,59 @@ describe("tryouts/mutations/responses outcomes", () => {
             seeded.client.mutation(api.tryouts.mutations.responses.save, {
               placementId: seeded.placementId,
               selection: { kind: "single-choice", optionKey: "option-1" },
+              version: 2,
             }),
           { code: "TRYOUT_RESPONSE_KIND_MISMATCH" }
         );
+      })
+  );
+  it.effect.each([0, -1, 1.5])(
+    "refuses a version that is not a positive whole number (%s)",
+    (version) =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        const seeded = yield* seedResponseFixture(t, "version-invalid");
+        yield* setResponseClock(5000);
+        const rejected = yield* Effect.tryPromise(() =>
+          seeded.client.mutation(api.tryouts.mutations.responses.save, {
+            placementId: seeded.placementId,
+            selection: { kind: "single-choice", optionKey: "option-1" },
+            version,
+          })
+        ).pipe(Effect.flip);
+        expect(String(rejected.cause)).toContain('at ["version"]');
+        expect((yield* readResponseState(t, seeded)).responses).toEqual([]);
+      })
+  );
+  it.effect(
+    "returns the stored version with its question, which the next write must exceed",
+    () =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        const seeded = yield* seedResponseFixture(t, "version-response");
+        const read = () =>
+          Effect.promise(() =>
+            seeded.client.query(
+              api.tryouts.queries.runtime.getSectionAttemptState,
+              {
+                attemptId: seeded.attemptId,
+                locale: "id",
+                sectionKey: TRYOUT_SECTION_KEY,
+              }
+            )
+          ).pipe(
+            Effect.map((state) =>
+              Option.getOrUndefined(Arr.head(state?.runtime?.questions ?? []))
+            )
+          );
+        expect((yield* read())?.response).toBeNull();
+        yield* setResponseClock(5000);
+        yield* saveAnswer(
+          seeded,
+          { kind: "single-choice", optionKey: "option-1" },
+          4
+        );
+        expect((yield* read())?.response?.version).toBe(4);
       })
   );
 });

@@ -4,6 +4,7 @@ import { Schema } from "effect";
 import {
   applyOptimisticTryoutResponse,
   assignCategorySelection,
+  nextTryoutResponseVersion,
   toggleMultipleChoiceSelection,
 } from "@/components/tryout/runtime/response/state";
 import type {
@@ -97,6 +98,7 @@ describe("try-out response state", () => {
             kind: "multiple-choice",
             optionKeys: ["option-1"],
           },
+          version: 1,
         },
         NOW
       )?.section.answeredCount
@@ -113,6 +115,7 @@ describe("try-out response state", () => {
           ],
           kind: "category",
         },
+        version: 1,
       },
       NOW
     );
@@ -136,6 +139,7 @@ describe("try-out response state", () => {
           ],
           kind: "category",
         },
+        version: 2,
       },
       NOW + 1000
     );
@@ -151,11 +155,46 @@ describe("try-out response state", () => {
     }
     const cleared = applyOptimisticTryoutResponse(
       complete,
-      { placementId: runtime.questions[0].placementId, selection: null },
+      {
+        placementId: runtime.questions[0].placementId,
+        selection: null,
+        version: 3,
+      },
       NOW + 2000
     );
     expect(cleared?.questions[0].response).toBeNull();
     expect(cleared?.section.answeredCount).toBe(0);
+  });
+
+  it("numbers each write after the version its question shows", () => {
+    const question = makeMultipleQuestion();
+    expect(nextTryoutResponseVersion(question)).toBe(1);
+    expect(
+      nextTryoutResponseVersion({
+        ...question,
+        response: makeResponse({
+          kind: "multiple-choice",
+          optionKeys: ["option-1"],
+        }),
+      })
+    ).toBe(1);
+    expect(
+      nextTryoutResponseVersion({
+        ...question,
+        response: makeResponse(
+          { kind: "multiple-choice", optionKeys: ["option-1"] },
+          4
+        ),
+      })
+    ).toBe(5);
+  });
+
+  it("shows the version of the latest write, so the next one follows it", () => {
+    const first = writeNext(makeRuntime(makeMultipleQuestion()), ["option-1"]);
+    expect(first.questions[0].response?.version).toBe(1);
+    const second = writeNext(first, ["option-1", "option-2"]);
+    expect(second.questions[0].response?.version).toBe(2);
+    expect(nextTryoutResponseVersion(second.questions[0])).toBe(3);
   });
 
   it("rejects missing placements and invalid optimistic selections", () => {
@@ -163,7 +202,11 @@ describe("try-out response state", () => {
     expect(
       applyOptimisticTryoutResponse(
         runtime,
-        { placementId: decodePlacementId("missing"), selection: null },
+        {
+          placementId: decodePlacementId("missing"),
+          selection: null,
+          version: 1,
+        },
         NOW
       )
     ).toBeNull();
@@ -173,6 +216,7 @@ describe("try-out response state", () => {
         {
           placementId: runtime.questions[0].placementId,
           selection: { kind: "single-choice", optionKey: "option-1" },
+          version: 1,
         },
         NOW
       )
@@ -183,6 +227,7 @@ describe("try-out response state", () => {
         {
           placementId: runtime.questions[0].placementId,
           selection: { kind: "single-choice", optionKey: "missing" },
+          version: 1,
         },
         NOW
       )
@@ -194,6 +239,7 @@ describe("try-out response state", () => {
           {
             placementId: runtime.questions[0].placementId,
             selection: { kind: "multiple-choice", optionKeys },
+            version: 1,
           },
           NOW
         )
@@ -214,6 +260,7 @@ describe("try-out response state", () => {
           {
             placementId: categoryRuntime.questions[0].placementId,
             selection: { assignments, kind: "category" },
+            version: 1,
           },
           NOW
         )
@@ -296,14 +343,34 @@ function responseState(question: TryoutRuntimeQuestion) {
 }
 
 function makeResponse(
-  selection: NonNullable<TryoutRuntimeQuestion["response"]>["selection"]
+  selection: NonNullable<TryoutRuntimeQuestion["response"]>["selection"],
+  version?: number
 ) {
   return {
     answeredAt: NOW,
     isComplete: false,
     selection,
     updatedAt: NOW,
+    ...(version === undefined ? {} : { version }),
   };
+}
+
+/** Writes a multiple-choice answer to the only question of a runtime, numbered as the client numbers it. */
+function writeNext(runtime: TryoutSectionRuntime, optionKeys: string[]) {
+  const [question] = runtime.questions;
+  const applied = applyOptimisticTryoutResponse(
+    runtime,
+    {
+      placementId: question.placementId,
+      selection: { kind: "multiple-choice", optionKeys },
+      version: nextTryoutResponseVersion(question),
+    },
+    NOW
+  );
+  if (!applied) {
+    throw new Error("Expected an optimistic multiple-choice response.");
+  }
+  return applied;
 }
 
 function makeRuntime(question: TryoutRuntimeQuestion): TryoutSectionRuntime {
