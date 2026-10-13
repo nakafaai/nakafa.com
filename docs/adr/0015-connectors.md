@@ -7,9 +7,9 @@ approved decisions K1 to K20 on that day. Planned for program wave B, after the
 Google verification (risk R3 of the plan) for the scopes that need it.
 
 No connector exists in the code today: `git grep` on main at `f8a5610808` finds
-no connector module, table, route, or scope request. The rule that matches
-Classroom members stands only after its gate passes (see Gates). Implementation
-Status lists each part.
+no connector module, table, or route, and no connector scope. The rule that
+matches Classroom members stands only after its gate passes (see Gates).
+Implementation Status lists each part.
 
 ## Context
 
@@ -17,8 +17,8 @@ A school's teachers and learners already keep files, forms, classes, and
 calendars in Google. Connectors bring them into Nakafa as context for Nina and
 as a way to set a school up without retyping a roster. The School program asks
 for the least permission that does the job, a permission the owner can take back
-at any time, and a strict split between a learner's own data and a school's data
-(K3).
+at any time, and a strict split between a learner's own data and a school's
+data, the split that K3 makes for memory.
 
 Today Google is a sign-in provider only.
 `packages/backend/confect/auth/runtime.ts` asks Google for offline access with a
@@ -33,9 +33,10 @@ connector token never sits there. Better Auth's Google provider also adds
 These rules of Google shape the design. Each was read on its own page on 13
 October 2026, and References lists the pages.
 
-- A sensitive scope needs a review by Google before any account can grant it.
-  A restricted scope needs a security assessment by a Google-approved assessor
-  when the app stores the data on a server.
+- A sensitive scope needs a review by Google. Until the review passes, a user
+  cap limits how many accounts can grant it to the app. A restricted scope needs
+  a security assessment by a Google-approved assessor when the app stores the
+  data on a server.
 - A Workspace administrator controls which apps may use which scopes. In
   Education editions, a user designated as under 18 must ask for access to an
   app the administrator has not configured.
@@ -58,11 +59,13 @@ which scopes it asks for, and in which direction. `connect` makes a connection.
 adapter calls it. A new source adds an adapter and a manifest. It adds no token
 table, no second vault, and no second audit path.
 
-Every connector reads, and Nakafa writes nothing to Google. Every scope below is
-a read scope except `drive.file`, which Google also lets change the files that
-the user opened with the app. So the Drive adapter has no write operation. Data
-that leaves Nakafa (webhooks, exports, grades sent to a learning system) is not
-a connector. ADR 0029 owns it.
+Nakafa writes nothing to Google, so every Google connector only reads. Every
+scope below is a read scope except `drive.file`, which Google also lets change
+the files that the user opened with the app. So the Drive adapter has no write
+operation. Data that leaves Nakafa (webhooks, exports, grades sent to a learning
+system) is not a connector, and ADR 0029 owns it. The one exception is the
+Dapodik XLSX export, which stays with the adapter that owns the format (see
+below).
 
 | Source | What it brings | Who connects | Status |
 | --- | --- | --- | --- |
@@ -71,8 +74,8 @@ a connector. ADR 0029 owns it.
 | Google Classroom | Classes, members, tasks, materials, announcements, and grades, as one import and then a sync | A teacher or an admin of a school Workspace; a student, for their own tasks and grades | Planned |
 | Google Calendar | Upcoming events, for Nina and the home page | A Google account | Planned |
 | Gmail | Email context | A teacher or a staff member, never a student | Planned, after the security assessment |
-| Dapodik XLSX | A file the school uploads. Only the listed columns are read. | A school in Indonesia | Planned |
-| OneRoster CSV | Academic sessions, orgs, users, courses, classes, and enrollments from a file | A school in any country | Planned |
+| Dapodik XLSX | A file the school uploads. Only the columns listed below are read. | A school in Indonesia | Planned |
+| OneRoster CSV | A roster file that the school uploads. ADR 0029 owns the standard and lists what the import reads. | A school in any country | Planned |
 
 - Dapodik has no official data API (K13). K13 has the owner send two written
   requests to the Ministry, one to become a partner for sign-in and one for the
@@ -80,10 +83,19 @@ a connector. ADR 0029 owns it.
   XLSX is the only path. When the API runs, the XLSX path is replaced in the same
   release. `confect/connectors` owns both directions of the format, so it also
   writes the XLSX export of report data for Dapodik and e-Ijazah.
-- A file import reads in an action, shows a preview before it applies anything,
-  and deletes the file once the import is applied or cancelled. `confect/files`
-  keeps the file (ADR 0028). The blueprint proposes 10 MB and 5,000 rows as
-  targets, to be measured with a pilot school's file.
+- The Dapodik import reads a student's name, NISN, level, and class group name,
+  and the date of birth only as a mark of age, which is not stored. It reads no
+  NIK, no address, and no other column. The columns of each Dapodik version are
+  recorded from a pilot school's export.
+- A file import (the Dapodik XLSX, and the OneRoster CSV of ADR 0029) reads in an
+  action, checks the file, shows a preview before it applies anything, and
+  deletes the file once the import is applied or cancelled. For an XLSX file the
+  checks are that its type is read from the content and not from the name, that
+  no cell holds a formula, and that the columns match the list that is read.
+  `confect/files` keeps the file (ADR 0028). The blueprint proposes 10 MB and
+  5,000 rows as targets, to be measured with a pilot school's file. Applying an
+  import is a journaled change, `roster.imported`, that holds the source and the
+  number of rows added, changed, and skipped (ADR 0016).
 - One XLSX library serves import here and the exports of ADR 0029. The
   blueprint lists `xlsx` and `exceljs`. The `xlsx` package on npm ends at 0.18.5,
   and SheetJS's documentation names its own CDN as the source of newer
@@ -103,27 +115,30 @@ A connection is one connector authorized by one owner.
 
 - A **personal connection** belongs to one account. Its token is sealed under
   that learner's key. It feeds that learner's personal Nina threads. It reaches
-  anything of a school only when the learner allows it, as the Insight rule
-  says for Classroom and Calendar data, and the learner can take that back at
-  any time. The learner disconnects at any time.
+  anything of a school only when the learner allows it, as the Insight section
+  of the blueprint says for Classroom and Calendar data, and the learner can
+  take that permission back at any time. The learner also disconnects at any
+  time.
 - A **school connection** belongs to one school. An Owner or an Admin makes one,
   and a Teacher may make their own. Its token is sealed under the school key
   (ADR 0030). It feeds the school's classes and the school's Nina threads.
 
 A school thread reads school connections only, and a personal thread reads
-personal connections only (K3). An Admin turns each connector on for the roles
-that may use it, and the Student role can never be given Gmail. A connection
-lives in the data cell of its owner (ADR 0026): a school connection is stored in
-the school's deployment, and a personal connection in the account's home cell.
+personal connections only, the same split that K3 makes for memory. An Admin
+turns each connector on for the roles that may use it, and the Student role can
+never be given Gmail. A connection lives in the data cell of its owner
+(ADR 0026): a school connection is stored in the school's deployment, and a
+personal connection in the account's home cell.
 
-A learner who needs a parent's consent (the country profile sets the age and the
-rule, ADR 0032, K2) can connect nothing until the consent is recorded.
+A student under the age limit of the country profile gets Nina, the forum, and
+grading only after a parent's consent is recorded (K2, ADR 0032). A connection
+exists to feed Nina, so such a student can make none until then.
 
 A connection is active or in the `reconnect` state. It enters `reconnect` when
 Google refuses its token, for example because the user took access away in their
-Google account, or when its owner's account is deleted without a transfer
-(ADR 0030). It never disappears silently, and it shows its state to its owner and
-to the Admins of its school.
+Google account, or when the account of the member who made a school connection
+is deleted (ADR 0030). It never disappears silently, and it shows its state to
+its owner and to the Admins of its school.
 
 ### Scopes
 
@@ -142,8 +157,9 @@ Google's class is the class on Google's page where the page gives one.
 
 - A connection asks for the scopes of its own connector only, and only when a
   user turns that connector on. It takes the narrowest scope that works. Forms
-  tries `drive.file` first, because Google's `forms.get` accepts it, and falls
-  back to the Forms scopes only if a test with a picked form fails.
+  tries `drive.file` first, because Google's `forms.get` and
+  `forms.responses.list` accept it, and falls back to the Forms scopes only if a
+  test with a picked form fails.
 - No connector request sets `include_granted_scopes`. With it, the new token
   carries every scope the user ever granted to the project, so a school
   connection's token could read a personal Gmail connection. Each connection gets
@@ -184,14 +200,14 @@ sensitive or restricted.
 - Calendar waits: it is sensitive.
 - Gmail waits for the security assessment. It repeats at least every 12 months,
   and Google states no price.
-- The plan lists the Classroom scopes among the sensitive ones, and its risk R3
-  says the Classroom import does not wait because members match by Google
-  account ID and not by email. Both hold only if the Data Access panel shows the
-  scopes that the import uses as non-sensitive. If it shows them as sensitive,
-  the import waits like Calendar. The same check applies to the Forms scopes.
-- While a request is pending, Google's user cap limits how many accounts can
-  grant a sensitive scope. That is enough for a test with a pilot school and no
-  more. The cap's number is shown in the Cloud console and is not stated here.
+- The plan's verification step lists the Classroom and Calendar scopes as
+  sensitive, and its risk R3 expects only the member email and Calendar to wait,
+  because members match by Google account ID and not by email. Google's pages
+  give no class for any Classroom scope, so the Data Access panel decides. The
+  import waits for every scope that the panel shows as sensitive, as Calendar
+  does. The same check applies to the Forms scopes.
+- Until the review passes, Google's help page on unverified apps limits an app to
+  100 new users. That is enough for a test with a pilot school and no more.
 
 Google asks for a justification for each sensitive scope, a video that shows how
 a user starts and grants access, a verified domain, a public home page, and a
@@ -200,19 +216,21 @@ takes 3 to 5 business days. The plan treats the whole process as a risk of
 weeks. The request is for the connectors project. It is a wave A step, filed
 after the demo video exists and running in parallel with the build. No connector
 reaches production before every scope it asks for is non-sensitive or verified.
-The privacy policy, published from Aksara, describes a connector before it goes
-live, as Google's data policy requires.
+The privacy policy, published from Aksara, describes each connector as a plan
+until it goes live, because Google requires an app to limit its use of Google
+user data to what its privacy policy discloses.
 
 ### Workspace administrators
 
 For Education Fundamentals, Standard, Plus, and the Teaching and Learning
 Upgrade, a user designated as under 18 must request access to an app that the
 administrator has not configured (Google Workspace Updates, 24 August 2023). An
-administrator configures an app under Menu, Security, Access and data control,
-API controls, Manage App Access, by its OAuth client ID. The levels are Trusted,
-Limited, Specific Google data, and Blocked. A separate setting lets users sign
-in to apps that ask only for the basic information that Sign in with Google
-needs. Google names the error that follows a refusal `admin_policy_enforced`.
+administrator configures an app, found by its name or its OAuth client ID, under
+Menu, Security, Access and data control, API controls, Manage App Access. The
+levels are Trusted, Limited, Specific Google data, and Blocked. A separate
+setting lets users sign in to apps that ask only for the basic information that
+Sign in with Google needs. Google names the error that follows a refusal
+`admin_policy_enforced`.
 
 - The setup flow (ADR 0026, `/setup`) carries a guide for the school's Workspace
   administrator. It gives the client ID of sign-in and the client ID of the
@@ -222,10 +240,10 @@ needs. Google names the error that follows a refusal `admin_policy_enforced`.
   client Trusted, or Specific Google data with that connector's scopes. The
   guide is checked against the console before each release, because Google
   renames its labels.
-- For belajar.id the blueprint expects the administrator to sit at the Ministry
-  and not at the school. No Ministry source was checked. So the guide asks the
-  school owner to confirm who runs the domain first. The file imports (Dapodik
-  XLSX, OneRoster CSV) do not depend on Google.
+- For belajar.id the blueprint says the administrator may sit at the Ministry.
+  No Ministry source was checked. So the guide asks the school owner to confirm
+  who runs the domain first. The file imports (Dapodik XLSX, OneRoster CSV) do
+  not depend on Google.
 - When Google ends a connect with `admin_policy_enforced`, Nakafa makes no
   connection, tells the user that the school's administrator has not allowed
   Nakafa for this account, and shows the guide to an Admin. A learner whose
@@ -269,17 +287,20 @@ minute for each client, and 1,200 per minute for each user (read 13 October
   resumable pages.
 - Polling is adaptive: a source that changed is read again sooner, and a quiet
   one later. The intervals are targets, measured with a pilot school. Google
-  also offers push notifications for Classroom, which Google advises over
-  polling where an endpoint has them. They need the
+  also offers push notifications for Classroom, and its limits page tells an app
+  that polls to consider them where an endpoint offers them. They need the
   `classroom.push-notifications` scope and a Pub/Sub topic, and they are a
   separate decision.
 - The work runs in a workpool of its own. `convex.config.ts` declares no
   standalone pool today. The workpool inside `@convex-dev/workflow` is set up in
-  `packages/backend/confect/workflow.ts`. Fairness between schools comes from a
-  cap on the queued pages of each school. A pool per school cannot be created
-  when a school signs, because a pool is a component that `convex.config.ts`
-  declares, and the workpool's documentation names no per-key parallelism or
-  fairness. The cap stands in for the plan's workpool per tenant (R10).
+  `packages/backend/confect/workflow.ts` with `maxParallelism` 20. The workpool
+  README asks that the `maxParallelism` of all workpools and workflows together
+  does not exceed 100 on Pro, so the pool of the connectors sets its own value
+  within what the others leave. Fairness between schools comes from a cap on the
+  queued pages of each school. A pool per school cannot be created when a school
+  signs, because a pool is a component that `convex.config.ts` declares, and the
+  workpool README names no per-key parallelism or fairness. The cap stands in for
+  the plan's workpool per tenant (R10).
 - A retryable Google error, such as `RESOURCE_EXHAUSTED`, is retried with
   exponential backoff, as Google advises. The workpool's retry adds jitter.
 - A user can start a sync by hand. The request passes the rate-limit component,
@@ -293,8 +314,9 @@ minute for each client, and 1,200 per minute for each user (read 13 October
 | A connection is disconnected, by its owner or by an Admin of its school | Its stored tokens are destroyed. Nakafa revokes the grant at Google only when the same Google account has no other connection left. The imported data is deleted or kept, as the owner chooses. |
 | The Calendar mirror | It is always deleted. |
 | A Drive copy | It is kept only when the owner chooses to keep it. |
-| The owner's account is deleted | A school connection is transferred and sealed again. Without a transfer it enters `reconnect` (ADR 0030). |
-| A school leaves Nakafa | Every school connection is disconnected, the school key is destroyed, and the school receives a deletion record (ADR 0030). |
+| A member leaves the school | Their connection is transferred and sealed again under the key of the learner who chooses it, or it is disconnected (ADR 0030). |
+| The account of the member who made a school connection is deleted | The connection stays and enters `reconnect`. It does not work until someone reconnects it (ADR 0030). |
+| A school leaves Nakafa | Every school connection is disconnected before the school key is destroyed, and the school receives a deletion record (ADR 0030). |
 | Each step | It is journaled (ADR 0016). The entry holds IDs and reason codes, never the Google email or a class name. |
 
 Revoking one token at Google removes every scope the user granted to the
@@ -317,12 +339,14 @@ finds them, and it must not show one owner's connection to another owner.
   ads, and it is not used to train a general model. It goes only to the
   providers that the feature needs, and the privacy policy lists them. Gmail is
   never used for students. The basis is Google's API Services User Data Policy
-  and its Workspace API policy. The blueprint says the live privacy policy
-  already refers to the first.
+  and its Workspace API user data policy, which the privacy policy of the Aksara
+  release `edadc28a9d` already names (line 211 of
+  `packages/corpus/pages/privacy-policy/en.mdx`).
 - Google data reaches a model only in a language call (ADR 0019 sets the
-  retention request of those calls). It is never embedded, because an embedding
-  request cannot carry the retention request. A Drive file becomes searchable
-  only when a teacher publishes it to a class library (ADR 0023).
+  retention request of those calls). A connection copy is not embedded, because
+  an embedding request carries no retention request today (ADR 0019). A Drive
+  file is indexed for search only after a teacher publishes it to a class
+  library, and then ADR 0023 governs it.
 - Nina never writes to Google.
 
 ## Gates
@@ -388,7 +412,7 @@ finds them, and it must not show one owner's connection to another owner.
 | A Google Cloud project for connectors, and its verification request | Planned, program wave A step |
 | A standalone workpool for connectors | Planned. None exists today. |
 | Workspace guide in the setup flow | Planned |
-| Dapodik XLSX and OneRoster CSV imports | Planned |
+| Dapodik XLSX import and export, and the file import checks | Planned |
 
 ## References
 
@@ -400,7 +424,8 @@ finds them, and it must not show one owner's connection to another owner.
   (accounts.google.com/.well-known/openid-configuration): the PKCE methods and
   the endpoints.
 - Google, sensitive scope verification and restricted scope verification
-  (developers.google.com/identity/protocols/oauth2/production-readiness).
+  (developers.google.com/identity/protocols/oauth2/production-readiness), and
+  Google Cloud Help, unverified apps (support.google.com/cloud/answer/7454865).
 - Google, Gmail scopes (developers.google.com/workspace/gmail/api/auth/scopes)
   and Drive scopes
   (developers.google.com/workspace/drive/api/guides/api-specific-auth).
@@ -418,7 +443,7 @@ finds them, and it must not show one owner's connection to another owner.
   access Workspace data.
 - Google, API Services User Data Policy and the Workspace API user data policy.
 - Google, the Picker overview.
-- `@convex-dev/workpool` README, on pools, retries, and keys.
+- `@convex-dev/workpool` 0.4.13 README, on pools, `maxParallelism`, and retries.
 - Convex limits (docs.convex.dev/production/state/limits).
 - `@better-auth/core` 1.6.33, `dist/social-providers/google.mjs` and
   `dist/oauth2/create-authorization-url.mjs`: the scopes, the PKCE method, the
