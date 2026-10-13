@@ -16,8 +16,8 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   expectState,
   expectThings,
+  giveRoom,
   holdWebFont,
-  readRoom,
 } from "@/e2e/support/state";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
@@ -285,8 +285,6 @@ test.describe("the things beside Nina on the state of a missing page", () => {
         page,
         Effect.gen(function* () {
           yield* openStandalone(page, "en");
-          // What the page keeps around her place at this width.
-          const around = touchViewport.width - (yield* readRoom(page));
 
           yield* Effect.forEach(
             [
@@ -294,12 +292,9 @@ test.describe("the things beside Nina on the state of a missing page", () => {
               { room: FIGURE_WIDTH, shown: true },
             ],
             ({ room, shown }) =>
-              Effect.promise(() =>
-                page.setViewportSize({
-                  height: touchViewport.height,
-                  width: room + around,
-                })
-              ).pipe(Effect.andThen(expectThings(page, shown))),
+              giveRoom(page, room).pipe(
+                Effect.andThen(expectThings(page, shown))
+              ),
             { discard: true }
           );
         })
