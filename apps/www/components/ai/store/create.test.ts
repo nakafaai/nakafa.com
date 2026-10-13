@@ -260,19 +260,23 @@ describe("ai/store/create", () => {
     expect(store.getState()).toMatchObject({ open: false, warmed: true });
   });
 
-  it("marks an upload as on its way or failed, and clears it by its file", () => {
+  it("marks an upload as on its way or failed by the id of its file, and clears it by that id", () => {
     const store = createAiStore();
 
-    store.getState().markUpload("blob:first", "uploading");
-    store.getState().markUpload("blob:second", "uploading");
-    store.getState().markUpload("blob:first", "error");
+    store.getState().markUpload("file-1", "uploading");
+    store.getState().markUpload("file-2", "uploading");
+    store.getState().markUpload("file-1", "error");
     expect(store.getState().uploads).toEqual({
-      "blob:first": "error",
-      "blob:second": "uploading",
+      "file-1": "error",
+      "file-2": "uploading",
     });
 
-    store.getState().clearUpload("blob:first");
-    expect(store.getState().uploads).toEqual({ "blob:second": "uploading" });
+    store.getState().clearUpload("file-1");
+    expect(store.getState().uploads).toEqual({ "file-2": "uploading" });
+
+    // A file that shows nothing has no entry, so clearing it again is no change.
+    store.getState().clearUpload("file-1");
+    expect(store.getState().uploads).toEqual({ "file-2": "uploading" });
   });
 
   it("remembers the upload that holds a file, by the id of the file", () => {

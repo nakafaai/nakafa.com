@@ -19,12 +19,12 @@ export function createAiStore() {
           set((state) => ({
             chatDrafts: Arr.prepend(state.chatDrafts, key),
           })),
-        clearUpload: (url) =>
-          set((state) => ({ uploads: Rec.remove(state.uploads, url) })),
+        clearUpload: (fileId) =>
+          set((state) => ({ uploads: Rec.remove(state.uploads, fileId) })),
         keepUpload: (fileId, uploadId) =>
           set((state) => ({ held: Rec.set(state.held, fileId, uploadId) })),
-        markUpload: (url, status) =>
-          set((state) => ({ uploads: Rec.set(state.uploads, url, status) })),
+        markUpload: (fileId, status) =>
+          set((state) => ({ uploads: Rec.set(state.uploads, fileId, status) })),
         // One new-chat admission at a time: a pending ask or composer draft
         // owns it, so a second one is refused atomically.
         openAsk: (ask) => {

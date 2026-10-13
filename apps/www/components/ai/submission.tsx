@@ -111,7 +111,10 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   yield* requireNinaConnection(convex);
   // The file shows as uploading from the moment its bytes go, and as failed if
   // the upload does not finish. A refusal before that moment is not an upload.
-  yield* Effect.sync(() => status.markUpload(attachment.url, "uploading"));
+  // Both are kept under the id of the file: its preview address changes when a
+  // hidden composer shows again, so a failure written under the address of
+  // this send would never be found by the chip.
+  yield* Effect.sync(() => status.markUpload(attachment.id, "uploading"));
   const id = yield* Effect.tryPromise({
     try: () => upload({ bytes, mediaType, filename: attachment.file.name }),
     catch: () =>
@@ -122,7 +125,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   }).pipe(
     Effect.flatMap(Effect.fromResult),
     Effect.tapError(() =>
-      Effect.sync(() => status.markUpload(attachment.url, "error"))
+      Effect.sync(() => status.markUpload(attachment.id, "error"))
     )
   );
   yield* Effect.sync(() => status.keepUpload(attachment.id, id));
@@ -132,7 +135,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
     mediaType,
     filename: attachment.file.name,
   });
-  yield* Effect.sync(() => status.clearUpload(attachment.url));
+  yield* Effect.sync(() => status.clearUpload(attachment.id));
   return id;
 });
 

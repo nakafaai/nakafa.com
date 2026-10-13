@@ -43,8 +43,11 @@ const AiStateSchema = Schema.Struct({
   ),
   text: Schema.String,
   /**
-   * The uploads that are on their way or failed, by the preview address of the
-   * file that holds them. A file with neither has no entry.
+   * The uploads that are on their way or failed, by the id the composer gave
+   * the file. A file with neither has no entry. The id is the key for the same
+   * reason it is the key of `held`: the preview address of a file changes when
+   * a hidden composer shows again, so a state written under the old address
+   * would never be read again and no remove could clear it.
    */
   uploads: Schema.Record(Schema.String, AiUploadSchema),
   /** Whether the sheet's body may render ahead of the press that opens it. */
@@ -55,10 +58,12 @@ export type AiState = typeof AiStateSchema.Type;
 
 interface AiActions {
   addChatDraft: (key: string) => void;
-  clearUpload: (url: string) => void;
+  /** Forgets that this file is uploading or that its upload failed. */
+  clearUpload: (fileId: string) => void;
   /** Remembers the upload that now holds this file on the server. */
   keepUpload: (fileId: string, uploadId: typeof AiUploadIdSchema.Type) => void;
-  markUpload: (url: string, status: typeof AiUploadSchema.Type) => void;
+  /** Shows this file as uploading, or as an upload that failed. */
+  markUpload: (fileId: string, status: typeof AiUploadSchema.Type) => void;
   openAsk: (ask: AiAsk) => boolean;
   removeChatDraft: (key: string) => void;
   resolveAsk: (id: AiAsk["id"], chatId: AiState["activeChatId"]) => void;

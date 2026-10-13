@@ -22,6 +22,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr, Effect, HashSet } from "effect";
@@ -72,19 +73,31 @@ function NinaFileMedia({ uploading }: { uploading: boolean }) {
   return uploading ? <Spinner /> : <HugeIcons icon={FileIcon} />;
 }
 
+/**
+ * A file a prompt shows: a saved one, or one the learner just picked. A picked
+ * file holds the id the composer gave it, which is the key of its upload state,
+ * and a prompt that is still on its way shows it with that id.
+ */
+export type NinaFile = FileUIPart | PromptInputFile;
+
 /** Shadcn owns attachment composition; Nina supplies the native Agent file. */
 export function NinaAttachment({
   children,
   file,
   variant = "message",
-}: { children?: ReactNode; file: FileUIPart } & VariantProps<
+}: { children?: ReactNode; file: NinaFile } & VariantProps<
   typeof imageVariants
 >) {
   const t = useTranslations("Ai");
   const name = file.filename ?? t("attachment");
   const isImage = file.mediaType.startsWith("image/");
-  // A file that is neither uploading nor failed has no entry and shows as done.
-  const state = useAi((store) => store.uploads[file.url]) ?? "done";
+  // A saved file has no id and is never uploading. A picked file that is
+  // neither uploading nor failed has no entry and shows as done.
+  const fileId = "id" in file ? file.id : undefined;
+  const state =
+    useAi((store) =>
+      fileId === undefined ? undefined : store.uploads[fileId]
+    ) ?? "done";
   return (
     <Attachment
       className={isImage ? imageVariants({ variant }) : "max-w-64"}
@@ -196,7 +209,7 @@ export function NinaAttachments({
               aria-label={t("remove-attachment", { filename: file.file.name })}
               onClick={() => {
                 removeAttachment(file.id);
-                clearUpload(file.url);
+                clearUpload(file.id);
                 // The upload the file holds goes back at once, not at expiry.
                 Effect.runFork(releaseUploads(takeUploads([file.id]), release));
               }}

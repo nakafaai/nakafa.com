@@ -11,6 +11,7 @@ import {
 } from "@/e2e/support/attachment";
 import { type Changes, saved } from "@/e2e/support/changes";
 import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
+import { inTheSheet, openSheet } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The Convex names of the upload functions the composer calls. */
@@ -292,6 +293,104 @@ test.describe("Uploads of a composer at 390px", () => {
           await expect(chipsIn(composer).first()).toHaveAttribute(
             "data-state",
             "error"
+          );
+        });
+      })
+    );
+  });
+});
+
+/** The popup of Nina's sheet, which stays in the page while the sheet is closed. */
+const sheetPopup = (page: Page) => page.locator('[data-slot="sheet-popup"]');
+
+test.describe("Uploads of a composer in the sheet at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("a chip shows its failed upload after the sheet closed and opened again, and a new file shows its own state alone", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes } = yield* openChatPage(page, origin);
+        yield* openSheet(page);
+        yield* pickFiles(inTheSheet(page), [
+          fileOf("report.pdf", "application/pdf", 12),
+        ]);
+        yield* write(inTheSheet(page), "Summarize this report");
+
+        // The learner closes the sheet while the upload is on its way. A hidden
+        // composer gives back the preview address of each file, and a shown one
+        // makes a new address, so the failure that comes next is found by the
+        // id of the file or not at all: a chip that reads the new address finds
+        // no failure and shows the file as done.
+        changes.hold();
+        changes.failNext(SAVE);
+        yield* Effect.promise(async () => {
+          await composerOf(inTheSheet(page)).press("Enter");
+          await expect
+            .poll(() => changes.argumentsOf(SAVE).length, {
+              timeout: readinessTimeoutMilliseconds,
+            })
+            .toBe(1);
+          await inTheSheet(page).getByRole("button", { name: "Close" }).click();
+          await expect(composerOf(sheetPopup(page))).toBeHidden();
+        });
+
+        // The upload fails while the sheet is closed. The notice covers the
+        // entry for a moment, and a press that lands on it holds it there for
+        // as long as the pointer stays, so the press waits for it to go.
+        changes.release();
+        yield* Effect.promise(async () => {
+          await expect(page.getByText(UNCONFIRMED).first()).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(page.locator("[data-sonner-toast]")).toHaveCount(0, {
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await page
+            .getByRole("button", { exact: true, name: "Ask Nina" })
+            .click();
+          await expect(chipsIn(inTheSheet(page)).first()).toHaveAttribute(
+            "data-state",
+            "error",
+            { timeout: readinessTimeoutMilliseconds }
+          );
+        });
+
+        // Removing the chip takes the failure with it. A new file that is sent
+        // shows its own state alone: on its way, and then uploaded.
+        yield* Effect.promise(async () => {
+          await inTheSheet(page)
+            .getByRole("button", { name: "Remove report.pdf" })
+            .click();
+          await expect(chipsIn(inTheSheet(page))).toHaveCount(0);
+        });
+        yield* pickFiles(inTheSheet(page), [
+          fileOf("notes.txt", "text/plain", 12),
+        ]);
+        changes.hold();
+        changes.failNext(START);
+        yield* Effect.promise(async () => {
+          await composerOf(inTheSheet(page)).press("Enter");
+          await expect(chipsIn(inTheSheet(page))).toHaveCount(1);
+          await expect(chipsIn(inTheSheet(page)).first()).toHaveAttribute(
+            "data-state",
+            "uploading"
+          );
+        });
+        changes.release();
+        yield* Effect.promise(async () => {
+          // The server refuses the prompt once the file is up, so the file is
+          // back in the composer, uploaded, and nothing says failed.
+          await expect(page.getByText(UNCONFIRMED).first()).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(chipsIn(inTheSheet(page))).toHaveCount(1);
+          await expect(chipsIn(inTheSheet(page)).first()).toHaveAttribute(
+            "data-state",
+            "done"
           );
         });
       })

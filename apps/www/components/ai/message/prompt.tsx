@@ -7,10 +7,9 @@ import {
   MessageContent,
   MessageFooter,
 } from "@repo/design-system/components/ui/message";
-import type { FileUIPart } from "ai";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { NinaAttachment } from "@/components/ai/attachment";
+import { NinaAttachment, type NinaFile } from "@/components/ai/attachment";
 
 /**
  * The same prompt geometry before admission, during navigation and in history.
@@ -23,7 +22,7 @@ export function NinaPrompt({
 }: {
   actions?: ReactNode;
   children: ReactNode;
-  files?: readonly FileUIPart[];
+  files?: readonly NinaFile[];
 }) {
   return (
     <MessageContent>
