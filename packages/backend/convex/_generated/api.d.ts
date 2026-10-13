@@ -5960,24 +5960,6 @@ export declare const api: {
         | "notAllowed"
         | "taken"
       >;
-      getProfileByUsername: FunctionReference<
-        "query",
-        "public",
-        { username: string },
-        {
-          _id: Id<"users">;
-          bio?: string;
-          image?: string;
-          name: string;
-          username: string;
-        } | null
-      >;
-      getUsernameById: FunctionReference<
-        "query",
-        "public",
-        { userId: string },
-        string | null
-      >;
     };
   };
 };
@@ -10039,8 +10021,8 @@ export declare const internal: {
       allocateUsernames: FunctionReference<
         "mutation",
         "internal",
-        { cursor: string | null },
-        { allocated: number; next: string | null }
+        { cursor: string | null; dry: boolean },
+        { allocated: number; next: string | null; waiting: number }
       >;
     };
     queries: {
