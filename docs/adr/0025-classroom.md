@@ -74,7 +74,9 @@ and the library of every class their grant covers, and they write nowhere in
 them (a roles-granted view action, ADR 0012). Counselors, Staff, Proctors,
 Auditors, and Integrations have no access to them. A guardian does not read the
 forum. The verified parent relation opens tasks, grades, report cards, and
-announcements.
+announcements. A student under the age limit of the country profile (ADR 0032)
+uses the forum, and Nina in it, only after a parent's consent is recorded (K2).
+Signing in does not count as consent (ADR 0009).
 
 ### Channels and numbered discussions
 

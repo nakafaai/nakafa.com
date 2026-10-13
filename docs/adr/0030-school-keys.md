@@ -97,7 +97,7 @@ A free text is sealed. A number or a state that the server computes with is not
 | The names of uploaded files | ADR 0028 |
 | Exam essays, and the names of answer photos | K10, built with the gate and with grading (ADR 0013, ADR 0031) |
 | Insight narratives, not their numbers | K10, program wave C |
-| The tokens of a school connection | ADR 0015 |
+| The tokens of a school connection, and its Drive copies and Calendar mirrors | ADR 0015 |
 | The secret of a webhook, which is sealed and not hashed because the server signs with it | ADR 0029 |
 
 Some values stay unsealed. Grades, attendance, counts, and every other value the
@@ -149,13 +149,18 @@ sits on an account, and ADR 0015 decides how connectors behave.
 
 | Event | What happens to the connection and its key |
 | --- | --- |
-| A member who made a school connection leaves the school | The member chooses. The connection is sealed again under the member's own learner key and becomes a personal connection, or it is disconnected. |
-| The account of the member who made a school connection is deleted | Deleting the account shreds only the learner key, so the secret under the school key stays readable. The connection is transferred to another member and sealed again, or it enters the reconnect state (ADR 0015). It does not vanish, and it does not work until someone reconnects it. |
-| The school is deleted | Every school connection is disconnected, the school key is deleted, and the school is given a deletion record. |
+| A member leaves the school | The connection is transferred and sealed again under the key of the learner who chooses it, or it is disconnected. |
+| The account of the member who made a school connection is deleted | The connection stays and enters the reconnect state. It does not vanish, and it does not work until someone reconnects it. |
+| The school is deleted | Every school connection is disconnected before the school key is deleted, and the school is given a deletion record. |
 
-The test for the second row, with no transfer made: delete the account of the
-teacher who made the connection, and the connection must be in the reconnect
-state, never gone and never silently working.
+A connection belongs to the Google account of the member who made it, so in the
+first row the learner who chooses is that member. In the second row, deleting
+the account shreds only the learner key, so the secret under the school key
+stays readable. ADR 0015 decides the rest of the connector flow.
+
+The test for the second row: delete the account of the teacher who made the
+connection, and the connection must be in the reconnect state, never gone and
+never silently working.
 
 ### Rotation and replacement
 
