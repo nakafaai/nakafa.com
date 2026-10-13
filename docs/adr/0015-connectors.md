@@ -1,4 +1,4 @@
-# ADR 0015: Connectors Are Read-Only Adapters Whose Tokens Are Sealed Under Their Owner's Key
+# ADR 0015: Google Connectors Are Read-Only Adapters Whose Tokens Are Sealed Under Their Owner's Key
 
 ## Status
 
