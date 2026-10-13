@@ -3,7 +3,7 @@ import { expect, type Page } from "@playwright/test";
 import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
 import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
-import { trackChanges } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS, trackChanges } from "@/e2e/support/changes";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
@@ -26,7 +26,9 @@ const LIST_QUERY = "chats/queries:getOwnChats";
 export const START = "nina/turns:start";
 export const RENAME = "chats/mutations:updateChatTitle";
 export const DELETE = "chats/mutations:deleteChat";
-const VISIBILITY = "chats/mutations:updateChatVisibility";
+/** The mutation the share dialog calls to turn sharing on, and the query it reads the token with. */
+const SHARE = "chats/mutations:updateChatVisibility";
+export const SHARE_TOKEN_QUERY = "chats/queries:getShareToken";
 /** What the pages say when a change fails. */
 export const FAILED = "We could not complete this action. Please try again.";
 
@@ -125,6 +127,10 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
   ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(CurrentUser)));
 
   return {
+    /** Deletes a chat of the learner, as the menu of the chat does. */
+    deleteChat: Effect.fn("NakafaE2E.deleteChat")(function* (chatId: string) {
+      yield* call("mutation", DELETE, { chatId });
+    }),
     /**
      * Adds `count` chats to the list, after the chats it has. They share the
      * thread of a chat that was started, so each can be opened and deleted,
@@ -153,9 +159,17 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
       Effect.scoped,
       Effect.provide(nodeServicesLayer)
     ),
-    /** Makes a chat of the learner readable by anyone who has its link. */
+    /**
+     * Shares a chat of the learner the way the share dialog does: the same
+     * mutation turns sharing on, and the same query gives the owner the token
+     * the server drew, which the chat's link holds. The chat is readable by
+     * that link and by nothing else.
+     */
     share: Effect.fn("NakafaE2E.share")(function* (chatId: string) {
-      yield* call("mutation", VISIBILITY, { chatId, visibility: "public" });
+      yield* call("mutation", SHARE, { chatId, visibility: "public" });
+      return yield* call("query", SHARE_TOKEN_QUERY, { chatId }).pipe(
+        Effect.flatMap(Schema.decodeUnknownEffect(Schema.String))
+      );
     }),
     /** Starts a chat the way the new chat page does, and returns where it lives. */
     startChat: Effect.fn("NakafaE2E.startChat")(function* (text: string) {
@@ -215,6 +229,17 @@ export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
     await expect
       .poll(() => changes.signedIn && changes.origin !== "", {
         timeout: readinessTimeoutMilliseconds,
+      })
+      .toBe(true);
+    // The page hides its card at once, before the server has stored the
+    // decision. A page that goes elsewhere while the change is on its way drops
+    // it, so the card comes back and the tracker never sees its answer. A
+    // decision that fails to save is tried again after 10 seconds
+    // (`lib/analytics/consent/signal.ts`), so only a stored one counts, and the
+    // wait covers that retry.
+    await expect
+      .poll(() => changes.stored > 0n && changes.told >= changes.stored, {
+        timeout: ANSWER_MILLISECONDS * 2,
       })
       .toBe(true);
   });

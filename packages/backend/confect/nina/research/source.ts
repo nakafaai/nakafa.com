@@ -1,9 +1,9 @@
 import { getLatestUserText } from "@repo/backend/confect/nina/prompt/user";
+import { isRegistrableHostname } from "@repo/backend/confect/nina/research/domain";
 import { isNakafaHostname } from "@repo/contents/agent/refs";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import type { ModelMessage } from "ai";
 import { Array as Arr, HashMap, HashSet, MutableHashSet, Option } from "effect";
-import { ParseResultType, parseDomain } from "parse-domain";
 
 const whitespacePattern = /\s+/;
 const sourceSeparators = HashSet.make(",", ";");
@@ -44,7 +44,7 @@ export function getSourceReferences(text: string) {
  * the address Nakafa reads: the same page on the production origin over https,
  * whichever scheme or `www` alias the learner wrote.
  */
-export function getNakafaReferences(text: string) {
+function getNakafaReferences(text: string) {
   const addresses = Arr.map(
     Arr.filter(getLinks(text), (link) => isNakafaHostname(link.hostname)),
     toNakafaAddress
@@ -97,11 +97,7 @@ function parseSourceReference(token: string) {
   if (url.username || url.password) {
     return;
   }
-  const result = parseDomain(url.hostname);
-  if (result.type !== ParseResultType.Listed) {
-    return;
-  }
-  if (!result.domain) {
+  if (!isRegistrableHostname(url.hostname)) {
     return;
   }
   return createSourceReference(text, url);

@@ -1038,4 +1038,13 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    session: {
+      live: FunctionReference<
+        "query",
+        "internal",
+        { now: number; sessionId: string; userId: string },
+        boolean,
+        Name
+      >;
+    };
   };

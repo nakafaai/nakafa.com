@@ -5,6 +5,7 @@ import { getNakafaContent } from "@repo/backend/agent/content";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
+import type { NinaContextPack } from "@repo/backend/confect/nina/contract/pack";
 import { readNinaLearningPage } from "@repo/backend/confect/nina/contract/turn";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
 import { createNinaTest } from "@repo/backend/test/nina";
@@ -24,9 +25,14 @@ const NOW = Date.parse(runtime.currentDate);
 const LESSON = "material:lesson:mathematics:material-section:limits";
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 
-/** Reads one fixture turn's instructions, or the typed failure's reason. */
+/**
+ * Reads one fixture turn's instructions, or the typed failure's reason. `tools`
+ * changes what the turn's page allows, as a page that stored other permissions
+ * would.
+ */
 async function instructionsFor(
-  nina: Awaited<ReturnType<typeof createNinaTest>>
+  nina: Awaited<ReturnType<typeof createNinaTest>>,
+  tools: Partial<NinaContextPack["tools"]> = {}
 ) {
   const turn = Schema.decodeUnknownSync(ninaTurns.Doc)(
     await nina.t.query((ctx) => ctx.db.get("ninaTurns", nina.turnId))
@@ -35,15 +41,25 @@ async function instructionsFor(
     throw new Error("Expected one active Nina turn.");
   }
   const { url } = readNinaLearningPage(turn.page);
+  const page = {
+    ...turn.page,
+    nina: {
+      ...turn.page.nina,
+      tools: { ...turn.page.nina.tools, ...tools },
+    },
+  };
   return nina.t.action((ctx) =>
     Effect.runPromise(
-      readInstructions(turn, url).pipe(
-        Effect.map(({ instructions, memories, paused, summary }) => ({
-          instructions,
-          memories: memories ?? null,
-          paused,
-          summary: summary?.throughOrder ?? null,
-        })),
+      readInstructions({ ...turn, page }, url).pipe(
+        Effect.map(
+          ({ capabilities, instructions, memories, paused, summary }) => ({
+            capabilities,
+            instructions,
+            memories: memories ?? null,
+            paused,
+            summary: summary?.throughOrder ?? null,
+          })
+        ),
         Effect.catchTag("NinaGenerationError", (error) =>
           Effect.succeed({ failure: error.reason })
         ),
@@ -134,7 +150,10 @@ describe("Nina instructions", () => {
     await f.seed({ kind: "struggle", text: "Sulit di peluang." });
     await f.seedPortrait({ text: "Duduk di kelas 12 dan suka contoh soal." });
     const result = await instructionsFor(f);
-    expect(result).toMatchObject({ paused: false });
+    expect(result).toMatchObject({
+      capabilities: ["nakafa", "deepResearch", "math", "memory"],
+      paused: false,
+    });
     for (const expected of [
       "# Learner",
       "- Focus: preparing for try-outs",
@@ -208,7 +227,12 @@ describe("Nina instructions", () => {
     await f.seedPortrait({ text: "Duduk di kelas 12." });
     await f.owner.mutation(pause, { paused: true });
     const result = await instructionsFor(f);
-    expect(result).toMatchObject({ memories: null, paused: true });
+    // The prompt and the tools Nina is offered follow the one pause the turn read.
+    expect(result).toMatchObject({
+      capabilities: ["nakafa", "deepResearch", "math"],
+      memories: null,
+      paused: true,
+    });
     for (const absent of [
       "Sulit di peluang.",
       "Duduk di kelas 12.",
@@ -218,6 +242,36 @@ describe("Nina instructions", () => {
       expect(result).toHaveProperty(
         "instructions",
         expect.not.stringContaining(absent)
+      );
+    }
+  });
+
+  it("leaves out a capability that the turn's page does not allow, with its rules, and keeps the others", async () => {
+    const f = await createNinaTest();
+    const result = await instructionsFor(f, { allowMath: false });
+    // The prompt and the tools Nina is offered follow the page, as they follow the pause.
+    expect(result).toMatchObject({
+      capabilities: ["nakafa", "deepResearch", "memory"],
+    });
+    for (const absent of [
+      "- math: deterministic calculations",
+      "- math.given:",
+      "## math",
+    ]) {
+      expect(result).toHaveProperty(
+        "instructions",
+        expect.not.stringContaining(absent)
+      );
+    }
+    for (const present of [
+      "- Nakafa: Nakafa-owned lessons",
+      "## Nakafa",
+      "## deepResearch",
+      "## memory",
+    ]) {
+      expect(result).toHaveProperty(
+        "instructions",
+        expect.stringContaining(present)
       );
     }
   });

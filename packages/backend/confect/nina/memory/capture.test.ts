@@ -3,6 +3,7 @@ import { saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { noteText } from "@repo/backend/confect/nina/judgment/note";
 import { askedOf, provider, textOf } from "@repo/backend/test/gateway";
 import {
@@ -10,6 +11,7 @@ import {
   answersAfter,
   createCapturingTest,
   judges,
+  knownLines,
   level,
   MESSAGE,
   unavailable,
@@ -46,11 +48,6 @@ afterEach(() => {
   provider.languageModel.mockReset();
 });
 
-/** The lines of a prompt that list a known memory, one line each. */
-function lines(prompt: string) {
-  return Arr.filter(Str.split(prompt, "\\n"), Str.startsWith("- ["));
-}
-
 describe("memory capture", () => {
   it("asks the capture model nothing about a message in which the decision model finds nothing lasting, and sends that decision the message alone", async () => {
     const f = await createCapturingTest("Explain a limit.");
@@ -85,6 +82,25 @@ describe("memory capture", () => {
       [{ text: message, type: "text" }],
       [{ text: "Note: 高校三年生。\nQuote: 高校三年生", type: "text" }],
     ]);
+  });
+
+  it("asks the capture model for one flat claim, not a union, with the end day optional for every kind", async () => {
+    const f = await createCapturingTest();
+    const model = answers(level);
+    await f.capture();
+    const asked = encodeJsonText(model.doGenerateCalls[0]?.responseFormat);
+    expect(asked).toContain('"required":["kind","quote","text"]');
+    expect(asked).not.toContain("anyOf");
+    expect(asked).not.toContain("oneOf");
+  });
+
+  it("bounds the message that the capture model reads to the capture budget", async () => {
+    const { captureMessage } = NINA_BUDGET;
+    const f = await createCapturingTest("word ".repeat(captureMessage * 2));
+    const model = answers();
+    await f.capture();
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain(`Shortened to about ${captureMessage} of`);
   });
 
   it("asks no model about a prompt that holds no words of the learner", async () => {
@@ -212,7 +228,7 @@ describe("memory capture", () => {
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     // The newest twelve of the thirty that hold a word of the message, the
     // newest first: the hobby holds none.
-    expect(lines(prompt)).toEqual(
+    expect(knownLines(prompt)).toEqual(
       Arr.makeBy(12, (place) => `- [${place + 1}] ${said(29 - place)}`)
     );
   });
@@ -244,7 +260,7 @@ describe("memory capture", () => {
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
     expect(prompt).toContain("Other memories are not listed.");
-    expect(Arr.length(lines(prompt))).toBeLessThan(12);
+    expect(Arr.length(knownLines(prompt))).toBeLessThan(12);
     // It names nothing, so the candidate is a new memory and no memory is confirmed.
     expect(await f.stored()).toHaveLength(13);
     expect(Arr.map(await f.stored(), (row) => row.confirmedAt)).toEqual([

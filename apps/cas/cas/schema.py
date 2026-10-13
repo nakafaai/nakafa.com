@@ -16,6 +16,31 @@ MathStatus = Literal["verified", "contradicted", "inconclusive"]
 MathSource = Literal["math"]
 MathStepStatus = Literal["complete", "partial", "unavailable"]
 
+# Every label a math item may carry. The web app gives each one a translation
+# key, and tests/schema_test.py fails when this list and the one in
+# packages/math/schema/shared.ts differ. A new label reaches learners in this
+# order: the app that accepts it first, then the CAS that emits it.
+MathItemLabel = Literal[
+    "algebraic_multiplicity",
+    "approximation",
+    "counterexample",
+    "diagonalizable",
+    "domain",
+    "eigenbasis",
+    "eigenvalue",
+    "eigenvector",
+    "factor",
+    "geometric_multiplicity",
+    "mode",
+    "q1",
+    "q2",
+    "q3",
+    "root",
+    "singularity",
+    "solution",
+    "status",
+]
+
 
 class PointInput(BaseModel):
     """Two-dimensional point payload accepted by geometry operations."""
@@ -74,7 +99,7 @@ class MathItem(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    label: str
+    label: MathItemLabel
     value: str
     latex: str | None = None
 

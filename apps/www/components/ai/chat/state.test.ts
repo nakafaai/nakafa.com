@@ -1,8 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { ChatView } from "@repo/backend/confect/chats/view";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 import {
+  loadedForChat,
   patchChatPage,
   removeChatFromPage,
   updateOwnChatVisibility,
@@ -63,5 +64,26 @@ describe("chat query state", () => {
     expect(updateOwnChatVisibility(page, firstId, "public", "private")).toEqual(
       [page[1]]
     );
+  });
+
+  it("finds a loaded chat under any arguments, the share token of a link included", () => {
+    /** The arguments of a query: the chat, and the token when a link was used. */
+    const access = (chatId: typeof firstId, shareToken?: string) =>
+      shareToken === undefined ? { chatId } : { chatId, shareToken };
+    const loaded = [
+      { args: access(firstId), value: Option.some("by id") },
+      { args: access(firstId, "token"), value: Option.some("by link") },
+      { args: access(firstId, "other"), value: Option.none<string>() },
+      { args: access(secondId), value: Option.some("another chat") },
+    ];
+
+    expect(loadedForChat(loaded, firstId)).toEqual([
+      { args: { chatId: firstId }, value: "by id" },
+      { args: { chatId: firstId, shareToken: "token" }, value: "by link" },
+    ]);
+    expect(loadedForChat(loaded, secondId)).toEqual([
+      { args: { chatId: secondId }, value: "another chat" },
+    ]);
+    expect(loadedForChat([], firstId)).toEqual([]);
   });
 });

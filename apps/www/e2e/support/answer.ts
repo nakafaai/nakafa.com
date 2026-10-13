@@ -2,10 +2,9 @@ import type { Page } from "@playwright/test";
 import { Array as Arr, Effect, MutableHashSet, Option, Schema } from "effect";
 import {
   CONVEX_SOCKET,
-  decodeFrame,
   decodeSent,
-  encodeFrame,
-  isTransition,
+  decodeTransition,
+  encodeTransition,
 } from "@/e2e/support/frames";
 import { LIST_QUERY } from "@/e2e/support/memory";
 
@@ -23,9 +22,9 @@ const isListAnswer = Schema.is(ListAnswer);
  * Changes what the list answers, for the connections the page opens from now
  * on, the way a backend that holds other memories would. `change` gets each
  * memory of a page, newest first, with its place on the page, and returns the
- * memory the page then shows. Everything else passes through as it is: a frame
- * is read as plain JSON, so the fields of a transition that the rewrite does
- * not read go on as they came.
+ * memory the page then shows. Everything else passes through as it is: a
+ * transition is read whole, so the fields that the rewrite does not read go on
+ * as they came.
  */
 export const rewriteList = Effect.fn("NakafaE2E.rewriteList")(function* (
   page: Page,
@@ -50,14 +49,14 @@ export const rewriteList = Effect.fn("NakafaE2E.rewriteList")(function* (
         server.send(message);
       });
       server.onMessage((message) => {
-        const frame = decodeFrame(message.toString());
+        const frame = decodeTransition(message.toString());
 
-        if (Option.isNone(frame) || !isTransition(frame.value)) {
+        if (Option.isNone(frame)) {
           socket.send(message);
           return;
         }
         socket.send(
-          encodeFrame({
+          encodeTransition({
             ...frame.value,
             modifications: Arr.map(frame.value.modifications, (update) =>
               MutableHashSet.has(lists, update.queryId) &&

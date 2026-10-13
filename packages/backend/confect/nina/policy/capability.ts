@@ -1,77 +1,83 @@
 import type { CapabilityOutput } from "@repo/backend/confect/nina/capability/progress";
-import {
-  type LearningCapabilityName,
-  MATH_CAPABILITY,
-  MEMORY_CAPABILITY,
-  NAKAFA_CAPABILITY,
-  RESEARCH_CAPABILITY,
-} from "@repo/backend/confect/nina/capability/spec";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 
 /** Schema-owned permission result for a Nina capability in one turn. */
-const NinaCapabilityDecisionSchema = Schema.Union([
+const CapabilityDecisionSchema = Schema.Union([
   Schema.Struct({ state: Schema.Literal("allowed") }),
   Schema.Struct({ state: Schema.Literal("denied"), reason: Schema.String }),
 ]);
-type NinaCapabilityDecision = typeof NinaCapabilityDecisionSchema.Type;
+export type CapabilityDecision = typeof CapabilityDecisionSchema.Type;
+
+/** The decision of a capability that the turn's context offers. */
+export const ALLOWED = { state: "allowed" } satisfies CapabilityDecision;
+
+/** The decision of a capability that the turn's context does not offer, with the reason Nina reads. */
+export function denied(reason: string) {
+  return { state: "denied", reason } satisfies CapabilityDecision;
+}
 
 /**
- * Why the memory capability is denied while the learner has paused memory. The
- * policy decides it for a turn from its context, and the capability decides it
- * again for a call, because the learner may pause while the turn runs.
+ * What a capability decides on: whether the learner's memory is on, and Nina's
+ * context pack with the tool permissions of the turn. A turn that has no pack
+ * offers no capability, so a capability never sees the absence of one.
  */
-export const MEMORY_PAUSED = {
-  state: "denied",
-  reason:
-    "The learner paused memory, so what they told Nina before is not available. Tell the learner you cannot look it up while memory is paused.",
-} satisfies NinaCapabilityDecision;
+export type OfferContext = Pick<AgentContext, "memory"> & {
+  [Key in "nina"]-?: NonNullable<AgentContext[Key]>;
+};
 
-/** Resolves whether one Nina capability may run under the immutable context pack. */
-export function decideNinaCapability({
-  capability,
-  context,
-}: {
-  readonly capability: LearningCapabilityName;
-  readonly context: AgentContext;
-}): NinaCapabilityDecision {
-  const tools = context.nina?.tools;
-  if (!tools) {
-    return {
-      state: "denied",
-      reason: "Nina context is unavailable for this turn.",
-    };
-  }
-  if (capability === NAKAFA_CAPABILITY && !tools.allowNakafa) {
-    return {
-      state: "denied",
-      reason: "Nakafa evidence is not allowed for this context.",
-    };
-  }
-  if (capability === RESEARCH_CAPABILITY && !tools.allowDeepResearch) {
-    return {
-      state: "denied",
-      reason: "External research is not allowed for this context.",
-    };
-  }
-  if (capability === MATH_CAPABILITY && !tools.allowMath) {
-    return {
-      state: "denied",
-      reason: "Math verification is not allowed for this context.",
-    };
-  }
-  if (capability === MEMORY_CAPABILITY && context.memory !== true) {
-    return MEMORY_PAUSED;
-  }
-  return { state: "allowed" };
+/** The part of a capability that the policy reads. */
+interface Offering {
+  readonly offered: (context: OfferContext) => CapabilityDecision;
 }
+
+/**
+ * Raised by a capability's run when its conditions changed after the policy
+ * allowed the call, for example a learner who paused memory while the turn ran.
+ * The shared runner answers it like a refusal by the policy.
+ */
+export class CapabilityDenied extends Schema.TaggedError<CapabilityDenied>()(
+  "CapabilityDenied",
+  { reason: Schema.String }
+) {}
+
+/**
+ * Resolves whether one capability may run under the turn's context. It fails
+ * closed: a turn without Nina's context pack allows nothing, and a capability
+ * is allowed only by its own `offered`, which every definition must give.
+ */
+export function decideCapability(
+  capability: Offering,
+  { memory, nina }: Pick<AgentContext, "memory" | "nina">
+) {
+  if (!nina) {
+    return denied("Nina context is unavailable for this turn.");
+  }
+  return capability.offered({ memory, nina });
+}
+
+/**
+ * Lists the capabilities of a registry that the context offers, in the order of
+ * the registry. The prompt, the tools Nina is offered, and the policy of each
+ * call all follow it.
+ */
+export function offeredCapabilities<Name extends string>(
+  registry: Rec.ReadonlyRecord<Name, Offering>,
+  context: Pick<AgentContext, "memory" | "nina">
+) {
+  return Arr.filter(
+    Rec.keys(registry),
+    (name) => decideCapability(registry[name], context).state === "allowed"
+  );
+}
+
 /** Builds model-facing evidence for a capability denied by turn policy. */
 export function deniedCapabilityResult({
   capability,
-  decision,
+  reason,
 }: {
-  readonly capability: LearningCapabilityName;
-  readonly decision: Extract<NinaCapabilityDecision, { state: "denied" }>;
+  readonly capability: string;
+  readonly reason: string;
 }) {
   const text = Arr.join(
     [
@@ -79,7 +85,7 @@ export function deniedCapabilityResult({
       "",
       `- Capability: ${capability}`,
       "- Status: denied",
-      `- Reason: ${decision.reason}`,
+      `- Reason: ${reason}`,
       "",
       "# Final Answer Constraint",
       "",

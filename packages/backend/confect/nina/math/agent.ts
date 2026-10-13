@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/nina/capability/progress";
 import type { TaskAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
+import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import {
   mathAlgebra,
   mathArithmetic,
@@ -72,7 +73,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
     Effect.mapError(makeMathGenerationError)
   );
   const agent = new Agent(components.nina, {
-    name: "math",
+    name: "math" satisfies UsageAgent,
     languageModel: model,
     usageHandler,
   });
