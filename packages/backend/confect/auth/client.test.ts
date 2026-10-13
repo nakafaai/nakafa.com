@@ -1,15 +1,46 @@
+import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
+import refs from "@repo/backend/confect/_generated/refs";
 import { authComponent } from "@repo/backend/confect/auth/client";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/confect/auth/deletion/constants";
 import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { signInWithGoogle } from "@repo/backend/test/auth";
 import { getFunctionName, makeFunctionReference } from "convex/server";
 import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
+const claimRun = Ref.getFunctionReference(refs.internal.tenancy.claims.run);
+
+/** A pending invite for this address, in a tenant with one Person nobody has claimed. */
+async function seedInvite(ctx: MutationCtx, email: string) {
+  const tenantId = await ctx.db.insert("tenants", {
+    country: "ID",
+    currency: "IDR",
+    kind: "school",
+    name: "Sekolah Harapan",
+    policies: { emailDomains: [], nina: false, studentThreads: false },
+    slug: "harapan",
+    status: "active",
+  });
+  const personId = await ctx.db.insert("tenantPeople", {
+    account: { state: "unclaimed" },
+    kind: "member",
+    name: "Guru",
+    status: "active",
+    tenantId,
+  });
+  await ctx.db.insert("tenantInvites", {
+    channel: { email, kind: "email" },
+    personId,
+    state: { status: "pending" },
+    tenantId,
+  });
+  return { personId };
+}
 const finalizeDeletedUserCleanupReference = makeFunctionReference<
   "mutation",
   {
@@ -297,6 +328,91 @@ describe("auth/client", () => {
         ],
         scheduledTime: NOW + ACCOUNT_DELETION_RECOVERY_DELAY_MS,
       }),
+    ]);
+  });
+  it("lets a sign-up claim the invite that waits for its verified address", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const { personId } = await test.mutation((ctx) =>
+      seedInvite(ctx, "invited@example.com")
+    );
+    await signInWithGoogle(test, "invited", NOW);
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+    if (!user) {
+      throw new Error(
+        "Expected the Better Auth lifecycle to create an app user."
+      );
+    }
+    const jobs = await test.query(async (ctx) =>
+      Arr.filter(
+        await ctx.db.system.query("_scheduled_functions").collect(),
+        ({ name }) => name === getFunctionName(claimRun)
+      )
+    );
+    expect(jobs).toEqual([
+      expect.objectContaining({
+        args: [{ cursor: null, userId: user._id }],
+        scheduledTime: NOW,
+      }),
+    ]);
+    await test.mutation(claimRun, { cursor: null, userId: user._id });
+    await expect(
+      test.query((ctx) => ctx.db.get("tenantPeople", personId))
+    ).resolves.toMatchObject({
+      account: { method: "invite", state: "claimed", userId: user._id },
+    });
+  });
+  it("claims nothing for a sign-up that no invite waits for", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation((ctx) => seedInvite(ctx, "someone-else@example.com"));
+    await signInWithGoogle(test, "uninvited", NOW);
+    const jobs = await test.query(async (ctx) =>
+      Arr.filter(
+        await ctx.db.system.query("_scheduled_functions").collect(),
+        ({ name }) => name === getFunctionName(claimRun)
+      )
+    );
+    expect(jobs).toEqual([]);
+  });
+  it("asks for the claim only once Better Auth verifies the address", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation((ctx) => seedInvite(ctx, "later@example.com"));
+    const claimJobs = () =>
+      test.query(async (ctx) =>
+        Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
+          ({ name }) => name === getFunctionName(claimRun)
+        )
+      );
+    await test.mutation(async (ctx) => {
+      const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
+      await adapter.create({
+        data: {
+          createdAt: NOW,
+          email: "later@example.com",
+          emailVerified: false,
+          name: "Later learner",
+          updatedAt: NOW,
+        },
+        model: "user",
+      });
+    });
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+    if (!user) {
+      throw new Error(
+        "Expected the Better Auth lifecycle to create an app user."
+      );
+    }
+    expect(await claimJobs()).toEqual([]);
+    await test.mutation(async (ctx) => {
+      const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
+      await adapter.update({
+        model: "user",
+        update: { emailVerified: true },
+        where: [{ field: "_id", operator: "eq", value: user.authId }],
+      });
+    });
+    expect(await claimJobs()).toEqual([
+      expect.objectContaining({ args: [{ cursor: null, userId: user._id }] }),
     ]);
   });
 });

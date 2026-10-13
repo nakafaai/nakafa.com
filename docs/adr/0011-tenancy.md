@@ -135,13 +135,39 @@ ADR 0005. The classroom lane owns the retirement.
   (`by_channel_email_and_state_status`, `by_personId_and_state_status`),
   `tenantGrants` (ADR 0012), and `journalEntries` (ADR 0016).
 - Public: `tenancy/profile:get`, `tenancy/viewer:get` (the School shell for one
-  slug: tenant, active units, the caller's Person and grants, and the tenant
-  capabilities `can`), `tenancy/memberships:list` (the caller's own active
-  member Persons, identity scoped), `journal/audit:list`, and the grant
-  functions of ADR 0012.
-- Operators, provisioning, claims, visits, grant expiry, and the account
-  deletion release step follow as one change that extends this contract.
-- A tenant holds at most 24 units and at most 8 Owners.
+  slug: the tenant with its settings, its units with theirs, archived units
+  last, the caller's Person and grants, and the tenant capabilities `can`),
+  `tenancy/memberships:list` (the caller's own active member Persons, identity
+  scoped), `journal/audit:list`, and the grant functions of ADR 0012.
+- Settings, public mutations that answer with the value now stored and that
+  write and record nothing for a value already stored: `tenancy/settings`
+  (`setLocale` for the country and the contract currency, `setPolicy` for one
+  policy) and `tenancy/units` (`setLocale` for a school's time zone and content
+  language, `archive`, and `unarchive`). Organisation settings, archiving, and
+  restoring are `tenant.manage`, held by Owners and tenant-wide Admins. A
+  school's own settings are `unit.manage`, so an Admin of one school changes
+  that school only and an archived school refuses them. Restoring is decided on
+  the tenant because an archived school refuses every write.
+- Internal: `tenancy/provision:open` opens an organisation (the tenant, its
+  schools, its first Owner as an unclaimed Person with the Owner role, the
+  invite, and the journal) in one transaction, and starts the invitation email
+  through `emails/invite`, since `emails` is the only sender. Nakafa staff run
+  it with the deployment's key. `tenancy/claims:run` claims the pending invites of one
+  account whose address Better Auth has verified, a page at a time. It is
+  scheduled by the Better Auth user triggers after sign-up and after
+  verification, only when an invite waits for the address, and by `open` for an
+  account that already holds the address.
+- The organisation holds `country`, `currency`, and `policies` (students may
+  open threads, Nina, and the allowed email domains; an empty list limits no
+  domain), and each unit holds `timeZone` and `contentLanguage`. They are
+  required fields, because no code wrote a tenant before this change.
+  `tenant.provisioned` records the contract (plan, modules, data processing
+  agreement version, and content licence version); the entitlements it grants
+  are built later.
+- Operators, visits, grant expiry, and the account deletion release step
+  follow as one change that extends this contract.
+- A tenant holds at most 24 units, at most 8 Owners, and at most 16 allowed
+  email domains.
 
 ## Consequences
 

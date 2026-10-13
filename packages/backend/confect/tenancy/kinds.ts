@@ -1,5 +1,10 @@
+import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
+import { Contract } from "@repo/backend/confect/tenancy/contract";
+import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
+import { Policy } from "@repo/backend/confect/tenancy/policy";
 import { ClaimMethod } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
@@ -29,7 +34,21 @@ export const tenant = Kind.make("tenant", "tenants", {
       roles: ["admin", "auditor"],
     },
   },
-  changes: [Schema.Struct({ type: Schema.Literal("tenant.provisioned") })],
+  changes: [
+    Schema.Struct({
+      contract: Contract,
+      type: Schema.Literal("tenant.provisioned"),
+    }),
+    Schema.Struct({
+      country: CountryCodeSchema,
+      currency: Currency,
+      type: Schema.Literal("tenant.locale.set"),
+    }),
+    Schema.Struct({
+      policy: Policy,
+      type: Schema.Literal("tenant.policy.set"),
+    }),
+  ],
   published: [],
   relations: ["member"],
 });
@@ -37,6 +56,12 @@ export const tenant = Kind.make("tenant", "tenants", {
 /** One school (SD, SMP, SMA) inside a tenant; unit grants cover its subjects. */
 export const unit = Kind.make("unit", "tenantUnits", {
   actions: {
+    "unit.manage": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
     "unit.view": {
       access: "read",
       grantedBy: "roles",
@@ -44,7 +69,16 @@ export const unit = Kind.make("unit", "tenantUnits", {
       roles: ["admin", "auditor"],
     },
   },
-  changes: [Schema.Struct({ type: Schema.Literal("unit.created") })],
+  changes: [
+    Schema.Struct({ type: Schema.Literal("unit.created") }),
+    Schema.Struct({
+      contentLanguage: AppLocaleCodeSchema,
+      timeZone: TimeZone,
+      type: Schema.Literal("unit.locale.set"),
+    }),
+    Schema.Struct({ type: Schema.Literal("unit.archived") }),
+    Schema.Struct({ type: Schema.Literal("unit.unarchived") }),
+  ],
   published: ["unit.created"],
   relations: ["member"],
 });
