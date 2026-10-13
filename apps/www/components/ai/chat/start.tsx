@@ -1,6 +1,5 @@
 "use client";
 
-import { Response } from "@repo/design-system/components/ai/response";
 import { Message } from "@repo/design-system/components/ui/message";
 import {
   MessageScroller,
@@ -60,9 +59,7 @@ export function StartPrompt({
               <>
                 <MessageScrollerItem messageId={prompt.id} scrollAnchor>
                   <Message align="end">
-                    <NinaPrompt files={prompt.files}>
-                      <Response id={prompt.id}>{prompt.text}</Response>
-                    </NinaPrompt>
+                    <NinaPrompt files={prompt.files} text={prompt.text} />
                   </Message>
                 </MessageScrollerItem>
                 <MessageScrollerItem messageId="pending">

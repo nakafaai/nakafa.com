@@ -3,11 +3,13 @@
 ## Status
 
 Accepted on 13 October 2026 with owner decisions K2, K4, K17, and K20. The owner
-approved decisions K1 to K20 on that day. Planned.
+approved decisions K1 to K20 on that day. Planned, except the four locale
+settings, which are live.
 The profile module, `confect/jurisdiction`, does not exist yet. The organisation
-record has no country, time zone, language, or currency field:
-`packages/backend/confect/tenancy/schema.ts` defines the tenant as `kind`, `name`,
-`slug`, and `status`, and nothing else.
+holds its country and its billing currency, and each school holds its time zone
+and its content language (`packages/backend/confect/tenancy/schema.ts`). Until
+the profile names the countries Nakafa serves, the country is checked for its
+shape only, two uppercase letters.
 
 ## Context
 
@@ -44,7 +46,7 @@ first school and every new country before its launch (K20).
 | Report and credentials | The report template, the signers, and the credential issuer | The report renderer, the import, and the export |
 | Identity | The name, format, purpose, legal basis, and sensitivity of identifiers such as NISN, NPSN, and UPN | Encrypted storage. An identifier is never a key. |
 | National exam catalogue | Dates, delivery mode, and scale | The assessment engine and IRT (ADR 0031) |
-| Exam profile | The official name per language, the sections and their durations, navigation, interactions, tools, accommodations, scoring, and the report form | The player, the scoring, and the scale (ADR 0031) |
+| Exam profile | The official name per language, the sections and their durations, the total time, navigation, interactions, tools, accommodations, scoring, the report form, the write allowance after a deadline, and the reconciliation grace period (ADR 0013) | The player, the scoring, and the scale (ADR 0031) |
 | Age and consent | The age limit, and the rule for consent by a parent or guardian (K2) | The consent flow, with its time, method, and policy version |
 | Attendance | The attendance codes of the country | The summaries and the exports |
 | Locale and direction | The text direction, the number system, and the calendar, Gregorian or Hijri | The formatting engine, and the direction rules of the design system |
@@ -75,8 +77,10 @@ the app does not route.
 
 The organisation holds the country profile and the billing currency of its
 contract. Each school holds its time zone and its content language. A person's
-interface language comes from the `NEXT_LOCALE` cookie (ADR 0026). The columns
-for these fields are added in program wave A.
+interface language comes from the `NEXT_LOCALE` cookie (ADR 0026). The fields
+are stored: an Owner or an Admin changes them through `tenancy/settings` and
+`tenancy/units`, and a time zone or a currency must be one that the platform
+lists.
 
 ### Indonesia, the first profile
 
@@ -140,5 +144,5 @@ These are targets. They are not live.
 | `UnitLevel`, the ten level choices in `packages/backend/confect/tenancy/schema.ts` | Live. The country profile replaces this list (K17). |
 | `confect/jurisdiction` | Planned, program wave A |
 | Signed Aksara profile for Indonesia | Planned, program wave A |
-| The four locale settings stored on the organisation and the school | Planned. The interface language stays in the `NEXT_LOCALE` cookie |
+| The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NEXT_LOCALE` cookie |
 | Text direction through one helper | Target |

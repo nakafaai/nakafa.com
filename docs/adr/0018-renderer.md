@@ -3,7 +3,9 @@
 ## Decision
 
 Authored MDX and its editorial rules live only in Aksara. Nakafa owns the
-React renderer and renders exactly what the signed publication declares.
+React renderer and renders exactly what a signed Aksara publication declares.
+That statement covers Aksara publications only: a school's own items are not
+signed and are in no publication, and the last point below says how they render.
 
 - Rendered content follows the audited Aksara locale equivalent without
   fallback. Renderer work preserves reviewed facts, pedagogy, exercises,

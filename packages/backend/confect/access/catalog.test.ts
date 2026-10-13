@@ -28,7 +28,12 @@ describe("access/catalog", () => {
       Arr.map(Change.members, (change) => change.fields.type.literal)
     ).toEqual([
       "tenant.provisioned",
+      "tenant.locale.set",
+      "tenant.policy.set",
       "unit.created",
+      "unit.locale.set",
+      "unit.archived",
+      "unit.unarchived",
       "person.created",
       "person.invited",
       "person.claimed",
