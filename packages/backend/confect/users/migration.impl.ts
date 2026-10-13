@@ -16,16 +16,11 @@ import { Array as Arr, Effect, Layer } from "effect";
  */
 const PAGE_SIZE = 50;
 
-/**
- * Gives a username to each live account of one page that holds none. The
- * accounts take their names one after another, so each one sees the usernames
- * the accounts before it just took.
- */
 const allocateUsernames = FunctionImpl.make(
   databaseSchema,
   spec,
   "allocateUsernames",
-  Effect.fn("users.migration.allocateUsernames")(function* ({ cursor }) {
+  Effect.fn("users.migration.allocateUsernames")(function* ({ cursor, dry }) {
     const writer = yield* DatabaseWriter;
     const page = yield* (yield* DatabaseReader)
       .table("users")
@@ -36,20 +31,25 @@ const allocateUsernames = FunctionImpl.make(
       page.page,
       (user) => user.username === undefined && user.deletedAt === undefined
     );
-    yield* Effect.forEach(
-      waiting,
-      (user) =>
-        allocateUsername(user.name).pipe(
-          Effect.flatMap((username) =>
-            writer.table("users").patch(user._id, { username })
+    if (!dry) {
+      // The accounts take their names one after another, so each one sees the
+      // usernames that the accounts before it just took.
+      yield* Effect.forEach(
+        waiting,
+        (user) =>
+          allocateUsername(user.name).pipe(
+            Effect.flatMap((username) =>
+              writer.table("users").patch(user._id, { username })
+            ),
+            Effect.orDie
           ),
-          Effect.orDie
-        ),
-      { discard: true }
-    );
+        { discard: true }
+      );
+    }
     return {
-      allocated: waiting.length,
+      allocated: dry ? 0 : waiting.length,
       next: page.isDone ? null : page.continueCursor,
+      waiting: waiting.length,
     };
   })
 );

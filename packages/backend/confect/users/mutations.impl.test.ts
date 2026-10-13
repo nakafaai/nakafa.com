@@ -236,7 +236,7 @@ describe("users/mutations", () => {
       ["admin", "notAllowed"],
       ["pricing", "notAllowed"],
       ["a".repeat(21), "notAllowed"],
-    ] as const)(
+    ])(
       "refuses %j because %s and keeps the username",
       async (username, reason) => {
         const t = createConvexTestWithBetterAuth();
