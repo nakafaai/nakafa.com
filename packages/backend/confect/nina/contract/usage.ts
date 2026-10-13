@@ -50,9 +50,9 @@ export const NinaUsage = Schema.Struct({
   provider: Schema.NonEmptyString,
   input: Tokens,
   output: Tokens,
-  /** Input tokens the provider read from its prompt cache. Rows stored before October 2026 did not record them. */
+  /** Input tokens the provider read from its prompt cache. A row stored before the ledger recorded them has none. */
   cached: Schema.optionalKey(Tokens),
-  /** Output tokens the model spent reasoning. Rows stored before October 2026 did not record them. */
+  /** Output tokens the model spent reasoning. A row stored before the ledger recorded them has none. */
   reasoning: Schema.optionalKey(Tokens),
   /** The gateway's reported cost; rows stored before pricing, or calls that report none, have no cost. */
   cost: Schema.optionalKey(Dollars),

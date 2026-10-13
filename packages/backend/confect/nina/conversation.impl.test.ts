@@ -1,5 +1,12 @@
 import { Ref } from "@confect/core";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -21,6 +28,10 @@ const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const messages = Ref.getFunctionReference(refs.public.nina.messages.list);
+const share = Ref.getFunctionReference(
+  refs.public.chats.mutations.updateChatVisibility
+);
+const token = Ref.getFunctionReference(refs.public.chats.queries.getShareToken);
 const input = {
   requestId: "one",
   input: {
@@ -43,7 +54,7 @@ async function fixture() {
     refs.public.nina.turns.start,
     await owner.mutation(start, input)
   );
-  return { t, owner, ...receipt };
+  return { t, owner, userId: identity.userId, ...receipt };
 }
 
 describe("Nina conversation visibility", () => {
@@ -83,12 +94,21 @@ describe("Nina conversation visibility", () => {
 
   it("projects only public turn facts for anonymous readers of a shared chat", async () => {
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      ctx.db.patch("chats", f.chatId, { visibility: "public" })
-    );
+    await f.owner.mutation(share, {
+      chatId: f.chatId,
+      visibility: "public",
+    });
+    const shareToken = await f.owner.query(token, { chatId: f.chatId });
+    assert(shareToken !== null);
+    // The chat id alone opens nothing, and neither does the wrong token.
+    for (const refused of [{}, { shareToken: "A".repeat(43) }]) {
+      await expect(
+        f.t.query(get, { chatId: f.chatId, ...refused })
+      ).rejects.toMatchObject({ data: { code: "CHAT_NOT_FOUND" } });
+    }
     const conversation = Ref.decodeReturnsSync(
       refs.public.nina.conversation.get,
-      await f.t.query(get, { chatId: f.chatId })
+      await f.t.query(get, { chatId: f.chatId, shareToken })
     );
     // The title was sealed for its owner when the chat began; the shared page
     // opens it with the owner's key.
@@ -98,16 +118,19 @@ describe("Nina conversation visibility", () => {
       promptMessageId: f.promptMessageId,
       promptedAt: NOW,
       state: { status: "queued" },
-      credits: 5,
       usage: [],
+    });
+    const listed = {
+      chatId: f.chatId,
+      threadId: f.threadId,
+      paginationOpts: { cursor: null, numItems: 20 },
+    };
+    await expect(f.t.query(messages, listed)).rejects.toMatchObject({
+      data: { code: "CHAT_NOT_FOUND" },
     });
     const page = Ref.decodeReturnsSync(
       refs.public.nina.messages.list,
-      await f.t.query(messages, {
-        chatId: f.chatId,
-        threadId: f.threadId,
-        paginationOpts: { cursor: null, numItems: 20 },
-      })
+      await f.t.query(messages, { ...listed, shareToken })
     );
     expect(page.page).toHaveLength(1);
     expect(page.page[0]?.metadata).toEqual(conversation.turn);
@@ -116,10 +139,142 @@ describe("Nina conversation visibility", () => {
     expect(encodeJsonText(conversation)).not.toContain("fingerprint");
   });
 
+  it("tells the owner everything about a turn, and a reader who holds the share link only where it stands", async () => {
+    const f = await fixture();
+    // What the turn cost, what Nina kept from it and what she suggests next.
+    const ownerFacts = {
+      remembered: 1,
+      suggestions: ["How does a limit relate to continuity?"],
+      tokens: { input: 1200, output: 340, total: 1540 },
+      usage: [
+        {
+          agent: "nina" as const,
+          calls: 1,
+          cost: 0.002,
+          input: 1200,
+          model: "model-one",
+          output: 340,
+          provider: "provider-one",
+        },
+      ],
+    };
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("ninaTurns", f.turnId, ownerFacts)
+    );
+    await f.owner.mutation(share, {
+      chatId: f.chatId,
+      visibility: "public",
+    });
+    const shareToken = await f.owner.query(token, { chatId: f.chatId });
+    assert(shareToken !== null);
+    const stranger = await f.t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "stranger" })
+    );
+    const asStranger = f.t.withIdentity({
+      sessionId: stranger.sessionId,
+      subject: stranger.authUserId,
+    });
+    const where = {
+      order: f.order,
+      promptMessageId: f.promptMessageId,
+      promptedAt: NOW,
+      state: { status: "queued" },
+      usage: [],
+    };
+    const listed = {
+      chatId: f.chatId,
+      threadId: f.threadId,
+      paginationOpts: { cursor: null, numItems: 20 },
+    };
+    const read = async (
+      reader: typeof f.owner,
+      access: { shareToken?: string }
+    ) => {
+      const conversation = Ref.decodeReturnsSync(
+        refs.public.nina.conversation.get,
+        await reader.query(get, { chatId: f.chatId, ...access })
+      );
+      const page = Ref.decodeReturnsSync(
+        refs.public.nina.messages.list,
+        await reader.query(messages, { ...listed, ...access })
+      );
+      return { conversation, page };
+    };
+
+    // The owner is told everything, by the chat id and through the share link.
+    for (const access of [{}, { shareToken }]) {
+      const { conversation, page } = await read(f.owner, access);
+      const known = { ...where, credits: 5, ...ownerFacts };
+      expect(conversation.turn).toEqual(known);
+      expect(page.page[0]?.metadata).toEqual(known);
+    }
+    // A reader with no account, and a learner with another account, are told
+    // where the turn stands and nothing of what it cost or what Nina kept.
+    for (const reader of [f.t, asStranger]) {
+      const { conversation, page } = await read(reader, { shareToken });
+      expect(conversation.turn).toEqual(where);
+      expect(page.page[0]?.metadata).toEqual(where);
+      const told = encodeJsonText({ conversation, page });
+      for (const owned of [
+        "model-one",
+        "provider-one",
+        "continuity",
+        "1540",
+        "credits",
+        "remembered",
+      ]) {
+        expect(told).not.toContain(owned);
+      }
+    }
+  });
+
+  it("names the owner's account and the turn that runs to the owner, and to a reader who holds the share link neither", async () => {
+    const f = await fixture();
+    await f.owner.mutation(share, {
+      chatId: f.chatId,
+      visibility: "public",
+    });
+    const shareToken = await f.owner.query(token, { chatId: f.chatId });
+    assert(shareToken !== null);
+    const stranger = await f.t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "stranger" })
+    );
+    const asStranger = f.t.withIdentity({
+      sessionId: stranger.sessionId,
+      subject: stranger.authUserId,
+    });
+    const chatOf = async (
+      reader: typeof f.owner,
+      access: { shareToken?: string }
+    ) => (await reader.query(get, { chatId: f.chatId, ...access })).chat;
+
+    // The turn that was admitted is the one that runs, so the owner is told it
+    // along with the account, by the chat id and through the share link.
+    for (const access of [{}, { shareToken }]) {
+      expect(await chatOf(f.owner, access)).toMatchObject({
+        activeTurnId: f.turnId,
+        userId: f.userId,
+      });
+    }
+    // A reader with no account, and a learner with another account, are told
+    // what it takes to show the chat and to read its messages, and no more.
+    for (const reader of [f.t, asStranger]) {
+      expect(await chatOf(reader, { shareToken })).toEqual({
+        _creationTime: expect.any(Number),
+        _id: f.chatId,
+        threadId: f.threadId,
+        title: DEFAULT_TITLE,
+        type: "study",
+        updatedAt: NOW,
+        visibility: "public",
+      });
+    }
+  });
+
   it("denies anonymous readers of a private chat and follows the newest turn by order", async () => {
     const f = await fixture();
     await expect(f.t.query(get, { chatId: f.chatId })).rejects.toMatchObject({
-      data: { code: "FORBIDDEN" },
+      data: { code: "CHAT_NOT_FOUND" },
     });
     await f.owner.mutation(cancel, { chatId: f.chatId });
     const next = Ref.decodeReturnsSync(

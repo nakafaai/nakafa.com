@@ -1,3 +1,4 @@
+import { tenth } from "@repo/mascot/round";
 import {
   ellipse as drawEllipse,
   path as drawPath,
@@ -5,7 +6,7 @@ import {
   polygon,
   type Shape,
 } from "@repo/mascot/shape";
-import { Array as Arr, Match, Number as Num, Schema } from "effect";
+import { Array as Arr, Match, Schema } from "effect";
 
 /** The ink of every eye, mouth, and nose. */
 export const INK = "#15294f";
@@ -39,8 +40,6 @@ export interface Design {
   readonly colors: readonly (readonly [string, string])[];
   readonly draw: (kit: typeof Kit.Type) => readonly Layer[];
 }
-
-const tenth = Num.round(1);
 
 /** The layers of an animal, back to front, with each group of layers laid flat. */
 export function figure(...layers: readonly (Layer | readonly Layer[])[]) {

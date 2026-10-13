@@ -62,7 +62,7 @@ describe("createNinaPrompt", () => {
     expect(prompt).not.toContain("Hold nothing back");
   });
 
-  it("defines compact specialist inputs without the old task blob", () => {
+  it("describes the compact fields that every specialist tool shares", () => {
     const prompt = createNinaPrompt({ capabilities: withoutMemory });
     const toolSection = prompt.slice(
       prompt.indexOf("# Tool Usage Guidelines"),
@@ -316,7 +316,7 @@ describe("createNinaPrompt", () => {
 
     expect(prompt).not.toContain("# Runtime Context");
     expect(prompt).not.toContain("- date:");
-    expect(prompt).not.toContain("Current page:");
+    expect(prompt).not.toContain("Learning asset:");
     expect(prompt).not.toContain("# Nina Context Pack");
     expect(prompt).not.toContain("- curriculum preference:");
   });

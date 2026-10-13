@@ -1026,6 +1026,14 @@ export const api: {
       null
     >;
   };
+  session: {
+    live: FunctionReference<
+      "query",
+      "public",
+      { now: number; sessionId: string; userId: string },
+      boolean
+    >;
+  };
 } = anyApi as any;
 
 /**

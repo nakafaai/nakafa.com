@@ -7,6 +7,7 @@ import sympy as sp
 from cas.schema import (
     MathExpression,
     MathItem,
+    MathItemLabel,
     MathRequest,
     MathResult,
     MathStatus,
@@ -33,7 +34,7 @@ def math_expression(value: object) -> MathExpression:
     return expression(value)
 
 
-def item(label: str, value: object) -> MathItem:
+def item(label: MathItemLabel, value: object) -> MathItem:
     """Render a labeled supporting CAS value."""
     rendered = math_expression(value)
 

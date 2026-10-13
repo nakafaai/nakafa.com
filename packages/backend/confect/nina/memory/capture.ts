@@ -8,7 +8,11 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import { boundText, countTextTokens } from "@repo/backend/confect/nina/budget";
+import {
+  boundText,
+  countTextTokens,
+  NINA_BUDGET,
+} from "@repo/backend/confect/nina/budget";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import { checkCandidates } from "@repo/backend/confect/nina/memory/check";
@@ -41,17 +45,6 @@ import {
   String as Str,
   Struct,
 } from "effect";
-
-/** Learner text one capture call reads. */
-const MESSAGE_TOKENS = 1000;
-
-/**
- * The whole list of known memories one capture call reads. It holds at most
- * `MEMORY_KNOWN_LIMIT` memories, and each shows only its first characters, so
- * this is a second bound. The list is best match first, and one that does not
- * fit loses its last memories, which the model cannot name.
- */
-const KNOWN_TOKENS = 4000;
 
 /** What each kind of memory holds. Adding a kind to the contract fails here until it is described. */
 const KINDS = {
@@ -88,9 +81,9 @@ type Known = (typeof NinaKnown.Type)["known"];
 
 /**
  * The memories the capture call lists: the best matches in their order, as many
- * as fit `KNOWN_TOKENS`. The model names a memory by its place on the list, so a
- * memory that the list loses cannot be named, and the write is given exactly the
- * memories that are listed.
+ * as fit `NINA_BUDGET.captureKnown`. The model names a memory by its place on
+ * the list, so a memory that the list loses cannot be named, and the write is
+ * given exactly the memories that are listed.
  */
 function listedMemories(known: Known) {
   const tokens = Arr.map(known, (note, index) =>
@@ -101,7 +94,10 @@ function listedMemories(known: Known) {
     1
   );
   return Arr.map(
-    Arr.takeWhile(Arr.zip(known, totals), ([, total]) => total <= KNOWN_TOKENS),
+    Arr.takeWhile(
+      Arr.zip(known, totals),
+      ([, total]) => total <= NINA_BUDGET.captureKnown
+    ),
     ([note]) => note
   );
 }
@@ -138,7 +134,7 @@ function formatPrompt({
       `# Today\n\n${DateTime.formatIsoDateUtc(today)}`,
       `# Account\n\n${formatLearnerProfile(learner.profile) ?? "Account: none"}`,
       `# Known Memories\n\n${formatKnown(learner.known, listed)}`,
-      `# Learner Message\n\n${boundText(message, MESSAGE_TOKENS, "Message shortened.")}`,
+      `# Learner Message\n\n${boundText(message, NINA_BUDGET.captureMessage, "Message shortened.")}`,
     ],
     "\n\n"
   );

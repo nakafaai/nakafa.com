@@ -4,7 +4,10 @@ import { countTokens, decode, encode } from "gpt-tokenizer";
 /**
  * Model-facing token budgets for one Nina turn. Gemini accepts far more, so
  * these bound cost and latency; every limit truncates with a visible note
- * instead of failing the turn. `NINA_CALL_LIMIT` adds them up.
+ * instead of failing the turn. `NINA_CALL_LIMIT` adds up the ones a chat call
+ * holds at once. `captureKnown`, `captureMessage` and `foldMessage` bound the
+ * input of separate background calls, the memory capture and the summary
+ * refresh, so they are not part of it.
  */
 export const NINA_BUDGET = {
   /**
@@ -13,10 +16,21 @@ export const NINA_BUDGET = {
    * rest of the learner section out.
    */
   account: 500,
+  /**
+   * The whole list of known memories one capture call reads. It holds at most
+   * `MEMORY_KNOWN_LIMIT` memories, and each shows only its first characters, so
+   * this is a second bound. The list is best match first, and one that does not
+   * fit loses its last memories, which the model cannot name.
+   */
+  captureKnown: 4000,
+  /** The learner text one capture call reads. */
+  captureMessage: 1000,
   /** One capability output returned to the main Agent. */
   evidence: 6000,
   /** Evidence gathered by all tool calls in the current turn. */
   turnEvidence: 16_000,
+  /** The text one message contributes to the transcript of a summary refresh. */
+  foldMessage: 1500,
   /**
    * Complete turns kept word for word after the conversation summary. When
    * they cost more than this, the summary folds the oldest of them down to
@@ -27,7 +41,7 @@ export const NINA_BUDGET = {
    * Nina's static instructions, her four tool definitions and the runtime
    * facts of a turn: what every call carries before any conversation. Nothing
    * cuts to this number. The budget test measures the real ones against it
-   * from a real turn (5,174 tokens with the memory capability, measured on 12
+   * from a real turn (5,143 tokens with the memory capability, measured on 12
    * October 2026), and it is rounded up to the next 1,000 tokens.
    */
   instructions: 6000,

@@ -5,7 +5,6 @@ export const loading = {
   type: "data-web-search",
   id: "search-1",
   data: {
-    provider: "firecrawl",
     queries: ["limit"],
     sources: [],
     status: "loading",

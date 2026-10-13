@@ -200,8 +200,6 @@ export const DataPartSchema = Schema.Struct({
   }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
   "web-search": Schema.Struct({
     error: Schema.optional(Schema.String),
-    /** Answers stored while research used Google Search grounding carry `google`. */
-    provider: Schema.optional(Schema.Literals(["firecrawl", "google"])),
     queries: Schema.Array(Schema.String).pipe(Schema.mutable),
     /**
      * The sites the search was limited to, when the model named any. A card
