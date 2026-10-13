@@ -25,12 +25,8 @@ const MERMAID_FLOWCHART_DECLARATION_REGEX = /^(flowchart|graph)\b/;
  * language, so the renderer that knows the language chooses them.
  */
 export function readMermaidMetadata(meta?: string | null) {
-  if (!meta) {
-    return { description: undefined, title: undefined };
-  }
-
   const values = MutableHashMap.empty<string, string>();
-  for (const match of meta.matchAll(MERMAID_META_REGEX)) {
+  for (const match of (meta ?? "").matchAll(MERMAID_META_REGEX)) {
     const key = match[1];
     const rawValue = match[2];
 

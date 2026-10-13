@@ -13,6 +13,10 @@ describe("readMermaidMetadata", () => {
       description: undefined,
       title: undefined,
     });
+    expect(readMermaidMetadata(null)).toEqual({
+      description: undefined,
+      title: undefined,
+    });
     expect(readMermaidMetadata("")).toEqual({
       description: undefined,
       title: undefined,

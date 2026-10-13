@@ -1,5 +1,13 @@
 "use client";
+import { Alert02Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog/browser";
+import { CodeBlockText } from "@repo/design-system/components/code-block/text";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@repo/design-system/components/ui/collapsible";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   type MermaidRenderConfig,
@@ -28,6 +36,20 @@ const diagramVariants = cva("flex [&>svg]:m-auto", {
     },
   },
 });
+
+/**
+ * A piece of text from a diagram that cannot be drawn, such as the parser's
+ * own words or the code that failed. Its box is filled and has no border, so
+ * the card around the diagram holds no box inside a box. Its text is
+ * `foreground` on `muted`, a pair the theme contract checks in every theme.
+ */
+function FailureText({ children }: { children: string }) {
+  return (
+    <CodeBlockText preClassName="overflow-x-auto rounded bg-muted p-2 text-foreground text-xs">
+      {children}
+    </CodeBlockText>
+  );
+}
 
 type MermaidProps = VariantProps<typeof diagramVariants> & {
   chart: string;
@@ -127,22 +149,30 @@ export function Mermaid({
   if (hasCurrentRender && renderState.failed && !renderState.svg) {
     return (
       <div className={cn("flex overflow-auto", className)}>
-        <div className="m-auto w-full p-4 text-destructive">
-          <p className="text-sm">{t("diagram-error")}</p>
-          <details className="mt-2">
-            <summary className="cursor-pointer text-xs">
-              {t("show-code")}
-            </summary>
+        <Collapsible className="m-auto flex w-full min-w-0 flex-col gap-2 p-4">
+          <p className="flex items-start gap-2 text-sm">
+            <HugeIcons
+              aria-hidden="true"
+              className="mt-0.5 size-4 text-destructive"
+              icon={Alert02Icon}
+            />
+            {t("diagram-error")}
+          </p>
+          <CollapsibleTrigger className="group/failure flex min-h-6 w-fit items-center gap-1 rounded-sm text-muted-foreground text-xs outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+            {t("show-code")}
+            <HugeIcons
+              aria-hidden="true"
+              className="size-4 transition-transform group-data-panel-open/failure:rotate-180 motion-reduce:transition-none"
+              icon={ArrowDown01Icon}
+            />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="flex flex-col gap-2 motion-reduce:transition-none">
             {renderState.detail ? (
-              <pre className="mt-2 overflow-x-auto rounded bg-muted p-2 text-destructive text-xs">
-                {renderState.detail}
-              </pre>
+              <FailureText>{renderState.detail}</FailureText>
             ) : null}
-            <pre className="mt-2 overflow-x-auto rounded bg-muted p-2 text-foreground text-xs">
-              {chart}
-            </pre>
-          </details>
-        </div>
+            <FailureText>{chart}</FailureText>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     );
   }

@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { Changes } from "@/e2e/support/changes";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { LEARNER_TEXT, PASTED } from "@/e2e/support/prose";
-import { NINA_SHOWCASE } from "@/e2e/support/selector";
+import { MARKDOWN_MARKUP, NINA_SHOWCASE } from "@/e2e/support/selector";
 import { composerOf, promptWith } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -34,9 +34,7 @@ const showsWordsAsWritten = (page: Page, scope: Locator, changes: Changes) =>
     await expect
       .poll(() => words.evaluate((box) => box.textContent))
       .toBe(WORDS);
-    await expect(
-      bubble.locator("em, strong, code, pre, a, ul, ol, h1, h2, h3")
-    ).toHaveCount(0);
+    await expect(bubble.locator(MARKDOWN_MARKUP)).toHaveCount(0);
     await expect(
       bubble.getByRole("button", { name: "Show more" })
     ).toBeVisible();

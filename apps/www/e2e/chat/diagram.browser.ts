@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { ANSWER, answerTurn, chatOf } from "@/e2e/support/prose";
 import { drawnRow, openServedChat } from "@/e2e/support/serve";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** A diagram with no title or description, one that cannot be drawn, and one with a title and a description. */
 const PLAIN = answerTurn({ markdown: ANSWER.diagramPlain, order: 1 });
@@ -63,7 +64,7 @@ test.describe("The words of a diagram", () => {
 
             // Mermaid loads on demand: wait for the drawing, which has no words of its own.
             await expect(card.locator('[role="img"] svg')).toBeVisible({
-              timeout: 30_000,
+              timeout: revealTimeoutMilliseconds,
             });
             // The controls of a card have a name in the page's language.
             await expect(controls).toHaveCount(3);
@@ -86,18 +87,23 @@ test.describe("The words of a diagram", () => {
 
             // A diagram that cannot be drawn says so in the same words.
             const broken = await drawnRow(page, BROKEN.answer);
-            await expect(broken.locator("details")).toBeVisible({
-              timeout: 30_000,
+            const show = broken.getByRole("button", { name: language.show });
+            await expect(show).toBeVisible({
+              timeout: revealTimeoutMilliseconds,
             });
             await expect.soft(broken.getByText(language.error)).toBeVisible();
-            await expect.soft(broken.getByText(language.show)).toBeVisible();
+            // The code that failed stays out of sight until the reader asks for it.
+            await expect.soft(broken.getByText("flowchart TD")).toBeHidden();
+            await show.click();
+            await expect.soft(show).toHaveAttribute("aria-expanded", "true");
+            await expect.soft(broken.getByText("flowchart TD")).toBeVisible();
 
             // The words of a diagram that has its own are the model's, in any language.
             const titled = await drawnRow(page, TITLED.answer);
             const titledCard = titled.locator('[data-nakafa="mermaid-card"]');
 
             await expect(titledCard.locator('[role="img"] svg')).toBeVisible({
-              timeout: 30_000,
+              timeout: revealTimeoutMilliseconds,
             });
             await expect
               .soft(titledCard)

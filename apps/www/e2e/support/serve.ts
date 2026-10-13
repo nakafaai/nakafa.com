@@ -21,13 +21,14 @@ import {
   pageOf,
   type StoredMessage,
 } from "@/e2e/support/query";
+import { BUBBLE_CONTENT } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The stream that carries the answer being written. */
 const STREAM_ID = "prose-stream";
 
 /** The rows of a transcript: one for each message, and the alert of the chat's failed turn after them. */
-export const ROW = '[data-slot="message-scroller-item"]';
+const ROW = '[data-slot="message-scroller-item"]';
 
 /** A frame in which the server moves the page to a new view of the database. */
 type Transition = Option.Option.Value<ReturnType<typeof decodeTransition>>;
@@ -228,14 +229,23 @@ export const openServedChat = Effect.fn("NakafaE2E.openServedChat")(function* (
   return served;
 });
 
+/** The row of the transcript that shows `message`, drawn or not. */
+export const rowOf = (page: Page, message: StoredMessage) =>
+  page.locator(`${ROW}[data-message-id="${message.key}"]`);
+
 /**
- * The row of the transcript that shows `message`, scrolled to and drawn. A row
- * that is out of sight is not rendered at all, which empties its `innerText`,
- * and the transcript scrolls back to its end while the pictures of other rows
- * load, so the row is scrolled to again until it has drawn.
+ * The row of the transcript that shows `message`, scrolled to and drawn.
+ *
+ * A row that is out of sight is not drawn (`content-visibility` on the rows),
+ * which empties its `innerText`. And while the pictures of other rows load,
+ * the message scroller of `@shadcn/react` puts the view back on the question
+ * it anchors, or on the end of the chat: while it is anchored it takes only a
+ * wheel, a touch or a scroll key for the reader's own scroll, and a scroll
+ * made by a test is none of those. So the row is scrolled to again until it
+ * has drawn.
  */
 export const drawnRow = async (page: Page, message: StoredMessage) => {
-  const row = page.locator(`${ROW}[data-message-id="${message.key}"]`);
+  const row = rowOf(page, message);
 
   await expect
     .poll(async () => {
@@ -248,3 +258,7 @@ export const drawnRow = async (page: Page, message: StoredMessage) => {
     .toBe(true);
   return row;
 };
+
+/** The box that holds the words of the row that shows `message`, once the row has drawn. */
+export const bubbleOf = async (page: Page, message: StoredMessage) =>
+  (await drawnRow(page, message)).locator(BUBBLE_CONTENT);

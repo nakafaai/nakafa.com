@@ -12,7 +12,7 @@ import {
   worksheet,
 } from "@/e2e/support/prose";
 import type { StoredMessage } from "@/e2e/support/query";
-import { drawnRow, openServedChat } from "@/e2e/support/serve";
+import { bubbleOf, drawnRow, openServedChat } from "@/e2e/support/serve";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** A message of one word, and a message pasted from a page of exercises. */
@@ -32,10 +32,6 @@ const WORKSHEET = learnerMessage({
   text: WORKSHEET_NAME,
 });
 const NOTE = learnerMessage({ files: [note], order: 4, text: NOTE_NAME });
-
-/** The text bubble of one message. */
-const bubbleOf = async (page: Page, message: StoredMessage) =>
-  (await drawnRow(page, message)).locator('[data-slot="bubble-content"]');
 
 /** The height of an element, in pixels. */
 const heightOf = (element: Locator) =>
@@ -82,10 +78,11 @@ const foldsPastTwelveLines = async (page: Page) => {
 /**
  * A row of files starts at its first file and scrolls to the last, and a row
  * that fits ends where the message ends. A document of a long name has the
- * widest card there is, 256 pixels. Where the column is 252 pixels, as it is
- * at 300 pixels and was in CI at 320, its row scrolls and its card runs 4
- * pixels past the end of the row, which no scroll reaches. So a short document
- * is held to the end of the row, and the long one to its start.
+ * widest card there is, 256 pixels (`max-w-64`), which is wider than the
+ * column of a phone in CI: at 320 pixels its row scrolled and its card stood 4
+ * pixels from the end of the row (run 38424649287). So a short document is
+ * held to the end of the row, and the long one to its start and to a name cut
+ * inside its card.
  */
 const scrollsFilesFromTheFirst = async (page: Page) => {
   const measure = async (message: StoredMessage) =>

@@ -3,7 +3,8 @@ import { Effect, Record as Rec } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { LEARNER_TEXT, learnerMessage } from "@/e2e/support/prose";
 import type { StoredMessage } from "@/e2e/support/query";
-import { drawnRow, openServedChat, ROW } from "@/e2e/support/serve";
+import { BUBBLE_CONTENT, MARKDOWN_MARKUP } from "@/e2e/support/selector";
+import { bubbleOf, openServedChat, rowOf } from "@/e2e/support/serve";
 
 /** What learners wrote, one message of each, in the order the page shows them. */
 const WORDS = {
@@ -23,10 +24,6 @@ const WORDS = {
   link: learnerMessage({ order: 11, text: LEARNER_TEXT.link }),
 };
 
-/** The text bubble of one message. */
-const bubbleOf = async (page: Page, message: StoredMessage) =>
-  (await drawnRow(page, message)).locator('[data-slot="bubble-content"]');
-
 /**
  * The text the bubble of one message shows, as a reader sees it, with its line
  * breaks and spaces. The row is scrolled to and drawn in the same call that
@@ -34,48 +31,37 @@ const bubbleOf = async (page: Page, message: StoredMessage) =>
  * sight has no `innerText`.
  */
 const shownText = (page: Page, message: StoredMessage) =>
-  page
-    .locator(`${ROW}[data-message-id="${message.key}"]`)
-    .evaluate(async (row) => {
-      row.scrollIntoView({ block: "center" });
-      await new Promise((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(resolve))
-      );
-      const bubble = row.querySelector('[data-slot="bubble-content"]');
-      return bubble instanceof HTMLElement ? bubble.innerText : "";
-    });
+  rowOf(page, message).evaluate(async (row, slot) => {
+    row.scrollIntoView({ block: "center" });
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    );
+    const bubble = row.querySelector(slot);
+    return bubble instanceof HTMLElement ? bubble.innerText : "";
+  }, BUBBLE_CONTENT);
 
-/** Nothing the learner wrote is read as Markdown, a link or a formula, and every word stays. */
+/** Nothing the learner wrote is read as Markdown or as a link, and every word stays. */
 const showsAsWritten = async (page: Page) => {
   for (const message of Rec.values(WORDS)) {
     await expect.soft
       .poll(() => shownText(page, message), message.text)
       .toBe(message.text);
     await expect
-      .soft(
-        (await bubbleOf(page, message)).locator(
-          "em, strong, code, pre, a, ul, ol, h1, h2, h3"
-        )
-      )
+      .soft((await bubbleOf(page, message)).locator(MARKDOWN_MARKUP))
       .toHaveCount(0);
   }
 
   // A message of one word is one line tall, as it was: its box adds nothing around its text.
   const one = await (await bubbleOf(page, WORDS.one)).evaluate((element) => {
     const style = getComputedStyle(element);
-    const sides = [
-      "borderTopWidth",
-      "borderBottomWidth",
-      "paddingTop",
-      "paddingBottom",
-    ] as const;
     return {
+      around:
+        Number.parseFloat(style.borderTopWidth) +
+        Number.parseFloat(style.borderBottomWidth) +
+        Number.parseFloat(style.paddingTop) +
+        Number.parseFloat(style.paddingBottom),
       height: element.getBoundingClientRect().height,
       line: Number.parseFloat(style.lineHeight),
-      around: sides.reduce(
-        (sum, side) => sum + Number.parseFloat(style[side]),
-        0
-      ),
     };
   });
 
@@ -85,34 +71,59 @@ const showsAsWritten = async (page: Page) => {
 /** One option on each of three lines, not one run-on line. */
 const keepsLineBreaks = async (page: Page) => {
   const bubble = await bubbleOf(page, WORDS.choices);
-  // Each line of the text is a box of its own, counted by where it starts.
+  // Each line of the text is a box of its own, counted when its top changes.
   const lines = await bubble.evaluate((element) => {
-    const tops = new Set<number>();
+    let count = 0;
+    let top = Number.NaN;
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       const range = document.createRange();
       range.selectNodeContents(node);
       for (const rect of range.getClientRects()) {
-        tops.add(Math.round(rect.top));
+        if (Math.round(rect.top) !== top) {
+          count += 1;
+          top = Math.round(rect.top);
+        }
       }
     }
-    return tops.size;
+    return count;
   });
 
   expect.soft(lines).toBe(3);
 };
 
-/** The bubble clips what runs past it, so a long string that stays whole is one that wraps. */
+/**
+ * No line of a long string stands past the sides of the bubble's content box.
+ * The box that holds the words clips what runs past it, and the clipped text
+ * is still in the page, so what a bubble scrolls or says cannot tell a string
+ * that wrapped from one that was cut: the test reads where each line stands.
+ */
 const breaksLongStrings = async (page: Page) => {
   const bubble = await bubbleOf(page, WORDS.link);
-  const clipped = await bubble.evaluate(
-    (element) => element.scrollWidth - element.clientWidth
-  );
+  const past = await bubble.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const box = element.getBoundingClientRect();
+    const start =
+      box.left +
+      Number.parseFloat(style.borderLeftWidth) +
+      Number.parseFloat(style.paddingLeft);
+    const end =
+      box.right -
+      Number.parseFloat(style.borderRightWidth) -
+      Number.parseFloat(style.paddingRight);
+    let furthest = 0;
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const rect of range.getClientRects()) {
+        furthest = Math.max(furthest, rect.right - end, start - rect.left);
+      }
+    }
+    return furthest;
+  });
 
-  expect.soft(clipped).toBeLessThanOrEqual(0);
-  await expect.soft
-    .poll(() => shownText(page, WORDS.link))
-    .toBe(LEARNER_TEXT.link);
+  expect.soft(past).toBeLessThanOrEqual(0.5);
 };
 
 /** Where an Arabic sentence stands: it reads from the right, and its full stop ends it on the left. */
