@@ -6,7 +6,7 @@ import { SharedProviders } from "@/components/providers/shared";
  *
  * Keeping this boundary above `(site)`, `(main)`, and `try-out` removes
  * duplicate provider mounts without widening client-only state to unrelated
- * routes like `auth` and `school`.
+ * routes like `auth`.
  */
 export default function Layout(props: LayoutProps<"/[locale]">) {
   const { children } = props;

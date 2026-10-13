@@ -57,17 +57,12 @@ describe("account browser identity", () => {
           "test-content-view-state"
         );
         window.localStorage.setItem("nakafa-device-id", "test-device");
-        window.localStorage.setItem("nakafa-school-layout", "test-layout");
         window.localStorage.setItem(
           ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
           "anonymous-privacy-choice"
         );
         window.localStorage.setItem("unrelated", "preserved");
         window.sessionStorage.setItem("nakafa-search", "test-search");
-        window.sessionStorage.setItem(
-          "nakafa-forum-session:class-1",
-          "test-forum-session"
-        );
         window.sessionStorage.setItem("unrelated", "preserved");
 
         yield* clearAccountBrowserIdentity();
@@ -77,15 +72,11 @@ describe("account browser identity", () => {
         expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
         expect(window.localStorage.getItem("nakafa-content-views")).toBeNull();
         expect(window.localStorage.getItem("nakafa-device-id")).toBeNull();
-        expect(window.localStorage.getItem("nakafa-school-layout")).toBeNull();
         expect(
           window.localStorage.getItem(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)
         ).toBe("anonymous-privacy-choice");
         expect(window.localStorage.getItem("unrelated")).toBe("preserved");
         expect(window.sessionStorage.getItem("nakafa-search")).toBeNull();
-        expect(
-          window.sessionStorage.getItem("nakafa-forum-session:class-1")
-        ).toBeNull();
         expect(window.sessionStorage.getItem("unrelated")).toBe("preserved");
       })
   );
@@ -175,17 +166,12 @@ describe("account browser identity", () => {
         error: null,
       });
       window.localStorage.setItem("nakafa-ai", "deleted-account-chat");
-      window.sessionStorage.setItem(
-        "nakafa-forum-session:class-1",
-        "deleted-account-forum"
-      );
+      window.sessionStorage.setItem("nakafa-search", "deleted-account-search");
 
       expect(yield* signOutAccountBrowserIdentity()).toBeUndefined();
 
       expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
-      expect(
-        window.sessionStorage.getItem("nakafa-forum-session:class-1")
-      ).toBeNull();
+      expect(window.sessionStorage.getItem("nakafa-search")).toBeNull();
       expect(revokeToBaselineAnalytics).not.toHaveBeenCalled();
       expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
       expect(authClient.signOut).toHaveBeenCalledOnce();
@@ -224,19 +210,16 @@ describe("account browser identity", () => {
 
   it.effect("preserves browser identity when sign-out cannot start", () =>
     Effect.gen(function* () {
-      window.sessionStorage.setItem(
-        "nakafa-forum-session:class-1",
-        "active-account-forum"
-      );
+      window.sessionStorage.setItem("nakafa-search", "active-account-search");
 
       const failure = yield* signOutAccountBrowserIdentity(() =>
         Promise.reject(new Error("network unavailable"))
       ).pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(AccountSignOutFailed);
-      expect(
-        window.sessionStorage.getItem("nakafa-forum-session:class-1")
-      ).toBe("active-account-forum");
+      expect(window.sessionStorage.getItem("nakafa-search")).toBe(
+        "active-account-search"
+      );
       expect(resetBrowserAnalyticsIdentity).not.toHaveBeenCalled();
     })
   );
