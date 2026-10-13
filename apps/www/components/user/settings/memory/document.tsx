@@ -13,7 +13,10 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAutosave } from "@/components/user/settings/memory/autosave.client";
-import { MemoryFacts } from "@/components/user/settings/memory/facts";
+import {
+  MemoryEnds,
+  MemoryOrigin,
+} from "@/components/user/settings/memory/facts";
 import {
   isBlank,
   type Memory,
@@ -81,9 +84,14 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
             placeholder={t("untitled")}
             value={draft.title}
           />
+          {memory?.validUntil === undefined ? null : (
+            <p className="text-muted-foreground text-sm">
+              <MemoryEnds validUntil={memory.validUntil} />
+            </p>
+          )}
           {memory ? (
             <p className="text-muted-foreground text-sm">
-              <MemoryFacts memory={memory} />
+              <MemoryOrigin memory={memory} />
             </p>
           ) : null}
         </div>
