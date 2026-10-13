@@ -86,11 +86,11 @@ interface SourceTriggerProps {
  * shows its host in the title's place. A title shows two lines at most and the
  * host one, by decision: the rest is cut with an ellipsis, and all of it stays
  * in the name and the address of the link. Two titles on one host that share
- * their first two lines look the same. The lines of a title are 24 px high: the
- * clip at two lines would cut the tone marks of Thai, which stand about 16 px
- * above the baseline at this size, out of a line of 20 px. The icon is as large
- * as the icons of the rows above it and sits in the middle of the title's first
- * line.
+ * their first two lines look the same. A title keeps the 20 px lines of every
+ * other text of the evidence, with 2 px above and below them: the clip at two
+ * lines would otherwise cut the tone marks of Thai, which stand about 16 px
+ * above the baseline at this size. The icon is as large as the icons of the
+ * rows above it and sits in the middle of the title's first line.
  */
 export function SourceTrigger({
   className,
@@ -119,7 +119,7 @@ export function SourceTrigger({
       />
       <span className="flex min-w-0 flex-col">
         <span
-          className="wrap-anywhere line-clamp-2 text-sm leading-6 group-hover/source:underline group-focus-visible/source:underline"
+          className="wrap-anywhere line-clamp-2 py-0.5 text-sm group-hover/source:underline group-focus-visible/source:underline"
           data-slot="source-title"
           dir="auto"
         >
@@ -157,7 +157,7 @@ export function SourceContent({ className, description }: SourceContentProps) {
   return (
     <HoverCardContent className={cn("w-80 p-3 shadow-xs", className)}>
       <p
-        className="wrap-anywhere line-clamp-2 text-muted-foreground text-sm leading-6"
+        className="wrap-anywhere line-clamp-2 py-0.5 text-muted-foreground text-sm"
         dir="auto"
       >
         {text}

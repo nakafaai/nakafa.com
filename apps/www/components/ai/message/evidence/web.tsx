@@ -108,7 +108,7 @@ WebSearchPartSites.displayName = "WebSearchPartSites";
 function WebSearchQueryText({ query }: { query: string }) {
   return (
     <p
-      className="wrap-anywhere line-clamp-2 text-muted-foreground text-sm"
+      className="wrap-anywhere line-clamp-2 py-0.5 text-muted-foreground text-sm"
       dir="auto"
     >{`"${query}"`}</p>
   );

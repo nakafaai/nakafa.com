@@ -37,7 +37,7 @@ export function SearchPart({ message }: Props) {
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    <span className="wrap-anywhere line-clamp-2 min-w-0">
+                    <span className="wrap-anywhere line-clamp-2 min-w-0 py-0.5">
                       {item.title}
                     </span>
                     <HugeIcons icon={ArrowUpRight01Icon} />
@@ -90,7 +90,7 @@ SearchPartQueries.displayName = "SearchPartQueries";
 function SearchQueryText({ query }: { query: string }) {
   return (
     <p
-      className="wrap-anywhere line-clamp-2 text-muted-foreground text-sm"
+      className="wrap-anywhere line-clamp-2 py-0.5 text-muted-foreground text-sm"
       dir="auto"
     >{`"${query}"`}</p>
   );

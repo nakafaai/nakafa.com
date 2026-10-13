@@ -26,14 +26,14 @@ export function ContentPart({ message }: Props) {
         target="_blank"
       >
         <span
-          className="wrap-anywhere line-clamp-2 text-sm leading-6 group-hover/content:underline group-focus-visible/content:underline"
+          className="wrap-anywhere line-clamp-2 py-0.5 text-sm group-hover/content:underline group-focus-visible/content:underline"
           dir="auto"
         >
           {title}
         </span>
         {description ? (
           <span
-            className="wrap-anywhere line-clamp-2 text-muted-foreground text-xs"
+            className="wrap-anywhere line-clamp-2 py-0.5 text-muted-foreground text-xs"
             dir="auto"
           >
             {description}

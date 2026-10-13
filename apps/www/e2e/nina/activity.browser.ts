@@ -202,12 +202,11 @@ test.describe("Nina evidence hierarchy on a phone", () => {
               }
               const box = element.getBoundingClientRect();
               const line = words.getBoundingClientRect();
-              const height = Number.parseFloat(
-                getComputedStyle(words).lineHeight
-              );
-              return Math.abs(
-                box.top + box.height / 2 - (line.top + height / 2)
-              );
+              const style = getComputedStyle(words);
+              // A clamped text keeps room above its first line for tall marks.
+              const top = line.top + Number.parseFloat(style.paddingTop);
+              const height = Number.parseFloat(style.lineHeight);
+              return Math.abs(box.top + box.height / 2 - (top + height / 2));
             }),
           [icon, text] as const
         );

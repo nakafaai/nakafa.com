@@ -55,14 +55,20 @@ export function overflow(page: Page) {
   });
 }
 
-/** How many lines of text an element shows, from its height and its line height. */
+/**
+ * How many lines of text an element shows, from the height of its content box
+ * and its line height. A clamped text keeps a little padding for tall marks,
+ * which holds no line.
+ */
 export function lines(locator: Locator) {
-  return locator.evaluate((element) =>
-    Math.round(
-      element.getBoundingClientRect().height /
-        Number.parseFloat(getComputedStyle(element).lineHeight)
-    )
-  );
+  return locator.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const content =
+      element.getBoundingClientRect().height -
+      Number.parseFloat(style.paddingTop) -
+      Number.parseFloat(style.paddingBottom);
+    return Math.round(content / Number.parseFloat(style.lineHeight));
+  });
 }
 
 /**
