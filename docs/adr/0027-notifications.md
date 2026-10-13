@@ -108,10 +108,12 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   The change that sends the first notification email sets `retryAttempts` to 3
   and `initialBackoffMs` to 500 for the one sender, the welcome email included:
   two retries after about 500 milliseconds and one second, because a workpool
-  counts the first try as an attempt (`RetryBehavior` in `@convex-dev/workpool`
-  0.4.14). A repeated request does not send an email twice, because the
-  component dedupes on the idempotency key of the send and sends the id of the
-  first email of a batch as the `Idempotency-Key` header (`src/component/lib.ts`).
+  counts the first try as an attempt, and the nth retry waits the first backoff
+  times 2 to the power n minus 1 (`RetryBehavior` and the README of
+  `@convex-dev/workpool` 0.4.13, the version in `pnpm-lock.yaml`). A repeated
+  request does not send an email twice, because the component dedupes on the
+  idempotency key of the send and sends the id of the first email of a batch as
+  the `Idempotency-Key` header (`src/component/lib.ts`).
 
 ### The journal changes that notify
 
