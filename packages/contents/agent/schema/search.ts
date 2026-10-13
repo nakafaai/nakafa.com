@@ -4,6 +4,7 @@ import {
   NakafaAgentSectionSchema,
 } from "@repo/contents/agent/schema/ref";
 import {
+  CONVEX_SEARCH_TERMS,
   NAKAFA_AGENT_DEFAULT_LIMIT,
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,
@@ -80,8 +81,7 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
         Schema.check(Schema.isMaxLength(NAKAFA_AGENT_MAX_QUERIES))
       )
       .annotate({
-        description:
-          "Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Preserve exact identifiers such as names, years, labels, canonical IDs, and URLs. Use limit for requested counts. Use separate parallel search tool calls when section filters differ.",
+        description: `Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Preserve exact identifiers such as names, years, labels, canonical IDs, and URLs. A query takes at most ${CONVEX_SEARCH_TERMS} terms, a term being a run of letters or digits, and a longer one is refused. Use limit for requested counts. Use separate parallel search tool calls when section filters differ.`,
       })
   ),
   section: Schema.optionalKey(

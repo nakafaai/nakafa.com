@@ -101,6 +101,32 @@ describe("contents/queries/search:search", () => {
       });
     }
   );
+  it.each([
+    {
+      name: "17 terms",
+      query: Arr.join(
+        Array.from({ length: 17 }, (_, index) => `term${index}`),
+        " "
+      ),
+    },
+    { name: "a term of 32 bytes", query: "x".repeat(32) },
+  ])(
+    "refuses a query that Convex would read in part, for lessons and articles too: $name",
+    async ({ query }) => {
+      const t = await activateArticleSearch(1, () => "term0 term1 term16");
+      const result = t.query(api.contents.queries.search.search, {
+        limit: 10,
+        locale: "en",
+        offset: 0,
+        queries: [query],
+        section: "articles",
+      });
+      await expect(result).rejects.toBeInstanceOf(ConvexError);
+      await expect(result).rejects.toMatchObject({
+        data: { code: "CONTENT_RELEASE_LIMIT" },
+      });
+    }
+  );
   it("deduplicates query wording before checking the request budget", async () => {
     const t = await activateArticleSearch(1, () => "rational function");
     const result = await t.query(api.contents.queries.search.search, {

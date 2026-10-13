@@ -4,6 +4,7 @@ import {
   NakafaAgentSearchOptionsSchema,
 } from "@repo/contents/agent/schema/search";
 import {
+  CONVEX_SEARCH_TERMS,
   NAKAFA_AGENT_MAX_QUERY_LENGTH,
   NAKAFA_AGENT_SEARCH_WINDOW,
 } from "@repo/contents/agent/search";
@@ -31,7 +32,7 @@ describe("NakafaAgentSearchOptionsSchema", () => {
       Schema.is(NakafaAgentSearchFactsSchema)({ ...executed, limit: -1 })
     ).toBe(false);
   });
-  it("tells clients the longest query the search can use, refuses a longer one, and still reads a recorded one", () => {
+  it("tells clients how long a query may be and how many terms it may hold, refuses a longer one, and still reads a recorded one", () => {
     // The longest query that the 16 terms Convex reads can fill: each term is
     // 31 bytes, the most it keeps, with one space between each two.
     const atLimit = Arr.join(Arr.replicate("a".repeat(31), 16), " ");
@@ -56,12 +57,19 @@ describe("NakafaAgentSearchOptionsSchema", () => {
     expect(
       Result.isFailure(decode("𠮷".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH + 1)))
     ).toBe(true);
-    // The schema that the MCP tool, the public API and Nina's tool carry says it.
+    // The schema that the MCP tool, the public API and Nina's tool carry says
+    // it, and says that the search holds a query to 16 terms, which a short
+    // query can exceed.
     expect(
       Schema.toJsonSchemaDocument(NakafaAgentSearchOptionsSchema).schema
     ).toMatchObject({
       properties: {
-        queries: { items: { maxLength: NAKAFA_AGENT_MAX_QUERY_LENGTH } },
+        queries: {
+          description: expect.stringContaining(
+            `at most ${CONVEX_SEARCH_TERMS} terms`
+          ),
+          items: { maxLength: NAKAFA_AGENT_MAX_QUERY_LENGTH },
+        },
       },
     });
     // A search recorded with a longer query before the limit still decodes.
