@@ -5,33 +5,38 @@
 Accepted on 13 October 2026 with owner decisions K3, K10, and K11. The owner
 approved decisions K1 to K20 on that day. This ADR replaces ADR 0005. The
 classroom module, `confect/classroom`, is planned for program wave B (ADR 0013
-describes the waves). The first School's forum is live until the wave 0 change
-that retires the first School (K11) deletes it. The design-system parts that the
-forum uses are live, except the ones its table marks as planned.
+describes the waves). The first School's forum is retired in the releases of ADR
+0011: its web app, forum viewport included, is gone from main (#1051), and its
+backend stays until the contract release deletes it (K11). The design-system
+parts that the forum uses are live, except the ones its table marks as planned.
 
 ## Context
 
 ADR 0005 recorded an Effect-owned viewport for one conversation of the first
-School's forum. The wave 0 change that retires the first School deletes that ADR
-with the forum, and this ADR takes its place. The first School's forum works like
-this today:
+School's forum. The contract release of the retirement (ADR 0011) deletes that
+ADR with the backend of the forum, and this ADR takes its place. Git keeps the
+old text (`git show ac134a0819:docs/adr/0005-forum-viewport.md`). The first
+School's forum worked like this. The backend facts were read on main at
+`f8a5610808` on 13 October 2026, and the web facts at `ac134a0819`, the commit
+before #1051 deleted the web app:
 
 - Its threads are in `schoolClassForums` and its posts in `schoolClassForumPosts`
-  (`packages/backend/confect/tables`). The body of a post is plain text
+  (`packages/backend/confect/tables`). The body of a post is a plain string
   (`packages/backend/confect/classes/schema.ts`).
 - A post takes at most 20 mentions, stored as user IDs (`MAX_FORUM_POST_MENTIONS`
   in `packages/backend/confect/classes/forums/constants.ts`). No notification
-  follows a mention: nothing under `packages/backend/confect/classes` mentions an
-  inbox or a notification (`git grep`, 13 October 2026).
-- Its viewport is 38 files under
+  follows a mention: `git grep` finds no inbox and no notification under
+  `packages/backend/confect/classes`.
+- Its viewport was 38 files under
   `apps/www/components/school/classes/forum/conversation` (33 in `viewport` and 5
-  in `data/scroll`, tests included, counted with `git ls-files` on 13 October
-  2026), and its transcript uses Virtua.
+  in `data/scroll`, 15 of them tests, counted with `git ls-tree`), and its
+  transcript used Virtua. Main holds none of these files now.
 
-K11 deletes all of it before the new School is built. The new School needs a
-class that is not a school identity (ADR 0011), numbered discussions, messages
-sealed with the school key (ADR 0030), mentions that reach the inbox (ADR 0027),
-files (ADR 0028), tasks, and one scroller that Nina's chat also uses.
+K11 deletes all of it, in the releases of ADR 0011, before the new School is
+built. The new School needs a class that is not a school identity (ADR 0011),
+numbered discussions, messages sealed with the school key (ADR 0030), mentions
+that reach the inbox (ADR 0027), files (ADR 0028), tasks, and one scroller that
+Nina's chat also uses.
 
 The design system already holds Nina's chat primitives: `Message`,
 `MessageContent`, and `MessageFooter` (`message.tsx`), `Bubble` and
@@ -69,7 +74,8 @@ tasks, grades, report cards, and announcements.
 
 ### Channels and numbered discussions
 
-- A channel is a named place in the forum. Every class has a general channel for
+- A channel is a named place in the forum, and a row of `classroomChannels`
+  (planned) with its name and its class. Every class has a general channel for
   all its members, and a teacher adds topic channels. A message belongs to one
   channel. A message without a title is a message in the channel.
 - A discussion starts with a titled message. It has a number that counts per
@@ -103,12 +109,14 @@ bespoke part is written.
 | `MessageScroller` and its parts | Live | The scroll of a channel and of a thread |
 | `Marker` | Planned, from the registry | Date separators and the divider before the first unread message |
 | `Item` | Planned, from the registry | The rows of the people, library, and task lists |
-| `MessageAvatar`, `MessageHeader`, `MessageGroup`, and the reactions of `Bubble` | Planned, from the registry | The author line, grouping, and reactions |
+| `MessageAvatar`, `MessageHeader`, `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, from the registry | The author line, grouping, and reactions |
 
 `marker`, `item`, `message`, and `bubble` of the `base-vega` registry hold these
-parts (the registry files, read on 13 October 2026). Wave B adds them. `Attachment`
-came from the same registry already, and `attachment.tsx` names its source. The
-mention popup is not a registry part (see Mentions).
+parts (the registry files at `ui.shadcn.com/r/styles/base-vega`, read on 13
+October 2026). `item` also needs `separator`, which the design system has.
+Wave B adds the parts. `Attachment` came from the same registry already, and
+`attachment.tsx` names its source. The mention popup is not a registry part (see
+Mentions).
 
 ### Messages
 
@@ -145,10 +153,11 @@ mention popup is not a registry part (see Mentions).
 Mentions work as they do in WhatsApp.
 
 - Typing `@` opens a list at the caret of the people the sender may mention: the
-  members who can read the class now. The first School rejects any other mention
-  (`validateForumMentions` in `packages/backend/confect/classes/forums/mentions.ts`),
-  and the new module keeps that rule through `decide` (ADR 0012). `@Nina` is in
-  the list. Only a teacher can use `@all`.
+  members who can read the class now. The first School's backend rejected any
+  other mention (`validateForumMentions` in
+  `packages/backend/confect/classes/forums/mentions.ts`), and the new module
+  keeps that rule through `decide` (ADR 0012). `@Nina` is in the list. Only a
+  teacher can use `@all`.
 - A message takes up to 20 mentions, `@Nina` included. The recipients of `@all`
   are written in batches of 100 and not in one transaction (ADR 0027).
 - Each mentioned person gets one inbox row, written in the transaction of the
@@ -173,22 +182,24 @@ field the forum composer is. Status of the spike: planned, in program wave B.
 
 ### Nina in a class
 
-- A reply of Nina is an ordinary forum message. It is written in the same
-  transaction as the Agent answer. The turn uses the thread, the rate limit, and
-  the usage of the Convex Agent component, as every Nina turn does (ADR 0001,
-  ADR 0008).
+- A reply of Nina is an ordinary forum message. The mutation that settles the
+  turn as complete writes that message in its own transaction (today the
+  settlement of every Nina turn is `closeTurn` in
+  `packages/backend/confect/nina/settlement.ts`). The turn keeps its thread and
+  its usage in the Convex Agent component (ADR 0001), and it passes the
+  admission rate limit and the credit hold of ADR 0008, as every Nina turn does.
 - A reply needs no tool approval, because Nina changes no data in the forum.
-- If the turn fails, no reply is invented, and the question is passed on to the
-  teacher.
+- If the turn does not complete, no reply is invented, and the question is
+  passed on to the teacher.
 - A reply costs 5 credits (`responseCredits` in
   `packages/backend/confect/nina/credits/ledger.ts`, pull request #965). The
   daily quota of each member is recorded in the credit ledger. The Admin manages
   the AI quota (ADR 0012).
 - Nina answers from the teacher's library and from Nakafa material, with
   citations, and passes the question to the teacher when she is unsure.
-- The Agent thread of a class has no personal memory (ADR 0022) and is sealed
-  with the school key (ADR 0024). The library index covers only files that a
-  teacher published (ADR 0023).
+- The Agent thread of a class reads no personal memory and no learner profile
+  (ADR 0022), and it is sealed with the school key (ADR 0024). The library index
+  covers only files that a teacher published (ADR 0023).
 
 ### Class settings
 
@@ -202,9 +213,10 @@ field the forum composer is. Status of the spike: planned, in program wave B.
 | Archive | The class stays readable and takes no new message. It is the archived condition of ADR 0012. |
 
 A class can narrow what the school allows and never widen it. The school's values
-are its tenant settings, "students may open threads" and "Nina on or off" (ADR
-0011), and their change is `tenant.policy.set` (ADR 0016). Changing a permission
-of a class, or Nina in a class, is an audited change as well.
+are its tenant settings (ADR 0011): whether students may open threads, which
+here means start a discussion, and whether Nina is on. Their change is
+`tenant.policy.set` (ADR 0016). Changing a permission of a class, or Nina in a
+class, is an audited change as well.
 
 Every change shows at once. If the write fails, the value returns and a Retry
 button shows.
@@ -226,10 +238,14 @@ It is the primitive of `@shadcn/react` 0.3.1. Its type declarations offer a
 provider with `autoScroll` and `defaultScrollPosition` (`start`, `end`, or
 `last-anchor`), `preserveScrollOnPrepend` on the viewport, an anchor on an item,
 a function that scrolls to a message, and a hook that reports the visible
-messages. They hold no function that loads older messages and none that
-announces a message, so the classroom module pages the history, and the tests
-below prove the rest. The wrapper in the design system does not virtualize. Its
-items use `content-visibility: auto`
+messages (`message-scroller/index.d.ts` in the package, read on 13 October
+2026). They hold no function that loads older messages, so the classroom module
+pages the history. The content element is a `log` region with `aria-relevant`
+set to `additions` unless a caller sets another value (`message-scroller/index.js`),
+so a screen reader may announce a page of older messages that the viewport
+prepends, and the history must not be announced again. The tests below prove
+what the primitive does not state. The wrapper in the design system does not
+virtualize. Its items use `content-visibility: auto`
 (`packages/design-system/components/ui/scroller.tsx`).
 
 The read state stays with the classroom module. The module reads the visible
@@ -252,7 +268,9 @@ The persisted snapshots and the navigation history of ADR 0005 are two of them.
 
 ## Consequences
 
-- The first School's forum, its tables, and its 38 viewport files go with K11.
+- The first School's forum goes with K11. Its web app and viewport are already
+  gone from main (#1051), and its backend and tables go with the contract
+  release (ADR 0011).
 - One scroller serves Nina and the forum, and one set of primitives serves both.
   A fix to a primitive reaches both chats.
 - A message in a class writes its row and one row for each mention, at most 20.
@@ -267,7 +285,7 @@ The persisted snapshots and the navigation history of ADR 0005 are two of them.
 
 ## Rejected Alternatives
 
-- The Effect-owned viewport of ADR 0005. It is 38 files for one chat surface,
+- The Effect-owned viewport of ADR 0005. It was 38 files for one chat surface,
   while Nina's chat already uses the primitive of the design system.
 - Base UI's Autocomplete for mentions. The School blueprint chose the Positioner
   with a virtual anchor and a listbox instead.
@@ -281,9 +299,10 @@ The persisted snapshots and the navigation history of ADR 0005 are two of them.
 
 | Part | Status |
 | --- | --- |
-| The first School's forum: `schoolClassForums`, `schoolClassForumPosts`, `confect/classes/forums`, and the viewport in `apps/www/components/school/classes/forum` | Live, retired with K11 |
+| The first School's forum backend: `schoolClassForums`, `schoolClassForumPosts`, and `confect/classes/forums` | Live on main at `f8a5610808`. The contract release of ADR 0011 deletes it (K11). |
+| The first School's forum screens and viewport in `apps/www/components/school` | Deleted from main by #1051 |
 | `Message`, `Bubble`, `Attachment`, and `MessageScroller` in `packages/design-system/components/ui` | Live |
-| `Marker`, `Item`, `MessageAvatar`, `MessageHeader`, `MessageGroup`, and reactions | Planned, program wave B, from the registry |
+| `Marker`, `Item`, `MessageAvatar`, `MessageHeader`, `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, program wave B, from the registry |
 | `confect/classroom` and its tables `classrooms`, `classroomMembers`, `classroomPosts`, `classroomThreads`, `classroomMessages`, `classroomReactions`, `classroomReads`, `classroomFolders`, `classroomTasks`, `classroomSubmissions`, and `classroomChannels` | Planned, program wave B |
 | The mention popup | Planned. A spike comes first. |
 | The parity tests of the scroller | Planned, program wave B |
