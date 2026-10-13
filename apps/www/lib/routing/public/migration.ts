@@ -5,6 +5,7 @@ import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { queryContentStore } from "@/lib/content/store/query";
+import { readProfileRedirect } from "@/lib/routing/public/profile";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
 import { readTryoutRedirect } from "@/lib/routing/public/tryout";
 
@@ -150,9 +151,9 @@ function readArticleMigrationRedirect(migration: ArticleMigration) {
 
 /**
  * Resolves one retired public URL to its exact current successor, with the
- * status that answers it: a try-out rule answers 307 or 308, and every other
- * rule answers 308. A try-out URL that carries an attempt stays on the route
- * its attempt was frozen to.
+ * status that answers it: a try-out rule answers 307 or 308, the profile rule
+ * answers 307, and every other rule answers 308. A try-out URL that carries an
+ * attempt stays on the route its attempt was frozen to.
  */
 export const readPublicUrlMigrationRedirect = Effect.fn(
   "www.routing.publicHtml.urlMigrationRedirect"
@@ -177,6 +178,10 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
     : yield* readTryoutRedirect(pathname);
   if (tryoutRedirect) {
     return tryoutRedirect;
+  }
+  const profileRedirect = yield* readProfileRedirect(pathname);
+  if (profileRedirect) {
+    return profileRedirect;
   }
   const identity = readPreviousMaterialIdentity(pathname);
   if (Option.isNone(identity)) {

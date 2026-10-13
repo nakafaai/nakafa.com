@@ -1,30 +1,28 @@
 "use client";
 
-import {
-  MessageMultiple01Icon,
-  MessageMultiple02Icon,
-} from "@hugeicons/core-free-icons";
+import { BubbleChatSparkIcon, Comment01Icon } from "@hugeicons/core-free-icons";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 
 import { SharedTabs } from "@/components/user/navigation";
+import { profileHref } from "@/lib/profile/href";
 
-export function UserTabs({ userId }: { userId: string }) {
+export function UserTabs({ username }: { username: string }) {
   const t = useTranslations("Common");
 
   const pathname = usePathname();
 
   const tabs = [
     {
-      icon: MessageMultiple01Icon,
+      icon: Comment01Icon,
       label: t("comments"),
-      href: `/user/${userId}`,
+      href: profileHref(username),
     },
     {
-      icon: MessageMultiple02Icon,
+      icon: BubbleChatSparkIcon,
       label: t("chat"),
-      href: `/user/${userId}/chat`,
+      href: `${profileHref(username)}/chat`,
     },
   ];
 

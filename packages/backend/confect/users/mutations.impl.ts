@@ -12,8 +12,11 @@ import {
 } from "@repo/backend/confect/credits/state";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
+import { inspectUsername } from "@repo/backend/confect/users/availability";
+import { readBio } from "@repo/backend/confect/users/bio";
 import spec from "@repo/backend/confect/users/mutations.spec";
-import { Clock, Effect, Layer } from "effect";
+import { UsernameRejected } from "@repo/backend/confect/users/username";
+import { Clock, Effect, Layer, Result } from "effect";
 
 const updateUserRole = FunctionImpl.make(
   databaseSchema,
@@ -54,6 +57,47 @@ const updateUserName = FunctionImpl.make(
       .patch(user.appUser._id, {
         name: args.name,
       })
+      .pipe(Effect.orDie);
+    return null;
+  })
+);
+
+/**
+ * Renames the caller's profile address. The old username is free the moment the
+ * new one is stored, in the same transaction that checks the new one, so two
+ * accounts that ask for the same name at once cannot both win.
+ */
+const updateUsername = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "updateUsername",
+  Effect.fn("users.mutations.updateUsername")(function* (args) {
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAuth();
+    const inspected = yield* inspectUsername(args.username, user.appUser._id);
+    if (Result.isFailure(inspected)) {
+      return yield* new UsernameRejected({ reason: inspected.failure });
+    }
+    yield* writer
+      .table("users")
+      .patch(user.appUser._id, { username: inspected.success })
+      .pipe(Effect.orDie);
+    return null;
+  })
+);
+
+/** Stores the caller's bio, or clears it when the text holds nothing. */
+const updateBio = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "updateBio",
+  Effect.fn("users.mutations.updateBio")(function* (args) {
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAuth();
+    const bio = yield* Effect.fromResult(readBio(args.bio));
+    yield* writer
+      .table("users")
+      .patch(user.appUser._id, { bio: bio === "" ? undefined : bio })
       .pipe(Effect.orDie);
     return null;
   })
@@ -104,6 +148,8 @@ const syncUserInfoForChat = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(updateUserRole),
   Layer.provide(updateUserName),
+  Layer.provide(updateUsername),
+  Layer.provide(updateBio),
   Layer.provide(syncUserInfoForChat),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),

@@ -1,16 +1,37 @@
 import { HttpClient } from "@confect/js";
-import { Id } from "@repo/backend/confect/_generated/id";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { readProfile } from "@/lib/profile/server";
 
-export default function Layout(props: LayoutProps<"/[locale]/user/[id]">) {
+/**
+ * Keeps a profile out of search results: it shows a learner's name, bio, and
+ * comments, and many learners are minors. The page stays reachable by link, so
+ * robots.txt does not block it and a crawler can read this rule.
+ */
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
+};
+
+export default function Layout(
+  props: LayoutProps<"/[locale]/user/[username]">
+) {
   return (
     <Suspense fallback={null}>
       <UserLayoutContent {...props} />
@@ -19,34 +40,26 @@ export default function Layout(props: LayoutProps<"/[locale]/user/[id]">) {
 }
 
 /** Resolves the URL-specific profile shell inside its streaming boundary. */
-async function UserLayoutContent(props: LayoutProps<"/[locale]/user/[id]">) {
+async function UserLayoutContent(
+  props: LayoutProps<"/[locale]/user/[username]">
+) {
   const { children, params } = props;
-  const [{ id, locale }, token] = await Promise.all([params, getToken()]);
+  const [{ username, locale }, token] = await Promise.all([params, getToken()]);
   getLocaleOrThrow(locale);
 
-  const { userId, profile, account } = await Effect.runPromise(
-    Schema.decodeUnknownEffect(Id("users"))(id).pipe(
-      Effect.flatMap((userId) =>
-        HttpClient.HttpClient.pipe(
-          Effect.flatMap((client) =>
-            Effect.all(
-              {
-                userId: Effect.succeed(userId),
-                profile: client.query(auth.queries.getUserById, {
-                  userId,
-                }),
-                account: token
-                  ? client.query(auth.queries.getCurrentUser, {})
-                  : Effect.succeed(null),
-              },
-              { concurrency: "unbounded" }
-            )
+  const [profile, account] = await Promise.all([
+    readProfile(username),
+    token
+      ? Effect.runPromise(
+          HttpClient.HttpClient.pipe(
+            Effect.flatMap((client) =>
+              client.query(auth.queries.getCurrentUser, {})
+            ),
+            Effect.provide(httpLayer({ auth: token }))
           )
         )
-      ),
-      Effect.provide(httpLayer(token ? { auth: token } : {}))
-    )
-  );
+      : null,
+  ]);
 
   return (
     <ErrorBoundary fallback={null}>
@@ -54,12 +67,14 @@ async function UserLayoutContent(props: LayoutProps<"/[locale]/user/[id]">) {
         <div className="flex flex-col gap-6">
           <UserHeader
             initialOwnerEmail={
-              account?.appUser._id === userId ? account.authUser.email : null
+              account?.appUser._id === profile._id
+                ? account.authUser.email
+                : null
             }
             initialProfile={profile}
-            userId={userId}
+            userId={profile._id}
           />
-          <UserTabs userId={userId} />
+          <UserTabs username={profile.username} />
           {children}
         </div>
       </main>
