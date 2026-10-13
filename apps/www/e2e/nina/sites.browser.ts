@@ -20,7 +20,7 @@ test.describe("Nina web search sites on a phone", () => {
   test.use({ viewport: { height: 2600, width: 320 } });
 
   test(
-    "names the sites of a finished search and of a failed one, and wraps each hostname instead of cutting it",
+    "names the sites of a finished search and of a failed one, each hostname on one line",
     onChat(limited, { locale: "id" }, async (page) => {
       const boxes = page.locator(SITES);
       const done = boxes.nth(0);
@@ -37,20 +37,24 @@ test.describe("Nina web search sites on a phone", () => {
         PUNYCODE_SITE,
       ]);
       for (const box of [done, failed]) {
-        expect(await cutText(box)).toEqual([]);
-        // A hostname is shown, and lies within the page from its first
-        // character to its last. A hostname that is not shown has no box to
-        // measure, so it is looked for before it is measured.
+        // A hostname is shown on one line that lies within the page. A
+        // hostname that is not shown has no box to measure, so it is looked
+        // for before it is measured.
         for (const host of await box.locator(HOSTS).all()) {
           await expect(host).toBeVisible();
+          expect(await lines(host)).toBe(1);
           const right = await host.evaluate(
             (element) => element.getBoundingClientRect().right
           );
           expect(right).toBeLessThanOrEqual(edge);
         }
       }
-      // The third hostname is longer than a line, so it takes more than one.
-      expect(await lines(done.locator(HOSTS).nth(2))).toBeGreaterThan(1);
+      // The third hostname is longer than a line, so it ends in an ellipsis,
+      // and the others fit whole.
+      const long = done.locator(HOSTS).nth(2);
+      await expect(long).toHaveCSS("text-overflow", "ellipsis");
+      expect(await cutText(long)).not.toEqual([]);
+      expect(await cutText(done.locator(HOSTS).nth(0))).toEqual([]);
       expect(await overflow(page)).toBe(0);
     })
   );
@@ -65,8 +69,8 @@ test.describe("Nina web search sites on a phone", () => {
       // The text of a hostname that is hidden reads too, so each is looked for.
       for (const host of await boxes.locator(HOSTS).all()) {
         await expect(host).toBeVisible();
+        expect(await lines(host)).toBe(1);
       }
-      expect(await cutText(boxes)).toEqual([]);
       expect(await overflow(page)).toBe(0);
     })
   );

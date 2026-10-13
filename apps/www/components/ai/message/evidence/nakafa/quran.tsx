@@ -1,10 +1,12 @@
 "use client";
 
-import { ArrowUpRight01Icon, Quran02Icon } from "@hugeicons/core-free-icons";
+import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
+import { nakafaIcons } from "@/components/ai/message/evidence/nakafa/icons";
+import { Step } from "@/components/ai/message/evidence/step";
 
 interface Props {
   message: Extract<NakafaDataPart, { kind: "quran"; status: "done" }>;
@@ -20,16 +22,7 @@ export function QuranPart({ message }: Props) {
   const { from_verse: from, name, to_verse: to, url } = message.result;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <HugeIcons
-          className="size-4 text-muted-foreground"
-          icon={Quran02Icon}
-        />
-        <span className="text-muted-foreground text-sm">
-          {t("nakafa-quran")}
-        </span>
-      </div>
+    <Step icon={nakafaIcons.quran} label={t("nakafa-quran")}>
       <Button
         className="max-w-full self-start"
         nativeButton={false}
@@ -52,7 +45,7 @@ export function QuranPart({ message }: Props) {
         size="sm"
         variant="outline"
       />
-    </div>
+    </Step>
   );
 }
 QuranPart.displayName = "QuranPart";

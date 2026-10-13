@@ -51,14 +51,14 @@ test.describe("Nina web sources on a phone", () => {
       await expect(exercises).toBeVisible();
       await expect(lesson).toContainText(LONG_HOST);
       await expect(exercises).toContainText(LONG_HOST);
-      expect(await cutText(lesson)).toEqual([]);
-      expect(await cutText(exercises)).toEqual([]);
       // Only the last word tells the two titles apart, so it must show: each
       // title takes two lines and none of it is cut. A title cut to one line, or
-      // cut after the second, fails here.
+      // cut after the second, fails here. The host under it keeps to one line.
       for (const row of [lesson, exercises]) {
+        expect(await cutText(row.locator(TITLE))).toEqual([]);
         expect(await lines(row.locator(TITLE))).toBe(2);
         expect(await clamped(row.locator(TITLE))).toBe(false);
+        expect(await lines(row.locator(HOST))).toBe(1);
       }
       expect(await overflow(page)).toBe(0);
     })
@@ -98,15 +98,23 @@ test.describe("Nina web sources on a phone", () => {
   );
 
   test(
-    "wraps a long host, a long title and a file name instead of cutting them sideways",
+    "keeps every host to one line and cuts none of a title sideways",
     onChat(sameHost, { locale: "id" }, async (page) => {
       const rows = page.locator(SOURCE);
 
       await expect(rows.filter({ hasText: "Modul_Matematika" })).toBeVisible();
-      // Nothing in any row is cut: not the file name, not the host of 33 characters.
+      // A title wraps anywhere, a file name of 63 characters included, so no
+      // title is cut sideways. A host is one line, and one longer than the row
+      // ends in an ellipsis; the whole host stays in the address of the link.
       for (const row of await rows.all()) {
-        expect(await cutText(row)).toEqual([]);
+        expect(await cutText(row.locator(TITLE))).toEqual([]);
+        const host = row.locator(HOST);
+        if ((await host.count()) > 0) {
+          expect(await lines(host)).toBe(1);
+          await expect(host).toHaveCSS("text-overflow", "ellipsis");
+        }
       }
+      expect(await overflow(page)).toBe(0);
     })
   );
 
@@ -153,9 +161,11 @@ test.describe("Nina web sources on a phone", () => {
       await expect(broken).toBeVisible();
       await expect(titles.first()).toBeVisible();
       const chip = broken.locator('[data-slot="source-icon"]');
-      // The chip holds a globe, never a broken image.
+      // The icon becomes a link mark of the same 16 pixels, never a broken
+      // image, and never the globe of the web activity above it.
       await expect(chip.locator("svg")).toBeVisible();
       await expect(chip.locator("img")).toHaveCount(0);
+      expect((await chip.boundingBox())?.width).toBe(16);
       const left = async (title: typeof titles) =>
         (await title.boundingBox())?.x;
       expect(await left(broken.locator(TITLE))).toBe(
@@ -215,7 +225,7 @@ test.describe("Nina web sources on a phone", () => {
 
       await expect(rows).toHaveCount(10);
       for (const row of await rows.all()) {
-        expect(await cutText(row)).toEqual([]);
+        expect(await cutText(row.locator(TITLE))).toEqual([]);
       }
       expect(await overflow(page)).toBe(0);
     })
@@ -245,14 +255,15 @@ test.describe("Nina scraped pages on a phone", () => {
   test.use({ viewport: { height: 2600, width: 320 } });
 
   test(
-    "gives the page of a running read its own line, and shows its host in full",
+    "gives the page of a running read its own line, and its host one line",
     onChat(loading, { locale: "de", running: true }, async (page) => {
       const row = page.locator(SOURCE).filter({ hasText: "ppid" });
       const status = page.getByText("Quelle wird gelesen...");
 
       await expect(row).toBeVisible();
       await expect(status).toBeVisible();
-      expect(await cutText(row)).toEqual([]);
+      expect(await cutText(row.locator(TITLE))).toEqual([]);
+      expect(await lines(row.locator(HOST))).toBe(1);
       // The status is a line above the row, so neither takes the other's width.
       const above = await status.boundingBox();
       const below = await row.boundingBox();
@@ -284,7 +295,7 @@ test.describe("Nina sources of older answers on a phone", () => {
 
       await expect(wikipedia).toBeVisible();
       await expect(wikipedia).toContainText("id.wikipedia.org");
-      expect(await cutText(wikipedia)).toEqual([]);
+      expect(await cutText(wikipedia.locator(TITLE))).toEqual([]);
       await expect(untitled.locator(TITLE)).toHaveText("example.org");
     })
   );
@@ -317,13 +328,17 @@ test.describe("Nina sources of older answers on a phone", () => {
   );
 
   test(
-    "reads a long query and an Arabic one in full, each in its own direction",
+    "shows a long query in two lines at most and an Arabic one in its own direction",
     onChat(queries, { locale: "id" }, async (page) => {
       const address = page.getByText(LONG_ADDRESS.slice(0, 40));
       const arabic = page.getByText('"نور الهدى عبد الرحمن"', { exact: true });
 
       await expect(address).toBeVisible();
+      // The address wraps anywhere, so nothing of it is cut sideways, and the
+      // lines past the second are cut with an ellipsis.
       expect(await cutText(address)).toEqual([]);
+      expect(await lines(address)).toBe(2);
+      expect(await clamped(address)).toBe(true);
       await expect(arabic).toHaveCSS("direction", "rtl");
       await expect(address).toHaveCSS("direction", "ltr");
     })
@@ -341,9 +356,8 @@ test.describe("Nina web sources in the sheet", () => {
 
       await expect(lesson).toBeVisible();
       await expect(exercises).toBeVisible();
-      expect(await cutText(lesson)).toEqual([]);
-      expect(await cutText(exercises)).toEqual([]);
       for (const row of [lesson, exercises]) {
+        expect(await cutText(row.locator(TITLE))).toEqual([]);
         expect(await clamped(row.locator(TITLE))).toBe(false);
       }
     })

@@ -5,8 +5,8 @@ import {
   ArrowDown01Icon,
   BookOpen02Icon,
   BrainIcon,
-  Calculator01Icon,
   Globe02Icon,
+  MathIcon,
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
@@ -50,8 +50,8 @@ export function Activity({
       <Collapsible className="not-prose min-w-0" defaultOpen={false}>
         <ActivityTrigger />
         <CollapsibleContent className="motion-reduce:transition-none">
-          {/* The line starts under the row's icon, so the evidence reads as its children. */}
-          <div className="ms-2 mt-3 flex min-w-0 flex-col gap-3 border-s ps-4">
+          {/* The line runs under the middle of the row's icon, and the evidence starts where the row's words start (8 + 1 + 15 = 24 px), so it reads as their children. */}
+          <div className="ms-2 mt-3 flex min-w-0 flex-col gap-4 border-s ps-3.75">
             {children}
           </div>
         </CollapsibleContent>
@@ -68,8 +68,10 @@ function ActivityTrigger() {
   const capability = useActivity((invocation) => invocation.capability);
   const state = useActivity((invocation) => invocation.state);
   const problem = isProblem(state);
+  // No step of an activity draws its activity's icon: the math steps have an
+  // icon per operation, the calculator among them, so math has its own.
   const icon = {
-    math: Calculator01Icon,
+    math: MathIcon,
     memory: AiBrain01Icon,
     nakafa: BookOpen02Icon,
     deepResearch: Globe02Icon,

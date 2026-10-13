@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe02Icon } from "@hugeicons/core-free-icons";
+import { Link01Icon } from "@hugeicons/core-free-icons";
 import {
   HoverCard,
   HoverCardContent,
@@ -83,12 +83,14 @@ interface SourceTriggerProps {
  * One cited source as a row a learner can read without a pointer: its icon, its
  * title and the host it came from. The whole row is the link, and a pointer
  * also opens the card with the description of the page. A source with no title
- * shows its host in the title's place. A title shows two lines at most, by
- * decision: the rest is cut, and all of it stays in the name of the link. Two
- * titles on one host that share their first two lines look the same. The lines
- * of a title are 24 px high: the clip at two lines would cut the tone marks of
- * Thai, which stand about 16 px above the baseline at this size, out of a line
- * of 20 px.
+ * shows its host in the title's place. A title shows two lines at most and the
+ * host one, by decision: the rest is cut with an ellipsis, and all of it stays
+ * in the name and the address of the link. Two titles on one host that share
+ * their first two lines look the same. The lines of a title are 24 px high: the
+ * clip at two lines would cut the tone marks of Thai, which stand about 16 px
+ * above the baseline at this size, out of a line of 20 px. The icon is as large
+ * as the icons of the rows above it and sits in the middle of the title's first
+ * line.
  */
 export function SourceTrigger({
   className,
@@ -103,7 +105,7 @@ export function SourceTrigger({
   return (
     <HoverCardTrigger
       className={cn(
-        "group/source flex min-w-0 items-start gap-2 rounded-sm py-1 text-start outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "group/source flex min-w-0 items-start gap-2 rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}
       closeDelay={0}
@@ -125,7 +127,7 @@ export function SourceTrigger({
         </span>
         {named ? (
           <span
-            className="wrap-anywhere text-muted-foreground text-xs"
+            className="truncate text-muted-foreground text-xs"
             data-slot="source-host"
           >
             {host}
@@ -180,10 +182,11 @@ function getCustomFaviconUrl(faviconUrl?: string) {
 }
 
 /**
- * The icon of a source on a chip. An icon is another site's artwork, drawn for
- * a white page, so its chip is white in both themes: a black mark on a
- * transparent ground stays visible in the dark theme. An icon that does not
- * load leaves a chip with a globe, so the rows keep their alignment.
+ * The icon of a source, 16 px like every icon of the evidence. An icon is
+ * another site's artwork, drawn for a white page, so it sits on white in both
+ * themes: a black mark on a transparent ground stays visible in the dark theme.
+ * An icon that does not load leaves a link mark of the same size, so the rows
+ * keep their alignment; it is not the globe of the web activity above it.
  */
 function SourceIcon({ src }: { src: string }) {
   const [failedSrc, setFailedSrc] = useState("");
@@ -192,13 +195,13 @@ function SourceIcon({ src }: { src: string }) {
   return (
     <span
       className={cn(
-        "flex size-6 shrink-0 items-center justify-center rounded-full ring-1 ring-border",
-        failed ? "bg-muted text-muted-foreground" : "bg-white"
+        "mt-1 flex size-4 shrink-0 overflow-hidden rounded-sm",
+        failed ? "text-muted-foreground" : "bg-white"
       )}
       data-slot="source-icon"
     >
       {failed ? (
-        <HugeIcons className="size-3.5" icon={Globe02Icon} />
+        <HugeIcons className="size-4" icon={Link01Icon} />
       ) : (
         <Image
           alt=""

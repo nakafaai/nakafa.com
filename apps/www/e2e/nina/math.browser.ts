@@ -167,21 +167,37 @@ test.describe("Nina math on a phone", () => {
   );
 
   test(
-    "draws one rail for each level of nesting and gives its width back",
+    "starts each level where the words of the level above start, with one rail",
     onChat(sameHost, { locale: "id" }, async (page) => {
-      const query = page.getByText('"turunan fungsi"');
       const activity = page.locator('[data-slot="message-activity"]').first();
+      const words = activity.locator('[data-slot="activity-label"]');
+      const step = activity.locator('[data-slot="evidence-step"]').first();
+      const query = page.getByText('"turunan fungsi"');
+      const source = activity.locator('a[data-slot="hover-card-trigger"]');
       const panel = page.locator('[data-slot="collapsible-panel"]').first();
+      const left = async (locator: typeof query) =>
+        (await locator.boundingBox())?.x ?? Number.NaN;
 
       await expect(query).toBeVisible();
-      const box = await query.boundingBox();
+      // The activity's rail runs under its icon, and its steps start where its
+      // words start: an indent of 8, a rail of 1 and a gap of 15. A step's
+      // details start where the step's words start, and so does the icon of
+      // each source under it. A level that starts 1 pixel off reads crooked.
+      expect(await left(step.locator("svg"))).toBeCloseTo(await left(words), 0);
+      const stepWords = await left(step.locator("span").last());
+      expect(await left(query)).toBeCloseTo(stepWords, 0);
+      for (const row of await source.all()) {
+        expect(
+          await left(row.locator('[data-slot="source-icon"]'))
+        ).toBeCloseTo(stepWords, 0);
+      }
+      // The query ends where the column of the activity ends.
       const column = await activity.boundingBox();
-      // One level of nesting takes 25 pixels at the start of the column of the
-      // activity: an indent of 8, a rail of 1 and a gap of 16. A second rail
-      // inside it took the same 25 pixels again. The query ends where the
-      // column ends, so what is left of the column is the width it gives back.
-      expect((box?.x ?? 0) - (column?.x ?? 0)).toBeCloseTo(25, 0);
-      expect(box?.width).toBeCloseTo((column?.width ?? 0) - 25, 0);
+      const box = await query.boundingBox();
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeCloseTo(
+        (column?.x ?? 0) + (column?.width ?? 0),
+        0
+      );
       const rails = await panel.evaluate(
         (element) =>
           [element, ...element.querySelectorAll("*")].filter(

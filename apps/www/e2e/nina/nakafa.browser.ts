@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr } from "effect";
-import { cutText, lines, overflow } from "@/e2e/support/transcript/measure";
+import {
+  clamped,
+  cutText,
+  lines,
+  overflow,
+} from "@/e2e/support/transcript/measure";
 import {
   content,
   contentBare,
@@ -41,8 +46,10 @@ test.describe("Nina lessons on a phone", () => {
 
       for (const link of [analytical, graphical, longest, word]) {
         await expect(link).toBeVisible();
-        // The whole title is on the screen, down to its last word.
+        // A title wraps, so nothing of it is cut sideways, and keeps to two
+        // lines; these fit in two, so each shows down to its last word.
         expect(await cutText(link)).toEqual([]);
+        expect(await clamped(link.locator("span").first())).toBe(false);
       }
       expect(await overflow(page)).toBe(0);
     })
@@ -104,12 +111,12 @@ test.describe("Nina lessons on a phone", () => {
   );
 
   test(
-    "keeps the card of a page with a long description to three lines of it",
+    "keeps the long description of a page to two lines",
     onChat(contentLong, { locale: "id" }, async (page) => {
       const description = page.getByText("Pohon penularan ideal");
 
       await expect(description).toBeVisible();
-      expect(await lines(description)).toBeLessThanOrEqual(3);
+      expect(await lines(description)).toBeLessThanOrEqual(2);
     })
   );
 
