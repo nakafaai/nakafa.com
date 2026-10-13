@@ -31,8 +31,8 @@ export const PAGE_SIZE = 100;
  *
  * Owner: ADR 0001. Exit: it runs on dev and on production, dry first, and a dry
  * pass over every turn finds none in the old shape. Cleanup: step two deletes
- * this spec, its implementation and their tests, together with the fields of
- * the stored validator that `contract/turn.ts` marks for it.
+ * this spec, its implementation and their tests, and narrows the stored
+ * validator (`NinaStoredPageSchema` in `contract/turn.ts`) to the new shape.
  */
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalMutation({
