@@ -114,14 +114,13 @@ below).
 A connection is one connector authorized by one owner.
 
 - A **personal connection** belongs to one account. Its token is sealed under
-  that learner's key. It feeds that learner's personal Nina threads. It reaches
-  anything of a school only when the learner allows it, as the Insight section
-  of the blueprint says for Classroom and Calendar data, and the learner can
-  take that permission back at any time. The learner also disconnects at any
-  time.
+  that learner's key. It reaches anything of a school only when the learner
+  allows it, as the Insight section of the blueprint says for Classroom and
+  Calendar data, and the learner can take that permission back at any time. The
+  learner also disconnects at any time.
 - A **school connection** belongs to one school. An Owner or an Admin makes one,
   and a Teacher may make their own. Its token is sealed under the school key
-  (ADR 0030). It feeds the school's classes and the school's Nina threads.
+  (ADR 0030). It feeds the school's classes.
 
 A school thread reads school connections only, and a personal thread reads
 personal connections only, the same split that K3 makes for memory. An Admin
@@ -205,7 +204,11 @@ sensitive or restricted.
   because members match by Google account ID and not by email. Google's pages
   give no class for any Classroom scope, so the Data Access panel decides. The
   import waits for every scope that the panel shows as sensitive, as Calendar
-  does. The same check applies to the Forms scopes.
+  does. The same check applies to the Forms scopes. The privacy policy of the
+  Aksara release `edadc28a9d` already gives the class of one scope: line 205 of
+  `en.mdx`, `de.mdx`, and `id.mdx` in `packages/corpus/pages/privacy-policy`
+  says that Google classes the Classroom email access as sensitive. None of
+  Google's pages in References shows that.
 - Until the review passes, Google's help page on unverified apps limits an app to
   100 new users. That is enough for a test with a pilot school and no more.
 
@@ -284,56 +287,84 @@ minute for each client, and 1,200 per minute for each user (read 13 October
 - A sync is a series of actions, one page each, with the writes in internal
   mutations. A query or a mutation may run user code for about a second
   (docs.convex.dev/production/state/limits), so a long job is a chain of
-  resumable pages.
+  resumable pages. A connection queues its next page when the previous one
+  completes, so it holds at most one page in the pool.
 - Polling is adaptive: a source that changed is read again sooner, and a quiet
   one later. The intervals are targets, measured with a pilot school. Google
   also offers push notifications for Classroom, and its limits page tells an app
   that polls to consider them where an endpoint offers them. They need the
   `classroom.push-notifications` scope and a Pub/Sub topic, and they are a
   separate decision.
-- The work runs in a workpool of its own. `convex.config.ts` declares no
-  standalone pool today. The workpool inside `@convex-dev/workflow` is set up in
-  `packages/backend/confect/workflow.ts` with `maxParallelism` 20. The workpool
+- The work runs in one workpool of its own, shared by every school.
+  `convex.config.ts` declares no standalone pool today. The pools that exist
+  take 28 between them: the one inside `@convex-dev/workflow` takes 20
+  (`packages/backend/confect/workflow.ts`), and the two inside
+  `@convex-dev/resend` 0.2.8 take 4 each (`src/component/lib.ts`). The workpool
   README asks that the `maxParallelism` of all workpools and workflows together
-  does not exceed 100 on Pro, so the pool of the connectors sets its own value
-  within what the others leave. Fairness between schools comes from a cap on the
-  queued pages of each school. A pool per school cannot be created when a school
-  signs, because a pool is a component that `convex.config.ts` declares, and the
-  workpool README names no per-key parallelism or fairness. The cap stands in for
-  the plan's workpool per tenant (R10).
+  does not exceed 100 on Pro, so the pool of the connectors takes a value within
+  what the others leave. That value is the most pages that run at once.
+- Fairness between schools is a cap on the pages that one school has in the
+  pool, queued or running. The pool starts pending work in the order it was due,
+  in steps of 100 ms (`@convex-dev/workpool` 0.4.13, `src/component/loop.ts`,
+  `lib.ts`, and `shared.ts`), and its README names no key, priority, or
+  parallelism for each key. So one pool cannot keep a page of one school from
+  waiting behind the pages of another, and the cap bounds how many pages can
+  stand ahead of it. The mutation that queues a page counts the pages of its
+  school through an indexed read that stops at the cap, and queues nothing at
+  the cap. A connection refused at the cap stays due and tries again on the
+  next pass. This replaces the plan's workpool per tenant (R10), for the
+  reasons under Rejected Alternatives.
+- The Google requests a minute are about
+  `60 * maxParallelism * requestsPerPage / secondsPerPage` at most, and
+  `maxParallelism` is set so that this stays under 3,000, the client limit, with
+  a margin. Under steady load the daily limit comes first, because 4,000,000 a
+  day is under 2,800 a minute on average. A connection runs one page at a time,
+  so it sends about `60 * requestsPerPage / secondsPerPage` a minute at most.
+  Google counts the 1,200 a minute for a user, which is a Google account, so the
+  connections of one account share it, and a page is sized so that they stay
+  under it.
+- The first page of a school starts after about
+  `otherSchools * cap * secondsPerPage / maxParallelism` seconds at most, where
+  `otherSchools` counts the schools that have pages in the pool. The cap is the
+  largest value that keeps this within the start delay that the pilot school
+  accepts. The workpool reports the delay between queueing and start when its
+  `logLevel` is `INFO` (README).
+- None of these values is measured yet. `requestsPerPage` and `secondsPerPage`
+  are measured with the pilot school, and the cap and `maxParallelism` are
+  targets set from them.
 - A retryable Google error, such as `RESOURCE_EXHAUSTED`, is retried with
   exponential backoff, as Google advises. The workpool's retry adds jitter.
-- A user can start a sync by hand. The request passes the rate-limit component,
-  so a button cannot use up the quota.
+- A user can start a sync by hand. The request passes the rate-limit component
+  and then the cap, so a button cannot use up the quota.
 - Every Google request has a deadline (ADR 0020).
 
 ### Disconnect and delete
 
 | Event | What happens |
 | --- | --- |
-| A connection is disconnected, by its owner or by an Admin of its school | Its stored tokens are destroyed. Nakafa revokes the grant at Google only when the same Google account has no other connection left. The imported data is deleted or kept, as the owner chooses. |
+| A connection is disconnected, by its owner or by an Admin of its school | Its stored tokens are destroyed, and the grant at Google is revoked as the revoke rule below says. The imported data is deleted or kept, as the owner chooses. |
 | The Calendar mirror | It is always deleted. |
 | A Drive copy | It is kept only when the owner chooses to keep it. |
 | A member leaves the school | The Google grant belongs to the Google account of the member who made the connection, so that member chooses. The connection is transferred to them and sealed again under their learner key, or it is disconnected. The imported data stays with the school (ADR 0030). |
-| The account of the member who made a school connection is deleted | The connection stays and enters `reconnect`. Its stored tokens are destroyed, and Nakafa revokes the grant at Google unless another connection of the same Google account remains. The imported data stays with the school, which controls its records (ADR 0011). Someone reconnects it with a Google account of their own (ADR 0030). |
+| The account of the member who made a school connection is deleted | The connection stays and enters `reconnect`. Its stored tokens are destroyed, and the grant at Google is revoked as the revoke rule below says. The imported data stays with the school, which controls its records (ADR 0011). Someone reconnects it with a Google account of their own (ADR 0030). |
+| A learner deletes their account | Each personal connection of the learner is disconnected first. Its stored tokens are destroyed, the grant at Google is revoked as the revoke rule below says, and its imported data is deleted, because the learner key that seals it is shredded with the account. The disconnect has to come first: revoking needs the token, and `packages/backend/confect/auth/cleanup/impl.ts` shreds the key after every row it sealed. A school connection that the learner made follows the row above. |
 | A school leaves Nakafa | Every school connection is disconnected before the school key is destroyed, and the school receives a deletion record (ADR 0030). |
 | A school moves to another data cell | Every school connection is disconnected before the export. Its imported data moves with the school, except a Calendar mirror, which is always deleted. No token crosses cells, because accounts stay in their home cell and the maker of a connection has no account in the target cell (ADR 0026). The school connects again there. |
 | Each step | It is journaled (ADR 0016). The entry holds IDs and reason codes, never the Google email or a class name. |
 
-Revoking one token at Google removes every scope the user granted to the
-project and invalidates the tokens of every client in it. A blind revoke would
-end the other connections of the same Google account, so Nakafa revokes only
-with the last one. Until then the grant stays in the user's Google account, and
-the settings page says where to remove it. The count spans the personal and the
-school connections of one Google account. The connector change decides how it
-finds them, and it must not show one owner's connection to another owner.
+**The revoke rule.** Revoking one token at Google removes every scope the user
+granted to the project and invalidates the tokens of every client in it. A blind
+revoke would end the other connections of the same Google account, so Nakafa
+revokes only with the last one. Until then the grant stays in the user's Google
+account, and the connector page says where to remove it. The count spans the
+personal and the school connections of one Google account. The connector change
+decides how it finds them, and it must not show one owner's connection to
+another owner.
 
 ### Nina and Google data
 
-| Thread | Data it may use | Control |
-| --- | --- | --- |
-| School | School connections only | An Admin turns each connector on for each role |
-| Personal | The learner's personal connections only | The learner disconnects at any time |
+A school thread and a personal thread read different connections, as the section
+Two kinds of connection decides.
 
 - Nina reads the synced copy in Convex. She does not call Google on each turn.
 - Google data is used for the feature the user asked for. It is not used for
@@ -343,11 +374,12 @@ finds them, and it must not show one owner's connection to another owner.
   and its Workspace API user data policy, which the privacy policy of the Aksara
   release `edadc28a9d` already names (line 211 of
   `packages/corpus/pages/privacy-policy/en.mdx`).
-- Google data reaches a model only in a language call (ADR 0019 sets the
-  retention request of those calls). A connection copy is not embedded, because
-  an embedding request carries no retention request today (ADR 0019). A Drive
-  file is indexed for search only after a teacher publishes it to a class
-  library, and then ADR 0023 governs it.
+- Google data reaches a model only in a language call, which sends `zdr: true`
+  and `data_collection: "deny"` (ADR 0019). A connection copy is not embedded,
+  because an embedding request sends `zdr: true` alone, and ADR 0019 says
+  embeddings carry published lesson and Quran text and a search phrase, never a
+  stored learner message. A Drive file is indexed for search only after a
+  teacher publishes it to a class library, and then ADR 0023 governs it.
 - Nina never writes to Google.
 
 ## Gates
@@ -357,7 +389,12 @@ finds them, and it must not show one owner's connection to another owner.
   matching rule is built only after it passes. If it fails, a new decision
   replaces the section Classroom members.
 - **Scope classes.** The Data Access panel of the Cloud console shows the class
-  of every scope before the verification request is filed.
+  of every scope before the verification request is filed, and the privacy
+  policy is changed to say what the panel shows.
+- **School fairness.** On the pilot setup, school A fills its cap and school B
+  starts one sync. The first page of B starts within the wait, and the Google
+  requests of the run stay under the rate, that the formulas in Sync and quota
+  give for the chosen values. If either fails, a new decision replaces the cap.
 - **Forms with `drive.file`.** A form chosen in the Picker is read with
   `drive.file` alone, or Forms falls back to its own scopes.
 - **Workspace under 18.** A Workspace for Education account under 18 meets
@@ -375,13 +412,12 @@ finds them, and it must not show one owner's connection to another owner.
 - A second Google Cloud project means a second consent screen and a second
   verification. Sign-in does not wait for them, and a connector's verification
   state, user cap, or revocation never reaches sign-in.
-- Disconnecting one connection can leave the Google grant in place while another
-  connection of the same account remains. The tokens are gone from Nakafa at
-  once.
+- A disconnect can leave the Google grant in place, as the revoke rule says. The
+  tokens are gone from Nakafa at once.
 - Calendar and Gmail may reach production later than Drive, and Classroom
   depends on the panel's classes.
-- Every school shares Classroom's client quota. A large school can slow the
-  others unless the cap on queued pages holds.
+- Every school shares Classroom's client quota and the one pool. The cap bounds
+  how long one school can delay another, and it does not remove the delay.
 - A student who never signs in with Google stays on the invitation list of a
   Classroom import.
 
@@ -398,9 +434,10 @@ finds them, and it must not show one owner's connection to another owner.
 - Matching Classroom members by email. Google says an email can change and is
   not a stable key.
 - A workpool for each school. A pool is a component that is declared when the
-  app is deployed.
-- Always revoking at Google on disconnect. It would end the user's other
-  connections without notice.
+  app is deployed, so signing a school cannot create one. The workpool README
+  also asks that all pools together stay under a `maxParallelism` of 100 on Pro,
+  and it says each pool adds overhead, so many pools do not fit.
+- Always revoking at Google on disconnect. The revoke rule gives the reason.
 
 ## Implementation Status
 
@@ -410,10 +447,12 @@ finds them, and it must not show one owner's connection to another owner.
 | Learner key in `confect/vault` (`vaultKeys`) | Live |
 | School key (`tenantKeys`, ADR 0030) | Planned |
 | `confect/connectors`, `connectorLinks`, `connectorSecrets` | Planned, program wave B |
+| The Drive, Forms, Classroom, Calendar, and Gmail adapters | Planned, program wave B. Each reaches production as Google verification says. |
+| The connector pages: connect, disconnect, reconnect, sync by hand, and the Admin's switch for each role (ADR 0026 has the school address) | Planned, program wave B |
 | A Google Cloud project for connectors, and its verification request | Planned, program wave A step |
-| A standalone workpool for connectors | Planned. None exists today. |
+| A standalone workpool for connectors, and the cap on the pages of each school in it | Planned. None exists today. |
 | Workspace guide in the setup flow | Planned |
-| Dapodik XLSX import and export, and the file import checks | Planned |
+| Dapodik XLSX import and export, and the file import checks (the OneRoster CSV import of ADR 0029 uses them too) | Planned |
 
 ## References
 
@@ -434,6 +473,9 @@ finds them, and it must not show one owner's connection to another owner.
   (developers.google.com/workspace/classroom/guides/auth), the user profile
   reference, the Classroom limits page, and the Classroom push notifications
   guide.
+- Google, OAuth 2.0 scopes for Google APIs
+  (developers.google.com/identity/protocols/oauth2/scopes), read 14 October
+  2026: its Classroom list gives no class to any scope.
 - Google, the Forms `forms.get` and `forms.responses.list` references, on the
   scopes they accept.
 - Google, OpenID Connect
@@ -444,7 +486,10 @@ finds them, and it must not show one owner's connection to another owner.
   access Workspace data.
 - Google, API Services User Data Policy and the Workspace API user data policy.
 - Google, the Picker overview.
-- `@convex-dev/workpool` 0.4.13 README, on pools, `maxParallelism`, and retries.
+- `@convex-dev/workpool` 0.4.13 README, on pools, `maxParallelism`, retries, and
+  the start delay, and its `src/component` files `loop.ts`, `lib.ts`, and
+  `shared.ts`, on the order of starts. `@convex-dev/resend` 0.2.8,
+  `src/component/lib.ts`, on its two pools.
 - Convex limits (docs.convex.dev/production/state/limits).
 - `@better-auth/core` 1.6.33, `dist/social-providers/google.mjs` and
   `dist/oauth2/create-authorization-url.mjs`: the scopes, the PKCE method, the
