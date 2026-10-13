@@ -139,15 +139,15 @@ thresholds in the catalog were set from what that command printed on 12 October
   accepts (measured 10 October 2026). `zdr: true` asks for endpoints with a zero
   data retention policy, and `data_collection: "deny"` excludes providers that
   collect data (`docs.convex.dev/ai-gateway/api`, read on 13 October 2026). No
-  Convex page states zero data retention for every request. An embedding request
-  cannot send the field: `@ai-sdk/openai-compatible` 3.0.14 builds its body from
-  the model, the texts, the encoding format, `dimensions`, and `user` alone, and
-  `convexGateway.embeddingModel` offers no way to add a field. The gateway's API
-  accepts `provider` on Embeddings, so the limit sits in the adapter. Until the
-  adapter can send the field, embedding requests carry no retention request, and
-  no Convex statement covers how long they are kept. They carry published lesson
-  and Quran text and the short search phrase that the specialist writes from a
-  learner's question, never a stored learner message.
+  Convex page states zero data retention for every request. Every embedding
+  request sends `provider: { zdr: true }`: `gateway/handle.ts` asks the provider
+  for the embedding model with `{ zdr: true }`, as it does for a decision, and
+  `gatewayModelFetch` in `@convex-dev/ai-sdk-provider` 0.3.0 (`src/index.ts`)
+  adds the field to the body that `@ai-sdk/openai-compatible` 3.0.14 builds. The
+  provider's options hold `zdr` alone, so an embedding request cannot also send
+  `data_collection`. Embeddings carry published lesson and Quran text and the
+  short search phrase that the specialist writes from a learner's question,
+  never a stored learner message.
   `gateway/route.ts` is deleted.
 - **Embeddings.** `Gateway.embed(texts, model)` returns one vector of
   `embeddingDimensions` numbers per text, from `embeddingModelId` in
@@ -201,7 +201,7 @@ thresholds in the catalog were set from what that command printed on 12 October
   owns the requests, the answers it reads, and the failures it reports. The
   provider's SDK is not used. A search (`research/search/provider.ts`) sends the
   query that the research model writes from the learner's request and, when the
-  task names sites, their hostnames as `includeDomains`
+  learner names sites, their hostnames as `includeDomains`
   ([ADR 0001](./0001-nina-engagement-architecture.md) says what the provider
   documents for that field). A page read (`research/tools/scrape.ts`) sends the
   address of a page, which is a link the learner gave or a result of a search.
@@ -229,6 +229,37 @@ thresholds in the catalog were set from what that command printed on 12 October
   learner's words. The repository sets up no tracer layer and no exporter, so no
   span leaves the process today, and an attribute kept on it would carry the
   learner's words out through a tracer added later.
+  - Sites. The research model reads only the task that Nina writes, not the
+    learner's message, so the rule has two halves. Nina writes a domain or an
+    address into the task only when the learner wrote it, never one from memory
+    (`research/capability.ts`), and the research model limits a search to a
+    site only when the task asks for results from that site alone; a page to
+    read or a source to check against others limits nothing
+    (`research/descriptions.ts`). A request for an official, recent, or primary
+    source names no site by itself, so unless the learner names one the search
+    stays open and its queries carry the name of the source. A site
+    that the model writes from memory can be wrong or no longer in use, and a
+    search limited to it finds nothing.
+    That happened on production: a learner asked for the latest official source
+    of the UTBK SNBT 2027 schedule, and the research model limited both of its
+    queries to `snpmb.bppp.kemdikbud.go.id`. The card said only that no source
+    was found, and Nina answered that nothing could be verified. Measured on
+    the production plan on 13 October 2026, a query limited to that domain
+    returned no web and no news result, the same query limited to `snpmb.id`
+    returned five of each, and the same query open returned five web results.
+  - A limit that finds nothing. Every card of a search limited to sites carries
+    them in every state (`research/tools/search.ts`), so a card can show them
+    with its query. A search that was limited to sites and returned no source
+    also tells Nina in words (`research/search/format.ts`), after whatever else
+    the run answers from, such as a link of the learner's
+    (`research/agent.ts`): which sites it was limited to, that none of them
+    returned a page, that a site named from memory may be wrong or no longer in
+    use, and that she should research again without the limit unless the
+    learner named those sites. A search that returned a source, also one that
+    cannot be cited, says nothing of its limit, and an open search that finds
+    nothing adds nothing to what Nina reads. No code searches again or drops a
+    site, because the learner may have named them on purpose, so whether to
+    search again is Nina's step.
 - **Attachments.** The documents of one turn, every attachment whose media type
   does not start with `image/`, may total at most 10 MiB (`NINA_DOCUMENT_SIZE`).
   Documents travel inside the request body, which the gateway accepts up to
@@ -413,6 +444,12 @@ Not yet established:
   has not been run against a deployment. If the gateway refuses it, every
   decision fails, Nina stores no memory, and `judgment:measure` says so for
   every message; no decision is made without asking for zero retention.
+- Whether the research search step, given the rule that a site goes in a search
+  only when the learner names it, leaves the field out for a request for an
+  official source that names no site and puts the site in when the learner
+  names one, and whether Nina researches again after she reads that a limit
+  found nothing. Each is an instruction to a model, and no model call was made
+  to test them.
 
 ## Implementation Contract
 

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { nakafaWebSearch } from "@repo/backend/confect/nina/research/descriptions";
+import {
+  nakafaWebSearch,
+  webSearchSitesRule,
+} from "@repo/backend/confect/nina/research/descriptions";
 import {
   researchPrompt,
   researchSearchPrompt,
@@ -62,15 +65,28 @@ describe("research prompt", () => {
     );
   });
 
-  it("restricts a search to given sites through the sites field, in the search step and in the tool description, also for a site the task writes as a URL", () => {
+  it("limits a search to a site only when the task asks for that site alone, in the same words in the search step and in the tool description", () => {
     const search = researchSearchPrompt({ context, locale: "id" });
 
-    expect(search).toContain(
-      "When the task asks for results of given sites only, put the hostname of each site in the sites field of webSearch, also when the task writes the site as a URL, and not in the queries."
+    expect(webSearchSitesRule).toContain(
+      "Put a site in the sites field only when the task asks for results from that site alone."
     );
-    expect(nakafaWebSearch).toContain(
-      "When the task asks for results of given sites only, put the hostname of each site in the sites field, also when the task writes the site as a URL, and not in the queries."
+    // A page the learner sent to read, or a source to check against others,
+    // must not shut every other site out of the search.
+    expect(webSearchSitesRule).toContain(
+      "A site or address that the task names for another reason, such as a page to read or a source to check against others, limits nothing: leave it out of the sites field."
     );
+    expect(webSearchSitesRule).toContain(
+      "Put the hostname of a limiting site there, also when the task writes it as a URL, and not in the queries."
+    );
+    expect(webSearchSitesRule).toContain(
+      "A request for an official, recent, or primary source names no site by itself."
+    );
+    for (const guidance of [search, nakafaWebSearch]) {
+      expect(guidance).toContain(webSearchSitesRule);
+      // The line it replaces let any request for given sites decide.
+      expect(guidance).not.toContain("results of given sites");
+    }
   });
 
   it("keeps a URL in a query only for a page the query is about, so no line asks for a site's URL in the queries and its hostname in the sites field at once", () => {

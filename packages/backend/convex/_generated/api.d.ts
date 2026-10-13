@@ -3163,8 +3163,33 @@ export declare const api: {
               | { kind: "system" };
             at: number;
             change:
-              | { type: "tenant.provisioned" }
+              | {
+                  contract: {
+                    contentLicense: string;
+                    dpaVersion: string;
+                    modules: Array<
+                      "classes" | "exams" | "bank" | "grades" | "reports"
+                    >;
+                    plan: "tenant" | "unit";
+                  };
+                  type: "tenant.provisioned";
+                }
+              | { country: string; currency: string; type: "tenant.locale.set" }
+              | {
+                  policy:
+                    | { key: "emailDomains"; value: Array<string> }
+                    | { key: "nina"; value: boolean }
+                    | { key: "studentThreads"; value: boolean };
+                  type: "tenant.policy.set";
+                }
               | { type: "unit.created" }
+              | {
+                  contentLanguage: "en" | "id" | "de";
+                  timeZone: string;
+                  type: "unit.locale.set";
+                }
+              | { type: "unit.archived" }
+              | { type: "unit.unarchived" }
               | { type: "person.created" }
               | { invite: Id<"tenantInvites">; type: "person.invited" }
               | { method: "invite" | "operator"; type: "person.claimed" }
@@ -3897,6 +3922,51 @@ export declare const api: {
         }
       >;
     };
+    settings: {
+      setLocale: FunctionReference<
+        "mutation",
+        "public",
+        { country: string; currency: string; slug: string },
+        { country: string; currency: string }
+      >;
+      setPolicy: FunctionReference<
+        "mutation",
+        "public",
+        {
+          policy:
+            | { key: "emailDomains"; value: Array<string> }
+            | { key: "nina"; value: boolean }
+            | { key: "studentThreads"; value: boolean };
+          slug: string;
+        },
+        { emailDomains: Array<string>; nina: boolean; studentThreads: boolean }
+      >;
+    };
+    units: {
+      archive: FunctionReference<
+        "mutation",
+        "public",
+        { slug: string; unitId: Id<"tenantUnits"> },
+        "active" | "archived"
+      >;
+      setLocale: FunctionReference<
+        "mutation",
+        "public",
+        {
+          contentLanguage: "en" | "id" | "de";
+          slug: string;
+          timeZone: string;
+          unitId: Id<"tenantUnits">;
+        },
+        { contentLanguage: "en" | "id" | "de"; timeZone: string }
+      >;
+      unarchive: FunctionReference<
+        "mutation",
+        "public",
+        { slug: string; unitId: Id<"tenantUnits"> },
+        "active" | "archived"
+      >;
+    };
     viewer: {
       get: FunctionReference<
         "query",
@@ -3933,13 +4003,21 @@ export declare const api: {
             name: string;
           };
           tenant: {
+            country: string;
+            currency: string;
             id: Id<"tenants">;
             kind: "school" | "foundation";
             name: string;
+            policies: {
+              emailDomains: Array<string>;
+              nina: boolean;
+              studentThreads: boolean;
+            };
             slug: string;
             status: "active" | "suspended";
           };
           units: Array<{
+            contentLanguage: "en" | "id" | "de";
             id: Id<"tenantUnits">;
             level:
               | "paud"
@@ -3953,6 +4031,8 @@ export declare const api: {
               | "slb"
               | "other";
             name: string;
+            status: "active" | "archived";
+            timeZone: string;
           }>;
         }
       >;
@@ -8514,6 +8594,86 @@ export declare const internal: {
     };
   };
   emails: {
+    invite: {
+      delivery: {
+        render: FunctionReference<
+          "action",
+          "internal",
+          {
+            locale: "en" | "id" | "de";
+            organisation: string;
+            privacyPolicyUrl: string;
+            signInUrl: string;
+            termsOfServiceUrl: string;
+          },
+          { html: string; subject: string; text: string }
+        >;
+      };
+      internal: {
+        enqueueRendered: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            html: string;
+            inviteId: Id<"tenantInvites">;
+            subject: string;
+            text: string;
+          },
+          null
+        >;
+        readInput: FunctionReference<
+          "query",
+          "internal",
+          { inviteId: Id<"tenantInvites">; locale: "en" | "id" | "de" },
+          {
+            locale: "en" | "id" | "de";
+            organisation: string;
+            privacyPolicyUrl: string;
+            signInUrl: string;
+            termsOfServiceUrl: string;
+          } | null
+        >;
+      };
+      workflow: {
+        deliverInviteEmail: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: {
+              inviteId: Id<"tenantInvites">;
+              locale: "en" | "id" | "de";
+            };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+        finishInviteEmail: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            context: { inviteId: Id<"tenantInvites"> };
+            result:
+              | { kind: "success"; returnValue: any }
+              | { error: string; kind: "failed" }
+              | { kind: "canceled" };
+            workflowId: string;
+          },
+          null
+        >;
+      };
+    };
     retention: {
       cleanupRetainedEmailData: FunctionReference<
         "mutation",
@@ -9921,6 +10081,67 @@ export declare const internal: {
           };
         },
         null
+      >;
+    };
+  };
+  tenancy: {
+    claims: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; userId: Id<"users"> },
+        null
+      >;
+    };
+    holders: {
+      schedule: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; email: string },
+        null
+      >;
+    };
+    provision: {
+      open: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          contract: {
+            contentLicense: string;
+            dpaVersion: string;
+            modules: Array<"classes" | "exams" | "bank" | "grades" | "reports">;
+            plan: "tenant" | "unit";
+          };
+          country: string;
+          currency: string;
+          kind: "school" | "foundation";
+          name: string;
+          owner: { email: string; name: string };
+          slug: string;
+          units: Array<{
+            contentLanguage: "en" | "id" | "de";
+            level:
+              | "paud"
+              | "sd"
+              | "mi"
+              | "smp"
+              | "mts"
+              | "sma"
+              | "ma"
+              | "smk"
+              | "slb"
+              | "other";
+            name: string;
+            npsn?: string;
+            timeZone: string;
+          }>;
+        },
+        {
+          invite: Id<"tenantInvites">;
+          owner: Id<"tenantPeople">;
+          tenant: Id<"tenants">;
+          units: Array<Id<"tenantUnits">>;
+        }
       >;
     };
   };
