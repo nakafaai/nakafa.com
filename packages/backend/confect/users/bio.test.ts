@@ -30,4 +30,11 @@ describe("users/bio", () => {
       Result.succeed("a".repeat(BIO_MAX_LENGTH))
     );
   });
+
+  it("counts an emoji as one character, though it takes two UTF-16 units", () => {
+    const emoji = "😀".repeat(BIO_MAX_LENGTH);
+
+    expect(readBio(emoji)).toEqual(Result.succeed(emoji));
+    expect(readBio(`${emoji}😀`)).toEqual(Result.fail(new BioTooLong()));
+  });
 });

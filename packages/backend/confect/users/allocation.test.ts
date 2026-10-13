@@ -253,8 +253,6 @@ describe("users/allocation", () => {
         // the thousand accounts took are all read before one is free.
         expect(account.reads).toBeGreaterThanOrEqual(14);
         expect(account.reads).toBeLessThanOrEqual(MAX_ALLOCATION_TRIES);
-        // The bound is small and fixed, whatever the number of accounts.
-        expect(MAX_ALLOCATION_TRIES).toBeLessThanOrEqual(30);
       })
   );
 

@@ -89,10 +89,11 @@ export const MAX_ALLOCATION_TRIES = SUFFIXES.length;
  * Gives an account the first username that is free for its name: the name
  * itself, then the name with 2 up to 9 in order, then the name with a random
  * number that gains a digit after repeated collisions. Each try is one index
- * read, so a name that thousands of accounts share costs no more than a rare
- * one. A try that is too short or reserved is passed over without a read, so
- * "Jo" becomes `jo2`. The caller writes the username in the same transaction,
- * so two accounts that ask for the same name at once cannot both win.
+ * read, so a rare name costs one read and a name that thousands of accounts
+ * share costs more, but never more than `MAX_ALLOCATION_TRIES`. A try that is
+ * too short or reserved is passed over without a read, so "Jo" becomes `jo2`.
+ * The caller writes the username in the same transaction, so two accounts that
+ * ask for the same name at once cannot both win.
  */
 export const allocateUsername = Effect.fn("users.allocation.allocate")(
   function* (name: string) {
