@@ -71,7 +71,7 @@ message (ADR 0016).
 
 | Path | Kinds | How |
 | --- | --- | --- |
-| The transaction of the cause | Mentions and replies in a class | The mutation that writes the message (ADR 0025) also writes one row for each mentioned person and schedules the push. Convex schedules a function from a mutation only if the mutation commits, so a failed message leaves no row. |
+| The transaction of the cause | Mentions and replies in a class | The mutation that writes the message (ADR 0025) also writes one row for each mentioned person and schedules the push. The rows are in the same transaction, and Convex schedules a function from a mutation only if the mutation commits, so a failed message leaves no row and no push. |
 | The consumer and the scheduler | Every other kind | The notify consumer reads published journal changes with its own cursor. The scheduler runs a reminder when it falls due. |
 
 ### The sending flow
@@ -108,10 +108,9 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   and `initialBackoffMs` to 500 for the one sender, the welcome email included:
   two retries after about 500 milliseconds and one second, because a workpool
   counts the first try as an attempt (`RetryBehavior` in `@convex-dev/workpool`
-  0.4.14). A repeated request does not send an email
-  twice, because the component dedupes on the idempotency key of the send and
-  sends the id of the first email of a batch as the `Idempotency-Key` header
-  (`src/component/lib.ts`).
+  0.4.14). A repeated request does not send an email twice, because the
+  component dedupes on the idempotency key of the send and sends the id of the
+  first email of a batch as the `Idempotency-Key` header (`src/component/lib.ts`).
 
 ### The journal changes that notify
 
