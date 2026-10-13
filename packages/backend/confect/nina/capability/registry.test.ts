@@ -24,7 +24,7 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect, MutableRef, Record as Rec } from "effect";
+import { Effect, MutableRef, Record as Rec, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -51,13 +51,30 @@ const toolInputs = {
   },
 };
 
+/** How a scripted run of a capability can end. */
+const RunStateSchema = Schema.Literals([
+  "allowed",
+  "cardless",
+  "failed",
+  "sourceLimit",
+]);
+/**
+ * The ends that the matrix below runs capabilities through. A `cardless` run has
+ * its own tests.
+ */
+const PolicyStateSchema = RunStateSchema.pick([
+  "allowed",
+  "failed",
+  "sourceLimit",
+]);
+
 /**
  * Runs one capability through a scripted turn in one state and returns what
  * the model's tool call produced and what the turn logged.
  */
 function runCapability(
   capability: keyof typeof toolInputs,
-  state: "allowed" | "cardless" | "failed" | "sourceLimit",
+  state: typeof RunStateSchema.Type,
   prompt = "Use the requested capability."
 ) {
   // A run that is allowed gathers a card and ends with its text, so it reads as
@@ -139,11 +156,12 @@ describe("the registry of Nina's capabilities", () => {
 });
 
 describe("Nina capability execution policy", () => {
-  for (const capability of ["nakafa", "math", "deepResearch"] as const) {
+  for (const capability of Rec.keys(toolInputs)) {
+    // Only web research has a limit on the sources it reads.
     const states =
       capability === "deepResearch"
-        ? (["allowed", "failed", "sourceLimit"] as const)
-        : (["allowed", "failed"] as const);
+        ? PolicyStateSchema.literals
+        : PolicyStateSchema.pick(["allowed", "failed"]).literals;
     it.each(states)(
       `${capability} keeps %s execution within the authenticated turn`,
       async (state) => {
@@ -194,7 +212,7 @@ describe("Nina capability execution policy", () => {
     );
   }
 
-  it.each(["nakafa", "math", "deepResearch"] as const)(
+  it.each(Rec.keys(toolInputs))(
     "reads %s as empty when its run gathers no card and states no outcome",
     async (capability) => {
       const { result } = await runCapability(capability, "cardless");
