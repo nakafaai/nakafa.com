@@ -40,6 +40,46 @@ export const waitForStableCanvas = Effect.fn("NakafaE2E.waitForStableCanvas")(
   }
 );
 
+/**
+ * Waits until a scene has come to rest: its canvas clears no frame through one
+ * quiet window. A scene draws on demand, so it draws only while something moves
+ * it. A rotation that was switched off, or a drag that was let go, leaves
+ * damping that the camera runs out frame by frame, so a slow renderer needs
+ * seconds for it and no fixed time fits every runner. The wait therefore ends
+ * one quiet window after the last frame, however long that takes, and the
+ * test's own timeout bounds it. It reads the `data-frames` that
+ * `countCanvasFrames` writes, so the page needs that patch before it loads.
+ */
+export const waitForCanvasRest = Effect.fn("NakafaE2E.waitForCanvasRest")(
+  function* (canvas: Locator) {
+    yield* Effect.promise(() =>
+      canvas.evaluate(
+        (element, quiet) =>
+          new Promise<void>((resolve) => {
+            let lastFrame = performance.now();
+            const observer = new MutationObserver(() => {
+              lastFrame = performance.now();
+            });
+            observer.observe(element, {
+              attributeFilter: ["data-frames"],
+              attributes: true,
+            });
+            const look = () => {
+              if (performance.now() - lastFrame < quiet) {
+                requestAnimationFrame(look);
+                return;
+              }
+              observer.disconnect();
+              resolve();
+            };
+            requestAnimationFrame(look);
+          }),
+        QUIET_WINDOW_MILLISECONDS
+      )
+    );
+  }
+);
+
 /** Waits until a canvas renders a frame that differs from the baseline. */
 export const expectCanvasToMove = Effect.fn("NakafaE2E.expectCanvasToMove")(
   function* (canvas: Locator, baseline: Uint8Array) {
