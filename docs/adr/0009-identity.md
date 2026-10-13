@@ -92,8 +92,9 @@ Nakafa's copy. A refresh token that Google issued earlier is not revoked by it.
 
 Owner: this ADR. Exit: a dry pass over every account on dev and on production
 finds no row that holds a token. Cleanup: the change that records the
-production result deletes the mutation and its test. The columns stay in the
-schema, because Better Auth generates the table, and stay unset.
+production result deletes the mutation and its test, and stops exporting the
+list of columns that only the mutation reads. The columns stay in the schema,
+because Better Auth generates the table, and stay unset.
 
 ### Signing keys and the session token
 

@@ -83,7 +83,9 @@ const clearPageProgram = Effect.fn("betterAuth.tokens.clearPage")(function* (
  *
  * Owner: ADR 0009. Exit: it has run on dev and on production, and a dry pass
  * over every account finds no row that holds a token. Cleanup: delete this
- * function and its test in the change that records the production result.
+ * function and its test in the change that records the production result, and
+ * stop exporting `noProviderTokens`, which only this function reads outside its
+ * own module.
  */
 export const clearPage = mutation({
   args: {
