@@ -140,7 +140,7 @@ export const encodeTransition = Schema.encodeSync(
 );
 
 /** What a transition says about one query, with every field the server wrote. */
-type Update = (typeof TransitionSchema.Type)["modifications"][number];
+type Update = (typeof WholeTransitionSchema.Type)["modifications"][number];
 
 /**
  * The transition `text` with each update that `replace` gives another one put

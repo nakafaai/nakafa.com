@@ -11,11 +11,12 @@ import {
   Option,
   Schema,
 } from "effect";
-import { answerQueriesIn, decodeSent } from "@/e2e/support/frames";
+import {
+  answerQueriesIn,
+  CONVEX_SOCKET,
+  decodeSent,
+} from "@/e2e/support/frames";
 import { THREAD } from "@/e2e/support/transcript/message";
-
-/** The realtime connection of the page to the backend. */
-const CONVEX_SOCKET = /\/api\/[^/]+\/sync/;
 
 /** The Convex names of the two queries that give a chat its messages. */
 const CONVERSATION = "nina/conversation:get";

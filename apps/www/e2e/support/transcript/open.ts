@@ -109,10 +109,11 @@ const startTranscript = Effect.fn("NakafaE2E.startTranscript")(function* (
 
 /**
  * A phone draws its scrollbars over the page and gives them no room. The root
- * of the site keeps a gutter at each edge for scrollbars that take room
- * (`scrollbar-gutter: stable both-edges`), as they do in the runner's browser,
- * and the scroller of a transcript keeps one too. Those gutters narrow every
- * column. Measured in CI on 13 October: at a width of 320 the column of the
+ * of the site keeps a gutter for scrollbars that take room, as they do in the
+ * runner's browser: on both edges, and on one edge under 24rem
+ * (`scrollbar-gutter` in `globals.css`). The scroller of a transcript keeps one
+ * too. Those gutters narrow every column. Measured in CI on 13 October, while
+ * the root kept two at that width: at a width of 320 the column of the
  * activity was 217 pixels, where it is 247 on a machine whose scrollbars lie
  * over the page as a phone's do. The chat page of a narrow width is a phone's,
  * so every box on it takes its scrollbar room back.
