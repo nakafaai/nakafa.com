@@ -2,7 +2,6 @@ import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
-import { Buffer } from "node:buffer";
 import { generateKeyPairSync, sign as signBytes } from "node:crypto";
 import { describe, expect, it } from "@effect/vitest";
 import {
@@ -55,6 +54,7 @@ import {
 } from "@repo/backend/test/program/snapshot";
 import { convexTest, type TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
+import { Base64Url } from "effect/encoding";
 
 const encodeRendererJson = Schema.encodeSync(
   Schema.fromJsonString(RendererManifestEnvelopeSchema)
@@ -87,17 +87,18 @@ function activeSignedRelease() {
     manifest: ingressRelease.manifest,
     manifestHash: ingressRelease.manifestHash,
     signature: Ed25519SignatureSchema.make(
-      signBytes(
-        null,
-        Buffer.from(
-          canonicalizeContentReleaseSigningInput(
-            ingressRelease.manifestHash,
-            ingressRelease.manifest
+      Base64Url.encode(
+        signBytes(
+          null,
+          new TextEncoder().encode(
+            canonicalizeContentReleaseSigningInput(
+              ingressRelease.manifestHash,
+              ingressRelease.manifest
+            )
           ),
-          "utf8"
-        ),
-        activeKeys.privateKey
-      ).toString("base64url")
+          activeKeys.privateKey
+        )
+      )
     ),
   });
 }

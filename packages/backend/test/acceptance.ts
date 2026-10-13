@@ -1,6 +1,27 @@
+import { NodeSocketServer } from "@effect/platform-node";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { Effect, Fiber, FileSystem, MutableList } from "effect";
+import { HttpServer } from "effect/http";
 import { TestClock } from "effect/testing";
+
+/**
+ * Holds a loopback port until the scope ends, as a process does that started
+ * without the acceptance lease. Port 0 lets the system pick a free one. It
+ * returns the port held.
+ */
+export const occupyPort = Effect.fn("AcceptanceTest.occupyPort")(function* (
+  port: number
+) {
+  const server = yield* NodeSocketServer.make({ host: "127.0.0.1", port });
+  return Number(new URL(HttpServer.formatAddress(server.address)).port);
+});
+
+/** Whether something holds a loopback port, which a second listener learns by failing to bind it. */
+export const isPortOccupied = (port: number) =>
+  NodeSocketServer.make({ host: "127.0.0.1", port }).pipe(
+    Effect.scoped,
+    Effect.isFailure
+  );
 
 /** A temporary backend checkout holding the Convex files a local runtime reads. */
 export const fixture = Effect.gen(function* () {
