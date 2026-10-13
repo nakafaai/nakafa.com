@@ -26,10 +26,10 @@ without migration (see Retirement).
 ### Tenants, units, and the route slug
 
 An organisation is a tenant. It is a school or a foundation (yayasan), served by
-the same web and Convex deployments as every other tenant. The tenant's `kind` is
-`school` or `foundation`. A foundation runs several schools, each held as a unit
-(SD, SMP, SMA, and so on) with its level, an optional NPSN, and a status. An
-archived unit stays readable and refuses writes.
+the web project and the Convex deployment of its data cell (ADR 0026). The
+tenant's `kind` is `school` or `foundation`. A foundation runs several schools,
+each held as a unit (SD, SMP, SMA, and so on) with its level, an optional NPSN,
+and a status. An archived unit stays readable and refuses writes.
 
 The concepts are neutral and the same in every country: an organisation holds
 units (schools), a unit runs periods and cohorts, a person belongs to the
@@ -91,40 +91,76 @@ Person and any change reruns that caller's subscriptions. Persons of kind
 An invite names a Person and an email address. A claim binds the Person to the
 account that controls the address: an invite is claimed automatically when an
 account whose Better Auth email is verified and equal to the invite address
-exists, and the tenant's allowed email domains, one of its policies, admit the
-address (an empty list admits every address). Claims run in a scheduled
-mutation after sign-up, after Better Auth verifies an address, and after an
-invite is created for an existing account, never inside the sign-in
-transaction. An account that already holds a Person in the tenant, or whose
-address the allowed email domains do not admit, leaves the invite pending for
-the school to resolve. The functions that create invites refuse an address
-outside the list too, once people management exists; today only `open` creates
-an invite, and a new tenant starts with an empty list. Later channels
-(belajar.id matches and login card codes) extend the invite channel and claim
-method values.
+exists, the tenant is active, and the tenant's allowed email domains, one of its
+policies, admit the address (an empty list admits every address). An invite claim
+is the one place where an account is matched by its verified email, and ADR 0009
+names it as the exception to its rule that a school account is never matched by
+its email address. An invite expires 14 days after it is created if nobody has
+claimed it, and an expired invite is never claimed: the school invites again.
+Claims run in a scheduled mutation after sign-up, after Better Auth verifies an
+address, and after an invite is created for an existing account, never inside
+the sign-in transaction. The claim writes `person.claimed` with the claim method
+(ADR 0016). An account that already holds a Person in the tenant, an address the
+allowed email domains do not admit, and a suspended tenant leave the invite
+pending for the school to resolve. The functions that create invites refuse an
+address outside the list too, once people management exists; today only `open`
+creates an invite, and a new tenant starts with an empty list. Later channels
+extend the invite channel and the claim method values: a belajar.id match, and
+a login card, which is an invite on the card channel with the claim method
+`card` (ADR 0009). A claim hands the claimant the Person's standing grants, so
+creating an invite, or printing a login card, for a Person that holds the Owner
+or Admin role needs the right to give that role, `owner.manage` (ADR 0012).
 
 Account deletion releases the account's Persons instead of deleting them: the
 school controls its records, so each Person and its standing grants stay,
-unclaimed. Deletion is never blocked by tenant ownership; an operator restores
-an Owner when needed.
+unclaimed. The release also revokes the Person's accepted invite, which then names
+no account and can never be claimed again. A released Person is claimed again
+only through a new invite or a new login card. Deletion is never blocked by
+tenant ownership; an operator of the tenant's cell restores an Owner when needed.
+
+### Tenant settings
+
+A tenant holds its settings on its own row: the country (the profile of ADR
+0032), the contract currency, and its `policies`, which are whether students may
+open forum threads, whether Nina is on, and the allowed email domains. Each
+school holds its time zone and its content language. Provisioning writes every
+field: the operator gives the country and the contract currency, and sets the
+two switches. Only the allowed email domains have a default, an empty list, and
+an empty list means no restriction. A tenant that sets domains keeps the claims
+of its invites, and later its Google sign-in, on them (ADR 0009). An Owner or a
+tenant-wide Admin changes the organisation's settings with `tenant.manage`, and
+a school's Admin changes that school's with `unit.manage`. Each change of a
+policy writes `tenant.policy.set`, a change type declared on the tenant kind,
+because each authority accepts only the change types of its own kind (ADR 0016).
+The change names the policy and holds no domain, because a change holds IDs,
+enums, and reason codes only.
 
 ### Operators
 
 Operators are Nakafa staff, listed in an `operators` table that only internal
-mutations write; the first operator is granted through a production operation.
-The onboarding role on `users` is a learner's self-description and never grants
-privilege; an environment allowlist would match emails instead of accounts and
-keep no history; the Better Auth admin plugin would move platform privilege into
-the auth component's schema.
+mutations write. Every cell's deployment holds its own `operators` rows (ADR
+0026). A staff member who serves two cells holds one account and one operator row
+in each, and the first operator of a cell is granted through a production
+operation on that cell's deployment. The onboarding role on `users` is a
+learner's self-description and never grants privilege; an environment allowlist
+would match emails instead of accounts and keep no history; the Better Auth admin
+plugin would move platform privilege into the auth component's schema.
 
-Operators provision tenants (the tenant, its units, and the first Owner invite
-in one mutation), replace a tenant's unclaimed Owners as an audited break-glass,
-and suspend or reactivate a tenant. A suspended tenant stays readable and
-refuses every write. Operators enter a tenant only through an audited visit: a
-temporary admin or auditor grant of at most 24 hours. The school's Owner or Admin
-approves each visit, and a scheduled mutation ends the grant (ADR 0012). The
-operator directory, tenant metadata with no personal data, is the one public
-read across tenants; everything inside a tenant needs a visit.
+Operators provision tenants (the tenant with the journal retention that its data
+processing agreement states, its settings, its units, and the first Owner
+invite in one mutation), replace a tenant's unclaimed Owners as an audited
+break-glass, and suspend or reactivate a tenant. A suspended tenant stays
+readable and refuses every member write. The system transitions that time or
+an operator starts still run in it, because they end access, keep a deadline, or
+restore the tenant: a visit end, a grant expiry, an invite expiry, an account
+release, the close and the reconciliation of an attempt, and the operator's
+reactivation of the tenant (ADR 0012, Decisions). Operators enter a tenant only
+through an audited visit: a temporary Auditor grant of at most 24 hours. A visit
+grant is always the Auditor role, so approving a visit never mints an Admin. The
+school's Owner or Admin approves each visit, and a scheduled mutation ends the
+grant (ADR 0012). The operator directory of a cell, tenant metadata with no
+personal data, lists only the tenants of that cell and is the one public read
+across them; everything inside a tenant needs a visit.
 
 ### Journal
 
@@ -134,44 +170,42 @@ reads the tenant's entries newest first.
 
 ### Time
 
-Queries never read the clock. Grant expiry and every other time-driven state is
-written by a scheduled mutation, with a cron sweep as the backstop for a job
-that never ran.
+Queries never read the clock. Grant expiry, invite expiry, and every other
+time-driven state is written by a scheduled mutation, with a cron sweep as the
+backstop for a job that never ran.
 
 ### Retirement of the first School
 
 Program wave 0 deletes the first School before the new School is built (K11).
-The deletion is one reviewed change: every old School row, table, function,
-component, redirect, image, test, and dictionary key goes, and so do the forum
-viewport engine and its tests and the School branch of account deletion. It
-takes no backup and no production export, because nobody uses the old School,
-and its data is deleted, not kept (K11). A new ADR supersedes ADR 0005.
+The deletion removes every old School row, table, function, component, redirect,
+image, test, and dictionary key, together with the forum viewport engine and its
+tests and the School branch of account deletion. It takes no backup and no
+production export, because nobody uses the old School, and its data is deleted,
+not kept (K11). A new ADR supersedes ADR 0005.
 
 The removal follows the rule for public functions in
-`packages/backend/AGENTS.md`: expand, switch, observe, contract.
+`packages/backend/AGENTS.md`: expand, switch, observe, contract. Expand is done:
+the tenancy functions in `packages/backend/confect/tenancy` already exist on main
+beside the old School. Four steps follow, in this order, and the first is merged:
 
-1. Expand: the tenancy functions in `packages/backend/confect/tenancy` already
-   exist on main beside the old School.
-2. Switch: an earlier release removes every School route and component that
-   calls an old function, so no new web build calls one.
-3. Observe: after the switch release is live, production function logs show
+1. Switch (merged in #1051): a release makes the web stop calling the old
+   functions. It removes every School route and component that calls an old
+   function, so no new web build calls one. The old functions stay.
+2. Observe: after the switch release is live, production function logs show
    no call to an old School function for at least 12 hours (the Vercel skew
    window, `skewProtectionMaxAge` 43,200 seconds, read from the project API on
    12 October 2026) and across at least one later production deploy, because a
    loaded or suspended tab calls Convex directly and every deploy re-runs every
    live subscription. Measured before the switch on 13 October 2026: 2,790
    production executions between 12:57 and 14:42 UTC, spanning the deploy at
-   14:36, held no call to `schools/*`, `classes/*` or the School triggers. The
-   switch release deletes the web routes and components only; the old functions
-   stay until this window has passed.
-4. Dry run: the batched deletion's dry mode counts the old rows on dev before
-   the contract release.
-5. Contract: one reviewed release deletes the old functions, every writer of the
-   old tables, and the rest of the code listed above, and adds the batched
-   deletion. The deletion then runs on dev and production until every old count
-   is zero, and a last release drops the tables and the deletion; Convex accepts
-   that schema only when no row is left, which is the proof that the rows are
-   gone.
+   14:36, held no call to `schools/*`, `classes/*` or the School triggers. This
+   step ships nothing.
+3. Contract: one release removes the old functions, every writer of the old
+   tables, and the rest of the code listed above, and adds the batched erase
+   migration in the same release. The migration runs dry first, which counts the
+   old rows, and then for real, on dev and on production, until it reports zero.
+4. Drop: a last release deletes the tables and the migration. Convex accepts that
+   schema only when no row is left, which is the proof that the rows are gone.
 
 ## Implementation Contract
 
@@ -217,8 +251,8 @@ The removal follows the rule for public functions in
   tenant's name goes in the subject of its invitation email. `tenant.provisioned`
   records the contract (plan, modules, data processing agreement version, and
   content licence version); the entitlements it grants are built later.
-- Operators, visits, grant expiry, and the account deletion release step
-  follow as one change that extends this contract.
+- Operators, invite expiry, visits, grant expiry, and the account deletion
+  release step follow as one change that extends this contract.
 - A tenant holds at most 24 units, at most 8 Owners, and at most 16 allowed
   email domains.
 
@@ -228,11 +262,13 @@ The removal follows the rule for public functions in
   sign-in, and the consumer product lives in the `us` cell. A school in another
   cell is joined with an account of that cell (ADR 0026, Data cells).
 - An invite address works like a credential: whoever holds a verified account
-  with that address claims the Person, an Owner invite included. Schools invite
-  only addresses they or the invitee control, and a tenant's allowed email
-  domains keep the claims of its invites on the school's own domains.
-- A tenant whose only Owner deleted their account has no Owner until an
-  operator replaces it.
+  with that address claims the Person, an Owner invite included, until the
+  invite expires after 14 days. Schools invite only addresses they or the
+  invitee control. A tenant that sets allowed email domains keeps the claims of
+  its invites, and later its Google sign-in, on them, and a tenant with an empty
+  list has no domain restriction.
+- A tenant whose only Owner deleted their account has no Owner until an operator
+  of its cell replaces it.
 
 ## Rejected Alternatives
 
@@ -244,5 +280,6 @@ The removal follows the rule for public functions in
   schools.
 - Accepting every invite by hand, for example with an emailed one-time code,
   would add a step before each invited teacher, student, and parent reaches
-  their school; automatic matching of verified addresses, limited by the
-  tenant's allowed email domains, keeps joining a school to one sign-in.
+  their school; automatic matching of verified addresses, limited to the
+  tenant's allowed email domains when it sets any, keeps joining a school to one
+  sign-in.
