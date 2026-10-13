@@ -16,10 +16,7 @@ describe("invitation content", () => {
     const copy = getInviteEmailCopy("en", "Harapan");
 
     assert.strictEqual(copy.subject, "Harapan invited you to Nakafa");
-    assert.strictEqual(
-      copy.body,
-      "Sign in with this email address to open Harapan on Nakafa."
-    );
+    assert.strictEqual(copy.body, "Sign in with this email address to join.");
     assert.strictEqual(copy.cta, "Sign in");
     assert.strictEqual(
       copy.footerReason,
@@ -35,7 +32,7 @@ describe("invitation content", () => {
     assert.strictEqual(copy.subject, "Harapan mengundang kamu ke Nakafa");
     assert.strictEqual(
       copy.body,
-      "Masuk dengan alamat email ini untuk membuka Harapan di Nakafa."
+      "Masuk dengan alamat email ini untuk bergabung."
     );
     assert.strictEqual(copy.cta, "Masuk");
     assert.strictEqual(
@@ -52,7 +49,7 @@ describe("invitation content", () => {
     assert.strictEqual(copy.subject, "Harapan hat dich zu Nakafa eingeladen");
     assert.strictEqual(
       copy.body,
-      "Melde dich mit dieser E-Mail-Adresse an, um Harapan auf Nakafa zu öffnen."
+      "Melde dich mit dieser E-Mail-Adresse an, um beizutreten."
     );
     assert.strictEqual(copy.cta, "Anmelden");
     assert.strictEqual(

@@ -33,19 +33,19 @@ const InviteEmailCopySchema = Schema.Struct({
 });
 const inviteEmailCopy = {
   de: (organisation) => ({
-    body: `Melde dich mit dieser E-Mail-Adresse an, um ${organisation} auf Nakafa zu öffnen.`,
+    body: "Melde dich mit dieser E-Mail-Adresse an, um beizutreten.",
     cta: "Anmelden",
     footerReason: `Wir senden dir diese E-Mail, weil ${organisation} diese Adresse zu Nakafa eingeladen hat.`,
     subject: `${organisation} hat dich zu Nakafa eingeladen`,
   }),
   en: (organisation) => ({
-    body: `Sign in with this email address to open ${organisation} on Nakafa.`,
+    body: "Sign in with this email address to join.",
     cta: "Sign in",
     footerReason: `We sent this email because ${organisation} invited this address to Nakafa.`,
     subject: `${organisation} invited you to Nakafa`,
   }),
   id: (organisation) => ({
-    body: `Masuk dengan alamat email ini untuk membuka ${organisation} di Nakafa.`,
+    body: "Masuk dengan alamat email ini untuk bergabung.",
     cta: "Masuk",
     footerReason: `Kami mengirim email ini karena ${organisation} mengundang alamat ini ke Nakafa.`,
     subject: `${organisation} mengundang kamu ke Nakafa`,
