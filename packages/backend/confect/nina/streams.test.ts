@@ -21,7 +21,7 @@ vi.mock("@convex-dev/agent", async (importOriginal) => {
   };
 });
 
-const query = Ref.getFunctionReference(refs.public.nina.messages.list);
+const query = Ref.getFunctionReference(refs.public.nina.messages.page);
 
 describe("Nina stream reads", () => {
   afterEach(() => {
@@ -58,7 +58,7 @@ describe("Nina stream reads", () => {
       return { own, other };
     });
     const listed = Ref.decodeReturnsSync(
-      refs.public.nina.messages.list,
+      refs.public.nina.messages.page,
       await owner.query(query, { ...args, streamArgs: { kind: "list" } })
     );
     expect(listed.streams).toEqual({
@@ -67,7 +67,7 @@ describe("Nina stream reads", () => {
     });
     expect(listed.page).toEqual([]);
     const resumed = Ref.decodeReturnsSync(
-      refs.public.nina.messages.list,
+      refs.public.nina.messages.page,
       await owner.query(query, {
         ...args,
         streamArgs: {

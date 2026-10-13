@@ -24,7 +24,7 @@ const StreamFormat = Schema.Literals(["UIMessageChunk", "TextStreamPart"]);
  * A message holds nothing of its turn: `conversation.turns` tells where a turn
  * stands and what it cost.
  */
-const AgentMessage = Schema.Struct({
+export const AgentMessage = Schema.Struct({
   id: Schema.String,
   key: Schema.String,
   order: Schema.Finite,

@@ -33,6 +33,7 @@ const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const messages = Ref.getFunctionReference(refs.public.nina.messages.list);
+const messagesPage = Ref.getFunctionReference(refs.public.nina.messages.page);
 const turns = Ref.getFunctionReference(refs.public.nina.conversation.turns);
 const share = Ref.getFunctionReference(
   refs.public.chats.mutations.updateChatVisibility
@@ -154,8 +155,14 @@ describe("Nina conversation visibility", () => {
       await f.t.query(messages, { ...listed, shareToken })
     );
     expect(page.page).toHaveLength(1);
-    expect(page.page[0]).not.toHaveProperty("metadata");
-    // The turn runs, so only the conversation tells it.
+    expect(page.page[0]?.metadata).toEqual(conversation.turn);
+    // The page of messages tells no turn, and the turn runs, so only the
+    // conversation tells it.
+    const lean = Ref.decodeReturnsSync(
+      refs.public.nina.messages.page,
+      await f.t.query(messagesPage, { ...listed, shareToken })
+    );
+    expect(lean.page[0]).not.toHaveProperty("metadata");
     expect(await turnsOf(f.t, { chatId: f.chatId, shareToken })).toEqual([]);
     expect(encodeJsonText(page)).not.toContain('"role":"teacher"');
     expect(encodeJsonText(page)).not.toContain("creditsResetAt");
@@ -254,7 +261,7 @@ describe("Nina conversation visibility", () => {
     assert(shareToken !== null);
     const documentsRead = () =>
       f.t.query(async (ctx) => {
-        await ctx.runQuery(messages, {
+        await ctx.runQuery(messagesPage, {
           chatId: f.chatId,
           paginationOpts: { cursor: null, numItems: 20 },
           shareToken,
