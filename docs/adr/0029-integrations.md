@@ -48,10 +48,10 @@ Each object and action is declared once, in the access catalog (ADR 0012). The
 school REST API, the school MCP server, the CLI, webhooks, and exports are
 written against it.
 
-- An endpoint, a tool, a hook, or an export names an action of a declared kind,
-  and its handler gets the subject through that kind's authority. `decide` is
-  the only place a permission is decided. No surface keeps a permission table or
-  a scope list of its own.
+- An endpoint, a tool, a webhook, or an export names an action of a declared
+  kind, and its handler gets the subject through that kind's authority. `decide`
+  is the only place a permission is decided. No surface keeps a permission table
+  or a scope list of its own.
 - Every school call is decided. A write goes through an internal mutation that
   resolves the caller and decides again in its own transaction (ADR 0012, Convex
   actions), so a client revoked between two calls stops at the write. That
@@ -118,8 +118,8 @@ and schemas of the school API. Everything else comes from it.
 - A client's action list can name only actions that the catalog opens to the
   Integration role. The tenant of a call comes from the client or the person
   behind the token and never from a parameter the caller chooses (ADR 0012).
-- An Owner or an Admin creates and revokes clients and hooks. Revoking a client
-  ends its tokens and its hooks.
+- An Owner or an Admin creates and revokes clients and webhooks. Revoking a
+  client ends its tokens and its webhooks.
 - A person approves a device at `harapan.nakafa.com/perangkat` after signing in
   (ADR 0026). The CLI token is scoped to the school API. It is not a session.
 - A token issued for the school API is never accepted as a Convex session, and a
@@ -189,11 +189,11 @@ the device and is never printed.
 
 | Part | Rule |
 | --- | --- |
-| Source | The journal. Each hook has its own cursor over the published changes (ADR 0016). |
+| Source | The journal. Each webhook has its own cursor over the published changes (ADR 0016). |
 | Payload | The published change and its subject reference: IDs, enums, and reason codes. It holds no names, emails, or text, because the journal holds none. A receiver that needs more reads it through the REST API with its own token. |
-| Hook | Made for one integration client. A change is delivered only when that client could read its subject, and the check runs at delivery (ADR 0016). |
+| Client | A webhook is made for one integration client. A change is delivered only when that client could read its subject, and the check runs at delivery (ADR 0016). |
 | Signature | HMAC-SHA256 over the timestamp, a dot, and the body |
-| Hook secret | Sealed with the school key (ADR 0030) and not hashed, because the server must sign with it |
+| Secret | Sealed with the school key (ADR 0030) and not hashed, because the server must sign with it |
 | Replay | A receiver rejects a timestamp older than 5 minutes (target) |
 | Retries | Up to 8 attempts in 24 hours, with growing delays (target) |
 | Delivery log | One row for each attempt, in `integrationDeliveries` |
@@ -201,7 +201,7 @@ the device and is never printed.
 | Receiver address | HTTPS only. A public address only. No redirect is followed. The judgment of addresses is the one of the research scrape guard (`packages/backend/confect/nina/research/tools/safety.ts` and `url.ts`), shared and not copied. |
 | Deadline | Each attempt has a deadline that covers the body, and the response is read up to a size cap (ADR 0020). |
 
-The receiver address rule keeps a hook from being used to reach Nakafa's own
+The receiver address rule keeps a webhook from being used to reach Nakafa's own
 network.
 
 ### API hygiene
@@ -373,7 +373,7 @@ The 19 files that import `convex-helpers`:
 
 - A school integrates without the web app, and no surface has a permission table
   of its own. A new action reaches a surface by naming it in an endpoint, a tool,
-  or a hook, and no surface can exceed what `decide` allows.
+  or a webhook, and no surface can exceed what `decide` allows.
 - Every call is an HTTP action. Convex limits concurrent actions and HTTP actions
   together (64 on S16 and 512 on S256, its limits page, 13 October 2026), so the
   rate limit of each client also protects the exam traffic that shares the
