@@ -1,16 +1,20 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TenantCapabilities } from "@repo/backend/confect/access/catalog";
 import { GrantView } from "@repo/backend/confect/access/schema";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { TimeZone } from "@repo/backend/confect/tenancy/locale";
 import {
   PersonKind,
   PersonName,
   TenantProfile,
+  TenantSettings,
   UnitLevel,
   UnitName,
+  UnitStatus,
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema, Struct } from "effect";
@@ -24,9 +28,18 @@ const ViewerView = Schema.Struct({
     kind: PersonKind,
     name: PersonName,
   }),
-  tenant: TenantProfile.mapFields(Struct.assign({ id: Id("tenants") })),
+  tenant: TenantProfile.mapFields(
+    Struct.assign({ id: Id("tenants"), ...TenantSettings.fields })
+  ),
   units: Schema.Array(
-    Schema.Struct({ id: Id("tenantUnits"), level: UnitLevel, name: UnitName })
+    Schema.Struct({
+      contentLanguage: AppLocaleCodeSchema,
+      id: Id("tenantUnits"),
+      level: UnitLevel,
+      name: UnitName,
+      status: UnitStatus,
+      timeZone: TimeZone,
+    })
   ),
 });
 

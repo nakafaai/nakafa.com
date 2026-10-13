@@ -3,11 +3,13 @@
 ## Status
 
 Accepted on 13 October 2026 with owner decisions K2, K4, K17, and K20. The owner
-approved decisions K1 to K20 on that day. Planned.
+approved decisions K1 to K20 on that day. Planned, except the four locale
+settings, which are live.
 The profile module, `confect/jurisdiction`, does not exist yet. The organisation
-record has no country, time zone, language, or currency field:
-`packages/backend/confect/tenancy/schema.ts` defines the tenant as `kind`, `name`,
-`slug`, and `status`, and nothing else.
+holds its country and its billing currency, and each school holds its time zone
+and its content language (`packages/backend/confect/tenancy/schema.ts`). Until
+the profile names the countries Nakafa serves, the country is checked for its
+shape only, two uppercase letters.
 
 ## Context
 
@@ -75,8 +77,10 @@ the app does not route.
 
 The organisation holds the country profile and the billing currency of its
 contract. Each school holds its time zone and its content language. A person's
-interface language comes from the `NEXT_LOCALE` cookie (ADR 0026). The columns
-for these fields are added in program wave A.
+interface language comes from the `NEXT_LOCALE` cookie (ADR 0026). The fields
+are stored: an Owner or an Admin changes them through `tenancy/settings` and
+`tenancy/units`, and a time zone or a currency must be one that the platform
+lists.
 
 ### Indonesia, the first profile
 
@@ -140,5 +144,5 @@ These are targets. They are not live.
 | `UnitLevel`, the ten level choices in `packages/backend/confect/tenancy/schema.ts` | Live. The country profile replaces this list (K17). |
 | `confect/jurisdiction` | Planned, program wave A |
 | Signed Aksara profile for Indonesia | Planned, program wave A |
-| The four locale settings stored on the organisation and the school | Planned. The interface language stays in the `NEXT_LOCALE` cookie |
+| The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NEXT_LOCALE` cookie |
 | Text direction through one helper | Target |
