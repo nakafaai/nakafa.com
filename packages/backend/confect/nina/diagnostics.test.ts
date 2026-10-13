@@ -1,17 +1,25 @@
 import { Ref } from "@confect/core";
-import { afterEach, expect, it } from "@effect/vitest";
+import { saveMessages } from "@convex-dev/agent";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { PostHog } from "@posthog/convex";
+import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
+
+const NOW = Date.UTC(2026, 8, 27, 12);
+const DEADLINE = Duration.toMillis(TURN_DEADLINE);
+const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -121,3 +129,129 @@ it.effect(
       );
     })
 );
+
+describe("The report of a turn whose run was lost", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("names the turn, the reason and how long it was open in the log, tells error tracking the reason and the place, and carries no word of the conversation", async () => {
+    const capture = vi
+      .spyOn(PostHog.prototype, "captureException")
+      .mockResolvedValue(undefined);
+    const logged = vi.spyOn(console, "error").mockImplementation(() => 0);
+    const f = await createNinaTest({ now: NOW, prompt: "private user prompt" });
+    await f.t.mutation(claim, { turnId: f.turnId });
+    // The run died while it wrote part of an answer, which the journal keeps.
+    await f.t.mutation((ctx) =>
+      saveMessages(ctx, components.nina, {
+        threadId: f.threadId,
+        promptMessageId: f.promptMessageId,
+        messages: [{ role: "assistant", content: "private partial answer" }],
+        metadata: [{ finishReason: "length" }],
+      })
+    );
+    vi.setSystemTime(NOW + DEADLINE + 1);
+    await f.t.mutation(recover, { turnId: f.turnId });
+
+    expect((await f.inspect()).turn?.state).toMatchObject({
+      status: "failed",
+      reason: "interrupted",
+    });
+    expect(capture).toHaveBeenCalledOnce();
+    const sent = capture.mock.calls[0]?.[1];
+    expect(sent?.additionalProperties).toEqual({
+      source: "nina-response",
+      operation: "interrupted",
+      error_location: "settlement",
+    });
+    expect(sent?.error).toMatchObject({
+      name: "OperationalError(nina-response.interrupted.settlement)",
+      message: "Operational exception",
+    });
+    expect(sent?.distinctId).toBeUndefined();
+    expect(logged).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: "ERROR",
+        message: [
+          "Nina run was lost",
+          {
+            turnId: f.turnId,
+            openMs: expect.closeTo(DEADLINE + 1, 0),
+            source: "nina-response",
+            operation: "interrupted",
+            error_location: "settlement",
+          },
+        ],
+      })
+    );
+    expect(encodeJsonText([sent, logged.mock.calls])).not.toContain("private");
+  });
+
+  it("ends a lost turn even when its report cannot be queued", async () => {
+    vi.spyOn(PostHog.prototype, "captureException").mockRejectedValue(
+      new Error("private delivery failure")
+    );
+    const warned = vi.spyOn(console, "warn").mockImplementation(() => 0);
+    const f = await createNinaTest({ now: NOW });
+    await f.t.mutation(claim, { turnId: f.turnId });
+    vi.setSystemTime(NOW + DEADLINE + 1);
+    await f.t.mutation(recover, { turnId: f.turnId });
+
+    // A report that fails must not roll the settlement back: the hold would
+    // stay and the chat would stay busy.
+    const state = await f.inspect();
+    expect(state.turn?.state).toMatchObject({
+      status: "failed",
+      reason: "interrupted",
+    });
+    expect(state.user?.credits).toBe(10);
+    expect(state.chat?.activeTurnId).toBeUndefined();
+    expect(warned).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: "WARN",
+        message: "Nina diagnostics could not be queued.",
+      })
+    );
+    expect(encodeJsonText(warned.mock.calls)).not.toContain("private");
+  });
+
+  it.each([
+    [
+      "not as a lost run when the turn is within its deadline, because its run reports itself",
+      DEADLINE,
+      0,
+    ],
+    [
+      "once as a lost run when the turn stayed open past its deadline",
+      DEADLINE + 1,
+      1,
+    ],
+  ])(
+    "reports a failure that ends a turn: %s",
+    async (_name, openFor, reports) => {
+      const capture = vi
+        .spyOn(PostHog.prototype, "captureException")
+        .mockResolvedValue(undefined);
+      const f = await createNinaTest({ now: NOW });
+      await f.t.mutation(claim, { turnId: f.turnId });
+      vi.setSystemTime(NOW + openFor);
+
+      // The run's own exit passes the reason it failed with and the stages it
+      // reached, as `generation` does.
+      await f.t.mutation(recover, {
+        turnId: f.turnId,
+        failure: "provider-busy",
+        timing: { claimedMs: 1 },
+      });
+
+      expect((await f.inspect()).turn?.state).toMatchObject({
+        status: "failed",
+        reason: "provider-busy",
+      });
+      expect(capture).toHaveBeenCalledTimes(reports);
+    }
+  );
+});
