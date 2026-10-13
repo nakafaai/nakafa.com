@@ -213,14 +213,11 @@ nothing. So no profile is public yet.
 ### Naming The Accounts Made Before
 
 Accounts made before this decision got their usernames from a temporary
-migration (`users/migration:allocateUsernames`), the expand step. It reads one
-page of accounts at a time after a cursor, oldest first, and a dry pass counts
-the accounts that wait and writes nothing. Exit: it runs on dev and on
-production, dry first, until a dry pass over every account finds none waiting.
-Cleanup: delete the migration with its tests and bindings. The schema keeps
-`username` optional, because a deleted account holds none, so the cleanup
-changes no stored shape. Until a live account has its username, the account
-menu shows no profile entry for it and its profile address is not found.
+migration, the expand step. On 14 October 2026 it named 1 account on dev and 729
+accounts on production, page by page after a cursor, and a dry pass over every
+account then found none waiting, so the migration and its tests and bindings were
+deleted. The schema keeps `username` optional, because a deleted account holds
+none.
 
 ## Rejected Alternatives
 

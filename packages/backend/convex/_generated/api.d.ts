@@ -10244,14 +10244,6 @@ export declare const internal: {
     };
   };
   users: {
-    migration: {
-      allocateUsernames: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null; dry: boolean },
-        { allocated: number; next: string | null; waiting: number }
-      >;
-    };
     queries: {
       getUserByAuthId: FunctionReference<
         "query",
