@@ -5,19 +5,20 @@
 Accepted on 13 October 2026 with owner decisions K3, K10, and K11. The owner
 approved decisions K1 to K20 on that day. This ADR replaces ADR 0005. The
 classroom module, `confect/classroom`, is planned for program wave B (ADR 0013
-describes the waves). The first School's forum is retired in the releases of ADR
-0011: its web app, forum viewport included, is gone from main (#1051), and its
-backend stays until the contract release deletes it (K11). The design-system
-parts that the forum uses are live, except the ones its table marks as planned.
+describes the waves). The first School's forum is retired (K11), in the releases
+that ADR 0011 sets: its web app, forum viewport included, is gone from main
+(#1051), and its backend stays until the contract release deletes it. The
+design-system parts that the forum uses are live, except the ones its table
+marks as planned.
 
 ## Context
 
 ADR 0005 recorded an Effect-owned viewport for one conversation of the first
 School's forum. The contract release of the retirement (ADR 0011) deletes that
 ADR with the backend of the forum, and this ADR takes its place. Git keeps the
-old text (`git show ac134a0819:docs/adr/0005-forum-viewport.md`). The first
+old text (`git show e8511254af:docs/adr/0005-forum-viewport.md`). The first
 School's forum worked like this. The backend facts were read on main at
-`f8a5610808` on 13 October 2026, and the web facts at `ac134a0819`, the commit
+`f8a5610808` on 13 October 2026, and the web facts at `e8511254af`, the commit
 before #1051 deleted the web app:
 
 - Its threads are in `schoolClassForums` and its posts in `schoolClassForumPosts`
@@ -32,8 +33,9 @@ before #1051 deleted the web app:
   in `data/scroll`, 15 of them tests, counted with `git ls-tree`), and its
   transcript used Virtua. Main holds none of these files now.
 
-K11 deletes all of it, in the releases of ADR 0011, before the new School is
-built. The new School needs a class that is not a school identity (ADR 0011),
+K11 deletes all of it before the new School is built, and ADR 0011 sets the
+releases that do it, in the rollout order of `packages/backend/AGENTS.md`. The
+new School needs a class that is not a school identity (ADR 0011),
 numbered discussions, messages sealed with the school key (ADR 0030), mentions
 that reach the inbox (ADR 0027), files (ADR 0028), tasks, and one scroller that
 Nina's chat also uses.
@@ -315,8 +317,9 @@ The persisted snapshots and the navigation history of ADR 0005 are two of them.
 
 | Part | Status |
 | --- | --- |
-| The first School's forum backend: `schoolClassForums`, `schoolClassForumPosts`, and `confect/classes/forums` | Live on main at `f8a5610808`. The contract release of ADR 0011 deletes it (K11). |
+| The first School's forum backend: `schoolClassForums`, `schoolClassForumPosts`, and `confect/classes/forums` | Live on main at `f8a5610808`. The contract release of ADR 0011 deletes it, as K11 decides. |
 | The first School's forum screens and viewport in `apps/www/components/school` | Deleted from main by #1051 |
+| ADR 0005, and the glossary section `Forum Conversation` | Live. The contract release of ADR 0011 deletes both with the backend. |
 | `Message`, `Bubble`, `Attachment`, and `MessageScroller` in `packages/design-system/components/ui` | Live |
 | `Marker`, `Item`, `MessageAvatar`, `MessageHeader`, `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, program wave B, from the registry |
 | `confect/classroom` and its tables `classrooms`, `classroomMembers`, `classroomPosts`, `classroomThreads`, `classroomMessages`, `classroomReactions`, `classroomReads`, `classroomFolders`, `classroomTasks`, `classroomSubmissions`, and `classroomChannels` | Planned, program wave B |
