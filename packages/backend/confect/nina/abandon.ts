@@ -7,9 +7,10 @@ import { Effect } from "effect";
  * Ends an open turn that `settleTurn` could not settle, so that no failure of
  * the Agent journal keeps the chat busy and the credits held for good. The sweep
  * ends a turn this way when every try to settle it failed, and the delete of a
- * chat ends its open turn this way when the first try fails, so a failure of the
- * journal never keeps the learner from deleting a chat (`chatsHandler`). The
- * journal is used while it works: an answer it holds still completes the turn.
+ * chat ends its open turn this way when the first try fails, so a journal that
+ * cannot settle the turn never keeps the learner from deleting a chat
+ * (`chatsHandler`). The journal is used while it works: an answer it holds
+ * still completes the turn.
  * A journal that cannot be read counts as holding no answer, and one that
  * cannot cut the turn off is left as it is; the log keeps the turn in both
  * cases. A turn the learner stopped ends as cancelled, any other as failed for

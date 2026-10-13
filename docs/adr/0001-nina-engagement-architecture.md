@@ -474,12 +474,14 @@ the chat is free:
   fails, or is cancelled when the learner had stopped it, an answer the journal
   does hold still completes it, and the chat is free. Deleting a chat does not
   wait for it: when the journal fails the settlement of the chat's open turn,
-  the delete ends the turn the same way, in its own transaction, and goes on, so
-  a failure of the journal never keeps a learner from deleting their chat. A
-  hold that cannot be paid back is the one thing that ending never drops. When
-  the credit state cannot be read, the ending fails as a whole and changes
-  nothing, and the next sweep tries again. A delete of that chat fails the same
-  way, because the learner's credits are not dropped to free it.
+  the delete ends the turn the same way, in the transaction of the delete, and
+  goes on, so a journal that cannot settle the turn never keeps a learner from
+  deleting their chat. A hold that cannot be paid back is the one thing that
+  ending never drops. When the credit state cannot be read, the ending fails as
+  a whole and changes nothing, and the next sweep tries again. A delete of that
+  chat fails the same way, because the learner's credits are not dropped to free
+  it. So does a delete whose journal cannot be deleted: it commits nothing, so a
+  deleted chat never leaves its words behind, and the learner tries again.
 - The failed turn stores `unknown`, which the learner reads as a response Nina
   could not finish, with a way to try again and to ask for help. A reason of its
   own would be a new value of the stored failure reason. Every web build reads

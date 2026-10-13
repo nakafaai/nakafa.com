@@ -478,6 +478,31 @@ describe("native Nina deletion lifecycle", () => {
     expect(kept.user?.credits).toBe(5);
   });
 
+  it("keeps the chat, its open turn and the hold when the Agent journal cannot be deleted, so a deleted chat never leaves its words behind", async () => {
+    const { t, owner, identity, receipt } = await fixture();
+    await t.mutation(claim, { turnId: receipt.turnId });
+    // The chat names a thread that the Agent component cannot delete, while the
+    // open turn still names the real one, so its settlement works.
+    await t.mutation((ctx) =>
+      ctx.db.patch("chats", receipt.chatId, { threadId: "fixture-thread" })
+    );
+
+    await expect(
+      owner.mutation(remove, { chatId: receipt.chatId })
+    ).rejects.toThrow();
+
+    // Nothing of the delete committed, the end it had made of the open turn
+    // included. The learner can try again once the journal can be deleted.
+    const kept = await t.query(async (ctx) => ({
+      chat: await ctx.db.get("chats", receipt.chatId),
+      turn: await ctx.db.get("ninaTurns", receipt.turnId),
+      user: await ctx.db.get("users", identity.userId),
+    }));
+    expect(kept.chat?.activeTurnId).toBe(receipt.turnId);
+    expect(kept.turn).toMatchObject({ phase: "active" });
+    expect(kept.user?.credits).toBe(5);
+  });
+
   it("account cleanup removes owned pending grants and Agent threads while preserving another owner's journal", async () => {
     const { t, owner, identity, receipt } = await fixture();
     const pending = Ref.decodeReturnsSync(
