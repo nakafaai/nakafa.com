@@ -52,6 +52,18 @@ it.
   visible `Activity` lets the lesson hydrate, and answer presses, before the
   renderer's code arrives.
 
+## Player
+
+The player of a running try-out section (`apps/www/components/player`) follows
+both homes. What only the learner and the player's observers write, namely the
+current question, the view, the open overlay, and the request to reveal a
+question, lives in a store that `PlayerProvider` creates once per player. What
+the questions hold, such as their answers, travels in props from the binding to
+the parts that use it, because the signed question bodies stream in a Suspense
+boundary below the provider. A context that changed when the live attempt
+arrived would make React discard the HTML the server sent for that boundary,
+while the store never changes, so it can sit above it.
+
 ## Consequences
 
 - `scripts/check/react.ts`, run by `pnpm check:tests`, rejects

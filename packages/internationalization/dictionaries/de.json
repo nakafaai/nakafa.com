@@ -368,6 +368,25 @@
     "attempt-not-in-progress": "Starte eine neue Sitzung, um weiterzuüben.",
     "submit-answer-error": "Deine Antwort konnte nicht gespeichert werden. Versuche es erneut."
   },
+  "Player": {
+    "navigator": "Aufgaben",
+    "navigator-open": "Aufgabenübersicht öffnen, Aufgabe {number}",
+    "controls": "Aufgabensteuerung",
+    "previous-question": "Vorherige Aufgabe",
+    "next-question": "Nächste Aufgabe",
+    "mode": "Ansicht",
+    "mode-list": "Liste",
+    "mode-single": "Eine Aufgabe",
+    "mode-error": "Deine Ansicht konnte nicht gespeichert werden. Versuche es erneut.",
+    "cell": "{state, select, answered {Aufgabe {number}, beantwortet} other {Aufgabe {number}, offen}}",
+    "unanswered": "Noch offen",
+    "time-left": "Noch {hours, plural, =0 {} one {# Stunde } other {# Stunden }}{minutes, plural, one {# Minute} other {# Minuten}} {seconds, plural, one {# Sekunde} other {# Sekunden}}",
+    "time-five": "Noch 5 Minuten",
+    "time-one": "Noch 1 Minute",
+    "shortcut-step": "Vorherige oder nächste Aufgabe",
+    "shortcut-pick": "Option wählen",
+    "shortcut-navigator": "Aufgabenübersicht"
+  },
   "Utils": {
     "clear-search": "Suche löschen",
     "search-bar-placeholder": "Inhalte durchsuchen...",

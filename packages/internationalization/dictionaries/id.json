@@ -368,6 +368,25 @@
     "attempt-not-in-progress": "Mulai sesi baru dulu ya untuk lanjut latihan.",
     "submit-answer-error": "Ada masalah saat menyimpan jawaban. Coba lagi ya."
   },
+  "Player": {
+    "navigator": "Soal",
+    "navigator-open": "Buka navigasi soal, soal {number}",
+    "controls": "Kontrol soal",
+    "previous-question": "Soal sebelumnya",
+    "next-question": "Soal berikutnya",
+    "mode": "Tampilan",
+    "mode-list": "Daftar",
+    "mode-single": "Satu soal",
+    "mode-error": "Tampilanmu belum bisa disimpan. Coba lagi ya.",
+    "cell": "{state, select, answered {Soal {number}, terjawab} other {Soal {number}, belum dijawab}}",
+    "unanswered": "Belum dijawab",
+    "time-left": "Sisa waktu {hours, plural, =0 {} other {# jam }}{minutes} menit {seconds} detik",
+    "time-five": "Sisa waktu 5 menit",
+    "time-one": "Sisa waktu 1 menit",
+    "shortcut-step": "Soal sebelumnya atau berikutnya",
+    "shortcut-pick": "Pilih opsi",
+    "shortcut-navigator": "Navigasi soal"
+  },
   "Utils": {
     "clear-search": "Hapus pencarian",
     "search-bar-placeholder": "Cari konten...",
