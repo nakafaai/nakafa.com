@@ -32,6 +32,8 @@ that the model must change:
 - The scoring strategies are `irt`, `penalized`, and `raw`. The IRT strategy
   uses a 2PL model with provisional parameters. Main has no calibration job
   (`packages/backend/confect/tryouts/runtime/estimate.ts`).
+- Multiple choice and category answers are all or nothing in code
+  (`packages/backend/confect/response/evaluation.ts`).
 - The player has no calculator, formula sheet, option elimination, highlighter,
   notes, line reader, or accommodations. Navigation is by time only.
 - `packages/backend/confect/response` rewrites the option, category, statement,
@@ -193,6 +195,8 @@ has exactly one owner.
   window.
 - One flag table, `assessmentFlags`, holds every assessment flag. The
   branch-only `tryoutFlags` never ships.
+- Nina reads each question's raw MDX (`packages/backend/confect/nina/focus.ts`).
+  That reader moves to the assessment document in the same release.
 - No Aksara release may contain short-answer or rubric content until the renderer
   and grading are installed. This is a release gate in wave B.
 

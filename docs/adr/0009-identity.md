@@ -78,7 +78,8 @@ path ends in the Better Auth session that the rest of this ADR checks.
   is stored in the school's login table and maps to a Better Auth username that
   is unique worldwide and created automatically. Username sign-in works on the
   school's host only. That path is switched off on main, so it needs a test
-  before it opens.
+  before it opens. A school username is a login name only, never a public
+  profile handle (K15).
 - **Login card.** A card carries a 10-character Crockford base32 code, without
   the letters I, L, O, and U. Nakafa stores only a keyed hash of the code. A code
   is single use, expires after 14 days, and is rate limited by the existing

@@ -61,6 +61,8 @@ returns only those fields.
 
 ### Subdomains
 
+Planned. The host rewrite is on a local branch, and ADR 0026 lists what is live.
+
 `slug.nakafa.com` serves the School routes through a host rewrite in the proxy,
 which never reads the database and routes only labels that are a valid
 `TenantSlug` outside `reservedSlugs`. Unknown tenants render the School
