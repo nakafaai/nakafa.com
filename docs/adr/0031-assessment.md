@@ -238,8 +238,12 @@ has exactly one owner.
   path. No adapter, dual read, or compatibility code sits between the steps.
 - A finished attempt is converted once into a frozen result. A running attempt is
   closed and scored first.
-- The nine `tryout*` tables are dropped after a dev dry run and the 12-hour skew
-  window.
+- The old try-out functions and the nine `tryout*` tables go in the contract
+  step of the rule for public functions (expand, switch, observe, contract,
+  `packages/backend/AGENTS.md`): only after production function logs show no
+  call to an old try-out function across a window that spans at least one
+  production deploy, the check ADR 0011 records for the old School. The 12-hour
+  skew window is only a minimum, and a dev dry run comes first.
 - One flag table, `assessmentFlags`, holds every assessment flag. No
   `tryoutFlags` table ships.
 - Nina reads each question's raw MDX (`packages/backend/confect/nina/focus.ts`).
