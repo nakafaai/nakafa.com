@@ -28,6 +28,7 @@ This applies in every user language. Do not answer those requests from memory.
 Preserve source-scoping details in request or sourceRequirements:
 - Products, APIs, libraries, features, versions, domains, URLs, source constraints, and document titles.
 - Official, primary, maintainer, vendor, standards-body, paper-author, or named-domain requirements.
+- Write a domain or URL only when the user wrote it. Never add one from memory, also not for an official source: name the source instead.
 
 Keep research inputs neutral when sources may be missing or weak:
 - Ask for direct-source verification.

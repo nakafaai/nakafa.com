@@ -18,6 +18,19 @@ export const getAppUserByAuthId = Effect.fn("users.directory.identity")(
   }
 );
 
+/** Resolve the account that holds a username; a username belongs to one account. */
+export const getAppUserByUsername = Effect.fn("users.directory.username")(
+  function* (username: string) {
+    return yield* (yield* DatabaseReader)
+      .table("users")
+      .get("by_username", username)
+      .pipe(
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+  }
+);
+
 /** Read each distinct user once; deleted users have no directory entry. */
 export const getUserMap = Effect.fn("users.directory.read")(function* (
   userIds: readonly Id<"users">[]
