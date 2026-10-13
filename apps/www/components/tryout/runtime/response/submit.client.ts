@@ -8,12 +8,19 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   applyOptimisticTryoutResponse,
+  nextTryoutResponseVersion,
   type TryoutResponseSelection,
+  tryoutSubmitFailureOf,
 } from "@/components/tryout/runtime/response/state";
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 import { reportClientException } from "@/lib/analytics/client";
 
-/** Owns the mutation, optimistic cache, and error boundary for responses. */
+/**
+ * Owns the mutation, optimistic cache, and error boundary for responses. Each
+ * write carries the next version of its question. When the server refuses it
+ * because a newer write took its place, Convex drops the optimistic value with
+ * the failed mutation and the screen shows the server's value again.
+ */
 export function useTryoutResponseSubmit() {
   const saveResponse = useMutation(
     tryouts.mutations.responses.save
@@ -37,11 +44,13 @@ export function useTryoutResponseSubmit() {
     question: TryoutRuntimeQuestion,
     selection: TryoutResponseSelection | null
   ) => {
+    const version = nextTryoutResponseVersion(question);
     Effect.runFork(
       Effect.tryPromise(() =>
         saveResponse({
           placementId: question.placementId,
           selection,
+          version,
         })
       ).pipe(
         Effect.flatMap((result) =>
@@ -101,11 +110,11 @@ function handleSubmitError(
   tTryouts: ReturnType<typeof useTranslations>,
   errorCode?: Ref.Error<typeof tryouts.mutations.responses.save>["code"]
 ) {
-  if (
-    errorCode === "TRYOUT_EXPIRED" ||
-    errorCode === "TRYOUT_ATTEMPT_NOT_ACTIVE" ||
-    errorCode === "TRYOUT_SECTION_NOT_ACTIVE"
-  ) {
+  const failure = tryoutSubmitFailureOf(errorCode);
+  if (failure === "stale") {
+    return Effect.void;
+  }
+  if (failure === "ended") {
     return Effect.sync(() => {
       toast.info(tTryouts("attempt-not-in-progress"), {
         position: "bottom-center",

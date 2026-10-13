@@ -126,7 +126,9 @@ const presentation = FunctionImpl.make(
  * interrupted turn's credits. A turn the learner stopped ends as cancelled,
  * whatever ended its run. Only the run's own exit knows which stages the turn
  * reached and what the history of its prompt cost, so only it passes `timing`
- * and `history`.
+ * and `history`, and the settlement reads `timing` as a run that came back to
+ * end its own turn: it reports its failure itself, so the settlement does not
+ * report the turn as a lost run.
  */
 const recover = FunctionImpl.make(
   schema,
