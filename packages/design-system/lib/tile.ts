@@ -1,7 +1,7 @@
 import { Hash } from "effect";
 
 /** A full turn is 360 degrees, whether it counts hues or gradient directions. */
-const TURN = 360;
+export const TURN = 360;
 /** The second tone sits this many degrees to the left or the right of the first. */
 const NEIGHBOUR = 34;
 const SIDES = 2;
@@ -18,6 +18,33 @@ function tone(lightness: number, chroma: number, hue: number) {
   return `oklch(${lightness} ${chroma} ${hue})`;
 }
 
+/** Wraps an angle in degrees into 0 up to 359, also when it is negative. */
+export function wrap(degrees: number) {
+  return ((degrees % TURN) + TURN) % TURN;
+}
+
+/**
+ * Reads the hash of a seed as digits: one hue out of 360, the side of the
+ * second tone, one of eight directions for the blend, and what is left, which
+ * a list uses to start from one icon of a pool. `middle` is the hue halfway
+ * between the two tones, which is the hue the eye takes the tile to have.
+ */
+export function readSeed(seed: string) {
+  const hash = Math.abs(Hash.string(seed));
+  const hue = hash % TURN;
+  const rest = Math.floor(hash / TURN);
+  const lean = rest % SIDES === 0 ? -NEIGHBOUR : NEIGHBOUR;
+  const aimed = Math.floor(rest / SIDES);
+
+  return {
+    direction: aimed % DIRECTIONS,
+    hue,
+    lean,
+    middle: wrap(hue + lean / 2),
+    spin: Math.floor(aimed / DIRECTIONS),
+  };
+}
+
 /**
  * The CSS background of a content tile, made from its seed.
  *
@@ -28,16 +55,13 @@ function tone(lightness: number, chroma: number, hue: number) {
  * belongs to one family and a white icon stays readable on it.
  *
  * @param seed - A key that does not change with language or edits, such as an id or a path
+ * @param shift - Degrees to turn the whole blend around the hue wheel, from `getTileShifts`; the seed alone gives 0
  * @returns A `linear-gradient(...)` for `background-image`
  */
-export function getTileGradient(seed: string) {
-  const hash = Math.abs(Hash.string(seed));
-  const hue = hash % TURN;
-  const rest = Math.floor(hash / TURN);
-  const side = rest % SIDES === 0 ? TURN - NEIGHBOUR : NEIGHBOUR;
-  const direction = Math.floor(rest / SIDES) % DIRECTIONS;
-  const ground = tone(GROUND_LIGHTNESS, GROUND_CHROMA, hue);
-  const second = tone(SECOND_LIGHTNESS, SECOND_CHROMA, (hue + side) % TURN);
+export function getTileGradient(seed: string, shift = 0) {
+  const { direction, hue, lean } = readSeed(seed);
+  const ground = wrap(hue + shift);
+  const second = wrap(ground + lean);
 
-  return `linear-gradient(${direction * (TURN / DIRECTIONS)}deg,${ground},${second})`;
+  return `linear-gradient(${direction * (TURN / DIRECTIONS)}deg,${tone(GROUND_LIGHTNESS, GROUND_CHROMA, ground)},${tone(SECOND_LIGHTNESS, SECOND_CHROMA, second)})`;
 }

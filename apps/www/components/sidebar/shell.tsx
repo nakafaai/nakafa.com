@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AiSheet } from "@/components/ai/sheet/frame";
+import { getArticleCategoryIcons } from "@/components/articles/category";
 import { DeferredSearchCommand } from "@/components/search/command/deferred";
 import { NavExplore } from "@/components/sidebar/explore";
 import { Header } from "@/components/sidebar/header/bar";
@@ -14,8 +15,11 @@ import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
  *
  * The shell composes the sidebar navigation slots around the resolved article
  * navigation, so the panel and the route chooser never carry data they do not
- * render themselves. A page locks it by rendering `ShellLock`. The layout that
- * mounts the shell decides whether its pages stream inside it.
+ * render themselves. It also takes the icon of each article category here, on
+ * the server, so the families of icons that a category picks from never enter
+ * the JavaScript that every page loads. A page locks it by rendering
+ * `ShellLock`. The layout that mounts the shell decides whether its pages
+ * stream inside it.
  *
  * The desktop sidebar keeps no gap in the page flow: the shell reserves its
  * width inside `<main>`, so a page that locks the shell never moves `<main>`.
@@ -44,7 +48,10 @@ export function AppShell({
               browse={
                 <>
                   <NavForYou />
-                  <NavExplore articleNavigation={articleNavigation} />
+                  <NavExplore
+                    articleIcons={getArticleCategoryIcons(articleNavigation)}
+                    articleNavigation={articleNavigation}
+                  />
                 </>
               }
             />
