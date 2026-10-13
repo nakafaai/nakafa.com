@@ -23,7 +23,7 @@ import { MathSeriesInputSchema } from "@repo/math/schema/tool/series";
 import { MathStatisticsInputSchema } from "@repo/math/schema/tool/statistics";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, ConfigProvider, Effect, Schema } from "effect";
+import { Array as Arr, ConfigProvider, Effect, Fiber, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/tools/compute", () => ({
   compute: vi.fn(),
@@ -425,6 +425,67 @@ describe("math Agent execution", () => {
         userId: expect.any(String),
       })
     );
+  });
+
+  it("ends a repair call that is in flight when the run is stopped, so a stopped turn spends no more on the background model", async () => {
+    let calls = 0;
+    let repairSignal: AbortSignal | undefined;
+    let started: () => void = () => undefined;
+    const repairing = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    // The first call writes a tool call that fails its schema, so the SDK asks
+    // for a repair. The repair call never answers: only its signal can end it.
+    const model = new MockLanguageModelV4({
+      doGenerate: ({ abortSignal }) => {
+        calls += 1;
+        if (calls === 1) {
+          return Promise.resolve(
+            providerStep(
+              [
+                {
+                  type: "tool-call",
+                  toolCallId: "repair",
+                  toolName: "algebra",
+                  input: '{"operation":"simplify"}',
+                },
+              ],
+              "tool-calls"
+            )
+          );
+        }
+        repairSignal = abortSignal;
+        started();
+        return new Promise<never>((_resolve, reject) => {
+          abortSignal?.addEventListener("abort", () =>
+            reject(abortSignal.reason)
+          );
+        });
+      },
+    });
+    provider.languageModel.mockReturnValue(model);
+    await runSpecialist((userId) =>
+      Effect.gen(function* () {
+        const running = yield* runMathAgent({
+          ...specialistRequest,
+          userId,
+          task: "Simplify x + x",
+          publish: () => Effect.void,
+          usageHandler: vi.fn(),
+        }).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, casConfig),
+          Effect.forkChild
+        );
+        yield* Effect.promise(() => repairing);
+        // A stop interrupts the run, as the capability stream does when its turn
+        // is stopped.
+        yield* Fiber.interrupt(running);
+      })
+    );
+
+    await vi.waitFor(() => expect(repairSignal?.aborted).toBe(true));
+    expect(model.doGenerateCalls).toHaveLength(2);
+    expect(compute).not.toHaveBeenCalled();
   });
 
   it("cuts its model call and its repair call to the time the capability has left", async () => {
