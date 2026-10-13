@@ -109,8 +109,9 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   milliseconds and one second (`NETWORK_RETRY_SCHEDULE`), and only after a
   failure that proves the request never reached the push service. A missed
   deadline and any answer of the push service end the send, so the action does
-  not call `retryNetworkAttempt`, which repeats a missed deadline. A push that
-  ends costs one push and no notification, because the inbox holds it.
+  not call `retryNetworkAttempt`, which repeats a missed deadline. A send that
+  ends without a delivery loses one push, and the inbox still holds the
+  notification.
 - The Resend component makes the email request and retries a failed batch in its
   own workpool. Its defaults are 5 attempts and a first backoff of 30 seconds
   that doubles (`@convex-dev/resend` 0.2.8, `src/client/index.ts`), and the
