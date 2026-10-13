@@ -557,8 +557,8 @@
       "title": "Files not attached",
       "type": "Only PNG, JPEG, WebP, GIF, PDF, and text files",
       "empty": "Empty file",
-      "size": "Larger than {size, number} MiB",
-      "count": "At most {count, number} files per message"
+      "size": "Larger than {size, number}\u00a0MiB",
+      "count": "At most {count, number}\u00a0files per message"
     },
     "ask-nina": "Ask Nina",
     "text-placeholder": "Ask Nina anything...",
@@ -745,9 +745,9 @@
       "context": "Nina could not load the learning material for this conversation. Please try again.",
       "attachment-invalid": "An attachment is invalid or no longer available. Choose it again and check its file type and size.",
       "attachment-limit": "You have reached the attachment limit. Send the files already uploaded or wait before uploading more.",
-      "attachment-size": "Documents in one message can total at most {size, number} MiB",
+      "attachment-size": "Documents in one message can total at most {size, number}\u00a0MiB",
       "attachment-failed": "Nina could not read or save the attachment. Please try uploading it again.",
-      "prompt-length": "Shorten the message to at most {count, number} characters",
+      "prompt-length": "Shorten the message to at most {count, number}\u00a0characters",
       "provider-busy": "The AI service is handling too many requests right now. Wait a moment, then try again.",
       "provider-unavailable": "The AI service is temporarily unavailable. Please try again shortly.",
       "service-configuration": "Nina cannot access the AI service right now. Please try again later. If this continues, contact Nakafa support.",

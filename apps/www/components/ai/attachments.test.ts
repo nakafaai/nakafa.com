@@ -16,6 +16,8 @@ import {
   splitFileName,
 } from "@/components/ai/attachments";
 
+/** The space that a line never breaks at, which keeps a number with its unit. */
+const NO_BREAK = "\u00a0";
 const MiB = 1024 * 1024;
 /** One tenth of a MiB, rounded up to a whole byte. */
 const TENTH_MIB = Math.ceil(MiB / 10);
@@ -122,6 +124,26 @@ describe("notice of the files that were not attached", () => {
         expect(Arr.dedupe(reasons)).toHaveLength(4);
         expect(size).toContain(String(NINA_FILE_MEBIBYTES));
         expect(count).toContain(String(NINA_FILE_COUNT));
+      });
+
+      it("keeps each number with its unit or its noun on one line", () => {
+        const [size, count] = Arr.map(
+          rejectionNotice(
+            [
+              rejected("max_file_size", ["report.pdf"]),
+              rejected("max_files", ["extra.png"]),
+            ],
+            t
+          ).reasons,
+          ({ reason }) => reason
+        );
+
+        // The learner reads "10 MiB" and "10 files" as one word each, so a line
+        // never ends between the number and what it counts.
+        expect(size).toContain(`${NINA_FILE_MEBIBYTES}${NO_BREAK}`);
+        expect(size).not.toContain(`${NINA_FILE_MEBIBYTES} `);
+        expect(count).toContain(`${NINA_FILE_COUNT}${NO_BREAK}`);
+        expect(count).not.toContain(`${NINA_FILE_COUNT} `);
       });
 
       it("says the same title for one file as for many", () => {

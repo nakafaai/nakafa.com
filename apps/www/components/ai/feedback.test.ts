@@ -23,6 +23,9 @@ vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 
 afterEach(() => vi.clearAllMocks());
 
+/** The space that a line never breaks at, which keeps a number with its unit. */
+const NO_BREAK = "\u00a0";
+
 const copy = {
   fallbackMessage: "Something went wrong.",
   insufficientCreditsMessage: "You need more credits.",
@@ -156,6 +159,29 @@ describe("the sentences of the failure table", () => {
       // A number reads the way its language writes it: 100,000 or 100.000.
       expect(t("failures.prompt-length", ninaFailureLimits)).toContain(
         new Intl.NumberFormat(locale).format(NINA_PROMPT_LENGTH)
+      );
+    });
+
+    it(`keeps each number with its unit or its noun on one line, in ${locale}`, () => {
+      const t = createTranslator({ locale, messages, namespace: "Ai" });
+      const length = new Intl.NumberFormat(locale).format(NINA_PROMPT_LENGTH);
+      const size = new Intl.NumberFormat(locale).format(
+        NINA_DOCUMENT_MEBIBYTES
+      );
+
+      // The learner reads "10 MiB" and "100,000 characters" as one word each,
+      // so a line never ends between the number and what it counts.
+      expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
+        `${size}${NO_BREAK}`
+      );
+      expect(t("failures.prompt-length", ninaFailureLimits)).toContain(
+        `${length}${NO_BREAK}`
+      );
+      expect(t("failures.attachment-size", ninaFailureLimits)).not.toContain(
+        `${size} `
+      );
+      expect(t("failures.prompt-length", ninaFailureLimits)).not.toContain(
+        `${length} `
       );
     });
   }

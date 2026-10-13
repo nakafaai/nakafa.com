@@ -557,8 +557,8 @@
       "title": "Dateien nicht angehängt",
       "type": "Nur PNG-, JPEG-, WebP-, GIF-, PDF- und Textdateien",
       "empty": "Leere Datei",
-      "size": "Größer als {size, number} MiB",
-      "count": "Höchstens {count, number} Dateien pro Nachricht"
+      "size": "Größer als {size, number}\u00a0MiB",
+      "count": "Höchstens {count, number}\u00a0Dateien pro Nachricht"
     },
     "ask-nina": "Nina fragen",
     "text-placeholder": "Frag Nina etwas...",
@@ -745,9 +745,9 @@
       "context": "Nina konnte das Lernmaterial für dieses Gespräch nicht laden. Bitte versuche es erneut.",
       "attachment-invalid": "Ein Anhang ist ungültig oder nicht mehr verfügbar. Wähle die Datei erneut aus und prüfe ihren Typ und ihre Größe.",
       "attachment-limit": "Du hast das Limit für Anhänge erreicht. Sende die bereits hochgeladenen Dateien oder warte, bevor du weitere hochlädst.",
-      "attachment-size": "Die Dokumente einer Nachricht dürfen zusammen höchstens {size, number} MiB groß sein",
+      "attachment-size": "Die Dokumente einer Nachricht dürfen zusammen höchstens {size, number}\u00a0MiB groß sein",
       "attachment-failed": "Nina konnte den Anhang nicht lesen oder speichern. Lade ihn bitte erneut hoch.",
-      "prompt-length": "Kürze die Nachricht auf höchstens {count, number} Zeichen",
+      "prompt-length": "Kürze die Nachricht auf höchstens {count, number}\u00a0Zeichen",
       "provider-busy": "Der KI-Dienst erhält gerade zu viele Anfragen. Warte kurz und versuche es dann erneut.",
       "provider-unavailable": "Der KI-Dienst ist vorübergehend nicht verfügbar. Versuche es in Kürze erneut.",
       "service-configuration": "Nina kann gerade nicht auf den KI-Dienst zugreifen. Versuche es später erneut. Falls das Problem bestehen bleibt, kontaktiere den Nakafa-Support.",
