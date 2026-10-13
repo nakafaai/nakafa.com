@@ -116,7 +116,7 @@ compare exactly; a float compares within the interaction's stated tolerance).
 Any other `true` about expressions with free variables comes from sampling and is
 treated as a sample. The engine is Cortex Compute Engine
 (`@cortex-js/compute-engine`, planned: it is not in the backend manifest today).
-In the pinned version (0.152.0, read in `src/compute-engine/boxed-expression/compare.ts`)
+In the pinned version (0.152.0, read in its `compare.ts` at the release commit)
 `isEqual` runs with the prover off and never samples; a contract test pins that
 (`(x+1)^2` against `x^2+2x+1` stays undefined under `isEqual`), so an upgrade
 that adds a sampling path to `isEqual` fails the test before it can grade.
