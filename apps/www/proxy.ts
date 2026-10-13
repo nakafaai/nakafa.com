@@ -14,7 +14,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
-import { readSchoolAuthRedirect } from "@/lib/auth/school";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   matchesInternalPreviewRoute,
@@ -121,12 +120,6 @@ export async function proxy(request: NextRequest) {
 
   if (isOgRouteAliasPathname(pathname)) {
     return NextResponse.next();
-  }
-
-  const schoolAuthRedirect = readSchoolAuthRedirect(request);
-
-  if (schoolAuthRedirect) {
-    return NextResponse.redirect(schoolAuthRedirect);
   }
 
   const { markdownExtension: migrationSuffix, pathname: migrationPathname } =

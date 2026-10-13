@@ -284,7 +284,7 @@ describe("proxy", () => {
   });
   it.each([
     "/fr/search",
-    "/fr/school/onboarding/create",
+    "/fr/user/settings/memory",
     "/fr/example.og",
     "/fr/example.png",
   ])("hard-rejects the unselected candidate route %s", async (path) => {
@@ -299,33 +299,6 @@ describe("proxy", () => {
       const response = await requestProxy(path);
       expectHardNotFound(response, "en");
       expect(previewMocks.pathname).not.toHaveBeenCalled();
-    }
-  );
-  it.each([
-    [
-      "/en/school/select",
-      "http://localhost:3000/en/auth?redirect=%2Fen%2Fschool%2Fselect",
-    ],
-    [
-      "/school/onboarding",
-      "http://localhost:3000/en/auth?redirect=%2Fen%2Fschool%2Fonboarding",
-    ],
-  ])(
-    "optimistically redirects the protected School route %s",
-    async (path, expected) => {
-      const response = await requestProxy(path);
-      expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toBe(expected);
-      expectNoLocaleProxy();
-    }
-  );
-  it.each(["/en/school", "/en/school/select"])(
-    "delegates the available School route %s",
-    async (path) => {
-      const response = await requestProxy(path, {
-        headers: { cookie: "better-auth.session_token=fixture-session" },
-      });
-      expectLocaleProxy(response);
     }
   );
   it.each(localeHints)(

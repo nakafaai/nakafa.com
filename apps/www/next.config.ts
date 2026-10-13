@@ -168,11 +168,6 @@ function createLocalizedRedirects() {
       destination: "/:locale/onboarding",
       permanent: true,
     },
-    {
-      source: `/${LOCALE_SEGMENT}/school/:slug/classes/:id/timeline`,
-      destination: "/:locale/school/:slug/classes/:id/forum",
-      permanent: true,
-    },
   ];
   const redirects = [
     {

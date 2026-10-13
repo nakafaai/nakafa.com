@@ -4014,6 +4014,7 @@ export declare const api: {
                   text: string;
                 }
               | null;
+            version?: number;
           },
           null
         >;
@@ -4307,6 +4308,7 @@ export declare const api: {
                         };
                     sourcePath: string;
                     sourceRevision: string;
+                    version?: number;
                   }>;
                   section: {
                     answeredCount: number;
@@ -4621,6 +4623,7 @@ export declare const api: {
                         };
                     sourcePath: string;
                     sourceRevision: string;
+                    version?: number;
                   }>;
                   section: {
                     answeredCount: number;
@@ -4929,6 +4932,7 @@ export declare const api: {
                         };
                     sourcePath: string;
                     sourceRevision: string;
+                    version?: number;
                   }>;
                   section: {
                     answeredCount: number;
@@ -5633,6 +5637,7 @@ export declare const api: {
                     };
                 sourcePath: string;
                 sourceRevision: string;
+                version?: number;
               }>;
               section: {
                 answeredCount: number;
@@ -5827,6 +5832,7 @@ export declare const api: {
                     };
                 sourcePath: string;
                 sourceRevision: string;
+                version?: number;
               }>;
               section: {
                 answeredCount: number;

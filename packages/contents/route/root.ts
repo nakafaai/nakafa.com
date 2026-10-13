@@ -15,7 +15,6 @@ export const APPLICATION_ROUTE_ROOTS = HashSet.make(
   "onboarding",
   "pricing",
   "quran",
-  "school",
   "search",
   "user"
 );
