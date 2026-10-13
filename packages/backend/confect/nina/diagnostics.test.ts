@@ -1,5 +1,5 @@
 import { Ref } from "@confect/core";
-import { saveMessages } from "@convex-dev/agent";
+import { listMessages, saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -15,15 +15,22 @@ import { Duration, Effect } from "effect";
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
+vi.mock("@convex-dev/agent", async (load) => {
+  const actual = await load<typeof import("@convex-dev/agent")>();
+  return { ...actual, listMessages: vi.fn(actual.listMessages) };
+});
 
 const NOW = Date.UTC(2026, 8, 27, 12);
 const DEADLINE = Duration.toMillis(TURN_DEADLINE);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
+const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
+const remove = Ref.getFunctionReference(refs.public.chats.mutations.deleteChat);
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.mocked(listMessages).mockReset();
   provider.languageModel.mockReset();
 });
 
@@ -229,6 +236,56 @@ describe("The report of a turn whose run was lost", () => {
         status: "failed",
         reason: "provider-busy",
       });
+      expect(capture).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([
+    { journal: "works", unreadable: false, operation: "interrupted" },
+    { journal: "cannot be read", unreadable: true, operation: "unknown" },
+  ])(
+    "reports the lost run of a chat deleted after its deadline once, when its journal $journal",
+    async ({ unreadable, operation }) => {
+      const capture = stubReport();
+      const f = await createNinaTest({ now: NOW });
+      await f.t.mutation(claim, { turnId: f.turnId });
+      if (unreadable) {
+        vi.mocked(listMessages).mockRejectedValue(
+          new Error("Private component failure")
+        );
+      }
+      vi.setSystemTime(NOW + DEADLINE + 1);
+
+      // The delete ends the turn as cancelled, or without its journal as failed,
+      // and the run was lost either way: the report does not depend on the
+      // journal.
+      await f.owner.mutation(remove, { chatId: f.chatId });
+
+      expect(capture).toHaveBeenCalledOnce();
+      expect(capture.mock.calls[0]?.[1].additionalProperties).toEqual({
+        source: "nina-response",
+        operation,
+        error_location: "settlement",
+      });
+    }
+  );
+
+  it.each([
+    { turn: "within its deadline", stopped: false, openFor: DEADLINE },
+    { turn: "that the learner stopped", stopped: true, openFor: DEADLINE + 1 },
+  ])(
+    "does not report a chat deleted with a turn $turn",
+    async ({ stopped, openFor }) => {
+      const capture = stubReport();
+      const f = await createNinaTest({ now: NOW });
+      await f.t.mutation(claim, { turnId: f.turnId });
+      if (stopped) {
+        await f.owner.mutation(cancel, { chatId: f.chatId });
+      }
+      vi.setSystemTime(NOW + openFor);
+
+      await f.owner.mutation(remove, { chatId: f.chatId });
+
       expect(capture).not.toHaveBeenCalled();
     }
   );

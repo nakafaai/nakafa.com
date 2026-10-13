@@ -13,14 +13,12 @@ import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import { resolveEffectiveCreditState } from "@repo/backend/confect/credits/state";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
-import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { stubReport } from "@repo/backend/test/nina/report";
 import { sealedSummary } from "@repo/backend/test/seal";
-import { Array as Arr, DateTime, Duration, Effect } from "effect";
+import { Array as Arr, DateTime, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -42,7 +40,6 @@ vi.mock("@convex-dev/agent", async (load) => {
   };
 });
 const NOW = Date.UTC(2026, 8, 27, 12);
-const DEADLINE = Duration.toMillis(TURN_DEADLINE);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const save = Ref.getFunctionReference(refs.public.nina.uploads.save);
 const add = Ref.getFunctionReference(refs.public.nina.memory.add);
@@ -52,7 +49,6 @@ const share = Ref.getFunctionReference(
   refs.public.chats.mutations.updateChatVisibility
 );
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
-const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
 const cleanup = Ref.getFunctionReference(
   refs.internal.auth.cleanup.cleanupDeletedUser
@@ -127,7 +123,15 @@ async function fixture() {
       },
     })
   );
-  return { t, owner, identity, receipt, fileId: grant.state.fileId };
+  /** What a delete leaves of the chat, its first turn, the learner's credits and the ledger. */
+  const read = () =>
+    t.query(async (ctx) => ({
+      chat: await ctx.db.get("chats", receipt.chatId),
+      turn: await ctx.db.get("ninaTurns", receipt.turnId),
+      user: await ctx.db.get("users", identity.userId),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+    }));
+  return { t, owner, identity, receipt, fileId: grant.state.fileId, read };
 }
 
 describe("native Nina deletion lifecycle", () => {
@@ -299,19 +303,13 @@ describe("native Nina deletion lifecycle", () => {
   });
 
   it("settles a running turn at once when its chat is deleted, and tells its run to halt", async () => {
-    const { t, owner, identity, receipt } = await fixture();
+    const { t, owner, receipt, read } = await fixture();
     await t.mutation(claim, { turnId: receipt.turnId });
     await owner.mutation(remove, { chatId: receipt.chatId });
 
     // The turn settles in the deleting transaction: the hold comes back without
     // waiting for the run to exit, and the run's next check finds its turn
     // settled.
-    const read = () =>
-      t.query(async (ctx) => ({
-        turn: await ctx.db.get("ninaTurns", receipt.turnId),
-        user: await ctx.db.get("users", identity.userId),
-        ledger: await ctx.db.query("creditTransactions").collect(),
-      }));
     const settled = await read();
     expect(settled.turn?.state.status).toBe("cancelled");
     expect(settled.user?.credits).toBe(10);
@@ -333,7 +331,7 @@ describe("native Nina deletion lifecycle", () => {
   ])(
     "deletes a chat whose open turn cannot be settled because its journal cannot be $failure, and ends the turn once",
     async ({ journal }) => {
-      const { t, owner, identity, receipt } = await fixture();
+      const { t, owner, receipt, read } = await fixture();
       await t.mutation(claim, { turnId: receipt.turnId });
       journal.mockRejectedValue(new Error("Private component failure"));
 
@@ -341,13 +339,6 @@ describe("native Nina deletion lifecycle", () => {
 
       // The delete committed, and the turn ended in its transaction without the
       // journal: the hold came back once.
-      const read = () =>
-        t.query(async (ctx) => ({
-          chat: await ctx.db.get("chats", receipt.chatId),
-          turn: await ctx.db.get("ninaTurns", receipt.turnId),
-          user: await ctx.db.get("users", identity.userId),
-          ledger: await ctx.db.query("creditTransactions").collect(),
-        }));
       const ended = await read();
       expect(ended.chat).toBeNull();
       expect(ended.turn).toMatchObject({
@@ -370,85 +361,8 @@ describe("native Nina deletion lifecycle", () => {
     }
   );
 
-  describe("when its run was lost", () => {
-    let report: ReturnType<typeof stubReport>;
-
-    beforeEach(() => {
-      report = stubReport();
-    });
-    afterEach(() => {
-      report.mockRestore();
-    });
-
-    it.each([
-      {
-        name: "nothing for a turn within its deadline",
-        openFor: DEADLINE,
-        unreadable: false,
-        reported: undefined,
-      },
-      {
-        name: "one loss for a turn past its deadline",
-        openFor: DEADLINE + 1,
-        unreadable: false,
-        reported: "interrupted",
-      },
-      {
-        name: "nothing for a turn within its deadline when the journal cannot be read",
-        openFor: DEADLINE,
-        unreadable: true,
-        reported: undefined,
-      },
-      {
-        name: "one loss for a turn past its deadline when the journal cannot be read",
-        openFor: DEADLINE + 1,
-        unreadable: true,
-        reported: "unknown",
-      },
-    ])(
-      "reports $name when the chat is deleted",
-      async ({ openFor, unreadable, reported }) => {
-        const { owner, receipt, t } = await fixture();
-        await t.mutation(claim, { turnId: receipt.turnId });
-        if (unreadable) {
-          vi.mocked(listMessages).mockRejectedValue(
-            new Error("Private component failure")
-          );
-        }
-        vi.setSystemTime(NOW + openFor);
-
-        await owner.mutation(remove, { chatId: receipt.chatId });
-
-        // However the delete ended the turn, a run that no one stopped and that
-        // was still not done after its deadline was lost, and it is reported
-        // once, so the report does not depend on the journal.
-        if (reported === undefined) {
-          expect(report).not.toHaveBeenCalled();
-          return;
-        }
-        expect(report).toHaveBeenCalledOnce();
-        expect(report.mock.calls[0]?.[1].additionalProperties).toEqual({
-          source: "nina-response",
-          operation: reported,
-          error_location: "settlement",
-        });
-      }
-    );
-
-    it("reports nothing for a turn that the learner had stopped", async () => {
-      const { owner, receipt, t } = await fixture();
-      await t.mutation(claim, { turnId: receipt.turnId });
-      await owner.mutation(cancel, { chatId: receipt.chatId });
-      vi.setSystemTime(NOW + DEADLINE + 1);
-
-      await owner.mutation(remove, { chatId: receipt.chatId });
-
-      expect(report).not.toHaveBeenCalled();
-    });
-  });
-
   it("keeps the chat when the hold of its open turn cannot be paid back, so no credit is dropped to free it", async () => {
-    const { t, owner, identity, receipt } = await fixture();
+    const { t, owner, receipt, read } = await fixture();
     await t.mutation(claim, { turnId: receipt.turnId });
     vi.mocked(listMessages).mockRejectedValue(
       new Error("Private component failure")
@@ -468,18 +382,14 @@ describe("native Nina deletion lifecycle", () => {
 
     // The delete rolled back as a whole: the chat, the open turn and the hold
     // stay as they were.
-    const kept = await t.query(async (ctx) => ({
-      chat: await ctx.db.get("chats", receipt.chatId),
-      turn: await ctx.db.get("ninaTurns", receipt.turnId),
-      user: await ctx.db.get("users", identity.userId),
-    }));
+    const kept = await read();
     expect(kept.chat?.activeTurnId).toBe(receipt.turnId);
     expect(kept.turn).toMatchObject({ phase: "active" });
     expect(kept.user?.credits).toBe(5);
   });
 
   it("keeps the chat, its open turn and the hold when the Agent journal cannot be deleted, so a deleted chat never leaves its words behind", async () => {
-    const { t, owner, identity, receipt } = await fixture();
+    const { t, owner, receipt, read } = await fixture();
     await t.mutation(claim, { turnId: receipt.turnId });
     // The chat names a thread that the Agent component cannot delete, while the
     // open turn still names the real one, so its settlement works.
@@ -493,11 +403,7 @@ describe("native Nina deletion lifecycle", () => {
 
     // Nothing of the delete committed, the end it had made of the open turn
     // included. The learner can try again once the journal can be deleted.
-    const kept = await t.query(async (ctx) => ({
-      chat: await ctx.db.get("chats", receipt.chatId),
-      turn: await ctx.db.get("ninaTurns", receipt.turnId),
-      user: await ctx.db.get("users", identity.userId),
-    }));
+    const kept = await read();
     expect(kept.chat?.activeTurnId).toBe(receipt.turnId);
     expect(kept.turn).toMatchObject({ phase: "active" });
     expect(kept.user?.credits).toBe(5);
