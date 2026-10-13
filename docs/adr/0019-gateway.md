@@ -232,8 +232,9 @@ thresholds in the catalog were set from what that command printed on 12 October
   - Sites. The research model reads only the task that Nina writes, not the
     learner's message, so the rule has two halves. Nina writes a domain or an
     address into the task only when the learner wrote it, never one from memory
-    (`research/capability.ts`), and the research model puts a site in a search
-    only when the task names that site or its address
+    (`research/capability.ts`), and the research model limits a search to a
+    site only when the task asks for results from that site alone; a page to
+    read or a source to check against others limits nothing
     (`research/descriptions.ts`). A request for an official, recent, or primary
     source names no site by itself, so unless the learner names one the search
     stays open and its queries carry the name of the source. A site

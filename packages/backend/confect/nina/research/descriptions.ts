@@ -12,7 +12,7 @@ import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
  * provider").
  */
 export const webSearchSitesRule =
-  "Put a site in the sites field only when the task names that site or its address. Put its hostname there, also when the task writes a URL, and not in the queries. A request for an official, recent, or primary source names no site by itself: leave the sites field out unless the task names one.";
+  "Put a site in the sites field only when the task asks for results from that site alone. A site or address that the task names for another reason, such as a page to read or a source to check against others, limits nothing: leave it out of the sites field. Put the hostname of a limiting site there, also when the task writes it as a URL, and not in the queries. A request for an official, recent, or primary source names no site by itself.";
 
 export const nakafaWebSearch = createPrompt({
   taskContext: `
