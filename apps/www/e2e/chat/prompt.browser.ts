@@ -7,15 +7,15 @@ import { NINA_SHOWCASE } from "@/e2e/support/selector";
 import { composerOf, promptWith } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** What a learner writes first: three lines that Markdown would read as markup, and a pasted set of exercises. */
+/** What a learner writes first: lines that Markdown would read as markup, then a pasted set of exercises. */
 const WORDS = `${LEARNER_TEXT.angle}\n${LEARNER_TEXT.product}\n${LEARNER_TEXT.choices}\n${PASTED}`;
 /** The address of a chat that a surface moves to once its first prompt is admitted. */
 const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
 
 /**
- * The prompt a surface shows while its first message is on the way: every word
- * as the learner wrote it, and a message as long as a pasted page folded, so
- * the surface that shows it is one of the places that decide how.
+ * What a surface shows while the first message of a learner is on its way:
+ * every word as they wrote it, and a message as long as a pasted page folded.
+ * A surface that read the words as Markdown, or showed them whole, fails here.
  */
 const showsWordsAsWritten = (page: Page, scope: Locator, changes: Changes) =>
   Effect.promise(async () => {
