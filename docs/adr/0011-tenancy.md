@@ -15,7 +15,7 @@ account. Schools control their students' data; Nakafa processes it for them.
 The first School let any signed-in user create a school through a public
 mutation, mapped roles to permissions in one static table, and kept member
 counters on the school document that every member action rewrote. It is retired
-without migration (see Retirement).
+and nothing of it is migrated (see Retirement).
 
 ## Decision
 
@@ -118,14 +118,23 @@ that never ran.
 
 ### Retirement of the first School
 
-New tables and functions live beside the `school*` tables (expand). School
-routes then switch to the new functions; the old ones are observed until no
-deployed client calls them. A Convex backup of production is taken right before
-deletion, then an internal batched mutation deletes every `school*` row, the
-forum aggregates, and their files, on dev and then production, until the counts
-are zero. Last, the old functions, tables, the forum viewport engine and its
-tests, and the old account deletion steps are removed, and a new ADR supersedes
-ADR 0005. The classroom lane owns the retirement.
+Nobody uses the first School, so all of it goes before the new School is built
+and nothing of it is reused: its routes, components, functions, forum viewport
+engine, and the account deletion step that handed a school to a successor are
+deleted, and so is its data, with no backup and no production export. The
+owner of a school is deleted like any other account.
+
+Convex refuses a schema that drops a table or a field while a row still holds
+it, so the data goes in two changes. The first deletes every function that could
+write to the 16 old tables (the 15 `school*` tables and
+`accountDeletionSchoolTransfers`), keeps their table definitions, and adds one
+internal migration, `retire/school:erase`. It deletes every row of those tables,
+every stored file their rows name, every scheduled job that would publish a
+class material, and every forum post from the two forum aggregates, and it
+clears the school fields of `accountDeletionPreparations`. It runs on dev and
+then on production, page by page, until a dry pass finds nothing. The second
+change drops the tables, those fields, the two forum aggregates of
+`convex.config.ts`, and the migration. The new Classroom gets its own ADR.
 
 ## Implementation Contract
 

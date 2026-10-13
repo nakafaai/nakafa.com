@@ -103,16 +103,6 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 - **Checkout admission**: The account-lifecycle revalidation performed after a checkout is created and before its link is released. Its result is Admitted or Unavailable; integration failures remain distinct.
 
-## Forum Conversation
-
-- **Forum Conversation**: The opened discussion surface for one class forum, usually shown as the right-side panel beside the forum list.
-- **Transcript**: The ordered message log rendered inside a Forum Conversation.
-- **Viewport**: The visible scroll window over a Transcript.
-- **Placement**: The intended Viewport target, such as the latest message edge or a specific post.
-- **Snapshot**: A persisted restorable Viewport state for one Forum Conversation.
-- **Navigation History**: The ordered semantic Viewport positions a user can return to inside one Forum Conversation.
-- **Latest Affinity**: The user state where a Forum Conversation Viewport is attached to the newest Transcript edge.
-
 ## Nakafa School
 
 - **Tenant**: One school or foundation (yayasan) using Nakafa School, served by the same deployments as every other tenant. Its data is isolated by every School function, never by the client.
