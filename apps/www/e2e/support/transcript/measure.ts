@@ -77,6 +77,18 @@ export function clamped(locator: Locator) {
 }
 
 /**
+ * Whether `lower` has lines of its own under `upper`: its top is at or below
+ * the bottom of `upper`, so the two never share a line of text. A box that is
+ * not rendered has no place to measure, and is not under anything.
+ */
+export function startsUnder(lower: Locator, upper: Locator) {
+  return Promise.all([lower.boundingBox(), upper.boundingBox()]).then(
+    ([under, over]) =>
+      under !== null && over !== null && under.y >= over.y + over.height - 0.5
+  );
+}
+
+/**
  * How many pixels of its text an element of one line clips above and below its
  * own box. The ink of the text is measured on a canvas in the element's font,
  * from its baseline, and set against the box that clips it. The baseline is

@@ -113,10 +113,14 @@ function ActivityTrigger() {
         icon={problem ? Sad02Icon : icon}
         isLoading={state === "running"}
       />
-      {/* The note follows the label in the same line of text, so a narrow row wraps both and cuts neither. */}
-      <span className="min-w-0">
-        {label}
-        {note ? <span className="ms-2 text-xs">{note}</span> : null}
+      {/* A line says one fact, so the note has its own line under the label. Either wraps in a narrow row instead of being cut. */}
+      <span className="flex min-w-0 flex-col">
+        <span data-slot="activity-label">{label}</span>
+        {note ? (
+          <span className="text-xs" data-slot="activity-note">
+            {note}
+          </span>
+        ) : null}
       </span>
       {artifactCount > 0 ? (
         <HugeIcons

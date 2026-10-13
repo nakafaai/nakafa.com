@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { checkFailed } from "@/e2e/support/transcript/math";
-import { cutText } from "@/e2e/support/transcript/measure";
+import { cutText, startsUnder } from "@/e2e/support/transcript/measure";
 import { said } from "@/e2e/support/transcript/message";
 import { nakafaSearchFailed } from "@/e2e/support/transcript/nakafa";
 import { onChat } from "@/e2e/support/transcript/open";
@@ -17,6 +17,10 @@ const ROWS = [
 
 /** The rows of the activity of one reply: the buttons that open a capability. */
 const ACTIVITY = 'button[aria-live="polite"]';
+
+/** The label of a row, and the note under it when the capability ended short of a plain answer. */
+const LABEL = '[data-slot="activity-label"]';
+const NOTE = '[data-slot="activity-note"]';
 
 test.describe("Nina activity rows on a phone", () => {
   test.use({ viewport: { height: 2600, width: 320 } });
@@ -55,6 +59,21 @@ test.describe("Nina activity rows on a phone", () => {
       ).toHaveCount(1);
       for (const row of await rows.all()) {
         expect(await cutText(row)).toEqual([]);
+      }
+    })
+  );
+
+  test(
+    "puts the note of a row on a line of its own under the label",
+    onChat(ROWS, { locale: "de" }, async (page) => {
+      const noted = page.locator(ACTIVITY).filter({ has: page.locator(NOTE) });
+
+      // A partial and an empty result of each of the three capabilities.
+      await expect(noted).toHaveCount(6);
+      for (const row of await noted.all()) {
+        expect(await startsUnder(row.locator(NOTE), row.locator(LABEL))).toBe(
+          true
+        );
       }
     })
   );
