@@ -5,6 +5,7 @@ import {
   NINA_FILE_COUNT,
   NINA_FILE_SIZE,
   NINA_FILE_SIZE_MESSAGE,
+  NINA_UPLOAD_LIFETIME,
   NinaUploadError,
 } from "@repo/backend/client/nina/uploads";
 import { components } from "@repo/backend/confect/_generated/components";
@@ -134,17 +135,16 @@ const reserve = FunctionImpl.make(
         message: "Too many uploads. Try again shortly.",
       });
     }
-    const lifetime = Duration.hours(2);
     const uploadId = yield* (yield* DatabaseWriter)
       .table("ninaUploads")
       .insert({
         userId: appUser._id,
-        expiresAt: now + Duration.toMillis(lifetime),
+        expiresAt: now + Duration.toMillis(NINA_UPLOAD_LIFETIME),
         state: { status: "uploading" },
       })
       .pipe(Effect.orDie);
     yield* (yield* Scheduler).runAfter(
-      lifetime,
+      NINA_UPLOAD_LIFETIME,
       refs.internal.nina.uploads.discard,
       { uploadId }
     );

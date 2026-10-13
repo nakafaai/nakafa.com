@@ -51,11 +51,11 @@ const start = FunctionImpl.make(
   "start",
   Effect.fn("nina.turns.start")(function* (args) {
     const { appUser } = yield* requireAuth();
-    // A prompt over the limit is refused before it is hashed or held credits.
-    // A retry carries no text: it sends a stored prompt again, and this
-    // function admitted every stored prompt under a limit that was never
-    // looser. The spec has limited the text since its first version, in UTF-16
-    // units, and a string never has more code points than it has units.
+    // A prompt over the limit is refused first, before it is hashed and before
+    // credits are held. A retry has no text to check: it sends a stored prompt.
+    // A stored prompt passed this check, or the older check of the same size
+    // that counted UTF-16 units. A string has at most as many code points as
+    // units, so every stored prompt fits the limit as it is counted now.
     if (
       args.input.kind === "message" &&
       !isPromptWithinLimit(args.input.prompt.text)

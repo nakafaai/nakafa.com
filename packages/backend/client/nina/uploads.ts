@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Duration, Schema } from "effect";
 
 const MEBIBYTE = 1024 * 1024;
 
@@ -6,8 +6,16 @@ const MEBIBYTE = 1024 * 1024;
 export const NINA_FILE_MEBIBYTES = 8;
 export const NINA_FILE_SIZE = NINA_FILE_MEBIBYTES * MEBIBYTE;
 export const NINA_FILE_COUNT = 10;
-/** The most characters the name of one file can hold. A longer name is refused. */
+/**
+ * The most characters the name of one file can hold. A character is a Unicode
+ * code point, as for the prompt limit. A longer name is refused.
+ */
 export const NINA_FILENAME_LENGTH = 255;
+/**
+ * How long the server keeps an upload that no message has taken. A page that
+ * holds an upload reads this to know when the server has dropped it.
+ */
+export const NINA_UPLOAD_LIFETIME = Duration.hours(2);
 /**
  * Documents travel inside the request body: the gateway accepts 16 MiB and
  * base64 adds a third, so one message keeps its documents to this many MiB in

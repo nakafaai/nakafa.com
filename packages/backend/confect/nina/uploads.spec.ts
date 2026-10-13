@@ -26,7 +26,7 @@ export default GroupSpec.make()
         bytes: Schema.instanceOf(ArrayBuffer),
         mediaType: NinaFileType,
         filename: Schema.NonEmptyString.check(
-          Schema.isMaxLength(NINA_FILENAME_LENGTH)
+          Schema.isMaxCodePoints(NINA_FILENAME_LENGTH)
         ),
       }),
       returns: () => Id("ninaUploads"),
