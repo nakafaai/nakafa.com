@@ -13,6 +13,7 @@ import {
   importedNames,
   namedImports,
   readsMember,
+  readsOf,
 } from "#scripts/check/imports";
 
 const EFFECT = "effect";
@@ -93,24 +94,22 @@ function isDetached(options: Node) {
 
 /**
  * Whether a module starts children only as leaders of their own process group:
- * it calls `spawn`, and the last argument of each call sets `detached: true`.
+ * it reads `spawn`, every read is a call, and the last argument of each call
+ * sets `detached: true`. A child started through an alias or a handover is
+ * started by a read that is no such call.
  */
 function spawnsDetached(nodes: readonly Node[]) {
-  const calls = Arr.filter(
-    nodes,
-    (node) =>
-      isCallExpression(node) &&
-      isIdentifier(node.expression) &&
-      node.expression.text === SPAWN
-  );
+  const reads = readsOf(nodes, SPAWN);
   return (
-    Arr.isReadonlyArrayNonEmpty(calls) &&
-    Arr.every(
-      calls,
-      (call) =>
+    Arr.isReadonlyArrayNonEmpty(reads) &&
+    Arr.every(reads, (use) => {
+      const call = use.parent;
+      return (
         isCallExpression(call) &&
+        call.expression === use &&
         Arr.some(Arr.takeRight(call.arguments, 1), isDetached)
-    )
+      );
+    })
   );
 }
 

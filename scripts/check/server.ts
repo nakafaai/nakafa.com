@@ -1,9 +1,6 @@
 import { Array as Arr, HashSet, Option } from "effect";
 import {
   isCallExpression,
-  isIdentifier,
-  isImportSpecifier,
-  isPropertyAccessExpression,
   type Node,
   type SourceFile,
 } from "typescript/unstable/ast";
@@ -11,6 +8,7 @@ import {
   importedNames,
   namedImports,
   readsMember,
+  readsOf,
 } from "#scripts/check/imports";
 
 /** The Node HTTP module, by both of its specifiers. */
@@ -27,18 +25,6 @@ const SERVER_FUNCTIONS = HashSet.make(
   "layerServer",
   "make"
 );
-
-/** Returns the identifiers that read the constructor: not its import and not a member of that name. */
-function reads(nodes: readonly Node[]) {
-  return Arr.filter(
-    nodes,
-    (node) =>
-      isIdentifier(node) &&
-      node.text === CREATE_SERVER &&
-      !isImportSpecifier(node.parent) &&
-      !(isPropertyAccessExpression(node.parent) && node.parent.name === node)
-  );
-}
 
 /** Whether a node is the first argument of a call of a platform server function. */
 function isHandedOver(node: Node, owners: readonly string[]) {
@@ -85,7 +71,7 @@ export function platformServerImports(
         : []
   );
   const owners = importedNames(sourceFile, PLATFORM_PACKAGE, PLATFORM_SERVER);
-  const uses = reads(nodes);
+  const uses = readsOf(nodes, CREATE_SERVER);
   return Arr.isReadonlyArrayNonEmpty(uses) &&
     Arr.every(uses, (use) => isHandedOver(use, owners))
     ? imports

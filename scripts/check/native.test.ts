@@ -143,6 +143,8 @@ export const ChildLive = L.effect(Child, make(spawn("node", { detached: true }))
           `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace("{ detached: true }", "options")}`,
           `${SPAWN}${EFFECT}${SERVICE}${LAYER.replace("{ detached: true }", "{ detached, [key]: true, ...rest }")}`,
           `${SPAWN}${EFFECT}${SERVICE}${LAYER}export const second = spawn("node");\n`,
+          // A child started through an alias of spawn.
+          `${SPAWN}${EFFECT}${SERVICE}${LAYER}export const start = spawn;\nexport const second = start("node");\n`,
           // An import that binds more than spawn, or binds it another way.
           `import { exec, spawn } from "node:child_process";\n${EFFECT}${SERVICE}${LAYER}`,
           `import { spawn as start } from "node:child_process";\n${EFFECT}${SERVICE}${LAYER}`,
@@ -349,6 +351,8 @@ export const flipped = ("object") === typeof value;
           `import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";\n${SIGNING}`,
           `import { sign } from "node:crypto";\nexport const signature = sign(null, bytes, key);\n`,
           `${NODE_SIGN}${SIGNING}${SIGNING.replaceAll("keys", "more").replace("signature", "again")}`,
+          // A member of the same name on another object is no read of the import.
+          `${NODE_SIGN}${SIGNING}export const other = factory.sign;\nexport const pair = factory.generateKeyPairSync("rsa");\n`,
         ]) {
           assert.deepStrictEqual(yield* findings(source), []);
         }
@@ -369,6 +373,16 @@ export const flipped = ("object") === typeof value;
           `${NODE_SIGN}export const keys = {};\n`,
           `${NODE_SIGN}${SIGNING}export const more = generateKeyPairSync("rsa");\n`,
           `${NODE_SIGN}${SIGNING}export const more = sign("sha256", bytes, key);\n`,
+          // A function that is read and not called with the argument that is
+          // allowed: through an alias, a method, a handover, or a re-export,
+          // also under the local name of a renamed import.
+          `${NODE_SIGN}${SIGNING}export const digest = sign;\nexport const signed = digest("sha256", bytes, key);\n`,
+          `${NODE_SIGN}${SIGNING}export const signed = sign.call(null, "sha256", bytes, key);\n`,
+          `${NODE_SIGN}${SIGNING}export const signed = Reflect.apply(sign, null, ["sha256", bytes, key]);\n`,
+          `${NODE_SIGN}${SIGNING}export const make = generateKeyPairSync;\nexport const pair = make("rsa", { modulusLength: 2048 });\n`,
+          `${NODE_SIGN}${SIGNING}export const wrapped = wrap(null, sign);\n`,
+          `${NODE_SIGN}${SIGNING}export { generateKeyPairSync };\n`,
+          `import { generateKeyPairSync as generate, sign as signBytes } from "node:crypto";\nexport const keys = generate("ed25519");\nexport const make = generate;\nexport const signature = signBytes(null, bytes, keys.privateKey);\n`,
           // An import that binds more than the two, or binds them another way.
           `import { createHash, generateKeyPairSync, sign } from "node:crypto";\n${SIGNING}`,
           `import { generateKeyPairSync, sign, verify } from "node:crypto";\n${SIGNING}`,

@@ -121,7 +121,11 @@ A module counts by its name, so `fs-extra`, `crypto-js`, and `./fs` stay.
 
 The other Node modules that authored code loads (`url`, `module`, `dns`) are
 not judged yet. The rule has three constructions, each a module of one exact
-shape.
+shape. Each judges every read of the name it keeps, not only its calls: a call,
+an alias, a handover to another function, and an export of the binding all read
+it. The import itself, a name in a re-export from another module, and a member
+of that name on another object, such as `factory.sign`, are no read. A read
+that is no call the shape allows, such as `const run = spawn`, keeps no import.
 
 ### A detached process service
 
@@ -133,8 +137,9 @@ service. All of these hold:
   class's layer with `Layer.succeed`, `Layer.effect`, or `Layer.sync`.
 - The import declaration binds `spawn` under that name, and nothing else at run
   time.
-- The module calls `spawn`, and the last argument of every call is an object
-  literal with `detached: true`: each child leads a process group of its own.
+- Every read of `spawn` is a call, the module has at least one, and the last
+  argument of every call is an object literal with `detached: true`: each child
+  leads a process group of its own.
 
 Effect's spawner owns termination (4.0.2, `NodeChildProcessSpawner.ts`, lines
 549 to 568). When the scope closes it signals the child's process group, also
@@ -188,8 +193,9 @@ change every one of those modules. All of these hold:
 
 - The import declaration binds `generateKeyPairSync` and `sign`, under any local
   names, and nothing else at run time.
-- Every call of the first makes an `ed25519` key pair, and every call of the
-  second passes `null` as its digest, which is how Node signs with Ed25519.
+- Every read of the first is a call that makes an `ed25519` key pair, and every
+  read of the second is a call that passes `null` as its digest, which is how
+  Node signs with Ed25519.
 - The module makes at least one such call.
 
 Hashes, HMACs, random bytes, and every other key type are still reported, so
