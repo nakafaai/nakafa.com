@@ -81,11 +81,14 @@ type UploadStore = Pick<
   | "uploadOf"
 >;
 
-/** Uploads one file unless it already holds an upload, and shows how far the upload is. */
-const uploadAttachment = Effect.fn("nina.upload")(function* (
+/**
+ * The upload that holds a file: the one an earlier send kept while the server
+ * still keeps it, or a new upload that this send makes and keeps.
+ */
+const holdAttachment = Effect.fn("nina.upload.hold")(function* (
   attachment: NonNullable<NinaDraft["files"]>[number],
+  mediaType: typeof NinaFileType.Type,
   upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
-  previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>,
   convex: ConvexReactClient,
   status: UploadStore
 ) {
@@ -100,17 +103,6 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   if (Option.isSome(cached)) {
     return cached.value;
   }
-  const mediaType = yield* Schema.decodeUnknownEffect(NinaFileType)(
-    attachment.file.type
-  ).pipe(
-    Effect.mapError(
-      () =>
-        new NinaUploadError({
-          code: "NINA_UPLOAD_INVALID",
-          message: "This attachment type is not supported.",
-        })
-    )
-  );
   const bytes = yield* Effect.tryPromise({
     try: () => attachment.file.arrayBuffer(),
     catch: () =>
@@ -140,13 +132,45 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
     )
   );
   yield* Effect.sync(() => status.keepUpload(attachment.id, id, startedAt));
+  yield* Effect.sync(() => status.clearUpload(attachment.id));
+  return id;
+});
+
+/** Uploads one file unless it already holds an upload, and shows how far the upload is. */
+const uploadAttachment = Effect.fn("nina.upload")(function* (
+  attachment: NonNullable<NinaDraft["files"]>[number],
+  upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
+  previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>,
+  convex: ConvexReactClient,
+  status: UploadStore
+) {
+  const mediaType = yield* Schema.decodeUnknownEffect(NinaFileType)(
+    attachment.file.type
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new NinaUploadError({
+          code: "NINA_UPLOAD_INVALID",
+          message: "This attachment type is not supported.",
+        })
+    )
+  );
+  const id = yield* holdAttachment(
+    attachment,
+    mediaType,
+    upload,
+    convex,
+    status
+  );
+  // Written on both paths from the file this send holds. A hidden composer gives
+  // each file a new preview address when it shows again, so the address an
+  // upload kept from an earlier send is not the one the message should show.
   MutableHashMap.set(previews, id, {
     type: "file",
     url: attachment.url,
     mediaType,
     filename: attachment.file.name,
   });
-  yield* Effect.sync(() => status.clearUpload(attachment.id));
   return id;
 });
 
