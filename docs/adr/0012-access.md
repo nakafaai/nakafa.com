@@ -134,11 +134,12 @@ The school roles also hold these actions:
   The Teacher releases the grades of their own tasks and exams.
 - The Principal approves report cards and promotion (kenaikan kelas). The Deputy
   holds the Principal's actions, except approving report cards and promotion,
-  reading the audit journal, and seeing the quota.
+  reading the audit journal, and seeing the quota. Both see the participant
+  dashboard of every exam sitting of their school and take no proctor action.
 - The Admin manages the organisation settings and the AI quota. The Admin, like
-  every Owner, may accept or reject a late record of an exam attempt (ADR 0013).
-  That decision does not let a role read the answers, which stay with relations
-  only.
+  every Owner, takes every proctor action of every exam sitting of their school,
+  the decision on a late record included (ADR 0013). These actions do not let a
+  role read the answers, which stay with relations only.
 - The Staff (Staf TU) prepares report cards and school documents and views
   people's data. The Counselor (Guru BK) views people's data and insight. The
   Auditor reads the journal, the settings, and people's data, and changes
@@ -174,7 +175,7 @@ are:
 | Class group member | A student and one class group | The announcements of that class group | Planned |
 | Verified parent | A guardian and a student, once the parent relation is verified | The student's tasks, grades, report cards, and announcements, and the Insight narratives that the student shared and a teacher approved | Planned |
 | Session proctor | A proctor and one exam sitting | Every proctor action of that sitting (ADR 0013): the token and the participant dashboard, lock and unlock, add minutes, change the token, allow a second device, close the sitting, and accept or reject a late record of an attempt in it | Planned |
-| Exam author | A teacher and their exam | Changing and grading that exam, and accepting or rejecting the late records of its attempts | Planned |
+| Exam author | A teacher and their exam | Changing and grading that exam, every proctor action of its sittings, and accepting or rejecting the late records of its attempts | Planned |
 | Shared practice | A student and a practice the student shared | School Insight, per topic, revocable by the student | Planned |
 
 ### Operators inside tenants
