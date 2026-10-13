@@ -110,9 +110,9 @@ export function useMemoryActions() {
   function add(
     draft: MemoryDraft,
     after: {
-      done?: (memory: Memory) => void;
-      failed?: (again: boolean) => void;
-    } = {}
+      done: (memory: Memory) => void;
+      failed: (again: boolean) => void;
+    }
   ) {
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
     const memory = learnerMemory(
@@ -126,7 +126,7 @@ export function useMemoryActions() {
         addDraft.withOptimisticUpdate((store) => addToList(store, memory))(
           draftArgs(draft)
         ),
-      { ...after, done: (id) => after.done?.({ ...memory, id }) }
+      { ...after, done: (id) => after.done({ ...memory, id }) }
     );
   }
 
