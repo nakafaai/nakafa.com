@@ -14,8 +14,9 @@ interface Props {
 
 /**
  * Renders a compact Quran reference preview: the surah, and the verse or the
- * verses of it. The name gives way first when the row is narrow, because the
- * numbers are what a learner compares.
+ * verses of it. The numbers are what a learner compares, so they are never
+ * cut: when they do not fit beside the name they take a line of their own in
+ * the button, and only a name longer than the whole button ends in an ellipsis.
  */
 export function QuranPart({ message }: Props) {
   const t = useTranslations("Ai");
@@ -24,7 +25,7 @@ export function QuranPart({ message }: Props) {
   return (
     <Step icon={nakafaIcons.quran} label={t("nakafa-quran")}>
       <Button
-        className="max-w-full self-start"
+        className="h-auto min-h-8 max-w-full self-start whitespace-normal py-1 text-start"
         nativeButton={false}
         render={
           <a
@@ -33,8 +34,8 @@ export function QuranPart({ message }: Props) {
             rel="noopener noreferrer"
             target="_blank"
           >
-            <span className="flex min-w-0">
-              <span className="truncate">{name}</span>
+            <span className="flex min-w-0 flex-wrap">
+              <span className="min-w-0 max-w-full truncate">{name}</span>
               <span className="shrink-0">
                 : {from === to ? from : `${from}-${to}`}
               </span>

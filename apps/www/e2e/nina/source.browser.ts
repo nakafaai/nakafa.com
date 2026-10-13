@@ -255,15 +255,17 @@ test.describe("Nina scraped pages on a phone", () => {
   test.use({ viewport: { height: 2600, width: 320 } });
 
   test(
-    "gives the page of a running read its own line, and its host one line",
+    "gives the page of a running read its own line, and shows its host in the title's place",
     onChat(loading, { locale: "de", running: true }, async (page) => {
       const row = page.locator(SOURCE).filter({ hasText: "ppid" });
       const status = page.getByText("Quelle wird gelesen...");
 
       await expect(row).toBeVisible();
       await expect(status).toBeVisible();
+      // A page that is still being read has no title yet, so its host is the
+      // title, and the title wraps anywhere instead of being cut sideways.
       expect(await cutText(row.locator(TITLE))).toEqual([]);
-      expect(await lines(row.locator(HOST))).toBe(1);
+      await expect(row.locator(HOST)).toHaveCount(0);
       // The status is a line above the row, so neither takes the other's width.
       const above = await status.boundingBox();
       const below = await row.boundingBox();

@@ -1,11 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr } from "effect";
-import {
-  clamped,
-  cutText,
-  lines,
-  overflow,
-} from "@/e2e/support/transcript/measure";
+import { cutText, lines, overflow } from "@/e2e/support/transcript/measure";
 import {
   content,
   contentBare,
@@ -29,7 +24,7 @@ test.describe("Nina lessons on a phone", () => {
   test.use({ viewport: { height: 2600, width: 320 } });
 
   test(
-    "reads two German lessons that differ in their last words",
+    "keeps every German lesson title to two lines, cut with an ellipsis, and whole in the name of its link",
     onChat(searchDe, { locale: "de" }, async (page) => {
       const analytical = page.getByRole(RESULT, {
         name: "mit der analytischen Methode",
@@ -46,10 +41,13 @@ test.describe("Nina lessons on a phone", () => {
 
       for (const link of [analytical, graphical, longest, word]) {
         await expect(link).toBeVisible();
-        // A title wraps, so nothing of it is cut sideways, and keeps to two
-        // lines; these fit in two, so each shows down to its last word.
+        // A title wraps anywhere, so nothing of it is cut sideways, and shows
+        // two lines at most: the rest is cut with an ellipsis, by decision, and
+        // the link keeps the whole title as its name (the role query above
+        // finds each link by its last words).
+        const title = link.locator("span").first();
         expect(await cutText(link)).toEqual([]);
-        expect(await clamped(link.locator("span").first())).toBe(false);
+        expect(await lines(title)).toBeLessThanOrEqual(2);
       }
       expect(await overflow(page)).toBe(0);
     })

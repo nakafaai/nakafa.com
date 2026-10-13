@@ -49,12 +49,15 @@ test.describe("Nina web search sites on a phone", () => {
           expect(right).toBeLessThanOrEqual(edge);
         }
       }
-      // The third hostname is longer than a line, so it ends in an ellipsis,
-      // and the others fit whole.
-      const long = done.locator(HOSTS).nth(2);
-      await expect(long).toHaveCSS("text-overflow", "ellipsis");
-      expect(await cutText(long)).not.toEqual([]);
-      expect(await cutText(done.locator(HOSTS).nth(0))).toEqual([]);
+      // Every limit site is longer than the line, so each ends in an
+      // ellipsis, and a short one fits whole.
+      for (const host of await done.locator(HOSTS).all()) {
+        await expect(host).toHaveCSS("text-overflow", "ellipsis");
+        expect(await cutText(host)).not.toEqual([]);
+      }
+      expect(
+        await cutText(failed.locator(HOSTS).filter({ hasText: PUNYCODE_SITE }))
+      ).toEqual([]);
       expect(await overflow(page)).toBe(0);
     })
   );
