@@ -54,12 +54,11 @@ export class Gateway extends Context.Service<
     /**
      * One vector per text, in order, each of `embeddingDimensions` numbers,
      * from the embedding model of knowledge search or from the candidate the
-     * model test names. The request carries no retention flags, because the AI
-     * SDK builds an embedding request from fixed fields, the model, the texts,
-     * and the vector length among them, that leave no place for them, so it
-     * relies on the gateway's own zero retention. Callers embed published
-     * lessons and Quran text, and the short search phrase that the specialist
-     * writes from a question, never a stored learner message.
+     * model test names. The request asks for zero retention with `zdr`, the
+     * one retention flag the provider's embedding options hold (see
+     * `retention` below). Callers embed published lessons and Quran text, and the
+     * short search phrase that the specialist writes from a question, never a
+     * stored learner message.
      */
     readonly embed: (
       texts: readonly string[],
