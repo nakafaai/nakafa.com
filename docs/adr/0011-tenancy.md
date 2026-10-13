@@ -74,13 +74,17 @@ Person and any change reruns that caller's subscriptions. Persons of kind
 An invite names a Person and an email address. A claim binds the Person to the
 account that controls the address: an invite is claimed automatically when an
 account whose Better Auth email is verified and equal to the invite address
-exists. Claims run in a scheduled mutation after sign-up, after Better Auth
-verifies an address, and after an invite is created for an existing account,
-never inside the sign-in transaction. An account that already holds a Person in
-the tenant leaves the invite pending for the school to resolve. A tenant's
-allowed email domains, one of its policies, limit the addresses its invites may
-name. Later channels (belajar.id matches and login card codes) extend the invite
-channel and claim method values.
+exists, and the tenant's allowed email domains, one of its policies, admit the
+address (an empty list admits every address). Claims run in a scheduled
+mutation after sign-up, after Better Auth verifies an address, and after an
+invite is created for an existing account, never inside the sign-in
+transaction. An account that already holds a Person in the tenant, or whose
+address the allowed email domains do not admit, leaves the invite pending for
+the school to resolve. The functions that create invites refuse an address
+outside the list too, once people management exists; today only `open` creates
+an invite, and a new tenant starts with an empty list. Later channels
+(belajar.id matches and login card codes) extend the invite channel and claim
+method values.
 
 Account deletion releases the account's Persons instead of deleting them: the
 school controls its records, so each Person and its standing grants stay,
@@ -153,17 +157,24 @@ ADR 0005. The classroom lane owns the retirement.
   invite, and the journal) in one transaction, and starts the invitation email
   through `emails/invite`, since `emails` is the only sender. Nakafa staff run
   it with the deployment's key. `tenancy/claims:run` claims the pending invites of one
-  account whose address Better Auth has verified, a page at a time. It is
-  scheduled by the Better Auth user triggers after sign-up and after
-  verification, only when an invite waits for the address, and by `open` for an
-  account that already holds the address.
+  account whose address Better Auth has verified and the tenant admits, a page
+  at a time. It is scheduled by the Better Auth user triggers after sign-up and
+  after verification, only when an invite waits for the address, and for an
+  account that already holds the address of a new invite by
+  `tenancy/holders:schedule`, which `open` starts and which pages through those
+  accounts, so no number of them is assumed.
 - The organisation holds `country`, `currency`, and `policies` (students may
-  open threads, Nina, and the allowed email domains; an empty list limits no
-  domain), and each unit holds `timeZone` and `contentLanguage`. They are
-  required fields, because no code wrote a tenant before this change.
-  `tenant.provisioned` records the contract (plan, modules, data processing
-  agreement version, and content licence version); the entitlements it grants
-  are built later.
+  open threads, Nina, and the allowed email domains; an empty list admits every
+  address, and a claim checks a longer one), and each unit holds `timeZone` and
+  `contentLanguage`. They are required fields, because no code wrote a tenant
+  before this change. Nina and student threads are stored until the School
+  features they switch exist. The country is checked for its shape only, two
+  uppercase letters: ADR 0032 moves the countries Nakafa serves to the signed
+  country profile, so no list of countries is kept in code. A tenant's, a
+  school's, and a Person's name are one line: names fill list rows, and the
+  tenant's name goes in the subject of its invitation email. `tenant.provisioned`
+  records the contract (plan, modules, data processing agreement version, and
+  content licence version); the entitlements it grants are built later.
 - Operators, visits, grant expiry, and the account deletion release step
   follow as one change that extends this contract.
 - A tenant holds at most 24 units, at most 8 Owners, and at most 16 allowed
@@ -176,7 +187,7 @@ ADR 0005. The classroom lane owns the retirement.
 - An invite address works like a credential: whoever holds a verified account
   with that address claims the Person, an Owner invite included. Schools invite
   only addresses they or the invitee control, and a tenant's allowed email
-  domains keep its invites on the school's own domains.
+  domains keep the claims of its invites on the school's own domains.
 - A tenant whose only Owner deleted their account has no Owner until an
   operator replaces it.
 

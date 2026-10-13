@@ -8,19 +8,15 @@ import type { Email } from "@repo/backend/confect/tenancy/schema";
 import { Duration, Effect, Option } from "effect";
 
 /**
- * Invites one run claims at most. A page of them reads a few documents each,
- * far inside the 4,096 index ranges that one mutation may read.
+ * Rows one scheduled claim step handles at most: the invites that one run
+ * claims, and the accounts that one `tenancy/holders` page schedules a run for.
+ * A page of them reads a few documents per row, far inside the 4,096 index
+ * ranges that one mutation may read.
  */
 export const CLAIM_PAGE_SIZE = 20;
 
-/**
- * Accounts that can hold one address. Better Auth keeps one account for an
- * address, so the bound only protects the read.
- */
-const ACCOUNT_LIMIT = 2;
-
 /** Schedules the claim run of one account, outside the transaction that asked for it. */
-const scheduleRun = Effect.fn("tenancy.claims.schedule")(function* (
+export const scheduleRun = Effect.fn("tenancy.claims.schedule")(function* (
   userId: GenericId.GenericId<"users">
 ) {
   yield* (yield* Scheduler).runAfter(
@@ -52,18 +48,16 @@ export const claimAfterVerification = Effect.fn(
 });
 
 /**
- * After an invite is made: schedules the claim run of each account that
- * already holds the invited address, because no sign-in is coming to do it.
+ * After an invite is made: schedules the walk over the accounts that already
+ * hold the invited address, because no sign-in is coming to claim it. The walk
+ * is its own step, so no number of accounts is assumed here.
  */
 export const claimAfterInvite = Effect.fn("tenancy.claims.afterInvite")(
   function* (email: typeof Email.Type) {
-    const users = yield* (yield* DatabaseReader)
-      .table("users")
-      .index("by_email", (query) => query.eq("email", email))
-      .take(ACCOUNT_LIMIT)
-      .pipe(Effect.orDie);
-    yield* Effect.forEach(users, (user) => scheduleRun(user._id), {
-      discard: true,
-    });
+    yield* (yield* Scheduler).runAfter(
+      Duration.zero,
+      refs.internal.tenancy.holders.schedule,
+      { cursor: null, email }
+    );
   }
 );

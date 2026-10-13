@@ -4,13 +4,19 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { legalLabels } from "@repo/email/legal";
 import { EmailUrlSchema } from "@repo/email/url";
+import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
 
-/** What the invitation email says: who invited, where to sign in, and the legal links. */
+/**
+ * What the invitation email says: who invited, where to sign in, and the legal
+ * links. The organisation is named in the subject, so it is one line: a line
+ * break in it would end the header.
+ */
 export const InviteEmailInputSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,
   organisation: Schema.String.check(
     Schema.isTrimmed(),
+    isSingleLine,
     Schema.isMinLength(1),
     Schema.isMaxLength(120)
   ),

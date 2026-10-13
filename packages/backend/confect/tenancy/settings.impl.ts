@@ -14,7 +14,7 @@ import {
 import spec from "@repo/backend/confect/tenancy/settings.spec";
 import { Effect, Layer, Schema, Struct } from "effect";
 
-/** Two policy sets are the same when every choice and every allowed domain agrees. */
+/** Two policy sets are the same when every choice agrees and both allow the same domains, in any order. */
 const samePolicies = Schema.toEquivalence(TenantPolicies);
 
 /**
@@ -51,7 +51,8 @@ const setLocale = FunctionImpl.make(
 
 /**
  * Changes one policy and leaves the others as they are. A value that is
- * already stored writes and records nothing.
+ * already stored, the same domains in another order included, writes and
+ * records nothing, and the answer is what is stored.
  */
 const setPolicy = FunctionImpl.make(
   databaseSchema,
@@ -60,21 +61,22 @@ const setPolicy = FunctionImpl.make(
   Effect.fn("tenancy.settings.setPolicy")(function* ({ policy }) {
     const { person, tenant } = yield* Member;
     const policies = applyPolicy(tenant.policies, policy);
-    if (!samePolicies(tenant.policies, policies)) {
-      yield* (yield* DatabaseWriter)
-        .table("tenants")
-        .replace(
-          tenant._id,
-          Struct.assign(Struct.omit(tenant, ["_creationTime", "_id"]), {
-            policies,
-          })
-        )
-        .pipe(Effect.orDie);
-      yield* tenantAuthority.record(personActor(person), tenant, {
-        policy,
-        type: "tenant.policy.set",
-      });
+    if (samePolicies(tenant.policies, policies)) {
+      return tenant.policies;
     }
+    yield* (yield* DatabaseWriter)
+      .table("tenants")
+      .replace(
+        tenant._id,
+        Struct.assign(Struct.omit(tenant, ["_creationTime", "_id"]), {
+          policies,
+        })
+      )
+      .pipe(Effect.orDie);
+    yield* tenantAuthority.record(personActor(person), tenant, {
+      policy,
+      type: "tenant.policy.set",
+    });
     return policies;
   })
 );

@@ -10,6 +10,8 @@ import { Effect, Schema } from "effect";
 
 const address = Schema.decodeSync(Email)("kepala@harapan.example.test");
 const readInput = refs.internal.emails.invite.internal.readInput;
+/** The word that names the welcome email, which the invitation shares its legal links with. */
+const WELCOME = /welcome/iu;
 
 /** The signed legal Pages of every language, as the production release holds them. */
 const signedPages = Effect.gen(function* () {
@@ -44,6 +46,25 @@ describe("emails/invite/input", () => {
           signInUrl: `http://localhost:3000/${locale}/auth`,
           termsOfServiceUrl: `http://localhost:3000/${locale}/terms-${locale}`,
         });
+      })
+  );
+
+  it.effect(
+    "fails as an email without signed legal Pages, and does not call itself a welcome email",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { inviteId } = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, address)
+        );
+        const error = yield* fixture.internal
+          .query(readInput, { inviteId, locale: "id" })
+          .pipe(Effect.flip);
+        expect(error).toMatchObject({
+          _tag: "ReleaseError",
+          code: "CONTENT_RELEASE_INTEGRITY",
+        });
+        expect(error.message).not.toMatch(WELCOME);
       })
   );
 

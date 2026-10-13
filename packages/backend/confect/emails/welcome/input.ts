@@ -1,14 +1,9 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import {
-  type PageKey,
-  PageKeySchema,
-  type PublicPageProjection,
-} from "@nakafa/aksara-contracts/projection/page";
-import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { pageCatalogValidator } from "@repo/backend/confect/contentRelease/page.spec";
-import { decodeProjectionJson } from "@repo/backend/confect/contentRelease/parse";
+import {
+  type PageCatalogInput,
+  resolveLegalLinks,
+} from "@repo/backend/confect/emails/legal";
 import {
   deferWelcomeIntent,
   toWelcomeIntentError,
@@ -18,80 +13,14 @@ import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { readPageCatalog } from "@repo/backend/content/publication/page";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, flow, Option, Schema } from "effect";
-
-const PRIVACY_POLICY_PAGE_KEY = PageKeySchema.make("privacy-policy");
-const TERMS_OF_SERVICE_PAGE_KEY = PageKeySchema.make("terms-of-service");
-const PageCatalogInputSchema = Schema.Struct({
-  managed: pageCatalogValidator.fields.managed,
-  projectionJson: Schema.Array(Schema.String),
-});
-type PageCatalogInput = typeof PageCatalogInputSchema.Type;
-function findWelcomePage(
-  projections: readonly ContentProjection[],
-  locale: AppLocaleCode,
-  pageKey: PageKey
-): PublicPageProjection | undefined {
-  return Option.getOrUndefined(
-    Arr.findFirst(
-      projections,
-      (projection): projection is PublicPageProjection =>
-        projection.kind === "public-page" &&
-        projection.appLocale === locale &&
-        projection.pageKey === pageKey
-    )
-  );
-}
+import { Effect, flow } from "effect";
 
 /** Resolves locale-exact legal and continuation links from signed content. */
 export const resolveWelcomeEmailLinks = Effect.fn(
   "emails.welcome.resolveLinks"
 )(function* (catalog: PageCatalogInput, locale: AppLocaleCode, siteUrl: URL) {
-  if (!catalog.managed) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Welcome email requires an active signed Page catalog."
-    );
-  }
-  const projections = yield* Effect.forEach(
-    catalog.projectionJson,
-    decodeProjectionJson
-  );
-  if (
-    Arr.some(projections, (projection) => projection.kind !== "public-page")
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Welcome email Page catalog contains a non-Page projection."
-    );
-  }
-  const privacyPolicy = findWelcomePage(
-    projections,
-    locale,
-    PRIVACY_POLICY_PAGE_KEY
-  );
-  const termsOfService = findWelcomePage(
-    projections,
-    locale,
-    TERMS_OF_SERVICE_PAGE_KEY
-  );
-  if (!(privacyPolicy && termsOfService)) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Welcome email requires ${locale} privacy policy and terms of service Pages.`
-    );
-  }
-  return {
-    continueUrl: new URL(`/${locale}/home`, siteUrl).href,
-    privacyPolicyUrl: new URL(
-      `/${privacyPolicy.appLocale}/${privacyPolicy.publicPath}`,
-      siteUrl
-    ).href,
-    termsOfServiceUrl: new URL(
-      `/${termsOfService.appLocale}/${termsOfService.publicPath}`,
-      siteUrl
-    ).href,
-  };
+  const legal = yield* resolveLegalLinks(catalog, locale, siteUrl);
+  return { continueUrl: new URL(`/${locale}/home`, siteUrl).href, ...legal };
 });
 export type WelcomeIntentInput = typeof welcomeIntentInputValidator.Type;
 

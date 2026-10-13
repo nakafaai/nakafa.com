@@ -18,6 +18,7 @@ import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import spec from "@repo/backend/confect/tenancy/claims.spec";
+import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
 import type {
   Account,
   InviteState,
@@ -46,8 +47,9 @@ const verifiedEmail = Effect.fn("tenancy.claims.email")(function* (
 
 /**
  * Binds the invited Person to the account and accepts the invite, unless the
- * Person is not waiting any more or the account already holds a Person in the
- * tenant: then the invite stays pending for the school to resolve.
+ * Person is not waiting any more, the account already holds a Person in the
+ * tenant, or the tenant's email domains do not admit the address: then the
+ * invite stays pending for the school to resolve.
  */
 const claim = Effect.fn("tenancy.claims.claim")(function* (
   invite: TenantInvitesDoc,
@@ -58,6 +60,10 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
   const person = yield* reader
     .table("tenantPeople")
     .get(invite.personId)
+    .pipe(Effect.orDie);
+  const tenant = yield* reader
+    .table("tenants")
+    .get(invite.tenantId)
     .pipe(Effect.orDie);
   const held = yield* reader
     .table("tenantPeople")
@@ -70,7 +76,8 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
   if (
     person.status !== "active" ||
     person.account.state !== "unclaimed" ||
-    Option.isSome(held)
+    Option.isSome(held) ||
+    !admitsAddress(tenant.policies, invite.channel.email)
   ) {
     return;
   }

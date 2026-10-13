@@ -4,6 +4,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { TenantPolicies } from "@repo/backend/confect/tenancy/policy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { isSingleLine } from "@repo/utilities/line";
 import { Schema, Struct } from "effect";
 
 /** A normalized address: forms trim and lowercase before sending it. */
@@ -14,8 +15,14 @@ export const Email = Schema.String.check(
   Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
 ).pipe(Schema.brand("@Nakafa/Email"));
 
+/**
+ * Names are one line: they fill list rows, and the organisation's name is put
+ * in the subject of its invitation email, where a line break would end the
+ * header.
+ */
 export const TenantName = Schema.String.check(
   Schema.isTrimmed(),
+  isSingleLine,
   Schema.isMinLength(2),
   Schema.isMaxLength(120)
 );
@@ -25,6 +32,7 @@ const TenantStatus = Schema.Literals(["active", "suspended"]);
 
 export const UnitName = Schema.String.check(
   Schema.isTrimmed(),
+  isSingleLine,
   Schema.isMinLength(1),
   Schema.isMaxLength(80)
 );
@@ -51,6 +59,7 @@ export const Npsn = Schema.String.check(Schema.isPattern(/^\d{8}$/)).pipe(
 
 export const PersonName = Schema.String.check(
   Schema.isTrimmed(),
+  isSingleLine,
   Schema.isMinLength(1),
   Schema.isMaxLength(120)
 );
@@ -87,7 +96,10 @@ export const InviteState = Schema.Union([
 
 /**
  * The organisation holds its country and the currency of its contract (ADR
- * 0032), and the choices its Owner makes for the whole tenant.
+ * 0032), and the choices its Owner makes for the whole tenant. The country is
+ * checked for its shape only, two uppercase letters: which countries Nakafa
+ * serves is the decision of the signed country profile, so no list of
+ * countries is kept in code.
  */
 export const tenantValidator = Schema.Struct({
   country: CountryCodeSchema,

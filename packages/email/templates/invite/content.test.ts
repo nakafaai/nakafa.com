@@ -3,7 +3,7 @@ import {
   getInviteEmailCopy,
   InviteEmailInputSchema,
 } from "@repo/email/templates/invite/content";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const links = {
   privacyPolicyUrl: "https://nakafa.com/en/privacy-policy",
@@ -92,5 +92,30 @@ describe("invitation content", () => {
       assert.ok(blank.message.includes("organisation"));
       assert.ok(insecure.message.includes("signInUrl"));
     })
+  );
+
+  it.effect(
+    "rejects an organisation with a line break, which would end the subject",
+    () =>
+      Effect.gen(function* () {
+        const refusals = yield* Effect.forEach(
+          [
+            "Harapan\nBcc: lain@example.test",
+            "Harapan\rBangsa",
+            "Harapan Bangsa",
+          ],
+          (organisation) =>
+            Schema.decodeEffect(InviteEmailInputSchema)({
+              ...links,
+              locale: "en",
+              organisation,
+            }).pipe(Effect.flip)
+        );
+
+        assert.deepStrictEqual(
+          Arr.map(refusals, ({ message }) => message.includes("organisation")),
+          [true, true, true]
+        );
+      })
   );
 });

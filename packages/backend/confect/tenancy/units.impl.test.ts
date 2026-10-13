@@ -188,15 +188,29 @@ describe("tenancy/units archive and unarchive", () => {
   );
 
   it.effect(
-    "restores a school that is archived, which refuses every other write",
+    "restores an archived school that refuses a change to itself, and it takes changes again",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const restored = yield* fixture
-          .as("admin")
-          .mutation(unarchive, { slug: nf, unitId: fixture.units.smk });
-        const view = yield* fixture.as("admin").query(viewer, { slug: nf });
+        const admin = fixture.as("admin");
+        const refused = yield* admin
+          .mutation(setLocale, makassar(fixture.units.smk))
+          .pipe(Effect.flip);
+        const restored = yield* admin.mutation(unarchive, {
+          slug: nf,
+          unitId: fixture.units.smk,
+        });
+        const changed = yield* admin.mutation(
+          setLocale,
+          makassar(fixture.units.smk)
+        );
+        const view = yield* admin.query(viewer, { slug: nf });
+        expect(refused).toMatchObject(denied("condition"));
         expect(restored).toBe("active");
+        expect(changed).toEqual({
+          contentLanguage: "en",
+          timeZone: "Asia/Makassar",
+        });
         expect(view.units).toContainEqual(
           expect.objectContaining({ id: fixture.units.smk, status: "active" })
         );

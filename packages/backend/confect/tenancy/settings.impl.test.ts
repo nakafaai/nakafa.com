@@ -202,6 +202,40 @@ describe("tenancy/settings setPolicy", () => {
   );
 
   it.effect(
+    "treats the same email domains in another order as the policy already stored",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const owner = fixture.as("owner");
+        const stored = yield* owner.mutation(setPolicy, {
+          policy: {
+            key: "emailDomains",
+            value: ["harapan.example.test", "belajar.id"],
+          },
+          slug: nf,
+        });
+        const reordered = yield* owner.mutation(setPolicy, {
+          policy: {
+            key: "emailDomains",
+            value: ["belajar.id", "harapan.example.test"],
+          },
+          slug: nf,
+        });
+        const afterReorder = yield* fixture.run(journal);
+        const dropped = yield* owner.mutation(setPolicy, {
+          policy: { key: "emailDomains", value: ["belajar.id"] },
+          slug: nf,
+        });
+        const view = yield* owner.query(viewer, { slug: nf });
+        expect(reordered).toEqual(stored);
+        expect(afterReorder).toHaveLength(1);
+        expect(dropped.emailDomains).toEqual(["belajar.id"]);
+        expect(view.tenant.policies).toEqual(dropped);
+        expect(yield* fixture.run(journal)).toHaveLength(2);
+      })
+  );
+
+  it.effect(
     "holds as many email domains as the limit and refuses one more",
     () =>
       Effect.gen(function* () {

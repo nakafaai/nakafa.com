@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { resolveWelcomeEmailLinks } from "@repo/backend/confect/emails/welcome/input";
+import { resolveLegalLinks } from "@repo/backend/confect/emails/legal";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { readPageCatalog } from "@repo/backend/content/publication/page";
@@ -29,7 +29,7 @@ export const readInviteInput = Effect.fn("emails.invite.readInput")(function* (
     .get(invite.tenantId)
     .pipe(Effect.orDie);
   const siteUrl = yield* readSiteUrl();
-  const links = yield* resolveWelcomeEmailLinks(
+  const links = yield* resolveLegalLinks(
     yield* readPageCatalog().pipe(Effect.provide(publicationLayer)),
     locale,
     siteUrl

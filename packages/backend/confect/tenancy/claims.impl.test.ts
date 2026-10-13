@@ -25,6 +25,17 @@ const run = refs.internal.tenancy.claims.run;
 const viewer = refs.public.tenancy.viewer.get;
 const nf = slugOf("nf");
 
+/** Limits a tenant to the addresses on these email domains, the way its Owner does. */
+const admitOnly = (
+  tenantId: GenericId.GenericId<"tenants">,
+  emailDomains: readonly string[]
+) =>
+  Effect.flatMap(DatabaseWriter, (writer) =>
+    writer.table("tenants").patch(tenantId, {
+      policies: { ...NEW_TENANT_POLICIES, emailDomains },
+    })
+  );
+
 /** Fake timers keep every scheduled run from starting before the test starts it. */
 beforeEach(() => {
   vi.useFakeTimers();
@@ -377,5 +388,66 @@ describe("tenancy/claims run", () => {
       });
       untouched(yield* fixture.run(stored(personId, inviteId)));
     })
+  );
+
+  it.effect(
+    "claims an address on one of the email domains the tenant allows",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const account = yield* fixture.account("guru", address, true);
+        yield* fixture.run(
+          admitOnly(fixture.tenants.nf, ["belajar.id", "harapan.example.test"])
+        );
+        const { inviteId, personId } = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, address)
+        );
+        yield* fixture.internal.mutation(run, {
+          cursor: null,
+          userId: account.userId,
+        });
+        const after = yield* fixture.run(stored(personId, inviteId));
+        expect(after.person.account).toMatchObject({
+          state: "claimed",
+          userId: account.userId,
+        });
+        expect(after.invite.state).toMatchObject({ status: "accepted" });
+      })
+  );
+
+  it.effect(
+    "leaves an invite pending when the tenant's email domains do not include the address, and judges each tenant by its own domains",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const account = yield* fixture.account("guru", address, true);
+        yield* fixture.run(admitOnly(fixture.tenants.nf, ["belajar.id"]));
+        const closed = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, address)
+        );
+        const open = yield* fixture.run(
+          invitePerson(fixture.tenants.other, address)
+        );
+        yield* fixture.internal.mutation(run, {
+          cursor: null,
+          userId: account.userId,
+        });
+        const afterClosed = yield* fixture.run(
+          stored(closed.personId, closed.inviteId)
+        );
+        const afterOpen = yield* fixture.run(
+          stored(open.personId, open.inviteId)
+        );
+        expect(afterClosed.person.account).toEqual({ state: "unclaimed" });
+        expect(afterClosed.invite.state).toEqual({ status: "pending" });
+        expect(afterOpen.person.account).toMatchObject({
+          state: "claimed",
+          userId: account.userId,
+        });
+        expect(afterOpen.entries).toMatchObject([
+          { change: { type: "person.claimed" } },
+        ]);
+        expect(afterOpen.entries).toHaveLength(1);
+      })
   );
 });

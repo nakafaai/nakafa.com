@@ -18,6 +18,7 @@ import {
 import { Array as Arr, Effect, Schema } from "effect";
 
 const open = refs.internal.tenancy.provision.open;
+const holdersSchedule = refs.internal.tenancy.holders.schedule;
 const claimsRun = refs.internal.tenancy.claims.run;
 const viewer = refs.public.tenancy.viewer.get;
 const contract: typeof Contract.Type = {
@@ -263,11 +264,18 @@ describe("tenancy/provision open", () => {
           open,
           request("harapan", [sma])
         );
-        const jobs = Arr.filter(
-          yield* fixture.run(scheduledJobs),
-          (job) => job.name === "tenancy/claims:run"
-        );
-        expect(jobs).toMatchObject([
+        const jobsNamed = (name: string) =>
+          Effect.map(fixture.run(scheduledJobs), (jobs) =>
+            Arr.filter(jobs, (job) => job.name === name)
+          );
+        expect(yield* jobsNamed("tenancy/holders:schedule")).toMatchObject([
+          { args: [{ cursor: null, email: address }] },
+        ]);
+        yield* fixture.internal.mutation(holdersSchedule, {
+          cursor: null,
+          email: address,
+        });
+        expect(yield* jobsNamed("tenancy/claims:run")).toMatchObject([
           { args: [{ cursor: null, userId: account.userId }] },
         ]);
         yield* fixture.internal.mutation(claimsRun, {
@@ -297,6 +305,10 @@ describe("tenancy/provision open", () => {
       const fixture = yield* tenancyFixture;
       yield* fixture.account("lain", stranger, true);
       yield* fixture.internal.mutation(open, request("harapan", [sma]));
+      yield* fixture.internal.mutation(holdersSchedule, {
+        cursor: null,
+        email: address,
+      });
       const jobs = Arr.filter(
         yield* fixture.run(scheduledJobs),
         (job) => job.name === "tenancy/claims:run"
@@ -392,6 +404,28 @@ describe("tenancy/provision open", () => {
         expect(refusals).toMatchObject(
           Arr.replicate({ _tag: "SchemaError" }, 3)
         );
+      })
+  );
+
+  it.effect(
+    "refuses an organisation, a school, and an Owner whose name runs over a line, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const before = yield* fixture.run(counts);
+        const base = request("harapan", [sma]);
+        const refusals = yield* Effect.forEach(
+          [
+            { ...base, name: "Yayasan Harapan\nBangsa" },
+            { ...base, units: [{ ...sma, name: "SMA Harapan\r\nBangsa" }] },
+            { ...base, owner: { ...base.owner, name: "Kepala\u2028Yayasan" } },
+          ],
+          (bad) => fixture.internal.mutation(open, bad).pipe(Effect.flip)
+        );
+        expect(refusals).toMatchObject(
+          Arr.replicate({ _tag: "SchemaError" }, 3)
+        );
+        expect(yield* fixture.run(counts)).toEqual(before);
       })
   );
 

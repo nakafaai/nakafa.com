@@ -13,20 +13,23 @@ import { Array as Arr, Effect, Schema } from "effect";
 
 const address = Schema.decodeSync(Email)("guru@harapan.example.test");
 const other = Schema.decodeSync(Email)("lain@harapan.example.test");
-const run = "tenancy/claims:run";
 
 /** Fake timers keep every scheduled run from starting before the test looks at it. */
 beforeEach(() => {
   vi.useFakeTimers();
 });
 
+/** The arguments of the jobs of one function that earlier writes scheduled. */
+const jobsOf = (name: "tenancy/claims:run" | "tenancy/holders:schedule") =>
+  Effect.map(scheduledJobs, (jobs) =>
+    Arr.map(
+      Arr.filter(jobs, (job) => job.name === name),
+      (job) => job.args
+    )
+  );
+
 /** The claim runs that earlier writes scheduled, by the account they are for. */
-const claimJobs = Effect.map(scheduledJobs, (jobs) =>
-  Arr.map(
-    Arr.filter(jobs, (job) => job.name === run),
-    (job) => job.args
-  )
-);
+const claimJobs = jobsOf("tenancy/claims:run");
 
 describe("tenancy/claims after verification", () => {
   it.effect("schedules the claim when an invite waits for the address", () =>
@@ -84,24 +87,18 @@ describe("tenancy/claims after verification", () => {
 });
 
 describe("tenancy/claims after an invite", () => {
-  it.effect("schedules the claim of the account that holds the address", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const holder = yield* fixture.account("guru", address, true);
-      yield* fixture.account("lain", other, true);
-      yield* fixture.run(claimAfterInvite(address));
-      expect(yield* fixture.run(claimJobs)).toEqual([
-        [{ cursor: null, userId: holder.userId }],
-      ]);
-    })
-  );
-
-  it.effect("schedules nothing when no account holds the address", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      yield* fixture.account("lain", other, true);
-      yield* fixture.run(claimAfterInvite(address));
-      expect(yield* fixture.run(claimJobs)).toEqual([]);
-    })
+  it.effect(
+    "schedules the walk over the accounts that hold the address, and counts none of them itself",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.account("guru", address, true);
+        yield* fixture.account("lain", other, true);
+        yield* fixture.run(claimAfterInvite(address));
+        expect(yield* fixture.run(jobsOf("tenancy/holders:schedule"))).toEqual([
+          [{ cursor: null, email: address }],
+        ]);
+        expect(yield* fixture.run(claimJobs)).toEqual([]);
+      })
   );
 });
