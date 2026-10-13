@@ -1,4 +1,3 @@
-import { requireWholeSearchQuery } from "@repo/backend/confect/contentRelease/search/input";
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/search/schema";
 import {
   NAKAFA_AGENT_MAX_LIMIT,
@@ -19,11 +18,7 @@ export class ContentSearchInputError extends Schema.TaggedError<ContentSearchInp
 ) {}
 type ContentSearchInput = typeof contentSearchInputValidator.Type;
 
-/**
- * Validates bounded public search input and returns unique query texts. A
- * query that Convex full-text search would read in part is refused here,
- * before anything is read, for every section alike.
- */
+/** Validates bounded public search input and returns unique query texts. */
 export const validateContentSearchInput = Effect.fn(
   "contents.search.validateInput"
 )(function* (args: ContentSearchInput) {
@@ -46,7 +41,6 @@ export const validateContentSearchInput = Effect.fn(
       message: `Content search accepts at most ${NAKAFA_AGENT_MAX_QUERIES} unique queries.`,
     });
   }
-  yield* Effect.forEach(queryTexts, requireWholeSearchQuery);
   return queryTexts;
 });
 

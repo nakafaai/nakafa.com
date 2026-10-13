@@ -58,15 +58,15 @@ describe("NakafaAgentSearchOptionsSchema", () => {
       Result.isFailure(decode("𠮷".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH + 1)))
     ).toBe(true);
     // The schema that the MCP tool, the public API and Nina's tool carry says
-    // it, and says that the search holds a query to 16 terms, which a short
-    // query can exceed.
+    // it, and says how many terms the search reads, which a short query can
+    // exceed.
     expect(
       Schema.toJsonSchemaDocument(NakafaAgentSearchOptionsSchema).schema
     ).toMatchObject({
       properties: {
         queries: {
           description: expect.stringContaining(
-            `at most ${CONVEX_SEARCH_TERMS} terms`
+            `within ${CONVEX_SEARCH_TERMS} terms`
           ),
           items: { maxLength: NAKAFA_AGENT_MAX_QUERY_LENGTH },
         },

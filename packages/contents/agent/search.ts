@@ -46,9 +46,10 @@ export const CONVEX_SEARCH_TERM_BYTES = 32;
  * longest text that 16 terms of 31 bytes fill with one character between each
  * two, 511 characters. A query longer than that is invalid, like a fifth
  * query. The limit is a length, not a count of terms, so a query of 17 short
- * words is within it and Convex would lose its last word without an error.
- * The search itself refuses such a query, and one with a term of 32 bytes or
- * more, before it reads anything (`requireWholeSearchQuery`). A search already
+ * words is within it, and Convex would lose its last word without an error.
+ * The search of lessons and articles refuses such a query, and one with a term
+ * of 32 bytes or more, as the search of the Quran does (`requireWholeSearchQuery`).
+ * A try-out is matched in memory and reads every term. A search already
  * recorded keeps whatever query it ran with.
  */
 export const NAKAFA_AGENT_MAX_QUERY_LENGTH =
