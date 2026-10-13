@@ -17,11 +17,13 @@ export const occupyPort = Effect.fn("AcceptanceTest.occupyPort")(function* (
 });
 
 /** Whether something holds a loopback port, which a second listener learns by failing to bind it. */
-export const isPortOccupied = (port: number) =>
-  NodeSocketServer.make({ host: "127.0.0.1", port }).pipe(
-    Effect.scoped,
-    Effect.isFailure
-  );
+export const isPortOccupied = Effect.fn("AcceptanceTest.isPortOccupied")(
+  (port: number) =>
+    NodeSocketServer.make({ host: "127.0.0.1", port }).pipe(
+      Effect.scoped,
+      Effect.isFailure
+    )
+);
 
 /** A temporary backend checkout holding the Convex files a local runtime reads. */
 export const fixture = Effect.gen(function* () {
@@ -97,10 +99,11 @@ export function anonymousConvexCommand(
  * after the failed attempt's real file operations finish, so the clock moves in
  * small steps until the operation settles, never far past a readiness timeout.
  */
-export const ticking = <A, E, R>(operation: Effect.Effect<A, E, R>) =>
-  Effect.gen(function* () {
-    const ticker = yield* Effect.forkChild(
-      Effect.forever(TestClock.adjust("10 millis"))
-    );
-    return yield* operation.pipe(Effect.ensuring(Fiber.interrupt(ticker)));
-  });
+export const ticking = Effect.fn("AcceptanceTest.ticking")(function* <A, E, R>(
+  operation: Effect.Effect<A, E, R>
+) {
+  const ticker = yield* Effect.forkChild(
+    Effect.forever(TestClock.adjust("10 millis"))
+  );
+  return yield* operation.pipe(Effect.ensuring(Fiber.interrupt(ticker)));
+});
