@@ -330,6 +330,27 @@ describe("Nina memory restore", () => {
     expect(await f.texts()).toEqual([]);
   });
 
+  it("moves the moment of a Delete all for the records of the learner who asked and for no other learner's", async () => {
+    const f = await createMemoryTest();
+    const other = await f.stranger();
+    const ahead = await f.seed({
+      confirmedAt: NOW + 60_000,
+      text: "Theirs, confirmed far ahead",
+      userId: other.userId,
+    });
+    await other.owner.mutation(remove, { id: ahead });
+
+    await f.owner.mutation(clear, {});
+    expect(
+      await f.t.query((ctx) => ctx.db.query("learningPreferences").collect())
+    ).toEqual([
+      expect.objectContaining({
+        ninaMemoryClearedAt: NOW,
+        userId: f.identity.userId,
+      }),
+    ]);
+  });
+
   it("puts a situation back even when its end day has passed meanwhile, and the daily job then deletes it like any ended situation", async () => {
     const f = await createMemoryTest();
     const id = await f.seed({
