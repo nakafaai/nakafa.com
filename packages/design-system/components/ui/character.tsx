@@ -1,4 +1,5 @@
 import { Picture } from "@repo/design-system/components/ui/picture";
+import type { Mascot } from "@repo/mascot/code";
 import { CANVAS, draw } from "@repo/mascot/draw";
 import { forSeed } from "@repo/mascot/seed";
 import { cn } from "cn";
@@ -22,17 +23,36 @@ function marked() {
 }
 
 /**
+ * One animal of the identity, drawn from its mascot on its whole canvas. The
+ * profile animals and the animal pool draw every animal through it.
+ */
+export function Animal({
+  className,
+  mascot,
+}: {
+  className?: string;
+  mascot: typeof Mascot.Type;
+}) {
+  return (
+    <Picture
+      box={BOX}
+      className={className}
+      data-look=""
+      marked={marked}
+      shapes={Arr.of(draw(mascot))}
+    />
+  );
+}
+
+/**
  * The profile animal of one person, in a round frame. The animal follows the
  * seed in `name`, so the same name always shows the same animal.
  */
 export function Character({ name, className }: Props) {
   return (
-    <Picture
-      box={BOX}
+    <Animal
       className={cn("shrink-0 rounded-full border", className)}
-      data-look=""
-      marked={marked}
-      shapes={Arr.of(draw(forSeed(name)))}
+      mascot={forSeed(name)}
     />
   );
 }
