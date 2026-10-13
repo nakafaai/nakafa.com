@@ -8,8 +8,7 @@ import { SearchContextProvider } from "@/lib/search/context";
  * route groups.
  *
  * These stores are intentionally scoped below the app-wide runtime providers so
- * `auth` and `school` stay free of unrelated search, AI, and content view
- * state.
+ * `auth` stays free of unrelated search, AI, and content view state.
  *
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/layout
  * @see https://nextjs.org/docs/app/guides/streaming

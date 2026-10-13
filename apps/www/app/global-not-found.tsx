@@ -94,7 +94,6 @@ function NotFoundDocument({ locale }: { locale: keyof typeof dictionaries }) {
           <Stage>
             <Missing
               description={messages.NotFound.description}
-              scene="missing"
               title={messages.NotFound.title}
             >
               <ActionLink

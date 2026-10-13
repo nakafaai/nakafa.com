@@ -38,7 +38,7 @@ describe("OG route aliases", () => {
     ["/og/FR/example/image.png", "FR"],
     ["/og/example/image.png", null],
     ["/example.png", null],
-    ["/classes/bacteria.png", null],
+    ["/logos/itb.png", null],
     ["/open-graph/curriculum/en-merdeka.png", null],
   ])("reads localized ownership from the OG alias %s", (pathname, expected) => {
     expect(readOgRouteAliasLocale(pathname)).toBe(expected);
