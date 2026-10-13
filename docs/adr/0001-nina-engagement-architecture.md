@@ -473,8 +473,8 @@ the chat is free:
   does hold still completes it, and the chat is free. Deleting a chat does not
   wait for it: when the journal fails the settlement of the chat's open turn,
   the delete ends the turn the same way, in its own transaction, and goes on, so
-  a learner can always delete their chat. A hold that cannot be paid back is the
-  one thing that ending never drops. When the credit state cannot be read, the
+  a failure of the journal never keeps a learner from deleting their chat. A
+  hold that cannot be paid back is the one thing that ending never drops. When the credit state cannot be read, the
   ending fails as a whole and changes nothing, and the next sweep tries again.
   A delete of that chat fails the same way, because the learner's credits are
   not dropped to free it.

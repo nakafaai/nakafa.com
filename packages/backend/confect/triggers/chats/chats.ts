@@ -16,15 +16,15 @@ import { Duration, Effect } from "effect";
  * Settles the chat's open turn and cascades journal deletion through Agent. The
  * turn settles in this transaction, so its hold is paid back without waiting
  * for its run to exit: the stream is cut off, and the run's next check finds
- * the turn settled and stops its provider call. A learner can always delete
- * their chat, so when the Agent journal cannot be read or cut off the turn ends
- * without it, as the sweep ends a turn it could not settle (`abandonTurn`), and
- * the delete goes on. A hold that cannot be paid back still fails the delete,
- * because the learner's credits are not dropped to free a chat, and a defect
- * fails it too. Agent deletes the journal page by page, the first page here and
- * the rest in the mutations it schedules. The share token goes in the same
- * transaction, so no link outlives its chat. A memory is the learner's own and
- * stays when a chat is deleted.
+ * the turn settled and stops its provider call. A failure of the Agent journal
+ * never keeps a learner from deleting their chat: when it cannot be read or cut
+ * off, the turn ends without it, as the sweep ends a turn it could not settle
+ * (`abandonTurn`), and the delete goes on. A hold that cannot be paid back
+ * still fails the delete, because the learner's credits are not dropped to free
+ * a chat, and a defect fails it too. Agent deletes the journal page by page,
+ * the first page here and the rest in the mutations it schedules. The share
+ * token goes in the same transaction, so no link outlives its chat. A memory is
+ * the learner's own and stays when a chat is deleted.
  */
 export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
   function* (change: Change<DataModel, "chats">) {

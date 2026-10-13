@@ -7,14 +7,15 @@ import { Effect } from "effect";
  * Ends an open turn that `settleTurn` could not settle, so that no failure of
  * the Agent journal keeps the chat busy and the credits held for good. The sweep
  * ends a turn this way when every try to settle it failed, and the delete of a
- * chat ends its open turn this way when the first try fails, so the learner can
- * always delete a chat (`chatsHandler`). The journal is used while it works: an
- * answer it holds still completes the turn. A journal that cannot be read
- * counts as holding no answer, and one that cannot cut the turn off is left as
- * it is; the log keeps the turn in both cases. A turn the learner stopped ends
- * as cancelled, any other as failed for a reason the learner reads as
- * "unknown". Only an active turn is passed in, so a second ending of the same
- * turn changes nothing and the hold is paid back once.
+ * chat ends its open turn this way when the first try fails, so a failure of the
+ * journal never keeps the learner from deleting a chat (`chatsHandler`). The
+ * journal is used while it works: an answer it holds still completes the turn.
+ * A journal that cannot be read counts as holding no answer, and one that
+ * cannot cut the turn off is left as it is; the log keeps the turn in both
+ * cases. A turn the learner stopped ends as cancelled, any other as failed for
+ * a reason the learner reads as "unknown". Only an active turn is passed in, so
+ * a second ending of the same turn changes nothing and the hold is paid back
+ * once.
  *
  * The reason is `unknown` and not one of its own because a new reason is a new
  * value that every web build must read and word before the backend may store
