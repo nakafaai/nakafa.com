@@ -35,7 +35,8 @@ finds the right data.
 - One sign-in covers `nakafa.com` and every school host of the `us` cell,
   through the cross-subdomain cookies that ADR 0011 describes.
 - The proxy reads only the host and the cookie. The map from host to school is
-  configuration, so a request never reads the database to find its school.
+  configuration, so a request never reads the database to find its school. Its
+  target is under 1 ms, measured at the edge.
 - School pages are private and not indexed (ADR 0011).
 - An address never holds personal data, so a student's name never enters a URL.
 - A school member or an account under 18 has no public profile (K15). Each school
@@ -56,13 +57,15 @@ Every address below is planned.
 | `harapan.nakafa.com/exams` | All exams and their status. |
 | `.../exams/pts-matematika` | An exam. Its information, taking it, and its results share this address. |
 | `.../exams/pts-matematika/sittings/sesi-2` | One sitting: one room and one token. |
-| `.../exams/pts-matematika/review` | Answers that wait for a teacher. |
+| `.../exams/pts-matematika/review` | Answers that wait for a teacher, and attempts whose late records wait for a decision (ADR 0013). |
 | `harapan.nakafa.com/people` | Everyone in the school. Admins invite people. Teachers manage their class members from this list. |
 | `harapan.nakafa.com/reports/2026-2027-1/x-1` | A report card, by period, then class group. A teacher reaches a report card only through the homeroom relation (ADR 0012). |
 | `harapan.nakafa.com/bank`, `/bank/trigonometri/14`, `/bank/impor/pts-matematika` | The question bank, an item by topic and number, and an import reviewed next to its original PDF. |
 | `harapan.nakafa.com/insight` | Insight. |
 | `harapan.nakafa.com/connectors`, `/connectors/classroom` | Connectors. A teacher sees only their own connections. |
 | `harapan.nakafa.com/perangkat` | Where a person types the code that the CLI shows (device authorization). |
+| `harapan.nakafa.com/kartu` | Where a student enters the code of a login card (ADR 0009). It works on the school host only. |
+| `harapan.nakafa.com/orang-tua` | Where a parent asks for a sign-in code by email and enters it (ADR 0009). It works on the school host only. |
 | `harapan.nakafa.com/api/v1`, `harapan.nakafa.com/mcp` | The school REST API and the school MCP server. They use OAuth 2.0 client credentials. |
 | `harapan.nakafa.com/settings` | Organisation settings, periods, class groups, billing, and the AI quota. |
 | `harapan.nakafa.com/chat` | Nina in the school. A school thread does not read personal memory (K3). |
@@ -100,9 +103,29 @@ its own change, before any school code that depends on it lands.
 - The `eu` cell is planned. It runs on Convex `aws-eu-west-1` in Dublin, and on
   Vercel `dub1` only if measured latency calls for it. It is created when the
   first school in the European Union signs, with its own budget (K5).
-- A school is placed in one cell when it is created. Moving it to another cell is
-  an export and an import, never an automatic move, and its host moves to the
-  other cell's domain with it. The cell is shown only in the settings.
+- Each cell runs its own `www` project and its own Convex deployment. A cell's
+  project has its own `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`,
+  and its deployment has its own `SITE_URL` and cookie domain. The `us` project
+  serves `nakafa.com` and its school hosts, and a later cell's project serves that
+  cell's domain. A request reaches its cell by the domain it names, so the proxy
+  never routes across cells and no resolver keyed by host exists. The change that
+  creates a cell adds the test that an `/api/auth` request on a cell's host
+  reaches only that cell's site.
+- A school is placed in one cell when it is created. A move to another cell is
+  never automatic, and its host moves to the other cell's domain with it. The
+  cell is shown only in the settings. A move runs in this order:
+  1. The tenant is suspended from the start of the export to the cutover, so no
+     write changes the data while it is copied (ADR 0011).
+  2. The export reads every table the tenant owns, the tenant's journal entries
+     (ADR 0016), and its stored files.
+  3. The import writes them into the target cell. It gives every row a new ID
+     there and rewrites each reference to it.
+  4. The host switches to the target cell's domain at a dated cutover, and the
+     tenant becomes active again in the target cell.
+  5. The source rows are deleted through a reviewed batched deletion, run dry and
+     then for real until every count is zero, the pattern that ADR 0011 uses to
+     retire the old School. Nothing of the school stays in the source cell: not
+     its Persons' names, nor the email addresses of its invites, nor its journal.
 - An account has one home cell, and it signs in and writes only there: every
   mutation checks its session against the Better Auth rows of its own deployment
   (ADR 0009). A person with schools in two cells holds one account in each,
@@ -111,14 +134,15 @@ its own change, before any school code that depends on it lands.
   each cell's hosts live under a registrable domain of their own and its session
   cookie names that domain: `nakafa.com` for `us`, and for `eu` a domain that
   the change creating the cell chooses and registers. A session of one cell is
-  then never sent to a host of another, and both live in one browser. The map
-  from host to cell follows from the domain.
+  then never sent to a host of another, and both live in one browser. A host
+  belongs to the cell whose project serves its domain.
 - Signed Aksara content is copied to every cell. A teacher's questions stay in the
   school's own cell.
-- Email is sent from the cell's own domain and carries only links. Push carries
-  only a notification id and a general title.
-- The map from host to cell is configuration that the proxy reads without the
-  database. Its target is under 1 ms, measured at the edge.
+- Email is sent from the cell's own domain and carries only links, with one
+  exception: the parent's six-digit sign-in code (ADR 0009). It expires after five
+  minutes, rests as a keyed hash, and is useless without the code entry page of
+  the school host (`/orang-tua`). Push carries only a notification id and a
+  general title.
 
 ## Consequences
 
@@ -127,10 +151,10 @@ its own change, before any school code that depends on it lands.
 - One sign-in serves every school host of a cell. A school host and
   `nakafa.com` share their cookies.
 - A person with schools in two cells signs in once per cell.
-- A school that moves cells needs an export and an import. Nothing moves on its
-  own.
-- The eu cell adds a second place where data lives and a second budget. Its cost
-  starts with the first European school that signs.
+- A school that moves cells needs an export, an import, a dated cutover, and a
+  deletion of the source rows. Nothing moves on its own.
+- The eu cell adds a second place where data lives, a second `www` project, and a
+  second budget. Its cost starts with the first European school that signs.
 - Data location is limited by the providers. Resend stores account data in the
   United States even when it sends from Ireland. The location of Convex logs and
   backups is not confirmed in writing, and the privacy text must not claim more.
@@ -151,6 +175,12 @@ its own change, before any school code that depends on it lands.
 - One account across cells through a federated session. It would keep the
   identity of a person in the `eu` cell inside the `us` cell, which is what a
   cell exists to prevent.
+- One `www` project for every cell, with a resolver that picks the deployment by
+  host. The auth handler, the session token read, and the Convex provider in the
+  layouts each take the deployment from `NEXT_PUBLIC_CONVEX_URL` and
+  `NEXT_PUBLIC_CONVEX_SITE_URL` (`apps/www/lib/auth/server.ts`), so a resolver
+  would have to replace all of them, and one miss would send a session cookie to
+  the wrong cell's deployment.
 
 ## Implementation Status
 
@@ -160,5 +190,4 @@ its own change, before any school code that depends on it lands.
 | Host rewrite for school subdomains | Planned |
 | School URL tree | Planned |
 | `us` data cell | Live |
-| `eu` data cell | Planned, created by K5 |
-| Host-to-cell map | Planned |
+| `eu` data cell, with its own `www` project and Convex deployment | Planned, created by K5 |

@@ -67,40 +67,64 @@ school connection.
 
 Program wave A, the first delivery wave of the School program, changes how
 school members sign in. Each path below is planned unless it says live. Every
-path ends in the Better Auth session that the rest of this ADR checks.
+path ends in the Better Auth session that the rest of this ADR checks. The
+username, the login card, and the parent code are served on the school host
+only, each at its own address (ADR 0026).
 
 - **Google.** Google sign-in covers a school's Workspace account and belajar.id
-  accounts. The sign-in checks the hosted domain claim (`hd`) against the
-  school's allowed email domains. A school account is matched by its Google
-  issuer and subject, never by its email address. Google sign-in is live today.
-  The school host, the domain check, and the belajar.id match are planned.
+  accounts. When the school has set allowed email domains, the sign-in checks the
+  hosted domain claim (`hd`) against them, and an empty list restricts nothing
+  (ADR 0011). A school account is matched by its Google issuer and subject, never
+  by its email address. The one exception is an invite claim (ADR 0011), which
+  matches the verified email of an account to the address of an invite once, to
+  bind a Person. Google sign-in is live today. The school host, the domain
+  check, and the belajar.id match are planned.
 - **Username.** A school issues a username that is unique within the school. It
   is stored in the school's login table and maps to a Better Auth username that
-  is unique worldwide and created automatically. Username sign-in works on the
-  school's host only. That path is switched off on main, so it needs a test
-  before it opens. A school username is a login name only, never a public
-  profile handle (K15).
-- **Login card.** A card carries a 10-character Crockford base32 code, without
-  the letters I, L, O, and U. Nakafa stores only a keyed hash of the code. A code
-  is single use, expires after 14 days, and is rate limited by the existing
-  rate-limit component. The QR code on the card holds only the code. A teacher or
-  an admin prints a card again, which voids the old code and writes a journal
-  entry. A code is shown with dashes and accepted with or without them.
+  is unique within the cell, because each cell holds its own Better Auth rows
+  (ADR 0026), and is created automatically. A username signs in with a password.
+  The student sets it when redeeming a login card (below), and it is the daily
+  credential. Better Auth's `/sign-in/username` endpoint finds a user by
+  username among every user of the deployment and has no host check, so it is
+  switched off on main and stays off on every host. Username sign-in is served
+  only by an endpoint of the school host, never by the generic endpoint on
+  `nakafa.com`, and that endpoint needs a test before it opens. A username
+  account has an address in the reserved `.invalid` domain (RFC 2606) that never
+  receives mail, and every sender refuses that domain. Its Person is bound by the
+  card claim (claim method `card`). A school username is a login name only, never
+  a public profile handle (K15).
+- **Login card.** A card is a one-time setup secret, not a daily credential. It
+  carries a 10-character Crockford base32 code, without the letters I, L, O, and
+  U, and the school's host beside the code, such as `harapan.nakafa.com`.
+  Nakafa stores only a keyed hash of the code. A code is single use, expires
+  after 14 days, and is rate limited by the existing rate-limit component. The QR
+  code on the card holds only the code. A student redeems the code on the card
+  page of the school host (`/kartu`, ADR 0026). No other host accepts a card
+  code, so a card typed at `nakafa.com` finds nothing. Redeeming creates the
+  username account, runs the card claim, and asks the student to set a password.
+  A teacher or an admin prints a card again, which voids the old code and writes
+  a journal entry, and redeeming the new card lets the student set a new
+  password. A code is shown with dashes and accepted with or without them.
 - **Parent.** A parent signs in with an email code: six digits, valid for five
   minutes, void after three wrong tries, and stored as a keyed hash (an HMAC
   under a server secret, like the login-card code), because six digits have
   only a million values and a plain digest would give the code to anyone who
   reads the row. Better Auth's `emailOTP` plugin keeps codes in plain text by
-  default, so Nakafa stores its own keyed hash. `confect/emails` sends the code. Signing in is not consent for a
-  child (K2). Consent is recorded with a second check, and ADR 0012 defines the
-  verified parent relation.
+  default, so Nakafa stores its own keyed hash. `confect/emails` sends the code.
+  The parent enters it on the code entry page of the school host
+  (`/orang-tua`, ADR 0026), the only page that accepts it. It is the one
+  exception to the rule that email carries only links (ADR 0026): it lives five
+  minutes, rests as a keyed hash, and is useless without that page. Signing in is
+  not consent for a child (K2). Consent is recorded with a second check, and ADR
+  0012 defines the verified parent relation.
 - **Microsoft Entra ID and SAML.** These come after Google, for the schools that
   ask for them.
 
 A learner under 18 whose Workspace account is blocked until a Workspace admin
-marks Nakafa as trusted signs in with a login card. The status name that Google
-shows for that block comes from third-party documentation and is not yet tested
-on a Workspace account.
+marks Nakafa as trusted redeems a login card once, sets a password, and then
+signs in with the username and that password. The status name that Google shows
+for that block comes from third-party documentation and is not yet tested on a
+Workspace account.
 
 ## Rejected Alternatives
 
@@ -127,3 +151,10 @@ not compare the session's user with the token's, which `session.live` does.
   the cookie signature that a rotation invalidates.
 - `better-auth` `plugins/bearer` and `@convex-dev/better-auth` `plugins/convex`:
   the hook that accepts a session token in an `Authorization` header.
+- `better-auth` `plugins/username`: the sign-in endpoint takes a username and a
+  password, finds the user by username among every user of the deployment, and
+  has no host check. The same plugin keeps a username unique within one
+  deployment, which is why a school username maps to a Better Auth username that
+  is unique per cell.
+- RFC 2606, section 2: `.invalid` is a reserved top-level domain whose names are
+  sure to be invalid, so mail to an address in it never arrives.
