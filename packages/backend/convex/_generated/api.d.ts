@@ -171,7 +171,7 @@ export declare const api: {
       getChat: FunctionReference<
         "query",
         "public",
-        { chatId: Id<"chats"> },
+        { chatId: Id<"chats">; shareToken?: string },
         {
           _creationTime: number;
           _id: Id<"chats">;
@@ -180,43 +180,8 @@ export declare const api: {
           title?: string;
           type: "study";
           updatedAt: number;
-          userId: Id<"users">;
+          userId?: Id<"users">;
           visibility: "private" | "public";
-        }
-      >;
-      getChats: FunctionReference<
-        "query",
-        "public",
-        {
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          q?: string;
-          type?: "study";
-          userId: Id<"users">;
-          visibility?: "private" | "public";
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            _creationTime: number;
-            _id: Id<"chats">;
-            activeTurnId?: Id<"ninaTurns">;
-            threadId: string;
-            title?: string;
-            type: "study";
-            updatedAt: number;
-            userId: Id<"users">;
-            visibility: "private" | "public";
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
         }
       >;
       getChatTitle: FunctionReference<
@@ -252,12 +217,18 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      getShareToken: FunctionReference<
+        "query",
+        "public",
+        { chatId: Id<"chats"> },
+        string | null
       >;
     };
   };
@@ -3324,7 +3295,7 @@ export declare const api: {
       get: FunctionReference<
         "query",
         "public",
-        { chatId: Id<"chats"> },
+        { chatId: Id<"chats">; shareToken?: string },
         {
           chat: {
             _creationTime: number;
@@ -3334,7 +3305,7 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           };
           turn: {
@@ -3362,8 +3333,7 @@ export declare const api: {
                     | "unknown";
                   status: "failed";
                 }
-              | { finishedAt: number; status: "cancelled" }
-              | { status: "unanswered" };
+              | { finishedAt: number; status: "cancelled" };
             suggestions?: Array<string>;
             tokens?: { input?: number; output?: number; total?: number };
             usage: Array<{
@@ -3469,6 +3439,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          shareToken?: string;
           streamArgs?:
             | { kind: "list"; startOrder?: number }
             | {
@@ -3510,8 +3481,7 @@ export declare const api: {
                       | "unknown";
                     status: "failed";
                   }
-                | { finishedAt: number; status: "cancelled" }
-                | { status: "unanswered" };
+                | { finishedAt: number; status: "cancelled" };
               suggestions?: Array<string>;
               tokens?: { input?: number; output?: number; total?: number };
               usage: Array<{
@@ -8781,6 +8751,12 @@ export declare const internal: {
       >;
     };
     lifecycle: {
+      abandon: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
+      >;
       claim: FunctionReference<
         "mutation",
         "internal",
@@ -9134,171 +9110,13 @@ export declare const internal: {
             };
             userId: Id<"users">;
           }
-        | {
-            _creationTime: number;
-            _id: Id<"ninaTurns">;
-            chatId: Id<"chats">;
-            credits?: number;
-            fingerprint?: string;
-            order: number;
-            page?: {
-              locale: "en" | "id" | "de";
-              needsFetch: boolean;
-              nina: {
-                focus?: {
-                  attemptId: Id<"tryoutAttempts">;
-                  kind: "tryout-question";
-                  placementId: Id<"tryoutAttemptPlacements">;
-                  questionOrder: number;
-                  sectionKey: string;
-                };
-                learning: {
-                  assetId?: string;
-                  contentId?: string;
-                  locale: "en" | "id" | "de";
-                  materialKey?: string;
-                  section?: string;
-                  slug: string;
-                  sourcePath?: string;
-                  title?: string;
-                  url: string;
-                  verified: boolean;
-                };
-                placement?: {
-                  mode: "placement";
-                  nodeKey: string;
-                  parentHref: string;
-                  parentTitle: string;
-                  programKey: string;
-                };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
-                tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
-                  allowPageFetch: boolean;
-                  evidenceScope: "verified-page" | "general-learning";
-                };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
-              };
-              slug: string;
-              url: string;
-              verified: boolean;
-            };
-            phase: "unanswered";
-            promptMessageId: string;
-            promptedAt?: number;
-            remembered?: number;
-            requestId?: string;
-            retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            state: { status: "unanswered" };
-            suggestions?: Array<string>;
-            threadId: string;
-            timing?: {
-              claimedMs?: number;
-              progressMs?: number;
-              readyMs?: number;
-              tokenMs?: number;
-            };
-            tokens?: { input?: number; output?: number; total?: number };
-            transactionId?: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            usage: Array<{
-              agent:
-                | "nina"
-                | "nakafa"
-                | "research"
-                | "math"
-                | "math-repair"
-                | "suggestions"
-                | "title"
-                | "nina-repair"
-                | "memory";
-              cached?: number;
-              calls: number;
-              cost?: number;
-              input: number;
-              model: string;
-              output: number;
-              provider: string;
-              reasoning?: number;
-            }>;
-            user?: {
-              curriculumPreference?: {
-                program: { key: string; title: string };
-              };
-              role?: "teacher" | "student" | "parent" | "administrator";
-            };
-            userId: Id<"users">;
-          }
         | null
+      >;
+      expire: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
       >;
       halted: FunctionReference<
         "query",
@@ -9659,170 +9477,6 @@ export declare const internal: {
             };
             userId: Id<"users">;
           }
-        | {
-            _creationTime: number;
-            _id: Id<"ninaTurns">;
-            chatId: Id<"chats">;
-            credits?: number;
-            fingerprint?: string;
-            order: number;
-            page?: {
-              locale: "en" | "id" | "de";
-              needsFetch: boolean;
-              nina: {
-                focus?: {
-                  attemptId: Id<"tryoutAttempts">;
-                  kind: "tryout-question";
-                  placementId: Id<"tryoutAttemptPlacements">;
-                  questionOrder: number;
-                  sectionKey: string;
-                };
-                learning: {
-                  assetId?: string;
-                  contentId?: string;
-                  locale: "en" | "id" | "de";
-                  materialKey?: string;
-                  section?: string;
-                  slug: string;
-                  sourcePath?: string;
-                  title?: string;
-                  url: string;
-                  verified: boolean;
-                };
-                placement?: {
-                  mode: "placement";
-                  nodeKey: string;
-                  parentHref: string;
-                  parentTitle: string;
-                  programKey: string;
-                };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
-                tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
-                  allowPageFetch: boolean;
-                  evidenceScope: "verified-page" | "general-learning";
-                };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
-              };
-              slug: string;
-              url: string;
-              verified: boolean;
-            };
-            phase: "unanswered";
-            promptMessageId: string;
-            promptedAt?: number;
-            remembered?: number;
-            requestId?: string;
-            retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
-            state: { status: "unanswered" };
-            suggestions?: Array<string>;
-            threadId: string;
-            timing?: {
-              claimedMs?: number;
-              progressMs?: number;
-              readyMs?: number;
-              tokenMs?: number;
-            };
-            tokens?: { input?: number; output?: number; total?: number };
-            transactionId?: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
-            usage: Array<{
-              agent:
-                | "nina"
-                | "nakafa"
-                | "research"
-                | "math"
-                | "math-repair"
-                | "suggestions"
-                | "title"
-                | "nina-repair"
-                | "memory";
-              cached?: number;
-              calls: number;
-              cost?: number;
-              input: number;
-              model: string;
-              output: number;
-              provider: string;
-              reasoning?: number;
-            }>;
-            user?: {
-              curriculumPreference?: {
-                program: { key: string; title: string };
-              };
-              role?: "teacher" | "student" | "parent" | "administrator";
-            };
-            userId: Id<"users">;
-          }
         | null
       >;
       recover: FunctionReference<
@@ -9862,13 +9516,21 @@ export declare const internal: {
         "mutation",
         "internal",
         {
-          candidates: Array<{
-            kind: "level" | "goal" | "style" | "struggle" | "situation";
-            known?: number;
-            quote: string;
-            text: string;
-            until?: string;
-          }>;
+          candidates: Array<
+            | {
+                kind: "situation";
+                known?: number;
+                quote: string;
+                text: string;
+                until: string;
+              }
+            | {
+                kind: "level" | "goal" | "style" | "struggle";
+                known?: number;
+                quote: string;
+                text: string;
+              }
+          >;
           seen: Array<{ confirmedAt: number; id: Id<"ninaMemories"> }>;
           topics: Array<string>;
           turnId: Id<"ninaTurns">;
@@ -9986,14 +9648,6 @@ export declare const internal: {
           }>;
         }
       >;
-      rekey: {
-        page: FunctionReference<
-          "mutation",
-          "internal",
-          { cursor?: string },
-          { checked: number; cursor: string; done: boolean; rekeyed: number }
-        >;
-      };
     };
     portrait: {
       build: {
@@ -10087,7 +9741,7 @@ export declare const internal: {
         "internal",
         {
           chatId: Id<"chats">;
-          text: string;
+          text?: string;
           throughOrder: number;
           usage: { input: number; output: number };
         },
@@ -10142,6 +9796,32 @@ export declare const internal: {
           };
         },
         null
+      >;
+    };
+    waits: {
+      summary: FunctionReference<
+        "query",
+        "internal",
+        { count: number },
+        {
+          newest?: number;
+          oldest?: number;
+          read: number;
+          statuses: {
+            cancelled: number;
+            complete: number;
+            failed: number;
+            open: number;
+          };
+          waits: Array<{
+            max?: number;
+            median?: number;
+            min?: number;
+            p90?: number;
+            stage: "claimedMs" | "readyMs" | "progressMs" | "tokenMs";
+            turns: number;
+          }>;
+        }
       >;
     };
   };

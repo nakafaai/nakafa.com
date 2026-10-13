@@ -5,6 +5,7 @@ import {
   MEMORY_PAGE_LIMIT,
   type NinaMemoryView,
 } from "@repo/backend/confect/nina/memory.spec";
+import { plainText } from "@repo/design-system/components/editor/plain";
 import { Array as Arr, Option, Schema, String as Str, Struct } from "effect";
 
 /**
@@ -172,59 +173,42 @@ export function pageCleared(page: MemoryPage): MemoryPage {
   return { ...page, isDone: true, page: [] };
 }
 
-/** A backslash that the Markdown writer put before a character it would otherwise read as formatting. */
-const ESCAPE = /\\(?=[!-/:-@[-`{-~])/gu;
-/** A line that only opens or closes a code block, or draws a divider. */
-const BLOCK_MARK = /^\s*(?:```.*|-{3,}|\*{3,})\s*$/u;
-/** What starts a task, a list item, a heading or a quote at the beginning of a line. */
-const LINE_MARK = /^\s*(?:[-*+]\s+\[[ xX]\]|[-*+]|\d+[.)]|#{1,6}|>)\s+/u;
-/** A link: its words stay and its address leaves. */
-const LINK = /\[([^\]]*)\]\([^)]*\)/gu;
-/** The marks around bold, italic, underlined, struck, highlighted and code text. */
-const TEXT_MARK =
-  /\*\*|~~|\+\+|==|`|(?<![\\\p{L}\p{N}])\*(?=\S)|(?<=\S)(?<!\\)\*(?![\p{L}\p{N}])/gu;
-const WHITESPACE = /\s+/gu;
+/**
+ * What each memory's words say as the editor shows them, read once for each
+ * memory object the page holds. Reading them lexes the Markdown, a row asks for
+ * them each time it renders, and the search asks for every memory on every
+ * key. A changed memory is a new object.
+ */
+const WORDS = new WeakMap<Memory, string>();
 
-/** Reads one line of Markdown as plain words. */
-function plainLine(line: string) {
-  if (BLOCK_MARK.test(line)) {
-    return "";
+function wordsOf(memory: Memory) {
+  const known = WORDS.get(memory);
+
+  if (known !== undefined) {
+    return known;
   }
 
-  return Str.replaceAll(
-    ESCAPE,
-    ""
-  )(
-    Str.replaceAll(
-      TEXT_MARK,
-      ""
-    )(Str.replaceAll(LINK, "$1")(Str.replace(LINE_MARK, "")(line)))
-  );
+  const words = plainText(memory.text);
+
+  WORDS.set(memory, words);
+
+  return words;
 }
 
 /**
- * Reads a memory's Markdown as one line of plain words, for the list and for
- * the search. Formatting marks leave and every line joins the one before it.
+ * What the list calls a memory: its title, or its words as the editor shows
+ * them when it has no title. It is empty for words that show nothing, such as
+ * a divider alone, and the row says Untitled then.
  */
-export function previewText(markdown: string) {
-  return Str.trim(
-    Str.replaceAll(
-      WHITESPACE,
-      " "
-    )(Arr.join(Arr.map(Str.split(markdown, "\n"), plainLine), " "))
-  );
-}
-
-/** What the list calls a memory: its title, or its words when it has none. */
 export function memoryName(memory: Memory) {
-  return memory.title ?? previewText(memory.text);
+  return memory.title ?? wordsOf(memory);
 }
 
 /**
- * What the search reads of each memory: its title and its words without their
- * formatting, in lower case. Reading the formatting out of thousands of words
- * on every key would take longer than the key, so it is done once for each
- * memory object the page holds, and a changed memory is a new object.
+ * What the search reads of each memory: its title and its words as the editor
+ * shows them, in lower case. It is done once for each memory object the page
+ * holds, because joining and lowering thousands of words on every key would
+ * take longer than the key, and a changed memory is a new object.
  */
 const HAYSTACKS = new WeakMap<Memory, string>();
 
@@ -235,9 +219,7 @@ function haystackOf(memory: Memory) {
     return known;
   }
 
-  const haystack = Str.toLowerCase(
-    `${memory.title ?? ""} ${previewText(memory.text)}`
-  );
+  const haystack = Str.toLowerCase(`${memory.title ?? ""} ${wordsOf(memory)}`);
 
   HAYSTACKS.set(memory, haystack);
 

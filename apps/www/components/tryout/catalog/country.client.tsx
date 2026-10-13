@@ -4,14 +4,14 @@ import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { TileIcon } from "@repo/design-system/components/ui/tile";
 import { Array as Arr, Schema } from "effect";
 
 import {
   CatalogCard,
-  CatalogCardGradient,
   CatalogCardImage,
+  CatalogCardTile,
 } from "@/components/shared/catalog/card";
-import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
@@ -25,7 +25,7 @@ const CountryExamCardImageSchema = Schema.Struct({
 type CountryExamCard = CountryPage["exams"][number] &
   typeof CountryExamCardImageSchema.Type;
 
-/** Renders one signed try-out country catalog with reviewed or gradient art. */
+/** Renders one signed try-out country catalog with reviewed art or tiles. */
 export function TryoutCountryPageClient({
   actionLabel,
   page,
@@ -53,9 +53,9 @@ export function TryoutCountryPageClient({
           {exam.imageSrc ? (
             <CatalogCardImage preload={index === 0} src={exam.imageSrc} />
           ) : (
-            <CatalogCardGradient seed={exam.publicPath}>
-              <ChoiceCardIcon icon={getTryoutExamIcon(exam.examKey)} />
-            </CatalogCardGradient>
+            <CatalogCardTile seed={exam.publicPath}>
+              <TileIcon icon={getTryoutExamIcon(exam.examKey)} />
+            </CatalogCardTile>
           )}
         </CatalogCard>
       ))}

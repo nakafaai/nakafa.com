@@ -34,7 +34,7 @@ function AccordionTrigger({
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
         className={cn(
-          "group/accordion-trigger flex flex-1 cursor-pointer items-start justify-between gap-4 rounded-md py-4 text-left text-sm underline-offset-4 outline-none transition-all hover:underline focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+          "group/accordion-trigger flex flex-1 cursor-pointer items-start justify-between gap-4 rounded-md py-4 text-left text-sm underline-offset-4 outline-none transition-[border-color,box-shadow] hover:underline focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
           className
         )}
         data-slot="accordion-trigger"
@@ -42,7 +42,7 @@ function AccordionTrigger({
       >
         {children}
         <HugeIcons
-          className="pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200 group-aria-expanded/accordion-trigger:rotate-180"
+          className="pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform group-aria-expanded/accordion-trigger:rotate-180"
           icon={ArrowDown01Icon}
         />
       </AccordionPrimitive.Trigger>

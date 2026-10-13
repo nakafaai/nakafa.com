@@ -68,8 +68,6 @@ type LearningPlacementContext = typeof LearningPlacementContextSchema.Type;
 type NinaToolContext = typeof NinaToolContextSchema.Type;
 type NinaContextSnapshot = typeof NinaContextSnapshotSchema.Type;
 type NinaContextTransition = typeof NinaContextTransitionSchema.Type;
-export type NinaLearningSessionInput =
-  typeof NinaLearningSessionInputSchema.Type;
 /** Nina context pack consumed by prompts, specialists, and message metadata. */
 export const NinaContextPackSchema = Schema.Struct({
   focus: Schema.optionalKey(NinaFocusSchema),
@@ -81,7 +79,7 @@ export const NinaContextPackSchema = Schema.Struct({
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type NinaContextPack = typeof NinaContextPackSchema.Type;
 /** Learning context persisted with one Nina turn. */
-export const NinaLearningSessionSchema = Schema.Struct({
+const NinaLearningSessionSchema = Schema.Struct({
   context: NinaContextPackSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 type NinaLearningSession = typeof NinaLearningSessionSchema.Type;

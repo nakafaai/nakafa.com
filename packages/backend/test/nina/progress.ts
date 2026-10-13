@@ -18,3 +18,14 @@ export function createProgress() {
 
   return { parts: () => MutableRef.get(written), publish };
 }
+
+/** Extracts the web search data parts from the parts a test publish function kept. */
+export function getWebSearchParts(parts: readonly CapabilityArtifact[]) {
+  return Arr.flatMap(parts, (part) => {
+    if (part.type !== "data-web-search") {
+      return [];
+    }
+
+    return [part.data];
+  });
+}

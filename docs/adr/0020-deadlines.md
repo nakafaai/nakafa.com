@@ -12,7 +12,10 @@ answer's body as well as its headers.
   the deadline and repeats it while it fails retryably.
 - Only a failure that proves the request never reached the server is repeated,
   plus what one caller knows to be safe for its own request, such as a 5xx
-  answer to the session token read.
+  answer to the session token read and to the browser's read of the session
+  (`readSession` in `apps/www/lib/auth/request.ts`), which Better Auth does not
+  ask for again after a first read that failed until the learner returns to
+  the tab.
 - A caller keeps its own status rules, its decoder, and its error type. The
   shared part is the deadline, the retry, and the unwrap.
 - A request that a person waits for can cut that budget: the content copy
@@ -145,10 +148,11 @@ of its own, and every model call has a cap on its output.
   a defect to fix, not an exception.
 - A new transient read calls `retryNetworkAttempt` and passes its own deadline
   failure. It does not copy the wiring.
-- A new capability runs through `streamCapability`. A new model call inside one
-  cuts its deadline with `limitDeadline`, a new provider call cuts its limit to
-  `timeLeft`, and a specialist that reports a written answer does so through
-  `specialistResult`.
+- A new capability is defined with `defineCapability`, which runs it through
+  `streamCapability`, so every capability gets this deadline. A new model call
+  inside one cuts its deadline with `limitDeadline`, a new provider call cuts
+  its limit to `timeLeft`, and a specialist that reports a written answer does
+  so through `specialistResult`.
 - `packages/backend/client/content/transport.ts` keeps its own pipeline: one
   absolute clock over the send and the body, and it cancels the responses it
   discards, which the shared helper does not model.

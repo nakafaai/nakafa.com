@@ -22,6 +22,9 @@ const save = Ref.getFunctionReference(refs.public.nina.uploads.save);
 const add = Ref.getFunctionReference(refs.public.nina.memory.add);
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
 const remove = Ref.getFunctionReference(refs.public.chats.mutations.deleteChat);
+const share = Ref.getFunctionReference(
+  refs.public.chats.mutations.updateChatVisibility
+);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
 const cleanup = Ref.getFunctionReference(
@@ -98,6 +101,46 @@ async function fixture() {
 }
 
 describe("native Nina deletion lifecycle", () => {
+  it("deletes the share token in the transaction that deletes its chat", async () => {
+    const { t, owner, receipt } = await fixture();
+    const shares = () => t.query((ctx) => ctx.db.query("chatShares").collect());
+    await owner.mutation(share, {
+      chatId: receipt.chatId,
+      visibility: "public",
+    });
+    expect(await shares()).toHaveLength(1);
+    await owner.mutation(remove, { chatId: receipt.chatId });
+    // Before any scheduled cleanup has run.
+    expect(await shares()).toEqual([]);
+  });
+  it("deletes the share token of a chat that account cleanup removes", async () => {
+    const { t, owner, identity, receipt } = await fixture();
+    await owner.mutation(share, {
+      chatId: receipt.chatId,
+      visibility: "public",
+    });
+    await t.mutation((ctx) =>
+      ctx.db.patch(
+        "users",
+        identity.userId,
+        createDeletedUserTombstone(identity.userId, NOW)
+      )
+    );
+    for (let batch = 0; batch < 20; batch += 1) {
+      if (!(await t.mutation(cleanup, { userId: identity.userId }))) {
+        break;
+      }
+    }
+    vi.runAllTimers();
+    await vi.dynamicImportSettled();
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    expect(
+      await t.query((ctx) => ctx.db.get("chats", receipt.chatId))
+    ).toBeNull();
+    expect(
+      await t.query((ctx) => ctx.db.query("chatShares").collect())
+    ).toEqual([]);
+  });
   it("deletes a chat whose active turn was already removed", async () => {
     const { t, owner, receipt } = await fixture();
     await t.mutation((ctx) => ctx.db.delete("ninaTurns", receipt.turnId));
@@ -158,8 +201,8 @@ describe("native Nina deletion lifecycle", () => {
           promptMessageId: receipt.promptMessageId,
           order,
           usage: [],
-          phase: "unanswered",
-          state: { status: "unanswered" },
+          phase: "settled",
+          state: { status: "complete", finishedAt: NOW },
         });
       }
       await ctx.db.insert("ninaSummaries", {

@@ -3,12 +3,16 @@ import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileUIPart } from "ai";
 import { Array as Arr, HashMap, Option } from "effect";
+import { loadedForChat } from "@/components/ai/chat/state";
 
 /**
  * Adds the sent prompt to the first page of the chat's loaded messages, so it
  * shows at once. Confect replays this callback on every change of the loaded
  * data until the authoritative message arrives, so it only reads the store and
- * writes new pages. Dropping it brings back exactly the pages it read.
+ * writes new pages. Dropping it brings back exactly the pages it read. The
+ * conversation and its pages are found by the chat id, whatever access they
+ * were loaded with: the owner who opened the chat through its own share link
+ * holds them under the token as well.
  */
 export function optimisticPrompt(
   previews: HashMap.HashMap<Id<"ninaUploads">, FileUIPart>,
@@ -18,10 +22,11 @@ export function optimisticPrompt(
     if (!args.chatId) {
       return;
     }
-    const conversation = store.getQuery(nina.conversation.get, {
-      chatId: args.chatId,
-    });
-    if (Option.isNone(conversation)) {
+    const [conversation] = loadedForChat(
+      store.getAllQueries(nina.conversation.get),
+      args.chatId
+    );
+    if (!conversation) {
       return;
     }
     const threadId = conversation.value.chat.threadId;

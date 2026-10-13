@@ -1,7 +1,6 @@
 import { timeLeft } from "@repo/backend/confect/nina/capability/deadline";
-import { readFirecrawlApp } from "@repo/backend/confect/nina/research/provider";
-import { ResearchSearchError } from "@repo/backend/confect/nina/research/schema";
-import { Duration, Effect, Option, Schedule, Schema } from "effect";
+import { requestSearch } from "@repo/backend/confect/nina/research/provider";
+import { Duration, Effect, Schedule } from "effect";
 
 /** How long the search provider may take to answer, in milliseconds. */
 const SEARCH_TIMEOUT_MS = 10_000;
@@ -13,57 +12,43 @@ const SEARCH_TIMEOUT_MS = 10_000;
  */
 const SEARCH_DEADLINE = Duration.seconds(12);
 
+/** How many results of each source a search asks for. */
+const SEARCH_LIMIT = 5;
+
 /** The status the provider answers with when the plan's rate limit refuses a request. */
 const RATE_LIMITED = 429;
 /** How long a refused search waits before it asks once more. */
 const RETRY_DELAY = Duration.seconds(1);
-
-const searchFailure = (status?: { readonly status: number }) =>
-  new ResearchSearchError({
-    message: "Failed to search the web. Please try again.",
-    ...status,
-  });
-
-/** The provider's HTTP status. Its message may repeat the query and is never read. */
-const ProviderFailure = Schema.Struct({ status: Schema.Finite });
 
 /**
  * Calls Firecrawl search with one generated query. It asks for results only:
  * reading every result page inside the search took 76 seconds when measured on
  * 10 October 2026, so `searchWeb` reads the best pages itself, in parallel.
  * Each attempt is cut to the time the running capability has left.
+ *
+ * Named sites restrict the search through the provider's own `includeDomains`
+ * field, not through a `site:` operator in the query: when measured on 12
+ * October 2026, the news source answered the operator with five results of
+ * other sites in one of four cases, and the field returned no result of
+ * another site in four of four. With no site the field is left out
+ * (`research/provider.ts`).
+ *
+ * The span carries neither the query nor the sites, because both are derived
+ * from the learner's words (docs/adr/0019-gateway.md, "Search provider").
  */
 export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
-  query: string
+  query: string,
+  sites: readonly string[] = []
 ) {
-  yield* Effect.annotateCurrentSpan("query", query);
-  const client = yield* readFirecrawlApp().pipe(
-    Effect.mapError(
-      (error) => new ResearchSearchError({ message: error.message })
-    )
-  );
-
   const attempt = Effect.gen(function* () {
     const left = yield* timeLeft;
-    return yield* Effect.tryPromise({
-      try: () =>
-        client.search(query, {
-          limit: 5,
-          sources: ["web", "news"],
-          timeout: Math.min(SEARCH_TIMEOUT_MS, Duration.toMillis(left)),
-        }),
-      catch: (cause) =>
-        searchFailure(
-          Option.getOrUndefined(
-            Schema.decodeUnknownOption(ProviderFailure)(cause)
-          )
-        ),
-    }).pipe(
-      Effect.timeoutOrElse({
-        duration: Duration.min(SEARCH_DEADLINE, left),
-        orElse: () => Effect.fail(searchFailure()),
-      })
-    );
+    return yield* requestSearch({
+      deadline: Duration.min(SEARCH_DEADLINE, left),
+      limit: SEARCH_LIMIT,
+      query,
+      sites,
+      timeoutMs: Math.min(SEARCH_TIMEOUT_MS, Duration.toMillis(left)),
+    });
   });
 
   return yield* attempt.pipe(

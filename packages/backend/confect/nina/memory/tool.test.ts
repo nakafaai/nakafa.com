@@ -1,6 +1,13 @@
 import { Ref } from "@confect/core";
-import { RegisteredFunction } from "@confect/server";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { QueryRunner, RegisteredFunction } from "@confect/server";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
@@ -9,7 +16,7 @@ import {
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
 import {
-  restoreFound,
+  MEMORY_PAUSED,
   runMemory,
 } from "@repo/backend/confect/nina/memory/tool";
 import { provider } from "@repo/backend/test/gateway";
@@ -20,14 +27,7 @@ import {
 } from "@repo/backend/test/nina";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { encodeJsonText } from "@repo/utilities/json";
-import type { ModelMessage } from "ai";
-import {
-  Array as Arr,
-  Effect,
-  MutableHashMap,
-  Option,
-  String as Str,
-} from "effect";
+import { Array as Arr, Effect, String as Str } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -37,6 +37,10 @@ const list = Ref.getFunctionReference(refs.public.nina.messages.list);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
+const share = Ref.getFunctionReference(
+  refs.public.chats.mutations.updateChatVisibility
+);
+const token = Ref.getFunctionReference(refs.public.chats.queries.getShareToken);
 
 const NOW = Date.UTC(2026, 9, 12, 12);
 
@@ -51,25 +55,61 @@ afterEach(() => {
 
 /**
  * What the capability answers for a query, as the learner of the fixture or the
- * learner named, and the words it left for the model's next step, if any.
+ * learner named, and the words it found, if any. The words are the text of an
+ * answer that states no outcome; the capability's note keeps them out of the
+ * conversation (see the registry tests).
  */
 async function ask(
   f: Awaited<ReturnType<typeof createNinaTest>>,
   query: string,
   userId = f.identity.userId
 ) {
-  const found = MutableHashMap.empty<string, string>();
   const answer = await f.t.action((ctx) =>
     Effect.runPromise(
-      runMemory({ found, query, toolCallId: "call-1", userId }).pipe(
+      runMemory({ query, userId }).pipe(
         Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
       )
     )
   );
   return {
     answer,
-    words: Option.getOrUndefined(MutableHashMap.get(found, "call-1")),
+    words: answer.outcome === undefined ? answer.text : undefined,
   };
+}
+
+/** The refusal of a query by a learner who paused memory, as the typed failure the shared runner answers. */
+function refusal(f: Awaited<ReturnType<typeof createNinaTest>>, query: string) {
+  return f.t.action((ctx) =>
+    Effect.runPromise(
+      runMemory({ query, userId: f.identity.userId }).pipe(
+        // This search reads without failure, so only the refusal is left to flip.
+        Effect.catchTag("MemoryReadError", Effect.die),
+        Effect.flip,
+        // Only plain data leaves an action.
+        Effect.map(({ _tag, reason }) => ({ _tag, reason })),
+        Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
+      )
+    )
+  );
+}
+
+/**
+ * What the capability fails with, as plain data, when the platform answers its
+ * search as `lookup` says: the kind of failure, and everything it shows of
+ * itself.
+ */
+function readFailure(
+  f: Awaited<ReturnType<typeof createNinaTest>>,
+  lookup: () => Promise<unknown>
+) {
+  return runMemory({ query: "snbt", userId: f.identity.userId }).pipe(
+    Effect.flip,
+    Effect.map(({ _tag, message, stack }) => ({
+      _tag,
+      shown: Arr.join([message, stack ?? ""], "\n"),
+    })),
+    Effect.provide(QueryRunner.layer(lookup))
+  );
 }
 
 /** The lines of an answer that list a memory, in order. */
@@ -100,16 +140,6 @@ describe("the memory capability", () => {
       "- Catatan SNBT hari 4 (2026-09-04)",
       "- Catatan SNBT hari 3 (2026-09-03)",
     ]);
-  });
-
-  it("answers with a note that holds none of the words it found, because the conversation stores the answer", async () => {
-    const f = await createMemoryTest();
-    await f.seed({ author: "learner", text: "Ujian UTBK 20 Mei 2027" });
-    const { answer, words } = await ask(f, "utbk");
-    expect(words).toContain("Ujian UTBK 20 Mei 2027");
-    expect(answer).not.toHaveProperty("outcome");
-    expect(answer.text).not.toContain("UTBK");
-    expect(Arr.length(Str.split(answer.text, "\n"))).toBe(1);
   });
 
   it("finds a memory by its title as well as its words, and writes each as its title and words", async () => {
@@ -191,15 +221,41 @@ describe("the memory capability", () => {
     expect(Arr.length(listed((await ask(f, "snbt")).words))).toBe(2);
   });
 
-  it("refuses while memory is paused, as a policy does, and leaves nothing for the next step", async () => {
+  it("refuses while memory is paused, as a policy does, with the denial the policy gives", async () => {
     const f = await createMemoryTest();
     await f.seed({ text: "Mau ikut SNBT 2027" });
     await f.owner.mutation(pause, { paused: true });
-    expect(await ask(f, "snbt")).toEqual({
-      answer: { outcome: "denied", text: expect.any(String) },
-      words: undefined,
+    expect(await refusal(f, "snbt")).toMatchObject({
+      _tag: "CapabilityDenied",
+      reason: MEMORY_PAUSED.reason,
     });
   });
+
+  it.effect(
+    "fails as an unreadable search, and shows nothing of the platform's message, when the call is rejected",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* Effect.promise(() => createMemoryTest());
+        const error = yield* readFailure(f, () =>
+          // The fixture's message holds the learner's words, to show that none survive.
+          Promise.reject(new Error("Lookup failed for Mau ikut SNBT 2027"))
+        );
+        expect(error._tag).toBe("MemoryReadError");
+        expect(error.shown).not.toContain("SNBT");
+      })
+  );
+
+  it.effect(
+    "fails the same way when the platform answers what the search does not describe",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* Effect.promise(() => createMemoryTest());
+        const error = yield* readFailure(f, () =>
+          Promise.resolve({ memories: [], paused: "no" })
+        );
+        expect(error._tag).toBe("MemoryReadError");
+      })
+  );
 
   it("writes nothing: a memory it returns is not thereby confirmed", async () => {
     const f = await createMemoryTest();
@@ -211,49 +267,6 @@ describe("the memory capability", () => {
     // `toStrictEqual` compares the sealed bytes; `toEqual` takes any two buffers for equal.
     expect(await f.stored()).toStrictEqual(stored);
     expect(await f.keys()).toStrictEqual(keys);
-  });
-});
-
-describe("the words a memory call found, for the next step of its turn", () => {
-  const result = (toolCallId: string, toolName: string): ModelMessage => ({
-    content: [
-      {
-        output: { type: "json", value: { artifacts: [], text: "A note." } },
-        toolCallId,
-        toolName,
-        type: "tool-result",
-      },
-    ],
-    role: "tool",
-  });
-
-  it("go back into the result of the call that found them, and into no other", () => {
-    const found = MutableHashMap.make(["recall-1", "# Memories Found"]);
-    const messages: ModelMessage[] = [
-      { content: "Kapan ujianku?", role: "user" },
-      result("recall-1", "memory"),
-      result("recall-2", "memory"),
-      result("recall-1", "nakafa"),
-    ];
-    expect(restoreFound(messages, found)).toEqual([
-      messages[0],
-      {
-        content: [
-          expect.objectContaining({
-            output: { type: "text", value: "# Memories Found" },
-            toolCallId: "recall-1",
-          }),
-        ],
-        role: "tool",
-      },
-      messages[2],
-      messages[3],
-    ]);
-  });
-
-  it("are not in the messages of a turn that found none", () => {
-    const messages: ModelMessage[] = [result("recall-1", "memory")];
-    expect(restoreFound(messages, MutableHashMap.empty())).toEqual(messages);
   });
 });
 
@@ -291,7 +304,7 @@ describe("a turn in which Nina searches what the learner told her", () => {
     expect(first).not.toContain(words);
     expect(second).toContain(words);
     // The thread keeps the call and a result, never the words, and neither does
-    // the transcript that any reader of a public chat gets.
+    // the transcript that the owner reads.
     const thread = encodeJsonText(await stored(f));
     expect(thread).toContain("recall-1");
     expect(thread).not.toContain(words);
@@ -308,17 +321,29 @@ describe("a turn in which Nina searches what the learner told her", () => {
       })
     );
     expect(encodeJsonText(transcript)).not.toContain(words);
-    // A visitor who reads the public chat has no more than the learner sees.
-    await f.t.mutation((ctx) =>
-      ctx.db.patch("chats", f.chatId, { visibility: "public" })
+    // A reader who opens the shared chat through its link is sent no part of the
+    // search, neither the call nor the note, and still reads the answer. The
+    // owner who opens their own link is sent the note, as before.
+    await f.owner.mutation(share, { chatId: f.chatId, visibility: "public" });
+    const shareToken = await f.owner.query(token, { chatId: f.chatId });
+    assert(shareToken !== null);
+    const readThrough = (reader: typeof f.owner, access: object) =>
+      reader.query(list, {
+        chatId: f.chatId,
+        paginationOpts: { cursor: null, numItems: 20 },
+        threadId: f.threadId,
+        ...access,
+      });
+    const shared = encodeJsonText(await readThrough(f.t, { shareToken }));
+    expect(shared).not.toContain("recall-1");
+    expect(shared).not.toContain("tool-memory");
+    expect(shared).not.toContain(words);
+    expect(shared).toContain("A limit describes the value approached.");
+    const byOwnLink = encodeJsonText(
+      await readThrough(f.owner, { shareToken })
     );
-    const shared = await f.t.query(list, {
-      chatId: f.chatId,
-      paginationOpts: { cursor: null, numItems: 20 },
-      threadId: f.threadId,
-    });
-    expect(encodeJsonText(shared)).toContain("recall-1");
-    expect(encodeJsonText(shared)).not.toContain(words);
+    expect(byOwnLink).toContain("recall-1");
+    expect(byOwnLink).not.toContain(words);
     // The learner deletes the memory, and the next turn of the chat reads
     // neither the memory nor a copy of it that the thread kept.
     await f.owner.mutation(remove, { id: exam });

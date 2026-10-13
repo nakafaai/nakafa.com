@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
@@ -7,7 +8,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { reportFailure } from "@repo/backend/confect/nina/diagnostics";
-import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
+import {
+  causeReason,
+  NinaGenerationError,
+} from "@repo/backend/confect/nina/failure";
 import { generateResponse } from "@repo/backend/confect/nina/generation";
 import { turnHalted, watchHalt } from "@repo/backend/confect/nina/halt";
 import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
@@ -16,7 +20,23 @@ import spec from "@repo/backend/confect/nina/response.spec";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { makeTiming } from "@repo/backend/confect/nina/timing";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
-import { Cause, Effect, Exit, Layer, Option, Schema } from "effect";
+import { type Cause, Effect, Exit, Layer } from "effect";
+
+/**
+ * Notes that a generation ended because its turn was halted, whichever of the
+ * watch or Agent noticed first. The settlement says how the turn ended, so the
+ * cause needs no report, but it is not lost: the log keeps the turn and the
+ * reason the cause names, and never a message, since a provider's message may
+ * quote the conversation.
+ */
+const logHalted = (
+  turnId: Docs["ninaTurns"]["_id"],
+  cause: Cause.Cause<unknown>
+) =>
+  Effect.logInfo("Nina run ended after its turn was halted", {
+    turnId,
+    reason: causeReason(cause),
+  });
 
 const run = FunctionImpl.make(
   schema,
@@ -44,16 +64,12 @@ const run = FunctionImpl.make(
       // first. Its settlement below always does.
       Effect.catchCause((cause) =>
         Effect.flatMap(turnHalted(turn._id), (halted) =>
-          halted ? Effect.void : Effect.failCause(cause)
+          halted ? logHalted(turn._id, cause) : Effect.failCause(cause)
         )
       ),
       Effect.onExit((exit) => {
         const failure = Exit.isFailure(exit)
-          ? Cause.findErrorOption(exit.cause).pipe(
-              Option.filter(Schema.is(NinaGenerationError)),
-              Option.map((error) => error.reason),
-              Option.getOrElse(() => "unknown" as const)
-            )
+          ? causeReason(exit.cause)
           : undefined;
         return Effect.flatMap(timing.read, (reached) =>
           mutate(refs.internal.nina.lifecycle.recover, {
@@ -87,6 +103,8 @@ const present = FunctionImpl.make(
     // independent follow-up work. Each runs to its end whatever the others do,
     // because a step that dies would otherwise cancel the ones still running.
     // Their failures are raised together once all have ended, so none is lost.
+    // The summary gets no usage handler: it is chat upkeep, so its tokens stay
+    // on its own row (`NinaUpkeepCall`) and not in the ledger of the turn.
     yield* Effect.all(
       [
         Effect.exit(generatePresentation(turn, usageHandler)),

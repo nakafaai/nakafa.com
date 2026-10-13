@@ -1,17 +1,22 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { readsPages } from "@repo/backend/test/nina/pages";
-import { createProgress } from "@repo/backend/test/nina/progress";
+import {
+  createProgress,
+  getWebSearchParts,
+} from "@repo/backend/test/nina/progress";
+import {
+  answerSearches,
+  overProvider,
+  refusal,
+  searchAnswer,
+  sentBodies,
+} from "@repo/backend/test/nina/provider";
 import { Array as Arr, Effect, Logger, MutableRef, Option } from "effect";
 
-const firecrawlApp = vi.hoisted(() => ({
-  search: vi.fn(),
-}));
-
-vi.mock("@repo/backend/confect/nina/research/provider", () => ({
-  readFirecrawlApp: () => Effect.succeed(firecrawlApp),
-}));
+/** The fetch that Effect's client calls in place of the global one. */
+const fetcher = vi.fn<typeof fetch>();
+const overFetch = overProvider(fetcher);
 
 const readPage = vi.hoisted(() => vi.fn());
 
@@ -19,7 +24,10 @@ vi.mock("@repo/backend/confect/nina/research/tools/scrape", () => ({
   readPage,
 }));
 
-vi.mock("@repo/backend/confect/nina/research/domain", () => ({
+vi.mock("@repo/backend/confect/nina/research/domain", async (original) => ({
+  ...(await original<
+    typeof import("@repo/backend/confect/nina/research/domain")
+  >()),
   extractDomain: (url: string) => {
     const hostname = new URL(url).hostname;
 
@@ -33,6 +41,28 @@ vi.mock("@repo/backend/confect/nina/research/domain", () => ({
 
 /** What the provider is asked for with every query, besides the query itself. */
 const providerOptions = { limit: 5, sources: ["web", "news"], timeout: 10_000 };
+
+/** The sites the model named for the whole call: every query is sent with them. */
+const sites = ["kemdikbud.go.id", "bbc.com"];
+
+/** Answers every search with these results. */
+function answersWith(data: object) {
+  fetcher.mockImplementation(() => Promise.resolve(searchAnswer(data)));
+}
+
+/** Answers the next search with these results. */
+function answersNext(data: object) {
+  fetcher.mockImplementationOnce(() => Promise.resolve(searchAnswer(data)));
+}
+
+/** Runs the tool over the fetch double and keeps the cards it published. */
+function search(input: Omit<Parameters<typeof searchWeb>[0], "publish">) {
+  const { parts, publish } = createProgress();
+  return searchWeb({ ...input, publish }).pipe(
+    overFetch,
+    Effect.map((output) => ({ output, parts }))
+  );
+}
 
 /**
  * A learner asks about a name written in Latin letters, in their own language.
@@ -66,20 +96,9 @@ const askedInOwnLanguage = [
   },
 ];
 
-/** Extracts web-search data parts from a recorded test publish stream. */
-function getWebSearchParts(parts: readonly CapabilityArtifact[]) {
-  return Arr.flatMap(parts, (part) => {
-    if (part.type !== "data-web-search") {
-      return [];
-    }
-
-    return [part.data];
-  });
-}
-
 describe("research web search tool", () => {
   beforeEach(() => {
-    firecrawlApp.search.mockReset();
+    fetcher.mockReset();
     readPage.mockReset();
     readPage.mockImplementation(readsPages({}));
   });
@@ -88,7 +107,7 @@ describe("research web search tool", () => {
     "returns every result once, in the provider's order, whatever words it holds, and adds the text of the best pages it could read",
     () =>
       Effect.gen(function* () {
-        firecrawlApp.search.mockResolvedValue({
+        answersWith({
           news: [
             {
               snippet: "Duplicate source.",
@@ -139,12 +158,10 @@ describe("research web search tool", () => {
         readPage.mockImplementation(
           readsPages({ "https://example.com/research": "Main source content." })
         );
-        const { parts, publish } = createProgress();
-        const output = yield* searchWeb({
+        const { output, parts } = yield* search({
           queries: ["Next.js 16 Cache Components"],
           words: "Next.js 16 Cache Components",
           toolCallId: "web-search-1",
-          publish,
         });
 
         expect(output.text).toContain("# Web Search Results");
@@ -193,7 +210,6 @@ describe("research web search tool", () => {
           expect.objectContaining({
             type: "data-web-search",
             data: expect.objectContaining({
-              provider: "firecrawl",
               sources: expect.arrayContaining([
                 expect.objectContaining({
                   citation: "[example.com](https://example.com/research)",
@@ -215,13 +231,12 @@ describe("research web search tool", () => {
         ["Cuaca cerah hari ini. ".repeat(40), forWords, forQueries],
         "\n\n"
       );
-      firecrawlApp.search.mockResolvedValue({ web: [{ url }] });
+      answersWith({ web: [{ url }] });
       readPage.mockImplementation(readsPages({ [url]: page }));
-      const output = yield* searchWeb({
+      const { output } = yield* search({
         queries: ["citric acid cycle"],
         words: "Jelaskan siklus Krebs",
         toolCallId: "web-search-words",
-        publish: createProgress().publish,
       });
 
       expect(output.result.sources).toEqual([
@@ -239,17 +254,12 @@ describe("research web search tool", () => {
           title: `Kurikulum ${name}`,
           url: `https://example.com/${name}`,
         });
-        firecrawlApp.search
-          .mockResolvedValueOnce({
-            web: [result("a"), result("a"), result("b")],
-          })
-          .mockResolvedValueOnce({ web: [result("a"), result("c")] });
-        const { parts, publish } = createProgress();
-        const output = yield* searchWeb({
+        answersNext({ web: [result("a"), result("a"), result("b")] });
+        answersNext({ web: [result("a"), result("c")] });
+        const { output, parts } = yield* search({
           queries: ["kurikulum merdeka", "kurikulum sma"],
           words: "kurikulum",
           toolCallId: "web-search-repeats",
-          publish,
         });
 
         // The first query repeats the address a, and the second finds it again.
@@ -280,29 +290,19 @@ describe("research web search tool", () => {
 
   it.effect("deduplicates blank and repeated queries before searching", () =>
     Effect.gen(function* () {
-      firecrawlApp.search.mockResolvedValue({
-        web: [
-          {
-            description: "Official docs.",
-            markdown: "Official docs content.",
-            title: "AI SDK Docs",
-            url: "https://ai-sdk.dev/docs",
-          },
-        ],
+      answersWith({
+        web: [{ title: "AI SDK Docs", url: "https://ai-sdk.dev/docs" }],
       });
-      const { parts, publish } = createProgress();
-      yield* searchWeb({
+      const { parts } = yield* search({
         queries: [" AI SDK docs ", "", "ai sdk docs"],
         words: "AI SDK docs",
         toolCallId: "web-search-normalized-queries",
-        publish,
       });
 
-      expect(firecrawlApp.search).toHaveBeenCalledTimes(1);
-      expect(firecrawlApp.search).toHaveBeenCalledWith(
-        "AI SDK docs",
-        expect.objectContaining({ limit: 5 })
-      );
+      // One request only: the blank query is dropped and the repeat is merged.
+      expect(yield* sentBodies(fetcher)).toMatchObject([
+        { query: "AI SDK docs", limit: 5 },
+      ]);
       expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -310,19 +310,23 @@ describe("research web search tool", () => {
           }),
         })
       );
+      // An open search names no site, so no card carries the field.
+      expect(
+        Arr.some(getWebSearchParts(parts()), (part) => "sites" in part)
+      ).toBe(false);
     })
   );
 
   it.effect.each(askedInOwnLanguage)(
-    "sends the provider every query the model wrote as written, also one that holds none of the request's names, and shows each query its own results ($language)",
+    "sends the provider every query the model wrote as written, also one that holds none of the request's names, each with the sites of the call, and shows each query its own results ($language)",
     ({ named, own, request }) =>
       Effect.gen(function* () {
         const urlOf = (query: string) =>
           query === named
             ? "https://example.com/named"
             : "https://example.com/own";
-        firecrawlApp.search.mockImplementation((query: string) =>
-          Promise.resolve({
+        answerSearches(fetcher, (query) =>
+          searchAnswer({
             web: [
               {
                 description: `${query} result.`,
@@ -332,17 +336,16 @@ describe("research web search tool", () => {
             ],
           })
         );
-        const { parts, publish } = createProgress();
-        const output = yield* searchWeb({
+        const { output, parts } = yield* search({
           queries: [named, own],
+          sites,
           words: request,
           toolCallId: "web-search-queries",
-          publish,
         });
 
-        expect(firecrawlApp.search.mock.calls).toEqual([
-          [named, providerOptions],
-          [own, providerOptions],
+        expect(yield* sentBodies(fetcher)).toEqual([
+          { query: named, ...providerOptions, includeDomains: sites },
+          { query: own, ...providerOptions, includeDomains: sites },
         ]);
         expect(Arr.map(output.result.sources, (source) => source.url)).toEqual([
           "https://example.com/named",
@@ -363,14 +366,18 @@ describe("research web search tool", () => {
           [[named], ["https://example.com/named"]],
           [[own], ["https://example.com/own"]],
         ]);
+        // Every card of the call, loading or done, says the sites it was limited to.
+        expect(
+          Arr.map(getWebSearchParts(parts()), (part) => part.sites)
+        ).toEqual(Arr.makeBy(4, () => sites));
       })
   );
 
   it.effect("keeps successful query results when another query fails", () =>
     Effect.gen(function* () {
-      firecrawlApp.search.mockImplementation((query: string) => {
+      answerSearches(fetcher, (query) => {
         if (query === "AI SDK DevTools") {
-          return Promise.resolve({
+          return searchAnswer({
             web: [
               {
                 description: "Debug AI SDK calls with DevTools.",
@@ -385,12 +392,10 @@ describe("research web search tool", () => {
 
         return Promise.reject(new Error("timeout"));
       });
-      const { parts, publish } = createProgress();
-      const output = yield* searchWeb({
+      const { output, parts } = yield* search({
         queries: ["AI SDK DevTools", "AI SDK DevTools recent updates"],
         words: "AI SDK DevTools",
         toolCallId: "web-search-partial-success",
-        publish,
       });
 
       expect(output.result.error).toBeUndefined();
@@ -421,13 +426,11 @@ describe("research web search tool", () => {
     "writes an empty done part when Firecrawl returns no result groups",
     () =>
       Effect.gen(function* () {
-        firecrawlApp.search.mockResolvedValue({});
-        const { parts, publish } = createProgress();
-        const output = yield* searchWeb({
+        answersWith({});
+        const { output, parts } = yield* search({
           queries: ["latest solar energy research"],
           words: "latest solar energy research",
           toolCallId: "web-search-empty",
-          publish,
         });
 
         expect(output.result.sources).toEqual([]);
@@ -436,7 +439,6 @@ describe("research web search tool", () => {
           expect.objectContaining({
             type: "data-web-search",
             data: expect.objectContaining({
-              provider: "firecrawl",
               status: "done",
               sources: [],
             }),
@@ -449,10 +451,8 @@ describe("research web search tool", () => {
     "writes an error part when Firecrawl search fails, and logs its status without its message",
     () =>
       Effect.gen(function* () {
-        firecrawlApp.search.mockRejectedValue(
-          Object.assign(new Error("Unauthorized: solar energy research"), {
-            status: 401,
-          })
+        fetcher.mockImplementation(() =>
+          Promise.resolve(refusal(401, "Unauthorized: solar energy research"))
         );
         const logged = MutableRef.make<readonly unknown[]>([]);
         const { parts, publish } = createProgress();
@@ -462,6 +462,7 @@ describe("research web search tool", () => {
           toolCallId: "web-search-2",
           publish,
         }).pipe(
+          overFetch,
           Effect.provide(
             Logger.layer([
               Logger.formatStructured.pipe(
@@ -484,7 +485,6 @@ describe("research web search tool", () => {
           expect.objectContaining({
             type: "data-web-search",
             data: expect.objectContaining({
-              provider: "firecrawl",
               status: "error",
             }),
           })

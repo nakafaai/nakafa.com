@@ -2,14 +2,12 @@ import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
-import {
-  ResearchOutputSchema,
-  WebSearchInputSchema,
-} from "@repo/backend/confect/nina/research/schema";
+import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { provider } from "@repo/backend/test/gateway";
 import { neverAnswering, withTimeLeft } from "@repo/backend/test/nina/deadline";
+import { runResearch } from "@repo/backend/test/nina/research";
 import {
   providerStep,
   recordProgress,
@@ -18,15 +16,7 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import {
-  Array as Arr,
-  Duration,
-  Effect,
-  Logger,
-  MutableList,
-  MutableRef,
-  Schema,
-} from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 
 vi.mock("@repo/backend/confect/nina/research/tools/search", () => ({
   searchWeb: vi.fn(),
@@ -62,43 +52,46 @@ const output = {
   ],
   limitations: [],
 };
-const encodeSearchInput = Schema.encodeSync(
-  Schema.fromJsonString(WebSearchInputSchema)
-);
-const encodeResearchOutput = Schema.encodeSync(
-  Schema.fromJsonString(ResearchOutputSchema)
-);
-const searchCall = providerStep(
-  [
-    {
-      type: "tool-call",
-      toolCallId: "search",
-      toolName: "webSearch",
-      input: encodeSearchInput({ queries: ["official agents"] }),
-    },
-  ],
-  "tool-calls"
-);
+/** A search call whose input the model wrote as `input`, before any check. */
+const searchCallWith = (input: unknown) =>
+  providerStep(
+    [
+      {
+        type: "tool-call",
+        toolCallId: "search",
+        toolName: "webSearch",
+        input: encodeJsonText(input),
+      },
+    ],
+    "tool-calls"
+  );
+const searchCall = searchCallWith({
+  queries: ["official agents"],
+  sites: ["ai-sdk.dev"],
+});
 /** One scripted synthesis answer, as the model would return it. */
-const synthesis = (answer: typeof ResearchOutputSchema.Type) =>
-  providerStep([{ type: "text", text: encodeResearchOutput(answer) }]);
+const synthesis = (answer: ResearchOutput) =>
+  providerStep([{ type: "text", text: encodeJsonText(answer) }]);
 const final = synthesis(output);
 const noDate = "The official page did not state a date.";
 /** How the instruction Nina reads when research returns no source-backed finding begins. */
 const noFindingStart =
   /^Research returned no source-backed finding\. Tell the learner what this attempt could not verify\./u;
 const unusable = providerStep([{ type: "text", text: "Invalid JSON" }]);
-const noQuery = providerStep(
-  [
-    {
-      type: "tool-call",
-      toolCallId: "search",
-      toolName: "webSearch",
-      input: encodeJsonText({ queries: [] }),
-    },
-  ],
-  "tool-calls"
-);
+const noQuery = searchCallWith({ queries: [] });
+/**
+ * Names far more sites than a call may, so the schema refuses the whole call.
+ * `schema.test.ts` pins the exact bound.
+ */
+const tooManySites = searchCallWith({
+  queries: ["official agents"],
+  sites: Arr.makeBy(50, (index) => `site${index}.dev`),
+});
+/** Names a site by its name, not its hostname, next to a valid one. */
+const noHostname = searchCallWith({
+  queries: ["official agents"],
+  sites: ["ai-sdk.dev", "AI SDK"],
+});
 const found = Effect.succeed({
   text: "Inspectable source evidence.",
   result: {
@@ -131,51 +124,8 @@ const unread = Effect.succeed({
   error: "Unavailable",
 });
 
-/** Runs research over one scripted model; reports its calls and its log. */
-async function research(
-  steps: ConstructorParameters<typeof MockLanguageModelV4>[0],
-  sourceReferences: (typeof source)[] = [],
-  left: Duration.Input = Duration.infinity
-) {
-  const model = new MockLanguageModelV4(steps);
-  provider.languageModel.mockReturnValue(model);
-  const logged = MutableRef.make<readonly unknown[]>([]);
-  const result = await runSpecialist((userId) =>
-    runResearchAgent({
-      ...researchRequest,
-      userId,
-      sourceReferences,
-      publish: () => Effect.void,
-      usageHandler: vi.fn(),
-    }).pipe(
-      withTimeLeft(left),
-      Effect.catchTag("ResearchGenerationError", (error) =>
-        Effect.succeed({
-          failed: error.phase,
-          message: error.message,
-          rejected: error.rejected,
-        })
-      ),
-      Effect.provide(
-        Logger.layer([
-          Logger.formatStructured.pipe(
-            Logger.map(({ message }) =>
-              MutableRef.update(logged, Arr.append(message))
-            )
-          ),
-        ])
-      )
-    )
-  );
-  return {
-    calls: model.doGenerateCalls,
-    logged: MutableRef.get(logged),
-    result,
-  };
-}
-
 describe("research Agent evidence boundary", () => {
-  it("searches once, synthesizes once and keeps only retrieved citations", async () => {
+  it("searches once, in the sites the model named, synthesizes once and keeps only retrieved citations", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
     vi.mocked(scrapeUrl).mockReturnValue(read);
     const model = new MockLanguageModelV4({
@@ -212,6 +162,7 @@ describe("research Agent evidence boundary", () => {
     expect(searchWeb).toHaveBeenCalledWith(
       expect.objectContaining({
         queries: ["official agents"],
+        sites: ["ai-sdk.dev"],
         toolCallId: "search",
         words: researchRequest.words,
       })
@@ -306,7 +257,7 @@ describe("research Agent evidence boundary", () => {
 
   it("ends as empty without a synthesis call when the search finds no source", async () => {
     vi.mocked(searchWeb).mockReturnValue(nothing);
-    const { calls, result } = await research({ doGenerate: [searchCall] });
+    const { calls, result } = await runResearch({ doGenerate: [searchCall] });
     expect(result).toEqual({
       outcome: "empty",
       text: expect.stringContaining(
@@ -318,7 +269,7 @@ describe("research Agent evidence boundary", () => {
 
   it("hands Nina the closest thing the sources state, with its citation and the limitation, and is not empty", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
-    const { calls, result } = await research({
+    const { calls, result } = await runResearch({
       doGenerate: [
         searchCall,
         synthesis({
@@ -352,7 +303,7 @@ describe("research Agent evidence boundary", () => {
     "is not empty when synthesis %s: Nina reads what this attempt could not verify",
     async (_case, answer) => {
       vi.mocked(searchWeb).mockReturnValue(found);
-      const { calls, result } = await research({
+      const { calls, result } = await runResearch({
         doGenerate: [searchCall, synthesis(answer)],
       });
       expect(result).toEqual({ text: expect.stringMatching(noFindingStart) });
@@ -366,7 +317,7 @@ describe("research Agent evidence boundary", () => {
 
   it("hands the retrieved sources to Nina, without a retry, when synthesis is unusable", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
-    const { calls, logged, result } = await research({
+    const { calls, logged, result } = await runResearch({
       doGenerate: [searchCall, unusable],
     });
     expect(result).toEqual({
@@ -389,7 +340,7 @@ describe("research Agent evidence boundary", () => {
     vi.mocked(searchWeb).mockReturnValue(found);
     const hung = neverAnswering();
     // Only the search call forces a tool; the synthesis call never answers.
-    const running = research(
+    const running = runResearch(
       {
         doGenerate: ({ abortSignal, toolChoice }) =>
           toolChoice?.type === "tool"
@@ -418,12 +369,22 @@ describe("research Agent evidence boundary", () => {
       () => Promise.resolve(noQuery),
       { phase: "search", rejected: true },
     ],
+    [
+      "the model names more sites than a call may",
+      () => Promise.resolve(tooManySites),
+      { phase: "search", rejected: true },
+    ],
+    [
+      "the model names a site that is not a hostname",
+      () => Promise.resolve(noHostname),
+      { phase: "search", rejected: true },
+    ],
   ] as const)(
     "answers from the learner's own source as partial when %s",
     async (_reason, first, fact) => {
       vi.mocked(scrapeUrl).mockReturnValue(read);
       let call = 0;
-      const { calls, logged, result } = await research(
+      const { calls, logged, result } = await runResearch(
         {
           doGenerate: () => {
             call += 1;
@@ -448,7 +409,7 @@ describe("research Agent evidence boundary", () => {
   it("never shows the model a learner's source that could not be read as evidence", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
     vi.mocked(scrapeUrl).mockReturnValue(unread);
-    const { calls, result } = await research(
+    const { calls, result } = await runResearch(
       { doGenerate: [searchCall, final] },
       [source]
     );
@@ -476,6 +437,16 @@ describe("research Agent evidence boundary", () => {
       { message: "Research search wrote no usable query.", rejected: true },
     ],
     [
+      "the model names more sites than a call may, so no search runs and none is widened",
+      () => Promise.resolve(tooManySites),
+      { message: "Research search wrote no usable query.", rejected: true },
+    ],
+    [
+      "the model names a site that is not a hostname, so no search runs without it",
+      () => Promise.resolve(noHostname),
+      { message: "Research search wrote no usable query.", rejected: true },
+    ],
+    [
       "the search provider is unavailable",
       () => Promise.resolve(searchCall),
       { message: "Research search returned no source.", rejected: false },
@@ -485,7 +456,9 @@ describe("research Agent evidence boundary", () => {
     async (_reason, first, failure) => {
       vi.mocked(searchWeb).mockReturnValue(unavailable);
       vi.mocked(scrapeUrl).mockReturnValue(unread);
-      const { calls, result } = await research({ doGenerate: first }, [source]);
+      const { calls, result } = await runResearch({ doGenerate: first }, [
+        source,
+      ]);
       expect(result).toEqual({ failed: "search", ...failure });
       expect(calls).toHaveLength(1);
     }

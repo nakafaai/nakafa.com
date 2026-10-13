@@ -1,3 +1,4 @@
+import type { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import nina from "@repo/backend/confect/_generated/refs/nina";
@@ -8,7 +9,10 @@ import { createLocalStore } from "@/test/optimistic";
 
 const NOW = 1_700_000_000_000;
 const chatId = Schema.decodeUnknownSync(Id("chats"))("chat_1");
+const otherChatId = Schema.decodeUnknownSync(Id("chats"))("chat_2");
 const userId = Schema.decodeUnknownSync(Id("users"))("user_1");
+/** 43 URL-safe characters, the shape of a share token. */
+const shareToken = "abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE";
 
 const chat = {
   _creationTime: 1,
@@ -22,6 +26,11 @@ const chat = {
 } satisfies ChatView;
 
 const turn = { order: 0, promptMessageId: "message_0_user", usage: [] };
+/** A conversation whose latest turn is running. */
+const running = {
+  chat,
+  turn: { ...turn, state: { startedAt: 1, status: "running" } },
+} as const;
 
 describe("chat/cancel", () => {
   it("marks a running turn cancelled at the time of the press", () => {
@@ -55,6 +64,44 @@ describe("chat/cancel", () => {
     optimisticCancel(NOW)(local.store, { chatId });
 
     expect(local.written()).toHaveLength(1);
+  });
+
+  it("marks the turn of a chat the owner opened through its own share link", () => {
+    const local = createLocalStore();
+    // The stop sends the chat id alone, while the page holds the chat under the token.
+    local.seed(nina.conversation.get, { chatId, shareToken }, running);
+
+    optimisticCancel(NOW)(local.store, { chatId });
+
+    expect(
+      Option.getOrUndefined(
+        local.store.getQuery(nina.conversation.get, { chatId, shareToken })
+      )
+    ).toEqual({
+      chat,
+      turn: { ...turn, state: { finishedAt: NOW, status: "cancelled" } },
+    });
+    expect(local.written()).toHaveLength(1);
+  });
+
+  it("marks the chat wherever it is loaded, and no other chat", () => {
+    const local = createLocalStore();
+    local.seed(nina.conversation.get, { chatId }, running);
+    local.seed(nina.conversation.get, { chatId, shareToken }, running);
+    local.seed(
+      nina.conversation.get,
+      { chatId: otherChatId },
+      { ...running, chat: { ...chat, _id: otherChatId } }
+    );
+
+    optimisticCancel(NOW)(local.store, { chatId });
+
+    const statusOf = (args: Ref.Args<typeof nina.conversation.get>) =>
+      Option.getOrUndefined(local.store.getQuery(nina.conversation.get, args))
+        ?.turn?.state.status;
+    expect(statusOf({ chatId })).toBe("cancelled");
+    expect(statusOf({ chatId, shareToken })).toBe("cancelled");
+    expect(statusOf({ chatId: otherChatId })).toBe("running");
   });
 
   it("leaves a settled turn, a chat without a turn and an unloaded chat alone", () => {
@@ -97,7 +144,6 @@ describe("chat/cancel stop failure", () => {
       { finishedAt: 5, status: "complete" },
       { finishedAt: 5, reason: "unknown", status: "failed" },
       { finishedAt: 5, status: "cancelled" },
-      { status: "unanswered" },
     ] as const) {
       expect(readStopFailure(stop, { order: 3, state })).toBeNull();
     }

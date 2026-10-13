@@ -189,33 +189,5 @@ describe("chat lists with sealed titles", () => {
       q: "aljabar",
     });
     expect(titles(own.page)).toEqual([STRANGER]);
-    const other = await f.t.query(api.chats.queries.getChats, {
-      paginationOpts,
-      q: "aljabar",
-      userId: f.stranger.userId,
-    });
-    expect(titles(other.page)).toEqual([STRANGER]);
-  });
-
-  it("shows anyone the opened titles of a learner's public chats and searches them", async () => {
-    const f = await fixture();
-    const list = await f.t.query(api.chats.queries.getChats, {
-      paginationOpts,
-      type: "study",
-      userId: f.owner.userId,
-    });
-    expect(titles(list.page)).toEqual([BOOLEAN, undefined, PHYSICS]);
-    const found = await f.t.query(api.chats.queries.getChats, {
-      paginationOpts,
-      q: "fisika",
-      userId: f.owner.userId,
-    });
-    expect(titles(found.page)).toEqual([PHYSICS]);
-    const hidden = await f.t.query(api.chats.queries.getChats, {
-      paginationOpts,
-      q: "latihan",
-      userId: f.owner.userId,
-    });
-    expect(hidden.page).toEqual([]);
   });
 });

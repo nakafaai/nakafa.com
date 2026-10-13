@@ -39,7 +39,7 @@ export function MemoryProvider({
   return (
     <StoreContext value={store}>
       <NowContext value={now}>
-        <MemoryReader first={first} paused={paused}>
+        <MemoryReader first={first} now={now} paused={paused}>
           {children}
         </MemoryReader>
       </NowContext>
@@ -58,13 +58,15 @@ export function MemoryProvider({
 function MemoryReader({
   children,
   first,
+  now,
   paused,
 }: {
   children: ReactNode;
   first: MemoryPage;
+  now: number;
   paused: boolean;
 }) {
-  const reading = useMemoryReading(first, paused);
+  const reading = useMemoryReading(first, paused, now);
 
   return <ReadingContext value={reading}>{children}</ReadingContext>;
 }

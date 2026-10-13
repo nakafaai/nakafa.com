@@ -10,6 +10,7 @@ import accountDeletionSchoolTransfers from "./tables/accountDeletionSchoolTransf
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
@@ -105,6 +106,7 @@ export default $defineSchema({
   articleBuckets: $Table.tableDefinition(articleBuckets),
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
+  chatShares: $Table.tableDefinition(chatShares),
   chats: $Table.tableDefinition(chats),
   commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),

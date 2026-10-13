@@ -8,6 +8,7 @@ import {
   NINA_BUDGET,
   NINA_CALL_LIMIT,
 } from "@repo/backend/confect/nina/budget";
+import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { assembleContext, sentTurn } from "@repo/backend/confect/nina/history";
 import { createNinaSystemPrompt } from "@repo/backend/confect/nina/prompt/system";
 import { userRoles } from "@repo/backend/confect/users/role";
@@ -108,8 +109,8 @@ describe("Nina call limit", () => {
       ...Arr.map([...userRoles, undefined], (userRole) =>
         countTextTokens(
           createNinaSystemPrompt({
+            capabilities: LearningCapabilityNameSchema.literals,
             focus: "A focused question.",
-            memory: true,
             ...(userRole === undefined ? {} : { userRole }),
           })
         )

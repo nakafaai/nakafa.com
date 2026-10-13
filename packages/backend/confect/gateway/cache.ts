@@ -53,7 +53,7 @@ function markMessage(message: Message): Message {
  * provider still holds it. The newest user message is never marked, because a
  * marker there bills the whole prompt as a cache write that nothing reads.
  */
-export function markCachedPrefix(prompt: Prompt): Prompt {
+function markCachedPrefix(prompt: Prompt): Prompt {
   return Option.match(
     Arr.findLastIndex(prompt, (message) => message.role === "user"),
     {

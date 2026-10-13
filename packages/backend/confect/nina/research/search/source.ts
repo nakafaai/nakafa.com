@@ -1,10 +1,8 @@
-import type FirecrawlApp from "@mendable/firecrawl-js";
-import type {
-  Document,
-  SearchResultNews,
-  SearchResultWeb,
-} from "@mendable/firecrawl-js";
 import { extractDomain } from "@repo/backend/confect/nina/research/domain";
+import type {
+  SearchData,
+  SearchResult,
+} from "@repo/backend/confect/nina/research/provider";
 import {
   firstText,
   getDocumentMetadata,
@@ -14,9 +12,7 @@ import { Array as Arr, HashSet, MutableHashSet, pipe } from "effect";
 export type SearchSource = ReturnType<typeof getSearchSource>;
 
 /** Reads the web and news results of one search: titles, descriptions and addresses. */
-export function readSearchSources(
-  response: Awaited<ReturnType<FirecrawlApp["search"]>>
-) {
+export function readSearchSources(response: SearchData) {
   const web = Arr.map(response.web ?? [], getSearchSource);
   const webUrls = HashSet.fromIterable(
     pipe(
@@ -68,18 +64,20 @@ export function addSourceCitations(sources: SearchSource[]) {
   );
 }
 
-/** Reads one result, with the page metadata when the provider returns a document. */
-function getSearchSource(
-  result: Document | SearchResultNews | SearchResultWeb
-) {
-  const metadata = "metadata" in result ? result.metadata : undefined;
+/**
+ * Reads one result, with the page metadata when the provider returns a
+ * document. A web result describes itself in `description` and a news result in
+ * `snippet`.
+ */
+function getSearchSource(result: SearchResult) {
+  const { metadata } = result;
   const sourceMetadata = getDocumentMetadata({
-    description: getSearchDescription(result),
+    description: firstText(result.description, result.snippet),
     metadata,
-    title: "title" in result ? result.title : undefined,
+    title: result.title,
   });
   const url = firstText(
-    "url" in result ? result.url : undefined,
+    result.url,
     metadata?.sourceURL,
     metadata?.url,
     metadata?.ogUrl
@@ -93,17 +91,4 @@ function getSearchSource(
     title: sourceMetadata.title ?? "",
     url: url ?? "",
   };
-}
-
-/** Reads description text from either search snippets or document metadata. */
-function getSearchDescription(
-  result: Document | SearchResultNews | SearchResultWeb
-) {
-  if ("description" in result && result.description) {
-    return result.description;
-  }
-
-  if ("snippet" in result && result.snippet) {
-    return result.snippet;
-  }
 }

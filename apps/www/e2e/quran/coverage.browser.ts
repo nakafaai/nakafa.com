@@ -8,7 +8,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { appRoutes } from "@/e2e/support/route";
+import { appRoutes, waitForCachedRoute } from "@/e2e/support/route";
 import {
   CARD,
   DRAWER_BAR,
@@ -168,6 +168,10 @@ const verifyQuranLocaleCoverage = Effect.fn(
   yield* seedAnalyticsConsent(page, "denied");
 
   const href = `/${contract.locale}/quran/2`;
+  // Only the first surah of each locale is prerendered, so the first visit of
+  // this page in a locale gets the shell and fetches the page after it loaded.
+  // The check reads the cached page, which the first visit leaves behind.
+  yield* waitForCachedRoute(page, href);
   const response = yield* Effect.promise(() =>
     page.goto(href, { waitUntil: "domcontentloaded" })
   );

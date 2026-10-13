@@ -1,19 +1,26 @@
 import { Ref } from "@confect/core";
+import { QueryRunner } from "@confect/server";
 import { Agent } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
+import { purposes } from "@repo/backend/confect/gateway/purpose";
+import { turnHalted } from "@repo/backend/confect/nina/halt";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel, ninaStream } from "@repo/backend/test/nina";
-import { createCapturingTest, level } from "@repo/backend/test/nina/capture";
+import {
+  createCapturingTest,
+  level,
+  MESSAGE,
+} from "@repo/backend/test/nina/capture";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { createSilentTest } from "@repo/backend/test/nina/silent";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -23,6 +30,11 @@ vi.mock("@repo/backend/confect/nina/summary", async (load) => {
   const actual =
     await load<typeof import("@repo/backend/confect/nina/summary")>();
   return { ...actual, refreshSummary: vi.fn(actual.refreshSummary) };
+});
+
+vi.mock("@repo/backend/confect/nina/halt", async (load) => {
+  const actual = await load<typeof import("@repo/backend/confect/nina/halt")>();
+  return { ...actual, turnHalted: vi.fn(actual.turnHalted) };
 });
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
@@ -82,6 +94,7 @@ describe("The Nina response run when generation fails", () => {
     vi.restoreAllMocks();
     deployment.mockReset();
     provider.languageModel.mockReset();
+    vi.mocked(turnHalted).mockReset();
     vi.useRealTimers();
   });
 
@@ -146,6 +159,86 @@ describe("The Nina response run when generation fails", () => {
         expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
       })
   );
+
+  it("stores a response timeout when the provider goes silent for longer than the chunk deadline", async () => {
+    // The SDK arms its chunk timer with a timeout of its own, so the fake clock
+    // drives it, and it reports the deadline through the abort, not as an
+    // error. The clock advances from inside the model's stream, as in the
+    // readiness test of the generation tests: a timer that the test body fires
+    // would run outside the action and could not call the backend.
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doStream: () =>
+          Promise.resolve({
+            stream: new ReadableStream({
+              start(controller) {
+                controller.enqueue({ type: "stream-start", warnings: [] });
+                controller.enqueue({ type: "text-start", id: "answer" });
+                controller.enqueue({
+                  type: "text-delta",
+                  id: "answer",
+                  delta: "A limit",
+                });
+                controller.enqueue({
+                  type: "text-delta",
+                  id: "answer",
+                  delta: " is",
+                });
+              },
+              // The SDK asks for more as it reads the last part above, and it
+              // has armed its chunk timer on the one before. The model then
+              // says nothing more, for longer than the deadline.
+              pull() {
+                vi.advanceTimersByTime(purposes.chat.timeout.chunkMs);
+                return new Promise<void>(() => undefined);
+              },
+            }),
+          }),
+      })
+    );
+    const f = await failing();
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.inspect();
+    expect(state.turn?.state).toMatchObject({
+      status: "failed",
+      reason: "response-timeout",
+    });
+    expect(state.user?.credits).toBe(10);
+  }, 30_000);
+
+  it("stores the reason the generation failed with when the read that asks whether its turn was halted fails too", async () => {
+    const halt = await vi.importActual<
+      typeof import("@repo/backend/confect/nina/halt")
+    >("@repo/backend/confect/nina/halt");
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doStream: ninaStream([
+          { type: "error", error: failures["rate-limit"] },
+        ]),
+      })
+    );
+    // The failure handler asks once whether the turn was halted, and that read
+    // fails. The watch keeps its own copy of the question and is not affected.
+    vi.mocked(turnHalted).mockImplementationOnce((turnId) =>
+      halt
+        .turnHalted(turnId)
+        .pipe(
+          Effect.provide(
+            QueryRunner.layer(
+              vi.fn().mockRejectedValue(new Error("Private connection failure"))
+            )
+          )
+        )
+    );
+    const f = await failing();
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.inspect();
+    expect(state.turn?.state).toMatchObject({
+      status: "failed",
+      reason: "provider-busy",
+    });
+    expect(state.user?.credits).toBe(10);
+  });
 
   it("identifies missing Gateway configuration before a provider request", async () => {
     deployment.mockReturnValue(
@@ -279,6 +372,32 @@ describe("The Nina response among its follow-up work", () => {
       "Understanding A Function Limit"
     );
   });
+
+  it("keeps the tokens of a summary fold on the summary row and puts none in the ledger of the turn, which every web build decodes by the agent names it was built with", async () => {
+    // Six earlier turns of about 6,000 tokens outweigh the history budget, so
+    // the turn that settles folds them into the summary. It is not the first
+    // turn of its chat, so it gets no title.
+    const f = await createCapturingTest(
+      MESSAGE,
+      Arr.makeBy(6, () => ({ tokens: 6000 }))
+    );
+    const generate = turnModel();
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    // The capture, the suggestions and the fold each asked the model once.
+    expect(generate).toHaveBeenCalledTimes(3);
+    const agents = Arr.map((await f.turn())?.usage ?? [], ({ agent }) => agent);
+    expect(Arr.sort(agents, Order.String)).toEqual([
+      "memory",
+      "nina",
+      "suggestions",
+    ]);
+    expect(
+      await f.t.query((ctx) => ctx.db.query("ninaSummaries").collect())
+    ).toEqual([
+      expect.objectContaining({ usage: { calls: 1, input: 12, output: 4 } }),
+    ]);
+  }, 30_000);
 
   it("saves the memory, the suggestions and the title when the summary dies, and raises that failure once they are done", async () => {
     const f = await createCapturingTest();

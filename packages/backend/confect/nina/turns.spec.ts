@@ -11,10 +11,14 @@ import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { NinaFocusInputSchema } from "@repo/backend/confect/nina/contract/focus";
 import {
+  NinaCancelledState,
+  NinaCompleteState,
+  NinaFailedState,
   NinaPageSchema,
+  NinaQueuedState,
   NinaRequestId,
+  NinaRunningState,
   NinaTurnFacts,
-  NinaTurnState,
   NinaUserSchema,
 } from "@repo/backend/confect/nina/contract/turn";
 import {
@@ -68,32 +72,17 @@ const NinaActiveTurn = Schema.Struct({
   fingerprint: Schema.String,
   page: NinaPageSchema,
   user: NinaUserSchema,
-  state: Schema.Union([NinaTurnState.members[0], NinaTurnState.members[1]]),
+  state: Schema.Union([NinaQueuedState, NinaRunningState]),
   cancelRequestedAt: Schema.optionalKey(Schema.Finite),
 });
 
 export const NinaSettledTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
   phase: Schema.Literal("settled"),
-  state: Schema.Union([
-    NinaTurnState.members[2],
-    NinaTurnState.members[3],
-    NinaTurnState.members[4],
-  ]),
+  state: Schema.Union([NinaCompleteState, NinaFailedState, NinaCancelledState]),
 });
 
-/** A saved prompt without a response has no inferred charge or completion time. */
-const NinaUnansweredTurn = Schema.Struct({
-  ...NinaTurnFacts.fields,
-  phase: Schema.Literal("unanswered"),
-  state: NinaTurnState.members[5],
-});
-
-export const NinaTurn = Schema.Union([
-  NinaActiveTurn,
-  NinaSettledTurn,
-  NinaUnansweredTurn,
-]);
+export const NinaTurn = Schema.Union([NinaActiveTurn, NinaSettledTurn]);
 
 export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
   "NinaTurnError",
