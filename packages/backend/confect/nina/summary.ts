@@ -216,14 +216,16 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       "chatId" | "history" | "order" | "promptMessageId" | "threadId" | "userId"
     >
   ) {
+    // Whether the fold can wait does not depend on the summary, so the common
+    // refresh reads the turn alone and not even the summary row.
+    if (yield* foldWaits(turn)) {
+      return;
+    }
     const { runQuery: query } = yield* QueryRunner;
     const current = yield* query(refs.internal.nina.summaries.read, {
       chatId: turn.chatId,
     }).pipe(Effect.orDie);
     const covered = current?.throughOrder ?? null;
-    if (yield* foldWaits(turn)) {
-      return;
-    }
     // The turn that just settled is the newest of the turns to count.
     const uncovered = yield* readUncovered(
       turn,

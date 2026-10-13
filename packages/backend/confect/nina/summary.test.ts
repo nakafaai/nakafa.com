@@ -442,10 +442,10 @@ describe("Nina rolling summary", () => {
     // Without the cost the refresh pages through the turns and their messages.
     expect(readsOf(full.queries).uncovered).toHaveLength(2);
     expect(full.read.documentsRead).toBe(64);
-    // With it the refresh reads the summary row and one page of ten messages
-    // from the prompt of the turn, which holds the turn and the turn before it.
+    // With it the refresh reads one page of ten messages from the prompt of
+    // the turn, which holds the turn and the turn before it, and not even the
+    // summary row.
     expect(own.queries).toEqual([
-      { chatId: f.chatId },
       expect.objectContaining({
         paginationOpts: { cursor: null, numItems: 10 },
         upToAndIncludingMessageId: f.prompts[20],
