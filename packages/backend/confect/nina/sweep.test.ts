@@ -1,7 +1,6 @@
 import { Ref } from "@confect/core";
 import { listMessages, saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { PostHog } from "@posthog/convex";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -11,6 +10,7 @@ import {
 } from "@repo/backend/confect/nina/deadline";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
+import { stubReport } from "@repo/backend/test/nina/report";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Duration, pipe, Struct } from "effect";
 
@@ -29,10 +29,6 @@ const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const sweep = Ref.getFunctionReference(refs.internal.nina.lifecycle.sweep);
 const expire = Ref.getFunctionReference(refs.internal.nina.lifecycle.expire);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
-
-/** Stands in for the queue that carries an exception to error tracking. */
-const stubReport = () =>
-  vi.spyOn(PostHog.prototype, "captureException").mockResolvedValue(undefined);
 
 async function fixture() {
   const seeded = await createNinaTest({ now: NOW });

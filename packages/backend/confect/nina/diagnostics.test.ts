@@ -1,12 +1,12 @@
 import { Ref } from "@confect/core";
 import { saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { PostHog } from "@posthog/convex";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
+import { stubReport } from "@repo/backend/test/nina/report";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
@@ -65,9 +65,7 @@ it.effect.each([
   "reports the routing facts of %s while redacting the prompt, response and credentials",
   ([, error, facts]) =>
     Effect.gen(function* () {
-      const capture = vi
-        .spyOn(PostHog.prototype, "captureException")
-        .mockResolvedValue(undefined);
+      const capture = stubReport();
       provider.languageModel.mockReturnValue(
         new MockLanguageModelV4({
           doStream: ninaStream([{ type: "error", error }]),
@@ -101,9 +99,9 @@ it.effect(
   "refunds a defect even when exception delivery cannot be queued",
   () =>
     Effect.gen(function* () {
-      const capture = vi
-        .spyOn(PostHog.prototype, "captureException")
-        .mockRejectedValue(new Error("private delivery failure"));
+      const capture = stubReport().mockRejectedValue(
+        new Error("private delivery failure")
+      );
       provider.languageModel.mockImplementation(() => {
         throw new Error("private defect");
       });
@@ -138,9 +136,7 @@ describe("The report of a turn whose run was lost", () => {
   afterEach(() => vi.useRealTimers());
 
   it("names the turn, the reason and how long it was open in the log, tells error tracking the reason and the place, and carries no word of the conversation", async () => {
-    const capture = vi
-      .spyOn(PostHog.prototype, "captureException")
-      .mockResolvedValue(undefined);
+    const capture = stubReport();
     const logged = vi.spyOn(console, "error").mockImplementation(() => 0);
     const f = await createNinaTest({ now: NOW, prompt: "private user prompt" });
     await f.t.mutation(claim, { turnId: f.turnId });
@@ -191,9 +187,7 @@ describe("The report of a turn whose run was lost", () => {
   });
 
   it("ends a lost turn even when its report cannot be queued", async () => {
-    vi.spyOn(PostHog.prototype, "captureException").mockRejectedValue(
-      new Error("private delivery failure")
-    );
+    stubReport().mockRejectedValue(new Error("private delivery failure"));
     const warned = vi.spyOn(console, "warn").mockImplementation(() => 0);
     const f = await createNinaTest({ now: NOW });
     await f.t.mutation(claim, { turnId: f.turnId });
@@ -232,9 +226,7 @@ describe("The report of a turn whose run was lost", () => {
   ])(
     "reports a failure that ends a turn: %s",
     async (_name, openFor, reports) => {
-      const capture = vi
-        .spyOn(PostHog.prototype, "captureException")
-        .mockResolvedValue(undefined);
+      const capture = stubReport();
       const f = await createNinaTest({ now: NOW });
       await f.t.mutation(claim, { turnId: f.turnId });
       vi.setSystemTime(NOW + openFor);

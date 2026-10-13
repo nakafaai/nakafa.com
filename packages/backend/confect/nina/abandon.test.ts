@@ -1,7 +1,6 @@
 import { Ref } from "@confect/core";
 import { abortStream, listMessages, saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { PostHog } from "@posthog/convex";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { CreditStateError } from "@repo/backend/confect/credits/spec";
@@ -13,6 +12,7 @@ import {
 } from "@repo/backend/confect/nina/deadline";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
+import { stubReport } from "@repo/backend/test/nina/report";
 import { Array as Arr, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
@@ -44,10 +44,6 @@ const abandon = Ref.getFunctionReference(refs.internal.nina.lifecycle.abandon);
 const sweep = Ref.getFunctionReference(refs.internal.nina.lifecycle.sweep);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const remove = Ref.getFunctionReference(refs.public.chats.mutations.deleteChat);
-
-/** Stands in for the queue that carries an exception to error tracking. */
-const stubReport = () =>
-  vi.spyOn(PostHog.prototype, "captureException").mockResolvedValue(undefined);
 
 /** A chat whose first turn holds five of the learner's ten credits. */
 async function fixture() {
