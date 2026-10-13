@@ -60,9 +60,11 @@ that the model must change:
 ### 1. One item model for Nakafa content and school items
 
 - `ItemFamily` holds a language-neutral identifier.
-- `ItemVersion` holds one language's document, interactions, answer key, scoring
-  rules, explanation, and a content hash. A version never changes after it is
-  used.
+- `ItemVersion` holds one language's document, interactions, scoring rules,
+  explanation, and a content hash. A version never changes after it is used.
+- The answer key of a version is its own record, named by the version's hash and
+  delivered only to an entitled reader. A prompt, a paper, and a paper bundle
+  never carry a key.
 - `Placement` only points to a version in a frozen manuscript.
 - `Stimulus` stands alone, and one group of items shares it.
 - A teacher's question is school data in the school's own cell. The Aksara
@@ -72,7 +74,10 @@ that the model must change:
 ### 2. The item body is a structured document, not code
 
 - The assessment document is a structured tree of paragraphs, headings, lists,
-  tables, math written in LaTeX with MathML, and figures.
+  tables, math, and figures, encoded as ProseMirror-compatible JSON so the editor
+  works on the same document. Its depth is at most 16 and its encoding at most
+  1 MiB, the Convex document limit. Math is stored once as LaTeX; MathML is
+  rendered from it (KaTeX 0.19 with `output: "htmlAndMathml"`), never stored.
 - A figure is one of the published components (`MathVisual`, `NumberLine`,
   `LineEquation`, `UnitCircle`, `Mermaid`) or an image with alternative text. The
   image form has no schema yet, and wave A adds one with the document contract.
