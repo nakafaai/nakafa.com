@@ -12,12 +12,13 @@ the question. A question had to share words with a lesson to find it, and a
 result named the lesson, not the part of it that answers. The corpus is small
 enough to embed whole: 1,170 lesson and article documents with 9,567 sections,
 and 114 surahs with 1,085 signed chunks of six verses in three languages, 3,255
-passages. That is 12,822 rows, and the section index holds and embeds only published
-lesson and Quran text. No stored learner message is ever embedded. A search
-embeds one thing from a learner: the short search phrase that the specialist
-writes from a question, which it compares with the sections and keeps nowhere.
-That request cannot carry the zero retention flags that every language model
-call sends (ADR 0019), so it relies on the statement of the gateway. The class
+passages. That is 12,822 rows, and the section index holds and embeds only
+published lesson and Quran text. No stored learner message is ever embedded. A
+search embeds one thing from a learner: the short search phrase that the
+specialist writes from a question, which it compares with the sections and keeps
+nowhere.
+That request carries no zero retention request today, unlike every language
+model call (ADR 0019), so it relies on the statement of the gateway. The class
 libraries of a school are indexed apart from the section index, under the rules
 of Class Libraries below.
 
@@ -131,16 +132,18 @@ school data in the school's own cell.
   deleting the class, or switching Nina off for the class or for the school
   deletes the rows, and turning Nina on again builds them again.
 - The model is the one of the section index: `gemini-embedding-2`, 768 numbers
-  (`gateway/model.ts`). An embedding request cannot carry the zero retention
-  flags (ADR 0019), so the text of a teacher's file goes to the embedding
-  provider without a retention request. Only a file that the teacher published
-  to the class is sent.
-- A vector is kept in plain form and approximates its text (ADR 0022), so the
-  index holds only text that a teacher published to the class. Any other text
-  that a row keeps is sealed with the school key (ADR 0030).
+  (`gateway/model.ts`). An embedding request carries no zero retention request
+  today (ADR 0019 records why, and what changes it), so the text of a teacher's
+  file goes to the embedding provider without one. Only a file that the teacher
+  published to the class is sent.
+- A vector is kept in plain form, and an embedding can be turned back into the
+  text it stands for (ADR 0022), so the index holds only text that a teacher
+  published to the class. Any other text that a row keeps is sealed with the
+  school key (ADR 0030).
 - Nina in a class answers from this index and from the section index, with
   citations, and passes the question to the teacher when she is unsure. The
-  Agent thread of a class has no personal memory (ADR 0022).
+  Agent thread of a class reads no personal memory and no learner profile
+  (ADR 0022).
 
 ## Cost
 

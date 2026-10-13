@@ -4,8 +4,8 @@
 
 Accepted. Supersedes ADR 0010, which kept memory off until a learner turned it
 on. Amended on 13 October 2026: a Nina thread of a class neither reads nor
-writes personal memory (K3), and the Memory page is never shown inside a school
-(Memory In A School Thread).
+writes personal memory (K3) and reads no learner profile, and the Memory page is
+never shown inside a school (Memory In A School Thread).
 
 ## Context
 
@@ -36,11 +36,10 @@ prompt, whatever the learner asked, and Nina had no way to look for more.
 Memory is on for everyone, in the personal space. A Nina thread of a class does
 not use it (see Memory In A School Thread). The learner reads, adds, edits and
 deletes memories, pauses memory, and deletes all of it on one page, Settings, AI,
-Memory. Pausing
-sets `ninaMemoryPaused` on the learner's learning preference and keeps every
-row. While paused, Nina saves nothing and reads nothing. Resuming removes the
-mark, so a learner who never paused has no mark. Deleting all of it sets
-`ninaMemoryClearedAt` on the same row (see Implementation Contract).
+Memory. Pausing sets `ninaMemoryPaused` on the learner's learning preference and
+keeps every row. While paused, Nina saves nothing and reads nothing. Resuming
+removes the mark, so a learner who never paused has no mark. Deleting all of it
+sets `ninaMemoryClearedAt` on the same row (see Implementation Contract).
 
 A memory is one row. It holds a title, words, or both. The words are at most
 2000 characters and may hold Markdown, whose formatting counts toward the limit;
@@ -386,11 +385,20 @@ personal memory (K3). Memory stays on in the personal space as this ADR decides,
 and a school thread does not open it. The change is planned for program wave B
 (ADR 0013 describes the waves), and no school thread exists yet.
 
-- No read. A turn of a school thread reads no portrait and no recall list, and it
-  is not offered the memory capability. It takes the path of a paused memory,
-  which `nina/memory/turn.ts` (`read`, `lookup`, and `known`) and the offered
-  capabilities in `nina/instructions.ts` already hold. The kind of the thread
-  decides, and the learner's memory state is not read at all.
+- No read. A turn of a school thread calls none of the memory reads of
+  `nina/memory/turn.ts` (`read`, `lookup`, and `known`). It reads no portrait and
+  no recalled memory, and it is not offered the memory capability (the offered
+  capabilities in `nina/instructions.ts`). The kind of the thread decides, and
+  the learner's memory state is not read at all. A paused memory is not the model
+  for this: the turn of a paused learner still reads the learner profile,
+  because `read` returns `profile` before it looks at the pause.
+- No profile. The learner profile is not memory. It is the account facts that
+  `readLearnerProfile` returns (`nina/memory/profile.ts`): the onboarding focus
+  and region, the preferred try-out country, and the latest finished try-out by
+  section. K3 names memory only, and a reply of Nina in a class is read by the
+  whole class. So a school thread reads the profile no more than it reads memory,
+  which is the separation that ADR 0015 draws for connections. This ADR takes the
+  stricter reading of K3.
 - No write. No capture is scheduled after a turn of a school thread. The
   learner's message in a class goes to no memory model, and no memory, no key
   row, and no portrait request follows from it.
@@ -399,20 +407,18 @@ and a school thread does not open it. The change is planned for program wave B
 - A message in a class is school data, sealed with the school key (ADR 0030), and
   not memory. No job copies it into memory.
 - The Memory page stays in the personal space. The account menu of the school
-  shell links to it (`nakafa.com/id/user/settings/memory`, ADR 0026). The page is
-  never shown inside the shell, so a learner never edits or deletes personal
-  memory from within a school. The account menu has no entry for a profile,
-  because a school member has no public profile (K15).
-- The test, with a learner who has memories: the turn of a school thread carries
-  no portrait and no recall list, its capability list lacks `memory`, and no
-  capture runs. It plants a string in a memory and a string in a class message,
-  and looks for both in the prompt and in every memory table.
-- Open: K3 names memory. The learner profile is not memory, and K3 does not cover
-  it. It is the account facts that `memory.read` returns beside memory: the
-  onboarding focus and region, the preferred try-out country, and the latest
-  finished try-out by section (`nina/memory/turn.ts`). A reply of Nina in a class
-  is read by the whole class, so whether a school thread may read the learner
-  profile is for the owner to decide.
+  shell links to it (`nakafa.com/id/user/settings/memory`, ADR 0026), and a shell
+  of a cell other than `us` shows no such link, because personal Nina memory
+  exists only in the `us` cell. The page is never shown inside the shell, so a
+  learner never edits or deletes personal memory from within a school. The
+  account menu has no entry for a profile, because a school member has no public
+  profile (K15).
+- The test, with a learner who has memories and a profile: the turn of a school
+  thread carries no portrait, no recalled memory, and no profile fact, its
+  capability list lacks `memory`, and no capture runs. It plants a string in a
+  memory, one in the onboarding focus, and one in a class message. The prompt of
+  the school thread holds neither of the first two, and no memory table holds
+  the third.
 
 ## Index And Search
 

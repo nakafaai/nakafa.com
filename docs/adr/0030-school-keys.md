@@ -53,29 +53,34 @@ learner's key.
   apart.
 - It is stored only wrapped by the current root key, in `tenantKeys`, and it is
   created when the tenant is created. The provisioning mutation of ADR 0011
-  creates it, in the data cell that holds the school (ADR 0026, K5). A learner's
-  key is created on first use, because a learner exists before anything is
-  sealed for them. A school's key exists from the first day, so no read or write
-  has to create it. A tenant without a key is a defect, and a reader fails with
-  `VaultError` reason `key`.
-- The key never leaves its cell. A school that moves to another cell (ADR 0026)
-  is opened in the source cell, and the import seals its text again under a new
-  key of the target cell. The source key is deleted with the source rows.
+  creates it in the same transaction as the tenant, in the data cell that holds
+  the school (ADR 0026, K5). A learner's key is created on first use, because a
+  learner exists before anything is sealed for them. A school's key exists from
+  the first day, so no read or write has to create it. A tenant without a key is
+  a defect, and a reader fails with `VaultError` reason `key`.
+- The key never leaves its cell. `VAULT_ROOT_KEYS` is a value of one
+  deployment's environment, and Convex refuses a push to a deployment without it
+  (`packages/backend/convex/convex.config.ts`). Each cell has its own deployment
+  (ADR 0026), so the root keys of a cell wrap only the keys of that cell. A
+  school that moves to another cell is opened in the source cell, and the import
+  seals its text again under a new key of the target cell. The source key is
+  deleted with the source rows.
 - A function reads the school's key once and opens everything it returns with
   that one read, as one `vaultKeys` read does in ADR 0024.
 
 ### What changes in the vault
 
 Nothing sealed for a learner changes: the same values open with the same keys.
-`deriveKeys`, `seal`, `open`, and `blindHash` take any 32-byte key, so a school
-key derives the same three keys as a learner key: an AES-256-GCM key that seals,
-an HMAC key that makes each nonce, and an HMAC key that blinds a word.
+`deriveKeys` takes any 32-byte key, and `seal`, `open`, and `blindHash` take the
+keys it derives (`vault/cipher.ts`), so a school key derives the same three keys
+as a learner key: an AES-256-GCM key that seals, an HMAC key that makes each
+nonce, and an HMAC key that blinds a word.
 
 | Part of `confect/vault` | Today | With the school key |
 | --- | --- | --- |
-| `cipher.ts` | Seals, opens, and blinds with any 32-byte key | No change |
+| `cipher.ts` | Seals, opens, and blinds with the keys that any 32-byte key derives | No change |
 | `ring.ts` | Reads the root keys from `VAULT_ROOT_KEYS` | No change |
-| `keys.ts` | Learner keys: `ensureLearnerKeys`, `readLearnerKeys`, `shredLearnerKeys`, and `rewrapLearnerKeys` | Gains the readers of a school key, its creation (called by provisioning), and its deletion. The wrapped key is bound to the tenant with a label of its own, so a wrapped learner key never opens as a school key. `rewrapLearnerKeys` covers both tables. |
+| `keys.ts` | Learner keys: `ensureLearnerKeys`, `readLearnerKeys`, `shredLearnerKeys`, and `rewrapLearnerKeys` | Gains the readers of a school key, its creation (called by provisioning), and its deletion. The wrapped key is bound to the tenant with a label of its own, so a wrapped learner key never opens as a school key. The rewrap (`vault/keys:rewrap`) covers both tables. |
 | `text.ts` | `sealText`, `openText`, and `blindText` bind a text to a learner, a table, and a field | They take the keys of an owner, a learner or a tenant, and bind a text to that owner, the table, and the field. A text opens only for that school and that field. |
 | `schema.ts` | `VaultKey`, `VaultField`, and `VaultError` | Gains the row of `tenantKeys` (the tenant, the generation, the root key, the wrapped key, and the time of creation) |
 
@@ -100,19 +105,22 @@ server computes with. The names and states that an index needs, such as class
 membership. The report card, whose PDF hash is in the journal. Integrity
 signals, which only teachers see. Notifications, which hold an id, a kind, and a
 time. The evidence of consent and the journal, which hold IDs and codes without
-free text (ADR 0016). Login card codes, exam tokens, and OAuth client secrets
-are kept as keyed hashes: they are checked and never read.
+free text (ADR 0016). Login card codes (ADR 0009) and exam tokens (ADR 0013) are
+kept as keyed hashes, and OAuth client secrets as hashes (ADR 0029): they are
+checked and never read.
 
 ### Forum search and the blind index
 
 The forum is searched through a blind index, as a learner's memory is (ADR 0022).
 
 - A word is blinded with the school's blind key: the first 16 bytes of an
-  HMAC-SHA-256 of the word, bound to the table, the field, and the version of
-  the index (`blindText` in `vault/text.ts`). The database matches the same word
-  again without reading it, and the same word under another school's key is
-  another value. The index covers the words of a message, of the title of the
-  discussion it starts, and of the names of its attachments.
+  HMAC-SHA-256 of the word, bound to the table and the field (`blindText` in
+  `vault/text.ts`). The version of the index is part of the field name, as
+  `words/v2` is for memory (`WORDS_FIELD` in `nina/memory/keys.ts`). The database
+  matches the same word again without reading it, and the same word under
+  another school's key is another value. The index covers the words of a
+  message, of the title of the discussion it starts, and of the names of its
+  attachments.
 - One function defines a word: `wordsOf` in
   `packages/backend/confect/nina/memory/words.ts`. It applies Unicode NFKC and
   lower case, splits at the word boundaries of `Intl.Segmenter`, and cuts each
@@ -141,13 +149,13 @@ sits on an account, and ADR 0015 decides how connectors behave.
 
 | Event | What happens to the connection and its key |
 | --- | --- |
-| A member leaves the school | The connection is transferred and sealed again under the key of the learner who chooses it, or it is disconnected. |
-| The account of the member who made a school connection is deleted | The connection stays and enters the reconnect state. It does not vanish, and it does not work until someone reconnects it. |
+| A member who made a school connection leaves the school | The member chooses. The connection is sealed again under the member's own learner key and becomes a personal connection, or it is disconnected. |
+| The account of the member who made a school connection is deleted | Deleting the account shreds only the learner key, so the secret under the school key stays readable. The connection is transferred to another member and sealed again, or it enters the reconnect state (ADR 0015). It does not vanish, and it does not work until someone reconnects it. |
 | The school is deleted | Every school connection is disconnected, the school key is deleted, and the school is given a deletion record. |
 
-The test for the second row: delete the account of the teacher who made the
-connection, and the connection must be in the reconnect state, never gone and
-never silently working.
+The test for the second row, with no transfer made: delete the account of the
+teacher who made the connection, and the connection must be in the reconnect
+state, never gone and never silently working.
 
 ### Rotation and replacement
 
@@ -205,7 +213,7 @@ does another job.
 | --- | --- | --- | --- |
 | Another member of a class | What the class shares | No | Reads no one's private chat or memory |
 | A teacher | The data of their classes, through `decide` | No. The server opens it for them. | Reads no private chat or memory |
-| A school admin | The data of the school | No. The server opens it for them. | Reads no private chat (ADR 0011) |
+| A school admin | The data of the school | No. The server opens it for them. | Reads no private chat, because private threads stay out of every role (ADR 0012) |
 | A Nakafa operator during a visit | What an Auditor reads, and the journal records it | No | The school approves each visit, which lasts 24 hours at most (ADR 0011, ADR 0012) |
 | Whoever holds the environment and the production dashboard | Every text the server can open | `VAULT_ROOT_KEYS` | Access to the environment is access to the text. This is the honest limit. |
 | A copy or an export of the database | Nothing that is sealed | No | The rows of a running Nina turn are plain (ADR 0024) |
