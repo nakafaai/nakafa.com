@@ -19,6 +19,9 @@ import { desktopViewport, tryoutViewports } from "@/e2e/support/viewport";
 /** How much taller than its page a window is made, so the whole list fits in it. */
 const FITTING_ROOM = 200;
 
+/** Leaves each question with its number only, so a section of any size is a short list. */
+const NUMBERS_ONLY = "article[data-player-key] > section { display: none; }";
+
 /** The size of the root text of a browser that shows text larger than its default 16 px. */
 const LARGER_TEXT = 20;
 
@@ -51,9 +54,9 @@ const verifyScrollbar = Effect.fn("NakafaE2E.verifyPlayerScrollbar")(function* (
 });
 
 /**
- * Keeps the first question current when the window grows until the whole list
- * fits in it. The reader has not scrolled, so there is no end of the list that
- * they reached.
+ * Keeps the first question current when the whole list fits in the window,
+ * however it came to fit. The reader has not scrolled, so there is no end of
+ * the list that they reached.
  */
 const verifyFittingList = Effect.fn("NakafaE2E.verifyFittingList")(function* (
   page: Page,
@@ -65,7 +68,9 @@ const verifyFittingList = Effect.fn("NakafaE2E.verifyFittingList")(function* (
   const total = yield* Effect.promise(() => numberCells(page).count());
   yield* Effect.promise(() => expect(current).toHaveText("1"));
 
-  // The window becomes taller than the page, so the end of the list is in view.
+  // The questions shrink and the window becomes taller than the page, so the
+  // end of the list is in view.
+  yield* Effect.promise(() => page.addStyleTag({ content: NUMBERS_ONLY }));
   const height = yield* Effect.promise(() =>
     page.evaluate(() => document.documentElement.scrollHeight)
   );
