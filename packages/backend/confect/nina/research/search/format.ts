@@ -28,10 +28,10 @@ export function formatWebSearchOutput(output: WebSearchOutput) {
 }
 
 /**
- * Says why a search returned no usable source. A failure says so. A search
- * that ran limited to sites says that, because the limit may be why it found
- * nothing: a site that the model writes from memory can be wrong or no longer
- * in use. Whether to search again without the limit is the reader's step, never
+ * Says why a search returned no usable source: it failed, or it found nothing.
+ * A search that was limited to sites says so, because the limit may be why it
+ * found nothing: a site that the model writes from memory can be wrong or no
+ * longer in use. Searching again without the limit is the reader's step, never
  * the code's, because the learner may have named those sites on purpose.
  */
 function formatNoSources({ error, sites }: WebSearchOutput) {

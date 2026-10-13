@@ -451,7 +451,7 @@ describe("research web search tool", () => {
   );
 
   it.effect(
-    "writes an error part when Firecrawl search fails, and logs its status without its message",
+    "writes an error part with the sites when a limited search fails, logs its status without its message, and names no site in its output",
     () =>
       Effect.gen(function* () {
         fetcher.mockImplementation(() =>
@@ -461,6 +461,7 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: ["latest solar energy research"],
+          sites,
           words: "latest solar energy research",
           toolCallId: "web-search-2",
           publish,
@@ -483,13 +484,12 @@ describe("research web search tool", () => {
 
         expect(output.result.sources).toEqual([]);
         expect(output.result.error).toContain("Failed to search");
+        expect(output.result).not.toHaveProperty("sites");
         expect(output.text).toContain("Failed to search");
         expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
           expect.objectContaining({
             type: "data-web-search",
-            data: expect.objectContaining({
-              status: "error",
-            }),
+            data: expect.objectContaining({ sites, status: "error" }),
           })
         );
       })
