@@ -17,7 +17,6 @@ export const schoolClassVisibilityValidator = Schema.Literals([
   "private",
   "public",
 ]);
-export type SchoolClassVisibility = typeof schoolClassVisibilityValidator.Type;
 
 /**
  * Class material status validator
