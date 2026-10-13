@@ -74,6 +74,7 @@ The deltas stay for five minutes after a stream finishes (`streams.ts:69`,
 | Settlement | `settlement.ts:28-53` | The newest row, to see whether it holds a non-empty answer. It runs only for an active turn (`:95`). |
 | The page of messages | `messages.impl.ts:103-107`, `:108-144` | `listUIMessages`, which lists rows and runs `toUIMessages`, and the turn facts for each `order`. |
 | Streaming | `messages.impl.ts:28-69` | `listStreams` and `syncStreams`, which carry the deltas to the owner's browser. A reader of a shared chat is told no stream (ADR 0001). |
+| Attachments | `nina/attachments.ts:22-31` | `getFile`, whose file or image part carries the component's `files.filename`, for the model's file part and the admission receipt. |
 | Deletion | `triggers/chats/chats.ts:45` | `deleteAllForThreadIdAsync`, which deletes row by row (`threads.ts:184-247`, `messages.ts:59-71`) without reading content. |
 | Recovery inside the component | `messages.ts:484-551`, `streams.ts:662-741` | `finalizeMessage` rebuilds a row from the deltas when a pending row has no content, and writes it from inside the component. |
 
@@ -253,7 +254,11 @@ changes.
    copy of its bytes, registers the copy with the sealed name through `addFile`,
    and writes the replaced message with the new file id. The old row loses its
    last reference, and the sweep removes it and its bytes as for any unused
-   file. The dry run reports how many attachments and bytes it would copy. The
+   file. The module that owns the sealed form opens a file's name too: the
+   attachments reader takes the file through it and gets the part with its name
+   opened, so neither the model's file part, the admission receipt, nor the page
+   sees the sealed form. A file part inside a message row is sealed and opened
+   with its row. The dry run reports how many attachments and bytes it would copy. The
    stored file is removed within two days of its chat's deletion, as
    the live policy already says (ADR 0001). The cleanup runs once a day, and it
    removes a file once no chat refers to it and 24 hours have passed since its
@@ -339,6 +344,7 @@ read for the whole function.
 | The next turn | 50 rows a page, back to the oldest uncovered turn | 1 | rows read |
 | The summary job | 100 rows a page, text rows | 1 | rows read |
 | Capture, retry, replay | 1 row | 1 | 1 |
+| Attachments | 1 file row for each attachment | 1 | 1 name for each |
 | Suggestions | up to 50 rows | 1 | up to 50 |
 | Title | 1 row: it runs for the first turn only (`presentation.ts:102`) | 1 | 1 |
 
@@ -358,8 +364,8 @@ and opens inside it, so it makes the same single trip from the action that
 `listMessages`, opening, and `toUIMessages`, which is what `listUIMessages`
 does, so the shape the browser receives does not change. A source rule in
 `scripts/check` should reject a call to `listMessagesByThreadId`,
-`getMessagesByIds`, `listMessages`, `listUIMessages` or `docsToModelMessages`
-outside the module, so a reader added later cannot skip the opening.
+`getMessagesByIds`, `listMessages`, `listUIMessages`, `docsToModelMessages` or
+`getFile` outside the module, so a reader added later cannot skip the opening.
 
 ## Time To First Token
 
