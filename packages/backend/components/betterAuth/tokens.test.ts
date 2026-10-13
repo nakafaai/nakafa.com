@@ -66,6 +66,13 @@ const kinds = {
 /** How many accounts of `kinds` hold a token. */
 const HOLDING = 3;
 
+/**
+ * The most calls one drain makes. It is more than any test below needs, so a
+ * function that never reaches its last page fails the test and does not make
+ * it loop forever.
+ */
+const MAX_CALLS = 10;
+
 /** Creates accounts straight in the component, as rows from before the hooks exist. */
 async function seed(test: Test, accounts: readonly AccountData[]) {
   for (const data of accounts) {
@@ -89,7 +96,7 @@ function clearPage(test: Test, cursor: string | null, dry: boolean) {
   });
 }
 
-/** Runs pages from the start, each with the `next` of the one before, until the last. */
+/** Runs pages from the start, each with the `next` of the one before, until the last or `MAX_CALLS`. */
 async function drain(test: Test, dry: boolean) {
   const totals = { calls: 0, cleared: 0, holding: 0, scanned: 0, written: 0 };
   let cursor: string | null = null;
@@ -102,7 +109,7 @@ async function drain(test: Test, dry: boolean) {
     totals.scanned += result.scanned;
     totals.written += written;
     cursor = result.next;
-  } while (cursor !== null);
+  } while (cursor !== null && totals.calls < MAX_CALLS);
   return totals;
 }
 

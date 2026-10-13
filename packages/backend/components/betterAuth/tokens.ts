@@ -28,7 +28,11 @@ function holdsProviderToken(account: Doc<"account">) {
   );
 }
 
-/** Counts one page of accounts that hold a provider token, and clears them unless `dry`. */
+/**
+ * Counts one page of accounts that hold a provider token, and clears them
+ * unless `dry`. Convex removes a field that `patch` sets to `undefined`
+ * (https://docs.convex.dev/database/writing-data).
+ */
 const clearPageProgram = Effect.fn("betterAuth.tokens.clearPage")(function* (
   ctx: MutationCtx,
   cursor: string | null,

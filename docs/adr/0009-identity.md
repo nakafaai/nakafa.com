@@ -51,12 +51,12 @@ that nothing reads only widens what a leaked database or a leaked secret
 exposes. A token for a connector that a learner links later belongs in the
 vault, sealed under that learner's key, never on the account.
 
-- Sign-in asks Google for the account chooser (`prompt=select_account`) and
-  nothing more. It sends no `access_type`, which Google reads as `online`, so
-  Google issues no refresh token. It sends no `consent` prompt, which showed
-  Google's consent screen at every sign-in. Google still returns an access
-  token and an ID token at the code exchange, and Better Auth reads the profile
-  from the ID token.
+- Sign-in sends `prompt=select_account`, so a learner with several Google
+  accounts still picks one. It sends no `access_type`, which Google reads as
+  `online` and answers with no refresh token. It no longer sends the `consent`
+  prompt, which showed Google's consent screen at every sign-in. Google still
+  returns an access token and an ID token at the code exchange, and Better Auth
+  reads the profile from the ID token.
 - Two Better Auth database hooks (`confect/auth/tokens.ts`) set the access,
   refresh and ID tokens and their expiry times to `undefined` before every
   write to `account`. Better Auth merges what a hook returns over the data it
@@ -153,7 +153,8 @@ component call for each row.
   `access_type` reach Google only when set. `getUserInfo` (line 105) reads the
   profile from the ID token of the code exchange.
 - https://developers.google.com/identity/protocols/oauth2/web-server: the
-  default `access_type` is `online`, and without `prompt` Google asks the
-  learner only the first time.
+  default `access_type` is `online`, `prompt=consent` asks for consent and
+  `prompt=select_account` shows the account chooser, and a request without
+  `prompt` asks the learner only the first time.
 - https://developers.google.com/identity/openid-connect/openid-connect: the
   token response holds a `refresh_token` only when `access_type` is `offline`.

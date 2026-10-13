@@ -50,9 +50,9 @@ export const disabledTokenPaths = [
 /**
  * What sign-in asks Google for. It sends no `access_type`, which Google reads
  * as `online`, so Google issues no refresh token. It sends no `consent`
- * prompt, which made Google show its consent screen at every sign-in; without
- * it Google asks the first time only. `select_account` stays, so a learner
- * with several Google accounts still picks one.
+ * prompt, which made Google show its consent screen at every sign-in.
+ * `select_account` stays, so a learner with several Google accounts still
+ * picks one.
  *
  * Only the redirect flow signs a learner in. With ID token sign-in on, Better
  * Auth would accept any Google ID token that was issued to Nakafa in the last

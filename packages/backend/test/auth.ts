@@ -1,11 +1,11 @@
 import { assert, expect } from "@effect/vitest";
+import type { Doc } from "@repo/backend/components/betterAuth/_generated/dataModel";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ACCOUNT_DELETION_ATTEMPT_HEADER } from "@repo/backend/confect/auth/deletion/constants";
-import { noProviderTokens } from "@repo/backend/confect/auth/tokens";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { User } from "better-auth";
-import { Array as Arr, DateTime, Effect, pipe, Record as Rec } from "effect";
+import { Array as Arr, DateTime, Effect, pipe } from "effect";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const BASE64_PADDING_PATTERN = /[=]+$/;
@@ -187,9 +187,22 @@ export async function storedAccounts(
   return page;
 }
 
+/**
+ * The `account` columns that hold what Google issues at sign-in. The list is
+ * written out here and not read from the account hooks, so that a column
+ * dropped from the hooks fails the tests that use it.
+ */
+const PROVIDER_TOKEN_COLUMNS: ReadonlyArray<keyof Doc<"account">> = [
+  "accessToken",
+  "accessTokenExpiresAt",
+  "idToken",
+  "refreshToken",
+  "refreshTokenExpiresAt",
+];
+
 /** Expects that a stored `account` row holds none of the provider token columns. */
 export function expectNoProviderTokens(row: object) {
-  for (const field of Rec.keys(noProviderTokens)) {
-    expect(row).not.toHaveProperty(field);
+  for (const column of PROVIDER_TOKEN_COLUMNS) {
+    expect(row).not.toHaveProperty(column);
   }
 }
