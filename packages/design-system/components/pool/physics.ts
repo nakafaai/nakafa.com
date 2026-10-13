@@ -3,6 +3,7 @@ import {
   BallSchema,
   fastest,
   fence,
+  limitSpeed,
   tiltOf,
 } from "@repo/design-system/components/pool/ball";
 import { pushApart } from "@repo/design-system/components/pool/collide";
@@ -28,7 +29,7 @@ import { Array as Arr, Number as Num, Option, Schema } from "effect";
 const GRAVITY = 1500;
 /** How much speed a free ball keeps each second: its speed is multiplied by `exp(-DAMPING * dt)`. */
 const DAMPING = 0.95;
-/** The share of the way to its target that a held ball moves in one step. */
+/** A held ball sits on its target at once. This share of the speed that gets it there is what it carries into a collision, its release, and its lean. */
 const HOLD_SHARE = 0.35;
 /** The pile is at rest when no ball traveled this far in the last step, in pixels. */
 const REST_TRAVEL = 0.05;
@@ -110,14 +111,16 @@ export function tick(world: World, dt: number): World {
   };
 }
 
-/** Moves every ball for `dt` seconds, pushes the balls apart, and keeps the free ones in the box. */
+/** Moves every ball for `dt` seconds, pushes the balls apart, and keeps the free ones at the top speed and in the box. */
 export function step(world: World, dt: number): World {
   const flown = Arr.map(world.balls, (ball, index) =>
     index === world.held ? holdAt(world, ball, dt) : flyBall(world, ball, dt)
   );
   const pushed = pushApart(flown, world.held);
   const kept = Arr.map(pushed, (ball, index) =>
-    index === world.held ? ball : fence(ball, world.width, world.height)
+    index === world.held
+      ? ball
+      : fence(limitSpeed(ball), world.width, world.height)
   );
   return { ...world, balls: kept, moved: travel(world.balls, kept) };
 }

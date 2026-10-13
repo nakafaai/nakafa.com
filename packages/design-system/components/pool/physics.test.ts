@@ -29,6 +29,10 @@ const SHORT = 0.0001;
 const NOISE = 1e-9;
 /** The top speed, in pixels per second, of anything that is not held. */
 const TOP_SPEED = 760;
+/** The frames in six seconds at 60 frames a second. */
+const FRAMES_IN_SIX_SECONDS = 360;
+/** The loop sleeps once the pile has been at rest this many frames in a row. */
+const CALM_FRAMES = 20;
 /** The two boxes of the stress test: a wide sign-in column, and a phone. */
 const BOXES = [
   { height: 640, width: 1200 },
@@ -152,10 +156,16 @@ describe("the pile", () => {
   for (const box of BOXES) {
     it(`comes to rest within six seconds in a ${box.width} by ${box.height} box`, () => {
       let world = poolWorld(box.width, box.height);
-      for (let frame = 0; frame < 360 && !isResting(world); frame += 1) {
+      let calm = 0;
+      for (
+        let frame = 0;
+        frame < FRAMES_IN_SIX_SECONDS && calm < CALM_FRAMES;
+        frame += 1
+      ) {
         world = tick(world, FRAME);
+        calm = isResting(world) ? calm + 1 : 0;
       }
-      expect(isResting(world)).toBe(true);
+      expect(calm).toBeGreaterThanOrEqual(CALM_FRAMES);
     });
   }
 
@@ -191,6 +201,23 @@ describe("the pile", () => {
     );
     expect(next.pointer.vx).toBeCloseTo(80, 10);
     expect(next.pointer.vy).toBeCloseTo(-40, 10);
+  });
+});
+
+describe("the top speed", () => {
+  it("keeps a free ball at the top speed when a collision pushes it", () => {
+    const next = step(
+      boxWith([
+        ballAt({ vy: TOP_SPEED, x: 500, y: 300 }),
+        ballAt({ vx: -TOP_SPEED, x: 530, y: 300 }),
+      ]),
+      SHORT
+    );
+    Arr.forEach(next.balls, (ball) => {
+      expect(Math.hypot(ball.vx, ball.vy)).toBeLessThanOrEqual(
+        TOP_SPEED + NOISE
+      );
+    });
   });
 });
 

@@ -54,6 +54,15 @@ export function fastest(vx: number, vy: number) {
 }
 
 /**
+ * The ball with its speed kept inside the top speed. A collision can push a free
+ * ball past the top speed, and this takes the extra speed back.
+ */
+export function limitSpeed(ball: Ball): Ball {
+  const speed = fastest(ball.vx, ball.vy);
+  return { ...ball, vx: speed.vx, vy: speed.vy };
+}
+
+/**
  * The walls of the box. A ball bounces off the left and right walls and the
  * floor. It meets the top wall only once it has been inside, so a ball that falls
  * in from above is not turned back at the top edge.
