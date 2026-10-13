@@ -140,14 +140,23 @@ thresholds in the catalog were set from what that command printed on 12 October
   data retention policy, and `data_collection: "deny"` excludes providers that
   collect data (`docs.convex.dev/ai-gateway/api`, read on 13 October 2026). No
   Convex page states zero data retention for every request. An embedding request
-  cannot send the field: `@ai-sdk/openai-compatible` 3.0.14 builds its body from
-  the model, the texts, the encoding format, `dimensions`, and `user` alone, and
-  `convexGateway.embeddingModel` offers no way to add a field. The gateway's API
-  accepts `provider` on Embeddings, so the limit sits in the adapter. Until the
-  adapter can send the field, embedding requests carry no retention request, and
-  no Convex statement covers how long they are kept. They carry published lesson
-  and Quran text and the short search phrase that the specialist writes from a
-  learner's question, never a stored learner message.
+  can carry `zdr` and cannot carry `data_collection`. `@ai-sdk/openai-compatible`
+  3.0.14 builds the body of an embedding request from the model, the texts, the
+  encoding format, `dimensions`, and `user` alone, but the fetch of
+  `@convex-dev/ai-sdk-provider` 0.3.0 then sets `provider.zdr` in every body it
+  sends when the model is made with
+  `convexGateway.embeddingModel(modelId, { zdr: true })` (`gatewayModelFetch` and
+  `embeddingModel` in its `src/index.ts`). The adapter's options hold `zdr`
+  alone, so `data_collection` is not sent on an embedding request. The gateway's
+  API accepts `provider` on Embeddings.
+  `gateway/live.ts` passes `convexGateway.embeddingModel` without the option
+  today, so embedding requests carry no retention request yet, and no Convex
+  statement covers how long they are kept. A planned change, in its own pull
+  request, makes the handle's embedding model take `{ zdr: true }`, passes it in
+  `gateway/live.ts`, asserts the body in `gateway/live.test.ts`, and corrects the
+  comment on `retention` in `gateway/handle.ts`. Embedding requests carry
+  published lesson and Quran text and the short search phrase that the specialist
+  writes from a learner's question, never a stored learner message.
   `gateway/route.ts` is deleted.
 - **Embeddings.** `Gateway.embed(texts, model)` returns one vector of
   `embeddingDimensions` numbers per text, from `embeddingModelId` in
