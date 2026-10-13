@@ -21,9 +21,8 @@ export function readInvocation(
   const output =
     result && Result.isSuccess(result) ? result.success : undefined;
   const artifacts = output?.artifacts ?? [];
-  const capability = Schema.is(LearningCapabilityNameSchema)(name)
-    ? name
-    : ("unknown" as const);
+  const capability: typeof LearningCapabilityNameSchema.Type | "unknown" =
+    Schema.is(LearningCapabilityNameSchema)(name) ? name : "unknown";
   return {
     artifacts,
     capability,
