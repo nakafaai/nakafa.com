@@ -1034,19 +1034,6 @@ export const api: {
       boolean
     >;
   };
-  tokens: {
-    clearPage: FunctionReference<
-      "mutation",
-      "public",
-      { cursor: null | string; dry: boolean },
-      {
-        cleared: number;
-        holding: number;
-        next: null | string;
-        scanned: number;
-      }
-    >;
-  };
 } = anyApi as any;
 
 /**
@@ -1057,6 +1044,20 @@ export const api: {
  * const myFunctionReference = internal.myModule.myFunction;
  * ```
  */
-export const internal: {} = anyApi as any;
+export const internal: {
+  tokens: {
+    clearPage: FunctionReference<
+      "mutation",
+      "internal",
+      { cursor: null | string; dry: boolean },
+      {
+        cleared: number;
+        holding: number;
+        next: null | string;
+        scanned: number;
+      }
+    >;
+  };
+} = anyApi as any;
 
 export const components = componentsGeneric() as unknown as {};

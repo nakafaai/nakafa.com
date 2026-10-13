@@ -36,18 +36,6 @@ export const accountTokenHooks = {
 } satisfies NonNullable<BetterAuthOptions["databaseHooks"]>;
 
 /**
- * The routes that read a stored provider token. No account holds one, so they
- * answer 404 like any other disabled path. `/get-access-token` and
- * `/account-info` would read it, and `/refresh-token` would refresh it and
- * write the new one.
- */
-export const disabledTokenPaths = [
-  "/account-info",
-  "/get-access-token",
-  "/refresh-token",
-];
-
-/**
  * What sign-in asks Google for. It sends no `access_type`, which Google reads
  * as `online`, so Google issues no refresh token. It sends no `consent`
  * prompt, which made Google show its consent screen at every sign-in.

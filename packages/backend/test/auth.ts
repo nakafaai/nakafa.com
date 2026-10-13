@@ -9,14 +9,16 @@ import { Array as Arr, DateTime, Effect, pipe } from "effect";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const BASE64_PADDING_PATTERN = /[=]+$/;
-/** The most account rows a test reads at once. */
-const STORED_ACCOUNT_LIMIT = 200;
+/** How many account rows `storedAccounts` reads in one query. */
+const STORED_ACCOUNT_PAGE_SIZE = 100;
 
 /**
- * The one stand-in for Google's token endpoint in a test file. Each sign-in
- * resets it and sets what it issues, and the test file unstubs the global.
+ * The one stand-in for Google in a test file. Each sign-in stubs the global
+ * `fetch` with it, resets it, and sets what Google's token endpoint issues. A
+ * test that expects no request to Google resets it and checks that it was never
+ * called. The test file unstubs the global.
  */
-const tokenExchange = vi.fn<typeof fetch>();
+export const googleFetch = vi.fn<typeof fetch>();
 
 /** The Better Auth user that an account deletion hook receives. */
 export function betterAuthUser(id: string, now: number): User {
@@ -128,7 +130,7 @@ export async function signInWithGoogle(
   suffix: string,
   now: number
 ) {
-  tokenExchange.mockReset().mockImplementation((input, init) => {
+  googleFetch.mockReset().mockImplementation((input, init) => {
     expect(String(input)).toBe(GOOGLE_TOKEN_ENDPOINT);
     expect(init?.method).toBe("POST");
     expect(String(init?.body)).toContain("code=synthetic-authorization-code");
@@ -143,7 +145,7 @@ export async function signInWithGoogle(
       })
     );
   });
-  vi.stubGlobal("fetch", tokenExchange);
+  vi.stubGlobal("fetch", googleFetch);
   const signInResponse = await test.fetch("/api/auth/sign-in/social", {
     body: encodeJsonText({
       callbackURL: "/en",
@@ -170,21 +172,27 @@ export async function signInWithGoogle(
       },
     }
   );
-  expect(tokenExchange).toHaveBeenCalledOnce();
+  expect(googleFetch).toHaveBeenCalledOnce();
   return response;
 }
 
-/** The `account` rows that the Better Auth component holds, oldest first. */
+/** Every `account` row that the Better Auth component holds, oldest first. */
 export async function storedAccounts(
   test: ReturnType<typeof createConvexTestWithBetterAuth>
 ) {
-  const { page } = await test.query((ctx) =>
-    ctx.runQuery(components.betterAuth.adapter.findMany, {
-      model: "account",
-      paginationOpts: { cursor: null, numItems: STORED_ACCOUNT_LIMIT },
-    })
-  );
-  return page;
+  let accounts: readonly Doc<"account">[] = [];
+  let cursor: string | null = null;
+  do {
+    const result = await test.query((ctx) =>
+      ctx.runQuery(components.betterAuth.adapter.findMany, {
+        model: "account",
+        paginationOpts: { cursor, numItems: STORED_ACCOUNT_PAGE_SIZE },
+      })
+    );
+    accounts = Arr.appendAll(accounts, result.page);
+    cursor = result.isDone ? null : result.continueCursor;
+  } while (cursor !== null);
+  return accounts;
 }
 
 /**

@@ -70,8 +70,14 @@ connection.
   could hold the tokens, the account cookie, is off, because Better Auth turns
   it on only when no database is configured.
 - `/get-access-token`, `/account-info` and `/refresh-token`, the routes that
-  read or refresh a stored token, answer 404 like the retired credential
-  routes.
+  read or refresh a stored token (`confect/auth/routes.ts`), answer 404 like the
+  retired credential routes, and the API reference leaves them out. Better Auth
+  checks `disabledPaths` in the HTTP router only, and `auth.api` runs an
+  endpoint without that check. A server call that sends no headers and names a
+  `userId` is taken to speak for that learner, so a before hook of a plugin
+  refuses the same three routes with 404 for server code too. Without it, such
+  a call would return a token that an older sign-in stored, until the clearing
+  below has run.
 - `disableIdTokenSignIn` stays on. With it off, Better Auth would accept any
   Google ID token that was issued to Nakafa in the last hour as a credential, to
   sign a learner in and to link an account. Only the redirect flow signs a
@@ -83,18 +89,21 @@ connection.
 
 The hooks never touch a row they do not write, so every account written before
 them still holds the tokens, sealed except for the ID token. The temporary
-mutation `tokens:clearPage` of the Better Auth component removes the five
-columns from them, one page of accounts a call, and leaves every other row and
-column alone. With `dry` set it only counts. It runs on dev and then on
-production with `convex run --component betterAuth tokens:clearPage`, on
-production only after the release with the hooks is live. Clearing removes
-Nakafa's copy. A refresh token that Google issued earlier is not revoked by it.
+internal mutation `tokens:clearPage` of the Better Auth component removes the
+five columns from them, one page of accounts a call, and leaves every other row
+and column alone. With `dry` set it only counts. It is internal, so the app
+cannot call it, and an operator runs it because `convex run` sends the admin
+key, which may call internal functions. It runs on dev and then on production
+with `convex run --component betterAuth tokens:clearPage`, on production only
+after the release with the hooks is live. Clearing removes Nakafa's copy. A
+refresh token that Google issued earlier is not revoked by it.
 
-Owner: this ADR. Exit: a dry pass over every account on dev and on production
-finds no row that holds a token. Cleanup: the change that records the
-production result deletes the mutation and its test, and stops exporting the
-list of columns that only the mutation reads. The columns stay in the schema,
-because Better Auth generates the table, and stay unset.
+Owner: this ADR. Exit: on dev and on production, after the release with the
+hooks is live there, a dry pass over every account finds no row that holds a
+token. Cleanup: the change that records the production result deletes the
+mutation and its test, and stops exporting the list of columns that only the
+mutation reads. The columns stay in the schema, because Better Auth generates
+the table, and stay unset.
 
 ### Signing keys and the session token
 
@@ -219,7 +228,21 @@ component call for each row.
 - `better-auth` `dist/api/routes/account`: the routes that read a stored token,
   `/get-access-token` (line 344), `/refresh-token` (381) and `/account-info`
   (484), and `getValidAccessToken` (284) that two of them share.
-  `dist/api/index` (lines 166 to 168) answers a disabled path with 404.
+  `resolveUserId` (265 to 274) takes the `userId` of the call when it carries no
+  headers and no session. `dist/api/index` (lines 166 to 168) answers a disabled
+  path with 404, and `dist/plugins/open-api/generator` (lines 426 and 474)
+  leaves it out of the API reference.
+- `better-auth` 1.6.33, `dist/auth/base` (line 9) and `dist/api/index` (line
+  114): `auth.api` and the router are built from the same endpoints, and
+  `dist/api/to-auth-endpoints` (line 34) wraps each one in the hook pipeline of
+  `dist/api/dispatch`. `getHooks` (line 137) collects the before hooks of every
+  plugin, `dispatchAuthEndpoint` (186 and 210) runs them for a router request
+  and for an `auth.api` call alike, and a hook that rejects ends the call. Only
+  the router checks `disabledPaths`.
+- `convex` 1.46.0, `browser/http_client` (`setAdminAuth`, line 167) and the CLI
+  `run` command (`runFunctionAndLog`, line 121210 of `dist/cli.bundle.cjs`): the
+  admin key may call internal queries, mutations and actions, and `run` sends it
+  with the component path of `--component`.
 - `@better-auth/core` 1.6.33, `dist/social-providers/google` (lines 45 to 73)
   and `dist/oauth2/create-authorization-url` (lines 15 and 17): `prompt` and
   `access_type` reach Google only when set. `getUserInfo` (line 105) reads the

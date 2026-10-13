@@ -1,7 +1,7 @@
 import { RegisteredFunction } from "@confect/server";
 import type { Doc } from "@repo/backend/components/betterAuth/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/components/betterAuth/_generated/server";
-import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+import { internalMutation } from "@repo/backend/components/betterAuth/_generated/server";
 import schema from "@repo/backend/components/betterAuth/schema";
 import { noProviderTokens } from "@repo/backend/confect/auth/tokens";
 import { v } from "convex/values";
@@ -77,17 +77,11 @@ const clearPageProgram = Effect.fn("betterAuth.tokens.clearPage")(function* (
  * with `{ cursor: null, dry: true }` and send each `next` back as the `cursor`
  * of the following call until it is null, which means there are no more rows.
  *
- * Run it with `convex run --component betterAuth tokens:clearPage`. On
- * production, run it only after the release that adds the account hooks is
- * live, or the next sign-in stores a token again.
- *
- * Owner: ADR 0009. Exit: it has run on dev and on production, and a dry pass
- * over every account finds no row that holds a token. Cleanup: delete this
- * function and its test in the change that records the production result, and
- * stop exporting `noProviderTokens`, which only this function reads outside its
- * own module.
+ * It is internal: the app cannot call a component's internal function, so only
+ * an operator can run it. ADR 0009 ("Clearing the tokens already stored") owns
+ * how and when it runs, when it ends, and what the end removes.
  */
-export const clearPage = mutation({
+export const clearPage = internalMutation({
   args: {
     cursor: v.union(v.null(), v.string()),
     dry: v.boolean(),

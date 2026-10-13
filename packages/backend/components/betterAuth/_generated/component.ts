@@ -1047,18 +1047,4 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
-    tokens: {
-      clearPage: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: null | string; dry: boolean },
-        {
-          cleared: number;
-          holding: number;
-          next: null | string;
-          scanned: number;
-        },
-        Name
-      >;
-    };
   };

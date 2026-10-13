@@ -17,6 +17,7 @@ import {
   createGoogleIdToken,
   expectNoProviderTokens,
   GOOGLE_KEY,
+  googleFetch,
   signInWithGoogle,
   storedAccounts,
 } from "@repo/backend/test/auth";
@@ -202,8 +203,9 @@ describe("auth/tokens", () => {
     const test = createConvexTestWithBetterAuth();
     const signedIn = await signInWithGoogle(test, "linking", NOW);
     const before = await storedAccounts(test);
-    const keyLookup = vi.fn<typeof fetch>();
-    vi.stubGlobal("fetch", keyLookup);
+    // The sign-in stubbed `fetch` with the stand-in for Google. From here on it
+    // records every request, and none gets an answer.
+    googleFetch.mockReset();
     const response = await test.fetch("/api/auth/link-social", {
       body: encodeJsonText({
         idToken: {
@@ -223,24 +225,7 @@ describe("auth/tokens", () => {
     expect(response.status).toBe(401);
     expect(await response.json()).toMatchObject({ code: "INVALID_TOKEN" });
     // Checking a token starts with a request for Google's signing keys.
-    expect(keyLookup).not.toHaveBeenCalled();
+    expect(googleFetch).not.toHaveBeenCalled();
     expect(await storedAccounts(test)).toEqual(before);
   });
-
-  it.each([
-    ["POST", "/api/auth/get-access-token"],
-    ["POST", "/api/auth/refresh-token"],
-    ["GET", "/api/auth/account-info"],
-  ])(
-    "returns 404 for the route %s %s that would read a stored provider token",
-    async (method, path) => {
-      const test = createConvexTestWithBetterAuth();
-      const response = await test.fetch(path, {
-        headers: { origin: SITE_URL },
-        method,
-      });
-      expect(response.status).toBe(404);
-      expect(await response.text()).toBe("Not Found");
-    }
-  );
 });

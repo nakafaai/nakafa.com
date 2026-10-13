@@ -22,8 +22,11 @@ import {
   accountDeletionPreparationOutcome,
 } from "@repo/backend/confect/auth/deletion/spec";
 import {
-  accountTokenHooks,
   disabledTokenPaths,
+  tokenRoutesDisabled,
+} from "@repo/backend/confect/auth/routes";
+import {
+  accountTokenHooks,
   googleSignIn,
 } from "@repo/backend/confect/auth/tokens";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
@@ -229,6 +232,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     },
     plugins: [
       credentialSurfaceDisabled,
+      tokenRoutesDisabled,
       openAPI(),
       convex({
         authConfig,
