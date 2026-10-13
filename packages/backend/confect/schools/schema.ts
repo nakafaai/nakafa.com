@@ -10,7 +10,7 @@ import { Schema } from "effect";
 /**
  * School type validator
  */
-export const schoolTypeSchema = Schema.Literals([
+const schoolTypeSchema = Schema.Literals([
   "elementary-school",
   "middle-school",
   "high-school",

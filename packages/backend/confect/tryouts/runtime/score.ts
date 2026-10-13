@@ -5,9 +5,9 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import {
-  type AttemptEndReason,
-  getAttemptStatusFromEndReason,
-} from "@repo/backend/confect/lib/attempts";
+  type EndReason,
+  statusOf,
+} from "@repo/backend/confect/assessment/gate/end";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
@@ -182,7 +182,7 @@ export const finalizeAttemptScore = Effect.fn(
   "tryouts.runtime.finalizeAttemptScore"
 )(function* (args: {
   attempt: TryoutAttempt;
-  endReason: AttemptEndReason;
+  endReason: EndReason;
   now: number;
   responseIndex: TryoutResponseIndex;
   source: TryoutScoreSource;
@@ -226,7 +226,7 @@ export const finalizeAttemptScore = Effect.fn(
       })
     )
     .pipe(Effect.mapError(toTryoutRuntimeError));
-  const status = getAttemptStatusFromEndReason(args.endReason);
+  const status = statusOf(args.endReason);
   yield* writer
     .table("tryoutAttempts")
     .patch(args.attempt._id, {

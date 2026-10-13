@@ -122,7 +122,9 @@ const presentation = FunctionImpl.make(
  * sweep all come here. Reconciles committed Agent output before releasing an
  * interrupted turn's credits. A turn the learner stopped ends as cancelled,
  * whatever ended its run. Only the run's own exit knows which stages the turn
- * reached, so only it passes `timing`.
+ * reached, so only it passes `timing`, and the settlement reads that as a run
+ * that came back to end its own turn: it reports its failure itself, so the
+ * settlement does not report the turn as a lost run.
  */
 const recover = FunctionImpl.make(
   schema,
