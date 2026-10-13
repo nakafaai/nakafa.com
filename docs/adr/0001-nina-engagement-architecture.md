@@ -459,7 +459,13 @@ the chat is free:
   turn that was claimed or settled alone.
 - The sweep, every five minutes, settles a turn that stays open past its
   deadline. No live run is open that long, so the run was lost to a crash or a
-  deploy, and the turn is stored as interrupted, never as a timeout.
+  deploy, and the turn is stored as interrupted, never as a timeout. Such a run
+  has no live action to report it, so the settlement does, once, when a turn
+  fails after its deadline (`closeTurn`): the log names the turn, the reason it
+  was stored with and how long it was open, and error tracking gets the reason
+  and the place, with no turn, no account and no word of the conversation. A
+  turn the learner stopped or that holds an answer is not a loss, and a run that
+  fails within its deadline reports itself.
 - The sweep also schedules the end of that settlement for three of its own runs
   later. A settlement that failed in every try, as when the Agent journal cannot
   be read or cut off, ends then without the journal it could not use: the turn

@@ -12,7 +12,10 @@ import type {
   NinaTurnTiming,
 } from "@repo/backend/confect/nina/contract/turn";
 import { refundCredits } from "@repo/backend/confect/nina/credits/ledger";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
+import { reportLostRun } from "@repo/backend/confect/nina/diagnostics";
 import { answered, cutOff } from "@repo/backend/confect/nina/journal";
+import { sinceAdmission } from "@repo/backend/confect/nina/timing";
 import { NinaSettledTurn } from "@repo/backend/confect/nina/turns.spec";
 import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
 
@@ -20,6 +23,14 @@ import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
  * Writes the end of an active turn in the transaction that decided it: an
  * unanswered turn gets its hold back, its chat is freed, and the turn is
  * replaced by its settled form. `failure` is the reason a failed turn stores.
+ *
+ * A turn that fails after its deadline lost its run, because no live run is
+ * open that long (`TURN_DEADLINE`). The sweep and the end of the settlement
+ * grace (`abandonTurn`) end such a turn, and this reports the loss. Only an
+ * active turn is closed, so it is reported once, however many sweeps and late
+ * results reach the turn. A turn the learner stopped ends as cancelled and one
+ * that holds an answer as complete, and neither is a loss. A run that fails
+ * within its deadline reports itself (`reportFailure`).
  */
 export const closeTurn = Effect.fn("nina.settlement.close")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>,
@@ -56,6 +67,7 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
       .pipe(Effect.orDie);
   }
   const settledAt = yield* Clock.currentTimeMillis;
+  const reason = failure ?? "interrupted";
   // A turn the learner stopped finished when they stopped it, however late it
   // settles, so the time the page already shows does not move.
   const finishedAt =
@@ -78,7 +90,7 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
     ...(timing ? { timing: { ...turn.timing, ...timing } } : {}),
     state:
       status === "failed"
-        ? { status, finishedAt, reason: failure ?? "interrupted" }
+        ? { status, finishedAt, reason }
         : { status, finishedAt },
   }).pipe(Effect.orDie);
   yield* writer
@@ -112,11 +124,15 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
               name: "chat response failed",
               properties: {
                 chat_type: chat.type,
-                error_code: failure ?? "interrupted",
+                error_code: reason,
               },
             },
       timestamp: finishedAt,
     });
+  }
+  const openMs = sinceAdmission(turn, settledAt);
+  if (status === "failed" && openMs > Duration.toMillis(TURN_DEADLINE)) {
+    yield* reportLostRun(turn, reason, openMs);
   }
 });
 
