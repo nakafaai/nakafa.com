@@ -5,6 +5,12 @@ import { Array as Arr, Number as Num, Order, Struct } from "effect";
 /** A stage a turn can store a wait for. */
 type Stage = keyof typeof NinaTurnTiming.Type;
 
+/** The part of a stored turn that a summary reads. */
+type SummarizedTurn = Pick<
+  NinaTurnsDoc,
+  "_creationTime" | "phase" | "state" | "timing"
+>;
+
 /**
  * The nearest-rank percentile of `values`: sort them, then take the value at
  * rank `ceil(percent / 100 * count)`, counting from 1 and kept inside the list.
@@ -14,7 +20,7 @@ type Stage = keyof typeof NinaTurnTiming.Type;
  * first turns 14 percent of 50 values into 7.000000000000001, and the rank
  * would jump to 8.
  */
-export function percentile(
+function percentile(
   values: Arr.NonEmptyReadonlyArray<number>,
   percent: number
 ) {
@@ -28,7 +34,7 @@ export function percentile(
  * How a turn stands: `open` while its phase is active, which is exactly while it
  * is queued or running, otherwise the status it settled with.
  */
-function standing(turn: NinaTurnsDoc) {
+function standing(turn: SummarizedTurn) {
   return turn.phase === "active" ? "open" : turn.state.status;
 }
 
@@ -37,7 +43,7 @@ function standing(turn: NinaTurnsDoc) {
  * reached the stage holds no wait for it, and is left out rather than counted
  * as zero.
  */
-function stageSpread(turns: readonly NinaTurnsDoc[], stage: Stage) {
+function stageSpread(turns: readonly SummarizedTurn[], stage: Stage) {
   const waits = Arr.flatMap(turns, (turn) =>
     Arr.fromNullishOr(turn.timing?.[stage])
   );
@@ -58,7 +64,7 @@ function stageSpread(turns: readonly NinaTurnsDoc[], stage: Stage) {
  * Summarizes the waits that `turns` stored, with one row for each stage the
  * contract stores. It keeps no turn, chat or learner and none of their text.
  */
-export function summarizeWaits(turns: readonly NinaTurnsDoc[]) {
+export function summarizeWaits(turns: readonly SummarizedTurn[]) {
   const times = Arr.map(turns, (turn) => turn._creationTime);
   const count = (status: ReturnType<typeof standing>) =>
     Arr.countBy(turns, (turn) => standing(turn) === status);

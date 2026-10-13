@@ -1,7 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { NinaLearner } from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryNote } from "@repo/backend/confect/nina/memory.spec";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
 import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { Array as Arr } from "effect";
@@ -23,12 +23,12 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 /** The words and the title of each memory that a turn tells about. */
-function titled(notes: (typeof NinaLearner.Type)["recalled"]) {
+function titled(notes: readonly (typeof NinaMemoryNote.Type)[]) {
   return Arr.map(notes, ({ text, title }) => [text, title]);
 }
 
 /** The words of each memory, in the order they are told. */
-function words(notes: (typeof NinaLearner.Type)["recalled"]) {
+function words(notes: readonly (typeof NinaMemoryNote.Type)[]) {
   return Arr.map(notes, (note) => note.text);
 }
 

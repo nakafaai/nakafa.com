@@ -10,13 +10,14 @@ import {
 } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { NINA_WAITS_MAX } from "@repo/backend/confect/nina/waits.spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { appendNinaTurn, createNinaTest } from "@repo/backend/test/nina";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { FunctionArgs } from "convex/server";
 
 const NOW = Date.UTC(2026, 9, 12, 12);
+/** The most turns one report reads. `waits.spec.ts` bounds the count with it, and ADR 0008 states it. */
+const WAITS_MAX = 500;
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
@@ -357,12 +358,8 @@ describe("report of the waits of the newest turns", () => {
   });
 
   it.each([
-    [
-      "a count above the maximum",
-      NINA_WAITS_MAX + 1,
-      `between 1 and ${NINA_WAITS_MAX}`,
-    ],
-    ["a count of zero", 0, `between 1 and ${NINA_WAITS_MAX}`],
+    ["a count above the maximum", WAITS_MAX + 1, `between 1 and ${WAITS_MAX}`],
+    ["a count of zero", 0, `between 1 and ${WAITS_MAX}`],
     ["a count that is not a whole number", 2.5, "Expected an integer"],
   ])("refuses %s with the error of its schema", async (_, count, message) => {
     const t = createConvexTestWithBetterAuth();
@@ -405,18 +402,18 @@ describe("report of the waits of the newest turns", () => {
       tokenMs: 3200,
     });
     await fixture.t.mutation(async (ctx) => {
-      for (let copy = 0; copy <= NINA_WAITS_MAX; copy += 1) {
+      for (let copy = 0; copy <= WAITS_MAX; copy += 1) {
         await ctx.db.insert("ninaTurns", turn);
       }
     });
 
     const run = await fixture.t.mutation(async (ctx) => {
-      const result = await ctx.runQuery(summary, { count: NINA_WAITS_MAX });
+      const result = await ctx.runQuery(summary, { count: WAITS_MAX });
       return { metrics: await ctx.meta.getTransactionMetrics(), result };
     });
 
-    expect(run.result.read).toBe(NINA_WAITS_MAX);
-    expect(run.metrics.documentsRead.used).toBe(NINA_WAITS_MAX);
+    expect(run.result.read).toBe(WAITS_MAX);
+    expect(run.metrics.documentsRead.used).toBe(WAITS_MAX);
     expect(run.metrics.databaseQueries.used).toBe(1);
     // The bytes are not pinned, because they move with the text of the fixture.
     // What is pinned is the margin: the run stays under a tenth of what the

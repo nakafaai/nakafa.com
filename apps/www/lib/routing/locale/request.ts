@@ -3,7 +3,7 @@ import {
   retryNetworkAttempt,
 } from "@repo/backend/client/network";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Data, Effect, Schema } from "effect";
+import { Data, Effect, Option, Schema, String as Str } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import type { Locale } from "next-intl";
 
@@ -57,9 +57,28 @@ const attemptLocalizedHref = Effect.fn("www.routing.locale.attempt")(function* (
 });
 
 /**
+ * Splits `href` at its fragment, which is the part from the first `#`. A
+ * fragment is state of the page that a browser sends to no server, and a share
+ * link keeps its token there.
+ */
+function splitFragment(href: string) {
+  return Option.match(Str.indexOf("#")(href), {
+    onNone: () => ({ fragment: "", path: href }),
+    onSome: (start) => ({
+      fragment: Str.slice(start)(href),
+      path: Str.slice(0, start)(href),
+    }),
+  });
+}
+
+/**
  * Calls the internal route-localization endpoint and decodes the JSON contract
  * before the caller hands it to `router.replace`. A missed deadline or a
  * retryable network failure is tried again on the shared schedule.
+ *
+ * The request carries the path and the query of `href` and never its fragment,
+ * so a share token in the fragment reaches no server and no log. The answer
+ * gets the fragment back, so the visitor stays where they were on the page.
  *
  * The browser imports this module when a visitor picks a language, and the
  * module provides its own client, so no page ships the HTTP client in its
@@ -67,12 +86,14 @@ const attemptLocalizedHref = Effect.fn("www.routing.locale.attempt")(function* (
  */
 export const requestLocalizedHref = Effect.fn("www.routing.locale.request")(
   function* ({ href, locale }: { href: string; locale: Locale }) {
-    return yield* retryNetworkAttempt(
-      attemptLocalizedHref(href, locale),
+    const { fragment, path } = splitFragment(href);
+    const localized = yield* retryNetworkAttempt(
+      attemptLocalizedHref(path, locale),
       new LocalizedHrefRequestError({
         message: "The route-localization request timed out.",
       })
     );
+    return { href: `${localized.href}${fragment}` };
   },
   Effect.provide(FetchClient)
 );

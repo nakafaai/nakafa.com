@@ -57,7 +57,7 @@ export function isRegistrableHostname(hostname: string) {
  * public web gives none. A public suffix alone, such as go.id, is a host here,
  * because a search can be limited to everything under one.
  */
-export function extractHostname(address: string) {
+function extractHostname(address: string) {
   return pipe(
     readPublicHost(fromUrl(address)),
     Option.map((host) => Arr.join(host.labels, "."))

@@ -50,7 +50,7 @@ const SpecialistToolInputFields = {
 /**
  * Input schema for the Nakafa LearningCapability tool.
  */
-export const NakafaToolInputSchema = Schema.Struct({
+const NakafaToolInputSchema = Schema.Struct({
   ...SpecialistToolInputFields,
   deliverables: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)

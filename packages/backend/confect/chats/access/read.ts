@@ -1,32 +1,41 @@
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
+import { matchesShare } from "@repo/backend/confect/chats/share";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
-/** Public transcripts are readable by anyone; private transcripts require ownership. */
+/**
+ * A chat is readable by its owner, by id, and by anyone who presents the token
+ * of its share. Every other read answers as if the chat did not exist, so a
+ * chat id alone says nothing about a chat, whether it is private, shared or
+ * gone.
+ */
 export const readChat = Effect.fn("chats.access.read")(function* (
   chatId: Id<"chats">,
-  viewerId: Id<"users"> | null
+  viewerId: Id<"users"> | null,
+  shareToken?: string
 ) {
-  const reader = yield* DatabaseReader;
-  const chat = yield* reader
+  const chat = yield* (yield* DatabaseReader)
     .table("chats")
     .get(chatId)
     .pipe(
-      Effect.catchTag("DocumentDecodeError", Effect.die),
-      Effect.mapError(
-        () =>
-          new ChatAccessError({
-            code: "CHAT_NOT_FOUND",
-            message: `Chat not found for chatId: ${chatId}`,
-          })
-      )
+      Effect.catchTags({
+        DocumentDecodeError: Effect.die,
+        GetByIdFailure: () => Effect.succeed(null),
+      })
     );
-  if (chat.visibility === "private" && chat.userId !== viewerId) {
-    return yield* new ChatAccessError({
-      code: "FORBIDDEN",
-      message: "You do not have permission to access this private chat.",
-    });
+  if (chat?.userId === viewerId) {
+    return chat;
   }
-  return chat;
+  if (
+    chat &&
+    shareToken !== undefined &&
+    (yield* matchesShare(chat._id, shareToken))
+  ) {
+    return chat;
+  }
+  return yield* new ChatAccessError({
+    code: "CHAT_NOT_FOUND",
+    message: `Chat not found for chatId: ${chatId}`,
+  });
 });

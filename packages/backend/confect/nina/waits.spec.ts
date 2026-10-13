@@ -13,7 +13,7 @@ import { Schema, Struct } from "effect";
  * MiB. It does not pin the 728,000, which moves with the text of its fixture.
  * Turns on production were not measured and may weigh more.
  */
-export const NINA_WAITS_MAX = 500;
+const NINA_WAITS_MAX = 500;
 
 /** How many of the newest turns one report reads: a whole number from 1 to the maximum. */
 const NinaWaitsCount = Schema.Int.check(

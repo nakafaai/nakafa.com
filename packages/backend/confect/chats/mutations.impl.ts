@@ -4,6 +4,7 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { requireChatOwner } from "@repo/backend/confect/chats/access/owner";
 import spec from "@repo/backend/confect/chats/mutations.spec";
+import { startSharing, stopSharing } from "@repo/backend/confect/chats/share";
 import { sealTitle } from "@repo/backend/confect/chats/title";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
@@ -30,6 +31,11 @@ const updateChatTitle = FunctionImpl.make(
     return chat._id;
   })
 );
+/**
+ * Shares or unshares a chat. Sharing draws a token for the chat's link and
+ * keeps the one it has when it is shared already. Unsharing deletes the token,
+ * so every link to the chat stops at once, and sharing again draws a new one.
+ */
 const updateChatVisibility = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -48,6 +54,11 @@ const updateChatVisibility = FunctionImpl.make(
         visibility: args.visibility,
       })
       .pipe(Effect.orDie);
+    if (args.visibility === "public") {
+      yield* startSharing(chat);
+    } else {
+      yield* stopSharing(chat._id);
+    }
     return chat._id;
   })
 );

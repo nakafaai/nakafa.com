@@ -47,13 +47,14 @@ const ProviderFailure = Schema.Struct({ status: Schema.Finite });
  * another site in four of four. With no site the field is left out, because
  * the SDK sends an empty list as it is: it tests the field for truth, and an
  * empty array is true.
+ *
+ * The span carries neither the query nor the sites, because both are derived
+ * from the learner's words (docs/adr/0019-gateway.md, "Search provider").
  */
 export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
   query: string,
   sites: readonly string[] = []
 ) {
-  yield* Effect.annotateCurrentSpan("query", query);
-  yield* Effect.annotateCurrentSpan("sites", sites);
   const client = yield* readFirecrawlApp().pipe(
     Effect.mapError(
       (error) => new ResearchSearchError({ message: error.message })

@@ -1,4 +1,5 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
@@ -11,7 +12,16 @@ export default async function NotFound() {
   return (
     <div className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh">
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-      <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
+      <div className="relative mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
+        <div className="absolute inset-x-0 bottom-full mx-auto mb-px w-fit">
+          <Nina
+            fidget={["greeting", "drumming"]}
+            label=""
+            lean="peek"
+            mood="confused"
+            size={120}
+          />
+        </div>
         <div className="space-y-4 text-center">
           <h1 className="font-bold font-mono text-6xl text-destructive">404</h1>
 

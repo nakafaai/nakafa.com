@@ -4,7 +4,7 @@ import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
 import { noteText } from "@repo/backend/confect/nina/judgment/note";
 import { captureMemory } from "@repo/backend/confect/nina/memory/capture";
-import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryClaim } from "@repo/backend/confect/nina/memory.spec";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { decides, GatewayTest, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, type EarlierTurn } from "@repo/backend/test/nina";
@@ -19,13 +19,17 @@ import {
   Match,
   MutableRef,
   Schema,
+  String as Str,
 } from "effect";
+
+/** One thing the capture model says the learner stated, as the model writes it. */
+type Claim = typeof NinaMemoryClaim.Type;
 
 /** What the learner says in a capture test, unless the test says something else. */
 export const MESSAGE = "Aku kelas 12 dan mau ikut SNBT 2027.";
 
 /** What the learner states: their level, quoted from `MESSAGE`. */
-export const level: typeof NinaMemoryCandidate.Type = {
+export const level: Claim = {
   kind: "level",
   quote: "Aku kelas 12",
   text: "Kelas 12.",
@@ -36,8 +40,13 @@ export const unavailable = (fact: object) => [
   ["Nina memory unavailable", expect.objectContaining(fact)],
 ];
 
+/** The lines of a capture prompt, read as JSON text, that list a known memory, one line each. */
+export function knownLines(prompt: string) {
+  return Arr.filter(Str.split(prompt, "\\n"), Str.startsWith("- ["));
+}
+
 /** The sentence of a candidate and the learner's words it quotes. */
-type Note = Pick<typeof NinaMemoryCandidate.Type, "quote" | "text">;
+type Note = Pick<Claim, "quote" | "text">;
 
 /**
  * A decision model that finds the message lasting or not, and each candidate
@@ -70,8 +79,8 @@ export function judges({
   });
 }
 
-/** A model that answers every capture call with these candidates. */
-export function answers(...memories: (typeof NinaMemoryCandidate.Type)[]) {
+/** A model that answers every capture call with these claims. */
+export function answers(...memories: Claim[]) {
   const model = new MockLanguageModelV4({
     doGenerate: providerStep([
       { type: "text", text: encodeJsonText({ memories }) },
@@ -87,7 +96,7 @@ export function answers(...memories: (typeof NinaMemoryCandidate.Type)[]) {
  */
 export function answersAfter(
   meanwhile: () => Promise<unknown>,
-  ...memories: (typeof NinaMemoryCandidate.Type)[]
+  ...memories: Claim[]
 ) {
   const model = new MockLanguageModelV4({
     doGenerate: async () => {

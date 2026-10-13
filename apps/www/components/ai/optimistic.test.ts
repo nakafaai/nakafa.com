@@ -17,6 +17,8 @@ const otherChatId = Schema.decodeUnknownSync(Id("chats"))("chat_2");
 const userId = Schema.decodeUnknownSync(Id("users"))("user_1");
 const uploadId = Schema.decodeUnknownSync(Id("ninaUploads"))("upload_1");
 const missingUploadId = Schema.decodeUnknownSync(Id("ninaUploads"))("upload_2");
+/** 43 URL-safe characters, the shape of a share token. */
+const shareToken = "abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE";
 
 const chat = {
   _creationTime: 1,
@@ -76,6 +78,7 @@ function listArgs(
   overrides: {
     chatId?: typeof chatId;
     cursor?: string | null;
+    shareToken?: string;
     streamed?: boolean;
     threadId?: string;
   } = {}
@@ -83,6 +86,9 @@ function listArgs(
   return {
     chatId: overrides.chatId ?? chatId,
     paginationOpts: { cursor: overrides.cursor ?? null, numItems: 50 },
+    ...(overrides.shareToken === undefined
+      ? {}
+      : { shareToken: overrides.shareToken }),
     ...(overrides.streamed
       ? { streamArgs: { kind: "list", startOrder: 0 } }
       : {}),
@@ -196,6 +202,31 @@ describe("ai/optimistic prompt", () => {
 
     expect(local.written()).toHaveLength(1);
     expect(readPage(local, older)).toHaveLength(1);
+  });
+
+  it("shows the prompt in a chat the owner opened through its own share link", () => {
+    const local = createLocalStore();
+    // The send names the chat id alone, while the page holds the chat under the token.
+    local.seed(
+      nina.conversation.get,
+      { chatId, shareToken },
+      { chat, turn: null }
+    );
+    local.seed(
+      nina.messages.list,
+      listArgs({ shareToken }),
+      listPage([message(0, "user", "What is a limit?")])
+    );
+
+    optimisticPrompt(previews, NOW)(local.store, sendArgs);
+
+    expect(readPage(local, listArgs({ shareToken }))?.[0]).toMatchObject({
+      id: "request_1",
+      key: "thread_1-1-0",
+      order: 1,
+      status: "pending",
+      text: "And a derivative?",
+    });
   });
 
   it("leaves a first page that is still loading alone", () => {
