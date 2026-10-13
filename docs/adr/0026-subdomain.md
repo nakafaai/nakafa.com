@@ -26,12 +26,14 @@ finds the right data.
 ### Hosts
 
 - An organisation's host is `slug.nakafa.com`, where the slug follows ADR 0011.
-  One host serves every unit of the organisation.
+  That is the `us` cell's domain: a cell other than `us` serves its
+  organisations under a registrable domain of its own (see Data cells). One host
+  serves every unit of the organisation.
 - A school host has no locale prefix. The language comes from the `NEXT_LOCALE`
   cookie. Sign-in sets the cookie, and changing the language in the account menu
   sets it again.
-- One sign-in covers `nakafa.com` and every school host, through the cross-
-  subdomain cookies that ADR 0011 describes.
+- One sign-in covers `nakafa.com` and every school host of the `us` cell,
+  through the cross-subdomain cookies that ADR 0011 describes.
 - The proxy reads only the host and the cookie. The map from host to school is
   configuration, so a request never reads the database to find its school.
 - School pages are private and not indexed (ADR 0011).
@@ -92,14 +94,18 @@ its own change, before any school code that depends on it lands.
   Vercel `dub1` only if measured latency calls for it. It is created when the
   first school in the European Union signs, with its own budget (K5).
 - A school is placed in one cell when it is created. Moving it to another cell is
-  an export and an import, never an automatic move. The cell is shown only in the
-  settings.
+  an export and an import, never an automatic move, and its host moves to the
+  other cell's domain with it. The cell is shown only in the settings.
 - An account has one home cell, and it signs in and writes only there: every
   mutation checks its session against the Better Auth rows of its own deployment
   (ADR 0009). A person with schools in two cells holds one account in each,
-  signed in with the same email or Google identity. Each cell's session cookie
-  has its own name, so both sessions live in one browser, and no session or
-  personal data crosses a cell.
+  signed in with the same email or Google identity.
+- A browser sends a cookie to every host under the domain the cookie names, so
+  each cell's hosts live under a registrable domain of their own and its session
+  cookie names that domain: `nakafa.com` for `us`, and for `eu` a domain that
+  the change creating the cell chooses and registers. A session of one cell is
+  then never sent to a host of another, and both live in one browser. The map
+  from host to cell follows from the domain.
 - Signed Aksara content is copied to every cell. A teacher's questions stay in the
   school's own cell.
 - Email is sent from the cell's own domain and carries only links. Push carries
@@ -131,6 +137,10 @@ its own change, before any school code that depends on it lands.
 - Creating the eu cell now. K5 defers it until the first European school signs.
 - Reading the database in the proxy to find a school. The proxy reads only the
   host and the cookie.
+- A session cookie of its own name for each cell under `.nakafa.com`. The
+  browser sends every `.nakafa.com` cookie to every host under it, so the names
+  keep the sessions apart but still send one cell's session to the other cell's
+  hosts.
 - One account across cells through a federated session. It would keep the
   identity of a person in the `eu` cell inside the `us` cell, which is what a
   cell exists to prevent.

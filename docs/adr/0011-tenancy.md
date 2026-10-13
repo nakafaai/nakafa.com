@@ -38,7 +38,7 @@ a country, such as `SD`, `Halbjahr`, or `KKTP`, are labels from that country's
 signed profile (ADR 0032). They never appear in code names. The first profile is
 Indonesia.
 
-The tenant slug is the tenant's public address: the `slug.nakafa.com` label. School addresses have no locale prefix, because the
+The tenant slug is the tenant's public address: the `slug.nakafa.com` label, under the domain of the tenant's data cell (ADR 0026). School addresses have no locale prefix, because the
 language comes from the `NEXT_LOCALE` cookie (ADR 0026). It is the context every tenant
 function receives, never an authorization claim. The member middleware resolves
 the tenant and the caller's Person from it; objects named by ID derive their
@@ -68,7 +68,7 @@ Planned. ADR 0026 lists what is live.
 which never reads the database and routes only labels that are a valid
 `TenantSlug` outside `reservedSlugs`. Unknown tenants render the School
 not-found page from `tenancy/profile:get`. One sign-in covers nakafa.com and
-every tenant host through Better Auth cross-subdomain cookies, sign-in from a
+every tenant host of its cell through Better Auth cross-subdomain cookies, sign-in from a
 tenant host returns through nakafa.com, and tenant pages are private and
 noindex. Schools' own domains come later through a domain map and a one-time
 token handoff. The subdomain change records its configuration facts here.
