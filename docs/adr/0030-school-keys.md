@@ -53,7 +53,8 @@ learner's key.
   apart.
 - It is stored only wrapped by the current root key, in `tenantKeys`, and it is
   created when the tenant is created. The provisioning mutation of ADR 0011
-  creates it in the same transaction as the tenant, in the data cell that holds
+  (`tenancy/provision:open`, live today and writing no key) gains the creation
+  and runs it in the same transaction as the tenant, in the data cell that holds
   the school (ADR 0026, K5). A learner's key is created on first use, because a
   learner exists before anything is sealed for them. A school's key exists from
   the first day, so no read or write has to create it. A tenant without a key is

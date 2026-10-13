@@ -5,8 +5,10 @@
 Accepted on 13 October 2026 with owner decision K10. The owner approved decisions
 K1 to K20 on that day. Notifications are planned for program wave B
 (ADR 0013 describes the waves). Nothing in this ADR is live. The repository has
-no inbox table, no push code, and no service worker, and the only email it sends
-is the welcome email (`packages/backend/confect/emails/welcome/internal.ts`).
+no inbox table, no push code, and no service worker. It sends two emails: the
+welcome email (`packages/backend/confect/emails/welcome/internal.ts`) and the
+invitation email (`packages/backend/confect/emails/invite`), which the invite
+mutation starts (ADR 0011).
 
 ## Context
 
@@ -111,16 +113,16 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   ends costs one push and no notification, because the inbox holds it.
 - The Resend component makes the email request and retries a failed batch in its
   own workpool. Its defaults are 5 attempts and a first backoff of 30 seconds
-  that doubles (`@convex-dev/resend` 0.2.8, `src/client/index.ts`), and
-  `confect/emails/client.ts` sets only `testMode` today. Its request carries no
-  deadline (`callResendAPIWithBatch` in the package), and the options of the
-  component hold no setting for one (`ResendOptions`), so the deadline of ADR
-  0020 does not reach the email request. That stays a known limit. The change
-  that sends the first notification email sets `retryAttempts` to 3 and
-  `initialBackoffMs` to 500 for the one sender, the welcome email included: two
-  retries after about 500 milliseconds and one second, because a workpool counts
-  the first try as an attempt, and the nth retry waits the first backoff times 2
-  to the power n minus 1 (`RetryBehavior` and the README of
+  that doubles (`@convex-dev/resend` 0.2.8, `src/client/index.ts`), and the
+  options in `confect/emails/client.ts` set only `testMode` today. Its request
+  carries no deadline (`callResendAPIWithBatch` in the package), and the options
+  of the component hold no setting for one (`ResendOptions`), so the deadline of
+  ADR 0020 does not reach the email request. That stays a known limit. The
+  change that sends the first notification email sets `retryAttempts` to 3 and
+  `initialBackoffMs` to 500 for the one sender, the welcome and invitation emails
+  included: two retries after about 500 milliseconds and one second, because a
+  workpool counts the first try as an attempt, and the nth retry waits the first
+  backoff times 2 to the power n minus 1 (`RetryBehavior` and the README of
   `@convex-dev/workpool` 0.4.13, the version in `pnpm-lock.yaml`). A repeated
   request does not send an email twice, because the component dedupes on the
   idempotency key of the send and sends the id of the first email of a batch as
@@ -132,7 +134,7 @@ A kind lists the change types it publishes (ADR 0016). These feed the consumer.
 
 | Change | Origin | Used for |
 | --- | --- | --- |
-| `person.invited` | People and invitations | The invitation email, then the inbox after the person signs in. It joins the published list in the same change that adds the consumer. |
+| `person.invited` | People and invitations | The inbox row, which the account sees once it claims the Person. The invitation email is not sent from here: the invite mutation starts it through `confect/emails/invite` in its own transaction (ADR 0011). The change joins the published list in the same change that adds the consumer. |
 | `announcement.posted` | Class | The announcement in the inbox and in push, and an email when the teacher chooses |
 | `assignment.published` | Class | A new task, then its deadline reminders |
 | `assignment.deadlineChanged` | Class | Resets the deadline reminders |
@@ -159,7 +161,9 @@ final times.
 
 A guardian gets no forum mention. A guardian's push is for grades and late tasks
 only, and a guardian's email is a link for grades, late tasks, exam reminders,
-and invitations.
+and invitations. In the Email column, a link only means the link and the general
+sentence around it, and nothing that names a person or states a grade (see
+Email).
 
 ### Reminders
 
@@ -216,8 +220,9 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 ### Email
 
 - Every email is sent by `confect/emails`, the one sender, from the domain of the
-  cell (ADR 0026). The notification module hands its payload to it, and so will
-  the guardian module and sign-in.
+  cell (ADR 0026). The welcome email and the invitation email already go through
+  it. The notification module hands its payload to it, and so will the guardian
+  module and sign-in.
 - An email carries links and general sentences only, and this ADR owns that
   rule. The one exception is the parent's six-digit sign-in code, which ADR 0009
   decides and `confect/emails` sends as it sends the rest. A digest states counts
@@ -275,6 +280,7 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | Part | Status |
 | --- | --- |
 | The welcome email through `confect/emails` and the Resend component | Live |
+| The invitation email through `confect/emails/invite`, started by the invite mutation | Live |
 | `apps/www/app/manifest.ts` with `display: "standalone"` | Live |
 | `notifications`, `notificationPreferences`, `notificationReminders`, `pushSubscriptions`, and `journalCursors` | Planned, program wave B |
 | The notify consumer, and the published list with `person.invited` | Planned, program wave B |
