@@ -4,29 +4,42 @@ import { useWindowEvent } from "@mantine/hooks";
 import { Array as Arr, Option } from "effect";
 import { type RefObject, useEffect } from "react";
 import { ARTICLES_SELECTOR, readArticleKey } from "@/components/player/article";
-import { readKeyTarget } from "@/components/player/keyboard";
 import { usePlayer } from "@/components/player/provider";
-import { nextBand, readingBand, spyCandidate } from "@/components/player/spy";
+import {
+  endBand,
+  nextBand,
+  readingBand,
+  readPixels,
+  spyCandidate,
+} from "@/components/player/spy";
 
-/** Height of the footer, which the end of the list must clear before it counts as in view. */
-const FOOTER_INSET = "0px 0px -64px 0px";
-
-/** Keys that scroll the page when no field or widget owns them. */
-const SCROLL_KEYS = [
-  " ",
-  "ArrowDown",
-  "ArrowUp",
-  "End",
-  "Home",
-  "PageDown",
-  "PageUp",
-];
+/** Selects the footer, which `PlayerFooter` marks with this attribute. */
+const FOOTER_SELECTOR = "[data-player-footer]";
 
 /**
- * Follows the reader through the list with two observers and no layout reads:
- * one watches the question under the reading line, and one watches the end of
- * the list, which makes the last question current. A jump or a focus holds its
- * question current until the reader scrolls by hand.
+ * How far a question keeps clear of the header when it is revealed, which is
+ * its scroll margin. The reading line follows it, so it stays inside a
+ * question that was just revealed at any text size.
+ */
+function readClearance(article: Element) {
+  return readPixels(window.getComputedStyle(article).scrollMarginTop);
+}
+
+/** How much of the bottom of the window the footer covers: none without a footer. */
+function readFooterHeight() {
+  return (
+    document.querySelector(FOOTER_SELECTOR)?.getBoundingClientRect().height ?? 0
+  );
+}
+
+/**
+ * Follows the reader through the list with two observers that report changes,
+ * so nothing is measured on each scroll: one watches the question under the
+ * reading line, and one watches the end of the list, which makes the last
+ * question current once the reader has scrolled there. A jump or a focus holds
+ * its question current until the page moves away from where it left it. The
+ * observers take the clearance and the footer from the page when they are
+ * made, and again after a resize.
  */
 function watchList(input: {
   end: HTMLElement;
@@ -39,14 +52,25 @@ function watchList(input: {
   let atEnd = false;
 
   function publish() {
-    const key = spyCandidate({ band, end: atEnd }, lastKey);
+    const key = spyCandidate(
+      { band, end: atEnd, scrolled: window.scrollY > 0 },
+      lastKey
+    );
     if (key !== null) {
       input.observe(key);
     }
   }
 
-  function observeBand() {
-    const observer = new IntersectionObserver(
+  /** Watches the reading line and the end of the list as the page measures them now; returns what stops both. */
+  function observeList() {
+    const articles = Arr.fromIterable(
+      input.list.querySelectorAll(ARTICLES_SELECTOR)
+    );
+    const clearance = Option.flatMap(Arr.head(articles), readClearance);
+    if (Option.isNone(clearance)) {
+      return () => undefined;
+    }
+    const bandObserver = new IntersectionObserver(
       (entries) => {
         band = nextBand(
           band,
@@ -59,35 +83,38 @@ function watchList(input: {
         );
         publish();
       },
-      { rootMargin: readingBand(window.innerHeight), threshold: 0 }
+      {
+        rootMargin: readingBand(window.innerHeight, clearance.value),
+        threshold: 0,
+      }
     );
-    Arr.forEach(
-      Arr.fromIterable(input.list.querySelectorAll(ARTICLES_SELECTOR)),
-      (article) => observer.observe(article)
+    Arr.forEach(articles, (article) => bandObserver.observe(article));
+    const endObserver = new IntersectionObserver(
+      (entries) => {
+        const latest = Arr.last(entries);
+        if (Option.isSome(latest)) {
+          atEnd = latest.value.isIntersecting;
+          publish();
+        }
+      },
+      { rootMargin: endBand(readFooterHeight()), threshold: 0 }
     );
-    return observer;
+    endObserver.observe(input.end);
+    return () => {
+      bandObserver.disconnect();
+      endObserver.disconnect();
+    };
   }
 
-  let bandObserver = observeBand();
-  const endObserver = new IntersectionObserver(
-    (entries) => {
-      const latest = Arr.last(entries);
-      if (Option.isSome(latest)) {
-        atEnd = latest.value.isIntersecting;
-        publish();
-      }
-    },
-    { rootMargin: FOOTER_INSET, threshold: 0 }
-  );
-  endObserver.observe(input.end);
-
-  // The band is as high as the viewport, so it is made again after a resize.
+  // The band is as high as the viewport, and the clearance and the footer
+  // follow the text size, so both observers are made again after a resize.
+  let stop = observeList();
   let frame = 0;
   function onResize() {
     window.cancelAnimationFrame(frame);
     frame = window.requestAnimationFrame(() => {
-      bandObserver.disconnect();
-      bandObserver = observeBand();
+      stop();
+      stop = observeList();
     });
   }
   window.addEventListener("resize", onResize);
@@ -95,15 +122,14 @@ function watchList(input: {
   return () => {
     window.removeEventListener("resize", onResize);
     window.cancelAnimationFrame(frame);
-    bandObserver.disconnect();
-    endObserver.disconnect();
+    stop();
   };
 }
 
 /**
  * Keeps the current question in step with the reader in the list, and gives
- * `current` back to the reading line when the reader scrolls by hand, with the
- * wheel, a touch, or a key that scrolls.
+ * `current` back to the reading line when the reader moves the page away from
+ * a jump or a focus, with the wheel, a touch, a key, or the scrollbar.
  */
 export function usePlayerSpy(
   list: RefObject<HTMLElement | null>,
@@ -111,8 +137,8 @@ export function usePlayerSpy(
 ) {
   const keys = usePlayer((state) => state.keys);
   const mode = usePlayer((state) => state.mode);
+  const moved = usePlayer((state) => state.moved);
   const observe = usePlayer((state) => state.observe);
-  const release = usePlayer((state) => state.release);
 
   useEffect(() => {
     if (mode !== "list" || !list.current || !end.current) {
@@ -121,15 +147,5 @@ export function usePlayerSpy(
     return watchList({ end: end.current, keys, list: list.current, observe });
   }, [end, keys, list, mode, observe]);
 
-  useWindowEvent("wheel", release, { passive: true });
-  useWindowEvent("touchmove", release, { passive: true });
-  useWindowEvent("keydown", (event) => {
-    const target = readKeyTarget(event.target);
-    if (
-      Arr.contains(SCROLL_KEYS, event.key) &&
-      !(target.editable || target.composite)
-    ) {
-      release();
-    }
-  });
+  useWindowEvent("scroll", () => moved(window.scrollY));
 }

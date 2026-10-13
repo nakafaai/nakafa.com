@@ -47,7 +47,7 @@ const COMPOSITE_SELECTOR = Arr.join(
   ", "
 );
 
-/** Classifies where a key landed, for the shortcuts and for the scroll hold. */
+/** Classifies where a key landed, so the shortcuts leave typing and the widgets that own a key alone. */
 export function readKeyTarget(target: EventTarget | null) {
   if (!(target instanceof Element)) {
     return { composite: false, editable: false };

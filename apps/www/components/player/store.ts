@@ -27,6 +27,8 @@ type PlayerJump = typeof PlayerJumpSchema.Type;
 
 /** What the learner is doing in the player, written only by its own actions and observers. */
 const PlayerStateSchema = Schema.Struct({
+  /** Where a jump or a focus left the page, in pixels from the top, once the page has settled there. */
+  anchor: Schema.NullOr(Schema.Finite),
   /** Counts the views the learner chose, so a failed save knows whether a newer choice replaced it. */
   choice: Schema.Int,
   /** The question that the footer and the keys act on. */
@@ -40,7 +42,7 @@ const PlayerStateSchema = Schema.Struct({
   overlay: PlayerOverlaySchema,
   /** The question to reveal once the open overlay has closed. */
   pending: Schema.NullOr(Schema.String),
-  /** Whether a jump or a focus holds `current` until the learner scrolls. */
+  /** Whether a jump or a focus holds `current` until the page moves away from its anchor. */
   pinned: Schema.Boolean,
   /** The view the server knows: the one it resolved, or the last one it saved. */
   saved: PlayerModeSchema,
@@ -49,6 +51,12 @@ const PlayerStateSchema = Schema.Struct({
 type PlayerState = typeof PlayerStateSchema.Type;
 
 interface PlayerActions {
+  /**
+   * Records where the page rests once a jump or a focus has scrolled it. While
+   * the page stays there, the question that the jump or the focus chose stays
+   * current.
+   */
+  anchorAt: (position: number) => void;
   /**
    * Shows a view at once and saves it. When the save fails, the last saved view
    * comes back, unless the learner chose another view since.
@@ -63,12 +71,16 @@ interface PlayerActions {
   focus: (key: string) => void;
   /** Makes one question current and reveals it. */
   goTo: (key: string) => void;
+  /**
+   * Reports that the page is at `position`. When that is not where a jump or a
+   * focus left it, the learner moved the page, however they did it, and the
+   * reading line decides `current` again.
+   */
+  moved: (position: number) => void;
   /** Records the question under the reading line. */
   observe: (key: string) => void;
   /** Opens one overlay in place of any other. */
   open: (overlay: Exclude<PlayerOverlay, "none">) => void;
-  /** Lets the reading line decide `current` again after the learner scrolls. */
-  release: () => void;
   /** Reveals the question that waited for an overlay to finish closing. */
   settle: () => void;
   /** Goes to the question before or after the current one. */
@@ -108,13 +120,16 @@ export function createPlayerStore(input: {
     /** Shows a view and reveals the current question in it. */
     function show(mode: PlayerMode) {
       const { current } = get();
-      set({ mode, observed: null, pinned: true });
+      set({ anchor: null, mode, observed: null, pinned: true });
       if (current !== null) {
         reveal(current);
       }
     }
 
     return {
+      anchor: null,
+      anchorAt: (position) =>
+        set((state) => (state.pinned ? { anchor: position } : state)),
       choice: 0,
       choose: Effect.fn("player.mode.choose")(function* (mode, save) {
         const choice = get().choice + 1;
@@ -132,14 +147,26 @@ export function createPlayerStore(input: {
       }),
       close: () => set({ overlay: "none" }),
       current: Option.getOrNull(Arr.head(input.keys)),
-      focus: (key) => set({ current: key, observed: null, pinned: true }),
+      focus: (key) =>
+        set({ anchor: null, current: key, observed: null, pinned: true }),
       goTo: (key) => {
-        set({ current: key, observed: null, pinned: true });
+        set({ anchor: null, current: key, observed: null, pinned: true });
         reveal(key);
       },
       jump: null,
       keys: input.keys,
       mode: input.mode,
+      moved: (position) =>
+        set((state) =>
+          state.pinned && state.anchor !== null && state.anchor !== position
+            ? {
+                anchor: null,
+                current: state.observed ?? state.current,
+                observed: null,
+                pinned: false,
+              }
+            : state
+        ),
       observe: (key) =>
         set(get().pinned ? { observed: key } : { current: key }),
       observed: null,
@@ -147,16 +174,6 @@ export function createPlayerStore(input: {
       overlay: "none",
       pending: null,
       pinned: false,
-      release: () =>
-        set((state) =>
-          state.pinned
-            ? {
-                current: state.observed ?? state.current,
-                observed: null,
-                pinned: false,
-              }
-            : state
-        ),
       saved: input.mode,
       settle: () => {
         const { jump, pending } = get();

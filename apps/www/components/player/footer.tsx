@@ -15,13 +15,17 @@ import { usePlayer } from "@/components/player/provider";
 /**
  * The controls under the questions: previous, the navigator on small screens,
  * and next. It sticks to the bottom of the screen, so a learner moves on
- * without scrolling back.
+ * without scrolling back. The list measures it through `data-player-footer`,
+ * so the end of the list counts as reached once it clears the footer.
  */
 export function PlayerFooter() {
   const t = useTranslations("Player");
 
   return (
-    <footer className="sticky bottom-0 z-10 border-t bg-background pb-[env(safe-area-inset-bottom,0px)]">
+    <footer
+      className="sticky bottom-0 z-10 border-t bg-background pb-[env(safe-area-inset-bottom,0px)]"
+      data-player-footer=""
+    >
       <fieldset className="mx-auto flex h-16 w-full min-w-0 max-w-3xl items-center justify-between gap-2 border-0 px-6 lg:max-w-5xl">
         <legend className="sr-only">{t("controls")}</legend>
         <PlayerPrevious />

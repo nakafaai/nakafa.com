@@ -211,6 +211,17 @@ and back to the question. Confirming a finish lists the questions still open.
 A flag key and a flag state ship with the engine's single flags table, not with
 the player.
 
+In the list, the current question follows the reader. It is the question under
+a reading line just below the header, or the last question once the reader has
+scrolled to the end of the list. Both follow the page and not a constant: the
+line is the scroll margin that reveals a question plus a few pixels, so it falls
+inside a revealed question at any text size, and the end counts once it clears
+the footer, which the list measures. A jump or a focus holds its question
+current until the page moves away from where the jump or the focus left it,
+whether the reader used the wheel, a touch, a key, or the scrollbar. A list that
+fits in the window keeps the question under the line, because the reader has no
+end to reach.
+
 ### Freemium Access
 
 Every authenticated account can start and repeat any try-out without a lifetime

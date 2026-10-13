@@ -28,6 +28,7 @@ describe("player store", () => {
     expect(
       createPlayerStore({ keys: ["a", "b"], mode: "single" }).getState()
     ).toMatchObject({
+      anchor: null,
       current: "a",
       jump: null,
       mode: "single",
@@ -130,34 +131,100 @@ describe("player store", () => {
     store.getState().goTo("c");
     store.getState().observe("b");
     expect(store.getState()).toMatchObject({ current: "c", observed: "b" });
+  });
 
-    store.getState().release();
+  it("keeps a held question while the page stays where the hold left it", () => {
+    const store = listOfThree();
+    store.getState().goTo("c");
+    store.getState().anchorAt(480);
+    store.getState().observe("b");
+
+    store.getState().moved(480);
+
     expect(store.getState()).toMatchObject({
+      anchor: 480,
+      current: "c",
+      observed: "b",
+      pinned: true,
+    });
+  });
+
+  it("gives current back to the reading line when the page moves away, however it moved", () => {
+    const store = listOfThree();
+    store.getState().goTo("c");
+    store.getState().anchorAt(480);
+    store.getState().observe("b");
+
+    store.getState().moved(1200);
+
+    expect(store.getState()).toMatchObject({
+      anchor: null,
       current: "b",
       observed: null,
       pinned: false,
     });
   });
 
-  it("keeps the held question when the learner scrolls before anything is observed", () => {
+  it("keeps the held question when the page moves before anything is observed", () => {
     const store = listOfThree();
     store.getState().focus("c");
+    store.getState().anchorAt(100);
 
-    store.getState().release();
+    store.getState().moved(160);
 
     expect(store.getState()).toMatchObject({ current: "c", pinned: false });
   });
 
-  it("ignores a scroll while nothing is held", () => {
+  it("holds through the scroll that a jump or a focus causes while the page settles", () => {
+    const store = listOfThree();
+    store.getState().focus("c");
+
+    store.getState().moved(300);
+
+    expect(store.getState()).toMatchObject({
+      anchor: null,
+      current: "c",
+      pinned: true,
+    });
+  });
+
+  it("forgets the old anchor when a new hold begins", () => {
+    const store = listOfThree();
+    store.getState().goTo("b");
+    store.getState().anchorAt(100);
+
+    store.getState().goTo("c");
+    store.getState().moved(900);
+
+    expect(store.getState()).toMatchObject({
+      anchor: null,
+      current: "c",
+      pinned: true,
+    });
+  });
+
+  it("ignores a move of the page while nothing is held", () => {
     const store = listOfThree();
     store.getState().observe("b");
     const changed = vi.fn();
     store.subscribe(changed);
 
-    store.getState().release();
+    store.getState().moved(900);
 
     expect(changed).not.toHaveBeenCalled();
     expect(store.getState()).toMatchObject({ current: "b", pinned: false });
+  });
+
+  it("does not anchor a hold that already ended", () => {
+    const store = listOfThree();
+    store.getState().observe("b");
+    const changed = vi.fn();
+    store.subscribe(changed);
+
+    store.getState().anchorAt(480);
+
+    expect(changed).not.toHaveBeenCalled();
+    expect(store.getState().anchor).toBeNull();
   });
 
   it("holds the question that has the learner's focus", () => {

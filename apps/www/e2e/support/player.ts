@@ -77,7 +77,7 @@ export const numberCells = (page: Page) => sidebarOf(page).locator("li");
 
 /**
  * Scrolls the page to its start or its end in one step, as a reader who drags
- * the scrollbar does: no key, wheel, or click holds a question current.
+ * the scrollbar does: the page gets a scroll and no wheel, touch, or key.
  */
 export const scrollPageTo = Effect.fn("NakafaE2E.scrollPageTo")(function* (
   page: Page,
@@ -92,6 +92,61 @@ export const scrollPageTo = Effect.fn("NakafaE2E.scrollPageTo")(function* (
     }, edge)
   );
 });
+
+/**
+ * Scrolls the page, as a script does, until a question starts 30 px below the
+ * top of the window. That is above any reading line, so the line falls inside
+ * the question whatever the size of the text.
+ */
+export const scrollToQuestion = Effect.fn("NakafaE2E.scrollToQuestion")(
+  function* (page: Page, number: number) {
+    yield* Effect.promise(() =>
+      questionArticle(page, number).evaluate((article) => {
+        window.scrollTo({
+          behavior: "instant",
+          top: article.getBoundingClientRect().top + window.scrollY - 30,
+        });
+      })
+    );
+  }
+);
+
+/**
+ * Scrolls the page by a few pixels, in one step and without a wheel, a touch,
+ * or a key, as a reader who drags the scrollbar does.
+ */
+export const scrollPageBy = Effect.fn("NakafaE2E.scrollPageBy")(function* (
+  page: Page,
+  pixels: number
+) {
+  yield* Effect.promise(() =>
+    page.evaluate((top) => {
+      window.scrollBy({ behavior: "instant", top });
+    }, pixels)
+  );
+});
+
+/**
+ * Waits until the browser has reported what the page's observers saw after a
+ * change. An observer reports in a task after the frame that found the change,
+ * so a check that a number stayed put looks only a few frames later.
+ */
+export const waitForObservers = Effect.fn("NakafaE2E.waitForObservers")(
+  function* (page: Page) {
+    yield* Effect.promise(() =>
+      page.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => resolve())
+              )
+            );
+          })
+      )
+    );
+  }
+);
 
 /**
  * Signs a new learner in, starts the first set, and runs its first section:
