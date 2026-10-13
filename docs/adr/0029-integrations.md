@@ -138,8 +138,8 @@ writes the endpoint and records here why:
   out of Better Auth's schema), so a client row held by Better Auth carries only
   a reference to its tenant.
 - A client secret is stored as a hash.
-- An access token is short-lived, is bound to one resource, and is revoked at
-  once or lives only as long as the revocation delay can stand.
+- An access token is short-lived and bound to one resource. It is revoked at
+  once, or its lifetime is no longer than the revocation delay Nakafa accepts.
 - A CLI token carries the actions the CLI needs and is not a session.
 
 ### The school host forwards to its own cell
@@ -147,8 +147,8 @@ writes the endpoint and records here why:
 The school host belongs to one data cell, with its own web project and its own
 Convex deployment (ADR 0026). The public bridge cannot serve the school API,
 because it deletes the credential. The web project of the cell forwards
-`/api/v1` and `/mcp` to the Convex site URL of the same cell, and so does it for
-any OAuth endpoint that lives on the school host. The forward must:
+`/api/v1` and `/mcp` to the Convex site URL of the same cell, and does the same
+for any OAuth endpoint that lives on the school host. The forward must:
 
 - keep the `Authorization` header and drop `cookie`: the school API takes a
   token and never a session cookie;
@@ -225,8 +225,8 @@ domains (ADR 0011).
 
 ### Standards are adapters at one seam
 
-A standard that comes in forms the roster and the classes. A standard that goes
-out carries grades. No standard reaches around `decide`.
+An inbound standard forms the roster and the classes. An outbound standard
+carries grades. No standard reaches around `decide`.
 
 | Standard | Direction | What Nakafa does | Owner |
 | --- | --- | --- | --- |
