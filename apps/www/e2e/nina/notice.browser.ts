@@ -8,19 +8,18 @@ import {
   NOTICE_LIST,
   noticeWith,
   openComposer,
+  photo,
   pickFiles,
   runPage,
   WORD_TYPE,
   write,
 } from "@/e2e/support/attachment";
-import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
+import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
 import { UNCONFIRMED } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** How long Sonner keeps a notice that sets no lifetime of its own. */
 const DEFAULT_LIFETIME_MILLISECONDS = 4000;
-
-const photo = (name: string) => fileOf(name, "image/png", 1);
 
 /** Scrolls the list of a notice to its end, in the page. */
 const scrollToEnd = (notice: HTMLElement, scroller: string) => {
@@ -109,7 +108,7 @@ test.describe("The notice of the files not attached at 390px", () => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
         const { changes } = yield* openChatPage(page, origin);
-        const composer = page.locator("main main");
+        const composer = onThePage(page);
         yield* pickFiles(composer, [fileOf("essay.docx", WORD_TYPE, 20)]);
         const notice = noticeWith(page, NOT_ATTACHED);
         yield* Effect.promise(() => expect(notice).toBeVisible());

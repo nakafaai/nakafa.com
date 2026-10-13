@@ -1,5 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Array as Arr, Effect, HashSet, Order, Schema } from "effect";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
+import { Array as Arr, Effect, HashSet, Order } from "effect";
 import {
   chipsIn,
   composerOf,
@@ -9,57 +12,25 @@ import {
   pictureOf,
   write,
 } from "@/e2e/support/attachment";
-import { type Changes, saved } from "@/e2e/support/changes";
-import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
-import { inTheSheet, openSheet } from "@/e2e/support/sheet";
+import { saved } from "@/e2e/support/changes";
+import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
+import { inTheSheet, openSheet, UNCONFIRMED } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import {
+  RELEASE,
+  SAVE,
+  uploadsNamedBy,
+  uploadsReleasedBy,
+} from "@/e2e/support/upload";
 
-/** The Convex names of the upload functions the composer calls. */
-const SAVE = "nina/uploads:save";
-const RELEASE = "nina/uploads:release";
-/** What the pages tell the learner when a prompt could not be confirmed. */
-const UNCONFIRMED =
-  "We could not confirm the request. Check your connection and try again.";
 /** What the pages tell the learner when the server calls an upload invalid. */
-const INVALID = "An attachment is invalid or no longer available";
+const INVALID = en.Ai.failures["attachment-invalid"];
 /** The failure the server names when an upload is gone or is not the learner's. */
 const INVALID_UPLOAD = {
   _tag: "NinaUploadError",
   code: "NINA_UPLOAD_INVALID",
   message: "Refused by the test.",
 };
-
-/** The new chat page, where the first prompt of a chat is written. */
-const onThePage = (page: Page) => page.locator("main main");
-
-/** The arguments of a call that releases one upload. */
-const ReleaseArguments = Schema.Tuple([
-  Schema.Struct({ uploadId: Schema.String }),
-]);
-/** The arguments of a call that starts a turn: the uploads it names. */
-const StartArguments = Schema.Tuple([
-  Schema.Struct({
-    input: Schema.Struct({
-      prompt: Schema.Struct({ uploadIds: Schema.Array(Schema.String) }),
-    }),
-  }),
-]);
-
-/** The uploads each call that started a turn named, in the order the calls were sent. */
-const uploadsNamedBy = (changes: Changes) =>
-  Effect.forEach(changes.argumentsOf(START), (args) =>
-    Schema.decodeUnknownEffect(StartArguments)(args).pipe(
-      Effect.map(([argument]) => argument.input.prompt.uploadIds)
-    )
-  );
-
-/** The uploads the page gave back, in the order it did. */
-const uploadsReleasedBy = (changes: Changes) =>
-  Effect.forEach(changes.argumentsOf(RELEASE), (args) =>
-    Schema.decodeUnknownEffect(ReleaseArguments)(args).pipe(
-      Effect.map(([argument]) => argument.uploadId)
-    )
-  );
 
 test.describe("Uploads of a composer at 390px", () => {
   test.use({ viewport: { height: 900, width: 390 } });

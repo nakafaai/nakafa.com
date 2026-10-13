@@ -7,13 +7,12 @@ import {
   noticeWith,
   write,
 } from "@/e2e/support/attachment";
-import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
+import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
+import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForSlide } from "@/e2e/support/layout";
 import { SHEET_POPUP } from "@/e2e/support/selector";
+import { UNCONFIRMED } from "@/e2e/support/sheet";
 
-/** What the pages tell the learner when a prompt could not be confirmed. */
-const UNCONFIRMED =
-  "We could not confirm the request. Check your connection and try again.";
 /** The limit of a prompt as the English notice writes it. */
 const LIMIT = `at most ${new Intl.NumberFormat("en").format(NINA_PROMPT_LENGTH)} characters`;
 /** The failures the server names, as the page receives them. */
@@ -27,9 +26,6 @@ const NO_CREDITS = {
   code: "INSUFFICIENT_CREDITS",
   message: "Not enough credits.",
 };
-
-/** The new chat page, where the first prompt of a chat is written. */
-const onThePage = (page: Page) => page.locator("main main");
 
 /** Waits until the page has painted twice, so what a press queued is on the page. */
 const afterPaint = (page: Page) =>
@@ -151,10 +147,6 @@ const readCover = (notice: HTMLElement, names: readonly string[]) => {
   };
 };
 
-/** A lesson of the German site, where Nina's sheet opens over the page. */
-const GERMAN_LESSON =
-  "/de/faecher/mathematik/potenzen-und-logarithmen/grundlagen";
-
 /** The refusals whose German sentence the sheet places, as the server names them. */
 const GERMAN_REFUSALS = [
   { failure: NO_CREDITS, reason: "credits", sentence: "Deine Credits reichen" },
@@ -178,8 +170,9 @@ for (const { failure, reason, sentence } of GERMAN_REFUSALS) {
       await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
           const { changes } = yield* openChatPage(page, origin, "de");
+          // A lesson of the German site, where Nina's sheet opens over the page.
           yield* Effect.promise(async () => {
-            await page.goto(GERMAN_LESSON);
+            await page.goto(pinnedRoutes.exponent.de);
             await page
               .getByRole("button", { exact: true, name: "Nina fragen" })
               .click();

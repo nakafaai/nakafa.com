@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** What the app's weather route answers for a long place name in heavy rain, at -10 degrees. */
 const SUMMARY = {
@@ -12,8 +13,6 @@ const SUMMARY = {
   icon: "09d",
   temperatureKelvin: 263.15,
 };
-/** How long the weather request keeps trying before it gives up, with its three retries. */
-const GIVE_UP_MILLISECONDS = 30_000;
 
 /** Opens the new chat page with the weather route answering `answer`. */
 const openHome = Effect.fn("NakafaE2E.openHome")(function* (
@@ -129,12 +128,15 @@ for (const width of [320, 1440]) {
               route.fulfill({ status: 500 })
             );
             // The skeleton shows while the request tries, and goes once it has
-            // given up.
+            // given up. The request tries again after one, two and four seconds
+            // (lib/weather/request.ts) and this route answers at once, so the
+            // wait is those seven seconds. The suite's time for a deferred card
+            // to reveal itself holds them.
             const skeleton = grid.locator('[data-slot="skeleton"]');
             yield* Effect.promise(async () => {
               await expect(skeleton.first()).toBeVisible();
               await expect(skeleton).toHaveCount(0, {
-                timeout: GIVE_UP_MILLISECONDS,
+                timeout: revealTimeoutMilliseconds,
               });
             });
             const cells = yield* Effect.promise(() => grid.evaluate(readCells));

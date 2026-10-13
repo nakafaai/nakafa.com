@@ -11,7 +11,7 @@ import {
   runPage,
   write,
 } from "@/e2e/support/attachment";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { onThePage, openChatPage, runOnPage } from "@/e2e/support/chat";
 
 /** Names a learner can have on a file, longer than a title can show. */
 const LONG_NAMES = [
@@ -156,7 +156,7 @@ test.describe("Names on the files of a sent message at 320px", () => {
       await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
           const { changes } = yield* openChatPage(page, origin);
-          const composer = page.locator("main main");
+          const composer = onThePage(page);
           yield* pickFiles(composer, [fileOf(name, "text/plain", 8)]);
           yield* write(composer, "Read this file");
 

@@ -138,15 +138,13 @@ for (const scheme of ThemeSchema.literals) {
           ]);
           const chip = chipsIn(composer).first();
           yield* Effect.promise(() => expect(chip).toBeVisible());
+          // A chip without a picture, or a page that cannot draw, reads as none
+          // and ends the test with that failure.
           const backdrop = yield* Effect.promise(() =>
             chip.evaluate(readBackdrop)
-          );
+          ).pipe(Effect.flatMap(Effect.fromNullishOr));
 
           yield* Effect.sync(() => {
-            expect(backdrop).not.toBeNull();
-            if (!backdrop) {
-              return;
-            }
             expect(backdrop.dark).toBe(scheme === "dark");
             expect(backdrop.alpha).toBe(255);
             // Black ink against the backdrop, as WCAG measures contrast.

@@ -9,11 +9,11 @@ import {
   runPage,
 } from "@/e2e/support/attachment";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForSlide } from "@/e2e/support/layout";
 import { SHEET_POPUP } from "@/e2e/support/selector";
+import { openSheet } from "@/e2e/support/sheet";
 
-const LESSON =
-  "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
 const PLACEHOLDER = ENGLISH.input;
 
 /** A link the learner pasted: no space to break the line at, as with any long address. */
@@ -109,12 +109,7 @@ for (const screen of SHORT_SCREENS) {
         page,
         Effect.gen(function* () {
           yield* seedAnalyticsConsent(page, "denied");
-          yield* Effect.promise(async () => {
-            await page.goto(LESSON);
-            await page
-              .getByRole("button", { exact: true, name: "Ask Nina" })
-              .click();
-          });
+          yield* openSheet(page);
           const sheet = page.locator(SHEET_POPUP);
           yield* waitForSlide(sheet);
           const input = sheet.getByRole("textbox", { name: PLACEHOLDER });
@@ -148,9 +143,7 @@ for (const screen of SHORT_SCREENS) {
   });
 }
 
-/** A lesson of the German site, and the three first prompts its sheet offers. */
-const GERMAN_LESSON =
-  "/de/faecher/mathematik/potenzen-und-logarithmen/grundlagen";
+/** The three first prompts the sheet of a German lesson offers. */
 const GERMAN_SUGGESTIONS = [
   "Das erklären",
   "Beispielaufgabe zeigen",
@@ -222,7 +215,7 @@ for (const size of TEXT_SIZES) {
         Effect.gen(function* () {
           yield* seedAnalyticsConsent(page, "denied");
           yield* Effect.promise(async () => {
-            await page.goto(GERMAN_LESSON);
+            await page.goto(pinnedRoutes.exponent.de);
             await page.addStyleTag({
               content: `html { font-size: ${size}% !important; }`,
             });

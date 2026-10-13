@@ -13,6 +13,7 @@ import {
   NOTICE_LIST,
   noticeWith,
   openComposer,
+  photo,
   pickFiles,
   runPage,
   WORD_TYPE,
@@ -162,8 +163,6 @@ const readList = (notice: HTMLElement, scroller: string) => {
     reasonOpaque: getComputedStyle(last).backgroundColor !== "rgba(0, 0, 0, 0)",
   };
 };
-
-const photo = (name: string) => fileOf(name, "image/png", 1);
 
 for (const width of [320, 1440]) {
   test.describe(`Choosing files at ${width}px`, () => {

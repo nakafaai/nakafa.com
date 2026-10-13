@@ -32,6 +32,9 @@ export function fileOf(name: string, mimeType: string, size: number): Upload {
   return { buffer: Buffer.alloc(size, "a"), mimeType, name };
 }
 
+/** A picture of one byte: enough for the picker to take it as an image. */
+export const photo = (name: string) => fileOf(name, "image/png", 1);
+
 /**
  * Draws a PNG of `width` by `height` pixels in the page, so the file is a real
  * picture with a transparent background. With `ink` it also carries a dark
@@ -137,13 +140,18 @@ export const composerOf = (scope: Locator, labels = ENGLISH) =>
   scope.getByRole("textbox", { name: labels.input });
 
 /** Writes the prompt and waits until the page lets it be sent. */
-export const write = (scope: Locator, text: string, labels = ENGLISH) =>
-  Effect.promise(async () => {
+export const write = Effect.fn("NakafaE2E.write")(function* (
+  scope: Locator,
+  text: string,
+  labels = ENGLISH
+) {
+  yield* Effect.promise(async () => {
     await composerOf(scope, labels).fill(text);
     await expect(scope.getByRole("button", { name: labels.send })).toBeEnabled({
       timeout: readinessTimeoutMilliseconds,
     });
   });
+});
 
 /** The notices on the page that contain `text`. */
 export function noticeWith(page: Page, text: string) {

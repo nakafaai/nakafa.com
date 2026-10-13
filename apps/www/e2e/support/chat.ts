@@ -20,6 +20,14 @@ export const LESSON_PATH =
 /** How many chats one page of a list loads. */
 export const PAGE = CHAT_LIST_PAGE_SIZE;
 /**
+ * The part of a chat page that holds the conversation, beside the sidebar. The
+ * new chat page and the page of the chat it opens share it, and the page the
+ * learner left stays in it, hidden, until React renders that page again.
+ * `promptWith` counts only the bubbles a reader can see, so the left page
+ * never counts.
+ */
+export const onThePage = (page: Page) => page.locator("main main");
+/**
  * The Convex names of the functions the chat pages call. The refs module
  * cannot be imported here, because it pulls in packages that Node does not
  * resolve outside the bundler.
