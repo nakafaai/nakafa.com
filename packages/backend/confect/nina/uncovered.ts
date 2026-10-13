@@ -11,7 +11,7 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import { HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
+import { foldCanWait, HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
 import {
   type Asking,
   newestAskings,
@@ -240,7 +240,7 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
  * reaches an older turn. A turn that does not open with its question or holds
  * no answer reads as none.
  */
-export const readOwnCost = Effect.fn("nina.uncovered.own")(function* (
+const readOwnCost = Effect.fn("nina.uncovered.own")(function* (
   turn: Pick<NinaTurnsDoc, "order" | "promptMessageId" | "threadId">
 ) {
   const thread = yield* threadReader(turn, OWN_PAGE);
@@ -249,4 +249,27 @@ export const readOwnCost = Effect.fn("nina.uncovered.own")(function* (
   return isComplete(stored)
     ? Option.some(costed(turn.order, stored).tokens)
     : Option.none();
+});
+
+/**
+ * Whether the fold can wait for the turn that settled without reading the
+ * turns before it again. Its prompt stored what the history cost when it was
+ * built (`NinaHistoryCost`), so only the turn itself is read: the history of
+ * its prompt together with it still fits the budget, and the read left no turn
+ * out (`foldCanWait`). A turn that stored no cost, a history that did not fit
+ * or left a turn out, and a turn that holds no question and answer all leave
+ * the decision to the read of the turns. A turn whose messages cannot be read
+ * fails.
+ */
+export const foldWaits = Effect.fn("nina.uncovered.waits")(function* (
+  turn: Pick<NinaTurnsDoc, "history" | "order" | "promptMessageId" | "threadId">
+) {
+  const cost = turn.history;
+  if (!(cost && foldCanWait(cost, 0, NINA_BUDGET.history))) {
+    return false;
+  }
+  const own = yield* readOwnCost(turn);
+  return Option.exists(own, (tokens) =>
+    foldCanWait(cost, tokens, NINA_BUDGET.history)
+  );
 });

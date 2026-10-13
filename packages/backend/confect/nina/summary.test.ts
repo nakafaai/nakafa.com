@@ -455,6 +455,20 @@ describe("Nina rolling summary", () => {
     expect(own.read.bytesRead).toBeLessThan(full.read.bytesRead / 3);
   });
 
+  it("waits on a stored cost that counts turns a fold has covered since, because the turns that remain cost no more", async () => {
+    provider.languageModel.mockReturnValue(summaryModel("unused"));
+    const f = await createSummaryTest(21, () => ({ tokens: 500 }));
+    // The prompt of the last turn was built before a fold covered orders 0 to 9.
+    const history = await f.history(20);
+    await f.seed(9, EARLIER);
+    const { queries } = await f.measure(20, { history });
+    expect(queries).toHaveLength(1);
+    expect(provider.languageModel).not.toHaveBeenCalled();
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: 9, usage: EARLIER_USAGE }),
+    ]);
+  });
+
   it("reads the turns once the history holds as many as it takes, because the count of turns decides a fold too", async () => {
     provider.languageModel.mockReturnValue(
       summaryModel("- The first sixteen turns.")

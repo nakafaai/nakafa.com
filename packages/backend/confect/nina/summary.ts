@@ -10,13 +10,10 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
-import {
-  foldCanWait,
-  nextSummaryTarget,
-} from "@repo/backend/confect/nina/fold";
+import { nextSummaryTarget } from "@repo/backend/confect/nina/fold";
 import { newestAskings, questionKey } from "@repo/backend/confect/nina/history";
 import {
-  readOwnCost,
+  foldWaits,
   readUncovered,
   storedTurn,
 } from "@repo/backend/confect/nina/uncovered";
@@ -179,30 +176,6 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
 });
 
 /**
- * Whether the fold can wait for the turn that settled without reading the
- * turns before it again. Its prompt stored what the history cost when it was
- * built (`NinaHistoryCost`), so only the turn itself is read: the history of
- * its prompt together with it still fits the budget, and the read left no turn
- * out (`foldCanWait`). A turn that stored no cost, a history that did not fit
- * or left a turn out, and a turn whose messages cannot be read all leave the
- * decision to the read of the turns.
- */
-const foldWaits = Effect.fn("nina.summary.waits")(function* (
-  turn: Pick<NinaTurnsDoc, "history" | "order" | "promptMessageId" | "threadId">
-) {
-  const cost = turn.history;
-  if (!(cost && foldCanWait(cost, 0, NINA_BUDGET.history))) {
-    return false;
-  }
-  const own = yield* readOwnCost(turn).pipe(
-    Effect.mapError(() => new NinaSummaryError({ operation: "read" }))
-  );
-  return Option.exists(own, (tokens) =>
-    foldCanWait(cost, tokens, NINA_BUDGET.history)
-  );
-});
-
-/**
  * Folds settled turns into the chat's rolling summary once the turns it does
  * not cover cost more than the history budget. A failure keeps the previous
  * summary; generation still bounds its history. The turns are counted from the
@@ -218,7 +191,11 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
   ) {
     // Whether the fold can wait does not depend on the summary, so the common
     // refresh reads the turn alone and not even the summary row.
-    if (yield* foldWaits(turn)) {
+    if (
+      yield* foldWaits(turn).pipe(
+        Effect.mapError(() => new NinaSummaryError({ operation: "read" }))
+      )
+    ) {
       return;
     }
     const { runQuery: query } = yield* QueryRunner;
