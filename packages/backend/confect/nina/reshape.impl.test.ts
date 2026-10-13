@@ -15,10 +15,9 @@ const rewrite = Ref.getFunctionReference(refs.internal.nina.reshape.rewrite);
 /**
  * A chat with the turns of every kind a pass tells apart. Four are in the old
  * shape: the active turn the fixture queues, a settled turn with the page of a
- * lesson, a settled turn of a pinned chat (which stored `pinned-chat` and
- * `same-context`), and the oldest kind, which holds the copy of its context on
- * the turn and has no page. Two are not: a settled turn written now, and a
- * settled turn that never had a page.
+ * lesson, a settled turn of a pinned chat, and the oldest kind, which holds its
+ * old fields on the turn itself and has no page. Two are not: a settled turn
+ * written now, and a settled turn that never had a page.
  */
 async function fixture() {
   const f = await createNinaTest({ legacy: true, now: NOW });

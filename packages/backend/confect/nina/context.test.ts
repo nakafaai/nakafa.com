@@ -109,9 +109,8 @@ describe("Nina signed learning context", () => {
                 },
                 { ...user, role: "student" }
               );
-              // The whole page is compared, so a second copy of its address or
-              // signed state, of the asset id, of the context, or a permission
-              // flag beside these fields would fail it.
+              // The whole page is compared, so any field beside these would
+              // fail it.
               expect(value.page).toEqual({
                 locale: "en",
                 needsFetch: true,

@@ -15,12 +15,9 @@ export const PAGE_SIZE = 100;
 
 /**
  * Temporary function of step one of the change that makes a stored Nina turn
- * hold only what something reads. A turn stored before it holds fields that
- * nothing reads: a copy of its context (`snapshot` and `transition`, on the
- * turn and in its page), the address and the signed state of its page twice, the
- * copy of the asset id, and three permission flags that were always true. New
- * turns are written without them, and the table still admits them, so every
- * reader takes a turn in either shape.
+ * hold only what something reads (ADR 0001). A turn stored before it holds
+ * fields that nothing reads. New turns are written without them, and the table
+ * still admits them, so every reader takes a turn in either shape.
  *
  * Each call reads one page of turns after a cursor, by creation time, whatever
  * their state, and counts the ones in the old shape in `old`. With `dry` set it

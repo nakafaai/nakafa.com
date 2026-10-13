@@ -26,26 +26,21 @@ const NinaPageSchema = Schema.Struct({
   slug: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /**
- * Step one of two of the change that stores only what a turn's readers use.
- * Turns stored before it hold fields that nothing reads, and the table keeps
- * admitting them until `nina/reshape:rewrite` has removed them from every turn
- * on dev and on production. Step two deletes the stored schemas below,
- * `NinaLegacyField` with the two fields of `NinaTurnFacts` that use it, and
- * `dropLegacyPage`, and the table takes `NinaPageSchema` again.
- *
- * `NinaLegacyField` stands for the copy of their context (`snapshot`) and the
- * marker of a switch of context (`transition`) that those turns hold. No turn
- * is written with one, and the table admits any value there. A copy typed in
- * full would have the shape of a pack, so Confect's check for recursive schemas
- * would read the pack, and the turn with it, as recursive and type their
- * validators as `any`.
+ * What turns stored before the change hold beside the shape a turn is written
+ * with now: a copy of their context (`snapshot`) and a marker of a switch of
+ * context (`transition`), in their pack and, for the oldest turns, on the turn
+ * itself. Each is an object whose members nothing reads, and no turn is written
+ * with one, so the members stay untyped. Confect 10.1.0 gives the table no
+ * validator type for a field typed `unknown`, nor for a copy typed in full: it
+ * has the shape of a pack, so the check for recursive schemas reads the pack as
+ * a cycle.
  */
-const NinaLegacyField = Schema.optionalKey(Schema.Any);
+const NinaLegacyField = Schema.optionalKey(
+  Schema.Record(Schema.String, Schema.Any)
+);
 /**
- * The pack as the table admits it: the pack of a turn written now, and what
- * turns stored before the change hold beside it. Their asset id is also in
- * `contentId`, and their three permission flags, `true` on every turn, sit in
- * `tools`.
+ * The pack as the table admits it: the pack of a turn written now, and beside
+ * it the fields that older packs hold.
  */
 const NinaStoredPackSchema = NinaContextPackSchema.mapFields((fields) => ({
   ...fields,
@@ -68,8 +63,9 @@ const NinaStoredPackSchema = NinaContextPackSchema.mapFields((fields) => ({
 }));
 /**
  * The page as the table admits it: the page of a turn written now, and beside
- * it the address and the signed state of the page that older turns hold in
- * `url` and `verified`.
+ * it the fields that older pages hold. It is step one of the change that stores
+ * only what a turn's readers use, and ADR 0001 owns the list of those fields,
+ * the rollout, the exit and the cleanup.
  */
 export const NinaStoredPageSchema = NinaPageSchema.mapFields((fields) => ({
   ...fields,
@@ -192,10 +188,7 @@ export const NinaTurnFacts = Schema.Struct({
   transactionId: Schema.optionalKey(Id("creditTransactions")),
   page: Schema.optionalKey(NinaStoredPageSchema),
   user: Schema.optionalKey(NinaUserSchema),
-  /**
-   * The oldest turns hold a copy of their context and a marker beside their
-   * page, from before a turn kept its context in `page`. See `NinaLegacyField`.
-   */
+  /** The oldest turns hold these two beside their page. See `NinaLegacyField`. */
   snapshot: NinaLegacyField,
   transition: NinaLegacyField,
   tokens: Schema.optionalKey(

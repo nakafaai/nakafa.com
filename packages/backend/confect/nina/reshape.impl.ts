@@ -10,9 +10,8 @@ import spec, { PAGE_SIZE } from "@repo/backend/confect/nina/reshape.spec";
 import { Array as Arr, Effect, Equal, Layer } from "effect";
 
 /**
- * The turn as a turn is written now: without the copy of its context and the
- * marker that the oldest turns hold beside their page, and with its page in the
- * new shape.
+ * The turn as a turn is written now: without the fields that the oldest turns
+ * hold beside their page, and with its page in the new shape.
  */
 const dropLegacyTurn = Effect.fn("nina.reshape.drop")(function* ({
   snapshot,

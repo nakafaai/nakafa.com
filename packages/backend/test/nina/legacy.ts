@@ -7,25 +7,15 @@ import type {
 const CAPTURED_AT = "2026-09-27T12:00:00.000Z";
 
 /**
- * The page of a turn as it was stored before the change that stores only what a
- * turn's readers use, built from the page a turn is written with now. The old
- * code added to it, and nothing else:
- *
- * - the address and the signed state of the page, again beside `nina`;
- * - the asset id again, as `contentId`;
- * - three permission flags that were `true` on every turn;
- * - a second copy of the context (`snapshot`) and a marker (`transition`) in
- *   the pack. A turn admitted from the page it was asked on has the source
- *   `current-page` and the reason `page-context`. Until 11 October 2026 a turn
- *   of a pinned chat had the source `pinned-chat` and the reason
- *   `same-context`, which `pinned` gives.
- *
- * Step two of the change deletes this module with the old shape.
+ * What the old code stored for the page of a turn in its pack: the learning
+ * page and the tool policy with the fields the old code added to them, and the
+ * copy of the context (`snapshot`) and the marker (`transition`) beside them.
+ * A turn admitted from the page it was asked on has the source `current-page`
+ * and the reason `page-context`. Until 11 October 2026 a turn of a pinned chat
+ * had the source `pinned-chat` and the reason `same-context`, which `pinned`
+ * gives.
  */
-export function oldPage(
-  { nina, ...page }: NinaPage,
-  { pinned = false }: { readonly pinned?: boolean } = {}
-): typeof NinaStoredPageSchema.Type {
+function oldContext({ nina }: NinaPage, pinned: boolean) {
   const { learning, placement, tools } = nina;
   const oldLearning =
     learning.assetId === undefined
@@ -38,36 +28,50 @@ export function oldPage(
     allowNakafa: true,
   };
   return {
-    ...page,
-    url: learning.url,
-    verified: learning.verified,
-    nina: {
-      ...nina,
+    learning: oldLearning,
+    tools: oldTools,
+    snapshot: {
+      capturedAt: CAPTURED_AT,
       learning: oldLearning,
+      ...(placement === undefined ? {} : { placement }),
+      source: pinned ? "pinned-chat" : "current-page",
       tools: oldTools,
-      snapshot: {
-        capturedAt: CAPTURED_AT,
-        learning: oldLearning,
-        ...(placement === undefined ? {} : { placement }),
-        source: pinned ? "pinned-chat" : "current-page",
-        tools: oldTools,
-      },
-      transition: {
-        reason: pinned ? "same-context" : "page-context",
-        toContextKey:
-          placement === undefined
-            ? `canonical:${learning.slug}`
-            : `placement:${placement.programKey}:${placement.nodeKey}:${learning.slug}`,
-      },
+    },
+    transition: {
+      reason: pinned ? "same-context" : "page-context",
+      toContextKey:
+        placement === undefined
+          ? `canonical:${learning.slug}`
+          : `placement:${placement.programKey}:${placement.nodeKey}:${learning.slug}`,
     },
   };
 }
 
 /**
- * The copy of the context and the marker that the oldest turns hold on the turn
- * itself, beside their page, from before a turn kept its context in `page`.
+ * The page of a turn as it was stored before the change that stores only what a
+ * turn's readers use (ADR 0001), built from the page a turn is written with
+ * now. The old code added the fields below to it, and nothing else.
+ *
+ * Step two of the change deletes this module with the old shape.
+ */
+export function oldPage(
+  page: NinaPage,
+  { pinned = false }: { readonly pinned?: boolean } = {}
+): typeof NinaStoredPageSchema.Type {
+  const { nina, ...rest } = page;
+  return {
+    ...rest,
+    url: nina.learning.url,
+    verified: nina.learning.verified,
+    nina: { ...nina, ...oldContext(page, pinned) },
+  };
+}
+
+/**
+ * What the oldest turns hold on the turn itself, beside their page, from before
+ * a turn kept its context in `page`.
  */
 export function oldestFields(page: NinaPage) {
-  const { snapshot, transition } = oldPage(page).nina;
+  const { snapshot, transition } = oldContext(page, false);
   return { snapshot, transition };
 }

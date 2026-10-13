@@ -35,8 +35,7 @@ describe("nina/contract/pack", () => {
           placement,
         });
 
-        // The whole pack is compared, so a copy of the context, a marker of a
-        // switch, or a permission flag beside these fields would fail it.
+        // The whole pack is compared, so any field beside these would fail it.
         expect(session).toEqual({
           context: {
             learning,

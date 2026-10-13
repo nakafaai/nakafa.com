@@ -3,10 +3,11 @@ import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec"
 import {
   createNinaAgentContext,
   dropLegacyPage,
+  NinaStoredPageSchema,
 } from "@repo/backend/confect/nina/contract/turn";
 import { oldPage } from "@repo/backend/test/nina/legacy";
 import { homePage, lessonPage } from "@repo/backend/test/nina/page";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const runtime = { currentDate: "2026-09-27" };
 
@@ -78,4 +79,24 @@ describe("the page of a stored Nina turn", () => {
       expect(yield* dropLegacyPage(lessonPage)).toEqual(lessonPage);
     })
   );
+
+  it("admits an object where an older turn holds a copy of its context or a marker, and no other value", () => {
+    const admits = (page: unknown) =>
+      Option.isSome(Schema.decodeUnknownOption(NinaStoredPageSchema)(page));
+    const holding = (fields: Record<string, unknown>) => ({
+      ...homePage,
+      nina: { ...homePage.nina, ...fields },
+    });
+
+    expect(
+      admits(
+        holding({
+          snapshot: { source: "current-page" },
+          transition: { reason: "page-context" },
+        })
+      )
+    ).toBe(true);
+    expect(admits(holding({ snapshot: 42 }))).toBe(false);
+    expect(admits(holding({ transition: "page-context" }))).toBe(false);
+  });
 });
