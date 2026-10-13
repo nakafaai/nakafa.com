@@ -1,8 +1,9 @@
 "use client";
 
-import { Array as Arr, DateTime, Record as Rec } from "effect";
+import { Array as Arr, DateTime, Option, Record as Rec } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { keptUpload, strayFiles } from "@/components/ai/store/hold";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
 
@@ -32,8 +33,10 @@ export function createAiStore() {
             openingChat: null,
             uploads: {},
           }),
-        keepUpload: (fileId, uploadId) =>
-          set((state) => ({ held: Rec.set(state.held, fileId, uploadId) })),
+        keepUpload: (fileId, uploadId, expiresAt) =>
+          set((state) => ({
+            held: Rec.set(state.held, fileId, { expiresAt, uploadId }),
+          })),
         markUpload: (fileId, status) =>
           set((state) => ({ uploads: Rec.set(state.uploads, fileId, status) })),
         // One new-chat admission at a time: a pending ask or composer draft
@@ -103,11 +106,14 @@ export function createAiStore() {
           set((state) => ({
             text: typeof text === "function" ? text(state.text) : text,
           })),
+        strayFiles: (fileIds, now) => strayFiles(get().held, fileIds, now),
         // A file that holds no upload changes nothing, so nobody re-renders.
         takeUploads: (fileIds) => {
           const { held } = get();
           const taken = Arr.getSomes(
-            Arr.map(fileIds, (fileId) => Rec.get(held, fileId))
+            Arr.map(fileIds, (fileId) =>
+              Option.map(Rec.get(held, fileId), (hold) => hold.uploadId)
+            )
           );
           if (Arr.isReadonlyArrayNonEmpty(taken)) {
             set({
@@ -118,7 +124,7 @@ export function createAiStore() {
           }
           return taken;
         },
-        uploadOf: (fileId) => Rec.get(get().held, fileId),
+        uploadOf: (fileId, now) => keptUpload(get().held, fileId, now),
         // The reader showed intent: the sheet's body renders hidden from now
         // on, so the press that opens it usually finds it ready.
         warm: () => set({ warmed: true }),

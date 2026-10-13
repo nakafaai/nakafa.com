@@ -20,6 +20,15 @@ const AiUploadSchema = Schema.Literals(["uploading", "error"]);
 /** The upload that holds one chosen file on the server. */
 const AiUploadIdSchema = Id("ninaUploads");
 
+/**
+ * An upload that holds a file, and the moment the server drops it if no
+ * message has taken it by then.
+ */
+const AiHoldSchema = Schema.Struct({
+  expiresAt: Schema.Finite,
+  uploadId: AiUploadIdSchema,
+});
+
 const AiStateSchema = Schema.Struct({
   activeChatId: Schema.NullOr(Id("chats")),
   ask: Schema.NullOr(AiAskSchema),
@@ -39,7 +48,7 @@ const AiStateSchema = Schema.Struct({
    * The preview address of a file changes when a hidden composer shows again,
    * and its id does not, so the id is the key.
    */
-  held: Schema.Record(Schema.String, AiUploadIdSchema),
+  held: Schema.Record(Schema.String, AiHoldSchema),
   open: Schema.Boolean,
   openingChat: Schema.NullOr(
     Schema.Struct({
@@ -76,8 +85,15 @@ interface AiActions {
    * server would refuse.
    */
   endSession: () => void;
-  /** Remembers the upload that now holds this file on the server. */
-  keepUpload: (fileId: string, uploadId: typeof AiUploadIdSchema.Type) => void;
+  /**
+   * Remembers the upload that now holds this file on the server, and the
+   * moment the server drops it if no message has taken it by then.
+   */
+  keepUpload: (
+    fileId: string,
+    uploadId: typeof AiUploadIdSchema.Type,
+    expiresAt: number
+  ) => void;
   /** Shows this file as uploading, or as an upload that failed. */
   markUpload: (fileId: string, status: typeof AiUploadSchema.Type) => void;
   openAsk: (ask: AiAsk) => boolean;
@@ -95,14 +111,29 @@ interface AiActions {
   setOpeningChat: (openingChat: AiState["openingChat"]) => void;
   setText: (text: AiState["text"] | ((previous: string) => string)) => void;
   /**
+   * The files outside a send whose uploads the send has to give back, when the
+   * send needs more places than the server leaves beside them. The server
+   * counts every upload it has not dropped, whichever composer holds its file.
+   * A composer that is gone takes its files with it, and the places held for
+   * them stay counted until the server drops them. Nothing is changed: the
+   * caller gives the places back, then forgets them with `takeUploads`.
+   */
+  strayFiles: (fileIds: readonly string[], now: number) => readonly string[];
+  /**
    * Forgets the uploads that hold these files and returns them, so the caller
    * can give them back to the server. A file that holds none returns nothing.
    */
   takeUploads: (
     fileIds: readonly string[]
   ) => readonly (typeof AiUploadIdSchema.Type)[];
-  /** The upload that holds this file on the server, once it has uploaded. */
-  uploadOf: (fileId: string) => Option.Option<typeof AiUploadIdSchema.Type>;
+  /**
+   * The upload that holds this file on the server, once it has uploaded and
+   * while the server still keeps it at `now`.
+   */
+  uploadOf: (
+    fileId: string,
+    now: number
+  ) => Option.Option<typeof AiUploadIdSchema.Type>;
   warm: () => void;
 }
 

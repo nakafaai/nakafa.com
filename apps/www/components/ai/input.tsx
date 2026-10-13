@@ -9,11 +9,6 @@ import {
   StopIcon,
 } from "@hugeicons/core-free-icons";
 import {
-  isPromptWithinLimit,
-  NINA_PROMPT_LENGTH_MESSAGE,
-  NinaPromptError,
-} from "@repo/backend/client/nina/prompt";
-import {
   NINA_FILE_COUNT,
   NINA_FILE_SIZE,
   NinaFileType,
@@ -35,7 +30,7 @@ import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/su
 import { randomUuid } from "@repo/utilities/uuid";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
@@ -49,6 +44,7 @@ import { useAi } from "@/components/ai/context";
 import {
   NINA_NOTICE_POSITION,
   ninaFailureLimits,
+  promptRefusal,
   reportNinaFailure,
 } from "@/components/ai/feedback";
 
@@ -82,18 +78,15 @@ export function NinaInput({
   );
   const [, startTransition] = useTransition();
 
+  // While Nina answers, the button stops the reply and a press sends no text.
+  const answering = status === "streaming";
+
   function handleSubmit(message: PromptInputMessage) {
-    // A prompt over the limit stays in the composer with the limit named, and
-    // nothing is asked of the server. The page composers send the text trimmed,
-    // so the trimmed length is the one that counts; a conversation sends it
-    // as written, and the server's own refusal names the same limit.
-    if (!isPromptWithinLimit(message.text?.trim() ?? "")) {
+    const refusal = promptRefusal(message.text, answering);
+    if (Option.isSome(refusal)) {
       Effect.runFork(
         reportNinaFailure(
-          new NinaPromptError({
-            code: "NINA_PROMPT_LENGTH",
-            message: NINA_PROMPT_LENGTH_MESSAGE,
-          }),
+          refusal.value,
           t("failures.prompt-length", ninaFailureLimits)
         )
       );
@@ -190,9 +183,7 @@ export function NinaInput({
           <div className="flex items-center gap-1">
             <InputGroupButton
               aria-label={
-                status === "streaming" && !disabled
-                  ? t("stop-response")
-                  : t("send-message")
+                answering && !disabled ? t("stop-response") : t("send-message")
               }
               className="rounded-full"
               disabled={disabled}
@@ -201,9 +192,7 @@ export function NinaInput({
               variant="default"
             >
               <HugeIcons
-                icon={
-                  status === "streaming" && !disabled ? StopIcon : ArrowUp02Icon
-                }
+                icon={answering && !disabled ? StopIcon : ArrowUp02Icon}
               />
             </InputGroupButton>
           </div>

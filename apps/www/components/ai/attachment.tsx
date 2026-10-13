@@ -26,6 +26,7 @@ import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/
 import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import { Array as Arr, Effect, HashSet } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -101,7 +102,14 @@ export function NinaAttachment({
     ) ?? "done";
   return (
     <Attachment
-      className={isImage ? imageVariants({ variant }) : "max-w-64"}
+      // A chip in the composer sits inside the border of the composer, so it
+      // draws none of its own: a box with a border inside a box with a border
+      // reads as a card in a card. A failed upload keeps the border that
+      // marks it. A transparent border keeps the size of the chip.
+      className={cn(
+        isImage ? imageVariants({ variant }) : "max-w-64",
+        variant === "preview" && "border-transparent"
+      )}
       orientation={isImage ? "vertical" : "horizontal"}
       state={state}
     >

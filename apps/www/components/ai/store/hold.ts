@@ -1,0 +1,42 @@
+"use client";
+
+import { NINA_FILE_COUNT } from "@repo/backend/client/nina/uploads";
+import { Array as Arr, Option, Record as Rec } from "effect";
+import type { AiState } from "@/components/ai/store/types";
+
+/** The uploads the page holds on the server, by the id of the file each one holds. */
+type Held = AiState["held"];
+
+/** Whether the server still keeps an upload at `now`: it refuses one from the moment it expires. */
+function isKept(hold: Held[string], now: number) {
+  return hold.expiresAt > now;
+}
+
+/** The upload that holds this file, while the server still keeps it at `now`. */
+export function keptUpload(held: Held, fileId: string, now: number) {
+  return Rec.get(held, fileId).pipe(
+    Option.filter((hold) => isKept(hold, now)),
+    Option.map((hold) => hold.uploadId)
+  );
+}
+
+/**
+ * The files outside a send whose uploads the send has to give back, or none
+ * when the send fits. The server counts every upload it has not dropped,
+ * whichever composer holds its file, and refuses an upload beyond its limit. A
+ * composer that is gone takes its files with it, and the places held for them
+ * stay counted until the server drops them. A file of the send that holds an
+ * upload needs no new place, and one whose upload the server dropped does.
+ */
+export function strayFiles(
+  held: Held,
+  fileIds: readonly string[],
+  now: number
+) {
+  const counted = Rec.filter(held, (hold) => isKept(hold, now));
+  const needing = Arr.filter(fileIds, (fileId) => !Rec.has(counted, fileId));
+  if (Rec.size(counted) + needing.length <= NINA_FILE_COUNT) {
+    return [];
+  }
+  return Arr.filter(Rec.keys(held), (fileId) => !Arr.contains(fileIds, fileId));
+}

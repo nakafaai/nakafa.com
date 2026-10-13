@@ -1,20 +1,19 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { captureException } from "@repo/analytics/posthog/browser";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
-import de from "@repo/internationalization/dictionaries/de.json";
-import en from "@repo/internationalization/dictionaries/en.json";
-import id from "@repo/internationalization/dictionaries/id.json";
-import { Array as Arr, Effect, Record as Rec } from "effect";
-import { createTranslator } from "next-intl";
+import { Array as Arr, Effect, Option, Record as Rec } from "effect";
 import { toast } from "sonner";
 import {
   NinaConnectionError,
   ninaFailureFeedback,
   ninaFailureLimits,
+  promptRefusal,
   reportNinaFailure,
 } from "@/components/ai/feedback";
+import { aiTranslator, NO_BREAK } from "@/test/ai";
 
 vi.mock("@repo/analytics/posthog/browser", () => ({
   captureException: vi.fn(),
@@ -22,9 +21,6 @@ vi.mock("@repo/analytics/posthog/browser", () => ({
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 
 afterEach(() => vi.clearAllMocks());
-
-/** The space that a line never breaks at, which keeps a number with its unit. */
-const NO_BREAK = "\u00a0";
 
 const copy = {
   fallbackMessage: "Something went wrong.",
@@ -132,53 +128,80 @@ describe("chat runtime feedback", () => {
   );
 });
 
+describe("the refusal of a prompt over the limit", () => {
+  const tooLong = "a".repeat(NINA_PROMPT_LENGTH + 1);
+
+  it("takes a prompt of exactly the limit, counted without the spaces around it", () => {
+    const fits = "a".repeat(NINA_PROMPT_LENGTH);
+
+    expect(promptRefusal(fits, false)).toEqual(Option.none());
+    expect(promptRefusal(`  ${fits}\n`, false)).toEqual(Option.none());
+  });
+
+  it("takes a press with no text, which sends nothing", () => {
+    expect(promptRefusal(undefined, false)).toEqual(Option.none());
+  });
+
+  it("refuses a prompt one character over with its own failure", () => {
+    expect(Option.getOrNull(promptRefusal(tooLong, false))).toMatchObject({
+      _tag: "NinaPromptError",
+      code: "NINA_PROMPT_LENGTH",
+    });
+  });
+
+  it("does not refuse the press that stops a reply, whatever the composer holds", () => {
+    expect(promptRefusal(tooLong, true)).toEqual(Option.none());
+  });
+});
+
 describe("the sentences of the failure table", () => {
-  for (const [locale, messages] of Rec.toEntries({ de, en, id })) {
-    it(`say the limits the code checks, in ${locale}`, () => {
-      const onError = vi.fn();
-      const t = createTranslator({
-        locale,
-        messages,
-        namespace: "Ai",
-        onError,
-      });
+  it.effect.each(APP_LOCALE_CODES)(
+    "say the limits the code checks, in %s",
+    (locale) =>
+      Effect.gen(function* () {
+        const onError = vi.fn();
+        const t = yield* aiTranslator(locale, onError);
 
-      for (const { message } of Rec.values(ninaFailureFeedback)) {
-        // A sentence that needs a number nobody passed fails to format.
-        t(`failures.${message}`, ninaFailureLimits);
-      }
+        for (const { message } of Rec.values(ninaFailureFeedback)) {
+          // A sentence that needs a number nobody passed fails to format.
+          t(`failures.${message}`, ninaFailureLimits);
+        }
 
-      expect(onError).not.toHaveBeenCalled();
-      expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
-        String(NINA_DOCUMENT_MEBIBYTES)
-      );
-      // A number reads the way its language writes it: 100,000 or 100.000.
-      expect(t("failures.prompt-length", ninaFailureLimits)).toContain(
-        new Intl.NumberFormat(locale).format(NINA_PROMPT_LENGTH)
-      );
-    });
+        expect(onError).not.toHaveBeenCalled();
+        expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
+          String(NINA_DOCUMENT_MEBIBYTES)
+        );
+        // A number reads the way its language writes it: 100,000 or 100.000.
+        expect(t("failures.prompt-length", ninaFailureLimits)).toContain(
+          new Intl.NumberFormat(locale).format(NINA_PROMPT_LENGTH)
+        );
+      })
+  );
 
-    it(`keeps each number with its unit or its noun on one line, in ${locale}`, () => {
-      const t = createTranslator({ locale, messages, namespace: "Ai" });
-      const length = new Intl.NumberFormat(locale).format(NINA_PROMPT_LENGTH);
-      const size = new Intl.NumberFormat(locale).format(
-        NINA_DOCUMENT_MEBIBYTES
-      );
+  it.effect.each(APP_LOCALE_CODES)(
+    "keeps each number with its unit or its noun on one line, in %s",
+    (locale) =>
+      Effect.gen(function* () {
+        const t = yield* aiTranslator(locale);
+        const length = new Intl.NumberFormat(locale).format(NINA_PROMPT_LENGTH);
+        const size = new Intl.NumberFormat(locale).format(
+          NINA_DOCUMENT_MEBIBYTES
+        );
 
-      // The learner reads "10 MiB" and "100,000 characters" as one word each,
-      // so a line never ends between the number and what it counts.
-      expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
-        `${size}${NO_BREAK}`
-      );
-      expect(t("failures.prompt-length", ninaFailureLimits)).toContain(
-        `${length}${NO_BREAK}`
-      );
-      expect(t("failures.attachment-size", ninaFailureLimits)).not.toContain(
-        `${size} `
-      );
-      expect(t("failures.prompt-length", ninaFailureLimits)).not.toContain(
-        `${length} `
-      );
-    });
-  }
+        // The learner reads "10 MiB" and "100,000 characters" as one word each,
+        // so a line never ends between the number and what it counts.
+        expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
+          `${size}${NO_BREAK}`
+        );
+        expect(t("failures.prompt-length", ninaFailureLimits)).toContain(
+          `${length}${NO_BREAK}`
+        );
+        expect(t("failures.attachment-size", ninaFailureLimits)).not.toContain(
+          `${size} `
+        );
+        expect(t("failures.prompt-length", ninaFailureLimits)).not.toContain(
+          `${length} `
+        );
+      })
+  );
 });

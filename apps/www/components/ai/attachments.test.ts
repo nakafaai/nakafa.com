@@ -1,23 +1,19 @@
 import { describe, expect, it } from "@effect/vitest";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   NINA_FILE_COUNT,
   NINA_FILE_MEBIBYTES,
 } from "@repo/backend/client/nina/uploads";
 import { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
-import de from "@repo/internationalization/dictionaries/de.json";
-import en from "@repo/internationalization/dictionaries/en.json";
-import id from "@repo/internationalization/dictionaries/id.json";
-import { Array as Arr, Record as Rec } from "effect";
-import { createTranslator } from "next-intl";
+import { Array as Arr, Effect } from "effect";
 import {
   exceedsDocumentLimit,
   NAME_TAIL,
   rejectionNotice,
   splitFileName,
 } from "@/components/ai/attachments";
+import { aiTranslator, NO_BREAK } from "@/test/ai";
 
-/** The space that a line never breaks at, which keeps a number with its unit. */
-const NO_BREAK = "\u00a0";
 const MiB = 1024 * 1024;
 /** One tenth of a MiB, rounded up to a whole byte. */
 const TENTH_MIB = Math.ceil(MiB / 10);
@@ -91,18 +87,15 @@ const rejected = (
   files: readonly string[]
 ) => new PromptInputFileConstraintError({ code, files, message: code });
 
+// Every language of the site is read, whichever languages that is.
 describe("notice of the files that were not attached", () => {
-  for (const [locale, messages] of Rec.toEntries({ de, en, id })) {
-    describe(`in ${locale}`, () => {
-      const onError = vi.fn();
-      const t = createTranslator({
-        locale,
-        messages,
-        namespace: "Ai",
-        onError,
-      });
+  it.effect.each(APP_LOCALE_CODES)(
+    "gives every reason its own words, with the limits the code checks, in %s",
+    (locale) =>
+      Effect.gen(function* () {
+        const onError = vi.fn();
+        const t = yield* aiTranslator(locale, onError);
 
-      it("gives every reason its own words, with the limits the code checks", () => {
         const notice = rejectionNotice(
           [
             rejected("accept", ["essay.docx"]),
@@ -120,9 +113,15 @@ describe("notice of the files that were not attached", () => {
         expect(Arr.dedupe(reasons)).toHaveLength(4);
         expect(size).toContain(String(NINA_FILE_MEBIBYTES));
         expect(count).toContain(String(NINA_FILE_COUNT));
-      });
+      })
+  );
 
-      it("keeps each number with its unit or its noun on one line", () => {
+  it.effect.each(APP_LOCALE_CODES)(
+    "keeps each number with its unit or its noun on one line, in %s",
+    (locale) =>
+      Effect.gen(function* () {
+        const t = yield* aiTranslator(locale);
+
         const [size, count] = Arr.map(
           rejectionNotice(
             [
@@ -140,9 +139,15 @@ describe("notice of the files that were not attached", () => {
         expect(size).not.toContain(`${NINA_FILE_MEBIBYTES} `);
         expect(count).toContain(`${NINA_FILE_COUNT}${NO_BREAK}`);
         expect(count).not.toContain(`${NINA_FILE_COUNT} `);
-      });
+      })
+  );
 
-      it("says the same title for one file as for many", () => {
+  it.effect.each(APP_LOCALE_CODES)(
+    "says the same title for one file as for many, in %s",
+    (locale) =>
+      Effect.gen(function* () {
+        const t = yield* aiTranslator(locale);
+
         const one = rejectionNotice([rejected("empty", ["a.txt"])], t);
         const many = rejectionNotice(
           [
@@ -153,9 +158,14 @@ describe("notice of the files that were not attached", () => {
         );
 
         expect(one.title).toBe(many.title);
-      });
+      })
+  );
 
-      it("names every file of a reason, however many, and counts none of them", () => {
+  it.effect.each(APP_LOCALE_CODES)(
+    "names every file of a reason, however many, and counts none of them, in %s",
+    (locale) =>
+      Effect.gen(function* () {
+        const t = yield* aiTranslator(locale);
         const dropped = Arr.makeBy(25, (index) => `${index}.png`);
 
         const notice = rejectionNotice([rejected("max_files", dropped)], t);
@@ -163,16 +173,21 @@ describe("notice of the files that were not attached", () => {
         expect(notice.reasons).toEqual([
           { names: dropped, reason: expect.any(String) },
         ]);
-      });
+      })
+  );
 
-      it("lists two files of one name once", () => {
+  it.effect.each(APP_LOCALE_CODES)(
+    "lists two files of one name once, in %s",
+    (locale) =>
+      Effect.gen(function* () {
+        const t = yield* aiTranslator(locale);
+
         const [reason] = rejectionNotice(
           [rejected("empty", ["a.txt", "a.txt", "b.txt"])],
           t
         ).reasons;
 
         expect(reason?.names).toEqual(["a.txt", "b.txt"]);
-      });
-    });
-  }
+      })
+  );
 });

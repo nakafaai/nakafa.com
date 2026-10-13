@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { NINA_FILE_COUNT } from "@repo/backend/client/nina/uploads";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { encodeJsonText } from "@repo/utilities/json";
-import { DateTime, Option, Record as Rec, Schema } from "effect";
+import { Array as Arr, DateTime, Option, Record as Rec, Schema } from "effect";
 import { createAiStore } from "@/components/ai/store/create";
 
 const STORAGE_KEY = "nakafa-ai";
@@ -13,8 +14,12 @@ const StoredAiState = Schema.fromJsonString(
 );
 const chatId = Schema.decodeUnknownSync(Id("chats"))("chat_1");
 const otherChatId = Schema.decodeUnknownSync(Id("chats"))("chat_2");
-const firstUpload = Schema.decodeUnknownSync(Id("ninaUploads"))("upload_1");
-const secondUpload = Schema.decodeUnknownSync(Id("ninaUploads"))("upload_2");
+const uploadNamed = Schema.decodeUnknownSync(Id("ninaUploads"));
+const firstUpload = uploadNamed("upload_1");
+const secondUpload = uploadNamed("upload_2");
+/** Two moments: the server keeps an upload until the later one. */
+const NOW = 1000;
+const LATER = 5000;
 const receipt = {
   chatId,
   order: 0,
@@ -282,27 +287,31 @@ describe("ai/store/create", () => {
   it("remembers the upload that holds a file, by the id of the file", () => {
     const store = createAiStore();
 
-    expect(store.getState().uploadOf("file-1")).toEqual(Option.none());
+    expect(store.getState().uploadOf("file-1", NOW)).toEqual(Option.none());
 
-    store.getState().keepUpload("file-1", firstUpload);
-    store.getState().keepUpload("file-2", secondUpload);
-    expect(store.getState().uploadOf("file-1")).toEqual(
+    store.getState().keepUpload("file-1", firstUpload, LATER);
+    store.getState().keepUpload("file-2", secondUpload, LATER);
+    expect(store.getState().uploadOf("file-1", NOW)).toEqual(
       Option.some(firstUpload)
     );
-    expect(store.getState().uploadOf("file-2")).toEqual(
+    expect(store.getState().uploadOf("file-2", NOW)).toEqual(
       Option.some(secondUpload)
     );
+    // The server refuses an upload from the moment it expires.
+    expect(store.getState().uploadOf("file-1", LATER)).toEqual(Option.none());
   });
 
   it("gives up the uploads of the files it is asked for, once, and nothing else", () => {
     const store = createAiStore();
-    store.getState().keepUpload("file-1", firstUpload);
-    store.getState().keepUpload("file-2", secondUpload);
+    store.getState().keepUpload("file-1", firstUpload, LATER);
+    store.getState().keepUpload("file-2", secondUpload, LATER);
 
     expect(store.getState().takeUploads(["file-1", "file-3"])).toEqual([
       firstUpload,
     ]);
-    expect(store.getState().held).toEqual({ "file-2": secondUpload });
+    expect(store.getState().held).toEqual({
+      "file-2": { expiresAt: LATER, uploadId: secondUpload },
+    });
 
     // A file that holds no upload changes nothing, so no reader runs again.
     const before = store.getState();
@@ -311,6 +320,17 @@ describe("ai/store/create", () => {
     expect(store.getState().takeUploads(["file-1", "file-3"])).toEqual([]);
     expect(store.getState()).toBe(before);
     expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("names the files outside a send whose uploads it holds, when the send would not fit", () => {
+    const store = createAiStore();
+    const strays = Arr.makeBy(NINA_FILE_COUNT, (index) => `stray-${index}`);
+    for (const fileId of strays) {
+      store.getState().keepUpload(fileId, uploadNamed(fileId), LATER);
+    }
+
+    expect(store.getState().strayFiles(["new"], NOW)).toEqual(strays);
+    expect(store.getState().strayFiles(strays, NOW)).toEqual([]);
   });
 
   it("ends the session of its owner: what it held for them is gone, and the draft and the page are not touched", () => {
@@ -323,7 +343,7 @@ describe("ai/store/create", () => {
       receipt,
       submittedAt: 1,
     });
-    store.getState().keepUpload("file-1", firstUpload);
+    store.getState().keepUpload("file-1", firstUpload, LATER);
     store.getState().markUpload("file-1", "error");
     store.getState().markUpload("file-2", "uploading");
     store.getState().setText("Half typed");
@@ -340,7 +360,7 @@ describe("ai/store/create", () => {
     // The next learner finds no upload of the last one to send or to show.
     expect(state.held).toEqual({});
     expect(state.uploads).toEqual({});
-    expect(state.uploadOf("file-1")).toEqual(Option.none());
+    expect(state.uploadOf("file-1", NOW)).toEqual(Option.none());
     // The draft has its own rule, and the page keeps what it shows.
     expect(state).toMatchObject({
       contextTitle: "Algebra",

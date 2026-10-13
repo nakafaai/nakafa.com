@@ -1,10 +1,15 @@
 import type { Ref } from "@confect/core";
 import { captureException } from "@repo/analytics/posthog/browser";
-import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
+import {
+  isPromptWithinLimit,
+  NINA_PROMPT_LENGTH,
+  NINA_PROMPT_LENGTH_MESSAGE,
+  NinaPromptError,
+} from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { toast } from "sonner";
 
 /**
@@ -145,6 +150,26 @@ export const ninaFailureLimits = {
   count: NINA_PROMPT_LENGTH,
   size: NINA_DOCUMENT_MEBIBYTES,
 };
+
+/**
+ * The refusal of a press on the send button, or nothing. A prompt over the
+ * limit stays in the composer with the limit named, and nothing is asked of
+ * the server. The page composers send the text trimmed, so the trimmed length
+ * is the one that counts; a conversation sends it as written, and the
+ * server's own refusal names the same limit. While a reply streams, the same
+ * press stops it and sends no text, so the limit does not apply to it.
+ */
+export function promptRefusal(text: string | undefined, stopping: boolean) {
+  if (stopping || isPromptWithinLimit(text?.trim() ?? "")) {
+    return Option.none();
+  }
+  return Option.some(
+    new NinaPromptError({
+      code: "NINA_PROMPT_LENGTH",
+      message: NINA_PROMPT_LENGTH_MESSAGE,
+    })
+  );
+}
 
 /** Persisted failures retain their own recovery policy when history is reopened. */
 export const ninaResponseFeedback = {

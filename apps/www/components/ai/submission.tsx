@@ -4,6 +4,7 @@ import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
 import {
   NINA_DOCUMENT_SIZE_MESSAGE,
+  NINA_UPLOAD_LIFETIME,
   NinaFileType,
   NinaUploadError,
 } from "@repo/backend/client/nina/uploads";
@@ -20,7 +21,9 @@ import type { FileUIPart } from "ai";
 import { type ConvexReactClient, useConvex } from "convex/react";
 import {
   Array as Arr,
+  Clock,
   DateTime,
+  Duration,
   Effect,
   Exit,
   HashMap,
@@ -66,11 +69,17 @@ function requireNinaConnection(convex: ConvexReactClient) {
 
 /**
  * What the uploads of a send need from the store: to show a chip as uploading
- * or failed, and to know which upload already holds a file.
+ * or failed, to know which upload already holds a file, and to give back the
+ * places held for files outside the send when the send needs the room.
  */
 type UploadStore = Pick<
   AiStore,
-  "clearUpload" | "keepUpload" | "markUpload" | "uploadOf"
+  | "clearUpload"
+  | "keepUpload"
+  | "markUpload"
+  | "strayFiles"
+  | "takeUploads"
+  | "uploadOf"
 >;
 
 /** Uploads one file unless it already holds an upload, and shows how far the upload is. */
@@ -81,11 +90,16 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   convex: ConvexReactClient,
   status: UploadStore
 ) {
-  // A file that holds an upload from an earlier send is not uploaded again. A
-  // failed send leaves its uploads where they are: the server refuses with a
-  // failure it throws, which rolls the whole mutation back, and Convex's client
-  // sends a mutation again when it lost the answer instead of failing it.
-  const cached = status.uploadOf(attachment.id);
+  // The server counts the life of an upload from its own reserve, which comes
+  // after this moment, so the page never trusts an upload for longer than the
+  // server keeps it.
+  const startedAt = yield* Clock.currentTimeMillis;
+  // A file that holds an upload from an earlier send is not uploaded again,
+  // unless the server has dropped that upload by now. A failed send leaves its
+  // uploads where they are: the server refuses with a failure it throws, which
+  // rolls the whole mutation back, and Convex's client sends a mutation again
+  // when it lost the answer instead of failing it.
+  const cached = status.uploadOf(attachment.id, startedAt);
   if (Option.isSome(cached)) {
     return cached.value;
   }
@@ -128,7 +142,13 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
       Effect.sync(() => status.markUpload(attachment.id, "error"))
     )
   );
-  yield* Effect.sync(() => status.keepUpload(attachment.id, id));
+  yield* Effect.sync(() =>
+    status.keepUpload(
+      attachment.id,
+      id,
+      startedAt + Duration.toMillis(NINA_UPLOAD_LIFETIME)
+    )
+  );
   MutableHashMap.set(previews, id, {
     type: "file",
     url: attachment.url,
@@ -139,10 +159,16 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   return id;
 });
 
-/** Uploads one message's attachments, refusing oversized documents before any upload starts. */
+/**
+ * Uploads one message's attachments, refusing oversized documents before any
+ * upload starts. The server also counts the uploads held for files of
+ * composers that are gone, and refuses an upload beyond its limit, so a send
+ * that would not fit beside them gives those places back first.
+ */
 const uploadAttachments = Effect.fn("nina.uploads")(function* (
   files: NonNullable<NinaDraft["files"]>,
   upload: ReturnType<typeof useAction<typeof nina.uploads.save>>,
+  release: ReturnType<typeof useMutation<typeof nina.uploads.release>>,
   previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>,
   convex: ConvexReactClient,
   status: UploadStore
@@ -152,6 +178,16 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
       code: "NINA_UPLOAD_SIZE",
       message: NINA_DOCUMENT_SIZE_MESSAGE,
     });
+  }
+  const now = yield* Clock.currentTimeMillis;
+  const strays = status.strayFiles(
+    Arr.map(files, (attachment) => attachment.id),
+    now
+  );
+  if (Arr.isReadonlyArrayNonEmpty(strays)) {
+    // A call made offline waits for the connection, and the send with it.
+    yield* requireNinaConnection(convex);
+    yield* releaseUploads(status.takeUploads(strays), release);
   }
   return yield* Effect.forEach(files, (attachment) =>
     uploadAttachment(attachment, upload, previews, convex, status)
@@ -179,6 +215,7 @@ export function useNinaSubmission(
   const markUpload = useAi((state) => state.markUpload);
   const removeChatDraft = useAi((state) => state.removeChatDraft);
   const resolveChatDraft = useAi((state) => state.resolveChatDraft);
+  const strayFiles = useAi((state) => state.strayFiles);
   const takeUploads = useAi((state) => state.takeUploads);
   const uploadOf = useAi((state) => state.uploadOf);
   const inFlight = useRef(false);
@@ -312,10 +349,12 @@ export function useNinaSubmission(
   function send(prompt: NinaDraft, chatId?: Id<"chats">) {
     const files = prompt.files ?? [];
     return perform(
-      uploadAttachments(files, upload, previews, convex, {
+      uploadAttachments(files, upload, release, previews, convex, {
         clearUpload,
         keepUpload,
         markUpload,
+        strayFiles,
+        takeUploads,
         uploadOf,
       }).pipe(
         Effect.map((uploadIds) =>
