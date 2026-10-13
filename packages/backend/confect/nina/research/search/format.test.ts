@@ -85,7 +85,7 @@ describe("web search output text", () => {
 });
 
 describe("limit of a search", () => {
-  it("is the words a search limited to sites writes when it returned no source", () => {
+  it("is the text of the search, in a list of one, when it was limited to sites and returned no source", () => {
     const limited = { error: undefined, sites, sources: [] };
 
     expect(formatSearchLimit(limited)).toEqual([

@@ -247,7 +247,7 @@ describe("research Agent evidence boundary", () => {
       `\n\n${limitNote}`,
     ],
     [
-      "a search limited to sites finds only a source that no citation may name, which Nina is neither told of nor handed",
+      "a search limited to sites finds only a source that no citation may name, so Nina is told nothing of the limit and handed nothing of the source",
       searchUncitable,
       "",
     ],
