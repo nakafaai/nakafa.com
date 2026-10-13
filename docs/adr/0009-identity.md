@@ -73,6 +73,22 @@ vault, sealed under that learner's key, never on the account.
 - `account.encryptOAuthTokens` stays on, so that a token that a later plugin
   writes is sealed.
 
+### Clearing the tokens already stored
+
+The hooks never touch a row they do not write, so every account written before
+them still holds the tokens, sealed except for the ID token. The temporary
+mutation `tokens:clearPage` of the Better Auth component removes the five
+columns from them, 100 accounts a call, and leaves every other row and column
+alone. With `dry` set it only counts. It runs on dev and then on production with
+`convex run --component betterAuth tokens:clearPage`, on production only after
+the release with the hooks is live. Clearing removes Nakafa's copy. A refresh
+token that Google issued earlier is not revoked by it.
+
+Owner: this ADR. Exit: a dry pass over every account on dev and on production
+finds no row that holds a token. Cleanup: the change that records the
+production result deletes the mutation and its test. The columns stay in the
+schema, because Better Auth generates the table, and stay unset.
+
 ### Signing keys and the session token
 
 Better Auth seals the private half of each signing key in `jwks`, also in the
@@ -98,6 +114,10 @@ not compare the session's user with the token's, which `session.live` does.
 Turning off `account.updateAccountOnSignIn` stops the update at each sign-in,
 but not the writes at sign-up and at a link, and it stops the granted scopes
 from following Google. The hooks cover every write with one rule.
+
+Clearing the stored tokens from the app through the component's `updateOne`
+would write `null` instead of removing the columns, and would cost one
+component call for each row.
 
 ## References
 

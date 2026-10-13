@@ -1034,6 +1034,19 @@ export const api: {
       boolean
     >;
   };
+  tokens: {
+    clearPage: FunctionReference<
+      "mutation",
+      "public",
+      { cursor: null | string; dry: boolean },
+      {
+        cleared: number;
+        holding: number;
+        next: null | string;
+        scanned: number;
+      }
+    >;
+  };
 } = anyApi as any;
 
 /**
