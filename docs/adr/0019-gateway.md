@@ -441,9 +441,10 @@ Not yet established:
   every message; no decision is made without asking for zero retention.
 - Whether the research search step, given the rule that a site goes in a search
   only when the learner names it, leaves the field out for a request for an
-  official source, and whether Nina researches again after she reads that a
-  limit found nothing. Both are instructions to a model, and no model call was
-  made to test them.
+  official source that names no site and puts the site in when the learner
+  names one, and whether Nina researches again after she reads that a limit
+  found nothing. Each is an instruction to a model, and no model call was made
+  to test them.
 
 ## Implementation Contract
 

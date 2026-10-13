@@ -4,12 +4,22 @@ import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import { formatResearchOutput } from "@repo/backend/confect/nina/research/output";
 import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
-import { formatWebSearchOutput } from "@repo/backend/confect/nina/research/search/format";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { provider } from "@repo/backend/test/gateway";
 import { neverAnswering, withTimeLeft } from "@repo/backend/test/nina/deadline";
-import { runResearch } from "@repo/backend/test/nina/research";
+import {
+  limitNote,
+  pageRead,
+  pageUnread,
+  runResearch,
+  searchFound,
+  searchLimited,
+  searchNothing,
+  searchUnavailable,
+  searchUncitable,
+  url,
+} from "@repo/backend/test/nina/research";
 import {
   providerStep,
   recordProgress,
@@ -37,7 +47,6 @@ afterEach(() => {
   provider.languageModel.mockReset();
   vi.useRealTimers();
 });
-const url = "https://ai-sdk.dev/docs/agents";
 const source = { href: url, hostname: "ai-sdk.dev", text: url };
 const output = {
   findings: [
@@ -96,68 +105,11 @@ const noHostname = searchCallWith({
   queries: ["official agents"],
   sites: ["ai-sdk.dev", "AI SDK"],
 });
-const found = Effect.succeed({
-  text: "Inspectable source evidence.",
-  result: {
-    error: undefined,
-    sources: [
-      {
-        url,
-        title: "Official source",
-        citation: "Official",
-        content: "Verified source.",
-        description: "Direct evidence",
-      },
-    ],
-  },
-});
-const nothing = Effect.succeed({
-  text: "No web result.",
-  result: { sources: [], error: undefined },
-});
-/** A search limited to a site, which found no page in it. */
-const limited = { sites: Arr.make("ai-sdk.dev"), sources: [] };
-/** What Nina is told when a search limited to a site found no page in it. */
-const limitNote = formatWebSearchOutput(limited);
-const limitedNothing = Effect.succeed({ text: limitNote, result: limited });
-/**
- * A search limited to a site, whose only result is an address that carries
- * credentials, so no citation may name it. It found a page in the site, so the
- * limit is not why nothing can be cited.
- */
-const uncitable = {
-  sites: limited.sites,
-  sources: [
-    {
-      url: "https://reader:secret@ai-sdk.dev/docs/agents",
-      title: "Private mirror",
-      citation: "[ai-sdk.dev](https://reader:secret@ai-sdk.dev/docs/agents)",
-      content: "Mirror text.",
-      description: "A mirror that asks for a login.",
-    },
-  ],
-};
-const limitedUncitable = Effect.succeed({
-  text: formatWebSearchOutput(uncitable),
-  result: uncitable,
-});
-const unavailable = Effect.succeed({
-  text: "Search failed.",
-  result: { sources: [], error: "Unavailable" },
-});
-const read = Effect.succeed({
-  data: { url, content: "Exact source text." },
-  error: undefined,
-});
-const unread = Effect.succeed({
-  data: { url: "https://example.org/unread", content: "" },
-  error: "Unavailable",
-});
 
 describe("research Agent evidence boundary", () => {
   it("searches once, in the sites the model named, synthesizes once and keeps only retrieved citations", async () => {
-    vi.mocked(searchWeb).mockReturnValue(found);
-    vi.mocked(scrapeUrl).mockReturnValue(read);
+    vi.mocked(searchWeb).mockReturnValue(searchFound);
+    vi.mocked(scrapeUrl).mockReturnValue(pageRead);
     const model = new MockLanguageModelV4({
       doGenerate: [searchCall, final],
     });
@@ -212,7 +164,7 @@ describe("research Agent evidence boundary", () => {
   });
 
   it("cuts both of its model calls to the time the capability has left", async () => {
-    vi.mocked(searchWeb).mockReturnValue(found);
+    vi.mocked(searchWeb).mockReturnValue(searchFound);
     provider.languageModel.mockReturnValue(
       new MockLanguageModelV4({ doGenerate: [searchCall, final] })
     );
@@ -232,8 +184,8 @@ describe("research Agent evidence boundary", () => {
   });
 
   it("reads a full address in the task as a link, but not a site the task only names or a page of Nakafa's own site", async () => {
-    vi.mocked(searchWeb).mockReturnValue(found);
-    vi.mocked(scrapeUrl).mockReturnValue(read);
+    vi.mocked(searchWeb).mockReturnValue(searchFound);
+    vi.mocked(scrapeUrl).mockReturnValue(pageRead);
     provider.languageModel.mockReturnValue(
       new MockLanguageModelV4({ doGenerate: [searchCall, final] })
     );
@@ -284,15 +236,19 @@ describe("research Agent evidence boundary", () => {
   });
 
   it.each([
-    ["an open search finds no source and adds nothing for Nina", nothing, ""],
+    [
+      "an open search finds no source and adds nothing for Nina",
+      searchNothing,
+      "",
+    ],
     [
       "a search limited to sites finds no source and hands Nina what the limit means",
-      limitedNothing,
+      searchLimited,
       `\n\n${limitNote}`,
     ],
     [
       "a search limited to sites finds only a source that no citation may name, which Nina is neither told of nor handed",
-      limitedUncitable,
+      searchUncitable,
       "",
     ],
   ])(
@@ -309,8 +265,8 @@ describe("research Agent evidence boundary", () => {
   );
 
   it("hands Nina what a limit found after the findings drawn from a link of the learner's", async () => {
-    vi.mocked(searchWeb).mockReturnValue(limitedNothing);
-    vi.mocked(scrapeUrl).mockReturnValue(read);
+    vi.mocked(searchWeb).mockReturnValue(searchLimited);
+    vi.mocked(scrapeUrl).mockReturnValue(pageRead);
     const { result } = await runResearch({ doGenerate: [searchCall, final] }, [
       source,
     ]);
@@ -318,8 +274,8 @@ describe("research Agent evidence boundary", () => {
   });
 
   it("hands Nina what a limit found after the evidence of a link of the learner's when synthesis is unusable", async () => {
-    vi.mocked(searchWeb).mockReturnValue(limitedNothing);
-    vi.mocked(scrapeUrl).mockReturnValue(read);
+    vi.mocked(searchWeb).mockReturnValue(searchLimited);
+    vi.mocked(scrapeUrl).mockReturnValue(pageRead);
     const { result } = await runResearch(
       { doGenerate: [searchCall, unusable] },
       [source]
@@ -335,7 +291,7 @@ describe("research Agent evidence boundary", () => {
   });
 
   it("hands Nina the closest thing the sources state, with its citation and the limitation, and is not empty", async () => {
-    vi.mocked(searchWeb).mockReturnValue(found);
+    vi.mocked(searchWeb).mockReturnValue(searchFound);
     const { calls, result } = await runResearch({
       doGenerate: [
         searchCall,
@@ -369,7 +325,7 @@ describe("research Agent evidence boundary", () => {
   ])(
     "is not empty when synthesis %s: Nina reads what this attempt could not verify",
     async (_case, answer) => {
-      vi.mocked(searchWeb).mockReturnValue(found);
+      vi.mocked(searchWeb).mockReturnValue(searchFound);
       const { calls, result } = await runResearch({
         doGenerate: [searchCall, synthesis(answer)],
       });
@@ -383,7 +339,7 @@ describe("research Agent evidence boundary", () => {
   );
 
   it("hands the retrieved sources to Nina, without a retry, when synthesis is unusable", async () => {
-    vi.mocked(searchWeb).mockReturnValue(found);
+    vi.mocked(searchWeb).mockReturnValue(searchFound);
     const { calls, logged, result } = await runResearch({
       doGenerate: [searchCall, unusable],
     });
@@ -404,7 +360,7 @@ describe("research Agent evidence boundary", () => {
   it("hands Nina what it gathered, as partial, when the synthesis call never answers within the time left", async () => {
     // Fake time drives the SDK's step timer, which ends a call that never answers.
     vi.useFakeTimers();
-    vi.mocked(searchWeb).mockReturnValue(found);
+    vi.mocked(searchWeb).mockReturnValue(searchFound);
     const hung = neverAnswering();
     // Only the search call forces a tool; the synthesis call never answers.
     const running = runResearch(
@@ -449,7 +405,7 @@ describe("research Agent evidence boundary", () => {
   ] as const)(
     "answers from the learner's own source as partial when %s",
     async (_reason, first, fact) => {
-      vi.mocked(scrapeUrl).mockReturnValue(read);
+      vi.mocked(scrapeUrl).mockReturnValue(pageRead);
       let call = 0;
       const { calls, logged, result } = await runResearch(
         {
@@ -471,8 +427,8 @@ describe("research Agent evidence boundary", () => {
   );
 
   it("never shows the model a learner's source that could not be read as evidence", async () => {
-    vi.mocked(searchWeb).mockReturnValue(found);
-    vi.mocked(scrapeUrl).mockReturnValue(unread);
+    vi.mocked(searchWeb).mockReturnValue(searchFound);
+    vi.mocked(scrapeUrl).mockReturnValue(pageUnread);
     const { calls, result } = await runResearch(
       { doGenerate: [searchCall, final] },
       [source]
@@ -516,8 +472,8 @@ describe("research Agent evidence boundary", () => {
   ] as const)(
     "fails in the search phase with nothing usable when %s",
     async (_reason, first, failure) => {
-      vi.mocked(searchWeb).mockReturnValue(unavailable);
-      vi.mocked(scrapeUrl).mockReturnValue(unread);
+      vi.mocked(searchWeb).mockReturnValue(searchUnavailable);
+      vi.mocked(scrapeUrl).mockReturnValue(pageUnread);
       const { calls, result } = await runResearch({ doGenerate: first }, [
         source,
       ]);
