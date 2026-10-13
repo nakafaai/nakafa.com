@@ -32,6 +32,7 @@ import {
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
 import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import { randomUuid } from "@repo/utilities/uuid";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
@@ -126,7 +127,14 @@ export function NinaInput({
   ) {
     const notice = rejectionNotice(rejections, t);
     toast.error(notice.title, {
-      description: <RejectedFiles reasons={notice.reasons} />,
+      // A new pick is a new list. With a key of its own it starts at its top,
+      // not where the list it replaces was scrolled to.
+      description: (
+        <RejectedFiles
+          key={Effect.runSync(randomUuid)}
+          reasons={notice.reasons}
+        />
+      ),
       duration: Number.POSITIVE_INFINITY,
       id: FILES_NOTICE,
       position: NINA_NOTICE_POSITION,
