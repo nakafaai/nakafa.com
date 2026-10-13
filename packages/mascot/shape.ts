@@ -5,6 +5,8 @@ import { Schema } from "effect";
  * an animal, Nina, or one of her things, is drawn with these and nothing else.
  */
 const PAINT = {
+  /** The colour that `currentColor` reads, for this shape and what it holds. */
+  color: Schema.optionalKey(Schema.String),
   fill: Schema.optionalKey(Schema.String),
   fillOpacity: Schema.optionalKey(Schema.Finite),
   fillRule: Schema.optionalKey(Schema.Literal("evenodd")),
@@ -102,6 +104,13 @@ export function ellipse<const Mark = never>(
   fields: typeof EllipseFields.Type & Marked<Mark>
 ) {
   return { _tag: "ellipse", ...fields } as const satisfies Shape<Mark>;
+}
+
+/** Draws a circle. */
+export function circle<const Mark = never>(
+  fields: typeof CircleFields.Type & Marked<Mark>
+) {
+  return { _tag: "circle", ...fields } as const satisfies Shape<Mark>;
 }
 
 /** Draws a rectangle. */

@@ -1,29 +1,97 @@
 "use client";
 
+import { QueryResult, useQuery } from "@confect/react";
 import {
   Copy01Icon,
   Globe02Icon,
   Link04Icon,
+  Refresh03Icon,
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
+import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { getAppUrl } from "@repo/next-config/app";
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useChange } from "@/components/ai/chat/change.client";
+import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 
-/** Owns sharing state and visibility admission independently of title editing. */
+/**
+ * The share dialog of one chat. A link the server could not load shows in the
+ * dialog, which offers to load it again, and never takes the chat page with it.
+ */
 export function ChatSharing({
+  chat,
+  open,
+  onOpenChange,
+}: {
+  chat: ChatView;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <ErrorBoundary
+      fallbackRender={({ resetErrorBoundary }) => (
+        <ChatSharingError
+          onOpenChange={onOpenChange}
+          onRetry={resetErrorBoundary}
+          open={open}
+        />
+      )}
+    >
+      <ChatSharingDialog chat={chat} onOpenChange={onOpenChange} open={open} />
+    </ErrorBoundary>
+  );
+}
+
+/**
+ * The share dialog while the link could not be loaded. It says so in one
+ * sentence and offers to load the link again, which asks the server anew.
+ */
+function ChatSharingError({
+  open,
+  onOpenChange,
+  onRetry,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onRetry: () => void;
+}) {
+  const t = useTranslations("Ai");
+
+  return (
+    <ResponsiveDialog
+      description={t("share-link-error")}
+      footer={
+        <Button onClick={onRetry}>
+          <HugeIcons icon={Refresh03Icon} />
+          {t("retry")}
+        </Button>
+      }
+      open={open}
+      setOpen={onOpenChange}
+      title={t("share-chat")}
+    />
+  );
+}
+
+/**
+ * Owns sharing state and visibility admission independently of title editing.
+ * The link carries a token the server draws when the chat is shared, so the
+ * link can be copied once the token arrives. A token the server fails to read
+ * fails the dialog, which its boundary shows.
+ */
+function ChatSharingDialog({
   chat,
   open,
   onOpenChange,
@@ -38,7 +106,14 @@ export function ChatSharing({
   const clipboard = useClipboard({ timeout: 500 });
   const updateChatVisibility = useUpdateChatVisibilityMutation();
   const isPrivate = chat.visibility === "private";
-  const link = `${getAppUrl()}/chat/${chat._id}`;
+  const tokenResult = useQuery(
+    chats.queries.getShareToken,
+    isPrivate ? "skip" : { chatId: chat._id }
+  );
+  if (QueryResult.isFailure(tokenResult)) {
+    throw tokenResult.error;
+  }
+  const token = QueryResult.isSuccess(tokenResult) ? tokenResult.value : null;
   /** Persist the selected chat visibility. */
   const handleUpdateVisibility = (visibility: ChatVisibility) => {
     change(() =>
@@ -68,6 +143,16 @@ export function ChatSharing({
       )
     );
   };
+  /** Copy the link once the server has drawn its token. */
+  const handleCopy = () => {
+    if (token === null) {
+      return;
+    }
+    clipboard.copy(shareLink(chat._id, token));
+    toast.success(t("link-copied"), {
+      position: "bottom-center",
+    });
+  };
 
   return (
     <ResponsiveDialog
@@ -82,15 +167,7 @@ export function ChatSharing({
             {t("create-link")}
           </Button>
         ) : (
-          <Button
-            disabled={isPending}
-            onClick={() => {
-              clipboard.copy(link);
-              toast.success(t("link-copied"), {
-                position: "bottom-center",
-              });
-            }}
-          >
+          <Button disabled={isPending || token === null} onClick={handleCopy}>
             <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
             {t("copy-link")}
           </Button>

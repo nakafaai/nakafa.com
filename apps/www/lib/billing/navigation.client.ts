@@ -12,6 +12,7 @@ import { reportClientException } from "@/lib/analytics/client";
 import {
   type BillingDestination,
   billingNavigationProgram,
+  checkoutReturnUrl,
 } from "@/lib/billing/navigation";
 import { requireConvexOnline } from "@/lib/convex/online";
 
@@ -69,7 +70,10 @@ export function useBillingNavigation() {
     }: BillingSource & { readonly locale: PublicAppLocale }) =>
       runBillingRequest(
         Effect.tryPromise(() =>
-          createCheckout({ locale, successUrl: window.location.href })
+          createCheckout({
+            locale,
+            successUrl: checkoutReturnUrl(window.location.href),
+          })
         ).pipe(Effect.flatMap(Effect.fromResult)),
         { ...failure, message: t("checkout-error") }
       ),

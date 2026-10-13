@@ -166,7 +166,9 @@ const asked = FunctionImpl.make(
 /**
  * Stores a refreshed summary, sealed for the chat owner. Coverage only moves
  * forward, so a slower refresh never replaces a newer one, but its provider
- * usage still counts; a chat deleted meanwhile gets no orphan.
+ * usage still counts; a chat deleted meanwhile gets no orphan. A refresh whose
+ * answer was rejected sends no text, and its usage counts all the same. A chat
+ * that has no summary has no row to count it in, because a row holds text.
  */
 const save = FunctionImpl.make(
   schema,
@@ -189,11 +191,16 @@ const save = FunctionImpl.make(
       output: (existing?.usage.output ?? 0) + call.output,
     };
     const writer = yield* DatabaseWriter;
-    if (existing && existing.throughOrder >= throughOrder) {
-      yield* writer
-        .table("ninaSummaries")
-        .patch(existing._id, { usage })
-        .pipe(Effect.orDie);
+    if (
+      text === undefined ||
+      (existing && existing.throughOrder >= throughOrder)
+    ) {
+      if (existing) {
+        yield* writer
+          .table("ninaSummaries")
+          .patch(existing._id, { usage })
+          .pipe(Effect.orDie);
+      }
       return null;
     }
     const sealed = yield* sealSummary(chat.userId, text);

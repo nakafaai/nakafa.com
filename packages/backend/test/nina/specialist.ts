@@ -13,7 +13,7 @@ import type {
 } from "@repo/backend/confect/nina/capability/progress";
 import type {
   ResearchAgentData,
-  TaskAgentDataSchema,
+  TaskAgentData,
 } from "@repo/backend/confect/nina/contract/agent";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
@@ -34,7 +34,7 @@ export const specialistRequest = {
   },
   locale: "en",
   task: "Verify the requested evidence.",
-} satisfies Omit<typeof TaskAgentDataSchema.Type, "userId">;
+} satisfies Omit<TaskAgentData, "userId">;
 
 /** The learning session of the home page, which a scripted turn of a specialist or a capability runs under. */
 export const openHomeSession = openNinaLearningSession({

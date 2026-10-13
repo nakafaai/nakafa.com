@@ -94,10 +94,20 @@ the learner can read, edit and delete every one. After a complete turn:
    candidate that restates one of them names it by its place, as a whole
    number; a candidate that is new, or that corrects a memory, names none. Its
    usage is recorded as agent `memory` in the turn's ledger.
-3. The check keeps a candidate only when its quote is in the message once
-   lower-cased and with whitespace collapsed, its text has a letter or a digit,
-   and a situation has an end day of today or later. It reads structure and
-   never meaning. The candidates that stay then go to the decision model, each
+3. The check turns each claim of the capture model into a candidate, and keeps
+   it only when its quote is in the message once lower-cased and with
+   whitespace collapsed, its text has a letter or a digit, and a situation has
+   an end day of today or later. A claim is a candidate when it fits one of two
+   shapes: a situation names a real end day (`YYYY-MM-DD`, and not a day that a
+   calendar rolls over, such as February 30) and any other kind has none, so a
+   situation without a real day is dropped, and any other kind loses a day it
+   was given. The write takes the same two shapes as its argument, so it
+   refuses a situation that has no real end day. The model is asked for one
+   flat claim, not for the two shapes,
+   because a union in a structured output is not known to pass the gateway
+   (Gemini's structured output page lists no `anyOf`, read on 12 October
+   2026). The check reads structure and never meaning. The candidates that stay
+   then go to the decision model, each
    in a request of its own and all at the same time, each as its note: the
    sentence followed by its quote (`Note: ...`, `Quote: ...`). A request asks
    two questions about its note. `ownNote` asks whether the sentence reads as
@@ -126,11 +136,11 @@ the learner can read, edit and delete every one. After a complete turn:
    not name: a sentence that restates a memory without naming it is added again,
    which the learner can delete. Two candidates of one call that hold the same
    words (up to case, punctuation and spacing), the same kind and the same name
-   are one candidate, the first, and a situation without a usable end day is
-   dropped. Confirming moves the confirmation time. A memory is changed since
-   the call read it when it was written, edited or confirmed after the call
-   listed it, which includes a memory that an earlier candidate of the same call
-   wrote or confirmed. When nobody changed the memory since, confirming also
+   are one candidate, the first. Confirming moves the confirmation time. A
+   memory is changed since the call read it when it was written, edited or
+   confirmed after the call listed it, which includes a memory that an earlier
+   candidate of the same call wrote or confirmed. When nobody changed the
+   memory since, confirming also
    gives it the candidate's kind and, for a situation, its end day. A changed
    memory keeps its words, its kind and its end day, so the learner's newer
    words win. A memory the learner wrote therefore has no kind until a chat says
@@ -257,7 +267,13 @@ her, such as a target, an exam date or how they like explanations; and not for
 lesson content, for facts stated in this conversation, or more than twice in one
 turn. The twice is an instruction and not a limit in code: a turn still ends
 after 20 steps. In the chat it is one activity row, "Recalled memories", with no
-count and nothing to open, because a memory's text is not shown in the chat.
+count and nothing to open, because a memory's text is not shown in the chat. The
+row is the owner's alone. The call tells what Nina looked for in the owner's
+memories, in the owner's words, whether something matched and whether memory is
+paused, so a reader of a shared chat is sent no part of it, and no live stream
+in which its chunks could travel (ADR 0001). The words Nina writes around the
+call, her reasoning and her answer, are the conversation: a reader is sent them
+like the rest of her words (ADR 0001).
 
 While memory is paused none of the three is there: no portrait, no list, and the
 tool is not offered. The turn reads the pause once, at its start, and the

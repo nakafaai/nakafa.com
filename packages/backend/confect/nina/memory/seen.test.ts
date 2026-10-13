@@ -7,7 +7,11 @@ import {
   lostSeen,
   readNamed,
 } from "@repo/backend/confect/nina/memory/seen";
-import { candidate, createCaptureTest } from "@repo/backend/test/nina/memory";
+import {
+  candidate,
+  createCaptureTest,
+  situation,
+} from "@repo/backend/test/nina/memory";
 import { Effect, Option, Schema } from "effect";
 
 const clear = Ref.getFunctionReference(refs.public.nina.memory.clear);
@@ -205,8 +209,7 @@ describe("memory capture write after the learner changed their memory", () => {
     expect(
       await f.run(
         [
-          candidate({
-            kind: "situation",
+          situation({
             known: 1,
             text: "Ulangan kimia hari Senin.",
             until: "2026-10-25",

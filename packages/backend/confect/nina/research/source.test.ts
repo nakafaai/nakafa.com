@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { withTurnContext } from "@repo/backend/confect/nina/prompt/user";
 import {
-  getNakafaReferences,
   getNakafaReferencesFromMessages,
   getSourceReferences,
   getSourceReferencesFromMessages,
@@ -80,6 +79,10 @@ const staleNakafaMessages = [
 const hrefs = (references: ReturnType<typeof getSourceReferences>) =>
   Arr.map(references, (reference) => reference.href);
 
+/** The addresses Nakafa reads for the links to its own site in one message of a learner. */
+const nakafaAddresses = (text: string) =>
+  hrefs(getNakafaReferencesFromMessages([{ content: text, role: "user" }]));
+
 describe("lib/source", () => {
   it("keeps links to Nakafa's own site out of the outside sources, and finds them apart", () => {
     const text = `Bandingkan ${nakafaLesson}, ${nakafaQuran}, ai-sdk.dev/docs dan api.nakafa.com/docs.`;
@@ -88,18 +91,13 @@ describe("lib/source", () => {
       "https://ai-sdk.dev/docs",
       "https://api.nakafa.com/docs",
     ]);
-    expect(hrefs(getNakafaReferences(text))).toEqual([
-      nakafaLesson,
-      nakafaQuranAddress,
-    ]);
+    expect(nakafaAddresses(text)).toEqual([nakafaLesson, nakafaQuranAddress]);
   });
 
   it("reads every spelling of a link to Nakafa's own site as one address on the production origin", () => {
     expect(
-      hrefs(
-        getNakafaReferences(
-          "http://nakafa.com/en/articles/a https://www.nakafa.com/en/articles/a?x=1#top HTTP://NAKAFA.COM:8080/en/articles/a nakafa.com/en/articles/a https://nakafa.com//evil.com/path"
-        )
+      nakafaAddresses(
+        "http://nakafa.com/en/articles/a https://www.nakafa.com/en/articles/a?x=1#top HTTP://NAKAFA.COM:8080/en/articles/a nakafa.com/en/articles/a https://nakafa.com//evil.com/path"
       )
     ).toEqual([
       "https://nakafa.com/en/articles/a",
@@ -216,7 +214,7 @@ describe("lib/source", () => {
   it("does not take the page of the runtime facts for a source the learner named", () => {
     const message = withTurnContext(
       { role: "user", content: "Baca https://ai-sdk.dev/docs" },
-      "# Runtime Context\n\nCurrent page:\n- url: https://nakafa.com/en/home"
+      "# Runtime Context\n\nLearning asset:\n- url: https://nakafa.com/en/home"
     );
     expect(
       Arr.map(
@@ -228,7 +226,7 @@ describe("lib/source", () => {
       getSourceReferencesFromMessages([
         withTurnContext(
           { role: "user", content: "Jelaskan limit" },
-          "Current page:\n- url: https://nakafa.com/en/home"
+          "Learning asset:\n- url: https://nakafa.com/en/home"
         ),
       ])
     ).toEqual([]);
@@ -242,7 +240,7 @@ describe("lib/source", () => {
               role: "user",
               content: "Baca https://nakafa.com/id/materi/matematika",
             },
-            "Current page:\n- url: https://nakafa.com/en/home"
+            "Learning asset:\n- url: https://nakafa.com/en/home"
           ),
         ]),
         (link) => link.href

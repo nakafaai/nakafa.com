@@ -69,6 +69,19 @@ describe("formatTurnContext", () => {
     ).toBe(true);
   });
 
+  it("names the page once, in the context pack, and not again as the current page", () => {
+    const lines = formatTurnContext({ page, runtime, user: {} }).split("\n");
+
+    expect(Arr.filter(lines, (line) => line === `- url: ${url}`)).toHaveLength(
+      1
+    );
+    expect(
+      Arr.filter(lines, (line) => line === `- slug: ${learning.slug}`)
+    ).toHaveLength(1);
+    expect(lines).not.toContain("Current page:");
+    expect(lines).toContain("Learning asset:");
+  });
+
   it("names the selected curriculum preference", () => {
     const context = formatTurnContext({
       page,
@@ -114,8 +127,8 @@ describe("formatTurnContext", () => {
       },
     });
 
-    // This block weighs 339 tokens by the shared tokenizer, and it travels with every learner message.
-    expect(countTextTokens(context)).toBeLessThan(400);
+    // This block weighs 287 tokens by the shared tokenizer, and it travels with every learner message.
+    expect(countTextTokens(context)).toBeLessThan(300);
   });
 
   it("follows the runtime facts with the memories the turn recalls, and adds nothing without them", () => {

@@ -49,6 +49,41 @@ describe("post-auth admission", () => {
     );
   });
 
+  it("never carries a share token into an auth route, whichever helper builds it", () => {
+    // 43 URL-safe characters, the shape of a share token.
+    const token = "abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE";
+    const source = `/en/chat/chat-id#share=${token}`;
+    const resume = resolvePostAuthIntent(source, "en");
+
+    expect(resume).toEqual({
+      intent: "/en/chat/chat-id",
+      kind: "resume",
+      locale: "en",
+    });
+    expect(
+      getPostAuthSignInHrefForLocation(
+        { hash: `#share=${token}`, pathname: "/en/chat/chat-id", search: "" },
+        "en"
+      )
+    ).toBe("/auth?redirect=%2Fen%2Fchat%2Fchat-id");
+    for (const href of [
+      getPostAuthSignInHref(resume),
+      getPostAuthOnboardingHref(source, "en"),
+      getPostAuthProviderErrorHref(source, "en"),
+      getPostAuthProviderRetryHref(resume),
+      getPostAuthDestination(resume, "en").href,
+    ]) {
+      expect(href).not.toContain(token);
+      expect(href).not.toContain("share");
+    }
+  });
+
+  it("keeps the other entries of a fragment that carried a share token", () => {
+    expect(
+      resolvePostAuthIntent(`/en/chat/chat-id#a=1&share=${"A".repeat(43)}`)
+    ).toMatchObject({ intent: "/en/chat/chat-id#a=1", kind: "resume" });
+  });
+
   it("normalizes one localized internal intent", () => {
     const resolution = resolvePostAuthIntent(
       "/id/search?q=a%2Cb#search-results"
