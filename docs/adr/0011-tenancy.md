@@ -69,7 +69,9 @@ which never reads the database and routes only labels that are a valid
 `TenantSlug` outside `reservedSlugs`. Unknown tenants render the School
 not-found page from `tenancy/profile:get`. One sign-in covers nakafa.com and
 every tenant host of its cell through Better Auth cross-subdomain cookies, sign-in from a
-tenant host returns through nakafa.com, and tenant pages are private and
+tenant host returns through the apex domain of the tenant's cell (`nakafa.com`
+for `us`, ADR 0026), so the session cookie is set where that cell's hosts read
+it, and tenant pages are private and
 noindex. Schools' own domains come later through a domain map and a one-time
 token handoff. The subdomain change records its configuration facts here.
 
