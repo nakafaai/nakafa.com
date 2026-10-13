@@ -239,10 +239,10 @@ export const rowOf = (page: Page, message: StoredMessage) =>
  * A row that is out of sight is not drawn (`content-visibility` on the rows),
  * which empties its `innerText`. And while the pictures of other rows load,
  * the message scroller of `@shadcn/react` puts the view back on the question
- * it anchors, or on the end of the chat: while it is anchored it takes only a
- * wheel, a touch or a scroll key for the reader's own scroll, and a scroll
- * made by a test is none of those. So the row is scrolled to again until it
- * has drawn.
+ * it anchors, or, just after it scrolled itself, on the end of the chat. Only
+ * a wheel, a touch or a scroll key frees it from an anchor, and a scroll made
+ * by a test is none of those. So the row is scrolled to again until it has
+ * drawn.
  */
 export const drawnRow = async (page: Page, message: StoredMessage) => {
   const row = rowOf(page, message);
