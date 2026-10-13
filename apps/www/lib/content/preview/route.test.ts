@@ -179,9 +179,9 @@ describe("local preview route matching", () => {
       expect(
         yield* matchesPreviewPathname(`/en/${previewRoute.publicPath}`)
       ).toBe(true);
-      expect(
-        yield* matchesPreviewPathname("/en/school/onboarding/create")
-      ).toBe(false);
+      expect(yield* matchesPreviewPathname("/en/user/settings/memory")).toBe(
+        false
+      );
       expect(yield* matchesPreviewPathname("/de")).toBe(false);
     })
   );
