@@ -39,7 +39,8 @@ message (ADR 0016).
   object it points to (an `ObjectRef`, ADR 0016), and the time. It holds no
   text. The title is read from the source when the row is opened, through the
   kind of the object, so the permission is checked every time and a sealed title
-  is opened for its reader and for no one else (ADR 0030).
+  is opened for its reader and for no one else (ADR 0030). A row reads like the
+  activity list of Threads: who did what, and where.
 - A school notification is addressed to a Person, because a Person is who
   belongs to a school (ADR 0011). A personal notification is addressed to an
   account.

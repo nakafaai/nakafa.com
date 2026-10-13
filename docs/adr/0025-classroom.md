@@ -197,7 +197,9 @@ field the forum composer is. Status of the spike: planned, in program wave B.
   its thread and its usage in the Convex Agent component (ADR 0001), and it
   passes the admission rate limit and the credit hold of ADR 0008, as every Nina
   turn does.
-- A reply needs no tool approval, because Nina changes no data in the forum.
+- A reply needs no tool approval, because Nina changes no data in the forum. A
+  draft that would change data, such as an exam announcement, is published only
+  after a teacher approves it.
 - If the turn does not complete, no reply is invented, and the question is
   passed on to the teacher.
 - A reply costs 5 credits (`responseCredits` in
