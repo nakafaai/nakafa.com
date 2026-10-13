@@ -81,6 +81,8 @@ export function clamped(locator: Locator) {
  * own box. The ink of the text is measured on a canvas in the element's font,
  * from its baseline, and set against the box that clips it. The baseline is
  * where the layout put it: an ascent below the top of the line the page drew.
+ * An element that cannot be measured fails the test: it says nothing about
+ * clipping, and zero would say that nothing is clipped.
  */
 export function clippedInk(locator: Locator) {
   return locator.evaluate((element) => {
@@ -89,8 +91,11 @@ export function clippedInk(locator: Locator) {
     const range = document.createRange();
     range.selectNodeContents(element);
     const line = range.getClientRects().item(0);
-    if (!(context && line)) {
-      return { above: 0, below: 0 };
+    if (!context) {
+      throw new Error("The page gave no 2D canvas to measure the ink on.");
+    }
+    if (!line) {
+      throw new Error("The element shows no line of text to measure.");
     }
     context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
     const text = context.measureText(element.textContent ?? "");

@@ -1,5 +1,6 @@
 import type { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import type { LearningCapabilityName } from "@repo/backend/confect/nina/capability/spec";
+import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { ToolUIPart } from "ai";
 
@@ -139,18 +140,20 @@ function startedAt(order: number) {
 }
 
 /** The facts a turn keeps once the page reads it: it ended, or it is still running. */
-function summaryOf(order: number, running: boolean) {
-  const state = running
-    ? { startedAt: startedAt(order), status: "running" as const }
-    : {
-        finishedAt: startedAt(order) + TURN_MILLISECONDS / 2,
-        status: "complete" as const,
-      };
+function summaryOf(
+  order: number,
+  running: boolean
+): typeof NinaTurnSummary.Type {
   return {
     order,
     promptMessageId: `prompt-${order}`,
     promptedAt: startedAt(order),
-    state,
+    state: running
+      ? { startedAt: startedAt(order), status: "running" }
+      : {
+          finishedAt: startedAt(order) + TURN_MILLISECONDS / 2,
+          status: "complete",
+        },
     usage: [],
   };
 }

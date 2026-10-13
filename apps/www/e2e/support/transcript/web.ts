@@ -150,23 +150,28 @@ export const sameHost = replyOf("web-same-host", [
   ]),
 ]);
 
+/** Five titles on probability: the web results of the card below, which its news results repeat. */
+const PROBABILITY_TITLES = [
+  "Peluang Kejadian Majemuk",
+  "Rumus Peluang Gabungan Dua Kejadian",
+  "Kejadian Saling Lepas dan Tidak Saling Lepas",
+  "Contoh Soal Peluang Kejadian Majemuk",
+  "Peluang Bersyarat dan Kejadian Bebas",
+];
+
 /** The most results one search card holds: five web results and five news results. */
 export const manyResults = replyOf("web-many", [
   search(
     "web-many-1",
     "peluang kejadian majemuk",
-    Arr.makeBy(10, (index) =>
-      found(
-        `https://sumber-${index + 1}.example.test/peluang`,
-        [
-          "Peluang Kejadian Majemuk",
-          "Rumus Peluang Gabungan Dua Kejadian",
-          "Kejadian Saling Lepas dan Tidak Saling Lepas",
-          "Contoh Soal Peluang Kejadian Majemuk",
-          "Peluang Bersyarat dan Kejadian Bebas",
-        ][index % 5] ?? "Peluang",
-        "Penjelasan singkat dengan contoh soal."
-      )
+    Arr.map(
+      Arr.appendAll(PROBABILITY_TITLES, PROBABILITY_TITLES),
+      (title, index) =>
+        found(
+          `https://sumber-${index + 1}.example.test/peluang`,
+          title,
+          "Penjelasan singkat dengan contoh soal."
+        )
     )
   ),
 ]);

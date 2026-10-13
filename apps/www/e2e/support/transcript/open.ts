@@ -5,7 +5,7 @@ import {
   type Page,
 } from "@playwright/test";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import { Effect, MutableRef, Option, Schedule, Schema } from "effect";
+import { Effect, MutableRef, Option, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
@@ -38,10 +38,6 @@ const REPLY = '[data-slot="message-activity"], [data-slot="message-response"]';
 
 /** More parts than any fixture conversation has, so a stuck page stops the loop. */
 const MOST_PARTS = 40;
-
-/** How often a learner that cannot be created is tried again, and how long the worker waits between tries. */
-const SIGN_IN_TRIES = 5;
-const SIGN_IN_PAUSE = "2 seconds";
 
 /** How long a page may take to ask a signed-in learner about usage data. */
 const PROMPT_MILLISECONDS = 6000;
@@ -94,12 +90,7 @@ const startTranscript = Effect.fn("NakafaE2E.startTranscript")(function* (
     yield* Effect.promise(() => page.context().addCookies(cookies.value));
     return shown;
   }
-  yield* signInLearner(page.context(), baseURL).pipe(
-    Effect.retry({
-      schedule: Schedule.spaced(SIGN_IN_PAUSE),
-      times: SIGN_IN_TRIES,
-    })
-  );
+  yield* signInLearner(page.context(), baseURL);
   MutableRef.set(
     session,
     Option.some(yield* Effect.promise(() => page.context().cookies()))

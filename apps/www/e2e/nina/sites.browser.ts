@@ -38,12 +38,15 @@ test.describe("Nina web search sites on a phone", () => {
       ]);
       for (const box of [done, failed]) {
         expect(await cutText(box)).toEqual([]);
-        // A hostname lies within the page from its first character to its last.
+        // A hostname is shown, and lies within the page from its first
+        // character to its last. A hostname that is not shown has no box to
+        // measure, so it is looked for before it is measured.
         for (const host of await box.locator(HOSTS).all()) {
-          const place = await host.boundingBox();
-          expect((place?.x ?? 0) + (place?.width ?? 0)).toBeLessThanOrEqual(
-            edge
+          await expect(host).toBeVisible();
+          const right = await host.evaluate(
+            (element) => element.getBoundingClientRect().right
           );
+          expect(right).toBeLessThanOrEqual(edge);
         }
       }
       // The third hostname is longer than a line, so it takes more than one.
@@ -59,6 +62,10 @@ test.describe("Nina web search sites on a phone", () => {
 
       await expect(boxes).toHaveCount(1);
       await expect(boxes.locator(HOSTS)).toHaveText(LIMIT_SITES);
+      // The text of a hostname that is hidden reads too, so each is looked for.
+      for (const host of await boxes.locator(HOSTS).all()) {
+        await expect(host).toBeVisible();
+      }
       expect(await cutText(boxes)).toEqual([]);
       expect(await overflow(page)).toBe(0);
     })

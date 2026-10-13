@@ -19,7 +19,7 @@ type MathResult = typeof MathResultSchema.Encoded;
  * same rule the CAS follows.
  */
 
-const EQUALS = { expression: "equals", latex: "=" } as const;
+const EQUALS = { expression: "equals", latex: "=" };
 
 const ROOTS_EXPRESSION =
   "x**20 - 210*x**19 + 20615*x**18 - 1256850*x**17 + 53327946*x**16 - 1672280820*x**15 + 40171771630*x**14 - 756111184500*x**13 + 11310276995381*x**12 - 135585182899530*x**11 + 1307535010540395*x**10 - 10142299865511450*x**9 + 63030812099294896*x**8 - 311333643161390640*x**7 + 1206647803780373360*x**6 - 3599979517947607200*x**5 + 8037811822645051776*x**4 - 12870931245150988800*x**3 + 13803759753640704000*x**2 - 8752948036761600000*x + 2432902008176640000";
@@ -157,20 +157,22 @@ export const expansion = replyOf("math-expand", [
 
 /** The division steps of the Euclidean algorithm, written the way the CAS writes them. */
 function divisions(first: number, second: number) {
-  return Arr.unfold([first, second] as const, ([larger, smaller]) =>
-    smaller === 0
-      ? Option.none()
-      : Option.some([
-          {
-            action: "gcd",
-            items: [],
-            primary: {
-              expression: `${larger} = ${Math.floor(larger / smaller)}*${smaller} + ${larger % smaller}`,
-              latex: `${larger} = ${Math.floor(larger / smaller)} \\cdot ${smaller} + ${larger % smaller}`,
+  return Arr.unfold(
+    { larger: first, smaller: second },
+    ({ larger, smaller }) =>
+      smaller === 0
+        ? Option.none()
+        : Option.some([
+            {
+              action: "gcd",
+              items: [],
+              primary: {
+                expression: `${larger} = ${Math.floor(larger / smaller)}*${smaller} + ${larger % smaller}`,
+                latex: `${larger} = ${Math.floor(larger / smaller)} \\cdot ${smaller} + ${larger % smaller}`,
+              },
             },
-          },
-          [smaller, larger % smaller] as const,
-        ])
+            { larger: smaller, smaller: larger % smaller },
+          ])
   );
 }
 
@@ -180,7 +182,11 @@ const EUCLID_INPUT = {
   values: ["165580141", "102334155"],
 } satisfies MathRequest;
 
-/** The greatest common divisor of two neighbours in the Fibonacci numbers: 40 steps, the most Euclid's algorithm needs below a billion. */
+/**
+ * The greatest common divisor of two neighbours in the Fibonacci numbers, the
+ * pair that takes Euclid's algorithm the most divisions for numbers of their
+ * size: 39 divisions and the row that gives the divisor, 40 rows.
+ */
 export const euclid = replyOf("math-euclid", [
   done(
     "math-euclid-1",

@@ -24,8 +24,16 @@ import { sameHost } from "@/e2e/support/transcript/web";
 /** The label of a step of a derivation, in German. */
 const STEP = /^Schritt \d+$/u;
 
-/** The two rows of an eigen analysis whose German labels are the longest. */
-const LONG_LABELS = ["Algebraische Vielfachheit", "Basis des Eigenraums"];
+/**
+ * The rows of an eigen analysis that crowd a row most: the two whose German
+ * labels are the longest, 25 characters each, and the one whose value is the
+ * widest, a basis of three vectors.
+ */
+const LONG_LABELS = [
+  "Algebraische Vielfachheit",
+  "Geometrische Vielfachheit",
+  "Basis des Eigenraums",
+];
 
 test.describe("Nina math on a phone", () => {
   test.use({ viewport: { height: 3600, width: 320 } });
@@ -213,10 +221,12 @@ test.describe("Nina math in the sheet", () => {
   test(
     "keeps the value of a row with a long German label on the row in the compact sheet",
     onSheet(eigen, { locale: "de" }, async (page) => {
-      const label = page.getByText("Algebraische Vielfachheit");
+      for (const text of LONG_LABELS) {
+        const label = page.getByText(text);
 
-      await expect(label).toBeVisible();
-      expect(await reachable(rowOf(label))).toBe(true);
+        await expect(label).toBeVisible();
+        expect(await reachable(rowOf(label))).toBe(true);
+      }
     })
   );
 });
