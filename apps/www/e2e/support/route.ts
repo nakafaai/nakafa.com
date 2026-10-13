@@ -13,6 +13,14 @@ export const appRoutes = {
 } as const;
 
 /**
+ * The JavaScript chunks of the app, as local Next and Vercel-promoted
+ * production paths write them. Aborting them after a page has loaded fails
+ * whatever that page loads next.
+ */
+export const NEXT_CHUNK_PATH =
+  /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
+
+/**
  * Seeds one consent decision before the first navigation, then opens `href`
  * and expects the server to answer it with a page.
  */

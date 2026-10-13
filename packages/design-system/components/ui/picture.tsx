@@ -2,6 +2,7 @@ import {
   Drawing,
   type MarkAttributes,
 } from "@repo/design-system/components/ui/drawing";
+import { type Box, pictureHeight } from "@repo/design-system/lib/picture";
 import type { Shape } from "@repo/mascot/shape";
 import { Array as Arr } from "effect";
 import { type ComponentProps, createElement } from "react";
@@ -16,8 +17,8 @@ type PictureProps<Mark> = Omit<
   | "viewBox"
   | "width"
 > & {
-  /** The window on the picture: where it starts, and how wide and high it is. */
-  box: readonly [number, number, number, number];
+  /** The window on the picture. */
+  box: Box;
   /**
    * What a screen reader says. Left out or empty, the picture only decorates
    * what is already said, and a screen reader skips it.
@@ -51,8 +52,7 @@ export function Picture<Mark>({
       ...props,
       "aria-hidden": named ? undefined : true,
       "aria-label": named ? label : undefined,
-      height:
-        size === undefined ? undefined : Math.round((size * box[3]) / box[2]),
+      height: size === undefined ? undefined : pictureHeight(size, box),
       role: named ? "img" : undefined,
       viewBox: `${box[0]} ${box[1]} ${box[2]} ${box[3]}`,
       width: size,
