@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -82,6 +82,11 @@ const counts = Effect.gen(function* () {
       .index("by_creation_time")
       .take(500)).length,
   };
+});
+
+/** Fake timers keep the claim run and the invitation workflow from starting before the test looks at them. */
+beforeEach(() => {
+  vi.useFakeTimers();
 });
 
 describe("tenancy/provision open", () => {

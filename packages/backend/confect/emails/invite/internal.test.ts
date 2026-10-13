@@ -1,5 +1,5 @@
 import { Resend } from "@convex-dev/resend";
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
@@ -16,6 +16,10 @@ const testResend = new Resend(components.resend, {
   testMode: true,
 });
 
+/** Fake timers keep the mail component from sending what the test hands it. */
+beforeEach(() => {
+  vi.useFakeTimers();
+});
 afterEach(() => {
   vi.restoreAllMocks();
 });

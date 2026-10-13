@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   claimAfterInvite,
   claimAfterVerification,
@@ -14,6 +14,11 @@ import { Array as Arr, Effect, Schema } from "effect";
 const address = Schema.decodeSync(Email)("guru@harapan.example.test");
 const other = Schema.decodeSync(Email)("lain@harapan.example.test");
 const run = "tenancy/claims:run";
+
+/** Fake timers keep every scheduled run from starting before the test looks at it. */
+beforeEach(() => {
+  vi.useFakeTimers();
+});
 
 /** The claim runs that earlier writes scheduled, by the account they are for. */
 const claimJobs = Effect.map(scheduledJobs, (jobs) =>

@@ -25,8 +25,9 @@ const run = refs.internal.tenancy.claims.run;
 const viewer = refs.public.tenancy.viewer.get;
 const nf = slugOf("nf");
 
+/** Fake timers keep every scheduled run from starting before the test starts it. */
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.useFakeTimers();
   vi.setSystemTime(NOW);
 });
 

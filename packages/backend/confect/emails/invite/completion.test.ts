@@ -1,5 +1,5 @@
 import type { WorkflowId } from "@convex-dev/workflow";
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { startInviteEmail } from "@repo/backend/confect/emails/invite/workflow";
@@ -10,6 +10,11 @@ import type { FunctionArgs } from "convex/server";
 import { Array as Arr, Effect, Exit, Option, Schema } from "effect";
 
 const address = Schema.decodeSync(Email)("kepala@harapan.example.test");
+
+/** Fake timers keep the workflow from running its steps; the tests end it by hand. */
+beforeEach(() => {
+  vi.useFakeTimers();
+});
 
 /** The workflow that the platform started for a new invite, before it has ended. */
 const started = Effect.gen(function* () {
