@@ -43,10 +43,12 @@ nothing refers to.
 - `confect/editor` serves questions, materials, and announcements. Nina's memory
   is not one of its users. The Memory page keeps its own editor: Markdown, one
   author, sealed with the learner's key.
-- A draft is an editor document. Publishing a question to the bank validates the
-  document against the contract and writes an item version, which never changes
-  after it is used (ADR 0031). Publishing is an audited change (ADR 0016). The
-  steps of a draft are not, because a draft is its own record.
+- A draft is an editor document. Publishing a question to the bank, which ADR
+  0031 calls a teacher's save, validates the document against the contract and
+  writes an item version, which never changes after it is used. Nothing else
+  writes an item version: a draft writes steps and snapshots. Publishing is an
+  audited change (ADR 0016). The steps of a draft are not, because a draft is its
+  own record.
 - The server validates every snapshot and every published document with the
   Schema of the contract. `Node.fromJSON` of prosemirror-model 1.25.12 does not
   check content, and `Node.check()` does, so a document that parses is not a
@@ -91,17 +93,17 @@ written by hand.
 
 ### Bounds
 
-ADR 0031 sets the bounds of the assessment document: a node depth of 16 and the
-whole record under 1 MiB. A document is stored as JSON text in string chunks.
-Each value below is a Convex limit, a bound of ADR 0031, a target, or a
-computation, as the last column says.
+ADR 0031 sets the bounds of the assessment document: a node depth of 16, and the
+complete row under 1 MiB. A document is JSON text in one string field, in a
+snapshot as in an item version, so one layout and one check serve both. Each
+value below is a Convex limit, a bound of ADR 0031, a target, or a computation,
+as the last column says.
 
 | Bound | Value | Basis |
 | --- | --- | --- |
 | A Convex document | 1 MiB, nested 16 levels | Convex limits page, read on 13 October 2026 |
-| The content of a document | JSON text in string chunks, not an object | ProseMirror can nest deeper than Convex allows |
-| A document as a whole | Under 1 MiB, with a node depth of at most 16 | ADR 0031 |
-| A snapshot chunk | At most 256 KiB | Target. A quarter of the document limit. |
+| The content of a document | JSON text in one string field, not an object | ProseMirror can nest deeper than Convex allows |
+| A document as a whole | A node depth of at most 16, and the complete row under 1 MiB | ADR 0031 |
 | Steps sent in one call | At most 128 KiB and 200 steps | Target |
 | Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. |
 | Snapshots | At most one every 30 seconds, when the editor is idle | Target. 200 KiB after 50 pauses an hour is about 10 MB for each document an hour (computed). |
@@ -109,15 +111,21 @@ computation, as the last column says.
 | Presence | A heartbeat every 10 seconds and a limit of 25 seconds | Target. Three editors write about 1,080 times an hour (computed). |
 | Cursors | None in the first version | Three editors at one update a second would write about 10,800 times an hour for each document (computed). |
 
+The size is checked where a whole document is written. A snapshot and the save to
+the bank each refuse a document whose complete row would pass 1 MiB, before the
+write (ADR 0031). A step carries no whole document, so a draft that grows past
+the limit is refused at its next snapshot and never reaches the bank.
+
 The step log is bounded too. A scheduled sweep deletes, in bounded batches, the
 steps that a snapshot covers, after a delay that the build sets by test. A client
 that is behind the oldest step that is kept loads the snapshot and continues
 from it.
 
-Acceptance: in `convex-test`, a submit at a stale version is refused, and a
-document nested 20 levels deep is stored and read back. In Playwright, three
-editors work on one question and no step is lost, and the one renderer of ADR
-0018 draws a Nakafa question and a school question.
+Acceptance: in `convex-test`, a submit at a stale version is refused, a document
+nested 20 levels deep is stored and read back, and a snapshot whose complete row
+would pass 1 MiB is refused and writes nothing. In Playwright, three editors work
+on one question and no step is lost, and the one renderer of ADR 0018 draws a
+Nakafa question and a school question.
 
 ### The formula node
 
