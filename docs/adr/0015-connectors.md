@@ -314,8 +314,8 @@ minute for each client, and 1,200 per minute for each user (read 13 October
 | A connection is disconnected, by its owner or by an Admin of its school | Its stored tokens are destroyed. Nakafa revokes the grant at Google only when the same Google account has no other connection left. The imported data is deleted or kept, as the owner chooses. |
 | The Calendar mirror | It is always deleted. |
 | A Drive copy | It is kept only when the owner chooses to keep it. |
-| A member leaves the school | Their connection is transferred and sealed again under the key of the learner who chooses it, or it is disconnected (ADR 0030). |
-| The account of the member who made a school connection is deleted | The connection stays and enters `reconnect`. It does not work until someone reconnects it (ADR 0030). |
+| A member leaves the school | The Google grant belongs to the Google account of the member who made the connection, so that member chooses. The connection is transferred to them and sealed again under their learner key, or it is disconnected. The imported data stays with the school (ADR 0030). |
+| The account of the member who made a school connection is deleted | The connection stays and enters `reconnect`. Its stored tokens are destroyed, and Nakafa revokes the grant at Google unless another connection of the same Google account remains. The imported data stays with the school, which controls its records (ADR 0011). Someone reconnects it with a Google account of their own (ADR 0030). |
 | A school leaves Nakafa | Every school connection is disconnected before the school key is destroyed, and the school receives a deletion record (ADR 0030). |
 | Each step | It is journaled (ADR 0016). The entry holds IDs and reason codes, never the Google email or a class name. |
 
@@ -450,4 +450,6 @@ finds them, and it must not show one owner's connection to another owner.
   `include_granted_scopes` parameter, and the user ID.
 - npm registry on 13 October 2026: `xlsx` 0.18.5 (Apache-2.0) and `exceljs`
   4.4.0 (MIT) are the latest releases.
-- ADR 0009, 0011, 0012, 0016, 0019, 0020, 0023, 0026, 0028, 0030, and 0032.
+- The privacy policy of the Aksara release `edadc28a9d`
+  (`packages/corpus/pages/privacy-policy/en.mdx`), on the Google data policies.
+- ADR 0009, 0011, 0012, 0016, 0019, 0020, 0023, 0026, 0028, 0029, 0030, and 0032.
