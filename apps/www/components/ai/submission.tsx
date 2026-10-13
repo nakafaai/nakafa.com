@@ -4,7 +4,6 @@ import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
 import {
   NINA_DOCUMENT_SIZE_MESSAGE,
-  NINA_UPLOAD_LIFETIME,
   NinaFileType,
   NinaUploadError,
 } from "@repo/backend/client/nina/uploads";
@@ -23,7 +22,6 @@ import {
   Array as Arr,
   Clock,
   DateTime,
-  Duration,
   Effect,
   Exit,
   HashMap,
@@ -90,9 +88,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   convex: ConvexReactClient,
   status: UploadStore
 ) {
-  // The server counts the life of an upload from its own reserve, which comes
-  // after this moment, so the page never trusts an upload for longer than the
-  // server keeps it.
+  // The moment the upload begins, which the store counts its life from.
   const startedAt = yield* Clock.currentTimeMillis;
   // A file that holds an upload from an earlier send is not uploaded again,
   // unless the server has dropped that upload by now. A failed send leaves its
@@ -142,13 +138,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
       Effect.sync(() => status.markUpload(attachment.id, "error"))
     )
   );
-  yield* Effect.sync(() =>
-    status.keepUpload(
-      attachment.id,
-      id,
-      startedAt + Duration.toMillis(NINA_UPLOAD_LIFETIME)
-    )
-  );
+  yield* Effect.sync(() => status.keepUpload(attachment.id, id, startedAt));
   MutableHashMap.set(previews, id, {
     type: "file",
     url: attachment.url,

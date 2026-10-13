@@ -86,13 +86,14 @@ interface AiActions {
    */
   endSession: () => void;
   /**
-   * Remembers the upload that now holds this file on the server, and the
-   * moment the server drops it if no message has taken it by then.
+   * Remembers the upload that now holds this file on the server, with the
+   * moment the upload began. The server drops it a lifetime after that if no
+   * message has taken it.
    */
   keepUpload: (
     fileId: string,
     uploadId: typeof AiUploadIdSchema.Type,
-    expiresAt: number
+    startedAt: number
   ) => void;
   /** Shows this file as uploading, or as an upload that failed. */
   markUpload: (fileId: string, status: typeof AiUploadSchema.Type) => void;

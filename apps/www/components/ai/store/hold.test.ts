@@ -1,8 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
-import { NINA_FILE_COUNT } from "@repo/backend/client/nina/uploads";
+import {
+  NINA_FILE_COUNT,
+  NINA_UPLOAD_LIFETIME,
+} from "@repo/backend/client/nina/uploads";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import { keptUpload, strayFiles } from "@/components/ai/store/hold";
+import { Array as Arr, Duration, Option, Record as Rec, Schema } from "effect";
+import { holdOf, keptUpload, strayFiles } from "@/components/ai/store/hold";
 
 const uploadNamed = Schema.decodeUnknownSync(Id("ninaUploads"));
 /** Two moments: the server keeps an upload until the later one. */
@@ -15,6 +18,24 @@ const holding = (fileIds: readonly string[], expiresAt = LATER) =>
     fileId,
     { expiresAt, uploadId: uploadNamed(fileId) },
   ]);
+
+describe("the hold of an upload", () => {
+  it("lasts as long as the server keeps the upload, from the moment it began", () => {
+    const lifetime = Duration.toMillis(NINA_UPLOAD_LIFETIME);
+    const hold = holdOf(uploadNamed("file-1"), NOW);
+
+    expect(hold).toEqual({
+      expiresAt: NOW + lifetime,
+      uploadId: uploadNamed("file-1"),
+    });
+    expect(
+      keptUpload({ "file-1": hold }, "file-1", NOW + lifetime - 1)
+    ).toEqual(Option.some(uploadNamed("file-1")));
+    expect(keptUpload({ "file-1": hold }, "file-1", NOW + lifetime)).toEqual(
+      Option.none()
+    );
+  });
+});
 
 describe("the upload that holds a file", () => {
   it("is offered while the server keeps it", () => {

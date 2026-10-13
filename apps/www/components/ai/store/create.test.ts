@@ -1,8 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { NINA_FILE_COUNT } from "@repo/backend/client/nina/uploads";
+import {
+  NINA_FILE_COUNT,
+  NINA_UPLOAD_LIFETIME,
+} from "@repo/backend/client/nina/uploads";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, DateTime, Option, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  DateTime,
+  Duration,
+  Option,
+  Record as Rec,
+  Schema,
+} from "effect";
 import { createAiStore } from "@/components/ai/store/create";
 
 const STORAGE_KEY = "nakafa-ai";
@@ -17,9 +27,9 @@ const otherChatId = Schema.decodeUnknownSync(Id("chats"))("chat_2");
 const uploadNamed = Schema.decodeUnknownSync(Id("ninaUploads"));
 const firstUpload = uploadNamed("upload_1");
 const secondUpload = uploadNamed("upload_2");
-/** Two moments: the server keeps an upload until the later one. */
+/** The moment the uploads of a test began, and how long the server keeps one. */
 const NOW = 1000;
-const LATER = 5000;
+const LIFETIME = Duration.toMillis(NINA_UPLOAD_LIFETIME);
 const receipt = {
   chatId,
   order: 0,
@@ -289,28 +299,30 @@ describe("ai/store/create", () => {
 
     expect(store.getState().uploadOf("file-1", NOW)).toEqual(Option.none());
 
-    store.getState().keepUpload("file-1", firstUpload, LATER);
-    store.getState().keepUpload("file-2", secondUpload, LATER);
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().keepUpload("file-2", secondUpload, NOW);
     expect(store.getState().uploadOf("file-1", NOW)).toEqual(
       Option.some(firstUpload)
     );
     expect(store.getState().uploadOf("file-2", NOW)).toEqual(
       Option.some(secondUpload)
     );
-    // The server refuses an upload from the moment it expires.
-    expect(store.getState().uploadOf("file-1", LATER)).toEqual(Option.none());
+    // The server drops an upload a lifetime after it began.
+    expect(store.getState().uploadOf("file-1", NOW + LIFETIME)).toEqual(
+      Option.none()
+    );
   });
 
   it("gives up the uploads of the files it is asked for, once, and nothing else", () => {
     const store = createAiStore();
-    store.getState().keepUpload("file-1", firstUpload, LATER);
-    store.getState().keepUpload("file-2", secondUpload, LATER);
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().keepUpload("file-2", secondUpload, NOW);
 
     expect(store.getState().takeUploads(["file-1", "file-3"])).toEqual([
       firstUpload,
     ]);
     expect(store.getState().held).toEqual({
-      "file-2": { expiresAt: LATER, uploadId: secondUpload },
+      "file-2": { expiresAt: NOW + LIFETIME, uploadId: secondUpload },
     });
 
     // A file that holds no upload changes nothing, so no reader runs again.
@@ -326,7 +338,7 @@ describe("ai/store/create", () => {
     const store = createAiStore();
     const strays = Arr.makeBy(NINA_FILE_COUNT, (index) => `stray-${index}`);
     for (const fileId of strays) {
-      store.getState().keepUpload(fileId, uploadNamed(fileId), LATER);
+      store.getState().keepUpload(fileId, uploadNamed(fileId), NOW);
     }
 
     expect(store.getState().strayFiles(["new"], NOW)).toEqual(strays);
@@ -343,7 +355,7 @@ describe("ai/store/create", () => {
       receipt,
       submittedAt: 1,
     });
-    store.getState().keepUpload("file-1", firstUpload, LATER);
+    store.getState().keepUpload("file-1", firstUpload, NOW);
     store.getState().markUpload("file-1", "error");
     store.getState().markUpload("file-2", "uploading");
     store.getState().setText("Half typed");

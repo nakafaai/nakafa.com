@@ -1,14 +1,30 @@
 "use client";
 
-import { NINA_FILE_COUNT } from "@repo/backend/client/nina/uploads";
-import { Array as Arr, Option, Record as Rec } from "effect";
+import {
+  NINA_FILE_COUNT,
+  NINA_UPLOAD_LIFETIME,
+} from "@repo/backend/client/nina/uploads";
+import { Array as Arr, Duration, Option, Record as Rec } from "effect";
 import type { AiState } from "@/components/ai/store/types";
 
 /** The uploads the page holds on the server, by the id of the file each one holds. */
 type Held = AiState["held"];
+type Hold = Held[string];
+
+/**
+ * The hold of an upload that began at `startedAt`. The server counts the life
+ * of an upload from its own reserve, which comes after that moment, so the
+ * page never trusts an upload for longer than the server keeps it.
+ */
+export function holdOf(uploadId: Hold["uploadId"], startedAt: number): Hold {
+  return {
+    expiresAt: startedAt + Duration.toMillis(NINA_UPLOAD_LIFETIME),
+    uploadId,
+  };
+}
 
 /** Whether the server still keeps an upload at `now`: it refuses one from the moment it expires. */
-function isKept(hold: Held[string], now: number) {
+function isKept(hold: Hold, now: number) {
   return hold.expiresAt > now;
 }
 

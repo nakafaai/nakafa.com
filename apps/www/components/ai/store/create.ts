@@ -3,7 +3,7 @@
 import { Array as Arr, DateTime, Option, Record as Rec } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { keptUpload, strayFiles } from "@/components/ai/store/hold";
+import { holdOf, keptUpload, strayFiles } from "@/components/ai/store/hold";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
 
@@ -33,9 +33,9 @@ export function createAiStore() {
             openingChat: null,
             uploads: {},
           }),
-        keepUpload: (fileId, uploadId, expiresAt) =>
+        keepUpload: (fileId, uploadId, startedAt) =>
           set((state) => ({
-            held: Rec.set(state.held, fileId, { expiresAt, uploadId }),
+            held: Rec.set(state.held, fileId, holdOf(uploadId, startedAt)),
           })),
         markUpload: (fileId, status) =>
           set((state) => ({ uploads: Rec.set(state.uploads, fileId, status) })),
