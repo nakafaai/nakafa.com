@@ -1,58 +1,33 @@
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { Nina } from "@repo/design-system/components/ui/nina";
-import { Particles } from "@repo/design-system/components/ui/particles";
-import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "cn";
 import { getTranslations } from "next-intl/server";
+import { Missing } from "@/components/state/missing";
+import { ActionNavigation } from "@/components/state/navigation";
+import { Stage } from "@/components/state/stage";
 
-/** Renders the shared localized not-found state. */
+/** Renders the localized state of a route that does not exist. */
 export default async function NotFound() {
-  const t = await getTranslations("NotFound");
+  const [t, tState] = await Promise.all([
+    getTranslations("NotFound"),
+    getTranslations("State"),
+  ]);
 
   return (
-    <div className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh">
-      <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-      <div className="relative mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
-        <div className="absolute inset-x-0 bottom-full mx-auto mb-px w-fit">
-          <Nina
-            fidget={["greeting", "drumming"]}
-            label=""
-            lean="peek"
-            mood="confused"
-            size={120}
-          />
-        </div>
-        <div className="space-y-4 text-center">
-          <h1 className="font-bold font-mono text-6xl text-destructive">404</h1>
-
-          <div className="space-y-2">
-            <h2 className="font-medium text-lg tracking-tight">{t("title")}</h2>
-
-            <p className="mx-auto max-w-md text-muted-foreground text-sm">
-              {t("description")}
-            </p>
-          </div>
-
-          <div className="mx-auto flex w-fit items-center gap-2">
-            <a
-              className={cn(buttonVariants({ variant: "secondary" }))}
-              href="https://github.com/nakafaai/nakafa.com"
-              rel="noopener noreferrer"
-              target="_blank"
-              title={t("contribute-button")}
-            >
-              {t("contribute-button")}
-            </a>
-            <NavigationLink
-              className={cn(buttonVariants({ variant: "default" }))}
-              href="/"
-              title={t("home-button")}
-            >
-              {t("home-button")}
-            </NavigationLink>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Stage>
+      <Missing
+        description={t("description")}
+        scene="missing"
+        title={t("title")}
+      >
+        <ActionNavigation
+          href="/"
+          label={tState("home-button")}
+          variant="default"
+        />
+        <ActionNavigation
+          href="/search"
+          label={t("search-button")}
+          variant="ghost"
+        />
+      </Missing>
+    </Stage>
   );
 }
