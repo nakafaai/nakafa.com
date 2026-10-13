@@ -13,10 +13,10 @@ import { Array as Arr, Equal, Order, Predicate, Tuple } from "effect";
  * What a list keeps depends on its length, since ten gaps of 36 degrees fill
  * the wheel. A list of up to six tiles always keeps the gap: five tiles hide at
  * most 355 of the 360 hues, so a sixth always finds one. A longer list keeps it
- * only when its seeds fall well, and the longest real lists do: the eight
- * tiles of the Merdeka classes 1 to 8 and the seven sections of a UTBK-SNBT
- * set. Past the last free hue a tile takes the hue farthest from the rest, so
- * the least distance shrinks but no two tiles share a hue.
+ * only when its seeds fall well, and the longest real lists do: the Merdeka
+ * classes that draw tiles and the sections of a UTBK-SNBT set. Past the last
+ * free hue a tile takes the hue farthest from the rest, so the least distance
+ * shrinks but no two tiles share a hue.
  */
 export const TILE_HUE_GAP = 36;
 
