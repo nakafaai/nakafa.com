@@ -130,9 +130,12 @@ Better Auth already offers the parts of an authorization server, as its pages sa
 for machine access, resources under RFC 8707, introspection, revocation, and a
 device grant. Its device authorization plugin implements RFC 8628, but in its
 standalone form it returns a Better Auth session token, which would give the CLI
-the power of a session. So the change that builds the token endpoint reads those
-plugins first. It adopts them if they meet these conditions, and otherwise it
-writes the endpoint and records here why:
+the power of a session. This repository pins `better-auth` 1.6.33 and the
+registry's latest is 1.7.7. `@better-auth/oauth-provider` has a 1.6.33 release
+that asks for `better-auth` ^1.6.33 (npm registry, 13 October 2026). So the
+change that builds the token endpoint reads the source of that release, and not
+only the pages, before it relies on a feature. It adopts the plugins if they meet
+these conditions, and otherwise it writes the endpoint and records here why:
 
 - The tenant of a client stays owned by `confect/tenancy` (ADR 0011 keeps tenancy
   out of Better Auth's schema), so a client row held by Better Auth carries only
@@ -169,7 +172,8 @@ at the same protocol version. It is an OAuth resource server in the sense of the
 MCP authorization specification, version 2026-07-28, read 13 October 2026: it
 publishes protected resource metadata (RFC 9728), answers 401 with a
 `WWW-Authenticate` header that points to it, and accepts only tokens issued for
-it. Each tool is a projection of an action. It calls the same services as REST
+it. The metadata needs no token, because a client reads it before it has one.
+Each tool is a projection of an action. It calls the same services as REST
 and goes through `decide`. The public MCP definitions
 (`packages/backend/agent/mcp`) stay public and read only, and no school tool is
 registered on them. The school route keeps the guards of the public route in
@@ -198,7 +202,7 @@ the device and is never printed.
 | Retries | Up to 8 attempts in 24 hours, with growing delays (target) |
 | Delivery log | One row for each attempt, in `integrationDeliveries` |
 | Idempotency | Every attempt of a change carries the same event ID |
-| Receiver address | HTTPS only. A public address only. No redirect is followed. The judgment of addresses is the one of the research scrape guard (`packages/backend/confect/nina/research/tools/safety.ts` and `url.ts`), shared and not copied. |
+| Receiver address | HTTPS only. A public address only. No redirect is followed. The judgment of addresses is the one of the research scrape guard (`judgeAddress` in `packages/backend/confect/nina/research/url.ts`, which `tools/safety.ts` in the same research folder calls), shared and not copied. |
 | Deadline | Each attempt has a deadline that covers the body, and the response is read up to a size cap (ADR 0020). |
 
 The receiver address rule keeps a webhook from being used to reach Nakafa's own
@@ -212,16 +216,16 @@ network.
 | Pagination | By cursor, not by page number | 100 rows a page (target) |
 | Rate limit | For each client, through the rate-limit component, with the remaining quota in response headers. A refusal is 429 with `Retry-After`, as in the public API. | 600 requests a minute (target, not measured) |
 | Documentation | OpenAPI generated from the definition of the routes | One source |
-| Embed | A one-time token in an iframe, with `frame-ancestors` for each school, built from the school's list of domains | Not decided here |
+| Embed | A one-time token in an iframe, with `frame-ancestors` for each school, built from the school's list of domains | Waits for that list (see below) |
 
 The statuses for `Idempotency-Key` follow the IETF draft
 `draft-ietf-httpapi-idempotency-key-header-07`. That draft has expired and is not
 a standard (read 13 October 2026), so this ADR owns the behavior. The public API
 today allows 120 requests a minute with a burst of 30 for each client address
-(`packages/backend/confect/routes/agent/quota.impl.ts`). Embed needs a list of the
-school's domains, which the tenant record does not hold
-(`packages/backend/confect/tenancy/schema.ts`), so it waits for the school's own
-domains (ADR 0011).
+(`packages/backend/confect/routes/agent/quota.impl.ts`). Embed needs the list of
+web domains that may frame a school page. The tenant record holds none
+(`packages/backend/confect/tenancy/schema.ts`), and ADR 0011 plans the school's
+own domains for later, so embed waits for them.
 
 ### Standards are adapters at one seam
 
@@ -230,7 +234,7 @@ carries grades. No standard reaches around `decide`.
 
 | Standard | Direction | What Nakafa does | Owner |
 | --- | --- | --- | --- |
-| OneRoster 1.2 | Roster in, results out | CSV import first, then the REST service for rosters and results | ADR 0015 for the import, this ADR for the rest |
+| OneRoster 1.2 | Roster in, results out | CSV import first, then the REST service for rosters and results | This ADR. The CSV import follows the file import rules of ADR 0015. |
 | LTI 1.3 Advantage | Launch, deep linking, grades, members | Nakafa is the tool and the school's learning system is the platform | This ADR |
 | QTI 3.0 | Items in and out | A codec over the response contract and the item model | This ADR and ADR 0031 |
 | CASE 1.1 | Competencies | Competencies as framework items, linked to the curriculum | Later |
@@ -270,8 +274,10 @@ asks decides it.
 the item model of ADR 0031 stays the storage model. The codec reads and writes
 that model and nothing else.
 
-- The version is QTI 3.0, a Final Release of 11 May 2022. Its information model
-  and XML binding documents are labelled 3.0.1. 1EdTech lists no 3.1.
+- The version is QTI 3.0. The QTI page of 1EdTech dates its Final Release
+  Specification 11 May 2022, while the overview and the information model give 1
+  May 2022 as their date of issue. The same page lists the information model and
+  the XSD binding as 3.0.1, and it lists no 3.1.
 - The codec maps the interactions of ADR 0031 for which QTI 3 has a standard form.
   It refuses the others on import and on export with a named reason, and it never
   maps one to a lookalike. An item that QTI 3 offers only as a portable custom
@@ -305,34 +311,50 @@ What `pnpm-lock.yaml` holds:
 
 - `hono@4.13.13` is in the lock only as the resolved optional peer of
   `convex-helpers@0.1.128` (`peerDependencies` `hono ^4.0.5`, optional; the
-  package exports `server/hono`). It appears as two entries of its own, as one
-  optional dependency of the `convex-helpers` snapshot, and in the resolution
-  keys and references on 34 lines.
-- `zod` is a required peer of `ai@7.0.136` and the `@ai-sdk` packages, and of
-  `better-call@1.4.0`. It stays while they stay, so no check names it.
+  package exports `server/hono`). The lock names `hono` on 45 lines: two entries
+  of its own, one optional dependency of the `convex-helpers` snapshot, the
+  `(hono@4.13.13)` suffix of resolution keys and references on 34 lines, and
+  eight lines that declare it as an optional peer (the peer declaration of
+  `convex-helpers`, two lines, and six `transitivePeerDependencies` lists).
+- `zod` is a required peer of `ai@7.0.136` and of the `@ai-sdk` packages
+  (`@ai-sdk/provider-utils` and `@ai-sdk/gateway`), and an optional peer of
+  `better-call@1.4.0` and of `convex-helpers`. The plan keeps `ai` as the
+  dependency of the Agent component, so `zod` stays while `ai` stays, and no
+  check names it.
 - `convex-helpers` is a peer of `@convex-dev/agent`, `@convex-dev/resend`,
-  `@convex-dev/workflow`, and `@convex-dev/workpool`, and 0.1.128 is its latest
+  `@convex-dev/workflow`, and `@convex-dev/workpool`, and a dependency of
+  `@convex-dev/aggregate` and `@convex-dev/better-auth`. 0.1.128 is its latest
   release (npm registry, 13 October 2026). It stays in the lock, so replacing it
   in the files that import it would not remove `hono`, and no newer release
   exists to upgrade to.
 
 A probe on 13 October 2026 used a scratch copy of the workspace manifests and
-pnpm 11.28.5, the pinned version, in lock-only mode. Without the existing lock,
-the resolution holds no `hono` at all. With the existing lock, `pnpm install`
-keeps `hono`. Removing from the existing lock the two `hono@4.13.13` entries, the
-`(hono@4.13.13)` suffixes, and the optional dependency of the `convex-helpers`
-snapshot gave a lock that `pnpm install --frozen-lockfile --lockfile-only`
-accepts and that a plain `pnpm install --lockfile-only` leaves as it is. So the
-lock carries `hono` over, and nothing requires it.
+pnpm 11.28.5, the pinned version, in lock-only mode, and it ran three ways.
+
+- With the existing lock, `pnpm install --lockfile-only` changes nothing and
+  `pnpm dedupe --lockfile-only` changes other packages, so `hono` stays.
+- Without a lock, the resolution holds no `hono` package. Eight lines still name
+  it, the declarations above.
+- Removing from the existing lock the two `hono@4.13.13` entries, the optional
+  dependency of the `convex-helpers` snapshot, and the 34 suffixes gave a lock
+  with the same eight lines. `pnpm install --frozen-lockfile --lockfile-only`
+  accepts it, `pnpm install --lockfile-only` leaves it as it is, and
+  `pnpm install --lockfile-only --fix-lockfile`, which resolves again, does not
+  bring `hono` back.
+
+So the lock carries `hono` over, and nothing requires it.
 
 The decision:
 
-- Wave A removes `hono` from `pnpm-lock.yaml` and proves the result with
-  `pnpm install --frozen-lockfile`. No import changes.
-- A check fails when `pnpm-lock.yaml` holds `hono`. The dependency validator
-  (`scripts/dependencies/validate.ts`) reads manifests and `pnpm-workspace.yaml`
-  today and not the lock, so the check is new there and has its own test. It
-  names `hono` only.
+- Wave A removes the resolved `hono` from `pnpm-lock.yaml`, which leaves the eight
+  declaration lines, and proves the result with `pnpm install --frozen-lockfile`.
+  No import changes.
+- A check fails when `pnpm-lock.yaml` resolves `hono`, that is, when a
+  `hono@<version>` key stands in `packages` or `snapshots`. It does not match
+  the bare word, because the eight declaration lines stay in a lock without
+  `hono`. The dependency validator (`scripts/dependencies/validate.ts`) reads
+  manifests and `pnpm-workspace.yaml` today and not the lock, so the check is new
+  there and has its own test. It names `hono` only.
 - The plan said to upgrade or replace `convex-helpers` in the 19 files that import
   it. The probe shows `hono` leaves without that, and the package stays anyway,
   so the files stay as they are.
@@ -360,6 +382,8 @@ The 19 files that import `convex-helpers`:
   above, and whether it lives on the school host or on the apex domain of the
   cell. The metadata of the MCP server points to it either way.
 - How the forward from the school host is built, and what it costs.
+- How a webhook delivery connects to the address it checked, because a name can
+  resolve to another address between the check and the connection.
 - How an LTI launch becomes a session and finds its Person.
 - The XML library of the QTI codec.
 - Embed.
@@ -399,7 +423,7 @@ The 19 files that import `convex-helpers`:
 - A hand-written OpenAPI document for the school API. The public one drifts
   from its routes by hand, and the school one comes from the definition.
 - Replacing `convex-helpers` to remove `hono`. The package stays in the lock for
-  four components, and `hono` is not needed for it.
+  six Convex components, and `hono` is not needed for it.
 
 ## Implementation Status
 
