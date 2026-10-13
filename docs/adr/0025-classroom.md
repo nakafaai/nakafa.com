@@ -35,10 +35,10 @@ before #1051 deleted the web app:
 
 K11 deletes all of it before the new School is built, and ADR 0011 sets the
 releases that do it, in the rollout order of `packages/backend/AGENTS.md`. The
-new School needs a class that is not a school identity (ADR 0011),
-numbered discussions, messages sealed with the school key (ADR 0030), mentions
-that reach the inbox (ADR 0027), files (ADR 0028), tasks, and one scroller that
-Nina's chat also uses.
+new School needs a class that is not a school identity (ADR 0011), numbered
+discussions, messages sealed with the school key (ADR 0030), mentions that reach
+the inbox (ADR 0027), files (ADR 0028), tasks, and one scroller that Nina's chat
+also uses.
 
 The design system already holds Nina's chat primitives: `Message`,
 `MessageContent`, and `MessageFooter` (`message.tsx`), `Bubble` and

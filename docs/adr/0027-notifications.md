@@ -64,9 +64,10 @@ message (ADR 0016).
 - The inbox opens in the first frame after the tap (target). A browser test
   measures it at 390 and 1440 px against the budget of the initial bundle. The
   Nina System Blueprint measured the same kind of panel, the Nina sheet, on
-  production on 10 October 2026: on desktop nothing showed for 347 ms after the
-  tap, while 13 chunks of 260 kB were loaded. That load after the tap is the
-  cause this target removes, and the browser test measures the current figure.
+  production on 10 October 2026: on a desktop with fast Wi-Fi nothing showed for
+  347 ms after the tap, while 13 chunks, 260 kB in all, were loaded. That load
+  after the tap is the cause this target removes, and the browser test measures
+  the current figure.
 
 ### Two ways into the inbox
 
