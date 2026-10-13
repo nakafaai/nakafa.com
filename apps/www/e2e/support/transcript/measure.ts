@@ -39,13 +39,20 @@ export function reachable(row: Locator) {
   });
 }
 
-/** How far the page scrolls sideways, in pixels: zero for a page that fits its viewport. */
+/**
+ * How far the page can be scrolled sideways, in pixels: zero for a page that
+ * fits its viewport. It asks the page to scroll as far as it goes and reads
+ * where it stopped. The scroll width less the client width says the same only
+ * where the root keeps no gutters: with them, a page that fits read -20 in CI.
+ */
 export function overflow(page: Page) {
-  return page.evaluate(
-    () =>
-      document.documentElement.scrollWidth -
-      document.documentElement.clientWidth
-  );
+  return page.evaluate(() => {
+    const root = document.scrollingElement ?? document.documentElement;
+    root.scrollLeft = root.scrollWidth;
+    const reach = root.scrollLeft;
+    root.scrollLeft = 0;
+    return reach;
+  });
 }
 
 /** How many lines of text an element shows, from its height and its line height. */

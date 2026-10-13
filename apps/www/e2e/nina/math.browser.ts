@@ -162,14 +162,18 @@ test.describe("Nina math on a phone", () => {
     "draws one rail for each level of nesting and gives its width back",
     onChat(sameHost, { locale: "id" }, async (page) => {
       const query = page.getByText('"turunan fungsi"');
+      const activity = page.locator('[data-slot="message-activity"]').first();
       const panel = page.locator('[data-slot="collapsible-panel"]').first();
 
       await expect(query).toBeVisible();
       const box = await query.boundingBox();
-      // The column of the activity is 247 pixels at 320: the page less 48
-      // pixels of padding, an indent of 8, a rail of 1 and a gap of 16. A
-      // second rail inside it took the same 25 pixels again.
-      expect(box?.width).toBeCloseTo(247, 0);
+      const column = await activity.boundingBox();
+      // One level of nesting takes 25 pixels at the start of the column of the
+      // activity: an indent of 8, a rail of 1 and a gap of 16. A second rail
+      // inside it took the same 25 pixels again. The query ends where the
+      // column ends, so what is left of the column is the width it gives back.
+      expect((box?.x ?? 0) - (column?.x ?? 0)).toBeCloseTo(25, 0);
+      expect(box?.width).toBeCloseTo((column?.width ?? 0) - 25, 0);
       const rails = await panel.evaluate(
         (element) =>
           [element, ...element.querySelectorAll("*")].filter(
