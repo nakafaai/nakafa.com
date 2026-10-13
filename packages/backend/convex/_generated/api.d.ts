@@ -3416,6 +3416,20 @@ export declare const api: {
         { id: Id<"ninaMemories"> },
         null
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { id: Id<"ninaMemories"> },
+        {
+          author: "nina" | "learner";
+          confirmedAt: number;
+          createdAt: number;
+          id: Id<"ninaMemories">;
+          text: string;
+          title?: string;
+          validUntil?: number;
+        }
+      >;
       state: FunctionReference<
         "query",
         "public",
@@ -9571,6 +9585,12 @@ export declare const internal: {
         "internal",
         { userId: Id<"users"> },
         boolean
+      >;
+      purge: FunctionReference<
+        "mutation",
+        "internal",
+        { id: Id<"ninaMemoryRestores"> },
+        null
       >;
       read: FunctionReference<
         "query",
