@@ -300,7 +300,9 @@ Revoking one token at Google removes every scope the user granted to the
 project and invalidates the tokens of every client in it. A blind revoke would
 end the other connections of the same Google account, so Nakafa revokes only
 with the last one. Until then the grant stays in the user's Google account, and
-the settings page says where to remove it.
+the settings page says where to remove it. The count spans the personal and the
+school connections of one Google account. The connector change decides how it
+finds them, and it must not show one owner's connection to another owner.
 
 ### Nina and Google data
 
