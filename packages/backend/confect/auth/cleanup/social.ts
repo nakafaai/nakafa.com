@@ -3,6 +3,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
+import { dropRestores } from "@repo/backend/confect/nina/memory/restore/store";
 import { deleteBatch } from "@repo/backend/confect/nina/memory/store";
 import { dropPortrait } from "@repo/backend/confect/nina/portrait/store";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -128,14 +129,16 @@ const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
 
 /**
  * Deletes one bounded batch of the learner's Nina memories, with their key
- * rows, and the learner's portrait. A capture that lands during the deletion
- * writes a memory and asks for a portrait, and the next pass deletes both.
+ * rows, the learner's portrait, and the records that keep a deleted memory for
+ * its Undo. A capture that lands during the deletion writes a memory and asks
+ * for a portrait, and the next pass deletes both.
  */
 const cleanupNinaMemory = Effect.fn("auth.cleanup.ninaMemory")(
   function* (userId: Id<"users">) {
     const deleted = yield* deleteBatch(userId);
     const dropped = yield* dropPortrait(userId);
-    return deleted > 0 || dropped;
+    const kept = yield* dropRestores(userId);
+    return deleted > 0 || dropped || kept;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );

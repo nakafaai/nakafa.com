@@ -152,15 +152,19 @@ export const readKeptMemory = Effect.fn("nina.memory.store.kept")(function* (
   return memory === null || isCleared(memory, clearedAt) ? null : memory;
 });
 
-/** Deletes one memory and its key rows. */
+/**
+ * Deletes one memory and its key rows, and returns the keys the memory had.
+ * Only `remove` keeps them, for an Undo.
+ */
 export const deleteMemory = Effect.fn("nina.memory.store.delete")(function* (
   memoryId: MemoryId
 ) {
-  yield* deleteKeys(memoryId);
+  const keys = yield* deleteKeys(memoryId);
   yield* (yield* DatabaseWriter)
     .table("ninaMemories")
     .delete(memoryId)
     .pipe(Effect.orDie);
+  return keys;
 });
 
 /**
