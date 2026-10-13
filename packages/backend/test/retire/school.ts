@@ -2,12 +2,13 @@ import { TableAggregate } from "@convex-dev/aggregate";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
+import { seedAccounts } from "@repo/backend/test/retire/account";
 
 /** The time every seeded row is written at. */
 export const NOW = Date.UTC(2026, 9, 13, 8, 0, 0);
 
 /** The aggregate of posts by forum, with the keys the old post trigger used. */
-const bySequence = new TableAggregate<{
+export const bySequence = new TableAggregate<{
   Namespace: Id<"schoolClassForums">;
   Key: number;
   DataModel: DataModel;
@@ -18,7 +19,7 @@ const bySequence = new TableAggregate<{
 });
 
 /** The aggregate of posts by forum and author, with the keys the old trigger used. */
-const byAuthor = new TableAggregate<{
+export const byAuthor = new TableAggregate<{
   Namespace: [Id<"schoolClassForums">, Id<"users">];
   Key: number;
   DataModel: DataModel;
@@ -28,7 +29,11 @@ const byAuthor = new TableAggregate<{
   sortKey: (post) => post.sequence,
 });
 
-/** The rows that `seedSchool` writes in each retired table. */
+/**
+ * What the migration counts for the rows that `seedSchool` writes: every row of
+ * a retired table, and the rows of a table that stays which hold a retired
+ * field.
+ */
 export const SEEDED = {
   accountDeletionPreparations: 1,
   accountDeletionSchoolTransfers: 1,
@@ -47,6 +52,7 @@ export const SEEDED = {
   schoolInviteCodes: 1,
   schoolMembers: 1,
   schools: 1,
+  subscriptions: 1,
 };
 
 /**
@@ -254,86 +260,14 @@ export async function seedSchool() {
         uploadedBy: member,
       });
     }
-    const preparationId = await ctx.db.insert("accountDeletionPreparations", {
-      attemptId: "retire-attempt",
-      authId: "retire-owner",
-      cancellationStartedAt: NOW,
-      pendingSchoolId: schoolId,
-      pendingSchoolNextCursor: "next-school",
-      recoveryGeneration: 0,
-      schoolCursor: "school",
-      successorCursor: "successor",
-      userId: owner,
-    });
-    await ctx.db.insert("accountDeletionPreparations", {
-      authId: "retire-member",
-      recoveryGeneration: 0,
-      userId: member,
-    });
-    await ctx.db.insert("accountDeletionSchoolTransfers", {
-      preparationId,
+    const accounts = await seedAccounts(ctx, {
+      member,
+      membershipId,
+      now: NOW,
+      owner,
       schoolId,
-      successorMembershipId: membershipId,
-      successorUserId: member,
     });
-    return { attached, forumId, member, pending, preparationId, waiting };
+    return { ...accounts, attached, forumId, member, pending, waiting };
   });
   return { ids, t };
-}
-
-/** Everything that is left of the first School, read from the deployment. */
-export async function leftovers(
-  t: Awaited<ReturnType<typeof seedSchool>>["t"],
-  ids: Awaited<ReturnType<typeof seedSchool>>["ids"]
-) {
-  return await t.run(async (ctx) => ({
-    attached: await ctx.db.system.get(ids.attached),
-    byAuthor: await byAuthor.count(ctx, {
-      namespace: [ids.forumId, ids.member],
-    }),
-    bySequence: await bySequence.count(ctx, { namespace: ids.forumId }),
-    job: (await ctx.db.system.get(ids.waiting))?.state.kind,
-    pending: await ctx.db.system.get(ids.pending),
-    preparation: await ctx.db.get(ids.preparationId),
-    tables: {
-      accountDeletionSchoolTransfers: (
-        await ctx.db.query("accountDeletionSchoolTransfers").collect()
-      ).length,
-      schoolActivityLogs: (await ctx.db.query("schoolActivityLogs").collect())
-        .length,
-      schoolClassForumPendingUploads: (
-        await ctx.db.query("schoolClassForumPendingUploads").collect()
-      ).length,
-      schoolClassForumPostAttachments: (
-        await ctx.db.query("schoolClassForumPostAttachments").collect()
-      ).length,
-      schoolClassForumPostReactions: (
-        await ctx.db.query("schoolClassForumPostReactions").collect()
-      ).length,
-      schoolClassForumPosts: (
-        await ctx.db.query("schoolClassForumPosts").collect()
-      ).length,
-      schoolClassForumReactions: (
-        await ctx.db.query("schoolClassForumReactions").collect()
-      ).length,
-      schoolClassForumReadStates: (
-        await ctx.db.query("schoolClassForumReadStates").collect()
-      ).length,
-      schoolClassForums: (await ctx.db.query("schoolClassForums").collect())
-        .length,
-      schoolClassInviteCodes: (
-        await ctx.db.query("schoolClassInviteCodes").collect()
-      ).length,
-      schoolClassMaterialGroups: (
-        await ctx.db.query("schoolClassMaterialGroups").collect()
-      ).length,
-      schoolClassMembers: (await ctx.db.query("schoolClassMembers").collect())
-        .length,
-      schoolClasses: (await ctx.db.query("schoolClasses").collect()).length,
-      schoolInviteCodes: (await ctx.db.query("schoolInviteCodes").collect())
-        .length,
-      schoolMembers: (await ctx.db.query("schoolMembers").collect()).length,
-      schools: (await ctx.db.query("schools").collect()).length,
-    },
-  }));
 }

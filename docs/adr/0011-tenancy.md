@@ -131,10 +131,12 @@ write to the 16 old tables (the 15 `school*` tables and
 internal migration, `retire/school:erase`. It deletes every row of those tables,
 every stored file their rows name, every scheduled job that would publish a
 class material, and every forum post from the two forum aggregates, and it
-clears the school fields of `accountDeletionPreparations`. It runs on dev and
-then on production, page by page, until a dry pass finds nothing. The second
-change drops the tables, those fields, the two forum aggregates of
-`convex.config.ts`, and the migration. The new Classroom gets its own ADR.
+clears the school fields of `accountDeletionPreparations` and the `schoolId` of
+`subscriptions`, which the Polar webhook no longer writes. The `metadata` of a
+subscription is Polar's copy and stays whole. It runs on dev and then on
+production, page by page, until a dry pass finds nothing. The second change
+drops the tables, those fields, the two forum aggregates of `convex.config.ts`,
+and the migration. The new Classroom gets its own ADR.
 
 ## Implementation Contract
 

@@ -2,12 +2,9 @@ import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import {
-  leftovers,
-  NOW,
-  SEEDED,
-  seedSchool,
-} from "@repo/backend/test/retire/school";
+import { subscriptionRow } from "@repo/backend/test/retire/account";
+import { remains } from "@repo/backend/test/retire/remains";
+import { NOW, SEEDED, seedSchool } from "@repo/backend/test/retire/school";
 import { Array as Arr, Record as Rec } from "effect";
 
 const erase = Ref.getFunctionReference(refs.internal.retire.school.erase);
@@ -37,11 +34,11 @@ async function pass(
 describe("retire/school", () => {
   it("counts what a real pass would remove in a dry pass and writes nothing", async () => {
     const { ids, t } = await seedSchool();
-    const before = await leftovers(t, ids);
+    const before = await remains(t, ids);
     const counted = await pass(t, true);
     expect(counted.rows).toEqual(SEEDED);
     expect([counted.files, counted.jobs]).toEqual([2, 1]);
-    expect(await leftovers(t, ids)).toEqual(before);
+    expect(await remains(t, ids)).toEqual(before);
     expect(before).toMatchObject({
       byAuthor: 1,
       bySequence: 1,
@@ -56,6 +53,9 @@ describe("retire/school", () => {
       schoolCursor: "school",
       successorCursor: "successor",
     });
+    expect(before.subscriptions.linked).toMatchObject({
+      schoolId: expect.any(String),
+    });
   });
 
   it("removes every row, file, job, aggregate entry, and school field", async () => {
@@ -63,7 +63,7 @@ describe("retire/school", () => {
     const removed = await pass(t, false);
     expect(removed.rows).toEqual(SEEDED);
     expect([removed.files, removed.jobs]).toEqual([2, 1]);
-    const after = await leftovers(t, ids);
+    const after = await remains(t, ids);
     expect(after).toMatchObject({
       attached: null,
       byAuthor: 0,
@@ -84,17 +84,28 @@ describe("retire/school", () => {
         ctx.db.query("accountDeletionPreparations").collect()
       )
     ).toHaveLength(2);
+    // The subscriptions stay as well, with their Polar data: only the link goes.
+    expect(after.subscriptions.linked).not.toHaveProperty("schoolId");
+    expect(after.subscriptions.linked).toMatchObject({
+      id: "retire-linked",
+      metadata: { schoolId: expect.any(String) },
+    });
+    expect(after.subscriptions.plain).toMatchObject({ id: "retire-plain" });
+    expect(
+      await t.run((ctx) => ctx.db.query("subscriptions").collect())
+    ).toHaveLength(2);
   });
 
-  it("ends a dry pass in one call when nothing is left", async () => {
+  it("counts nothing in any call of a dry pass once nothing is left", async () => {
     const { t } = await seedSchool();
     await pass(t, false);
-    // The preparations stay, so the last step looks at them and finds no school field.
-    expect(await t.mutation(erase, { cursor: null, dry: true })).toEqual({
+    // The two tables that stay are read to the end, one call each, and hold no school field.
+    const proof = await pass(t, true);
+    expect(proof).toEqual({
+      calls: 2,
       files: 0,
       jobs: 0,
-      next: null,
-      rows: { accountDeletionPreparations: 0 },
+      rows: { accountDeletionPreparations: 0, subscriptions: 0 },
     });
   });
 
@@ -168,15 +179,22 @@ describe("retire/school", () => {
           recoveryGeneration: 0,
           userId: owner,
         });
+        await ctx.db.insert("subscriptions", {
+          ...subscriptionRow(`many-${index}`, NOW),
+          schoolId,
+        });
       }
+      await ctx.db.insert("subscriptions", subscriptionRow("many-plain", NOW));
     });
     const counted = await pass(t, true);
-    expect(counted.calls).toBeGreaterThan(4);
+    // Five tables hold something, and three of them need more than one call.
+    expect(counted.calls).toBeGreaterThan(5);
     expect(counted.rows).toEqual({
       accountDeletionPreparations: 10,
       schoolClassMaterialGroups: 20,
       schoolClasses: 1,
       schools: 1,
+      subscriptions: 10,
     });
     expect(
       await t.run((ctx) => ctx.db.query("schoolClassMaterialGroups").collect())
@@ -190,8 +208,13 @@ describe("retire/school", () => {
           await ctx.db.query("accountDeletionPreparations").collect(),
           (row) => row.pendingSchoolId !== undefined
         ),
+        linked: Arr.filter(
+          await ctx.db.query("subscriptions").collect(),
+          (row) => row.schoolId !== undefined
+        ),
+        subscriptions: (await ctx.db.query("subscriptions").collect()).length,
       }))
-    ).toEqual({ groups: [], held: [] });
+    ).toEqual({ groups: [], held: [], linked: [], subscriptions: 11 });
   });
 
   it("refuses a cursor that it did not make", async () => {

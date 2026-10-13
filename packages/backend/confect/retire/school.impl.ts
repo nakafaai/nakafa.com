@@ -1,13 +1,15 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { TableAggregate } from "@convex-dev/aggregate";
 import schema from "@repo/backend/confect/_generated/schema";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  dropFile,
+  dropFromAggregates,
+  dropJob,
+  nothing,
+} from "@repo/backend/confect/retire/leftovers";
 import spec from "@repo/backend/confect/retire/school.spec";
-import { components } from "@repo/backend/convex/_generated/api";
 import type {
-  DataModel,
   Doc,
-  Id,
   TableNames,
 } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect, Layer, Record as Rec, Schema } from "effect";
@@ -21,9 +23,10 @@ import { Array as Arr, Effect, Layer, Record as Rec, Schema } from "effect";
 const PAGE_ROWS = 256;
 
 /**
- * Rows one call handles when each row needs more than a delete, and rows one
- * dry call reads. A document is at most 1 MiB, so 8 of them stay under the
- * 16 MiB a transaction may read, with no byte limit and so no partial page.
+ * Rows one call handles when each row needs more than a delete or the rows
+ * stay, so the call goes on from a cursor, and rows one dry call reads. A
+ * document is at most 1 MiB, so 8 of them stay under the 16 MiB a transaction
+ * may read, with no byte limit and so no partial page.
  */
 const PAGE_FEW = 8;
 
@@ -38,69 +41,6 @@ const Position = Schema.Struct({
 const PositionText = Schema.fromJsonString(Position);
 
 /**
- * The aggregate of forum posts by forum that the old post trigger kept. A post
- * leaves it here, with the same namespace and key it had when it went in.
- */
-const forumPostsBySequence = new TableAggregate<{
-  Namespace: Id<"schoolClassForums">;
-  Key: number;
-  DataModel: DataModel;
-  TableName: "schoolClassForumPosts";
-}>(components.forumPostsBySequence, {
-  namespace: (post) => post.forumId,
-  sortKey: (post) => post.sequence,
-});
-
-/** The aggregate of forum posts by forum and author that the old trigger kept. */
-const forumPostsByAuthorSequence = new TableAggregate<{
-  Namespace: [Id<"schoolClassForums">, Id<"users">];
-  Key: number;
-  DataModel: DataModel;
-  TableName: "schoolClassForumPosts";
-}>(components.forumPostsByAuthorSequence, {
-  namespace: (post) => [post.forumId, post.createdBy],
-  sortKey: (post) => post.sequence,
-});
-
-/** The nothing a row leaves behind when it is only a row. */
-const nothing = Effect.succeed({ files: 0, jobs: 0 });
-
-/** Deletes one stored file unless it is gone already, and counts it when it was there. */
-const dropFile = Effect.fn("retire.school.dropFile")(function* (
-  storageId: Id<"_storage">,
-  dry: boolean
-) {
-  const ctx = yield* MutationCtx;
-  const file = yield* Effect.promise(() => ctx.db.system.get(storageId));
-  if (file === null) {
-    return 0;
-  }
-  if (!dry) {
-    yield* Effect.promise(() => ctx.storage.delete(storageId));
-  }
-  return 1;
-});
-
-/** Cancels a scheduled job that has not started, and counts it when it did. */
-const dropJob = Effect.fn("retire.school.dropJob")(function* (
-  jobId: Id<"_scheduled_functions"> | undefined,
-  dry: boolean
-) {
-  if (jobId === undefined) {
-    return 0;
-  }
-  const ctx = yield* MutationCtx;
-  const job = yield* Effect.promise(() => ctx.db.system.get(jobId));
-  if (job?.state.kind !== "pending") {
-    return 0;
-  }
-  if (!dry) {
-    yield* Effect.promise(() => ctx.scheduler.cancel(jobId));
-  }
-  return 1;
-});
-
-/**
  * Tells whether a table holds a row. A call may paginate only once, so this
  * looks at the tables that come before the one it works on with a plain read.
  */
@@ -110,17 +50,6 @@ function hasRows(table: TableNames) {
     return (yield* Effect.promise(() => ctx.db.query(table).first())) !== null;
   });
 }
-
-/** Takes one forum post out of both forum aggregates, which may never have held it. */
-const dropFromAggregates = Effect.fn("retire.school.dropFromAggregates")(
-  function* (post: Doc<"schoolClassForumPosts">) {
-    const ctx = yield* MutationCtx;
-    yield* Effect.promise(() => forumPostsBySequence.deleteIfExists(ctx, post));
-    yield* Effect.promise(() =>
-      forumPostsByAuthorSequence.deleteIfExists(ctx, post)
-    );
-  }
-);
 
 /**
  * Deletes every row of one table, page by page. The rows are read and deleted
@@ -175,88 +104,102 @@ function rows<T extends TableNames>(
 }
 
 /**
- * Clears the school fields of the deletion preparations that still hold them,
- * and the marker of the cancellation batches that only school transfers made.
- * The rows stay, so this step goes on from the cursor of the page before in a
- * real pass as well.
+ * Clears the retired fields of a table that stays. `holds` says which rows
+ * hold one, and `clear` removes them from a row. A row that holds one is
+ * counted, and in a real pass it is cleared too. The rows stay, so a real page
+ * goes on from the cursor of the page before, as a dry page does. The rows are
+ * read and patched through the Convex context, never decoded.
  */
-const preparations = {
-  has: hasRows("accountDeletionPreparations"),
-  table: "accountDeletionPreparations",
-  run: Effect.fn("retire.school.accountDeletionPreparations")(function* (
-    page: string | null,
-    dry: boolean
-  ) {
-    const ctx = yield* MutationCtx;
-    const read = yield* Effect.promise(() =>
-      ctx.db
-        .query("accountDeletionPreparations")
-        .paginate({ cursor: page, numItems: PAGE_FEW })
-    );
-    const held = Arr.filter(
-      read.page,
-      (row) =>
-        row.pendingSchoolId !== undefined ||
-        row.pendingSchoolNextCursor !== undefined ||
-        row.schoolCursor !== undefined ||
-        row.successorCursor !== undefined ||
-        row.cancellationStartedAt !== undefined
-    );
-    if (!dry) {
-      yield* Effect.forEach(
-        held,
-        (row) =>
-          Effect.promise(() =>
-            ctx.db.patch(row._id, {
-              cancellationStartedAt: undefined,
-              pendingSchoolId: undefined,
-              pendingSchoolNextCursor: undefined,
-              schoolCursor: undefined,
-              successorCursor: undefined,
-            })
-          ),
-        { discard: true }
+function fields<T extends TableNames>(
+  table: T,
+  holds: (row: Doc<T>) => boolean,
+  clear: (row: Doc<T>) => Effect.Effect<void, never, MutationCtx>
+) {
+  return {
+    has: hasRows(table),
+    table,
+    run: Effect.fn(`retire.school.${table}`)(function* (
+      page: string | null,
+      dry: boolean
+    ) {
+      const ctx = yield* MutationCtx;
+      const read = yield* Effect.promise(() =>
+        ctx.db.query(table).paginate({ cursor: page, numItems: PAGE_FEW })
       );
-    }
-    return {
-      done: read.isDone,
-      files: 0,
-      jobs: 0,
-      resume: read.isDone ? null : read.continueCursor,
-      rows: held.length,
-    };
-  }),
-};
+      const held = Arr.filter(read.page, holds);
+      if (!dry) {
+        yield* Effect.forEach(held, clear, { discard: true });
+      }
+      return {
+        done: read.isDone,
+        files: 0,
+        jobs: 0,
+        resume: read.isDone ? null : read.continueCursor,
+        rows: held.length,
+      };
+    }),
+  };
+}
+
+/**
+ * The school fields of the deletion preparations, and the marker of the
+ * cancellation batches that only school transfers made.
+ */
+const preparations = fields(
+  "accountDeletionPreparations",
+  (row) =>
+    row.pendingSchoolId !== undefined ||
+    row.pendingSchoolNextCursor !== undefined ||
+    row.schoolCursor !== undefined ||
+    row.successorCursor !== undefined ||
+    row.cancellationStartedAt !== undefined,
+  (row) =>
+    Effect.flatMap(MutationCtx, (ctx) =>
+      Effect.promise(() =>
+        ctx.db.patch(row._id, {
+          cancellationStartedAt: undefined,
+          pendingSchoolId: undefined,
+          pendingSchoolNextCursor: undefined,
+          schoolCursor: undefined,
+          successorCursor: undefined,
+        })
+      )
+    )
+);
+
+/**
+ * The link from a subscription to a school. Its `metadata` is a copy of what
+ * Polar sends and every webhook writes it whole, so only the link is cleared.
+ */
+const subscriptions = fields(
+  "subscriptions",
+  (row) => row.schoolId !== undefined,
+  (row) =>
+    Effect.flatMap(MutationCtx, (ctx) =>
+      Effect.promise(() => ctx.db.patch(row._id, { schoolId: undefined }))
+    )
+);
 
 /**
  * The tables in the order their rows go: files and reactions first, then the
- * posts, forums, and groups they belong to, then classes, then schools.
+ * posts, forums, and groups they belong to, then classes, then schools. The
+ * two tables that stay come last.
  */
 const STEPS = Arr.map(
   [
     rows("schoolClassForumPostAttachments", (row, dry) =>
-      Effect.map(dropFile(row.fileId, dry), (files) => ({ files, jobs: 0 }))
+      dropFile(row.fileId, dry)
     ),
     rows("schoolClassForumPendingUploads", (row, dry) =>
-      row.storageId === undefined
-        ? nothing
-        : Effect.map(dropFile(row.storageId, dry), (files) => ({
-            files,
-            jobs: 0,
-          }))
+      dropFile(row.storageId, dry)
     ),
     rows("schoolClassForumPostReactions"),
     rows("schoolClassForumReactions"),
     rows("schoolClassForumReadStates"),
-    rows("schoolClassForumPosts", (post, dry) =>
-      dry ? nothing : Effect.as(dropFromAggregates(post), { files: 0, jobs: 0 })
-    ),
+    rows("schoolClassForumPosts", dropFromAggregates),
     rows("schoolClassForums"),
     rows("schoolClassMaterialGroups", (group, dry) =>
-      Effect.map(dropJob(group.scheduledJobId, dry), (jobs) => ({
-        files: 0,
-        jobs,
-      }))
+      dropJob(group.scheduledJobId, dry)
     ),
     rows("schoolClassInviteCodes"),
     rows("schoolClassMembers"),
@@ -267,6 +210,7 @@ const STEPS = Arr.map(
     rows("schools"),
     rows("accountDeletionSchoolTransfers"),
     preparations,
+    subscriptions,
   ],
   (step, index) => ({ ...step, index })
 );

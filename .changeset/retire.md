@@ -15,7 +15,8 @@ account deletion each finish in one call.
 An internal migration, `retire/school:erase`, deletes the old data page by page:
 every row of the 16 old tables, the files and scheduled jobs they name, and the
 forum posts in the two forum aggregates. It also clears the school fields of
-`accountDeletionPreparations`. A later change drops the tables, those fields,
+`accountDeletionPreparations` and the school link of `subscriptions`, which the
+Polar webhook no longer writes. A later change drops the tables, those fields,
 and the migration once every deployment reports nothing left.
 
 The FAQ and the schools section of the home page now say only what is live:
