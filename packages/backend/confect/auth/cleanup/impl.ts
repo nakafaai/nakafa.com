@@ -8,10 +8,10 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 /**
- * Deletes one bounded batch of personal data. Shared records, such as the
- * replies to a deleted comment, keep the stable user ID, so the final pass
- * replaces profile fields with an anonymous tombstone instead of leaving
- * dangling references.
+ * Deletes one bounded batch of personal data and says whether it found any, so
+ * the caller runs it again until it finds none. It never deletes the user row:
+ * finalizing the deletion already replaced the profile fields with an
+ * anonymous tombstone, so a record that keeps the stable user ID names no one.
  */
 export const cleanupDeletedUserProgram = Effect.fn(
   "auth.cleanup.cleanupDeletedUser"
