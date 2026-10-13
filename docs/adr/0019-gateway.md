@@ -3,7 +3,9 @@
 ## Status
 
 Accepted. Supersedes ADR 0014, which routed every model call through the
-Vercel AI Gateway.
+Vercel AI Gateway. The Jev decision route is alpha: no school grade uses a Jev
+judgment until the zero-retention test in Decisions passes on the dev
+deployment.
 
 ## Context
 
@@ -257,6 +259,19 @@ thresholds in the catalog were set from what that command printed on 12 October
     the production adapter sends. That the gateway serves a decision that asks
     for `zdr` is not yet proven (see Not yet established), and this ADR claims
     nothing more about it until it has been run against a deployment.
+  - School grading (K6). A Jev judgment may inform a school grade only after the
+    zero-retention test passes on the dev deployment: one decision request that
+    asks for `zdr` is served by the gateway and returns an answer. Until then the
+    decision route is alpha, and no code path that grades uses it. After the
+    test passes, a Jev judgment is a suggestion that the teacher confirms, never
+    a grade. It is one input to the teacher's grading queue, next to the answer
+    key's own verdicts (K6, K7). A second opinion is a second Jev request, shown
+    to the teacher only. If the test fails, teachers grade alone.
+    `gateway/live.test.ts` already asserts the request body that the production
+    adapter sends.
+  - Name. The Jev call is `Gateway.decide` in code. `decide` also names the
+    authorization check of ADR 0012, so the Jev call takes another name in a
+    later change. This ADR does not choose that name.
   - One retry policy and one deadline. The AI SDK retries a failure the
     provider marks as retryable twice, after 2 and 4 seconds, and honors
     `Retry-After`. The whole call, retries included, ends after ten seconds
@@ -300,6 +315,11 @@ thresholds in the catalog were set from what that command printed on 12 October
 - **Dependencies.** `@convex-dev/ai-sdk-provider` joins the AI SDK cohort in
   `scripts/dependencies/policy.ts`. `@ai-sdk/gateway` and `@ai-sdk/google` leave
   the backend.
+- **Package boundary (planned).** `ai` leaves the `apps/www` and
+  `packages/design-system` manifests. The backend's direct imports of `ai` move
+  behind `confect/gateway` or another Confect seam, and a check rejects a new
+  one. `ai` stays only as a dependency of `@convex-dev/agent`. The change
+  belongs to the first delivery wave of the School program.
 
 ## Consequences
 

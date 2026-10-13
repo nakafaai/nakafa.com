@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted.
+Accepted. Amended on 13 October 2026 for the homeroom and guardian relations, the
+actions of the school roles, and the 24-hour limit on operator visits.
 
 ## Context
 
@@ -117,6 +118,24 @@ The built-in roles are Owner, Admin, Principal, Deputy, Teacher, Counselor,
 Staff, Student, Guardian, Proctor, Auditor, and Integration. They are code and
 identical in every tenant; display labels live in the UI dictionary. Owner
 holds every roles-granted action of every kind and is tenant-wide and standing.
+Operator Nakafa is not a built-in role. Its Persons hold only visit grants (see
+Operators inside tenants). The Guardian role is shown as Orang tua.
+
+The school roles also hold these actions:
+
+- The Teacher manages the membership of their own classes from the school roster,
+  and creates no accounts. Inviting people to the school stays with the Admin.
+  The Teacher releases the grades of their own tasks and exams.
+- The Principal approves report cards and promotion (kenaikan kelas). The Deputy
+  holds the Principal's actions, except approving report cards and promotion,
+  reading the audit journal, and seeing the quota.
+- The Admin manages the organisation settings and the AI quota.
+- The Staff (Staf TU) prepares report cards and school documents and views
+  people's data. The Counselor (Guru BK) views people's data and insight. The
+  Auditor reads the journal, the settings, and people's data, and changes
+  nothing.
+- The Guardian reaches a child only through a verified parent relation (see
+  Relations).
 Assigning or ending an Owner or Admin role needs `owner.manage`, which only
 Owners hold, so an Admin cannot mint Admins. The last Owner held by a claimed,
 active Person cannot be revoked. Integration grants belong to integration apps,
@@ -128,10 +147,31 @@ and widen the stored role reference with a second member. A custom role holds
 only roles-granted actions its editor already holds tenant-wide; archiving it
 ends its grants.
 
+### Relations
+
+A relation links a Person to objects that a role does not reach. A rule can
+grant an action through a relation alone, so no role can allow it. The relations
+are:
+
+| Relation | Connects | Opens | Status |
+| --- | --- | --- | --- |
+| Self | A person and their own data | Their own data and results | Live |
+| Member | A person and an organisation | The home page and the school space | Live |
+| Holder | A person and a role they hold | Their own role | Live |
+| Homeroom teacher (wali kelas) | A teacher and one class group in one period, from the teacher's assignment to that class group | The report cards, attendance, and insight of that class group | Planned |
+| Subject teacher | A teacher and one class | The grades, tasks, and posts of that class | Planned |
+| Class member | A student and one class | The posts, tasks, and grades of that class | Planned |
+| Class group member | A student and one class group | The announcements of that class group | Planned |
+| Verified parent | A guardian and a student, once the parent relation is verified | The student's tasks, grades, report cards, and announcements, and the Insight narratives that the student shared and a teacher approved | Planned |
+| Session proctor | A proctor and one exam sitting | The token and the participant dashboard of that sitting | Planned |
+| Exam author | A teacher and their exam | Changing and grading that exam | Planned |
+| Shared practice | A student and a practice the student shared | School Insight, per topic, revocable by the student | Planned |
+
 ### Operators inside tenants
 
 An operator enters a tenant through a visit: a temporary admin or auditor grant
-on a Person of kind operator, active only while the grant is. The visit's end,
+on a Person of kind operator, active only while the grant is. The school's Owner
+or Admin approves each visit, and the grant lasts at most 24 hours. The visit's end,
 by schedule, by leaving, by an Owner revoking it, or by the operator losing
 their operator row, ends the grant and suspends that Person in the same
 transaction, so the member middleware refuses it at once. An operator Person

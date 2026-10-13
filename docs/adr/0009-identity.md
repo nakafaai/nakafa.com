@@ -1,4 +1,4 @@
-# ADR 0009: Token-Verified Reads And Session-Validated Writes
+# ADR 0009: Token-Verified Reads, Session-Validated Writes, And School Sign-In
 
 ## Decision
 
@@ -55,6 +55,49 @@ secret signs every learner out. List the new secret first in
 older version listed while anything is still sealed with it. Keep
 `encryptOAuthTokens` on, because with it off Better Auth hands out the cipher
 text.
+
+Planned for program wave A: sign-in stops storing Google tokens on the account.
+The rows that hold them are counted on dev first, then cleared in the same
+release that stops storing them. Connector tokens never sit on the account. They
+are sealed in the vault (`confect/vault`) under the key of the connection's
+owner: the learner's key for a personal connection, and the school's key for a
+school connection.
+
+## School Sign-In
+
+Program wave A, the first delivery wave of the School program, changes how
+school members sign in. Each path below is planned unless it says live. Every
+path ends in the Better Auth session that the rest of this ADR checks.
+
+- **Google.** Google sign-in covers a school's Workspace account and belajar.id
+  accounts. The sign-in checks the hosted domain claim (`hd`) against the
+  school's allowed email domains. A school account is matched by its Google
+  issuer and subject, never by its email address. Google sign-in is live today.
+  The school host, the domain check, and the belajar.id match are planned.
+- **Username.** A school issues a username that is unique within the school. It
+  is stored in the school's login table and maps to a Better Auth username that
+  is unique worldwide and created automatically. Username sign-in works on the
+  school's host only. That path is switched off on main, so it needs a test
+  before it opens.
+- **Login card.** A card carries a 10-character Crockford base32 code, without
+  the letters I, L, O, and U. Nakafa stores only a keyed hash of the code. A code
+  is single use, expires after 14 days, and is rate limited by the existing
+  rate-limit component. The QR code on the card holds only the code. A teacher or
+  an admin prints a card again, which voids the old code and writes a journal
+  entry. A code is shown with dashes and accepted with or without them.
+- **Parent.** A parent signs in with an email code: six digits, valid for five
+  minutes, void after three wrong tries, and stored as a hash. Better Auth's
+  `emailOTP` plugin keeps codes in plain text by default, so Nakafa stores its
+  own hash. `confect/emails` sends the code. Signing in is not consent for a
+  child (K2). Consent is recorded with a second check, and ADR 0012 defines the
+  verified parent relation.
+- **Microsoft Entra ID and SAML.** These come after Google, for the schools that
+  ask for them.
+
+A learner under 18 whose Workspace account is blocked until a Workspace admin
+marks Nakafa as trusted signs in with a login card. The status name that Google
+shows for that block comes from third-party documentation and is not yet tested
+on a Workspace account.
 
 ## Rejected Alternatives
 

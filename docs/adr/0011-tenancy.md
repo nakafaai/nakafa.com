@@ -2,7 +2,10 @@
 
 ## Status
 
-Accepted for the Nakafa School foundation.
+Accepted for the Nakafa School foundation. Amended on 13 October 2026 for the
+organisation tier, the neutral concepts, and the country profile above units.
+The school subdomains and their URL tree are in ADR 0026, and the country
+profile is in ADR 0032.
 
 ## Context
 
@@ -21,13 +24,21 @@ without migration (see Retirement).
 
 ### Tenants, units, and the route slug
 
-A tenant is one organisation, a school or a foundation, served by the same web
-and Convex deployments as every other tenant. It holds one or more units (SD,
-SMP, SMA, and so on), each with its level, an optional NPSN, and a status; an
+An organisation is a tenant. It is a school or a foundation (yayasan), served by
+the same web and Convex deployments as every other tenant. The tenant's `kind` is
+`school` or `foundation`. A foundation runs several schools, each held as a unit
+(SD, SMP, SMA, and so on) with its level, an optional NPSN, and a status. An
 archived unit stays readable and refuses writes.
 
-The tenant slug is the tenant's public address: the `slug.nakafa.com` label and
-the `/[locale]/school/[slug]` route segment. It is the context every tenant
+The concepts are neutral and the same in every country: an organisation holds
+units (schools), a unit runs periods and cohorts, a person belongs to the
+organisation, and a section or an enrolment links people to classes. The words of
+a country, such as `SD`, `Halbjahr`, or `KKTP`, are labels from that country's
+signed profile (ADR 0032). They never appear in code names. The first profile is
+Indonesia.
+
+The tenant slug is the tenant's public address: the `slug.nakafa.com` label. School addresses have no locale prefix, because the
+language comes from the `NEXT_LOCALE` cookie (ADR 0026). It is the context every tenant
 function receives, never an authorization claim. The member middleware resolves
 the tenant and the caller's Person from it; objects named by ID derive their
 tenant from data (ADR 0012). Every tenant-owned table carries `tenantId`.
@@ -38,7 +49,8 @@ single inner hyphens, so never `xn--`. It holds only rules that never change,
 because Confect decodes stored documents and a stricter brand would make
 existing tenants unreadable. `reservedSlugs`, an Effect `HashSet`, lists
 labels that never name a tenant: every live `*.nakafa.com` host, product and account words, the
-application locales, and static segments under `/[locale]/school`.
+application locales, and static segments under `/[locale]/school`, which the old School retires (K11,
+ADR 0026).
 `NewTenantSlug` is a `TenantSlug` outside that set: what operators may give a
 new tenant and what the proxy routes. A new host or School route segment is
 added to `reservedSlugs` first.
@@ -100,7 +112,8 @@ Operators provision tenants (the tenant, its units, and the first Owner invite
 in one mutation), replace a tenant's unclaimed Owners as an audited break-glass,
 and suspend or reactivate a tenant. A suspended tenant stays readable and
 refuses every write. Operators enter a tenant only through an audited visit: a
-temporary admin or auditor grant that a scheduled mutation ends (ADR 0012). The
+temporary admin or auditor grant of at most 24 hours. The school's Owner or Admin
+approves each visit, and a scheduled mutation ends the grant (ADR 0012). The
 operator directory, tenant metadata with no personal data, is the one public
 read across tenants; everything inside a tenant needs a visit.
 

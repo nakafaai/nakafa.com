@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer,
+Superseded by ADR 0031. Accepted and amended on 2026-07-08 to insert the canonical try-out track layer,
 on 2026-07-22 to define freemium attempt access, and on 2026-08-04 to make
 Aksara signed publication the only authored try-out source. Amended on
 2026-08-10 to define transactional response and scoring integrity. Amended on

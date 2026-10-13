@@ -3,7 +3,9 @@
 ## Status
 
 Accepted after the sealing spike of 12 October 2026. It decides the design and
-the order of work. No product code for it exists yet.
+the order of work. The title, the summary, and the memory are sealed and live.
+The other stages in Decision are planned for program wave A, the first delivery
+wave of the School program, and are not live yet.
 
 ## Context
 
@@ -239,6 +241,24 @@ changes.
    it, so a missed seal is found and not forgotten.
 3. **One module owns the form, and every reader opens through it.** A reader
    gets rows from the module and never from the component.
+4. **Chat attachments.** The file name of a chat attachment, the `files.filename`
+   field that the component keeps, is sealed with the learner's key in program
+   wave A. The stored file is removed two days after its chat is deleted, as the
+   live policy already says. This plan does not seal the bytes of an upload.
+
+The stages, and the key that seals each one (owner decisions K2, K3, and K10):
+
+| Stage | Sealed with | Status |
+| --- | --- | --- |
+| Title, summary, and memory | The learner's key | Live |
+| The learner's message, at send | The learner's key | Planned, wave A |
+| The rows of a running turn | Not sealed while the turn runs | Plain, by design |
+| The private reply and tool rows, once the turn settles, in one transaction | The learner's key | Planned, wave A |
+| A failed or cancelled prompt, at turn end by the sweep | The learner's key | Planned, wave A |
+| Stream deltas | Not sealed; deleted after the turn | Planned, wave A |
+| Old messages, by migration | The learner's key | Planned, wave A |
+| Chat attachment file names | The learner's key | Planned, wave A |
+| School Nina thread, from the class's creation; no personal memory (K3) | The school's key | Planned |
 
 Cost, in documents: a turn of n rows costs n - 1 deletes and n - 1 inserts at
 settlement, 16 writes for the 9-row average turn above and at most 78 for the
@@ -379,8 +399,10 @@ migrates them, with a dry pass, as the migrations before it did:
    sizes above can be replaced with real ones.
 
 It runs on dev and on production until a whole pass finds no plain row of a
-settled turn, and it is deleted afterwards with its tests. The reader keeps both
-forms, because a running turn is plain.
+settled turn, and it is deleted afterwards with its tests. In the same release
+the reader stops reading plain rows of settled turns. It passes through only the
+plain rows of a running turn, and a plain row of a settled turn fails the read
+instead of being returned.
 
 ## Order Of Work
 
@@ -400,8 +422,9 @@ runs a whole turn and searches every component table.
    turn they appear only in the plain rows and the deltas.
 4. **Old messages.** The migration, run dry, then run for real on dev and on
    production, then run again until it reports nothing.
-5. **Contract.** Delete the migration and its tests. The plain form stays, as
-   said above.
+5. **Contract.** Delete the migration and its tests, and in the same release stop
+   reading plain rows of settled turns, as the Old Messages section says. A
+   running turn's plain rows stay readable until it settles.
 
 In parallel, a proposal to Convex for a codec hook in the component. If it ships,
 the hook replaces wave 3, and wave 2 too if the hook covers `saveMessage`. The
@@ -412,8 +435,8 @@ module then keeps only the opening.
 - The rows of a running turn, a failed turn until the sweep seals it, and the
   deltas are plain for as long as stated in the table of designs. A backup taken
   in that window holds them.
-- `files.filename` and the uploaded files are not sealed. ADR 0001 and the
-  blueprint leave files out of this plan.
+- The bytes of an uploaded file are not sealed by this plan. The file name of a
+  chat attachment is sealed in program wave A (Decision 4).
 - Searching earlier chats for text is not possible over sealed rows. The summary
   and the memories carry what Nina recalls. If a search is wanted later, it
   follows ADR 0022: blind keys for words, no embeddings, because an embedding
