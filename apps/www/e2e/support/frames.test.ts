@@ -223,22 +223,15 @@ describe("the frames of the realtime connection", () => {
     });
     // A transition that updates none of the queries, a query that was removed
     // and a frame that is no transition are left alone.
-    const left = [
-      [answered, [9]],
-      [
-        encodeJsonText({
-          modifications: [{ queryId: 3, type: "QueryRemoved" }],
-          type: "Transition",
-        }),
-        [3],
-      ],
-      [encodeJsonText({ type: "Ping" }), [3]],
-    ] as const;
-    for (const [frame, queryIds] of left) {
-      expect(Option.isNone(changeAnswersIn(frame, queryIds, double))).toBe(
-        true
-      );
-    }
+    const removed = encodeJsonText({
+      modifications: [{ queryId: 3, type: "QueryRemoved" }],
+      type: "Transition",
+    });
+    const ping = encodeJsonText({ type: "Ping" });
+
+    expect(Option.isNone(changeAnswersIn(answered, [9], double))).toBe(true);
+    expect(Option.isNone(changeAnswersIn(removed, [3], double))).toBe(true);
+    expect(Option.isNone(changeAnswersIn(ping, [3], double))).toBe(true);
   });
 
   it("keeps the later of two moments", () => {

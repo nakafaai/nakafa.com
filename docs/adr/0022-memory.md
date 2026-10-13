@@ -627,11 +627,10 @@ nobody tries them again without a new reason.
   arguments refuse it. `restore` fails with `NinaMemoryRejected` and `missing`
   (see the restore record below). `read`, `paused`, `known`, `lookup`,
   `capture`, `drain`, `expire` and `purge` are internal. `paused` tells whether
-  the learner paused memory,
-  and the capture asks it once, before it sends the learner's message to any
-  model and before it reads a memory. `known` reads the learner's memory state
-  once more for the moment of the last Delete all, and the write reads it again
-  as the authority.
+  the learner paused memory, and the capture asks it once, before it sends the
+  learner's message to any model and before it reads a memory. `known` reads
+  the learner's memory state once more for the moment of the last Delete all,
+  and the write reads it again as the authority.
 - `ninaMemoryPortraits` (index by user) holds one row for a learner who has
   asked for a portrait: its sealed `text`, absent until a build has written
   one and after a memory was deleted or rewritten; `through`, the newest
@@ -776,9 +775,9 @@ nobody tries them again without a new reason.
   back. They open in the editor again only when the server does not delete the
   memory. A paste that would take the Markdown past 2,000 characters is
   refused as a whole, and the page says so. The panel beside the page never
-  takes the room
-  the list needs: the list keeps a card of 20rem between its padding, whatever
-  width the learner dragged the panel to and whatever the window is, and its
+  takes the room the list needs: the list keeps a card of 20rem between its
+  padding, whatever width the learner dragged the panel to and whatever the
+  window is, and its
   resizer says the width the panel has and the widths it can have. A drag of
   its edge measures from where the page ends and not from the window, so a
   scrollbar never leaves the edge beside the pointer. Nina's sheet, which is

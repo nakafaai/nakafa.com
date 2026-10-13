@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, String as Str } from "effect";
 import { changeRows } from "@/e2e/support/answer";
 import { type Changes, live, reloadUntil, saved } from "@/e2e/support/changes";
 import {
@@ -69,7 +69,7 @@ const verifySituationUndo = Effect.fn("NakafaE2E.verifySituationUndo")(
     changes.rewrite(
       LIST_QUERY,
       changeRows((memory) =>
-        typeof memory.text === "string" && memory.text.includes(EXAM)
+        typeof memory.text === "string" && Str.includes(EXAM)(memory.text)
           ? { ...memory, author: "nina", validUntil: endOfDay(now + 8 * DAY) }
           : memory
       )
