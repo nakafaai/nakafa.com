@@ -4,11 +4,13 @@ import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import { requestLocalizedHref } from "@/lib/routing/locale/request";
 
-const CURRENT_HREF = "/en/quran/2?verse=3#top";
+const CURRENT_HREF = "/en/quran/2?verse=3";
+/** 43 URL-safe characters, the shape of a share token. */
+const SHARE_TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE";
 
 /** Resolves one href through the module's own client with a controlled fetch. */
-function request(fetcher: typeof fetch) {
-  return requestLocalizedHref({ href: CURRENT_HREF, locale: "id" }).pipe(
+function request(fetcher: typeof fetch, href = CURRENT_HREF) {
+  return requestLocalizedHref({ href, locale: "id" }).pipe(
     Effect.provideService(FetchHttpClient.Fetch, fetcher)
   );
 }
@@ -47,6 +49,38 @@ describe("requestLocalizedHref", () => {
         })
       );
     })
+  );
+  it.effect.each([
+    ["a plain path", "/en/quran/2", "/en/quran/2", ""],
+    [
+      "a query and an anchor",
+      "/en/quran/2?verse=3#top",
+      "/en/quran/2?verse=3",
+      "#top",
+    ],
+    [
+      "a share token",
+      `/en/chat/chat-1#share=${SHARE_TOKEN}`,
+      "/en/chat/chat-1",
+      `#share=${SHARE_TOKEN}`,
+    ],
+    ["a second hash sign", "/en/search?q=a#b#c", "/en/search?q=a", "#b#c"],
+  ] as const)(
+    "keeps the fragment of %s in the browser and puts it back on the answer",
+    ([, href, path, fragment]) =>
+      Effect.gen(function* () {
+        const fetcher = vi
+          .fn<typeof fetch>()
+          .mockResolvedValue(Response.json({ href: "/id/page" }));
+
+        expect(yield* request(fetcher, href)).toEqual({
+          href: `/id/page${fragment}`,
+        });
+        const sent = new URL(String(fetcher.mock.calls[0]?.[0]));
+        expect(sent.searchParams.get("href")).toBe(path);
+        expect(sent.href).not.toContain("#");
+        expect(sent.href).not.toContain(SHARE_TOKEN);
+      })
   );
   it.effect.each([
     ["a refused request", () => Response.json({}, { status: 404 })],

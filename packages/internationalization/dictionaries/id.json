@@ -124,6 +124,7 @@
     "see": "Lihat",
     "chat": "Obrolan",
     "no-chats": "Belum ada obrolan.",
+    "chats-by-link": "Obrolan yang dibagikan dibuka lewat tautannya",
     "try-out": "Try out",
     "try-out-short": "Tryout",
     "search-country-placeholder": "Cari negara...",
@@ -405,18 +406,6 @@
   "Videos": {
     "discover": "Temukan video"
   },
-  "NotFound": {
-    "title": "Halaman Nggak Ketemu",
-    "description": "Waduh! Halaman yang kamu cari nggak ada atau belum tersedia.",
-    "home-button": "Beranda",
-    "contribute-button": "Kontribusi"
-  },
-  "Error": {
-    "title": "Waduh, ada kesalahan!",
-    "description": "Bantu kami dengan melaporkan masalah ini di GitHub ya.",
-    "retry": "Coba Lagi",
-    "report": "Lapor"
-  },
   "Contributor": {
     "title": "Kontributor",
     "description": "Temui orang-orang yang membuat Nakafa menjadi mungkin."
@@ -430,9 +419,6 @@
     "continue-with-google": "Masuk dengan Google",
     "opening-google": "Membuka Google...",
     "provider-error": "Kami tidak dapat melanjutkan dengan Google. Coba lagi.",
-    "entry-error-title": "Kami tidak dapat menyiapkan halaman ini",
-    "entry-error-description": "Coba lagi untuk melanjutkan dengan aman.",
-    "retry": "Coba lagi",
     "logout": "Keluar",
     "login": "Masuk",
     "login-cta-title": "Lanjutkan belajarmu",
@@ -699,10 +685,11 @@
     "private": "Pribadi",
     "private-description": "Obrolan hanya dapat dilihat oleh kamu.",
     "public": "Publik",
-    "public-description": "Obrolan dapat dilihat oleh siapa saja.",
+    "public-description": "Obrolan dapat dilihat oleh siapa saja yang punya link.",
     "create-link": "Buat link",
     "copy-link": "Salin link",
     "link-copied": "Link berhasil disalin!",
+    "share-link-error": "Link belum bisa dimuat",
     "private-chat-error": "Akses ditolak",
     "private-chat-error-description": "Ini bukan obrolanmu. Minta akses ke pemiliknya dulu ya.",
     "credits-label": "Kredit",
@@ -939,6 +926,11 @@
       "classes": "Kelas",
       "nakafa-materials": "Materi Nakafa",
       "yours": "Untukmu"
+    },
+    "Missing": {
+      "title": "Sekolah atau kelas ini nggak ketemu",
+      "description": "Mungkin tautannya salah, atau kamu belum bergabung",
+      "back-button": "Kembali ke Nakafa School"
     },
     "Classes": {
       "classes": "Kelas",

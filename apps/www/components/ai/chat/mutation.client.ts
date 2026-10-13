@@ -8,12 +8,17 @@ import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option } from "effect";
 import {
+  loadedForChat,
   patchChatPage,
   removeChatFromPage,
   updateOwnChatVisibility,
 } from "@/components/ai/chat/state";
 
-/** Patch a loaded chat detail projection when it is subscribed. */
+/**
+ * Patch the loaded conversation of a chat. The owner who opened the chat
+ * through its own share link holds it under other arguments, and is patched
+ * too.
+ */
 function patchChatDetail(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   chatId: Id<"chats">,
@@ -22,39 +27,19 @@ function patchChatDetail(
     visibility?: ChatVisibility;
   }
 ) {
-  const conversation = localStore.getQuery(nina.conversation.get, {
-    chatId,
-  });
-  if (Option.isSome(conversation)) {
+  for (const { args, value } of loadedForChat(
+    localStore.getAllQueries(nina.conversation.get),
+    chatId
+  )) {
     localStore.setQuery(
       nina.conversation.get,
-      { chatId },
-      Option.some({
-        ...conversation.value,
-        chat: { ...conversation.value.chat, ...patch },
-      })
-    );
-  }
-  const chat = Option.getOrUndefined(
-    localStore.getQuery(chats.queries.getChat, {
-      chatId,
-    })
-  );
-  if (chat) {
-    localStore.setQuery(
-      chats.queries.getChat,
-      {
-        chatId,
-      },
-      Option.some({
-        ...chat,
-        ...patch,
-      })
+      args,
+      Option.some({ ...value, chat: { ...value.chat, ...patch } })
     );
   }
 }
 
-/** Patch or remove a chat across every loaded visibility-aware list. */
+/** Patch or remove a chat across every loaded list of the learner's own chats. */
 function patchLoadedLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   chatId: Id<"chats">,
@@ -84,26 +69,9 @@ function patchLoadedLists(
       })
     );
   }
-  for (const query of localStore.getAllQueries(chats.queries.getChats)) {
-    if (Option.isNone(query.value)) {
-      continue;
-    }
-    const page =
-      patch.visibility === "private"
-        ? removeChatFromPage(query.value.value.page, chatId)
-        : patchChatPage(query.value.value.page, chatId, patch);
-    localStore.setQuery(
-      chats.queries.getChats,
-      query.args,
-      Option.some({
-        ...query.value.value,
-        page,
-      })
-    );
-  }
 }
 
-/** Remove one chat from every loaded owned and public list. */
+/** Remove one chat from every loaded list of the learner's own chats. */
 function removeFromLoadedLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   chatId: Id<"chats">
@@ -112,18 +80,6 @@ function removeFromLoadedLists(
     if (Option.isSome(query.value)) {
       localStore.setQuery(
         chats.queries.getOwnChats,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: removeChatFromPage(query.value.value.page, chatId),
-        })
-      );
-    }
-  }
-  for (const query of localStore.getAllQueries(chats.queries.getChats)) {
-    if (Option.isSome(query.value)) {
-      localStore.setQuery(
-        chats.queries.getChats,
         query.args,
         Option.some({
           ...query.value.value,
@@ -144,25 +100,16 @@ export function useUpdateChatTitleMutation() {
       patchLoadedLists(localStore, chatId, {
         title,
       });
-      const currentTitle = Option.getOrUndefined(
-        localStore.getQuery(chats.queries.getChatTitle, {
-          chatId,
-        })
-      );
-      if (currentTitle !== undefined) {
-        localStore.setQuery(
-          chats.queries.getChatTitle,
-          {
-            chatId,
-          },
-          Option.some(title)
-        );
-      }
     }
   );
 }
 
-/** Return a visibility mutation that updates eligible loaded chat projections. */
+/**
+ * Return a visibility mutation that updates eligible loaded chat projections.
+ * Unsharing deletes the share token, which is known at once, so a loaded token
+ * goes with it. Sharing draws a token on the server, so the token arrives with
+ * the answer.
+ */
 export function useUpdateChatVisibilityMutation() {
   return useMutation(chats.mutations.updateChatVisibility).withOptimisticUpdate(
     (localStore, { chatId, visibility }) => {
@@ -172,6 +119,18 @@ export function useUpdateChatVisibilityMutation() {
       patchLoadedLists(localStore, chatId, {
         visibility,
       });
+      if (
+        visibility === "private" &&
+        Option.isSome(
+          localStore.getQuery(chats.queries.getShareToken, { chatId })
+        )
+      ) {
+        localStore.setQuery(
+          chats.queries.getShareToken,
+          { chatId },
+          Option.some(null)
+        );
+      }
     }
   );
 }
