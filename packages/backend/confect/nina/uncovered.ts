@@ -115,12 +115,17 @@ function outweighs(turns: readonly ReturnType<typeof costed>[]) {
  * neither the history nor the summary until a fold covers them. `docs` returns
  * every message read: all those of the turns listed, and of the turn at
  * `before`, so a caller finds that turn in them too.
+ *
+ * `first` holds the first page of turns, those below `before` and above
+ * `through`, when the caller has read them already, so the read does not ask
+ * for them again.
  */
 export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
   turn: Pick<NinaTurnsDoc, "chatId" | "promptMessageId" | "threadId">,
   before: number,
   through: number | null,
-  later: readonly Asking[]
+  later: readonly Asking[],
+  first?: readonly Asking[]
 ) {
   const ctx = yield* ActionCtx;
   const { runQuery: query } = yield* QueryRunner;
@@ -155,6 +160,8 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
   let exhausted = false;
   // Rows listed that kept no turn, which `PASSED_LIMIT` bounds.
   let passed = 0;
+  // The page of turns the caller read, for the first round only.
+  let known = first;
   while (
     !(
       exhausted ||
@@ -163,11 +170,14 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
       passed >= PASSED_LIMIT
     )
   ) {
-    const rows = yield* query(refs.internal.nina.summaries.uncovered, {
-      before: upTo,
-      chatId: turn.chatId,
-      through,
-    }).pipe(Effect.mapError(() => new NinaUncoveredError()));
+    const rows =
+      known ??
+      (yield* query(refs.internal.nina.summaries.uncovered, {
+        before: upTo,
+        chatId: turn.chatId,
+        through,
+      }).pipe(Effect.mapError(() => new NinaUncoveredError())));
+    known = undefined;
     exhausted = rows.length < SUMMARY_FOLD_LIMIT;
     if (Arr.isReadonlyArrayNonEmpty(rows)) {
       const oldest = Arr.lastNonEmpty(rows).order;

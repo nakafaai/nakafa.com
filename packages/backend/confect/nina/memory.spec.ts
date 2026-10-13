@@ -91,9 +91,9 @@ const NinaMemoryTopic = Schema.NonEmptyString.check(
 );
 
 /** The topics of one page, or the topics one memory is linked to. */
-const NinaMemoryTopics = Schema.mutable(Schema.Array(NinaMemoryTopic)).check(
-  Schema.isMaxLength(MEMORY_TOPIC_LIMIT)
-);
+export const NinaMemoryTopics = Schema.mutable(
+  Schema.Array(NinaMemoryTopic)
+).check(Schema.isMaxLength(MEMORY_TOPIC_LIMIT));
 
 /**
  * One stored memory. `text` and `title` are sealed for its learner. Only the
@@ -272,7 +272,7 @@ export const NinaMemorySeen = NinaMemoryNote.mapFields(
  * page call up (`recalled`), at most `MEMORY_RECALL_LIMIT`. While memory is
  * paused it holds neither the portrait nor a memory.
  */
-const NinaLearner = Schema.Struct({
+export const NinaLearner = Schema.Struct({
   paused: Schema.Boolean,
   portrait: Schema.optionalKey(NinaPortraitText),
   profile: NinaLearnerProfile,
@@ -363,23 +363,6 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () => AuthFailure,
     }).middleware(Session)
-  )
-  // What a turn knows about the learner: the account facts, the portrait, and
-  // the memories that the learner's words (`said`) and the pages they have open
-  // call up. `now` is the caller's time, which leaves out the situations that
-  // ended: a query never reads the clock, because it is not run again when time
-  // passes.
-  .addFunction(
-    FunctionSpec.internalQuery({
-      name: "read",
-      args: () => ({
-        now: Schema.Finite,
-        said: Schema.String,
-        topics: NinaMemoryTopics,
-        userId: Id("users"),
-      }),
-      returns: () => NinaLearner,
-    })
   )
   // What the memory capability finds for Nina's query, as the memories are at
   // the caller's time `now`. It reads the learner's words only, not the page.

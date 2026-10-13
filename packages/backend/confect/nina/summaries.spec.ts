@@ -7,7 +7,8 @@ import {
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema, Struct } from "effect";
 
-const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
+/** The order of a turn: its place among the prompts of its chat. */
+export const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 
 /**
  * A chat's rolling summary of every turn up to and including `throughOrder`.
@@ -24,7 +25,7 @@ export const NinaSummary = Schema.Struct({
 });
 
 /** The summary facts generation and refresh read back, with the text opened. */
-const NinaSummaryView = NinaSummary.mapFields((fields) => ({
+export const NinaSummaryView = NinaSummary.mapFields((fields) => ({
   text: Schema.String,
   throughOrder: fields.throughOrder,
 }));

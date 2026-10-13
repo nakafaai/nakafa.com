@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MEMORY_BATCH } from "@repo/backend/confect/nina/memory/store";
 import type { NinaMemoryNote } from "@repo/backend/confect/nina/memory.spec";
-import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import { createMemoryTest, readLearner } from "@repo/backend/test/nina/memory";
 import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { Array as Arr, Order } from "effect";
 
@@ -15,7 +15,6 @@ const pause = Ref.getFunctionReference(memory.pause);
 const clear = Ref.getFunctionReference(memory.clear);
 const add = Ref.getFunctionReference(memory.add);
 const edit = Ref.getFunctionReference(memory.edit);
-const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
 const known = Ref.getFunctionReference(refs.internal.nina.memory.known);
 const drain = Ref.getFunctionReference(refs.internal.nina.memory.drain);
 const expire = Ref.getFunctionReference(refs.internal.nina.memory.expire);
@@ -67,7 +66,7 @@ async function readers(f: Awaited<ReturnType<typeof createMemoryTest>>) {
       paginationOpts: { cursor: null, numItems: 50 },
     })
   );
-  const turn = await f.t.query(read, {
+  const turn = await readLearner(f, {
     now: NOW,
     said: "memory",
     topics: [],
@@ -359,7 +358,7 @@ describe("Nina memory pause", () => {
     ]);
     expect(await f.owner.query(state, {})).toEqual({ paused: true });
     expect(
-      await f.t.query(read, {
+      await readLearner(f, {
         now: NOW,
         said: "kept",
         topics: [],
@@ -373,7 +372,7 @@ describe("Nina memory pause", () => {
     expect(resumed?.updatedAt).toBe(2000);
     expect(await f.owner.query(state, {})).toEqual({ paused: false });
     expect(
-      await f.t.query(read, {
+      await readLearner(f, {
         now: NOW,
         said: "kept",
         topics: [],

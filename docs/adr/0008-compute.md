@@ -87,6 +87,14 @@ follows its answer. A learner waits that long more than the stages show. The
 turn sent right after a stop waits for none of the stopped run's exit, its
 refund and the sweep, since its admission settles the stopped turn and
 schedules its own run in one transaction.
+Between the claim and the first model call the run reads in two calls for a
+short chat: the brief of the turn (`nina/brief:read`), one query that gives the
+learner's words, what the turn knows of the learner, the summary of the chat and
+the first page of the turns the summary does not cover, and the first page of
+the thread's messages. Every function call loads its module before it reads a
+row, so one query for the brief saves the loads of two functions and a call
+into the Agent component. A chat longer
+than a page of each asks again for the next one (`readUncovered`).
 `convex run nina/waits:summary '{"count": 500}'` reports the smallest, median,
 90th percentile (nearest rank) and largest of each stage over the newest turns,
 as counts and milliseconds only, and one run is bounded: it reads at most 500

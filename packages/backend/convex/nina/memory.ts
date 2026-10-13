@@ -11,6 +11,5 @@ export const list = registeredFunctions.list;
 export const lookup = registeredFunctions.lookup;
 export const pause = registeredFunctions.pause;
 export const paused = registeredFunctions.paused;
-export const read = registeredFunctions.read;
 export const remove = registeredFunctions.remove;
 export const state = registeredFunctions.state;

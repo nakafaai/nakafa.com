@@ -12,6 +12,7 @@ import {
 } from "@repo/backend/confect/nina/memory/seal";
 import { searchMemories } from "@repo/backend/confect/nina/memory/search";
 import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
+import { recallLearner } from "@repo/backend/confect/nina/memory/turn";
 import {
   MEMORY_KNOWN_LIMIT,
   type NinaMemory,
@@ -49,6 +50,17 @@ function run<A, E>(
       Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
     )
   );
+}
+
+/**
+ * What a turn knows about a learner, read the way the brief of a turn reads it
+ * (`recallLearner`), in a test mutation.
+ */
+export function readLearner(
+  f: Pick<Awaited<ReturnType<typeof createNinaTest>>, "t">,
+  args: Parameters<typeof recallLearner>[0]
+) {
+  return f.t.mutation((ctx) => run(ctx, recallLearner(args)));
 }
 
 /**

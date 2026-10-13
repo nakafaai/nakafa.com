@@ -1,6 +1,9 @@
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
-import { assembleContext } from "@repo/backend/confect/nina/history";
+import {
+  type Asking,
+  assembleContext,
+} from "@repo/backend/confect/nina/history";
 import { withTurnContext } from "@repo/backend/confect/nina/prompt/user";
 import {
   readUncovered,
@@ -19,6 +22,8 @@ const unreadable = () => new NinaGenerationError({ reason: "unknown" });
  * turns the history can hold, or after a long run of replaced askings, and the
  * turns behind such a run wait for the next fold (`readUncovered`). The
  * learner's message carries the turn's runtime facts, which are not stored.
+ * `uncovered` is the first page of those turns, when the caller holds it
+ * already, as the turn's brief does (`nina/brief`).
  */
 export const readInput = Effect.fn("nina.input.read")(function* (
   turn: Pick<
@@ -28,11 +33,20 @@ export const readInput = Effect.fn("nina.input.read")(function* (
   {
     context,
     through,
-  }: { readonly context: string; readonly through: number | null }
+    uncovered,
+  }: {
+    readonly context: string;
+    readonly through: number | null;
+    readonly uncovered?: readonly Asking[];
+  }
 ) {
-  const { docs, turns } = yield* readUncovered(turn, turn.order, through, [
+  const { docs, turns } = yield* readUncovered(
     turn,
-  ]).pipe(Effect.mapError(unreadable));
+    turn.order,
+    through,
+    [turn],
+    uncovered
+  ).pipe(Effect.mapError(unreadable));
   const [question, ...answers] = turnMessages(docs, turn.order);
   if (question?.role !== "user") {
     return yield* unreadable();
