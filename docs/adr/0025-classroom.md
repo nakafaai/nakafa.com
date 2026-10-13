@@ -69,8 +69,12 @@ own address (ADR 0026).
 
 A student reads and writes in the classes they belong to, and a teacher in the
 classes they teach, through the Class member and Subject teacher relations (ADR
-0012). A guardian does not read the forum. The verified parent relation opens
-tasks, grades, report cards, and announcements.
+0012). Owners, Admins, Principals, and Deputies can read the posts, the forum,
+and the library of every class their grant covers, and they write nowhere in
+them (a roles-granted view action, ADR 0012). Counselors, Staff, Proctors,
+Auditors, and Integrations have no access to them. A guardian does not read the
+forum. The verified parent relation opens tasks, grades, report cards, and
+announcements.
 
 ### Channels and numbered discussions
 
@@ -89,7 +93,9 @@ tasks, grades, report cards, and announcements.
 - The title of a discussion is the same in the browser tab, in the header of its
   panel, in a notification, and wherever another message refers to it.
 - The forum offers reactions, forward, edit, pin, and search. A teacher can hide
-  a message, and hiding is an audited change (ADR 0016).
+  a message, and hiding is an audited change (ADR 0016). A moderation flag on a
+  message is shown to teachers only, and no message is deleted automatically.
+  The AI Act class of such a flag is not decided, and counsel assesses it.
 - A forward is a reference to the original message and not a copy. It is a stored
   object reference (ADR 0016), so opening it checks permission through the kind
   of the message every time.
@@ -142,11 +148,11 @@ Mentions).
   (`classroomReads`, planned).
 - An announcement is a class post. The post owns its content, Home shows a
   projection of it, and the inbox row reads its title from the post (ADR 0027).
-- Names, mentions, and message text take `dir="auto"` or `bdi`. Dates and times
-  use the school's time zone and the local format (ADR 0032). A name or an
-  address without spaces may break anywhere, and a long channel name is cut in
-  its rail. The browser tests of a class use worst-case data at 390 and 1440 px,
-  in light and dark.
+- Names, mentions, and message text take `dir="auto"` or `bdi`, while formulas,
+  code, URLs, and numbers stay left to right. Dates and times use the school's
+  time zone and the local format (ADR 0032). A name or an address without spaces
+  may break anywhere, and a long channel name is cut in its rail. The browser
+  tests of a class use worst-case data at 390 and 1440 px, in light and dark.
 
 ### Mentions
 
@@ -183,18 +189,24 @@ field the forum composer is. Status of the spike: planned, in program wave B.
 ### Nina in a class
 
 - A reply of Nina is an ordinary forum message. The mutation that settles the
-  turn as complete writes that message in its own transaction (today the
-  settlement of every Nina turn is `closeTurn` in
-  `packages/backend/confect/nina/settlement.ts`). The turn keeps its thread and
-  its usage in the Convex Agent component (ADR 0001), and it passes the
-  admission rate limit and the credit hold of ADR 0008, as every Nina turn does.
+  turn as complete writes that message in its own transaction, with the inbox
+  rows of a message (ADR 0027). Today the settlement of every Nina turn is
+  `closeTurn` in `packages/backend/confect/nina/settlement.ts`. The turn keeps
+  its thread and its usage in the Convex Agent component (ADR 0001), and it
+  passes the admission rate limit and the credit hold of ADR 0008, as every Nina
+  turn does.
 - A reply needs no tool approval, because Nina changes no data in the forum.
 - If the turn does not complete, no reply is invented, and the question is
   passed on to the teacher.
 - A reply costs 5 credits (`responseCredits` in
-  `packages/backend/confect/nina/credits/ledger.ts`, pull request #965). The
-  daily quota of each member is recorded in the credit ledger. The Admin manages
-  the AI quota (ADR 0012).
+  `packages/backend/confect/nina/credits/ledger.ts`, pull request #965). In a
+  class the credits come from the organisation's pool of AI credits, with a daily
+  limit for each member that the Admin sets (ADR 0012), and never from the
+  student's personal credits. The credit ledger records the use of each member
+  for the day.
+- Every conversation of Nina in a class names her as an AI assistant, and each
+  reply carries the same label. Her output is never shown as a grade. The logs
+  of a class thread hold usage metadata only, never the words of a student.
 - Nina answers from the teacher's library and from Nakafa material, with
   citations, and passes the question to the teacher when she is unsure.
 - The Agent thread of a class reads no personal memory and no learner profile

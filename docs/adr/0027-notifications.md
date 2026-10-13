@@ -171,13 +171,16 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
   notification.
 - On iPhone and iPad, push needs three things (WebKit, "Web Push for Web Apps on
   iOS and iPadOS", `webkit.org/blog/13878`, read on 13 October 2026). The site is
-  a web app on the Home Screen, whose manifest sets `display` to `standalone` or
-  `fullscreen`. The system is iOS or iPadOS 16.4 or later. The person grants the
-  permission in response to a tap. Without these steps, the inbox and the email
+  a web app on the Home Screen, opened from its icon, whose manifest sets
+  `display` to `standalone` or `fullscreen`. The system is iOS or iPadOS 16.4 or
+  later. The person grants the permission in response to a tap. Without these steps, the inbox and the email
   still arrive. Behavior on later iOS versions is not tested. Push is offered
   only to a web app on the Home Screen, and a normal tab gets none. A browser
   test covers iOS 16.4 with the app on the Home Screen and a normal tab without
   push.
+- Students, teachers, and guardians on iPhone get a step in their onboarding
+  that leads from Safari to the Home Screen. The step writes no journal entry,
+  because the inbox stays the source of truth.
 - `apps/www/app/manifest.ts` already sets `display: "standalone"`. No service
   worker and no subscription code exist yet. The build adds both, with
   `pushSubscriptions` (planned). RFC 8030 section 7.3 makes a push service
@@ -226,8 +229,8 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 - The inbox holds one row for each recipient and each notification, for 90 days.
   A page of the inbox reads the sources of its rows, so the page size is bounded
   when the inbox is built.
-- A guardian reads no grade in an email. The link leads to the place in the
-  school after sign-in, where permission decides what the guardian sees.
+- A guardian reads no grade in an email. The link opens the inbox, where
+  permission decides what the guardian sees.
 - The mention and the reply path writes the inbox row in the transaction of the
   message, so a class post costs one extra write for each mentioned person, at
   most 20 (ADR 0025).
