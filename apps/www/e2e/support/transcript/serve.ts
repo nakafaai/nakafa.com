@@ -11,6 +11,7 @@ import {
   Option,
   Schema,
 } from "effect";
+import { answerQueriesIn, decodeSent } from "@/e2e/support/frames";
 import { THREAD } from "@/e2e/support/transcript/message";
 
 /** The realtime connection of the page to the backend. */
@@ -23,44 +24,16 @@ const MESSAGES = "nina/messages:list";
 /** The id of the fixture chat. The page takes any string for the id of a chat. */
 export const CHAT = "e2e-evidence-chat";
 
-/** A frame as JSON text: the keys the protocol gives it, and whatever else it carries. */
-const Frame = Schema.fromJsonString(
-  Schema.Record(Schema.String, Schema.Unknown)
+/**
+ * What the page calls the queries of a chat with: the chat, and for the
+ * messages the stream it asks for, which only a request of the stream carries.
+ */
+const decodeChatArgs = Schema.decodeUnknownOption(
+  Schema.Struct({
+    chatId: Schema.String,
+    streamArgs: Schema.optionalKey(Schema.Unknown),
+  })
 );
-
-/** The change of the query set that the page sends: the queries it adds and drops. */
-const Change = Schema.Struct({
-  modifications: Schema.Array(
-    Schema.Union([
-      Schema.Struct({
-        args: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
-        queryId: Schema.Finite,
-        type: Schema.Literal("Add"),
-        udfPath: Schema.String,
-      }),
-      Schema.Struct({
-        queryId: Schema.Finite,
-        type: Schema.Literal("Remove"),
-      }),
-    ])
-  ),
-  type: Schema.Literal("ModifyQuerySet"),
-});
-
-/** The answer of the server that carries query results. */
-const Transition = Schema.Struct({
-  modifications: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
-  type: Schema.Literal("Transition"),
-});
-
-/** The query of one result in a transition. */
-const Result = Schema.Struct({ queryId: Schema.Finite });
-
-const decodeChange = Schema.decodeUnknownOption(Schema.fromJsonString(Change));
-const decodeFrame = Schema.decodeUnknownOption(Frame);
-const encodeFrame = Schema.encodeSync(Frame);
-const isTransition = Schema.is(Transition);
-const isResult = Schema.is(Result);
 
 /** The fields of a chat as readers receive it. */
 type ChatFields = typeof chatViewValidator.fields;
@@ -138,17 +111,20 @@ function noticeChange(
   shown: MutableRef.MutableRef<readonly NinaMessage[]>,
   text: string
 ) {
-  const change = decodeChange(text);
-  if (Option.isNone(change)) {
+  const frame = decodeSent(text);
+  if (Option.isNone(frame) || frame.value.type !== "ModifyQuerySet") {
     return;
   }
-  for (const modification of change.value.modifications) {
+  for (const modification of frame.value.modifications) {
     if (modification.type === "Remove") {
       MutableHashMap.remove(served, modification.queryId);
       continue;
     }
-    const [args] = modification.args;
-    if (args?.chatId !== CHAT) {
+    const args = Option.fromNullishOr(modification.args).pipe(
+      Option.flatMap(Arr.head),
+      Option.flatMap(decodeChatArgs)
+    );
+    if (Option.isNone(args) || args.value.chatId !== CHAT) {
       continue;
     }
     if (modification.udfPath === CONVERSATION) {
@@ -162,7 +138,9 @@ function noticeChange(
       MutableHashMap.set(
         served,
         modification.queryId,
-        args.streamArgs === undefined ? transcriptOf(shown.current) : STREAMS
+        args.value.streamArgs === undefined
+          ? transcriptOf(shown.current)
+          : STREAMS
       );
     }
   }
@@ -174,26 +152,10 @@ function noticeChange(
  * of any other query, pass through as they are.
  */
 function replaceResults(served: Served, text: string) {
-  const frame = decodeFrame(text);
-  if (Option.isNone(frame) || !isTransition(frame.value)) {
-    return text;
-  }
-  const modifications = Arr.map(frame.value.modifications, (result) => {
-    if (!isResult(result)) {
-      return result;
-    }
-    return Option.match(MutableHashMap.get(served, result.queryId), {
-      onNone: () => result,
-      onSome: (value) => ({
-        journal: null,
-        logLines: [],
-        queryId: result.queryId,
-        type: "QueryUpdated",
-        value,
-      }),
-    });
-  });
-  return encodeFrame({ ...frame.value, modifications });
+  return Option.getOrElse(
+    answerQueriesIn(text, (queryId) => MutableHashMap.get(served, queryId)),
+    () => text
+  );
 }
 
 /**
