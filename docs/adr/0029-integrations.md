@@ -214,7 +214,7 @@ network.
 
 | Rule | What | Number |
 | --- | --- | --- |
-| Idempotency | Every POST carries `Idempotency-Key`. A repeat with the same key and request returns the first result. The same key with another request gets 422, a repeat still running gets 409, and a missing key gets 400. The record is written by the mutation that makes the change, and a scheduled sweep deletes it, because queries do not read the clock (ADR 0011). | Kept 24 hours (target) |
+| Idempotency | Every POST of the REST API carries `Idempotency-Key`. The token endpoint is not part of it. A repeat with the same key and request returns the first result. The same key with another request gets 422, a repeat still running gets 409, and a missing key gets 400. The record is written by the mutation that makes the change, and a scheduled sweep deletes it, because queries do not read the clock (ADR 0011). | Kept 24 hours (target) |
 | Pagination | By cursor, not by page number | 100 rows a page (target) |
 | Rate limit | For each client, through the rate-limit component, with the remaining quota in response headers. A refusal is 429 with `Retry-After`, as in the public API. | 600 requests a minute (target, not measured) |
 | Documentation | OpenAPI generated from the definition of the routes | One source |
