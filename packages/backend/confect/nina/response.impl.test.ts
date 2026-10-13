@@ -133,6 +133,8 @@ describe("The Nina response run when generation fails", () => {
         yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
         const state = yield* Effect.promise(f.inspect);
         expect(state.turn?.state).toMatchObject({ status: "failed", reason });
+        // A run that ended badly has no history cost to keep.
+        expect(state.turn).not.toHaveProperty("history");
         expect(state.user?.credits).toBe(10);
         const paginationOpts = { cursor: null, numItems: 20 };
         const page = yield* Effect.promise(() =>

@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import {
+  foldCanWait,
   HISTORY_TURNS,
+  historyCost,
   nextSummaryTarget,
 } from "@repo/backend/confect/nina/fold";
 import { sentTurn } from "@repo/backend/confect/nina/history";
@@ -12,7 +14,7 @@ import {
   summaryModel,
 } from "@repo/backend/test/nina/summary";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Predicate } from "effect";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -203,6 +205,78 @@ describe("Nina summary fold", () => {
     );
     expect(failures).toEqual([]);
   });
+
+  it("counts what the history held: its tokens, its turns, and the highest order the read left out", () => {
+    expect(historyCost([], nothing)).toEqual({ tokens: 0, turns: 0 });
+    expect(historyCost(costs(3, 5, 40), Option.some(2))).toEqual({
+      tokens: 120,
+      turns: 3,
+      unread: 2,
+    });
+  });
+
+  it.each([
+    // Six turns of 10 cost 60, and 40 more reach the budget itself.
+    ["the budget is not passed", costs(0, 5, 10), nothing, 40, true],
+    [
+      "the turn that settled passes the budget",
+      costs(0, 5, 10),
+      nothing,
+      41,
+      false,
+    ],
+    ["the read left a turn out", costs(40, 41, 1), Option.some(39), 0, false],
+    [
+      "the turns make room for the turn that settled",
+      costs(0, HISTORY_TURNS - 3, 1),
+      nothing,
+      1,
+      true,
+    ],
+    [
+      "the turns and the turn that settled are as many as the history takes",
+      costs(0, HISTORY_TURNS - 2, 1),
+      nothing,
+      1,
+      false,
+    ],
+  ])(
+    "lets the fold wait only when %s",
+    (_case, turns, unread, own, expected) => {
+      expect(foldCanWait(historyCost(turns, unread), own, budget)).toBe(
+        expected
+      );
+    }
+  );
+
+  it("lets the fold wait exactly when the turns fit the budget, and then finds nothing to fold, for every arrangement of costs", () => {
+    // The fold waits on the cost the prompt stored for every turn but the newest, and on the newest's own cost.
+    function waits(list: readonly number[]) {
+      const turns = Arr.map(list, (tokens, order) => ({ order, tokens }));
+      return foldCanWait(
+        historyCost(Arr.dropRight(turns, 1), nothing),
+        sum(Arr.takeRight(list, 1)),
+        budget
+      );
+    }
+    const lists = Arr.flatMap(Arr.range(1, 4), (length) =>
+      arrangements([10, 30, 60, 120], length)
+    );
+    const fits = (list: readonly number[]) => sum(list) <= budget;
+    const disagree = Arr.filter(lists, (list) => waits(list) !== fits(list));
+    const folds = Arr.filter(Arr.filter(lists, waits), (list) =>
+      Option.isSome(
+        nextSummaryTarget(
+          null,
+          Arr.map(list, (tokens, order) => ({ order, tokens })),
+          budget,
+          nothing
+        )
+      )
+    );
+    expect(disagree).toEqual([]);
+    expect(folds).toEqual([]);
+  });
 });
 
 describe("Nina fold by size", () => {
@@ -360,4 +434,65 @@ describe("Nina fold by size", () => {
       expect.objectContaining({ throughOrder: 0 }),
     ]);
   });
+});
+
+describe("Nina fold from the cost its prompt stored", () => {
+  /** Whether a query of a refresh asks for the turns that a summary does not cover. */
+  const asksTurns = (args: unknown) => Predicate.hasProperty(args, "through");
+
+  it.each([
+    [
+      "the turn that settled outweighs the budget with its history",
+      // Four turns of 7,000 tokens fit the budget of 32,000, and a fifth of 6,000 does not.
+      5,
+      (order: number) => ({ tokens: order === 4 ? 6000 : 7000 }),
+    ],
+    [
+      "the read behind the cost left the oldest turns out",
+      // The read of forty turns of 1,000 tokens stops after the page that outweighs the budget.
+      40,
+      () => ({ tokens: 1000 }),
+    ],
+  ])(
+    "reads the turns and folds as it does without the cost when %s",
+    async (_case, turns, shape) => {
+      provider.languageModel.mockReturnValue(summaryModel("- A fold."));
+      const settled = turns - 1;
+      const stored = await createSummaryTest(turns, shape);
+      const history = await stored.history(settled);
+      const full = await createSummaryTest(turns, shape);
+      await full.refresh(settled);
+      const refreshed = await stored.measure(settled, { history });
+      const throughs = async (f: typeof stored) =>
+        Arr.map(await f.summary(), ({ throughOrder }) => throughOrder);
+      expect(await throughs(full)).toHaveLength(1);
+      expect(await throughs(stored)).toEqual(await throughs(full));
+      expect(Arr.some(refreshed.queries, asksTurns)).toBe(true);
+    },
+    30_000
+  );
+
+  it("folds at the same turns as the full read after every turn of a chat, and reads the turns for only some of them", async () => {
+    provider.languageModel.mockReturnValue(summaryModel("- A study session."));
+    // Each turn costs about 9,000 tokens: a fold comes every four or so.
+    const shape = () => ({ tokens: 9000 });
+    const full = await createSummaryTest(14, shape);
+    const stored = await createSummaryTest(14, shape);
+    let reads: readonly boolean[] = [];
+    for (const settled of Arr.range(0, 12)) {
+      await full.refresh(settled);
+      const { queries } = await stored.measure(settled, {
+        history: await stored.history(settled),
+      });
+      reads = Arr.append(reads, Arr.some(queries, asksTurns));
+      expect((await stored.stored())?.throughOrder).toBe(
+        (await full.stored())?.throughOrder
+      );
+      expect(await stored.lost(settled)).toEqual([]);
+    }
+    // The summary folded more than once, and the turns that fit never read the chat.
+    expect((await stored.stored())?.throughOrder).toBeGreaterThan(2);
+    expect(Arr.filter(reads, (read) => !read).length).toBeGreaterThan(3);
+    expect(Arr.filter(reads, (read) => read).length).toBeGreaterThan(1);
+  }, 60_000);
 });

@@ -1,3 +1,4 @@
+import type { NinaHistoryCost } from "@repo/backend/confect/nina/contract/turn";
 import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
 import { Array as Arr, Option, pipe, Schema } from "effect";
 
@@ -13,6 +14,47 @@ const CostedTurn = Schema.Struct({ order: Schema.Int, tokens: Schema.Int });
  * `countTextTokens`), so this cap is about reads, not about the prompt.
  */
 export const HISTORY_TURNS = 4 * SUMMARY_FOLD_LIMIT;
+
+/**
+ * What the history cost: the tokens of `turns`, how many they are, and the
+ * highest order the read left out (`unread`). A turn stores it when its prompt
+ * is built (`NinaHistoryCost`).
+ */
+export function historyCost(
+  turns: readonly (typeof CostedTurn.Type)[],
+  unread: Option.Option<number>
+) {
+  return {
+    tokens: Arr.reduce(turns, 0, (total, { tokens }) => total + tokens),
+    turns: turns.length,
+    ...(Option.isSome(unread) ? { unread: unread.value } : {}),
+  };
+}
+
+/**
+ * Whether the fold can wait without reading a single turn again: the read left
+ * no turn out, the turns it read and the turn that settled leave the history
+ * under the most turns it takes, and together they cost no more than `budget`,
+ * with `own` tokens for the turn that settled. Then `nextSummaryTarget` finds
+ * nothing to fold, whatever each turn costs. Otherwise only reading the turns
+ * tells whether a fold is due and what it covers: the count of turns decides a
+ * fold too, once a read holds `HISTORY_TURNS` of them.
+ *
+ * The summary may have covered more turns since the prompt was built, never
+ * fewer, so the stored cost can only count too many turns, and a fold that
+ * waits on it waits on the real state too.
+ */
+export function foldCanWait(
+  cost: typeof NinaHistoryCost.Type,
+  own: number,
+  budget: number
+) {
+  return (
+    cost.unread === undefined &&
+    cost.turns + 1 < HISTORY_TURNS &&
+    cost.tokens + own <= budget
+  );
+}
 
 /**
  * Returns the order a fold should summarize through, or none while the turns

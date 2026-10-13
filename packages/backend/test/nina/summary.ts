@@ -4,6 +4,7 @@ import { createThread, saveMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
+import type { NinaHistoryCost } from "@repo/backend/confect/nina/contract/turn";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import {
@@ -11,6 +12,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { GatewayTest } from "@repo/backend/test/gateway";
+import { measured, type Sample, totalOf } from "@repo/backend/test/measure";
 import { type EarlierTurn, filler } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { sealedSummary } from "@repo/backend/test/seal";
@@ -147,21 +149,45 @@ export async function createSummaryTest(
     order,
     promptMessageId: setup.prompts[order] ?? "",
   });
-  // Refreshes the summary as the turn at `order` settles, optionally reading
-  // another thread, and returns the arguments of the queries the refresh made.
-  const refresh = (order: number, threadId = setup.threadId) =>
+  // Refreshes the summary as the turn at `order` settles, with the cost its
+  // prompt stored (`history`) and optionally reading another thread. Every
+  // query and mutation of the refresh runs as a transaction of its own, as the
+  // deployment runs them. Returns the arguments of the queries and what all of
+  // them read and wrote.
+  const measure = (
+    order: number,
+    options: {
+      readonly history?: typeof NinaHistoryCost.Type;
+      readonly threadId?: string;
+    } = {}
+  ) =>
     t.action(async (ctx) => {
-      const runQuery = vi.spyOn(ctx, "runQuery");
+      let samples: readonly Sample[] = [];
+      const counted = measured(t, ctx, (sample) => {
+        samples = Arr.append(samples, sample);
+      });
+      const runQuery = vi.spyOn(counted, "runQuery");
       await Effect.runPromise(
-        refreshSummary({ ...settled(order), threadId }).pipe(
+        refreshSummary({
+          ...settled(order),
+          threadId: options.threadId ?? setup.threadId,
+          ...(options.history ? { history: options.history } : {}),
+        }).pipe(
           Effect.provide([
             GatewayTest,
-            RegisteredFunction.actionLayer(schema, ctx),
+            RegisteredFunction.actionLayer(schema, counted),
           ])
         )
       );
-      return Arr.map(runQuery.mock.calls, ([, args]) => args);
+      return {
+        queries: Arr.map(runQuery.mock.calls, ([, args]) => args),
+        read: totalOf(samples),
+      };
     });
+  const refresh = async (
+    order: number,
+    options?: Parameters<typeof measure>[1]
+  ) => (await measure(order, options)).queries;
   const summary = () =>
     t.query((ctx) => ctx.db.query("ninaSummaries").collect());
   // Stores the summary an earlier fold left, which covers the turns through
@@ -180,8 +206,9 @@ export async function createSummaryTest(
   const stored = () => t.query(read, { chatId: setup.chatId });
   const text = async () => (await stored())?.text;
   // What the model receives for the turn at `order`, whose question the chat
-  // holds, through the summary as it stands.
-  const input = async (order: number) => {
+  // holds, through the summary as it stands, and what the history of its
+  // prompt costs, which the turn stores when its run ends well.
+  const readFor = async (order: number) => {
     const through = (await stored())?.throughOrder ?? null;
     return t.action((ctx) =>
       Effect.runPromise(
@@ -191,6 +218,8 @@ export async function createSummaryTest(
       )
     );
   };
+  const input = async (order: number) => (await readFor(order)).input;
+  const history = async (order: number) => (await readFor(order)).history;
   // The turns up to `settled` that are in neither the summary nor the model
   // input of the turn after it, whose questions are told by their text.
   const lost = async (settled: number) => {
@@ -203,8 +232,10 @@ export async function createSummaryTest(
   };
   return {
     ...setup,
+    history,
     input,
     lost,
+    measure,
     refresh,
     seed,
     stored,

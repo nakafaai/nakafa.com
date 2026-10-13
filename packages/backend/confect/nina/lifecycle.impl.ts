@@ -125,7 +125,8 @@ const presentation = FunctionImpl.make(
  * sweep all come here. Reconciles committed Agent output before releasing an
  * interrupted turn's credits. A turn the learner stopped ends as cancelled,
  * whatever ended its run. Only the run's own exit knows which stages the turn
- * reached, so only it passes `timing`.
+ * reached and what the history of its prompt cost, so only it passes `timing`
+ * and `history`.
  */
 const recover = FunctionImpl.make(
   schema,
@@ -140,7 +141,8 @@ const recover = FunctionImpl.make(
       turn,
       turn.cancelRequestedAt === undefined ? "failed" : "cancelled",
       args.failure,
-      args.timing
+      args.timing,
+      args.history
     );
     return null;
   }, Effect.catchDefect(lifecycleFailure))

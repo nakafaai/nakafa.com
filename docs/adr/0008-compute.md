@@ -22,6 +22,14 @@ turns within its token budgets, so a long thread cannot trigger unbounded
 pagination. Whole turns preserve tool-call and tool-result parts together. The
 full transcript remains available for browsing.
 
+A turn whose run ends well stores what the history of its prompt cost: the
+tokens of those turns, how many they were, and the highest order the read left
+out. When the turn settles, the rolling summary reads only the turn itself, one
+page of ten messages, and leaves the fold for later while the stored cost and
+the turn fit the history budget, the read left no turn out, and the turns stay
+under the most the history takes. Otherwise it reads the turns after the summary
+as before, so `nina/fold.ts` decides every fold from the same counts.
+
 Successful persistence closes the hold and completes its existing ledger entry.
 Failure refunds it at most once. A refund can restore only the allowance from
 which the hold was taken: both the reset timestamp and the plan grant identity

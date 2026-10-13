@@ -10,8 +10,9 @@ import { DateTime, Effect } from "effect";
 
 /**
  * Reads everything a run needs before it calls the model: Nina's instructions
- * and the capabilities she is offered, the context of her tools, and the model
- * input of the turn. The turn reads once whether the learner paused memory, and
+ * and the capabilities she is offered, the context of her tools, the model
+ * input of the turn, and what its history cost, which the turn stores. The turn
+ * reads once whether the learner paused memory, and
  * the prompt, the tools Nina is offered and the policy of each call all follow
  * it. What the run reads of the learner and the chat comes from one query (the
  * brief, `nina/brief`), and the thread's messages follow it, so a short chat
@@ -32,7 +33,7 @@ export const prepareTurn = Effect.fn("nina.prepare")(function* (
     runtime,
   });
   // Nina reads its own turns, so the Agent fetches no history and sends this as is.
-  const input = yield* readInput(turn, {
+  const { history, input } = yield* readInput(turn, {
     context: formatTurnContext({
       memories,
       page: turn.page,
@@ -42,5 +43,5 @@ export const prepareTurn = Effect.fn("nina.prepare")(function* (
     through: summary?.throughOrder ?? null,
     uncovered,
   });
-  return { capabilities, context, input, instructions };
+  return { capabilities, context, history, input, instructions };
 });

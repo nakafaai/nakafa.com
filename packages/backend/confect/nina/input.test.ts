@@ -47,6 +47,7 @@ async function inputFor(
   return nina.t.action((ctx) =>
     Effect.runPromise(
       readInput(turn, { context: CONTEXT, through }).pipe(
+        Effect.map(({ input }) => input),
         Effect.catchTag("NinaGenerationError", (error) =>
           Effect.succeed(error.reason)
         ),

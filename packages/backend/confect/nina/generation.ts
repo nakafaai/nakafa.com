@@ -35,7 +35,9 @@ import { Effect, MutableHashMap } from "effect";
  * The scheduled Confect action owns generation; Agent owns its persistent
  * stream. Aborting `halt` ends the generation early and lets Agent clean up its
  * stream before this returns. `timing` notes when the model is first called and
- * when its stream first shows something to the learner.
+ * when its stream first shows something to the learner. An answer that ended
+ * well returns what the history of its prompt cost, which the turn stores when
+ * the run exits.
  */
 export const generateResponse = Effect.fn("nina.generate")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>,
@@ -47,7 +49,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   // SDK callbacks are framework boundaries. Domain programs keep composing Effects.
   const runPromise = Effect.runPromiseWith(services);
   const usageHandler = yield* createUsageHandler(turn._id);
-  const { capabilities, context, input, instructions } =
+  const { capabilities, context, history, input, instructions } =
     yield* prepareTurn(turn);
   // The chat step's timer covers Nina's own call and the tools it starts, so
   // each step marks its start here and the tools count their time from it.
@@ -132,7 +134,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     catch: generationFailure,
   });
   if (completed[0] === "stop" && completed[1].trim()) {
-    return;
+    return history;
   }
   if (completed[0] === "content-filter") {
     return yield* new NinaGenerationError({ reason: "content-blocked" });

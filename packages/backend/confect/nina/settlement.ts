@@ -9,6 +9,7 @@ import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { activeTurns } from "@repo/backend/confect/nina/capacity";
 import type {
   NinaFailureReason,
+  NinaHistoryCost,
   NinaTurnTiming,
 } from "@repo/backend/confect/nina/contract/turn";
 import { refundCredits } from "@repo/backend/confect/nina/credits/ledger";
@@ -25,7 +26,8 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>,
   status: "complete" | "failed" | "cancelled",
   failure?: typeof NinaFailureReason.Type,
-  timing?: typeof NinaTurnTiming.Type
+  timing?: typeof NinaTurnTiming.Type,
+  history?: typeof NinaHistoryCost.Type
 ) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
@@ -76,6 +78,8 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
     tokens: { input, output, total: input + output },
     // The stages the run reached join the claim the turn already stores.
     ...(timing ? { timing: { ...turn.timing, ...timing } } : {}),
+    // Only an answered turn is folded into the summary, so only it keeps the cost.
+    ...(history && status === "complete" ? { history } : {}),
     state:
       status === "failed"
         ? { status, finishedAt, reason: failure ?? "interrupted" }
@@ -129,7 +133,8 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
   turn: NinaTurnsDoc,
   interrupted: "failed" | "cancelled",
   failure?: typeof NinaFailureReason.Type,
-  timing?: typeof NinaTurnTiming.Type
+  timing?: typeof NinaTurnTiming.Type,
+  history?: typeof NinaHistoryCost.Type
 ) {
   if (turn.phase !== "active") {
     return;
@@ -138,7 +143,13 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
   if (!completed) {
     yield* cutOff(turn, interrupted);
   }
-  yield* closeTurn(turn, completed ? "complete" : interrupted, failure, timing);
+  yield* closeTurn(
+    turn,
+    completed ? "complete" : interrupted,
+    failure,
+    timing,
+    history
+  );
 });
 
 /**
@@ -201,17 +212,21 @@ export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
  *
  * The refund changes the balance, so a hold taken from the copy the caller
  * started with would overwrite it. Returns the learner as the settlements left
- * them, and the caller carries on with that copy.
+ * them, and the caller carries on with that copy. It also returns the
+ * learner's newest open turns (`activeTurns`) as the settlements left them, so
+ * the caller counts them without reading them again. They are read again only
+ * when a turn settled, because an older turn may then be among the newest.
  */
 export const settleStopped = Effect.fn("nina.settlement.stopped")(function* (
   learner: Docs["users"]
 ) {
+  const open = yield* activeTurns(learner._id);
   const stopped = Arr.filter(
-    yield* activeTurns(learner._id),
+    open,
     (turn) => turn.phase === "active" && turn.cancelRequestedAt !== undefined
   );
   if (!Arr.isReadonlyArrayNonEmpty(stopped)) {
-    return learner;
+    return { learner, open };
   }
   yield* Effect.forEach(
     stopped,
@@ -225,8 +240,11 @@ export const settleStopped = Effect.fn("nina.settlement.stopped")(function* (
       ),
     { discard: true }
   );
-  return yield* (yield* DatabaseReader)
-    .table("users")
-    .get(learner._id)
-    .pipe(Effect.orDie);
+  return {
+    learner: yield* (yield* DatabaseReader)
+      .table("users")
+      .get(learner._id)
+      .pipe(Effect.orDie),
+    open: yield* activeTurns(learner._id),
+  };
 });

@@ -407,6 +407,9 @@ describe("Nina generation through the real Agent component", () => {
     expect(prompt).not.toContain("Earlier question 3");
     expect(prompt).toContain("Earlier question 4");
     expect(prompt).toContain("Earlier answer 5");
+    // The settled turn keeps what the history of its prompt cost: orders 4 and 5.
+    const turn = await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId));
+    expect(turn?.history).toEqual({ tokens: expect.any(Number), turns: 2 });
   });
 
   it("dates the prompt with the turn's creation time as an ISO string", async () => {

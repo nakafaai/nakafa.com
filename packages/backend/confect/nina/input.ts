@@ -1,5 +1,6 @@
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
+import { historyCost } from "@repo/backend/confect/nina/fold";
 import {
   type Asking,
   assembleContext,
@@ -23,7 +24,8 @@ const unreadable = () => new NinaGenerationError({ reason: "unknown" });
  * turns behind such a run wait for the next fold (`readUncovered`). The
  * learner's message carries the turn's runtime facts, which are not stored.
  * `uncovered` is the first page of those turns, when the caller holds it
- * already, as the turn's brief does (`nina/brief`).
+ * already, as the turn's brief does (`nina/brief`). The result holds the model
+ * input and what the history cost (`historyCost`), which the turn stores.
  */
 export const readInput = Effect.fn("nina.input.read")(function* (
   turn: Pick<
@@ -40,7 +42,7 @@ export const readInput = Effect.fn("nina.input.read")(function* (
     readonly uncovered?: readonly Asking[];
   }
 ) {
-  const { docs, turns } = yield* readUncovered(
+  const { docs, turns, unread } = yield* readUncovered(
     turn,
     turn.order,
     through,
@@ -51,8 +53,11 @@ export const readInput = Effect.fn("nina.input.read")(function* (
   if (question?.role !== "user") {
     return yield* unreadable();
   }
-  return assembleContext({
-    current: [withTurnContext(question, context), ...answers],
-    history: Arr.map(turns, ({ messages }) => messages),
-  });
+  return {
+    history: historyCost(turns, unread),
+    input: assembleContext({
+      current: [withTurnContext(question, context), ...answers],
+      history: Arr.map(turns, ({ messages }) => messages),
+    }),
+  };
 });
