@@ -319,7 +319,7 @@ describe("public HTML route rejection", () => {
         "/de/lehrplaene/merdeka",
         "/de/faecher/mathematik/algebra",
         "/de/try-out/indonesien/snbt",
-        "/en/school/onboarding",
+        "/en/pricing",
       ];
 
       for (const pathname of paths) {
@@ -347,7 +347,7 @@ describe("public HTML route rejection", () => {
           "/de/contributor/fabricated",
           "/de/user",
           "/de/user/settings/fabricated",
-          "/en/school/select/fabricated",
+          "/en/pricing/fabricated",
           "/de/og",
           "/de/faecher",
           "/en/subjects/mathematics",
