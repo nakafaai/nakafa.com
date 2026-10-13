@@ -245,20 +245,28 @@ describe("a research provider request that fails", () => {
       })
   );
 
-  it.effect("sends nothing when the caller has no time left", () =>
+  it.effect("sends nothing below the least time the provider takes", () =>
     Effect.gen(function* () {
-      const none = { deadline: Duration.zero, timeoutMs: 0 };
-
       const searched = yield* Effect.flip(
-        requestSearch({ ...search, ...none }).pipe(overFetch)
+        requestSearch({ ...search, timeoutMs: 0 }).pipe(overFetch)
       );
       const read = yield* Effect.flip(
-        requestScrape({ ...page, ...none }).pipe(overFetch)
+        requestScrape({ ...page, timeoutMs: 999 }).pipe(overFetch)
       );
-
       expect(searched._tag).toBe("ResearchSearchError");
       expect(read._tag).toBe("ResearchScrapeError");
       expect(fetcher).not.toHaveBeenCalled();
+
+      // The least is 1 millisecond for a search and 1 second for a page read.
+      fetcher
+        .mockResolvedValueOnce(searchAnswer({ web: [] }))
+        .mockResolvedValueOnce(scrapeAnswer({ markdown: "# Page" }));
+      yield* requestSearch({ ...search, timeoutMs: 1 }).pipe(overFetch);
+      yield* requestScrape({ ...page, timeoutMs: 1000 }).pipe(overFetch);
+      expect(yield* sentBodies(fetcher)).toMatchObject([
+        { timeout: 1 },
+        { timeout: 1000 },
+      ]);
     })
   );
 

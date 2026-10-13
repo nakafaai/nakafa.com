@@ -6,7 +6,7 @@ import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
   Config,
-  type Duration,
+  Duration,
   Effect,
   Redacted,
   Schedule,
@@ -28,6 +28,26 @@ const BAD_GATEWAY_RETRIES = 2;
 /** The wait before the first new ask. The second waits twice as long. */
 const BAD_GATEWAY_DELAY = "500 millis";
 
+/**
+ * How long past the provider's own `timeout` an ask may take before it is cut.
+ * The provider's SDK (4.46.0, `src/v2/methods/scrape.ts` and `search.ts`) cut
+ * every request at its `timeout` plus the same five seconds.
+ */
+const ANSWER_MARGIN = Duration.seconds(5);
+
+/**
+ * The least `timeout` that the provider takes for a search, in milliseconds.
+ * The reference states none, and the SDK refused a `timeout` that was not
+ * positive.
+ */
+const SEARCH_MINIMUM_MS = 1;
+/**
+ * The least `timeout` that the provider takes for a page read, in milliseconds
+ * (https://docs.firecrawl.dev/api-reference/endpoint/scrape, read on 13 October
+ * 2026).
+ */
+const SCRAPE_MINIMUM_MS = 1000;
+
 /** What a learner is told when the deployment has no provider key. */
 const NOT_CONFIGURED = "Web research is not configured.";
 /** What a learner is told when a search got no usable answer. */
@@ -38,10 +58,11 @@ const SCRAPE_FAILED = "The page could not be retrieved. Please try again.";
 /**
  * A text of the provider's answer: one string, a list of strings when a page
  * repeats the tag, or null. The scrape reference documents the metadata title
- * and description as a string or an array of strings, and the SDK's search
- * tests (4.46.0) accept a result title or description that is null
- * (https://docs.firecrawl.dev/api-reference/endpoint/scrape, read on 13
- * October 2026).
+ * and description as a string or an array of strings
+ * (https://docs.firecrawl.dev/api-reference/endpoint/scrape, read on 13 October
+ * 2026). The SDK's own search tests (4.46.0,
+ * `src/__tests__/e2e/v2/search.test.ts`) accept a result title or description
+ * that is null or missing, and one null must not fail a whole search.
  */
 const TextSchema = Schema.NullOr(
   Schema.Union([Schema.String, Schema.Array(Schema.String)])
@@ -168,14 +189,27 @@ const postOnce = Effect.fn("research.postOnce")(function* <A, I>(request: {
  * Sends a request and asks again when a bad gateway answers. The provider's
  * SDK did the same for every endpoint, twice, after 0.5 and 1 second. Any
  * other failure ends the request at once.
+ *
+ * `timeoutMs` is the provider's own limit, which the request sends as its
+ * `timeout`. Each ask is cut `ANSWER_MARGIN` after that limit, as the SDK did,
+ * so a provider that stays silent does not hold the caller until its deadline.
+ * The cut has no status, so it is not asked again.
  */
 const post = Effect.fn("research.post")(function* <A, I>(request: {
-  readonly body: Schema.Json;
+  readonly body: Schema.JsonObject;
   readonly key: Redacted.Redacted;
   readonly path: string;
   readonly schema: Schema.ConstraintCodec<A, I>;
+  readonly timeoutMs: number;
 }) {
-  return yield* postOnce(request).pipe(
+  return yield* postOnce({
+    ...request,
+    body: { ...request.body, timeout: request.timeoutMs },
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: Duration.sum(Duration.millis(request.timeoutMs), ANSWER_MARGIN),
+      orElse: () => Effect.fail(new ProviderRequestError({})),
+    }),
     Effect.retry({
       schedule: Schedule.exponential(BAD_GATEWAY_DELAY),
       times: BAD_GATEWAY_RETRIES,
@@ -200,13 +234,14 @@ const scrapeFailure = () => new ResearchScrapeError({ message: SCRAPE_FAILED });
  * `includeDomains` field. With no site the field is left out, because the
  * reference does not say what an empty list means.
  *
- * `deadline` is the backstop for a provider that never answers, bad gateway
- * retries included. A failure carries the HTTP status of the provider's
- * answer, which the caller reads to tell a refusal by the rate limit from
- * other failures. It never carries the provider's message, which may repeat
- * the query. A `timeoutMs` of no time sends nothing and fails at once, because
- * the provider's `timeout` is a positive number and a caller with no time left
- * would pay for a request that it cancels.
+ * `deadline` is the backstop for the whole request, bad gateway retries
+ * included, and each ask is also cut shortly after `timeoutMs`. A failure
+ * carries the HTTP status of the provider's answer, which the caller reads to
+ * tell a refusal by the rate limit from other failures. It never carries the
+ * provider's message, which may repeat the query. A `timeoutMs` below
+ * `SEARCH_MINIMUM_MS` sends nothing and fails at once, as the SDK did for a
+ * `timeout` that was not positive: the provider does not take it, and a caller
+ * with no time left cancels the request as it starts.
  */
 export const requestSearch = Effect.fn("research.requestSearch")(
   function* (search: {
@@ -221,7 +256,7 @@ export const requestSearch = Effect.fn("research.requestSearch")(
         (error) => new ResearchSearchError({ message: error.message })
       )
     );
-    if (search.timeoutMs <= 0) {
+    if (search.timeoutMs < SEARCH_MINIMUM_MS) {
       return yield* searchFailure();
     }
     const answer = yield* post({
@@ -232,11 +267,11 @@ export const requestSearch = Effect.fn("research.requestSearch")(
           ? { includeDomains: search.sites }
           : {}),
         limit: search.limit,
-        timeout: search.timeoutMs,
       },
       key,
       path: "/v2/search",
       schema: SearchAnswerSchema,
+      timeoutMs: search.timeoutMs,
     }).pipe(
       Effect.mapError((failure) => searchFailure(failure.status)),
       Effect.timeoutOrElse({
@@ -253,9 +288,9 @@ export const requestSearch = Effect.fn("research.requestSearch")(
  * read, in milliseconds. When the page takes longer, the provider answers with
  * a refusal and this function does not ask again: the SDK would have waited
  * for a document that the provider keeps processing, unless told not to.
- * `deadline` is the backstop for a provider that never answers, bad gateway
- * retries included. A `timeoutMs` of no time sends nothing and fails at once,
- * as a search does.
+ * `deadline` is the backstop for the whole read, bad gateway retries included,
+ * and each ask is also cut shortly after `timeoutMs`. A `timeoutMs` below
+ * `SCRAPE_MINIMUM_MS` sends nothing and fails at once, as a search does.
  */
 export const requestScrape = Effect.fn("research.requestScrape")(
   function* (page: {
@@ -268,14 +303,15 @@ export const requestScrape = Effect.fn("research.requestScrape")(
         (error) => new ResearchScrapeError({ message: error.message })
       )
     );
-    if (page.timeoutMs <= 0) {
+    if (page.timeoutMs < SCRAPE_MINIMUM_MS) {
       return yield* scrapeFailure();
     }
     const answer = yield* post({
-      body: { url: page.url, formats: ["markdown"], timeout: page.timeoutMs },
+      body: { url: page.url, formats: ["markdown"] },
       key,
       path: "/v2/scrape",
       schema: ScrapeAnswerSchema,
+      timeoutMs: page.timeoutMs,
     }).pipe(
       Effect.mapError(scrapeFailure),
       Effect.timeoutOrElse({

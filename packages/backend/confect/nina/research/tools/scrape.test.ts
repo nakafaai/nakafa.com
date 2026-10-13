@@ -143,16 +143,23 @@ describe("research scrape tool", () => {
   );
 
   it.effect(
-    "ends a scrape that never answers at the specialist step deadline",
+    "cuts each ask of a link read five seconds after the provider's limit of fifteen seconds, not counting the wait for a bad gateway",
     () =>
       Effect.gen(function* () {
-        route(never);
+        fetcher
+          .mockImplementationOnce(() =>
+            Promise.resolve(new Response("", { status: 502 }))
+          )
+          .mockImplementation(never);
         const fiber = yield* inBackground(
           readLink("https://ai-sdk.dev/docs/ai-sdk-core/devtools")
         );
 
-        // The specialist step allows 30 seconds, and the scrape waits for all of it.
-        yield* TestClock.adjust("29999 millis");
+        // The second ask starts after the half second wait for the bad gateway.
+        // It is cut 20 seconds later, before the 30 seconds of the specialist step.
+        yield* TestClock.adjust("500 millis");
+        expect(fetcher).toHaveBeenCalledTimes(2);
+        yield* TestClock.adjust("19999 millis");
         expect(fiber.pollUnsafe()).toBeUndefined();
         yield* TestClock.adjust("1 millis");
 
@@ -161,7 +168,8 @@ describe("research scrape tool", () => {
         expect(output.error).toBe(
           "The page could not be retrieved. Please try again."
         );
-        expect(fetcher.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+        expect(fetcher).toHaveBeenCalledTimes(2);
+        expect(fetcher.mock.calls[1]?.[1]?.signal?.aborted).toBe(true);
       })
   );
 

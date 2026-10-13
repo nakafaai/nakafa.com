@@ -13,9 +13,10 @@ import { Duration, Effect, Result, Schema } from "effect";
 /**
  * How long one page read may take, in milliseconds. `timeoutMs` is the
  * provider's own limit: when the page takes longer, the provider answers with a
- * refusal at once and the read does not ask again. The read asks again only
- * after a 502, up to two more times, so `deadlineMs` is the backstop for the
- * whole read. Both are cut to the time the running capability has left.
+ * refusal at once and the read does not ask again, and an ask that nothing
+ * answers is cut five seconds after it. The read asks again only after a 502,
+ * up to two more times, so `deadlineMs` is the backstop for the whole read.
+ * Both are cut to the time the running capability has left.
  */
 const PageLimits = Schema.Struct({
   deadlineMs: Schema.Finite,
