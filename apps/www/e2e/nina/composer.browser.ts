@@ -1,12 +1,12 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, HashSet } from "effect";
+import { CHAT_PATH } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { NINA_SHOWCASE, SHEET_POPUP } from "@/e2e/support/selector";
+import { openSheet } from "@/e2e/support/sheet";
 
-const LESSON =
-  "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
 const SAMPLE_IMAGE = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1sAAAAASUVORK5CYII=",
   "base64"
@@ -105,13 +105,10 @@ const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
   yield* Effect.promise(() => page.goto("/en"));
   yield* verifyComposer(page.locator(NINA_SHOWCASE));
 
-  yield* Effect.promise(() => page.goto("/en/chat"));
+  yield* Effect.promise(() => page.goto(CHAT_PATH));
   yield* verifyComposer(page.locator("main"));
 
-  yield* Effect.promise(() => page.goto(LESSON));
-  yield* Effect.promise(() =>
-    page.getByRole("button", { name: "Ask Nina", exact: true }).click()
-  );
+  yield* openSheet(page);
   // The composer is in the sheet from its first frame, so its geometry is
   // read once the sheet has stopped sliding.
   yield* waitForSlide(page.locator(SHEET_POPUP));

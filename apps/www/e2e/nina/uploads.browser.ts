@@ -5,8 +5,10 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import { Array as Arr, Effect, HashSet, Order } from "effect";
 import {
   chipsIn,
+  chipsOfComposer,
   composerOf,
   fileOf,
+  NO_BORDER,
   noticeWith,
   pickFiles,
   pictureOf,
@@ -240,6 +242,10 @@ test.describe("Uploads of a composer at 390px", () => {
             "data-state",
             "done"
           );
+          await expect(chipsOfComposer(composer).first()).toHaveCSS(
+            "border-top-color",
+            NO_BORDER
+          );
         });
       })
     );
@@ -264,6 +270,11 @@ test.describe("Uploads of a composer at 390px", () => {
           await expect(chipsIn(composer).first()).toHaveAttribute(
             "data-state",
             "error"
+          );
+          // The failure is the one thing a chip still draws a border for.
+          await expect(chipsOfComposer(composer).first()).not.toHaveCSS(
+            "border-top-color",
+            NO_BORDER
           );
         });
       })

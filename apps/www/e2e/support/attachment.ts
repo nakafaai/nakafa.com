@@ -1,5 +1,12 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import de from "@repo/internationalization/dictionaries/de.json" with {
+  type: "json",
+};
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect, Schema } from "effect";
+import { CHAT_PATH } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -13,7 +20,7 @@ const UploadSchema = Schema.Struct({
 type Upload = typeof UploadSchema.Type;
 
 /** The title of the notice that names the files a pick did not attach. */
-export const NOT_ATTACHED = "Files not attached";
+export const NOT_ATTACHED = en.Ai["attachment-rejections"].title;
 
 /**
  * The box a long list of that notice scrolls in: the viewport of its scroll
@@ -87,6 +94,20 @@ export const pictureOf = Effect.fn("NakafaE2E.pictureOf")(function* (
   } satisfies Upload;
 });
 
+/** The names of the composer's controls in English and in German. */
+export const ENGLISH = {
+  input: en.Ai["text-placeholder"],
+  send: en.Ai["send-message"],
+};
+export const GERMAN = {
+  input: de.Ai["text-placeholder"],
+  send: de.Ai["send-message"],
+};
+
+/** The box where the learner writes to Nina, in the language of the page. */
+export const composerOf = (scope: Locator, labels = ENGLISH) =>
+  scope.getByRole("textbox", { name: labels.input });
+
 /** Opens the picker of a composer and chooses `files`, the way a learner does. */
 export const pickFiles = Effect.fn("NakafaE2E.pickFiles")(function* (
   scope: Locator,
@@ -94,7 +115,7 @@ export const pickFiles = Effect.fn("NakafaE2E.pickFiles")(function* (
 ) {
   yield* Effect.promise(async () => {
     const chooser = scope.page().waitForEvent("filechooser");
-    await scope.getByRole("button", { name: "Attach files" }).click();
+    await scope.getByRole("button", { name: en.Ai["attach-files"] }).click();
     await (await chooser).setFiles([...files]);
   });
 });
@@ -107,13 +128,9 @@ export const openComposer = Effect.fn("NakafaE2E.openComposer")(function* (
   page: Page
 ) {
   yield* seedAnalyticsConsent(page, "denied");
-  yield* Effect.promise(() => page.goto("/en/chat"));
+  yield* Effect.promise(() => page.goto(CHAT_PATH));
   const composer = page.locator("main");
-  yield* Effect.promise(() =>
-    expect(
-      composer.getByRole("textbox", { name: "Ask Nina anything..." })
-    ).toBeVisible()
-  );
+  yield* Effect.promise(() => expect(composerOf(composer)).toBeVisible());
   return composer;
 });
 
@@ -131,13 +148,21 @@ export function chipsOfMessages(page: Page) {
   return chipsIn(page.locator('[data-slot="message"]'));
 }
 
-/** The names of the composer's controls in English and in German. */
-export const ENGLISH = { input: "Ask Nina anything...", send: "Send message" };
-export const GERMAN = { input: "Frag Nina etwas...", send: "Nachricht senden" };
+/**
+ * The chips inside the box where the learner writes. A page that shows the
+ * chat holds the chips of its messages as well, which are not these.
+ */
+export function chipsOfComposer(scope: Locator) {
+  return chipsIn(scope.locator('[data-slot="input-group"]'));
+}
 
-/** The box where the learner writes to Nina, in the language of the page. */
-export const composerOf = (scope: Locator, labels = ENGLISH) =>
-  scope.getByRole("textbox", { name: labels.input });
+/**
+ * The computed color of a border that is not drawn. A chip in the composer
+ * sits inside the border of the composer and draws none of its own, except
+ * when its upload failed, so a test reads this color from the chip's top
+ * border.
+ */
+export const NO_BORDER = "rgba(0, 0, 0, 0)";
 
 /** Writes the prompt and waits until the page lets it be sent. */
 export const write = Effect.fn("NakafaE2E.write")(function* (

@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { CHAT_PATH } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -22,7 +23,7 @@ const openHome = Effect.fn("NakafaE2E.openHome")(function* (
   yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(async () => {
     await page.route("**/api/weather", answer);
-    await page.goto("/en/chat");
+    await page.goto(CHAT_PATH);
   });
   // The grid under the composer holds the videos card and the weather cell.
   return page.locator('a[href*="youtube"]').locator("..");
