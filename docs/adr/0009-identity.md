@@ -87,9 +87,11 @@ path ends in the Better Auth session that the rest of this ADR checks.
   an admin prints a card again, which voids the old code and writes a journal
   entry. A code is shown with dashes and accepted with or without them.
 - **Parent.** A parent signs in with an email code: six digits, valid for five
-  minutes, void after three wrong tries, and stored as a hash. Better Auth's
-  `emailOTP` plugin keeps codes in plain text by default, so Nakafa stores its
-  own hash. `confect/emails` sends the code. Signing in is not consent for a
+  minutes, void after three wrong tries, and stored as a keyed hash (an HMAC
+  under a server secret, like the login-card code), because six digits have
+  only a million values and a plain digest would give the code to anyone who
+  reads the row. Better Auth's `emailOTP` plugin keeps codes in plain text by
+  default, so Nakafa stores its own keyed hash. `confect/emails` sends the code. Signing in is not consent for a
   child (K2). Consent is recorded with a second check, and ADR 0012 defines the
   verified parent relation.
 - **Microsoft Entra ID and SAML.** These come after Google, for the schools that

@@ -147,20 +147,24 @@ The removal follows the rule for public functions in
    exist on main beside the old School.
 2. Switch: an earlier release removes every School route and component that
    calls an old function, so no new web build calls one.
-3. Observe: production function logs show no call to an old School function
-   across a window that spans at least one production deploy, because a loaded
-   tab calls Convex directly and every deploy re-runs every live subscription.
-   The 12-hour skew window of Vercel (`skewProtectionMaxAge` 43,200 seconds,
-   read from the project API on 12 October 2026) is only a minimum. Measured on
-   13 October 2026: 2,790 production executions between 12:57 and 14:42 UTC,
-   spanning the deploy at 14:36, held no call to `schools/*`, `classes/*` or the
-   School triggers. Because the old School had no caller before the switch, the
-   switch and the contract ship in one reviewed release (K11).
-4. Dry run: the batched deletion runs on the dev deployment until every old count
-   is zero, and the old tables drop there.
-5. Contract: one reviewed release deletes the old functions and the code listed
-   above. The batched deletion then runs on production until every old count is
-   zero, and the table drop that follows is the proof that the rows are gone.
+3. Observe: after the switch release is live, production function logs show
+   no call to an old School function for at least 12 hours (the Vercel skew
+   window, `skewProtectionMaxAge` 43,200 seconds, read from the project API on
+   12 October 2026) and across at least one later production deploy, because a
+   loaded or suspended tab calls Convex directly and every deploy re-runs every
+   live subscription. Measured before the switch on 13 October 2026: 2,790
+   production executions between 12:57 and 14:42 UTC, spanning the deploy at
+   14:36, held no call to `schools/*`, `classes/*` or the School triggers. The
+   switch release deletes the web routes and components only; the old functions
+   stay until this window has passed.
+4. Dry run: the batched deletion's dry mode counts the old rows on dev before
+   the contract release.
+5. Contract: one reviewed release deletes the old functions, every writer of the
+   old tables, and the rest of the code listed above, and adds the batched
+   deletion. The deletion then runs on dev and production until every old count
+   is zero, and a last release drops the tables and the deletion; Convex accepts
+   that schema only when no row is left, which is the proof that the rows are
+   gone.
 
 ## Implementation Contract
 
