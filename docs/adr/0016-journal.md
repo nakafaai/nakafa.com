@@ -51,8 +51,9 @@ data it mentions.
 
 Two changes carry more than a type. A claim, `person.claimed`, holds the claim
 method and the claiming account, the one account ID that a tenant entry holds.
-The school's audit view shows the Person and the method and never the account,
-because account identities never reach a school. A grant that ends,
+The school's audit view and the consumers of the published change get the Person
+and the method and never the account, because account identities never reach a
+school. A grant that ends,
 `grant.ended`, holds why it ended. For a visit grant the reasons are `left`,
 `expired`, `revoked by the school`, and `operator removed`.
 

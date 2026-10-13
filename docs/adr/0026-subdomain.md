@@ -176,11 +176,11 @@ its own change, before any school code that depends on it lands.
   identity of a person in the `eu` cell inside the `us` cell, which is what a
   cell exists to prevent.
 - One `www` project for every cell, with a resolver that picks the deployment by
-  host. The auth handler, the session token read, and the Convex provider in the
-  layouts each take the deployment from `NEXT_PUBLIC_CONVEX_URL` and
-  `NEXT_PUBLIC_CONVEX_SITE_URL` (`apps/www/lib/auth/server.ts`), so a resolver
-  would have to replace all of them, and one miss would send a session cookie to
-  the wrong cell's deployment.
+  host. The auth handler and the session token read (`apps/www/lib/auth/server.ts`)
+  and the Convex provider (`apps/www/components/providers/app.tsx`) each take the
+  deployment from `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`, so a
+  resolver would have to replace all of them, and one miss would send a session
+  cookie to the wrong cell's deployment.
 
 ## Implementation Status
 

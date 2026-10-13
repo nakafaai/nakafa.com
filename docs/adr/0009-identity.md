@@ -83,16 +83,16 @@ only, each at its own address (ADR 0026).
   is stored in the school's login table and maps to a Better Auth username that
   is unique within the cell, because each cell holds its own Better Auth rows
   (ADR 0026), and is created automatically. A username signs in with a password.
-  The student sets it when redeeming a login card (below), and it is the daily
-  credential. Better Auth's `/sign-in/username` endpoint finds a user by
-  username among every user of the deployment and has no host check, so it is
-  switched off on main and stays off on every host. Username sign-in is served
-  only by an endpoint of the school host, never by the generic endpoint on
-  `nakafa.com`, and that endpoint needs a test before it opens. A username
-  account has an address in the reserved `.invalid` domain (RFC 2606) that never
-  receives mail, and every sender refuses that domain. Its Person is bound by the
-  card claim (claim method `card`). A school username is a login name only, never
-  a public profile handle (K15).
+  The student sets the password when redeeming a login card (below), and the
+  password is the daily credential. Better Auth's `/sign-in/username` endpoint
+  finds a user by username among every user of the deployment and has no host
+  check, so it is switched off on main and stays off on every host. Username
+  sign-in is served only by an endpoint of the school host, never by the generic
+  endpoint on `nakafa.com`, and that endpoint needs a test before it opens. A
+  username account has an address in the reserved `.invalid` domain (RFC 2606)
+  that never receives mail, and every sender refuses that domain. Its Person is
+  bound by the card claim (claim method `card`). A school username is a login
+  name only, never a public profile handle (K15).
 - **Login card.** A card is a one-time setup secret, not a daily credential. It
   carries a 10-character Crockford base32 code, without the letters I, L, O, and
   U, and the school's host beside the code, such as `harapan.nakafa.com`.
