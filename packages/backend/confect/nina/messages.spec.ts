@@ -5,6 +5,7 @@ import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import { shareTokenValidator } from "@repo/backend/confect/chats/schema";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import {
+  AgentId,
   MessagePage,
   StreamRequest,
 } from "@repo/backend/confect/nina/contract/message";
@@ -17,14 +18,15 @@ export class NinaReadError extends Schema.TaggedError<NinaReadError>()(
 
 // One page of a chat's messages, newest first. A page holds at most
 // `NINA_MESSAGES_PAGE_SIZE` messages, however many the caller asks for. A
-// request for streams holds no page.
+// request for streams holds no page. The thread and the streams a caller names
+// are ids of the Agent component, which have a length (`AGENT_ID_LENGTH`).
 export default GroupSpec.make().addFunction(
   FunctionSpec.publicQuery({
     name: "list",
     args: () => ({
       chatId: Id("chats"),
       shareToken: Schema.optionalKey(shareTokenValidator),
-      threadId: Schema.String,
+      threadId: AgentId,
       paginationOpts: PaginationOptions.PaginationOptions,
       streamArgs: Schema.optionalKey(StreamRequest),
     }),

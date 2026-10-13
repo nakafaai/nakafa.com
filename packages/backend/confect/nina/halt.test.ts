@@ -85,8 +85,8 @@ describe("A running Nina turn that the learner stops", () => {
     }
   }, 30_000);
 
-  // The run asks about its turn once a second, so these tests wait in real time
-  // and get a longer limit than the default.
+  // The run asks about its turn every two seconds (`HALT_POLL` in `halt.ts`), so
+  // these tests wait in real time and get a longer limit than the default.
   it("stops a silent provider call when the learner cancels, and pays back only after the run exits", async () => {
     const report = stubReport();
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);

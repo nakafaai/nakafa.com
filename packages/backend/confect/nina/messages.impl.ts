@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { listStreams, listUIMessages, syncStreams } from "@convex-dev/agent";
+import { listUIMessages } from "@convex-dev/agent";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
@@ -8,68 +8,13 @@ import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import type { StreamRequest } from "@repo/backend/confect/nina/contract/message";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
 import {
   readerMessage,
   readerStreams,
 } from "@repo/backend/confect/nina/reader";
-import {
-  Array as Arr,
-  Effect,
-  HashSet,
-  Layer,
-  MutableHashMap,
-  Number as Num,
-  pipe,
-  Struct,
-} from "effect";
-
-/** Reads active streams or their deltas for one authorized thread. */
-const readStreams = Effect.fn("nina.messages.streams")(function* (
-  threadId: string,
-  request: typeof StreamRequest.Type
-) {
-  const ctx = yield* QueryCtx;
-  let streamArgs = request;
-  if (streamArgs.kind === "deltas") {
-    // A cursor is untrusted input. Scope it to this thread before asking the
-    // SDK for deltas; expired streams intentionally produce no more chunks.
-    const available = yield* Effect.tryPromise({
-      try: () =>
-        listStreams(ctx, components.nina, {
-          threadId,
-          includeStatuses: ["streaming", "finished", "aborted"],
-        }),
-      catch: () =>
-        new NinaReadError({ message: "Unable to read Nina streams." }),
-    });
-    const allowed = HashSet.fromIterable(
-      Arr.map(available, (stream) => stream.streamId)
-    );
-    // A stream keeps its last cursor, in the order the streams first appear.
-    const latest = MutableHashMap.fromIterable(
-      pipe(
-        streamArgs.cursors,
-        Arr.filter((cursor) => HashSet.has(allowed, cursor.streamId)),
-        Arr.map((cursor) => [cursor.streamId, cursor])
-      )
-    );
-    streamArgs = {
-      kind: "deltas",
-      cursors: [...MutableHashMap.values(latest)],
-    };
-  }
-  // The SDK answers every stream request; a missing result is a read failure.
-  return yield* Effect.tryPromise(() =>
-    syncStreams(ctx, components.nina, { threadId, streamArgs })
-  ).pipe(
-    Effect.flatMap(Effect.fromNullishOr),
-    Effect.mapError(
-      () => new NinaReadError({ message: "Unable to read Nina streams." })
-    )
-  );
-});
+import { readStreams } from "@repo/backend/confect/nina/streams";
+import { Array as Arr, Effect, Layer, Number as Num, Struct } from "effect";
 
 const list = FunctionImpl.make(
   schema,
@@ -112,10 +57,13 @@ const list = FunctionImpl.make(
       catch: () =>
         new NinaReadError({ message: "Unable to read Nina messages." }),
     });
-    // The page reads the messages and nothing of a turn: where a turn stands
-    // and what it cost is told by `conversation.get` and `conversation.turns`,
-    // so a write to a turn does not run this query again. A message names no
-    // account to a reader and holds nothing of the owner's memory.
+    // The page reads the messages and no row of a turn: where a turn stands and
+    // what it cost is told by `conversation.get` and `conversation.turns`. So
+    // a write that touches a turn alone, such as the usage a run records after
+    // each model response, does not run this query again. The admission and the
+    // settlement of a turn do, because they write the chat and the learner's
+    // record as well, which this query reads. A message names no account to a
+    // reader and holds nothing of the owner's memory.
     return {
       ...page,
       page: owner ? page.page : Arr.map(page.page, (m) => readerMessage(m)),

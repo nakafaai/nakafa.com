@@ -65,10 +65,13 @@ const get = FunctionImpl.make(
 
 /**
  * One page of the turns of a conversation that ended, newest first, each as the
- * viewer is told of it (see `get`). The index range holds the turns that
- * ended and not the one that runs, so a write to the running turn does not run
- * this query again, and the query for the messages of the chat does not read a
- * turn at all.
+ * viewer is told of it (see `get`). The index range holds the turns that ended
+ * and not the one that runs, so a write to the turn that runs, such as the
+ * usage a run records after each model response, does not run this query
+ * again. The admission and the settlement of a turn do, because they write the
+ * chat as well, which this query reads, and so does a write to a turn that
+ * ended, such as its suggestions. The query for the messages of the chat does
+ * not read a turn at all.
  */
 const turns = FunctionImpl.make(
   schema,

@@ -32,9 +32,13 @@ import {
 const PAGE = 50;
 
 /**
- * Messages one query reads when it reads one turn only. A turn holds its prompt
- * and the steps of its answer, which seldom pass this, so one query reads it
- * and the few messages of the turn before.
+ * Messages one query reads when it reads one turn only. A turn holds its prompt,
+ * an answer for each step and a result for each step that called tools, so ten
+ * rows hold the prompt, three steps that called tools and the answer, and one
+ * row of the turn before that ends the read. A longer turn takes another query,
+ * and the step limit of a run (`isStepCount` in `generation.ts`) bounds how
+ * many. A page of `PAGE` would read more rows of the turns before it, which
+ * this read does not need.
  */
 const OWN_PAGE = 10;
 

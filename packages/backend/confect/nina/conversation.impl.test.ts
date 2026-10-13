@@ -7,7 +7,10 @@ import {
   expect,
   it,
 } from "@effect/vitest";
-import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
+import {
+  DEFAULT_TITLE,
+  NINA_MESSAGES_PAGE_SIZE,
+} from "@repo/backend/client/nina/presentation";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
@@ -286,10 +289,11 @@ describe("Nina conversation visibility", () => {
     expect(documentsRead).toBe(5);
   });
 
-  it("cuts a page of turns to 50 however many the caller asks for, and reaches the rest through the cursor", async () => {
+  it("cuts a page of turns to the page size however many the caller asks for, and reaches the rest through the cursor", async () => {
     const f = await createNinaTest();
+    // One turn more than a page ended after the turn the fixture admitted.
     await f.t.mutation(async (ctx) => {
-      for (let order = 1; order <= 51; order += 1) {
+      for (let order = 1; order <= NINA_MESSAGES_PAGE_SIZE + 1; order += 1) {
         await ctx.db.insert("ninaTurns", {
           chatId: f.chatId,
           order,
@@ -309,13 +313,16 @@ describe("Nina conversation visibility", () => {
         paginationOpts: { cursor: null, numItems: 1_000_000 },
       })
     );
-    expect(asked.page).toHaveLength(50);
+    expect(asked.page).toHaveLength(NINA_MESSAGES_PAGE_SIZE);
     expect(asked.isDone).toBe(false);
     const rest = Ref.decodeReturnsSync(
       refs.public.nina.conversation.turns,
       await f.owner.query(turns, {
         chatId: f.chatId,
-        paginationOpts: { cursor: asked.continueCursor, numItems: 50 },
+        paginationOpts: {
+          cursor: asked.continueCursor,
+          numItems: NINA_MESSAGES_PAGE_SIZE,
+        },
       })
     );
     expect(Arr.map(rest.page, (t) => t.order)).toEqual([1]);

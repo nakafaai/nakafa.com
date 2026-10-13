@@ -1,14 +1,15 @@
 import { Ref } from "@confect/core";
 import {
-  createThread,
   listStreams,
   listUIMessages,
   saveMessage,
   syncStreams,
 } from "@convex-dev/agent";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
+import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { AGENT_ID_LENGTH } from "@repo/backend/confect/nina/contract/message";
 import { provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
@@ -197,17 +198,18 @@ describe("Nina message boundary", () => {
     expect(listUIMessages).not.toHaveBeenCalled();
   });
 
-  it("cuts a page to 50 messages however many the caller asks for", async () => {
+  it("cuts a page to the page size however many messages the caller asks for", async () => {
     const { t, owner, identity, args } = await createThreadTest();
+    // The thread holds the messages of the fixture and a full page besides.
     await t.mutation(async (ctx) => {
-      for (let n = 0; n < 50; n += 1) {
+      for (let n = 0; n < NINA_MESSAGES_PAGE_SIZE; n += 1) {
         const threadId = identity.threadId;
         await saveMessage(ctx, components.nina, { prompt: `Q${n}`, threadId });
       }
     });
     const paginationOpts = { cursor: null, numItems: 1_000_000 };
     const asked = await tell(owner, { ...args, paginationOpts });
-    expect(asked.page).toHaveLength(50);
+    expect(asked.page).toHaveLength(NINA_MESSAGES_PAGE_SIZE);
     expect(asked.isDone).toBe(false);
   });
 
@@ -221,84 +223,27 @@ describe("Nina message boundary", () => {
     expect(listUIMessages).not.toHaveBeenCalled();
   });
 
-  it("resumes only deltas belonging to the authorized thread", async () => {
-    const { t, owner, identity, args } = await createThreadTest();
-    const streams = await t.mutation(async (ctx) => {
-      const otherThread = await createThread(ctx, components.nina);
-      const own = await ctx.runMutation(components.nina.streams.create, {
-        threadId: identity.threadId,
-        order: 1,
-        stepOrder: 0,
-        format: "UIMessageChunk",
-      });
-      const other = await ctx.runMutation(components.nina.streams.create, {
-        threadId: otherThread,
-        order: 1,
-        stepOrder: 0,
-        format: "UIMessageChunk",
-      });
-      for (const [streamId, delta] of [
-        [own, "Allowed"],
-        [other, "Private"],
-      ] as const) {
-        await ctx.runMutation(components.nina.streams.addDelta, {
-          streamId,
-          start: 0,
-          end: 1,
-          parts: [{ type: "text-delta", id: "text-1", delta }],
-        });
-      }
-      return { own, other };
-    });
-    const listed = Ref.decodeReturnsSync(
-      refs.public.nina.messages.list,
-      await owner.query(query, { ...args, streamArgs: { kind: "list" } })
-    );
-    expect(listed.streams).toEqual({
-      kind: "list",
-      messages: [expect.objectContaining({ streamId: streams.own })],
-    });
-    expect(listed.page).toEqual([]);
-    const resumed = Ref.decodeReturnsSync(
-      refs.public.nina.messages.list,
-      await owner.query(query, {
+  it("takes the id of a thread of the longest length and refuses a longer one before it reads anything", async () => {
+    const { owner, args } = await createThreadTest();
+    // The longest id passes the schema, and it is no thread of this chat.
+    await expect(
+      owner.query(query, {
         ...args,
-        streamArgs: {
-          kind: "deltas",
-          cursors: [
-            { streamId: streams.own, cursor: 0 },
-            { streamId: streams.own, cursor: 0 },
-            { streamId: streams.other, cursor: 0 },
-            { streamId: "expired", cursor: 0 },
-          ],
-        },
+        threadId: "x".repeat(AGENT_ID_LENGTH),
       })
-    );
-    expect(resumed.streams).toEqual({
-      kind: "deltas",
-      deltas: [
-        {
-          streamId: streams.own,
-          start: 0,
-          end: 1,
-          parts: [{ type: "text-delta", id: "text-1", delta: "Allowed" }],
-        },
-      ],
+    ).rejects.toMatchObject({
+      data: { _tag: "ChatAccessError", code: "FORBIDDEN" },
     });
-    expect(resumed.page).toEqual([]);
-    // Stream round trips never re-read the transcript.
+    await expect(
+      owner.query(query, {
+        ...args,
+        threadId: "x".repeat(AGENT_ID_LENGTH + 1),
+      })
+    ).rejects.toMatchObject({
+      _tag: "SchemaError",
+      message: expect.stringContaining("threadId"),
+    });
     expect(listUIMessages).not.toHaveBeenCalled();
-    expect(syncStreams).toHaveBeenLastCalledWith(
-      expect.anything(),
-      components.nina,
-      {
-        threadId: identity.threadId,
-        streamArgs: {
-          kind: "deltas",
-          cursors: [{ streamId: streams.own, cursor: 0 }],
-        },
-      }
-    );
   });
 
   it("names the account that owns the chat in every message and live stream it tells the owner", async () => {
@@ -446,52 +391,13 @@ describe("Nina message boundary", () => {
     expect(encodeJsonText(readerTold)).not.toMatch(REPORTED);
   });
 
-  it.each([
-    [{ streamId: "invalid", cursor: -1 }],
-    [{ streamId: "invalid", cursor: 0.5 }],
-    Array.from({ length: 101 }, () => ({ streamId: "invalid", cursor: 0 })),
-  ])(
-    "rejects invalid or unbounded cursor batches before reading the component",
-    async (...cursors) => {
-      const { owner, args } = await createThreadTest();
-      await expect(
-        owner.query(query, { ...args, streamArgs: { kind: "deltas", cursors } })
-      ).rejects.toThrow();
-      expect(listUIMessages).not.toHaveBeenCalled();
-      expect(syncStreams).not.toHaveBeenCalled();
-    }
-  );
-
-  it.each([
-    ["messages", undefined],
-    ["streams", { kind: "deltas", cursors: [] }],
-    ["cursors", { kind: "deltas", cursors: [] }],
-    ["missing streams", { kind: "list" }],
-  ] as const)("redacts %s transport failures", async (source, streamArgs) => {
+  it("redacts a transport failure of the messages", async () => {
     const { owner, args } = await createThreadTest();
-    const error = new Error("private transport diagnostic");
-    if (source === "messages") {
-      vi.mocked(listUIMessages).mockRejectedValueOnce(error);
-    }
-    if (source === "streams") {
-      vi.mocked(syncStreams).mockRejectedValueOnce(error);
-    }
-    if (source === "cursors") {
-      vi.mocked(listStreams).mockRejectedValueOnce(error);
-    }
-    if (source === "missing streams") {
-      vi.mocked(syncStreams).mockResolvedValueOnce(undefined);
-    }
-    await expect(
-      owner.query(query, streamArgs ? { ...args, streamArgs } : args)
-    ).rejects.toMatchObject({
-      data: {
-        _tag: "NinaReadError",
-        message:
-          source === "messages"
-            ? "Unable to read Nina messages."
-            : "Unable to read Nina streams.",
-      },
+    vi.mocked(listUIMessages).mockRejectedValueOnce(
+      new Error("private transport diagnostic")
+    );
+    await expect(owner.query(query, args)).rejects.toMatchObject({
+      data: { _tag: "NinaReadError", message: "Unable to read Nina messages." },
     });
   });
 });

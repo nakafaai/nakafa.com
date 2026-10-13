@@ -38,6 +38,19 @@ const AgentMessage = Schema.Struct({
   _creationTime: Schema.Finite,
 });
 
+/**
+ * Characters the id of a row of the Agent component holds at most. A caller
+ * names such a row, a thread or a stream, as text, because this app's schema
+ * does not hold the component's tables. A Convex document id is at most 23
+ * bytes (a table number of up to 5 bytes, 16 bytes of id and a 2 byte
+ * checksum), which its base32 writes in 37 characters (`id_v6.rs` and
+ * `base32.rs` in get-convex/convex-backend).
+ */
+export const AGENT_ID_LENGTH = 37;
+
+/** The id of a thread or a stream of the Agent component, as a caller names it. */
+export const AgentId = Schema.String.check(Schema.isMaxLength(AGENT_ID_LENGTH));
+
 export const StreamRequest = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("list"),
@@ -50,7 +63,7 @@ export const StreamRequest = Schema.Union([
     cursors: Schema.mutable(
       Schema.Array(
         Schema.Struct({
-          streamId: Schema.String,
+          streamId: AgentId,
           cursor: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
         })
       ).check(Schema.isMaxLength(100))
