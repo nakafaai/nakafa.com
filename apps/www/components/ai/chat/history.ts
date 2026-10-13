@@ -3,15 +3,23 @@ import {
   CHAT_LIST_PAGE_SIZE,
   CHAT_SEARCH_EMPTY_WINDOWS,
 } from "@repo/backend/client/chats/list";
+import { Array as Arr, HashSet } from "effect";
 
 /**
  * The windows of a search in a row that held no chat, the one asked for last
- * included. `base` is how many chats the list held when that window was asked
- * for, and `empties` the windows in a row before it that held none. The window
- * is empty when the list holds no more chats than it did.
+ * included. `known` holds the ids of the chats the list held when that window
+ * was asked for, `empties` the windows in a row before it that held none, and
+ * `ids` those of the chats the list holds now. The window is empty when the
+ * list holds no chat that was not known. It counts the chats that came in and
+ * not how many the list holds, so a chat that left the list while the window
+ * loaded, deleted in another tab, does not hide a match the window brought.
  */
-export function emptyWindows(base: number, empties: number, length: number) {
-  return length <= base ? empties + 1 : 0;
+export function emptyWindows(
+  known: HashSet.HashSet<string>,
+  empties: number,
+  ids: readonly string[]
+) {
+  return Arr.some(ids, (id) => !HashSet.has(known, id)) ? 0 : empties + 1;
 }
 
 /**
@@ -20,8 +28,12 @@ export function emptyWindows(base: number, empties: number, length: number) {
  * window reads and opens the titles of many chats, and a search that matches
  * nothing would otherwise walk the whole account.
  */
-export function searchStopped(base: number, empties: number, length: number) {
-  return emptyWindows(base, empties, length) >= CHAT_SEARCH_EMPTY_WINDOWS;
+export function searchStopped(
+  known: HashSet.HashSet<string>,
+  empties: number,
+  ids: readonly string[]
+) {
+  return emptyWindows(known, empties, ids) >= CHAT_SEARCH_EMPTY_WINDOWS;
 }
 
 /**

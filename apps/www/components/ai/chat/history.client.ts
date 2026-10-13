@@ -1,6 +1,7 @@
 "use client";
 
 import type { PaginatedQueryResult } from "@confect/react";
+import { Array as Arr, HashSet } from "effect";
 import { useState } from "react";
 import {
   emptyWindows,
@@ -19,34 +20,38 @@ import {
  * search never stops, because each of its pages holds chats. A new `search`
  * starts the count again.
  */
-export function useChatList<Item, E>(
+export function useChatList<Item extends { readonly _id: string }, E>(
   pagination: PaginatedQueryResult.Variants<Item, E>,
   search?: string
 ) {
   const [settled, setSettled] = useState(pagination.results);
-  const [asked, setAsked] = useState({ base: 0, empties: 0, search });
+  const [asked, setAsked] = useState({
+    empties: 0,
+    known: HashSet.empty<string>(),
+    search,
+  });
   const list = readChatList(settled, pagination);
   if (list.results !== settled) {
     setSettled(list.results);
   }
   if (asked.search !== search) {
-    setAsked({ base: 0, empties: 0, search });
+    setAsked({ empties: 0, known: HashSet.empty<string>(), search });
   }
-  const length = list.results.length;
+  const ids = Arr.map(list.results, (chat) => chat._id);
   const next = list.loadMore;
-  // Asking for a window notes how many chats the list holds, so the next
-  // render can tell whether that window added any.
+  // Asking for a window notes which chats the list holds, so the next render
+  // can tell whether that window added any.
   const ask = next
     ? () => {
         setAsked({
-          base: length,
-          empties: emptyWindows(asked.base, asked.empties, length),
+          empties: emptyWindows(asked.known, asked.empties, ids),
+          known: HashSet.fromIterable(ids),
           search,
         });
         next();
       }
     : undefined;
-  const stopped = searchStopped(asked.base, asked.empties, length);
+  const stopped = searchStopped(asked.known, asked.empties, ids);
   return {
     loadMore: stopped ? undefined : ask,
     results: list.results,
