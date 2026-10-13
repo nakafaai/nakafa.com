@@ -10,6 +10,7 @@ import {
   chipsIn,
   fileOf,
   NOT_ATTACHED,
+  NOTICE_LIST,
   noticeWith,
   openComposer,
   pickFiles,
@@ -46,19 +47,13 @@ const readNotice = (notice: HTMLElement) => {
 };
 
 /**
- * The box a long list scrolls in: the viewport of its scroll area. The reasons
- * and the names are inside it.
- */
-const SCROLLER = '[data-slot="scroll-area-viewport"]';
-
-/**
  * The names that the reason at the top of the list covers in part, read in the
  * page. A reason hides a name whole when the name lies within its box, which is
  * the way a name goes under it. A name that sticks out of its box is cut in
  * half, and a learner sees half a name under the reason.
  */
-const readCutNames = (notice: HTMLElement) => {
-  const list = notice.querySelector(SCROLLER);
+const readCutNames = (notice: HTMLElement, scroller: string) => {
+  const list = notice.querySelector(scroller);
   if (!list) {
     return null;
   }
@@ -87,8 +82,8 @@ const readCutNames = (notice: HTMLElement) => {
  * Scrolls the list to the middle of a line, a place that a scroll of the wheel
  * leaves a plain list at, and returns the height of a line.
  */
-const scrollBetweenLines = (notice: HTMLElement) => {
-  const list = notice.querySelector(SCROLLER);
+const scrollBetweenLines = (notice: HTMLElement, scroller: string) => {
+  const list = notice.querySelector(scroller);
   const name = notice.querySelector("dd");
   if (!(list && name)) {
     return null;
@@ -105,8 +100,8 @@ const scrollBetweenLines = (notice: HTMLElement) => {
  * there would fade with it. A browser lists the stops of a fade by their
  * position: `calc(100% - 24px)` is a fade of 24 pixels.
  */
-const readFade = (notice: HTMLElement) => {
-  const list = notice.querySelector(SCROLLER);
+const readFade = (notice: HTMLElement, scroller: string) => {
+  const list = notice.querySelector(scroller);
   if (!list) {
     return null;
   }
@@ -123,8 +118,8 @@ const readFade = (notice: HTMLElement) => {
  * name below it whole, once the list is scrolled to its end, read in the page.
  * The read scrolls the list, so it comes last.
  */
-const readList = (notice: HTMLElement) => {
-  const list = notice.querySelector(SCROLLER);
+const readList = (notice: HTMLElement, scroller: string) => {
+  const list = notice.querySelector(scroller);
   const reasons = Array.from(notice.querySelectorAll("dt"));
   const [first] = reasons;
   const last = reasons.at(-1);
@@ -270,26 +265,32 @@ for (const width of [320, 1440]) {
           yield* Effect.promise(async () => {
             await expect(notice.locator("dd")).toHaveCount(surplus.length + 1);
             await expect
-              .poll(() => notice.evaluate(readFade))
+              .poll(() => notice.evaluate(readFade, NOTICE_LIST))
               .toEqual({ endFades: true, startFades: false });
           });
 
           // Wherever a scroll leaves the list, a whole name is under the reason.
           yield* Effect.promise(async () => {
-            await notice.evaluate(scrollBetweenLines);
-            await expect.poll(() => notice.evaluate(readCutNames)).toEqual([]);
+            await notice.evaluate(scrollBetweenLines, NOTICE_LIST);
+            await expect
+              .poll(() => notice.evaluate(readCutNames, NOTICE_LIST))
+              .toEqual([]);
           });
 
           // At the end the reason of the last group stays at the top, and the
           // reason of the first has gone with its group. No name is cut under
           // it, and the last name can be reached.
-          const read = yield* Effect.promise(() => notice.evaluate(readList));
+          const read = yield* Effect.promise(() =>
+            notice.evaluate(readList, NOTICE_LIST)
+          );
           yield* Effect.promise(async () => {
-            await expect.poll(() => notice.evaluate(readCutNames)).toEqual([]);
+            await expect
+              .poll(() => notice.evaluate(readCutNames, NOTICE_LIST))
+              .toEqual([]);
             // Nothing follows now, so the end does not fade, and the start
             // still does not, though the list is scrolled.
             await expect
-              .poll(() => notice.evaluate(readFade))
+              .poll(() => notice.evaluate(readFade, NOTICE_LIST))
               .toEqual({ endFades: false, startFades: false });
           });
           yield* Effect.sync(() => {

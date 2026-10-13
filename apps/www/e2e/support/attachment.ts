@@ -15,6 +15,14 @@ type Upload = typeof UploadSchema.Type;
 /** The title of the notice that names the files a pick did not attach. */
 export const NOT_ATTACHED = "Files not attached";
 
+/**
+ * The box a long list of that notice scrolls in: the viewport of its scroll
+ * area, with the reasons and the names inside it. A function that Playwright
+ * sends to the page cannot reach a constant of its module, so such a function
+ * takes this selector as its argument.
+ */
+export const NOTICE_LIST = '[data-slot="scroll-area-viewport"]';
+
 /** The media type of a Word file, which Nina does not read. */
 export const WORD_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
