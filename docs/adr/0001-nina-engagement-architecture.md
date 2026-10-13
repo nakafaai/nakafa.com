@@ -544,9 +544,8 @@ capability's `offered` says no, such as the memory capability of a learner who
 paused it, is offered neither its tool nor its entry and rules in the prompt, so
 that turn's prompt prefix differs from the others, as its tool list does. No
 page refuses a capability, so only a pause changes it today. A few other places
-still name a capability or its
-Agent, and they are the steps below, in order, with what the compiler enforces
-at each and what it leaves to the author.
+still name a capability or its Agent, and they are the steps below, in order,
+with what the compiler enforces at each and what it leaves to the author.
 
 1. Write the run, an Effect program in the capability's own folder. It takes its
    input and the facts of the turn, publishes its cards through `publish`, and
