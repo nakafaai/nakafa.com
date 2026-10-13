@@ -189,12 +189,5 @@ describe("chat lists with sealed titles", () => {
       q: "aljabar",
     });
     expect(titles(own.page)).toEqual([STRANGER]);
-    // The public list of another learner shows no title at all.
-    const other = await f.t.query(api.chats.queries.getChats, {
-      paginationOpts,
-      q: "aljabar",
-      userId: f.stranger.userId,
-    });
-    expect(other.page).toEqual([]);
   });
 });

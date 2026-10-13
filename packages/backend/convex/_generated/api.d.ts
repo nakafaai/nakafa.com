@@ -182,41 +182,6 @@ export declare const api: {
           visibility: "private" | "public";
         }
       >;
-      getChats: FunctionReference<
-        "query",
-        "public",
-        {
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          q?: string;
-          type?: "study";
-          userId: Id<"users">;
-          visibility?: "private" | "public";
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            _creationTime: number;
-            _id: Id<"chats">;
-            activeTurnId?: Id<"ninaTurns">;
-            threadId: string;
-            title?: string;
-            type: "study";
-            updatedAt: number;
-            userId?: Id<"users">;
-            visibility: "private" | "public";
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
       getChatTitle: FunctionReference<
         "query",
         "public",
@@ -4047,6 +4012,7 @@ export declare const api: {
                   text: string;
                 }
               | null;
+            version?: number;
           },
           null
         >;
@@ -4340,6 +4306,7 @@ export declare const api: {
                         };
                     sourcePath: string;
                     sourceRevision: string;
+                    version?: number;
                   }>;
                   section: {
                     answeredCount: number;
@@ -4654,6 +4621,7 @@ export declare const api: {
                         };
                     sourcePath: string;
                     sourceRevision: string;
+                    version?: number;
                   }>;
                   section: {
                     answeredCount: number;
@@ -4962,6 +4930,7 @@ export declare const api: {
                         };
                     sourcePath: string;
                     sourceRevision: string;
+                    version?: number;
                   }>;
                   section: {
                     answeredCount: number;
@@ -5666,6 +5635,7 @@ export declare const api: {
                     };
                 sourcePath: string;
                 sourceRevision: string;
+                version?: number;
               }>;
               section: {
                 answeredCount: number;
@@ -5860,6 +5830,7 @@ export declare const api: {
                     };
                 sourcePath: string;
                 sourceRevision: string;
+                version?: number;
               }>;
               section: {
                 answeredCount: number;
@@ -6173,16 +6144,6 @@ export declare const internal: {
         "internal",
         { model: string; newDoc: any; oldDoc: any },
         any
-      >;
-    };
-  };
-  chats: {
-    unshare: {
-      closeLegacy: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null; dry: boolean },
-        { closed: number; legacy: number; next: string | null; shared: number }
       >;
     };
   };

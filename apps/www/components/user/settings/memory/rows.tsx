@@ -36,7 +36,9 @@ import { MemoryWindow } from "@/components/user/settings/memory/window";
  */
 export function MemoryRows() {
   const query = useMemoryPage((state) => state.query);
-  const { empty, loaded, more, whole } = useMemory((reading) => reading);
+  const { empty, fetched, loaded, more, whole } = useMemory(
+    (reading) => reading
+  );
   const shown = shownMemories(loaded, query);
 
   return (
@@ -48,7 +50,7 @@ export function MemoryRows() {
       )}
       {more ? (
         <MemoryMore
-          count={Arr.length(loaded)}
+          fetched={fetched}
           more={more}
           searching={isSearching(query)}
         />
@@ -62,20 +64,25 @@ export function MemoryRows() {
  * end of the list to come into view. With one it asks at once, and again each
  * time a page has arrived, until every memory is loaded, because a memory that
  * is not loaded cannot match.
+ *
+ * Both start again for each page that arrives, counted by what arrived and not
+ * by what the list shows: a page of only ended situations adds no row, so the
+ * end of the list stays in view and the count of rows stays the same, and
+ * neither would ask for the page after it.
  */
 function MemoryMore({
-  count,
+  fetched,
   more,
   searching,
 }: {
-  count: number;
+  fetched: number;
   more: (count: number) => void;
   searching: boolean;
 }) {
   return searching ? (
-    <MemoryFill key={count} more={more} />
+    <MemoryFill key={fetched} more={more} />
   ) : (
-    <Intersection onIntersect={() => more(MEMORY_PAGE)} />
+    <Intersection key={fetched} onIntersect={() => more(MEMORY_PAGE)} />
   );
 }
 

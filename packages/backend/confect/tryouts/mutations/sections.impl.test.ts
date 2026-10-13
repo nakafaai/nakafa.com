@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import {
+  createConvexTestWithBetterAuth,
+  seedAuthenticatedUser,
+} from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { authenticate } from "@repo/backend/test/tryout/response";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import {
   TRYOUT_TEST_NOW as NOW,
@@ -39,6 +43,37 @@ describe("tryouts/mutations/sections", () => {
       })
     ).rejects.toMatchObject({ data: { code: "TRYOUT_SECTION_NOT_FOUND" } });
     expect(await read()).toEqual(before);
+  });
+
+  it("rejects a start on another learner's attempt, and on one that no longer exists", async () => {
+    vi.setSystemTime(NOW);
+    const t = createConvexTestWithBetterAuth();
+    const fixture = await t.mutation((ctx) =>
+      seedTryoutContentAccessState(ctx, {
+        attemptStatus: "in-progress",
+        sectionStatus: "in-progress",
+        suffix: "start-owner",
+      })
+    );
+    const outsider = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "start-outsider" })
+    );
+    const start = (identity: Parameters<typeof authenticate>[1]) =>
+      authenticate(t, identity).mutation(api.tryouts.mutations.sections.start, {
+        attemptId: fixture.attemptId,
+        sectionKey: TRYOUT_SECTION_KEY,
+      });
+    const sections = () =>
+      t.query((ctx) => ctx.db.query("tryoutSectionAttempts").collect());
+    const before = await sections();
+    await expect(start(outsider)).rejects.toMatchObject({
+      data: { code: "TRYOUT_ATTEMPT_NOT_FOUND" },
+    });
+    await t.mutation((ctx) => ctx.db.delete(fixture.attemptId));
+    await expect(start(fixture.identity)).rejects.toMatchObject({
+      data: { code: "TRYOUT_ATTEMPT_NOT_FOUND" },
+    });
+    expect(await sections()).toEqual(before);
   });
 
   it.each(["terminal", "expired"])(

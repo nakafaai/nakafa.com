@@ -1,6 +1,3 @@
-// @ai-sdk/gateway encodes file bytes with the global Buffer, which the
-// default Convex runtime does not have.
-import "@repo/backend/confect/polyfills";
 import { convexGateway } from "@convex-dev/ai-sdk-provider";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { Gateway, make } from "@repo/backend/confect/gateway/handle";
@@ -13,6 +10,14 @@ import { Effect, Layer } from "effect";
  * again for each request. A decision model is the provider's evaluation model,
  * made with the options the handle gives it, among them the zero retention
  * request that the provider puts in the `provider` field of the request.
+ *
+ * It needs no Buffer in the global scope, which the default Convex runtime does
+ * not have. The provider's chat adapter encodes the bytes of a file with
+ * `btoa`. The AI SDK packages read the global `Buffer` without a guard in two
+ * places only, both in the file encoders of the Vercel gateway client
+ * (`@ai-sdk/gateway`: `maybeEncodeFileParts` of its language model and
+ * `maybeEncodeBatchFileParts` of its batch client). No model call here reaches
+ * that client (`scripts/check/gateway.ts` rejects its import).
  */
 export const GatewayLive = Layer.effect(
   Gateway,

@@ -2,7 +2,6 @@ import { Ref } from "@confect/core";
 import { QueryRunner } from "@confect/server";
 import { listMessages } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { PostHog } from "@posthog/convex";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -10,6 +9,7 @@ import { turnHalted, watchHalt } from "@repo/backend/confect/nina/halt";
 import { provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
+import { stubReport } from "@repo/backend/test/nina/report";
 import { createSilentTest, hasAnswer } from "@repo/backend/test/nina/silent";
 import { encodeJsonText } from "@repo/utilities/json";
 import {
@@ -88,9 +88,7 @@ describe("A running Nina turn that the learner stops", () => {
   // The run asks about its turn once a second, so these tests wait in real time
   // and get a longer limit than the default.
   it("stops a silent provider call when the learner cancels, and pays back only after the run exits", async () => {
-    const report = vi
-      .spyOn(PostHog.prototype, "captureException")
-      .mockResolvedValue(undefined);
+    const report = stubReport();
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
     const f = await createSilentTest();
     try {
@@ -139,9 +137,7 @@ describe("A running Nina turn that the learner stops", () => {
   }, 15_000);
 
   it("does not report a stop that Agent noticed before the watch did", async () => {
-    const report = vi
-      .spyOn(PostHog.prototype, "captureException")
-      .mockResolvedValue(undefined);
+    const report = stubReport();
     const f = await createSilentTest();
     try {
       const running = f.t.action(run, { turnId: f.turnId });
@@ -162,9 +158,7 @@ describe("A running Nina turn that the learner stops", () => {
   }, 15_000);
 
   it("reports a settlement that failed after the learner stopped the turn", async () => {
-    const report = vi
-      .spyOn(PostHog.prototype, "captureException")
-      .mockResolvedValue(undefined);
+    const report = stubReport();
     const f = await createSilentTest();
     const actual =
       await vi.importActual<typeof import("@convex-dev/agent")>(

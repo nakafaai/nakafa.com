@@ -2,6 +2,7 @@ import { expect, type Page } from "@playwright/test";
 import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { cacheTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The app routes that several suites open by name, in English and Indonesian. */
 export const appRoutes = {
@@ -11,6 +12,30 @@ export const appRoutes = {
   quranSurahId: "/id/quran/2",
   tryout: "/en/try-out",
 } as const;
+
+/**
+ * Waits until Next.js has cached the page at `href`, which the server says with
+ * `x-nextjs-cache: HIT`. A page whose params were not prerendered, such as a
+ * surah past the first, is answered on its first visit with the shell of its
+ * route, and the browser fetches the page itself after it loaded while Next.js
+ * renders it in the background; every visit after that gets the cached page
+ * whole. A check that reads the page would race that fetch, so it starts once
+ * the server answers HIT.
+ * @see https://nextjs.org/docs/app/guides/incremental-static-regeneration-cache-components#at-runtime
+ */
+export const waitForCachedRoute = Effect.fn("NakafaE2E.waitForCachedRoute")(
+  function* (page: Page, href: string) {
+    yield* Effect.promise(() =>
+      expect
+        .poll(
+          async () =>
+            (await page.request.get(href)).headers()["x-nextjs-cache"],
+          { timeout: cacheTimeoutMilliseconds }
+        )
+        .toBe("HIT")
+    );
+  }
+);
 
 /**
  * The JavaScript chunks of the app, as local Next and Vercel-promoted

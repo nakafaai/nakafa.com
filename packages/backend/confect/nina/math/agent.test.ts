@@ -427,6 +427,51 @@ describe("math Agent execution", () => {
     );
   });
 
+  it("ends a repair call that is in flight when the run is stopped, so a stopped turn spends no more on the background model", async () => {
+    let started: () => void = () => undefined;
+    const repairing = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    let repair: Promise<never> | undefined;
+    // The first call writes a tool call that fails its schema, so the SDK asks
+    // for a repair. The repair call never answers: only its signal can end it.
+    const model: MockLanguageModelV4 = new MockLanguageModelV4({
+      doGenerate: ({ abortSignal }) => {
+        if (model.doGenerateCalls.length === 1) {
+          return Promise.resolve(
+            callStep("algebra", { operation: "simplify" }, "repair")
+          );
+        }
+        repair = new Promise<never>((_resolve, reject) => {
+          abortSignal?.addEventListener("abort", () =>
+            reject(abortSignal.reason)
+          );
+        });
+        started();
+        return repair;
+      },
+    });
+    provider.languageModel.mockReturnValue(model);
+    await runSpecialist((userId) =>
+      runMathAgent({
+        ...specialistRequest,
+        userId,
+        publish: () => Effect.void,
+        usageHandler: vi.fn(),
+      }).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, casConfig),
+        // A stop interrupts the run once its repair is in flight, as the
+        // capability stream does when its turn is stopped.
+        Effect.raceFirst(Effect.promise(() => repairing))
+      )
+    );
+
+    // The repair call ended with the stop, and no call followed it.
+    await expect(repair).rejects.toMatchObject({ name: "AbortError" });
+    expect(model.doGenerateCalls).toHaveLength(2);
+    expect(compute).not.toHaveBeenCalled();
+  });
+
   it("cuts its model call and its repair call to the time the capability has left", async () => {
     provider.languageModel.mockReturnValue(repairScript(repairedInput));
     vi.mocked(compute).mockReturnValue(Effect.succeed("2x"));

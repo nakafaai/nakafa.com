@@ -209,18 +209,12 @@ load. `apps/www/e2e/chat/link.browser.ts` proves the late link, and the dialog
 that says so when the query fails with the typed failure and loads the link
 again on Retry, in the production build.
 
-Two temporary contract steps remain from the change that introduced share
-tokens. This ADR owns them, and they end together. Until they do,
-`chats/unshare:closeLegacy` sends the public chats that have no token back to
-private, and `getChats` answers an empty page for the browser tabs that were
-opened before share tokens and still ask for the chats of a profile. The exit is
-met when a dry pass of `closeLegacy` over every chat finds no legacy chat on dev
-and on production, and the release has been on production for 12 hours. That is
-how long the project's skew protection keeps a browser on the web deployment it
-loaded (`skewProtectionMaxAge` 43,200 seconds, read from the Vercel project on
-12 October 2026): after it, a navigation in an older tab loads the build that
-no longer calls `getChats`. The cleanup is one change: delete `chats/unshare`
-with its tests, and delete `getChats` with its test.
+The change that introduced share tokens kept two temporary contract steps,
+`chats/unshare:closeLegacy` and an empty `getChats`, until a dry pass of
+`closeLegacy` found no legacy chat on dev and on production and the release had
+been on production for 12 hours, the project's skew protection window
+(`skewProtectionMaxAge` 43,200 seconds). Both passes found none on 13 October
+2026, and both steps are deleted.
 
 Nina's system prompt leads with stable instructions so provider prompt caching
 reuses them across turns. The current page, which learners share, the learner
@@ -459,15 +453,29 @@ the chat is free:
   turn that was claimed or settled alone.
 - The sweep, every five minutes, settles a turn that stays open past its
   deadline. No live run is open that long, so the run was lost to a crash or a
-  deploy, and the turn is stored as interrupted, never as a timeout.
+  deploy, and the turn is stored as interrupted, never as a timeout. Such a run
+  has no live action to report it, so the settlement does, once, when a turn
+  ends without an answer after its deadline (`closeTurn`), whichever status it
+  stores, as when the learner deletes the chat in the meantime: the log names
+  the turn, the reason it was stored with and how long it was open, and error
+  tracking gets the reason and the place, with no turn, no account and no word
+  of the conversation. A turn the learner stopped or that holds an answer is not
+  a loss. A run that ends its own turn reports its own failure, however late it
+  fails, so the settlement leaves that one to it.
 - The sweep also schedules the end of that settlement for three of its own runs
   later. A settlement that failed in every try, as when the Agent journal cannot
   be read or cut off, ends then without the journal it could not use: the turn
   fails, or is cancelled when the learner had stopped it, an answer the journal
-  does hold still completes it, and the chat can be deleted. A hold that cannot
-  be paid back is the one thing that ending never drops. When the credit state
-  cannot be read, the ending fails as a whole and changes nothing, and the next
-  sweep tries again.
+  does hold still completes it, and the chat is free. Deleting a chat does not
+  wait for it: when the journal fails the settlement of the chat's open turn,
+  the delete ends the turn the same way, in the transaction of the delete, and
+  goes on, so a journal that cannot settle the turn never keeps a learner from
+  deleting their chat. A hold that cannot be paid back is the one thing that
+  ending never drops. When the credit state cannot be read, the ending fails as
+  a whole and changes nothing, and the next sweep tries again. A delete of that
+  chat fails the same way, because the learner's credits are not dropped to free
+  it. So does a delete whose journal cannot be deleted: it commits nothing, so a
+  deleted chat never leaves its words behind, and the learner tries again.
 - The failed turn stores `unknown`, which the learner reads as a response Nina
   could not finish, with a way to try again and to ask for help. A reason of its
   own would be a new value of the stored failure reason. Every web build reads
@@ -542,10 +550,8 @@ at each and what it leaves to the author.
    tool policy (`entry`, `field` when its input has a field of its own,
    `section`), the `continuation` that tells the model how to ask for what a
    truncation omitted, `offered`, and `run`. Add `note` when its answer must
-   stay out of the conversation, and `textOnly` when it publishes no card: its
-   answer is the text, so a run that ends without a card is not read as empty,
-   and keeps the outcome it states, or none. Enforced: `offered` and `run` have
-   no default, so nothing is allowed by omission; the Schema types the input of
+   stay out of the conversation. Enforced: `offered` and `run` have no default,
+   so nothing is allowed by omission; the Schema types the input of
    `run`; the typed errors of `run` end as `CapabilityDenied` or `failed`, so
    none stays unhandled. Left to the author: a defect of `run` is not caught,
    and its message reaches Nina, the stored thread and the transcript as the
@@ -555,6 +561,10 @@ at each and what it leaves to the author.
    ends as `MemoryReadError`, and a defect anywhere else in its run ends the
    same way.
 4. Add its name to `LearningCapabilityNameSchema` in `capability/spec.ts`, and
+   pick it in `TextOnlyCapabilitySchema` beside it when it publishes no card:
+   its answer is the text, so a run that ends without a card is not read as
+   empty, in the result it stores or on the page that shows it
+   (`client/nina/outcome.ts`), and keeps the outcome it states, or none. Add
    its definition to the end of the record in `capability/registry.ts`. The
    order is the order of the tool list and of the tool policy, so it is part of
    the prompt prefix that the provider caches. Enforced: the record is

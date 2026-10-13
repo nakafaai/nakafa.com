@@ -1,5 +1,5 @@
 import { expect, type Page, test, type WebSocket } from "@playwright/test";
-import { Deferred, Effect } from "effect";
+import { Deferred, Effect, Ref } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import {
   withObservedEvents,
@@ -9,6 +9,9 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const SETTINGS = "/en/user/settings";
 const SESSION_ANSWER = "**/api/auth/get-session**";
+/** What Better Auth answers when its session lookup throws, as the trace of a failed run showed. */
+const SESSION_REFUSED =
+  '{"message":"Failed to get session","code":"FAILED_TO_GET_SESSION"}';
 const NAME = "Learner After Reload";
 /** How Convex's sync protocol names the server's answer to a mutation. */
 const MUTATION_ANSWER = '"type":"MutationResponse"';
@@ -125,6 +128,55 @@ test("a change made the moment a page loads is sent signed in", async ({
             timeout: readinessTimeoutMilliseconds,
           })
         );
+      })
+    )
+  );
+});
+
+test("a session read the server refuses once is read again", async ({
+  baseURL,
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        const origin = yield* Effect.fromNullishOr(baseURL);
+        yield* signInLearner(page.context(), origin);
+
+        // The server refuses the first read of the session, as it does when a
+        // function of the backend runs past its time limit on a busy machine.
+        const reads = yield* Ref.make(0);
+        const run = Effect.runPromiseWith(yield* Effect.context<never>());
+        yield* Effect.promise(() =>
+          page.route(SESSION_ANSWER, async (route) => {
+            const read = await run(
+              Ref.updateAndGet(reads, (count) => count + 1)
+            );
+            if (read > 1) {
+              await route.continue();
+              return;
+            }
+            await route.fulfill({
+              body: SESSION_REFUSED,
+              contentType: "application/json",
+              status: 500,
+            });
+          })
+        );
+
+        // The browser stores the id of a session once the page has settled on
+        // it, and stores nothing after a failed read, so the key can only show
+        // up after the page has asked again.
+        yield* Effect.promise(() => page.goto(SETTINGS));
+        yield* Effect.promise(() =>
+          page.waitForFunction(
+            () => window.localStorage.getItem("nakafa-session") !== null,
+            undefined,
+            { timeout: readinessTimeoutMilliseconds }
+          )
+        );
+        expect(yield* Ref.get(reads)).toBeGreaterThanOrEqual(2);
       })
     )
   );

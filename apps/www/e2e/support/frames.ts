@@ -7,6 +7,9 @@ const callFields = {
   udfPath: Schema.String,
 };
 
+/** The realtime connection of the page to the backend. */
+export const CONVEX_SOCKET = /\/api\/[^/]+\/sync/;
+
 /** A change the page sends, which the server answers with the same `requestId`. */
 const MutationSchema = Schema.Struct({
   ...callFields,
@@ -52,6 +55,22 @@ export const SentSchema = Schema.Union([
 ]);
 
 /**
+ * A frame from the server that tells the page what some queries now answer. A
+ * change of the kind `QueryUpdated` carries the new answer as its `value`. A
+ * decoded frame keeps only the fields described here.
+ */
+const TransitionSchema = Schema.Struct({
+  modifications: Schema.Array(
+    Schema.Struct({
+      queryId: Schema.Finite,
+      type: Schema.String,
+      value: Schema.optionalKey(Schema.Unknown),
+    })
+  ),
+  type: Schema.Literal("Transition"),
+});
+
+/**
  * The frames the server sends that a step waits on. A `ts` is a moment of the
  * database, which the protocol writes as eight bytes in Base64.
  */
@@ -64,16 +83,8 @@ export const GivenSchema = Schema.Union([
   }),
   Schema.Struct({ type: Schema.Literal("ActionResponse") }),
   Schema.Struct({
+    ...TransitionSchema.fields,
     endVersion: Schema.Struct({ ts: Schema.Uint8ArrayFromBase64 }),
-    modifications: Schema.Array(
-      Schema.Struct({
-        queryId: Schema.Finite,
-        type: Schema.String,
-        /** What an updated query now answers. */
-        value: Schema.optionalKey(Schema.Unknown),
-      })
-    ),
-    type: Schema.Literal("Transition"),
   }),
 ]);
 
@@ -102,9 +113,10 @@ export const later = (one: bigint, other: bigint) =>
 
 /**
  * A transition with every field it carries kept, so a step can change one
- * update and send the rest as the server wrote it.
+ * update and send the rest as the server wrote it. `GivenSchema` reads a
+ * transition too, but a frame it decodes keeps only the fields it describes.
  */
-const TransitionSchema = Schema.StructWithRest(
+const WholeTransitionSchema = Schema.StructWithRest(
   Schema.Struct({
     modifications: Schema.Array(
       Schema.StructWithRest(
@@ -116,11 +128,13 @@ const TransitionSchema = Schema.StructWithRest(
   }),
   [Schema.Record(Schema.String, Schema.Unknown)]
 );
-const decodeTransition = Schema.decodeOption(
-  Schema.fromJsonString(TransitionSchema)
+/** Reads a transition whole, or none for any other frame. */
+export const decodeTransition = Schema.decodeOption(
+  Schema.fromJsonString(WholeTransitionSchema)
 );
-const encodeTransition = Schema.encodeSync(
-  Schema.fromJsonString(TransitionSchema)
+/** Writes a whole transition back as the text of its frame. */
+export const encodeTransition = Schema.encodeSync(
+  Schema.fromJsonString(WholeTransitionSchema)
 );
 
 /**
