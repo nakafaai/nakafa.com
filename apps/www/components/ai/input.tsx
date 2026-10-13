@@ -51,6 +51,9 @@ import {
   reportNinaFailure,
 } from "@/components/ai/feedback";
 
+/** The one notice that names the files a pick did not attach. */
+const FILES_NOTICE = "nina-files";
+
 interface Props {
   autoFocus?: boolean;
   children?: ReactNode;
@@ -101,7 +104,11 @@ export function NinaInput({
     }
     startTransition(async () => {
       hideSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
-      await admission;
+      // Once the message is sent, the notice about the files an earlier pick
+      // did not attach has done its work.
+      if (await admission) {
+        toast.dismiss(FILES_NOTICE);
+      }
     });
     return admission;
   }
@@ -109,7 +116,10 @@ export function NinaInput({
   /**
    * Says why a pick was not attached in full: one notice for the pick, naming
    * the files it dropped and the reason of each. Two notices would stack, and
-   * the one in front would hide the other.
+   * the one in front would hide the other, so the notice has one id, and a new
+   * pick replaces it. A learner needs time to read a list of names, and a list
+   * that scrolls cannot be used in a notice that is about to leave, so it stays
+   * until the learner closes it, picks again, or sends the message.
    */
   function handleFileErrors(
     rejections: readonly PromptInputFileConstraintError[]
@@ -117,7 +127,8 @@ export function NinaInput({
     const notice = rejectionNotice(rejections, t);
     toast.error(notice.title, {
       description: <RejectedFiles reasons={notice.reasons} />,
-      id: "nina-files",
+      duration: Number.POSITIVE_INFINITY,
+      id: FILES_NOTICE,
       position: NINA_NOTICE_POSITION,
     });
   }
