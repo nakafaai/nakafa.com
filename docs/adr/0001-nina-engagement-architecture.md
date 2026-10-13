@@ -474,10 +474,10 @@ the chat is free:
   wait for it: when the journal fails the settlement of the chat's open turn,
   the delete ends the turn the same way, in its own transaction, and goes on, so
   a failure of the journal never keeps a learner from deleting their chat. A
-  hold that cannot be paid back is the one thing that ending never drops. When the credit state cannot be read, the
-  ending fails as a whole and changes nothing, and the next sweep tries again.
-  A delete of that chat fails the same way, because the learner's credits are
-  not dropped to free it.
+  hold that cannot be paid back is the one thing that ending never drops. When
+  the credit state cannot be read, the ending fails as a whole and changes
+  nothing, and the next sweep tries again. A delete of that chat fails the same
+  way, because the learner's credits are not dropped to free it.
 - The failed turn stores `unknown`, which the learner reads as a response Nina
   could not finish, with a way to try again and to ask for help. A reason of its
   own would be a new value of the stored failure reason. Every web build reads
@@ -552,8 +552,8 @@ at each and what it leaves to the author.
    tool policy (`entry`, `field` when its input has a field of its own,
    `section`), the `continuation` that tells the model how to ask for what a
    truncation omitted, `offered`, and `run`. Add `note` when its answer must
-   stay out of the conversation. Enforced: `offered` and `run` have
-   no default, so nothing is allowed by omission; the Schema types the input of
+   stay out of the conversation. Enforced: `offered` and `run` have no default,
+   so nothing is allowed by omission; the Schema types the input of
    `run`; the typed errors of `run` end as `CapabilityDenied` or `failed`, so
    none stays unhandled. Left to the author: a defect of `run` is not caught,
    and its message reaches Nina, the stored thread and the transcript as the
