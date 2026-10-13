@@ -120,7 +120,8 @@ const putBack = Effect.fn("nina.memory.restore.put")(function* (
  * from scratch (`requestPortrait`), because the memory comes back with the
  * confirmation time it had, which a build that reads on from the time it has
  * read would never meet. It reads the record, the memory state and the
- * learner's key, and writes the memory, at most 104 key rows and the record.
+ * learner's key, writes the memory and its key rows (a memory has at most
+ * `MEMORY_KEY_LIMIT` of them, in `keys.ts`), and deletes the record.
  */
 export const restoreMemory = Effect.fn("nina.memory.restore.memory")(function* (
   userId: UserId,

@@ -306,6 +306,30 @@ describe("Nina memory restore", () => {
     expect(await f.texts()).toEqual(["Written after"]);
   });
 
+  it("does not put back a memory the learner deleted before asking to delete everything again, though the clock has not moved on", async () => {
+    const f = await createMemoryTest();
+    const older = await f.seed({ confirmedAt: 3, text: "Deleted long before" });
+    await f.owner.mutation(remove, { id: older });
+    // The first Delete all finds nothing to take. A memory written after it is
+    // confirmed a millisecond later, because the clock has not moved on.
+    await f.owner.mutation(clear, {});
+    const id = await f.owner.mutation(add, { text: "Deleted before" });
+    await f.owner.mutation(remove, { id });
+    expect(await f.restores()).toEqual([
+      expect.objectContaining({ confirmedAt: 3 }),
+      expect.objectContaining({ confirmedAt: NOW + 1 }),
+    ]);
+
+    // No memory is left to tell this Delete all how far to reach, so the
+    // newest record does, and the Undo is refused as it is when the clock has
+    // moved on.
+    await f.owner.mutation(clear, {});
+    await expect(f.owner.mutation(restore, { id })).rejects.toMatchObject(
+      missing
+    );
+    expect(await f.texts()).toEqual([]);
+  });
+
   it("puts a situation back even when its end day has passed meanwhile, and the daily job then deletes it like any ended situation", async () => {
     const f = await createMemoryTest();
     const id = await f.seed({

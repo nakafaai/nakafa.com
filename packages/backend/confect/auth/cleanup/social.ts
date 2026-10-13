@@ -136,9 +136,9 @@ const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
 const cleanupNinaMemory = Effect.fn("auth.cleanup.ninaMemory")(
   function* (userId: Id<"users">) {
     const deleted = yield* deleteBatch(userId);
-    const dropped = yield* dropPortrait(userId);
-    const kept = yield* dropRestores(userId);
-    return deleted > 0 || dropped || kept;
+    const droppedPortrait = yield* dropPortrait(userId);
+    const droppedRestores = yield* dropRestores(userId);
+    return deleted > 0 || droppedPortrait || droppedRestores;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
