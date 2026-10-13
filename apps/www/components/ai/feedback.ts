@@ -154,10 +154,9 @@ export const ninaFailureLimits = {
 /**
  * The refusal of a press on the send button, or nothing. A prompt over the
  * limit stays in the composer with the limit named, and nothing is asked of
- * the server. The page composers send the text trimmed, so the trimmed length
- * is the one that counts; a conversation sends it as written, and the
- * server's own refusal names the same limit. While a reply streams, the same
- * press stops it and sends no text, so the limit does not apply to it.
+ * the server. Every composer sends the text trimmed, so the trimmed length is
+ * the one that counts. While a reply streams, the same press stops it and
+ * sends no text, so the limit does not apply to it.
  */
 export function promptRefusal(text: string | undefined, stopping: boolean) {
   if (stopping || isPromptWithinLimit(text?.trim() ?? "")) {
