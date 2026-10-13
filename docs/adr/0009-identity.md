@@ -48,8 +48,10 @@ current in the same transaction as the Better Auth write.
 Nakafa stores no token that Google issues at sign-in. Nothing reads one after
 sign-in (the Search Console scripts use their own service account), and a token
 that nothing reads only widens what a leaked database or a leaked secret
-exposes. A token for a connector that a learner links later belongs in the
-vault, sealed under that learner's key, never on the account.
+exposes. A connector token never sits on the account either. It is sealed in
+the vault (`confect/vault`) under the key of the connection's owner: the
+learner's key for a personal connection, and the school's key for a school
+connection.
 
 - Sign-in sends `prompt=select_account`, so a learner with several Google
   accounts still picks one. It sends no `access_type`, which Google reads as
@@ -99,13 +101,6 @@ option to seal it. Rotating the secret signs every learner out. List the new
 secret first in `BETTER_AUTH_SECRETS`, keep `BETTER_AUTH_SECRET` at its old
 value, and keep each older version listed while anything is still sealed with
 it.
-
-Planned for program wave A: sign-in stops storing Google tokens on the account.
-The rows that hold them are counted on dev first, then cleared in the same
-release that stops storing them. Connector tokens never sit on the account. They
-are sealed in the vault (`confect/vault`) under the key of the connection's
-owner: the learner's key for a personal connection, and the school's key for a
-school connection.
 
 ## School Sign-In
 
