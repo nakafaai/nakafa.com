@@ -97,15 +97,17 @@ test.describe("Nina math on a phone", () => {
   );
 
   test(
-    "wraps the label of a check that failed",
+    "names the operation of a check that failed under the activity that names the failure",
     onChat(failedCheck, { locale: "de" }, async (page) => {
-      const headers = page.getByRole("button", {
+      const activity = page.getByRole("button", {
         name: "Mathematische Prüfung fehlgeschlagen",
       });
+      const check = page.getByRole("button", { name: "Vereinfachen" });
 
-      // The row of the activity and the header of the check both name the failure.
-      await expect(headers).toHaveCount(2);
-      for (const header of await headers.all()) {
+      // Only the activity says that the check failed; the check says which one.
+      await expect(activity).toHaveCount(1);
+      await expect(check).toHaveCount(1);
+      for (const header of [activity, check]) {
         expect(await cutText(header)).toEqual([]);
       }
     })
