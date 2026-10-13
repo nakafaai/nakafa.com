@@ -54,7 +54,7 @@ describe("access/kind declarations", () => {
         Kind.actions(entries, "unit").members,
         (member) => member.literals
       )
-    ).toEqual(["unit.view", "grant.manage"]);
+    ).toEqual(["unit.manage", "unit.view", "grant.manage"]);
     expect(
       Arr.map(
         Kind.changes(entries, "person").members,

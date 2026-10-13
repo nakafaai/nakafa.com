@@ -14,7 +14,6 @@ import {
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Tooltip,
   TooltipContent,
@@ -96,7 +95,6 @@ export function CommentContent({
   const t = useTranslations("Common");
   const locale = useLocale();
   const user = useViewer((s) => s.account);
-  const userId = comment.user?._id;
   const userName = comment.user?.name ?? t("anonymous");
   const userImage = comment.user?.image ?? "";
   const isReplyToMe = user && comment.replyToUser?._id === user.appUser._id;
@@ -115,21 +113,12 @@ export function CommentContent({
       <div className="grid min-w-0 flex-1 gap-2">
         <div className="grid gap-1">
           <div className="flex min-w-0 items-center gap-2">
-            {userId ? (
-              <NavigationLink
-                className="min-w-0 max-w-36 truncate font-medium text-sm transition-colors ease-out hover:text-primary"
-                href={`/user/${userId}`}
-                rel="noopener noreferrer"
-                target="_blank"
-                title={userName}
-              >
-                {userName}
-              </NavigationLink>
-            ) : (
-              <span className="min-w-0 truncate font-medium text-sm">
-                {userName}
-              </span>
-            )}
+            <span
+              className="min-w-0 max-w-36 truncate font-medium text-sm"
+              title={userName}
+            >
+              {userName}
+            </span>
             <time className="min-w-0 truncate text-muted-foreground text-xs tracking-tight">
               {formatAge(comment._creationTime, locale)}
             </time>

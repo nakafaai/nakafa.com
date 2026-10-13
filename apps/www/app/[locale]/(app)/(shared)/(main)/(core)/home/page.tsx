@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
+import { getMaterialLooks } from "@/components/home/look";
 import { HomeContinueLearning } from "@/components/home/recent";
 import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
@@ -73,6 +74,8 @@ async function AuthenticatedHome({
     )
   );
 
+  const recentLooks = getMaterialLooks(recentRows);
+
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
       <div className="mx-auto w-full max-w-3xl px-6 py-24">
@@ -81,10 +84,10 @@ async function AuthenticatedHome({
 
           <HomeExplore />
 
-          <HomeContinueLearning subjects={recentRows} />
+          <HomeContinueLearning looks={recentLooks} subjects={recentRows} />
 
           <Suspense fallback={null}>
-            <HomeTrending locale={locale} />
+            <HomeTrending locale={locale} shown={recentLooks} />
           </Suspense>
         </div>
       </div>

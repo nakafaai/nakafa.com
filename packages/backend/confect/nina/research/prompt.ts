@@ -1,6 +1,7 @@
 import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
+import { webSearchSitesRule } from "@repo/backend/confect/nina/research/descriptions";
 
 /** Builds the prompt for the one step that writes the web search. */
 export function researchSearchPrompt({
@@ -40,7 +41,7 @@ export function researchSearchPrompt({
         - versions, source names, and document titles.
         - the URL of a page that the query is about.
       - Do not translate or paraphrase those preserved strings.
-      - When the task asks for results of given sites only, put the hostname of each site in the sites field of webSearch, also when the task writes the site as a URL, and not in the queries.
+      - ${webSearchSitesRule}
       - When the task asks for an official, first-party, or primary source, write queries that reach it and name the source in the query.
       - Search named or official sources before broadening.
       - Do not rewrite a specific source request into a generic trends query.
