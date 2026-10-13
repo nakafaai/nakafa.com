@@ -851,11 +851,11 @@ nobody tries them again without a new reason.
   account deletion deletes the learner's records with their memories, before
   the key goes. A deleted memory's words therefore stay on the server, sealed
   for the learner, for the window and until the job that deletes the record at
-  its end has run, and only for a memory the learner deleted one at a time.
-  `restore` refuses the record from the end of the window, whether or not that
-  job has run. They stay because `add` cannot give a memory back:
-  it takes no kind, no end day and no author, so a situation that was undone
-  no longer ended and a memory Nina saved came back as one the learner wrote.
+  its end has run, and only for a memory the learner deleted one at a time
+  (`restore` refuses the record from the end of the window, whether or not the
+  job has run). The words stay because `add` cannot give a memory back: it
+  takes no kind, no end day and no author, so a situation that was undone no
+  longer ended and a memory Nina saved came back as one the learner wrote.
 - `read` gives a turn the account profile, the portrait when the learner has
   one, and the at most 8 memories that the learner's words and the topics of
   the open page recall. `known` gives the capture call the account profile and
