@@ -3,18 +3,12 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
-import {
-  getSectionEndReason,
-  sectionCompletedResult,
-} from "@repo/backend/confect/tryouts/mutations/sections";
-import spec from "@repo/backend/confect/tryouts/mutations/sections.spec";
-import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
+import { tryoutGate } from "@repo/backend/confect/tryouts/gate";
+import spec, {
+  SECTION_COMPLETED_RESULT,
+} from "@repo/backend/confect/tryouts/mutations/sections.spec";
 import { requireOwnedAttempt } from "@repo/backend/confect/tryouts/runtime/score";
-import {
-  requireActiveSectionAttempt,
-  startSectionAttempt,
-} from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
+import { startSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
 import { Clock, Effect, Layer } from "effect";
 
 const start = FunctionImpl.make(
@@ -35,40 +29,18 @@ const start = FunctionImpl.make(
     });
   })
 );
+
+const completed = Object.freeze({ kind: SECTION_COMPLETED_RESULT });
+
+/** Ends and scores the caller's running section through the live-attempt gate. */
 const complete = FunctionImpl.make(
   databaseSchema,
   spec,
   "complete",
   Effect.fn("tryouts.mutations.sections.complete")(function* (args) {
     const { appUser } = yield* requireAuth();
-    const attempt = yield* requireOwnedAttempt({
-      attemptId: args.attemptId,
-      userId: appUser._id,
-    });
-    if (attempt.status !== "in-progress") {
-      return yield* new TryoutAttemptStateError({
-        code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-        message: "Try-out attempt is not active.",
-      });
-    }
-    const now = yield* Clock.currentTimeMillis;
-    if (now >= attempt.expiresAt) {
-      return yield* new TryoutAttemptStateError({
-        code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-        message: "Try-out attempt time has expired.",
-      });
-    }
-    const section = yield* requireActiveSectionAttempt({
-      attempt,
-      sectionKey: args.sectionKey,
-    });
-    yield* finalizeSectionAttempt({
-      attempt,
-      endReason: getSectionEndReason(section, now),
-      now,
-      section,
-    });
-    return sectionCompletedResult;
+    yield* tryoutGate.finish(appUser._id, args);
+    return completed;
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

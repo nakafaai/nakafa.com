@@ -118,8 +118,10 @@ export function failed(facts: typeof FailureFacts.Type, text: string) {
  * - `note` keeps the answer out of the conversation: the turn holds the text of
  *   a plain answer for the model's next step, and the conversation stores the
  *   note in its place. Answers that state an outcome are fixed lines and stay.
- * - `textOnly` says that the capability publishes no card, so a run without one
- *   is not empty.
+ *
+ * A capability that publishes no card is not declared here. Its name is picked
+ * in `TextOnlyCapabilitySchema` (`capability/spec.ts`), because the page reads
+ * that fact too: a run of it without a card is not empty.
  */
 interface CapabilitySpec<Input, Requirements extends RunServices> {
   readonly continuation: string;
@@ -140,7 +142,6 @@ interface CapabilitySpec<Input, Requirements extends RunServices> {
     CapabilityFailure | CapabilityDenied,
     Requirements
   >;
-  readonly textOnly?: boolean;
 }
 
 /**
@@ -235,7 +236,6 @@ export function defineCapability<Input, Requirements extends RunServices>(
                 capability: name,
                 continuation: spec.continuation,
                 signal: abortSignal,
-                textOnly: spec.textOnly,
               }
             ),
             services

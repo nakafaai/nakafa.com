@@ -3,7 +3,6 @@ import { describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
-  requireActiveSectionAttempt,
   requireInternalEntrySection,
   startSectionAttempt,
 } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
@@ -202,7 +201,7 @@ describe("tryouts/runtime/sectionAttempt", () => {
       expect(await read()).toEqual(before);
     }
   );
-  it("requires an active timer and preserves a resumed timer", async () => {
+  it("preserves a resumed timer", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {
       const fixture = await seedTryoutContentAccessState(ctx, {
@@ -215,18 +214,6 @@ describe("tryouts/runtime/sectionAttempt", () => {
       if (!(attempt && section)) {
         throw new Error("Expected a timed attempt.");
       }
-      expect(
-        await Effect.runPromise(
-          requireActiveSectionAttempt({
-            attempt,
-            sectionKey: section.sectionKey,
-          }).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-            )
-          )
-        )
-      ).toEqual(section);
       expect(
         await Effect.runPromise(
           startSectionAttempt({
@@ -243,20 +230,6 @@ describe("tryouts/runtime/sectionAttempt", () => {
         kind: "started",
       });
       expect(await ctx.db.get(section._id)).toEqual(section);
-      await expect(
-        Effect.runPromise(
-          requireActiveSectionAttempt({
-            attempt,
-            sectionKey: "missing",
-          }).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-            )
-          )
-        )
-      ).rejects.toMatchObject({
-        code: "TRYOUT_SECTION_NOT_ACTIVE",
-      });
     });
   });
   it.each(["completed", "in-progress"] as const)(
