@@ -154,10 +154,11 @@ thresholds in the catalog were set from what that command printed on 12 October
   statement covers how long they are kept. A planned change, in its own pull
   request, makes the handle's embedding model take `{ zdr: true }`, passes it in
   `gateway/live.ts`, asserts the body in `gateway/live.test.ts`, and corrects the
-  comment on `retention` in `gateway/handle.ts`. Embedding requests carry
-  published lesson and Quran text and the short search phrase that the specialist
-  writes from a learner's question, never a stored learner message.
-  `gateway/route.ts` is deleted.
+  two comments in `gateway/handle.ts` that say an embedding request carries no
+  retention flags: the doc of `Gateway.embed` and the comment on `retention`.
+  Embedding requests carry published lesson and Quran text and the short search
+  phrase that the specialist writes from a learner's question, never a stored
+  learner message. `gateway/route.ts` is deleted.
 - **Embeddings.** `Gateway.embed(texts, model)` returns one vector of
   `embeddingDimensions` numbers per text, from `embeddingModelId` in
   `gateway/model.ts` or from the candidate that the model test of knowledge

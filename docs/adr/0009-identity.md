@@ -104,7 +104,9 @@ only, each at its own address (ADR 0026).
   username account, runs the card claim, and asks the student to set a password.
   A teacher or an admin prints a card again, which voids the old code and writes
   a journal entry, and redeeming the new card lets the student set a new
-  password. A code is shown with dashes and accepted with or without them.
+  password. A card is an invite on the card channel, so the rules of ADR 0011
+  apply to it, including who may print one for a Person who holds the Owner or
+  Admin role. A code is shown with dashes and accepted with or without them.
 - **Parent.** A parent signs in with an email code: six digits, valid for five
   minutes, void after three wrong tries, and stored as a keyed hash (an HMAC
   under a server secret, like the login-card code), because six digits have

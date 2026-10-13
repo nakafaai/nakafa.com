@@ -119,13 +119,13 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 - **Tenant**: One school or foundation (yayasan) using Nakafa School, served by the web project and the Convex deployment of its data cell. Its data is isolated by every School function, never by the client.
 - **Data cell**: One `www` project and one Convex deployment, with a registrable domain of its own. A tenant lives in one cell, and an account has one home cell. The `us` cell is live and the `eu` cell is planned.
-- **Tenant slug**: A tenant's public address, the `slug.nakafa.com` label and the `/[locale]/school/[slug]` route segment. It names the tenant context of a request; it never grants access.
+- **Tenant slug**: A tenant's public address, the `slug.nakafa.com` label under the domain of its data cell. It names the tenant context of a request; it never grants access.
 - **Unit**: One school level inside a tenant, such as the SD, SMP, or SMA of a foundation, with its own NPSN. An archived unit stays readable and refuses writes.
 - **Period**: One school year or semester of a tenant. Promotion archives a period and moves students into the next one.
 - **Cohort**: A rombel, the administrative class group that rapor, promotion, and Dapodik use. It is separate from a Classroom.
 - **Classroom**: The learning space for one subject in one Cohort, or one per Cohort in SD.
 - **Person**: Someone in one tenant, separate from a User. A Person can exist before any account and is claimed later; an account holds at most one Person per tenant.
-- **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the address of an unexpired invite, the one place an account is matched by its email. The journal records the claiming account.
+- **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the address of an unexpired invite, the one place an account is matched by its email. The journal records the claim method.
 - **Invite**: A pending offer of one Person to the account whose verified email equals its address. It expires 14 days after it is created, and an expired invite is never claimed.
 - **Grant**: One role held by one Person over the whole tenant or one unit, standing or temporary.
 - **Built-in role**: One of the fixed roles every tenant shares: Owner, Admin, Principal, Deputy, Teacher, Counselor, Staff, Student, Guardian, Proctor, Auditor, and Integration.

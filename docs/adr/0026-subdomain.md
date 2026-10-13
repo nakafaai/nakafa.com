@@ -4,16 +4,15 @@
 
 Accepted on 13 October 2026 with owner decisions K5, K11, and K15. The owner
 approved decisions K1 to K20 on that day. The host rewrite for school subdomains
-and the URL tree are planned. The eu data cell is planned, and it is created when the first
-school in the European Union signs (K5). The old School routes are retired with
-K11 and get no redirect.
+and the URL tree are planned. The eu data cell is planned, and it is created when
+the first school in the European Union signs (K5). The routes of the old School
+are deleted from the web app (#1051, K11) and get no redirect.
 
 ## Context
 
-Today the School lives under the locale path `/[locale]/school/[slug]`. Its
-routes are in `apps/www/app/[locale]/(app)/school`. The proxy in
-`apps/www/proxy.ts` handles School sign-in redirects through
-`readSchoolAuthRedirect`, and it does not route school hosts.
+The first School lived under the locale path `/[locale]/school/[slug]`. #1051
+deleted its routes and its sign-in redirect from the web app (ADR 0011,
+Retirement), and the proxy in `apps/www/proxy.ts` does not route school hosts.
 
 A school needs an address that a member can open in any language, that keeps its
 data in one place, and that never carries a person's name. ADR 0011 makes the
@@ -80,7 +79,7 @@ Every address below is planned.
 | `nakafa.com/id` | Back to Nakafa learning | Live |
 | `api.nakafa.com/v1` | Public REST. No key, public data only. It never accepts a school path. | Live |
 | `mcp.nakafa.com/mcp` | Public MCP. No key, Nakafa content only. The name repeats in the host and the path, and it stays so that agents keep working. | Live |
-| `nakafa.com/id/school/{slug}/...` | The old School. Retired with K11, with no redirect. | Live, retired with K11 |
+| `nakafa.com/id/school/{slug}/...` | The old School. Retired with K11, with no redirect. | Deleted from the web app in #1051 |
 
 These are the addresses of the `us` cell. An account's own surfaces, the inbox
 and the account settings, are served by the cell that holds the account, under
@@ -113,19 +112,8 @@ its own change, before any school code that depends on it lands.
   reaches only that cell's site.
 - A school is placed in one cell when it is created. A move to another cell is
   never automatic, and its host moves to the other cell's domain with it. The
-  cell is shown only in the settings. A move runs in this order:
-  1. The tenant is suspended from the start of the export to the cutover, so no
-     write changes the data while it is copied (ADR 0011).
-  2. The export reads every table the tenant owns, the tenant's journal entries
-     (ADR 0016), and its stored files.
-  3. The import writes them into the target cell. It gives every row a new ID
-     there and rewrites each reference to it.
-  4. The host switches to the target cell's domain at a dated cutover, and the
-     tenant becomes active again in the target cell.
-  5. The source rows are deleted through a reviewed batched deletion, run dry and
-     then for real until every count is zero, the pattern that ADR 0011 uses to
-     retire the old School. Nothing of the school stays in the source cell: not
-     its Persons' names, nor the email addresses of its invites, nor its journal.
+  cell is shown only in the settings. A move runs in the order of the next
+  section.
 - An account has one home cell, and it signs in and writes only there: every
   mutation checks its session against the Better Auth rows of its own deployment
   (ADR 0009). A person with schools in two cells holds one account in each,
@@ -144,6 +132,38 @@ its own change, before any school code that depends on it lands.
   the school host (`/orang-tua`). Push carries only a notification id and a
   general title.
 
+### Moving a school between cells
+
+A move runs in this order:
+
+1. An operator suspends the tenant from the start of the export to the cutover.
+   A suspended tenant refuses every member write (ADR 0011), so no member
+   changes the data while it is copied. Four system transitions still run in it
+   (ADR 0011, ADR 0012), and the table below says why none of them leaves a wrong
+   row in the target.
+2. The export reads every table the tenant owns, the tenant's journal entries
+   (ADR 0016), and its stored files.
+3. The import writes them into the target cell. It gives every row a new ID there
+   and rewrites each reference to it, except the references to accounts, which
+   stay in their home cell: every Person arrives unclaimed, every accepted invite
+   arrives revoked as after a release (ADR 0011), and the school invites its
+   members again. The import also writes every operator Person suspended and every
+   grant of one ended. Before the tenant becomes active in the target cell, the
+   expiry sweep of ADR 0011 (Time) runs for it there.
+4. The host switches to the target cell's domain at a dated cutover, and the
+   tenant becomes active again in the target cell.
+5. The source rows are deleted through a reviewed batched deletion, run dry and
+   then for real until every count is zero, the pattern that ADR 0011 uses to
+   retire the old School. Nothing of the school stays in the source cell: not its
+   Persons' names, nor the email addresses of its invites, nor its journal.
+
+| Transition during the copy | Why the target stays correct |
+| --- | --- |
+| A visit end | A visit belongs to the operators of its cell (ADR 0011), so the import ends every operator grant and suspends every operator Person (step 3). |
+| A grant expiry | The target ends every grant and invite whose time has passed before the tenant becomes active there (step 3). |
+| An account release | Accounts stay in their home cell, so every Person arrives unclaimed (step 3). |
+| The operator's reactivation of the tenant | Only the move reactivates the tenant, and only in the target cell (step 4). The source tenant stays suspended until step 5 deletes its rows. |
+
 ## Consequences
 
 - A school address is short, and it has no language prefix. The same link opens
@@ -152,7 +172,8 @@ its own change, before any school code that depends on it lands.
   `nakafa.com` share their cookies.
 - A person with schools in two cells signs in once per cell.
 - A school that moves cells needs an export, an import, a dated cutover, and a
-  deletion of the source rows. Nothing moves on its own.
+  deletion of the source rows. Nothing moves on its own, and its members claim
+  their Persons again with accounts of the target cell.
 - The eu cell adds a second place where data lives, a second `www` project, and a
   second budget. Its cost starts with the first European school that signs.
 - Data location is limited by the providers. Resend stores account data in the
@@ -176,17 +197,19 @@ its own change, before any school code that depends on it lands.
   identity of a person in the `eu` cell inside the `us` cell, which is what a
   cell exists to prevent.
 - One `www` project for every cell, with a resolver that picks the deployment by
-  host. The auth handler and the session token read (`apps/www/lib/auth/server.ts`)
-  and the Convex provider (`apps/www/components/providers/app.tsx`) each take the
-  deployment from `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`, so a
-  resolver would have to replace all of them, and one miss would send a session
-  cookie to the wrong cell's deployment.
+  host. The auth handler (`apps/www/lib/auth/server.ts`) takes both
+  `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`, the session token
+  read in the same file takes the site URL, and the Convex provider
+  (`apps/www/components/providers/app.tsx`) takes the query URL, besides the
+  readers of signed content and try-outs. A resolver would have to replace every
+  one of them, and one miss would send a session cookie to the wrong cell's
+  deployment.
 
 ## Implementation Status
 
 | Part | Status |
 | --- | --- |
-| `apps/www/app/[locale]/(app)/school` and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Live today, retired with K11 |
+| The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 (K11). Its backend stays until the observation of ADR 0011 passes |
 | Host rewrite for school subdomains | Planned |
 | School URL tree | Planned |
 | `us` data cell | Live |

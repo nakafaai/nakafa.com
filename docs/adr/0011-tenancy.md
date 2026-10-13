@@ -98,19 +98,22 @@ is created if nobody has claimed it, and an expired invite is never claimed: the
 school invites again. Claims run in a scheduled mutation after sign-up, after
 Better Auth verifies an address, and after an invite is created for an existing
 account, never inside the sign-in transaction. The claim writes `person.claimed`
-with the claim method and the claiming account (ADR 0016). An account that
-already holds a Person in the tenant leaves the invite pending for the school to
-resolve. A tenant's allowed email domains, one of its settings (see Tenant
-settings), limit the addresses its invites may name. Later channels (belajar.id
-matches and login card codes, with the claim method `card`) extend the invite
-channel and claim method values.
+with the claim method (ADR 0016). An account that already holds a Person in the
+tenant leaves the invite pending for the school to resolve. A tenant's allowed
+email domains, one of its settings (see Tenant settings), limit the addresses its
+invites may name. Later channels extend the invite channel and the claim method
+values: a belajar.id match, and a login card, which is an invite on the card
+channel with the claim method `card` (ADR 0009). A claim hands the claimant the
+Person's standing grants, so creating an invite, or printing a login card, for a
+Person that holds the Owner or Admin role needs the right to give that role,
+`owner.manage` (ADR 0012).
 
 Account deletion releases the account's Persons instead of deleting them: the
 school controls its records, so each Person and its standing grants stay,
-unclaimed. The release also clears the account from the Person's accepted invite,
-and a released Person is claimed again only through a new invite. Deletion is
-never blocked by tenant ownership; an operator of the tenant's cell restores an
-Owner when needed.
+unclaimed. The release also revokes the Person's accepted invite, which then names
+no account and can never be claimed again. A released Person is claimed again
+only through a new invite or a new login card. Deletion is never blocked by
+tenant ownership; an operator of the tenant's cell restores an Owner when needed.
 
 ### Tenant settings
 
@@ -177,11 +180,11 @@ not kept (K11). A new ADR supersedes ADR 0005.
 The removal follows the rule for public functions in
 `packages/backend/AGENTS.md`: expand, switch, observe, contract. Expand is done:
 the tenancy functions in `packages/backend/confect/tenancy` already exist on main
-beside the old School. Four steps remain, in this order:
+beside the old School. Four steps follow, in this order, and the first is merged:
 
-1. Switch: a release makes the web stop calling the old functions. It removes
-   every School route and component that calls an old function, so no new web
-   build calls one. The old functions stay.
+1. Switch (merged in #1051): a release makes the web stop calling the old
+   functions. It removes every School route and component that calls an old
+   function, so no new web build calls one. The old functions stay.
 2. Observe: after the switch release is live, production function logs show
    no call to an old School function for at least 12 hours (the Vercel skew
    window, `skewProtectionMaxAge` 43,200 seconds, read from the project API on

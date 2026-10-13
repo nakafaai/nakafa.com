@@ -50,12 +50,11 @@ only, never names, emails, or free text, so an entry never outlives the personal
 data it mentions.
 
 Two changes carry more than a type. A claim, `person.claimed`, holds the claim
-method and the claiming account, the one account ID that a tenant entry holds.
-The school's audit view and the consumers of the published change get the Person
-and the method and never the account, because account identities never reach a
-school. A grant that ends,
-`grant.ended`, holds why it ended. For a visit grant the reasons are `left`,
-`expired`, `revoked by the school`, and `operator removed`.
+method and no account: the Person row names the account and the release clears
+it (ADR 0011), so no tenant entry holds an account ID that could outlive the
+account. A grant that ends, `grant.ended`, holds why it ended. For a visit grant
+the reasons are `left`, `expired`, `revoked by the school`, and `operator
+removed`.
 
 ### Object references
 
@@ -80,23 +79,24 @@ Convex before relying on a creation-time cursor.
 Tenant entries are kept for the journal retention of their organisation. The
 retention is one period for each data type (owner decision K10), and for the
 journal it is one period for each organisation: the one that its data processing
-agreement states, stored on the tenant at provisioning (ADR 0011). An entry is
-not deleted before that period ends. A bounded scheduled sweep over the owner
-index in creation order removes expired entries, and it never passes the oldest
-live consumer cursor. Offboarding is the end of the organisation's data
-processing agreement. It exports the organisation's entries with proof, and then
-they are deleted with its other data.
+agreement states, stored on the tenant at provisioning (ADR 0011). A bounded
+scheduled sweep over the owner index in creation order removes an entry only
+after that period ends, and it never passes the oldest live consumer cursor.
+Offboarding is the one other end. It is the end of the organisation's data
+processing agreement, which is the agreement that states the period, so it ends
+the period for every entry, whatever its age. It exports the organisation's
+entries with proof, and then they are deleted with its other data.
 
 Personal entries leave with the account: the first personal writer adds the
 owner index on accounts and the account deletion drain.
 
-Account deletion leaves tenant entries alone. A tenant entry holds Person IDs and
-no name, and each ID points at a Person row, which holds personal data, in the
-same deployment. The IDs never outlive that data: offboarding deletes the entries
-with the organisation's other data, and a move to another cell carries the
-entries to the target cell and deletes the source entries with the source rows
-(ADR 0026). Retention, offboarding, and a move are the only things that delete
-tenant entries.
+Account deletion leaves tenant entries alone. A tenant entry holds Person IDs, no
+account ID, and no name, and each ID points at a Person row, which holds personal
+data, in the same deployment. The IDs never outlive that data: offboarding
+deletes the entries with the organisation's other data, and a move to another
+cell carries the entries to the target cell and deletes the source entries with
+the source rows (ADR 0026). Retention, offboarding, and a move are the only
+things that delete tenant entries.
 
 ## Implementation Contract
 
