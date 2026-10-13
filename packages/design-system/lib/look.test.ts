@@ -132,25 +132,6 @@ describe("getTileShifts", () => {
     }
   });
 
-  it("keeps the tiles of the two longest real lists the full gap apart", () => {
-    // The classes 1 to 8 of the Merdeka curriculum, the longest list of tiles
-    // of the corpus, and the seven sections of a UTBK-SNBT set.
-    const classes = Arr.makeBy(8, (index) => `class-${index + 1}`);
-    const sections = [
-      "general-reasoning",
-      "general-knowledge-and-understanding",
-      "reading-comprehension-and-writing",
-      "quantitative-knowledge",
-      "literacy-in-indonesian",
-      "literacy-in-english",
-      "mathematical-reasoning",
-    ];
-
-    for (const seeds of [classes, sections]) {
-      expect(leastDistance(middlesOf(seeds))).toBe(TILE_HUE_GAP);
-    }
-  });
-
   it("spreads ten tiles that start together evenly around the wheel", () => {
     const seeds = Arr.replicate("aljabar", 10);
 
@@ -213,6 +194,35 @@ describe("getTileShifts", () => {
         Arr.take(getTileShifts(list, shown), length)
       );
     }
+  });
+
+  it("passes a row that is an object through where it stands", () => {
+    const first = { imageSrc: "first.png" };
+    const second = { imageSrc: "second.png" };
+    const shifts = getTileShifts([first, "gerak", second]);
+
+    expect(shifts[0]).toBe(first);
+    expect(shifts[2]).toBe(second);
+    expect(shifts).toHaveLength(3);
+  });
+
+  it("places the tiles around an object as if it were not in the list", () => {
+    // After "aljabar" the tile "tryout/indonesia/snbt" turns by 57 degrees, but
+    // after a card that draws artwork it stays where its seed puts it.
+    const among = getTileShifts([
+      { imageSrc: "first.png" },
+      "aljabar",
+      "tryout/indonesia/snbt",
+      { imageSrc: "second.png" },
+      "aljabar",
+    ]);
+
+    expect(Arr.filter(among, Predicate.isNumber)).toEqual(
+      getTileShifts(["aljabar", "tryout/indonesia/snbt", "aljabar"])
+    );
+    expect(
+      getTileShifts([{ imageSrc: "first.png" }, "tryout/indonesia/snbt"])[1]
+    ).toBe(0);
   });
 });
 

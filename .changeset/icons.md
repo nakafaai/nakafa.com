@@ -34,9 +34,14 @@ an icon of Continue learning while their family has a free one. Two routes of
 one subject on a curriculum grid take two icons of the family of that subject.
 A card that draws reviewed artwork instead of a tile comes back from
 `getTileLooks` as its artwork, in its place, and takes no icon and no hue from
-the tiles around it. The home lessons, the curriculum cards, the try-out
-countries, exams, tracks, and sections, the exam selector, the article
-categories, and the subjects of the landing page use it.
+the tiles around it; `getTileShifts`, for a list whose tiles hold a flag
+instead of an icon, does the same with an object that holds the artwork. The
+home lessons, the curriculum cards, the try-out countries, exams, tracks, and
+sections, the exam selector, the article categories, and the subjects of the
+landing page use it.
+
+The trending lessons of the home page no longer show their view count, and the
+track cards of a try-out exam no longer show their set count.
 
 The icon of a curriculum stage has one owner, the navigation icons of the
 curriculum, and the sidebar and the search palette read it from there, so the

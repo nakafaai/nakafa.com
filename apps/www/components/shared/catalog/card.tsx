@@ -1,8 +1,6 @@
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
-  CardAction,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -16,7 +14,6 @@ import type { ReactElement, ReactNode } from "react";
 interface CatalogCardProps {
   readonly action: ReactElement;
   readonly actionLabel: string;
-  readonly badge?: string;
   readonly children: ReactElement;
   readonly title: string;
 }
@@ -25,7 +22,6 @@ interface CatalogCardProps {
 export function CatalogCard({
   action,
   actionLabel,
-  badge,
   children,
   title,
 }: CatalogCardProps) {
@@ -36,11 +32,6 @@ export function CatalogCard({
         <CardTitle>
           <h2>{title}</h2>
         </CardTitle>
-        {badge ? (
-          <CardAction className="self-center">
-            <Badge variant="outline">{badge}</Badge>
-          </CardAction>
-        ) : null}
       </CardHeader>
       <CardFooter className="border-t bg-muted/50 p-(--card-spacing)">
         <Button

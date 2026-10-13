@@ -1,7 +1,6 @@
 import { Array as Arr } from "effect";
 import "server-only";
-import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
-import { Badge } from "@repo/design-system/components/ui/badge";
+import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { TileLook } from "@repo/design-system/lib/look";
 import type { Locale } from "next-intl";
@@ -55,12 +54,6 @@ export async function HomeTrending({
               href: subject.href,
               title: subject.title,
             }}
-            trailing={
-              <Badge className="absolute top-0 right-0 mt-0.5" variant="muted">
-                <HugeIcons className="size-3" icon={ViewIcon} />
-                {subject.viewCount}
-              </Badge>
-            }
           />
         ))}
       </div>

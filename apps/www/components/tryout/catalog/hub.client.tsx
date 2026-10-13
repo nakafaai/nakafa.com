@@ -5,7 +5,7 @@ import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { getTileShifts } from "@repo/design-system/lib/look";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Predicate } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -66,42 +66,42 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
     ).then(() => undefined);
   }
 
-  const shifts = getTileShifts(
-    Arr.map(page.countries, (country) => country.countryKey)
+  const visuals = getTileShifts(
+    Arr.map(page.countries, (country) => {
+      const imageSrc = getTryoutCountryCatalogArtwork(locale, {
+        countryKey: country.countryKey,
+      });
+
+      return imageSrc === undefined ? country.countryKey : { imageSrc };
+    })
   );
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(Arr.zip(page.countries, shifts), ([country, shift], index) => {
-        const imageSrc = getTryoutCountryCatalogArtwork(locale, {
-          countryKey: country.countryKey,
-        });
-
-        return (
-          <CatalogCard
-            action={
-              <IntentLink
-                href={getTryoutPublicPathHref(country.publicPath)}
-                onClick={() => handleCountryClick(country)}
+      {Arr.map(Arr.zip(page.countries, visuals), ([country, visual], index) => (
+        <CatalogCard
+          action={
+            <IntentLink
+              href={getTryoutPublicPathHref(country.publicPath)}
+              onClick={() => handleCountryClick(country)}
+            />
+          }
+          actionLabel={tTryouts("open-country-cta")}
+          key={country.countryKey}
+          title={country.title}
+        >
+          {Predicate.isNumber(visual) ? (
+            <CatalogCardTile seed={country.countryKey} shift={visual}>
+              <CountryFlagIcon
+                className="h-6 w-9 rounded-xs ring-1 ring-border/60"
+                countryCode={country.countryCode}
               />
-            }
-            actionLabel={tTryouts("open-country-cta")}
-            key={country.countryKey}
-            title={country.title}
-          >
-            {imageSrc ? (
-              <CatalogCardImage preload={index === 0} src={imageSrc} />
-            ) : (
-              <CatalogCardTile seed={country.countryKey} shift={shift}>
-                <CountryFlagIcon
-                  className="h-6 w-9 rounded-xs ring-1 ring-border/60"
-                  countryCode={country.countryCode}
-                />
-              </CatalogCardTile>
-            )}
-          </CatalogCard>
-        );
-      })}
+            </CatalogCardTile>
+          ) : (
+            <CatalogCardImage preload={index === 0} src={visual.imageSrc} />
+          )}
+        </CatalogCard>
+      ))}
     </div>
   );
 }

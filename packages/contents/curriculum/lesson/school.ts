@@ -93,12 +93,8 @@ import type { MaterialIcon } from "@repo/contents/curriculum/material";
 import type { HIGH_SCHOOL_MATERIALS } from "@repo/contents/taxonomy";
 
 /**
- * The icons of each high school subject beyond its own (see `getLessonIcons`).
- * Every icon reads as its subject to someone who sees only the tile, and no
- * two of them, in one family or across families, draw the same object at 40px,
- * so a learner of one subject sees a family of different things and a list of
- * lessons of several subjects never shows two alike. None of them is the icon
- * of another subject or key.
+ * The icons of each high school subject beyond its own. `getLessonIcons` says
+ * what every icon of a family keeps.
  */
 export const SCHOOL_LESSON_ICONS = {
   biology: [

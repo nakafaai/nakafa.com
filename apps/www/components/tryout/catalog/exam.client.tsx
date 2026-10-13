@@ -60,7 +60,6 @@ export function TryoutExamPageClient({
               <IntentLink href={getTryoutPublicPathHref(track.publicPath)} />
             }
             actionLabel={tTryouts("open-set-cta")}
-            badge={tTryouts("set-count", { count: track.readySetCount })}
             key={track.trackKey}
             title={track.title}
           >

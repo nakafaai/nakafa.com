@@ -21,10 +21,8 @@ import type { Array as Arr } from "effect";
  * new subject or exam, takes its icon from here, chosen from the key, so two
  * unknown keys show two icons and never one shared fallback. Nothing else in
  * the product draws these twelve, and they are more than the longest list of
- * tiles that the corpus holds. The product-wide test of icons in
- * `apps/www/components/tryout/catalog/icons.test.ts` keeps both so. No two of
- * them are the same object at 40px, since a list of unknown keys shows many
- * of them together.
+ * tiles that the corpus holds. No two of them are the same object at 40px,
+ * since a list of unknown keys shows many of them together.
  */
 export const SPARE_ICONS: Arr.NonEmptyReadonlyArray<typeof KiteIcon> = [
   KiteIcon,

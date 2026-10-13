@@ -6,40 +6,17 @@ import { Array as Arr, Equal, Order, Predicate, Tuple } from "effect";
  * The least distance, in degrees, between the middles of the blends of two
  * tiles that sit in one list.
  *
- * Chosen by looking at rows of blends at 40px on a light and a dark ground, in
- * normal vision and in simulated protanopia, deuteranopia, and tritanopia
- * (Machado, Oliveira, and Fernandes, 2009, severity 1), and by measuring the
- * distance between two middles in OKLab, where 0.02 is the least that an eye
- * tells apart. At 36 degrees two middles differ by at least 0.067, and the two
- * blends, each 34 degrees wide, no longer overlap in hue. A wider gap keeps
- * fewer lists: of 3,000 random lists of seven tiles, 96 in 100 kept 40 degrees
- * and 63 in 100 kept 45.
- *
- * Every tile has the same lightness and chroma, so no gap separates every pair
- * for a viewer who confuses red with green or blue with yellow: in
- * deuteranopia and tritanopia 17 and 18 of 100 neighbouring pairs fall under
- * 0.02, while protanopia keeps all of them above it (0.026 at the least). A
- * list never repeats an icon either, so those pairs still differ.
+ * At 36 degrees two middles differ by at least 0.067 in OKLab, where 0.02 is
+ * the least that an eye tells apart, and the two blends no longer overlap in
+ * hue. A wider gap keeps fewer lists.
  *
  * What a list keeps depends on its length, since ten gaps of 36 degrees fill
  * the wheel. A list of up to six tiles always keeps the gap: five tiles hide at
- * most 355 of the 360 hues, so a sixth always finds one. Of 200,000 random
- * lists of seven, 172 fell under it (about 1 in 1,160) and the least distance
- * seen was 32 degrees, which is a measurement and no bound: the bound is 30,
- * since six tiles leave a gap of at least 60 degrees between two neighbours and
- * its middle is 30 degrees from both.
- *
- * The longest list of tiles that the corpus holds is eight: the classes 1 to 8
- * of the Merdeka curriculum once they are published, counted from the source
- * trees of the Aksara corpus. Its classes 9 to 12 draw reviewed artwork and
- * take no tile, so the root of that curriculum lists twelve cards and eight
- * tiles. Those eight tiles keep the full 36 degrees, as do the seven sections
- * of a UTBK-SNBT set. Of 200,000 random lists of eight, 14,322 fell under the
- * gap (7.2 percent) and the least distance seen was 28 degrees. A card with
- * artwork stays out of the list on purpose: the same twelve classes, all drawn
- * as tiles, would keep only 18 degrees. Past the last free hue a tile takes the
- * hue farthest from the rest, so the least distance shrinks but no two tiles
- * share a hue.
+ * most 355 of the 360 hues, so a sixth always finds one. A longer list keeps it
+ * only when its seeds fall well, and the longest real lists do: the eight
+ * tiles of the Merdeka classes 1 to 8 and the seven sections of a UTBK-SNBT
+ * set. Past the last free hue a tile takes the hue farthest from the rest, so
+ * the least distance shrinks but no two tiles share a hue.
  */
 export const TILE_HUE_GAP = 36;
 
@@ -112,23 +89,43 @@ function turnOf(seed: string, middle: number) {
  * this one as `shown`: a tile then also prefers a hue that has room from them,
  * but the gap inside its own list comes first and never gives way.
  *
+ * A row that is an object draws no tile, such as a catalog card that draws
+ * reviewed artwork and hands over its source in an object. It comes back
+ * unchanged in its place and takes no hue, so the tiles around it are placed as
+ * if it were not in the list.
+ *
  * `TILE_HUE_GAP` says what a list keeps by its length, up to the longest list
  * of the corpus.
  *
- * @param seeds - The seed of each tile, in list order
+ * @param rows - The seed of each tile, in list order, or the object of a card that draws no tile
  * @param shown - The tiles that the page already shows before this list
- * @returns The degrees to pass as `shift` to each tile, in the same order
+ * @returns The degrees to pass as `shift` to each tile, and each object as it came, in the same order
  */
 export function getTileShifts(
-  seeds: readonly string[],
+  rows: readonly string[],
+  shown?: readonly Pick<TileLook, "seed" | "shift">[]
+): readonly number[];
+export function getTileShifts<Passed extends object>(
+  rows: readonly (string | Passed)[],
+  shown?: readonly Pick<TileLook, "seed" | "shift">[]
+): readonly (number | Passed)[];
+export function getTileShifts(
+  rows: readonly (string | object)[],
   shown: readonly Pick<TileLook, "seed" | "shift">[] = []
-) {
+): readonly (number | object)[] {
   const onPage = Arr.map(shown, middleOf);
-  const [, shifts] = Arr.mapAccum(seeds, Arr.empty<number>(), (taken, seed) => {
-    const middle = placeMiddle(readSeed(seed).middle, taken, onPage);
+  const [, shifts] = Arr.mapAccum(
+    rows,
+    Arr.empty<number>(),
+    (taken, row): readonly [readonly number[], number | object] => {
+      if (!Predicate.isString(row)) {
+        return Tuple.make(taken, row);
+      }
+      const middle = placeMiddle(readSeed(row).middle, taken, onPage);
 
-    return Tuple.make(Arr.append(taken, middle), turnOf(seed, middle));
-  });
+      return Tuple.make(Arr.append(taken, middle), turnOf(row, middle));
+    }
+  );
 
   return shifts;
 }

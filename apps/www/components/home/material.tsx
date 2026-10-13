@@ -7,8 +7,6 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import type { TileLook } from "@repo/design-system/lib/look";
 
-import type { ReactNode } from "react";
-
 /**
  * The fields one home list row renders.
  *
@@ -29,18 +27,16 @@ type HomeMaterial = Pick<
  * Renders one home learning row.
  *
  * Continue Learning and Trending read the same row shape, so they share this
- * markup and differ only through `trailing`. The `look` is the icon and the
- * turn that the list gave this row (see `getMaterialLooks`), so that no two
- * rows of one list share an icon or a blend.
+ * markup. The `look` is the icon and the turn that the list gave this row (see
+ * `getMaterialLooks`), so that no two rows of one list share an icon or a
+ * blend.
  */
 export function MaterialRow({
   look,
   material,
-  trailing,
 }: {
   look: TileLook;
   material: HomeMaterial;
-  trailing?: ReactNode;
 }) {
   return (
     <NavigationLink
@@ -52,14 +48,7 @@ export function MaterialRow({
           <TileIcon icon={look.icon} />
         </Tile>
         <div className="-mt-1 flex flex-1 flex-col gap-0.5">
-          {trailing ? (
-            <div className="relative">
-              <h3 className="pr-20">{material.title}</h3>
-              {trailing}
-            </div>
-          ) : (
-            <h3>{material.title}</h3>
-          )}
+          <h3>{material.title}</h3>
           <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground sm:mr-12">
             {material.description}
           </span>

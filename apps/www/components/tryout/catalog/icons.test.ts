@@ -4,7 +4,8 @@ import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { getMaterialIcons } from "@repo/contents/curriculum/material";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
 import { PRESENTED_MATERIAL_DOMAINS } from "@repo/contents/taxonomy";
-import { getTileLooks } from "@repo/design-system/lib/look";
+import { getTileLooks, TILE_HUE_GAP } from "@repo/design-system/lib/look";
+import { readSeed, TURN, wrap } from "@repo/design-system/lib/tile";
 import { Array as Arr, Record as Rec, Tuple } from "effect";
 import { ARTICLE_CATEGORY_ICONS } from "@/components/articles/category";
 import {
@@ -183,5 +184,36 @@ describe("try-out icons", () => {
     expect(
       Arr.every(icons, (icon) => Arr.contains(TRYOUT_YEAR_ICONS, icon))
     ).toBe(true);
+  });
+});
+
+/** The middle hue of each tile of one list, as the list places its tiles by their keys. */
+function middlesOf(keys: readonly string[]) {
+  return Arr.map(
+    getTileLooks(Arr.map(keys, (key) => Tuple.make(SPARE_ICONS, key))),
+    ({ seed, shift }) => wrap(readSeed(seed).middle + shift)
+  );
+}
+
+/** The least distance between any two hues of a list, the short way around the wheel. */
+function leastDistance(hues: readonly number[]) {
+  return Arr.reduce(hues, TURN, (least, hue, index) =>
+    Arr.reduce(Arr.drop(hues, index + 1), least, (nearest, other) => {
+      const apart = Math.abs(hue - other);
+
+      return Math.min(nearest, apart, TURN - apart);
+    })
+  );
+}
+
+describe("tiles of the longest lists", () => {
+  it("keeps the classes of the Merdeka curriculum and the sections of a UTBK-SNBT set the full gap apart", () => {
+    const classes = Arr.makeBy(LONGEST_LIST, (index) => `class-${index + 1}`);
+
+    for (const keys of [classes, SNBT_SECTIONS]) {
+      expect(leastDistance(middlesOf(keys))).toBeGreaterThanOrEqual(
+        TILE_HUE_GAP
+      );
+    }
   });
 });

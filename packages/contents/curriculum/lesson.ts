@@ -16,12 +16,15 @@ const lessonIconsByKey = { ...SCHOOL_LESSON_ICONS, ...BACHELOR_LESSON_ICONS };
  * Resolves the icons that a lesson of a subject may show, so that lessons of
  * one subject differ from each other. The family of a subject starts with its
  * own icon (see `getMaterialIcons`) and is longer than the longest list of
- * tiles that the corpus holds. Every icon of a family reads as that subject,
- * and no icon belongs to two families, to the spare icons, or to any other key
- * of the product, so two lessons of different subjects never show one icon.
- * The product-wide test of icons in
- * `apps/www/components/tryout/catalog/icons.test.ts` keeps both so. A subject
- * the product does not know yet offers the spare icons.
+ * tiles that the corpus holds. Every icon of a family reads as that subject to
+ * someone who sees only the tile. No icon belongs to two families, to the spare
+ * icons, or to any other key of the product, and no two of them, in one family
+ * or across families, draw the same object at 40px, so a learner of one subject
+ * sees a family of different things and a list of lessons of several subjects
+ * never shows two alike. The product-wide test of icons in
+ * `apps/www/components/tryout/catalog/icons.test.ts` checks the length of every
+ * pool of icons and that no icon belongs to two keys. A subject the product
+ * does not know yet offers the spare icons.
  *
  * A lesson takes one of them from its own key, and a list of lessons takes them
  * apart (see `getTileLooks` in the design system).
