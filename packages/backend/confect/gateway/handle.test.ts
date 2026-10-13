@@ -216,8 +216,10 @@ describe("Gateway embeddings", () => {
     Effect.gen(function* () {
       const { embedder, embeddingModel, gateway } = serve();
       const embeddings = yield* gateway.embed(["first", "second"]);
+      // The request asks for zero retention, as a decision does.
       expect(embeddingModel).toHaveBeenCalledExactlyOnceWith(
-        "google/gemini-embedding-2"
+        "google/gemini-embedding-2",
+        { zdr: true }
       );
       expect(embeddings).toEqual([vector(0), vector(1)]);
       expect(embedder.doEmbedCalls[0]).toMatchObject({
@@ -232,7 +234,8 @@ describe("Gateway embeddings", () => {
       const { embeddingModel, gateway } = serve();
       yield* gateway.embed(["first"], "qwen/qwen3-embedding-8b");
       expect(embeddingModel).toHaveBeenCalledExactlyOnceWith(
-        "qwen/qwen3-embedding-8b"
+        "qwen/qwen3-embedding-8b",
+        { zdr: true }
       );
     })
   );

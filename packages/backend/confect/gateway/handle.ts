@@ -72,10 +72,9 @@ export class Gateway extends Context.Service<
  * Sent with every language model call: route only to an endpoint that keeps no
  * prompt and no answer, and refuse one that collects them. The gateway states
  * zero data retention itself; these flags make each request ask for it. A
- * decision asks with `zdr` alone, the only flag the provider's decision model
- * sends. An embedding request cannot carry them, because the AI SDK builds it
- * from fixed fields that leave no place for them, so it relies on the gateway's
- * own statement.
+ * decision and an embedding ask with `zdr` alone, the only flag the provider's
+ * decision and embedding models send: the provider adds it to the body of the
+ * request (`gatewayModelFetch` in `@convex-dev/ai-sdk-provider`).
  */
 const retention = { data_collection: "deny", zdr: true };
 
@@ -97,7 +96,10 @@ export function make(provider: {
     options: { readonly zdr: boolean }
   ) => DecisionModel;
   readonly languageModel: (modelId: string) => LanguageModel;
-  readonly embeddingModel: (modelId: string) => EmbeddingModel;
+  readonly embeddingModel: (
+    modelId: string,
+    options: { readonly zdr: boolean }
+  ) => EmbeddingModel;
 }): Gateway["Service"] {
   return Gateway.of({
     decide: (state, questions) =>
@@ -137,7 +139,7 @@ export function make(provider: {
         try: (signal) =>
           embedMany({
             abortSignal: signal,
-            model: provider.embeddingModel(model),
+            model: provider.embeddingModel(model, { zdr: retention.zdr }),
             providerOptions: {
               openaiCompatible: { dimensions: embeddingDimensions },
             },
