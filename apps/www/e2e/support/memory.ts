@@ -14,7 +14,7 @@ const MEMORY_TITLE = /Memory/;
  * cannot be imported here, because it pulls in packages that Node does not
  * resolve outside the bundler.
  */
-const LIST_QUERY = "nina/memory:list";
+export const LIST_QUERY = "nina/memory:list";
 
 /** What the Memory page says when the learner has no memory. */
 export const EMPTY = "No memories yet";

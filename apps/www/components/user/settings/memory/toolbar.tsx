@@ -14,8 +14,16 @@ import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
 /**
  * The head of the list: the search that narrows it as the learner types, and
- * the button that opens the editor with a new memory. The button says what it
- * adds where there is room for a word, and is the plus alone on a phone.
+ * the button that opens the editor with a new memory. The head decides what it
+ * shows by its own width, not the window's, because the card beside the editor
+ * panel is as narrow as the card on a phone. From 24rem the button says what it
+ * adds, and the longest placeholder, which is German, still has all its room.
+ * From 16rem the search shows its icon. Below that the field has the room alone.
+ *
+ * A search field keeps a slot for its clear button even while it is empty, and
+ * the placeholder cannot use it: in a narrow card the German placeholder lost
+ * its last letter. The button hides while the placeholder shows and comes back
+ * with the first letter.
  */
 export function MemoryToolbar() {
   const t = useTranslations("Memory");
@@ -29,23 +37,24 @@ export function MemoryToolbar() {
         <InputGroup>
           <InputGroupInput
             aria-label={t("search")}
+            className="[&:placeholder-shown::-webkit-search-cancel-button]:hidden"
             onChange={(event) => search(event.target.value)}
             placeholder={t("search")}
             type="search"
             value={query}
           />
-          <InputGroupAddon>
+          <InputGroupAddon className="@max-3xs/card-header:hidden">
             <HugeIcons icon={Search01Icon} />
           </InputGroupAddon>
         </InputGroup>
         <Button
           aria-label={t("add")}
-          className="w-9 sm:w-auto"
+          className="@sm/card-header:w-auto w-9"
           onClick={openNew}
           title={t("add")}
         >
           <HugeIcons icon={Add01Icon} />
-          <span className="hidden sm:inline">{t("memory")}</span>
+          <span className="@sm/card-header:inline hidden">{t("memory")}</span>
         </Button>
       </div>
     </CardHeader>
