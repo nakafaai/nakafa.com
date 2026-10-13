@@ -111,11 +111,7 @@ export async function FeaturesNina() {
 
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6">
         <Message align="end">
-          <NinaPrompt>
-            <MarkdownContent id="features-nina-question" variant="chat">
-              {prompt}
-            </MarkdownContent>
-          </NinaPrompt>
+          <NinaPrompt text={prompt} />
         </Message>
         <Message>
           <MessageContent>

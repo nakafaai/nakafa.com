@@ -36,6 +36,29 @@ describe("the frames of the realtime connection", () => {
     expect(Option.isSome(Option.filter(rename, isMutation))).toBe(true);
   });
 
+  it("reads the function and the arguments of a query the page adds, and the id of one it drops", () => {
+    const added = {
+      args: [{ paginationOpts: { cursor: null, numItems: 10 } }],
+      queryId: 3,
+      type: "Add",
+      udfPath: "nina/messages:list",
+    };
+    const dropped = { queryId: 4, type: "Remove" };
+    const frame = decodeSent(
+      encodeJsonText({
+        baseVersion: 1,
+        modifications: [added, dropped],
+        newVersion: 2,
+        type: "ModifyQuerySet",
+      })
+    );
+
+    expect(Option.getOrUndefined(frame)).toEqual({
+      modifications: [added, dropped],
+      type: "ModifyQuerySet",
+    });
+  });
+
   it("leaves a frame the tracker does not follow undecoded", () => {
     const event = encodeJsonText({ event: {}, eventType: "x", type: "Event" });
 

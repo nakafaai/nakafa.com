@@ -34,7 +34,10 @@ const RefusalSchema = Schema.Struct({
   type: Schema.Literal("MutationResponse"),
 });
 
-/** The frames the page sends that a step waits on. Any other frame decodes to none. */
+/**
+ * The frames the page sends that a step waits on. Any other frame decodes to
+ * none. A query the page adds names its function and the `args` it asks with.
+ */
 export const SentSchema = Schema.Union([
   Schema.Struct({
     tokenType: Schema.Literal("User"),
