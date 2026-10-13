@@ -165,8 +165,9 @@ test("a session read the server refuses once is read again", async ({
           })
         );
 
-        // The browser keeps the id of a session it has settled on, and keeps
-        // none after a failed read, so the key shows the page asked again.
+        // The browser stores the id of a session once the page has settled on
+        // it, and stores nothing after a failed read, so the key can only show
+        // up after the page has asked again.
         yield* Effect.promise(() => page.goto(SETTINGS));
         yield* Effect.promise(() =>
           page.waitForFunction(
