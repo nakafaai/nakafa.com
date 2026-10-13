@@ -35,6 +35,13 @@ export const MEMORY_TOPIC_LIMIT = 8;
 export const MEMORY_TOPIC_LENGTH = 256;
 /** Memories one page of the Memory page holds, however many the browser asks for. */
 export const MEMORY_PAGE_LIMIT = 50;
+/**
+ * Writes a learner may make by hand in a minute: a new memory or a rewrite. The
+ * editor saves 600 milliseconds after a keystroke at the soonest, which is 100
+ * saves a minute for one learner who types slowly, so a person never reaches
+ * this. A learner keeps as many memories as they write.
+ */
+export const MEMORY_WRITES_PER_MINUTE = 120;
 
 /** The kinds of memory that never end. */
 const NinaLastingKind = Schema.Literals(["level", "goal", "style", "struggle"]);
@@ -147,11 +154,12 @@ export const NinaMemoryDraft = Schema.Struct({
 
 /**
  * Why a memory could not be written. `empty`: it holds neither a title nor
- * words. `missing`: the memory was deleted meanwhile.
+ * words. `missing`: the memory was deleted meanwhile. `limit`: the learner made
+ * `MEMORY_WRITES_PER_MINUTE` writes in the last minute.
  */
 export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()(
   "NinaMemoryRejected",
-  { reason: Schema.Literals(["empty", "missing"]) }
+  { reason: Schema.Literals(["empty", "missing", "limit"]) }
 ) {}
 
 /**

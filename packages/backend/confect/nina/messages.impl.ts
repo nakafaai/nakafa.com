@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { listStreams, listUIMessages, syncStreams } from "@convex-dev/agent";
+import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
@@ -27,9 +28,11 @@ import {
   HashSet,
   Layer,
   MutableHashMap,
+  Number as Num,
   Option,
   pipe,
   Schema,
+  Struct,
 } from "effect";
 
 /** Reads active streams or their deltas for one authorized thread. */
@@ -107,9 +110,15 @@ const list = FunctionImpl.make(
           : readerStreams(args.streamArgs),
       };
     }
-    // The component SDK owns message projection and the resumable delta protocol.
+    // The component SDK owns message projection and the resumable delta
+    // protocol. A page holds at most `NINA_MESSAGES_PAGE_SIZE` messages,
+    // however many the caller asks for.
+    const paginationOpts = Struct.assign(args.paginationOpts, {
+      numItems: Num.min(args.paginationOpts.numItems, NINA_MESSAGES_PAGE_SIZE),
+    });
     const page = yield* Effect.tryPromise({
-      try: () => listUIMessages(ctx, components.nina, args),
+      try: () =>
+        listUIMessages(ctx, components.nina, { ...args, paginationOpts }),
       catch: () =>
         new NinaReadError({ message: "Unable to read Nina messages." }),
     });

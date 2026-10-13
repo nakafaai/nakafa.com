@@ -1,7 +1,28 @@
 import { PaginatedQueryResult } from "@confect/react";
+import {
+  CHAT_LIST_PAGE_SIZE,
+  CHAT_SEARCH_EMPTY_WINDOWS,
+} from "@repo/backend/client/chats/list";
 
-/** How many chats a list loads at first, and each time its end comes into view. */
-export const CHAT_LIST_PAGE_SIZE = 50;
+/**
+ * The windows of a search in a row that held no chat, the one asked for last
+ * included. `base` is how many chats the list held when that window was asked
+ * for, and `empties` the windows in a row before it that held none. The window
+ * is empty when the list holds no more chats than it did.
+ */
+export function emptyWindows(base: number, empties: number, length: number) {
+  return length <= base ? empties + 1 : 0;
+}
+
+/**
+ * Whether a search has run through `CHAT_SEARCH_EMPTY_WINDOWS` windows in a row
+ * without a match, so the list stops asking for the next one by itself. Each
+ * window reads and opens the titles of many chats, and a search that matches
+ * nothing would otherwise walk the whole account.
+ */
+export function searchStopped(base: number, empties: number, length: number) {
+  return emptyWindows(base, empties, length) >= CHAT_SEARCH_EMPTY_WINDOWS;
+}
 
 /**
  * What a chat list shows for the paginated query it reads. While the first page

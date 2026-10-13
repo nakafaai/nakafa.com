@@ -261,6 +261,30 @@ describe("Nina presentation after an answer", () => {
     ).toMatchObject({ suggestions: ["A relevant follow-up?"] });
   });
 
+  it("saves follow-up suggestions with the turn and the chat read once and the turn read once more to write it", async () => {
+    const f = await createNinaTest();
+    const metrics = await f.t.mutation(async (ctx) => {
+      await ctx.runMutation(save, {
+        turnId: f.turnId,
+        suggestions: ["A relevant follow-up?"],
+      });
+      return ctx.meta.getTransactionMetrics();
+    });
+    // A `patch` of the turn read it once more, which made four.
+    expect(metrics.documentsRead.used).toBe(3);
+  });
+
+  it("saves a generated title with the chat read once more to write it", async () => {
+    const f = await createNinaTest();
+    const metrics = await f.t.mutation(async (ctx) => {
+      await ctx.runMutation(save, { turnId: f.turnId, title: "Generated" });
+      return ctx.meta.getTransactionMetrics();
+    });
+    // The turn, the chat, the learner's key, and the chat again to write it. A
+    // `patch` of the chat read it once more, which made five.
+    expect(metrics.documentsRead.used).toBe(4);
+  });
+
   it("keeps a title the learner chose before the generated one arrives", async () => {
     const f = await createNinaTest();
     await f.owner.mutation(rename, { chatId: f.chatId, title: "My own title" });

@@ -77,11 +77,14 @@ const claim = FunctionImpl.make(
     // Its time since the admission is the wait for the run to start.
     const state = { status: "running" as const, startedAt };
     const timing = { claimedMs: sinceAdmission(turn, startedAt) };
+    const claimed = { ...turn, state, timing };
+    // The turn is loaded already, so it is written back whole: a `patch` would
+    // read it once more.
     yield* (yield* DatabaseWriter)
       .table("ninaTurns")
-      .patch(turn._id, { state, timing })
+      .replace(turn._id, claimed)
       .pipe(Effect.orDie);
-    return { ...turn, state, timing };
+    return claimed;
   }, Effect.catchDefect(lifecycleFailure))
 );
 

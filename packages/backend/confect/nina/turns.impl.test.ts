@@ -23,6 +23,7 @@ import {
   start,
 } from "@repo/backend/test/nina/admission";
 import { showsText } from "@repo/backend/test/seal";
+import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, DateTime, Duration, Effect } from "effect";
 
@@ -138,6 +139,36 @@ describe("native Nina admission", () => {
       )
     ).toEqual([]);
     expect(state.messages.page).toHaveLength(1);
+  });
+
+  it("takes a context hint of the longest length and refuses a longer one before it charges or saves anything", async () => {
+    const { t, identity, owner } = await fixture();
+    const withHint = (requestId: string, length: number) => ({
+      requestId,
+      input: {
+        ...args.input,
+        page: { ...args.input.page, materialContextHint: "x".repeat(length) },
+      },
+    });
+    await owner.mutation(
+      start,
+      withHint("request-longest", MATERIAL_CONTEXT_HINT_LENGTH)
+    );
+    await expect(
+      owner.mutation(
+        start,
+        withHint("request-longer", MATERIAL_CONTEXT_HINT_LENGTH + 1)
+      )
+    ).rejects.toMatchObject({
+      _tag: "SchemaError",
+      message: expect.stringContaining("materialContextHint"),
+    });
+    const state = await t.query(async (ctx) => ({
+      turns: await ctx.db.query("ninaTurns").collect(),
+      user: await ctx.db.get("users", identity.userId),
+    }));
+    expect(state.turns).toHaveLength(1);
+    expect(state.user?.credits).toBe(5);
   });
 
   it("begins a chat with its default title sealed for the learner", async () => {

@@ -3,6 +3,7 @@ import {
   createThread,
   listStreams,
   listUIMessages,
+  saveMessage,
   syncStreams,
 } from "@convex-dev/agent";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
@@ -194,6 +195,20 @@ describe("Nina message boundary", () => {
       data: { _tag: "ChatAccessError", code: "CHAT_NOT_FOUND" },
     });
     expect(listUIMessages).not.toHaveBeenCalled();
+  });
+
+  it("cuts a page to 50 messages however many the caller asks for", async () => {
+    const { t, owner, identity, args } = await createThreadTest();
+    await t.mutation(async (ctx) => {
+      for (let n = 0; n < 50; n += 1) {
+        const threadId = identity.threadId;
+        await saveMessage(ctx, components.nina, { prompt: `Q${n}`, threadId });
+      }
+    });
+    const paginationOpts = { cursor: null, numItems: 1_000_000 };
+    const asked = await tell(owner, { ...args, paginationOpts });
+    expect(asked.page).toHaveLength(50);
+    expect(asked.isDone).toBe(false);
   });
 
   it("denies a guessed thread even when the reader owns the supplied chat", async () => {

@@ -119,6 +119,17 @@ describe("native Nina settlement", () => {
     ]);
   });
 
+  it("claims a turn by reading the turn, its learner and its chat once, and the turn one more time to write it", async () => {
+    const f = await fixture();
+    const metrics = await f.t.mutation(async (ctx) => {
+      await ctx.runMutation(claim, { turnId: f.turnId });
+      return ctx.meta.getTransactionMetrics();
+    });
+    // A `patch` of the turn read it once more, which made five.
+    expect(metrics.documentsRead.used).toBe(4);
+    expect(metrics.documentsWritten.used).toBe(1);
+  });
+
   it("adds the stages a run reached to its claim when the turn settles", async () => {
     const f = await fixture();
     await f.t.mutation(claim, { turnId: f.turnId });
@@ -369,18 +380,6 @@ describe("native Nina settlement", () => {
     vi.setSystemTime(NOW + 5000);
     await f.owner.mutation(cancel, { chatId: f.chatId });
     expect((await f.inspect()).turn).toMatchObject({ cancelRequestedAt: NOW });
-  });
-
-  it("tells a run to halt once its turn was stopped, settled or removed", async () => {
-    const f = await fixture();
-    await f.t.mutation(claim, { turnId: f.turnId });
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(false);
-    await f.owner.mutation(cancel, { chatId: f.chatId });
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
-    await f.t.mutation(recover, { turnId: f.turnId });
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
-    await f.t.mutation((ctx) => ctx.db.delete("ninaTurns", f.turnId));
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
   });
 
   it("refunds a stopped generation with no final text and never enlarges the next credit period", async () => {

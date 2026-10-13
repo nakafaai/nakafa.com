@@ -1,5 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { CHAT_SEARCH_WINDOW } from "@repo/backend/confect/chats/list";
+import {
+  CHAT_LIST_PAGE_SIZE,
+  CHAT_SEARCH_LENGTH,
+  CHAT_SEARCH_WINDOW,
+} from "@repo/backend/client/chats/list";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import {
   createConvexTestWithBetterAuth,
@@ -170,6 +174,47 @@ describe("chat lists with sealed titles", () => {
     });
     expect(titles(second.page)).toEqual([BOOLEAN, ALGEBRA]);
     expect(second.isDone).toBe(true);
+  });
+
+  it("cuts a page to the page size however many chats the caller asks for, and reaches the rest through the cursor", async () => {
+    const f = await fixture();
+    await f.t.mutation(async (ctx) => {
+      for (let index = 0; index < CHAT_LIST_PAGE_SIZE; index += 1) {
+        await ctx.db.insert("chats", {
+          threadId: "fixture-thread",
+          type: "study",
+          updatedAt: NOW,
+          userId: f.owner.userId,
+          visibility: "private",
+        });
+      }
+    });
+    // The owner holds the page size and four more chats.
+    const asked = await f.asOwner.query(api.chats.queries.getOwnChats, {
+      paginationOpts: { cursor: null, numItems: 1_000_000 },
+    });
+    expect(asked.page).toHaveLength(CHAT_LIST_PAGE_SIZE);
+    expect(asked.isDone).toBe(false);
+    const rest = await f.asOwner.query(api.chats.queries.getOwnChats, {
+      paginationOpts: { cursor: asked.continueCursor, numItems: 1_000_000 },
+    });
+    expect(rest.page).toHaveLength(4);
+    expect(rest.isDone).toBe(true);
+  });
+
+  it("takes a search of the longest length a title can answer and refuses a longer one", async () => {
+    const f = await fixture();
+    const search = (q: string) =>
+      f.asOwner.query(api.chats.queries.getOwnChats, { paginationOpts, q });
+    expect(
+      titles((await search("aljabar".padEnd(CHAT_SEARCH_LENGTH))).page)
+    ).toEqual([BOOLEAN, ALGEBRA]);
+    await expect(
+      search("aljabar".padEnd(CHAT_SEARCH_LENGTH + 1))
+    ).rejects.toMatchObject({
+      _tag: "SchemaError",
+      message: expect.stringContaining('["q"]'),
+    });
   });
 
   it("returns every match of a window whatever page size was asked, and ends at the oldest chat", async () => {

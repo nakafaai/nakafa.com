@@ -15,6 +15,9 @@ export class NinaReadError extends Schema.TaggedError<NinaReadError>()(
   { message: Schema.String }
 ) {}
 
+// One page of a chat's messages, newest first. A page holds at most
+// `NINA_MESSAGES_PAGE_SIZE` messages, however many the caller asks for. A
+// request for streams holds no page.
 export default GroupSpec.make().addFunction(
   FunctionSpec.publicQuery({
     name: "list",
