@@ -10,6 +10,7 @@ export function createDeletedUserTombstone(
   return {
     authVerificationCleanupCursor: undefined,
     authId: `deleted:${anonymousId}`,
+    bio: undefined,
     credits: 0,
     creditsResetAt: 0,
     deletedAt,
@@ -19,5 +20,6 @@ export function createDeletedUserTombstone(
     name: "Deleted user",
     plan: DEFAULT_USER_PLAN,
     role: undefined,
+    username: undefined,
   };
 }

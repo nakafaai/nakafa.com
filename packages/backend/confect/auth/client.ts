@@ -31,6 +31,7 @@ import {
 import { getCurrentCreditResetTimestamp } from "@repo/backend/confect/credits/state";
 import { declareWelcomeIntent } from "@repo/backend/confect/emails/welcome/impl";
 import { claimAfterVerification } from "@repo/backend/confect/tenancy/claims";
+import { allocateUsername } from "@repo/backend/confect/users/allocation";
 import { getAppUserByAuthId } from "@repo/backend/confect/users/directory";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
@@ -50,12 +51,14 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;
   const now = yield* Clock.currentTimeMillis;
+  const username = yield* allocateUsername(authUser.name);
   const userId = yield* writer
     .table("users")
     .insert({
       email: authUser.email,
       authId: authUser._id,
       name: authUser.name,
+      username,
       ...(Predicate.isNullish(authUser.image)
         ? {}
         : {

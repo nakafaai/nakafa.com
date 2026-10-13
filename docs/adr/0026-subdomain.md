@@ -6,7 +6,8 @@ Accepted on 13 October 2026 with owner decisions K5, K11, and K15. The owner
 approved decisions K1 to K20 on that day. The host rewrite for school subdomains
 and the URL tree are planned. The eu data cell is planned, and it is created when
 the first school in the European Union signs (K5). The routes of the old School
-are deleted from the web app (#1051, K11) and get no redirect.
+are deleted from the web app (#1051, K11) and get no redirect. Amended on 14
+October 2026: ADR 0027 decides what an email may hold (Data cells).
 
 ## Context
 
@@ -126,11 +127,12 @@ its own change, before any school code that depends on it lands.
   belongs to the cell whose project serves its domain.
 - Signed Aksara content is copied to every cell. A teacher's questions stay in the
   school's own cell.
-- Email is sent from the cell's own domain and carries only links, with one
-  exception: the parent's six-digit sign-in code (ADR 0009). It expires after five
-  minutes, rests as a keyed hash, and is useless without the code entry page of
-  the school host (`/orang-tua`). Push carries only a notification id and a
-  general title.
+- Email is sent from the cell's own domain. What an email may hold is decided in
+  ADR 0027: links and general sentences, and never a grade, a student's name, the
+  text of a message, or an exam token. The one code an email carries is the
+  parent's six-digit sign-in code (ADR 0009). It expires after five minutes,
+  rests as a keyed hash, and is useless without the code entry page of the school
+  host (`/orang-tua`). Push carries only a notification id and a general title.
 
 ### Moving a school between cells
 
