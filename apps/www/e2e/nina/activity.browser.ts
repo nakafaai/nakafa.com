@@ -185,6 +185,21 @@ test.describe("Nina evidence hierarchy on a phone", () => {
   );
 
   test(
+    "never repeats the words of an activity in one of its steps",
+    onChat(STEPS, { locale: "de" }, async (page) => {
+      const activities = page.locator(ACTIVITY_ROOT);
+
+      await expect(activities.first()).toBeVisible();
+      for (const activity of await activities.all()) {
+        const label = await activity.locator(LABEL).first().innerText();
+        await expect(
+          activity.locator(PANEL).getByText(label, { exact: true })
+        ).toHaveCount(0);
+      }
+    })
+  );
+
+  test(
     "puts each icon in the middle of the first line of its words",
     onChat(STEPS, { locale: "id" }, async (page) => {
       const steps = page.locator('[data-slot="evidence-step"]');

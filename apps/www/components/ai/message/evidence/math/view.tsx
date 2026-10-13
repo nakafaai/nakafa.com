@@ -45,11 +45,11 @@ export function MathPart({ children, icon, message }: Props) {
             : "text-muted-foreground hover:text-foreground"
         )}
       >
-        {/* The label wraps, so a long one in any language is read in full. */}
+        {/* The label wraps, so a long one in any language is read in full. A
+        failed check keeps the name of its operation: the activity above it
+        already says that the check failed. */}
         <StepLabel icon={message.status === "error" ? AlertCircleIcon : icon}>
-          {message.status === "error"
-            ? t("tool-failures.math")
-            : t(`math-${message.kind}`)}
+          {t(`math-${message.kind}`)}
         </StepLabel>
         <HugeIcons
           className={cn(

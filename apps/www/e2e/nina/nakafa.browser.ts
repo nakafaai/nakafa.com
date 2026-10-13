@@ -157,9 +157,21 @@ test.describe("Nina lessons at 200 percent zoom", () => {
       expect(Arr.some(cut, (text) => text.includes("9-11"))).toBe(false);
       const box = await range.boundingBox();
       const numbers = await range.getByText(": 9-11").boundingBox();
+      const arrow = await range.locator("svg").boundingBox();
       expect((numbers?.x ?? 0) + (numbers?.width ?? 0)).toBeLessThanOrEqual(
         (box?.x ?? 0) + (box?.width ?? 0)
       );
+      // The arrow goes to the next line before it would lie over the numbers.
+      expect(numbers).not.toBeNull();
+      expect(arrow).not.toBeNull();
+      const covered =
+        numbers !== null &&
+        arrow !== null &&
+        arrow.x < numbers.x + numbers.width &&
+        numbers.x < arrow.x + arrow.width &&
+        arrow.y < numbers.y + numbers.height &&
+        numbers.y < arrow.y + arrow.height;
+      expect(covered).toBe(false);
     })
   );
 });

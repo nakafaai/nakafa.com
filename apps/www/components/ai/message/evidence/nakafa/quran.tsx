@@ -16,7 +16,8 @@ interface Props {
  * Renders a compact Quran reference preview: the surah, and the verse or the
  * verses of it. The numbers are what a learner compares, so they are never
  * cut: when they do not fit beside the name they take a line of their own in
- * the button, and only a name longer than the whole button ends in an ellipsis.
+ * the button, and the arrow follows them onto the next line before it would
+ * cover them. Only a name longer than the whole button ends in an ellipsis.
  */
 export function QuranPart({ message }: Props) {
   const t = useTranslations("Ai");
@@ -34,13 +35,13 @@ export function QuranPart({ message }: Props) {
             rel="noopener noreferrer"
             target="_blank"
           >
-            <span className="flex min-w-0 flex-wrap">
+            <span className="flex min-w-0 flex-wrap items-center">
               <span className="min-w-0 max-w-full truncate">{name}</span>
               <span className="shrink-0">
                 : {from === to ? from : `${from}-${to}`}
               </span>
+              <HugeIcons className="ms-1.5" icon={ArrowUpRight01Icon} />
             </span>
-            <HugeIcons icon={ArrowUpRight01Icon} />
           </a>
         }
         size="sm"
