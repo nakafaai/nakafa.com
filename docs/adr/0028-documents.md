@@ -140,7 +140,7 @@ rows. This table says what differs from a Nakafa question.
 | | A Nakafa question | A teacher's question (K1) |
 | --- | --- | --- |
 | Owner | Aksara, in a signed release | The school. It is not in the Nakafa catalogue, it is not shared with another school, and it is not used to calibrate a national scale unless the school chooses it for an exam (K12). When the school leaves, it is exported and then deleted by its retention (K10). |
-| Stored as | A frozen reference: the content hash, the placement, and the delivery class (public, authenticated, or entitled) | School data in the school's own cell, not signed, with the contract version in each row |
+| Stored as | A frozen reference: the content hash, the placement, and the delivery class (`ContentDeliveryClassSchema` in `@nakafa/aksara-contracts/delivery`: public, authenticated, or entitled) | School data in the school's own cell, not signed, with the contract version in each row |
 | Language | The language of each part, set by Aksara | One of `id`, `en`, or `de` for each question. It sets the decimal comma or point and the language of the Jev verdict, apart from the interface language. |
 | Reading passage | A shared entity from Aksara: identifier, document, image, and language | A shared entity that the school owns. Editing the passage edits every question that uses it, and questions with one identifier show one passage. |
 | Starting difficulty | The editorial blueprint: cognitive level, domain, and topic | The teacher's difficulty on a versioned scale, or the blueprint. A question with neither does not enter IRT calibration. |
@@ -160,11 +160,12 @@ never publishes one.
   not through the Vercel server. The Files module scans it first.
 - A model reads a PDF as a file part through the Convex gateway (ADR 0019). A
   request carries its documents in the body, which the gateway accepts up to 16
-  MiB, and the adapter inlines a PDF as base64, which adds a third
-  (`NINA_DOCUMENT_SIZE` in `packages/backend/client/nina/uploads.ts`). One
-  request reads about 12 MiB of PDF at most, which is less than the 20 MB of the
-  target below, so a larger file is read in page ranges, and every request stays
-  within the limit.
+  MiB, and the adapter inlines a PDF as base64, which adds a third. One request
+  therefore carries about 12 MiB of PDF at most (16 MiB divided by 4/3). Nina
+  keeps the documents of one message to 10 MiB to leave room for the rest of the
+  body (`NINA_DOCUMENT_SIZE` in `packages/backend/client/nina/uploads.ts`). The
+  target below allows 20 MB for an import, so a larger file is read in page
+  ranges, and every request stays within the limit.
 - The teacher always sees the extracted questions next to the original page, at
   `harapan.nakafa.com/bank/impor/pts-matematika` (ADR 0026), and nothing is
   applied before the review. The answer key inside the PDF is an automatic
@@ -218,8 +219,8 @@ Drive copies come through the Drive connector (ADR 0015).
 
 ## What Stays Open
 
-- The scanner and the PDF page viewer. `pdfjs-dist` is the candidate for the
-  viewer.
+- The scanner, the PDF page viewer, and the library that cuts a large PDF into
+  page ranges. `pdfjs-dist` is the candidate for the viewer.
 - Whether a kind of file, such as the photo of an exam answer, needs an
   authenticated route instead of a storage address. It is decided when that kind
   is built, and the limit above holds until then.

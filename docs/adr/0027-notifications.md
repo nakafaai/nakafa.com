@@ -22,9 +22,10 @@ yet. `journalEntries` has one index, `by_owner_tenantId`
 change of the tenancy kind that its published list does not hold yet
 (`packages/backend/confect/tenancy/kinds.ts`).
 
-ADR 0026 fixes what may leave the system: email carries only links, push carries
-only a notification id and a general title, and the inbox of an account is
-served by the cell that holds the account.
+ADR 0026 fixes what may leave the system: email carries only links (the parent's
+sign-in code of ADR 0009 is the one exception), push carries only a notification
+id and a general title, and the inbox of an account is served by the cell that
+holds the account.
 
 A mention is a different source. The message of ADR 0025 and the inbox row that
 it causes are written in one transaction, and the journal does not record each
@@ -39,8 +40,9 @@ message (ADR 0016).
   text. The title is read from the source when the row is opened, through the
   kind of the object, so the permission is checked every time and a sealed title
   is opened for its reader and for no one else (ADR 0030).
-- A school notification names a Person, as every tenant row does (ADR 0016). A
-  personal notification names an account.
+- A school notification is addressed to a Person, because a Person is who
+  belongs to a school (ADR 0011). A personal notification is addressed to an
+  account.
 - A row is never skipped. Quiet hours, a missing push subscription, and a failed
   email do not stop it from being written.
 - Unread is one mark, a dot on the row. There is no number. Marking a row read
@@ -59,9 +61,11 @@ message (ADR 0016).
   are the kinds: all, mentions, tasks, grades, announcements, exams, and
   invitations.
 - The inbox opens in the first frame after the tap (target). A browser test
-  measures it at 390 and 1440 px against the budget of the initial bundle. Today
-  the Nina panel needs a lazy chunk of 260 kB and 347 ms on desktop (measured in
-  the Nina System Blueprint), and that is the cause this target removes.
+  measures it at 390 and 1440 px against the budget of the initial bundle. The
+  Nina System Blueprint measured the same kind of panel, the Nina sheet, on
+  production on 10 October 2026: on desktop nothing showed for 347 ms after the
+  tap, while 13 chunks of 260 kB were loaded. That load after the tap is the
+  cause this target removes, and the browser test measures the current figure.
 
 ### Two ways into the inbox
 
@@ -86,13 +90,28 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
 - The fan-out is never one transaction. A workpool (`@convex-dev/workpool`, a
   dependency of `packages/backend` today) works in batches of 100 recipients.
   An `@all` of a teacher follows the same rule (ADR 0025).
-- Push and email keep to the limits of ADR 0020: ten seconds for one attempt, and
-  two retries after 500 milliseconds and one second (`NETWORK_ATTEMPT_DEADLINE`
-  and `NETWORK_RETRY_SCHEDULE` in `packages/backend/client/network.ts`). Convex
-  runs a scheduled action at most once and does not retry it
-  (`docs.convex.dev/scheduling/scheduled-functions`), so the push action retries
-  inside itself. The Resend component queues and sends an email, and the build
-  checks that the component's own retry fits the same limits.
+- Push and email keep to the limits of ADR 0020: an attempt has a deadline of ten
+  seconds, and a failure is repeated at most twice, after 500 milliseconds and
+  one second (`NETWORK_ATTEMPT_DEADLINE`, `NETWORK_RETRY_SCHEDULE`, and
+  `retryNetworkAttempt` in `packages/backend/client/network.ts`). Convex runs a
+  scheduled action at most once and does not retry it
+  (`docs.convex.dev/scheduling/scheduled-functions`, read on 13 October 2026), so
+  the retry lives in the code that sends.
+- A push action makes its own request, and `retryNetworkAttempt` repeats an
+  attempt only where ADR 0020 says that is safe.
+- The Resend component makes the email request and retries a failed batch in its
+  own workpool. Its defaults are 5 attempts and a first backoff of 30 seconds
+  that doubles (`@convex-dev/resend` 0.2.8, `src/client/index.ts`), and
+  `confect/emails/client.ts` sets only `testMode` today. Its request carries no
+  deadline (`callResendAPIWithBatch` in the package), which stays a known limit.
+  The change that sends the first notification email sets `retryAttempts` to 3
+  and `initialBackoffMs` to 500 for the one sender, the welcome email included:
+  two retries after about 500 milliseconds and one second, because a workpool
+  counts the first try as an attempt (`RetryBehavior` in `@convex-dev/workpool`
+  0.4.14). A repeated request does not send an email
+  twice, because the component dedupes on the idempotency key of the send and
+  sends the id of the first email of a batch as the `Idempotency-Key` header
+  (`src/component/lib.ts`).
 
 ### The journal changes that notify
 
@@ -161,14 +180,18 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
   push.
 - `apps/www/app/manifest.ts` already sets `display: "standalone"`. No service
   worker and no subscription code exist yet. The build adds both, with
-  `pushSubscriptions` (planned). A subscription that the push service reports as
-  expired is deleted (RFC 8030).
+  `pushSubscriptions` (planned). RFC 8030 section 7.3 makes a push service
+  answer a send to an expired subscription with 404, and the sender deletes that
+  subscription.
+- `apps/www/playwright.config.ts` blocks service workers for every project today
+  (`serviceWorkers: "block"`), so the push change gives its browser test a
+  project that allows them, and it records how the iOS check runs.
 
 ### Quiet hours and time zones
 
 - Quiet hours run from 21:00 to 06:00 in the school's time zone. They are on by
-  default for an account under 18, and a school can relax them only as its DPIA
-  allows.
+  default for an account under 18, and a school can relax them only as its data
+  protection impact assessment (DPIA) allows.
 - Quiet hours, reminders, and digests use the IANA time zone of the school the
   notification is about (ADR 0032). Instants are stored in UTC.
 - The tests run in Asia/Jakarta and Europe/Berlin, and they include a change of
@@ -178,10 +201,11 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 
 - Every email is sent by `confect/emails`, the one sender. The notification
   module hands its payload to it, and so will the guardian module and sign-in.
-- An email carries links and general sentences only. A digest states counts for
-  each kind and names no one, and its plural forms follow the CLDR rules of each
-  language. Grades, the names of students, the text of messages, and exam tokens
-  never enter an email.
+- An email carries links and general sentences only. The one exception is the
+  parent's six-digit sign-in code (ADR 0009, ADR 0026), which `confect/emails`
+  sends as it sends the rest. A digest states counts for each kind and names no
+  one, and its plural forms follow the CLDR rules of each language. Grades, the
+  names of students, the text of messages, and exam tokens never enter an email.
 - Each cell has its own Resend domain (ADR 0026). Each send has an idempotency
   key for the notification and the recipient, as the welcome email has one
   (`idempotencyKey` in `emails/welcome/internal.ts`).
@@ -202,8 +226,8 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 - The inbox holds one row for each recipient and each notification, for 90 days.
   A page of the inbox reads the sources of its rows, so the page size is bounded
   when the inbox is built.
-- A guardian reads no grade in an email. The link opens the inbox, where
-  permission decides what the guardian sees.
+- A guardian reads no grade in an email. The link leads to the place in the
+  school after sign-in, where permission decides what the guardian sees.
 - The mention and the reply path writes the inbox row in the transaction of the
   message, so a class post costs one extra write for each mentioned person, at
   most 20 (ADR 0025).
