@@ -181,7 +181,8 @@ Decided, not live:
 - An exam profile holds the official name per language, the section template,
   the time per section and in total, the navigation, the allowed interactions,
   the tools per section, the accommodation catalogue, the scoring strategy and
-  scale, and the report form.
+  scale, the report form, and the write allowance and reconciliation grace period
+  that ADR 0013 reads at the deadline.
 - Try-outs and school exams use the same profile type (ADR 0032, K17).
 - Aksara signs the profile, and Nakafa checks the signature before it uses the
   profile.

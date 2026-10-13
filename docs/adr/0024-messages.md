@@ -247,7 +247,14 @@ changes.
    gets rows from the module and never from the component.
 4. **Chat attachments.** The file name of a chat attachment, the `files.filename`
    field that the component keeps, is sealed with the learner's key in program
-   wave A. The stored file is removed within two days of its chat's deletion, as
+   wave A. The component has no way to change a file's name, and the storage
+   sweep deletes a file's bytes with its row, so an attachment written before
+   wave A is copied: the old-message migration (order of work, step 4) stores a
+   copy of its bytes, registers the copy with the sealed name through `addFile`,
+   and writes the replaced message with the new file id. The old row loses its
+   last reference, and the sweep removes it and its bytes as for any unused
+   file. The dry run reports how many attachments and bytes it would copy. The
+   stored file is removed within two days of its chat's deletion, as
    the live policy already says (ADR 0001). The cleanup runs once a day, and it
    removes a file once no chat refers to it and 24 hours have passed since its
    last reference changed. This plan does not seal the bytes of an upload.
@@ -430,7 +437,9 @@ runs a whole turn and searches every component table.
    deletion of the deltas no planted string appears in any table; during the
    turn they appear only in the plain rows and the deltas.
 4. **Old messages.** The migration, run dry, then run for real on dev and on
-   production, then run again until it reports nothing.
+   production, then run again until it reports nothing. It also copies each
+   attachment of an old message under its sealed name (Decision, item 4). Gate:
+   no file row that a message refers to holds a plain name.
 5. **Contract.** Delete the migration and its tests. The reader rule of the Sealed
    Row section stays: a plain row of a turn that carries `sealedAt` fails the
    read, and a running turn or a settled turn without the marker keeps its plain

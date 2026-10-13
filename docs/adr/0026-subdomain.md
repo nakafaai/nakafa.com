@@ -79,6 +79,13 @@ Every address below is planned.
 | `mcp.nakafa.com/mcp` | Public MCP. No key, Nakafa content only. The name repeats in the host and the path, and it stays so that agents keep working. | Live |
 | `nakafa.com/id/school/{slug}/...` | The old School. Retired with K11, with no redirect. | Live, retired with K11 |
 
+These are the addresses of the `us` cell. An account's own surfaces, the inbox
+and the account settings, are served by the cell that holds the account, under
+that cell's domain at the same paths, and a school shell links to the ones of
+its own cell, so an account of another cell never lands on a `nakafa.com` page
+that cannot see its session. Personal Nina memory and Nakafa learning exist only
+in the `us` cell, so a shell of another cell shows no link to them.
+
 The school REST and MCP addresses are separate from the public ones. The public
 addresses stay keyless. The change to ADR 0006 that makes this split is made in
 its own change, before any school code that depends on it lands.
