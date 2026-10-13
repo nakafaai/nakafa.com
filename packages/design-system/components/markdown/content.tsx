@@ -4,6 +4,7 @@ import {
 } from "@repo/design-system/components/markdown/frame";
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react/mdx";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
+import { rehypeDirection } from "@repo/design-system/lib/markdown/direction";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
 import { preprocessLaTeX } from "@repo/math/latex";
 import { SITE_ORIGIN } from "@repo/seo/origin";
@@ -53,6 +54,7 @@ export function MarkdownBlock({
       components={reactMdxComponents}
       rehypePlugins={[
         [harden, { allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin }],
+        rehypeDirection,
       ]}
       remarkPlugins={REMARK_PLUGINS}
       skipHtml

@@ -8,10 +8,18 @@ import {
 import { Array as Arr } from "effect";
 
 describe("readMermaidMetadata", () => {
-  it("uses distinct fallback copy when metadata is missing", () => {
+  it("names no copy when metadata is missing, so the reader's language supplies it", () => {
     expect(readMermaidMetadata()).toEqual({
-      description: "Key ideas shown visually.",
-      title: "Diagram",
+      description: undefined,
+      title: undefined,
+    });
+    expect(readMermaidMetadata(null)).toEqual({
+      description: undefined,
+      title: undefined,
+    });
+    expect(readMermaidMetadata("")).toEqual({
+      description: undefined,
+      title: undefined,
     });
   });
 
@@ -26,9 +34,9 @@ describe("readMermaidMetadata", () => {
     });
   });
 
-  it("fills only the missing field when metadata is partial", () => {
+  it("leaves only the missing field empty when metadata is partial", () => {
     expect(readMermaidMetadata('title="Siklus Air"')).toEqual({
-      description: "Key ideas shown visually.",
+      description: undefined,
       title: "Siklus Air",
     });
 
@@ -36,7 +44,14 @@ describe("readMermaidMetadata", () => {
       readMermaidMetadata('description="Dari awan kembali ke laut"')
     ).toEqual({
       description: "Dari awan kembali ke laut",
-      title: "Diagram",
+      title: undefined,
+    });
+  });
+
+  it("treats an empty value as missing", () => {
+    expect(readMermaidMetadata('title="" description=""')).toEqual({
+      description: undefined,
+      title: undefined,
     });
   });
 
