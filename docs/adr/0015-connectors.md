@@ -317,6 +317,7 @@ minute for each client, and 1,200 per minute for each user (read 13 October
 | A member leaves the school | The Google grant belongs to the Google account of the member who made the connection, so that member chooses. The connection is transferred to them and sealed again under their learner key, or it is disconnected. The imported data stays with the school (ADR 0030). |
 | The account of the member who made a school connection is deleted | The connection stays and enters `reconnect`. Its stored tokens are destroyed, and Nakafa revokes the grant at Google unless another connection of the same Google account remains. The imported data stays with the school, which controls its records (ADR 0011). Someone reconnects it with a Google account of their own (ADR 0030). |
 | A school leaves Nakafa | Every school connection is disconnected before the school key is destroyed, and the school receives a deletion record (ADR 0030). |
+| A school moves to another data cell | Every school connection is disconnected before the export. Its imported data moves with the school, except a Calendar mirror, which is always deleted. No token crosses cells, because accounts stay in their home cell and the maker of a connection has no account in the target cell (ADR 0026). The school connects again there. |
 | Each step | It is journaled (ADR 0016). The entry holds IDs and reason codes, never the Google email or a class name. |
 
 Revoking one token at Google removes every scope the user granted to the
