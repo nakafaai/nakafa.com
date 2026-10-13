@@ -147,11 +147,15 @@ The removal follows the rule for public functions in
    exist on main beside the old School.
 2. Switch: an earlier release removes every School route and component that
    calls an old function, so no new web build calls one.
-3. Observe: 12 hours pass after the switch release. A browser can keep an older
-   web deployment for at most that long (Vercel skew protection on `www` is
-   43,200 seconds, read from the project API on 12 October 2026). The window is a
-   fixed time. No log is read to decide whether an old function still has
-   callers.
+3. Observe: production function logs show no call to an old School function
+   across a window that spans at least one production deploy, because a loaded
+   tab calls Convex directly and every deploy re-runs every live subscription.
+   The 12-hour skew window of Vercel (`skewProtectionMaxAge` 43,200 seconds,
+   read from the project API on 12 October 2026) is only a minimum. Measured on
+   13 October 2026: 2,790 production executions between 12:57 and 14:42 UTC,
+   spanning the deploy at 14:36, held no call to `schools/*`, `classes/*` or the
+   School triggers. Because the old School had no caller before the switch, the
+   switch and the contract ship in one reviewed release (K11).
 4. Dry run: the batched deletion runs on the dev deployment until every old count
    is zero, and the old tables drop there.
 5. Contract: one reviewed release deletes the old functions and the code listed

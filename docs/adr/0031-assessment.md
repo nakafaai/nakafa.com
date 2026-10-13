@@ -69,7 +69,12 @@ that the model must change:
 - `Stimulus` stands alone, and one group of items shares it.
 - A teacher's question is school data in the school's own cell. The Aksara
   question schema reads it read-only. It is not signed, it is not in the Aksara
-  catalogue, and each row records the contract version (K1).
+  catalogue, and each row records the contract version it was written with (K1).
+  That version is migration bookkeeping only: an index lets a contract release
+  find the rows it has not rewritten yet. No reader dispatches on it and no
+  renderer keeps an older shape (ADR 0018): a major contract release migrates
+  every school item row in its own release train, and readers decode only the
+  current shape.
 
 ### 2. The item body is a structured document, not code
 
