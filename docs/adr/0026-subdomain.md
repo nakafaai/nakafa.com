@@ -96,9 +96,10 @@ its own change, before any school code that depends on it lands.
   settings.
 - An account has one home cell, and it signs in and writes only there: every
   mutation checks its session against the Better Auth rows of its own deployment
-  (ADR 0009). A school in another cell is joined with an account of that cell,
-  so no session crosses a cell. Cross-cell sign-in is decided in the change that
-  creates the `eu` cell, before its first school is placed.
+  (ADR 0009). A person with schools in two cells holds one account in each,
+  signed in with the same email or Google identity. Each cell's session cookie
+  has its own name, so both sessions live in one browser, and no session or
+  personal data crosses a cell.
 - Signed Aksara content is copied to every cell. A teacher's questions stay in the
   school's own cell.
 - Email is sent from the cell's own domain and carries only links. Push carries
@@ -110,8 +111,9 @@ its own change, before any school code that depends on it lands.
 
 - A school address is short, and it has no language prefix. The same link opens
   the school in any language, because the language comes from the cookie.
-- One sign-in serves every school host. A school host and `nakafa.com` share
-  their cookies.
+- One sign-in serves every school host of a cell. A school host and
+  `nakafa.com` share their cookies.
+- A person with schools in two cells signs in once per cell.
 - A school that moves cells needs an export and an import. Nothing moves on its
   own.
 - The eu cell adds a second place where data lives and a second budget. Its cost
@@ -129,6 +131,9 @@ its own change, before any school code that depends on it lands.
 - Creating the eu cell now. K5 defers it until the first European school signs.
 - Reading the database in the proxy to find a school. The proxy reads only the
   host and the cookie.
+- One account across cells through a federated session. It would keep the
+  identity of a person in the `eu` cell inside the `us` cell, which is what a
+  cell exists to prevent.
 
 ## Implementation Status
 

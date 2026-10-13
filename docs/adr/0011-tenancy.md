@@ -3,7 +3,8 @@
 ## Status
 
 Accepted for the Nakafa School foundation. Amended on 13 October 2026 for the
-organisation tier, the neutral concepts, and the country profile above units.
+organisation tier, the neutral concepts, the country profile above units, and
+the account's home cell.
 The school subdomains and their URL tree are in ADR 0026, and the country
 profile is in ADR 0032.
 
@@ -184,8 +185,9 @@ The removal follows the rule for public functions in
 
 ## Consequences
 
-- One account reaches every school it belongs to and the consumer product with
-  one sign-in.
+- One account reaches every school of its home cell that it belongs to with one
+  sign-in, and the consumer product lives in the `us` cell. A school in another
+  cell is joined with an account of that cell (ADR 0026, Data cells).
 - An invite address works like a credential: whoever holds a verified account
   with that address claims the Person, an Owner invite included. Schools invite
   only addresses they or the invitee control, and a tenant's allowed email
