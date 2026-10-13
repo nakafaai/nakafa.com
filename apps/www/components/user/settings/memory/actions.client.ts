@@ -170,17 +170,6 @@ export function useMemoryActions() {
   }
 
   /**
-   * Deletes a memory without a word, for one the learner never saw stored. The
-   * editor on it closes, and nothing it still had to save is saved. When the
-   * server does not delete it, the memory is in the list again, so the note
-   * that it was deleted is taken back and the editor saves it again.
-   */
-  function drop(id: Memory["id"]) {
-    forget(id);
-    settle(() => removeById({ id }), { failed: () => recall(id) });
-  }
-
-  /**
    * Deletes a memory at once, on the page and on the server, so that closing
    * the page can never leave it stored. The toast offers an Undo, which writes
    * the memory back as the learner's own: the words an open editor on it still
@@ -190,9 +179,19 @@ export function useMemoryActions() {
    * When the server does not delete the memory, everything the deletion took
    * comes back: the memory in the list, and the editor that was on it with the
    * words it held. The Undo goes, because nothing is left to undo.
+   *
+   * A memory the learner deleted already is not deleted again. That is the case
+   * of the editor on a memory whose words the learner removed, when the
+   * learner deletes the memory from its row: the deletion closes the editor,
+   * and the editor, closing on no words, would delete the memory a second time.
    */
   function remove(memory: Memory, restore: MemoryDraft = draftOf(memory)) {
     const before = latest();
+
+    if (before.deleted === memory.id) {
+      return;
+    }
+
     const editing = before.open && before.target?.id === memory.id;
 
     const taken = MutableRef.make(Option.none<MemoryDraft>());
@@ -300,5 +299,5 @@ export function useMemoryActions() {
     });
   }
 
-  return { add, clear, drop, edit, pause, remove };
+  return { add, clear, edit, pause, remove };
 }

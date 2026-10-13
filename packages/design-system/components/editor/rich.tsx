@@ -1,21 +1,10 @@
 "use client";
 
 import { useCallbackRef } from "@mantine/hooks";
+import { richOptions } from "@repo/design-system/components/editor/extensions";
 import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar";
-import { Highlight } from "@tiptap/extension-highlight";
-import { TaskItem, TaskList } from "@tiptap/extension-list";
-import { Placeholder } from "@tiptap/extensions";
-import { Markdown } from "@tiptap/markdown";
-import type { Node } from "@tiptap/pm/model";
-import { Plugin } from "@tiptap/pm/state";
 import type { EditorProps } from "@tiptap/pm/view";
-import {
-  EditorContent,
-  EditorContext,
-  Extension,
-  useEditor,
-} from "@tiptap/react";
-import { StarterKit } from "@tiptap/starter-kit";
+import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import type { ComponentProps } from "react";
 import { useMemo, useState } from "react";
 
@@ -36,40 +25,21 @@ interface RichEditorProps {
   onChange: (markdown: string) => void;
   /** Called when the reader presses Escape in the text. */
   onClose: () => void;
+  /**
+   * Called when a paste is refused because it would take the Markdown past
+   * `limit`, so the reader can be told why nothing was inserted.
+   */
+  onRefuse: () => void;
   /** The hint shown while the text is empty. */
   placeholder: string;
 }
-
-/**
- * Refuses every edit that would take the Markdown of the text past `limit`
- * characters, so the text a reader sees is always text that fits. An edit that
- * makes a text shorter always passes.
- */
-const Limit = Extension.create<{ limit: number }>({
-  addOptions: () => ({ limit: 0 }),
-  addProseMirrorPlugins() {
-    const { editor, options } = this;
-    const size = (doc: Node) =>
-      editor.markdown?.serialize(doc.toJSON()).trim().length ?? 0;
-
-    return [
-      new Plugin({
-        filterTransaction: (transaction, state) =>
-          !transaction.docChanged ||
-          size(transaction.doc) <= options.limit ||
-          size(transaction.doc) <= size(state.doc),
-      }),
-    ];
-  },
-  name: "limit",
-});
 
 /**
  * Edits rich text and keeps it as Markdown: headings, bold, italic, underline,
  * struck, code and highlighted words, links, bulleted, numbered and task
  * lists, quotes, code blocks and dividers, with undo and redo. The toolbar
  * sits above the text, and the text fills the space its parent gives, so the
- * parent decides the height.
+ * parent decides the height. Each block takes the direction of its own words.
  *
  * Load it with `next/dynamic` and `ssr: false`: the editor needs the browser
  * and brings the editing library with it.
@@ -81,27 +51,16 @@ export function RichEditor({
   limit,
   onChange,
   onClose,
+  onRefuse,
   placeholder,
 }: RichEditorProps) {
   const change = useCallbackRef(onChange);
   const close = useCallbackRef(onClose);
+  const refuse = useCallbackRef(onRefuse);
   const [content] = useState(defaultValue);
-  const extensions = useMemo(
-    () => [
-      StarterKit.configure({
-        dropcursor: false,
-        gapcursor: false,
-        heading: { levels: [1, 2, 3] },
-        link: { autolink: true, defaultProtocol: "https", openOnClick: false },
-      }),
-      Highlight,
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Markdown,
-      Limit.configure({ limit }),
-      Placeholder.configure({ placeholder }),
-    ],
-    [limit, placeholder]
+  const options = useMemo(
+    () => richOptions({ limit, onRefuse: refuse, placeholder }),
+    [limit, placeholder, refuse]
   );
   const editorProps = useMemo<EditorProps>(
     () => ({
@@ -117,11 +76,11 @@ export function RichEditor({
     [close, label]
   );
   const editor = useEditor({
+    ...options,
     autofocus: "end",
     content,
     contentType: "markdown",
     editorProps,
-    extensions,
     immediatelyRender: false,
     onUpdate: ({ editor: current }) => change(current.getMarkdown()),
   });

@@ -1,4 +1,7 @@
-import type { DocumentMetadata } from "@mendable/firecrawl-js";
+import type {
+  PageMetadata,
+  ProviderText,
+} from "@repo/backend/confect/nina/research/provider";
 
 /** Selects source metadata that should survive the research pipeline. */
 export function getDocumentMetadata({
@@ -6,9 +9,9 @@ export function getDocumentMetadata({
   metadata,
   title,
 }: {
-  description?: string | undefined;
-  metadata?: DocumentMetadata | undefined;
-  title?: string | undefined;
+  description?: ProviderText | undefined;
+  metadata?: PageMetadata | null | undefined;
+  title?: ProviderText | undefined;
 }) {
   const sourceTitle = firstText(title, metadata?.title, metadata?.ogTitle);
   const sourceDescription = firstText(
@@ -26,13 +29,18 @@ export function getDocumentMetadata({
   };
 }
 
-/** Returns the first non-empty provider metadata value. */
-export function firstText(...values: (string | undefined)[]) {
+/**
+ * Returns the first non-empty provider text. A list of texts counts as its
+ * items in order, because a page that repeats a tag gives the provider a list.
+ */
+export function firstText(...values: (ProviderText | undefined)[]) {
   for (const value of values) {
-    const text = value?.trim();
+    for (const item of typeof value === "string" ? [value] : (value ?? [])) {
+      const text = item.trim();
 
-    if (text) {
-      return text;
+      if (text) {
+        return text;
+      }
     }
   }
 }

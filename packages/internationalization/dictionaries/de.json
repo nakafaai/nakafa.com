@@ -523,6 +523,7 @@
     "text": "Text der Erinnerung",
     "placeholder": "Schreib, was Nina sich merken soll",
     "missing": "Diese Erinnerung gibt es nicht mehr",
+    "too-long": "Dieser Text ist zu lang für eine Erinnerung",
     "title": "Titel",
     "untitled": "Ohne Titel",
     "count": "{count, number} / {limit, number}"

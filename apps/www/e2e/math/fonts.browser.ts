@@ -6,11 +6,9 @@ import { readMathFonts } from "@/e2e/support/fonts";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
+import { waitForCachedRoute } from "@/e2e/support/route";
 import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
-import {
-  cacheTimeoutMilliseconds,
-  readinessTimeoutMilliseconds,
-} from "@/e2e/support/timeout";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const lessonPath = /^\/en\/subjects\//;
 
@@ -21,17 +19,7 @@ const lessonPath = /^\/en\/subjects\//;
 const verifyCachedLessonFonts = Effect.fn("NakafaE2E.verifyCachedLessonFonts")(
   function* (page: Page) {
     yield* seedAnalyticsConsent(page, "denied");
-    yield* Effect.promise(() =>
-      expect
-        .poll(
-          async () =>
-            (await page.request.get(pinnedRoutes.inverse.en)).headers()[
-              "x-nextjs-cache"
-            ],
-          { timeout: cacheTimeoutMilliseconds }
-        )
-        .toBe("HIT")
-    );
+    yield* waitForCachedRoute(page, pinnedRoutes.inverse.en);
     const warnings = yield* collectUnusedPreloads(
       page,
       Effect.gen(function* () {

@@ -13,10 +13,41 @@ const StateSchema = Schema.Struct({
   title: Schema.String,
 });
 
+/** The width of her place, in the page as it stands. */
+const roomOf = (page: Page) =>
+  page.locator(STATE_FIGURE).evaluate((place) => place.clientWidth);
+
 /** The width of her place, which is the room that the things beside her have. */
-export const readRoom = Effect.fn("NakafaE2E.readRoom")(function* (page: Page) {
-  return yield* Effect.promise(() =>
-    page.locator(STATE_FIGURE).evaluate((place) => place.clientWidth)
+const readRoom = Effect.fn("NakafaE2E.readRoom")(function* (page: Page) {
+  return yield* Effect.promise(() => roomOf(page));
+});
+
+/**
+ * Sets the viewport to the width at which her place is exactly `room` wide.
+ * What the page keeps around her place is not the same at every width: where
+ * scrollbars take room, a page narrower than 24rem keeps one scrollbar gutter
+ * and a wider one keeps two (`globals.css`). So the width is reckoned from what
+ * the page keeps where it stands, and again from where that lands, until her
+ * place has the room.
+ */
+export const giveRoom = Effect.fn("NakafaE2E.giveRoom")(function* (
+  page: Page,
+  room: number
+) {
+  yield* Effect.promise(() =>
+    expect(async () => {
+      const has = await roomOf(page);
+
+      if (has !== room) {
+        const { height, width } = await page.evaluate(() => ({
+          height: window.innerHeight,
+          width: window.innerWidth,
+        }));
+
+        await page.setViewportSize({ height, width: width + room - has });
+      }
+      expect(await roomOf(page)).toBe(room);
+    }).toPass()
   );
 });
 

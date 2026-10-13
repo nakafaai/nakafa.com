@@ -523,6 +523,7 @@
     "text": "Memory text",
     "placeholder": "Write what Nina should remember",
     "missing": "This memory no longer exists",
+    "too-long": "That text is too long for one memory",
     "title": "Title",
     "untitled": "Untitled",
     "count": "{count, number} / {limit, number}"

@@ -66,9 +66,6 @@ function page() {
         note(`adopt ${memory.id} ${words(draftOf(memory))}`);
       },
       cleared: () => MutableRef.get(cleared),
-      drop(id: Memory["id"]) {
-        note(`drop ${id}`);
-      },
       edit(
         id: Memory["id"],
         draft: MemoryDraft,
@@ -386,32 +383,26 @@ describe("the saving of an open editor", () => {
     expect(missing.sent()).not.toContain("leave");
   });
 
-  it("deletes the memory the editor shows, with an Undo for the words the editor held, and writes nothing after", () => {
+  it("deletes the memory the editor shows, with an Undo for the words the editor held or, when it held none, the words of the memory, and writes nothing after", () => {
     const { send, sent } = page();
     const saving = createAutosave(stored, null);
+    const emptied = createAutosave(stored, null);
 
     // The learner wrote the second draft and pressed Delete before the editor
     // saved it, so the stored words are not what the Undo brings back.
     saving.change(second);
     saving.discard(send, stored);
     saving.write(send);
+    emptied.change(blank);
+    emptied.discard(send, stored);
 
     expect(sent()).toEqual([
       `remove ${stored.id} School|Grade 12, science track`,
+      `remove ${stored.id} |Grade 12`,
     ]);
   });
 
-  it("brings back the words of the memory with the Undo when the editor held none", () => {
-    const { send, sent } = page();
-    const saving = createAutosave(stored, null);
-
-    saving.change(blank);
-    saving.discard(send, stored);
-
-    expect(sent()).toEqual([`remove ${stored.id} |Grade 12`]);
-  });
-
-  it("deletes a memory stored a moment ago without a word", () => {
+  it("deletes the memory its first save stored, with an Undo, also when the editor does not show it yet", () => {
     const { answer, send, sent } = page();
     const saving = createAutosave(null, null);
 
@@ -423,29 +414,86 @@ describe("the saving of an open editor", () => {
     expect(sent()).toEqual([
       "add |Grade 12",
       `adopt ${NEW_ID} |Grade 12`,
-      `drop ${NEW_ID}`,
+      `remove ${NEW_ID} |Grade 12`,
     ]);
   });
 
-  it("drops a memory the server stored after the learner deleted it", () => {
+  it("deletes the memory the server stores after the learner deleted it, with an Undo for the words the editor held, because its row showed", () => {
     const { answer, send, sent } = page();
     const saving = createAutosave(null, null);
 
     saving.change(first);
     saving.write(send);
+    saving.change(second);
     saving.discard(send, null);
     expect(sent()).toEqual(["add |Grade 12"]);
 
     answer("done");
-    expect(sent()).toEqual(["add |Grade 12", `drop ${NEW_ID}`]);
+    expect(sent()).toEqual([
+      "add |Grade 12",
+      `remove ${NEW_ID} School|Grade 12, science track`,
+    ]);
   });
 
-  it("deletes nothing for a new memory that was never stored", () => {
-    const { send, sent } = page();
+  it("deletes nothing more for a memory that Delete all deleted while its first save was on its way", () => {
+    const { answer, clear, send, sent } = page();
     const saving = createAutosave(null, null);
 
+    saving.change(first);
+    saving.write(send);
     saving.discard(send, null);
+    clear();
+    answer("done");
 
-    expect(sent()).toEqual([]);
+    expect(sent()).toEqual(["add |Grade 12", "leave"]);
+  });
+
+  it("deletes a stored memory the learner emptied when the editor closes, once, with an Undo for the words the server holds", () => {
+    const { send, sent } = page();
+    const saving = createAutosave(stored, null);
+    // The page shows the memory with the words of the save that went out.
+    const rewritten = editedMemory(stored, second, 2);
+
+    saving.change(second);
+    saving.write(send);
+    // A write while the editor is open sends nothing for words that say nothing.
+    saving.change(blank);
+    saving.write(send);
+    saving.close(send, rewritten);
+    saving.close(send, rewritten);
+
+    expect(sent()).toEqual([
+      `edit ${stored.id} School|Grade 12, science track`,
+      `remove ${stored.id} School|Grade 12, science track`,
+    ]);
+  });
+
+  it("deletes nothing more when the editor closes after the learner deleted the memory, and deletes or creates nothing for a new memory that was never given a word", () => {
+    const { send, sent } = page();
+    const deleted = createAutosave(stored, null);
+    const empty = createAutosave(null, null);
+
+    deleted.discard(send, stored);
+    deleted.change(blank);
+    deleted.close(send, stored);
+    empty.discard(send, null);
+    empty.close(send, null);
+    empty.change({ text: " ", title: " " });
+    empty.close(send, null);
+
+    expect(sent()).toEqual([`remove ${stored.id} |Grade 12`]);
+  });
+
+  it("deletes the memory the server stores after the learner emptied the editor while the first save was on its way, with an Undo for the words it was sent", () => {
+    const { answer, send, sent } = page();
+    const saving = createAutosave(null, null);
+
+    saving.change(first);
+    saving.write(send);
+    saving.change(blank);
+    saving.close(send, null);
+    answer("done");
+
+    expect(sent()).toEqual(["add |Grade 12", `remove ${NEW_ID} |Grade 12`]);
   });
 });

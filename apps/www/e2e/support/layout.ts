@@ -5,10 +5,21 @@ import { VISUAL_CARD } from "@/e2e/support/selector";
 /**
  * Records, from the first script on, the start time and value of every layout
  * shift the browser reports, in the page global `key`, with one line per
- * element that moved: what it is, where it was, and where it went. Pass it to
- * `page.addInitScript` before the page loads, with the global's name.
+ * element that moved: what it is, where it was, and where it went. A shift is
+ * left out when everything that moved sits inside a fixed element that matches
+ * `overlay`, such as the list that holds the toasts: a toast stacks over the
+ * page and animates its own height, which is not the page moving. An element
+ * that stays in the flow of the page is the page, so its shifts count.
+ * Pass it to `page.addInitScript` before the page loads, with the global's name
+ * and the selector.
  */
-export function recordLayoutShifts(key: string) {
+export function recordLayoutShifts({
+  key,
+  overlay,
+}: {
+  key: string;
+  overlay: string;
+}) {
   const shifts: { sources: string[]; time: number; value: number }[] = [];
   Object.defineProperty(window, key, { value: shifts });
   const box = (rect: unknown) =>
@@ -26,6 +37,16 @@ export function recordLayoutShifts(key: string) {
     const classes = owner.getAttribute("class") ?? "";
     return `${owner.tagName.toLowerCase()}${slot ? `[data-slot=${slot}]` : ""} class="${classes.slice(0, 80)}"${element ? "" : " (text)"}`;
   };
+  // Whether the node sits inside a fixed element that matches `overlay`.
+  const insideOverlay = (node: unknown) => {
+    const owner = node instanceof Node ? node : null;
+    const element = owner instanceof Element ? owner : owner?.parentElement;
+    const container = element?.closest(overlay);
+    return (
+      container instanceof Element &&
+      getComputedStyle(container).position === "fixed"
+    );
+  };
   new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       if ("value" in entry && typeof entry.value === "number") {
@@ -34,14 +55,20 @@ export function recordLayoutShifts(key: string) {
           node: unknown;
           previousRect: unknown;
         }>(Reflect.get(entry, "sources") ?? []);
-        shifts.push({
-          sources: sources.map(
-            (source) =>
-              `${name(source.node)}: ${box(source.previousRect)} to ${box(source.currentRect)}`
-          ),
-          time: entry.startTime,
-          value: entry.value,
-        });
+        // A shift with no source to name counts as the page's.
+        const movedOnlyTheOverlay =
+          sources.length > 0 &&
+          sources.every((source) => insideOverlay(source.node));
+        if (!movedOnlyTheOverlay) {
+          shifts.push({
+            sources: sources.map(
+              (source) =>
+                `${name(source.node)}: ${box(source.previousRect)} to ${box(source.currentRect)}`
+            ),
+            time: entry.startTime,
+            value: entry.value,
+          });
+        }
       }
     }
   }).observe({ buffered: true, type: "layout-shift" });
