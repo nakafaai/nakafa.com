@@ -56,8 +56,7 @@ export const disabledTokenPaths = [
  *
  * Only the redirect flow signs a learner in. With ID token sign-in on, Better
  * Auth would accept any Google ID token that was issued to Nakafa in the last
- * hour as a login credential, and its link route would store the tokens that
- * came with one.
+ * hour as a login credential, both to sign a learner in and to link an account.
  * @see https://developers.google.com/identity/protocols/oauth2/web-server
  */
 export const googleSignIn = {

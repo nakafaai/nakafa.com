@@ -72,6 +72,10 @@ connection.
 - `/get-access-token`, `/account-info` and `/refresh-token`, the routes that
   read or refresh a stored token, answer 404 like the retired credential
   routes.
+- `disableIdTokenSignIn` stays on. With it off, Better Auth would accept any
+  Google ID token that was issued to Nakafa in the last hour as a credential, to
+  sign a learner in and to link an account. Only the redirect flow signs a
+  learner in.
 - `account.encryptOAuthTokens` stays on, so that a token that a later plugin
   writes is sealed.
 
@@ -192,7 +196,8 @@ component call for each row.
 - `@better-auth/core` 1.6.33, `dist/social-providers/google` (lines 45 to 73)
   and `dist/oauth2/create-authorization-url` (lines 15 and 17): `prompt` and
   `access_type` reach Google only when set. `getUserInfo` (line 105) reads the
-  profile from the ID token of the code exchange.
+  profile from the ID token of the code exchange, and `verifyIdToken` (line 95)
+  refuses every ID token when `disableIdTokenSignIn` is set.
 - https://developers.google.com/identity/protocols/oauth2/web-server: the
   default `access_type` is `online`, `prompt=consent` asks for consent and
   `prompt=select_account` shows the account chooser, and a request without
