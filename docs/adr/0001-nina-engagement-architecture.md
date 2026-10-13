@@ -563,11 +563,11 @@ at each and what it leaves to the author.
    ends as `MemoryReadError`, and a defect anywhere else in its run ends the
    same way.
 4. Add its name to `LearningCapabilityNameSchema` in `capability/spec.ts`, and
-   to `TEXT_ONLY_CAPABILITIES` beside it when it publishes no card: its answer
-   is the text, so a run that ends without a card is not read as empty, in the
-   result it stores or on the page that shows it (`client/nina/outcome.ts`),
-   and keeps the outcome it states, or none. Add its definition to the end of
-   the record in `capability/registry.ts`. The
+   pick it in `TextOnlyCapabilitySchema` beside it when it publishes no card:
+   its answer is the text, so a run that ends without a card is not read as
+   empty, in the result it stores or on the page that shows it
+   (`client/nina/outcome.ts`), and keeps the outcome it states, or none. Add
+   its definition to the end of the record in `capability/registry.ts`. The
    order is the order of the tool list and of the tool policy, so it is part of
    the prompt prefix that the provider caches. Enforced: the record is
    `satisfies Record<LearningCapabilityName, Capability>`, so a name without a

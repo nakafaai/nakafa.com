@@ -3,14 +3,16 @@ import type {
   CapabilityOutcomeSchema,
   CapabilityOutputSchema,
 } from "@repo/backend/client/nina/capability";
-import { TEXT_ONLY_CAPABILITIES } from "@repo/backend/confect/nina/capability/spec";
-import { Array as Arr } from "effect";
+import { TextOnlyCapabilitySchema } from "@repo/backend/confect/nina/capability/spec";
+import { Array as Arr, Schema } from "effect";
 
 type CapabilityArtifact = typeof CapabilityArtifactSchema.Type;
 
 type CapabilityOutcome = typeof CapabilityOutcomeSchema.Type;
 
 type CapabilityOutput = typeof CapabilityOutputSchema.Type;
+
+const isTextOnly = Schema.is(TextOnlyCapabilitySchema);
 
 /**
  * Keeps the outcome from contradicting the cards beside it. This is the one
@@ -24,7 +26,7 @@ type CapabilityOutput = typeof CapabilityOutputSchema.Type;
  * one. `limit` and `denied` are decisions, not results, and stay as stated. A
  * run with no card at all and no stated outcome is `empty`, whatever prose it
  * returned, because nothing it ran loaded evidence. A text-only capability
- * (`TEXT_ONLY_CAPABILITIES`) is the one exception: its answer is the text and
+ * (`TextOnlyCapabilitySchema`) is the one exception: its answer is the text and
  * it has no card to show, so its run keeps the outcome it states, or none,
  * which reads as done.
  */
@@ -32,7 +34,7 @@ export function settleOutcome(
   outcome: CapabilityOutcome | undefined,
   artifacts: readonly CapabilityArtifact[],
   capability: string
-) {
+): CapabilityOutcome | undefined {
   const loaded = Arr.some(
     artifacts,
     ({ data }) => data.status !== "loading" && data.status !== "error"
@@ -40,16 +42,16 @@ export function settleOutcome(
   const lost = Arr.some(artifacts, ({ data }) => data.status === "error");
   const unstated = !outcome || outcome === "empty";
   if (loaded && (outcome === "failed" || (lost && unstated))) {
-    return "partial" as const;
+    return "partial";
   }
   if (!(outcome || loaded) && lost) {
-    return "failed" as const;
+    return "failed";
   }
   if (
-    !(outcome || Arr.contains(TEXT_ONLY_CAPABILITIES, capability)) &&
+    !(outcome || isTextOnly(capability)) &&
     Arr.isReadonlyArrayEmpty(artifacts)
   ) {
-    return "empty" as const;
+    return "empty";
   }
   return outcome;
 }
@@ -64,9 +66,6 @@ export function settleOutcome(
 export function readOutcome(
   output: Pick<CapabilityOutput, "artifacts" | "outcome">,
   capability: string
-) {
-  return (
-    settleOutcome(output.outcome, output.artifacts, capability) ??
-    ("done" as const)
-  );
+): CapabilityOutcome | "done" {
+  return settleOutcome(output.outcome, output.artifacts, capability) ?? "done";
 }

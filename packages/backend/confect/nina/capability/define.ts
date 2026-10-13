@@ -119,8 +119,8 @@ export function failed(facts: typeof FailureFacts.Type, text: string) {
  *   a plain answer for the model's next step, and the conversation stores the
  *   note in its place. Answers that state an outcome are fixed lines and stay.
  *
- * A capability that publishes no card is not declared here. Its name is listed
- * in `TEXT_ONLY_CAPABILITIES` (`capability/spec.ts`), because the page reads
+ * A capability that publishes no card is not declared here. Its name is picked
+ * in `TextOnlyCapabilitySchema` (`capability/spec.ts`), because the page reads
  * that fact too: a run of it without a card is not empty.
  */
 interface CapabilitySpec<Input, Requirements extends RunServices> {

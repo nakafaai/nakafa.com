@@ -38,7 +38,7 @@ const UNREADABLE =
  * transcript of a public chat, is read again by every later turn, and outlives
  * the memory it came from. So the turn holds them for the model's next step and
  * the conversation keeps only this note. A memory it returns is not thereby
- * confirmed. It publishes no card, which `TEXT_ONLY_CAPABILITIES` in
+ * confirmed. It publishes no card, which `TextOnlyCapabilitySchema` in
  * `capability/spec.ts` says, so a search that found memories ends with no
  * outcome and reads as done.
  *

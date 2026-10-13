@@ -73,7 +73,7 @@ export function specialistResult(text: string, finishReason: FinishReason) {
  * is decided here, from what `run` reports and the cards it gathered, by the
  * rule in `client/nina/outcome.ts` that the page reads a stored result with. A
  * run that ends with no card and states no outcome found nothing, so it is
- * `empty`, unless `capability` publishes no card (`TEXT_ONLY_CAPABILITIES`):
+ * `empty`, unless `capability` publishes no card (`TextOnlyCapabilitySchema`):
  * its answer is the text, and no card is the normal way for it to end.
  *
  * A run has the time its chat step can spare, counted from the start of that

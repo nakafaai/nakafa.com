@@ -31,8 +31,8 @@ export type LearningCapabilityName = typeof LearningCapabilityNameSchema.Type;
  * The capabilities that publish no card. Their answer is their text, so a run
  * of one that ends without a card is not read as empty, both in the result the
  * run stores and on the page that shows it (`client/nina/outcome.ts`). A name
- * that is not listed here publishes cards.
+ * that is not picked here publishes cards.
  */
-export const TEXT_ONLY_CAPABILITIES = [
+export const TextOnlyCapabilitySchema = LearningCapabilityNameSchema.pick([
   MEMORY_CAPABILITY,
-] as const satisfies readonly LearningCapabilityName[];
+]);
