@@ -22,6 +22,7 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
+import { homePage } from "@repo/backend/test/nina/page";
 import { showsText } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Duration, Effect } from "effect";
@@ -111,6 +112,12 @@ describe("native Nina admission", () => {
       usage: [],
       state: { status: "queued" },
     });
+    // The page is stored once, as the resolver froze it: no second copy of its
+    // context, marker, address or permission flag beside it, on the page or on
+    // the turn.
+    expect(state.turns[0]?.page).toEqual(homePage);
+    expect(state.turns[0]).not.toHaveProperty("snapshot");
+    expect(state.turns[0]).not.toHaveProperty("transition");
     expect(
       Arr.filter(state.ledger, (row) => row.type === "usage")
     ).toHaveLength(1);
