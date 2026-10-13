@@ -17,7 +17,7 @@ import { reportLostRun } from "@repo/backend/confect/nina/diagnostics";
 import { answered, cutOff } from "@repo/backend/confect/nina/journal";
 import { sinceAdmission } from "@repo/backend/confect/nina/timing";
 import { NinaSettledTurn } from "@repo/backend/confect/nina/turns.spec";
-import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Duration, Effect, Result, Schema } from "effect";
 
 /**
  * Writes the end of an active turn in the transaction that decided it: an
@@ -138,18 +138,16 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
 
 /**
  * Inspect the Agent journal and settle its existing hold in the same
- * transaction. Only an active turn settles, so a second settlement of the same
- * turn changes nothing and never refunds twice.
+ * transaction. Only an active turn is passed in. Every caller reads the turn in
+ * the transaction that settles it and leaves a settled one alone, so a turn
+ * settles once and its hold is never paid back twice.
  */
 export const settleTurn = Effect.fn("nina.settlement")(function* (
-  turn: NinaTurnsDoc,
+  turn: Extract<NinaTurnsDoc, { phase: "active" }>,
   interrupted: "failed" | "cancelled",
   failure?: typeof NinaFailureReason.Type,
   timing?: typeof NinaTurnTiming.Type
 ) {
-  if (turn.phase !== "active") {
-    return;
-  }
   const completed = yield* answered(turn);
   if (!completed) {
     yield* cutOff(turn, interrupted);
@@ -222,9 +220,10 @@ export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
 export const settleStopped = Effect.fn("nina.settlement.stopped")(function* (
   learner: Docs["users"]
 ) {
-  const stopped = Arr.filter(
-    yield* activeTurns(learner._id),
-    (turn) => turn.phase === "active" && turn.cancelRequestedAt !== undefined
+  const stopped = Arr.filterMap(yield* activeTurns(learner._id), (turn) =>
+    turn.phase === "active" && turn.cancelRequestedAt !== undefined
+      ? Result.succeed(turn)
+      : Result.failVoid
   );
   if (!Arr.isReadonlyArrayNonEmpty(stopped)) {
     return learner;
