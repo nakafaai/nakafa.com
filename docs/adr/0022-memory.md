@@ -811,51 +811,56 @@ nobody tries them again without a new reason.
   confirmed at or before it. Until the server answers it carries an id the
   server has not stored, like a memory that is being added, because the id the
   memory had is gone and Convex gives the restored memory another. When the
-  server cannot put it back, the row goes, the learner is told as for any
-  failed change, and, if they can try again, the memory's words open in the
-  editor as a new memory, so nothing they wrote is lost.
+  server cannot put it back, the row goes and a toast says that the Undo
+  failed, whether the server refused or broke. If it broke the learner can try
+  again, so the memory's words open in the editor as a new memory and nothing
+  they wrote is lost. A refusal means there is nothing left to put back, so no
+  editor opens.
 - `remove` keeps what it deletes for the length of the Undo, and `restore` gives
   it back as it was. The table `ninaMemoryRestores` (index by user and the id
-  the memory had) holds one record for each memory the learner deleted whose
-  Undo has not ended. A record holds every stored field of the memory, sealed
-  as stored and never opened (author, confirmation time, kind, topics, end day,
-  words and title), the id the memory had (`memoryId`), the keys it had in the
-  memory index, and the moment its Undo ends (`expiresAt`). `remove` writes it
-  in the transaction that deletes the memory and its keys, and schedules the
-  internal `purge` for that moment, which deletes the record if it is still
-  there. The window is `MEMORY_UNDO`, 5 seconds, in `memory.spec`, which the
-  Memory page reads for its toast too, so one number owns both. A toast waits
-  while the pointer rests on it or the tab is hidden, so the page closes it
-  when the window ends and offers no Undo after the server stopped keeping the
-  memory. The page's window starts when the toast shows and the server's when
-  it has deleted the memory, so the page's ends first, but an Undo that
-  travels slower than the delete did can still arrive late: the server then
-  answers `missing` and the page tells the learner as for any failed change.
-  `restore({ id })` takes the id the memory had. It fails with
+  the memory had, index by user and confirmation time) holds one record for each
+  memory the learner deleted whose Undo has not ended. A record holds every
+  stored field of the memory, sealed as stored and never opened (author,
+  confirmation time, kind, topics, end day, words and title), the id the memory
+  had (`memoryId`), the keys it had in the memory index, and the moment its Undo
+  ends (`expiresAt`). `remove` writes it in the transaction that deletes the
+  memory and its keys, and schedules the internal `purge` for that moment, which
+  deletes the record if it is still there. The window is `MEMORY_UNDO`, 5
+  seconds, in `memory.spec`, which the Memory page reads for its toast too, so
+  one number owns both. A toast waits while the pointer rests on it or the tab
+  is hidden, so the page closes it when the window ends and offers no Undo after
+  the server stopped keeping the memory. The page's window starts when the toast
+  shows and the server's when it has deleted the memory, so the page's ends
+  first, but an Undo that travels slower than the delete did can still arrive
+  late: the server then answers `missing` and the page says that the Undo
+  failed. `restore({ id })` takes the id the memory had. It fails with
   `NinaMemoryRejected` and `missing` when the learner has no record under it:
   the id is another learner's, the window ended, the memory was put back
   already, or "Delete all" took the memory (it was confirmed at or before the
   moment the learner last deleted every memory, which every reader would hide
-  and no batch might delete). Otherwise it inserts the stored fields back as
-  they were, so a situation keeps its end day, a memory Nina saved keeps Nina
-  as its author, and the memory keeps its confirmation time and so its place in
-  the list. It inserts the same key rows, deletes the record, asks for a build
-  of the portrait from scratch (the memory returns with a confirmation time
-  older than the moment a build reads on from, which such a build would never
-  meet), and returns the memory as the Memory page shows it. Only what Convex
-  gives a document differs: a new id and a new creation time. Nothing is sealed
-  or computed again, and a record is used once. A situation whose end day
-  passed meanwhile is put back and then ends as any ended situation does
-  (`hasEnded`): the daily job deletes it. No other deletion is taken back:
-  "Delete all", the daily expiry and account deletion keep no record, and
-  account deletion deletes the learner's records with their memories, before
-  the key goes. A deleted memory's words therefore stay on the server, sealed
-  for the learner, for the window and until the job that deletes the record at
-  its end has run, and only for a memory the learner deleted one at a time
-  (`restore` refuses the record from the end of the window, whether or not the
-  job has run). The words stay because `add` cannot give a memory back: it
-  takes no kind, no end day and no author, so a situation that was undone no
-  longer ended and a memory Nina saved came back as one the learner wrote.
+  and no batch might delete). A "Delete all" counts the newest record in its
+  moment as it counts the newest memory, so a memory deleted before the learner
+  asked is refused even when the clock had not moved on since the memory was
+  written. Otherwise it inserts the stored fields back as they were, so a
+  situation keeps its end day, a memory Nina saved keeps Nina as its author, and
+  the memory keeps its confirmation time and so its place in the list. It
+  inserts the same key rows, deletes the record, asks for a build of the
+  portrait from scratch (the memory returns with a confirmation time older than
+  the moment a build reads on from, which such a build would never meet), and
+  returns the memory as the Memory page shows it. Only what Convex gives a
+  document differs: a new id and a new creation time. Nothing is sealed or
+  computed again, and a record is used once. A situation whose end day passed
+  meanwhile is put back and then ends as any ended situation does (`hasEnded`):
+  the daily job deletes it. No other deletion is taken back: "Delete all", the
+  daily expiry and account deletion keep no record, and account deletion deletes
+  the learner's records with their memories, before the key goes. A deleted
+  memory's words therefore stay on the server, sealed for the learner, for the
+  window and until the job that deletes the record at its end has run, and only
+  for a memory the learner deleted one at a time (`restore` refuses the record
+  from the end of the window, whether or not the job has run). The words stay
+  because `add` cannot give a memory back: it takes no kind, no end day and no
+  author, so a situation that was undone no longer ended and a memory Nina saved
+  came back as one the learner wrote.
 - `read` gives a turn the account profile, the portrait when the learner has
   one, and the at most 8 memories that the learner's words and the topics of
   the open page recall. `known` gives the capture call the account profile and
