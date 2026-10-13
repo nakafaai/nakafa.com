@@ -313,6 +313,60 @@ describe("ai/store/create", () => {
     expect(listener).not.toHaveBeenCalled();
   });
 
+  it("ends the session of its owner: what it held for them is gone, and the draft and the page are not touched", () => {
+    const store = createAiStore();
+    store.getState().openAsk({ id: "ask-1", text: "Explain" });
+    store.getState().addChatDraft("draft-1");
+    store.getState().setActiveChatId(chatId);
+    store.getState().setOpeningChat({
+      prompt: receipt.prompt,
+      receipt,
+      submittedAt: 1,
+    });
+    store.getState().keepUpload("file-1", firstUpload);
+    store.getState().markUpload("file-1", "error");
+    store.getState().markUpload("file-2", "uploading");
+    store.getState().setText("Half typed");
+    store.getState().setContextTitle("Algebra");
+    store.getState().setOpen(true);
+
+    store.getState().endSession();
+
+    const state = store.getState();
+    expect(state.activeChatId).toBeNull();
+    expect(state.ask).toBeNull();
+    expect(state.chatDrafts).toEqual([]);
+    expect(state.openingChat).toBeNull();
+    // The next learner finds no upload of the last one to send or to show.
+    expect(state.held).toEqual({});
+    expect(state.uploads).toEqual({});
+    expect(state.uploadOf("file-1")).toEqual(Option.none());
+    // The draft has its own rule, and the page keeps what it shows.
+    expect(state).toMatchObject({
+      contextTitle: "Algebra",
+      open: true,
+      text: "Half typed",
+    });
+    // A reload does not open the chat of the last learner either.
+    const stored = Schema.decodeUnknownSync(StoredAiState)(
+      localStorage.getItem(STORAGE_KEY)
+    );
+    expect(stored.state.activeChatId).toBeNull();
+  });
+
+  it("starts every composer over with a new key, and leaves the text alone", () => {
+    const store = createAiStore();
+    const { composerKey } = store.getState();
+    store.getState().setText("Half typed");
+
+    store.getState().resetComposers();
+    expect(store.getState().composerKey).toBe(composerKey + 1);
+
+    store.getState().resetComposers();
+    expect(store.getState().composerKey).toBe(composerKey + 2);
+    expect(store.getState().text).toBe("Half typed");
+  });
+
   it("sets the composer text from a value or from an updater", () => {
     const store = createAiStore();
     store.getState().openAsk({ id: "ask-1", text: "Explain" });

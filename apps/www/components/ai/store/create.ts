@@ -21,6 +21,17 @@ export function createAiStore() {
           })),
         clearUpload: (fileId) =>
           set((state) => ({ uploads: Rec.remove(state.uploads, fileId) })),
+        // The text of the draft is not cleared here: a visitor who signs in
+        // keeps what they wrote, and the caller decides that.
+        endSession: () =>
+          set({
+            activeChatId: null,
+            ask: null,
+            chatDrafts: [],
+            held: {},
+            openingChat: null,
+            uploads: {},
+          }),
         keepUpload: (fileId, uploadId) =>
           set((state) => ({ held: Rec.set(state.held, fileId, uploadId) })),
         markUpload: (fileId, status) =>
@@ -47,6 +58,8 @@ export function createAiStore() {
               ),
             };
           }),
+        resetComposers: () =>
+          set((state) => ({ composerKey: state.composerKey + 1 })),
         // The admitted chat opens only while the sheet still shows its prompt,
         // so a conversation the learner picked meanwhile stays open.
         resolveAsk: (id, chatId) =>

@@ -6,6 +6,7 @@ export const initialState = {
   activeChatId: null,
   ask: null,
   chatDrafts: [],
+  composerKey: 0,
   contextTitle: null,
   held: {},
   open: false,

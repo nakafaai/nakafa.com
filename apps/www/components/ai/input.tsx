@@ -70,6 +70,7 @@ export function NinaInput({
   status,
 }: Props) {
   const t = useTranslations("Ai");
+  const composerKey = useAi((state) => state.composerKey);
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
   const [submittedFiles, hideSubmittedFiles] = useOptimistic<readonly string[]>(
@@ -121,9 +122,14 @@ export function NinaInput({
     });
   }
 
+  // The files of a composer live in the state of its PromptInput, and a new key
+  // is how React starts that state over. The key changes with the text of the
+  // draft, when the draft stops belonging to the learner who is signed in, so
+  // every surface of this composer drops the files the previous learner picked.
   return (
     <PromptInput
       accept={Arr.join(NinaFileType.literals, ",")}
+      key={composerKey}
       maxFileSize={NINA_FILE_SIZE}
       maxFiles={NINA_FILE_COUNT}
       multiple

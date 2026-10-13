@@ -14,6 +14,7 @@ import { useShallow } from "zustand/react/shallow";
 import { type AiStoreApi, createAiStore } from "@/components/ai/store/create";
 import {
   resolveAiDraftText,
+  resolveAiOwnerChange,
   saveAiDraftText,
 } from "@/components/ai/store/draft";
 import type { AiStore } from "@/components/ai/store/types";
@@ -61,19 +62,16 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const previousOwnerId = previousDraftOwnerIdRef.current;
-    const ownerChanged =
-      previousOwnerId !== undefined && previousOwnerId !== ownerId;
-    const mustResetDraft = ownerChanged && previousOwnerId !== null;
+    const { mustResetDraft, ownerChanged } = resolveAiOwnerChange(
+      previousDraftOwnerIdRef.current,
+      ownerId
+    );
     if (ownerChanged) {
-      // A pending ask belongs to the previous owner; its receipt must not
-      // open that owner's chat in this session.
-      store.setState({
-        activeChatId: null,
-        ask: null,
-        chatDrafts: [],
-        openingChat: null,
-      });
+      // Nothing the store holds for the previous owner is for this one. A
+      // pending ask must not open that owner's chat in this session. The
+      // uploads that owner held are forgotten, not given back: the server
+      // refuses to release another learner's upload, so their expiry frees them.
+      store.getState().endSession();
     }
     if (mustResetDraft) {
       activeDraftOwnerIdRef.current = undefined;
@@ -84,6 +82,8 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
       if (store.getState().text.length > 0) {
         store.setState({ text: "" });
       }
+      // The files of the draft go with its text, so every composer starts over.
+      store.getState().resetComposers();
     }
 
     const pendingDraft = pendingDraftRef.current;

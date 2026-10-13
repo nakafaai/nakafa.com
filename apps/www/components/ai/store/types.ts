@@ -24,6 +24,13 @@ const AiStateSchema = Schema.Struct({
   activeChatId: Schema.NullOr(Id("chats")),
   ask: Schema.NullOr(AiAskSchema),
   chatDrafts: Schema.Array(Schema.String),
+  /**
+   * The key of the composers. A composer keeps the files the learner picked in
+   * its own state, and a new key is how React starts that state over. It
+   * changes together with the text of the draft, when the draft stops
+   * belonging to the learner who started it.
+   */
+  composerKey: Schema.Int,
   contextTitle: Schema.NullOr(Schema.String),
   /**
    * The upload that holds each chosen file on the server, by the id the
@@ -60,12 +67,23 @@ interface AiActions {
   addChatDraft: (key: string) => void;
   /** Forgets that this file is uploading or that its upload failed. */
   clearUpload: (fileId: string) => void;
+  /**
+   * Ends the session of the learner the store held things for: the pending
+   * ask, the chats that learner was starting or had open, and the uploads it
+   * kept and showed. The draft is not part of it, because a visitor who signs
+   * in keeps the draft, and the caller decides that. The uploads stay on the
+   * server until they expire: the next learner cannot give them back, and the
+   * server would refuse.
+   */
+  endSession: () => void;
   /** Remembers the upload that now holds this file on the server. */
   keepUpload: (fileId: string, uploadId: typeof AiUploadIdSchema.Type) => void;
   /** Shows this file as uploading, or as an upload that failed. */
   markUpload: (fileId: string, status: typeof AiUploadSchema.Type) => void;
   openAsk: (ask: AiAsk) => boolean;
   removeChatDraft: (key: string) => void;
+  /** Starts every composer over, without the files it holds. */
+  resetComposers: () => void;
   resolveAsk: (id: AiAsk["id"], chatId: AiState["activeChatId"]) => void;
   resolveChatDraft: (
     key: string,
