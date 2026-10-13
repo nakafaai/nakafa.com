@@ -209,18 +209,12 @@ load. `apps/www/e2e/chat/link.browser.ts` proves the late link, and the dialog
 that says so when the query fails with the typed failure and loads the link
 again on Retry, in the production build.
 
-Two temporary contract steps remain from the change that introduced share
-tokens. This ADR owns them, and they end together. Until they do,
-`chats/unshare:closeLegacy` sends the public chats that have no token back to
-private, and `getChats` answers an empty page for the browser tabs that were
-opened before share tokens and still ask for the chats of a profile. The exit is
-met when a dry pass of `closeLegacy` over every chat finds no legacy chat on dev
-and on production, and the release has been on production for 12 hours. That is
-how long the project's skew protection keeps a browser on the web deployment it
-loaded (`skewProtectionMaxAge` 43,200 seconds, read from the Vercel project on
-12 October 2026): after it, a navigation in an older tab loads the build that
-no longer calls `getChats`. The cleanup is one change: delete `chats/unshare`
-with its tests, and delete `getChats` with its test.
+The change that introduced share tokens kept two temporary contract steps,
+`chats/unshare:closeLegacy` and an empty `getChats`, until a dry pass of
+`closeLegacy` found no legacy chat on dev and on production and the release had
+been on production for 12 hours, the project's skew protection window
+(`skewProtectionMaxAge` 43,200 seconds). Both passes found none on 13 October
+2026, and both steps are deleted.
 
 Nina's system prompt leads with stable instructions so provider prompt caching
 reuses them across turns. The current page, which learners share, the learner
